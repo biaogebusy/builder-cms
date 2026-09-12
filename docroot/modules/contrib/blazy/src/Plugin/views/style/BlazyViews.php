@@ -4,8 +4,8 @@ namespace Drupal\blazy\Plugin\views\style;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Views\BlazyStyleVanilla;
-use Drupal\blazy\internals\Internals;
 
 /**
  * Provides Blazy Grid style plugin.
@@ -74,9 +74,10 @@ class BlazyViews extends BlazyStyleVanilla implements BlazyViewsInterface {
    * Overrides StylePluginBase::render().
    */
   public function render() {
+    /** @var array $settings */
     $settings = $this->buildSettings();
-    $blazies  = $settings['blazies'];
-    $view     = $this->view;
+    $blazies = Internals::getBlazies($settings);
+    $view = $this->view;
 
     $blazies->set('is.grid', TRUE);
 

@@ -13,11 +13,13 @@
  * Below functions are copied from editor.module.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform\Hook\WebformEditorHooks;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\file\FileInterface;
 use Drupal\filter\FilterFormatInterface;
@@ -53,8 +55,9 @@ function webform_filter_format_load($entities) {
 /**
  * Implements hook_editor_js_settings_alter().
  */
+#[LegacyHook]
 function webform_editor_js_settings_alter(array &$settings) {
-  $settings['editor']['formats'][WebformHtmlEditor::DEFAULT_FILTER_FORMAT]['editorSettings']['autoGrow_minHeight'] = '80';
+  \Drupal::service(WebformEditorHooks::class)->editorJsSettingsAlter($settings);
 }
 
 /* ************************************************************************** */
@@ -66,9 +69,9 @@ function webform_editor_js_settings_alter(array &$settings) {
  *
  * @see editor_entity_insert()
  */
+#[LegacyHook]
 function webform_webform_insert(WebformInterface $webform) {
-  $uuids = _webform_get_config_entity_file_uuids($webform);
-  _webform_record_file_usage($uuids, $webform->getEntityTypeId(), $webform->id());
+  \Drupal::service(WebformEditorHooks::class)->webformInsert($webform);
 }
 
 /**
@@ -76,17 +79,9 @@ function webform_webform_insert(WebformInterface $webform) {
  *
  * @see editor_entity_update()
  */
+#[LegacyHook]
 function webform_webform_update(WebformInterface $webform) {
-  $original_uuids = _webform_get_config_entity_file_uuids($webform->original);
-  $uuids = _webform_get_config_entity_file_uuids($webform);
-
-  // Detect file usages that should be incremented.
-  $added_files = array_diff($uuids, $original_uuids);
-  _webform_record_file_usage($added_files, $webform->getEntityTypeId(), $webform->id());
-
-  // Detect file usages that should be decremented.
-  $removed_files = array_diff($original_uuids, $uuids);
-  _webform_delete_file_usage($removed_files, $webform->getEntityTypeId(), $webform->id(), 1);
+  \Drupal::service(WebformEditorHooks::class)->webformUpdate($webform);
 }
 
 /**
@@ -94,9 +89,9 @@ function webform_webform_update(WebformInterface $webform) {
  *
  * @see editor_entity_delete()
  */
+#[LegacyHook]
 function webform_webform_delete(WebformInterface $webform) {
-  $uuids = _webform_get_config_entity_file_uuids($webform);
-  _webform_delete_file_usage($uuids, $webform->getEntityTypeId(), $webform->id(), 0);
+  \Drupal::service(WebformEditorHooks::class)->webformDelete($webform);
 }
 
 /* ************************************************************************** */
@@ -277,7 +272,7 @@ function _webform_delete_file_usage(array $uuids, $type, $id, $count) {
  * @see _editor_parse_file_uuids()
  */
 function _webform_parse_file_uuids($text) {
-  if (strpos($text, 'data-entity-uuid') === FALSE) {
+  if (!str_contains($text, 'data-entity-uuid')) {
     return [];
   }
 

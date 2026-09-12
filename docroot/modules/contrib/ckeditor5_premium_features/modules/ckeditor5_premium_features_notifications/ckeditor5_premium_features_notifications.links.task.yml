@@ -1,0 +1,6 @@
+ckeditor5_premium_features_notifications.form.settings:
+  title: Notifications
+  route_name: ckeditor5_premium_features_notifications.form.settings
+  base_route: ckeditor5_premium_features.form.settings
+  description: 'Setup Notifications feature.'
+  weight: 110

@@ -10,7 +10,6 @@
  * User generated tables.
  */
 
-.forum table,
 .text-content table,
 .views-table,
 .draggable-table {
@@ -23,51 +22,55 @@
   font-family: var(--font-sans);
   font-size: 1rem;
   line-height: var(--sp1-5);
-}
 
-:is(.forum table, .text-content table, .views-table, .draggable-table) caption {
-  margin-block-end: var(--sp1);
-  text-align: start;
-  color: var(--color-text-neutral-medium);
-  font-family: var(--font-serif);
-  font-size: 0.875rem;
-  font-style: italic;
-  line-height: var(--sp);
-}
+  & caption {
+    margin-block-end: var(--sp1);
+    text-align: start;
+    color: var(--color-text-neutral-medium);
+    font-family: var(--font-serif);
+    font-size: 0.875rem;
+    font-style: italic;
+    line-height: var(--sp);
+  }
 
-:is(.forum table, .text-content table, .views-table, .draggable-table) tr:last-child td {
-  border-block-end: 0;
-}
+  & tr {
+    &:last-child {
+      & td {
+        border-block-end: 0;
+      }
+    }
+  }
 
-:is(.forum table, .text-content table, .views-table, .draggable-table) td,
-:is(.forum table, .text-content table, .views-table, .draggable-table) th {
-  padding-block: var(--sp1);
-  padding-inline-start: 0;
-  padding-inline-end: var(--sp1);
-  vertical-align: top;
-}
+  & td,
+  & th {
+    padding-block: var(--sp1);
+    padding-inline-start: 0;
+    padding-inline-end: var(--sp1);
+    vertical-align: top;
+  }
 
-:is(.forum table, .text-content table, .views-table, .draggable-table) th {
-  margin-block: 0;
-  margin-inline-start: 0;
-  margin-inline-end: 0;
-  text-align: start;
-  letter-spacing: 0.02em;
-  color: var(--color-text-neutral-loud);
-  border-block-end: 2px solid var(--color--primary-50);
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  line-height: var(--sp);
-}
+  & th {
+    margin-block: 0;
+    margin-inline-start: 0;
+    margin-inline-end: 0;
+    text-align: start;
+    letter-spacing: 0.02em;
+    color: var(--color-text-neutral-loud);
+    border-block-end: 2px solid var(--color--primary-50);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: var(--sp);
+  }
 
-:is(.forum table, .text-content table, .views-table, .draggable-table) td {
-  white-space: normal;
-  border-block-end: 2px solid var(--color--gray-65);
-}
+  & td {
+    white-space: normal;
+    border-block-end: 2px solid var(--color--gray-65);
+  }
 
-:is(.forum table, .text-content table, .views-table, .draggable-table) th.checkbox,
-:is(.forum table, .text-content table, .views-table, .draggable-table) td.checkbox {
-  text-align: center;
+  & th.checkbox,
+  & td.checkbox {
+    text-align: center;
+  }
 }
 
 .draggable-table {
@@ -78,9 +81,11 @@
   margin-top: 0;
 }
 
-.text-content table td,
-.text-content table th {
-  vertical-align: middle;
+.text-content table {
+  & td,
+  & th {
+    vertical-align: middle;
+  }
 }
 
 .tablesort {
@@ -91,10 +96,35 @@
   z-index: 0;
   margin: 0;
   border-block-end: 0.25rem solid var(--color--primary-50);
+  & thead {
+    background: var(--color--white);
+  }
 }
 
 /* Properly align VBO checkboxes. */
 
 .views-field-node-bulk-form .form-item {
   margin: 0;
+}
+
+/**
+ * Responsive table cells.
+ */
+
+th.priority-medium,
+td.priority-medium {
+  display: none;
+
+  @media screen and (min-width: 43.75rem) {
+    display: table-cell;
+  }
+}
+
+th.priority-low,
+td.priority-low {
+  display: none;
+
+  @media screen and (min-width: 62.5rem) {
+    display: table-cell;
+  }
 }

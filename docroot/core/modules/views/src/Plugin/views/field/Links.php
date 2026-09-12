@@ -6,7 +6,6 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Url as UrlObject;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * An abstract handler which provides a collection of links.
@@ -24,27 +23,11 @@ abstract class Links extends FieldPluginBase {
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Routing\RedirectDestinationInterface|null $redirectDestination
+   * @param \Drupal\Core\Routing\RedirectDestinationInterface $redirectDestination
    *   The redirect destination service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected ?RedirectDestinationInterface $redirectDestination = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected RedirectDestinationInterface $redirectDestination) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    if ($redirectDestination === NULL) {
-      $this->redirectDestination = \Drupal::service('redirect.destination');
-      @trigger_error('Calling' . __METHOD__ . '() without the $redirectDestination argument is deprecated in drupal:10.1.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/3343983', E_USER_DEPRECATED);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('redirect.destination')
-    );
   }
 
   /**

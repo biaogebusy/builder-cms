@@ -12,8 +12,8 @@ uid: null
 template: false
 archive: false
 id: test_element_autocomplete
-title: 'Test: Element: Autocomplete'
-description: 'Test element autocompletion.'
+title: 'Test: Element: Autocomplete CONTAINS'
+description: 'Test element autocompletion contains.'
 categories:
   - 'Test: Element'
 elements: |

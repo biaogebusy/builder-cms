@@ -1,0 +1,497 @@
+global-styling:
+  version: VERSION
+  fonts:
+    font/inter.woff2:
+      preload: true
+  css:
+    base:
+      css/_variables/variables-color-primitive.css: {}
+      css/_variables/variables-color-semantic.css: {}
+      css/_variables/variables-spacing.css: {}
+      css/_variables/variables-typography.css: {}
+      css/_variables/variables-misc.css: {}
+      css/_variables/variables-components.css: {}
+      css/base/font.css: {}
+      css/base/icons.css: {}
+      css/base/elements.css: {}
+      css/base/typography.css: {}
+      css/base/print.css: {}
+    component:
+      css/components/accordion.css: {}
+      # Ensure action-link.css is loaded after button.css.
+      css/components/action-link.css: { weight: 10 }
+      css/components/batch.css: {}
+      css/components/blocks.css: {}
+      css/components/content-header.css: {}
+      css/components/ckeditor5.css: {}
+      css/components/container-inline.css: {}
+      css/components/container-inline.module.css: {}
+      css/components/breadcrumb.css: {}
+      css/components/button.css: {}
+      css/components/dropbutton.css: {}
+      css/components/details.css: {}
+      css/components/divider.css: {}
+      css/components/messages.css: {}
+      css/components/entity-meta.css: {}
+      css/components/fieldset.css: {}
+      css/components/form.css: {}
+      css/components/form--checkbox-radio.css: {}
+      css/components/form--checkbox-toggle.css: {}
+      css/components/form--field-multiple.css: {}
+      css/components/form--managed-file.css: {}
+      css/components/form--text.css: {}
+      css/components/form--select.css: {}
+      css/components/form-inline.css: {}
+      css/components/help.css: {}
+      css/components/image-preview.css: {}
+      css/components/layers.css: {}
+      css/components/local-actions.css: {}
+      css/components/menus-and-lists.css: {}
+      css/components/modules-page.css: {}
+      css/components/node.css: {}
+      css/components/page-title.css: {}
+      css/components/pager.css: {}
+      css/components/performance.css: {}
+      css/components/skip-link.css: {}
+      css/components/tables.css: {}
+      css/components/table--file-multiple-widget.css: {}
+      css/components/search-admin-settings.css: {}
+      css/components/system-themes.css: {}
+      css/components/tableselect.css: {}
+      css/components/tabs.css: {}
+    theme:
+      css/theme/colors.css: {}
+    layout:
+      css/layout/breadcrumb.css: {}
+      css/layout/layout.css: {}
+  dependencies:
+    - system/admin
+    - core/jquery
+    - core/drupal
+    # Admin has small and extra small variation for most control elements
+    # such as inputs, action links, buttons, dropbuttons. For usability and
+    # accessibility reasons, we keep target sizes big enough on touch screen
+    # devices (by not making these elements smaller than their default size).
+    # This library allows conditionally rendering small variations of the
+    # control elements on non-touch devices. In some cases, such as when
+    # rendering links, it is hard to recognize when this detection should be
+    # attached, therefore it is always attached.
+    - core/drupal.touchevents-test
+    - default_admin/status
+
+form-two-columns:
+  version: VERSION
+  css:
+    layout:
+      css/layout/form-two-columns.css: {}
+
+maintenance-page:
+  version: VERSION
+  js:
+    js/mobile.install.js: {}
+  css:
+    theme:
+      css/theme/maintenance-page.css: {}
+  dependencies:
+    - system/maintenance
+    - default_admin/global-styling
+
+install-page:
+  version: VERSION
+  js:
+    js/mobile.install.js: {}
+  css:
+    theme:
+      css/theme/install-page.css: {}
+  dependencies:
+    - default_admin/maintenance-page
+
+drupal.nav-tabs:
+  version: VERSION
+  js:
+    js/nav-tabs.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - core/drupal.debounce
+
+admin.jquery.ui:
+  version: VERSION
+  css:
+    component:
+      css/components/jquery.ui/theme.css: { weight: -1 }
+
+admin.drupal.dialog:
+  version: VERSION
+  css:
+    theme:
+      css/components/dialog.css: {}
+  dependencies:
+    - default_admin/accent
+    - default_admin/admin.jquery.ui
+
+admin.tabledrag:
+  version: VERSION
+  css:
+    component:
+      css/components/tabledrag.css: {}
+  js:
+    migration/js/tabledrag.js: {}
+    js/tabledrag.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+    - core/drupal.touchevents-test
+
+drupal.dblog:
+  version: VERSION
+  css:
+    theme:
+      css/components/dblog.css: {}
+
+drupal.node.preview:
+  version: VERSION
+  css:
+    theme:
+      css/components/node-preview.css: {}
+
+drupal.tablesort:
+  version: VERSION
+  css:
+    component:
+      css/components/tablesort-indicator.css: {}
+
+drupal.update.admin:
+  version: VERSION
+  css:
+    component:
+      css/components/update.css: {}
+
+drupal.user.admin:
+  version: VERSION
+  css:
+    component:
+      css/components/user.admin.css: {}
+
+media-form:
+  version: VERSION
+  css:
+    layout:
+      css/components/media.css: {}
+  dependencies:
+    - media/form
+
+image.admin:
+  version: VERSION
+  css:
+    component:
+      css/components/image.admin.css: {}
+
+system.admin:
+  version: VERSION
+  css:
+    component:
+      css/components/system-admin--admin-list.css: { weight: -10 }
+      css/components/system-admin--links.css: { weight: -10 }
+      css/components/system-admin--modules.css: { weight: -10 }
+      css/components/system-admin--panel.css: { weight: -10 }
+    layout:
+      css/layout/system-admin--layout.css: { weight: -10 }
+  dependencies:
+    - default_admin/card
+
+checkbox:
+  version: VERSION
+  js:
+    js/checkbox.js: {}
+  dependencies:
+    - core/drupal
+
+icon-link:
+  version: VERSION
+  css:
+    component:
+      css/components/icon-link.css: {}
+
+dropbutton:
+  version: VERSION
+  js:
+    js/dropbutton.js: { minified: false }
+    migration/js/dropbutton.js: { minified: false }
+  dependencies:
+    - core/drupal
+    - core/once
+
+autocomplete:
+  version: VERSION
+  css:
+    theme:
+      css/components/autocomplete-loading.module.css: { }
+  js:
+    js/autocomplete.js: {}
+  dependencies:
+    - core/once
+    - default_admin/admin.jquery.ui
+
+details-focus:
+  js:
+    js/details.js: {}
+
+ajax:
+  js:
+    js/ajax.js: {}
+
+form.password-confirm:
+  css:
+    component:
+      css/components/form--password-confirm.css: {}
+  js:
+    js/user.theme.js: {}
+  dependencies:
+    - core/drupal
+    - default_admin/global-styling
+
+
+status.report:
+  version: VERSION
+  css:
+    component:
+      css/components/system-status-report-general-info.css: {}
+      css/components/system-status-report.css: {}
+      css/components/system-status-report-counters.css: {}
+      css/components/system-status-counter.css: {}
+
+views:
+  css:
+    component:
+      css/components/views-exposed-form.css: {}
+  after:
+    # Load after form.css.
+    - default_admin/global-styling
+
+views_ui:
+  css:
+    component:
+      css/components/views-ui.css: {}
+
+messages:
+  js:
+    migration/js/messages.js: { minified: false }
+  dependencies:
+    - core/once
+
+card:
+  css:
+    component:
+      css/layout/card-list.css: {}
+      css/components/card.css: {}
+
+vertical-tabs:
+  css:
+    component:
+      css/components/vertical-tabs.css: {}
+  js:
+    js/vertical-tabs.js: {}
+  dependencies:
+    - default_admin/global-styling
+
+file:
+  css:
+    component:
+      css/components/file.css: {}
+
+media_library:
+  version: VERSION
+  css:
+    component:
+      css/components/media-library.css: {}
+      css/components/media-library-item.css: {}
+      css/components/media-library-vertical-tabs.css: {}
+  js:
+    js/media-library.ui.js: { weight: -1 }
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - default_admin/icon-link
+
+progress:
+  version: VERSION
+  css:
+    component:
+      css/components/progress.css: {}
+
+tabbingmanager:
+  version: VERSION
+  dependencies:
+    - default_admin/admin.jquery.ui
+
+filter:
+  version: VERSION
+  css:
+    component:
+      css/theme/filter.theme.css: {}
+
+tableselect:
+  version: VERSION
+  js:
+    js/tableselect.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupal.announce
+    - core/drupal.debounce
+    - core/tabbable
+    - core/once
+
+# Init
+
+init:
+  header: true
+  js:
+    migration/js/init.js: { minified: false, preprocess: false, weight: -99 }
+  dependencies:
+    - core/drupalSettings
+
+# Top bar
+
+top_bar:
+  css:
+    component:
+      css/layout/top-bar.css: { minified: false }
+  dependencies:
+    - default_admin/status
+
+# Navigation
+
+navigation:
+  css:
+    theme:
+      css/components/navigation.css: { }
+  js:
+    migration/js/navigation.js: { minified: false }
+  dependencies:
+    - default_admin/escape_admin
+    - default_admin/drupal.node.preview
+    - default_admin/contextual_links
+    - default_admin/breadcrumb
+
+# Accent
+
+accent:
+  css:
+    theme:
+      css/theme/accent.css: {}
+  js:
+    migration/js/accent.js: { minified: false }
+  dependencies:
+    - core/drupalSettings
+    - core/once
+
+# Libraries
+
+description_toggle:
+  css:
+    component:
+      css/components/description-toggle.css: { }
+  js:
+    migration/js/description_toggle.js: { minified: false }
+
+escape_admin:
+  js:
+    migration/js/escape_admin.js: { minified: false }
+  dependencies:
+    - core/once
+
+# Custom CSS
+
+admin_custom_css:
+  css:
+    theme:
+      public://admin-custom.css: { preprocess: false, minified: false, weight: 50 }
+
+# Libs
+
+scroll_sync:
+  js:
+    migration/js/scroll_sync.js: { minified: true, weight: -1 }
+
+# Overrides
+
+media_embed_ckeditor_theme:
+  js:
+    migration/js/media_embed_ckeditor.theme.js: { minified: false }
+
+# Components
+
+sticky:
+  js:
+    migration/js/sticky.js: { minified: false }
+  dependencies:
+    - default_admin/tooltip
+    - core/drupal.displace
+    - core/once
+
+sidebar:
+  css:
+    theme:
+      css/components/sidebar.css: { minified: false }
+  js:
+    migration/js/sidebar.js: { minified: false }
+  dependencies:
+    - core/once
+
+settings:
+  js:
+    migration/js/settings.js: { minified: false }
+  css:
+    component:
+      css/components/settings.css: { minified: false }
+  dependencies:
+    - core/drupalSettings
+
+tableheader:
+  js:
+    migration/js/tableheader.js: { minified: false }
+  dependencies:
+    - core/once
+    - default_admin/scroll_sync
+
+tooltip:
+  css:
+    component:
+      css/components/tooltip.css: { minified: false }
+  dependencies:
+    - core/once
+
+status:
+  css:
+    component:
+      css/components/status.css: { minified: false }
+
+more_actions:
+  js:
+    migration/js/more_actions.js: { minified: false }
+  css:
+    component:
+      css/components/more-actions.css: { minified: false }
+  dependencies:
+    - core/once
+
+edit_form:
+  css:
+    layout:
+      css/components/edit-form.css: {}
+
+contextual_links:
+  css:
+    theme:
+      css/components/contextual-links.css: {}
+
+revisions:
+  css:
+    component:
+      css/components/revisions.css: { minified: false }

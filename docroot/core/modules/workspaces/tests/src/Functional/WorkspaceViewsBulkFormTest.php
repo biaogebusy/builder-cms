@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\workspaces\Functional;
 
 use Drupal\Tests\views\Functional\BulkFormTest;
-use Drupal\workspaces\Entity\Workspace;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the views bulk form in a workspace.
- *
- * @group views
- * @group workspaces
  */
+#[Group('views')]
+#[Group('workspaces')]
+#[RunTestsInSeparateProcesses]
 class WorkspaceViewsBulkFormTest extends BulkFormTest {
 
   use WorkspaceTestUtilities;
@@ -20,7 +21,7 @@ class WorkspaceViewsBulkFormTest extends BulkFormTest {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'workspaces', 'workspaces_test'];
+  protected static $modules = ['block', 'workspaces', 'workspaces_ui', 'workspaces_test'];
 
   /**
    * {@inheritdoc}
@@ -40,10 +41,12 @@ class WorkspaceViewsBulkFormTest extends BulkFormTest {
     // Ensure that all the test methods are executed in the context of a
     // workspace.
     $this->setupWorkspaceSwitcherBlock();
-    $stage = Workspace::load('stage');
-    $this->switchToWorkspace($stage);
+    $this->createAndActivateWorkspaceThroughUi('Test workspace', 'test');
   }
 
+  /**
+   * Tests the Workspaces view bulk form integration.
+   */
   public function testBulkForm(): void {
     // Ignore entity types that are not being tested, in order to fully re-use
     // the parent test method.

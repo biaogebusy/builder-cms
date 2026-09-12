@@ -28,7 +28,7 @@ class SearchApiNumeric extends NumericField implements MultiItemsFieldHandlerInt
     // In case we act as the fallback handler for an entity field, our
     // submitOptionsForm() method won't be called, which means the
     // "format_plural_string" option won't be saved correctly. Fix that here.
-    if (isset($options['format_plural_values'])) {
+    if (!empty($options['format_plural_values'])) {
       $options['format_plural_string'] = implode(PoItem::DELIMITER, $options['format_plural_values']);
     }
 

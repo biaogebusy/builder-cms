@@ -21,6 +21,8 @@ class RadioButtonsPagerWidgetKernelTest extends BetterExposedFiltersKernelTestBa
 
   /**
    * Tests the exposed radio buttons pager widget.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testExposedRadioButtons() {
     $view = Views::getView('bef_test');
@@ -42,7 +44,7 @@ class RadioButtonsPagerWidgetKernelTest extends BetterExposedFiltersKernelTestBa
 
     // Check our pager item "items_per_page" is rendered as radio buttons.
     $actual = $this->xpath('//form//input[@type="radio" and starts-with(@name, "items_per_page")]');
-    $this->assertCount(4, $actual, 'Exposed pager "items_per_page" has correct number of exposed radio buttons.');
+    $this->assertCount(4, $actual);
 
     $view->destroy();
   }

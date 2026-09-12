@@ -9,14 +9,16 @@ use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\jsonapi\Traits\GetDocumentFromResponseTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Makes assertions about the JSON:API behavior for internal entities.
  *
- * @group jsonapi
- *
  * @internal
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class EntryPointTest extends BrowserTestBase {
 
   use GetDocumentFromResponseTrait;

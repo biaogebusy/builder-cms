@@ -1,107 +1,145 @@
 
+
 ***
-## <a name="contribution"></a>SUBMITTING PATCHES OR ISSUES
-Please use the provided issue template to help you explain better, and to help
-us understand better your bug reports, or patches as needed.
+## <a name="contribution"> </a>SUBMITTING PATCHES OR ISSUES
 
-* Avoid explaining everything in the title.
-* Use body text for explanation purposes.
-* If language is a barrier, use any available/ online translation tool.
-* Be sure to type keywords of your would-be title in the provided Search box
-  to avoid unnecessary dups. This would save your precious time not only for
-  immediate solutions, but also from typing more useless words. Your problems
-  might already be addressed. Only proceed if no existing issues are found.
-* Do not abuse an issue as a vehicle for any strikes. Keep civil.
+Please use the provided issue template to ensure your reports are technically
+actionable. High-quality reports allow us to maintain a standard of excellence.
 
+* **Be Descriptive:**
 
-### 1. SUBMITTING ISSUES
-When submitting bug reports, please:
+  Use the body text for detailed explanations; keep the title concise.
 
-* be kind with proper reproduction, and enough details.
-* mention library version, related-module version, if any, active theme, or
-  anything which may help us identify issue better.
-* ensure the library is loaded, not 404, and verify it can be viewed at browser.
-* switch to stock (Responsive) Bartik for just in case it is your custom theme.
-* switch to default formatters, image to Image, text to Default, etc.
-* use matching or similar branches or tags for related modules.
-* check out dups at project issues, your problem may be already addressed.
-* consult descriptions on each form item.
-* file it a support request, if unsure. We'll mark a bug a bug even if you
-  file it under support requests.
+* **Translation:**
 
+  If language is a barrier, please use an online translation tool; we will work
+  with you to understand the technical intent.
 
-### 2. SUBMITTING PATCHES
-We consider a patch as help, they consider it a sale, so thank you in advanced!
-In order for you to help, or buy, us successfully, please consider:
+### SUBMITTING ISSUES
+To ensure a rigorous technical analysis, please:
 
-* communicating and filling out the body text with proper explanations, not in
-  comments (unless for comment patches, of course).
-  I've seen patches which broke a module, so explanation is a must.
-  If you have no time to write it in the body text, please hold off till later!
-* providing optional links to the change records, or docs, if any.
-* providing links to docs is a must for coding standards issues.
-  This also lets us, you and me, learn from the actual docs, not told by tools!
-  We can just run `drupalcs ...`, but help is welcome, too, in case a miss.
-* checking out the latest dev branch in case already resolved.
-* providing reproduction steps for bug reports is a must. No repro, no bugs.
+* **Provide Context:**
 
-You must speak like human to human, and help us respect you, and your time.
-Dumping patches with empty body text, or any disrespectful negative posts, will
-be disregarded till the above is met. We are not hungry for respects. We simply
-do not welcome disrespects in respected project issues. It is the boundary.
+  Include library versions, related module versions, and your active theme.
+
+* **Verify Assets:**
+
+  Ensure the Slick library is correctly loaded and not returning a 404|403.
+
+* **Isolate Variables:**
+
+  Switch to a core theme (e.g., Olivero or Bartik) and use default formatters
+  to rule out custom overrides.
+
+* **Sync Branches:**
+
+  Ensure related modules are on matching or compatible branches.
+
+* **Search First:**
+
+  Check the issue queue for duplicates.
+
+* **Validate:**
+
+  Ensure you are working against the latest **dev branch**.
+
+* **Categorize:**
+
+  When in doubt, file as a **Support Request**. Valid bugs will be
+  re-categorized by maintainers upon verification. This ensures we don't
+  continue receiving false alarms on beautiful mornings.
+
+### SUBMITTING PATCHES
+A patch is a contribution toward collective excellence. To ensure a successful
+merge:
+
+* **Document Intent:**
+
+  Use the issue body to provide a thorough technical explanation. Patches
+  without explanatory context will be deferred.
+
+* **Reference Standards:**
+
+  Provide links to official Drupal Change Records or documentation, especially
+  for coding standards.
+
+* **Validate:**
+
+  Ensure you are working against the latest **dev branch**.
+
+* **Consistency:**
+
+  Every bug fix must include clear steps for reproduction. Bugs may result from
+  flaws in the code, glitches, or custom implementations that are normally
+  beyond the scope of project issues. That is why reproduction is crucial
+  — *no reproduction, no validation*.
+
+---
 
 ### BUG REPORTS OR SUPPORT REQUESTS
-A basic knowledge of Drupal site building is required. If you get stuck, please:
 
-   * consult the provided READMEs via **/admin/help**.
-   * consult descriptions on each form item.
-   * consult the relevant guidelines from the supported modules.
-   * search the project issue queues, your problem may be already addressed.
+A baseline understanding of Drupal site building is required. Before opening
+an issue:
 
-If you do have bug reports, we respect bugs, please:
+* Consult the README via **`/admin/help`** and review field descriptions.
+* Install the samples, if provided by sub-modules, to observe a verified,
+  working implementation. Any display issues must be confronted against the
+  working samples.
+* [Isolate](#cls) the issue against [configuration](#optimization).
+* Search the issue queue; many solutions are already documented.
 
-   * provide steps to reproduce it, valid bugs must have consistent
-     reproduction.
-   * provide detailed info, a screenshot of the output and Blazy form, or words
-     to identify it any better, library version, module version, active theme.
-   * make sure that the bug is caused by the module.
-   * do not game bugs, a waste of time, we'll know it, and close it.
+**For Validated Bug Reports:**
 
-For the Blazy library bug, please report it to:
-  [Blazy library](https://github.com/dinbror/blazy)
+Provide consistent reproduction steps, detailed environment information, and
+screenshots of both the output and the administrative form.
 
-You can create a fiddle to isolate the bug if reproduceable outside the module:
-  [Fiddle](https://jsfiddle.net/)
+For JavaScript-related issues, press `F12` and capture the **Console** tab for
+any potential errors. Fix those first if they are unrelated to this module, or
+share it with clear evidence and reliable reproduction steps.
 
-For the support requests, a screenshot of the output and Blazy form are helpful.
-Shortly, you should kindly help the maintainers with detailed info to help you.
+---
 
-### <a name="issues"></a> CONSTRUCTIVE VS. NON-CONSTRUCTIVE PROJECT ISSUES
-1. We appreciate constructive, or at least normal/ minor, project issues:
-   + `Support/ Feature` requests,
-   + `Bug` reports,
-   + `Meta`, `Task` or `Plan`.
-2. If your issue were directed to this page, feel free to re-open it after:
-   + You prove we identified it incorrectly, and in such a case we are sorry.
-   + You have redacted it accordingly, and or provide the required data.
+### <a name="issues"> </a> PROJECT HEALTH: CONSTRUCTIVE VS. NON-CONSTRUCTIVE
 
-It is perfectly fine to be negative as long as backed by data, or info (form or
-proof screenshots, benchmarks, docs, or anything else that add a value).
-In fact, your name will be credited where credit's due with gratitude and
-respect at CHANGELOG.txt or
-[here](https://www.drupal.org/node/2663268/committers).
+We prioritize and credit contributions that advance the project through
+technical rigor.
 
-Offhanded toxic posts without data are mere useless gossips we never welcome!
+1. **Valued Contributions:**
 
-We are well aware, defects, bugs, flaws etc. are there as proven by bug fixes.
-We believe constructive criticism, positive suggestions, corrections, patches,
-even inspirational `Feature` or `Support` requests, will surely help us better.
+   We welcome Support/Feature requests, Bug reports, and Meta/Tasks that provide
+   actionable data — anything under **Issue Category**.
 
-We want to keep this project useful and friendly to all, we would truly
-appreciate if you could kindly consider how to post respected and respectful
-issues as outlined above so to have a mutual respect before submitting an issue.
+2. **Issue Resolution:**
 
-In plain English, as the biker who sounded like talking about Newton Law III aka
-karma, said: Treat me good, I'll treat you better...
+   If an issue is closed for lack of data, feel free to re-open it once the
+   required technical evidence or reproduction steps are provided.
 
-Thank you for your positive consideration, cooperation, and kind contribution!
+**The Boundary of Engagement:**
+
+Critical feedback is welcome provided it is backed by **technical data**
+(benchmarks, screenshots, or documentation). We prioritize project health and
+collective time; therefore, discussions that deviate into unproductive
+negativity or fail to offer actionable insights will be closed to maintain
+focus.
+
+We also reserve the right to remain silent—not out of discourtesy, but because
+some issues are triaged in constrained contexts (including mobile devices),
+where time, attention, and input precision are naturally limited.
+
+Open collaboration thrives on clarity, evidence, and mutual respect. We welcome
+thoughtful discussion, reproducible reports, and data-backed critiques. At the
+same time, to preserve maintainer focus and project sustainability, we may
+choose not to engage with speculative claims, repeated assertions without
+evidence, or discussions rooted in hearsay rather than measurable behavior.
+Silence in such cases should be understood as a boundary, not a dismissal.
+
+**Reciprocity:**
+
+We recognize that defects are part of the development process. Constructive
+criticism and elegant patches help us eliminate them. We operate on a principle
+of mutual respect: provide professional, data-backed insights, and you will be
+credited with gratitude in our
+`CHANGELOG.txt`
+or [committers list](https://www.drupal.org/node/2663268/committers).
+
+Thank you for your cooperation in maintaining a high standard of engineering.

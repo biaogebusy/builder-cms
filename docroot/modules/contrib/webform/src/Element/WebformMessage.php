@@ -3,7 +3,7 @@
 namespace Drupal\webform\Element;
 
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Url;
 
 /**
@@ -11,7 +11,7 @@ use Drupal\Core\Url;
  *
  * @FormElement("webform_message")
  */
-class WebformMessage extends RenderElement {
+class WebformMessage extends RenderElementBase {
 
   /**
    * Storage none.

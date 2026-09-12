@@ -3,6 +3,7 @@
 namespace Drupal\page_manager\Entity;
 
 use Drupal\Component\Plugin\Context\ContextInterface;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Condition\ConditionPluginCollection;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
@@ -38,6 +39,8 @@ use Drupal\page_manager\PageVariantInterface;
  *     "access_logic",
  *     "access_conditions",
  *     "parameters",
+ *     "menu_type",
+ *     "menu_settings",
  *   },
  * )
  */
@@ -114,6 +117,20 @@ class Page extends ConfigEntityBase implements PageInterface {
   protected $use_admin_theme;
 
   /**
+   * The menu type.
+   *
+   * @var string
+   */
+  protected $menu_type = 'none';
+
+  /**
+   * The menu settings.
+   *
+   * @var array
+   */
+  protected $menu_settings = [];
+
+  /**
    * Parameter context configuration.
    *
    * An associative array keyed by parameter name, which contains associative
@@ -154,6 +171,7 @@ class Page extends ConfigEntityBase implements PageInterface {
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
     static::routeBuilder()->setRebuildNeeded();
+    $this->invalidateMenu();
   }
 
   /**
@@ -162,6 +180,10 @@ class Page extends ConfigEntityBase implements PageInterface {
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
     parent::postDelete($storage, $entities);
     static::routeBuilder()->setRebuildNeeded();
+    /** @var \Drupal\page_manager\Entity\Page $entity */
+    foreach ($entities as $entity) {
+      $entity->invalidateMenu();
+    }
   }
 
   /**
@@ -386,6 +408,89 @@ class Page extends ConfigEntityBase implements PageInterface {
       }
     }
     return $this->contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMenuType() {
+    return $this->menu_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMenuSettings() {
+    return $this->menu_settings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMenu() {
+    return $this->createMenu($this->getMenuType(), $this->getMenuSettings());
+  }
+
+  /**
+   * Instantiates a menu type plugin.
+   *
+   * @param string $menu_type
+   *   The menu type plugin ID, or 'none'.
+   * @param array $menu_settings
+   *   The plugin configuration.
+   *
+   * @return \Drupal\page_manager\Plugin\PageManagerMenuInterface|null
+   *   The menu type plugin, or NULL if the page has no menu entry or the
+   *   configured plugin is no longer available.
+   */
+  protected function createMenu($menu_type, array $menu_settings = []) {
+    if (empty($menu_type) || $menu_type === 'none') {
+      return NULL;
+    }
+
+    try {
+      return static::menuManager()->createInstance($menu_type, $menu_settings);
+    }
+    catch (PluginNotFoundException $e) {
+      // The module providing the menu type has been uninstalled. There is
+      // nothing to invalidate and nothing to render, so treat it as no menu
+      // entry rather than throwing on every save of the page.
+      return NULL;
+    }
+  }
+
+  /**
+   * Invalidates the menu entries this page provides.
+   *
+   * Called after the page is saved or deleted. When the menu type itself has
+   * changed the previously configured type is invalidated as well, otherwise
+   * the menu link or local task the page used to provide would be left behind.
+   */
+  protected function invalidateMenu() {
+    $menu_types = [$this->getMenuType() => $this->getMenuSettings()];
+
+    // \Drupal\Core\Entity\EntityInterface::getOriginal() was only added in
+    // Drupal 11.2, so fall back to the property on older supported core.
+    $original = method_exists($this, 'getOriginal') ? $this->getOriginal() : ($this->original ?? NULL);
+    if ($original instanceof PageInterface && $original->getMenuType() !== $this->getMenuType()) {
+      $menu_types[$original->getMenuType()] = $original->getMenuSettings();
+    }
+
+    foreach ($menu_types as $menu_type => $menu_settings) {
+      if ($menu = $this->createMenu($menu_type, $menu_settings)) {
+        $menu->invalidate();
+      }
+    }
+  }
+
+  /**
+   * Wraps the menu type plugin manager.
+   *
+   * @return \Drupal\page_manager\Plugin\PageManagerMenuManager
+   *   The menu type plugin manager.
+   */
+  protected static function menuManager() {
+    return \Drupal::service('plugin.manager.page_manager_menu');
   }
 
   /**

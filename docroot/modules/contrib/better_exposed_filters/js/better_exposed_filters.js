@@ -40,8 +40,40 @@
       if (!settings.better_exposed_filters?.autosubmit_exclude_textfield) {
         return;
       }
-      $(once('autosubmit-exclude-textfield', '.bef-exposed-form', context)).each(function () {
-        $(this).find('*[type="text"]').attr('data-bef-auto-submit-exclude', '');
+      $(once('autosubmit-exclude-textfield', '.bef-exposed-form *[type="text"]', context)).each(function () {
+        $(this).attr('data-bef-auto-submit-exclude', '');
+      });
+    }
+  };
+
+  /**
+   * Fix duplicate parameters from being passed.
+   */
+  Drupal.behaviors.befSingleCheckboxFix = {
+    attach: function (context, settings) {
+      once('befSingleCheckboxFix', 'form.views-exposed-form', context).forEach((form) => {
+        const $form = $(form);
+        const $checkboxes = $form.find('input[type="checkbox"].single-checkbox');
+
+        $form.on('submit', function () {
+          // For each checkbox, handle the hidden input fallback.
+          $checkboxes.each(function () {
+            const $checkbox = $(this);
+            const name = $checkbox.attr('name');
+
+            // Remove any existing hidden inputs with this name to avoid duplicates.
+            $form.find('input[type="hidden"][name="' + name + '"]').remove();
+
+            if (!$checkbox.is(':checked')) {
+              // Add hidden input only when checkbox is unchecked.
+              $('<input>').attr({
+                type: 'hidden',
+                name: name,
+                value: 0,
+              }).appendTo($form);
+            }
+          });
+        });
       });
     }
   };

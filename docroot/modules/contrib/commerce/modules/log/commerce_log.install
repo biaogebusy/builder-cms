@@ -5,6 +5,7 @@
  * Install, update and uninstall functions for the commerce_log module.
  */
 
+use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\commerce_log\LogStorageSchema;
@@ -60,4 +61,26 @@ function commerce_log_update_8202() {
     $entity_type = \Drupal::entityTypeManager()->getDefinition('commerce_log');
     $definition_update_manager->updateEntityType($entity_type);
   }
+}
+
+/**
+ * Rewrite the "commerce_activity" view.
+ */
+function commerce_log_update_10301(): void {
+  $config_name = 'views.view.commerce_activity';
+  $view_config = \Drupal::configFactory()->getEditable($config_name);
+  // Skip update when the view is not exists.
+  if (empty($view_config->getRawData())) {
+    return;
+  }
+
+  // Overwrite displays configuration from the installation directory.
+  $path = \Drupal::service('extension.list.module')->getPath('commerce_log') . '/config/install';
+  $source = new FileStorage($path);
+  $data = $source->read($config_name);
+  foreach ($data['display'] as $display_id => $display_data) {
+    $view_config->set("display.$display_id", $display_data);
+  }
+
+  $view_config->save();
 }

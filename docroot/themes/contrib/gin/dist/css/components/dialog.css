@@ -80,11 +80,17 @@
   color: #fff;
   width: 100%;
   padding-inline-end: var(--gin-spacing-xl);
+  margin: 0;
   box-sizing: border-box;
 }
 
 .ui-dialog .ui-dialog-content {
   color: var(--gin-color-text);
+}
+
+.ui-dialog .ui-dialog-content:not(:has(+ .ui-widget-content.ui-dialog-buttonpane)) {
+  border-end-start-radius: var(--gin-border-m);
+  border-end-end-radius: var(--gin-border-m);
 }
 
 .ui-dialog .ui-widget-content.ui-dialog-buttonpane {
@@ -112,6 +118,7 @@
 .ui-dialog .ui-widget-content.ui-dialog-buttonpane .button.button--danger,
 .ui-dialog [data-drupal-selector*=-remove-form] .button.button--danger {
   border-color: var(--gin-color-danger) !important;
+  background-color: var(--gin-color-danger) !important;
 }
 
 .ui-dialog .ui-dialog-buttonset {

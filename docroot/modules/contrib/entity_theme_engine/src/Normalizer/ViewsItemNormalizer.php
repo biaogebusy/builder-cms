@@ -48,7 +48,7 @@ class ViewsItemNormalizer extends FieldItemNormalizer {
         continue;
       }
       $entityData = $this->serializer->normalize($entity, $format, $context);
-      $entityData['url'] = $entity->toUrl()->setOptions(['absolute' => true])->toString(TRUE)->getGeneratedUrl();
+      $entityData['url'] = $entity->toUrl()->toString(TRUE)->getGeneratedUrl();
       $entityData['_result'] = $viewResult;
       $data['items'][] = $entityData;
     }
@@ -56,7 +56,12 @@ class ViewsItemNormalizer extends FieldItemNormalizer {
     if(isset($context['#no_render']) && $context['#no_render']) {
       return $data;
     }
-    $render = $view->render();
+    try {
+      $render = $view->render();
+    } catch(\Exception $e) {
+      \Drupal::logger('entity_theme_engine')->error("ViewsItemNormalizer: views-{$view->id()} Message:".$e->getMessage());
+      throw $e;
+    }
 
     $empty = empty($view->result);
 

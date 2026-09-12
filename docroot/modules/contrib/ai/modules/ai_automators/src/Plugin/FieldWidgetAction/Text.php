@@ -2,12 +2,16 @@
 
 namespace Drupal\ai_automators\Plugin\FieldWidgetAction;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 
 /**
  * The Text action.
+ *
+ * Uses the base-class AJAX + setFormInput contract: $item->toArray() maps
+ * cleanly to the per-delta ['value' => $text] shape that
+ * string_textfield / string_textarea / text_textfield / text_textarea
+ * widgets expect as user input.
  */
 #[FieldWidgetAction(
   id: 'automator_text',
@@ -29,18 +33,5 @@ use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
   category: new TranslatableMarkup('AI Automators'),
 )]
 class Text extends AutomatorBaseAction {
-
-  /**
-   * Ajax handler for Automators.
-   */
-  public function aiAutomatorsAjax(array &$form, FormStateInterface $form_state) {
-    // Get the triggering element, as it contains the settings.
-    $triggering_element = $form_state->getTriggeringElement();
-    $array_parents = $triggering_element['#array_parents'];
-    // @todo Best practice.
-    $form_key = $array_parents[0];
-    $key = $array_parents[2] ?? 0;
-    return $this->populateAutomatorValues($form, $form_state, $form_key, $key);
-  }
 
 }

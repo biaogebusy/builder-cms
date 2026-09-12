@@ -23,6 +23,7 @@ maintainance
 oomphinc
 solidgauge
 stacklabels
+treemap
 webform
 xaxis
 yaxes

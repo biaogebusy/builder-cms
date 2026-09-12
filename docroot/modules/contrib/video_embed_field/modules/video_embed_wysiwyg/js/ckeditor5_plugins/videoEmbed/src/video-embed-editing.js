@@ -65,6 +65,7 @@ export default class VideoEmbedEditing extends Plugin {
         'title_format',
         'title_fallback',
         'autoplay',
+        'loading',
         'previewThumbnail',
         'settingsSummary',
       ],
@@ -114,6 +115,7 @@ export default class VideoEmbedEditing extends Plugin {
           title_format: data.settings.title_format,
           title_fallback: !!data.settings.title_fallback,
           autoplay: !!data.settings.autoplay,
+          loading: data.settings.loading,
           previewThumbnail: data.preview_thumbnail,
           settingsSummary: data.settings_summary[0],
         });
@@ -141,6 +143,7 @@ export default class VideoEmbedEditing extends Plugin {
           'autoplay',
           'title_format',
           'title_fallback',
+          'loading',
         ].forEach(function (attributeName) {
           data.settings[attributeName] =
             modelElement.getAttribute(attributeName);

@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_test_alter_hooks\Hook\WebformTestAlterHooksHooks:
+    class: Drupal\webform_test_alter_hooks\Hook\WebformTestAlterHooksHooks
+    autowire: true

@@ -2,8 +2,6 @@
 
 namespace Drupal\media_library_form_element;
 
-use Drupal\media_library\MediaLibraryOpenerInterface;
-use Drupal\media_library\MediaLibraryState;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseModalDialogCommand;
@@ -11,6 +9,8 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\media_library\MediaLibraryOpenerInterface;
+use Drupal\media_library\MediaLibraryState;
 
 /**
  * The media library opener for form elements.

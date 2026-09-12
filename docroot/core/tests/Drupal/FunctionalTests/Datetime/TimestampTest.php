@@ -11,16 +11,21 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of Timestamp core field UI.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class TimestampTest extends BrowserTestBase {
 
   /**
-   * An array of display options to pass to EntityDisplayRepositoryInterface::getViewDisplay().
+   * An array of display options.
+   *
+   * These options are passed to
+   * EntityDisplayRepositoryInterface::getViewDisplay().
    *
    * @var array
    */
@@ -168,7 +173,8 @@ class TimestampTest extends BrowserTestBase {
     $this->drupalGet('entity_test/add');
     $date_format = DateFormat::load('html_date')->getPattern();
     $time_format = DateFormat::load('html_time')->getPattern();
-    // Make sure the default field value is set as the default value in the widget.
+    // Make sure the default field value is set as the default value in the
+    // widget.
     $this->assertSession()->fieldExists('field_timestamp[0][value][date]');
     $this->assertSession()->fieldValueEquals('field_timestamp[0][value][date]', $date->format($date_format));
     $this->assertSession()->fieldExists('field_timestamp[0][value][time]');

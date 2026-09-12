@@ -48,7 +48,7 @@ function flood_control_update_9202() {
 }
 
 /**
- * Add the default value for the IP Whitelist to the settings config.
+ * Add the default value for the IP Allowlist to the settings config.
  */
 function flood_control_update_9203() {
   $config = \Drupal::configFactory()->getEditable('flood_control.settings');

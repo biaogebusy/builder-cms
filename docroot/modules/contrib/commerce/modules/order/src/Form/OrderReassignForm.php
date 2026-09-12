@@ -2,11 +2,9 @@
 
 namespace Drupal\commerce_order\Form;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Password\PasswordGeneratorInterface;
-use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\commerce_order\OrderAssignmentInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -22,44 +20,25 @@ class OrderReassignForm extends FormBase {
    *
    * @var \Drupal\commerce_order\Entity\OrderInterface
    */
-  protected $order;
+  protected OrderInterface $order;
 
   /**
    * The order assignment service.
    *
    * @var \Drupal\commerce_order\OrderAssignmentInterface
    */
-  protected $orderAssignment;
-
-  /**
-   * Constructs a new OrderReassignForm object.
-   *
-   * @param \Drupal\Core\Routing\CurrentRouteMatch $current_route_match
-   *   The current route match.
-   * @param \Drupal\commerce_order\OrderAssignmentInterface $order_assignment
-   *   The order assignment service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Password\PasswordGeneratorInterface $password_generator
-   *   The password generator.
-   */
-  public function __construct(CurrentRouteMatch $current_route_match, OrderAssignmentInterface $order_assignment, EntityTypeManagerInterface $entity_type_manager, PasswordGeneratorInterface $password_generator) {
-    $this->order = $current_route_match->getParameter('commerce_order');
-    $this->orderAssignment = $order_assignment;
-    $this->userStorage = $entity_type_manager->getStorage('user');
-    $this->passwordGenerator = $password_generator;
-  }
+  protected OrderAssignmentInterface $orderAssignment;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('current_route_match'),
-      $container->get('commerce_order.order_assignment'),
-      $container->get('entity_type.manager'),
-      $container->get('password_generator')
-    );
+    $instance = parent::create($container);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->passwordGenerator = $container->get('password_generator');
+    $instance->order = $container->get('current_route_match')->getParameter('commerce_order');
+    $instance->orderAssignment = $container->get('commerce_order.order_assignment');
+    return $instance;
   }
 
   /**
@@ -102,6 +81,10 @@ class OrderReassignForm extends FormBase {
       ]),
     ];
     $form += $this->buildCustomerForm($form, $form_state, $this->order);
+    $form['customer']['keep_existing_email'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Keep existing order email address'),
+    ];
 
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
@@ -128,7 +111,11 @@ class OrderReassignForm extends FormBase {
 
     $values = $form_state->getValues();
     /** @var \Drupal\user\UserInterface $user */
-    $user = $this->userStorage->load($values['uid']);
+    $user_storage = $this->entityTypeManager->getStorage('user');
+    $user = $user_storage->load($values['uid']);
+    if ($values['keep_existing_email']) {
+      $this->order->setData('customer_email_overridden', TRUE);
+    }
     $this->orderAssignment->assign($this->order, $user);
     $this->messenger()->addMessage($this->t('The %label has been assigned to customer %customer.', [
       '%label' => $this->order->label(),

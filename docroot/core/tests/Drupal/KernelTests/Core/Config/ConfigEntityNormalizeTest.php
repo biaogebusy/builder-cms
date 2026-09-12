@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the listing of configuration entities.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigEntityNormalizeTest extends KernelTestBase {
 
   /**
@@ -26,8 +28,13 @@ class ConfigEntityNormalizeTest extends KernelTestBase {
     $this->installConfig(static::$modules);
   }
 
+  /**
+   * Tests the normalization of configuration data when saved.
+   */
   public function testNormalize(): void {
-    $config_entity = \Drupal::entityTypeManager()->getStorage('config_test')->create(['id' => 'system', 'label' => 'foobar', 'weight' => 1]);
+    $config_entity = \Drupal::entityTypeManager()
+      ->getStorage('config_test')
+      ->create(['id' => 'system', 'label' => 'foobar', 'weight' => 1]);
     $config_entity->save();
 
     // Modify stored config entity, this is comparable with a schema change.

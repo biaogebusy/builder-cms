@@ -10,7 +10,7 @@ use Drupal\Tests\node\Traits\NodeCreationTrait;
 /**
  * Base class for testing better exposed filters.
  */
-class BetterExposedFiltersTestBase extends WebDriverTestBase {
+abstract class BetterExposedFiltersTestBase extends WebDriverTestBase {
 
   use BetterExposedFiltersTrait;
   use ContentTypeCreationTrait;
@@ -26,6 +26,7 @@ class BetterExposedFiltersTestBase extends WebDriverTestBase {
    */
   protected static $modules = [
     'block',
+    'breakpoint',
     'node',
     'views',
     'taxonomy',
@@ -39,31 +40,52 @@ class BetterExposedFiltersTestBase extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    // Enable AJAX on the test view.
-    \Drupal::configFactory()->getEditable('views.view.bef_test')
-      ->set('display.default.display_options.use_ajax', TRUE)
-      ->save();
-
     // Create a few test nodes.
     $this->createNode([
       'title' => 'Page One',
-      'field_bef_boolean' => '',
+      'field_bef_boolean' => TRUE,
       'field_bef_email' => '1bef-test@drupal.org',
       'field_bef_integer' => '1',
-      'field_bef_letters' => 'Aardvark',
+      'field_bef_price' => '10',
+      'field_bef_letters' => 'a',
       // Seattle.
       'field_bef_location' => '10',
       'type' => 'bef_test',
     ]);
     $this->createNode([
       'title' => 'Page Two',
-      'field_bef_boolean' => '',
+      'field_bef_boolean' => FALSE,
       'field_bef_email' => '2bef-test2@drupal.org',
       'field_bef_integer' => '2',
+      'field_bef_price' => '75',
+      'field_bef_letters' => 'b',
+      // Vancouver.
+      'field_bef_location' => '15',
+      'type' => 'bef_test',
+    ]);
+    $this->createNode([
+      'title' => 'Page unpublished',
+      'field_bef_boolean' => FALSE,
+      'field_bef_email' => '2bef-test2@drupal.org',
+      'field_bef_integer' => '2',
+      'field_bef_price' => '75',
       'field_bef_letters' => 'Bumble & the Bee',
       // Vancouver.
       'field_bef_location' => '15',
       'type' => 'bef_test',
+      'status' => 0,
+    ]);
+    $this->createNode([
+      'title' => 'Page with 0 value',
+      'field_bef_boolean' => FALSE,
+      'field_bef_email' => '2bef-test2@drupal.org',
+      'field_bef_integer' => '0',
+      'field_bef_price' => '75',
+      'field_bef_letters' => 'Bumble & the Bee',
+      // Vancouver.
+      'field_bef_location' => '15',
+      'type' => 'bef_test',
+      'status' => 1,
     ]);
   }
 

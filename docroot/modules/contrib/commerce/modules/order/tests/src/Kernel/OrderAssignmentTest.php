@@ -189,4 +189,28 @@ class OrderAssignmentTest extends OrderKernelTestBase {
     $this->assertEquals($second_user->id(), $payment_method->getOwnerId());
   }
 
+  /**
+   * Tests assigning an order with a custom email address.
+   *
+   * @covers ::assign
+   */
+  public function testAssignWithCustomEmail() {
+    $custom_email = 'custom@example.com';
+    $this->order->setEmail($custom_email);
+    $this->order->setData('customer_email_overridden', TRUE);
+    $this->order->save();
+
+    $second_user = $this->createUser();
+    $this->orderAssignment->assign($this->order, $second_user);
+
+    $this->order = $this->reloadEntity($this->order);
+    // Confirm that the customer was reassigned.
+    $this->assertEquals($second_user->id(), $this->order->getCustomerId());
+    // Confirm that the email was NOT changed to the new customer's email.
+    $this->assertEquals($custom_email, $this->order->getEmail());
+    $this->assertNotEquals($second_user->getEmail(), $this->order->getEmail());
+    // Confirm that the override flag is still set.
+    $this->assertTrue($this->order->getData('customer_email_overridden'));
+  }
+
 }

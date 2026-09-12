@@ -18,7 +18,7 @@ trait UpdateTestTrait {
   /**
    * Sets information about installed extensions.
    *
-   * @param string[][] $installed_extensions
+   * @param array<string, array<string, string|bool>> $installed_extensions
    *   An array containing mocked installed extensions info. Keys are
    *   extension names, values are arrays containing key-value pairs that would
    *   be present in extensions' *.info.yml files.
@@ -48,7 +48,7 @@ trait UpdateTestTrait {
   /**
    * Sets default information about installed extensions.
    *
-   * @param string[] $default_info
+   * @param array<string, string|int> $default_info
    *   The *.info.yml key-value pairs to be mocked across all
    *   extensions. Hence, these can be seen as default/fallback values.
    */
@@ -65,8 +65,8 @@ trait UpdateTestTrait {
    *   The release history XML files to use for particular extension(s). The
    *   keys are the extension names (use 'drupal' for Drupal core itself), and
    *   the values are the suffix of the release history XML file to use. For
-   *   example, @code 'drupal' => 'sec.8.0.2' @endcode will map to a file called
-   *   drupal.sec.8.0.2.xml. Look at
+   *   example, "['drupal' => 'sec.8.0.2']" will map to a file called
+   *   "drupal.sec.8.0.2.xml". Look at
    *   core/modules/update/tests/fixtures/release-history for more release
    *   history XML examples.
    */

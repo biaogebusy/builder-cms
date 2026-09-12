@@ -21,7 +21,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\EntityOwnerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Default plugin implementation of the Entity Reference Selection plugin.
@@ -122,28 +121,18 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('module_handler'),
-      $container->get('current_user'),
-      $container->get('entity_field.manager'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('entity.repository')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function defaultConfiguration() {
     return [
       // For the 'target_bundles' setting, a NULL value is equivalent to "allow
       // entities from any bundle to be referenced" and an empty array value is
-      // equivalent to "no entities from any bundle can be referenced".
+      // equivalent to "no entities from any bundle can be referenced". The
+      // reason for NULL and an empty array having a different meaning is to
+      // correctly handle config updates.
+      // For example, in the scenario where a single target bundle is allowed,
+      // and that bundle is then deleted, the automatic removal of that bundle
+      // from the entity reference field's settings leaves an empty array.
+      // This empty array must therefore indicate that no bundles are allowed,
+      // as otherwise the field would suddenly allow all bundles.
       'target_bundles' => NULL,
       'sort' => [
         'field' => '_none',
@@ -351,7 +340,7 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
   }
 
   /**
-   * Validates a target_bundles element.
+   * {@inheritdoc}
    */
   public function getReferenceableEntities($match = NULL, $match_operator = 'CONTAINS', $limit = 0) {
     $target_type = $this->getConfiguration()['target_type'];

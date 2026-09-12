@@ -29,7 +29,7 @@ class WebformAccessEntityRulesTest extends WebformBrowserTestBase {
   /**
    * Tests webform entity access rules.
    */
-  public function testAccessRules() {
+  public function testAccessRules(): void {
     global $base_path;
 
     $assert_session = $this->assertSession();

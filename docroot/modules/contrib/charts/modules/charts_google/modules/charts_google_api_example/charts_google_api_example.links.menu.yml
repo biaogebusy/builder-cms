@@ -1,0 +1,5 @@
+charts_google_api_example.display:
+  title: 'Google Charts API Example'
+  description: 'Charts API demonstrations rendered with Google Charts.'
+  parent: charts_api_example.display
+  route_name: charts_google_api_example.display

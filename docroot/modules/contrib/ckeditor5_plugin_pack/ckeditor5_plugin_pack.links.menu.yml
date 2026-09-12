@@ -1,0 +1,5 @@
+ckeditor5_plugin_pack.settings:
+  title: 'CKEditor 5 Plugin Pack'
+  description: 'Configure the CKEditor 5 Plugin Pack module.'
+  route_name: ckeditor5_plugin_pack.settings
+  parent: system.admin_config_content

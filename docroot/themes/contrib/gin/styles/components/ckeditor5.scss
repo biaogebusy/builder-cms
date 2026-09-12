@@ -1,6 +1,8 @@
 .ck {
   --ck-color-text: var(--gin-color-text);
 
+  --ck-content-font-color: var(--gin-color-text);
+  
   --ck-color-toolbar-background: var(--gin-bg-layer3);
   --ck-color-toolbar-border: var(--gin-border-color-form-element);
 
@@ -15,6 +17,10 @@
 
   --ck-color-panel-background: var(--gin-bg-layer3);
   --ck-color-panel-border: transparent;
+
+  --ck-color-dialog-background: var(--gin-bg-layer3);
+  --ck-color-dialog-form-header-border: var(--gin-border-color-form-element);
+  --ck-accessibility-help-dialog-code-background-color: var(--gin-bg-layer4);
 
   --ck-color-button-default-background: transparent;
   --ck-color-button-default-hover-background: var(--gin-color-primary-light);
@@ -58,6 +64,24 @@
 
   --ck-border-radius: var(--gin-border-m);
 
+  --ck-style-panel-button-label-background: var(--gin-bg-layer4);
+  --ck-style-panel-button-hover-label-background: var(--gin-bg-layer4);
+  --ck-style-panel-button-hover-border-color: var(--gin-color-primary);
+
+  .ck-style-grid__button__preview {
+    border-top-left-radius: var(--ck-border-radius);
+    border-top-right-radius: var(--ck-border-radius);
+  }
+
+  .ck-style-panel .ck-style-grid .ck-style-grid__button:not(.ck-on) .ck-button__label {
+    border-bottom-left-radius: var(--ck-border-radius);
+    border-bottom-right-radius: var(--ck-border-radius);
+  }
+
+  .ck-dropdown__panel {
+    --ck-color-dropdown-panel-background: var(--gin-bg-input);
+  }
+
   // Overrides
   .ck-content blockquote,
   .ck.ck-dropdown__panel {
@@ -75,6 +99,11 @@
 
   .ck-toolbar__separator {
     opacity: .3;
+  }
+
+  .ck.ck-editor__top .ck-sticky-panel .ck-sticky-panel__content .ck-toolbar {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 
   .ck-toolbar_grouping:focus,

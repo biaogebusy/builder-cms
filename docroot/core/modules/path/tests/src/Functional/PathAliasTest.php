@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\path\Functional;
 
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests modifying path aliases from the UI.
- *
- * @group path
  */
+#[Group('path')]
+#[RunTestsInSeparateProcesses]
 class PathAliasTest extends PathTestBase {
 
   use WaitTerminateTestTrait;
@@ -44,44 +45,10 @@ class PathAliasTest extends PathTestBase {
     ]);
     $this->drupalLogin($web_user);
 
-    // The \Drupal\path_alias\AliasWhitelist service performs cache clears after
-    // Drupal has flushed the response to the client. We use
+    // The \Drupal\path_alias\AliasPrefixList service performs cache clears
+    // after Drupal has flushed the response to the client. We use
     // WaitTerminateTestTrait to wait for Drupal to do this before continuing.
     $this->setWaitForTerminate();
-  }
-
-  /**
-   * Tests the path cache.
-   */
-  public function testPathCache(): void {
-    // Create test node.
-    $node1 = $this->drupalCreateNode();
-
-    // Create alias.
-    $edit = [];
-    $edit['path[0][value]'] = '/node/' . $node1->id();
-    $edit['alias[0][value]'] = '/' . $this->randomMachineName(8);
-    $this->drupalGet('admin/config/search/path/add');
-    $this->submitForm($edit, 'Save');
-
-    // Check the path alias whitelist cache.
-    $whitelist = \Drupal::cache('bootstrap')->get('path_alias_whitelist');
-    $this->assertTrue($whitelist->data['node']);
-    $this->assertFalse($whitelist->data['admin']);
-
-    // Visit the system path for the node and confirm a cache entry is
-    // created.
-    \Drupal::cache('data')->deleteAll();
-    // Make sure the path is not converted to the alias.
-    $this->drupalGet(trim($edit['path[0][value]'], '/'), ['alias' => TRUE]);
-    $this->assertNotEmpty(\Drupal::cache('data')->get('preload-paths:' . $edit['path[0][value]']), 'Cache entry was created.');
-
-    // Visit the alias for the node and confirm a cache entry is created.
-    \Drupal::cache('data')->deleteAll();
-    // @todo Remove this once https://www.drupal.org/node/2480077 lands.
-    Cache::invalidateTags(['rendered']);
-    $this->drupalGet(trim($edit['alias[0][value]'], '/'));
-    $this->assertNotEmpty(\Drupal::cache('data')->get('preload-paths:' . $edit['path[0][value]']), 'Cache entry was created.');
   }
 
   /**
@@ -153,7 +120,7 @@ class PathAliasTest extends PathTestBase {
 
     // Set alias to second test node.
     $edit['path[0][value]'] = '/node/' . $node2->id();
-    // Leave $edit['alias'] the same
+    // Leave "$edit['alias']" the same.
     $this->drupalGet('admin/config/search/path/add');
     $this->submitForm($edit, 'Save');
 
@@ -264,7 +231,13 @@ class PathAliasTest extends PathTestBase {
     $edit = [];
     $edit['path[0][alias]'] = '/' . $this->randomMachineName(8);
     $this->drupalGet('node/' . $node1->id() . '/edit');
+    // Assert that the details form is closed.
+    $this->assertSession()->elementAttributeNotExists('css', 'details.path-form', 'open');
     $this->submitForm($edit, 'Save');
+
+    $this->drupalGet('node/' . $node1->id() . '/edit');
+    // Assert that the details form is still closed even though it has a url.
+    $this->assertSession()->elementAttributeNotExists('css', 'details.path-form', 'open');
 
     // Confirm that the alias works.
     $this->drupalGet($edit['path[0][alias]']);

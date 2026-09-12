@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ck-fullscreen__main-wrapper .ck-fullscreen__editable {
+  width: 100%;
+  margin-top: 0;
+}
+
+.ck-fullscreen__main-wrapper .ck-fullscreen__editable .ck.ck-editor__editable:not(.ck-editor__nested-editable) {
+  padding: 1em!important;
+  width: 65vw!important;
+  max-width: 65vw!important;
+  background: var(--ck-color-base-background)!important;
+}
+
+.ck-fullscreen__main-wrapper ~ .ui-dialog {
+  z-index: calc(var(--ck-z-fullscreen) + 2);
+}
+
+.ck.ck-balloon-panel {
+  z-index: 100000!important;
+}

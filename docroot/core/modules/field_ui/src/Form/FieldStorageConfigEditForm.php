@@ -2,11 +2,11 @@
 
 namespace Drupal\field_ui\Form;
 
+use Drupal\Core\Entity\ContentEntityStorageInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -106,12 +106,17 @@ class FieldStorageConfigEditForm extends EntityForm {
     ];
     // Create an arbitrary entity object, so that we can have an instantiated
     // FieldItem.
-    $ids = (object) [
+    $target_entity_storage = $this->entityTypeManager->getStorage($this->entity->getTargetEntityTypeId());
+    if (!$target_entity_storage instanceof ContentEntityStorageInterface) {
+      return $form;
+    }
+
+    $entity_identifiers = [
       'entity_type' => $form_state->get('entity_type_id'),
       'bundle' => $form_state->get('bundle'),
       'entity_id' => NULL,
     ];
-    $entity = _field_create_entity_from_ids($ids);
+    $entity = $target_entity_storage->createEntityFromIds($entity_identifiers);
     if (!$this->entity->isNew()) {
       $items = $entity->get($this->entity->getName());
     }
@@ -193,14 +198,7 @@ class FieldStorageConfigEditForm extends EntityForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
-    if ($form_state instanceof SubformStateInterface) {
-      return [];
-    }
-    $elements = parent::actions($form, $form_state);
-    $elements['submit']['#value'] = $this->entity->isNew() ? $this->t('Continue') : $this->t('Save');
-
-    @trigger_error('Rendering ' . __CLASS__ . ' outside of a subform is deprecated in drupal:10.2.0 and is removed in drupal:11.0.0. See https://www.drupal.org/node/3391538', E_USER_DEPRECATED);
-    return $elements;
+    return [];
   }
 
   /**
@@ -240,7 +238,15 @@ class FieldStorageConfigEditForm extends EntityForm {
         ->count()
         ->execute();
       if ($entities_with_higher_delta) {
-        $form_state->setError($element['cardinality_number'], $this->formatPlural($entities_with_higher_delta, 'There is @count entity with @delta or more values in this field, so the allowed number of values cannot be set to @allowed.', 'There are @count entities with @delta or more values in this field, so the allowed number of values cannot be set to @allowed.', ['@delta' => $cardinality_number + 1, '@allowed' => $cardinality_number]));
+        $form_state->setError($element['cardinality_number'], $this->formatPlural(
+          $entities_with_higher_delta,
+          'There is @count entity with @delta or more values in this field, so the allowed number of values cannot be set to @allowed.',
+          'There are @count entities with @delta or more values in this field, so the allowed number of values cannot be set to @allowed.',
+          [
+            '@delta' => $cardinality_number + 1,
+            '@allowed' => $cardinality_number,
+          ],
+        ));
       }
     }
   }
@@ -271,6 +277,8 @@ class FieldStorageConfigEditForm extends EntityForm {
    * returns that cardinality or NULL if no cardinality has been enforced.
    *
    * @return int|null
+   *   The enforced cardinality as an integer, or NULL if no cardinality is
+   *   enforced.
    */
   protected function getEnforcedCardinality() {
     /** @var \Drupal\Core\Field\FieldTypePluginManager $field_type_manager */

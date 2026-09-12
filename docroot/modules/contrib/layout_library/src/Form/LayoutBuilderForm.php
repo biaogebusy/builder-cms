@@ -51,7 +51,7 @@ class LayoutBuilderForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL) {
     $form['layout_builder'] = [
       '#type' => 'layout_builder',
       '#section_storage' => $section_storage,

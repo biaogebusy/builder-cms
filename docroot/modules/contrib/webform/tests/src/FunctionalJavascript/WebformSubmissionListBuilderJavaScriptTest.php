@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\webform\FunctionalJavascript;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
 use Drupal\webform\WebformInterface;
@@ -17,7 +17,7 @@ class WebformSubmissionListBuilderJavaScriptTest extends WebformWebDriverTestBas
   /**
    * Test toggle links.
    */
-  public function testToggleLinks() {
+  public function testToggleLinks(): void {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = Webform::create([
       'langcode' => 'en',

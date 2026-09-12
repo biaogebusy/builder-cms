@@ -1,0 +1,8 @@
+parameters:
+  datetime.skip_procedural_hook_scan: true
+
+services:
+  datetime.views_helper:
+    class: Drupal\datetime\DateTimeViewsHelper
+    arguments: ['@?views.field_data_provider']
+  Drupal\datetime\DateTimeViewsHelper: '@datetime.views_helper'

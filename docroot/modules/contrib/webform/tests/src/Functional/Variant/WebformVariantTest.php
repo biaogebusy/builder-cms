@@ -28,7 +28,7 @@ class WebformVariantTest extends WebformBrowserTestBase {
   /**
    * Tests webform variant plugin.
    */
-  public function testWebformVariant() {
+  public function testWebformVariant(): void {
     $this->drupalLogin($this->rootUser);
 
     /* ********************************************************************** */

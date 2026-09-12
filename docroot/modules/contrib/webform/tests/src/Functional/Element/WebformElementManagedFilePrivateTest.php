@@ -24,7 +24,7 @@ class WebformElementManagedFilePrivateTest extends WebformElementManagedFileTest
   /**
    * Test private files.
    */
-  public function testPrivateFiles() {
+  public function testPrivateFiles(): void {
     $assert_session = $this->assertSession();
 
     $admin_submission_user = $this->drupalCreateUser([

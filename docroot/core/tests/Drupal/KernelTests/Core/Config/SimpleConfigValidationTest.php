@@ -5,19 +5,23 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
  * Tests validation of certain elements common to all config.
- *
- * @group config
- * @group Validation
  */
+#[Group('config')]
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class SimpleConfigValidationTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['system'];
+  protected static $modules = ['config_test', 'system'];
 
   /**
    * {@inheritdoc}
@@ -27,6 +31,9 @@ class SimpleConfigValidationTest extends KernelTestBase {
     $this->installConfig('system');
   }
 
+  /**
+   * Tests the validation of the default configuration hash.
+   */
   public function testDefaultConfigHashValidation(): void {
     $config = $this->config('system.site');
     $this->assertFalse($config->isNew());
@@ -112,6 +119,12 @@ class SimpleConfigValidationTest extends KernelTestBase {
       '🤓',
       NULL,
     ];
+    $data['plural label'] = [
+      'config_test.with_plural_label',
+      'label',
+      "\x03",
+      NULL,
+    ];
 
     return $data;
   }
@@ -127,11 +140,11 @@ class SimpleConfigValidationTest extends KernelTestBase {
    *   A special character to embed.
    * @param string|null $expected_error_message
    *   The expected validation error message, if any.
-   *
-   * @dataProvider providerSpecialCharacters
    */
+  #[DataProvider('providerSpecialCharacters')]
   public function testSpecialCharacters(string $config_name, string $property, string $character, ?string $expected_error_message): void {
     $config = $this->config($config_name)
+      ->set('langcode', 'en')
       ->set($property, "This has a special character: $character");
 
     $violations = $this->container->get('config.typed')
@@ -157,10 +170,9 @@ class SimpleConfigValidationTest extends KernelTestBase {
    * @param string $property
    *   The property path to set. This will receive the value 'non_existent' and
    *   is expected to raise a "plugin does not exist" error.
-   *
-   * @testWith ["system.mail", "interface.0"]
-   *   ["system.image", "toolkit"]
    */
+  #[TestWith(["system.mail", "interface.0"])]
+  #[TestWith(["system.image", "toolkit"])]
   public function testInvalidPluginId(string $config_name, string $property): void {
     $config = $this->config($config_name);
 

@@ -7,6 +7,9 @@ use Drupal\entity\Event\EntityDuplicateEvent;
 use Drupal\entity\Event\EntityEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * Entity duplicate subscriber.
+ */
 class EntityDuplicateSubscriber implements EventSubscriberInterface {
 
   /**

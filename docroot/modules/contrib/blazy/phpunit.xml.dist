@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit
+    bootstrap="tests/bootstrap.php"
+    colors="true"
+>
+    <testsuites>
+
+        <!-- UNIT TESTS -->
+        <testsuite name="Unit">
+            <directory>tests/src/Unit</directory>
+        </testsuite>
+
+        <!-- KERNEL TESTS -->
+        <testsuite name="Kernel">
+            <directory>tests/src/Kernel</directory>
+        </testsuite>
+
+        <!-- FUNCTIONAL / JS TESTS -->
+        <testsuite name="FunctionalJavascript">
+            <directory>tests/src/FunctionalJavascript</directory>
+        </testsuite>
+
+    </testsuites>
+
+    <php>
+      <ini name="display_errors" value="1"/>
+      <ini name="log_error" value="1"/>
+      <ini name="error_reporting" value="-1"/>
+    </php>
+</phpunit>

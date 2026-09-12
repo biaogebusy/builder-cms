@@ -8,14 +8,17 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\views\Entity\View;
 use Drupal\views\Plugin\views\display\Page;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the CRUD functionality for a view.
  *
- * @group views
  * @see \Drupal\views\Entity\View
  * @see \Drupal\Core\Config\Entity\ConfigEntityStorage
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewStorageTest extends ViewsKernelTestBase {
 
   /**
@@ -71,14 +74,14 @@ class ViewStorageTest extends ViewsKernelTestBase {
     $this->createTests();
     $this->displayTests();
 
-    // Helper method tests
+    // Helper method tests.
     $this->displayMethodTests();
   }
 
   /**
    * Tests loading configuration entities.
    */
-  protected function loadTests() {
+  protected function loadTests(): void {
     $view = View::load('test_view_storage');
     $data = $this->config('views.view.test_view_storage')->get();
 
@@ -114,7 +117,7 @@ class ViewStorageTest extends ViewsKernelTestBase {
   /**
    * Tests creating configuration entities.
    */
-  protected function createTests() {
+  protected function createTests(): void {
     // Create a new View instance with empty values.
     $created = $this->controller->create([]);
 
@@ -151,7 +154,7 @@ class ViewStorageTest extends ViewsKernelTestBase {
   /**
    * Tests adding, saving, and loading displays on configuration entities.
    */
-  protected function displayTests() {
+  protected function displayTests(): void {
     // Check whether a display can be added and saved to a View.
     $view = View::load('test_view_storage_new');
 
@@ -179,7 +182,7 @@ class ViewStorageTest extends ViewsKernelTestBase {
   /**
    * Tests the display related functions like getDisplaysList().
    */
-  protected function displayMethodTests() {
+  protected function displayMethodTests(): void {
     $config['display'] = [
       'page_1' => [
         'display_options' => ['path' => 'test'],
@@ -311,8 +314,8 @@ class ViewStorageTest extends ViewsKernelTestBase {
     // Check that the original view and the copy have different UUIDs.
     $this->assertNotSame($view->storage->uuid(), $copy->uuid(), 'The copied view has a new UUID.');
 
-    // Check the 'name' (ID) is using the View objects default value (NULL) as it
-    // gets unset.
+    // Check the 'name' (ID) is using the View objects default value (NULL) as
+    // it gets unset.
     $this->assertNull($copy->id(), 'The ID has been reset.');
 
     // Check the other properties.

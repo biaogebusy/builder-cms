@@ -1,0 +1,17 @@
+@startuml
+
+' This is the PlantUML (https://plantuml.com/) source used to generate the UML
+' exceptions diagram for the translation system (exceptions.png). Said diagram can
+' be regenerated from this source at https://plantuml-editor.kkeisuke.com/ or with
+' the PhpStorm plugin at https://plugins.jetbrains.com/plugin/7017-plantuml-integration.
+' Optimize it with ImageOptim: https://imageoptim.com/.
+
+!include ../resources/settings.puml
+
+class TranslatableMessage
+
+exception "          Exception          " as Exception
+
+Exception *-right- TranslatableMessage
+
+@enduml

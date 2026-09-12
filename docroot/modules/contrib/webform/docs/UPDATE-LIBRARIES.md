@@ -56,31 +56,31 @@ Check external libraries are download.
 
 Enable and download all libraries
 
-    cd ~/Sites/drupal_webform
+    cd ~/Sites/webform
     drush php-eval "\Drupal::configFactory()->getEditable('webform.settings')->set('libraries.excluded_libraries', [])->save();"
-    drush en -y webform_image_select webform_toggles webform_location_geocomplete webform_location_places webform_icheck webform_options_custom
+    drush en -y webform_image_select webform_options_custom drush webform:libraries:download
     drush webform:libraries:download
 
 Update libraries.zip
 
     # Checkout branch
-    cd ~/Sites/drupal_webform/web/modules/sandbox/webform_libraries/
-    git checkout 6.2.x
+    cd ~/Sites/webform/web/modules/sandbox/webform_libraries/
+    git checkout 6.3.x
 
     # Remove libraries.zip
-    cd ~/Sites/drupal_webform/web/modules/sandbox/webform_libraries/
+    cd ~/Sites/webform/web/modules/sandbox/webform_libraries/
     rm -Rf libraries.zip
 
     # Create libraries.zip
-    cd ~/Sites/drupal_webform/web/
+    cd ~/Sites/webform/web/
     zip -r libraries.zip libraries
-    mv libraries.zip ~/Sites/drupal_webform/web/modules/sandbox/webform_libraries/libraries.zip
+    mv libraries.zip ~/Sites/webform/web/modules/sandbox/webform_libraries/libraries.zip
 
 Commit changes
 
     # Commit changes.
-    cd ~/Sites/drupal_webform/web/modules/sandbox/webform_libraries/
-    git checkout 6.2.x
+    cd ~/Sites/webform/web/modules/sandbox/webform_libraries/
+    git checkout 6.3.x
     git commit -am"Update webform_libraries"
     git push
 
@@ -88,5 +88,5 @@ Commit changes
 7. Update composer.libraries.json
 ----------------------------------
 
-    cd ~/Sites/drupal_webform/web/modules/sandbox/webform
+    cd ~/Sites/webform/web/modules/sandbox/webform
     drush webform:libraries:composer > composer.libraries.json

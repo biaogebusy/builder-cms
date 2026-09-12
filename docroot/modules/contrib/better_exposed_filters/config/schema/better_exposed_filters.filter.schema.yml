@@ -13,6 +13,12 @@ better_exposed_filters_filter_widget:
         sort_options:
           type: boolean
           label: 'Sort filter options alphabetically'
+        sort_options_method:
+          type: string
+          label: 'Sort method for filter options'
+        sort_options_natural:
+          type: boolean
+          label: 'Use natural sorting algorithm'
         placeholder_text:
           type: label
           label: 'Placeholder text for the filter'
@@ -32,12 +38,18 @@ better_exposed_filters_filter_widget:
         collapsible_disable_automatic_open:
           type: boolean
           label: 'Disable the automatic opening of collapsed filters with selections'
+        open_by_default:
+          type: boolean
+          label: 'Open by default'
         is_secondary:
           type: boolean
           label: 'This filter is a secondary option'
         hide_label:
           type: boolean
           label: 'Hide the label'
+        field_classes:
+          type: label
+          label: 'Custom classes added to the field element'
 
 # BEF exposed filter widgets
 better_exposed_filters.filter.*:
@@ -61,6 +73,24 @@ better_exposed_filters.filter.bef:
     display_inline:
       type: boolean
       label: 'Display checkbox/radio options inline'
+    soft_limit:
+      type: integer
+      label: 'Soft limit count'
+    soft_limit_label_less:
+      type: label
+      label: 'Soft limit label show less'
+    soft_limit_label_more:
+      type: label
+      label: 'Soft limit label show more'
+    soft_limit_include_children:
+      type: boolean
+      label: 'Apply soft limit to children'
+    scrollable:
+      type: boolean
+      label: 'Use scrollable container'
+    scrollable_height:
+      type: integer
+      label: 'Scrollable container height in pixels'
 
 better_exposed_filters.filter.bef_links:
   label: 'Links'
@@ -69,13 +99,37 @@ better_exposed_filters.filter.bef_links:
     select_all_none:
       type: boolean
       label: 'Add select all/none links'
+    select_all_none_nested:
+      type: boolean
+      label: 'Add select all/none links to hierarchical lists'
+    display_inline:
+      type: boolean
+      label: 'Display checkbox/radio options inline'
+    soft_limit:
+      type: integer
+      label: 'Soft limit count'
+    soft_limit_label_less:
+      type: label
+      label: 'Soft limit label show less'
+    soft_limit_label_more:
+      type: label
+      label: 'Soft limit label show more'
+    soft_limit_include_children:
+      type: boolean
+      label: 'Apply soft limit to children'
+    scrollable:
+      type: boolean
+      label: 'Use scrollable container'
+    scrollable_height:
+      type: integer
+      label: 'Scrollable container height in pixels'
 
 better_exposed_filters.filter.bef_hidden:
   label: 'Hidden'
   type: better_exposed_filters_filter_widget
 
 better_exposed_filters.filter.bef_sliders:
-  label: 'jQuery UI Slider'
+  label: 'UI Slider'
   type: better_exposed_filters_filter_widget
   mapping:
     min:
@@ -96,9 +150,30 @@ better_exposed_filters.filter.bef_sliders:
     orientation:
       type: string
       label: 'Orientation'
+    enable_tooltips:
+      type: boolean
+      label: 'Enable tooltips'
+    tooltips_value_prefix:
+      type: label
+      label: 'Tooltip value prefix'
+    tooltips_value_suffix:
+      type: label
+      label: 'Tooltip value suffix'
+    placement_location:
+      type: string
+      label: 'Placement location of slider'
+      constraints:
+        Choice:
+          - start
+          - middle
+          - end
 
 better_exposed_filters.filter.bef_datepickers:
   label: 'jQuery UI Date Picker'
+  type: better_exposed_filters_filter_widget
+
+better_exposed_filters.filter.bef_datetimepicker:
+  label: 'Date & Time Picker'
   type: better_exposed_filters_filter_widget
 
 better_exposed_filters.filter.bef_number:
@@ -117,3 +192,11 @@ better_exposed_filters.filter.bef_number:
       nullable: true
       constraints:
         FullyValidatable: ~
+
+better_exposed_filters.filter.bef_single:
+  label: 'Single On/Off Checkbox'
+  type: better_exposed_filters_filter_widget
+  mapping:
+    treat_as_false:
+      type: boolean
+      label: 'Uncheck to treat field as FALSE'

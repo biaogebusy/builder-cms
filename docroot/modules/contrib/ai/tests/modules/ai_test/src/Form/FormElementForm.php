@@ -55,11 +55,32 @@ class FormElementForm extends FormBase {
       '#markup' => '<hr>',
     ];
 
-    $form['ai_tools_library'] = [
+    // The selected tools can be pre-populated through the query string, so that
+    // tests can cover an existing selection. Both supported shapes of the
+    // default value can be requested: a comma-delimited string of tool ids, and
+    // the map of tool id => enabled that configuration stores.
+    $tools = $request->query->get('tools', '') ?? '';
+    if ($request->query->get('tools_as_map')) {
+      $tools = array_fill_keys(array_filter(explode(',', $tools)), TRUE);
+    }
+
+    // The element rebuilds the grandparent of its own position in the form, so
+    // that anything built from the selection can be rebuilt alongside it. It
+    // therefore has to be nested at least two levels deep, exactly as the AI
+    // agent form nests it in prompt_detail/tools_box.
+    $form['tools_details'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Tools'),
+      '#open' => TRUE,
+    ];
+    $form['tools_details']['tools_box'] = [
+      '#type' => 'container',
+    ];
+    $form['tools_details']['tools_box']['ai_tools_library'] = [
       '#type' => 'ai_tools_library',
       '#title' => $this->t('AI Tools Library'),
       '#description' => $this->t('A form element for selecting AI tools.'),
-      '#default_value' => '',
+      '#default_value' => $tools,
     ];
 
     $form['hr_3'] = [

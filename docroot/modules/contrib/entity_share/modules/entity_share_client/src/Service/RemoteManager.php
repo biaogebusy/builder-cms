@@ -6,6 +6,7 @@ namespace Drupal\entity_share_client\Service;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\entity_share_client\Entity\RemoteInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -112,7 +113,7 @@ class RemoteManager implements RemoteManagerInterface {
           'field_mappings' => [],
         ],
       ];
-      if ($response !== NULL) {
+      if (!is_null($response) && $response->getStatusCode() == 200) {
         $json = Json::decode((string) $response->getBody());
       }
       $this->remoteInfos[$remote_id] = $json['data'];
@@ -205,20 +206,16 @@ class RemoteManager implements RemoteManagerInterface {
       return $client->request($method, $url);
     }
     catch (ClientException $exception) {
-      $log_variables['@exception_message'] = $exception->getMessage();
-      $this->logger->error('Client exception when requesting the URL: @url with method @method: @exception_message', $log_variables);
+      Error::logException($this->logger, $exception, 'Client exception when requesting the URL @url with method @method', $log_variables);
     }
     catch (ServerException $exception) {
-      $log_variables['@exception_message'] = $exception->getMessage();
-      $this->logger->error('Server exception when requesting the URL: @url with method @method: @exception_message', $log_variables);
+      Error::logException($this->logger, $exception, 'Server exception when requesting the URL @url with method @method', $log_variables);
     }
     catch (GuzzleException $exception) {
-      $log_variables['@exception_message'] = $exception->getMessage();
-      $this->logger->error('Guzzle exception when requesting the URL: @url with method @method: @exception_message', $log_variables);
+      Error::logException($this->logger, $exception, 'Guzzle exception when requesting the URL @url with method @method', $log_variables);
     }
     catch (\Exception $exception) {
-      $log_variables['@exception_message'] = $exception->getMessage();
-      $this->logger->error('Error when requesting the URL: @url with method @method: @exception_message', $log_variables);
+      Error::logException($this->logger, $exception, 'Error when requesting the URL @url with method @method', $log_variables);
     }
 
     if (isset($options['rethrow']) && $options['rethrow'] && isset($exception)) {

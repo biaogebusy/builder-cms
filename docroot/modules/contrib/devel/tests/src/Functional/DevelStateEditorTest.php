@@ -3,12 +3,12 @@
 namespace Drupal\Tests\devel\Functional;
 
 use Behat\Mink\Element\NodeElement;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests devel state editor.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelStateEditorTest extends DevelBrowserTestBase {
 
   /**

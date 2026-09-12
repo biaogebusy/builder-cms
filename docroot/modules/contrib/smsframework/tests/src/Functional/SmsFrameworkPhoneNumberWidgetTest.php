@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -16,14 +16,8 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
 
   use CronRunTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = ['entity_test'];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -51,7 +45,7 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
       '@url' => Url::fromRoute('sms.phone.verify')->toString(),
       '@time' => '1 hour',
     ];
-    $this->assertSession()->responseContains(t('Enter a phone number. A verification code will be sent as an SMS message, you must enter the code into the <a href="@url">verification form</a> within @time.', $t_args));
+    $this->assertSession()->responseContains(\t('Enter a phone number. A verification code will be sent as an SMS message, you must enter the code into the <a href="@url">verification form</a> within @time.', $t_args));
 
     // Create verification code, wait for confirmation.
     $this->drupalGet($test_entity->toUrl('edit-form'));
@@ -59,10 +53,10 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
       $form_field_phone_number => '+123123123',
     ], 'Save');
 
-    $this->assertSession()->responseContains(t('A verification code has been sent to this phone number. Go to the <a href="@url">verification form</a> and enter the code. The code will expire if it is not verified in', $t_args));
+    $this->assertSession()->responseContains(\t('A verification code has been sent to this phone number. Go to the <a href="@url">verification form</a> and enter the code. The code will expire if it is not verified in', $t_args));
 
     $input = $this->xpath('//input[@name="' . $form_field_phone_number . '" and @disabled="disabled"]');
-    static::assertTrue(count($input) === 1, 'The phone number text field is disabled.');
+    static::assertTrue(\count($input) === 1, 'The phone number text field is disabled.');
 
     // Verify the code.
     $phone_verification = $this->getLastVerification();
@@ -72,10 +66,10 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
 
     // Check phone number is verified.
     $this->drupalGet($test_entity->toUrl('edit-form'));
-    $this->assertSession()->responseContains(t('This phone number is verified. <strong>Warning:</strong> Modifying this phone number will remove verification.'));
+    $this->assertSession()->responseContains(\t('This phone number is verified. <strong>Warning:</strong> Modifying this phone number will remove verification.'));
 
     $input = $this->xpath('//input[@name="' . $form_field_phone_number . '" and @disabled="disabled"]');
-    static::assertTrue(count($input) === 0, 'The phone number text field is enabled.');
+    static::assertTrue(\count($input) === 0, 'The phone number text field is enabled.');
   }
 
   /**
@@ -88,11 +82,11 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
     // Force verification code to expire.
     $phone_verification = $this->getLastVerification();
     $phone_verification
-      ->set('created', time() - ($phone_number_settings->getVerificationCodeLifetime() + 1))
+      ->set('created', \time() - ($phone_number_settings->getVerificationCodeLifetime() + 1))
       ->save();
 
     $this->drupalGet($test_entity->toUrl('edit-form'));
-    $this->assertSession()->responseContains(t('Verification code expired. Try again later.'));
+    $this->assertSession()->responseContains(\t('Verification code expired. Try again later.'));
 
     $this->cronRun();
     $this->drupalGet($test_entity->toUrl('edit-form'));
@@ -105,7 +99,7 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
     // Ensure phone number was purged.
     $field_phone_number = $phone_number_settings->getFieldName('phone_number');
     $this->assertSession()->fieldValueEquals($field_phone_number . '[0][value]', '');
-    $this->assertSession()->responseContains(t('Enter a phone number. A verification code will be sent as an SMS message, you must enter the code into the <a href="@url">verification form</a> within @time.', $t_args));
+    $this->assertSession()->responseContains(\t('Enter a phone number. A verification code will be sent as an SMS message, you must enter the code into the <a href="@url">verification form</a> within @time.', $t_args));
   }
 
   /**
@@ -120,7 +114,7 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
 
     // Force verification code to expire.
     $this->getLastVerification()
-      ->set('created', time() - ($phone_number_settings->getVerificationCodeLifetime() + 1))
+      ->set('created', \time() - ($phone_number_settings->getVerificationCodeLifetime() + 1))
       ->save();
     $this->cronRun();
 
@@ -142,7 +136,7 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
 
     // Force verification code to expire.
     $this->getLastVerification()
-      ->set('created', time() - ($phone_number_settings->getVerificationCodeLifetime() + 1))
+      ->set('created', \time() - ($phone_number_settings->getVerificationCodeLifetime() + 1))
       ->save();
     $this->cronRun();
 
@@ -152,7 +146,7 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
       '@url' => Url::fromRoute('sms.phone.verify')->toString(),
       '@time' => '1 hour',
     ];
-    $this->assertSession()->responseContains(t('Save this form to send a new verification code as an SMS message, you must enter the code into the <a href="@url">verification form</a> within @time.', $t_args));
+    $this->assertSession()->responseContains(\t('Save this form to send a new verification code as an SMS message, you must enter the code into the <a href="@url">verification form</a> within @time.', $t_args));
     $field_phone_number = $phone_number_settings->getFieldName('phone_number');
     $this->assertSession()->fieldValueEquals($field_phone_number . '[0][value]', '+123123123');
   }

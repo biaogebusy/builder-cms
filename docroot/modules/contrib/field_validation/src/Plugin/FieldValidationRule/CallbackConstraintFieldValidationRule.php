@@ -49,6 +49,7 @@ class CallbackConstraintFieldValidationRule extends ConstraintFieldValidationRul
     $form['value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Callback'),
+      '#description' => $this->t('A static callable in the form "Class::method". This will be invoked directly, so only enter callbacks you trust; anyone who can edit this rule effectively gains the ability to execute the referenced PHP code.'),
       '#default_value' => $this->configuration['value'],
       '#required' => TRUE,
     ];
@@ -71,7 +72,11 @@ class CallbackConstraintFieldValidationRule extends ConstraintFieldValidationRul
   public function getConstraintOptions(): array {
     $constraintOptions = [];
 
-    $constraintOptions['value'] = explode("::", $this->configuration['value']);
+    // Symfony's Callback constraint constructor parameter is named
+    // $callback, not $value. Drupal's ConstraintFactory spreads this array
+    // as named arguments, so a 'value' key here fatals with "Unknown named
+    // parameter $value" instead of ever reaching the callback comparison.
+    $constraintOptions['callback'] = explode("::", $this->configuration['value']);
     return $constraintOptions;
   }
 

@@ -3,9 +3,11 @@
 namespace Drupal\footable\Plugin\views\style;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\footable\Entity\FooTableBreakpoint;
 use Drupal\views\Plugin\views\style\Table;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Style plugin to render a table as a FooTable.
@@ -17,37 +19,62 @@ use Drupal\views\Plugin\views\style\Table;
  *   title = @Translation("FooTable"),
  *   help = @Translation("Render a table as a FooTable."),
  *   theme = "views_view_footable",
- *   display_types = { "normal" }
+ *   display_types = {"normal"}
  * )
  */
 class FooTable extends Table {
 
   /**
-   * {@inheritdoc}
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  protected $usesFields = TRUE;
+  protected $configFactory;
+
+  /**
+   * Constructs a FooTable object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $configFactory) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->configFactory = $configFactory;
+  }
 
   /**
    * {@inheritdoc}
    */
-  protected $usesRowPlugin = FALSE;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $usesRowClass = TRUE;
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('config.factory')
+    );
+  }
 
   /**
    * {@inheritdoc}
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
+    unset($options['sticky']);
+
     $options['footable'] = [
       'default' => [
         'expand_all' => FALSE,
         'expand_first' => FALSE,
         'show_header' => TRUE,
+        'show_toggle' => TRUE,
         'toggle_column' => 'first',
+        'use_parent_width' => FALSE,
         'bootstrap' => [
           'striped' => FALSE,
           'bordered' => FALSE,
@@ -55,18 +82,14 @@ class FooTable extends Table {
           'condensed' => FALSE,
         ],
         'component' => [
-          'paging' => [
-            'enabled' => FALSE,
-            'countformat' => '{CP} of {TP}',
-            'current' => 1,
-            'limit' => 5,
-            'position' => 'right',
-            'size' => 10,
-          ],
           'filtering' => [
             'enabled' => FALSE,
             'delay' => 1200,
-            'min' => 3,
+            // 'dropdown_title' => '',
+            'exact_match' => FALSE,
+            'focus' => TRUE,
+            'ignore_case' => TRUE,
+            'min' => 1,
             'placeholder' => 'Search',
             'position' => 'right',
             'space' => 'AND',
@@ -74,9 +97,24 @@ class FooTable extends Table {
           'sorting' => [
             'enabled' => FALSE,
           ],
+          'paging' => [
+            'enabled' => FALSE,
+            'countformat' => '{CP} of {TP}',
+            'current' => 1,
+            'limit' => 5,
+            'position' => 'center',
+            'size' => 10,
+          ],
+          'state' => [
+            'enabled' => FALSE,
+            'filtering' => TRUE,
+            'paging' => TRUE,
+            'sorting' => TRUE,
+          ],
         ],
       ],
     ];
+
     return $options;
   }
 
@@ -85,6 +123,22 @@ class FooTable extends Table {
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
+
+    // @todo Consider removing this later. The main point here is
+    // to check if the field has a table 'views'.
+    // @see https://www.drupal.org/project/drupal/issues/3574506
+    $handlers = $this->displayHandler->getHandlers('field');
+    foreach ($handlers as $field => $handler) {
+      // Drupal gives the table name 'view' for fields such as custom text,
+      // math expressions, and counter(our case). All of them don't have a real
+      // table in the DB, so they can't be sortable. Sortable fields
+      // (e.g., title) has the 'node_field_data' table name.
+      if (isset($handler->table) && $handler->table === 'views') {
+        $form['info'][$field]['sortable']['#access'] = FALSE;
+      }
+    }
+
+    unset($form['sticky']);
 
     $form['footable'] = [
       '#type' => 'details',
@@ -97,8 +151,8 @@ class FooTable extends Table {
       '#title' => $this->t('Expand all rows'),
       '#description' => $this->t('Whether or not to expand all rows of the table.'),
       '#options' => [
-        FALSE => $this->t('Disabled'),
-        TRUE => $this->t('Enabled'),
+        0 => $this->t('Disabled'),
+        1 => $this->t('Enabled'),
       ],
       '#default_value' => $this->options['footable']['expand_all'],
     ];
@@ -108,8 +162,8 @@ class FooTable extends Table {
       '#title' => $this->t('Expand first row'),
       '#description' => $this->t('Whether or not to expand the first rows details.'),
       '#options' => [
-        FALSE => $this->t('Disabled'),
-        TRUE => $this->t('Enabled'),
+        0 => $this->t('Disabled'),
+        1 => $this->t('Enabled'),
       ],
       '#default_value' => $this->options['footable']['expand_first'],
       '#states' => [
@@ -124,8 +178,8 @@ class FooTable extends Table {
       '#title' => $this->t('Show header'),
       '#description' => $this->t('Whether or not to display a header row in the table.'),
       '#options' => [
-        TRUE => $this->t('Yes'),
-        FALSE => $this->t('No'),
+        1 => $this->t('Yes'),
+        0 => $this->t('No'),
       ],
       '#default_value' => $this->options['footable']['show_header'],
     ];
@@ -142,8 +196,8 @@ class FooTable extends Table {
     ];
 
     // Bootstrap style configuration.
-    $config = \Drupal::config('footable.settings');
-    if ($config->get('footable_plugin_type') == 'bootstrap') {
+    $config = $this->configFactory->get('footable.settings');
+    if ($config->get('plugin_type') === 'bootstrap') {
       $form['footable']['bootstrap'] = [
         '#type' => 'details',
         '#title' => $this->t('Bootstrap'),
@@ -184,7 +238,7 @@ class FooTable extends Table {
     $form['footable']['component']['filtering'] = [
       '#type' => 'details',
       '#title' => $this->t('Filtering'),
-      '#open' => FALSE,
+      '#open' => $this->options['footable']['component']['filtering']['enabled'],
     ];
 
     $form['footable']['component']['filtering']['enabled'] = [
@@ -268,7 +322,7 @@ class FooTable extends Table {
     $form['footable']['component']['paging'] = [
       '#type' => 'details',
       '#title' => $this->t('Paging'),
-      '#open' => FALSE,
+      '#open' => $this->options['footable']['component']['paging']['enabled'],
     ];
 
     $form['footable']['component']['paging']['enabled'] = [
@@ -349,7 +403,7 @@ class FooTable extends Table {
     $form['footable']['component']['sorting'] = [
       '#type' => 'details',
       '#title' => $this->t('Sorting'),
-      '#open' => FALSE,
+      '#open' => $this->options['footable']['component']['sorting']['enabled'],
     ];
 
     $form['footable']['component']['sorting']['enabled'] = [
@@ -371,13 +425,13 @@ class FooTable extends Table {
       $breakpoints[$breakpoint->id()] = $breakpoint->label();
     }
 
-    if (!empty($breakpoints)) {
+    if ($breakpoints) {
       foreach ($this->displayHandler->getFieldLabels() as $name => $label) {
         $form['footable']['breakpoint'][$name] = [
           '#title' => Html::escape($label),
           '#type' => 'checkboxes',
           '#options' => $breakpoints,
-          '#default_value' => isset($this->options['footable']['breakpoint'][$name]) ? $this->options['footable']['breakpoint'][$name] : NULL,
+          '#default_value' => $this->options['footable']['breakpoint'][$name] ?? NULL,
           '#multiple' => TRUE,
         ];
       }
@@ -391,15 +445,19 @@ class FooTable extends Table {
     parent::validateOptionsForm($form, $form_state);
 
     $breakpoints = FALSE;
-    foreach ($form_state->getValue(['style_options', 'footable', 'breakpoint'], []) as $breakpoint) {
-      if (!empty(array_filter($breakpoint))) {
+    foreach ($form_state->getValue([
+      'style_options',
+      'footable',
+      'breakpoint',
+    ], []) as $breakpoint) {
+      if (array_filter($breakpoint)) {
         $breakpoints = TRUE;
         break;
       }
     }
 
     if (!$breakpoints) {
-      $form_state->setErrorByName('style_options][footable][breakpoint', $this->t('You need to have atleast one column that has a breakpoint.'));
+      $form_state->setErrorByName('style_options][footable][breakpoint', $this->t('You need to have at least one column that has a breakpoint.'));
     }
   }
 

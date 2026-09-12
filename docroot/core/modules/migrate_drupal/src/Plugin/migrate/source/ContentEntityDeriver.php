@@ -10,6 +10,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Deriver for content entity source plugins.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use
+ * \Drupal\migrate\Plugin\migrate\source\ContentEntityDeriver instead.
+ *
+ * @see https://www.drupal.org/node/3498916
  */
 class ContentEntityDeriver extends DeriverBase implements ContainerDeriverInterface {
 
@@ -29,6 +34,7 @@ class ContentEntityDeriver extends DeriverBase implements ContainerDeriverInterf
    *   The entity type manager.
    */
   public function __construct($base_plugin_id, EntityTypeManagerInterface $entityTypeManager) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal\migrate\Plugin\migrate\source\ContentEntity instead. See https://www.drupal.org/node/3498916', E_USER_DEPRECATED);
     $this->entityTypeManager = $entityTypeManager;
   }
 

@@ -2,8 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Wizard;
 
-use Drupal\Component\Utility\DeprecationHelper;
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\WebformInterface;
 
@@ -24,7 +23,7 @@ class WebformWizardAdvancedTest extends WebformWizardTestBase {
   /**
    * Test webform advanced wizard.
    */
-  public function testAdvancedWizard() {
+  public function testAdvancedWizard(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_form_wizard_advanced');
@@ -156,12 +155,7 @@ class WebformWizardAdvancedTest extends WebformWizardTestBase {
     $assert_session->responseContains('<a href="mailto:janesmith@example.com">janesmith@example.com</a>');
     $assert_session->responseContains('<label>Phone</label>');
     $assert_session->responseContains('<a href="tel:111-111-1111">111-111-1111</a>');
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<div class="webform-element webform-element-type-textarea js-form-item form-item form-type-item js-form-type-item form-item-comments js-form-item-comments form-no-label" id="test_form_wizard_advanced--comments">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<div class="webform-element webform-element-type-textarea js-form-item form-item js-form-type-item form-item-comments js-form-item-comments form-no-label" id="test_form_wizard_advanced--comments">'),
-    );
+    $assert_session->responseContains('<div class="webform-element webform-element-type-textarea js-form-item form-item form-type-item js-form-type-item form-item-comments js-form-item-comments form-no-label" id="test_form_wizard_advanced--comments">');
     $assert_session->responseContains('This is working fine.');
 
     // Submit the webform.
@@ -177,7 +171,7 @@ class WebformWizardAdvancedTest extends WebformWizardTestBase {
 
     $this->drupalLogout();
 
-    // Check global next and previous button labels.
+    // Set global next and previous button labels.
     \Drupal::configFactory()->getEditable('webform.settings')
       ->set('settings.default_wizard_next_button_label', '{global wizard next}')
       ->set('settings.default_wizard_prev_button_label', '{global wizard previous}')
@@ -192,32 +186,47 @@ class WebformWizardAdvancedTest extends WebformWizardTestBase {
     // Check next button.
     $assert_session->buttonExists('{global wizard next}');
 
-    // Add 'webform_actions' element.
-    $webform->setElementProperties('actions', [
-      '#type' => 'webform_actions',
-      '#wizard_next__label' => '{webform wizard next}',
-      '#wizard_prev__label' => '{webform wizard previous}',
-      '#preview_next__label' => '{webform preview next}',
-      '#preview_prev__label' => '{webform preview previous}',
+    // Add webform wizard settings.
+    $webform->setSettings([
+      'wizard_prev_button_label' => '{webform settings wizard prev}',
+      'wizard_next_button_label' => '{webform settings wizard next}',
     ]);
     $webform->save();
 
-    // Check webform next and previous button labels.
+    // Check webform settings  next and previous button labels.
     $this->drupalGet('/webform/test_form_wizard_advanced');
-    $this->submitForm([], '{webform wizard next}');
+    $this->submitForm([], '{webform settings wizard next}');
     // Check previous button.
-    $assert_session->buttonExists('{webform wizard previous}');
+    $assert_session->buttonExists('{webform settings wizard prev}');
     // Check next button.
-    $assert_session->buttonExists('{webform wizard next}');
+    $assert_session->buttonExists('{webform settings wizard next}');
 
-    // Check custom next and previous button labels.
+    // Add 'webform_actions' element.
+    $webform->setElementProperties('actions', [
+      '#type' => 'webform_actions',
+      '#wizard_next__label' => '{webform actions wizard next}',
+      '#wizard_prev__label' => '{webform actions wizard previous}',
+      '#preview_next__label' => '{webform actions preview next}',
+      '#preview_prev__label' => '{webform actions preview previous}',
+    ]);
+    $webform->save();
+
+    // Check webform actions next and previous button labels.
+    $this->drupalGet('/webform/test_form_wizard_advanced');
+    $this->submitForm([], '{webform actions wizard next}');
+    // Check previous button.
+    $assert_session->buttonExists('{webform actions wizard previous}');
+    // Check next button.
+    $assert_session->buttonExists('{webform actions wizard next}');
+
+    // Check wizard page custom next and previous button labels.
     $elements = Yaml::decode($webform->get('elements'));
     $elements['contact']['#next_button_label'] = '{elements wizard next}';
     $elements['contact']['#prev_button_label'] = '{elements wizard previous}';
     $webform->set('elements', Yaml::encode($elements));
     $webform->save();
     $this->drupalGet('/webform/test_form_wizard_advanced');
-    $this->submitForm([], '{webform wizard next}');
+    $this->submitForm([], '{webform actions wizard next}');
 
     // Check previous button.
     $assert_session->buttonExists('{elements wizard previous}');

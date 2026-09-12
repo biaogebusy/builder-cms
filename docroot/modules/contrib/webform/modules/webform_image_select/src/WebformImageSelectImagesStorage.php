@@ -2,8 +2,8 @@
 
 namespace Drupal\webform_image_select;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\Core\Serialization\Yaml;
 
 /**
  * Storage controller class for "webform_image_select_images" configuration entities.

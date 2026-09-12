@@ -3,6 +3,7 @@
 namespace Drupal\sqlite\Driver\Database\sqlite\Install;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\sqlite\Driver\Database\sqlite\Connection;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
@@ -12,13 +13,16 @@ use Drupal\Core\Database\Install\Tasks as InstallTasks;
  */
 class Tasks extends InstallTasks {
 
+  use StringTranslationTrait;
+
   /**
    * Minimum required SQLite version.
    *
    * Use to build sqlite library with json1 option for JSON datatype support.
+   *
    * @see https://www.sqlite.org/json1.html
    */
-  const SQLITE_MINIMUM_VERSION = '3.26';
+  const SQLITE_MINIMUM_VERSION = '3.45';
 
   /**
    * {@inheritdoc}
@@ -29,7 +33,7 @@ class Tasks extends InstallTasks {
    * {@inheritdoc}
    */
   public function name() {
-    return t('SQLite');
+    return $this->t('SQLite');
   }
 
   /**
@@ -49,8 +53,8 @@ class Tasks extends InstallTasks {
     unset($form['username'], $form['password'], $form['advanced_options']['host'], $form['advanced_options']['port']);
 
     // Make the text more accurate for SQLite.
-    $form['database']['#title'] = t('Database file');
-    $form['database']['#description'] = t('The absolute path to the file where @drupal data will be stored. This must be writable by the web server and should exist outside of the web root.', ['@drupal' => drupal_install_profile_distribution_name()]);
+    $form['database']['#title'] = $this->t('Database file');
+    $form['database']['#description'] = $this->t('The absolute path to the file where @drupal data will be stored. This must be writable by the web server and should exist outside of the web root.', ['@drupal' => drupal_install_profile_distribution_name()]);
     $default_database = \Drupal::getContainer()->getParameter('site.path') . '/files/.ht.sqlite';
     $form['database']['#default_value'] = empty($database['database']) ? $default_database : $database['database'];
     return $form;
@@ -99,13 +103,16 @@ class Tasks extends InstallTasks {
         catch (DatabaseNotFoundException $e) {
           // Still no dice; probably a permission issue. Raise the error to the
           // installer.
-          $this->fail(t('Failed to open or create database file %database. The database engine reports the following message when attempting to create the database: %error.', ['%database' => $database, '%error' => $e->getMessage()]));
+          $this->fail($this->t('Failed to open or create database file %database. The database engine reports the following message when attempting to create the database: %error.', [
+            '%database' => $database,
+            '%error' => $e->getMessage(),
+          ]));
         }
       }
       else {
         // Database connection failed for some other reason than a non-existent
         // database.
-        $this->fail(t('Failed to connect to database. The database engine reports the following message: %error.<ul><li>Does the database file exist?</li><li>Does web server have permission to write to the database file?</li>Does the web server have permission to write to the directory the database file should be created in?</li></ul>', ['%error' => $e->getMessage()]));
+        $this->fail($this->t('Failed to connect to database. The database engine reports the following message: %error.<ul><li>Does the database file exist?</li><li>Does web server have permission to write to the database file?</li>Does the web server have permission to write to the directory the database file should be created in?</li></ul>', ['%error' => $e->getMessage()]));
         return FALSE;
       }
     }

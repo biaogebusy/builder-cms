@@ -10,12 +10,14 @@ use Drupal\filter\FilterFormatInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\migrate\Kernel\MigrateDumpAlterInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade variables to filter.formats.*.yml.
- *
- * @group filter
  */
+#[Group('filter')]
+#[RunTestsInSeparateProcesses]
 class MigrateFilterFormatTest extends MigrateDrupal7TestBase implements MigrateDumpAlterInterface {
 
   /**
@@ -35,7 +37,7 @@ class MigrateFilterFormatTest extends MigrateDrupal7TestBase implements MigrateD
   /**
    * {@inheritdoc}
    */
-  public static function migrateDumpAlter(KernelTestBase $test) {
+  public static function migrateDumpAlter(KernelTestBase $test): void {
     $db = Database::getConnection('default', 'migrate');
     $fields = [
       'format' => 'image_resize_filter',
@@ -91,7 +93,17 @@ class MigrateFilterFormatTest extends MigrateDrupal7TestBase implements MigrateD
    */
   public function testFilterFormat(): void {
     $this->assertEntity('custom_text_format', 'Custom Text format', ['filter_autop' => 0, 'filter_html' => -10], 0, TRUE);
-    $this->assertEntity('filtered_html', 'Filtered HTML', ['filter_autop' => 2, 'filter_html' => 1, 'filter_htmlcorrector' => 10, 'filter_url' => 0], 0, TRUE);
+    $this->assertEntity(
+      'filtered_html',
+      'Filtered HTML',
+      [
+        'filter_autop' => 2,
+        'filter_html' => 1,
+        'filter_htmlcorrector' => 10,
+        'filter_url' => 0,
+      ],
+      0,
+      TRUE);
     $this->assertEntity('full_html', 'Full HTML', ['filter_autop' => 1, 'filter_htmlcorrector' => 10, 'filter_url' => 0], 1, TRUE);
     $this->assertEntity('plain_text', 'Plain text', ['filter_autop' => 2, 'filter_html_escape' => 0, 'filter_url' => 1], 10, TRUE);
     // This assertion covers issue #2555089. Drupal 7 formats are identified

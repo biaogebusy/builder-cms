@@ -57,7 +57,7 @@ abstract class BetterExposedFiltersKernelTestBase extends ViewsKernelTestBase {
    * @return array
    *   The render array.
    */
-  public function getExposedFormRenderArray(ViewExecutable $view) {
+  public function getExposedFormRenderArray(ViewExecutable $view): array {
     $this->executeView($view);
     $exposed_form = $view->display_handler->getPlugin('exposed_form');
     return $exposed_form->renderExposedForm();
@@ -69,7 +69,7 @@ abstract class BetterExposedFiltersKernelTestBase extends ViewsKernelTestBase {
    * @param \Drupal\views\ViewExecutable $view
    *   The view object.
    */
-  protected function renderExposedForm(ViewExecutable $view) {
+  protected function renderExposedForm(ViewExecutable $view): void {
     $output = $this->getExposedFormRenderArray($view);
     $this->setRawContent(\Drupal::service('renderer')->renderRoot($output));
   }

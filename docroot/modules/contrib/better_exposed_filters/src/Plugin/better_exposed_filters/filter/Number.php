@@ -2,26 +2,27 @@
 
 namespace Drupal\better_exposed_filters\Plugin\better_exposed_filters\filter;
 
+use Drupal\better_exposed_filters\Attribute\FiltersWidget;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Basic number widget. Input field but with type="number".
- *
- * @BetterExposedFiltersFilterWidget(
- *   id = "bef_number",
- *   label = @Translation("Number"),
- * )
  */
+#[FiltersWidget(
+  id: 'bef_number',
+  title: new TranslatableMarkup('bef_number'),
+)]
 class Number extends FilterWidgetBase {
 
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable(mixed $handler = NULL, array $options = []): bool {
-    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $handler */
+  public static function isApplicable(mixed $filter = NULL, array $filter_options = []): bool {
+    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
     $is_applicable = FALSE;
 
-    if (is_a($handler, 'Drupal\views\Plugin\views\filter\NumericFilter')) {
+    if (is_a($filter, 'Drupal\views\Plugin\views\filter\NumericFilter')) {
       $is_applicable = TRUE;
     }
 

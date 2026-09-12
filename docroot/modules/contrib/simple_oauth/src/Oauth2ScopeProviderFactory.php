@@ -16,8 +16,18 @@ class Oauth2ScopeProviderFactory implements Oauth2ScopeProviderFactoryInterface 
    * The simple_oauth settings config.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
+   * @deprecated in simple_oauth:6.2.0 and is removed from simple_oauth:7.0.0.
+   *    Use $this->configFactory instead.
+   * @see https://www.drupal.org/node/3577704
    */
   protected ImmutableConfig $config;
+
+  /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The scope provider plugin manager.
@@ -44,16 +54,21 @@ class Oauth2ScopeProviderFactory implements Oauth2ScopeProviderFactoryInterface 
    *   The entity type manager.
    */
   public function __construct(ConfigFactoryInterface $config_factory, ScopeProviderManagerInterface $scope_provider_manager, EntityTypeManagerInterface $entity_type_manager) {
-    $this->config = $config_factory->get('simple_oauth.settings');
+    $this->configFactory = $config_factory;
     $this->scopeProviderManager = $scope_provider_manager;
     $this->entityTypeManager = $entity_type_manager;
+
+    // Set for backwards compatibility, remove in 7.0.0.
+    // @phpstan-ignore-next-line property.deprecated
+    $this->config = $config_factory->get('simple_oauth.settings');
   }
 
   /**
    * {@inheritdoc}
    */
   public function get(): Oauth2ScopeAdapterInterface {
-    $plugin_id = $this->config->get('scope_provider') ?? 'dynamic';
+    $config = $this->configFactory->get('simple_oauth.settings');
+    $plugin_id = $config->get('scope_provider') ?? 'dynamic';
     /** @var \Drupal\simple_oauth\Plugin\ScopeProviderInterface $plugin */
     $plugin = $this->scopeProviderManager->getInstance(['id' => $plugin_id]);
     $adapter = $plugin->getScopeProviderAdapter();

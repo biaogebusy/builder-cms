@@ -11,7 +11,8 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Extends the base entity form with revision support in the UI.
  *
- * @deprecated Use \Drupal\Core\Entity\ContentEntityForm instead.
+ * @deprecated in entity:8.x-1.7 and is removed from entity:2.0.0. Use \Drupal\Core\Entity\ContentEntityForm instead.
+ * @see https://www.drupal.org/node/2997467
  */
 class RevisionableContentEntityForm extends ContentEntityForm {
 
@@ -128,19 +129,25 @@ class RevisionableContentEntityForm extends ContentEntityForm {
     }
 
     $insert = $this->entity->isNew();
-    $this->entity->save();
-    $context = ['@type' => $this->entity->bundle(), '%info' => $this->entity->label()];
+    $result = $this->entity->save();
+    $context = [
+      '@type' => $this->entity->bundle(),
+      '%info' => $this->entity->label(),
+    ];
     $logger = $this->logger('content');
     $bundle_entity = $this->getBundleEntity();
-    $t_args = ['@type' => $bundle_entity ? $bundle_entity->label() : 'None', '%info' => $this->entity->label()];
+    $t_args = [
+      '@type' => $bundle_entity ? $bundle_entity->label() : 'None',
+      '%info' => $this->entity->label(),
+    ];
 
     if ($insert) {
       $logger->notice('@type: added %info.', $context);
-      drupal_set_message($this->t('@type %info has been created.', $t_args));
+      $this->messenger()->addMessage($this->t('@type %info has been created.', $t_args));
     }
     else {
       $logger->notice('@type: updated %info.', $context);
-      drupal_set_message($this->t('@type %info has been updated.', $t_args));
+      $this->messenger()->addMessage($this->t('@type %info has been updated.', $t_args));
     }
 
     if ($this->entity->id()) {
@@ -157,9 +164,10 @@ class RevisionableContentEntityForm extends ContentEntityForm {
     else {
       // In the unlikely case something went wrong on save, the entity will be
       // rebuilt and entity form redisplayed.
-      drupal_set_message($this->t('The entity could not be saved.'), 'error');
+      $this->messenger()->addError($this->t('The entity could not be saved.'));
       $form_state->setRebuild();
     }
+    return $result;
   }
 
 }

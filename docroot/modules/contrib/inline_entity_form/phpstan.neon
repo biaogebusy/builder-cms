@@ -1,5 +1,6 @@
 # Configuration file for PHPStan static code checking, see https://phpstan.org.
 includes:
+  - phpstan-baseline.neon
   - phar://phpstan.phar/conf/bleedingEdge.neon
 
 parameters:

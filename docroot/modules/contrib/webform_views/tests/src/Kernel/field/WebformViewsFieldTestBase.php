@@ -3,6 +3,7 @@
 namespace Drupal\Tests\webform_views\Kernel\field;
 
 use Drupal\Tests\webform_views\Kernel\WebformViewsTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Reasonable starting point for testing webform views field handlers.
@@ -15,32 +16,32 @@ abstract class WebformViewsFieldTestBase extends WebformViewsTestBase {
    * Execute a view and make sure the field handler we are testing produced
    * correct HTML markup.
    */
-  public function testField() {
-    $this->webform = $this->createWebform($this->webform_elements);
-    $this->createWebformSubmissions($this->webform_submissions_data, $this->webform);
-    $this->view = $this->initView($this->webform, $this->view_handlers);
+  public function testField(): void {
+    $this->webform = $this->createWebform(static::$webform_elements);
+    $this->createWebformSubmissions(static::$webform_submissions_data, $this->webform);
+    $this->view = $this->initView($this->webform, static::$view_handlers);
 
     $rendered_cells = $this->renderView($this->view);
 
-    $this->assertSame($this->webform_submissions_data, $rendered_cells, 'Views field on a webform element produces correct output.');
+    $this->assertSame(static::$webform_submissions_data, $rendered_cells, 'Views field on a webform element produces correct output.');
   }
 
   /**
    * Test the multivalue element placing all values into single cell.
    */
-  public function testMultiValueAllInOne() {
+  public function testMultiValueAllInOne(): void {
     // Convert each webform element into multivalue before creating the webform.
-    $webform_elements = $this->webform_elements;
+    $webform_elements = static::$webform_elements;
     foreach ($webform_elements as $k => $v) {
       $webform_elements[$k]['#multiple'] = 10;
     }
     $this->webform = $this->createWebform($webform_elements);
 
-    $this->createWebformSubmissions($this->webform_submission_multivalue_data, $this->webform);
+    $this->createWebformSubmissions(static::$webform_submission_multivalue_data, $this->webform);
 
     // Convert each view field handler into 'all in one' multi value before
     // creating the view.
-    $view_handlers = $this->view_handlers;
+    $view_handlers = static::$view_handlers;
     foreach ($view_handlers['field'] as $k => $v) {
       $view_handlers['field'][$k]['options']['webform_multiple_value'] = TRUE;
     }
@@ -49,7 +50,7 @@ abstract class WebformViewsFieldTestBase extends WebformViewsTestBase {
     $rendered_cells = $this->renderView($this->view);
 
     $expected = [];
-    foreach ($this->webform_submission_multivalue_data as $i => $submission) {
+    foreach (static::$webform_submission_multivalue_data as $i => $submission) {
       foreach ($submission as $element => $data) {
         $render = [
           '#theme' => 'item_list',
@@ -65,22 +66,22 @@ abstract class WebformViewsFieldTestBase extends WebformViewsTestBase {
   /**
    * Test the multivalue element placing single value into a cell.
    */
-  public function testMultiValueDeltaOffset() {
+  public function testMultiValueDeltaOffset(): void {
     // Delta offset within element multivalues to display in the cell.
     $offset = 0;
 
     // Convert each webform element into multivalue before creating the webform.
-    $webform_elements = $this->webform_elements;
+    $webform_elements = static::$webform_elements;
     foreach ($webform_elements as $k => $v) {
       $webform_elements[$k]['#multiple'] = 10;
     }
     $this->webform = $this->createWebform($webform_elements);
 
-    $this->createWebformSubmissions($this->webform_submission_multivalue_data, $this->webform);
+    $this->createWebformSubmissions(static::$webform_submission_multivalue_data, $this->webform);
 
     // Convert each view field handler into 'all in one' multi value before
     // creating the view.
-    $view_handlers = $this->view_handlers;
+    $view_handlers = static::$view_handlers;
     foreach ($view_handlers['field'] as $k => $v) {
       $view_handlers['field'][$k]['options']['webform_multiple_value'] = FALSE;
       $view_handlers['field'][$k]['options']['webform_multiple_delta'] = $offset;
@@ -91,7 +92,7 @@ abstract class WebformViewsFieldTestBase extends WebformViewsTestBase {
     $rendered_cells = $this->renderView($this->view);
 
     $expected = [];
-    foreach ($this->webform_submission_multivalue_data as $i => $submission) {
+    foreach (static::$webform_submission_multivalue_data as $i => $submission) {
       foreach ($submission as $element => $data) {
         $expected[$i][$element] = $data[$offset];
       }
@@ -110,13 +111,12 @@ abstract class WebformViewsFieldTestBase extends WebformViewsTestBase {
    * @param array $expected
    *   Expected output from $this->renderView() with the specified above click
    *   sorting.
-   *
-   * @dataProvider providerClickSort()
    */
-  public function testClickSort($field_handler_id, $order, $expected) {
-    $this->webform = $this->createWebform($this->webform_elements);
-    $this->createWebformSubmissions($this->webform_submissions_data, $this->webform);
-    $this->view = $this->initView($this->webform, $this->view_handlers);
+  #[DataProvider('providerClickSort')]
+  public function testClickSort(string $field_handler_id, string $order, array $expected): void {
+    $this->webform = $this->createWebform(static::$webform_elements);
+    $this->createWebformSubmissions(static::$webform_submissions_data, $this->webform);
+    $this->view = $this->initView($this->webform, static::$view_handlers);
 
     $this->view->getExecutable()->build();
     $this->view->getExecutable()->field[$field_handler_id]->clickSort($order);
@@ -133,19 +133,19 @@ abstract class WebformViewsFieldTestBase extends WebformViewsTestBase {
    * You might want to override this method with more specific cases in a child
    * class.
    */
-  public function providerClickSort() {
+  public static function providerClickSort(): array {
     $tests = [];
 
     $tests[] = [
-      $this->view_handlers['field'][0]['id'],
+      static::$view_handlers['field'][0]['id'],
       'asc',
-      $this->webform_submissions_data,
+      static::$webform_submissions_data,
     ];
 
     $tests[] = [
-      $this->view_handlers['field'][0]['id'],
+      static::$view_handlers['field'][0]['id'],
       'desc',
-      array_reverse($this->webform_submissions_data),
+      array_reverse(static::$webform_submissions_data),
     ];
 
     return $tests;

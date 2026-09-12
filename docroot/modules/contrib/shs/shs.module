@@ -93,9 +93,9 @@ function shs_term_load_all_parents($tid, $target_type = 'taxonomy_term') {
         }
       }
     }
-    $parents_all[$tid] = $parents;
+    $parents_all[$tid ?? ''] = $parents;
   }
-  return $parents_all[$tid];
+  return $parents_all[$tid ?? ''];
 }
 
 /**

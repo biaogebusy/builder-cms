@@ -3,7 +3,7 @@
 namespace Drupal\blazy\Theme;
 
 use Drupal\Core\Render\Element;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
 
 /**
  * Provides non-reusable blazy admin static methods.
@@ -16,6 +16,11 @@ class Admin {
 
   /**
    * Provides compact description due to small estates in modal.
+   *
+   * @param array $form
+   *   The form being modified.
+   * @param array $parents
+   *   The parent elements.
    */
   public static function themeDescription(array &$form, array $parents = []): void {
     if (!empty($form['#description'])) {
@@ -36,15 +41,23 @@ class Admin {
         '#markup' => $form['#description'],
       ];
 
-      if ($manager = Internals::service('blazy.manager')) {
+      if ($manager = Internals::blazy()) {
         $form['#description'] = $manager->renderInIsolation($desc);
-        $form['#wrapper_attributes']['class'][] = 'form-item--collapsidesc';
       }
+
+      $form['#wrapper_attributes']['class'][] = 'form-item--collapsidesc';
     }
   }
 
   /**
    * Provides horizontal tabs menu for nested details elements.
+   *
+   * @param array $form
+   *   The form being modified.
+   * @param string $form_id
+   *   The form ID.
+   * @param string|null $region
+   *   The region name.
    */
   public static function tabify(array &$form, $form_id, $region): void {
     $children = Element::children($form[$form_id]);

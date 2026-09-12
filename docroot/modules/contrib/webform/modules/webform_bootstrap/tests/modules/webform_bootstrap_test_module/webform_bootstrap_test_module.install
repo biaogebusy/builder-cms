@@ -5,7 +5,7 @@
  * Install, update and uninstall functions for the Webform Test Bootstrap module.
  */
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 
 /**
  * Implements hook_install().

@@ -2,12 +2,18 @@
 
 namespace Drupal\ai_automators\Plugin\FieldWidgetAction;
 
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 
 /**
  * The Chart action.
+ *
+ * Chart uses the legacy dispatch (custom aiAutomatorsAjax + saveFormValues)
+ * because its chart_config_default widget has a nested table of data+color
+ * cells that must be manipulated on the rebuilt form render array — not
+ * expressible cleanly via $form_state->getUserInput().
  */
 #[FieldWidgetAction(
   id: 'automator_chart',
@@ -20,21 +26,45 @@ class Chart extends AutomatorBaseAction {
   /**
    * {@inheritdoc}
    */
-  public string $formElementProperty = 'config';
+  protected string $formElementProperty = 'config';
 
   /**
-   * Ajax handler for Automators.
+   * {@inheritdoc}
+   *
+   * Opt out of submit-phase automator run — saveFormValues needs the
+   * REBUILT form array and that's only available in the AJAX callback.
+   */
+  public function runAutomatorSubmit(array &$form, FormStateInterface $form_state): void {
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * No-op: this plugin delivers values via saveFormValues (form render
+   * tree), not $form_state->getUserInput().
+   */
+  protected function setFormInput(FieldableEntityInterface $entity, FormStateInterface $form_state, $form_key): void {
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Run the automator now — the rebuilt $form is what saveFormValues
+   * must modify for the AJAX response to carry the new chart data.
    */
   public function aiAutomatorsAjax(array &$form, FormStateInterface $form_state) {
-    // Get the triggering element, as it contains the settings.
     $triggering_element = $form_state->getTriggeringElement();
-    $array_parents = $triggering_element['#array_parents'];
-    array_pop($array_parents);
-    $array_parents[] = $this->formElementProperty;
-    $key = $array_parents[2] ?? 0;
-    $form_key = $array_parents[0];
-
-    return $this->populateAutomatorValues($form, $form_state, $form_key, $key);
+    $form_key = $triggering_element['#field_widget_action_field_name'] ?? NULL;
+    if ($form_key === NULL) {
+      $array_parents = $triggering_element['#array_parents'];
+      array_pop($array_parents);
+      $form_key = $array_parents[0] ?? NULL;
+    }
+    if (!$form_key || !isset($form[$form_key])) {
+      return [];
+    }
+    $key = $triggering_element['#field_widget_action_field_delta'] ?? NULL;
+    return $this->populateAutomatorValues($form, $form_state, $form_key, is_numeric($key) ? (int) $key : NULL);
   }
 
   /**

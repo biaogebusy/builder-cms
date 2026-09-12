@@ -36,7 +36,7 @@ interface SlickBaseInterface extends ConfigEntityInterface {
   /**
    * Sets the array of slick settings.
    *
-   * @param array $settings
+   * @param array<string, mixed> $settings
    *   The new array of settings.
    *
    * @return $this

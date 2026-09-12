@@ -20,12 +20,14 @@ interface FormHelperInterface {
    *   The selected remote.
    * @param string $channel_id
    *   The selected channel id.
-   *
-   * @throws \Drupal\entity_share_client\Exception\ResourceTypeNotFoundException
+   * @param string $channel_base_url
+   *   The base channel URL.
    *
    * @return array
    *   The array of options for the tableselect form type element.
+   *
+   * @throws \Drupal\entity_share_client\Exception\ResourceTypeNotFoundException
    */
-  public function buildEntitiesOptions(array $json_data, RemoteInterface $remote, $channel_id);
+  public function buildEntitiesOptions(array $json_data, RemoteInterface $remote, $channel_id, string $channel_base_url);
 
 }

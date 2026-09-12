@@ -22,6 +22,10 @@ class PathautoTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'menu_ui',
+    'field',
+    'entity_share_test',
     'jsonapi_extras',
     'pathauto',
   ];

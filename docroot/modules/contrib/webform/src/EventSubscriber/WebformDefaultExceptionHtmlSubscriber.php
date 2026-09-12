@@ -115,7 +115,7 @@ class WebformDefaultExceptionHtmlSubscriber extends DefaultExceptionHtmlSubscrib
    *   The event to process.
    */
   public function on403(ExceptionEvent $event) {
-    if ($event->getRequestType() !== HttpKernelInterface::MASTER_REQUEST) {
+    if ($event->getRequestType() !== HttpKernelInterface::MAIN_REQUEST) {
       return;
     }
 
@@ -135,13 +135,13 @@ class WebformDefaultExceptionHtmlSubscriber extends DefaultExceptionHtmlSubscrib
   public function on403RedirectPrivateFileAccess(ExceptionEvent $event) {
     $path = $event->getRequest()->getPathInfo();
     // Make sure the user is trying to access a private webform file upload.
-    if (strpos($path, '/system/files/webform/') !== 0) {
+    if (!str_starts_with($path, '/system/files/webform/')) {
       return;
     }
 
     // Make private webform file upload is not a temporary file.
     // @see \Drupal\webform\Plugin\WebformElement\WebformManagedFileBase::postSave
-    if (strpos($path, '/_sid_/') !== FALSE) {
+    if (str_contains($path, '/_sid_/')) {
       return;
     }
 
@@ -289,7 +289,7 @@ class WebformDefaultExceptionHtmlSubscriber extends DefaultExceptionHtmlSubscrib
    * @param null|\Drupal\Core\Entity\EntityInterface $entity
    *   (Optional) Entity to be used when replacing tokens.
    */
-  protected function redirectToLogin(ExceptionEvent $event, $message = NULL, EntityInterface $entity = NULL) {
+  protected function redirectToLogin(ExceptionEvent $event, $message = NULL, ?EntityInterface $entity = NULL) {
     // Display message.
     if ($message) {
       $this->setMessage($message, $entity);
@@ -316,10 +316,10 @@ class WebformDefaultExceptionHtmlSubscriber extends DefaultExceptionHtmlSubscrib
    * @param null|\Drupal\Core\Entity\EntityInterface $entity
    *   (Optional) Entity to be used when replacing tokens.
    */
-  protected function setMessage($message, EntityInterface $entity = NULL) {
+  protected function setMessage($message, ?EntityInterface $entity = NULL) {
     $message = $this->tokenManager->replace($message, $entity);
     $build = WebformHtmlEditor::checkMarkup($message);
-    $this->messenger->addStatus($this->renderer->renderPlain($build));
+    $this->messenger->addStatus($this->renderer->renderInIsolation($build));
   }
 
 }

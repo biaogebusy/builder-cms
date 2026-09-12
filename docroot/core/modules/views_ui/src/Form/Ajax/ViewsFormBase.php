@@ -17,6 +17,7 @@ use Drupal\views\Ajax\ReplaceTitleCommand;
 use Drupal\views\Ajax\ShowButtonsCommand;
 use Drupal\views\Ajax\TriggerPreviewCommand;
 use Drupal\views\ViewEntityInterface;
+use Drupal\views\ViewsFormHelperTrait;
 use Drupal\views_ui\Ajax\SetFormCommand;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -24,6 +25,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  * Provides a base class for Views UI AJAX forms.
  */
 abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
+
+  use ViewsFormHelperTrait;
 
   /**
    * The ID of the item this form is manipulating.
@@ -90,9 +93,6 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
     $view = $form_state->get('view');
     $form_key = $form_state->get('form_key');
 
-    // @todo Remove the need for this.
-    \Drupal::moduleHandler()->loadInclude('views_ui', 'inc', 'admin');
-
     // Reset the cache of IDs. Drupal rather aggressively prevents ID
     // duplication but this causes it to remember IDs that are no longer even
     // being used.
@@ -102,9 +102,16 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
     // it off; if it isn't, the user clicked somewhere else and the stack is
     // now irrelevant.
     if (!empty($view->stack)) {
-      $identifier = implode('-', array_filter([$form_key, $view->id(), $display_id, $form_state->get('type'), $form_state->get('id')]));
-      // Retrieve the first form from the stack without changing the integer keys,
-      // as they're being used for the "2 of 3" progress indicator.
+      $identifier = implode('-', array_filter([
+        $form_key,
+        $view->id(),
+        $display_id,
+        $form_state->get('type'),
+        $form_state->get('id'),
+      ]));
+
+      // Retrieve the first form from the stack without changing the integer
+      // keys, as they're being used for the "2 of 3" progress indicator.
       reset($view->stack);
       $stack_key = key($view->stack);
       $top = current($view->stack);
@@ -142,7 +149,7 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
       $form_class = get_class($form_state->getFormObject());
 
       $form_state->setUserInput([]);
-      $form_url = views_ui_build_form_url($form_state);
+      $form_url = $this->buildFormUrl($form_state);
       if (!$form_state->get('ajax')) {
         return new RedirectResponse($form_url->setAbsolute()->toString());
       }
@@ -150,9 +157,14 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
       $response = $this->ajaxFormWrapper($form_class, $form_state);
     }
     elseif (!$form_state->get('ajax')) {
-      // If nothing on the stack, non-js forms just go back to the main view editor.
+      // If nothing on the stack, non-js forms just go back to the main view
+      // editor.
       $display_id = $form_state->get('display_id');
-      return new RedirectResponse(Url::fromRoute('entity.view.edit_display_form', ['view' => $view->id(), 'display_id' => $display_id], ['absolute' => TRUE])->toString());
+      return new RedirectResponse(Url::fromRoute(
+        'entity.view.edit_display_form',
+        ['view' => $view->id(), 'display_id' => $display_id],
+        ['absolute' => TRUE],
+      )->toString());
     }
     else {
       $response = new AjaxResponse();

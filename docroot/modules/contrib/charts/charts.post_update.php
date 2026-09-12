@@ -219,3 +219,34 @@ function charts_post_update_move_views_style_color_changer_from_fields_to_displa
   }
   return t('This site did not have any chart related views.');
 }
+
+/**
+ * Clear caches to discover the new Chart element class signature.
+ */
+function charts_post_update_modernize_chart_element(&$sandbox) {
+}
+
+/**
+ * Copy the default library config into per-library settings storage.
+ *
+ * @see https://www.drupal.org/project/charts/issues/3532462
+ */
+function charts_post_update_copy_library_config_to_per_library_store(&$sandbox) {
+  $config = \Drupal::service('config.factory')->getEditable('charts.settings');
+  $settings = $config->get('charts_default_settings');
+  if (!$settings) {
+    return 'No per-library migration was done because the default settings are empty.';
+  }
+
+  $library = $settings['library'] ?? '';
+  $library_configs = $settings['library_configs'] ?? [];
+  // Seed the per-library store with the existing single library_config under
+  // the currently default library so its settings are preserved explicitly.
+  if ($library && !isset($library_configs[$library]) && !empty($settings['library_config'])) {
+    $library_configs[$library] = $settings['library_config'];
+    $config->set('charts_default_settings.library_configs', $library_configs)
+      ->save();
+    return 'Copied the default library configuration into per-library settings storage.';
+  }
+  return 'No per-library migration was needed.';
+}

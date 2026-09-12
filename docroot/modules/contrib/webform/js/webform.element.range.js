@@ -4,22 +4,14 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   /**
    * Display HTML5 range output in a left/right aligned number input.
    *
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformRangeOutputNumber = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-range-output-number', '.js-form-type-range', context)).each(function () {
-        // Handle browser that don't support the HTML5 range input.
-        if (Modernizr.inputtypes.range === false) {
-          return;
-        }
-
         var $element = $(this);
         var $input = $element.find('input[type="range"]');
         var $output = $element.find('input[type="number"]');
@@ -50,13 +42,8 @@
    * @see https://stackoverflow.com/questions/33794123/absolute-positioning-in-relation-to-a-inputtype-range
    */
   Drupal.behaviors.webformRangeOutputBubble = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-range-output-bubble', '.js-form-type-range', context)).each(function () {
-        // Handle browser that don't support the HTML5 range input.
-        if (Modernizr.inputtypes.range === false) {
-          return;
-        }
-
         var $element = $(this);
         var $input = $element.find('input[type="range"]');
         var $output = $element.find('output');

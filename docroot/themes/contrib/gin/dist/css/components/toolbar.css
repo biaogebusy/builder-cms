@@ -237,6 +237,10 @@ body.gin--classic-toolbar {
   --icon: url("../../media/sprite.svg#create-view");
 }
 
+.toolbar .toolbar-bar .toolbar-button--icon--thin-pencil::before {
+  --icon: url("../../media/sprite.svg#edit-view");
+}
+
 .toolbar .toolbar-bar .toolbar-icon-system-modules-list::before,
 .toolbar .toolbar-bar .toolbar-link--system-modules-list::before,
 .toolbar .toolbar-bar .toolbar-button--icon--system-modules-list::before {
@@ -302,7 +306,8 @@ body.gin--classic-toolbar {
 
 .toolbar .toolbar-bar .toolbar-icon-user::before,
 .toolbar .toolbar-bar .toolbar-link--user::before,
-.toolbar .toolbar-bar .toolbar-button--icon--user::before {
+.toolbar .toolbar-bar .toolbar-button--icon--user::before,
+.toolbar .toolbar-bar .toolbar-button--icon--navigation-user-links-user-wrapper::before {
   --icon: url("../../media/sprite.svg#user-view");
 }
 

@@ -1,0 +1,94 @@
+ckeditor5_premium_features_productivity_pack_document_outline:
+  ckeditor5:
+    plugins:
+      - documentOutlineAdapter.DocumentOutlineAdapter
+      - documentOutline.DocumentOutline
+      - toolbarAdapter.ToolbarAdapter
+  drupal:
+    label: Document Outline
+    library: ckeditor5_premium_features_productivity_pack/document_outline.adapter
+    class: Drupal\ckeditor5_premium_features_productivity_pack\Plugin\CKEditor5Plugin\DocumentOutline
+    elements: false
+
+ckeditor5_premium_features_productivity_pack_table_of_contents:
+  ckeditor5:
+    plugins:
+      - tableOfContentsAdapter.TableOfContentsAdapter
+      - documentOutline.TableOfContents
+  drupal:
+    label: Table of Contents
+    elements: false
+    library: ckeditor5_premium_features_productivity_pack/table_of_contents.adapter
+    admin_library: ckeditor5_premium_features_productivity_pack/admin.table_of_contents
+    toolbar_items:
+      tableOfContents:
+        label: Table of Contents
+
+ckeditor5_premium_features_productivity_pack_format_painter:
+  ckeditor5:
+    plugins:
+      - formatPainter.FormatPainter
+  drupal:
+    label: Format Painter
+    elements: false
+    library: ckeditor5_premium_features_productivity_pack/format-painter
+    admin_library: ckeditor5_premium_features_productivity_pack/admin.format_painter
+    toolbar_items:
+      formatPainter:
+        label: Format Painter
+
+ckeditor5_premium_features_productivity_pack_content_templates:
+  ckeditor5:
+    plugins:
+      - template.Template
+  drupal:
+    label: Content templates
+    elements: false
+    library: ckeditor5_premium_features_productivity_pack/template
+    class: Drupal\ckeditor5_premium_features_productivity_pack\Plugin\CKEditor5Plugin\Template
+    admin_library: ckeditor5_premium_features_productivity_pack/admin.content_templates
+    toolbar_items:
+      insertTemplate:
+        label: Insert template
+
+ckeditor5_premium_features_productivity_pack_slash_commands:
+  ckeditor5:
+    plugins:
+      - slashCommand.SlashCommand
+  drupal:
+    label: Slash Commands
+    elements: false
+    class: Drupal\ckeditor5_premium_features_productivity_pack\Plugin\CKEditor5Plugin\SlashCommand
+    library: ckeditor5_premium_features_productivity_pack/slash-command
+
+ckeditor5_premium_features_productivity_pack_paste_from_office_enhanced:
+  ckeditor5:
+    plugins:
+      - pasteFromOfficeEnhanced.PasteFromOfficeEnhanced
+  drupal:
+    label: Paste from Office enhanced
+    elements: false
+    class: Drupal\ckeditor5_premium_features_productivity_pack\Plugin\CKEditor5Plugin\PasteFromOfficeEnhanced
+    library: ckeditor5_premium_features_productivity_pack/paste-from-office-enhanced
+
+ckeditor5_premium_features_productivity_pack_case_change:
+  ckeditor5:
+    plugins:
+      - caseChange.CaseChange
+  drupal:
+    label: Case Change
+    elements: false
+    library: ckeditor5_premium_features_productivity_pack/case-change
+    admin_library: ckeditor5_premium_features_productivity_pack/admin.case_change
+    class: Drupal\ckeditor5_premium_features_productivity_pack\Plugin\CKEditor5Plugin\CaseChange
+    toolbar_items:
+      caseChange:
+        label: Case change
+
+ckeditor5_premium_features_productivity_pack_base:
+  ckeditor5:
+    plugins: [ ]
+  drupal:
+    label: Productivity Pack
+    elements: false
+    class: Drupal\ckeditor5_premium_features_productivity_pack\Plugin\CKEditor5Plugin\ProductivityPackBase

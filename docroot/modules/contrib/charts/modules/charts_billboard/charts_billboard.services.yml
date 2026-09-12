@@ -1,0 +1,6 @@
+services:
+  charts_billboard.hooks:
+    class: Drupal\charts_billboard\Hook\ChartsBillboardHooks
+    arguments: ['@config.factory']
+    tags:
+      - { name: hook }

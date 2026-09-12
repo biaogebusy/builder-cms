@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,6 +12,7 @@
 namespace Psy;
 
 use Psy\Exception\BreakException;
+use Psy\Exception\InvalidManualException;
 use Psy\ExecutionLoop\ProcessForker;
 use Psy\ManualUpdater\ManualUpdate;
 use Psy\Util\DependencyChecker;
@@ -23,6 +24,7 @@ use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 if (!\function_exists('Psy\\sh')) {
     /**
@@ -32,7 +34,7 @@ if (!\function_exists('Psy\\sh')) {
      */
     function sh(): string
     {
-        if (\version_compare(\PHP_VERSION, '8.0', '<')) {
+        if (\PHP_VERSION_ID < 80000) {
             return '\extract(\Psy\debug(\get_defined_vars(), isset($this) ? $this : @\get_called_class()));';
         }
 
@@ -188,17 +190,22 @@ if (!\function_exists('Psy\\info')) {
         $input = [
             'interactive mode'  => $config->interactiveMode(),
             'input interactive' => $config->getInputInteractive(),
+            'bracketed paste'   => $config->useBracketedPaste(),
             'yolo'              => $config->yolo(),
         ];
 
-        if ($config->hasReadline()) {
-            $info = \readline_info();
+        $readlineService = $config->getReadline();
+        $interactiveReadline = $readlineService instanceof Readline\InteractiveReadlineInterface;
 
-            $readline = [
-                'readline available' => true,
-                'readline enabled'   => $config->useReadline(),
-                'readline service'   => \get_class($config->getReadline()),
-            ];
+        $readline = [
+            'readline available' => $config->hasReadline(),
+            'readline enabled'   => $config->useReadline(),
+            'readline service'   => \get_class($readlineService),
+        ];
+
+        // Only show system readline library info when actually using it
+        if ($config->hasReadline() && !$interactiveReadline) {
+            $info = \readline_info();
 
             if (isset($info['library_version'])) {
                 $readline['readline library'] = $info['library_version'];
@@ -207,10 +214,17 @@ if (!\function_exists('Psy\\info')) {
             if (isset($info['readline_name']) && $info['readline_name'] !== '') {
                 $readline['readline name'] = $info['readline_name'];
             }
-        } else {
-            $readline = [
-                'readline available' => false,
-            ];
+        }
+
+        $readline['interactive readline requested'] = $config->useExperimentalReadline();
+
+        if ($interactiveReadline) {
+            $readline['syntax highlighting'] = $config->useSyntaxHighlighting();
+        }
+
+        // Show supported diagnostic when requested but not active
+        if (!$interactiveReadline) {
+            $readline['interactive readline supported'] = Readline\InteractiveReadline::isSupported();
         }
 
         $output = [
@@ -221,8 +235,8 @@ if (!\function_exists('Psy\\info')) {
         ];
 
         $theme = $config->theme();
-        // @todo show styles (but only if they're different than default?)
-        $output['theme'] = [
+        $output['theme'] = $theme->getName() ?? [
+            // @todo show styles (but only if they're different than default?)
             'compact'      => $theme->compact(),
             'prompt'       => $theme->prompt(),
             'bufferPrompt' => $theme->bufferPrompt(),
@@ -247,12 +261,20 @@ if (!\function_exists('Psy\\info')) {
 
         $history = [
             'history file'     => ConfigPaths::prettyPath($config->getHistoryFile()),
+            'history format'   => $interactiveReadline ? 'jsonl' : 'plain text',
             'history size'     => $config->getHistorySize(),
             'erase duplicates' => $config->getEraseDuplicates(),
         ];
 
         $manualDbFile = $config->getManualDbFile();
-        $manual = $config->getManual();
+        $manual = null;
+        $manualError = null;
+
+        try {
+            $manual = $config->getManual();
+        } catch (InvalidManualException $e) {
+            $manualError = $e->getMessage();
+        }
 
         // If we have a manual but no db file path, it's bundled in the PHAR
         if ($manual && !$manualDbFile && \Phar::running(false)) {
@@ -265,7 +287,9 @@ if (!\function_exists('Psy\\info')) {
             ];
         }
 
-        if ($manual) {
+        if ($manualError) {
+            $docs['manual error'] = $manualError;
+        } elseif ($manual) {
             $meta = $manual->getMeta();
 
             foreach ($meta as $key => $val) {
@@ -280,9 +304,15 @@ if (!\function_exists('Psy\\info')) {
             }
         }
 
+        $completionIntegration = 'disabled';
+        if ($config->useTabCompletion()) {
+            $completionIntegration = $interactiveReadline ? 'interactive readline' : 'legacy readline shim';
+        }
+
         $autocomplete = [
-            'tab completion enabled' => $config->useTabCompletion(),
-            'bracketed paste'        => $config->useBracketedPaste(),
+            'tab completion enabled'  => $config->useTabCompletion(),
+            'completion integration'  => $completionIntegration,
+            'inline suggestions'      => $interactiveReadline && $config->useSuggestions(),
         ];
 
         $warmers = $config->getAutoloadWarmers();
@@ -364,7 +394,26 @@ if (!\function_exists('Psy\\info')) {
                 $core['commands'] = \array_map('get_class', $shell->all());
 
                 try {
-                    $autocomplete['custom matchers'] = \array_map('get_class', Sudo::fetchProperty($shell, 'matchers'));
+                    $autocomplete['custom legacy matchers'] = \array_map('get_class', Sudo::fetchProperty($shell, 'matchers'));
+                } catch (\ReflectionException $e) {
+                    // shrug
+                }
+
+                try {
+                    $completionEngine = Sudo::fetchProperty($shell, 'completionEngine');
+                    if ($completionEngine !== null) {
+                        $autocomplete['completion sources'] = \array_map('get_class', Sudo::fetchProperty($completionEngine, 'sources'));
+                        $autocomplete['completion refiners'] = \array_map('get_class', Sudo::fetchProperty($completionEngine, 'refiners'));
+                    }
+                } catch (\ReflectionException $e) {
+                    // shrug
+                }
+
+                try {
+                    $pendingCompletionSources = Sudo::fetchProperty($shell, 'pendingCompletionSources');
+                    if (!empty($pendingCompletionSources)) {
+                        $autocomplete['pending completion sources'] = \array_map('get_class', $pendingCompletionSources);
+                    }
                 } catch (\ReflectionException $e) {
                     // shrug
                 }
@@ -405,6 +454,11 @@ if (!\function_exists('Psy\\bin')) {
     function bin(): \Closure
     {
         return function () {
+            // Ensure exit() works when uopz extension is loaded with uopz.exit=0
+            if (\function_exists('uopz_allow_exit')) {
+                \uopz_allow_exit(true);
+            }
+
             if (!isset($_SERVER['PSYSH_IGNORE_ENV']) || !$_SERVER['PSYSH_IGNORE_ENV']) {
                 if (\defined('HHVM_VERSION_ID')) {
                     \fwrite(\STDERR, 'PsySH v0.11 and higher does not support HHVM. Install an older version, or set the environment variable PSYSH_IGNORE_ENV=1 to override this restriction and proceed anyway.'.\PHP_EOL);
@@ -450,6 +504,22 @@ if (!\function_exists('Psy\\bin')) {
                 $usageException = $e;
             }
 
+            if ($usageException === null) {
+                $cwd = null;
+                if ($input->hasOption('cwd')) {
+                    $cwd = $input->getOption('cwd');
+                }
+                if ($cwd === null || $cwd === '') {
+                    $cwd = $input->getParameterOption('--cwd', null, true);
+                }
+                if ($cwd !== null && $cwd !== '') {
+                    if (!@\chdir($cwd)) {
+                        \fwrite(\STDERR, 'Invalid --cwd directory: '.$cwd.\PHP_EOL);
+                        exit(1);
+                    }
+                }
+            }
+
             try {
                 $config = Configuration::fromInput($input);
             } catch (\InvalidArgumentException $e) {
@@ -489,26 +559,31 @@ $version
   $name [options] [--] [<files>...]
 
 <comment>Arguments:</>
-  <info>files</info>                   PHP file(s) to load before starting the shell
+  <info>files</info>                        PHP file(s) to load before starting the shell
 
 <comment>Options:</>
-  <info>-h, --help</info>              Display this help message
-      <info>--info</info>              Display PsySH environment and configuration info
-  <info>-V, --version</info>           Display the PsySH version{$selfUpdateOption}
-      <info>--update-manual[=LANG]</info> Download and install the latest PHP manual (optional language code)
+  <info>-h, --help</info>                   Display this help message
+      <info>--info</info>                   Display PsySH environment and configuration info
+  <info>-V, --version</info>                Display the PsySH version{$selfUpdateOption}
+      <info>--update-manual[=LANG]</info>   Download and install the latest PHP manual (optional language code)
 
-      <info>--warm-autoload</info>     Enable autoload warming for better tab completion
-      <info>--yolo</info>              Run PsySH without input validation (you don't want this)
+      <info>--experimental-readline</info>  Use experimental interactive readline implementation
+      <info>--warm-autoload</info>          Enable autoload warming for better tab completion
+      <info>--yolo</info>                   Run PsySH without input validation (you don't want this)
 
-  <info>-c, --config=FILE</info>       Use an alternate PsySH config file location
-      <info>--cwd=PATH</info>          Use an alternate working directory
-      <info>--color|--no-color</info>  Force (or disable with --no-color) colors in output
-  <info>-i, --interactive</info>       Force PsySH to run in interactive mode
-  <info>-n, --no-interactive</info>    Run PsySH without interactive input (requires input from stdin)
-  <info>-r, --raw-output</info>        Print var_export-style return values (for non-interactive input)
-      <info>--compact</info>           Run PsySH with compact output
-  <info>-q, --quiet</info>             Shhhhhh
-  <info>-v|vv|vvv, --verbose</info>    Increase the verbosity of messages
+  <info>-c, --config=FILE</info>            Use an alternate PsySH config file location
+      <info>--cwd=PATH</info>               Use an alternate working directory
+      <info>--trust-project</info>          Trust the current project for this run
+      <info>--no-trust-project</info>       Run in Restricted Mode for this project
+      <info>--color|--no-color</info>       Force (or disable with --no-color) colors in output
+  <info>-i, --interactive</info>            Force PsySH to run in interactive mode
+  <info>-n, --no-interactive</info>         Run PsySH without interactive input (requires input from stdin)
+      <info>--pager[=PAGER]</info>          Use an alternate output pager command (without a value, use the default pager)
+      <info>--no-pager</info>               Disable paging output for this run
+  <info>-r, --raw-output</info>             Print var_export-style return values (for non-interactive input)
+      <info>--compact</info>                Run PsySH with compact output
+  <info>-q, --quiet</info>                  Shhhhhh
+  <info>-v|vv|vvv, --verbose</info>         Increase the verbosity of messages
 
 <comment>Help:</>
   PsySH is an interactive runtime developer console for PHP. Use it as a REPL
@@ -549,7 +624,7 @@ EOL;
                     $output->writeln(\var_export($infoData, true));
                 } else {
                     $presenter = $config->getPresenter();
-                    $output->writeln($presenter->present($infoData));
+                    $output->writeln($presenter->present($infoData, null, VarDumper\Presenter::RAW), OutputInterface::OUTPUT_RAW);
                 }
                 exit(0);
             }
@@ -567,9 +642,14 @@ EOL;
 
             // Handle --update-manual
             if ($input->getOption('update-manual') !== false) {
-                $manualUpdate = ManualUpdate::fromConfig($config, $input);
-                $result = $manualUpdate->run($input, $config->getOutput());
-                exit($result);
+                try {
+                    $manualUpdate = ManualUpdate::fromConfig($config, $input, $config->getOutput());
+                    $result = $manualUpdate->run($input, $config->getOutput());
+                    exit($result);
+                } catch (\RuntimeException $e) {
+                    \fwrite(\STDERR, $e->getMessage().\PHP_EOL);
+                    exit(1);
+                }
             }
 
             $shell = new Shell($config);

@@ -36,7 +36,7 @@ class WebformSubmissionStorageTest extends KernelTestBase {
   /**
    * Test webform submission storage.
    */
-  public function testStorage() {
+  public function testStorage(): void {
     $webform = Webform::create([
       'id' => $this->randomMachineName(),
     ]);
@@ -56,7 +56,7 @@ class WebformSubmissionStorageTest extends KernelTestBase {
    *
    * @dataProvider providerPurge
    */
-  public function testPurge($webform_purging, $webform_submissions_definition, $purged) {
+  public function testPurge($webform_purging, $webform_submissions_definition, $purged): void {
     $request_time = \Drupal::time()->getRequestTime();
     $days_to_seconds = 60 * 60 * 24;
     $purge_days = 10;
@@ -82,6 +82,9 @@ class WebformSubmissionStorageTest extends KernelTestBase {
         ]);
         $webform_submission->in_draft = $definition[0];
         $webform_submission->setCreatedTime($definition[1] ? ($request_time - ($purge_days + 1) * $days_to_seconds) : $request_time);
+        if (!$definition[0]) {
+          $webform_submission->setCompletedTime($definition[1] ? ($request_time - ($purge_days + 1) * $days_to_seconds) : $request_time);
+        }
         $webform_submission->save();
       }
     }
@@ -114,7 +117,7 @@ class WebformSubmissionStorageTest extends KernelTestBase {
    *
    * @see testPurge()
    */
-  public function providerPurge() {
+  public static function providerPurge() {
     // phpcs:disable Drupal.Commenting.InlineComment.SpacingBefore
     // The structure of each test case data is the following:
     // 0: (string) The webform 'purge' setting

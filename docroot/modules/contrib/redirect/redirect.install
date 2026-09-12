@@ -24,7 +24,8 @@ function redirect_update_8100(&$sandbox) {
   if (!isset($sandbox['progress'])) {
     $sandbox['progress'] = 0;
     $sandbox['current_rid'] = 0;
-    // Note, because MySQL can treat `foo = LOWER(foo)`, all records must be checked.
+    // Note, because MySQL can treat `foo = LOWER(foo)`, all records must be
+    // checked.
     $sandbox['max'] = Database::getConnection()->query('SELECT COUNT(1) FROM {redirect}')->fetchField();
   }
 

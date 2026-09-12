@@ -65,14 +65,14 @@ class ElasticSearchBackend extends BackendPluginBase implements PluginFormInterf
   /**
    * The ElasticSearch Search API client.
    *
-   * @var \Drupal\elasticsearch_connector\SearchAPI\BackendClient
+   * @var ?\Drupal\elasticsearch_connector\SearchAPI\BackendClientInterface
    */
   protected $backendClient;
 
   /**
    * The Elasticsearch client.
    *
-   * @var \Elastic\Elasticsearch\Client
+   * @var ?\Elastic\Elasticsearch\Client
    */
   protected $client;
 
@@ -150,7 +150,7 @@ class ElasticSearchBackend extends BackendPluginBase implements PluginFormInterf
       '#ajax' => [
         'callback' => [$this, 'buildAjaxConnectorConfigForm'],
         'wrapper' => 'elasticsearch-connector-config-form',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'effect' => 'fade',
       ],
     ];
@@ -279,13 +279,14 @@ class ElasticSearchBackend extends BackendPluginBase implements PluginFormInterf
 
     // Check before loading the backend plugin so we don't throw an exception.
     $this->configuration['connector'] = $form_state->get('connector');
-    $connector = $this->getConnector();
-    if (!$connector instanceof PluginFormInterface) {
-      $form_state->setError($form['connector'], $this->t('The connector could not be activated.'));
-      return;
+    try {
+      $connector = $this->getConnector();
+      $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
+      $connector->validateConfigurationForm($form['connector_config'], $connector_form_state);
     }
-    $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
-    $connector->validateConfigurationForm($form['connector_config'], $connector_form_state);
+    catch (InvalidConnectorException) {
+      $form_state->setError($form['connector'], $this->t('The connector could not be activated.'));
+    }
   }
 
   /**
@@ -293,19 +294,22 @@ class ElasticSearchBackend extends BackendPluginBase implements PluginFormInterf
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $values['advanced']['synonyms'] = explode(\PHP_EOL, $form_state->getValue([
-      'advanced',
-      'synonyms',
-    ], ''));
+    $synonyms = $form_state->getValue(['advanced', 'synonyms'], '');
+    $values['advanced']['synonyms'] = empty($synonyms) ? [] : explode(\PHP_EOL, $synonyms);
     $this->setConfiguration($values);
     $this->configuration['connector'] = $form_state->getValue('connector');
-    $connector = $this->getConnector();
-    if ($connector instanceof PluginFormInterface) {
+    try {
+      $connector = $this->getConnector();
       $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
       $connector->submitConfigurationForm($form['connector_config'], $connector_form_state);
+
       // Overwrite the form values with type casted values.
       $form_state->setValue('connector_config', $connector->getConfiguration());
     }
+    catch (InvalidConnectorException) {
+      // No-op.
+    }
+
   }
 
   /**
@@ -515,6 +519,63 @@ class ElasticSearchBackend extends BackendPluginBase implements PluginFormInterf
     $event = new SupportsDataTypeEvent($type);
     $this->eventDispatcher->dispatch($event);
     return $event->isSupported() || parent::supportsDataType($type);
+  }
+
+  /**
+   * Get an index's mappings from the Elasticsearch server.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index to get the mappings from.
+   *
+   * @return array
+   *   Returns an array of mappings for the index, as defined by the
+   *   Elasticsearch server.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Throws a Search API exception if we cannot get the index's mappings.
+   */
+  public function getRawIndexMappings(IndexInterface $index): array {
+    return $this->getBackendClient()->getRawIndexMappings($index);
+  }
+
+  /**
+   * Get an index's settings from the server.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index to get the settings from.
+   *
+   * @return array
+   *   Returns an array of settings for the index, as defined by the
+   *   Elasticsearch server.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Throws a Search API exception if we cannot get the index's settings.
+   */
+  public function getRawIndexSettings(IndexInterface $index): array {
+    return $this->getBackendClient()->getRawIndexSettings($index);
+  }
+
+  /**
+   * Run an analyzer defined for an index on some text, returning the tokens.
+   *
+   * Warning: Generating excessive amount of tokens may cause a node to run out
+   * of memory (i.e.: cause Denial of Service on your Elasticsearch server)!
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index that the analyzer is defined on.
+   * @param string $analyzerId
+   *   The name of the analyzer to run.
+   * @param string $text
+   *   The text to run the analyzer on.
+   *
+   * @return array
+   *   An array of tokens as parsed by Elasticsearch.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Throws a Search API exception if the analyzer cannot be run.
+   */
+  public function runIndexAnalyzer(IndexInterface $index, string $analyzerId, string $text): array {
+    return $this->getBackendClient()->runIndexAnalyzer($index, $analyzerId, $text);
   }
 
 }

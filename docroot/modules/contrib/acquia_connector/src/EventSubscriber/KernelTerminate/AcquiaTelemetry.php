@@ -53,43 +53,4 @@ class AcquiaTelemetry implements EventSubscriberInterface {
     $this->telemetryService->sendTelemetry("Drupal Module Statistics");
   }
 
-  /**
-   * Creates and log event to dblog/syslog.
-   *
-   * @param string $event_type
-   *   The event type.
-   * @param array $event_properties
-   *   (optional) Event properties.
-   *
-   * @throws \Exception
-   *   Thrown if state key acquia_telemetry.loud is TRUE and request fails.
-   *
-   * @deprecated in acquia_connector:4.0.6 and is removed from
-   *  acquia_connector:4.1.0 Use the
-   *  'Drupal\acquia_connector\Services\AcquiaTelemetry::sendTelemetry'
-   *  method instead.
-   *
-   * @see https://www.drupal.org/project/acquia_connector/issues/3421575
-   */
-  public function sendTelemetry(string $event_type, array $event_properties = []): void {
-    $this->telemetryService->sendTelemetry($event_type, $event_properties);
-  }
-
-  /**
-   * Gets an array of all Acquia Drupal extensions.
-   *
-   * @return array
-   *   A flat array of all Acquia Drupal extensions.
-   *
-   * @deprecated in acquia_connector:4.0.6 and is removed from
-   *  acquia_connector:4.1.0 Use the
-   *  'Drupal\acquia_connector\Services\AcquiaTelemetry::getAcquiaExtensionNames'
-   *  method instead.
-   *
-   * @see https://www.drupal.org/project/acquia_connector/issues/3421575
-   */
-  public function getAcquiaExtensionNames(): array {
-    return $this->telemetryService->getAcquiaExtensionNames();
-  }
-
 }

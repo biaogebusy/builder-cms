@@ -6,35 +6,66 @@ namespace Drupal\Tests\Core\Test;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
- * @coversDefaultClass \Drupal\FunctionalJavascriptTests\WebDriverTestBase
- * @group Test
- * @runTestsInSeparateProcesses
+ * Tests Drupal\FunctionalJavascriptTests\WebDriverTestBase.
  */
+#[CoversClass(WebDriverTestBase::class)]
+#[Group('Test')]
+#[RunTestsInSeparateProcesses]
 class WebDriverTestBaseTest extends UnitTestCase {
 
   /**
    * Tests W3C setting is added to goog:chromeOptions as expected.
    *
-   * @testWith [false, null]
-   *           [false, ""]
-   *           ["", "", ""]
-   *           ["[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":true,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]", "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":true,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]"]
-   *           ["[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":false,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]", "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":false,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]"]
-   *           ["[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"args\":[\"--headless\"],\"w3c\":false}},\"http:\\/\\/localhost:4444\"]", "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]"]
-   *           ["[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":false}},\"http:\\/\\/localhost:4444\"]", "[\"chrome\",{\"browserName\":\"chrome\"},\"http:\\/\\/localhost:4444\"]"]
-   *
-   * @covers ::getMinkDriverArgs
+   * @legacy-covers ::getMinkDriverArgs
    */
-  public function testCapabilities($expected, ?string $mink_driver_args_webdriver, ?string $mink_driver_args = NULL): void {
+  #[TestWith([FALSE, NULL])]
+  #[TestWith([FALSE, ""])]
+  #[TestWith(["", "", FALSE, ""])]
+  #[TestWith([
+    "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":true,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]",
+    "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":true,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]",
+  ])]
+  #[TestWith([
+    "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":false,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]",
+    "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":false,\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]",
+    TRUE,
+  ])]
+  #[TestWith([
+    "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"args\":[\"--headless\"],\"w3c\":false}},\"http:\\/\\/localhost:4444\"]",
+    "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"args\":[\"--headless\"]}},\"http:\\/\\/localhost:4444\"]",
+    TRUE,
+  ])]
+  #[TestWith([
+    "[\"chrome\",{\"browserName\":\"chrome\",\"goog:chromeOptions\":{\"w3c\":false}},\"http:\\/\\/localhost:4444\"]",
+    "[\"chrome\",{\"browserName\":\"chrome\"},\"http:\\/\\/localhost:4444\"]",
+    TRUE,
+  ])]
+  #[IgnoreDeprecations]
+  public function testCapabilities($expected, ?string $mink_driver_args_webdriver, ?bool $deprecated = FALSE, ?string $mink_driver_args = NULL): void {
     $this->putEnv("MINK_DRIVER_ARGS_WEBDRIVER", $mink_driver_args_webdriver);
     $this->putEnv("MINK_DRIVER_ARGS", $mink_driver_args);
 
-    $object = new class('test') extends WebDriverTestBase {
+    // @phpstan-ignore testClass.missingAttribute.Group, testClass.missingAttribute.RunInSeparateProcesses
+    $object = new #[IgnoreDeprecations] class('test') extends WebDriverTestBase {
+
+      public function test(): void {
+        $this->assertEquals(1, 1);
+      }
+
     };
     $method = new \ReflectionMethod($object, 'getMinkDriverArgs');
     $this->assertSame($expected, $method->invoke($object));
+
+    if ($deprecated) {
+      $this->expectUserDeprecationMessage('The "w3c" option for Chrome is deprecated in drupal:11.4.0 and will be forced to TRUE in drupal:12.0.0. See https://www.drupal.org/node/3460567');
+    }
   }
 
   /**
@@ -47,6 +78,7 @@ class WebDriverTestBaseTest extends UnitTestCase {
    *   environment variable will be unset.
    *
    * @return void
+   *   No return value.
    */
   private function putEnv(string $variable, ?string $value): void {
     if (is_string($value)) {
@@ -55,23 +87,6 @@ class WebDriverTestBaseTest extends UnitTestCase {
     else {
       putenv($variable);
     }
-  }
-
-  /**
-   * Tests "chromeOptions" deprecation.
-   *
-   * @group legacy
-   *
-   * @covers ::getMinkDriverArgs
-   */
-  public function testChromeOptions(): void {
-    $this->expectDeprecation('The "chromeOptions" array key is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use "goog:chromeOptions instead. See https://www.drupal.org/node/3422624');
-    putenv('MINK_DRIVER_ARGS_WEBDRIVER=["chrome",{"browserName":"chrome","chromeOptions":{"args":["--headless"]}},"http://localhost:4444"]');
-
-    $object = new class('test') extends WebDriverTestBase {
-    };
-    $method = new \ReflectionMethod($object, 'getMinkDriverArgs');
-    $this->assertSame('["chrome",{"browserName":"chrome","goog:chromeOptions":{"args":["--headless"],"w3c":false}},"http:\\/\\/localhost:4444"]', $method->invoke($object));
   }
 
 }

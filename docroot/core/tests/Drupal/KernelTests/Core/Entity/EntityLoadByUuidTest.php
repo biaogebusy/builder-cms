@@ -6,12 +6,14 @@ namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests loading entities by UUID.
- *
- * @group entity
  */
+#[Group('entity')]
+#[RunTestsInSeparateProcesses]
 class EntityLoadByUuidTest extends KernelTestBase {
 
   /**

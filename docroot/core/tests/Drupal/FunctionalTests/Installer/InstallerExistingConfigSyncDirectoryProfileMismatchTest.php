@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Installer;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Verifies that installing from existing configuration works.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerExistingConfigSyncDirectoryProfileMismatchTest extends InstallerConfigDirectoryTestBase {
 
   /**
@@ -36,13 +39,13 @@ class InstallerExistingConfigSyncDirectoryProfileMismatchTest extends InstallerC
   /**
    * Installer step: Configure settings.
    */
-  protected function setUpSettings() {
+  protected function setUpSettings(): void {
     // Cause a profile mismatch by hacking the URL.
     $this->drupalGet(str_replace($this->profile, 'minimal', $this->getUrl()));
     parent::setUpSettings();
   }
 
-  protected function setUpSite() {
+  protected function setUpSite(): void {
     // This step will not occur because there is an error.
   }
 

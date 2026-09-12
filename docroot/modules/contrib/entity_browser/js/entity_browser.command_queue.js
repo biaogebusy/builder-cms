@@ -31,7 +31,7 @@
   Drupal.behaviors.entityBrowserCommandQueue = {
     attach: function (context) {
       $(once('register-execute-commands', '[name="ajax_commands_handler"]', context))
-        .bind('execute-commands', Drupal.entityBrowserCommandQueue.executeCommands);
+        .on('execute-commands', Drupal.entityBrowserCommandQueue.executeCommands);
     }
   };
 
@@ -76,7 +76,7 @@
       handler.trigger('execute_js_commands');
     }
     else if (!addedCommand && filledQueue) {
-      setTimeout($.proxy(Drupal.entityBrowserCommandQueue.executeCommands, handlerElement), 200);
+      setTimeout(Drupal.entityBrowserCommandQueue.executeCommands.bind(handlerElement), 200);
     }
   };
 

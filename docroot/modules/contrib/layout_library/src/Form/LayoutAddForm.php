@@ -74,9 +74,9 @@ class LayoutAddForm extends EntityForm {
 
     $form['label'] = [
       '#type' => 'textfield',
-      '#title' => t('Label'),
+      '#title' => $this->t('Label'),
       '#maxlength' => 255,
-      '#description' => t("Provide a label for this layout to help identify it in the administration pages."),
+      '#description' => $this->t("Provide a label for this layout to help identify it in the administration pages."),
       '#required' => TRUE,
     ];
     $form['id'] = [
@@ -108,7 +108,7 @@ class LayoutAddForm extends EntityForm {
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Save'),
+      '#value' => $this->t('Save'),
     ];
 
     return $form;
@@ -119,7 +119,7 @@ class LayoutAddForm extends EntityForm {
    */
   public function buildEntity(array $form, FormStateInterface $form_state) {
     $entity = parent::buildEntity($form, $form_state);
-    list($entity_type_id, $bundle) = explode(':', $form_state->getValue('_entity_type'), 2);
+    [$entity_type_id, $bundle] = explode(':', $form_state->getValue('_entity_type'), 2);
     $entity->set('targetEntityType', $entity_type_id);
     $entity->set('targetBundle', $bundle);
     return $entity;
@@ -128,9 +128,9 @@ class LayoutAddForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
+  public function save(array $form, FormStateInterface $form_state): int {
     $layout = $this->entity;
-    $layout->save();
+    $result = $layout->save();
 
     // @todo initialize the layout with each field available for the entity?
     $this->messenger->addMessage($this->t('Layout %label has been added.', ['%label' => $layout->label()]));
@@ -138,6 +138,7 @@ class LayoutAddForm extends EntityForm {
 
     // Redirect to edit the layout.
     $form_state->setRedirectUrl($this->entity->toUrl('layout-builder'));
+    return $result;
   }
 
 }

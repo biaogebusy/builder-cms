@@ -1,0 +1,10 @@
+ckeditor5.plugin.ckeditor5_premium_features_line_height__line_height:
+  type: mapping
+  label: 'Line Height'
+  mapping:
+    options:
+      type: string
+      label: 'Options'
+    default_option:
+      type: string
+      label: 'Default option label'

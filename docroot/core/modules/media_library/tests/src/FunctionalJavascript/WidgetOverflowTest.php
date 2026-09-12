@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that uploads in the 'media_library_widget' works as expected.
  *
- * @group media_library
- * @group #slow
- *
  * @todo This test will occasionally fail with SQLite until
  *   https://www.drupal.org/node/3066447 is addressed.
  */
+#[Group('media_library')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class WidgetOverflowTest extends MediaLibraryTestBase {
 
   use TestFileCreationTrait;
@@ -73,7 +76,7 @@ class WidgetOverflowTest extends MediaLibraryTestBase {
       $this->assertNotEmpty($path);
       $this->assertFileExists($path);
 
-      $filenames[] = $file_system->basename($path);
+      $filenames[] = basename($path);
       $remote_paths[] = $this->getSession()
         ->getDriver()
         ->uploadFileAndGetRemoteFilePath($path);
@@ -95,9 +98,8 @@ class WidgetOverflowTest extends MediaLibraryTestBase {
    *   The operation of the button to click. For example, if this is "insert",
    *   the "Save and insert" button will be pressed. If NULL, the "Save" button
    *   will be pressed.
-   *
-   * @dataProvider providerWidgetOverflow
    */
+  #[DataProvider('providerWidgetOverflow')]
   public function testWidgetOverflow(?string $selected_operation): void {
     // If we want to press the "Save and insert" or "Save and select" buttons,
     // we need to enable the advanced UI.
@@ -106,7 +108,6 @@ class WidgetOverflowTest extends MediaLibraryTestBase {
     }
 
     $assert_session = $this->assertSession();
-    $page = $this->getSession()->getPage();
     $this->drupalGet('node/add/basic_page');
     // Upload 5 files into a media field that only allows 2.
     $this->openMediaLibraryForField('field_twin_media');
@@ -120,15 +121,38 @@ class WidgetOverflowTest extends MediaLibraryTestBase {
       $this->pressSaveButton();
     }
     $this->waitForElementTextContains('.messages--warning', 'There are currently 5 items selected. The maximum number of items for the field is 2. Remove 3 items from the selection.');
+
+    // Assert that unchecked media items are disabled when the selection
+    // exceeds the allowed maximum. This verifies the fix for the case where
+    // uploading multiple files at once causes the selection to exceed the
+    // limit; previously items were only disabled when the selection count
+    // was exactly equal to the limit.
+    $checkboxes = $this->getCheckboxes();
+    foreach ($checkboxes as $checkbox) {
+      if (!$checkbox->isChecked()) {
+        $this->assertTrue($checkbox->hasAttribute('disabled'), 'Unchecked media items should be disabled when selection exceeds the limit.');
+      }
+    }
+
     // If the user tries to insert the selected items anyway, they should get
     // an error.
     $this->pressInsertSelected(NULL, FALSE);
     $this->waitForElementTextContains('.messages--error', 'There are currently 5 items selected. The maximum number of items for the field is 2. Remove 3 items from the selection.');
     $assert_session->elementNotExists('css', '.messages--warning');
-    // Once the extra items are deselected, all should be well.
+    // Once the extra items are deselected, the error message should be
+    // automatically cleared.
     $this->deselectMediaItem(2);
     $this->deselectMediaItem(3);
     $this->deselectMediaItem(4);
+    $assert_session->elementNotExists('css', '.messages--error');
+    // After deselecting to exactly the limit (2 of 2), unchecked items
+    // should still be disabled since the selection is at the maximum.
+    $checkboxes = $this->getCheckboxes();
+    foreach ($checkboxes as $checkbox) {
+      if (!$checkbox->isChecked()) {
+        $this->assertTrue($checkbox->hasAttribute('disabled'), 'Unchecked media items should be disabled when selection is at the limit.');
+      }
+    }
     $this->pressInsertSelected('Added 2 media items.');
   }
 
@@ -139,9 +163,8 @@ class WidgetOverflowTest extends MediaLibraryTestBase {
    *   The operation of the button to click. For example, if this is "insert",
    *   the "Save and insert" button will be pressed. If NULL, the "Save" button
    *   will be pressed.
-   *
-   * @dataProvider providerWidgetOverflow
    */
+  #[DataProvider('providerWidgetOverflow')]
   public function testUnlimitedCardinality(?string $selected_operation): void {
     if ($selected_operation) {
       $this->config('media_library.settings')->set('advanced_ui', TRUE)->save();

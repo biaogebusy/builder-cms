@@ -13,16 +13,17 @@ use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field rendering in views.
  *
- * @group field
- *
  * @todo Extend test coverage in #3046722.
- *
  * @see https://www.drupal.org/project/drupal/issues/3046722
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class HandlerFieldFieldTest extends KernelTestBase {
 
   use NodeCreationTrait;
@@ -109,7 +110,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
   /**
    * Tests simple field rendering.
    */
-  public function doTestSimpleFieldRender() {
+  public function doTestSimpleFieldRender(): void {
     $view = Views::getView('test_view_fieldapi');
     $this->prepareView($view);
     $view->preview();
@@ -128,7 +129,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
   /**
    * Tests inaccessible field rendering.
    */
-  public function doTestInaccessibleFieldRender() {
+  public function doTestInaccessibleFieldRender(): void {
     $view = Views::getView('test_view_fieldapi');
     $this->prepareView($view);
     $view->preview();
@@ -150,7 +151,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
   /**
    * Tests that fields with formatters runs as expected.
    */
-  public function doTestFormatterSimpleFieldRender() {
+  public function doTestFormatterSimpleFieldRender(): void {
     $view = Views::getView('test_view_fieldapi');
     $this->prepareView($view);
     $view->displayHandlers->get('default')->options['fields'][$this->fieldStorages[5]->getName()]['type'] = 'text_trimmed';
@@ -172,7 +173,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
   /**
    * Tests multi-value field rendering.
    */
-  public function doTestMultipleFieldRender() {
+  public function doTestMultipleFieldRender(): void {
     $view = Views::getView('test_view_fieldapi');
     $field_name = $this->fieldStorages[3]->getName();
 
@@ -199,7 +200,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
     $view->style_plugin->getField(4, $this->fieldStorages[4]->getName());
     $view->destroy();
 
-    // Test delta limit + offset
+    // Test delta limit + offset.
     $this->prepareView($view);
     $view->displayHandlers->get('default')->options['fields'][$field_name]['group_rows'] = TRUE;
     $view->displayHandlers->get('default')->options['fields'][$field_name]['delta_limit'] = 3;
@@ -313,7 +314,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
    * @param \Drupal\views\ViewExecutable $view
    *   The view to add field data to.
    */
-  protected function prepareView(ViewExecutable $view) {
+  protected function prepareView(ViewExecutable $view): void {
     $view->storage->invalidateCaches();
     $view->initDisplay();
     foreach ($this->fieldStorages as $field_storage) {
@@ -327,7 +328,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
   /**
    * Creates the testing fields.
    */
-  protected function createFields() {
+  protected function createFields(): void {
     $fields_data = [
       [
         'field_name' => 'field_name_0',

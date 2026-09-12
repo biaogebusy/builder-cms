@@ -1,5 +1,4 @@
 webform_ui:
-  version: VERSION
   css:
     theme:
       css/webform_ui.module.css: {}

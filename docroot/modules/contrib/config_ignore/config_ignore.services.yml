@@ -1,7 +1,16 @@
 services:
+  logger.channel.config_ignore:
+    class: Drupal\Core\Logger\LoggerChannel
+    factory: [ '@logger.factory', 'get' ]
+    arguments: [ 'config_ignore' ]
+
   config_ignore.event_subscriber:
     class: Drupal\config_ignore\EventSubscriber\ConfigIgnoreEventSubscriber
-    arguments: ['@config.factory', '@module_handler', '@config.storage', '@config.storage.sync']
+    arguments:
+      - '@config.factory'
+      - '@module_handler'
+      - '@config.storage'
+      - '@config.storage.sync'
+      - '@logger.channel.config_ignore'
     tags:
       - { name: event_subscriber }
-      - { name: cache_tags_invalidator }

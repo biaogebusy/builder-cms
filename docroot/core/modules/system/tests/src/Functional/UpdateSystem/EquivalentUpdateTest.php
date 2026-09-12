@@ -7,12 +7,14 @@ namespace Drupal\Tests\system\Functional\UpdateSystem;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\RequirementsPageTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that update hooks are properly run.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class EquivalentUpdateTest extends BrowserTestBase {
 
   use RequirementsPageTrait;
@@ -56,7 +58,7 @@ class EquivalentUpdateTest extends BrowserTestBase {
   /**
    * Tests that update hooks are properly run.
    */
-  public function testUpdateHooks() {
+  public function testUpdateHooks(): void {
     /** @var \Drupal\Core\Update\UpdateHookRegistry $update_registry */
     $update_registry = \Drupal::service('update.update_hook_registry');
     $this->drupalLogin($this->user);
@@ -199,7 +201,7 @@ class EquivalentUpdateTest extends BrowserTestBase {
   /**
    * Tests that module uninstall removes skipped update information.
    */
-  public function testModuleUninstall() {
+  public function testModuleUninstall(): void {
     /** @var \Drupal\Core\Update\UpdateHookRegistry $update_registry */
     $update_registry = \Drupal::service('update.update_hook_registry');
 

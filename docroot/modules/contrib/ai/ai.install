@@ -143,3 +143,14 @@ function ai_update_13005() {
     $config->set('allowed_hosts_rewrite_links', FALSE)->save();
   }
 }
+
+/**
+ * Install the ai_file content entity for existing installations.
+ */
+function ai_update_14001(): void {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  if (!$update_manager->getEntityType('ai_file')) {
+    $definition = \Drupal::entityTypeManager()->getDefinition('ai_file');
+    $update_manager->installEntityType($definition);
+  }
+}

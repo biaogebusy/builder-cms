@@ -3,7 +3,7 @@
 namespace Drupal\ai_automators;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\ai_automators\Event\ValuesChangeEvent;
 use Drupal\ai_automators\Exceptions\AiAutomatorRuleNotFoundException;
@@ -17,7 +17,7 @@ class AiAutomatorRuleRunner {
   /**
    * The entity type manager.
    */
-  protected EntityTypeManager $entityType;
+  protected EntityTypeManagerInterface $entityType;
 
   /**
    * The field rule manager.
@@ -32,14 +32,14 @@ class AiAutomatorRuleRunner {
   /**
    * Constructs a new AiAutomatorRuleRunner object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type definition.
    * @param \Drupal\ai_automators\AiFieldRules $fieldRules
    *   The field rule manager.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    */
-  public function __construct(EntityTypeManager $entityTypeManager, AiFieldRules $fieldRules, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, AiFieldRules $fieldRules, EventDispatcherInterface $eventDispatcher) {
     $this->entityType = $entityTypeManager;
     $this->fieldRules = $fieldRules;
     $this->eventDispatcher = $eventDispatcher;

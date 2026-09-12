@@ -39,7 +39,7 @@ Once you have setup building your code base using composer, require the module
 via
 
 ```
-  $ composer require drupal/file_mdm:^2
+  $ composer require drupal/file_mdm
 ```
 
 then enable the module as usual. Also enable the EXIF or font submodules if

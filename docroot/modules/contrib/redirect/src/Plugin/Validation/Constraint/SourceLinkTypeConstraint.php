@@ -2,6 +2,8 @@
 
 namespace Drupal\redirect\Plugin\Validation\Constraint;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Validation\Attribute\Constraint as ConstraintAttribute;
 use Drupal\link\LinkItemInterface;
 use Drupal\Core\Url;
 use Drupal\Core\ParamConverter\ParamNotConvertedException;
@@ -20,6 +22,10 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  *   label = @Translation("Link data valid for redirect source link type.", context = "Validation"),
  * )
  */
+#[ConstraintAttribute(
+  id: 'RedirectSourceLinkType',
+  label: new TranslatableMarkup('Link data valid for redirect source link type.', [], ['context' => 'Validation']),
+)]
 class SourceLinkTypeConstraint extends Constraint implements ConstraintValidatorInterface {
 
   /**

@@ -1,0 +1,14 @@
+name: CKEditor 5 Premium Features
+type: module
+description: "Provides general configuration and authentication used by all CKEditor 5 Premium Features."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^10.3 || ^11
+configure: ckeditor5_premium_features.form.settings
+dependencies:
+  - drupal:editor
+  - drupal:ckeditor5
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

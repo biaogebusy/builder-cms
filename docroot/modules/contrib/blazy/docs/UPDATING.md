@@ -1,138 +1,182 @@
 
 ***
-## <a name="updating"></a>UPDATE SOP
-Please ignore any documentation if already aware of Drupal site building. This
-is for the sake of completed documentation for those who may need it.
+## <a name="updating"> </a>Standard Operating Procedure (SOP) for Updates
 
-**Note the order!**
-It is very important to follow as is for successful updates. If you don't follow
-the SOP, and stuck on a broken site, no need to uninstall modules which
-will remove all configuration, formatter, etc. Instead try downgrading the
-module versions, clear cache, and follow the SOP strictly before re-updating.
+> **Documentation Scope:** This documentation is comprehensive to serve as a
+definitive resource and reduce repetitive support inquiries. If you are an
+experienced site-builder, feel free to bypass the foundational steps. However,
+for those seeking a guaranteed stable deployment, these procedures are
+mandatory.
+
+### Quick Start: Update Commands
+
+| Scenario | Primary Command / Action |
+| --- | --- |
+| **Major Upgrade (2.x to 3.x)** | `composer require drupal/blazy:^3.0 -W -n` <br /> See Blazy project home [**Upgrade Path**](https://www.drupal.org/project/blazy#blazy-upgrade) |
+| **Standard Update (Drush)** | `drush cr && drush updb && drush cr` |
+| **Asset Issues (CSS/JS UI)** | Toggle Aggregation in [**Performance Page**](/admin/config/development/performance) with **Clearing all caches** button |
+| **WSOD Emergency Recovery** | Delete `composer.lock` & `/vendor`, then `composer install -W -n` |
+
+---
+
+### Full Update SOP
+
+> [!IMPORTANT]
+> **The Golden Rule of Updates:**
+>
+> Strict adherence to the order of operations below is required. If your site
+becomes unstable, **do not uninstall the module** (which destroys
+configuration). Instead, downgrade to your previous version, clear all caches,
+and restart this SOP from step one.
+
+#### 1. Update via Composer
+For major version upgrades (e.g., 2.x to 3.x), you must perform a
+**parallel upgrade** to ensure all dependencies resolve simultaneously.
+
+* **Main Module only:**
+```bash
+   composer require drupal/blazy:^3.0 -W -n
+```
+
+* **With Sub-modules (if installed):**
+```bash
+   composer require drupal/blazy:^3.0 drupal/slick:^3.0 drupal/slick_views:^3.0 -W -n
+```
+
+**Note:** The `-W` (with-dependencies) and `-n` (no-interaction) flags ensure a
+smooth, automated update of the entire tree.
+
+#### 2. Update via Drush (The Preferred Method)
+Once composer is done, ​execute this specific sequence to ensure the container
+and database are synchronized:
+
+```bash
+drush cr && drush updb && drush cr
+```
+
+The first `drush cr` ensures the new code is (re-)mapped correctly in
+`../files/php`. Failing to do this is the major error reason.
+
+#### 3. Update via UI (Manual / No-Drush)
+If you do not have access to Drush, follow these steps in strict order.
+**Preparation (backup) is vital**.
+
+1. **Staging First:**
+
+   Never update Production directly. Test on a Dev/Staging environment and
+   ensure you have a fresh backup (e.g., via
+   [backup_migrate](https://drupal.org/project/backup_migrate)). If you override
+   asset or template files, be sure to cross-check against the latest releases
+   for any potential changes (see the relevant **Change Records** links from the
+   ecosystem project homes), and re-adjust them accordingly. Major releases may
+   have potentially breaking changes to leverage either Core upgrade
+   requirements or any internal major betterment like seen from Blazy 2.17 to
+   3.x, see more details if any provided at
+   [Admin status](/admin/reports/status).
+
+2. **Maintenance Mode:**
+
+   Place the site in [Maintenance Mode](/admin/config/development/maintenance).
+
+3. **The "Safety Tab":**
+
+   Open the [**Performance Page**](/admin/config/development/performance) in a
+   separate browser tab. Do not close or reload this tab. This is
+   your emergency access to clear caches if the rest of the UI breaks.
+
+4. **Download Files:**
+
+   Replace the module files via the
+   [Update UI](/admin/modules/update), FTP or Composer.
+
+5. **Pre-Update Cache Clear:**
+
+   Before running any database updates, hit "**Clear all caches**". This ensures
+   the new code is mapped correctly in `../files/php`. Failing to do this is the
+   major error reason.
+
+6. **Run Updates:**
+
+   Navigate to `/update.php` in your browser and execute pending tasks.
+
+7. **Post-Update Cache Clear:**
+
+   Clear all caches a second time.
+
+8. **Rebuild Assets:**
+
+   Only if you see CSS/JS issues and regular cache clearing fails, toggle
+   aggregation on the
+   [**Performance Page**](/admin/config/development/performance) to force a
+   regeneration assets.
+
+9. **Verification:**
+
+   Verify the latest status at [Admin status](/admin/reports/status) and view
+   your site.
+
+---
+
+## <a name="wsod"> </a>Emergency Recovery (WSOD)
+This might or might not be related to Blazy updates. If you encounter a
+**White Screen of Death** (WSOD) that a standard cache clear cannot fix, perform
+a total environment rebuild:
+
+1. Rename or delete the `composer.lock` file and the `/vendor` directory.
+2. Run `composer update -W -n` to reinstall a clean dependency tree.
+3. **Flush File System:** If assets are corrupted, manually delete:
+    * `web/sites/default/files/css`
+    * `web/sites/default/files/js`
+4. Run the Drush "Power Cycle": `drush cr && drush updb && drush cr`.
+5. If WSOD persists, capture the error message/log; search or post it to any
+   identified module mentioned in it.
+
+**Note on Stability:**
+Alpha, Beta, and DEV releases are for development environments. Always align
+your versions (Dev-to-Dev, Stable-to-Stable) as outlined in the
+[Version compatibility](#first).
+
+---
+
+## <a name="d11-compat"> </a>Drupal 11 Compatibility
+
+Blazy 3.x continues to operate reliably on Drupal 11 in many environments and
+remains suitable for existing projects that are already stable.
+
+Blazy 4.x, however, is the branch officially aligned with Drupal 11. It
+formalizes compatibility by:
+
+- Updating hook implementations to follow current Drupal 11 standards
+- Removing deprecated APIs
+- Streamlining and modernizing internal architecture
+
+While immediate migration is not required for sites where Blazy 3.x is
+functioning well, projects planning long-term Drupal 11 development are
+encouraged to evaluate Blazy 4.x.
+
+Adopting 4.x ensures alignment with the current Drupal API direction and
+positions projects for future enhancements and ongoing maintenance improvements.
+
+---
+
+##  <a name="4x-upgrade"> </a>Upgrade Path: 3.x → 4.x
+
+Blazy 4.x is a major release that formalizes Drupal 11 alignment and removes
+previously deprecated APIs. While most runtime behavior remains consistent, some
+internal classes and deprecated methods introduced in 3.x have been cleaned up
+as part of this release.
+
+For many sites using default configurations, upgrading from 3.x to 4.x should be
+straightforward. Projects with custom integrations or extensions are encouraged
+to review the documented deprecations and API adjustments before upgrading.
+
+A detailed list of changes, deprecated components, and their replacements is
+available in the Change Record:
+
+→ See the full <a href="https://www.drupal.org/node/3575429">Change Record</a>
+  for 4.x.
 
 
-### WITH COMPOSER
-#### Upgrading from 2.x to 3+
-
-**Without sub-modules:**
-````
-composer require drupal/blazy:^3.0 -W -n
-````
-
-**With sub-modules:**
-````
-composer require drupal/slick_extras:^2.0 drupal/slick_views:^3.0 drupal/slick:^3.0 drupal/blazy:^3.0 -W -n
-````
-This is what parallel upgrade is -- composer require them all once. Remove or add more sub-modules as needed. Change version numbers accordingly for each upgarde. `-W -n` is not required, but handy and quick. In plain words: no fuss,
-just download themj all with dependencies, if any. Specifing the number is
-crucial on any branch upgrade, not required on minor version update.
-
-### WITH DRUSH
-````
-drush cr
-drush updb
-drush cr
-````
-This exact silly combo works all the time, and you are done!
-
-### WITHOUT DRUSH
-If not using drush, and or there are still remaining errors, the following will
-help.
-
-Visit any of the following URLs **before** updating Blazy, or its sub-modules.
-
-1. Always test updates at DEV or STAGING environments like a pro so nothing
-   breaks your PRODUCTION site until everything is thoroughly reviewed.
-   Have a restore point aka backup with
-   [backup_migrate](https://drupal.org/project/backup_migrate) module, etc.
-
-
-2. [Admin status](/admin/reports/status)
-
-   Check for any pending update.
-
-3. [/admin/config/development/maintenance](/admin/config/development/maintenance)
-
-   Be sure to put your site on maintenance mode.
-
-4. [/admin/config/development/performance](/admin/config/development/performance)
-   * Keep the `Performance` page open on a separate tab till the update is
-     performed. This will be your last resort if updates have errors.
-     Don't do anything here now, just keep it open, never even reload this page!
-   * Do not proceed until step 8:
-     Regenerate CSS and JS as the latest fixes may contain changes
-     to the assets. Ignore below if you are aware, and found no asset changes
-     from commits. Normally clearing cache at step 8 suffices at most cases.
-     * Uncheck CSS and JS aggregation options under Bandwidth optimization.
-     * Save.
-     * [Ignorable] See one of Blazy related pages if display is expected.
-     * [Ignorable] Only clear cache if needed.
-     * Check both options again.
-     * Save again.
-     * [Ignorable] Press F5, or CMD/ CTRL + R to clear browser cache if
-       needed.
-
-5. Use [Drupal UI to download the modules](/admin/modules/update), or composer
-   as above.
-
-6. Hit **Clear all caches** for the first time once the new Blazy in place,
-   immediately after updated modules are in downloaded.
-   Do not run `/update.php` yet until all caches are cleared up! Even if
-   `/update.php` looks like taking care of this.
-   Clearing cache should fix most issues with or without updates. If any, this
-   step will also make sure a smooth update, since all code base, including
-   those dynamic ones generated at `../files/php`, are now synced.
-   Any blocking code changes will no longer block the update process. Most
-   reported errors are due to failing to clear cache in the first place prior
-   to running updates.
-
-7. Run `/update.php` from browser address bar.
-   Do not view your website till the update is performed.
-
-8. Hit **Clear all caches** for the second time.
-
-9. If Twig templates are customized, compare against the latest. If having lots
-   of customized works, review the latest `blazy.api.php`, if any new changes.
-   Hit **Clear all caches** again only if any change to templates.
-
-10. Put your site back online when all is good:
-    [/admin/config/development/maintenance](/admin/config/development/maintenance)
-
-Unless Blazy makes a stupid mistake, often times the root cause of all upgrade
-evils is cache. Failing to clear it will lead to issues, or even WSOD.
-* Read more the [TROUBLESHOOTING](#troubleshooting) section for common trouble
-  solutions.
-* Check [this](https://drupal.org/node/3263027#comment-14402693) out for hints
-  on testing updates against Blazy ecosystem.
-
-## <a name="wsod"></a>WSOD - WORST CASE UPDATE SOP
-This might or might not be related to Blazy updates. At times, we got a WSOD.
-The following should do a total rebuild if a WSOD is not easily fixed by the
-above regular Update SOP:
-1. Rename or delete `composer.lock` file and `vendor` folder at Drupal docroot.
-2. Run `composer update -W -n`, and or plus any additional arguments as per your
-   install so to re-configure composer including its `vendor` folder.
-3. Only if any issues with asset re-generations, rename or delete folders:
-   + `web/sites/default/files/css`
-   + `web/sites/default/files/js`
-4. Run `composer clear-cache`, if necessary. Will slow it down temporarily!
-5. Run `drush cr`, `drush updb` and `drush cr`. Note the silly sequence!
-
-
-## BROKEN MODULES
-Alpha, Beta, DEV releases are for developers only. Beware of possible breakage.
-
-However if it is broken, running `drush cr`, `drush updb` and `drush cr` during
-DEV releases should fix most issues as we add new services, or change things.
-If you don't drush, before any module update:
-
-1. Always open a separate tab:
-
-   [Performance](/admin/config/development/performance)
-2. And so you are ready to hit **Clear all caches** button if any issue. Do not
-   reload this page.
-3. Instead view other browser tabs, and simply hit the button if any
-   issue.
-4. Run `/update.php` as required.
-5. D7 only, at worst case, know how to run
-   [Registry Rebuild](https://www.drupal.org/project/registry_rebuild) safely.
+---
+<a href="#top">Back to Top &uarr;</a>
+---

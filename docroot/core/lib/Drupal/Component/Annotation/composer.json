@@ -7,12 +7,12 @@
     "homepage": "https://www.drupal.org/project/drupal",
     "license": "GPL-2.0-or-later",
     "require": {
-        "php": ">=8.1.0",
-        "drupal/core-class-finder": "^10.6",
-        "drupal/core-file-cache": "^10.6",
-        "drupal/core-plugin": "^10.6",
-        "drupal/core-utility": "^10.6",
-        "doctrine/lexer": "^2"
+        "php": ">=8.3.0",
+        "doctrine/lexer": "^2 || ^3",
+        "drupal/core-class-finder": "^11.4",
+        "drupal/core-file-cache": "^11.4",
+        "drupal/core-plugin": "^11.4",
+        "drupal/core-utility": "^11.4"
     },
     "autoload": {
         "psr-4": {

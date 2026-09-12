@@ -78,15 +78,18 @@ class MenuPerRoleLinkTreeManipulator extends DefaultMenuLinkTreeManipulators {
         /** @var array $show_role */
         $show_role = $entity->menu_per_role__show_role->getValue();
         $show_role = \array_column($show_role, 'target_id');
-        /** @var array $hidden_role */
-        $hidden_role = $entity->menu_per_role__hide_role->getValue();
-        $hidden_role = \array_column($hidden_role, 'target_id');
 
         // Check whether this role has visibility access (must be present).
         if ($show_role && \count(\array_intersect($show_role, $this->account->getRoles())) == 0) {
           $result = $result->andIf(AccessResult::forbidden()
             ->addCacheContexts(['user.roles']));
         }
+      }
+
+      if (isset($entity->menu_per_role__hide_role)) {
+        /** @var array $hidden_role */
+        $hidden_role = $entity->menu_per_role__hide_role->getValue();
+        $hidden_role = \array_column($hidden_role, 'target_id');
 
         // Check whether this role has visibility access (must not be present).
         if ($hidden_role && \count(\array_intersect($hidden_role, $this->account->getRoles())) > 0) {

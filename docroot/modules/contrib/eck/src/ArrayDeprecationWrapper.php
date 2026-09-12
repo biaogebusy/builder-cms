@@ -5,7 +5,7 @@ namespace Drupal\eck;
 use Drupal\Core\Render\RenderableInterface;
 
 /**
- * Class ArrayDeprecationWrapper
+ * Defines a wrapper for deprecating access to an array with a warning.
  *
  * @package Drupal\eck
  */
@@ -30,7 +30,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
    *
    * @param array $wrappedArray
    *   The array being deprecated.
-   * @param $deprecationWarning
+   * @param string $deprecationWarning
    *   The warning that should be raised when it is accessed.
    */
   public function __construct(array &$wrappedArray, $deprecationWarning) {
@@ -43,7 +43,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
    */
   #[\ReturnTypeWillChange]
   public function offsetExists($offset) {
-    trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
+    @trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     return isset($this->wrappedArray[$offset]);
   }
 
@@ -52,7 +52,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
    */
   #[\ReturnTypeWillChange]
   public function offsetGet($offset) {
-    trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
+    @trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     return $this->wrappedArray[$offset];
   }
 
@@ -61,7 +61,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
    */
   #[\ReturnTypeWillChange]
   public function offsetSet($offset, $value) {
-    trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
+    @trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     $this->wrappedArray[$offset] = $value;
   }
 
@@ -70,7 +70,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
    */
   #[\ReturnTypeWillChange]
   public function offsetUnset($offset) {
-    trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
+    @trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     unset($this->wrappedArray[$offset]);
   }
 
@@ -81,7 +81,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
    *   A render array.
    */
   public function toRenderable() {
-    trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
+    @trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     return $this->wrappedArray;
   }
 

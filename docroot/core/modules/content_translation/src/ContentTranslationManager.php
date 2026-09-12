@@ -2,41 +2,34 @@
 
 namespace Drupal\content_translation;
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\workflows\Entity\Workflow;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 
 /**
  * Provides common functionality for content translation.
  */
 class ContentTranslationManager implements ContentTranslationManagerInterface, BundleTranslationSettingsInterface {
 
-  /**
-   * The entity type bundle info provider.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * Constructs a ContentTranslationManageAccessCheck object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info provider.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected EntityTypeBundleInfoInterface $entityTypeBundleInfo,
+    protected ?AccountProxyInterface $currentUser = NULL,
+    protected ?LanguageManagerInterface $languageManager = NULL,
+  ) {
+    if (!$this->currentUser) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $currentUser argument is deprecated in drupal:11.4.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/node/3567484', E_USER_DEPRECATED);
+      $this->currentUser = \Drupal::currentUser();
+    }
+    if (!$this->languageManager) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $languageManager argument is deprecated in drupal:11.4.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/node/3567484', E_USER_DEPRECATED);
+      $this->languageManager = \Drupal::languageManager();
+    }
   }
 
   /**
@@ -123,6 +116,30 @@ class ContentTranslationManager implements ContentTranslationManagerInterface, B
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function access(EntityInterface $entity): AccessResultInterface {
+    $condition = $entity instanceof ContentEntityInterface
+      && $entity->access('view')
+      && !$entity->getUntranslated()->language()->isLocked()
+      && $this->languageManager->isMultilingual()
+      && $entity->isTranslatable()
+      && (
+        $this->currentUser->hasPermission('create content translations')
+        || $this->currentUser->hasPermission('update content translations')
+        || $this->currentUser->hasPermission('delete content translations')
+        || (
+          $this->currentUser->hasPermission('translate editable entities')
+          && $entity->access('update')
+        )
+      );
+
+    return AccessResult::allowedIf($condition)
+      ->cachePerPermissions()
+      ->addCacheableDependency($entity);
+  }
+
+  /**
    * Loads a content language config entity based on the entity type and bundle.
    *
    * @param string $entity_type_id
@@ -140,7 +157,11 @@ class ContentTranslationManager implements ContentTranslationManagerInterface, B
     }
     $config = $this->entityTypeManager->getStorage('language_content_settings')->load($entity_type_id . '.' . $bundle);
     if ($config == NULL) {
-      $config = $this->entityTypeManager->getStorage('language_content_settings')->create(['target_entity_type_id' => $entity_type_id, 'target_bundle' => $bundle]);
+      $config = $this->entityTypeManager->getStorage('language_content_settings')
+        ->create([
+          'target_entity_type_id' => $entity_type_id,
+          'target_bundle' => $bundle,
+        ]);
     }
     return $config;
   }
@@ -168,24 +189,13 @@ class ContentTranslationManager implements ContentTranslationManagerInterface, B
       return FALSE;
     }
 
-    foreach (Workflow::loadMultipleByType('content_moderation') as $workflow) {
-      /** @var \Drupal\content_moderation\Plugin\WorkflowType\ContentModeration $plugin */
-      $plugin = $workflow->getTypePlugin();
-      $entity_type_ids = array_flip($plugin->getEntityTypes());
-      if (isset($entity_type_ids[$entity_type_id])) {
-        if (!isset($bundle_id)) {
-          return TRUE;
-        }
-        else {
-          $bundle_ids = array_flip($plugin->getBundlesForEntityType($entity_type_id));
-          if (isset($bundle_ids[$bundle_id])) {
-            return TRUE;
-          }
-        }
-      }
+    $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+    if ($bundle_id) {
+      return \Drupal::service('content_moderation.moderation_information')->shouldModerateEntitiesOfBundle($entity_type, $bundle_id);
     }
-
-    return FALSE;
+    else {
+      return \Drupal::service('content_moderation.moderation_information')->canModerateEntitiesOfEntityType($entity_type);
+    }
   }
 
 }

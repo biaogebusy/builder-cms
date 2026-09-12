@@ -4,12 +4,16 @@ namespace Drupal\Tests\entity_reference_revisions\Functional;
 
 use Drupal\entity_composite_relationship_test\Entity\EntityTestCompositeRelationship;
 use Drupal\entity_host_relationship_test\Entity\EntityTestHostRelationship;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests orphan composite revisions are properly removed.
  *
  * @group entity_reference_revisions
  */
+#[RunTestsInSeparateProcesses]
+#[Group('entity_reference_revisions')]
 class EntityReferenceRevisionsOrphanRemovalForBaseFieldDefinitionTest extends EntityReferenceRevisionsOrphanRemovalTest {
 
   /**

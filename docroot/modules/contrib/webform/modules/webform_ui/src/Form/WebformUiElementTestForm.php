@@ -2,9 +2,9 @@
 
 namespace Drupal\webform_ui\Form;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
@@ -49,7 +49,7 @@ class WebformUiElementTestForm extends WebformUiElementFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
     // Create a temp webform.
     $this->webform = Webform::create(['id' => '_webform_ui_temp_form']);
 

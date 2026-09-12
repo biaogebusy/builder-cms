@@ -2,14 +2,17 @@
 
 namespace Drupal\eck\Form\EntityType;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\eck\EckEntityTypeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class EckEntityTypeFormBase.
+ * Provides a form base for configuring ECK entity types.
  *
  * @ingroup eck
  */
@@ -30,16 +33,36 @@ class EckEntityTypeFormBase extends EntityForm {
   protected $entityFieldManager;
 
   /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * Construct the EckEntityTypeFormBase.
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $eck_entity_type_storage
    *   The eck_entity_type storage.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager service.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory service.
    */
-  public function __construct(EntityStorageInterface $eck_entity_type_storage, EntityFieldManagerInterface $entity_field_manager) {
+  public function __construct(EntityStorageInterface $eck_entity_type_storage, EntityFieldManagerInterface $entity_field_manager, MessengerInterface $messenger, ConfigFactoryInterface $configFactory) {
     $this->eckEntityTypeStorage = $eck_entity_type_storage;
     $this->entityFieldManager = $entity_field_manager;
+    $this->messenger = $messenger;
+    $this->configFactory = $configFactory;
   }
 
   /**
@@ -50,7 +73,9 @@ class EckEntityTypeFormBase extends EntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager')->getStorage('eck_entity_type'),
-      $container->get('entity_field.manager')
+      $container->get('entity_field.manager'),
+      $container->get('messenger'),
+      $container->get('config.factory')
     );
   }
 
@@ -62,6 +87,7 @@ class EckEntityTypeFormBase extends EntityForm {
     $form = parent::buildForm($form, $form_state);
 
     $eck_entity_type = $this->entity;
+    assert($eck_entity_type instanceof EckEntityTypeInterface);
 
     // Build the form.
     $form['label'] = [
@@ -79,10 +105,14 @@ class EckEntityTypeFormBase extends EntityForm {
       '#default_value' => $eck_entity_type->id(),
       '#machine_name' => [
         'exists' => [$this, 'exists'],
-        'replace_pattern' => '([^a-z0-9_]+)|(^custom$)',
-        'error' => 'The machine-readable name must be unique, and can only contain lowercase letters, numbers, and underscores. Additionally, it can not be the reserved word "custom".',
       ],
       '#disabled' => !$eck_entity_type->isNew(),
+    ];
+
+    $form['description'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Description'),
+      '#default_value' => $eck_entity_type->getDescription(),
     ];
 
     $form['base_fields'] = [
@@ -90,43 +120,51 @@ class EckEntityTypeFormBase extends EntityForm {
       '#title' => $this->t('Available base fields'),
     ];
 
-    $config = \Drupal::config('eck.eck_entity_type.' . $eck_entity_type->id());
     foreach (['created', 'changed', 'uid', 'title', 'status'] as $field) {
       $title = $field === 'uid' ? 'author' : $field;
 
       $form['base_fields'][$field] = [
         '#type' => 'checkbox',
         '#title' => $this->t('%field field', ['%field' => ucfirst($title)]),
-        '#default_value' => $config->get($field),
+        '#default_value' => $eck_entity_type->get($field),
       ];
     }
+
+    $form['settings'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Settings'),
+    ];
+
+    $form['settings']['standalone_url'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Standalone entity URL'),
+      '#description' => $this->t('Allow entities to be viewed standalone'),
+      '#default_value' => $eck_entity_type->hasStandaloneUrl(),
+    ];
 
     return $form;
   }
 
   /**
-   * Checks for an existing ECK entity type.
-   *
-   * @param string|int $entity_id
-   *   The entity ID.
-   * @param array $element
-   *   The form element.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   *
-   * @return bool
-   *   TRUE if this format already exists, FALSE otherwise.
+   * {@inheritdoc}
    */
-  public function exists($entity_id, array $element, FormStateInterface $form_state) {
-    // Use the query factory to build a new event entity query.
-    $query = $this->eckEntityTypeStorage->getQuery()->accessCheck(FALSE);
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
 
-    // Query the entity ID to see if its in use.
-    $result = $query->condition('id', $element['#field_prefix'] . $entity_id)
-      ->execute();
+    $machine_name = $form_state->getValue('id');
+    if (is_numeric(substr($machine_name, 0, 1))) {
+      $form_state->setErrorByName('id', $this->t('The machine-readable name cannot start with a number.'));
+    }
+  }
 
-    // We don't need to return the ID, only if it exists or not.
-    return (bool) $result;
+  /**
+   * Checks if a given entity type machine name is present in the system.
+   *
+   * @param string $machineName
+   *   The entity type machine name.
+   */
+  public function exists(string $machineName): bool {
+    return (bool) $this->entityTypeManager->getDefinition($machineName, FALSE);
   }
 
   /**
@@ -154,10 +192,11 @@ class EckEntityTypeFormBase extends EntityForm {
     if ($status === SAVED_UPDATED) {
       $message = $this->t('Entity type %label has been updated.', $messageArgs);
     }
-    \Drupal::messenger()->addMessage($message);
+    $this->messenger->addMessage($message);
 
     // Redirect the user back to the listing route after the save operation.
     $form_state->setRedirect('eck.entity_type.list');
+    return $status;
   }
 
 }

@@ -19,7 +19,7 @@ class ObjectDetectionItem {
    *
    * @var float|null
    */
-  private float|NULL $confidenceScore;
+  private float|null $confidenceScore;
 
   /**
    * The rectangle coordinates of detected object.
@@ -31,7 +31,7 @@ class ObjectDetectionItem {
   /**
    * The constructor.
    */
-  public function __construct(string $label, array $box = [], float|NULL $confidence_score = NULL) {
+  public function __construct(string $label, array $box = [], float|null $confidence_score = NULL) {
     $this->label = $label;
     $this->confidenceScore = $confidence_score;
     $this->box = $box;
@@ -63,7 +63,7 @@ class ObjectDetectionItem {
    * @return float|null
    *   The confidence score.
    */
-  public function getConfidenceScore(): float|NULL {
+  public function getConfidenceScore(): float|null {
     return $this->confidenceScore;
   }
 
@@ -73,18 +73,18 @@ class ObjectDetectionItem {
    * @param float|null $confidence_score
    *   The confidence score.
    */
-  public function setConfidenceScore(float|NULL $confidence_score): void {
+  public function setConfidenceScore(float|null $confidence_score): void {
     $this->confidenceScore = $confidence_score;
   }
 
   /**
    * Returns the confidence score as a percentage.
    *
-   * @return float|null
+   * @return float
    *   The confidence score as a percentage.
    */
-  public function getConfidenceScorePercentage(): string {
-    return $this->confidenceScore ? round($this->confidenceScore * 100, 2) : '0';
+  public function getConfidenceScorePercentage(): float {
+    return $this->confidenceScore ? round($this->confidenceScore * 100, 2) : 0.0;
   }
 
   /**

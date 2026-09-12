@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\layout_builder\Functional;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\Section;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\layout_builder\Traits\EnableLayoutBuilderTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
+// cspell:ignore blocknodebundle fieldlayout
 
 /**
  * Tests the Layout Builder UI.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderTest extends LayoutBuilderTestBase {
 
   use EnableLayoutBuilderTrait;
@@ -299,23 +304,6 @@ class LayoutBuilderTest extends LayoutBuilderTestBase {
   }
 
   /**
-   * Test decorating controller.entity_form while layout_builder is installed.
-   */
-  public function testHtmlEntityFormControllerDecoration(): void {
-    $assert_session = $this->assertSession();
-
-    $this->drupalLogin($this->drupalCreateUser([
-      'configure any layout',
-      'administer node display',
-    ]));
-
-    // Install module that decorates controller.entity_form.
-    \Drupal::service('module_installer')->install(['layout_builder_decoration_test']);
-    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display/default');
-    $assert_session->pageTextContains('Manage Display');
-  }
-
-  /**
    * Tests that layout builder checks entity view access.
    */
   public function testAccess(): void {
@@ -378,7 +366,7 @@ class LayoutBuilderTest extends LayoutBuilderTestBase {
     $page->fillField('link[0][uri]', '/');
     $page->pressButton('Save');
 
-    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display');
+    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display/default');
     $this->submitForm(['layout[enabled]' => TRUE], 'Save');
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
@@ -499,6 +487,17 @@ class LayoutBuilderTest extends LayoutBuilderTestBase {
     // Confirm that the newly added extra field is visible.
     $this->drupalGet('node/1');
     $assert_session->pageTextContains('Extra Field 2 is hidden by default.');
+
+    // Ensure empty extra field and its container are not rendered.
+    /* @see \Drupal\layout_builder\Plugin\Block\ExtraFieldBlock::preRenderBlock */
+    $selector = '.block-extra-field-blocknodebundle-with-section-fieldlayout-builder-test-empty';
+    $assert_session->elementNotExists('css', $selector);
+    // Force extra field to render, reload page and ensure presence.
+    \Drupal::keyValue('test_extra_fields_empty')->set('render_extra_field', TRUE);
+    Cache::invalidateTags(['test_extra_fields_empty']);
+    $this->getSession()->reload();
+    $assert_session->elementExists('css', $selector);
+    $assert_session->elementTextContains('css', $selector, 'This extra field is visible because it is not empty.');
   }
 
   /**
@@ -683,7 +682,7 @@ class LayoutBuilderTest extends LayoutBuilderTestBase {
       'Structure' => $base_path . 'admin/structure',
       'Content types' => $base_path . 'admin/structure/types',
       'Bundle with section field' => $base_path . 'admin/structure/types/manage/bundle_with_section_field',
-      'Manage display' => $base_path . 'admin/structure/types/manage/bundle_with_section_field/display/default',
+      'Manage display' => $base_path . 'admin/structure/types/manage/bundle_with_section_field/display',
       'External link' => 'http://www.example.com',
     ];
     $this->assertSame($expected, $breadcrumb_titles);

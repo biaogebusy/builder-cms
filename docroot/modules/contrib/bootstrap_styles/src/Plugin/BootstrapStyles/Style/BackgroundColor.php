@@ -125,7 +125,9 @@ class BackgroundColor extends StylePluginBase {
     }
 
     // Attach bs-classes to the build.
-    $build['#attached']['library'][] = 'bootstrap_styles/plugin.background_color.build';
+    if ((isset($storage['background']) && isset($storage['background']['background_type']))) {
+      $build['#attached']['library'][] = 'bootstrap_styles/plugin.background_color.build';
+    }
 
     return $build;
   }

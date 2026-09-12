@@ -1,0 +1,34 @@
+.ckeditor5-dependency-install-reload-button {
+  display: none!important;
+}
+
+.ckeditor5-dependency-install-wrapper .ckeditor5-dependency-install-button {
+  position: relative;
+  display: inline-block;
+}
+
+.ckeditor5-dependency-install-wrapper .ckeditor5-dependency-install-button input {
+  min-width: 200px;
+}
+
+.ckeditor5-dependency-install-wrapper .ckeditor5-dependency-install-button .ajax-progress--throbber {
+  display: none;
+  font-weight: bold;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height:100%;
+  justify-content: center;
+  align-items: center;
+  padding: calc(var(--space-m) - 1px) calc(var(--space-l) - 1px);
+}
+
+.ckeditor5-dependency-install-wrapper .ckeditor5-dependency-install-button .is-installing {
+  opacity: 0.1;
+}
+
+.ckeditor5-dependency-install-wrapper .ckeditor5-dependency-install-button .is-installing ~ .ajax-progress--throbber {
+  display: flex;
+}

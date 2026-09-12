@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -29,9 +29,6 @@ final class SmsFrameworkIncomingBrowserTest extends SmsFrameworkBrowserTestBase 
    */
   protected SmsGatewayInterface $incomingGateway;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->httpClient = $this->container->get('http_client');
@@ -67,7 +64,7 @@ final class SmsFrameworkIncomingBrowserTest extends SmsFrameworkBrowserTestBase 
       ],
     ];
 
-    static::assertTrue(TRUE, sprintf('POST request to %s', $url));
+    static::assertTrue(TRUE, \sprintf('POST request to %s', $url));
     $response = $this->httpClient
       ->post($url, $options);
 
@@ -75,7 +72,7 @@ final class SmsFrameworkIncomingBrowserTest extends SmsFrameworkBrowserTestBase 
     static::assertEmpty((string) $response->getBody(), 'Response body is empty.');
 
     $incoming_messages = $this->getIncomingMessages($this->incomingGateway);
-    static::assertCount(count($messages), $incoming_messages, 'There are 2 messages');
+    static::assertCount(\count($messages), $incoming_messages, 'There are 2 messages');
     foreach ($messages as $i => $message) {
       static::assertEquals($message['message'], $incoming_messages[$i]->getMessage(), "Message $i contents are same.");
       static::assertEquals($message['recipients'], $incoming_messages[$i]->getRecipients(), "Message $i recipients are same.");

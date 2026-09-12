@@ -13,6 +13,15 @@ use RuntimeException;
  */
 class CLIProfileCredentialsProvider implements CredentialsProvider
 {
+    private static $oauthBaseUrlMap = [
+        'CN' => 'https://oauth.aliyun.com',
+        'INTL' => 'https://oauth.alibabacloud.com',
+    ];
+
+    private static $oauthClientMap = [
+        'CN' => '4038181954557748008',
+        'INTL' => '4103531455503354461',
+    ];
 
     /**
      * @var string
@@ -135,8 +144,36 @@ class CLIProfileCredentialsProvider implements CredentialsProvider
                                     'stsRegionId' => Helper::unsetReturnNull($profile, 'sts_region'),
                                     'enableVpc' => Helper::unsetReturnNull($profile, 'enable_vpc'),
                                 ]);
+                            case 'CloudSSO':
+                                return new CloudSSOCredentialsProvider([
+                                    'signInUrl' => Helper::unsetReturnNull($profile, 'cloud_sso_sign_in_url'),
+                                    'accountId' => Helper::unsetReturnNull($profile, 'cloud_sso_account_id'),
+                                    'accessConfig' => Helper::unsetReturnNull($profile, 'cloud_sso_access_config'),
+                                    'accessToken' => Helper::unsetReturnNull($profile, 'access_token'),
+                                    'accessTokenExpire' => Helper::unsetReturnNull($profile, 'cloud_sso_access_token_expire'),
+                                ]);
+                            case 'OAuth':
+                                $siteType = strtoupper(Helper::unsetReturnNull($profile, 'oauth_site_type') ?: '');
+                                if (!isset(self::$oauthBaseUrlMap[$siteType])) {
+                                    throw new RuntimeException('Invalid OAuth site type, support CN or INTL.');
+                                }
+                                $oauthSignInUrl = self::$oauthBaseUrlMap[$siteType];
+                                $oauthClientId = self::$oauthClientMap[$siteType];
+                                return new OAuthCredentialsProvider([
+                                    'signInUrl' => $oauthSignInUrl,
+                                    'clientId' => $oauthClientId,
+                                    'refreshToken' => Helper::unsetReturnNull($profile, 'oauth_refresh_token'),
+                                    'accessToken' => Helper::unsetReturnNull($profile, 'oauth_access_token'),
+                                    'accessTokenExpire' => Helper::unsetReturnNull($profile, 'oauth_access_token_expire'),
+                                    'tokenUpdateCallback' => $this->createOAuthTokenUpdateCallback($profileFile, $profileName),
+                                ]);
+                            case 'External':
+                                return new ExternalCredentialsProvider([
+                                    'processCommand' => (string) Helper::unsetReturnNull($profile, 'process_command'),
+                                    'credentialUpdateCallback' => $this->createExternalCredentialUpdateCallback($profileFile, $profileName),
+                                ]);
                             default:
-                                throw new RuntimeException('Unsupported credential mode from CLI credentials file: ' . Helper::unsetReturnNull($profile, 'mode'));
+                                throw new RuntimeException('Unsupported credential mode from CLI credentials file: ' . (string) Helper::unsetReturnNull($profile, 'mode'));
                         }
                     }
                 }
@@ -167,6 +204,174 @@ class CLIProfileCredentialsProvider implements CredentialsProvider
             'securityToken' => $credentials->getSecurityToken(),
             'providerName' => $this->getProviderName() . '/' . $this->credentialsProvider->getProviderName(),
         ]);
+    }
+
+    /**
+     * @param string $profileFile
+     * @param string $profileName
+     * @return callable
+     */
+    private function createOAuthTokenUpdateCallback($profileFile, $profileName)
+    {
+        return function ($refreshToken, $accessToken, $accessKeyId, $accessKeySecret, $securityToken, $accessTokenExpire, $stsExpire) use ($profileFile, $profileName) {
+            try {
+                $this->updateOAuthTokens($profileFile, $profileName, $refreshToken, $accessToken, $accessKeyId, $accessKeySecret, $securityToken, $accessTokenExpire, $stsExpire);
+            } catch (\Exception $e) {
+                // Warning only
+            }
+        };
+    }
+
+    /**
+     * @param string $profileFile
+     * @param string $profileName
+     * @return callable
+     */
+    private function createExternalCredentialUpdateCallback($profileFile, $profileName)
+    {
+        return function ($accessKeyId, $accessKeySecret, $securityToken, $expiration) use ($profileFile, $profileName) {
+            try {
+                $this->updateExternalCredentials($profileFile, $profileName, $accessKeyId, $accessKeySecret, $securityToken, $expiration);
+            } catch (\Exception $e) {
+                // Warning only
+            }
+        };
+    }
+
+    /**
+     * @param string $profileFile
+     * @param string $profileName
+     * @param string $refreshToken
+     * @param string $accessToken
+     * @param string $accessKeyId
+     * @param string $accessKeySecret
+     * @param string $securityToken
+     * @param int $accessTokenExpire
+     * @param int $stsExpire
+     */
+    private function updateOAuthTokens($profileFile, $profileName, $refreshToken, $accessToken, $accessKeyId, $accessKeySecret, $securityToken, $accessTokenExpire, $stsExpire)
+    {
+        if (!file_exists($profileFile)) {
+            return;
+        }
+
+        $jsonContent = file_get_contents($profileFile);
+        $config = json_decode($jsonContent, true);
+        if (empty($config) || !isset($config['profiles'])) {
+            return;
+        }
+
+        $oauthProfile = $this->findOAuthProfile($config, $profileName);
+        if ($oauthProfile === null) {
+            return;
+        }
+
+        $oauthProfile['oauth_refresh_token'] = $refreshToken;
+        $oauthProfile['oauth_access_token'] = $accessToken;
+        $oauthProfile['oauth_access_token_expire'] = $accessTokenExpire;
+        $oauthProfile['access_key_id'] = $accessKeyId;
+        $oauthProfile['access_key_secret'] = $accessKeySecret;
+        $oauthProfile['sts_token'] = $securityToken;
+        $oauthProfile['sts_expiration'] = $stsExpire;
+
+        foreach ($config['profiles'] as &$p) {
+            if (isset($p['name']) && $p['name'] === $oauthProfile['name']) {
+                $p = $oauthProfile;
+                break;
+            }
+        }
+        unset($p);
+
+        file_put_contents($profileFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    }
+
+    /**
+     * @param string $profileFile
+     * @param string $profileName
+     * @param string $accessKeyId
+     * @param string $accessKeySecret
+     * @param string $securityToken
+     * @param int $expiration
+     */
+    private function updateExternalCredentials($profileFile, $profileName, $accessKeyId, $accessKeySecret, $securityToken, $expiration)
+    {
+        if (!file_exists($profileFile)) {
+            return;
+        }
+
+        $jsonContent = file_get_contents($profileFile);
+        $config = json_decode($jsonContent, true);
+        if (empty($config) || !isset($config['profiles'])) {
+            return;
+        }
+
+        $externalProfile = $this->findExternalProfile($config, $profileName);
+        if ($externalProfile === null) {
+            return;
+        }
+
+        $externalProfile['access_key_id'] = $accessKeyId;
+        $externalProfile['access_key_secret'] = $accessKeySecret;
+        $externalProfile['sts_token'] = $securityToken;
+        $externalProfile['sts_expiration'] = $expiration;
+
+        foreach ($config['profiles'] as &$p) {
+            if (isset($p['name']) && $p['name'] === $externalProfile['name']) {
+                $p = $externalProfile;
+                break;
+            }
+        }
+        unset($p);
+
+        file_put_contents($profileFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    }
+
+    /**
+     * @param array $config
+     * @param string $profileName
+     * @return array|null
+     */
+    private function findOAuthProfile($config, $profileName)
+    {
+        if (!isset($config['profiles'])) {
+            return null;
+        }
+        foreach ($config['profiles'] as $p) {
+            if (isset($p['name']) && $p['name'] === $profileName) {
+                if (isset($p['mode']) && $p['mode'] === 'OAuth') {
+                    return $p;
+                }
+                if (!empty($p['source_profile'])) {
+                    return $this->findOAuthProfile($config, $p['source_profile']);
+                }
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param array $config
+     * @param string $profileName
+     * @return array|null
+     */
+    private function findExternalProfile($config, $profileName)
+    {
+        if (!isset($config['profiles'])) {
+            return null;
+        }
+        foreach ($config['profiles'] as $p) {
+            if (isset($p['name']) && $p['name'] === $profileName) {
+                if (isset($p['mode']) && $p['mode'] === 'External') {
+                    return $p;
+                }
+                if (!empty($p['source_profile'])) {
+                    return $this->findExternalProfile($config, $p['source_profile']);
+                }
+                return null;
+            }
+        }
+        return null;
     }
 
     /**

@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\options\Kernel\Views;
 
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file views data.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileViewsDataTest extends ViewsKernelTestBase {
 
   /**
@@ -21,9 +23,7 @@ class FileViewsDataTest extends ViewsKernelTestBase {
    */
   protected static $modules = [
     'file',
-    'views',
     'entity_test',
-    'user',
     'field',
   ];
 

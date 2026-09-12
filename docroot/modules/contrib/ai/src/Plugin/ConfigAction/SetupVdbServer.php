@@ -61,8 +61,7 @@ final class SetupVdbServer implements ConfigActionPluginInterface, ContainerFact
 
     // Handle default database setting if not provided.
     if (!isset($value['backend_config']['database'])) {
-      $config = $this->configFactory->get('ai.settings');
-      $default_vdb_provider = $config->get('default_vdb_provider');
+      $default_vdb_provider = $this->aiVdbProviderPluginManager->defaultIfNone();
       if (empty($default_vdb_provider)) {
         throw new \Exception('No default VDB provider is set and database backend is not specified.');
       }

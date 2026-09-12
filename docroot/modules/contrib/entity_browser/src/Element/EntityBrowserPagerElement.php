@@ -3,7 +3,8 @@
 namespace Drupal\entity_browser\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Attribute\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides an Entity Browser pager form element.
@@ -30,10 +31,9 @@ use Drupal\Core\Render\Element\FormElement;
  * @endcode
  *
  * @see ::getCurrentPage($form_state).
- *
- * @FormElement("entity_browser_pager")
  */
-class EntityBrowserPagerElement extends FormElement {
+#[FormElement('entity_browser_pager')]
+class EntityBrowserPagerElement extends FormElementBase {
 
   /**
    * {@inheritdoc}

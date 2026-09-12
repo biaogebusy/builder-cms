@@ -81,6 +81,7 @@ class FieldOutputTest extends KernelTestBase {
               'allowfullscreen' => 'allowfullscreen',
               'referrerpolicy' => 'strict-origin-when-cross-origin',
               'title' => 'YouTube | fdbFVWupSsw',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -125,6 +126,7 @@ class FieldOutputTest extends KernelTestBase {
               'allowfullscreen' => 'allowfullscreen',
               'referrerpolicy' => 'strict-origin-when-cross-origin',
               'title' => 'YouTube | fdbFVWupSsw',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -170,6 +172,7 @@ class FieldOutputTest extends KernelTestBase {
               'allowfullscreen' => 'allowfullscreen',
               'referrerpolicy' => 'strict-origin-when-cross-origin',
               'title' => 'YouTube | fdbFVWupSsw',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -222,6 +225,7 @@ class FieldOutputTest extends KernelTestBase {
               'frameborder' => '0',
               'allowfullscreen' => 'allowfullscreen',
               'title' => 'Vimeo | 399842404',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -264,6 +268,7 @@ class FieldOutputTest extends KernelTestBase {
               'frameborder' => '0',
               'allowfullscreen' => 'allowfullscreen',
               'title' => 'Vimeo | 399842404',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -318,7 +323,7 @@ class FieldOutputTest extends KernelTestBase {
         [
           '#type' => 'container',
           '#attributes' => [
-            'data-video-embed-field-modal' => '<div class="video-embed-field-provider-vimeo"><iframe width="500" height="500" frameborder="0" allowfullscreen="allowfullscreen" title="Vimeo | 399842404" src="https://player.vimeo.com/video/399842404?autoplay=1&amp;muted=1"></iframe></div>',
+            'data-video-embed-field-modal' => '<div class="video-embed-field-provider-vimeo"><iframe width="500" height="500" frameborder="0" allowfullscreen="allowfullscreen" loading="lazy" title="Vimeo | 399842404" src="https://player.vimeo.com/video/399842404?autoplay=1&amp;muted=1"></iframe></div>',
             'class' => ['video-embed-field-launch-modal'],
           ],
           '#attached' => [
@@ -358,7 +363,7 @@ class FieldOutputTest extends KernelTestBase {
         [
           '#type' => 'container',
           '#attributes' => [
-            'data-video-embed-field-modal' => '<div class="video-embed-field-provider-vimeo video-embed-field-responsive-video video-embed-field-responsive-modal" style="width:999px;"><iframe width="900" height="450" frameborder="0" allowfullscreen="allowfullscreen" title="Vimeo | 399842404" src="https://player.vimeo.com/video/399842404?autoplay=1&amp;muted=1"></iframe></div>',
+            'data-video-embed-field-modal' => '<div class="video-embed-field-provider-vimeo video-embed-field-responsive-video video-embed-field-responsive-modal" style="width:999px;"><iframe width="900" height="450" frameborder="0" allowfullscreen="allowfullscreen" loading="lazy" title="Vimeo | 399842404" src="https://player.vimeo.com/video/399842404?autoplay=1&amp;muted=1"></iframe></div>',
             'class' => [
               'video-embed-field-launch-modal',
             ],
@@ -400,7 +405,7 @@ class FieldOutputTest extends KernelTestBase {
         [
           '#type' => 'container',
           '#attributes' => [
-            'data-video-embed-field-lazy' => '<div class="video-embed-field-provider-vimeo video-embed-field-responsive-video"><iframe width="900" height="450" frameborder="0" allowfullscreen="allowfullscreen" title="Vimeo | 399842404" src="https://player.vimeo.com/video/399842404?autoplay=1&amp;muted=1"></iframe></div>',
+            'data-video-embed-field-lazy' => '<div class="video-embed-field-provider-vimeo video-embed-field-responsive-video"><iframe width="900" height="450" frameborder="0" allowfullscreen="allowfullscreen" loading="lazy" title="Vimeo | 399842404" src="https://player.vimeo.com/video/399842404?autoplay=1&amp;muted=1"></iframe></div>',
             'class' => [
               'video-embed-field-lazy',
             ],
@@ -473,6 +478,7 @@ class FieldOutputTest extends KernelTestBase {
               'frameborder' => '0',
               'allowfullscreen' => 'allowfullscreen',
               'title' => 'Vimeo | 399842404',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -514,6 +520,8 @@ class FieldOutputTest extends KernelTestBase {
               'frameborder' => '0',
               'allowfullscreen' => 'allowfullscreen',
               'title' => 'YouTube Playlist | PLpeDXSh4nHjQCIZmkxg3VSdpR5e87X5eB',
+              'referrerpolicy' => 'strict-origin-when-cross-origin',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -555,6 +563,8 @@ class FieldOutputTest extends KernelTestBase {
               'frameborder' => '0',
               'allowfullscreen' => 'allowfullscreen',
               'title' => 'YouTube Playlist | PLpeDXSh4nHjQCIZmkxg3VSdpR5e87X5eB',
+              'referrerpolicy' => 'strict-origin-when-cross-origin',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [
@@ -597,6 +607,8 @@ class FieldOutputTest extends KernelTestBase {
               'frameborder' => '0',
               'allowfullscreen' => 'allowfullscreen',
               'title' => 'YouTube Playlist | PLpeDXSh4nHjQCIZmkxg3VSdpR5e87X5eB',
+              'referrerpolicy' => 'strict-origin-when-cross-origin',
+              'loading' => 'lazy',
             ],
             '#cache' => [
               'contexts' => [

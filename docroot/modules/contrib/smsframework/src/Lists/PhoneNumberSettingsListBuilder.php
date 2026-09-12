@@ -1,16 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Lists;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\sms\Provider\PhoneNumberVerificationInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\sms\Provider\PhoneNumberVerificationInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Builds a list of phone number settings.
@@ -52,7 +52,13 @@ class PhoneNumberSettingsListBuilder extends ConfigEntityListBuilder {
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   Time.
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, EntityStorageInterface $phone_number_verification_storage, PhoneNumberVerificationInterface $phone_number_verification_provider, TimeInterface $time) {
+  public function __construct(
+    EntityTypeInterface $entity_type,
+    EntityStorageInterface $storage,
+    EntityStorageInterface $phone_number_verification_storage,
+    PhoneNumberVerificationInterface $phone_number_verification_provider,
+    TimeInterface $time,
+  ) {
     parent::__construct($entity_type, $storage);
     $this->phoneNumberVerificationStorage = $phone_number_verification_storage;
     $this->phoneNumberVerificationProvider = $phone_number_verification_provider;
@@ -127,7 +133,7 @@ class PhoneNumberSettingsListBuilder extends ConfigEntityListBuilder {
    */
   public function render() {
     $render = parent::render();
-    $render['table']['#empty'] = t('No phone number settings found.');
+    $render['table']['#empty'] = \t('No phone number settings found.');
     return $render;
   }
 

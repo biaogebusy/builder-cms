@@ -98,7 +98,8 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
     $elements = $this->getOrderableElements();
 
     // Get (weight) delta parent options.
-    $delta = count($elements);
+    // Adding one to ensure delta is valid even when an element is deleted.
+    $delta = count($elements) + 1;
     $parent_options = $this->getParentOptions($elements);
 
     // Build table rows for elements.
@@ -243,7 +244,7 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
       'rendering' => TRUE,
     ];
     if ($this->elementsValidator->validate($webform, $validate_options)) {
-      $form_state->setErrorByName(NULL, $this->t('There has been error validating the elements.'));
+      $form_state->setErrorByName('', $this->t('There has been error validating the elements.'));
     }
   }
 
@@ -254,7 +255,7 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = $this->getEntity();
 
-    $webform->save();
+    $status = $webform->save();
 
     $context = [
       '@label' => $webform->label(),
@@ -263,6 +264,7 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
     $t_args = ['%label' => $webform->label()];
     $this->logger('webform')->notice('Webform @label elements saved.', $context);
     $this->messenger()->addStatus($this->t('Webform %label elements saved.', $t_args));
+    return $status;
   }
 
   /**
@@ -507,7 +509,7 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
           'key' => $key,
         ]),
         '#attributes' => $offcanvas_dialog_attributes,
-        '#prefix' => !empty($indentation) ? $this->renderer->renderPlain($indentation) : '',
+        '#prefix' => !empty($indentation) ? $this->renderer->renderInIsolation($indentation) : '',
       ],
     ];
     if (!empty($element['#admin_notes'])) {

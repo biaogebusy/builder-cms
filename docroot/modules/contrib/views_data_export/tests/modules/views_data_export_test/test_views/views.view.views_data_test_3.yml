@@ -210,7 +210,7 @@ display:
       export_limit: 3
 
       redirect_path: /admin
-      store_in_public_file_directory: false
+      export_filesystem: private
       custom_redirect_path: true
 
       redirect_to_display: none

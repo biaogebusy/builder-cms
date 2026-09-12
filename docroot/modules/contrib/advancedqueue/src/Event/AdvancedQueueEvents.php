@@ -28,4 +28,31 @@ final class AdvancedQueueEvents {
    */
   const POST_PROCESS = 'advancedqueue.post_process';
 
+  /**
+   * Name of the event fired when a job was processed successfully.
+   *
+   * @Event
+   *
+   * @see \Drupal\advancedqueue\Event\JobEvent
+   */
+  const JOB_SUCCESS = 'advancedqueue.job.success';
+
+  /**
+   * Name of the event fired when a job failed and was marked for a retry.
+   *
+   * @Event
+   *
+   * @see \Drupal\advancedqueue\Event\JobEvent
+   */
+  const JOB_RETRY = 'advancedqueue.job.retry';
+
+  /**
+   * Name of the event fired when a job failed and reached max retries.
+   *
+   * @Event
+   *
+   * @see \Drupal\advancedqueue\Event\JobEvent
+   */
+  const JOB_FAILURE = 'advancedqueue.job.failure';
+
 }

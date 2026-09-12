@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\admin_toolbar\Form;
 
 use Drupal\Core\Form\ConfigFormBase;

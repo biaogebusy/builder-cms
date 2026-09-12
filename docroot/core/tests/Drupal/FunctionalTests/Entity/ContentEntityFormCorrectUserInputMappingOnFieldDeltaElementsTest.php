@@ -8,12 +8,14 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the correct mapping of user input on the correct field delta elements.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class ContentEntityFormCorrectUserInputMappingOnFieldDeltaElementsTest extends BrowserTestBase {
 
   /**
@@ -132,7 +134,6 @@ class ContentEntityFormCorrectUserInputMappingOnFieldDeltaElementsTest extends B
     $this->submitForm($edit, "{$this->fieldName}_0_remove_button");
     $this->submitForm([], 'Save');
 
-    $storage->resetCache([$entity->id()]);
     $entity = $storage->load($entity->id());
     $this->assertEquals([
       ['shape' => 'rectangle', 'color' => 'green'],

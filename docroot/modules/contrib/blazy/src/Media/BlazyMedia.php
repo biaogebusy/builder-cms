@@ -7,8 +7,8 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Url;
 use Drupal\blazy\BlazyManagerInterface;
-use Drupal\blazy\Utility\CheckItem;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Internals\Entity;
 use Drupal\media\IFrameUrlHelper;
 use Drupal\media\MediaInterface;
 use GuzzleHttp\Client;
@@ -16,6 +16,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides extra utilities to work with core Media.
+ *
+ * Media component services deprecated in 3.x, and is removed in 4.x or 5.x.
+ * Public access is available via @blazy.media_context  coordinating layer.
  *
  * This class makes it possible to have a mixed display of all media entities,
  * useful for Blazy Grid, Slick Carousel, GridStack contents as mixed media.
@@ -31,7 +34,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * - TODO: replace ImageItem references into just $settings
  * - DONE, 2.17: convert this into non-static, move most BlazyOEmbed stuffs.
  * Not urgent, the important is to make it just work with minimal regressions.
- * @todo recap similiraties and make them plugins.
+ *
+ * @todo enable @trigger_error('BlazyMedia is deprecated in blazy:4.0.0 and is
+ * removed from blazy:5.0.0. Use @blazy.media_context instead.
+ * See https://www.drupal.org/node/3575429', E_USER_DEPRECATED);
  */
 class BlazyMedia implements BlazyMediaInterface {
 
@@ -111,7 +117,7 @@ class BlazyMedia implements BlazyMediaInterface {
       $data['content'][] = $this->view($data);
     }
 
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $blazies->set('is.denied', empty($data['#access']));
 
     // Pass it to Blazy for consistent markups.
@@ -131,12 +137,14 @@ class BlazyMedia implements BlazyMediaInterface {
    * {@inheritdoc}
    */
   public function view(array $build): array {
-    $entity   = $build['#media'] ?? $build['#entity'];
+    /** @var array $settings */
     $settings = &$build['#settings'];
+    $entity   = $build['#media'] ?? $build['#entity'];
     $item     = $build['#item'] ?? NULL;
 
     // Ensures the essentials setup early here since it enters theme_blazy() as
     // non-workable content.
+    /** @var \Drupal\blazy\BlazySettings $blazies */
     $blazies = $this->manager->preBlazy($build, $item);
     $settings['blazies'] = $blazies;
 
@@ -181,10 +189,12 @@ class BlazyMedia implements BlazyMediaInterface {
    * {@inheritdoc}
    */
   public function fromFile(array $data): ?object {
-    $file     = $data['#entity'];
+    /** @var array $settings */
     $settings = &$data['#settings'];
+    $file     = $data['#entity'];
 
     // In case called outside the workflow.
+    /** @var \Drupal\blazy\BlazySettings $blazies */
     $blazies = $this->manager->verifySafely($settings);
 
     // Seen at IO/Slick Entity Browser specific with file lacking of media data.
@@ -277,7 +287,7 @@ class BlazyMedia implements BlazyMediaInterface {
     }
 
     // Extracts common entity properties.
-    $info = CheckItem::entity($media, $langcode);
+    $info = Entity::withTranslatedData($media, $langcode);
 
     // Only eat what we can chew.
     $output = [
@@ -314,13 +324,13 @@ class BlazyMedia implements BlazyMediaInterface {
   }
 
   /**
-   * Modifies item attributes for iframes if any.
+   * {@inheritdoc}
    */
   public function iframeable(array &$item, array &$settings): bool {
-    $iframeable = FALSE;
-    $blazies    = $settings['blazies'];
+    $blazies    = Internals::getBlazies($settings);
     $original   = $item;
     $uri        = $blazies->get('image.uri');
+    $iframeable = FALSE;
 
     // Checks if we have iframes.
     if ($content = $this->manager->renderInIsolation($item)) {
@@ -365,7 +375,7 @@ class BlazyMedia implements BlazyMediaInterface {
   public function prepare(array &$data): MediaInterface {
     $media     = $data['#media'] ?? $data['#entity'];
     $settings  = &$data['#settings'];
-    $blazies   = $settings['blazies'];
+    $blazies   = Internals::getBlazies($settings);
     $view_mode = $settings['view_mode'] ?? 'default';
     $langcode  = $blazies->get('language.current');
     $result    = $this->getMetadata($media, $view_mode, $langcode);
@@ -405,7 +415,7 @@ class BlazyMedia implements BlazyMediaInterface {
       ->set('is.' . $_type, TRUE)
       ->set('field.target_bundles.' . $bundle, $bundle, TRUE);
 
-    // @todo remove for is.type:
+    // @todo deprecate and remove for is.type:
     $blazies->set('is.local_audio', $source == 'audio_file')
       ->set('is.local_video', $source == 'video_file');
 
@@ -482,7 +492,7 @@ class BlazyMedia implements BlazyMediaInterface {
    * @todo add an option for thumbnail preview rather than entity view.
    */
   private function disableFeatures(array &$settings, $rendered = TRUE, $link = NULL): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $blazies->set('use.content', $rendered);
 
     // @todo recheck, might be dynamic link to iframe like Pinterest:
@@ -499,7 +509,7 @@ class BlazyMedia implements BlazyMediaInterface {
    * Modifies item attributes for local audio/video item.
    */
   private function toLocal(array &$item, array &$settings, $file): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
 
     // @todo multiple sources, not crucial for now.
     // This is not an image URI, but file video URI.
@@ -532,9 +542,10 @@ class BlazyMedia implements BlazyMediaInterface {
    *   The array of the media item to be wrapped directly by theme_blazy().
    */
   private function unfield(array &$field): array {
-    $item      = $field[0];
+    /** @var array $settings */
     $settings  = &$field['#settings'];
-    $blazies   = $settings['blazies'];
+    $blazies   = Internals::getBlazies($settings);
+    $item      = $field[0];
     $is_iframe = ($item['#tag'] ?? NULL) == 'iframe';
 
     if (!isset($item['#attributes'])) {

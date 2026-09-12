@@ -6,11 +6,14 @@ namespace Drupal\Tests\views\Unit\Plugin;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\HandlerBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\HandlerBase
- * @group Views
+ * Tests Drupal\views\Plugin\views\HandlerBase.
  */
+#[CoversClass(HandlerBase::class)]
+#[Group('Views')]
 class HandlerBaseTest extends UnitTestCase {
 
   use HandlerTestTrait;
@@ -27,7 +30,7 @@ class HandlerBaseTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getEntityType
+   * Tests get entity type for field on base table.
    */
   public function testGetEntityTypeForFieldOnBaseTable(): void {
     $handler = new TestHandler([], 'test_handler', []);
@@ -49,7 +52,7 @@ class HandlerBaseTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getEntityType
+   * Tests get entity type for field with relationship.
    */
   public function testGetEntityTypeForFieldWithRelationship(): void {
     $handler = new TestHandler([], 'test_handler', []);
@@ -60,7 +63,13 @@ class HandlerBaseTest extends UnitTestCase {
     $this->display->expects($this->atLeastOnce())
       ->method('getOption')
       ->with('relationships')
-      ->willReturn(['test_relationship' => ['table' => 'test_entity_type_table', 'id' => 'test_relationship', 'field' => 'test_relationship']]);
+      ->willReturn([
+        'test_relationship' => [
+          'table' => 'test_entity_type_table',
+          'id' => 'test_relationship',
+          'field' => 'test_relationship',
+        ],
+      ]);
 
     $this->view->expects($this->any())
       ->method('get')

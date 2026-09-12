@@ -4,6 +4,7 @@ namespace Drupal\media\Plugin\media\Source;
 
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -14,6 +15,7 @@ use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
@@ -302,6 +304,14 @@ class OEmbed extends MediaSourceBase implements OEmbedInterface {
       case 'html':
         return $resource->getHtml();
 
+      case self::METADATA_ATTRIBUTE_LINK_TARGET:
+        // @see \Drupal\media\Entity\MediaLinkTarget
+        return (new GeneratedUrl())
+          ->setGeneratedUrl($media_url)
+          // No processing means permanent cacheability: this only changes when
+          // the parent Media entity changes.
+          ->setCacheMaxAge(Cache::PERMANENT);
+
       default:
         break;
     }
@@ -388,7 +398,7 @@ class OEmbed extends MediaSourceBase implements OEmbedInterface {
    *
    * @param \Drupal\media\OEmbed\Resource $resource
    *   The oEmbed resource.
-   * @param \Drupal\media\MediaInterface|null $media
+   * @param \Drupal\media\MediaInterface $media
    *   The media entity that contains the resource.
    *
    * @return string|null
@@ -400,14 +410,8 @@ class OEmbed extends MediaSourceBase implements OEmbedInterface {
    * toggle-able. See https://www.drupal.org/project/drupal/issues/2962751 for
    * more information.
    */
-  protected function getLocalThumbnailUri(Resource $resource, ?MediaInterface $media = NULL) {
-    if (is_null($media)) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $media argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3432920', E_USER_DEPRECATED);
-      $token_data = [];
-    }
-    else {
-      $token_data = ['date' => $media->getCreatedTime()];
-    }
+  protected function getLocalThumbnailUri(Resource $resource, MediaInterface $media) {
+    $token_data = ['date' => $media->getCreatedTime()];
 
     // If there is no remote thumbnail, there's nothing for us to fetch here.
     $remote_thumbnail_url = $resource->getThumbnailUrl();
@@ -461,7 +465,7 @@ class OEmbed extends MediaSourceBase implements OEmbedInterface {
         '%error' => $e->getMessage(),
       ]);
     }
-    catch (FileException $e) {
+    catch (FileException) {
       $this->logger->warning('Could not download remote thumbnail from {url}.', [
         'url' => $remote_thumbnail_url,
       ]);

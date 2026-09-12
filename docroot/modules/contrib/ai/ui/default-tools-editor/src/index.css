@@ -201,5 +201,5 @@
 }
 
 .tools-editor__error {
-  color: var(--gin-status-danger-text, var(--messages-fg-color));
+  color: var(--gin-status-danger-text, var(--color-red));
 }

@@ -5,14 +5,22 @@
  * Install functions for the Ace Editor module.
  */
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
+
 /**
- * Implements hook_enable().
+ * Implements hook_install().
  */
 function ace_editor_install() {
   $lib_path = ace_editor_lib_path();
 
   if (!$lib_path) {
-    \Drupal::messenger()->addMessage(t('Ace library is missing. Please download the more convenient version to you from <a href="@link">Ace Editor Page</a> and copy it under @path; Ace Editor module will use the first found version of ace.js located under @path.', ['@link' => 'https://github.com/ajaxorg/ace-builds', '@path' => '/libraries/']), 'warning');
+    \Drupal::messenger()->addMessage(t('The Ace library is missing. The module requires <a href="@link">vardot/ace</a>, so <code>composer require drupal/ace_editor</code> installs it at @path. On a site that is not managed with Composer, download a build from <a href="@upstream">ace-builds</a> and copy it under @libraries; the module uses the first ace.js it finds there.', [
+      '@link' => 'https://github.com/Vardot/ace',
+      '@upstream' => 'https://github.com/ajaxorg/ace-builds',
+      '@path' => '/libraries/ace/',
+      '@libraries' => '/libraries/',
+    ]), 'warning');
   }
   else {
     \Drupal::messenger()->addMessage(t('Ace library found at @location', ['@location' => $lib_path]));
@@ -32,12 +40,16 @@ function ace_editor_requirements($phase) {
     $lib_path = ace_editor_lib_path();
     if ($lib_path) {
       $requirements['ace_editor']['value'] = t('Installed at @location', ['@location' => $lib_path]);
-      $requirements['ace_editor']['severity'] = REQUIREMENT_OK;
+      $requirements['ace_editor']['severity'] = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::OK, fn() => REQUIREMENT_OK);
     }
     else {
       $requirements['ace_editor']['value'] = t('Not installed');
-      $requirements['ace_editor']['severity'] = REQUIREMENT_ERROR;
-      $requirements['ace_editor']['description'] = t('Please download the Ace library from <a href="@url">@url</a> to the @location directory for using the Ace Editor module.', ['@url' => 'https://github.com/ajaxorg/ace-builds', '@location' => '/libraries/']);
+      $requirements['ace_editor']['severity'] = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::Error, fn() => REQUIREMENT_ERROR);
+      $requirements['ace_editor']['description'] = t('The module requires the <a href="@library">vardot/ace</a> library, which Composer installs at @location. Run <code>composer require drupal/ace_editor</code> to bring it in. On a site that is not managed with Composer, download a build from <a href="@url">ace-builds</a> into @location.', [
+        '@library' => 'https://github.com/Vardot/ace',
+        '@url' => 'https://github.com/ajaxorg/ace-builds',
+        '@location' => '/libraries/ace/',
+      ]);
     }
 
   }

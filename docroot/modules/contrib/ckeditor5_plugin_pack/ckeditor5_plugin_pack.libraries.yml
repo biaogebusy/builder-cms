@@ -1,0 +1,4 @@
+drupal_powered_by:
+  version: 20240325
+  js:
+    js/build/drupalPoweredBy.js: { minified: true }

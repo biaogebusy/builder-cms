@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
 use Drupal\migrate_drupal\MigrationConfigurationTrait;
-use Drupal\Tests\migrate_drupal\Traits\CreateTestContentEntitiesTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\WebAssert;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the flow of the Migrate Drupal UI form.
- *
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_ui')]
+#[ignoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MigrateUpgradeFormStepsTest extends BrowserTestBase {
 
   use MigrationConfigurationTrait;
-  use CreateTestContentEntitiesTrait;
 
   /**
    * {@inheritdoc}

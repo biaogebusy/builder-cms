@@ -7,12 +7,14 @@ namespace Drupal\Tests\comment\Functional;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment status field access.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentStatusFieldAccessTest extends BrowserTestBase {
 
   use CommentTestTrait;

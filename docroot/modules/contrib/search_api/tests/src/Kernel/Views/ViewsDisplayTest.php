@@ -5,7 +5,6 @@ namespace Drupal\Tests\search_api\Kernel\Views;
 use Drupal\Core\Theme\ActiveTheme;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -49,13 +48,6 @@ class ViewsDisplayTest extends KernelTestBase {
     $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installEntitySchema('search_api_task');
     $this->installConfig('search_api');
-
-    // Do not use a batch for tracking the initial items after creating an
-    // index when running the tests via the GUI. Otherwise, it seems Drupal's
-    // Batch API gets confused and the test fails.
-    if (!Utility::isRunningInCli()) {
-      \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
-    }
 
     $this->installConfig([
       'search_api_test_example_content',
@@ -108,11 +100,11 @@ class ViewsDisplayTest extends KernelTestBase {
    */
   public function testBlockRenderedInCurrentRequest() {
     $this->installConfig('search_api_test_views');
-    \Drupal::service('theme_installer')->install(['stable9']);
+    \Drupal::service('theme_installer')->install(['starterkit_theme']);
     \Drupal::service('theme_installer')->install(['claro']);
 
     $block = $this->placeBlock('views_block:search_api_test_block_view-block_1', [
-      'theme' => 'stable9',
+      'theme' => 'starterkit_theme',
     ]);
     $this->assertTrue($block->status());
 
@@ -123,13 +115,13 @@ class ViewsDisplayTest extends KernelTestBase {
     $this->assertEquals('views_block:search_api_test_block_view__block_1', $display->getPluginId());
 
     $theme = $this->createMock(ActiveTheme::class);
-    $theme->method('getName')->willReturn('claro', 'stable9');
+    $theme->method('getName')->willReturn('claro', 'starterkit_theme');
     $theme_manager = $this->createMock(ThemeManagerInterface::class);
     $theme_manager->method('getActiveTheme')->willReturn($theme);
     $display->setThemeManager($theme_manager);
 
     // In the first call, active theme will be reported as "claro", so block
-    // would not be rendered; in the second call, with theme "stable9", it
+    // would not be rendered; in the second call, with theme "starterkit_theme", it
     // should be.
     $this->assertFalse($display->isRenderedInCurrentRequest());
     $this->assertTrue($display->isRenderedInCurrentRequest());

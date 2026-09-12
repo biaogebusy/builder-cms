@@ -3,6 +3,7 @@
 namespace Drupal\Tests\webform_views\Kernel\sort;
 
 use Drupal\Tests\webform_views\Kernel\WebformViewsTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Reasonable starting point for testing webform views sort handlers.
@@ -19,14 +20,13 @@ abstract class WebformViewsSortTestBase extends WebformViewsTestBase {
    * @param array $expected
    *   Expected output from $this->renderView() with the specified above
    *   sorting.
-   *
-   * @dataProvider providerSort()
    */
-  public function testSort($order, $expected) {
-    $this->webform = $this->createWebform($this->webform_elements);
-    $this->createWebformSubmissions($this->webform_submissions_data, $this->webform);
+  #[DataProvider('providerSort')]
+  public function testSort(string $order, array $expected): void {
+    $this->webform = $this->createWebform(static::$webform_elements);
+    $this->createWebformSubmissions(static::$webform_submissions_data, $this->webform);
 
-    $view_handlers = $this->view_handlers;
+    $view_handlers = static::$view_handlers;
     $view_handlers['sort'][0]['options']['order'] = $order;
 
     $this->view = $this->initView($this->webform, $view_handlers);
@@ -42,17 +42,17 @@ abstract class WebformViewsSortTestBase extends WebformViewsTestBase {
    * You might want to override this method with more specific cases in a child
    * class.
    */
-  public function providerSort() {
+  public static function providerSort(): array {
     $tests = [];
 
     $tests[] = [
       'ASC',
-      $this->webform_submissions_data,
+      static::$webform_submissions_data,
     ];
 
     $tests[] = [
       'DESC',
-      array_reverse($this->webform_submissions_data),
+      array_reverse(static::$webform_submissions_data),
     ];
 
     return $tests;

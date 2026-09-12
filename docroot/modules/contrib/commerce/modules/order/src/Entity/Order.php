@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_order\Entity;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -51,6 +52,10 @@ use Drupal\user\UserInterface;
  *       "delete" = "Drupal\commerce_order\Form\OrderDeleteForm",
  *       "unlock" = "Drupal\commerce_order\Form\OrderUnlockForm",
  *       "resend-receipt" = "Drupal\commerce_order\Form\OrderReceiptResendForm",
+ *       "add-items" = "Drupal\commerce_order\Form\OrderAddItemsForm",
+ *       "billing-information" = "Drupal\commerce_order\Form\OrderBillingInformation",
+ *       "order_details" = "Drupal\commerce_order\Form\OrderDetailsForm",
+ *       "state-transition-confirm" = "Drupal\commerce_order\Form\StateTransitionConfirmForm",
  *     },
  *     "local_task_provider" = {
  *       "default" = "Drupal\entity\Menu\DefaultEntityLocalTaskProvider",
@@ -833,6 +838,26 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
   /**
    * {@inheritdoc}
    */
+  protected function invalidateTagsOnSave($update) {
+    // An entity was created or updated: invalidate its list cache tags. (An
+    // updated entity may start to appear in a listing because it now meets that
+    // listing's filtering requirements. A newly created entity may start to
+    // appear in listings because it did not exist before.)
+    $tags = $this->getListCacheTagsToInvalidate();
+
+    // Do not invalidate 4xx-response cache tag, because commerce orders are
+    // not affected by possibly stale 404 pages as checkout is not cached for
+    // anonymous users.
+    if ($update) {
+      // An existing entity was updated, also invalidate its unique cache tag.
+      $tags = Cache::mergeTags($tags, $this->getCacheTagsToInvalidate());
+    }
+    Cache::invalidateTags($tags);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
@@ -925,6 +950,14 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
         'weight' => 0,
         'settings' => [],
       ])
+      ->setDisplayOptions('view', [
+        'type' => 'commerce_billing_information',
+        'label' => 'hidden',
+        'settings' => [
+          'profile_view_mode' => 'admin',
+        ],
+        'weight' => 0,
+      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -935,17 +968,12 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
       ->setSetting('target_type', 'commerce_order_item')
       ->setSetting('handler', 'default')
       ->setDisplayOptions('form', [
-        'type' => 'inline_entity_form_complex',
+        'type' => 'commerce_order_items',
         'weight' => 0,
-        'settings' => [
-          'override_labels' => TRUE,
-          'label_singular' => t('order item'),
-          'label_plural' => t('order items'),
-          'removed_reference' => 'delete',
-        ],
       ])
       ->setDisplayOptions('view', [
         'type' => 'commerce_order_item_table',
+        'label' => 'hidden',
         'weight' => 0,
       ])
       ->setDisplayConfigurable('form', TRUE)
@@ -1023,20 +1051,40 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))
-      ->setDescription(t('The time when the order was created.'));
+      ->setDescription(t('The time when the order was created.'))
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+        'weight' => 0,
+        'settings' => [
+          'date_format' => 'short',
+        ],
+      ])
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
       ->setDescription(t('The time when the order was last edited.'))
-      ->setDisplayConfigurable('view', TRUE);
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+        'weight' => 0,
+        'settings' => [
+          'date_format' => 'short',
+        ],
+      ]);
 
     $fields['placed'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Placed'))
       ->setDescription(t('The time when the order was placed.'))
       ->setDisplayOptions('view', [
-        'label' => 'above',
+        'label' => 'inline',
         'type' => 'timestamp',
         'weight' => 0,
+        'settings' => [
+          'date_format' => 'short',
+        ],
       ])
       ->setDisplayConfigurable('view', TRUE);
 

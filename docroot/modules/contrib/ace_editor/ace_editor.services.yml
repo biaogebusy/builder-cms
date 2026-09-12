@@ -1,0 +1,15 @@
+services:
+  Drupal\ace_editor\AceEditorLibraries:
+    class: Drupal\ace_editor\AceEditorLibraries
+    arguments:
+      - '@file_system'
+      - '@extension.list.module'
+      - '@extension.list.profile'
+      - '@config.factory'
+      - '%install_profile%'
+      - '@cache.discovery'
+
+  Drupal\ace_editor\Hook\AceEditorHooks:
+    class: Drupal\ace_editor\Hook\AceEditorHooks
+    arguments:
+      - '@Drupal\ace_editor\AceEditorLibraries'

@@ -7,12 +7,14 @@ namespace Drupal\Tests\system\Functional\UpdateSystem;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the update path with a broken router.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class UpdatePathWithBrokenRoutingTest extends BrowserTestBase {
   use UpdatePathTestTrait;
 

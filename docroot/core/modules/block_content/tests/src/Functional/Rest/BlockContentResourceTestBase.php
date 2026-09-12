@@ -7,12 +7,15 @@ namespace Drupal\Tests\block_content\Functional\Rest;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Cache\Cache;
+use Drupal\Tests\block_content\Traits\BlockContentCreationTrait;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 
 /**
- * ResourceTestBase for BlockContent entity.
+ * Resource test base for BlockContent entity.
  */
 abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
+
+  use BlockContentCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -47,7 +50,7 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
         break;
 
       case 'POST':
-        $this->grantPermissionsToTestedRole(['access block library', 'create basic block content']);
+        $this->grantPermissionsToTestedRole(['create basic block content']);
         break;
 
       case 'DELETE':
@@ -65,13 +68,11 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
    */
   protected function createEntity() {
     if (!BlockContentType::load('basic')) {
-      $block_content_type = BlockContentType::create([
+      $this->createBlockContentType([
         'id' => 'basic',
         'label' => 'basic',
         'revision' => TRUE,
-      ]);
-      $block_content_type->save();
-      block_content_add_body_field($block_content_type->id());
+      ], TRUE);
     }
 
     // Create a "Llama" content block.
@@ -162,7 +163,6 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
         [
           'value' => 'The name "llama" was adopted by European settlers from native Peruvians.',
           'format' => 'plain_text',
-          'summary' => NULL,
           'processed' => "<p>The name &quot;llama&quot; was adopted by European settlers from native Peruvians.</p>\n",
         ],
       ],
@@ -199,15 +199,15 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
     if (!$this->resourceConfigStorage->load(static::$resourceConfigId)) {
       return match ($method) {
         'GET', 'PATCH' => "The 'edit any basic block content' permission is required.",
-        'POST' => "The following permissions are required: 'create basic block content' AND 'access block library'.",
+        'POST' => "The following permissions are required: 'create basic block content' OR 'administer block content'.",
         'DELETE' => "The 'delete any basic block content' permission is required.",
         default => parent::getExpectedUnauthorizedAccessMessage($method),
       };
     }
     return match ($method) {
-      'GET' => "The 'access block library' permission is required.",
+      'GET' => "The following permissions are required: 'access block library' OR 'view unpublished block content'.",
       'PATCH' => "The 'edit any basic block content' permission is required.",
-      'POST' => "The following permissions are required: 'create basic block content' AND 'access block library'.",
+      'POST' => "The following permissions are required: 'create basic block content' OR 'administer block content'.",
       'DELETE' => "The 'delete any basic block content' permission is required.",
       default => parent::getExpectedUnauthorizedAccessMessage($method),
     };

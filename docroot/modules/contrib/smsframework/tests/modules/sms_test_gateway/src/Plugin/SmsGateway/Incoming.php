@@ -1,20 +1,20 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_test_gateway\Plugin\SmsGateway;
 
-use Drupal\sms\Message\SmsDeliveryReport;
-use Drupal\sms\Message\SmsMessageResult;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Drupal\Component\Serialization\Json;
 use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsGatewayInterface;
+use Drupal\sms\Message\SmsDeliveryReport;
 use Drupal\sms\Message\SmsMessage;
 use Drupal\sms\Message\SmsMessageInterface;
+use Drupal\sms\Message\SmsMessageResult;
 use Drupal\sms\Plugin\SmsGatewayPluginBase;
 use Drupal\sms\SmsProcessingResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Defines a gateway supporting incoming route.
@@ -74,9 +74,9 @@ final class Incoming extends SmsGatewayPluginBase {
         ->setResult($result);
 
       foreach ($sms_properties as $property => $method) {
-        if (array_key_exists($property, $raw_message)) {
+        if (\array_key_exists($property, $raw_message)) {
           $value = $raw_message[$property];
-          call_user_func_array([$message, $method], [$value]);
+          \call_user_func_array([$message, $method], [$value]);
         }
       }
 

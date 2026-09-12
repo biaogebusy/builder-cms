@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @ingroup testing
  */
-class PerformanceTestBase extends WebDriverTestBase {
+abstract class PerformanceTestBase extends WebDriverTestBase {
   use PerformanceTestTrait;
 
   /**
@@ -27,6 +27,7 @@ class PerformanceTestBase extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->doSetUpTasks();
+    \Drupal::service('module_installer')->uninstall(['automated_cron']);
   }
 
   /**

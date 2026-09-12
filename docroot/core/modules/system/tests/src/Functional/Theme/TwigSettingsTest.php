@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Functional\Theme;
 
-use Drupal\Tests\BrowserTestBase;
 use Drupal\Core\PhpStorage\PhpStorageFactory;
+use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests overriding Twig engine settings via settings.php.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class TwigSettingsTest extends BrowserTestBase {
 
   /**
@@ -80,7 +82,6 @@ class TwigSettingsTest extends BrowserTestBase {
    * Ensures Twig template cache setting can be overridden.
    */
   public function testTwigCacheOverride(): void {
-    $extension = twig_extension();
     $theme_installer = $this->container->get('theme_installer');
     $theme_installer->install(['test_theme']);
     $this->config('system.theme')->set('default', 'test_theme')->save();
@@ -100,7 +101,7 @@ class TwigSettingsTest extends BrowserTestBase {
     // Get the template filename and the cache filename for
     // theme_test.template_test.html.twig.
     $info = $templates->get('theme_test_template_test');
-    $template_filename = $info['path'] . '/' . $info['template'] . $extension;
+    $template_filename = $info['path'] . '/' . $info['template'] . '.html.twig';
 
     $environment = $this->container->get('twig');
     $cache = $environment->getCache();

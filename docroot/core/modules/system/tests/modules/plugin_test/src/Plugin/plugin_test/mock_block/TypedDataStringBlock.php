@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\plugin_test\Plugin\plugin_test\mock_block;
 
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
@@ -16,6 +18,9 @@ class TypedDataStringBlock extends PluginBase implements ContextAwarePluginInter
 
   use ContextAwarePluginTrait;
 
+  /**
+   * Returns the title of the block.
+   */
   public function getTitle() {
     return $this->getContextValue('string');
   }

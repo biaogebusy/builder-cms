@@ -23,7 +23,12 @@ class WebformScheduledEmailTest extends WebformNodeBrowserTestBase {
   /**
    * Tests webform schedule email handler.
    */
-  public function testWebformScheduledEmail() {
+  public function testWebformScheduledEmail(): void {
+    // Set default timezone to America/Los_Angeles.
+    $this->config('system.date')
+      ->set('timezone.default', 'America/Los_Angeles')
+      ->save();
+
     $assert_session = $this->assertSession();
 
     $webform_schedule = Webform::load('test_handler_scheduled_email');
@@ -108,7 +113,7 @@ class WebformScheduledEmailTest extends WebformNodeBrowserTestBase {
     $sid = $this->postSubmission($webform_schedule, ['send' => 'other', 'date[date]' => '2001-01-01', 'date[time]' => '02:00:00'], 'Save Draft');
     $webform_submission = WebformSubmission::load($sid);
     $scheduled_email = $scheduled_manager->load($webform_submission, 'other');
-    $assert_session->pageTextContains("Test: Handler: Test scheduled email: Submission #$sid: Email scheduled by Other handler to be sent on 2001-01-15 02:00:00.");
+    $assert_session->pageTextContains("Test: Handler: Test scheduled email: Submission #$sid: Email scheduled by Other handler to be sent on 2001-01-15T02:00:00-08:00.");
     $this->assertEquals($scheduled_email->send, strtotime('2001-01-15 02:00:00'));
     $this->assertEquals($scheduled_email->state, $scheduled_manager::SUBMISSION_SEND);
 
@@ -203,14 +208,8 @@ class WebformScheduledEmailTest extends WebformNodeBrowserTestBase {
     $yesterday_handler = $webform_schedule->getHandler('yesterday');
     $conditions = ['enabled' => [':input[name="value"]' => ['filled' => TRUE]]];
     $yesterday_handler->setConditions($conditions);
-    // NOTE: Executing $webform_schedule->save() throws the below
-    // unexplainable error.
-    //
-    // TypeError: Argument 1 passed to
-    // Drupal\webform\WebformSubmissionConditionsValidator::validateConditions()
-    // must be of the type array, null given
-    // $webform_schedule->save() ;
-    //
+    $webform_schedule->save();
+
     // Check that 3 yesterday scheduled emails are skipped and removed.
     $stats = $scheduled_manager->cron();
     $this->assertEquals($stats['skipped'], 3);
@@ -342,7 +341,7 @@ class WebformScheduledEmailTest extends WebformNodeBrowserTestBase {
 
     // Check 'Other' email is sent immediately via testing.
     $this->drupalGet('/webform/test_handler_scheduled_email/test');
-    $edit = ['send' => 'other', 'date[date]' => '2101-01-01'];
+    $edit = ['send' => 'other', 'date[date]' => '2049-01-01'];
     $this->submitForm($edit, 'Submit');
     $this->assertEquals($scheduled_manager->total(), 0);
     $assert_session->responseContains('Webform submission from: Test: Handler: Test scheduled email</em> sent to <em class="placeholder">simpletest@example.com</em> from <em class="placeholder">Drupal</em> [<em class="placeholder">simpletest@example.com</em>');

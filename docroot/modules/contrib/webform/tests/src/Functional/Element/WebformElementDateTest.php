@@ -28,7 +28,7 @@ class WebformElementDateTest extends WebformElementBrowserTestBase {
   /**
    * Test date element.
    */
-  public function testDateElement() {
+  public function testDateElement(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_date');
@@ -65,13 +65,7 @@ class WebformElementDateTest extends WebformElementBrowserTestBase {
     $max = \Drupal::service('date.formatter')->format(strtotime('+1 year'), 'html_date');
     $max_year = date('Y', strtotime('+1 year'));
     $default_value = \Drupal::service('date.formatter')->format(strtotime('now'), 'html_date');
-    // @todo Remove once Drupal 10.0.x is only supported.
-    if (floatval(\Drupal::VERSION) >= 10) {
-      $assert_session->responseContains('<input min="' . $min . '" data-min-year="' . $min_year . '" max="' . $max . '" data-max-year="' . $max_year . '" type="date" data-drupal-selector="edit-date-min-max-dynamic" aria-describedby="edit-date-min-max-dynamic--description" id="edit-date-min-max-dynamic" name="date_min_max_dynamic" value="' . $default_value . '" class="form-date" />');
-    }
-    else {
-      $assert_session->responseContains('<input min="' . $min . '" data-min-year="' . $min_year . '" max="' . $max . '" data-max-year="' . $max_year . '" type="date" data-drupal-selector="edit-date-min-max-dynamic" aria-describedby="edit-date-min-max-dynamic--description" data-drupal-date-format="Y-m-d" id="edit-date-min-max-dynamic" name="date_min_max_dynamic" value="' . $default_value . '" class="form-date" />');
-    }
+    $assert_session->responseContains('<input min="' . $min . '" data-min-year="' . $min_year . '" max="' . $max . '" data-max-year="' . $max_year . '" type="date" data-drupal-selector="edit-date-min-max-dynamic" aria-describedby="edit-date-min-max-dynamic--description" id="edit-date-min-max-dynamic" name="date_min_max_dynamic" value="' . $default_value . '" class="form-date" />');
 
     /* ********************************************************************** */
     // Format date elements.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Kernel\Views;
 
 use Drupal\Core\Form\FormState;
@@ -7,11 +9,19 @@ use Drupal\views\Views;
 
 /**
  * Test Blazy Views integration.
- *
- * @coversDefaultClass \Drupal\blazy\Views\BlazyStylePluginBase
- *
- * @group blazy
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class BlazyViewsFileTest extends BlazyViewsTestBase {
 
   /**

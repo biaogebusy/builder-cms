@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\config\FunctionalJavascript;
 
-use Drupal\block_content\Entity\BlockContent;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\block_content\Traits\BlockContentCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the config export form.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigExportTest extends WebDriverTestBase {
+
+  use BlockContentCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -25,8 +29,9 @@ class ConfigExportTest extends WebDriverTestBase {
   protected $defaultTheme = 'stark';
 
   /**
+   * A prefix string used in naming the test blocks.
+   *
    * @var string
-   *  A prefix string used in naming the test blocks.
    */
   protected string $blockNamePrefix = 'aaaaaa_config_export_test_block';
 
@@ -43,7 +48,8 @@ class ConfigExportTest extends WebDriverTestBase {
       'administer block content',
     ]));
 
-    // Create test blocks, so we know what the titles will be to check their order.
+    // Create test blocks, so we know what the titles will be to check their
+    // order.
     foreach ([1, 2, 3, 4] as $num) {
       $block_name = $this->blockNamePrefix . $num;
       $new_block = $this->createBlockContent($block_name);
@@ -54,25 +60,6 @@ class ConfigExportTest extends WebDriverTestBase {
         'region' => 'sidebar_first',
       ]);
     }
-  }
-
-  /**
-   * Creates test blocks.
-   *
-   * @param $title
-   *   Title of the block.
-   *
-   * @return \Drupal\block_content\Entity\BlockContent
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   */
-  protected function createBlockContent($title) {
-    $block_content = BlockContent::create([
-      'info' => $title,
-      'type' => 'basic',
-    ]);
-    $block_content->save();
-    return $block_content;
   }
 
   /**
@@ -108,7 +95,8 @@ class ConfigExportTest extends WebDriverTestBase {
     $this->assertSession()->fieldValueEquals('export', '');
 
     // Check that the 'Configuration name' list is sorted alphabetically by ID,
-    // which always begins with our prefix, and not the label, which is randomized.
+    // which always begins with our prefix, and not the label, which is
+    // randomized.
     $page->selectFieldOption('config_type', 'Block');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $options = $page->findField('config_name')->findAll('css', 'option');

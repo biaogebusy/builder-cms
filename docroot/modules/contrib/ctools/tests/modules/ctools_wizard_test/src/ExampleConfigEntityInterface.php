@@ -13,13 +13,15 @@ interface ExampleConfigEntityInterface extends ConfigEntityInterface {
    * Get first piece of information.
    *
    * @return string
+   *   The information.
    */
   public function getOne();
 
   /**
-   * Get second piece of information;.
+   * Get second piece of information.
    *
    * @return string
+   *   The information.
    */
   public function getTwo();
 

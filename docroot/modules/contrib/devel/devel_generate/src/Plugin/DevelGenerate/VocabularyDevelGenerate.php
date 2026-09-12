@@ -143,7 +143,7 @@ class VocabularyDevelGenerate extends DevelGenerateBase implements ContainerFact
    */
   public function validateDrushParams(array $args, array $options = []): array {
     $values = [
-      'num' => array_shift($args),
+      'num' => $args['num'],
       'kill' => $options['kill'],
       'title_length' => 12,
     ];

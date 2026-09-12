@@ -74,13 +74,13 @@ interface AutologoutManagerInterface {
   public function logout();
 
   /**
-   * Helper to determine if a given user should be autologged out.
+   * Helper to determine if a given user should be automatically logged out.
    *
    * @param \Drupal\user\UserInterface $user
    *   User entity.
    *
    * @return bool
-   *   TRUE if the user should be autologged out, otherwise FALSE.
+   *   TRUE if the user should be automatically logged out, otherwise FALSE.
    */
   public function logoutRole(UserInterface $user);
 

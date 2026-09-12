@@ -2,11 +2,10 @@
 
 namespace Drupal\commerce_promotion;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -53,34 +52,13 @@ class PromotionListBuilder extends EntityListBuilder implements FormInterface {
   protected $hasTableDrag = TRUE;
 
   /**
-   * Constructs a new PromotionListBuilder object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   *   The entity storage.
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
-   *   The form builder.
-   * @param \Drupal\commerce_promotion\PromotionUsageInterface $usage
-   *   The usage.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, FormBuilderInterface $form_builder, PromotionUsageInterface $usage) {
-    parent::__construct($entity_type, $storage);
-
-    $this->formBuilder = $form_builder;
-    $this->usage = $usage;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('form_builder'),
-      $container->get('commerce_promotion.usage')
-    );
+    $instance = parent::createInstance($container, $entity_type);
+    $instance->formBuilder = $container->get('form_builder');
+    $instance->usage = $container->get('commerce_promotion.usage');
+    return $instance;
   }
 
   /**
@@ -117,7 +95,7 @@ class PromotionListBuilder extends EntityListBuilder implements FormInterface {
    */
   public function load() {
     $entity_ids = $this->getEntityIds();
-    $entities = $this->storage->loadMultiple($entity_ids);
+    $entities = $this->getStorage()->loadMultiple($entity_ids);
     // Sort the entities using the entity class's sort() method.
     uasort($entities, [$this->entityType->getClass(), 'sort']);
     // Load the usage counts for each promotion.
@@ -259,9 +237,15 @@ class PromotionListBuilder extends EntityListBuilder implements FormInterface {
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
-    if ($entity->access('update')) {
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $cacheability = func_num_args() > 1 ? func_get_arg(1) : NULL;
+    $operations = parent::getDefaultOperations($entity, $cacheability);
+
+    $access = $entity->access('update', NULL, TRUE);
+    if ($cacheability instanceof CacheableMetadata) {
+      $cacheability->addCacheableDependency($access);
+    }
+    if ($access->isAllowed()) {
       $operations['coupons'] = [
         'title' => $this->t('Coupons'),
         'weight' => 20,

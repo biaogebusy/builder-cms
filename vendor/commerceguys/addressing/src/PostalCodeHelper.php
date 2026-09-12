@@ -36,7 +36,8 @@ class PostalCodeHelper
      *
      * @param string $postalCode The postal code.
      * @param string $rule       The rule. Can be a regular expression
-     *                           ("/(35|38)[0-9]{3}/") or comma-separated list,
+     *                           ("/(35|38)[0-9]{3}/", modifiers such as
+     *                           "/ZE[0-9]/i" allowed) or comma-separated list,
      *                            including ranges ("98, 100:200, 250").
      *
      * @return bool True if the provided postal code matches the provided
@@ -44,8 +45,8 @@ class PostalCodeHelper
      */
     protected static function matchRule(string $postalCode, string $rule): bool
     {
-        if (str_starts_with($rule, '/') && str_ends_with($rule, '/')) {
-            $match = preg_match($rule, $postalCode);
+        if (str_starts_with($rule, '/')) {
+            $match = preg_match($rule, $postalCode) === 1;
         } else {
             $match = in_array($postalCode, self::buildList($rule));
         }

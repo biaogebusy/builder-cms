@@ -26,7 +26,7 @@ class WebformElementSubmissionViewsTest extends WebformElementBrowserTestBase {
   /**
    * Test webform submission views element.
    */
-  public function testSubmissionViews() {
+  public function testSubmissionViews(): void {
     $assert_session = $this->assertSession();
 
     // Check global and webform rendering.

@@ -355,6 +355,21 @@ ckeditor5_link:
       - <a>
       - <a href>
 
+ckeditor5_link_entity_suggestions:
+  ckeditor5:
+    plugins:
+      - drupalEntityLinkSuggestions.DrupalEntityLinkSuggestions
+  drupal:
+    label: Entity links
+    class: \Drupal\ckeditor5\Plugin\CKEditor5Plugin\EntityLinkSuggestions
+    library: ckeditor5/internal.drupal.ckeditor5.link-entity-suggestions
+    elements:
+      - <a data-entity-type data-entity-uuid data-entity-metadata>
+    conditions:
+      filter: entity_links
+      plugins:
+        - ckeditor5_link
+
 ckeditor5_linkImage:
   ckeditor5:
     plugins:
@@ -371,6 +386,18 @@ ckeditor5_linkImage:
     conditions:
       plugins:
         - ckeditor5_link
+        - ckeditor5_image
+
+ckeditor5_entityLinkImage:
+  ckeditor5:
+    plugins: []
+  drupal:
+    label: Entity-Linked Image
+    elements:
+      - <img data-link-entity-type data-link-entity-uuid>
+    conditions:
+      plugins:
+        - ckeditor5_link_entity_suggestions
         - ckeditor5_image
 
 ckeditor5_linkMedia:
@@ -394,11 +421,8 @@ ckeditor5_list:
     plugins:
       - list.List
       - list.ListProperties
-    config:
-      list:
-        properties:
-          # @todo Make this configurable in https://www.drupal.org/project/drupal/issues/3274635
-          styles: false
+    # @see \Drupal\ckeditor5\Plugin\CKEditor5Plugin\ListPlugin::getDynamicPluginConfig()
+    config: {}
   drupal:
     label: List
     library: core/ckeditor5.list
@@ -414,6 +438,8 @@ ckeditor5_list:
       - <ol>
       - <ol reversed start>
       - <li>
+      - <ol type>
+      - <ul type>
 
 ckeditor5_horizontalLine:
   ckeditor5:
@@ -720,6 +746,18 @@ ckeditor5_showBlocks:
         label: Show blocks
     elements: false
 
+ckeditor5_fullscreen:
+  ckeditor5:
+    plugins: [fullscreen.Fullscreen]
+  drupal:
+    label: Fullscreen
+    library: core/ckeditor5.fullscreen
+    admin_library: ckeditor5/internal.admin.fullscreen
+    toolbar_items:
+      fullscreen:
+        label: Fullscreen
+    elements: false
+
 media_media:
   provider: media
   ckeditor5:
@@ -835,3 +873,17 @@ media_library_mediaLibrary:
     conditions:
       filter: media_embed
       toolbarItem: drupalMedia
+
+ckeditor5_entityLinkMedia:
+  ckeditor5:
+    plugins: []
+  drupal:
+    label: Entity-Linked Media
+    elements:
+      # The drupalMedia.DrupalLinkMedia CKEditor 5 plugin automatically supports the
+      # Entity Link Suggestions functionality when it is enabled.
+      - <drupal-media data-link-entity-type data-link-entity-uuid data-link-entity-metadata>
+    conditions:
+      plugins:
+        - ckeditor5_link_entity_suggestions
+        - media_media

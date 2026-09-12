@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\node\Kernel\Plugin\migrate\source\d7;
 
-// cspell:ignore tnid
+use Drupal\node\Plugin\migrate\source\d7\Node;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore tnid
 /**
  * Tests D7 node translation source plugin.
- *
- * @covers \Drupal\node\Plugin\migrate\source\d7\Node
- *
- * @group node
  */
+#[CoversClass(Node::class)]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeTranslationTest extends NodeTest {
 
   /**

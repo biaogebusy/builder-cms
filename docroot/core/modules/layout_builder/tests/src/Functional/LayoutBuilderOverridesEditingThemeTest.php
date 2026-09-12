@@ -10,6 +10,8 @@ use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\layout_builder\Traits\EnableLayoutBuilderTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests overrides editing uses the correct theme.
@@ -17,9 +19,9 @@ use Drupal\user\UserInterface;
  * Block content is used for this test as its canonical & editing routes
  * are in the admin section, so we need to test that layout builder editing
  * uses the front end theme.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderOverridesEditingThemeTest extends LayoutBuilderTestBase {
 
   use EnableLayoutBuilderTrait;

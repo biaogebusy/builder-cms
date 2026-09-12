@@ -8,7 +8,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\entity_browser\Attribute\EntityBrowserWidget;
 use Drupal\entity_browser\WidgetBase;
 use Drupal\views\Entity\View as ViewEntity;
 use Drupal\views\Views;
@@ -17,15 +19,14 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Uses a view to provide entity listing in a browser's widget.
- *
- * @EntityBrowserWidget(
- *   id = "view",
- *   label = @Translation("View"),
- *   provider = "views",
- *   description = @Translation("Uses a view to provide entity listing in a browser's widget."),
- *   auto_select = TRUE
- * )
  */
+#[EntityBrowserWidget(
+  id: 'view',
+  label: new TranslatableMarkup('View'),
+  description: new TranslatableMarkup("Uses a view to provide entity listing in a browser's widget."),
+  auto_select: TRUE,
+  provider: "views",
+)]
 class View extends WidgetBase {
 
   /**

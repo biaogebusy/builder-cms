@@ -16,7 +16,7 @@
   --card-border-color: var(--color-gray-200-o-80);
   --card-border-radius-size: var(--base-border-radius);
   --card-image-border-radius-size: calc(var(--card-border-radius-size) - var(--card-border-size));
-  --card-box-shadow: 0 0.25rem 0.625rem rgba(0, 0, 0, 0.1);
+  --card-box-shadow: 0 0.25rem 0.625rem rgb(0, 0, 0, 0.1);
 }
 
 .card {
@@ -139,10 +139,10 @@
 
 .card__content-item {
   margin-block: 0 var(--space-m);
-}
 
-.card__content-item:last-child {
-  margin-block-end: 0;
+  &:last-child {
+    margin-block-end: 0;
+  }
 }
 
 /**
@@ -157,8 +157,8 @@
 .card__footer .action-links {
   margin-block: 0;
   text-align: right; /* LTR */
-}
 
-[dir="rtl"] :is(.card__footer .action-links) {
-  text-align: left;
+  [dir="rtl"] & {
+    text-align: left;
+  }
 }

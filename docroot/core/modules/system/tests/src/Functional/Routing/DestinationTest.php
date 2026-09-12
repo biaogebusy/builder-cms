@@ -6,6 +6,8 @@ namespace Drupal\Tests\system\Functional\Routing;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for $_GET['destination'] and $_REQUEST['destination'] validation.
@@ -14,9 +16,9 @@ use Drupal\Tests\BrowserTestBase;
  * \Drupal\Tests\Core\EventSubscriber\RedirectResponseSubscriberTest::testSanitizeDestinationForGet
  * \Drupal\Tests\Core\EventSubscriber\RedirectResponseSubscriberTest::testSanitizeDestinationForPost
  * but we want to be absolutely sure it works.
- *
- * @group Routing
  */
+#[Group('Routing')]
+#[RunTestsInSeparateProcesses]
 class DestinationTest extends BrowserTestBase {
 
   /**

@@ -2,6 +2,8 @@
 
 namespace Drupal\redirect\Plugin\Validation\Constraint;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Validation\Attribute\Constraint as ConstraintAttribute;
 use Symfony\Component\Validator\Constraint;
 
 /**
@@ -12,6 +14,10 @@ use Symfony\Component\Validator\Constraint;
  *   label = @Translation("Unique redirect", context = "Validation")
  * )
  */
+#[ConstraintAttribute(
+  id: 'RedirectUniqueHash',
+  label: new TranslatableMarkup('Unique redirect', [], ['context' => 'Validation']),
+)]
 class UniqueHash extends Constraint {
 
   /**

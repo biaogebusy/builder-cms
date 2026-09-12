@@ -1,0 +1,6 @@
+admin.emoji:
+  version: 20250312
+  css:
+    theme:
+      css/emoji.admin.css: { }
+

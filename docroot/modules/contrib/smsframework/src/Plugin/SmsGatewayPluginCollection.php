@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Plugin;
 
@@ -22,7 +22,11 @@ class SmsGatewayPluginCollection extends DefaultSingleLazyPluginCollection {
    * @param array $configuration
    *   An array of configuration.
    */
-  public function __construct(PluginManagerInterface $manager, $instance_id, array $configuration) {
+  public function __construct(
+    PluginManagerInterface $manager,
+    $instance_id,
+    array $configuration,
+  ) {
     $this->manager = $manager;
     if ($instance_id !== NULL) {
       $this->addInstanceId($instance_id, $configuration);

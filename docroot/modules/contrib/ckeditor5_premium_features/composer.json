@@ -1,0 +1,35 @@
+{
+    "name": "drupal/ckeditor5_premium_features",
+    "type": "drupal-module",
+    "description": "The premium features for the CKEditor 5 WYSIWYG editor.",
+    "license": "GPL-2.0+",
+    "minimum-stability": "dev",
+    "homepage": "https://www.drupal.org/project/ckeditor5_premium_features",
+    "authors": [
+        {
+            "name": "Wojciech Kukowski (salmonek)",
+            "homepage": "https://www.drupal.org/u/salmonek",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Dawid Olszewski (dolszewski)",
+            "homepage": "https://www.drupal.org/u/dolszewski",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/ckeditor5_premium_features"
+    },
+    "require": {
+        "php": "^8.0",
+        "ext-dom": "*",
+        "ext-libxml": "*",
+        "drupal/core": "^10.3 || ^11.0"
+    },
+    "suggest": {
+        "firebase/php-jwt": "Required for Real-time collaboration and document converters.",
+        "caxy/php-htmldiff": "Required for asynchronous collaboration and notifications.",
+        "openai-php/client": "Required for OpenAI an AzureAI providers for the AI Assistant.",
+        "aws/aws-sdk-php": "Required for AWS Bedrock provider for the AI Assistant."
+    }
+}

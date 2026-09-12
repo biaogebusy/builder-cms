@@ -2,6 +2,7 @@
 
 namespace Drupal\ai_automators\Plugin\AiAutomatorProcess;
 
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -27,10 +28,16 @@ class QueueWorkerProcessor implements AiAutomatorFieldProcessInterface, Containe
   protected QueueFactory $queueFactory;
 
   /**
+   * The database connection.
+   */
+  protected Connection $connection;
+
+  /**
    * Constructor.
    */
-  final public function __construct(QueueFactory $queueFactory) {
+  final public function __construct(QueueFactory $queueFactory, Connection $connection) {
     $this->queueFactory = $queueFactory;
+    $this->connection = $connection;
   }
 
   /**
@@ -39,6 +46,7 @@ class QueueWorkerProcessor implements AiAutomatorFieldProcessInterface, Containe
   final public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
       $container->get('queue'),
+      $container->get('database'),
     );
   }
 
@@ -46,6 +54,12 @@ class QueueWorkerProcessor implements AiAutomatorFieldProcessInterface, Containe
    * {@inheritDoc}
    */
   public function modify(EntityInterface $entity, FieldDefinitionInterface $fieldDefinition, array $automatorConfig) {
+    $allowRequeue = $automatorConfig['queue_allow_requeue'] ?? FALSE;
+
+    if (!$allowRequeue && $this->isAlreadyQueued($entity, $fieldDefinition)) {
+      return TRUE;
+    }
+
     $queue = $this->queueFactory->get('ai_automator_field_modifier');
     $queue->createItem([
       'entity_id' => $entity->id(),
@@ -54,6 +68,35 @@ class QueueWorkerProcessor implements AiAutomatorFieldProcessInterface, Containe
       'automatorConfig' => $automatorConfig,
     ]);
     return TRUE;
+  }
+
+  /**
+   * Checks whether a queue item for this entity/field combination exists.
+   */
+  protected function isAlreadyQueued(EntityInterface $entity, FieldDefinitionInterface $fieldDefinition): bool {
+    try {
+      $result = $this->connection->select('queue', 'q')
+        ->fields('q', ['data'])
+        ->condition('name', 'ai_automator_field_modifier')
+        ->execute();
+    }
+    catch (\Exception $e) {
+      // If the queue table does not exist yet, no items can be pending.
+      if ($this->connection->schema()->tableExists('queue')) {
+        throw $e;
+      }
+      return FALSE;
+    }
+
+    foreach ($result as $record) {
+      $data = unserialize($record->data, ['allowed_classes' => FALSE]);
+      if (($data['entity_type'] ?? NULL) === $entity->getEntityTypeId()
+        && ($data['entity_id'] ?? NULL) == $entity->id()
+        && ($data['automatorConfig']['field_name'] ?? NULL) === $fieldDefinition->getName()) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**

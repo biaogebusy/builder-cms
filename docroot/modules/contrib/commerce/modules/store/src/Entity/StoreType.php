@@ -43,12 +43,12 @@ use Drupal\commerce\Entity\CommerceBundleEntityBase;
  *     "uuid" = "uuid",
  *   },
  *   config_export = {
+ *     "uuid",
  *     "id",
  *     "label",
- *     "uuid",
- *     "description",
  *     "traits",
  *     "locked",
+ *     "description",
  *   },
  *   links = {
  *     "add-form" = "/admin/commerce/config/store-types/add",

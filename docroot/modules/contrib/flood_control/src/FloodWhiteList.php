@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class FloodWhiteList implements FloodInterface {
 
+
   /**
    * The decorated flood service.
    *
@@ -41,7 +42,7 @@ class FloodWhiteList implements FloodInterface {
    * {@inheritdoc}
    */
   public function isAllowed($name, $threshold, $window = 3600, $identifier = NULL) {
-    if ($this->isIpWhitelisted()) {
+    if ($this->isIpAllowed()) {
       return TRUE;
     }
 
@@ -70,16 +71,16 @@ class FloodWhiteList implements FloodInterface {
   }
 
   /**
-   * Checks if ip address is whitelisted.
+   * Checks if ip address is allowed list.
    *
    * @param string $ipAddress
-   *   Optional. IP address to be checked if it is in whitelist. If no ip value
-   *   provided user's current ip will be used to be verified.
+   *   Optional. IP address to be checked if it is in allowed lists of IPs.
+   *   If no ip value provided, user's current ip will be used to be verified.
    *
    * @return bool
-   *   TRUE if requested IP address is whitelisted, FALSE if it is not.
+   *   TRUE if requested IP address is allowed in , FALSE if it is not.
    */
-  protected function isIpWhitelisted(string $ipAddress = ''): bool {
+  protected function isIpAllowed(string $ipAddress = ''): bool {
     $request = $this->requestStack->getCurrentRequest();
 
     if ($request && !$ipAddress) {
@@ -87,20 +88,20 @@ class FloodWhiteList implements FloodInterface {
     }
 
     // Gets the values from the config.
-    $ipsWhiteList = flood_control_get_whitelist_ips();
+    $ipsAllowedList = self::getAllowedlistIps();
 
     // Check if the current address is mentioned specifically.
-    if (isset($ipsWhiteList['addresses']) && in_array($ipAddress, $ipsWhiteList['addresses'], TRUE)) {
+    if (isset($ipsAllowedList['addresses']) && in_array($ipAddress, $ipsAllowedList['addresses'], TRUE)) {
       return TRUE;
     }
 
     // Check if any IP ranges are set, if so, continue, otherwise return false.
-    if (empty($ipsWhiteList['ranges'])) {
+    if (empty($ipsAllowedList['ranges'])) {
       return FALSE;
     }
 
     // Check if the current IP address is within the ranges.
-    foreach ($ipsWhiteList['ranges'] as $ipRange) {
+    foreach ($ipsAllowedList['ranges'] as $ipRange) {
       [$ipLower, $ipUpper] = explode('-', $ipRange, 2);
       $ipLowerDec = (float) sprintf("%u", ip2long($ipLower));
       $ipUpperDec = (float) sprintf("%u", ip2long($ipUpper));
@@ -112,6 +113,47 @@ class FloodWhiteList implements FloodInterface {
     }
 
     return FALSE;
+  }
+
+  /**
+   * Parse and return allowed list IPs from config value.
+   *
+   * @param string $allowedlistIpsValue
+   *   Optional. IP addresses to be allowed listed. If empty, will fetch from
+   *   config.
+   *
+   * @return array<string, string[]>
+   *   An array of allowed list of IPs addresses and ranges.
+   */
+  public static function getAllowedlistIps(string $allowedlistIpsValue = ''): array {
+    if (!$allowedlistIpsValue) {
+      $config = \Drupal::configFactory()->get('flood_control.settings');
+      $allowedlistIpsValue = $config->get('ip_white_list') ?? '';
+    }
+    $allowedListIps = [
+      'ranges' => [],
+      'addresses' => [],
+    ];
+
+    // Ensure the IPs value is trimmed before moving onward.
+    $allowedlistIpsValue = trim($allowedlistIpsValue);
+
+    if (empty($allowedlistIpsValue)) {
+      return $allowedListIps;
+    }
+
+    $valueRows = explode("\n", $allowedlistIpsValue);
+    foreach ($valueRows as $valueRow) {
+      $valueRow = trim($valueRow);
+      if (str_contains($valueRow, '-')) {
+        $allowedListIps['ranges'][] = $valueRow;
+      }
+      else {
+        $allowedListIps['addresses'][] = $valueRow;
+      }
+    }
+
+    return $allowedListIps;
   }
 
 }

@@ -8,14 +8,16 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\views\Views;
 use Drupal\views\Tests\ViewTestData;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the integration of node_revision table of node module.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class RevisionRelationshipsTest extends ViewsKernelTestBase {
 
   /**
@@ -25,7 +27,6 @@ class RevisionRelationshipsTest extends ViewsKernelTestBase {
     'node',
     'node_test_views',
     'language',
-    'content_translation',
   ];
 
   /**

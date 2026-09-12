@@ -231,10 +231,10 @@ class RemoteForm extends EntityForm {
   /**
    * Helper method to instantiate plugin from this entity.
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   *
    * @return bool
    *   True if the remote entity has a plugin.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   protected function hasAuthPlugin() {
     /** @var \Drupal\entity_share_client\Entity\RemoteInterface $remote */

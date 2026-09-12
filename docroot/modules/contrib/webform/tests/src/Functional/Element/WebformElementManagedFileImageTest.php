@@ -31,7 +31,7 @@ class WebformElementManagedFileImageTest extends WebformElementManagedFileTestBa
   /**
    * Test image file upload.
    */
-  public function testImageFileUpload() {
+  public function testImageFileUpload(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

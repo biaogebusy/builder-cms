@@ -17,18 +17,26 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class ResolverRelationshipConfigure extends FormBase {
 
   /**
+   * The tempstore factory.
+   *
    * @var \Drupal\Core\TempStore\SharedTempStoreFactory
    */
   protected $tempstore;
 
   /**
+   * The tempstore ID.
+   *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $tempstore_id;
 
   /**
+   * The machine name.
+   *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $machine_name;
 
   /**
@@ -178,29 +186,33 @@ abstract class ResolverRelationshipConfigure extends FormBase {
   /**
    * Document the route name and parameters for redirect after submission.
    *
-   * @param $cached_values
+   * @param array $cached_values
+   *   The cached values.
    *
    * @return array
    *   In the format of
-   *   return ['route.name', ['machine_name' => $this->machine_name, 'step' => 'step_name]];
+   *   return ['route.name',
+   *     ['machine_name' => $this->machine_name, 'step' => 'step_name']];
    */
   abstract protected function getParentRouteInfo($cached_values);
 
   /**
    * Custom logic for retrieving the contexts array from cached_values.
    *
-   * @param $cached_values
+   * @param array $cached_values
+   *   The cached values.
    *
    * @return array
+   *   The contexts.
    */
   abstract protected function getContexts($cached_values);
 
   /**
    * Custom logic for setting the contexts array in cached_values.
    *
-   * @param $cached_values
-   *
-   * @param $contexts
+   * @param array $cached_values
+   *   The cached values.
+   * @param array $contexts
    *   The contexts to set within the cached values.
    *
    * @return mixed

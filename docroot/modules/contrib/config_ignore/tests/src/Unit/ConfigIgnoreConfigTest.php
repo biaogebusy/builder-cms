@@ -4,11 +4,11 @@ namespace Drupal\Tests\config_ignore\Unit;
 
 use Drupal\config_ignore\ConfigIgnoreConfig;
 use Drupal\Tests\UnitTestCase;
+use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests the config ignore config object.
- *
- * @coversDefaultClass \Drupal\config_ignore\ConfigIgnoreConfig
  *
  * @group config_ignore
  */
@@ -25,9 +25,8 @@ class ConfigIgnoreConfigTest extends UnitTestCase {
    *   The config name.
    * @param bool|array $expected
    *   The expected result of what is ignored.
-   *
-   * @dataProvider ignorePatternProvider
    */
+  #[DataProvider('ignorePatternProvider')]
   public function testIgnorePatternMatching(array $pattern, string $collection, string $name, bool|array $expected): void {
     $config = new ConfigIgnoreConfig('simple', $pattern);
     self::assertSame($expected, $config->isIgnored($collection, $name, 'import', 'update'));
@@ -39,14 +38,14 @@ class ConfigIgnoreConfigTest extends UnitTestCase {
    * @return \Generator
    *   The patterns.
    */
-  public function ignorePatternProvider() {
-    yield 'direct' => [['hello'], $this->randomMachineName(), 'hello', TRUE];
-    yield 'direct not' => [['hello'], $this->randomMachineName(), 'world', FALSE];
+  public static function ignorePatternProvider() {
+    yield 'direct' => [['hello'], Random::machineName(), 'hello', TRUE];
+    yield 'direct not' => [['hello'], Random::machineName(), 'world', FALSE];
 
     // Test some patterns with collections.
     $pattern = ['a', 'b|c', 'd*|*', 'de|~f*', '~de|g*'];
-    yield 'a' => [$pattern, $this->randomMachineName(), 'a', TRUE];
-    yield '!a' => [$pattern, 'r' . $this->randomMachineName(), 'b', FALSE];
+    yield 'a' => [$pattern, Random::machineName(), 'a', TRUE];
+    yield '!a' => [$pattern, 'r' . Random::machineName(), 'b', FALSE];
     yield 'explicit collection' => [$pattern, 'b', 'c', TRUE];
     yield 'explicit collection, other' => [$pattern, 'b', 'other', FALSE];
     yield 'wildcard collection' => [$pattern, 'd', 'other', TRUE];

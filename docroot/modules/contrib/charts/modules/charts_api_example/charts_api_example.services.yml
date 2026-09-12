@@ -1,0 +1,8 @@
+services:
+  charts_api_example.hooks:
+    class: Drupal\charts_api_example\Hook\ChartsApiExampleHooks
+    tags:
+      - { name: hook }
+  charts_api_example.builder:
+    class: Drupal\charts_api_example\ChartExampleBuilder
+    arguments: ['@config.factory', '@plugin.manager.charts', '@extension.list.module']

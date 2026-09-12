@@ -16,6 +16,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
+use Drupal\Core\Field\FieldException;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -477,7 +478,12 @@ class ContentEntity extends DatasourcePluginBase implements PluginFormInterface 
     // confusion.
     foreach ($properties as $key => $property) {
       if (!$property->isComputed() || $key === 'path') {
-        if ($property->getFieldStorageDefinition()->hasCustomStorage()) {
+        try {
+          if ($property->getFieldStorageDefinition()->hasCustomStorage()) {
+            unset($properties[$key]);
+          }
+        }
+        catch (FieldException) {
           unset($properties[$key]);
         }
       }
@@ -1184,8 +1190,13 @@ class ContentEntity extends DatasourcePluginBase implements PluginFormInterface 
         catch (\Throwable $e) {
           // We don't want to catch all PHP \Error objects thrown, but just the
           // ones caused by #2893747.
-          if (!($e instanceof \Exception)
-              && (get_class($e) !== \Error::class || $e->getMessage() !== 'Call to a member function getColumns() on bool')) {
+          if (
+            !($e instanceof \Exception)
+            && (
+              get_class($e) !== \Error::class
+              || !str_starts_with($e->getMessage(), 'Call to a member function getColumns() on')
+            )
+          ) {
             throw $e;
           }
           $vars = [

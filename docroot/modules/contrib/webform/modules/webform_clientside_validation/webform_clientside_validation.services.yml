@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_clientside_validation\Hook\WebformClientsideValidationHooks:
+    class: Drupal\webform_clientside_validation\Hook\WebformClientsideValidationHooks
+    autowire: true

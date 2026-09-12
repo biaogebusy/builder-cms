@@ -101,6 +101,7 @@
     $.addClass(cn, ok ? isSuccess : isError);
 
     if (ok) {
+      el._bioLoaded = true;
       ER_COUNTED = success(el, status, cn, opts);
       // Native may already remove `data-[SRC|SRCSET]` early, except BG/Video.
       if ($.hasAttr(el, DATA_SRC)) {
@@ -108,6 +109,7 @@
       }
     }
     else {
+      el._bioLoaded = false;
       ER_COUNTED = error(el, status, cn, opts);
     }
 
@@ -139,6 +141,8 @@
   };
 
   $.selector = function (opts, suffix) {
+    opts = opts || $._defaults;
+
     var selector = opts.selector;
     // @todo recheck, troubled for onresize: + ':not(.' + opts.successClass + ')'.
     if (suffix && $.isBool(suffix)) {

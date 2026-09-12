@@ -76,6 +76,7 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
       'advanced' => [
         'collapsible' => FALSE,
         'collapsible_disable_automatic_open' => FALSE,
+        'open_by_default' => FALSE,
         'is_secondary' => FALSE,
         'placeholder_text' => '',
         'rewrite' => [
@@ -83,7 +84,10 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
           'filter_rewrite_values_key' => FALSE,
         ],
         'sort_options' => FALSE,
+        'sort_options_method' => 'alphabetical_asc',
+        'sort_options_natural' => TRUE,
         'hide_label' => FALSE,
+        'field_classes' => '',
       ],
     ];
   }
@@ -103,13 +107,58 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
     ];
 
     // Allow users to sort options.
-    $supported_types = ['select'];
-    if (in_array($filter_widget_type, $supported_types)) {
+    if ($this->isFieldSortingSupported($filter)) {
       $form['advanced']['sort_options'] = [
         '#type' => 'checkbox',
-        '#title' => 'Sort filter options',
+        '#title' => $this->t('Sort filter options'),
         '#default_value' => !empty($this->configuration['advanced']['sort_options']),
-        '#description' => $this->t('The options will be sorted alphabetically.'),
+        '#description' => $this->t('Enable custom sorting of filter options. Note: This feature is not available for entity reference fields (taxonomy, users, content) due to technical limitations.'),
+      ];
+
+      $form['advanced']['sort_options_method'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Sort method'),
+        '#default_value' => $this->configuration['advanced']['sort_options_method'],
+        '#options' => [
+          'alphabetical_asc' => $this->t('Ascending'),
+          'alphabetical_desc' => $this->t('Descending'),
+          'key_asc' => $this->t('By value key (ascending)'),
+          'key_desc' => $this->t('By value key (descending)'),
+          'result_count' => $this->t('By result count (if available)'),
+        ],
+        '#description' => $this->t('Choose how the filter options should be sorted.'),
+        '#states' => [
+          'visible' => [
+            ':input[name="exposed_form_options[bef][filter][' . $filter->options['id'] . '][configuration][advanced][sort_options]"]' => ['checked' => TRUE],
+          ],
+        ],
+      ];
+
+      $form['advanced']['sort_options_natural'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Use natural sorting'),
+        '#default_value' => !empty($this->configuration['advanced']['sort_options_natural']),
+        '#description' => $this->t('Use natural sorting algorithm (e.g., "Item 2" comes before "Item 10"). This works better with numbers and mixed content.'),
+        '#states' => [
+          'visible' => [
+            ':input[name="exposed_form_options[bef][filter][' . $filter->options['id'] . '][configuration][advanced][sort_options]"]' => ['checked' => TRUE],
+            0 => [':input[name="exposed_form_options[bef][filter][' . $filter->options['id'] . '][configuration][advanced][sort_options_method]"]' => ['value' => 'alphabetical_asc']],
+            1 => 'or',
+            2 => [':input[name="exposed_form_options[bef][filter][' . $filter->options['id'] . '][configuration][advanced][sort_options_method]"]' => ['value' => 'alphabetical_desc']],
+          ],
+        ],
+      ];
+    }
+    else {
+      // Provide information about unsupported field types.
+      $form['advanced']['sort_options_unsupported'] = [
+        '#type' => 'item',
+        '#title' => $this->t('Sorting options'),
+        '#description' => $this->t('Custom sorting is not available for this filter type. Entity reference fields (taxonomy terms, users, content) cannot be easily reordered due to deep integration with Drupal core. Consider using JavaScript-based client-side sorting if needed.'),
+        '#wrapper_attributes' => [
+          'class' => ['messages', 'messages--warning'],
+        ],
+        '#input' => FALSE,
       ];
     }
 
@@ -180,6 +229,21 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
       ],
     ];
 
+    // Make filter open by default.
+    $form['advanced']['open_by_default'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Open by default'),
+      '#default_value' => !empty($this->configuration['advanced']['open_by_default']),
+      '#description' => $this->t(
+        'Collapsible filter will be opened by default. It can be collapsed by the user if they wish, but after the page reload (or AJAX view refresh) it will be opened again.'
+      ),
+      '#states' => [
+        'visible' => [
+          ':input[name="exposed_form_options[bef][filter][' . $filter->options['id'] . '][configuration][advanced][collapsible]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
     // Allow any filter to be moved into the secondary options' element.
     $form['advanced']['is_secondary'] = [
       '#type' => 'checkbox',
@@ -191,6 +255,13 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
         ],
       ],
       '#description' => $this->t('Places this element in the secondary options portion of the exposed form.'),
+    ];
+
+    $form['advanced']['field_classes'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Custom classes added to the field element'),
+      '#default_value' => $this->configuration['advanced']['field_classes'],
+      '#description' => $this->t('To add multiple classes separate them with a space'),
     ];
 
     return $form;
@@ -206,13 +277,12 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
     $field_id = $this->getExposedFilterFieldId();
     $is_collapsible = $this->configuration['advanced']['collapsible'];
     $collapsible_disable_automatic_open = $this->configuration['advanced']['collapsible_disable_automatic_open'];
+    $open_by_default = $this->configuration['advanced']['open_by_default'] ?? FALSE;
     $is_secondary = !empty($form['secondary']) && $this->configuration['advanced']['is_secondary'];
 
     // Sort options alphabetically.
     if ($this->configuration['advanced']['sort_options']) {
-      $form[$field_id]['#nested'] = $filter->options['hierarchy'] ?? FALSE;
-      $form[$field_id]['#nested_delimiter'] = '-';
-      $form[$field_id]['#pre_process'][] = [$this, 'processSortedOptions'];
+      $form[$field_id]['#pre_process'][] = [$this, 'processCustomSortedOptions'];
     }
 
     // Check for placeholder text.
@@ -227,7 +297,9 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
       // @see \Drupal\views\Plugin\views\filter\FilterPluginBase::buildExposedForm
       // @see \Drupal\views\Plugin\views\filter\FilterPluginBase::buildValueWrapper
       if (empty($form["{$field_id}_wrapper"][$field_id])) {
-        $form[$field_id]['#title_display'] = 'invisible';
+        if (!empty($form[$field_id])) {
+          $form[$field_id]['#title_display'] = 'invisible';
+        }
       }
       else {
         $form["{$field_id}_wrapper"]['#title_display'] = 'invisible';
@@ -259,7 +331,7 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
 
     // If selected, collect our collapsible filter form element and put it in
     // a details' element.
-    if (!empty($form[$field_id])) {
+    if (!empty($form[$field_id]) || !empty($form["{$field_id}_wrapper"])) {
       if ($is_collapsible) {
         $details = [];
         $details[$field_id . '_collapsible'] = [
@@ -272,8 +344,19 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
           '#collapsible_disable_automatic_open' => $collapsible_disable_automatic_open,
         ];
 
+        if (!empty($open_by_default)) {
+          $details[$field_id . '_collapsible']['#open'] = TRUE;
+        }
+
+        $collapsible_field_id = match(TRUE) {
+          !empty($form["{$field_id}_wrapper"]) => "{$field_id}_wrapper",
+          !empty($form[$field_id]) => $field_id,
+          // Make it safe for future changes, and use field_id as backup.
+          default => $field_id,
+        };
+
         // Retain same weight as the original fields for details.
-        $pos = array_search($field_id, array_keys($form));
+        $pos = array_search($collapsible_field_id, array_keys($form));
         $form = array_merge(array_slice($form, 0, $pos), $details, array_slice($form, $pos));
       }
     }
@@ -339,9 +422,138 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
         $form[$element]['#description'] = $exposed_description;
       }
 
+      // Add custom classes to the field form element.
+      if ($this->configuration['advanced']['field_classes']) {
+        $field_classes = $this->configuration['advanced']['field_classes'];
+        $field_classes_array = explode(' ', $field_classes);
+        foreach ($field_classes_array as $class) {
+          $form[$element]['#attributes']['class'][] = $class;
+        }
+      }
+
       // Finally, add some metadata to the form element.
       $this->addContext($form[$element]);
     }
+  }
+
+  /**
+   * Check if a filter supports custom sorting.
+   *
+   * @param \Drupal\views\Plugin\views\filter\FilterPluginBase $filter
+   *   The filter plugin.
+   *
+   * @return bool
+   *   TRUE if the filter supports custom sorting, FALSE otherwise.
+   */
+  protected function isFieldSortingSupported($filter): bool {
+    // Support for InOperator-based filters (list fields, boolean, etc.)
+    if (is_a($filter, 'Drupal\views\Plugin\views\filter\InOperator')) {
+      return TRUE;
+    }
+
+    // Support for BooleanOperator.
+    if (is_a($filter, 'Drupal\views\Plugin\views\filter\BooleanOperator')) {
+      return TRUE;
+    }
+
+    // Support for String filters that have options (not free text)
+    if (is_a($filter, 'Drupal\views\Plugin\views\filter\StringFilter')) {
+      // Only if it has predefined options and uses 'in' operators.
+      return in_array($filter->operator, ['in', 'or', 'and', 'not']);
+    }
+
+    // Exclude entity reference filters (the problematic ones)
+    $excluded_classes = [
+      'Drupal\taxonomy\Plugin\views\filter\TaxonomyIndexTid',
+      'Drupal\views\Plugin\views\filter\EntityReference',
+      'Drupal\user\Plugin\views\filter\UserReference',
+      'Drupal\node\Plugin\views\filter\NodeReference',
+    ];
+
+    foreach ($excluded_classes as $excluded_class) {
+      if (is_a($filter, $excluded_class)) {
+        return FALSE;
+      }
+    }
+
+    // Support for grouped filters.
+    if ($filter->isAGroup()) {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Sorts the options for a given form element with enhanced methods.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   *
+   * @return array
+   *   The altered element.
+   */
+  public function processCustomSortedOptions(array $element, FormStateInterface $form_state): array {
+    $options = &$element['#options'];
+    $sort_method = $this->configuration['advanced']['sort_options_method'] ?? 'alphabetical_asc';
+    $natural_sort = $this->configuration['advanced']['sort_options_natural'] ?? TRUE;
+
+    // Find and preserve "- Any -" or similar default option.
+    $any_option = FALSE;
+    $any_key = FALSE;
+
+    if (empty($element['#required'])) {
+      // Look for common "any" option patterns.
+      foreach ($options as $key => $value) {
+        $value_string = is_object($value) ? (string) $value : $value;
+        // Check for common "any" patterns.
+        if ($key === '' || $key === 'All' ||
+            strpos($value_string, '- Any') === 0 ||
+            strpos($value_string, 'All') === 0 ||
+            strpos($value_string, '- Select') === 0) {
+          $any_option = [$key => $value];
+          $any_key = $key;
+          unset($options[$key]);
+          break;
+        }
+      }
+    }
+
+    switch ($sort_method) {
+      case 'alphabetical_asc':
+        $options = BetterExposedFiltersHelper::sortOptionsCustom($options, 'alpha', 'asc', $natural_sort);
+        break;
+
+      case 'alphabetical_desc':
+        $options = BetterExposedFiltersHelper::sortOptionsCustom($options, 'alpha', 'desc', $natural_sort);
+        break;
+
+      case 'key_asc':
+        $options = BetterExposedFiltersHelper::sortOptionsCustom($options, 'key', 'asc');
+        break;
+
+      case 'key_desc':
+        $options = BetterExposedFiltersHelper::sortOptionsCustom($options, 'key', 'desc');
+        break;
+
+      case 'result_count':
+        // This would require additional logic to get result counts
+        // For now, fall back to alphabetical.
+        $options = BetterExposedFiltersHelper::sortOptionsCustom($options, 'alpha', 'asc', $natural_sort);
+        break;
+
+      default:
+        $options = BetterExposedFiltersHelper::sortOptions($options);
+    }
+
+    // Restore the "- Any -" value at the first position.
+    if ($any_option && $any_key !== FALSE) {
+      $options = $any_option + $options;
+    }
+
+    return $element;
   }
 
   /**
@@ -360,13 +572,20 @@ abstract class FilterWidgetBase extends BetterExposedFiltersWidgetBase implement
 
     // Ensure "- Any -" value does not get sorted.
     $any_option = FALSE;
-    if (empty($element['#required'])) {
+    if ($element['#required']) {
       // We use array_slice to preserve they keys needed to determine the value
       // when using a filter (e.g. taxonomy terms).
-      $any_option = array_slice($options, 0, 1, TRUE);
-      // Array_slice does not modify the existing array, we need to remove the
-      // option manually.
-      unset($options[key($any_option)]);
+      $first_option = array_slice($options, 0, 1, TRUE);
+
+      // Only preserve the first option if it's actually "- Any -"
+      // translated or untranslated.
+      $first_option_value = reset($first_option);
+      if ($first_option_value === '- Any -' || $first_option_value === $this->t('- Any -')) {
+        $any_option = $first_option;
+        // Array_slice does not modify the existing array, we need to remove the
+        // option manually.
+        unset($options[key($any_option)]);
+      }
     }
 
     // Not all option arrays will have simple data types. We perform a custom

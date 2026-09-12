@@ -5,22 +5,25 @@ declare(strict_types=1);
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\node\Entity\Node;
+use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeTypeInterface;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\taxonomy\TermInterface;
 use Drupal\taxonomy\VocabularyInterface;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
-use Drupal\taxonomy\Entity\Term;
-use Drupal\taxonomy\TermInterface;
-use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\views\Hook\ViewsThemeHooks;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the summary of results when an argument is not provided.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ArgumentSummaryTest extends ViewsKernelTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -38,8 +41,6 @@ class ArgumentSummaryTest extends ViewsKernelTestBase {
     'node',
     'taxonomy',
     'text',
-    'user',
-    'views',
   ];
 
   /**
@@ -91,7 +92,7 @@ class ArgumentSummaryTest extends ViewsKernelTestBase {
       'node',
       $this->nodeType->id(),
       'field_tags',
-      NULL,
+      'Tags',
       'taxonomy_term',
       'default',
       $handler_settings,
@@ -102,7 +103,8 @@ class ArgumentSummaryTest extends ViewsKernelTestBase {
   /**
    * Creates a term in the tag vocabulary.
    *
-   * @return \Drupal\taxonomy\TermInterface $term
+   * @return \Drupal\taxonomy\TermInterface
+   *   The created term.
    */
   protected function createTag(): TermInterface {
     $tag = Term::create([
@@ -147,6 +149,39 @@ class ArgumentSummaryTest extends ViewsKernelTestBase {
     // Output should show first tag on 4 nodes, the second tag on only 2.
     $this->assertStringContainsString($tags[0]->label() . ' (4)', $output);
     $this->assertStringContainsString($tags[1]->label() . ' (2)', $output);
+  }
+
+  /**
+   * Tests that the active link is set correctly.
+   */
+  public function testActiveLink(): void {
+
+    // We need at least one node.
+    Node::create([
+      'type' => $this->nodeType->id(),
+      'title' => $this->randomMachineName(),
+    ])->save();
+
+    $view = Views::getView('test_argument_summary');
+    $view->execute();
+    $view->build();
+    $variables = [
+      'view' => $view,
+      'rows' => $view->result,
+    ];
+
+    \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewSummaryUnformatted($variables);
+    $this->assertFalse($variables['rows'][0]->active);
+
+    \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewSummary($variables);
+    $this->assertFalse($variables['rows'][0]->active);
+
+    // Checks that the row with the current path is active.
+    \Drupal::service('path.current')->setPath('/test-argument-summary');
+    \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewSummaryUnformatted($variables);
+    $this->assertTrue($variables['rows'][0]->active);
+    \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewSummary($variables);
+    $this->assertTrue($variables['rows'][0]->active);
   }
 
 }

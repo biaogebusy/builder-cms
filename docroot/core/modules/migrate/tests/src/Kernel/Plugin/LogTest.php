@@ -9,18 +9,20 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\Row;
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Log process plugin.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class LogTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'migrate'];
+  protected static $modules = ['node', 'migrate', 'user'];
 
   /**
    * The Log process plugin.

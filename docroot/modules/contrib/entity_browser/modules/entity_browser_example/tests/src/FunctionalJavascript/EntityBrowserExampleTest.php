@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser_example\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -9,6 +11,8 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityBrowserExampleTest extends BrowserTestBase {
 
   /**

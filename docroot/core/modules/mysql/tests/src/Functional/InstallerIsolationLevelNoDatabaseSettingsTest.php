@@ -6,12 +6,14 @@ namespace Drupal\Tests\mysql\Functional;
 
 use Drupal\Core\Database\Database;
 use Drupal\FunctionalTests\Installer\InstallerTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the isolation_level setting with no database settings.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerIsolationLevelNoDatabaseSettingsTest extends InstallerTestBase {
 
   /**
@@ -22,7 +24,7 @@ class InstallerIsolationLevelNoDatabaseSettingsTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
 
     // The isolation_level option is only available for MySQL.
@@ -56,13 +58,7 @@ class InstallerIsolationLevelNoDatabaseSettingsTest extends InstallerTestBase {
     Database::closeConnection('default', 'default');
     $connection = Database::getConnection('default', 'default');
 
-    $query = 'SELECT @@SESSION.tx_isolation';
-    // The database variable "tx_isolation" has been removed in MySQL v8.0 and
-    // has been replaced by "transaction_isolation".
-    // @see https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_tx_isolation
-    if (!$connection->isMariaDb() && version_compare($connection->version(), '8.0.0-AnyName', '>')) {
-      $query = 'SELECT @@SESSION.transaction_isolation';
-    }
+    $query = $connection->isMariaDb() ? 'SELECT @@SESSION.tx_isolation' : 'SELECT @@SESSION.transaction_isolation';
 
     // Test that transaction level is READ-COMMITTED.
     $this->assertEquals('READ-COMMITTED', $connection->query($query)->fetchField());

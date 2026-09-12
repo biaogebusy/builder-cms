@@ -19,7 +19,7 @@ class WebformUiElementAddForm extends WebformUiElementFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
     $this->webform = $webform;
     $this->element['#type'] = $type;
     $this->action = $this->t('created');

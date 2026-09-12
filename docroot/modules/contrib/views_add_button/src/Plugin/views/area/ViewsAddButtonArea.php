@@ -4,9 +4,9 @@ namespace Drupal\views_add_button\Plugin\views\area;
 
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\views\Plugin\views\area\TokenizeAreaPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\views\Plugin\views\area\TokenizeAreaPluginBase;
 use Drupal\views_add_button\Plugin\views\ViewsAddButtonTrait;
 use Drupal\views_add_button\Plugin\views_add_button\ViewsAddButtonDefault;
 use Drupal\views_add_button\Service\ViewsAddButtonService;
@@ -24,28 +24,41 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
   use ViewsAddButtonTrait;
 
   /**
-   * @var ViewsAddButtonService
+   * Views Add Button service.
+   *
+   * @var \Drupal\views_add_button\Service\ViewsAddButtonService
    */
   protected $vab;
 
   /**
-   * @var EntityTypeManager
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManager
    */
   protected $entityTypeManager;
 
   /**
-   * @var EntityTypeBundleInfo
+   * Entity Type Bundle Info.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfo
    */
   protected $bundleInfo;
 
   /**
    * ViewsAddButtonField constructor.
+   *
    * @param array $configuration
-   * @param $plugin_id
-   * @param $plugin_definition
-   * @param ViewsAddButtonService $vab
-   * @param EntityTypeManager $entityTypeManager
-   * @param EntityTypeBundleInfo $bundleInfo
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\views_add_button\Service\ViewsAddButtonService $vab
+   *   The Views Add Button service.
+   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfo $bundleInfo
+   *   The entity type bundle info service.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ViewsAddButtonService $vab, EntityTypeManager $entityTypeManager, EntityTypeBundleInfo $bundleInfo) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
@@ -113,7 +126,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
     $form['render_plugin'] = [
       '#type' => 'select',
       '#title' => t('Custom Rendering Plugin'),
-      '#description' => t('If you would like to specify a plugin to use for generating the URL and creating the 
+      '#description' => t('If you would like to specify a plugin to use for generating the URL and creating the
         link, set it here. Leave unset to use the entity default plugin (recommended).'),
       '#options' => $this->vab->createPluginList(),
       '#empty_option' => '- Select -',
@@ -123,7 +136,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
     $form['access_plugin'] = [
       '#type' => 'select',
       '#title' => t('Custom Access Plugin'),
-      '#description' => t('If you would like to specify an access plugin to use, set it here. 
+      '#description' => t('If you would like to specify an access plugin to use, set it here.
         Leave unset to use the entity default plugin (recommended).'),
       '#options' => $this->vab->createPluginList(),
       '#empty_option' => '- Select -',
@@ -150,6 +163,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       '#description' => t('Add the query string, without the "?" .'),
       '#default_value' => $this->options['query_string'],
       '#weight' => -6,
+      '#maxlength' => 511,
     ];
     $form['button_classes'] = [
       '#type' => 'textfield',
@@ -202,8 +216,10 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
     $this->tokenForm($form, $form_state);
   }
 
+  /**
+   * Check Button Access.
+   */
   public function checkButtonAccess($plugin_definitions, $default_plugin, $entity_type, $bundle) {
-    $access = FALSE;
     $plugin_class = $default_plugin;
     if (isset($this->options['access_plugin']) && isset($plugin_definitions[$this->options['access_plugin']]['class'])) {
       $plugin_class = $plugin_definitions[$this->options['access_plugin']]['class'];
@@ -229,10 +245,10 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
    */
   public function render($empty = FALSE) {
     // Get the entity/bundle type.
-    $type = explode('+', $this->options['type'], 2);
+    $type = explode('+', (string) $this->options['type'], 2);
     // If we do not have a '+', then assume we have a no-bundle entity type.
     $entity_type = $type[0];
-    $bundle = isset($type[1]) ? $type[1] : $type[0];
+    $bundle = $type[1] ?? $type[0];
 
     // Load ViewsAddButton plugin definitions, and find the right one.
     $plugin_definitions = $this->vab->getPluginDefinitions();
@@ -289,7 +305,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
         foreach ($attr_lines as $line) {
           $attr = explode('=', $line);
           if (count($attr) === 2) {
-            $opts['attributes'][$attr[0]] = $attr[1];
+            $opts['attributes'][$attr[0]] = trim($attr[1]);
           }
         }
       }
@@ -309,50 +325,55 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       }
       $bundles = $this->bundleInfo->getBundleInfo($entity_type);
       $bundle_label = $bundles[$bundle]['label'] ?? $bundle;
-      $text = $this->options['button_text'] ? $this->options['button_text'] : $this->t('Add @bundle', ['@bundle' => $bundle_label]);
+      $text = $this->options['button_text'] ?: $this->t('Add @bundle', ['@bundle' => $bundle_label]);
       $text = $this->options['tokenize'] ? $this->tokenizeValue($text) : $text;
 
       // Generate the link.
-      $l = NULL;
-      /* @var $l \Drupal\Core\Link */
+      /** @var \Drupal\Core\Link $l */
       if (method_exists($plugin_class, 'generateLink')) {
         $l = $plugin_class::generateLink($text, $url, $this->options);
       }
       else {
         $l = ViewsAddButtonDefault::generateLink($text, $url, $this->options);
       }
-      $l = $l->toRenderable();
+
+      /** @var \Drupal\Core\Link $l */
+      $ret = ['#type' => 'markup', '#markup' => $l->toString()->getGeneratedLink()];
+      /*
+       * Perform bracket and special character replacement.
+       * For security reasons, we are not opening this to most characters.
+       * @see https://www.drupal.org/project/views_add_button/issues/3095849.
+       */
+      $replace = ['%5B' => '[', '%5D' => ']'];
+      $ret['#markup'] = strtr($ret['#markup'], $replace);
 
       // Add the prefix and suffix.
       if (isset($this->options['button_prefix']) || isset($this->options['button_suffix'])) {
         if (!empty($this->options['button_prefix']['value'])) {
           $prefix = check_markup($this->options['button_prefix']['value'], $this->options['button_prefix']['format']);
           $prefix = $this->options['tokenize'] ? $this->tokenizeValue($prefix) : $prefix;
-          $l['#prefix'] = $prefix;
+          $ret['#prefix'] = $prefix;
         }
         if (!empty($this->options['button_suffix']['value'])) {
           $suffix = check_markup($this->options['button_suffix']['value'], $this->options['button_suffix']['format']);
           $suffix = $this->options['tokenize'] ? $this->tokenizeValue($suffix) : $suffix;
-          $l['#suffix'] = $suffix;
+          $ret['#suffix'] = $suffix;
         }
 
-        return $l;
+        return $ret;
       }
 
-      return $l;
+      return $ret;
     }
     // Access is denied.
-    else {
-      if (isset($this->options['button_access_denied']['value']) && !empty($this->options['button_access_denied']['value'])) {
-        $markup = check_markup($this->options['button_access_denied']['value'], $this->options['button_access_denied']['format']);
-        $markup = $this->options['tokenize'] ? $this->tokenizeValue($markup) : $markup;
+    if (isset($this->options['button_access_denied']['value']) && !empty($this->options['button_access_denied']['value'])) {
+      $markup = check_markup($this->options['button_access_denied']['value'], $this->options['button_access_denied']['format']);
+      $markup = $this->options['tokenize'] ? $this->tokenizeValue($markup) : $markup;
 
-        return ['#markup' => $markup];
-      }
-      else {
-        return ['#markup' => ''];
-      }
+      return ['#markup' => $markup];
     }
+
+    return ['#markup' => ''];
   }
 
 }

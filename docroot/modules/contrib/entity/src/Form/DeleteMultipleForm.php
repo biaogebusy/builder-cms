@@ -9,6 +9,7 @@ use Drupal\Core\Entity\Form\DeleteMultipleForm as CoreDeleteMultipleForm;
 /**
  * Provides an entities deletion confirmation form.
  *
- * @deprecated Use \Drupal\Core\Entity\Form\DeleteMultipleForm instead.
+ * @deprecated in entity:8.x-1.7 and is removed from entity:2.0.0. Use \Drupal\Core\Entity\Form\DeleteMultipleForm instead.
+ * @see https://www.drupal.org/node/2952495
  */
 class DeleteMultipleForm extends CoreDeleteMultipleForm {}

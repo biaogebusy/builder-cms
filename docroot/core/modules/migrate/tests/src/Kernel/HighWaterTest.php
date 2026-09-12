@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\migrate\Kernel;
 
-// cspell:ignore Highwater
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore Highwater
 /**
  * Tests migration high water property.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class HighWaterTest extends MigrateTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'user',
     'node',
-    'migrate',
     'migrate_high_water_test',
-    'field',
   ];
 
   /**
@@ -295,8 +294,9 @@ class HighWaterTest extends MigrateTestBase {
    *   Title of the node.
    *
    * @return bool
+   *   TRUE if node exists, FALSE otherwise.
    */
-  protected function nodeExists($title) {
+  protected function nodeExists($title): bool {
     $query = \Drupal::entityQuery('node')->accessCheck(FALSE);
     $result = $query
       ->condition('title', $title)

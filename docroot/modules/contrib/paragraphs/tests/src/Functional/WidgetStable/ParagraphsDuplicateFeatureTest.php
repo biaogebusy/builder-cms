@@ -3,12 +3,16 @@
 namespace Drupal\Tests\paragraphs\Functional\WidgetStable;
 
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests paragraphs duplicate feature.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsDuplicateFeatureTest extends ParagraphsTestBase {
 
   protected static $modules = [

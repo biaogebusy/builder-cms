@@ -10,33 +10,17 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class OrderEventSubscriber implements EventSubscriberInterface {
 
   /**
-   * The promotion storage.
-   *
-   * @var \Drupal\commerce_promotion\PromotionStorageInterface
-   */
-  protected $promotionStorage;
-
-  /**
-   * The coupon storage.
-   *
-   * @var \Drupal\commerce_promotion\CouponStorageInterface
-   */
-  protected $couponStorage;
-
-  /**
    * Constructs a new OrderEventSubscriber object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\commerce_promotion\PromotionUsageInterface $usage
    *   The promotion usage.
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected PromotionUsageInterface $usage,
   ) {
-    $this->promotionStorage = $entity_type_manager->getStorage('commerce_promotion');
-    $this->couponStorage = $entity_type_manager->getStorage(('commerce_promotion_coupon'));
   }
 
   /**
@@ -55,7 +39,7 @@ class OrderEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\state_machine\Event\WorkflowTransitionEvent $event
    *   The workflow transition event.
    */
-  public function registerUsage(WorkflowTransitionEvent $event) {
+  public function registerUsage(WorkflowTransitionEvent $event): void {
     /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
     $order = $event->getEntity();
     $coupon_promotion_ids = [];
@@ -80,7 +64,7 @@ class OrderEventSubscriber implements EventSubscriberInterface {
     }
 
     if ($promotion_ids) {
-      $promotions = $this->promotionStorage->loadMultiple($promotion_ids);
+      $promotions = $this->entityTypeManager->getStorage('commerce_promotion')->loadMultiple($promotion_ids);
 
       /** @var \Drupal\commerce_promotion\Entity\PromotionInterface $promotion */
       foreach ($promotions as $promotion) {

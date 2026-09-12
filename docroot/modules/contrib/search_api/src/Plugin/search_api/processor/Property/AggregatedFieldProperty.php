@@ -84,7 +84,7 @@ class AggregatedFieldProperty extends ConfigurablePropertyBase {
       if (!$datasource_id && $name == 'aggregated_field') {
         continue;
       }
-      $label = $datasource_labels[$datasource_id] . $property->getLabel();
+      $label = $datasource_labels["$datasource_id"] . $property->getLabel();
       $field_options[$combined_id] = Utility::escapeHtml($label);
       if ($property instanceof ConfigurablePropertyInterface) {
         $description = $property->getFieldDescription($field);
@@ -217,7 +217,7 @@ class AggregatedFieldProperty extends ConfigurablePropertyBase {
    */
   protected function getDatasourceLabelPrefixes(IndexInterface $index) {
     $prefixes = [
-      NULL => $this->t('General') . ' » ',
+      '' => $this->t('General') . ' » ',
     ];
 
     foreach ($index->getDatasources() as $datasource_id => $datasource) {

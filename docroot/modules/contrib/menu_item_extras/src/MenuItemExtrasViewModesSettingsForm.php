@@ -55,7 +55,7 @@ class MenuItemExtrasViewModesSettingsForm extends EntityForm {
    *
    * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
    */
-  private $entityDisplayRepository;
+  protected $entityDisplayRepository;
 
   /**
    * The overview tree form.

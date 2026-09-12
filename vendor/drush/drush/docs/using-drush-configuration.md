@@ -80,7 +80,7 @@ drush:
 
 #### Backup directory
 Specify a folder where Drush should store backup files, including
-temporary sql dump files created during [sql:sync](https://www.drush.org/latest/commands/sql_sync/). If unspecified,
+temporary sql dump files created during [sql:sync](commands/sql_sync.md). If unspecified,
 defaults to `$HOME/drush-backups`.
 ```yml
 drush:
@@ -92,7 +92,7 @@ drush:
 ```yml
 options:
   # Specify the base_url that should be used when generating links.
-  uri: 'http://example.com/subdir'
+  uri: 'https://example.com/subdir'
   
   # Load Drush config from a non-standard location
   config: '/home/USER/workspace/drupal'
@@ -104,6 +104,13 @@ options:
 #### Command-specific options
 ```yml
 command:
+  # Disabling the admin super user account (uid #1) is recommended.
+  # Use this to specify another admin account for the uli command.
+  # See https://www.drupal.org/docs/administering-a-drupal-site/security-in-drupal/securing-the-admin-super-user-1
+  user:
+    login:
+      options:
+        name: newadmin
   sql:
     cli:
       options:
@@ -123,7 +130,6 @@ command:
       options:
         # Ensure all rsync commands use verbose output.
         verbose: true
-
   site:
     install:
       options:

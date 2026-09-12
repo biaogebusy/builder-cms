@@ -2,86 +2,99 @@
 
 namespace Drupal\node\Entity;
 
+use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\node\Form\DeleteMultiple;
+use Drupal\node\Form\NodeDeleteForm;
+use Drupal\node\Form\NodeForm;
+use Drupal\node\NodeAccessControlHandler;
 use Drupal\node\NodeInterface;
+use Drupal\node\NodeListBuilder;
+use Drupal\node\NodeStorage;
+use Drupal\node\NodeStorageSchema;
+use Drupal\node\NodeTranslationHandler;
+use Drupal\node\NodeViewBuilder;
+use Drupal\node\NodeViewsData;
 use Drupal\user\EntityOwnerTrait;
 
 /**
  * Defines the node entity class.
- *
- * @ContentEntityType(
- *   id = "node",
- *   label = @Translation("Content"),
- *   label_collection = @Translation("Content"),
- *   label_singular = @Translation("content item"),
- *   label_plural = @Translation("content items"),
- *   label_count = @PluralTranslation(
- *     singular = "@count content item",
- *     plural = "@count content items"
- *   ),
- *   bundle_label = @Translation("Content type"),
- *   handlers = {
- *     "storage" = "Drupal\node\NodeStorage",
- *     "storage_schema" = "Drupal\node\NodeStorageSchema",
- *     "view_builder" = "Drupal\node\NodeViewBuilder",
- *     "access" = "Drupal\node\NodeAccessControlHandler",
- *     "views_data" = "Drupal\node\NodeViewsData",
- *     "form" = {
- *       "default" = "Drupal\node\NodeForm",
- *       "delete" = "Drupal\node\Form\NodeDeleteForm",
- *       "edit" = "Drupal\node\NodeForm",
- *       "delete-multiple-confirm" = "Drupal\node\Form\DeleteMultiple"
- *     },
- *     "route_provider" = {
- *       "html" = "Drupal\node\Entity\NodeRouteProvider",
- *     },
- *     "list_builder" = "Drupal\node\NodeListBuilder",
- *     "translation" = "Drupal\node\NodeTranslationHandler"
- *   },
- *   base_table = "node",
- *   data_table = "node_field_data",
- *   revision_table = "node_revision",
- *   revision_data_table = "node_field_revision",
- *   show_revision_ui = TRUE,
- *   translatable = TRUE,
- *   list_cache_contexts = { "user.node_grants:view" },
- *   entity_keys = {
- *     "id" = "nid",
- *     "revision" = "vid",
- *     "bundle" = "type",
- *     "label" = "title",
- *     "langcode" = "langcode",
- *     "uuid" = "uuid",
- *     "status" = "status",
- *     "published" = "status",
- *     "uid" = "uid",
- *     "owner" = "uid",
- *   },
- *   revision_metadata_keys = {
- *     "revision_user" = "revision_uid",
- *     "revision_created" = "revision_timestamp",
- *     "revision_log_message" = "revision_log"
- *   },
- *   bundle_entity_type = "node_type",
- *   field_ui_base_route = "entity.node_type.edit_form",
- *   common_reference_target = TRUE,
- *   permission_granularity = "bundle",
- *   collection_permission = "access content overview",
- *   links = {
- *     "canonical" = "/node/{node}",
- *     "delete-form" = "/node/{node}/delete",
- *     "delete-multiple-form" = "/admin/content/node/delete",
- *     "edit-form" = "/node/{node}/edit",
- *     "version-history" = "/node/{node}/revisions",
- *     "revision" = "/node/{node}/revisions/{node_revision}/view",
- *     "create" = "/node",
- *   }
- * )
  */
+#[ContentEntityType(
+  id: 'node',
+  label: new TranslatableMarkup('Content'),
+  label_collection: new TranslatableMarkup('Content'),
+  label_singular: new TranslatableMarkup('content item'),
+  label_plural: new TranslatableMarkup('content items'),
+  entity_keys: [
+    'id' => 'nid',
+    'revision' => 'vid',
+    'bundle' => 'type',
+    'label' => 'title',
+    'langcode' => 'langcode',
+    'uuid' => 'uuid',
+    'status' => 'status',
+    'published' => 'status',
+    'uid' => 'uid',
+    'owner' => 'uid',
+  ],
+  handlers: [
+    'storage' => NodeStorage::class,
+    'storage_schema' => NodeStorageSchema::class,
+    'view_builder' => NodeViewBuilder::class,
+    'access' => NodeAccessControlHandler::class,
+    'views_data' => NodeViewsData::class,
+    'form' => [
+      'default' => NodeForm::class,
+      'delete' => NodeDeleteForm::class,
+      'edit' => NodeForm::class,
+      'delete-multiple-confirm' => DeleteMultiple::class,
+    ],
+    'route_provider' => [
+      'html' => NodeRouteProvider::class,
+    ],
+    'list_builder' => NodeListBuilder::class,
+    'translation' => NodeTranslationHandler::class,
+  ],
+  links: [
+    'canonical' => '/node/{node}',
+    'add-page' => '/node/add',
+    'add-form' => '/node/add/{node_type}',
+    'edit-form' => '/node/{node}/edit',
+    'delete-form' => '/node/{node}/delete',
+    'delete-multiple-form' => '/admin/content/node/delete',
+    'version-history' => '/node/{node}/revisions',
+    'revision' => '/node/{node}/revisions/{node_revision}/view',
+    'create' => '/node',
+  ],
+  collection_permission: 'access content overview',
+  permission_granularity: 'bundle',
+  bundle_entity_type: 'node_type',
+  bundle_label: new TranslatableMarkup('Content type'),
+  base_table: 'node',
+  data_table: 'node_field_data',
+  revision_table: 'node_revision',
+  revision_data_table: 'node_field_revision',
+  translatable: TRUE,
+  show_revision_ui: TRUE,
+  label_count: [
+    'singular' => '@count content item',
+    'plural' => '@count content items',
+  ],
+  field_ui_base_route: 'entity.node_type.edit_form',
+  common_reference_target: TRUE,
+  list_cache_contexts: ['user.node_grants:view'],
+  revision_metadata_keys: [
+    'revision_user' => 'revision_uid',
+    'revision_created' => 'revision_timestamp',
+    'revision_log_message' => 'revision_log',
+  ],
+)]
 class Node extends EditorialContentEntityBase implements NodeInterface {
 
   use EntityOwnerTrait;
@@ -126,12 +139,12 @@ class Node extends EditorialContentEntityBase implements NodeInterface {
   public function preSaveRevision(EntityStorageInterface $storage, \stdClass $record) {
     parent::preSaveRevision($storage, $record);
 
-    if (!$this->isNewRevision() && isset($this->original) && (!isset($record->revision_log) || $record->revision_log === '')) {
+    if (!$this->isNewRevision() && $this->getOriginal() && (!isset($record->revision_log) || $record->revision_log === '')) {
       // If we are updating an existing node without adding a new revision, we
       // need to make sure $entity->revision_log is reset whenever it is empty.
       // Therefore, this code allows us to avoid clobbering an existing log
       // entry with an empty one.
-      $record->revision_log = $this->original->revision_log->value;
+      $record->revision_log = $this->getOriginal()->revision_log->value;
     }
   }
 
@@ -139,15 +152,6 @@ class Node extends EditorialContentEntityBase implements NodeInterface {
    * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    if ($update && \Drupal::moduleHandler()->moduleExists('search')) {
-      // Remove deleted translations from the search index.
-      foreach ($this->translations as $langcode => $translation) {
-        if ($translation['status'] === static::TRANSLATION_REMOVED) {
-          \Drupal::service('search.index')->clear('node_search', $this->id(), $langcode);
-        }
-      }
-    }
-
     parent::postSave($storage, $update);
 
     // Update the node access table for this node, but only if it is the
@@ -158,28 +162,6 @@ class Node extends EditorialContentEntityBase implements NodeInterface {
       $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('node');
       $grants = $access_control_handler->acquireGrants($this);
       \Drupal::service('node.grant_storage')->write($this, $grants, NULL, $update);
-    }
-
-    // Reindex the node when it is updated. The node is automatically indexed
-    // when it is added, simply by being added to the node table.
-    if ($update) {
-      node_reindex_node_search($this->id());
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function preDelete(EntityStorageInterface $storage, array $entities) {
-    parent::preDelete($storage, $entities);
-
-    // Ensure that all nodes deleted are removed from the search index.
-    if (\Drupal::hasService('search.index')) {
-      /** @var \Drupal\search\SearchIndexInterface $search_index */
-      $search_index = \Drupal::service('search.index');
-      foreach ($entities as $entity) {
-        $search_index->clear('node_search', $entity->nid->value);
-      }
     }
   }
 
@@ -346,13 +328,9 @@ class Node extends EditorialContentEntityBase implements NodeInterface {
       ->setLabel(t('Promoted to front page'))
       ->setRevisionable(TRUE)
       ->setTranslatable(TRUE)
-      ->setDefaultValue(TRUE)
+      ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
-        'type' => 'boolean_checkbox',
-        'settings' => [
-          'display_label' => TRUE,
-        ],
-        'weight' => 15,
+        'region' => 'hidden',
       ])
       ->setDisplayConfigurable('form', TRUE);
 
@@ -362,11 +340,7 @@ class Node extends EditorialContentEntityBase implements NodeInterface {
       ->setTranslatable(TRUE)
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
-        'type' => 'boolean_checkbox',
-        'settings' => [
-          'display_label' => TRUE,
-        ],
-        'weight' => 16,
+        'region' => 'hidden',
       ])
       ->setDisplayConfigurable('form', TRUE);
 

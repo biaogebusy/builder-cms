@@ -16,7 +16,7 @@ use Drupal\Core\Url;
 trait UpdateSemverTestBaselineTrait {
 
   /**
-   * Tests the Update Manager module when no updates are available.
+   * Tests the Update Status module when no updates are available.
    *
    * The XML fixture file 'drupal.8.1.0.xml' which is one of the XML files this
    * test uses also contains 2 extra releases that are newer than '8.0.1'. These
@@ -46,7 +46,7 @@ trait UpdateSemverTestBaselineTrait {
   }
 
   /**
-   * Tests the Update Manager module when one normal update is available.
+   * Tests the Update Status module when one normal update is available.
    */
   public function testNormalUpdateAvailable(): void {
     $this->setProjectInstalledVersion('8.0.0');
@@ -109,8 +109,6 @@ trait UpdateSemverTestBaselineTrait {
    *
    * @param string $full_version
    *   The recommended version.
-   *
-   * @return void
    */
   protected function assertNoExtraVersion(string $full_version): void {
     $this->assertUpdateTableTextNotContains('Up to date');
@@ -121,7 +119,7 @@ trait UpdateSemverTestBaselineTrait {
   }
 
   /**
-   * Tests the Update Manager module when major updates are available.
+   * Tests the Update Status module when major updates are available.
    *
    * This includes testing when the next major is available as well as when both
    * the current major version and the next major version are supported. There
@@ -144,9 +142,9 @@ trait UpdateSemverTestBaselineTrait {
             $this->clickLink('Check manually');
             $this->checkForMetaRefresh();
             $this->assertUpdateTableTextNotContains('Security update required!');
-            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('9.0.0', Url::fromUri("http://example.com/{$this->updateProject}-9-0-0-release"))
+            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('9.0.0', Url::fromUri("https://example.com/{$this->updateProject}-9-0-0-release"))
               ->toString());
-            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('Release notes', Url::fromUri("http://example.com/{$this->updateProject}-9-0-0-release"))
+            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('Release notes', Url::fromUri("https://example.com/{$this->updateProject}-9-0-0-release"))
               ->toString());
             $this->assertUpdateTableTextNotContains('Latest version:');
 
@@ -198,13 +196,13 @@ trait UpdateSemverTestBaselineTrait {
             $this->checkForMetaRefresh();
             $this->assertUpdateTableTextNotContains('Security update required!');
 
-            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('9.2.2', Url::fromUri("http://example.com/{$this->updateProject}-9-2-2-release"))
+            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('9.2.2', Url::fromUri("https://example.com/{$this->updateProject}-9-2-2-release"))
               ->toString());
-            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('Release notes', Url::fromUri("http://example.com/{$this->updateProject}-9-2-2-release"))
+            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('Release notes', Url::fromUri("https://example.com/{$this->updateProject}-9-2-2-release"))
               ->toString());
-            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('10.0.0-beta1', Url::fromUri("http://example.com/{$this->updateProject}-10-0-0-beta1-release"))
+            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('10.0.0-beta1', Url::fromUri("https://example.com/{$this->updateProject}-10-0-0-beta1-release"))
               ->toString());
-            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('Release notes', Url::fromUri("http://example.com/{$this->updateProject}-10-0-0-beta1-release"))
+            $this->assertUpdateTableElementContains((string) Link::fromTextAndUrl('Release notes', Url::fromUri("https://example.com/{$this->updateProject}-10-0-0-beta1-release"))
               ->toString());
             $this->assertUpdateTableTextNotContains('Latest version:');
 

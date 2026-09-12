@@ -5,17 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\file\Kernel;
 
 use Drupal\file\Entity\File;
+use Drupal\file_test\FileTestHelper;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * File saving tests.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class SaveTest extends FileManagedUnitTestBase {
 
   use UserCreationTrait;
 
+  /**
+   * Tests the saving process of file entities.
+   */
   public function testFileSave(): void {
     $account = $this->createUser();
     // Create a new file entity.
@@ -45,7 +51,7 @@ class SaveTest extends FileManagedUnitTestBase {
     $this->assertEquals('en', $loaded_file->langcode->value, 'Langcode was defaulted correctly.');
 
     // Resave the file, updating the existing record.
-    file_test_reset();
+    FileTestHelper::reset();
     $file->status->value = 7;
     $file->save();
 
@@ -60,8 +66,9 @@ class SaveTest extends FileManagedUnitTestBase {
     $this->assertEquals($file->isPermanent(), $loaded_file->isPermanent(), 'Status was saved correctly.');
     $this->assertEquals('en', $loaded_file->langcode->value, 'Langcode was saved correctly.');
 
-    // Try to insert a second file with the same name apart from case insensitivity
-    // to ensure the 'uri' index allows for filenames with different cases.
+    // Try to insert a second file with the same name apart from case
+    // insensitivity to ensure the 'uri' index allows for filenames with
+    // different cases.
     $uppercase_values = [
       'uid' => $account->id(),
       'filename' => 'DRUPLICON.txt',

@@ -5,9 +5,9 @@ namespace Drupal\blazy\Utility;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
-use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Media\Uri;
 
 /**
  * Provides very few common sanitization wrapper methods.
@@ -20,7 +20,7 @@ use Drupal\blazy\internals\Internals;
  * @see https://www.drupal.org/project/drupal/issues/3109650
  * @see https://www.drupal.org/node/2489544
  */
-class Sanitize {
+final class Sanitize {
 
   /**
    * All attributes that may contain URIs, copied from core Html.
@@ -86,14 +86,18 @@ class Sanitize {
       // The most obvious (HREF and SRC) are done downstream, not upstream.
       // PHP8.0.0 numeric with whitespace ("42 ") will now return true.
       $kid = FALSE;
-      $key = trim($key);
 
-      // @todo use is_int() instead after another check.
-      if (!is_numeric($key)) {
-        $key = Html::escape($key);
-        $check = strtolower($key);
-        $kid = mb_substr($check, 0, 2) === 'on' || in_array($check, $list);
-        $key = $kid ? 'data-' . $key : $key;
+      // Ensure a non-numeric string.
+      if ($key && is_string($key) && !is_numeric($key)) {
+        $key = trim($key);
+
+        if ($key) {
+          $key = Html::escape($key);
+          $check = strtolower($key);
+          $kid = substr($check, 0, 2) === 'on';
+          $kid = $kid || in_array($check, $list);
+          $key = $kid ? 'data-' . $key : $key;
+        }
       }
 
       // Only key class is known as array.
@@ -102,7 +106,7 @@ class Sanitize {
         if ($value) {
           $value = implode(' ', $value);
           if ($lowercase) {
-            $value = mb_strtolower($value);
+            $value = strtolower($value);
           }
           $value = array_map('\Drupal\Component\Utility\Html::cleanCssIdentifier', explode(' ', $value));
         }
@@ -110,11 +114,11 @@ class Sanitize {
         $output[$key] = $value;
       }
       else {
-        // Makes abused IMG title/ alt HTML usable for captions and attributes.
-        if ($value) {
+        // Make abused IMG title/ alt HTML usable for captions and attributes.
+        if ($value && is_string($value)) {
           $value = strip_tags($value);
           if ($lowercase) {
-            $value = mb_strtolower($value);
+            $value = strtolower($value);
           }
 
           $kid = $kid || self::kid($value);
@@ -246,14 +250,19 @@ class Sanitize {
    *
    * @param string $input
    *   The given url.
+   * @param array $options
+   *   The provided options: use_data_uri, filter.
    *
    * @return string
    *   The sanitized input url.
    */
-  public static function inputUrl($input): ?string {
-    // @todo move it out of here at 3.x:
-    if ($input = Internals::youtube($input)) {
-      $input = self::url($input);
+  public static function inputUrl($input, array $options = []): string {
+    $filter = $options['filter'] ?? FALSE;
+    $use_data_uri = $options['use_data_uri'] ?? FALSE;
+
+    // Only concerns about UCG, not Field UI input.
+    if ($filter) {
+      $input = self::url($input, $use_data_uri);
     }
     return $input;
   }
@@ -281,17 +290,17 @@ class Sanitize {
     $prestyle = $options['prestyle'] ?? '';
     $style = $options['style'] ?? '';
 
-    // @todo remove when local videos are generated dynamically like remote.
-    if (Blazy::has($content, 'src="blank"')) {
+    // @todo deprecate and remove when local videos are generated dynamically like remote.
+    if (Internals::has($content, 'src="blank"')) {
       $content = str_replace('src="blank"', 'src="about:blank"', $content);
     }
 
     // Fixed for 404 images when data URI is enabled via UI, or trusted.
     // @todo recheck if data:image is tweakable, a trojan carrier, based on some
     // limited info, browsers prevent embedded scripts from being executable.
-    if (Blazy::has($content, 'src="image/')) {
-      $data_uri = Blazy::has($content, 'base64')
-        || Blazy::has($content, 'svg+xml');
+    if (Internals::has($content, 'src="image/')) {
+      $data_uri = Internals::has($content, 'base64')
+        || Internals::has($content, 'svg+xml');
 
       if ($data_uri) {
         $content = str_replace('src="image/', 'src="data:image/', $content);
@@ -299,7 +308,7 @@ class Sanitize {
     }
 
     // The $prestyle is the only known barrier to limit scopes.
-    if ($style && Blazy::has($content, $prestyle)) {
+    if ($style && Internals::has($content, $prestyle)) {
       $content = str_replace($prestyle, $prestyle . ' style="' . $style . '"', $content);
     }
 
@@ -324,9 +333,9 @@ class Sanitize {
    */
   public static function url($url, $use_data_uri = FALSE): string {
     // This should be enough, unless data:image is tweakable.
-    $allow = Blazy::isDataUri($url) && $use_data_uri;
+    $allow = Uri::isDataUri($url) && $use_data_uri;
 
-    // @todo remove if data:image is known untweakable.
+    // Hijack regardless.
     if (self::kid($url)) {
       $allow = FALSE;
     }
@@ -336,7 +345,7 @@ class Sanitize {
   /**
    * Returns true if it is another scary joke, relevant for UGC.
    *
-   * @param string $value
+   * @param string|null $value
    *   The given value to check for.
    *
    * @return bool
@@ -346,18 +355,21 @@ class Sanitize {
    * @see https://en.wikipedia.org/wiki/ASCII
    */
   public static function kid($value): bool {
-    // Should use the proper filter before/after Blazy, not this naive.
-    // At least useless when already passed to self::attribute() upstream.
-    return Blazy::has($value, 'data:text/html')
-      || Blazy::has($value, 'script:');
     // @todo recheck, the last suspects might be innocent, just being cryptic
     // for common attribute values, normally readable. OK to strip since it
     // tests against attribute values, not HTML content after Xss::filter().
     // However useless checks after self::attribute() for now.
     // The Dec is represented with &#.
-    // || Blazy::has($value, ';&#')
+    // || Internals::has($value, ';&#')
     // The Hex is represented with &#x0.
-    // || Blazy::has($value, '&#x');
+    // || Internals::has($value, '&#x');
+    // Should use the proper filter before/after Blazy, not this naive.
+    // At least useless when already passed to self::attribute() upstream.
+    if ($value && is_string($value)) {
+      return Internals::has($value, 'data:text/html')
+      || Internals::has($value, 'script:');
+    }
+    return FALSE;
   }
 
 }

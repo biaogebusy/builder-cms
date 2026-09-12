@@ -10,3 +10,24 @@ entity.commerce_promotion_coupon.generate_form:
         type: 'entity:commerce_promotion'
   requirements:
     _permission: 'bulk generate commerce_promotion_coupon'
+
+entity.commerce_order.manage_coupons_form:
+  path: '/admin/commerce/orders/{commerce_order}/manage-coupons'
+  defaults:
+    _form: '\Drupal\commerce_promotion\Form\ManageCouponsForm'
+    _title: 'Manage coupons'
+  options:
+    parameters:
+      commerce_order:
+        type: 'entity:commerce_order'
+  requirements:
+    _entity_access: 'commerce_order.update'
+    _order_state: 'draft'
+
+commerce_promotion.settings:
+  path: '/admin/commerce/config/promotions/settings'
+  defaults:
+    _form: '\Drupal\commerce_promotion\Form\PromotionSettingsForm'
+    _title: 'Promotion settings'
+  requirements:
+    _permission: 'administer commerce_promotion'

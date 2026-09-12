@@ -1,0 +1,14 @@
+# This is _cspell_unrecognized_words.txt
+altlogout
+autotimeout
+behaviour
+behaviours
+initialises
+jstimer
+pairkey
+pairvalue
+staylogged
+timerfunction
+uactive
+whitelisted
+ydays

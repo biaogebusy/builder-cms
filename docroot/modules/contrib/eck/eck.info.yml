@@ -2,10 +2,10 @@ name: 'Entity Construction Kit'
 type: module
 description: 'ECK (Entity Construction Kit) allows users to create and administer entity types, bundles and entities from UI.'
 package: ECK
-core_version_requirement: ^9.4 || ^10
+core_version_requirement: ^9.4 || ^10 || ^11
 configure: eck.entity_type.list
 
-# Information added by Drupal.org packaging script on 2023-05-12
-version: '2.0.0'
+# Information added by Drupal.org packaging script on 2026-03-19
+version: '2.1.0'
 project: 'eck'
-datestamp: 1683903444
+datestamp: 1773924027

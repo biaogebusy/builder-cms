@@ -1,0 +1,6 @@
+services:
+  charts_chartjs.hooks:
+    class: Drupal\charts_chartjs\Hook\ChartsChartjsHooks
+    arguments: ['@config.factory']
+    tags:
+      - { name: hook }

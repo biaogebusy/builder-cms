@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\File;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the unmanaged file copy function.
- *
- * @group File
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class RemoteFileUnmanagedCopyTest extends FileCopyTest {
 
   /**

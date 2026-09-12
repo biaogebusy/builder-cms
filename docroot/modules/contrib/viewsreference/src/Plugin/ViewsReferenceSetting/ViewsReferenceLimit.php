@@ -27,6 +27,7 @@ class ViewsReferenceLimit extends PluginBase implements ViewsReferenceSettingInt
     $form_field['#title'] = $this->t('Items per page');
     $form_field['#type'] = 'number';
     $form_field['#weight'] = 25;
+    $form_field['#min'] = 0;
   }
 
   /**

@@ -4,6 +4,8 @@ services:
     arguments:
       - '@entity_type.manager'
       - '@entity.repository'
+      - '@cache.default'
+      - '@language_manager'
   menu_item_extras.menu_link_content_helper:
     class: Drupal\menu_item_extras\Service\MenuLinkContentService
     arguments:
@@ -15,13 +17,6 @@ services:
       - '@database'
   menu_item_extras.update:
     class: Drupal\menu_item_extras\Service\UpdateHelper
-  menu_item_extras.route_subscriber:
-    class: Drupal\menu_item_extras\Routing\RouteSubscriber
-    arguments:
-      - '@entity_type.manager'
-    deprecated: The "%service_id%" service is deprecated in menu_item_extras:2.11 and is removed from menu_item_extras:3.0.0
-    tags:
-      - { name: event_subscriber }
   menu_item_extras.uninstall_validator:
     class: Drupal\menu_item_extras\MenuItemExtrasUninstallValidator
     tags:
@@ -34,7 +29,8 @@ services:
     class: Drupal\menu_item_extras\Utility\Utility
   cache_context.menu_item_extras_link_item_content_active_trails:
     class: Drupal\menu_item_extras\Cache\LinkItemContentActiveTrailsCacheContext
-    arguments: ['@menu.active_trail']
+    arguments:
+      - '@menu.active_trail'
     tags:
       - { name: cache.context }
   menu_item_extras.config_subscriber:

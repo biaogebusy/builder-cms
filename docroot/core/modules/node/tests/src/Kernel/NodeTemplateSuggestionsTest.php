@@ -7,12 +7,14 @@ namespace Drupal\Tests\node\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests node template suggestions.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeTemplateSuggestionsTest extends KernelTestBase {
 
   use NodeCreationTrait;
@@ -27,7 +29,9 @@ class NodeTemplateSuggestionsTest extends KernelTestBase {
   ];
 
   /**
-   * Tests if template_preprocess_node() generates the correct suggestions.
+   * Tests node template suggestions.
+   *
+   * @see \Drupal\node\Hook\NodeThemeHooks::themeSuggestionsNode
    */
   public function testNodeThemeHookSuggestions(): void {
     $this->installEntitySchema('user');
@@ -50,7 +54,15 @@ class NodeTemplateSuggestionsTest extends KernelTestBase {
     $variables['elements'] = $build;
     $suggestions = \Drupal::moduleHandler()->invokeAll('theme_suggestions_node', [$variables]);
 
-    $this->assertEquals(['node__full', 'node__page', 'node__page__full', 'node__' . $node->id(), 'node__' . $node->id() . '__full'], $suggestions, 'Found expected node suggestions.');
+    $this->assertEquals([
+      'node__full',
+      'node__page',
+      'node__page__full',
+      'node__' . $node->id(),
+      'node__' . $node->id() . '__full',
+    ],
+    $suggestions,
+    'Found expected node suggestions.');
 
     // Change the view mode.
     $view_mode = 'node.my_custom_view_mode';
@@ -59,7 +71,15 @@ class NodeTemplateSuggestionsTest extends KernelTestBase {
     $variables['elements'] = $build;
     $suggestions = \Drupal::moduleHandler()->invokeAll('theme_suggestions_node', [$variables]);
 
-    $this->assertEquals(['node__node_my_custom_view_mode', 'node__page', 'node__page__node_my_custom_view_mode', 'node__' . $node->id(), 'node__' . $node->id() . '__node_my_custom_view_mode'], $suggestions, 'Found expected node suggestions.');
+    $this->assertEquals([
+      'node__node_my_custom_view_mode',
+      'node__page',
+      'node__page__node_my_custom_view_mode',
+      'node__' . $node->id(),
+      'node__' . $node->id() . '__node_my_custom_view_mode',
+    ],
+    $suggestions,
+    'Found expected node suggestions.');
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\twig_loader_test\Loader;
 
 use Twig\Loader\LoaderInterface;
@@ -22,7 +24,7 @@ class TestLoader implements LoaderInterface {
   /**
    * {@inheritdoc}
    */
-  public function exists(string $name) {
+  public function exists(string $name): bool {
     return TRUE;
   }
 

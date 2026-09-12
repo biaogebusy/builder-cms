@@ -3,6 +3,6 @@ status: true
 dependencies: {  }
 id: testing
 label: Testing
-description: ''
 traits: {  }
 locked: false
+description: ''

@@ -6,12 +6,14 @@ namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests general content moderation workflow for nodes.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ModerationStateNodeTest extends ModerationStateTestBase {
 
   /**
@@ -48,7 +50,6 @@ class ModerationStateNodeTest extends ModerationStateTestBase {
     // Set up published revision.
     $this->drupalGet($path);
     $this->submitForm(['moderation_state[0][state]' => 'published'], 'Save');
-    \Drupal::entityTypeManager()->getStorage('node')->resetCache([$node->id()]);
     /** @var \Drupal\node\NodeInterface $node */
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($node->id());
     $this->assertTrue($node->isPublished());
@@ -90,23 +91,22 @@ class ModerationStateNodeTest extends ModerationStateTestBase {
     $this->drupalGet('node/add/moderated_content');
     $this->submitForm([
       'title[0][value]' => 'Some moderated content',
-      'body[0][value]' => 'First version of the content.',
       'moderation_state[0][state]' => 'draft',
     ], 'Save');
 
     $node = $this->drupalGetNodeByTitle('Some moderated content');
-    $edit_path = sprintf('node/%d/edit', $node->id());
+    $edit_path = $node->toUrl('edit-form');
 
     // After saving, we should be at the canonical URL and viewing the first
     // revision.
     $this->assertSession()->addressEquals(Url::fromRoute('entity.node.canonical', ['node' => $node->id()]));
-    $this->assertSession()->pageTextContains('First version of the content.');
+    $this->assertSession()->pageTextContains('Some moderated content');
 
     // Create a new draft; after saving, we should still be on the canonical
     // URL, but viewing the second revision.
     $this->drupalGet($edit_path);
     $this->submitForm([
-      'body[0][value]' => 'Second version of the content.',
+      'title[0][value]' => 'Second version of the content.',
       'moderation_state[0][state]' => 'draft',
     ], 'Save');
     $this->assertSession()->addressEquals(Url::fromRoute('entity.node.canonical', ['node' => $node->id()]));
@@ -116,7 +116,7 @@ class ModerationStateNodeTest extends ModerationStateTestBase {
     // canonical URL.
     $this->drupalGet($edit_path);
     $this->submitForm([
-      'body[0][value]' => 'Third version of the content.',
+      'title[0][value]' => 'Third version of the content.',
       'moderation_state[0][state]' => 'published',
     ], 'Save');
     $this->assertSession()->addressEquals(Url::fromRoute('entity.node.canonical', ['node' => $node->id()]));
@@ -126,7 +126,7 @@ class ModerationStateNodeTest extends ModerationStateTestBase {
     // version" tab.
     $this->drupalGet($edit_path);
     $this->submitForm([
-      'body[0][value]' => 'Fourth version of the content.',
+      'title[0][value]' => 'Fourth version of the content.',
       'moderation_state[0][state]' => 'draft',
     ], 'Save');
     $this->assertSession()->addressEquals(Url::fromRoute('entity.node.latest_version', ['node' => $node->id()]));
@@ -179,6 +179,29 @@ class ModerationStateNodeTest extends ModerationStateTestBase {
       'title[0][value]' => 'moderated content',
     ], 'Save');
     $session_assert->pageTextContains('You do not have access to transition from Draft to Draft');
+  }
+
+  /**
+   * Tests content on the latest version tab for nodes.
+   */
+  public function testNodeLatestVersionContent(): void {
+    $node = $this->drupalCreateNode([
+      'type' => 'moderated_content',
+      'title' => 'Test moderated node content',
+      'status' => 1,
+      'moderation_state' => 'published',
+    ]);
+    $node->setNewRevision(TRUE);
+    $node->set('moderation_state', 'draft')
+      ->setTitle('Test moderated node content - draft')
+      ->save();
+    $this->drupalLogin($this->adminUser);
+    $this->drupalGet($node->toUrl('latest-version'));
+    $this->assertSession()->statusCodeEquals(200);
+    // The node title should only appear twice - once in the title tag, and once
+    // in the h1 tag.
+    $this->assertSession()->pageTextMatchesCount(2, '/Test moderated node content - draft/ui');
+    $this->assertSession()->elementNotExists('css', 'article h2');
   }
 
 }

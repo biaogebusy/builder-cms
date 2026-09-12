@@ -6,12 +6,14 @@ namespace Drupal\Tests\block\Functional;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests form in block caching.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockFormInBlockTest extends BrowserTestBase {
 
   /**

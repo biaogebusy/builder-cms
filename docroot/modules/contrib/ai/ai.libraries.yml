@@ -60,6 +60,9 @@ mdx_editor:
   css:
     component:
       ui/mdxeditor/dist/assets/index.css: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
 
 # JS assets below require compilation on dev releases. See docs/contribute/testing/full_patch_test.md
 json_schema_editor:
@@ -86,3 +89,6 @@ default_tools_editor:
   css:
     component:
       ui/default-tools-editor/dist/assets/index.css: {}
+  dependencies:
+    - core/drupal
+    - core/once

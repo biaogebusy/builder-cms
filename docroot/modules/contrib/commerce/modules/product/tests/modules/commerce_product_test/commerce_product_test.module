@@ -5,19 +5,18 @@
  * Test module for Commerce Product.
  */
 
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 
 /**
  * Implements hook_entity_access().
  */
 function commerce_product_test_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
-  if ($entity instanceof ProductVariationInterface) {
-    if ($operation == 'view') {
-      return AccessResult::forbiddenIf(strpos($entity->getSku(), 'DENY') !== FALSE);
-    }
+  if (($entity instanceof ProductVariationInterface) && $operation === 'view') {
+    return AccessResult::forbiddenIf(str_contains($entity->getSku() ?? '', 'DENY'));
   }
   return AccessResult::neutral();
 }
@@ -33,5 +32,30 @@ function commerce_product_test_module_implements_alter(&$implementations, $hook)
   // is working as expected.
   if ($hook === 'entity_type_alter') {
     unset($implementations['entity']);
+  }
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function commerce_product_test_entity_extra_field_info() {
+  $extra = [];
+  $extra['commerce_product_variation']['default']['display']['extra_field'] = [
+    'label' => t('Extra field'),
+    'description' => t('An extra field for testing.'),
+    'weight' => 10,
+    'visible' => TRUE,
+  ];
+  return $extra;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function commerce_product_test_commerce_product_variation_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($display->getComponent('extra_field')) {
+    $build['extra_field'] = [
+      '#plain_text' => 'Extra field content',
+    ];
   }
 }

@@ -4,6 +4,12 @@ views.display.excel_export:
   type: views.display.rest_export
   label: 'Excel export display options'
   mapping:
+    displays:
+      type: sequence
+      label: 'Attach to'
+      sequence:
+        type: string
+        label: 'Display'
     filename:
       type: string
       label: 'Filename'

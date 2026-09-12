@@ -5,19 +5,29 @@ namespace Drupal\pathauto\Entity;
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Condition\ConditionPluginCollection;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Entity\EntityDeleteForm;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\ContextInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\Utility\Error;
+use Drupal\pathauto\Form\PatternDisableForm;
+use Drupal\pathauto\Form\PatternDuplicateForm;
+use Drupal\pathauto\Form\PatternEditForm;
+use Drupal\pathauto\Form\PatternEnableForm;
 use Drupal\pathauto\PathautoPatternInterface;
+use Drupal\pathauto\PathautoPatternListBuilder;
 
 /**
  * Defines the Pathauto pattern entity.
@@ -71,6 +81,54 @@ use Drupal\pathauto\PathautoPatternInterface;
  *   }
  * )
  */
+#[ConfigEntityType(
+  id: 'pathauto_pattern',
+  label: new TranslatableMarkup('Pathauto pattern'),
+  config_prefix: 'pattern',
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'label',
+    'uuid' => 'uuid',
+    'weight' => 'weight',
+    'status' => 'status',
+  ],
+  handlers: [
+    'list_builder' => PathautoPatternListBuilder::class,
+    'form' => [
+      'default' => PatternEditForm::class,
+      'duplicate' => PatternDuplicateForm::class,
+      'delete' => EntityDeleteForm::class,
+      'enable' => PatternEnableForm::class,
+      'disable' => PatternDisableForm::class,
+    ],
+    'route_provider' => [
+      'html' => DefaultHtmlRouteProvider::class,
+    ],
+  ],
+  links: [
+    'collection' => '/admin/config/search/path/patterns',
+    'edit-form' => '/admin/config/search/path/patterns/{pathauto_pattern}',
+    'delete-form' => '/admin/config/search/path/patterns/{pathauto_pattern}/delete',
+    'enable' => '/admin/config/search/path/patterns/{pathauto_pattern}/enable',
+    'disable' => '/admin/config/search/path/patterns/{pathauto_pattern}/disable',
+    'duplicate-form' => '/admin/config/search/path/patterns/{pathauto_pattern}/duplicate',
+  ],
+  admin_permission: 'administer pathauto',
+  lookup_keys: [
+    'type',
+    'status',
+  ],
+  config_export: [
+    'id',
+    'label',
+    'type',
+    'pattern',
+    'selection_criteria',
+    'selection_logic',
+    'weight',
+    'relationships',
+  ]
+)]
 class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterface {
 
   /**
@@ -99,6 +157,8 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
   protected $type;
 
   /**
+   * The plugin collection that holds the alias type plugins.
+   *
    * @var \Drupal\Core\Plugin\DefaultSingleLazyPluginCollection
    */
   protected $aliasTypeCollection;
@@ -125,11 +185,15 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
   protected $selection_logic = 'and';
 
   /**
+   * The weight of this pattern entity.
+   *
    * @var int
    */
   protected $weight = 0;
 
   /**
+   * An array of context tokens that this pattern entity relates to.
+   *
    * @var array[]
    *   Keys are context tokens, and values are arrays with the following keys:
    *   - label (string|null, optional): The human-readable label of this
@@ -152,6 +216,17 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
    */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
+
+    // Normalize the pattern: trim whitespace, remove tabs/carriage returns
+    // within the pattern, and ensure leading slash.
+    if ($this->pattern !== NULL) {
+      $this->pattern = trim($this->pattern);
+      $this->pattern = str_replace(["\t", "\r", "\n"], '', $this->pattern);
+      if ($this->pattern !== '' && $this->pattern[0] !== '/') {
+        $this->pattern = '/' . $this->pattern;
+      }
+    }
+
     $criteria = [];
     foreach ($this->getSelectionConditions() as $id => $condition) {
       $criteria[$id] = $condition->getConfiguration();
@@ -179,11 +254,96 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
 
     $this->calculatePluginDependencies($this->getAliasType());
 
+    // @todo Condition plugins should implement
+    //   DependentPluginInterface::calculateDependencies() to declare
+    //   their bundle config dependencies. Until they do, we add them
+    //   manually here.
+    // @see https://www.drupal.org/project/drupal/issues/3573747
+    $entity_type_manager = \Drupal::entityTypeManager();
     foreach ($this->getSelectionConditions() as $instance) {
       $this->calculatePluginDependencies($instance);
+
+      if ($instance->getBaseId() !== 'entity_bundle') {
+        continue;
+      }
+
+      $entity_type_id = $instance->getDerivativeId();
+      $entity_type = $entity_type_manager->getDefinition($entity_type_id, FALSE);
+      if (!$entity_type) {
+        continue;
+      }
+
+      foreach ($instance->getConfiguration()['bundles'] ?? [] as $bundle) {
+        try {
+          $dependency = $entity_type->getBundleConfigDependency($bundle);
+          $this->addDependency($dependency['type'], $dependency['name']);
+        }
+        catch (\LogicException) {
+          // Bundle entity no longer exists (stale config).
+        }
+      }
     }
 
     return $this->getDependencies();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function onDependencyRemoval(array $dependencies) {
+    $changed = parent::onDependencyRemoval($dependencies);
+
+    // Collect bundle entity types being removed, keyed by the entity type
+    // they provide bundles for.
+    $removed_bundles = [];
+    foreach ($dependencies['config'] as $entity) {
+      if ($entity instanceof ConfigEntityInterface) {
+        $bundle_of = $entity->getEntityType()->getBundleOf();
+        if ($bundle_of) {
+          $removed_bundles[$bundle_of][] = $entity->id();
+        }
+      }
+    }
+
+    if (empty($removed_bundles)) {
+      return $changed;
+    }
+
+    foreach ($this->getSelectionConditions() as $condition_id => $condition) {
+      if ($condition->getBaseId() !== 'entity_bundle') {
+        continue;
+      }
+
+      $entity_type_id = $condition->getDerivativeId();
+      if (!isset($removed_bundles[$entity_type_id])) {
+        continue;
+      }
+
+      $configuration = $condition->getConfiguration();
+      $bundles = $configuration['bundles'] ?? [];
+      foreach ($removed_bundles[$entity_type_id] as $removed_bundle) {
+        unset($bundles[$removed_bundle]);
+      }
+
+      if (empty($bundles)) {
+        // No bundles left — remove the condition and disable
+        // the pattern.
+        $this->removeSelectionCondition($condition_id);
+        $this->setStatus(FALSE);
+        \Drupal::messenger()->addWarning(t('The pathauto pattern %label has been disabled because all its bundle conditions were removed.', [
+          '%label' => $this->label() ?? $this->id(),
+        ]));
+        $changed = TRUE;
+      }
+      elseif (count($bundles) !== count($configuration['bundles'])) {
+        // Update the condition with remaining bundles.
+        $configuration['bundles'] = $bundles;
+        $condition->setConfiguration($configuration);
+        $changed = TRUE;
+      }
+    }
+
+    return $changed;
   }
 
   /**
@@ -309,9 +469,9 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
    * {@inheritdoc}
    */
   public function addSelectionCondition(array $configuration) {
-    $configuration['uuid'] = $this->uuidGenerator()->generate();
-    $this->getSelectionConditions()->addInstanceId($configuration['uuid'], $configuration);
-    return $configuration['uuid'];
+    $configuration_uuid = $this->uuidGenerator()->generate();
+    $this->getSelectionConditions()->addInstanceId($configuration_uuid, $configuration);
+    return $configuration_uuid;
   }
 
   /**
@@ -407,7 +567,7 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
    * object.
    *
    * @param string $token
-   *   A ":" delimited set of tokens representing
+   *   A ":" delimited set of tokens representing.
    * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
    *   The array of available contexts.
    *
@@ -429,7 +589,7 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
         return $this->getContextFromProperty($property_path, $contexts[$base]);
       }
       // @todo improve this exception message.
-      throw new ContextNotFoundException("The requested context was not found in the supplied array of contexts.");
+      throw new \Exception("The requested context was not found in the supplied array of contexts.");
     }
   }
 

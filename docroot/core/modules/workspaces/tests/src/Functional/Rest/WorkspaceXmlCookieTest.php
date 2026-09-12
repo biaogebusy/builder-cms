@@ -6,12 +6,14 @@ namespace Drupal\Tests\workspaces\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test workspace entities for XML requests.
- *
- * @group workspaces
  */
+#[Group('workspaces')]
+#[RunTestsInSeparateProcesses]
 class WorkspaceXmlCookieTest extends WorkspaceResourceTestBase {
 
   use CookieResourceTestTrait;
@@ -25,7 +27,7 @@ class WorkspaceXmlCookieTest extends WorkspaceResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

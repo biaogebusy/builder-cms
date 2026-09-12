@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\eck\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eck\Entity\EckEntity;
 use Drupal\eck\Entity\EckEntityBundle;
 use Drupal\eck\Entity\EckEntityType;
-use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Tests the ECK entity class.
@@ -47,6 +47,26 @@ class EckEntityTest extends KernelTestBase {
   }
 
   /**
+   * Tests description field on ECK entity types.
+   */
+  public function testDescriptionOnEckEntityType() {
+    $eck_type_with_description = $this->createEckEntityType(
+      'with_description',
+      [],
+      'Test description'
+    );
+    $eck_type_without_description = $this->createEckEntityType(
+      'without_description'
+    );
+    $this->assertEquals(
+      'Test description',
+      $eck_type_with_description->getDescription()
+    );
+
+    $this->assertNull($eck_type_without_description->getDescription());
+  }
+
+  /**
    * Creates ECK entity.
    */
   protected function createEckEntity(EckEntityType $entity_type, $values = []) {
@@ -62,12 +82,16 @@ class EckEntityTest extends KernelTestBase {
    * Creates ECK entity type.
    *
    * @return \Drupal\eck\Entity\EckEntityType
+   *   The created ECK entity type.
    */
-  protected function createEckEntityType($id, $base_fields = []) {
+  protected function createEckEntityType($id, $base_fields = [], $description = NULL) {
     $entity_type = EckEntityType::create([
       'id' => $id,
       'label' => $this->randomString(),
     ]);
+    if ($description) {
+      $entity_type->set('description', $description);
+    }
     $entity_type->save();
 
     // Create bundle with the same ID.

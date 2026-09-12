@@ -4,25 +4,33 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
-// cspell:ignore sourceediting
-
+use Drupal\ckeditor5\Plugin\CKEditor5Plugin\Style;
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\ckeditor5\Traits\CKEditor5TestTrait;
-use Symfony\Component\Validator\ConstraintViolation;
+// cspell:ignore sourceediting
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
- * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Style
- * @group ckeditor5
+ * Tests Drupal\ckeditor5\Plugin\CKEditor5Plugin\Style.
+ *
  * @internal
  */
+#[CoversClass(Style::class)]
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class StyleTest extends CKEditor5TestBase {
 
   use CKEditor5TestTrait;
 
   /**
-   * @covers \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Style::buildConfigurationForm
+   * Tests style settings form.
+   *
+   * @legacy-covers \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Style::buildConfigurationForm
    */
   public function testStyleSettingsForm(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer filters']));
@@ -109,8 +117,8 @@ JS;
 
     // The CKEditor 5 module should refuse to allow styles on non-HTML5 tags.
     $assert_session->waitForElement('css', '[role=alert][data-drupal-message-type="error"]:contains("A style can only be specified for an HTML 5 tag. <drupal-media> is not an HTML5 tag.")');
-    // The vertical tab for "Style" settings should not be marked up as the cause
-    // of the error, but only the "Styles" text area in the vertical tab.
+    // The vertical tab for "Style" settings should not be marked up as the
+    // cause of the error, but only the "Styles" text area in the vertical tab.
     $assert_session->elementNotExists('css', '.vertical-tabs__pane[data-ckeditor5-plugin-id="ckeditor5_style"][aria-invalid="true"]');
     $assert_session->elementExists('css', '.vertical-tabs__pane[data-ckeditor5-plugin-id="ckeditor5_style"] textarea[data-drupal-selector="edit-editor-settings-plugins-ckeditor5-style-styles"][aria-invalid="true"]');
 
@@ -190,6 +198,7 @@ JS;
             'properties' => [
               'reversed' => FALSE,
               'startIndex' => FALSE,
+              'styles' => FALSE,
             ],
             'multiBlock' => TRUE,
           ],
@@ -245,7 +254,7 @@ JS;
       ],
     ])->save();
     $this->assertSame([], array_map(
-      function (ConstraintViolation $v) {
+      function (ConstraintViolationInterface $v) {
         return (string) $v->getMessage();
       },
       iterator_to_array(CKEditor5::validatePair(
@@ -400,7 +409,7 @@ JS;
     // Close the dropdown.
     $style_dropdown->click();
 
-    // Select the <ul> and check the available styles
+    // Select the <ul> and check the available styles.
     $this->selectTextInsideElement('ul');
     $this->assertSame('Styles', $style_dropdown->getText());
     $style_dropdown->click();
@@ -441,7 +450,7 @@ JS;
     $this->assertTrue($buttons[8]->hasClass('ck-off'));
     $this->assertSame('Items', $style_dropdown->getText());
 
-    // Select the <ol> and check the available styles
+    // Select the <ol> and check the available styles.
     $this->selectTextInsideElement('ol');
     $this->assertSame('Styles', $style_dropdown->getText());
     $style_dropdown->click();
@@ -482,7 +491,7 @@ JS;
     $this->assertTrue($buttons[8]->hasClass('ck-off'));
     $this->assertSame('Steps', $style_dropdown->getText());
 
-    // Select the table and check the available styles
+    // Select the table and check the available styles.
     $this->selectTextInsideElement('table td');
     $this->assertSame('Styles', $style_dropdown->getText());
     $style_dropdown->click();

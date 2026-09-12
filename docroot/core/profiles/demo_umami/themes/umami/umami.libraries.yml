@@ -10,7 +10,6 @@ global:
       css/components/blocks/search/search.css: {}
       css/components/blocks/search/search-results.css: {}
       css/components/blocks/articles-aside/articles-aside.css: {}
-      css/components/forms/contact.css: {}
       css/components/forms/form.css: { weight: -10 }
       css/components/forms/content-moderation.css: {}
       css/components/content/node.css: {}
@@ -31,7 +30,6 @@ global:
       css/components/navigation/menu-account/menu-account.css: {}
       css/components/navigation/skip-link/skip-link.css: {}
       css/components/navigation/tabs/tabs.css: {}
-      css/components/navigation/toolbar/toolbar.css: {}
       css/components/navigation/breadcrumbs/breadcrumbs.css: {}
       css/components/regions/bottom/bottom.css: {}
       css/components/regions/footer/footer.css: {}
@@ -43,6 +41,13 @@ global:
       css/components/layout_builder/layout-builder.css: {}
     layout:
       css/layout/layout.css: {}
+  fonts:
+    fonts/source-sans-pro-v21-latin-regular.woff2:
+      preload: true
+    fonts/scope-one-v14-latin-regular.woff2:
+      preload: true
+    fonts/source-sans-pro-v21-latin-700.woff2:
+      preload: true
 
 messages:
   css:
@@ -108,12 +113,6 @@ classy.base:
       css/classy/components/textarea.css: { weight: -10 }
       css/classy/components/ui-dialog.css: { weight: -10 }
 
-classy.book-navigation:
-  version: VERSION
-  css:
-    component:
-      css/classy/components/book-navigation.css: {}
-
 classy.dialog:
   version: VERSION
   css:
@@ -131,12 +130,6 @@ classy.file:
   css:
     component:
       css/classy/components/file.css: { weight: -10 }
-
-classy.forum:
-  version: VERSION
-  css:
-    component:
-      css/classy/components/forum.css: { weight: -10 }
 
 classy.indented:
   version: VERSION

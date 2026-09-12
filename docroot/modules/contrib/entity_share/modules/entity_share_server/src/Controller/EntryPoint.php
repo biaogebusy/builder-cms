@@ -76,25 +76,9 @@ class EntryPoint extends ControllerBase {
 
       $channel_entity_type = $channel->get('channel_entity_type');
       $channel_bundle = $channel->get('channel_bundle');
-      $channel_langcode = $channel->get('channel_langcode');
-      $route_name = \sprintf('jsonapi.%s--%s.collection', $channel_entity_type, $channel_bundle);
-      $url = Url::fromRoute($route_name)
-        ->setOption('language', $languages[$channel_langcode])
-        ->setOption('absolute', TRUE)
-        ->setOption('query', $this->channelManipulator->getQuery($channel));
 
-      // Prepare an URL to get only the UUIDs.
-      $url_uuid = clone $url;
-      $query = $url_uuid->getOption('query');
-      $query = ($query !== NULL) ? $query : [];
-      $url_uuid->setOption(
-        'query',
-        $query + [
-          'fields' => [
-            $channel_entity_type . '--' . $channel_bundle => 'changed',
-          ],
-        ]
-      );
+      $url = $channel->getJsonApiUrl();
+      $url_uuid = $channel->getJsonApiChangedTimestampsUrl();
 
       $data['channels'][$channel->id()] = [
         'label' => $channel->label(),

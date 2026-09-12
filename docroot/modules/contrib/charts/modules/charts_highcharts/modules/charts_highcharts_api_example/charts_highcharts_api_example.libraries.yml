@@ -1,0 +1,6 @@
+override:
+  version: VERSION
+  js:
+    js/charts_highcharts_api_example_js_override.js: { weight: -5 }
+  dependencies:
+    - charts/global

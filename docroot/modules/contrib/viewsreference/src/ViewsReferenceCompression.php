@@ -35,6 +35,7 @@ class ViewsReferenceCompression implements ViewsReferenceCompressionInterface {
       // compressed.
       $json = UrlHelper::uncompressQueryParameter($viewsreference['compressed']);
       $viewsreference = Json::decode($json);
+      return !is_array($viewsreference) ? [] : $viewsreference;
     }
     return $viewsreference;
   }

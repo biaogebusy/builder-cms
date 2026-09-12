@@ -240,7 +240,7 @@ class ConfigurableResourceTypeRepository extends ResourceTypeRepository {
       return $resource_types[$type_name];
     }
 
-    if (strpos($type_name ?? '', '--') !== FALSE) {
+    if (strpos($type_name ?: '', '--') !== FALSE) {
       [$entity_type_id, $bundle] = explode('--', $type_name);
       return static::lookupResourceType($resource_types, $entity_type_id, $bundle);
     }

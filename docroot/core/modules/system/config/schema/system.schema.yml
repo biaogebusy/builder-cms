@@ -69,14 +69,14 @@ system.cron:
           type: integer
           label: 'Requirements warning period'
           constraints:
-            # @see system_requirements()
+            # @see \Drupal\system\Hook\SystemRequirementsHooks
             Range:
               min: 60
         requirements_error:
           type: integer
           label: 'Requirements error period'
           constraints:
-            # @see system_requirements()
+            # @see \Drupal\system\Hook\SystemRequirementsHooks
             Range:
               min: 300
     logging:
@@ -137,7 +137,8 @@ system.date:
                 # - UserInterface::TIMEZONE_SELECT
                 # @see \Drupal\user\UserInterface::TIMEZONE_*
                 # @todo Update this to use enum in https://www.drupal.org/project/drupal/issues/3402178
-                Choice: [0, 1, 2]
+                Choice:
+                  choices: [0, 1, 2]
             warn:
               type: boolean
               label: 'Remind users at login if their time zone is not set'
@@ -157,23 +158,32 @@ system.diff:
           label: 'Number of leading lines in a diff'
           constraints:
             # @see \Drupal\Component\Diff\DiffFormatter
-            Range:
-              min: 0
+            PositiveOrZero: ~
         lines_trailing:
           type: integer
           label: 'Number of trailing lines in a diff'
           constraints:
             # @see \Drupal\Component\Diff\DiffFormatter
-            Range:
-              min: 0
+            PositiveOrZero: ~
 
 system.logging:
   type: config_object
   label: 'Logging settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     error_level:
       type: string
       label: 'Error messages to display'
+      # @see core/includes/bootstrap.inc
+      # @todo Update this to use enum in https://www.drupal.org/project/drupal/issues/2951046
+      constraints:
+        Choice:
+          choices:
+            - 'hide'
+            - 'some'
+            - 'all'
+            - 'verbose'
 
 system.performance:
   type: config_object
@@ -198,6 +208,11 @@ system.performance:
           type: boolean
           label: 'Aggregate CSS files'
         gzip:
+          # @see Drupal\Core\Asset\AssetDumper::dumpToUri()
+          type: boolean
+          label: 'Compress CSS files'
+          deprecated: "The 'gzip' config schema is deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Use the 'compress' config schema instead. See https://www.drupal.org/node/3526344."
+        compress:
           type: boolean
           label: 'Compress CSS files'
     fast_404:
@@ -224,24 +239,13 @@ system.performance:
           type: boolean
           label: 'JavaScript preprocess'
         gzip:
+          # @see Drupal\Core\Asset\AssetDumper::dumpToUri()
+          type: boolean
+          label: 'Compress JavaScript files'
+          deprecated: "The 'gzip' config schema is deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Use the 'compress' config schema instead. See https://www.drupal.org/node/3526344."
+        compress:
           type: boolean
           label: 'Compress JavaScript files.'
-    stale_file_threshold:
-      type: integer
-      label: 'Stale file threshold'
-      deprecated: 'The system.performance.stale_file_threshold config key is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3301744'
-
-system.rss:
-  type: config_object
-  label: 'Feed settings'
-  mapping:
-    items:
-      type: mapping
-      label: 'Feed items'
-      mapping:
-        view_mode:
-          type: string
-          label: 'Feed content'
 
 system.theme:
   type: config_object
@@ -290,6 +294,8 @@ system.menu.*:
 system.action.*:
   type: config_entity
   label: 'System action'
+  constraints:
+    FullyValidatable: ~
   mapping:
     id:
       type: machine_name
@@ -306,6 +312,12 @@ system.action.*:
     type:
       type: string
       label: 'Type'
+      # Action can be specified without type.
+      # @see \Drupal\action_test\Plugin\Action\NoType
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     plugin:
       type: string
       label: 'Plugin'
@@ -319,6 +331,8 @@ system.action.*:
 system.file:
   type: config_object
   label: 'File system'
+  constraints:
+    FullyValidatable: ~
   mapping:
     allow_insecure_uploads:
       type: boolean
@@ -326,17 +340,19 @@ system.file:
     default_scheme:
       type: string
       label: 'Default download method'
+      constraints:
+        ClassResolver:
+          classOrService: 'stream_wrapper_manager'
+          method: 'isValidScheme'
     path:
       type: mapping
       label: 'Path settings'
-      mapping:
-        temporary:
-          deprecated: "The 'system.file:path.temporary' config property path is deprecated in drupal:8.8.0 and is removed from drupal 11.0.0. Use settings.php instead. See https://www.drupal.org/node/3039255."
-          type: string
-          label: 'Temporary directory'
+      deprecated: "The 'path' config schema is deprecated in drupal:11.2.0 and will be removed from drupal 12.0.0. Use 'file_temp_path' key in settings.php instead. See https://www.drupal.org/node/3039255."
     temporary_maximum_age:
       type: integer
       label: 'Maximum age for temporary files'
+      constraints:
+        PositiveOrZero: ~
 
 system.image:
   type: config_object
@@ -370,6 +386,8 @@ system.image.gd:
 system.mail:
   type: config_object
   label: 'Mail system'
+  constraints:
+    FullyValidatable: ~
   mapping:
     interface:
       type: sequence
@@ -382,45 +400,8 @@ system.mail:
             manager: plugin.manager.mail
             interface: 'Drupal\Core\Mail\MailInterface'
     mailer_dsn:
-      type: mapping
+      type: mailer_dsn
       label: 'Symfony mailer transport DSN'
-      mapping:
-        scheme:
-          type: string
-          label: 'Scheme'
-          constraints:
-            NotBlank:
-              message: 'The mailer DSN must contain a scheme.'
-        host:
-          type: string
-          label: 'Host'
-          constraints:
-            NotBlank:
-              message: 'The mailer DSN must contain a host (use "default" by default).'
-        user:
-          type: string
-          nullable: true
-          label: 'User'
-        password:
-          type: string
-          nullable: true
-          label: 'Password'
-        port:
-          type: integer
-          nullable: true
-          label: 'Port'
-          constraints:
-            Range:
-              min: 0
-              max: 65535
-        options:
-          type: sequence
-          label: 'Options'
-          sequence:
-            type: string
-            label: Option
-            constraints:
-              NotNull: []
 
 system.theme.global:
   type: theme_settings
@@ -441,8 +422,7 @@ system.advisories:
       # Minimum can be set to 0 as it just means the advisories will be retrieved on every call.
       # @see \Drupal\system\SecurityAdvisories\SecurityAdvisoriesFetcher::getSecurityAdvisories
       constraints:
-        Range:
-          min: 0
+        PositiveOrZero: ~
 
 block.settings.system_branding_block:
   type: block_settings
@@ -463,16 +443,31 @@ block.settings.system_branding_block:
 block.settings.system_menu_block:*:
   type: block_settings
   label: 'Menu block'
+  constraints:
+    FullyValidatable: ~
+    IgnoreActiveTrail: ~
   mapping:
     level:
       type: integer
       label: 'Starting level'
+      constraints:
+        MenuLinkDepth:
+          min: 0
     depth:
       type: integer
       label: 'Maximum number of levels'
+      nullable: true
+      constraints:
+        MenuLinkDepth:
+          baseLevel: '[%parent.level]'
+          min: 1
     expand_all_items:
       type: boolean
       label: 'Expand all items'
+    ignore_active_trail:
+      type: boolean
+      label: 'Ignore active trail'
+      requiredKey: false
 
 block.settings.local_tasks_block:
   type: block_settings
@@ -495,11 +490,18 @@ condition.plugin.request_path:
 
 condition.plugin.response_status:
   type: condition.plugin
+  constraints:
+    FullyValidatable: ~
   mapping:
     status_codes:
       type: sequence
       sequence:
         type: integer
+        constraints:
+          # @see \Drupal\system\Plugin\Condition\ResponseStatus::buildConfigurationForm()
+          Choice:
+            # HTTP 200 OK, HTTP 403 FORBIDDEN, HTTP 404 NOT FOUND.
+            choices: [200, 403, 404]
 
 system.feature_flags:
   type: config_object

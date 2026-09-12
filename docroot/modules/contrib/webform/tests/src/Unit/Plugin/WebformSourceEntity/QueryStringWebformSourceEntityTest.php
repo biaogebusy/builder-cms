@@ -39,7 +39,7 @@ class QueryStringWebformSourceEntityTest extends UnitTestCase {
    *
    * @dataProvider providerGetCurrentSourceEntity
    */
-  public function testGetCurrentSourceEntity(array $options, $expect_source_entity, $assert_message = '') {
+  public function testGetCurrentSourceEntity(array $options, $expect_source_entity, $assert_message = ''): void {
     $options += [
       // Value for the setting 'form_prepopulate_source_entity' of the webform.
       'webform_settings_prepopulate_source_entity' => TRUE,
@@ -98,12 +98,10 @@ class QueryStringWebformSourceEntityTest extends UnitTestCase {
     // Mock request stack.
     $request_stack = $this->createMock(RequestStack::class);
     $request_stack->method('getCurrentRequest')
-      ->will($this->returnValue(
-        new Request([
-          'source_entity_type' => $options['request_query_source_entity_type'],
-          'source_entity_id' => $options['source_entity_id'],
-        ])
-      ));
+      ->willReturn(new Request([
+        'source_entity_type' => $options['request_query_source_entity_type'],
+        'source_entity_id' => $options['source_entity_id'],
+      ]));
 
     // Move entity reference manager.
     $webform_entity_reference_manager = $this->createMock(WebformEntityReferenceManagerInterface::class);
@@ -211,7 +209,7 @@ class QueryStringWebformSourceEntityTest extends UnitTestCase {
    *
    * @see testGetCurrentSourceEntity()
    */
-  public function providerGetCurrentSourceEntity() {
+  public static function providerGetCurrentSourceEntity() {
     $tests[] = [
       [
         'source_entity_has_translation' => FALSE,

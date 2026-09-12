@@ -83,7 +83,9 @@ abstract class ListItemBase extends FieldItemBase implements OptionsProviderInte
    * {@inheritdoc}
    */
   public function isEmpty() {
-    return empty($this->value) && (string) $this->value !== '0';
+    $value = $this->get('value')->getValue();
+
+    return empty($value) && (string) $value !== '0';
   }
 
   /**
@@ -334,9 +336,11 @@ abstract class ListItemBase extends FieldItemBase implements OptionsProviderInte
   abstract protected function allowedValuesDescription();
 
   /**
-   * #element_validate callback for options field allowed values.
+   * Render API callback: Validates the allowed values of an options field.
    *
-   * @param $element
+   * This function is assigned as a #element_validate callback.
+   *
+   * @param array $element
    *   An associative array containing the properties and children of the
    *   generic form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
@@ -347,13 +351,17 @@ abstract class ListItemBase extends FieldItemBase implements OptionsProviderInte
   public static function validateAllowedValues($element, FormStateInterface $form_state) {
     $items = array_filter(array_map(function ($item) use ($element) {
       $current_element = $element['table'][$item];
-      if ($current_element['item']['key']['#value'] !== NULL && $current_element['item']['label']['#value']) {
-        return $current_element['item']['key']['#value'] . '|' . $current_element['item']['label']['#value'];
-      }
-      elseif ($current_element['item']['key']['#value']) {
+      $key_has_input = isset($current_element['item']['key']['#value']) && $current_element['item']['key']['#value'] !== '';
+      $label_has_input = isset($current_element['item']['label']['#value']) && $current_element['item']['label']['#value'] !== '';
+      if ($key_has_input) {
+        if ($label_has_input) {
+          return $current_element['item']['key']['#value'] . '|' . $current_element['item']['label']['#value'];
+        }
+
         return $current_element['item']['key']['#value'];
       }
-      elseif ($current_element['item']['label']['#value']) {
+
+      if ($label_has_input) {
         return $current_element['item']['label']['#value'];
       }
 
@@ -389,7 +397,7 @@ abstract class ListItemBase extends FieldItemBase implements OptionsProviderInte
   /**
    * Extracts the allowed values array from the allowed_values element.
    *
-   * @param string|array $list
+   * @param array $list
    *   The raw string or array to extract values from.
    * @param bool $has_data
    *   The current field already has data inserted or not.
@@ -399,15 +407,8 @@ abstract class ListItemBase extends FieldItemBase implements OptionsProviderInte
    *
    * @see \Drupal\options\Plugin\Field\FieldType\ListItemBase::allowedValuesString()
    */
-  protected static function extractAllowedValues($list, $has_data) {
+  protected static function extractAllowedValues(array $list, bool $has_data) {
     $values = [];
-
-    if (is_string($list)) {
-      trigger_error('Passing a string to ' . __METHOD__ . '() is deprecated in drupal:10.2.0 and will cause an error from drupal:11.0.0. Use an array instead. See https://www.drupal.org/node/3376368', E_USER_DEPRECATED);
-      $list = explode("\n", $list);
-      $list = array_map('trim', $list);
-      $list = array_filter($list, 'strlen');
-    }
 
     $generated_keys = $explicit_keys = FALSE;
     foreach ($list as $position => $text) {
@@ -451,10 +452,12 @@ abstract class ListItemBase extends FieldItemBase implements OptionsProviderInte
    * @param string $option
    *   The option value entered by the user.
    *
-   * @return string
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string|null
    *   The error message if the specified value is invalid, NULL otherwise.
    */
-  protected static function validateAllowedValue($option) {}
+  protected static function validateAllowedValue($option) {
+    return NULL;
+  }
 
   /**
    * Generates a string representation of an array of 'allowed values'.

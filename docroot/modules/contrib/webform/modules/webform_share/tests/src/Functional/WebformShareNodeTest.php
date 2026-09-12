@@ -24,7 +24,7 @@ class WebformShareNodeTest extends WebformNodeBrowserTestBase {
   /**
    * Test share.
    */
-  public function testShare() {
+  public function testShare(): void {
     global $base_url;
 
     $assert_session = $this->assertSession();
@@ -86,13 +86,13 @@ class WebformShareNodeTest extends WebformNodeBrowserTestBase {
       '#webform' => $webform,
       '#source_entity' => $node,
     ];
-    $actual_script_tag = $renderer->renderPlain($build);
+    $actual_script_tag = $renderer->renderInIsolation($build);
 
     $src = $base_url . "/webform/contact/share.js?source_entity_type=node&amp;source_entity_id=$nid";
     $src = preg_replace('#^https?:#', '', $src);
     $expected_script_tag = '<script src="' . $src . '"></script>' . PHP_EOL;
 
-    $this->assertEquals($expected_script_tag, $actual_script_tag);
+    $this->assertEquals($expected_script_tag, (string) $actual_script_tag);
   }
 
 }

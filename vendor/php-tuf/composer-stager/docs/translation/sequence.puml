@@ -1,0 +1,26 @@
+@startuml
+
+' This is the PlantUML (https://plantuml.com/) source used to generate the UML
+' sequence diagram for the translation system (sequence.png). Said diagram can
+' be regenerated from this source at https://plantuml-editor.kkeisuke.com/ or with
+' the PhpStorm plugin at https://plugins.jetbrains.com/plugin/7017-plantuml-integration.
+' Optimize it with ImageOptim: https://imageoptim.com/.
+
+!include ../resources/settings.puml
+
+"Requester\n" as Requester -> "Provider\n" as Provider : request\nmessage
+Provider -> "Translatable\nFactory" as TranslatableFactory : request\nparameters
+TranslatableFactory -> "Translation\nParameters" as TranslationParameters : create\nparameters
+TranslationParameters --> Provider
+Provider -> TranslatableFactory : \nrequest\ndomain\noptions
+TranslatableFactory -> "Domain\nOptions" as DomainOptions : create domain options
+DomainOptions --> Provider
+Provider -> TranslatableFactory : \nrequest\nmessage
+TranslatableFactory -> "Translatable\nMessage" as TranslatableMessage : create message
+TranslatableMessage --> Requester : return message
+Requester -> "Translator\n" as Translator : \n\nget translator
+Translator --> Requester
+Requester -> TranslatableMessage : \nrequest string translation (send translator)
+TranslatableMessage --> Requester
+
+@enduml

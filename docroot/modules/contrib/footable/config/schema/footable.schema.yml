@@ -12,3 +12,137 @@ footable.footable_breakpoint.*:
     breakpoint:
       type: integer
       label: 'Breakpoint'
+
+footable.settings:
+  type: config_object
+  label: 'Footable settings'
+  mapping:
+    plugin_type:
+      type: string
+      label: 'Type'
+    plugin_compression:
+      type: string
+      label: 'Compression level'
+
+views.style.footable:
+  type: views.style.table
+  label: 'Footable'
+  mapping:
+    footable:
+      type: mapping
+      label: 'Footable'
+      mapping:
+        expand_all:
+          type: boolean
+          label: 'Expand all rows'
+        expand_first:
+          type: boolean
+          label: 'Expand first row'
+        show_header:
+          type: boolean
+          label: 'Show header'
+        show_toggle:
+          type: boolean
+          label: 'Expandable column'
+        toggle_column:
+          type: string
+          label: 'Toggle column'
+        use_parent_width:
+          type: boolean
+          label: 'Use parent width'
+        bootstrap:
+          type: mapping
+          label: 'Bootstrap'
+          mapping:
+            striped:
+              type: boolean
+              label: 'Striped'
+            bordered:
+              type: boolean
+              label: 'Bordered'
+            hover:
+              type: boolean
+              label: 'Hover'
+            condensed:
+              type: boolean
+              label: 'Condensed'
+        component:
+          type: mapping
+          label: 'Components'
+          mapping:
+            filtering:
+              type: mapping
+              label: 'Filtering'
+              mapping:
+                enabled:
+                  type: boolean
+                  label: 'Enabled'
+                delay:
+                  type: integer
+                  label: 'Delay'
+                exact_match:
+                  type: boolean
+                  label: 'Exact match'
+                focus:
+                  type: boolean
+                  label: 'Focus'
+                ignore_case:
+                  type: boolean
+                  label: 'Ignore case'
+                min:
+                  type: integer
+                  label: 'Min'
+                placeholder:
+                  type: label
+                  label: 'Placeholder'
+                position:
+                  type: string
+                  label: 'Position'
+                space:
+                  type: string
+                  label: 'Space'
+            sorting:
+              type: mapping
+              label: 'Sorting'
+              mapping:
+                enabled:
+                  type: boolean
+                  label: 'Enabled'
+            paging:
+              type: mapping
+              label: 'Paging'
+              mapping:
+                enabled:
+                  type: boolean
+                  label: 'Enabled'
+                countformat:
+                  type: string
+                  label: 'Count format'
+                current:
+                  type: integer
+                  label: 'Current'
+                limit:
+                  type: integer
+                  label: 'Limit'
+                position:
+                  type: string
+                  label: 'Position'
+                size:
+                  type: integer
+                  label: 'Size'
+            state:
+              type: mapping
+              label: 'State'
+              mapping:
+                enabled:
+                  type: boolean
+                  label: 'Enabled'
+                filtering:
+                  type: boolean
+                  label: 'Filtering'
+                paging:
+                  type: boolean
+                  label: 'Paging'
+                sorting:
+                  type: boolean
+                  label: 'Sorting'

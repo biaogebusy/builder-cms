@@ -56,7 +56,7 @@ class SynonymsSubscriberTest extends UnitTestCase {
             'synonyms' => $synonyms,
           ],
         ],
-        'analyser' => [
+        'analyzer' => [
           'querytime_synonyms' => [
             'type' => 'custom',
             'tokenizer' => 'standard',

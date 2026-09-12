@@ -1,0 +1,9 @@
+ckeditor5_plugin_pack__drupal_powered_by:
+  ckeditor5:
+    plugins:
+      - drupalPoweredBy.DrupalPoweredBy
+  drupal:
+    label: Drupal powered by
+    elements: false
+    library: ckeditor5_plugin_pack/drupal_powered_by
+    class: Drupal\ckeditor5_plugin_pack\Plugin\CKEditor5Plugin\DrupalPoweredBy

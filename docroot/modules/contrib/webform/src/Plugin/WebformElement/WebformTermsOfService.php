@@ -26,9 +26,11 @@ class WebformTermsOfService extends Checkbox {
   protected function defineDefaultProperties() {
     $properties = [
       'title' => $this->t('I agree to the {terms of service}.'),
-      'terms_type' => 'modal',
+      'terms_type' => WebformTermsOfServiceElement::TERMS_MODAL,
       'terms_title' => '',
       'terms_content' => '',
+      'terms_link' => '',
+      'terms_link_target' => '',
     ] + parent::defineDefaultProperties();
     unset(
       $properties['field_prefix'],
@@ -44,7 +46,7 @@ class WebformTermsOfService extends Checkbox {
    * {@inheritdoc}
    */
   protected function defineTranslatableProperties() {
-    return array_merge(parent::defineTranslatableProperties(), ['terms_title', 'terms_content']);
+    return array_merge(parent::defineTranslatableProperties(), ['terms_title', 'terms_content', 'terms_link', 'terms_link_target']);
   }
 
   /* ************************************************************************ */
@@ -70,7 +72,7 @@ class WebformTermsOfService extends Checkbox {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     // Restore #title with curly brackets.
     if (isset($element['#_webform_terms_of_service_title'])) {
       $element['#title'] = $element['#_webform_terms_of_service_title'];
@@ -94,6 +96,8 @@ class WebformTermsOfService extends Checkbox {
       '#required' => TRUE,
       '#terms_type' => WebformTermsOfServiceElement::TERMS_SLIDEOUT,
       '#terms_content' => '<em>' . $this->t('These are the terms of service.') . '</em>',
+      '#terms_link' => '/node/1',
+      '#terms_link_target' => '_self',
     ];
   }
 
@@ -111,20 +115,75 @@ class WebformTermsOfService extends Checkbox {
     ];
     $form['terms_of_service']['terms_type'] = [
       '#type' => 'select',
-      '#title' => $this->t('Terms display'),
+      '#title' => $this->t('Terms display'),
       '#options' => [
         WebformTermsOfServiceElement::TERMS_MODAL => $this->t('Modal'),
         WebformTermsOfServiceElement::TERMS_SLIDEOUT => $this->t('Slideout'),
+        WebformTermsOfServiceElement::TERMS_LINK => $this->t('Link'),
       ],
     ];
+    // Modal/slideout fields.
     $form['terms_of_service']['terms_title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Terms title'),
+      '#states' => [
+        'visible' => [
+          ':input[name="properties[terms_type]"]' => [
+            ['value' => WebformTermsOfServiceElement::TERMS_MODAL],
+            'or',
+            ['value' => WebformTermsOfServiceElement::TERMS_SLIDEOUT],
+          ],
+        ],
+      ],
     ];
     $form['terms_of_service']['terms_content'] = [
       '#type' => 'webform_html_editor',
       '#title' => $this->t('Terms content'),
-      '#required' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="properties[terms_type]"]' => [
+            ['value' => WebformTermsOfServiceElement::TERMS_MODAL],
+            'or',
+            ['value' => WebformTermsOfServiceElement::TERMS_SLIDEOUT],
+          ],
+        ],
+        'required' => [
+          ':input[name="properties[terms_type]"]' => [
+            ['value' => WebformTermsOfServiceElement::TERMS_MODAL],
+            'or',
+            ['value' => WebformTermsOfServiceElement::TERMS_SLIDEOUT],
+          ],
+        ],
+      ],
+    ];
+    // Link fields.
+    $form['terms_of_service']['terms_link'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Terms link'),
+      '#description' => $this->t('Enter the URL or path of the terms of service.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="properties[terms_type]"]' => ['value' => WebformTermsOfServiceElement::TERMS_LINK],
+        ],
+        'required' => [
+          ':input[name="properties[terms_type]"]' => ['value' => WebformTermsOfServiceElement::TERMS_LINK],
+        ],
+      ],
+    ];
+    $form['terms_of_service']['terms_link_target'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Terms link target'),
+      '#options' => [
+        '' => $this->t('Current window (_self)'),
+        '_blank' => $this->t('New window (_blank)'),
+        'parent' => $this->t('Parent window (_parent)'),
+        'top' => $this->t('Topmost window (_top)'),
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="properties[terms_type]"]' => ['value' => WebformTermsOfServiceElement::TERMS_LINK],
+        ],
+      ],
     ];
     return $form;
   }

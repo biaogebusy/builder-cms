@@ -5,12 +5,12 @@
  * Provides hooks for Send To Phone.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
-use Drupal\sms\Exception\PhoneNumberSettingsException;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
+use Drupal\sms\Exception\PhoneNumberSettingsException;
 use Drupal\user\Entity\User;
 
 /**

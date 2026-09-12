@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests devel requirements.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelRequirementsTest extends DevelBrowserTestBase {
 
   /**

@@ -14,14 +14,15 @@ use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\image\Kernel\ImageFieldCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore blocknodetest typefield
-
 /**
  * Tests rendering default field values in Layout Builder.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderDefaultValuesTest extends BrowserTestBase {
 
   use ImageFieldCreationTrait;
@@ -117,7 +118,7 @@ class LayoutBuilderDefaultValuesTest extends BrowserTestBase {
   /**
    * Test for expected text on node 1.
    */
-  protected function assertNodeWithValues() {
+  protected function assertNodeWithValues(): void {
     $this->drupalGet('node/1');
     $assert_session = $this->assertSession();
     // String field with no default should render a value.
@@ -165,7 +166,7 @@ class LayoutBuilderDefaultValuesTest extends BrowserTestBase {
   /**
    * Test for expected text on node 2.
    */
-  protected function assertNodeWithDefaultValues() {
+  protected function assertNodeWithDefaultValues(): void {
     // Switch theme to starterkit_theme so that layout builder components will
     // have block classes.
     /** @var \Drupal\Core\Extension\ThemeInstallerInterface $theme_installer */
@@ -208,7 +209,7 @@ class LayoutBuilderDefaultValuesTest extends BrowserTestBase {
   /**
    * Helper function to add string fields.
    */
-  protected function addTextFields() {
+  protected function addTextFields(): void {
     // String field with no default.
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'field_string_no_default',
@@ -284,7 +285,7 @@ class LayoutBuilderDefaultValuesTest extends BrowserTestBase {
   /**
    * Helper function to add image fields.
    */
-  protected function addImageFields() {
+  protected function addImageFields(): void {
     // Create files to use as the default images.
     $files = $this->drupalGetTestFiles('image');
     $images = [];

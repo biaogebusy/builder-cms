@@ -42,6 +42,8 @@ class RevisionOverviewController extends ControllerBase {
    *
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
    */
   public function __construct(DateFormatterInterface $date_formatter, RendererInterface $renderer) {
     $this->dateFormatter = $date_formatter;
@@ -72,6 +74,7 @@ class RevisionOverviewController extends ControllerBase {
         'url' => $entity_revision->toUrl('revision-revert-form'),
       ];
     }
+    return [];
   }
 
   /**
@@ -84,6 +87,7 @@ class RevisionOverviewController extends ControllerBase {
         'url' => $entity_revision->toUrl('revision-delete-form'),
       ];
     }
+    return [];
   }
 
   /**
@@ -109,7 +113,7 @@ class RevisionOverviewController extends ControllerBase {
       $date = $this->dateFormatter->format($revision->getRevisionCreationTime(), 'short');
       $link = $revision->toLink($date, 'revision');
 
-      // @todo: Simplify this when https://www.drupal.org/node/2334319 lands.
+      // @todo Simplify this when https://www.drupal.org/node/2334319 lands.
       $username = [
         '#theme' => 'username',
         '#account' => $revision->getRevisionUser(),
@@ -141,7 +145,10 @@ class RevisionOverviewController extends ControllerBase {
         '#context' => [
           'date' => $link->toString(),
           'username' => $username,
-          'message' => ['#markup' => $markup, '#allowed_tags' => Xss::getHtmlTagList()],
+          'message' => [
+            '#markup' => $markup,
+            '#allowed_tags' => Xss::getHtmlTagList(),
+          ],
         ],
       ],
     ];

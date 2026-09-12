@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ckeditor5-toolbar-button-fontFamily {
+  background-image: url(../icons/font-family.svg);
+}
+
+.ckeditor5-toolbar-button-fontSize {
+  background-image: url(../icons/font-size.svg);
+}
+
+.ckeditor5-toolbar-button-fontColor {
+  background-image: url(../icons/font-color.svg);
+}
+
+.ckeditor5-toolbar-button-fontBackgroundColor {
+  background-image: url(../icons/font-background.svg);
+}

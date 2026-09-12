@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\diff\Plugin\diff\Field;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -33,11 +34,10 @@ class EntityReferenceFieldBuilder extends FieldDiffBuilderBase {
       if (!$field_item->isEmpty()) {
         $values = $field_item->getValue();
         // Compare entity ids.
-        if ($field_item->entity) {
+        // @phpstan-ignore-next-line
+        if ($field_item->entity instanceof EntityInterface) {
           if ($this->configuration['compare_entity_reference'] == COMPARE_ENTITY_REFERENCE_LABEL) {
-            /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-            $entity = $field_item->entity;
-            $result[$field_key][] = $entity->label();
+            $result[$field_key][] = $field_item->entity->label();
           }
           else {
             $result[$field_key][] = $this->t('Entity ID: :id', [

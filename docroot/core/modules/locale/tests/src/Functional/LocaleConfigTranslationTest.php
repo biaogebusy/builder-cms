@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\locale\Functional;
 
-use Drupal\Tests\BrowserTestBase;
-use Drupal\locale\StringStorageInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\locale\StringStorageInterface;
+use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests translation of configuration strings.
- *
- * @group locale
  */
+#[Group('locale')]
+#[RunTestsInSeparateProcesses]
 class LocaleConfigTranslationTest extends BrowserTestBase {
 
   /**
@@ -25,7 +27,7 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['locale', 'contact', 'contact_test'];
+  protected static $modules = ['locale'];
 
   /**
    * {@inheritdoc}
@@ -59,8 +61,6 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
       'access administration pages',
       'translate interface',
       'administer modules',
-      'access site-wide contact form',
-      'administer contact forms',
       'administer site configuration',
     ]);
     $this->drupalLogin($admin_user);
@@ -111,7 +111,11 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
     $this->assertEquals($message, $translation['message']);
 
     // Check default medium date format exists and create a translation for it.
-    $string = $this->storage->findString(['source' => 'D, m/d/Y - H:i', 'context' => 'PHP date format', 'type' => 'configuration']);
+    $string = $this->storage->findString([
+      'source' => 'D, j M Y - H:i',
+      'context' => 'PHP date format',
+      'type' => 'configuration',
+    ]);
     $this->assertNotEmpty($string, 'Configuration date formats have been created upon installation.');
 
     // Translate using the UI so configuration is refreshed.
@@ -155,7 +159,11 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
     $this->assertArrayHasKey('image.style.medium', $locations['configuration']);
 
     // Check the string is unique and has no translation yet.
-    $translations = $this->storage->getTranslations(['language' => $this->langcode, 'type' => 'configuration', 'name' => 'image.style.medium']);
+    $translations = $this->storage->getTranslations([
+      'language' => $this->langcode,
+      'type' => 'configuration',
+      'name' => 'image.style.medium',
+    ]);
     $this->assertCount(1, $translations);
     $translation = reset($translations);
     $this->assertEquals($string->source, $translation->source);
@@ -179,7 +187,11 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
     $this->submitForm($edit, 'Save translations');
 
     // Check the right single translation has been created.
-    $translations = $this->storage->getTranslations(['language' => $this->langcode, 'type' => 'configuration', 'name' => 'image.style.medium']);
+    $translations = $this->storage->getTranslations([
+      'language' => $this->langcode,
+      'type' => 'configuration',
+      'name' => 'image.style.medium',
+    ]);
     $translation = reset($translations);
     $this->assertCount(1, $translations, 'Got only one translation for image configuration.');
     $this->assertEquals($string->source, $translation->source);
@@ -198,10 +210,16 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
     $override = \Drupal::languageManager()->getLanguageConfigOverride('xx', 'image.style.medium');
     $this->assertTrue($override->isNew(), 'Translated configuration for image module removed.');
 
-    // Translate default category using the UI so configuration is refreshed.
-    $category_label = $this->randomMachineName(20);
+    // Translate a provided config entity using the UI so configuration is
+    // refreshed. We don't have many to select from that are provided by
+    // core modules, so we have to use language entities. The required
+    // criteria from the test below are:
+    // a) It is a default config entity provided by a module.
+    // b) It uses upcasting on any route, which is what we want to test.
+    $untranslated_label = 'English';
+    $translated_label = $this->randomMachineName(20);
     $search = [
-      'string' => 'Website feedback',
+      'string' => $untranslated_label,
       'langcode' => $this->langcode,
       'translation' => 'all',
     ];
@@ -210,7 +228,7 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
     $textarea = $this->assertSession()->elementExists('xpath', '//textarea');
     $lid = $textarea->getAttribute('name');
     $edit = [
-      $lid => $category_label,
+      $lid => $translated_label,
     ];
     $this->drupalGet('admin/config/regional/translate');
     $this->submitForm($edit, 'Save translations');
@@ -218,12 +236,12 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
     // Check if this category displayed in this language will use the
     // translation. This test ensures the entity loaded from the request
     // upcasting will already work.
-    $this->drupalGet($this->langcode . '/contact/feedback');
-    $this->assertSession()->pageTextContains($category_label);
+    $this->drupalGet($this->langcode . '/admin/config/regional/language');
+    $this->assertSession()->pageTextContains($translated_label);
 
     // Check if the UI does not show the translated String.
-    $this->drupalGet('admin/structure/contact/manage/feedback');
-    $this->assertSession()->fieldValueEquals('edit-label', 'Website feedback');
+    $this->drupalGet('admin/config/regional/language/edit/en');
+    $this->assertSession()->fieldValueEquals('edit-label', $untranslated_label);
   }
 
   /**
@@ -269,7 +287,11 @@ class LocaleConfigTranslationTest extends BrowserTestBase {
     }
 
     // Check the optional default configuration in node module.
-    $string = $this->storage->findString(['source' => 'No front page content has been created yet.<br/>Follow the <a target="_blank" href="https://www.drupal.org/docs/user_guide/en/index.html">User Guide</a> to start building your site.', 'context' => '', 'type' => 'configuration']);
+    $string = $this->storage->findString([
+      'source' => 'No front page content has been created yet.<br/>Follow the <a target="_blank" href="https://www.drupal.org/docs/user_guide/en/index.html">User Guide</a> to start building your site.',
+      'context' => '',
+      'type' => 'configuration',
+    ]);
     if ($optional) {
       $this->assertFalse($this->config('views.view.frontpage')->isNew());
       $this->assertNotEmpty($string, 'Node view text can be found with node and views modules.');

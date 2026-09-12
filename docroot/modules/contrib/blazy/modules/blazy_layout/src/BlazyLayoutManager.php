@@ -5,6 +5,7 @@ namespace Drupal\blazy_layout;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\BlazyManager;
 use Drupal\blazy\Utility\Arrays;
+use Drupal\blazy\Utility\Css;
 use Drupal\blazy_layout\BlazyLayoutDefault as Defaults;
 
 /**
@@ -94,8 +95,9 @@ class BlazyLayoutManager extends BlazyManager implements BlazyLayoutManagerInter
     $this->verifySafely($settings);
     $this->preSettings($settings);
 
+    /** @var array $settings */
     $settings = $this->toSettings($settings);
-    $blazies  = $settings['blazies'];
+    $blazies = $this->getBlazies($settings);
 
     $blazies->set('namespace', static::$namespace)
       ->set('is.grid', TRUE)
@@ -107,10 +109,36 @@ class BlazyLayoutManager extends BlazyManager implements BlazyLayoutManagerInter
       ->set('item.caption', static::$captionId)
       ->set('count', $count);
 
+    if ($hero = $settings['hero'] ?? NULL) {
+      $id = Defaults::regionId($hero);
+      if ($styles = $settings['regions'][$id]['settings']['styles']['media'] ?? []) {
+        $blazies->set('heroes', $styles);
+
+        foreach (BlazyDefault::imageStyles() as $key) {
+          if (!$blazies->get('heroes.' . $key . '.style')) {
+            if ($_style = ($styles[$key . '_style'] ?? '')) {
+              if ($entity = $this->load($_style, 'image_style')) {
+                $blazies->set('heroes.' . $key . '.style', $entity)
+                  ->set('heroes.' . $key . '.id', $entity->id());
+              }
+            }
+          }
+        }
+      }
+    }
+
     $this->postSettings($settings);
 
     $settings = array_diff_key($settings, BlazyDefault::imageSettings());
     $settings = Arrays::filter($settings);
+
+    // If Heroes, enable preloading.
+    if ($blazies->get('heroes')) {
+      $settings['preload'] = TRUE;
+    }
+
+    // If Semantic layout enabled, turn DIV into UL list.
+    $this->semantic($settings);
 
     return $settings;
   }
@@ -133,14 +161,21 @@ class BlazyLayoutManager extends BlazyManager implements BlazyLayoutManagerInter
     $empty    = $options['empty'] ?? FALSE;
     $block_bg = $options['block_bg'] ?? FALSE;
     $prefix   = '.region';
+    $semantic = $options['semantic'] ?? FALSE;
 
     if ($region) {
       $region = str_replace('_', '-', $region);
       $prefix = ".region--{$region}";
     }
 
-    if ($region == 'bg' && !in_array($key, ['background', 'overlay'])) {
-      $prefix = '.region';
+    if ($region == 'bg') {
+      if (!in_array($key, ['background', 'overlay'])) {
+        $prefix = '.region';
+      }
+
+      if ($semantic) {
+        $prefix = '';
+      }
     }
 
     switch ($key) {
@@ -148,6 +183,9 @@ class BlazyLayoutManager extends BlazyManager implements BlazyLayoutManagerInter
         return $region == 'bg' ? '' : $prefix;
 
       case 'background':
+        if ($semantic && $region == 'bg') {
+          return 'SEMANTIC_BG';
+        }
         return $empty || !$block_bg ? "{$prefix}, {$prefix} .b-bg" : "{$prefix} .b-bg";
 
       case 'overlay':
@@ -173,24 +211,37 @@ class BlazyLayoutManager extends BlazyManager implements BlazyLayoutManagerInter
   /**
    * {@inheritdoc}
    */
-  public function toRules(array $data, $id): string {
-    return implode(' ', array_map(
-      function ($value, $key) use ($id) {
+  public function toRules(array $data, array $options): string {
+    $id = $options['id'] ?? '';
+    $custom_css = $options['custom_css'] ?? '';
+    $semantic = $options['semantic_layout'] ?? FALSE;
+
+    $css = implode(' ', array_map(
+      function ($value, $key) use ($id, $semantic) {
         if (strpos($value, 'ROOT') !== FALSE) {
           return str_replace('ROOT', ".blazy.b-layout.{$id}", $value);
         }
 
-        if (strpos($key, ',') !== FALSE) {
-          $vals = array_map('trim', explode(',', $key));
-          $keys = [];
-          foreach ($vals as $val) {
-            $keys[] = ".blazy.{$id} {$val}";
+        if ($key === 'SEMANTIC_BG') {
+          if ($semantic) {
+            $id = str_replace('b-layout--', '', $id);
+            return ".b-semantic.b-layout-wrapper--{$id} .region--bg {{$value}}";
           }
-
-          $key = implode(', ', $keys);
-          return "{$key} {{$value}}";
         }
 
+        // Multiple selectors.
+        if (strpos($key, ',') !== FALSE) {
+          $vals = array_map('trim', explode(',', $key));
+          $sels = [];
+          foreach ($vals as $val) {
+            $sels[] = ".blazy.{$id} {$val}";
+          }
+
+          $selector = implode(', ', $sels);
+          return "{$selector} {{$value}}";
+        }
+
+        // Single selector.
         return $id == $key
           ? ".blazy.b-layout.{$key} {{$value}}"
           : ".blazy.{$id} {$key} {{$value}}";
@@ -198,6 +249,19 @@ class BlazyLayoutManager extends BlazyManager implements BlazyLayoutManagerInter
       $data,
       array_keys($data)
     ));
+
+    // UGC CSS requires hardened admin roles to enable the option at Blazy UI.
+    if ($this->config('use_custom_css') && $custom_css) {
+      $added_css = Css::sanitizeInline($custom_css);
+
+      if ($scope = $this->config('css_scope')) {
+        $added_css = Css::scope($added_css, $scope);
+      }
+
+      $css .= $added_css;
+    }
+
+    return $css;
   }
 
   /**
@@ -224,6 +288,21 @@ class BlazyLayoutManager extends BlazyManager implements BlazyLayoutManagerInter
 
     // Adminimal, Classy has no special media library theme, skip.
     return $libraries;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function semantic(array &$settings): void {
+    if (!empty($settings['semantic_layout'])) {
+      $settings['wrapper'] = 'ul';
+
+      if ($regions = $settings['regions'] ?? []) {
+        foreach ($regions as $key => $region) {
+          $settings['regions'][$key]['settings']['wrapper'] = 'li';
+        }
+      }
+    }
   }
 
 }

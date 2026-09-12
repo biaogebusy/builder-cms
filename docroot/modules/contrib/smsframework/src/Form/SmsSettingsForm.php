@@ -1,17 +1,17 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\sms\Entity\SmsGateway;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\TypedConfigManagerInterface;
-use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Routing\RequestContext;
+use Drupal\Core\Routing\RouteBuilderInterface;
+use Drupal\sms\Entity\SmsGateway;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -105,7 +105,7 @@ class SmsSettingsForm extends ConfigFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $verify = $form_state->getValue(['pages', 'verify']);
-    if (substr($verify, 0, 1) !== '/') {
+    if (\substr($verify, 0, 1) !== '/') {
       $form_state->setError($form['pages']['verify'], $this->t("Path must begin with a '/' character."));
     }
   }

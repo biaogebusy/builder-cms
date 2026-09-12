@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\Tests\taxonomy\Kernel;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
+/**
+ * Tests views contextual links on terms.
+ */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
+class TermContextualLinksTest extends TaxonomyTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'contextual',
+  ];
+
+  /**
+   * Tests contextual links.
+   */
+  public function testTermContextualLinks(): void {
+    $vocabulary = $this->createVocabulary();
+    $term = $this->createTerm($vocabulary);
+
+    $user = $this->drupalCreateUser([
+      'administer taxonomy',
+      'access contextual links',
+    ]);
+    $this->setCurrentUser($user);
+
+    $this->drupalGet('taxonomy/term/' . $term->id());
+    $this->assertSession()->elementExists('css', 'div[data-contextual-id^="taxonomy_term:taxonomy_term=' . $term->id() . ':"]');
+  }
+
+}

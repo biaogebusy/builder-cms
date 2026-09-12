@@ -145,10 +145,6 @@
   background-color: var(--gin-bg-layer2);
 }
 
-.gin--classic-toolbar .page-wrapper__node-edit-form .layout-region-node-secondary {
-  padding-block-start: var(--gin-toolbar-y-offset);
-}
-
 @media (min-width: 64em) {
   .gin--classic-toolbar table.sticky-header {
     margin-block-start: 0;

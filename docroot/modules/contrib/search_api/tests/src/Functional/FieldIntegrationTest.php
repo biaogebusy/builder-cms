@@ -37,6 +37,8 @@ class FieldIntegrationTest extends SearchApiBrowserTestBase {
 
     // Check that all the fields defined in the config file made it into the
     // index.
+    ksort($fields);
+    ksort($field_settings);
     $this->assertEquals(array_keys($fields), array_keys($field_settings));
 
     // Make sure that the fields have the same type.

@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -13,9 +13,6 @@ use Drupal\Core\Url;
  */
 final class SmsFrameworkSettingsTest extends SmsFrameworkBrowserTestBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $account = $this->drupalCreateUser([
@@ -32,7 +29,7 @@ final class SmsFrameworkSettingsTest extends SmsFrameworkBrowserTestBase {
     $edit['pages[verify]'] = '/' . $this->randomMachineName();
     $this->drupalGet(Url::fromRoute('sms.settings'));
     $this->submitForm($edit, 'Save configuration');
-    $this->assertSession()->responseContains(t('SMS settings saved.'));
+    $this->assertSession()->responseContains(\t('SMS settings saved.'));
   }
 
   /**
@@ -44,7 +41,7 @@ final class SmsFrameworkSettingsTest extends SmsFrameworkBrowserTestBase {
     $edit['pages[verify]'] = '/' . $this->randomMachineName();
     $this->drupalGet(Url::fromRoute('sms.settings'));
     $this->submitForm($edit, 'Save configuration');
-    $this->assertSession()->responseContains(t('SMS settings saved.'));
+    $this->assertSession()->responseContains(\t('SMS settings saved.'));
   }
 
   /**
@@ -55,7 +52,7 @@ final class SmsFrameworkSettingsTest extends SmsFrameworkBrowserTestBase {
     $edit['pages[verify]'] = $this->randomMachineName() . '/' . $this->randomMachineName();
     $this->drupalGet(Url::fromRoute('sms.settings'));
     $this->submitForm($edit, 'Save configuration');
-    $this->assertSession()->responseContains(t("Path must begin with a '/' character."));
+    $this->assertSession()->responseContains(\t("Path must begin with a '/' character."));
   }
 
 }

@@ -61,3 +61,10 @@ ctools.block_display_variant:
       label: 'Blocks'
       sequence:
         type: ctools.block_plugin.[id]
+
+block.settings.entity_view:*:
+  type: block_settings
+  mapping:
+    view_mode:
+      type: string
+      label: 'View mode'

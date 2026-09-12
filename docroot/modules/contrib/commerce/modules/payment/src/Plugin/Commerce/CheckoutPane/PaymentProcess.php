@@ -116,7 +116,7 @@ class PaymentProcess extends PaymentCheckoutPaneBase {
       // Hide the pane if the PaymentInformation pane has been disabled.
       return FALSE;
     }
-    if ($this->order->getBalance()->isZero() && $this->collectBillingProfileOnly()) {
+    if ($this->order->getBalance()?->isZero() && $this->collectBillingProfileOnly()) {
       // Payment is not needed because order is already paid, or it did not
       // opt-in to collect payment for free order.
       return FALSE;

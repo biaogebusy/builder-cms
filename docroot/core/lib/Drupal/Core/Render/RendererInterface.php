@@ -124,6 +124,15 @@ interface RendererInterface {
    * and this must also bubble from child to parent. Therefore,
    * \Drupal\Core\Render\BubbleableMetadata includes that data as well.
    *
+   * The first time RendererInterface::render() is called on an element tree,
+   * as each element in the tree is rendered, it is marked with a #printed flag
+   * and the rendered children of the element are cached. Subsequent calls to
+   * RendererInterface::render() will not traverse the child trees of elements
+   * again: they will just use the cached children. So if you want to hide an
+   * element, be sure to set element['#printed'] = TRUE before its parent
+   * tree is rendered for the first time, as it will have no effect on
+   * subsequent renderings of the parent tree.
+   *
    * The process of rendering an element is recursive unless the element defines
    * an implemented theme hook in #theme. During each call to
    * Renderer::render(), the outermost renderable array (also known as an
@@ -323,7 +332,7 @@ interface RendererInterface {
    *   (Internal use only.) Whether this is a recursive call or not. See
    *   ::renderRoot().
    *
-   * @return \Drupal\Component\Render\MarkupInterface
+   * @return \Drupal\Component\Render\MarkupInterface|string
    *   The rendered HTML.
    *
    * @throws \LogicException
@@ -340,7 +349,7 @@ interface RendererInterface {
    * @see \Drupal\Core\Render\AttachmentsResponseProcessorInterface::processAttachments()
    * @see \Drupal\Core\Render\RendererInterface::renderRoot()
    */
-  public function render(&$elements, $is_root_call = FALSE);
+  public function render(/* array */&$elements, $is_root_call = FALSE);
 
   /**
    * Checks whether a render context is active.

@@ -8,7 +8,7 @@
     attach(context) {
       // Trigger the "Apply" button when Enter is pressed in a code field.
       $(
-        once('coupon-redemption-code', 'input[name$="[code]"]', context),
+        once('coupon-redemption-code', 'input[name$="[code]"]', context)
       ).keydown((event) => {
         if (event.keyCode === 13) {
           // Prevent the browser default from being triggered.

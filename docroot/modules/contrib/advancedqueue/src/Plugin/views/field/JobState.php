@@ -5,6 +5,7 @@ namespace Drupal\advancedqueue\Plugin\views\field;
 use Drupal\advancedqueue\Job;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 
@@ -15,6 +16,7 @@ use Drupal\views\ResultRow;
  *
  * @ViewsField("advancedqueue_job_state")
  */
+#[ViewsField("advancedqueue_job_state")]
 class JobState extends FieldPluginBase {
 
   /**

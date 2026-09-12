@@ -11,38 +11,6 @@
  */
 
 /**
- * Respond to a lock being successfully set.
- *
- * @param string $entity_id
- *   The entity ID whose lock was released.
- * @param string $langcode
- *   The requested language.
- * @param string $form_op
- *   The form operation.
- * @param int $uid
- *   The user id to lock the entity for.
- * @param string $entity_type
- *   The entity type.
- */
-function hook_content_lock_locked(string $entity_id, string $langcode, string $form_op, int $uid, string $entity_type) {
-}
-
-/**
- * Respond to an entity's lock being released.
- *
- * @param string $entity_id
- *   The entity ID whose lock was released.
- * @param string $langcode
- *   The requested language.
- * @param string $form_op
- *   The form operation.
- * @param string $entity_type
- *   The entity type.
- */
-function hook_content_lock_release(string $entity_id, string $langcode, string $form_op, string $entity_type) {
-}
-
-/**
  * Determine whether an entity is lockable.
  *
  * Called from isLockable() which is in turn
@@ -70,7 +38,7 @@ function hook_content_lock_release(string $entity_id, string $langcode, string $
  *   the default return value) or FALSE if the entity may not be
  *   considered lockable.
  */
-function hook_content_lock_entity_lockable(\Drupal\Core\Entity\EntityInterface $entity, array $config, string $form_op = NULL): bool {
+function hook_content_lock_entity_lockable(\Drupal\Core\Entity\EntityInterface $entity, array $config, ?string $form_op = NULL): bool {
   if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'article' && $entity->id() === 1) {
     return FALSE;
   }

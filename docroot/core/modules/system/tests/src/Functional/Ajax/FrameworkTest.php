@@ -13,12 +13,14 @@ use Drupal\Core\Ajax\SettingsCommand;
 use Drupal\Core\Asset\AttachedAssets;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Performs tests on AJAX framework functions.
- *
- * @group Ajax
  */
+#[Group('Ajax')]
+#[RunTestsInSeparateProcesses]
 class FrameworkTest extends BrowserTestBase {
 
   /**
@@ -51,7 +53,6 @@ class FrameworkTest extends BrowserTestBase {
     $asset_resolver = \Drupal::service('asset.resolver');
     $css_collection_renderer = \Drupal::service('asset.css.collection_renderer');
     $js_collection_renderer = \Drupal::service('asset.js.collection_renderer');
-    $renderer = \Drupal::service('renderer');
     $build['#attached']['library'][] = 'ajax_test/order-css-command';
     $assets = AttachedAssets::createFromRenderArray($build);
     $css_render_array = $css_collection_renderer->render($asset_resolver->getCssAssets($assets, FALSE, \Drupal::languageManager()->getCurrentLanguage()));

@@ -1,12 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\FunctionalJavascript;
 
 /**
  * Tests the Blazy without lazyloader script using PhantomJS, or Chromedriver.
- *
- * @group blazy
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class BlazyNativeJavaScriptTest extends BlazyJavaScriptTestBase {
 
   /**
@@ -26,6 +38,7 @@ class BlazyNativeJavaScriptTest extends BlazyJavaScriptTestBase {
    * Test the Blazy element from loading to loaded states.
    */
   public function testFormatterDisplay() {
+    $settings = $data = [];
     $settings['ratio'] = '';
     $settings['image_style'] = '';
 
@@ -38,7 +51,7 @@ class BlazyNativeJavaScriptTest extends BlazyJavaScriptTestBase {
     $this->drupalGet('node/' . $this->entity->id());
 
     // Ensures no data-src is printed. Except for Blur, BG, Video.
-    // @phpstan-ignore-next-line
+    /** @phpstan-ignore-next-line */
     $result = $this->assertSession()->waitForElement('css', '[data-src]');
     $this->assertEmpty($result);
   }

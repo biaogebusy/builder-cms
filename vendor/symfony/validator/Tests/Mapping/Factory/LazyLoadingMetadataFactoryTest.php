@@ -15,12 +15,17 @@ use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Validator\Constraints\Callback;
+use Symfony\Component\Validator\Constraints\DisableAutoMapping;
+use Symfony\Component\Validator\Constraints\EnableAutoMapping;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Traverse;
 use Symfony\Component\Validator\Exception\NoSuchMetadataException;
+use Symfony\Component\Validator\Mapping\AutoMappingStrategy;
 use Symfony\Component\Validator\Mapping\ClassMetadata;
 use Symfony\Component\Validator\Mapping\Factory\LazyLoadingMetadataFactory;
 use Symfony\Component\Validator\Mapping\Loader\LoaderInterface;
 use Symfony\Component\Validator\Mapping\Loader\StaticMethodLoader;
+use Symfony\Component\Validator\Mapping\TraversalStrategy;
 use Symfony\Component\Validator\Tests\Fixtures\ConstraintA;
 use Symfony\Component\Validator\Tests\Fixtures\NestedAttribute\Entity;
 use Symfony\Component\Validator\Tests\Fixtures\NestedAttribute\EntityParent;
@@ -39,8 +44,8 @@ class LazyLoadingMetadataFactoryTest extends TestCase
         $metadata = $factory->getMetadataFor(self::PARENT_CLASS);
 
         $constraints = [
-            new ConstraintA(['groups' => ['Default', 'EntityParent']]),
-            new ConstraintA(['groups' => ['Default', 'EntityInterfaceA', 'EntityParent']]),
+            new ConstraintA(groups: ['Default', 'EntityParent']),
+            new ConstraintA(groups: ['Default', 'EntityInterfaceA', 'EntityParent']),
         ];
 
         $this->assertEquals($constraints, $metadata->getConstraints());
@@ -52,34 +57,139 @@ class LazyLoadingMetadataFactoryTest extends TestCase
         $metadata = $factory->getMetadataFor(self::CLASS_NAME);
 
         $constraints = [
-            new ConstraintA(['groups' => [
+            new ConstraintA(groups: [
                 'Default',
                 'Entity',
-            ]]),
-            new ConstraintA(['groups' => [
+            ]),
+            new ConstraintA(groups: [
                 'Default',
                 'EntityParent',
                 'Entity',
-            ]]),
-            new ConstraintA(['groups' => [
+            ]),
+            new ConstraintA(groups: [
                 'Default',
                 'EntityInterfaceA',
                 'EntityParent',
                 'Entity',
-            ]]),
-            new ConstraintA(['groups' => [
+            ]),
+            new ConstraintA(groups: [
                 'Default',
                 'EntityInterfaceB',
                 'Entity',
-            ]]),
-            new ConstraintA(['groups' => [
+            ]),
+            new ConstraintA(groups: [
                 'Default',
                 'EntityParentInterface',
                 'Entity',
-            ]]),
+            ]),
         ];
 
         $this->assertEquals($constraints, $metadata->getConstraints());
+    }
+
+    public function testMergeParentTraversalStrategy()
+    {
+        $loader = new class implements LoaderInterface {
+            public function loadClassMetadata(ClassMetadata $metadata): bool
+            {
+                if (EntityParent::class === $metadata->getClassName()) {
+                    $metadata->addConstraint(new Traverse(false));
+                }
+
+                return true;
+            }
+        };
+
+        $factory = new LazyLoadingMetadataFactory($loader);
+        $metadata = $factory->getMetadataFor(self::CLASS_NAME);
+
+        $this->assertSame(TraversalStrategy::NONE, $metadata->getTraversalStrategy());
+    }
+
+    public function testLoadersSeeAutoMappingStrategyOfParentProperties()
+    {
+        $loader = new class implements LoaderInterface {
+            public int $strategy = AutoMappingStrategy::NONE;
+
+            public function loadClassMetadata(ClassMetadata $metadata): bool
+            {
+                if (EntityParent::class === $metadata->getClassName()) {
+                    $metadata->addPropertyConstraint('firstName', new DisableAutoMapping());
+
+                    return true;
+                }
+
+                foreach ($metadata->getPropertyMetadata('firstName') as $propertyMetadata) {
+                    $this->strategy = $propertyMetadata->getAutoMappingStrategy();
+                }
+
+                return true;
+            }
+        };
+
+        $factory = new LazyLoadingMetadataFactory($loader);
+        $factory->getMetadataFor(self::CLASS_NAME);
+
+        $this->assertSame(AutoMappingStrategy::DISABLED, $loader->strategy);
+    }
+
+    public function testInheritedAutoMappingStrategiesKeepTheOrderOfProperties()
+    {
+        $loader = new class implements LoaderInterface {
+            public function loadClassMetadata(ClassMetadata $metadata): bool
+            {
+                if (EntityParent::class === $metadata->getClassName()) {
+                    $metadata->addPropertyConstraint('firstName', new DisableAutoMapping());
+                    $metadata->addPropertyConstraint('firstName', new NotBlank());
+                } elseif (Entity::class === $metadata->getClassName()) {
+                    $metadata->addPropertyConstraint('lastName', new NotBlank());
+                    $metadata->addPropertyConstraint('reference', new NotBlank());
+                }
+
+                return true;
+            }
+        };
+
+        $factory = new LazyLoadingMetadataFactory($loader);
+        $metadata = $factory->getMetadataFor(self::CLASS_NAME);
+
+        $this->assertSame(['lastName', 'reference', 'firstName'], $metadata->getConstrainedProperties());
+
+        $firstNameMetadata = $metadata->getPropertyMetadata('firstName');
+        $this->assertCount(1, $firstNameMetadata);
+        $this->assertSame(self::PARENT_CLASS, $firstNameMetadata[0]->getClassName());
+        $this->assertSame(AutoMappingStrategy::DISABLED, $firstNameMetadata[0]->getAutoMappingStrategy());
+    }
+
+    public function testInheritedAutoMappingStrategiesAreKeptWhenLoadersMapTheProperty()
+    {
+        $loader = new class implements LoaderInterface {
+            public function loadClassMetadata(ClassMetadata $metadata): bool
+            {
+                if (EntityParent::class === $metadata->getClassName()) {
+                    $metadata->addPropertyConstraint('firstName', new EnableAutoMapping());
+
+                    return true;
+                }
+
+                foreach ($metadata->getPropertyMetadata('firstName') as $propertyMetadata) {
+                    if (AutoMappingStrategy::ENABLED === $propertyMetadata->getAutoMappingStrategy()) {
+                        $metadata->addPropertyConstraint('firstName', new NotBlank());
+                    }
+                }
+
+                return true;
+            }
+        };
+
+        $factory = new LazyLoadingMetadataFactory($loader);
+        $metadata = $factory->getMetadataFor(self::CLASS_NAME);
+
+        $firstNameMetadata = $metadata->getPropertyMetadata('firstName');
+        $this->assertCount(2, $firstNameMetadata);
+        $this->assertSame(self::CLASS_NAME, $firstNameMetadata[0]->getClassName());
+        $this->assertCount(1, $firstNameMetadata[0]->getConstraints());
+        $this->assertSame(AutoMappingStrategy::ENABLED, $firstNameMetadata[0]->getAutoMappingStrategy());
     }
 
     public function testCachedMetadata()
@@ -88,8 +198,8 @@ class LazyLoadingMetadataFactoryTest extends TestCase
         $factory = new LazyLoadingMetadataFactory(new TestLoader(), $cache);
 
         $expectedConstraints = [
-            new ConstraintA(['groups' => ['Default', 'EntityParent']]),
-            new ConstraintA(['groups' => ['Default', 'EntityInterfaceA', 'EntityParent']]),
+            new ConstraintA(groups: ['Default', 'EntityParent']),
+            new ConstraintA(groups: ['Default', 'EntityInterfaceA', 'EntityParent']),
         ];
 
         $metadata = $factory->getMetadataFor(self::PARENT_CLASS);
@@ -110,13 +220,16 @@ class LazyLoadingMetadataFactoryTest extends TestCase
 
     public function testNonClassNameStringValues()
     {
-        $this->expectException(NoSuchMetadataException::class);
         $testedValue = 'error@example.com';
         $cache = $this->createMock(CacheItemPoolInterface::class);
-        $factory = new LazyLoadingMetadataFactory(new StaticMethodLoader(), $cache);
         $cache
             ->expects($this->never())
             ->method('getItem');
+
+        $factory = new LazyLoadingMetadataFactory(new StaticMethodLoader(), $cache);
+
+        $this->expectException(NoSuchMetadataException::class);
+
         $factory->getMetadataFor($testedValue);
     }
 

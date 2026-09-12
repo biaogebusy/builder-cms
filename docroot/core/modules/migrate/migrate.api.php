@@ -47,8 +47,8 @@ use Drupal\migrate\Row;
  * @section sec_source Migrate API source plugins
  * Migrate API source plugins implement
  * \Drupal\migrate\Plugin\MigrateSourceInterface and usually extend
- * \Drupal\migrate\Plugin\migrate\source\SourcePluginBase. They are annotated
- * with \Drupal\migrate\Annotation\MigrateSource annotation and must be in
+ * \Drupal\migrate\Plugin\migrate\source\SourcePluginBase. They have the
+ * \Drupal\migrate\Attribute\MigrateSource attribute and must be in
  * namespace subdirectory 'Plugin\migrate\source' under the namespace of the
  * module that defines them. Migrate API source plugins are managed by the
  * \Drupal\migrate\Plugin\MigrateSourcePluginManager class.
@@ -152,11 +152,11 @@ use Drupal\migrate\Row;
  *
  * @ingroup migration
  */
-function hook_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+function hook_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration): void {
   if ($migration->id() == 'd6_filter_formats') {
     $value = $source->getDatabase()->query('SELECT [value] FROM {variable} WHERE [name] = :name', [':name' => 'my_module_filter_foo_' . $row->getSourceProperty('format')])->fetchField();
     if ($value) {
-      $row->setSourceProperty('settings:my_module:foo', unserialize($value));
+      $row->setSourceProperty('settings:my_module:foo', unserialize($value, ['allowed_classes' => FALSE]));
     }
   }
 }
@@ -179,7 +179,7 @@ function hook_migrate_prepare_row(Row $row, MigrateSourceInterface $source, Migr
 function hook_migrate_MIGRATION_ID_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
   $value = $source->getDatabase()->query('SELECT [value] FROM {variable} WHERE [name] = :name', [':name' => 'my_module_filter_foo_' . $row->getSourceProperty('format')])->fetchField();
   if ($value) {
-    $row->setSourceProperty('settings:my_module:foo', unserialize($value));
+    $row->setSourceProperty('settings:my_module:foo', unserialize($value, ['allowed_classes' => FALSE]));
   }
 }
 

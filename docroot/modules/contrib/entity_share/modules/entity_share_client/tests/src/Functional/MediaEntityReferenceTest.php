@@ -21,6 +21,21 @@ class MediaEntityReferenceTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'file',
+    'image',
+    'media',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+    'jsonapi_extras',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'node';
 
   /**
@@ -34,9 +49,7 @@ class MediaEntityReferenceTest extends EntityShareClientFunctionalTestBase {
   protected static $entityLangcode = 'en';
 
   /**
-   * An array of data to generate physical files.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $filesData = [
     'file_audio' => [

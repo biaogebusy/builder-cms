@@ -12,6 +12,9 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Entity duplicate controller.
+ */
 class EntityDuplicateController implements ContainerInjectionInterface {
 
   use StringTranslationTrait;

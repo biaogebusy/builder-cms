@@ -2,6 +2,7 @@
 
 namespace Drupal\entity_browser\Controllers;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 
@@ -38,10 +39,20 @@ class EntityBrowserListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * @todo Make the $cacheability parameter required and drop the null-safe
+   *   handling once we require at least drupal:11.3.0.
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
+  protected function getDefaultOperations(EntityInterface $entity, ?CacheableMetadata $cacheability = NULL) {
+    $operations = [];
 
-    if ($entity->access('update')) {
+    // The $cacheability parameter was added to the parent method in
+    // drupal:11.3.0 (and is required as of drupal:12.0.0); it is NULL on the
+    // older core versions we still support, so every access result is added
+    // through the null-safe operator.
+    $update_access = $entity->access('update', NULL, TRUE);
+    $cacheability?->addCacheableDependency($update_access);
+    if ($update_access->isAllowed()) {
       $operations['edit'] = [
         'title' => $this->t('Edit'),
         'url' => $entity->toUrl('edit-form'),
@@ -53,7 +64,9 @@ class EntityBrowserListBuilder extends EntityListBuilder {
       'url' => $entity->toUrl('edit-widgets'),
     ];
 
-    if ($entity->access('delete')) {
+    $delete_access = $entity->access('delete', NULL, TRUE);
+    $cacheability?->addCacheableDependency($delete_access);
+    if ($delete_access->isAllowed()) {
       $operations['delete'] = [
         'title' => $this->t('Delete'),
         'url' => $entity->toUrl('delete-form'),

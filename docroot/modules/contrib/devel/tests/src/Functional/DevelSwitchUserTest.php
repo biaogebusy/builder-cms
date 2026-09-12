@@ -4,12 +4,12 @@ namespace Drupal\Tests\devel\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Session\AccountInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests switch user.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelSwitchUserTest extends DevelBrowserTestBase {
 
   /**

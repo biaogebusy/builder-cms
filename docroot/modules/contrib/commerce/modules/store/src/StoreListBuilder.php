@@ -3,6 +3,7 @@
 namespace Drupal\commerce_store;
 
 use Drupal\commerce_store\Entity\StoreInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Link;
@@ -40,10 +41,16 @@ class StoreListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $cacheability = func_num_args() > 1 ? func_get_arg(1) : NULL;
+    $operations = parent::getDefaultOperations($entity, $cacheability);
     assert($entity instanceof StoreInterface);
-    if ($entity->access('update')) {
+
+    $access = $entity->access('update', NULL, TRUE);
+    if ($cacheability instanceof CacheableMetadata) {
+      $cacheability->addCacheableDependency($access);
+    }
+    if ($access->isAllowed()) {
       if (!$entity->isPublished() &&
         $entity->hasLinkTemplate('enable-form')) {
         $operations['enable'] = [

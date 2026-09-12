@@ -5,22 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
 use Drupal\Core\Database\Database;
-use Drupal\Tests\migrate_drupal\Traits\CreateTestContentEntitiesTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore drupalmysqldriverdatabasemysql
-
 /**
  * Test the credential form for both Drupal 6 and Drupal 7 sources.
  *
  * The credential form is tested with incorrect credentials, correct
  * credentials, and incorrect file paths.
- *
- * @group migrate_drupal_ui
- * @group #slow
  */
+#[Group('migrate_drupal_ui')]
+#[Group('#slow')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class CredentialFormTest extends MigrateUpgradeTestBase {
-
-  use CreateTestContentEntitiesTrait;
 
   /**
    * {@inheritdoc}
@@ -29,9 +30,8 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
 
   /**
    * Test the credential form.
-   *
-   * @dataProvider providerCredentialForm
    */
+  #[DataProvider('providerCredentialForm')]
   public function testCredentialFrom($path_to_database): void {
     $this->loadFixture($this->getModulePath('migrate_drupal') . $path_to_database);
     $session = $this->assertSession();
@@ -111,28 +111,28 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getAvailablePaths() {
+  protected function getAvailablePaths(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCounts() {
+  protected function getEntityCounts(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCountsIncremental() {
+  protected function getEntityCountsIncremental(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getMissingPaths() {
+  protected function getMissingPaths(): array {
     return [];
   }
 
@@ -147,7 +147,7 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
    *
    * @see \Drupal\migrate_drupal_ui\Form\CredentialForm
    */
-  protected function getDestinationSiteCredentials() {
+  protected function getDestinationSiteCredentials(): array {
     $connection_options = \Drupal::database()->getConnectionOptions();
     $version = $this->getLegacyDrupalVersion($this->sourceDatabase);
     $driver = $connection_options['driver'];

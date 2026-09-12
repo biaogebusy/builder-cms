@@ -8,7 +8,8 @@ use Composer\Util\Filesystem;
 use Drupal\Tests\Composer\Plugin\Scaffold\AssertUtilsTrait;
 use Drupal\Tests\Composer\Plugin\Scaffold\Fixtures;
 use Drupal\Tests\Composer\Plugin\Scaffold\ScaffoldTestResult;
-use Drupal\Tests\PhpUnitCompatibilityTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,12 +17,10 @@ use PHPUnit\Framework\TestCase;
  *
  * The purpose of this test file is to exercise all of the different kinds of
  * scaffold operations: copy, symlinks, skips and so on.
- *
- * @group Scaffold
  */
+#[Group('Scaffold')]
 class ScaffoldTest extends TestCase {
   use AssertUtilsTrait;
-  use PhpUnitCompatibilityTrait;
 
   /**
    * The root of this project.
@@ -112,7 +111,7 @@ class ScaffoldTest extends TestCase {
    * @param bool $relocated_docroot
    *   Whether the named fixture has a relocated document root.
    */
-  public function scaffoldSut($fixture_name, $is_link = FALSE, $relocated_docroot = TRUE) {
+  public function scaffoldSut($fixture_name, $is_link = FALSE, $relocated_docroot = TRUE): ScaffoldTestResult {
     $sut = $this->createSut($fixture_name, ['SYMLINK' => $is_link ? 'true' : 'false']);
     // Run composer install to get the dependencies we need to test.
     $this->fixtures->runComposer("install --no-ansi --no-scripts --no-plugins", $sut);
@@ -137,7 +136,7 @@ class ScaffoldTest extends TestCase {
   /**
    * Data provider for testScaffoldWithExpectedException.
    */
-  public static function scaffoldExpectedExceptionTestValues() {
+  public static function scaffoldExpectedExceptionTestValues(): array {
     return [
       [
         'drupal-drupal-missing-scaffold-file',
@@ -152,8 +151,8 @@ class ScaffoldTest extends TestCase {
       ],
 
       [
-        'project-with-illegal-dir-scaffold',
-        'Scaffold file assets in package fixtures/project-with-illegal-dir-scaffold is a directory; only files may be scaffolded',
+        'project-with-invalid-dir-scaffold',
+        'Scaffold file assets in package fixtures/project-with-invalid-dir-scaffold is a directory; only files may be scaffolded',
         FALSE,
       ],
     ];
@@ -169,9 +168,8 @@ class ScaffoldTest extends TestCase {
    *   The expected exception message.
    * @param bool $is_link
    *   Whether or not symlinking should be used.
-   *
-   * @dataProvider scaffoldExpectedExceptionTestValues
    */
+  #[DataProvider('scaffoldExpectedExceptionTestValues')]
   public function testScaffoldWithExpectedException($fixture_name, $expected_exception_message, $is_link): void {
     // Test scaffold. Expect an error.
     $this->expectException(\Exception::class);
@@ -200,7 +198,10 @@ class ScaffoldTest extends TestCase {
     $this->assertAutoloadFileCorrect($result->docroot());
   }
 
-  public static function scaffoldOverridingSettingsExcludingHtaccessValues() {
+  /**
+   * Provides test values for testScaffoldOverridingSettingsExcludingHtaccess.
+   */
+  public static function scaffoldOverridingSettingsExcludingHtaccessValues(): array {
     return [
       [
         'drupal-composer-drupal-project',
@@ -226,9 +227,8 @@ class ScaffoldTest extends TestCase {
    *   Whether to use symlinks for 'replace' operations.
    * @param bool $relocated_docroot
    *   Whether the named fixture has a relocated document root.
-   *
-   * @dataProvider scaffoldOverridingSettingsExcludingHtaccessValues
    */
+  #[DataProvider('scaffoldOverridingSettingsExcludingHtaccessValues')]
   public function testScaffoldOverridingSettingsExcludingHtaccess($fixture_name, $is_link, $relocated_docroot): void {
     $result = $this->scaffoldSut($fixture_name, $is_link, $relocated_docroot);
 
@@ -286,7 +286,7 @@ include __DIR__ . "/settings-custom-additions.php";',
    * @param bool $is_link
    *   Whether or not symlinking should be used.
    */
-  protected static function scaffoldAppendTestValuesToPermute($is_link) {
+  protected static function scaffoldAppendTestValuesToPermute($is_link): array {
     return [
       [
         'drupal-drupal-test-append',
@@ -338,12 +338,12 @@ include __DIR__ . "/settings-custom-additions.php";',
    * @param string $scaffold_file_path
    *   Relative path to the scaffold file target we are testing.
    * @param string $scaffold_file_contents
-   *   A string expected to be contained inside the scaffold file we are testing.
+   *   A string expected to be contained inside the scaffold file we are
+   *   testing.
    * @param string $scaffoldOutputContains
    *   A string expected to be contained in the scaffold command output.
-   *
-   * @dataProvider scaffoldAppendTestValues
    */
+  #[DataProvider('scaffoldAppendTestValues')]
   public function testDrupalDrupalFileWasAppended(string $fixture_name, bool $is_link, string $scaffold_file_path, string $scaffold_file_contents, string $scaffoldOutputContains): void {
     $result = $this->scaffoldSut($fixture_name, $is_link, FALSE);
     $this->assertStringContainsString($scaffoldOutputContains, $result->scaffoldOutput());
@@ -408,7 +408,6 @@ include __DIR__ . "/settings-custom-additions.php";',
     $this->assertScaffoldedFile($docroot . '/sites/example.sites.php', $is_link, 'Test version of example.sites.php from drupal/core.');
     $this->assertScaffoldedFile($docroot . '/index.php', $is_link, 'Test version of index.php from drupal/core.');
     $this->assertScaffoldedFile($docroot . '/update.php', $is_link, 'Test version of update.php from drupal/core.');
-    $this->assertScaffoldedFile($docroot . '/web.config', $is_link, 'Test version of web.config from drupal/core.');
   }
 
   /**

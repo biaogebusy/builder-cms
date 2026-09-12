@@ -1,0 +1,11 @@
+name: 'Webform Scheduled Email Exception Test'
+type: module
+description: 'Throwing mail backend + fixture to test scheduled-email cron exception handling.'
+package: Testing
+dependencies:
+  - webform:webform_scheduled_email
+
+# Information added by Drupal.org packaging script on 2026-07-07
+version: '6.3.0'
+project: 'webform'
+datestamp: 1783438707

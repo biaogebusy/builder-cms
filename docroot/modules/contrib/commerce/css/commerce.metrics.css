@@ -112,4 +112,8 @@
     -ms-flex-pack: justify;
     justify-content: space-between;
   }
+
+  .metrics__tables .layer-wrapper.gin-layer-wrapper {
+    margin-block-start: 0;
+  }
 }

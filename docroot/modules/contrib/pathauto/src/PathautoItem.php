@@ -34,6 +34,7 @@ class PathautoItem extends PathItem {
       parent::postSave($update);
     }
     $this->get('pathauto')->persist();
+    return FALSE;
   }
 
   /**

@@ -6,12 +6,14 @@ namespace Drupal\Tests\system\Functional\Cache;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the 'session.exists' cache context service.
- *
- * @group Cache
  */
+#[Group('Cache')]
+#[RunTestsInSeparateProcesses]
 class SessionExistsCacheContextTest extends BrowserTestBase {
 
   /**

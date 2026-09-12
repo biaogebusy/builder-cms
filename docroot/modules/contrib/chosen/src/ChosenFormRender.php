@@ -3,10 +3,16 @@
 namespace Drupal\chosen;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\field\Entity\FieldConfig;
 
+/**
+ * Provides rendering enhancements for the Chosen module.
+ *
+ * This class implements TrustedCallbackInterface to modify the rendering
+ * behavior of select elements in Drupal forms.
+ */
 class ChosenFormRender implements TrustedCallbackInterface {
 
   /**
@@ -46,6 +52,18 @@ class ChosenFormRender implements TrustedCallbackInterface {
       if (!empty($element['#chosen'])) {
         // Element has opted-in for Chosen, ensure the library gets added.
         $element['#attributes']['class'][] = 'chosen-enable';
+
+        if (!empty($element['#chosen_placeholder'])) {
+          $element['#attributes']['data-placeholder'] = $element['#chosen_placeholder'];
+        }
+
+        if (!empty($element['#no_results_text'])) {
+          $element['#attributes']['data-no_results_text'] = $element['#no_results_text'];
+        }
+
+        if (isset($element['#search_contains']) && (int) $element['#search_contains'] !== 0) {
+          $element['#attributes']['data-search_contains'] = (int) $element['#search_contains'];
+        }
       }
       else {
         $element['#attributes']['class'][] = 'chosen-disable';
@@ -64,31 +82,41 @@ class ChosenFormRender implements TrustedCallbackInterface {
     }
     else {
       // Neither the #chosen property was set, nor any chosen classes found.
-      // This element still might match the site-wide critera, so add the library.
+      // This element still might match the site-wide criteria, so add the
+      // library.
     }
 
     if (isset($element['#field_name']) && !empty($element['#multiple'])) {
       // Remove '_none' from multi-select options.
       unset($element['#options']['_none']);
 
-      if (isset($element['#entity_type']) && isset($element['#bundle']) && isset($element['#field_name'])) {
+      if (isset($element['#entity_type'], $element['#field_name'])) {
         // Set data-cardinality for fields that aren't unlimited.
         $field = NULL;
-        $field_config = FieldConfig::loadByName($element['#entity_type'], $element['#bundle'], $element['#field_name']);
-        if ($field_config) {
+
+        if (isset($element['#bundle'])) {
+          $field_config = FieldConfig::loadByName($element['#entity_type'], $element['#bundle'], $element['#field_name']);
+          if ($field_config) {
             $field = $field_config->getFieldStorageDefinition();
-        }
-        else {
-          /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
-          $entity_field_manager = \Drupal::service('entity_field.manager');
-          $fields = $entity_field_manager->getFieldDefinitions($element['#entity_type'], $element['#bundle']);
-          if (isset($fields[$element['#field_name']])) {
-            $field = $fields[$element['#field_name']]->getFieldStorageDefinition();
           }
         }
+
+        if (!$field) {
+          /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
+          $entity_field_manager = \Drupal::service('entity_field.manager');
+          $bundle = $element['#bundle'] ?? $element['#entity_type'];
+
+          if ($bundle) {
+            $fields = $entity_field_manager->getFieldDefinitions($element['#entity_type'], $bundle);
+            if (isset($fields[$element['#field_name']])) {
+              $field = $fields[$element['#field_name']]->getFieldStorageDefinition();
+            }
+          }
+        }
+
         $cardinality = ($field instanceof FieldStorageDefinitionInterface) ? $field->getCardinality() : NULL;
 
-        if ($cardinality != FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED && $cardinality > 1) {
+        if ($cardinality !== NULL && $cardinality != FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED && $cardinality > 1) {
           $element['#attributes']['data-cardinality'] = $cardinality;
         }
       }
@@ -139,6 +167,5 @@ class ChosenFormRender implements TrustedCallbackInterface {
     }
     return $element;
   }
-
 
 }

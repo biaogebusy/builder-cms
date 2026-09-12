@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+@media (min-width: 61rem) {
+  .layout-region--main,
+  .layout-region--footer,
+  .layout-region--node-main,
+  .layout-region--node-footer {
+    /* @todo Remove the `!important` once https://www.drupal.org/project/drupal/issues/1945262 is released. */
+    width: 100% !important;
+    /*overflow: hidden;*/
+  }
+}
+
+@media screen and (min-width: 61rem) {
+  body:not(.ck-fullscreen-overlay) .layout-region--main .layout-region__content,
+  body:not(.ck-fullscreen-overlay) .layout-region--footer .layout-region__content,
+  body:not(.ck-fullscreen-overlay) .layout-region--node-main .layout-region__content,
+  body:not(.ck-fullscreen-overlay) .layout-region--node-footer .layout-region__content {
+    max-width: none !important;
+  }
+}
+
+.layout-node-form {
+  display: grid;
+  grid-template-columns: 3fr minmax(22.5rem, 1fr);
+  gap: var(--space-l);
+}

@@ -6,18 +6,19 @@ namespace Drupal\Tests\Core\Form;
 
 use Drupal\Core\Form\FormStateValuesTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Form\FormStateValuesTrait
- *
- * @group Form
+ * Tests Drupal\Core\Form\FormStateValuesTrait.
  */
+#[CoversClass(FormStateValuesTrait::class)]
+#[Group('Form')]
 class FormStateValuesTraitTest extends UnitTestCase {
 
   /**
    * Tests that setting the value for an element adds to the values.
-   *
-   * @covers ::setValueForElement
    */
   public function testSetValueForElement(): void {
     $element = [
@@ -39,10 +40,9 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getValue
-   *
-   * @dataProvider providerGetValue
+   * Tests get value.
    */
+  #[DataProvider('providerGetValue')]
   public function testGetValue($key, $expected, $default = NULL): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'foo' => 'one',
@@ -62,7 +62,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The expected value (mixed).
    *   - The default value (mixed).
    */
-  public static function providerGetValue() {
+  public static function providerGetValue(): array {
     $data = [];
     $data[] = [
       'foo', 'one',
@@ -89,7 +89,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getValue
+   * Tests get value modify return.
    */
   public function testGetValueModifyReturn(): void {
     $initial_values = $values = [
@@ -109,10 +109,9 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setValue
-   *
-   * @dataProvider providerSetValue
+   * Tests set value.
    */
+  #[DataProvider('providerSetValue')]
   public function testSetValue($key, $value, $expected): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'bar' => 'wrong',
@@ -130,7 +129,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The new value to set (mixed).
    *   - The expected form state values after setting the new value (mixed[]).
    */
-  public static function providerSetValue() {
+  public static function providerSetValue(): array {
     $data = [];
     $data[] = [
       'foo', 'one', ['bar' => 'wrong', 'foo' => 'one'],
@@ -145,10 +144,9 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::hasValue
-   *
-   * @dataProvider providerHasValue
+   * Tests has value.
    */
+  #[DataProvider('providerHasValue')]
   public function testHasValue($key, $expected): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'foo' => 'one',
@@ -170,7 +168,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The key to check for in the form state (string)
    *   - Whether the form state has an item with that key (bool).
    */
-  public static function providerHasValue() {
+  public static function providerHasValue(): array {
     $data = [];
     $data[] = [
       'foo', TRUE,
@@ -194,10 +192,9 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isValueEmpty
-   *
-   * @dataProvider providerIsValueEmpty
+   * Tests is value empty.
    */
+  #[DataProvider('providerIsValueEmpty')]
   public function testIsValueEmpty($key, $expected): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'foo' => 'one',
@@ -219,7 +216,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The key to check for in the form state (string)
    *   - Whether the value is empty or not (bool).
    */
-  public static function providerIsValueEmpty() {
+  public static function providerIsValueEmpty(): array {
     $data = [];
     $data[] = [
       'foo', FALSE,
@@ -244,6 +241,9 @@ class FormStateValuesTraitTest extends UnitTestCase {
 
 }
 
+/**
+ * Stub class with trait for testing.
+ */
 class FormStateValuesTraitStub {
 
   use FormStateValuesTrait;

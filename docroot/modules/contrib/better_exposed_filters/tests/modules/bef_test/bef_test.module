@@ -14,8 +14,7 @@ function bef_test_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     // Main module help for the bef_test module.
     case 'help.page.bef_test':
-      $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output = '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('Test module for Better Exposed Filters') . '</p>';
       return $output;
 

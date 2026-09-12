@@ -3,6 +3,7 @@
 namespace Drupal\ai\Utility;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\Traits\File\FileSystemTrait;
 use Yethee\Tiktoken\Encoder;
 use Yethee\Tiktoken\EncoderProvider;
 
@@ -10,6 +11,8 @@ use Yethee\Tiktoken\EncoderProvider;
  * The tokenizer class wrapper for Tik-Token PHP.
  */
 class Tokenizer implements TokenizerInterface {
+
+  use FileSystemTrait;
 
   /**
    * The encoder.
@@ -35,6 +38,8 @@ class Tokenizer implements TokenizerInterface {
     protected AiProviderPluginManager $aiProvider,
   ) {
     $this->encoderProvider = new EncoderProvider();
+    $temp_directory = $this->getFileSystem()->getTempDirectory();
+    $this->encoderProvider->setVocabCache($temp_directory);
   }
 
   /**

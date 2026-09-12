@@ -2,35 +2,42 @@
 
 /**
  * @file
- * The API for comparing project translation status with available translation.
  */
 
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Utility\ProjectInfo;
+use Drupal\locale\LocaleDefaultOptions;
+use Drupal\locale\LocaleFetch;
+use Drupal\locale\LocaleProjectChecker;
+use Drupal\locale\LocaleProjectRepository;
 
 /**
  * Load common APIs.
  */
-// @todo Combine functions differently in files to avoid unnecessary includes.
-// Follow-up issue: https://www.drupal.org/node/1834298.
-require_once __DIR__ . '/locale.translation.inc';
 
 /**
  * Clear the project data table.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleProjectRepository::class)->deleteAll()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
-function locale_translation_flush_projects() {
-  \Drupal::service('locale.project')->deleteAll();
+function locale_translation_flush_projects(): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleProjectRepository::class)->deleteAll() instead. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
+  \Drupal::service(LocaleProjectRepository::class)->deleteAll();
 }
 
 /**
  * Builds list of projects and stores the result in the database.
  *
- * The project data is based on the project list supplied by the Update module.
- * Only the properties required by Locale module is included and additional
- * (custom) modules and translation server data is added.
+ * The project data is based on the project list supplied by the Update Status
+ * module. Only the properties required by Locale module is included and
+ * additional (custom) modules and translation server data is added.
  *
- * In case the Update module is disabled this function will return an empty
- * array.
+ * In case the Update Status module is disabled this function will return an
+ * empty array.
  *
  * @return array
  *   Array of project data:
@@ -38,55 +45,18 @@ function locale_translation_flush_projects() {
  *   - "project_type": Project type, e.g. 'module', 'theme'.
  *   - "core": Core release version, e.g. 8.x
  *   - "version": Project release version, e.g. 8.x-1.0
- *     See http://drupalcode.org/project/drupalorg.git/blob/refs/heads/7.x-3.x:/drupalorg_project/plugins/release_packager/DrupalorgProjectPackageRelease.class.php#l219
- *     for how the version strings are created.
  *   - "server_pattern": Translation server po file pattern.
  *   - "status": Project status, 1 = enabled.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleProjectRepository::class)->buildProjects()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
 function locale_translation_build_projects() {
-  // Get the project list based on .info.yml files.
-  $projects = locale_translation_project_list();
-
-  // Mark all previous projects as disabled and store new project data.
-  \Drupal::service('locale.project')->disableAll();
-
-  $default_server = locale_translation_default_translation_server();
-
-  foreach ($projects as $name => $data) {
-    // For dev releases, remove the '-dev' part and trust the translation server
-    // to fall back to the latest stable release for that branch.
-    if (isset($data['info']['version']) && strpos($data['info']['version'], '-dev')) {
-      if (preg_match("/^(\d+\.x-\d+\.).*$/", $data['info']['version'], $matches)) {
-        // Example matches: 8.x-1.x-dev, 8.x-1.0-alpha1+5-dev => 8.x-1.x
-        $data['info']['version'] = $matches[1] . 'x';
-      }
-      elseif (preg_match("/^(\d+\.\d+\.).*$/", $data['info']['version'], $matches)) {
-        // Example match: 8.0.0-dev => 8.0.x (Drupal core)
-        $data['info']['version'] = $matches[1] . 'x';
-      }
-    }
-
-    // For every project store information.
-    $data += [
-      'name' => $name,
-      'version' => $data['info']['version'] ?? '',
-      'core' => 'all',
-      // A project can provide the path and filename pattern to download the
-      // gettext file. Use the default if not.
-      'server_pattern' => isset($data['info']['interface translation server pattern']) && $data['info']['interface translation server pattern'] ? $data['info']['interface translation server pattern'] : $default_server['pattern'],
-      'status' => !empty($data['project_status']) ? 1 : 0,
-    ];
-
-    $project = (object) $data;
-    $projects[$name] = $project;
-
-    // Create or update the project record.
-    \Drupal::service('locale.project')->set($project->name, $data);
-
-    // Invalidate the cache of translatable projects.
-    locale_translation_clear_cache_projects();
-  }
-  return $projects;
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleProjectRepository::class)->buildProjects() instead. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
+  return \Drupal::service(LocaleProjectRepository::class)->buildProjects();
 }
 
 /**
@@ -94,21 +64,27 @@ function locale_translation_build_projects() {
  *
  * @return array
  *   Array of project data including .info.yml file data.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is no replacement.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
 function locale_translation_project_list() {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
   $projects = &drupal_static(__FUNCTION__, []);
   if (empty($projects)) {
     $projects = [];
 
-    $additional_whitelist = [
+    $additional_allow_list = [
       'interface translation project',
       'interface translation server pattern',
     ];
     $module_data = _locale_translation_prepare_project_list(\Drupal::service('extension.list.module')->getList(), 'module');
     $theme_data = _locale_translation_prepare_project_list(\Drupal::service('extension.list.theme')->reset()->getList(), 'theme');
     $project_info = new ProjectInfo();
-    $project_info->processInfoList($projects, $module_data, 'module', TRUE, $additional_whitelist);
-    $project_info->processInfoList($projects, $theme_data, 'theme', TRUE, $additional_whitelist);
+    $project_info->processInfoList($projects, $module_data, 'module', TRUE, $additional_allow_list);
+    $project_info->processInfoList($projects, $theme_data, 'theme', TRUE, $additional_allow_list);
 
     // Allow other modules to alter projects before fetching and comparing.
     \Drupal::moduleHandler()->alter('locale_translation_projects', $projects);
@@ -136,8 +112,14 @@ function locale_translation_project_list() {
  *
  * @return array
  *   Array of .info.yml file data.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is no replacement.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
 function _locale_translation_prepare_project_list($data, $type) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
   foreach ($data as $name => $file) {
     // Include interface translation projects. To allow
     // \Drupal\Core\Utility\ProjectInfo->processInfoList() to identify this as
@@ -156,16 +138,20 @@ function _locale_translation_prepare_project_list($data, $type) {
  * @return array
  *   Array of server parameters:
  *   - "pattern": URI containing po file pattern.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is not replacement.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
 function locale_translation_default_translation_server() {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
   $pattern = \Drupal::config('locale.settings')->get('translation.default_server_pattern');
   // An additional check is required here. During the upgrade process
   // \Drupal::config()->get() returns NULL. We use the defined value as
   // fallback.
-  $pattern = $pattern ? $pattern : LOCALE_TRANSLATION_DEFAULT_SERVER_PATTERN;
-
   return [
-    'pattern' => $pattern,
+    'pattern' => $pattern ?: \Drupal::TRANSLATION_DEFAULT_SERVER_PATTERN,
   ];
 }
 
@@ -177,19 +163,18 @@ function locale_translation_default_translation_server() {
  * @param array $langcodes
  *   Array of language codes. Defaults to all translatable languages.
  *
- * @todo Return batch or NULL.
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleProjectChecker::class)->checkProjects()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
-function locale_translation_check_projects($projects = [], $langcodes = []) {
-  if (locale_translation_use_remote_source()) {
-    // Retrieve the status of both remote and local translation sources by
-    // using a batch process.
-    locale_translation_check_projects_batch($projects, $langcodes);
+function locale_translation_check_projects($projects = [], $langcodes = []): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleProjectChecker::class)->checkProjects() instead. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
+  if (empty($projects)) {
+    $projects = array_keys(\Drupal::service(LocaleProjectRepository::class)->getAll());
   }
-  else {
-    // Retrieve and save the status of local translations only.
-    locale_translation_check_projects_local($projects, $langcodes);
-    \Drupal::state()->set('locale.translation_last_checked', \Drupal::time()->getRequestTime());
-  }
+  \Drupal::service(LocaleProjectChecker::class)->checkProjects($projects, $langcodes);
 }
 
 /**
@@ -204,11 +189,16 @@ function locale_translation_check_projects($projects = [], $langcodes = []) {
  *   Array of project names to check. Defaults to all translatable projects.
  * @param array $langcodes
  *   Array of language codes. Defaults to all translatable languages.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleProjectChecker::class)->triggerBatch()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function locale_translation_check_projects_batch($projects = [], $langcodes = []) {
-  // Build and set the batch process.
-  $batch = locale_translation_batch_status_build($projects, $langcodes);
-  batch_set($batch);
+function locale_translation_check_projects_batch($projects = [], $langcodes = []): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleProjectChecker::class)->triggerBatch() instead. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
+  \Drupal::service(LocaleProjectChecker::class)->triggerBatch($projects, $langcodes);
 }
 
 /**
@@ -228,19 +218,26 @@ function locale_translation_check_projects_batch($projects = [], $langcodes = []
  *
  * @return array
  *   Batch definition array.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleProjectChecker::class)->triggerBatch()
+ *   instead, this now calls batch_set immediately instead of returning the
+ *   array.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
 function locale_translation_batch_status_build($projects = [], $langcodes = []) {
-  $projects = $projects ? $projects : array_keys(locale_translation_get_projects());
-  $langcodes = $langcodes ? $langcodes : array_keys(locale_translatable_language_list());
-  $options = _locale_translation_default_update_options();
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleProjectChecker::class)->triggerBatch() instead, this now calls batch_set immediately instead of returning the array. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
+  $projects = $projects ?: array_keys(\Drupal::service(LocaleProjectRepository::class)->getAll());
+  $langcodes = $langcodes ?: array_keys(locale_translatable_language_list());
+  $options = LocaleDefaultOptions::updateOptions();
 
-  $operations = _locale_translation_batch_status_operations($projects, $langcodes, $options);
+  $operations = \Drupal::service(LocaleFetch::class)->getStatusOperations($projects, $langcodes, $options);
 
   $batch_builder = (new BatchBuilder())
-    ->setFile(\Drupal::service('extension.list.module')->getPath('locale') . '/locale.batch.inc')
     ->setTitle(t('Checking translations'))
     ->setErrorMessage(t('Error checking translation updates.'))
-    ->setFinishCallback('locale_translation_batch_status_finished');
+    ->setFinishCallback(LocaleProjectChecker::class . ':batchFinished');
 
   array_walk($operations, function ($operation) use ($batch_builder) {
     call_user_func_array([$batch_builder, 'addOperation'], $operation);
@@ -261,19 +258,16 @@ function locale_translation_batch_status_build($projects = [], $langcodes = []) 
  *
  * @return array
  *   Array of batch operations.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFetch::class)->getStatusOperations()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function _locale_translation_batch_status_operations($projects, $langcodes, $options = []) {
-  $operations = [];
-
-  foreach ($projects as $project) {
-    foreach ($langcodes as $langcode) {
-      // Check version and status translation sources.
-      $operations[] = ['locale_translation_batch_version_check', [$project, $langcode]];
-      $operations[] = ['locale_translation_batch_status_check', [$project, $langcode, $options]];
-    }
-  }
-
-  return $operations;
+function _locale_translation_batch_status_operations($projects, $langcodes, $options = []): array {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFetch::class)->getStatusOperations(). See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
+  return \Drupal::service(LocaleFetch::class)->getStatusOperations($projects, $langcodes, $options);
 }
 
 /**
@@ -294,19 +288,17 @@ function _locale_translation_batch_status_operations($projects, $langcodes, $opt
  *   Defaults to all translatable projects.
  * @param array $langcodes
  *   Array of language codes. Defaults to all translatable languages.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleProjectChecker::class)->checkLocalProjects()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
-function locale_translation_check_projects_local($projects = [], $langcodes = []) {
-  $projects = locale_translation_get_projects($projects);
-  $langcodes = $langcodes ? $langcodes : array_keys(locale_translatable_language_list());
-
-  // For each project and each language we check if a local po file is
-  // available. When found the source object is updated with the appropriate
-  // type and timestamp of the po file.
-  foreach ($projects as $name => $project) {
-    foreach ($langcodes as $langcode) {
-      $source = locale_translation_source_build($project, $langcode);
-      $file = locale_translation_source_check_file($source);
-      locale_translation_status_save($name, $langcode, LOCALE_TRANSLATION_LOCAL, $file);
-    }
+function locale_translation_check_projects_local($projects = [], $langcodes = []): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleProjectChecker::class)->checkLocalProjects() instead. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
+  if (empty($projects)) {
+    $projects = array_keys(\Drupal::service(LocaleProjectRepository::class)->getAll());
   }
+  \Drupal::service(LocaleProjectChecker::class)->checkLocalProjects($projects, $langcodes);
 }

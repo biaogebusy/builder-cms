@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\diff\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  * Base class for Diff web tests.
@@ -70,11 +70,8 @@ abstract class DiffTestBase extends WebDriverTestBase {
    * @param bool $reset_permissions
    *   Flag to determine if default admin permissions will be replaced by
    *   $additional_permissions.
-   *
-   * @return \Drupal\user\Entity\User|false
-   *   Newly created and logged in user object.
    */
-  protected function loginAsAdmin(array $additional_permissions = [], bool $reset_permissions = FALSE): User|bool {
+  protected function loginAsAdmin(array $additional_permissions = [], bool $reset_permissions = FALSE): UserInterface {
     $permissions = $this->adminPermissions;
 
     if ($reset_permissions) {

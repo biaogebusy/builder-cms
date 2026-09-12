@@ -35,6 +35,16 @@ class Chart extends Plugin {
   public array $types = [];
 
   /**
+   * The route name of the library's API example page, if it provides one.
+   *
+   * Set by a charts_*_api_example submodule so the example directory can link
+   * to it without hard-coding which libraries exist.
+   *
+   * @var string|null
+   */
+  public readonly ?string $example_route;
+
+  /**
    * Constructs an Action attribute.
    *
    * @param string $id
@@ -43,6 +53,8 @@ class Chart extends Plugin {
    *   The label of the action.
    * @param array $types
    *   The chart types that the chart library can use.
+   * @param string|null $example_route
+   *   The route name of the library's API example page, if any.
    * @param string|null $deriver
    *   The deriver class.
    */
@@ -50,11 +62,13 @@ class Chart extends Plugin {
     string $id,
     TranslatableMarkup $name,
     array $types = [],
+    ?string $example_route = NULL,
     ?string $deriver = NULL,
   ) {
     parent::__construct($id, $deriver);
     $this->name = $name;
     $this->types = $types;
+    $this->example_route = $example_route;
   }
 
 }

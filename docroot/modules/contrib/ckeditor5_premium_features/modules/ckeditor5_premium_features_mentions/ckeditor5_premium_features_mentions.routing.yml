@@ -1,0 +1,16 @@
+ckeditor5_premium_features_mentions.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/mentions'
+  defaults:
+    _title: 'Mentions'
+    _form: 'Drupal\ckeditor5_premium_features_mentions\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+ckeditor5_premium_features_mentions.annotations:
+  path: '/ck5/api/annotations'
+  defaults:
+    _controller: 'Drupal\ckeditor5_premium_features_mentions\Controller\MentionAutocompleteController::annotation'
+  methods:  [GET]
+  requirements:
+    _permission: 'mention users'
+    _format: json

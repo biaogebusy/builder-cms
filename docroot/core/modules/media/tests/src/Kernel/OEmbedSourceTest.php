@@ -17,13 +17,18 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\media\Plugin\media\Source\OEmbed
- *
- * @group media
+ * Tests Drupal\media\Plugin\media\Source\OEmbed.
  */
+#[CoversClass(OEmbed::class)]
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class OEmbedSourceTest extends MediaKernelTestBase {
 
   /**
@@ -32,7 +37,7 @@ class OEmbedSourceTest extends MediaKernelTestBase {
   protected static $modules = ['media'];
 
   /**
-   * @covers ::getMetadata
+   * Tests get metadata.
    */
   public function testGetMetadata(): void {
     $configuration = [
@@ -103,10 +108,9 @@ class OEmbedSourceTest extends MediaKernelTestBase {
    * @param string $expected_extension
    *   The extension that the downloaded thumbnail should have.
    *
-   * @covers ::getLocalThumbnailUri
-   *
-   * @dataProvider providerThumbnailUri
+   * @legacy-covers ::getLocalThumbnailUri
    */
+  #[DataProvider('providerThumbnailUri')]
   public function testThumbnailUri(string $remote_thumbnail_url, array $thumbnail_headers, string $expected_extension): void {
     // Create a fake resource with the given thumbnail URL.
     $resource = Resource::rich('<html></html>', 16, 16, NULL, 'Test resource', NULL, NULL, NULL, $remote_thumbnail_url, 16, 16);
@@ -128,7 +132,7 @@ class OEmbedSourceTest extends MediaKernelTestBase {
     // The source plugin will try to fetch the remote thumbnail, so mock the
     // HTTP client to ensure that request returns a response with some valid
     // image data.
-    $data = Utils::tryFopen($this->getDrupalRoot() . '/core/misc/druplicon.png', 'r');
+    $data = Utils::tryFopen($this->root . '/core/misc/druplicon.png', 'r');
     $response = new Response(200, $thumbnail_headers, Utils::streamFor($data));
     $handler = new MockHandler([$response]);
     $client = new Client([

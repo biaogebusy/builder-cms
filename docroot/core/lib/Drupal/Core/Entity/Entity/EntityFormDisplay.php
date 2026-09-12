@@ -2,6 +2,9 @@
 
 namespace Drupal\Core\Entity\Entity;
 
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Entity\Entity\Access\EntityFormDisplayAccessControlHandler;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\EntityDisplayPluginCollection;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -17,30 +20,36 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
  *
  * Contains widget options for all components of an entity form in a given
  * form mode.
- *
- * @ConfigEntityType(
- *   id = "entity_form_display",
- *   label = @Translation("Entity form display"),
- *   entity_keys = {
- *     "id" = "id",
- *     "status" = "status"
- *   },
- *   handlers = {
- *     "access" = "\Drupal\Core\Entity\Entity\Access\EntityFormDisplayAccessControlHandler",
- *   },
- *   config_export = {
- *     "id",
- *     "targetEntityType",
- *     "bundle",
- *     "mode",
- *     "content",
- *     "hidden",
- *   },
- *   constraints = {
- *     "ImmutableProperties" = {"id", "targetEntityType", "bundle", "mode"},
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'entity_form_display',
+  label: new TranslatableMarkup('Entity form display'),
+  entity_keys: [
+    'id' => 'id',
+    'status' => 'status',
+  ],
+  handlers: [
+    'access' => EntityFormDisplayAccessControlHandler::class,
+  ],
+  constraints: [
+    'ImmutableProperties' => [
+      'properties' => [
+        'id',
+        'targetEntityType',
+        'bundle',
+        'mode',
+      ],
+    ],
+  ],
+  config_export: [
+    'id',
+    'targetEntityType',
+    'bundle',
+    'mode',
+    'content',
+    'hidden',
+  ],
+  )]
 class EntityFormDisplay extends EntityDisplayBase implements EntityFormDisplayInterface {
 
   /**
@@ -205,6 +214,11 @@ class EntityFormDisplay extends EntityDisplayBase implements EntityFormDisplayIn
 
     // Associate the cache tags for the form display.
     $this->renderer->addCacheableDependency($form, $this);
+
+    // The form might not have the correct cacheability metadata, so make it
+    // uncacheable by default.
+    // @todo Remove this in https://www.drupal.org/node/3395524.
+    $form['#cache']['max-age'] = 0;
 
     // Add a process callback so we can assign weights and hide extra fields.
     $form['#process'][] = [$this, 'processForm'];

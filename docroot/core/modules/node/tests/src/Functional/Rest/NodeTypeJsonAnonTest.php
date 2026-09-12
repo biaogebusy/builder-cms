@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\AnonResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Node Type Json Anon.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class NodeTypeJsonAnonTest extends NodeTypeResourceTestBase {
 
   use AnonResourceTestTrait;

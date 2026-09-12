@@ -77,7 +77,7 @@ class MediaLibrary extends WebformElementBase {
       '#title' => $this->t('Media types'),
       '#description' => $this->t('Select which media types are selectable.'),
       '#required' => TRUE,
-      '#options' => array_map(function($bundle) {
+      '#options' => array_map(function ($bundle) {
         return $bundle['label'];
       }, $this->entityTypeBundleInfo->getBundleInfo('media')),
     ];

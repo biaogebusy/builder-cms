@@ -21,7 +21,7 @@ class WebformCardsStatesJavaScriptTest extends WebformWebDriverTestBase {
   /**
    * Test webform cards states.
    */
-  public function testStates() {
+  public function testStates(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();

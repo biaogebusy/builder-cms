@@ -1,0 +1,10 @@
+ckeditor5_premium_features_version_override.settings:
+  type: config_object
+  label: 'CKEditor 5 Premium Features Override dll module'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+    version:
+      type: string
+      label: 'Version'

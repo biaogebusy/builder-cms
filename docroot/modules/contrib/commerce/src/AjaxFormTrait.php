@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\PrependCommand;
@@ -47,7 +48,7 @@ trait AjaxFormTrait {
       $element = $form;
     }
     $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('[data-drupal-selector="' . $form['#attributes']['data-drupal-selector'] . '"]', $form));
+    $response->addCommand(new ReplaceCommand(sprintf('[data-drupal-selector^="%s"', Html::getId($form['#form_id'])), $form));
     $response->addCommand(new PrependCommand('[data-drupal-selector="' . $element['#attributes']['data-drupal-selector'] . '"]', ['#type' => 'status_messages']));
 
     return $response;

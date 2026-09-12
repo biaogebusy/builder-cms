@@ -36,6 +36,7 @@ abstract class RelationshipConfigure extends FormBase {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $tempstore_id;
 
   /**
@@ -43,6 +44,7 @@ abstract class RelationshipConfigure extends FormBase {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $machine_name;
 
   /**
@@ -148,7 +150,7 @@ abstract class RelationshipConfigure extends FormBase {
    * @param array $cached_values
    *   Cached Values get route info from.
    *
-   * @return array In the format of
+   * @return array
    *   In the format of
    *   return ['route.name',
    *      ['machine_name' => $this->machine_name, 'step' => 'step_name']];
@@ -159,7 +161,7 @@ abstract class RelationshipConfigure extends FormBase {
    * Custom logic for setting the conditions array in cached_values.
    *
    * @param array $cached_values
-   *
+   *   The cached values.
    * @param mixed $contexts
    *   The conditions to set within the cached values.
    *
@@ -175,6 +177,7 @@ abstract class RelationshipConfigure extends FormBase {
    *   Cached Values contexts are fetched from.
    *
    * @return \Drupal\Core\Plugin\Context\ContextInterface[]
+   *   The contexts.
    */
   abstract protected function getContexts(array $cached_values);
 

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\path_alias\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test path_alias entities for JSON requests via basic auth.
- *
- * @group path_alias
  */
+#[Group('path_alias')]
+#[RunTestsInSeparateProcesses]
 class PathAliasJsonBasicAuthTest extends PathAliasResourceTestBase {
 
   use BasicAuthResourceTestTrait;

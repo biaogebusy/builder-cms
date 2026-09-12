@@ -1,0 +1,99 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\Tests\package_manager\Kernel;
+
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\package_manager\Event\PreCreateEvent;
+use Drupal\package_manager\Exception\SandboxEventException;
+use Drupal\package_manager\ValidationResult;
+use Drupal\package_manager\Validator\PendingUpdatesValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
+/**
+ * Tests Pending Updates Validator.
+ *
+ * @internal
+ */
+#[Group('package_manager')]
+#[CoversClass(PendingUpdatesValidator::class)]
+#[RunTestsInSeparateProcesses]
+class PendingUpdatesValidatorTest extends PackageManagerKernelTestBase {
+
+  use StringTranslationTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['system'];
+
+  /**
+   * Tests that no error is raised if there are no pending updates.
+   */
+  public function testNoPendingUpdates(): void {
+    $this->assertStatusCheckResults([]);
+    $this->assertResults([], PreCreateEvent::class);
+  }
+
+  /**
+   * Tests that an error is raised if there are pending schema updates.
+   */
+  #[Depends('testNoPendingUpdates')]
+  public function testPendingUpdateHook(): void {
+    // Set the installed schema version of Package Manager to its default value
+    // and import an empty update hook which is numbered much higher than will
+    // ever exist in the real world.
+    $this->container->get('keyvalue')
+      ->get('system.schema')
+      ->set('package_manager', \Drupal::CORE_MINIMUM_SCHEMA_VERSION);
+
+    require_once __DIR__ . '/../../fixtures/db_update.php';
+
+    $result = ValidationResult::createError([
+      $this->t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
+    ]);
+    $this->assertStatusCheckResults([$result]);
+    $this->assertResults([$result], PreCreateEvent::class);
+  }
+
+  /**
+   * Tests that an error is raised if there are pending post-updates.
+   */
+  public function testPendingPostUpdate(): void {
+    // Make an additional post-update function available; the update registry
+    // will think it's pending.
+    require_once __DIR__ . '/../../fixtures/post_update.php';
+    $result = ValidationResult::createError([
+      $this->t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
+    ]);
+    $this->assertStatusCheckResults([$result]);
+    $this->assertResults([$result], PreCreateEvent::class);
+  }
+
+  /**
+   * Tests that pending updates stop an operation from being applied.
+   */
+  public function testPendingUpdateAfterStaged(): void {
+    $stage = $this->createStage();
+    $stage->create();
+    $stage->require(['drupal/core:9.8.1']);
+    // Make an additional post-update function available; the update registry
+    // will think it's pending.
+    require_once __DIR__ . '/../../fixtures/post_update.php';
+    $result = ValidationResult::createError([
+      $this->t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
+    ]);
+    try {
+      $stage->apply();
+      $this->fail('Able to apply update even though there is pending update.');
+    }
+    catch (SandboxEventException $exception) {
+      $this->assertExpectedResultsFromException([$result], $exception);
+    }
+  }
+
+}

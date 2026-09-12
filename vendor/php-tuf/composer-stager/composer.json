@@ -1,0 +1,129 @@
+{
+    "name": "php-tuf/composer-stager",
+    "description": "Stages Composer commands so they can be safely run on a production codebase.",
+    "license": "MIT",
+    "type": "library",
+    "readme": "docs/README.md",
+    "authors": [
+        {
+            "name": "Travis Carden",
+            "email": "travis.carden@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "homepage": "https://github.com/php-tuf/composer-stager",
+    "support": {
+        "issues": "https://github.com/php-tuf/composer-stager/issues",
+        "source": "https://github.com/php-tuf/composer-stager"
+    },
+    "require": {
+        "php": ">=8.1.0",
+        "ext-json": "*",
+        "symfony/filesystem": "^6.2 || ^7.0 || ^8.0",
+        "symfony/process": "^6.4.33 || ^7.3.11 || ^8.0",
+        "symfony/translation-contracts": "^3.1"
+    },
+    "require-dev": {
+        "ext-simplexml": "*",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "phpspec/prophecy": "^1.17",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.5.19",
+        "slevomat/coding-standard": "^8.13",
+        "squizlabs/php_codesniffer": "^3.7",
+        "symfony/config": "^6.3 || ^8.0",
+        "symfony/dependency-injection": "^6.3",
+        "symfony/yaml": "^6.3",
+        "thecodingmachine/phpstan-strict-rules": "^1.0"
+    },
+    "conflict": {
+        "symfony/process": ">=6.4 <6.4.33 || >=7.3 <7.3.11 || >=7.4 <7.4.5 || >=8.0 <8.0.5",
+        "symfony/symfony": ">=6.4 <6.4.33 || >=7.3 <7.3.11 || >=7.4 <7.4.5 || >=8.0 <8.0.5",
+        "symfony/yaml": ">=2.0.0 <5.4.52 || >=6.0.0 <6.4.40 || >=7.0.0 <7.4.12 || >=8.0.0 <8.0.12"
+    },
+    "suggest": {
+        "symfony/dependency-injection": "For dependency injection",
+        "symfony/translation": "For internationalization tools"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "PhpTuf\\ComposerStager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpTuf\\ComposerStager\\": "tools/PHPCS/",
+            "PhpTuf\\ComposerStager\\PHPStan\\": "tools/PHPStan/",
+            "PhpTuf\\ComposerStager\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "infection/extension-installer": true,
+            "phpro/grumphp-shim": true,
+            "phpstan/extension-installer": true,
+            "wikimedia/composer-merge-plugin": true
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "2.x-dev"
+        }
+    },
+    "scripts": {
+        "check:phpunit:coverage": [
+            "docker compose run --rm php84-sf7-high php ./vendor/bin/phpunit --exclude-group=windows_only --testsuite=coverage"
+        ],
+        "check:phpunit:full": [
+            "docker compose run --rm php83-sf6-high php ./vendor/bin/phpunit --exclude-group=windows_only --no-coverage",
+            "docker compose run --rm php83-sf7-high php ./vendor/bin/phpunit --exclude-group=windows_only --no-coverage",
+            "docker compose run --rm php84-sf6-high php ./vendor/bin/phpunit --exclude-group=windows_only --no-coverage",
+            "docker compose run --rm php84-sf7-high php ./vendor/bin/phpunit --exclude-group=windows_only --testsuite=coverage",
+            "docker compose run --rm php84-sf8-high php ./vendor/bin/phpunit --exclude-group=windows_only --no-coverage",
+            "docker compose run --rm php85-sf8-high php ./vendor/bin/phpunit --exclude-group=windows_only --no-coverage"
+        ],
+        "check:phpunit:quick": [
+            "docker compose run --rm php83-sf6-low php ./vendor/bin/phpunit --exclude-group=windows_only --no-coverage",
+            "docker compose run --rm php84-sf7-high php ./vendor/bin/phpunit --exclude-group=windows_only --testsuite=coverage",
+            "docker compose run --rm php85-sf8-high php ./vendor/bin/phpunit --exclude-group=windows_only --no-coverage"
+        ],
+        "docker:build": [
+            "./docker/init-locks.sh",
+            "docker compose build"
+        ],
+        "docker:down": "docker compose down"
+    },
+    "scripts-descriptions": {
+        "check:phpunit:coverage": "Runs PHPUnit tests with code coverage",
+        "check:phpunit:full": "Runs automated tests across major supported PHP/Symfony/dependency combinations",
+        "check:phpunit:quick": "Runs automated tests on a representative subset: sf6/low and sf7/high on PHP 8.3, sf7/high w/ coverage on PHP 8.4, sf8/high on PHP 8.5",
+        "docker:build": "Builds the Docker images for all supported PHP versions",
+        "docker:down": "Stops and removes Docker containers and networks (images and volumes are preserved; no rebuild needed to resume)"
+    },
+    "scripts-aliases": {
+        "check:phpunit:coverage": [
+            "coverage",
+            "cov"
+        ],
+        "check:phpunit:full": [
+            "full"
+        ],
+        "check:phpunit:quick": [
+            "phpunit",
+            "quick",
+            "test"
+        ],
+        "docker:build": [
+            "build"
+        ],
+        "docker:down": [
+            "down"
+        ]
+    }
+}

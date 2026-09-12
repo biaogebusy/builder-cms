@@ -1,0 +1,33 @@
+<div class="highlight-item-wrapper">
+  {% if context is defined and context is not empty %}
+    {% if formattingChange is defined and formattingChange %}
+      <div class="context-title">{{ 'Formatting changed:'|t }}</div>
+    {% endif %}
+    <div class="context-content">
+      {{ context|render }}
+    </div>
+  {% endif %}
+
+  {% if thread is defined and thread is not empty %}
+    <h3>{{ "Comments"|t }}</h3>
+    <div class="thread comment-thread-wrapper">
+      {% if threadCounter %}
+        {{ firstComment|render }}
+        <div class="comments-count-wrapper">
+          <div class="dots"></div>
+          <div class="comments-text">
+            <span>
+              {% trans %}
+                {{ threadCounter }} hidden comment
+              {% plural threadCounter %}
+                {{ threadCounter }} hidden comments
+              {% endtrans %}
+            </span>
+          </div>
+          <div class="dots"></div>
+        </div>
+      {% endif %}
+      {{ thread|render }}
+    </div>
+  {% endif %}
+</div>

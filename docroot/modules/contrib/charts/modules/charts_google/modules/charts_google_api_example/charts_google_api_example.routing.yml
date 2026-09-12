@@ -1,0 +1,7 @@
+charts_google_api_example.display:
+  path: /charts/example/google
+  defaults:
+    _controller: '\Drupal\charts_google_api_example\Controller\GoogleApiExample::display'
+    _title: 'Google Charts API Example'
+  requirements:
+    _permission: 'access content'

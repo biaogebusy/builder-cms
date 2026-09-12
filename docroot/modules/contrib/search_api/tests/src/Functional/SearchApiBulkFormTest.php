@@ -4,10 +4,14 @@ namespace Drupal\Tests\search_api\Functional;
 
 use Behat\Mink\Element\NodeElement;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\entity_test\Entity\EntityTestStringId;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api_test_bulk_form\TypedData\FooDataDefinition;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
+use Drupal\views\Entity\View;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
@@ -19,10 +23,14 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 #[RunTestsInSeparateProcesses]
 class SearchApiBulkFormTest extends BrowserTestBase {
 
+  use ContentTranslationTestTrait;
+
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
+    'language',
+    'content_translation',
     'search_api_test_bulk_form',
   ];
 
@@ -47,6 +55,86 @@ class SearchApiBulkFormTest extends BrowserTestBase {
     $this->index = Index::load('test_index');
     $this->createIndexedContent();
     $this->drupalLogin($this->createUser(['view test entity']));
+  }
+
+  /**
+   * Tests cache metadata of Search API views.
+   *
+   * @param string $cache_plugin_id
+   *   The ID of the Views cache plugin to test.
+   *
+   * @dataProvider viewsCacheMetadataTestDataProvider
+   */
+  public function testViewsCacheMetadata(string $cache_plugin_id): void {
+    // Disable direct indexing.
+    $this->index
+      ->set('options', ['index_directly' => FALSE])
+      ->save();
+    // Set the selected caching method for the test views page.
+    $views = View::load('search_api_test_bulk_form');
+    $displays = $views->get('display');
+    $this->assertArrayHasKey('default', $displays);
+    $displays['default']['display_options']['cache'] = [
+      'type' => $cache_plugin_id,
+      'options' => [],
+    ];
+    $views->set('display', $displays)->save();
+
+    $this->drupalGet('/search-api-test-bulk-form');
+    $assert = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    // Get the original label of entity_test:1 and entity_test:2.
+    $original_labels = $this->getTestEntityLabels();
+
+    // Change the label of entity_test:1 and entity_test:2.
+    $suffix = '--updated';
+    \Drupal::state()->set('search_api_test_bulk_form.update_name_suffix', $suffix);
+    $this->checkCheckboxInRow('entity:entity_test/1:en');
+    $this->checkCheckboxInRow('entity:entity_test/2:en');
+    $page->selectFieldOption('Action', 'Search API test bulk form action: entity_test');
+    $page->pressButton('Apply to selected items');
+    $assert->pageTextContains('Search API test bulk form action: entity_test was applied to 2 items.');
+
+    // Entity labels must now have the "--updated" suffix.
+    $expected_labels = array_reduce(
+      $original_labels,
+      function (array $carry, string $label) use ($suffix) {
+        $carry[] = "$label$suffix";
+        return $carry;
+      },
+      [],
+    );
+    $this->assertSame($expected_labels, $this->getTestEntityLabels());
+  }
+
+  /**
+   * Provides test data sets for testViewsCacheMetadata().
+   *
+   * @return array<string, array{0: string}>
+   *   An associative array of argument arrays for testViewsCacheMetadata(),
+   *   keyed by data set label.
+   *
+   * @see testViewsCacheMetadata()
+   */
+  public static function viewsCacheMetadataTestDataProvider(): array {
+    return [
+      'search_api_tag' => ['search_api_tag'],
+      'search_api_time_tag' => ['search_api_time_tag'],
+    ];
+  }
+
+  /**
+   * Returns the labels of the test entities used in ::testViewsCacheMetadata.
+   *
+   * @return string[]
+   *   The labels of the test entities used in ::testViewsCacheMetadata.
+   */
+  protected function getTestEntityLabels(): array {
+    return [
+      $this->getRowContainingText('entity:entity_test/1:en')->find('css', 'td.views-field-name')->getText(),
+      $this->getRowContainingText('entity:entity_test/2:en')->find('css', 'td.views-field-name')->getText(),
+    ];
   }
 
   /**
@@ -267,6 +355,68 @@ class SearchApiBulkFormTest extends BrowserTestBase {
     }
     $this->assertTrue($found, "No row with text \"$text\" found on the page.");
     return $row;
+  }
+
+  /**
+   * Tests the Views bulk field with translated content.
+   */
+  public function testBulkFormWithTranslatedContent(): void {
+    $this->enableContentTranslation('entity_test_mul', 'entity_test_mul');
+    ConfigurableLanguage::createFromLangcode('de')->save();
+
+    // Create two, translated multilingual content in addition to the defaults.
+    for ($i = 1; $i <= 2; $i++) {
+      $entity = EntityTestMul::create(['name' => "Multilingual content $i"]);
+      $entity->addTranslation('de')->set('name', "[DE] {$entity->label()}");
+      $entity->save();
+    }
+    $this->index->indexItems();
+
+    $query = \Drupal::getContainer()->get('search_api.query_helper')->createQuery($this->index);
+    $result_ids = array_keys($query->execute()->getResultItems());
+    sort($result_ids);
+    $this->assertEquals(
+      [
+        'entity:entity_test/1:en',
+        'entity:entity_test/2:en',
+        'entity:entity_test_mul/1:de',
+        'entity:entity_test_mul/1:en',
+        'entity:entity_test_mul/2:de',
+        'entity:entity_test_mul/2:en',
+        'entity:entity_test_string_id/1:und',
+        'entity:entity_test_string_id/2:und',
+        'search_api_test/1:en',
+        'search_api_test/2:en',
+      ],
+      $result_ids
+    );
+
+    $assert = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    $this->drupalGet('/search-api-test-bulk-form');
+    $assert->statusCodeEquals(200);
+
+    // Make sure that the view is functional: Check some rows which are, and
+    // also some which are not compatible with the applied action.
+    $this->checkCheckboxInRow('entity:entity_test/1:en');
+    $this->checkCheckboxInRow('entity:entity_test/2:en');
+    $this->checkCheckboxInRow('entity:entity_test_mul/1:en');
+    $this->checkCheckboxInRow('entity:entity_test_string_id/2:und');
+    $page->selectFieldOption('Action', 'Search API test bulk form action: entity_test');
+    $page->pressButton('Apply to selected items');
+
+    // After submitting the VBO form, the page is still functional and we can
+    // see the expected messages.
+    $assert->statusMessageContains(
+      'Search API test bulk form action: entity_test was applied to 2 items.',
+      'status',
+    );
+    $entity_string_id_2 = EntityTestStringId::load(2);
+    $assert->statusMessageContains(
+      "Rows Multilingual content 1, {$entity_string_id_2->label()} removed from selection as they are not compatible with Search API test bulk form action: entity_test action.",
+      'warning',
+    );
   }
 
 }

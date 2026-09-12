@@ -18,9 +18,19 @@ use Drupal\Core\TypedData\TypedDataInternalPropertiesHelper;
 class ComplexDataNormalizer extends NormalizerBase {
 
   /**
-   * {@inheritdoc}
+   * Normalizes data into a set of arrays/scalars.
+   *
+   * @param mixed $object
+   *   Data to normalize.
+   * @param string|null $format
+   *   Format the normalization result will be encoded as.
+   * @param array<string, mixed> $context
+   *   Context options for the normalizer.
+   *
+   * @return array
+   *   The normalized data.
    */
-  public function normalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
+  public function normalize($object, $format = NULL, array $context = []): array {
     $attributes = [];
     // $object will not always match getSupportedTypes().
     // @see \Drupal\serialization\Normalizer\EntityNormalizer
@@ -37,15 +47,6 @@ class ComplexDataNormalizer extends NormalizerBase {
       $attributes[$name] = $this->serializer->normalize($property, $format, $context);
     }
     return $attributes;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasCacheableSupportsMethod(): bool {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-
-    return TRUE;
   }
 
   /**

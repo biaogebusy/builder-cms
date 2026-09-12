@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\search_api\Event\SearchApiEvents;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
@@ -39,6 +40,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *   type. Also, it should not be considered part of the framework.)
  *
  * @see \Drupal\search_api\Task\TaskEvent
+ * @see \Drupal\search_api\Event\SearchApiEvents::EXECUTE_TASK_EVENT_PREFIX
  */
 class TaskManager implements TaskManagerInterface {
 
@@ -193,7 +195,7 @@ class TaskManager implements TaskManagerInterface {
 
     $event = new TaskEvent($task);
     static::$hasActiveTask = TRUE;
-    $this->eventDispatcher->dispatch($event, 'search_api.task.' . $task->getType());
+    $this->eventDispatcher->dispatch($event, SearchApiEvents::EXECUTE_TASK_EVENT_PREFIX . $task->getType());
     static::$hasActiveTask = FALSE;
     if (!$event->isPropagationStopped()) {
       $id = $task->id();

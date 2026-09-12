@@ -20,7 +20,7 @@ class PageManagerRoutingTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['page_manager', 'page_manager_routing_test', 'path_alias'];
+  protected static $modules = ['page_manager', 'page_manager_routing_test', 'path_alias', 'system'];
 
   /**
    * {@inheritdoc}
@@ -34,7 +34,7 @@ class PageManagerRoutingTest extends EntityKernelTestBase {
       $this->installEntitySchema('path_alias');
     }
 
-    $this->container->get('current_user')->setAccount($this->createUser([], ['view test entity']));
+    $this->container->get('current_user')->setAccount($this->createUser(['view test entity']));
     EntityTest::create()->save();
 
     Page::create([
@@ -100,6 +100,8 @@ class PageManagerRoutingTest extends EntityKernelTestBase {
       'variant' => 'simple_page',
       'page' => 'entity_test_delete',
     ])->save();
+
+    $this->config('system.site')->set('page.front', 'entity_test')->save();
   }
 
   /**
@@ -158,6 +160,12 @@ class PageManagerRoutingTest extends EntityKernelTestBase {
       '/entity_test/add',
       'entity.entity_test.add_form',
     ];
+    if (version_compare(\Drupal::VERSION, '11.2.0', '>=')) {
+      $data['same_pattern_no_match'] = [
+        '/entity_test/add',
+        'entity.entity_test.add_page',
+      ];
+    }
     $data['failed_selection'] = [
       '/entity_test/manage/1/edit',
       'entity.entity_test.edit_form',
@@ -166,6 +174,7 @@ class PageManagerRoutingTest extends EntityKernelTestBase {
       '/entity_test/delete/entity_test/1',
       NULL,
     ];
+
     return $data;
   }
 

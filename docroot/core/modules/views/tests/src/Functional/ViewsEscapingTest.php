@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests output of Views.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewsEscapingTest extends ViewTestBase {
 
   /**
@@ -26,7 +29,7 @@ class ViewsEscapingTest extends ViewTestBase {
   /**
    * {@inheritdoc}
    *
-   * We need theme_test for testing against test_basetheme and test_subtheme.
+   * We need theme_test for testing against test_base_theme and test_subtheme.
    *
    * @var array
    *

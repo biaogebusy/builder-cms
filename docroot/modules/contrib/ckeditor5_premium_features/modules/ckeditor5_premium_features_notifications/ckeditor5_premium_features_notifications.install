@@ -1,0 +1,146 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+/**
+ * @file
+ * Contains CKEditor 5 Premium Features Notifications module installer.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\ckeditor5_premium_features_notifications\Entity\MessageItemInterface;
+use Drupal\ckeditor5_premium_features_notifications\Entity\MessageInterface;
+
+/**
+ * Implements hook_install().
+ */
+function ckeditor5_premium_features_notifications_install($is_syncing) {
+  if (!$is_syncing) {
+    /** @var \Drupal\Core\Config\ConfigFactory $configFactory */
+    $configFactory = \Drupal::service('config.factory');
+    $userFormConfig = $configFactory->getEditable(
+      'core.entity_form_display.user.user.default'
+    );
+
+    if (!$userFormConfig) {
+      return;
+    }
+
+    $configArray = $userFormConfig->getRawData();
+    if (isset($configArray['content']['field_ck5_premium_notifications'])) {
+      return;
+    }
+
+    unset($configArray['hidden']['field_ck5_premium_notifications']);
+    $configArray['content']['field_ck5_premium_notifications'] = [
+      'type' => 'boolean_checkbox',
+      'weight' => 0,
+      'region' => 'content',
+      'settings' => [],
+      'third_party_settings' => [],
+    ];
+
+    $userFormConfig->setData($configArray)->save();
+
+    ckeditor5_premium_features_display_dependency_general_info_message();
+  }
+}
+
+/**
+ * Implements hook_update().
+ */
+function ckeditor5_premium_features_notifications_update_9001() {
+  $storageDefinition = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('Message item event type.'))
+    ->setDescription(t('The message content.'));
+
+  $entityDefinition = \Drupal::entityDefinitionUpdateManager();
+  $messageItem = $entityDefinition->getEntityType('ckeditor5_message_item');
+
+  if ($messageItem) {
+    $entityDefinition->installFieldStorageDefinition(
+      'message_content',
+      'ckeditor5_message_item',
+      'ckeditor5_message_item',
+      $storageDefinition
+    );
+  }
+}
+
+/**
+ * Implements hook_update().
+ */
+function ckeditor5_premium_features_notifications_update_9002() {
+  $storageDefinitionUid = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('User'))
+    ->setSetting('target_type', 'user')
+    ->setRequired(TRUE);
+  $storageDefinitionCreated = BaseFieldDefinition::create('created')
+    ->setLabel(t('Created'))
+    ->setRequired(TRUE);
+  $storageDefinitionKeyId = BaseFieldDefinition::create('string')
+    ->setLabel(t('Field Key ID'));
+  $storageDefinitionRefUid = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('Referenced User'))
+    ->setSetting('target_type', 'user');
+
+  $entityDefinition = \Drupal::entityDefinitionUpdateManager();
+  $messageItemUserReference = $entityDefinition->getFieldStorageDefinition('ref_uid', MessageItemInterface::ENTITY_TYPE_ID);
+
+  if (!$messageItemUserReference) {
+    $entityDefinition->installFieldStorageDefinition(
+      'uid',
+      MessageItemInterface::ENTITY_TYPE_ID,
+      MessageItemInterface::ENTITY_TYPE_ID,
+      $storageDefinitionUid
+    );
+    $entityDefinition->installFieldStorageDefinition(
+      'created',
+      MessageItemInterface::ENTITY_TYPE_ID,
+      MessageItemInterface::ENTITY_TYPE_ID,
+      $storageDefinitionCreated
+    );
+    $entityDefinition->installFieldStorageDefinition(
+      'key_id',
+      MessageItemInterface::ENTITY_TYPE_ID,
+      MessageItemInterface::ENTITY_TYPE_ID,
+      $storageDefinitionKeyId
+    );
+    $entityDefinition->installFieldStorageDefinition(
+      'ref_uid',
+      MessageItemInterface::ENTITY_TYPE_ID,
+      MessageItemInterface::ENTITY_TYPE_ID,
+      $storageDefinitionRefUid
+    );
+  }
+}
+
+/**
+ * Implements hook_update().
+ */
+function ckeditor5_premium_features_notifications_update_10000() {
+  $entityDefinition = \Drupal::entityDefinitionUpdateManager();
+
+  $messageEntity = $entityDefinition->getEntityType(MessageInterface::ENTITY_TYPE_ID);
+
+  $entityDefinition->updateEntityType($messageEntity);
+}
+
+/**
+ * Changes field_ck5_premium_notifications label and description.
+ */
+function ckeditor5_premium_features_notifications_update_10001() {
+  $configFactory = \Drupal::service('config.factory');
+  $fieldConfig = $configFactory->getEditable('field.field.user.user.field_ck5_premium_notifications');
+
+  $rawData = $fieldConfig->getRawData();
+  $rawData['label'] = "CKEditor 5 Premium Features - Receive notifications about changes in the content I'm co-authoring.";
+  $rawData['description'] = "Check this field if you would like to receive notifications whenever someone makes changes and/or adds comments to the articles/posts you co-authored.";
+
+  $fieldConfig->setData($rawData)->save();
+}

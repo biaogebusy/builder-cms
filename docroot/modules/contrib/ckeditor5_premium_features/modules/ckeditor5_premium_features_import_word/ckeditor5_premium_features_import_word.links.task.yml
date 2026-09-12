@@ -1,0 +1,6 @@
+ckeditor5_premium_features_import_word.form.settings:
+  title: Import from Word
+  route_name: ckeditor5_premium_features_import_word.form.settings
+  base_route: ckeditor5_premium_features.form.settings
+  description: 'Import from Word custom settings'
+  weight: 80

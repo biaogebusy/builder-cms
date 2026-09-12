@@ -7,12 +7,14 @@ namespace Drupal\FunctionalJavascriptTests\Theme;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Claro's Views Bulk Operations form.
- *
- * @group claro
  */
+#[Group('claro')]
+#[RunTestsInSeparateProcesses]
 class ClaroViewsBulkOperationsTest extends WebDriverTestBase {
   use ContentTypeCreationTrait;
   use NodeCreationTrait;

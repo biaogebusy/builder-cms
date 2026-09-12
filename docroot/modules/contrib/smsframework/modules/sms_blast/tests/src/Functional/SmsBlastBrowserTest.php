@@ -1,16 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms_blast\Functional;
 
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\sms\Entity\PhoneNumberSettings;
 use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\Tests\sms\Functional\SmsFrameworkBrowserTestBase;
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\sms\Entity\PhoneNumberSettings;
 
 /**
  * Integration tests for the sms_blast module.
@@ -19,22 +19,13 @@ use Drupal\sms\Entity\PhoneNumberSettings;
  */
 final class SmsBlastBrowserTest extends SmsFrameworkBrowserTestBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = ['sms', 'user', 'sms_blast'];
 
-  /**
-   * {@inheritdoc}
-   */
   protected $defaultTheme = 'stark';
 
   private PhoneNumberSettingsInterface $phoneNumberSettings;
   private SmsGatewayInterface $gateway;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->drupalLogin($this->drupalCreateUser(['Send SMS Blast']));
@@ -44,7 +35,7 @@ final class SmsBlastBrowserTest extends SmsFrameworkBrowserTestBase {
 
     $phone_field = FieldStorageConfig::create([
       'entity_type' => 'user',
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => \mb_strtolower($this->randomMachineName()),
       'type' => 'telephone',
     ]);
     $phone_field->save();
@@ -82,9 +73,9 @@ final class SmsBlastBrowserTest extends SmsFrameworkBrowserTestBase {
     }
 
     // Verify three of the users randomly.
-    $numbers = range(0, count($entities) - 1);
-    shuffle($numbers);
-    foreach (array_slice($numbers, 0, 3) as $i) {
+    $numbers = \range(0, \count($entities) - 1);
+    \shuffle($numbers);
+    foreach (\array_slice($numbers, 0, 3) as $i) {
       $this->verifyPhoneNumber($entities[$i], $phone_numbers[0]);
     }
 
@@ -95,7 +86,7 @@ final class SmsBlastBrowserTest extends SmsFrameworkBrowserTestBase {
     $edit['message'] = $this->randomString();
 
     $this->drupalGet(Url::fromRoute('sms_blast.blast'));
-    $this->submitForm($edit, t('Send'));
+    $this->submitForm($edit, \t('Send'));
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Message sent to 3 users.');
 

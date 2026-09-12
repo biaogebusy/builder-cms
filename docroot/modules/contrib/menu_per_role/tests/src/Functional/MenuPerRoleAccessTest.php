@@ -549,7 +549,9 @@ class MenuPerRoleAccessTest extends MenuPerRoleFunctionalTestBase {
   protected function linksAccessTest(): void {
     foreach ($this->expectations as $userProperty => $expectations) {
       if ($userProperty == 'anonymous') {
-        $this->drupalLogout();
+        if ($this->loggedInUser) {
+          $this->drupalLogout();
+        }
       }
       else {
         $this->drupalLogin($this->{$userProperty});

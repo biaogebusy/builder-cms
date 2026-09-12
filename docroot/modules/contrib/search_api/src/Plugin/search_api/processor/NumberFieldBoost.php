@@ -134,7 +134,7 @@ class NumberFieldBoost extends ProcessorPluginBase implements PluginFormInterfac
               }
               // Make sure the value is never negative.
               $value = max($value, 0);
-              $item->setBoost($item->getBoost() * (double) $value * (double) $settings['boost_factor']);
+              $item->setBoost($item->getBoost() * (float) $value * (float) $settings['boost_factor']);
             }
           }
         }

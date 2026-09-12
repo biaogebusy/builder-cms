@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\menu_test\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 
+/**
+ * Tests derivative for testing local tasks.
+ */
 class LocalTaskTest extends DeriverBase {
 
   /**

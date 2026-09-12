@@ -1,19 +1,19 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\sms\Exception\SmsStorageException;
-use Drupal\user\Entity\User;
-use Drupal\user\UserInterface;
 use Drupal\sms\Message\SmsMessageInterface as StdSmsMessageInterface;
 use Drupal\sms\Message\SmsMessageResultInterface as StdMessageResultInterface;
+use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  * Defines the SMS message entity.
@@ -107,7 +107,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    */
   public function removeRecipients(array $recipients) {
     $this->recipient_phone_number->filter(static function ($item) use ($recipients) {
-      return !in_array($item->value, $recipients);
+      return !\in_array($item->value, $recipients);
     });
     return $this;
   }
@@ -159,7 +159,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     $results = $this->entityTypeManager()
       ->getStorage('sms_result')
       ->loadByProperties(['sms_message' => $this->id()]);
-    return $results ? reset($results) : NULL;
+    return $results ? \reset($results) : NULL;
   }
 
   /**
@@ -208,7 +208,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
           'sms_message' => $this->id(),
           'recipient' => $recipient,
         ]);
-      return $reports ? reset($reports) : NULL;
+      return $reports ? \reset($reports) : NULL;
     }
     return NULL;
   }
@@ -222,7 +222,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       return $this->result->getReports();
     }
     elseif (!$this->isNew()) {
-      return array_values($this->entityTypeManager()
+      return \array_values($this->entityTypeManager()
         ->getStorage('sms_report')
         ->loadByProperties(['sms_message' => $this->id()]));
     }
@@ -449,7 +449,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     $recipients_all = $this->getRecipients();
 
     // Save processing by returning early.
-    if ($size < 1 || count($recipients_all) <= $size) {
+    if ($size < 1 || \count($recipients_all) <= $size) {
       return [$this];
     }
 
@@ -458,7 +458,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     $base->removeRecipients($recipients_all);
 
     $messages = [];
-    foreach (array_chunk($recipients_all, $size) as $recipients) {
+    foreach (\array_chunk($recipients_all, $size) as $recipients) {
       $messages[] = $base->createDuplicate()
         ->addRecipients($recipients);
     }
@@ -471,26 +471,26 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     // Identifiers.
     $fields['id'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('SMS message ID'))
-      ->setDescription(t('The SMS message ID.'))
+      ->setLabel(\t('SMS message ID'))
+      ->setDescription(\t('The SMS message ID.'))
       ->setReadOnly(TRUE)
       ->setSetting('unsigned', TRUE);
 
     $fields['uuid'] = BaseFieldDefinition::create('uuid')
-      ->setLabel(t('UUID'))
-      ->setDescription(t('The SMS message UUID.'))
+      ->setLabel(\t('UUID'))
+      ->setDescription(\t('The SMS message UUID.'))
       ->setReadOnly(TRUE);
 
     $fields['gateway'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Gateway Plugin'))
-      ->setDescription(t('The gateway plugin instance.'))
+      ->setLabel(\t('Gateway Plugin'))
+      ->setDescription(\t('The gateway plugin instance.'))
       ->setSetting('target_type', 'sms_gateway')
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 
     $fields['direction'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Transmission direction'))
-      ->setDescription(t('Transmission direction, See SmsMessageInterface::DIRECTION_*.'))
+      ->setLabel(\t('Transmission direction'))
+      ->setDescription(\t('Transmission direction, See SmsMessageInterface::DIRECTION_*.'))
       ->setReadOnly(TRUE)
       ->setSetting('unsigned', FALSE)
       ->setSetting('size', 'tiny')
@@ -498,74 +498,74 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
 
     // Sender and receivers.
     $fields['sender_name'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Sender name'))
-      ->setDescription(t('The name of the sender.'))
+      ->setLabel(\t('Sender name'))
+      ->setDescription(\t('The name of the sender.'))
       ->setRequired(FALSE);
 
     $fields['sender_phone_number'] = BaseFieldDefinition::create('telephone')
-      ->setLabel(t('Sender phone number'))
-      ->setDescription(t('The phone number of the sender.'))
+      ->setLabel(\t('Sender phone number'))
+      ->setDescription(\t('The phone number of the sender.'))
       ->setDefaultValue('')
       ->setRequired(FALSE);
 
     $fields['sender_entity'] = BaseFieldDefinition::create('dynamic_entity_reference')
-      ->setLabel(t('Sender entity'))
-      ->setDescription(t('The entity who sent the SMS message.'))
+      ->setLabel(\t('Sender entity'))
+      ->setDescription(\t('The entity who sent the SMS message.'))
       ->setRequired(FALSE);
 
     $fields['recipient_phone_number'] = BaseFieldDefinition::create('telephone')
-      ->setLabel(t('Recipient phone number'))
-      ->setDescription(t('The phone number of the recipient.'))
+      ->setLabel(\t('Recipient phone number'))
+      ->setDescription(\t('The phone number of the recipient.'))
       ->setRequired(FALSE)
       ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED);
 
     $fields['recipient_entity'] = BaseFieldDefinition::create('dynamic_entity_reference')
-      ->setLabel(t('Recipient entity'))
-      ->setDescription(t('The entity who received the SMS message.'))
+      ->setLabel(\t('Recipient entity'))
+      ->setDescription(\t('The entity who received the SMS message.'))
       ->setRequired(FALSE);
 
     // Meta information.
     $fields['options'] = BaseFieldDefinition::create('map')
-      ->setLabel(t('Options'))
-      ->setDescription(t('Options to pass to the gateway.'));
+      ->setLabel(\t('Options'))
+      ->setDescription(\t('Options to pass to the gateway.'));
 
     $fields['automated'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Is automated'))
-      ->setDescription(t('Whether this SMS message was generated automatically. 0=generated by user action, 1=generated automatically.'))
+      ->setLabel(\t('Is automated'))
+      ->setDescription(\t('Whether this SMS message was generated automatically. 0=generated by user action, 1=generated automatically.'))
       ->setDefaultValue(TRUE)
       ->setRequired(TRUE)
-      ->setSetting('on_label', t('Automated'))
-      ->setSetting('off_label', t('Not automated'));
+      ->setSetting('on_label', \t('Automated'))
+      ->setSetting('off_label', \t('Not automated'));
 
     $fields['queued'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Queued'))
-      ->setDescription(t('Whether the SMS message is in the queue to be processed.'))
+      ->setLabel(\t('Queued'))
+      ->setDescription(\t('Whether the SMS message is in the queue to be processed.'))
       ->setDefaultValue(FALSE)
       ->setRequired(TRUE)
-      ->setSetting('on_label', t('Queued'))
+      ->setSetting('on_label', \t('Queued'))
       // Off = processed, or not queued yet.
-      ->setSetting('off_label', t('Not queued'));
+      ->setSetting('off_label', \t('Not queued'));
 
     // Dates.
     $fields['created'] = BaseFieldDefinition::create('created')
-      ->setLabel(t('Creation date'))
-      ->setDescription(t('The time the SMS message was created.'))
+      ->setLabel(\t('Creation date'))
+      ->setDescription(\t('The time the SMS message was created.'))
       ->setRequired(TRUE);
 
     $fields['send_on'] = BaseFieldDefinition::create('created')
-      ->setLabel(t('Send date'))
-      ->setDescription(t('The time to send the SMS message.'))
+      ->setLabel(\t('Send date'))
+      ->setDescription(\t('The time to send the SMS message.'))
       ->setRequired(TRUE);
 
     $fields['processed'] = BaseFieldDefinition::create('timestamp')
-      ->setLabel(t('Processed'))
-      ->setDescription(t('The time the SMS message was processed. This value does not indicate whether the message was sent, only that the gateway accepted the request.'))
+      ->setLabel(\t('Processed'))
+      ->setDescription(\t('The time the SMS message was processed. This value does not indicate whether the message was sent, only that the gateway accepted the request.'))
       ->setRequired(FALSE);
 
     // Message contents.
     $fields['message'] = BaseFieldDefinition::create('string_long')
-      ->setLabel(t('Message'))
-      ->setDescription(t('The SMS message.'))
+      ->setLabel(\t('Message'))
+      ->setDescription(\t('The SMS message.'))
       ->setDefaultValue('')
       ->setRequired(TRUE);
 

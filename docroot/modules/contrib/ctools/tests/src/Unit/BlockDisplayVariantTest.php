@@ -23,6 +23,7 @@ use Drupal\Tests\UnitTestCase;
 class BlockDisplayVariantTest extends UnitTestCase {
 
   use ProphecyTrait;
+
   /**
    * Tests the submitConfigurationForm() method.
    *
@@ -48,7 +49,7 @@ class BlockDisplayVariantTest extends UnitTestCase {
       }
 
       /**
-       *
+       * Return region names.
        */
       public function getRegionNames() {
         return [

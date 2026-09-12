@@ -5,6 +5,7 @@ namespace Drupal\pathauto\Plugin\migrate\source;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\migrate\Attribute\MigrateSource;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
@@ -18,6 +19,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   source_module = "pathauto",
  * )
  */
+#[MigrateSource(
+  id: 'pathauto_pattern'
+)]
+// phpcs:ignore Drupal.Commenting.ClassComment.WrongStyle @phpstan-ignore class.extendsDeprecatedClass
 class PathautoPattern extends DrupalSqlBase {
 
   /**
@@ -31,6 +36,7 @@ class PathautoPattern extends DrupalSqlBase {
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, StateInterface $state, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfo $entity_bundle_info) {
+    // @phpstan-ignore method.deprecatedClass
     parent::__construct($configuration, $plugin_id, $plugin_definition, $migration, $state, $entity_type_manager);
     $this->entityTypeBundleInfo = $entity_bundle_info;
   }
@@ -83,6 +89,7 @@ class PathautoPattern extends DrupalSqlBase {
    * {@inheritdoc}
    */
   public function prepareRow(Row $row) {
+    // @phpstan-ignore property.deprecatedClass
     $entity_definitions = $this->entityTypeManager->getDefinitions();
     $name = $row->getSourceProperty('name');
     // Pattern variables are made of pathauto_[entity type]_[bundle]_pattern.

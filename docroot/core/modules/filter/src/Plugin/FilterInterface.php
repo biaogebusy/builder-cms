@@ -34,7 +34,6 @@ use Drupal\Core\Form\FormStateInterface;
  * convert smileys into images, etc.
  *
  * @see \Drupal\filter\Plugin\FilterInterface::process()
- * @see check_markup()
  *
  * Typically, only text processing is applied, but in more advanced use cases,
  * filters may also:
@@ -114,6 +113,7 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    * Returns the administrative label for this filter plugin.
    *
    * @return string
+   *   The administrative label of the filter plugin.
    */
   public function getLabel();
 
@@ -121,6 +121,7 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    * Returns the administrative description for this filter plugin.
    *
    * @return string
+   *   The administrative description of the filter plugin.
    */
   public function getDescription();
 
@@ -257,16 +258,9 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    * A filter's tips should be informative and to the point. Short tips are
    * preferably one-liners.
    *
-   * @param bool $long
-   *   Whether this callback should return a short tip to display in a form
-   *   (FALSE), or whether a more elaborate filter tips should be returned for
-   *   template_preprocess_filter_tips() (TRUE).
-   *
    * @return string|null
    *   Translated text to display as a tip, or NULL if this filter has no tip.
-   *
-   * @todo Split into getSummaryItem() and buildGuidelines().
    */
-  public function tips($long = FALSE);
+  public function tips();
 
 }

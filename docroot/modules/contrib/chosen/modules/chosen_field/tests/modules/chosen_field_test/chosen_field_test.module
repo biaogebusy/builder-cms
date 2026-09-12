@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Helper function(s) for chosen_field test(s).
+ */
+
+/**
+ * Returns allowed values for test with optgroups.
+ */
+function chosen_field_test_options_allowed_values_callback() {
+  return [
+    'Group 1' => [
+      0 => 'Zero',
+      1 => 'One',
+    ],
+    'Group 2' => [
+      2 => 'Some <script>dangerous</script> & unescaped <strong>markup</strong>',
+      3 => 'Some HTML encoded markup with &lt; &amp; &gt;',
+    ],
+  ];
+}

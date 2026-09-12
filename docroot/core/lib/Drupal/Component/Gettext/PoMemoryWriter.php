@@ -46,7 +46,8 @@ class PoMemoryWriter implements PoWriterInterface {
   /**
    * Get all stored PoItem's.
    *
-   * @return array PoItem
+   * @return array
+   *   Array of all PoItem elements.
    */
   public function getData() {
     return $this->items;
@@ -66,6 +67,7 @@ class PoMemoryWriter implements PoWriterInterface {
    * Not implemented. Not relevant for the MemoryWriter.
    */
   public function getLangcode() {
+    throw new \LogicException(__METHOD__ . '() not implemented. Not relevant for the MemoryWriter');
   }
 
   /**

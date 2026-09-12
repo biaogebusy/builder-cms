@@ -157,7 +157,6 @@ class PageBlockDisplayVariantTest extends UnitTestCase {
       ->getMock();
 
     $property = new \ReflectionProperty($variant_plugin, 'blockPluginCollection');
-    $property->setAccessible(TRUE);
     $property->setValue($variant_plugin, $block_collection);
 
     $page = $this->prophesize(PageInterface::class);
@@ -227,7 +226,6 @@ class PageBlockDisplayVariantTest extends UnitTestCase {
     $variant_plugin->submitConfigurationForm($form, $form_state);
 
     $property = new \ReflectionProperty($variant_plugin, 'configuration');
-    $property->setAccessible(TRUE);
     $this->assertSame($values['page_title'], $property->getValue($variant_plugin)['page_title']);
   }
 

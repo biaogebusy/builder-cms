@@ -243,15 +243,7 @@ class SettingsForm extends ConfigFormBase {
     // Refresh the subscription from Acquia
     // Allow other modules to add metadata to the subscription.
     $event = new AcquiaProductSettingsEvent($form, $form_state, $this->subscription);
-
-    // @todo Remove after dropping support for Drupal 8.
-    if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
-      $this->dispatcher->dispatch($event, AcquiaConnectorEvents::ACQUIA_PRODUCT_SETTINGS);
-    }
-    else {
-      // @phpstan-ignore-next-line
-      $this->dispatcher->dispatch(AcquiaConnectorEvents::ACQUIA_PRODUCT_SETTINGS, $event);
-    }
+    $this->dispatcher->dispatch($event, AcquiaConnectorEvents::ACQUIA_PRODUCT_SETTINGS);
 
     $form = $event->getForm();
     if (isset($form['product_settings'])) {
@@ -313,14 +305,7 @@ class SettingsForm extends ConfigFormBase {
       return;
     }
     $event = new AcquiaProductSettingsEvent($form, $form_state, $this->subscription);
-    // @todo Remove after dropping support for Drupal 8.
-    if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
-      $this->dispatcher->dispatch($event, AcquiaConnectorEvents::ALTER_PRODUCT_SETTINGS_SUBMIT);
-    }
-    else {
-      // @phpstan-ignore-next-line
-      $this->dispatcher->dispatch(AcquiaConnectorEvents::ALTER_PRODUCT_SETTINGS_SUBMIT, $event);
-    }
+    $this->dispatcher->dispatch($event, AcquiaConnectorEvents::ALTER_PRODUCT_SETTINGS_SUBMIT);
 
     $values = $form_state->getValues();
     $this->state->set('spi.site_name', $values['name']);

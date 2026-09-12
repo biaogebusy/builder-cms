@@ -7,14 +7,15 @@ namespace Drupal\Tests\media_library\FunctionalJavascript;
 use Drupal\media\Entity\Media;
 use Drupal\media_test_oembed\Controller\ResourceController;
 use Drupal\Tests\media\Traits\OEmbedTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore Drupalin Hustlin Schipulcon
-
 /**
  * Tests that oEmbed media can be added in the Media library's widget.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class WidgetOEmbedTest extends MediaLibraryTestBase {
 
   use OEmbedTestTrait;
@@ -124,10 +125,10 @@ class WidgetOEmbedTest extends MediaLibraryTestBase {
     // assertWaitOnAjaxRequest() required for input "id" attributes to
     // consistently match their label's "for" attribute.
     $assert_session->assertWaitOnAjaxRequest();
-    $this->waitForText('No matching provider found.');
+    $this->waitForText('No matching oEmbed provider found for resource:');
     // Assert we can not add a video ID that doesn't exist. We need to use a
     // video ID that will not be filtered by the regex, because otherwise the
-    // message 'No matching provider found.' will be returned.
+    // message 'No matching oEmbed provider found for resource: "..."' will be returned.
     $page->fillField('Add Type Five via URL', 'https://www.youtube.com/watch?v=PWjcqE3QKBg1');
     $page->pressButton('Add');
     // assertWaitOnAjaxRequest() required for input "id" attributes to
@@ -312,10 +313,10 @@ class WidgetOEmbedTest extends MediaLibraryTestBase {
     // assertWaitOnAjaxRequest() required for input "id" attributes to
     // consistently match their label's "for" attribute.
     $assert_session->assertWaitOnAjaxRequest();
-    $this->waitForText('No matching provider found.');
+    $this->waitForText('No matching oEmbed provider found for resource:');
     // Assert we can not add a video ID that doesn't exist. We need to use a
     // video ID that will not be filtered by the regex, because otherwise the
-    // message 'No matching provider found.' will be returned.
+    // message 'No matching oEmbed provider found for resource: "..."' will be returned.
     $page->fillField('Add Type Five via URL', 'https://www.youtube.com/watch?v=PWjcqE3QKBg1');
     $page->pressButton('Add');
     // assertWaitOnAjaxRequest() required for input "id" attributes to

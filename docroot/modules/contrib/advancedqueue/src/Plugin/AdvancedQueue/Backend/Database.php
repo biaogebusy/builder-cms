@@ -8,6 +8,7 @@ use Drupal\advancedqueue\Entity\QueueInterface;
 use Drupal\advancedqueue\Job;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -88,15 +89,33 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    * {@inheritdoc}
    */
   public function cleanupQueue() {
-    // Reset expired jobs.
-    $this->connection->update(static::TABLE)
-      ->fields([
-        'state' => Job::STATE_QUEUED,
-        'expires' => 0,
-      ])
+    // Find expired jobs for this queue only, then update them by job_id.
+    // A single UPDATE with a range condition on the expires column takes
+    // gap locks across the matching index range, which can deadlock with
+    // the single-row, primary-key updates performed by claimJob() and
+    // updateJob(). Updating by job_id in ascending order instead uses the
+    // same primary-key locking as those methods, and gives every writer a
+    // consistent lock order.
+    $job_ids = $this->connection->select(static::TABLE, 'a')
+      ->fields('a', ['job_id'])
+      ->condition('queue_id', $this->queueId)
       ->condition('expires', 0, '<>')
       ->condition('expires', $this->time->getCurrentTime(), '<')
-      ->execute();
+      ->orderBy('job_id', 'ASC')
+      ->execute()
+      ->fetchCol();
+
+    if ($job_ids) {
+      $this->executeWithDeadlockRetry(function () use ($job_ids) {
+        return $this->connection->update(static::TABLE)
+          ->fields([
+            'state' => Job::STATE_QUEUED,
+            'expires' => 0,
+          ])
+          ->condition('job_id', $job_ids, 'IN')
+          ->execute();
+      });
+    }
 
     // Cleanup old queue items.
     $this->cleanupQueueItems();
@@ -292,7 +311,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
         ->condition('job_id', $job_definition['job_id'])
         ->condition('expires', 0);
       // If there are affected rows, the claim succeeded.
-      if ($update->execute()) {
+      if ($this->executeWithDeadlockRetry(fn () => $update->execute())) {
         $job_definition['state'] = $state;
         $job_definition['expires'] = $expires;
         return $this->constructJobFromDefinition($job_definition);
@@ -357,6 +376,106 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
       ])
       ->condition('job_id', $job->getId())
       ->execute();
+  }
+
+  /**
+   * Executes a database write, retrying it if it hits lock contention.
+   *
+   * Concurrent writes to the queue table (job claims and queue cleanup)
+   * can be picked by the database as a deadlock victim, or (on SQLite,
+   * which has no row-level locking) simply find the database locked by
+   * another write. Either is expected under concurrency, and the affected
+   * write is safe to retry.
+   *
+   * @param callable $callback
+   *   A callback that performs the write and returns its result.
+   * @param int $max_attempts
+   *   The maximum number of attempts before giving up.
+   *
+   * @return mixed
+   *   The return value of the callback.
+   */
+  protected function executeWithDeadlockRetry(callable $callback, int $max_attempts = 3) {
+    $attempt = 0;
+    while (TRUE) {
+      try {
+        return $callback();
+      }
+      catch (DatabaseExceptionWrapper $e) {
+        $attempt++;
+        $previous = $e->getPrevious();
+        $is_retryable = $previous instanceof \PDOException && $this->isRetryableLockException($previous);
+        // On PostgreSQL, a failed statement leaves the whole transaction in
+        // an aborted state: every subsequent statement is refused with
+        // SQLSTATE 25P02 until an explicit ROLLBACK, even one that has
+        // nothing to do with the original failure. This callback normally
+        // runs outside of any transaction, in which case there is nothing
+        // to roll back; only do it if a transaction (started by this
+        // backend or, unusually, by a caller) is actually open. Do this
+        // whether or not we are about to retry, so the connection is left
+        // usable either way.
+        if ($this->connection->inTransaction()) {
+          // Roll back via the client connection directly (PDO::rollBack()),
+          // not a raw ROLLBACK query: the latter resets the transaction at
+          // the database level, but leaves PDO's own inTransaction() flag
+          // (and so, later, Drupal's transaction manager) believing a
+          // transaction is still open, causing a hard failure the next
+          // time anything tries to commit or roll back.
+          $this->connection->getClientConnection()->rollBack();
+          // Drupal's own transaction bookkeeping still thinks it owns an
+          // open transaction (or stack of them), even though the rollback
+          // above already ended it at the database level. Void it, so a
+          // Transaction object a caller is still holding safely no-ops on
+          // commit/release instead of trying to act on a transaction that
+          // no longer exists. On Drupal 10, transactionManager() can
+          // return FALSE for a driver that doesn't implement one (core's
+          // mysql/pgsql/sqlite drivers all do); on Drupal 11 it is always
+          // available.
+          if ($transaction_manager = $this->connection->transactionManager()) {
+            $transaction_manager->voidClientTransaction();
+          }
+        }
+        if (!$is_retryable || $attempt >= $max_attempts) {
+          throw $e;
+        }
+        usleep(random_int(50000, 150000));
+      }
+    }
+  }
+
+  /**
+   * Determines whether a database exception is retryable lock contention.
+   *
+   * The SQLSTATE (and, for SQLite, the driver-specific error code) that
+   * signals this differs per database engine:
+   * - MySQL: SQLSTATE 40001 is a detected deadlock.
+   * - PostgreSQL: SQLSTATE 40P01 is a detected deadlock; 40001 is a
+   *   serialization failure, which is likewise safe to retry.
+   * - SQLite has no row-level locking, so it can't deadlock. Concurrent
+   *   writers instead fail immediately with "database is locked" once
+   *   the connection's own busy timeout is exhausted. PDO reports this as
+   *   the generic SQLSTATE HY000, with the SQLite-specific SQLITE_BUSY (5)
+   *   or SQLITE_LOCKED (6) code in errorInfo[1].
+   *
+   * @param \PDOException $exception
+   *   The exception to check.
+   *
+   * @return bool
+   *   TRUE if the write is safe to retry.
+   */
+  protected function isRetryableLockException(\PDOException $exception): bool {
+    return match ($this->connection->driver()) {
+      'mysql' => $exception->getCode() === '40001',
+      'pgsql' => in_array($exception->getCode(), ['40001', '40P01'], TRUE),
+      // Reachable from ordinary single-writer contention (e.g. cron and a
+      // request both writing to the queue table at once), not only from
+      // the two-transaction lock cycles the deadlock tests construct -
+      // SQLite can't produce those (see ConcurrentCleanupDeadlockTest),
+      // but it produces this just from one write already holding the
+      // whole-database lock while another tries to write.
+      'sqlite' => $exception->getCode() === 'HY000' && in_array($exception->errorInfo[1] ?? NULL, [5, 6], TRUE),
+      default => FALSE,
+    };
   }
 
   /**

@@ -4,6 +4,7 @@
  * @file
  * Merge duplicate rows in group to one row.
  */
+
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;

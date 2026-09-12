@@ -1,0 +1,16 @@
+ckeditor5_premium_features_notifications__realtime_comment_notifications:
+  ckeditor5:
+    plugins:
+      - cloudServices.CloudServices
+      - realtimeAdapter.RealtimeAdapter
+      - comments.Comments
+      - commentsAdapter.CommentsAdapter
+      - realTimeCollaboration.RealTimeCollaborativeComments
+      - realtimeCommentNotifications.RealtimeCommentNotifications
+  drupal:
+    label: Realtime Comment Notifications
+    library: ckeditor5_premium_features_notifications/realtime-comment-notifications
+    class: Drupal\ckeditor5_premium_features_notifications\Plugin\CKEditor5Plugin\RealtimeCommentNotifications
+    elements: false
+    conditions:
+      toolbarItem: comment

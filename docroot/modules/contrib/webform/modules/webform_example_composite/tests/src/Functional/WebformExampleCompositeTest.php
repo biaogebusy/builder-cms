@@ -23,7 +23,7 @@ class WebformExampleCompositeTest extends WebformBrowserTestBase {
   /**
    * Tests webform example element.
    */
-  public function testWebformExampleComposite() {
+  public function testWebformExampleComposite(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('webform_example_composite');

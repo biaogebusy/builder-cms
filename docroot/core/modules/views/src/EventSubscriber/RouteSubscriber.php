@@ -18,7 +18,6 @@ use Symfony\Component\Routing\RouteCollection;
  * routes are overridden by views. This information is used to determine which
  * views have to be added by views in the dynamic event.
  *
- *
  * @see \Drupal\views\Plugin\views\display\PathPluginBase
  */
 class RouteSubscriber extends RouteSubscriberBase {
@@ -77,7 +76,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   public static function getSubscribedEvents(): array {
     $events = parent::getSubscribedEvents();
     $events[RoutingEvents::FINISHED] = ['routeRebuildFinished'];
-    // Ensure to run after the entity resolver subscriber
+    // Ensure to run after the entity resolver subscriber.
     // @see \Drupal\Core\EventSubscriber\EntityRouteAlterSubscriber
     $events[RoutingEvents::ALTER] = ['onAlterRoutes', -175];
 
@@ -139,8 +138,8 @@ class RouteSubscriber extends RouteSubscriberBase {
       if (($view = $view->getExecutable()) && $view instanceof ViewExecutable) {
         if ($view->setDisplay($display_id) && $display = $view->displayHandlers->get($display_id)) {
           if ($display instanceof DisplayRouterInterface) {
-            // If the display returns TRUE a route item was found, so it does not
-            // have to be added.
+            // If the display returns TRUE a route item was found, so it does
+            // not have to be added.
             $view_route_names = $display->alterRoutes($collection);
             $this->viewRouteNames = $view_route_names + $this->viewRouteNames;
             foreach ($view_route_names as $id_display => $route_name) {

@@ -1,0 +1,6 @@
+entity_share_client.entity.channel.collection:
+  route_name: entity.channel.collection
+  title: Channels
+  # This route is from the entity_share_client module which may not be enabled,
+  # but in that case this task plugin is simply ignored.
+  base_route: entity.import_config.collection

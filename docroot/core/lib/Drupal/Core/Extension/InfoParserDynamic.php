@@ -12,24 +12,12 @@ use Drupal\Core\Serialization\Yaml;
 class InfoParserDynamic implements InfoParserInterface {
 
   /**
-   * The root directory of the Drupal installation.
-   *
-   * @var string
-   */
-  protected $root;
-
-  /**
    * InfoParserDynamic constructor.
    *
-   * @param string|null $app_root
+   * @param string $root
    *   The root directory of the Drupal installation.
    */
-  public function __construct(?string $app_root = NULL) {
-    if ($app_root === NULL) {
-      @trigger_error('Calling InfoParserDynamic::__construct() without the $app_root argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3293709', E_USER_DEPRECATED);
-      $app_root = \Drupal::hasService('kernel') ? \Drupal::root() : DRUPAL_ROOT;
-    }
-    $this->root = $app_root;
+  public function __construct(protected string $root) {
   }
 
   /**
@@ -73,7 +61,7 @@ class InfoParserDynamic implements InfoParserInterface {
     try {
       $parsed_info['core_incompatible'] = !Semver::satisfies(\Drupal::VERSION, $parsed_info['core_version_requirement']);
     }
-    catch (\UnexpectedValueException $exception) {
+    catch (\UnexpectedValueException) {
       throw new InfoParserException("The 'core_version_requirement' constraint ({$parsed_info['core_version_requirement']}) is not a valid value in $filename");
     }
     if (isset($parsed_info['version'])) {
@@ -84,6 +72,9 @@ class InfoParserDynamic implements InfoParserInterface {
         throw new InfoParserException("The 'version' value must be a scalar in $filename");
       }
       elseif (!is_string($parsed_info['version'])) {
+        // @todo Replace this with an InfoParserException in Drupal 13.
+        // @see https://www.drupal.org/project/drupal/issues/3576313
+        @trigger_error("Using a non-string as the 'version' value in $filename is deprecated in drupal:11.4.0 and will be a fatal error in drupal:13.0.0. Instead, wrap the version value in single quotes. See https://www.drupal.org/node/3576311", E_USER_DEPRECATED);
         $parsed_info['version'] = (string) $parsed_info['version'];
       }
     }

@@ -8,12 +8,14 @@ use Drupal\Core\Config\Checkpoint\CheckpointStorageInterface;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Config\StorageComparer;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests CheckpointStorage operations.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class CheckpointStorageTest extends KernelTestBase {
 
   /**
@@ -29,6 +31,9 @@ class CheckpointStorageTest extends KernelTestBase {
     $this->installConfig(['system', 'config_test']);
   }
 
+  /**
+   * Tests the save and read operations of checkpoint storage.
+   */
   public function testConfigSaveAndRead(): void {
     $checkpoint_storage = $this->container->get('config.storage.checkpoint');
 
@@ -53,6 +58,9 @@ class CheckpointStorageTest extends KernelTestBase {
     $this->assertSame($checkpoint_storage->listAll(), $this->container->get('config.storage')->listAll());
   }
 
+  /**
+   * Tests the delete operation of checkpoint storage.
+   */
   public function testConfigDelete(): void {
     $checkpoint_storage = $this->container->get('config.storage.checkpoint');
 
@@ -87,6 +95,9 @@ class CheckpointStorageTest extends KernelTestBase {
     $this->assertContains('config_test.system', $checkpoint_storage->listAll());
   }
 
+  /**
+   * Tests the create operation of checkpoint storage.
+   */
   public function testConfigCreate(): void {
     $checkpoint_storage = $this->container->get('config.storage.checkpoint');
 
@@ -126,6 +137,9 @@ class CheckpointStorageTest extends KernelTestBase {
     $this->assertNotContains('config_test.system', $checkpoint_storage->listAll());
   }
 
+  /**
+   * Tests the rename operation of checkpoint storage.
+   */
   public function testConfigRename(): void {
     $checkpoint_storage = $this->container->get('config.storage.checkpoint');
     $check1 = $checkpoint_storage->checkpoint('A');
@@ -163,6 +177,9 @@ class CheckpointStorageTest extends KernelTestBase {
     $this->assertSame('Default', $checkpoint_storage->read('config_test.dynamic.dotted.default')['label']);
   }
 
+  /**
+   * Tests the revert operation of checkpoint storage.
+   */
   public function testRevert(): void {
     $checkpoint_storage = $this->container->get('config.storage.checkpoint');
     $check1 = $checkpoint_storage->checkpoint('A');
@@ -201,6 +218,9 @@ class CheckpointStorageTest extends KernelTestBase {
     $this->assertTrue($this->container->get('module_handler')->moduleExists('config_test'));
   }
 
+  /**
+   * Tests the rename operation of checkpoint storage with collections.
+   */
   public function testRevertWithCollections(): void {
     $collections = [
       'another_collection',
@@ -287,6 +307,9 @@ class CheckpointStorageTest extends KernelTestBase {
     }
   }
 
+  /**
+   * Gets the configuration importer.
+   */
   private function getConfigImporter(CheckpointStorageInterface $storage): ConfigImporter {
     $storage_comparer = new StorageComparer(
       $storage,

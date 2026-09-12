@@ -6,6 +6,7 @@ use Consolidation\AnnotatedCommand\AnnotationData;
 use Consolidation\AnnotatedCommand\CommandData;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\webform\Controller\WebformResultsExportController;
@@ -117,11 +118,11 @@ class WebformSubmissionCommands extends WebformCommandsBase {
    *
    * @command webform:export
    *
-   * @option exporter The type of export. (delimited, table, yaml, or json)
+   * @option exporter The type of export (i.e., delimited, table, yaml, or json). View all available exporters via /admin/reports/webform-plugins/exporters.
    * @option delimiter Delimiter between columns (defaults to site-wide setting). This option may need to be wrapped in quotes. i.e. --delimiter="\t".
    * @option multiple-delimiter Delimiter between an element with multiple values (defaults to site-wide setting).
    * @option file-name File name used to export submission and uploaded filed. You may use tokens.
-   * @option archive-type Archive file type for submission file uploadeds and generated records. (tar or zip)
+   * @option archive-type Archive file type for submission file uploaded and generated records. (tar or zip)
    * @option header-format Set to "label" (default) or "key"
    * @option options-item-format Set to "label" (default) or "key". Set to "key" to print select list values by their keys instead of labels.
    * @option options-single-format Set to "separate" (default) or "compact" to determine how single select list values are exported.
@@ -177,7 +178,7 @@ class WebformSubmissionCommands extends WebformCommandsBase {
     $file_path = ($submission_exporter->isArchive()) ? $submission_exporter->getArchiveFilePath() : $submission_exporter->getExportFilePath();
     if (isset($export_options['destination'])) {
       $this->output()->writeln(dt('Created @destination', ['@destination' => $export_options['destination']]));
-      $this->fileSystem->copy($file_path, $export_options['destination'], FileSystemInterface::EXISTS_REPLACE);
+      $this->fileSystem->copy($file_path, $export_options['destination'], FileExists::Replace);
     }
     else {
       $this->output()->writeln(file_get_contents($file_path));

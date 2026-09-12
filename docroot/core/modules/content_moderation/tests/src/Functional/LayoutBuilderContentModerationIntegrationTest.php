@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\content_moderation\Functional;
 
-use Drupal\block_content\Entity\BlockContentType;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\menu_ui\MenuUiUtility;
+use Drupal\Tests\block_content\Traits\BlockContentCreationTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Content Moderation's integration with Layout Builder.
- *
- * @group content_moderation
- * @group layout_builder
  */
+#[Group('content_moderation')]
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderContentModerationIntegrationTest extends BrowserTestBase {
 
+  use BlockContentCreationTrait;
   use ContentModerationTestTrait;
 
   /**
@@ -49,12 +53,11 @@ class LayoutBuilderContentModerationIntegrationTest extends BrowserTestBase {
     $this->createContentType(['type' => 'bundle_with_section_field']);
 
     // Add a new block content bundle to the editorial workflow.
-    BlockContentType::create([
+    $this->createBlockContentType([
       'id' => 'basic',
       'label' => 'Basic',
       'revision' => 1,
-    ])->save();
-    block_content_add_body_field('basic');
+    ], TRUE);
 
     // Enable layout overrides.
     LayoutBuilderEntityViewDisplay::load('node.bundle_with_section_field.default')
@@ -110,7 +113,7 @@ class LayoutBuilderContentModerationIntegrationTest extends BrowserTestBase {
         ],
       ],
     ]);
-    _menu_ui_node_save($node, [
+    \Drupal::service(MenuUiUtility::class)->menuUiNodeSave($node, [
       'title' => 'bar',
       'menu_name' => 'main',
       'description' => 'view bar',

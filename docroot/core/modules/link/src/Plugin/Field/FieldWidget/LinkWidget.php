@@ -10,7 +10,9 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\link\LinkItemInterface;
+use Drupal\link\LinkTitleVisibility;
 use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
@@ -46,11 +48,13 @@ class LinkWidget extends WidgetBase {
    *   The URI to get the displayable string for.
    *
    * @return string
+   *   The displayable string for the URI.
    *
    * @see static::getUserEnteredStringAsUri()
    */
   protected static function getUriAsDisplayableString($uri) {
     $scheme = parse_url($uri, PHP_URL_SCHEME);
+    $uri_reference = explode(':', $uri, 2)[1];
 
     // By default, the displayable string is the URI.
     $displayable_string = $uri;
@@ -58,8 +62,6 @@ class LinkWidget extends WidgetBase {
     // A different displayable string may be chosen in case of the 'internal:'
     // or 'entity:' built-in schemes.
     if ($scheme === 'internal') {
-      $uri_reference = explode(':', $uri, 2)[1];
-
       // @todo '<front>' is valid input for BC reasons, may be removed by
       //   https://www.drupal.org/node/2421941
       $path = parse_url($uri, PHP_URL_PATH);
@@ -78,8 +80,9 @@ class LinkWidget extends WidgetBase {
         $displayable_string = EntityAutocomplete::getEntityLabels([$entity]);
       }
     }
-    elseif ($scheme === 'route') {
-      $displayable_string = ltrim($displayable_string, 'route:');
+    // Strip the scheme from no-link routes, but leave it for all others.
+    elseif ($scheme === 'route' && self::isNoLinkRoute($uri_reference)) {
+      $displayable_string = $uri_reference;
     }
 
     return $displayable_string;
@@ -114,7 +117,7 @@ class LinkWidget extends WidgetBase {
       $uri = 'entity:node/' . $entity_id;
     }
     // Support linking to nothing.
-    elseif (in_array($string, ['<nolink>', '<none>', '<button>'], TRUE)) {
+    elseif (self::isNoLinkRoute($string)) {
       $uri = 'route:' . $string;
     }
     // Detect a schemeless string, map to 'internal:' URI.
@@ -146,7 +149,22 @@ class LinkWidget extends WidgetBase {
     // @todo '<front>' is valid input for BC reasons, may be removed by
     //   https://www.drupal.org/node/2421941
     if (parse_url($uri, PHP_URL_SCHEME) === 'internal' && !in_array($element['#value'][0], ['/', '?', '#'], TRUE) && !str_starts_with($element['#value'], '<front>')) {
-      $form_state->setError($element, new TranslatableMarkup('Manually entered paths should start with one of the following characters: / ? #'));
+      // Display an error message according to the link type.
+      $args = ['%link_example' => 'https://example.com'];
+      switch ($element['#link_type']) {
+        case LinkItemInterface::LINK_EXTERNAL:
+          $error_message = new TranslatableMarkup('External links must be a full URL including the protocol, such as %link_example.', $args);
+          break;
+
+        case LinkItemInterface::LINK_INTERNAL:
+          $error_message = new TranslatableMarkup('Enter a content title to select it, or enter an internal path starting with /, ? or #.');
+          break;
+
+        case LinkItemInterface::LINK_GENERIC:
+        default:
+          $error_message = new TranslatableMarkup('Enter a content title to select it, or enter an internal path starting with /, ? or #. External links must be a full URL including the protocol, such as %link_example.', $args);
+      }
+      $form_state->setError($element, $error_message);
       return;
     }
   }
@@ -155,12 +173,22 @@ class LinkWidget extends WidgetBase {
    * Form element validation handler for the 'title' element.
    *
    * Conditionally requires the link title if a URL value was filled in.
+   *
+   * @deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Instead,
+   * validation is performed by the LinkTitleRequiredConstraint on the LinkItem
+   * field type.
+   * @see https://www.drupal.org/node/3554139
    */
   public static function validateTitleElement(&$element, FormStateInterface $form_state, $form) {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Instead, validation is performed by the LinkTitleRequiredConstraint on the LinkItem field type. See https://www.drupal.org/node/3554139', E_USER_DEPRECATED);
     if ($element['uri']['#value'] !== '' && $element['title']['#value'] === '') {
-      // We expect the field name placeholder value to be wrapped in $this->t() here,
-      // so it won't be escaped again as it's already marked safe.
-      $form_state->setError($element['title'], new TranslatableMarkup('@title field is required if there is @uri input.', ['@title' => $element['title']['#title'], '@uri' => $element['uri']['#title']]));
+      // We expect the field name placeholder value to be wrapped in $this->t()
+      // here, so it won't be escaped again as it's already marked safe.
+      $form_state->setError($element['title'],
+        new TranslatableMarkup('@title field is required if there is @uri input.', [
+          '@title' => $element['title']['#title'],
+          '@uri' => $element['uri']['#title'],
+        ]));
     }
   }
 
@@ -171,7 +199,10 @@ class LinkWidget extends WidgetBase {
    */
   public static function validateTitleNoLink(&$element, FormStateInterface $form_state, $form) {
     if ($element['uri']['#value'] === '' && $element['title']['#value'] !== '') {
-      $form_state->setError($element['uri'], new TranslatableMarkup('The @uri field is required when the @title field is specified.', ['@title' => $element['title']['#title'], '@uri' => $element['uri']['#title']]));
+      $form_state->setError($element['uri'], new TranslatableMarkup('The @uri field is required when the @title field is specified.', [
+        '@title' => $element['title']['#title'],
+        '@uri' => $element['uri']['#title'],
+      ]));
     }
   }
 
@@ -192,7 +223,7 @@ class LinkWidget extends WidgetBase {
           $display_uri = static::getUriAsDisplayableString($item->uri);
         }
       }
-      catch (\InvalidArgumentException $e) {
+      catch (\InvalidArgumentException) {
         // If $item->uri is invalid, show value as is, so the user can see what
         // to edit.
         // @todo Add logging here in https://www.drupal.org/project/drupal/issues/3348020
@@ -218,7 +249,7 @@ class LinkWidget extends WidgetBase {
       //   in https://www.drupal.org/node/2423093.
       $element['uri']['#target_type'] = 'node';
       // Disable autocompletion when the first character is '/', '#' or '?'.
-      $element['uri']['#attributes']['data-autocomplete-first-character-blacklist'] = '/#?';
+      $element['uri']['#attributes']['data-autocomplete-first-character-denylist'] = '/#?';
 
       // The link widget is doing its own processing in
       // static::getUriAsDisplayableString().
@@ -229,12 +260,23 @@ class LinkWidget extends WidgetBase {
     // element prefix and description.
     if (!$this->supportsExternalLinks()) {
       $element['uri']['#field_prefix'] = rtrim(Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString(), '/');
-      $element['uri']['#description'] = $this->t('This must be an internal path such as %add-node. You can also start typing the title of a piece of content to select it. Enter %front to link to the front page. Enter %nolink to display link text only. Enter %button to display keyboard-accessible link text only.', ['%add-node' => '/node/add', '%front' => '<front>', '%nolink' => '<nolink>', '%button' => '<button>']);
+      $element['uri']['#description'] = $this->t('This must be an internal path such as %add-node. You can also start typing the title of a piece of content to select it. Enter %front to link to the front page. Enter %nolink to display link text only. Enter %button to display keyboard-accessible link text only.', [
+        '%add-node' => '/node/add',
+        '%front' => '<front>',
+        '%nolink' => '<nolink>',
+        '%button' => '<button>',
+      ]);
     }
     // If the field is configured to allow both internal and external links,
     // show a useful description.
     elseif ($this->supportsExternalLinks() && $this->supportsInternalLinks()) {
-      $element['uri']['#description'] = $this->t('Start typing the title of a piece of content to select it. You can also enter an internal path such as %add-node or an external URL such as %url. Enter %front to link to the front page. Enter %nolink to display link text only. Enter %button to display keyboard-accessible link text only.', ['%front' => '<front>', '%add-node' => '/node/add', '%url' => 'https://example.com', '%nolink' => '<nolink>', '%button' => '<button>']);
+      $element['uri']['#description'] = $this->t('Start typing the title of a piece of content to select it. You can also enter an internal path such as %add-node or an external URL such as %url. Enter %front to link to the front page. Enter %nolink to display link text only. Enter %button to display keyboard-accessible link text only.', [
+        '%front' => '<front>',
+        '%add-node' => '/node/add',
+        '%url' => 'https://example.com',
+        '%nolink' => '<nolink>',
+        '%button' => '<button>',
+      ]);
     }
     // If the field is configured to allow only external links, show a useful
     // description.
@@ -243,7 +285,8 @@ class LinkWidget extends WidgetBase {
     }
 
     // Make uri required on the front-end when title filled-in.
-    if (!$this->isDefaultValueWidget($form_state) && $this->getFieldSetting('title') !== DRUPAL_DISABLED && !$element['uri']['#required']) {
+    $title_visibility_setting = LinkTitleVisibility::tryFrom((int) $this->getFieldSetting('title'));
+    if (!$this->isDefaultValueWidget($form_state) && $title_visibility_setting !== LinkTitleVisibility::Disabled && !$element['uri']['#required']) {
       $parents = $element['#field_parents'];
       $parents[] = $this->fieldDefinition->getName();
       $selector = $root = array_shift($parents);
@@ -262,17 +305,13 @@ class LinkWidget extends WidgetBase {
       '#placeholder' => $this->getSetting('placeholder_title'),
       '#default_value' => $items[$delta]->title ?? NULL,
       '#maxlength' => 255,
-      '#access' => $this->getFieldSetting('title') != DRUPAL_DISABLED,
-      '#required' => $this->getFieldSetting('title') === DRUPAL_REQUIRED && $element['#required'],
+      '#access' => $title_visibility_setting != LinkTitleVisibility::Disabled,
+      '#required' => $title_visibility_setting === LinkTitleVisibility::Required && $element['#required'],
     ];
     // Post-process the title field to make it conditionally required if URL is
     // non-empty. Omit the validation on the field edit form, since the field
     // settings cannot be saved otherwise.
-    //
-    // Validate that title field is filled out (regardless of uri) when it is a
-    // required field.
-    if (!$this->isDefaultValueWidget($form_state) && $this->getFieldSetting('title') === DRUPAL_REQUIRED) {
-      $element['#element_validate'][] = [static::class, 'validateTitleElement'];
+    if (!$this->isDefaultValueWidget($form_state) && $title_visibility_setting === LinkTitleVisibility::Required) {
       $element['#element_validate'][] = [static::class, 'validateTitleNoLink'];
 
       if (!$element['title']['#required']) {
@@ -293,24 +332,22 @@ class LinkWidget extends WidgetBase {
 
     // Ensure that a URI is always entered when an optional title field is
     // submitted.
-    if (!$this->isDefaultValueWidget($form_state) && $this->getFieldSetting('title') == DRUPAL_OPTIONAL) {
+    if (!$this->isDefaultValueWidget($form_state) && $title_visibility_setting == LinkTitleVisibility::Optional) {
       $element['#element_validate'][] = [static::class, 'validateTitleNoLink'];
     }
 
-    // Exposing the attributes array in the widget is left for alternate and more
-    // advanced field widgets.
+    // Exposing the attributes array in the widget is left for alternate and
+    // more advanced field widgets.
     $element['attributes'] = [
       '#type' => 'value',
-      '#tree' => TRUE,
       '#value' => !empty($items[$delta]->options['attributes']) ? $items[$delta]->options['attributes'] : [],
-      '#attributes' => ['class' => ['link-field-widget-attributes']],
     ];
 
     // If cardinality is 1, ensure a proper label is output for the field.
     if ($this->fieldDefinition->getFieldStorageDefinition()->getCardinality() == 1) {
       // If the link title is disabled, use the field definition label as the
       // title of the 'uri' element.
-      if ($this->getFieldSetting('title') == DRUPAL_DISABLED) {
+      if ($title_visibility_setting == LinkTitleVisibility::Disabled) {
         $element['uri']['#title'] = $element['#title'];
         // By default the field description is added to the title field. Since
         // the title field is disabled, we add the description, if given, to the
@@ -390,7 +427,7 @@ class LinkWidget extends WidgetBase {
       '#description' => $this->t('Text that will be shown inside the field until a value is entered. This hint is usually a sample value or a brief description of the expected format.'),
       '#states' => [
         'invisible' => [
-          ':input[name="instance[settings][title]"]' => ['value' => DRUPAL_DISABLED],
+          ':input[name="instance[settings][title]"]' => ['value' => LinkTitleVisibility::Disabled->value],
         ],
       ],
     ];
@@ -445,6 +482,7 @@ class LinkWidget extends WidgetBase {
       if (isset($parameters['@uri'])) {
         $parameters['@uri'] = static::getUriAsDisplayableString($parameters['@uri']);
         $violations->set($offset, new ConstraintViolation(
+          // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
           $this->t($violation->getMessageTemplate(), $parameters),
           $violation->getMessageTemplate(),
           $parameters,
@@ -457,6 +495,29 @@ class LinkWidget extends WidgetBase {
       }
     }
     parent::flagErrors($items, $violations, $form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function errorElement(array $element, ConstraintViolationInterface $violation, array $form, FormStateInterface $form_state) {
+    $element = parent::errorElement($element, $violation, $form, $form_state);
+
+    $property_path_array = explode('.', $violation->getPropertyPath());
+    return ($element === FALSE) ? FALSE : $element[$property_path_array[1]];
+  }
+
+  /**
+   * Checks if a given route name is one of Drupal's special no-link routes.
+   *
+   * @param string $route
+   *   The route name.
+   *
+   * @return bool
+   *   TRUE if the route is a no-link route, FALSE otherwise.
+   */
+  protected static function isNoLinkRoute(string $route): bool {
+    return in_array($route, ['<nolink>', '<none>', '<button>'], TRUE);
   }
 
 }

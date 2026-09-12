@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Drupal\Tests\migrate\Kernel\Plugin;
 
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\migrate\Plugin\MigratePluginManager;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the migration plugin manager.
- *
- * @coversDefaultClass \Drupal\migrate\Plugin\MigratePluginManager
- * @group migrate
  */
+#[CoversClass(MigratePluginManager::class)]
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrationPluginConfigurationTest extends KernelTestBase {
 
   /**
@@ -21,15 +26,14 @@ class MigrationPluginConfigurationTest extends KernelTestBase {
     'migrate',
     'migrate_drupal',
     // Test with a simple migration.
-    'ban',
+    'migrate_plugin_config_test',
     'locale',
   ];
 
   /**
    * Tests merging configuration into a plugin through the plugin manager.
-   *
-   * @dataProvider mergeProvider
    */
+  #[DataProvider('mergeProvider')]
   public function testConfigurationMerge($id, $configuration, $expected): void {
     /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
     $migration = $this->container->get('plugin.manager.migration')
@@ -46,7 +50,7 @@ class MigrationPluginConfigurationTest extends KernelTestBase {
       // Tests adding new configuration to a migration.
       [
         // New configuration.
-        'd7_blocked_ips',
+        'simple_migration',
         [
           'source' => [
             'constants' => [
@@ -56,7 +60,7 @@ class MigrationPluginConfigurationTest extends KernelTestBase {
         ],
         // Expected final source configuration.
         [
-          'plugin' => 'd7_blocked_ips',
+          'plugin' => 'simple_source',
           'constants' => [
             'added_setting' => 'Ban them all!',
           ],
@@ -65,7 +69,7 @@ class MigrationPluginConfigurationTest extends KernelTestBase {
       // Tests overriding pre-existing configuration in a migration.
       [
         // New configuration.
-        'd7_blocked_ips',
+        'simple_migration',
         [
           'source' => [
             'plugin' => 'a_different_plugin',

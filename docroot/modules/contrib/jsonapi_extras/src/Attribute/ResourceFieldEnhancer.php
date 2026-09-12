@@ -23,13 +23,13 @@ class ResourceFieldEnhancer extends Plugin {
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup $description
    *   A short description of the formatter type.
    * @param array $dependencies
-   *   The name of modules that are required for this Field Enhancer to be usable.
+   *   The name of modules that are required for this enhancer to be usable.
    */
   public function __construct(
     public readonly string $id,
     public readonly TranslatableMarkup $label,
     public readonly TranslatableMarkup $description,
-    public readonly array $dependencies = [],
+    public array|null $dependencies = [],
   ) {
   }
 

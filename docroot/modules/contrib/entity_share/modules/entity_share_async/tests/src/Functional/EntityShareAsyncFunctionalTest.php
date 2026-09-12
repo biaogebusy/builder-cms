@@ -19,7 +19,10 @@ class EntityShareAsyncFunctionalTest extends EntityShareClientFunctionalTestBase
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'menu_ui',
     'entity_share_async',
+    'entity_share_test',
   ];
 
   /**

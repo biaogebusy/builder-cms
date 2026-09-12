@@ -2,17 +2,18 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\InlineForm;
 
+use Drupal\commerce\AjaxFormTrait;
+use Drupal\commerce\Attribute\CommerceInlineForm;
+use Drupal\commerce\CurrentCountryInterface;
+use Drupal\commerce\EntityHelper;
+use Drupal\commerce\Plugin\Commerce\InlineForm\EntityInlineFormBase;
+use Drupal\commerce_order\AddressBookInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\commerce\Attribute\CommerceInlineForm;
-use Drupal\commerce\CurrentCountryInterface;
-use Drupal\commerce\EntityHelper;
-use Drupal\commerce\Plugin\Commerce\InlineForm\EntityInlineFormBase;
-use Drupal\commerce_order\AddressBookInterface;
 use Drupal\profile\Entity\ProfileInterface;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,6 +32,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   label: new TranslatableMarkup("Customer profile"),
 )]
 class CustomerProfile extends EntityInlineFormBase {
+
+  use AjaxFormTrait;
 
   /**
    * The address book.
@@ -161,16 +164,33 @@ class CustomerProfile extends EntityInlineFormBase {
     $inline_form['#profile_scope'] = $this->configuration['profile_scope'];
 
     assert($this->entity instanceof ProfileInterface);
+
     $profile_type_id = $this->entity->bundle();
     $allows_multiple = $this->addressBook->allowsMultiple($profile_type_id);
     $customer = $this->loadUser($this->configuration['address_book_uid']);
     $available_countries = $this->configuration['available_countries'];
     $address_book_profile = NULL;
-    if (!$customer->isAnonymous() && $allows_multiple) {
+    $use_saved_profile = FALSE;
+
+    // Get saved profile and define if it should be used on the form.
+    $saved_profile = $form_state->get([$inline_form['#profile_scope'], 'saved_profile']);
+    $triggering_element_name = static::getTriggeringElementName($inline_form, $form_state);
+    $user_input = (array) NestedArray::getValue($form_state->getUserInput(), $inline_form['#parents']);
+    if ($saved_profile) {
+      $use_saved_profile = match ($triggering_element_name) {
+        'select_address', 'edit_button' => $user_input['select_address'] === '_original',
+        'save_button' => TRUE,
+        default => FALSE,
+      };
+    }
+
+    if ($allows_multiple && !$customer->isAnonymous()) {
       // Multiple address book profiles are allowed, prepare the dropdown.
       $address_book_profiles = $this->addressBook->loadAll($customer, $profile_type_id, $available_countries);
-      if ($address_book_profiles) {
-        $user_input = (array) NestedArray::getValue($form_state->getUserInput(), $inline_form['#parents']);
+      if ($use_saved_profile) {
+        $address_book_profile = $saved_profile;
+      }
+      elseif ($address_book_profiles) {
         if (!empty($user_input['select_address'])) {
           // An option was selected, pre-fill the profile form.
           $address_book_profile = $this->getProfileForOption($user_input['select_address'], $address_book_profiles);
@@ -182,8 +202,11 @@ class CustomerProfile extends EntityInlineFormBase {
         }
       }
 
-      $profile_options = $this->buildOptions($address_book_profiles);
-      if ($address_book_profile) {
+      $profile_options = $this->buildOptions($address_book_profiles, $saved_profile);
+      if ($use_saved_profile) {
+        $selected_option = '_original';
+      }
+      elseif ($address_book_profile) {
         $selected_option = $this->selectOptionForProfile($address_book_profile);
       }
       else {
@@ -223,7 +246,11 @@ class CustomerProfile extends EntityInlineFormBase {
       $this->entity->populateFromProfile($address_book_profile);
       $this->entity->unsetData('copy_to_address_book');
       $this->entity->unsetData('address_book_profile_id');
-      if (!$address_book_profile->isNew()) {
+      if ($use_saved_profile) {
+        $this->entity->setData('copy_to_address_book', $address_book_profile->getData('copy_to_address_book'));
+        $this->entity->setData('address_book_profile_id', $address_book_profile->getData('address_book_profile_id'));
+      }
+      elseif (!$address_book_profile->isNew()) {
         $this->entity->setData('address_book_profile_id', $address_book_profile->id());
       }
     }
@@ -244,6 +271,7 @@ class CustomerProfile extends EntityInlineFormBase {
           'class' => ['address-book-edit-button'],
         ],
       ];
+      $form_state->set(['use_save_button', $inline_form['#profile_scope']], FALSE);
     }
     else {
       // The $address_book_profile_id will be missing if the source
@@ -299,6 +327,22 @@ class CustomerProfile extends EntityInlineFormBase {
       ];
     }
 
+    // Add the "Save" button to manually store saved data within current form.
+    if ($this->configuration['admin']  && $form_state->get(['use_save_button', $inline_form['#profile_scope']])) {
+      $inline_form['save_button'] = [
+        '#type' => 'button',
+        '#value' => $this->t('Save'),
+        '#weight' => 1000,
+        '#submit' => [[$this, 'submitInlineForm']],
+        '#ajax' => [
+          'callback' => [get_class($this), 'ajaxRefreshForm'],
+          'element' => $inline_form['#parents'],
+        ],
+        '#limit_validation_errors' => [$inline_form['#parents']],
+        '#executes_submit_callback' => TRUE,
+      ];
+    }
+
     return $inline_form;
   }
 
@@ -316,11 +360,14 @@ class CustomerProfile extends EntityInlineFormBase {
    */
   public static function clearValues(array $element, FormStateInterface $form_state) {
     $triggering_element_name = static::getTriggeringElementName($element, $form_state);
-    if ($triggering_element_name != 'select_address') {
+    if (!in_array($triggering_element_name, ['select_address', 'save_button'])) {
       return $element;
     }
     $user_input = &$form_state->getUserInput();
     $inline_form_input = NestedArray::getValue($user_input, $element['#parents']);
+    if ($triggering_element_name === 'save_button') {
+      $inline_form_input['select_address'] = '_original';
+    }
     $inline_form_input = array_intersect_assoc($inline_form_input, ['select_address' => $inline_form_input['select_address']]);
     NestedArray::setValue($user_input, $element['#parents'], $inline_form_input);
     return $element;
@@ -343,12 +390,22 @@ class CustomerProfile extends EntityInlineFormBase {
    * {@inheritdoc}
    */
   public function submitInlineForm(array &$inline_form, FormStateInterface $form_state) {
+    // Get the correct inline form when "Save" button is used to save a profile.
+    $triggering_element_name = static::getTriggeringElementName($inline_form, $form_state);
+    if ($triggering_element_name === 'save_button') {
+      // Store the form array to update it later for correct process in the
+      // FormBuilder::processForm.
+      $form = $inline_form;
+      $triggering_element = $form_state->getTriggeringElement();
+      $inline_form = NestedArray::getValue($inline_form, array_slice($triggering_element['#array_parents'], 0, -1));
+    }
+
     parent::submitInlineForm($inline_form, $form_state);
 
+    $values = $form_state->getValue($inline_form['#parents']);
     if (!isset($inline_form['rendered'])) {
       $form_display = $this->loadFormDisplay();
       $form_display->extractFormValues($this->entity, $inline_form, $form_state);
-      $values = $form_state->getValue($inline_form['#parents']);
       if (!empty($values['copy_to_address_book'])) {
         $this->entity->setData('copy_to_address_book', TRUE);
       }
@@ -356,11 +413,26 @@ class CustomerProfile extends EntityInlineFormBase {
         $this->entity->unsetData('copy_to_address_book');
       }
     }
-    $this->entity->save();
 
-    if ($this->configuration['copy_on_save'] && $this->addressBook->needsCopy($this->entity)) {
-      $customer = $this->loadUser($this->configuration['address_book_uid']);
-      $this->addressBook->copy($this->entity, $customer);
+    // For the save button store the profile in the form.
+    if ($triggering_element_name === 'save_button') {
+      // Make sure that new entity is always created when "Save" button used.
+      $saved_profile = $this->entity->createDuplicate();
+      if (!$this->entity->isNew()) {
+        $saved_profile->setData('address_book_profile_id', $this->entity->id());
+      }
+      $form_state->set([$inline_form['#profile_scope'], 'saved_profile'], $saved_profile);
+      $form_state->setRebuild();
+      $inline_form = $form ?? $inline_form;
+    }
+    else {
+      $this->entity->save();
+      if ($this->configuration['copy_on_save']
+        && $this->addressBook->needsCopy($this->entity)
+      ) {
+        $customer = $this->loadUser($this->configuration['address_book_uid']);
+        $this->addressBook->copy($this->entity, $customer);
+      }
     }
   }
 
@@ -418,7 +490,7 @@ class CustomerProfile extends EntityInlineFormBase {
   protected function shouldRender(array $inline_form, FormStateInterface $form_state) {
     $render_parents = array_merge($inline_form['#parents'], ['render']);
     $triggering_element_name = static::getTriggeringElementName($inline_form, $form_state);
-    if ($triggering_element_name == 'select_address') {
+    if (in_array($triggering_element_name, ['select_address', 'save_button'], TRUE)) {
       // Reset the render flag to re-evaluate the newly selected profile.
       $form_state->set($render_parents, NULL);
     }
@@ -478,16 +550,21 @@ class CustomerProfile extends EntityInlineFormBase {
    *
    * @param \Drupal\profile\Entity\ProfileInterface[] $address_book_profiles
    *   The address book profiles.
+   * @param \Drupal\profile\Entity\ProfileInterface|null $saved_profile
+   *   The profile saved in the form.
    *
    * @return array
    *   The profile options.
    */
-  protected function buildOptions(array $address_book_profiles) {
+  protected function buildOptions(array $address_book_profiles, ?ProfileInterface $saved_profile = NULL) {
     $profile_options = EntityHelper::extractLabels($address_book_profiles);
     // The customer profile is not new, indicating that it is being edited.
     // Add an _original option to allow the customer to revert their changes
     // after selecting a different option.
-    if (!$this->entity->isNew()) {
+    if ($saved_profile) {
+      $profile_options['_original'] = $saved_profile->label();
+    }
+    elseif (!$this->entity->isNew()) {
       $profile_options['_original'] = $this->entity->label();
       $address_book_profile_id = $this->entity->getData('address_book_profile_id', 0);
       if (isset($address_book_profiles[$address_book_profile_id])) {

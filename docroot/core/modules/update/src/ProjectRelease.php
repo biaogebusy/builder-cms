@@ -143,13 +143,13 @@ final class ProjectRelease {
       new Type('string'),
       new NotBlank(),
     ];
-    $collection_constraint = new Collection([
-      'fields' => [
+    $collection_constraint = new Collection(
+      fields: [
         'version' => $not_blank_constraints,
         'date' => new Optional([new Type('numeric')]),
         'core_compatible' => new Optional([new Type('boolean')]),
         'core_compatibility_message' => new Optional($not_blank_constraints),
-        'status' => new Choice(['published', 'unpublished']),
+        'status' => new Choice(choices: ['published', 'unpublished']),
         'download_link' => new Optional($not_blank_constraints),
         'release_link' => $not_blank_constraints,
         'terms' => new Optional([
@@ -161,8 +161,8 @@ final class ProjectRelease {
           ]),
         ]),
       ],
-      'allowExtraFields' => TRUE,
-    ]);
+      allowExtraFields: TRUE,
+    );
     $violations = Validation::createValidator()->validate($data, $collection_constraint);
     if (count($violations)) {
       foreach ($violations as $violation) {

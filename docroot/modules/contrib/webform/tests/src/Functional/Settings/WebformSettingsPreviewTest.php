@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\webform\Functional\Settings;
 
-use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
 use Drupal\webform\Entity\Webform;
 
@@ -36,7 +35,7 @@ class WebformSettingsPreviewTest extends WebformBrowserTestBase {
   /**
    * Tests webform webform submission form preview.
    */
-  public function testPreview() {
+  public function testPreview(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -65,29 +64,14 @@ class WebformSettingsPreviewTest extends WebformBrowserTestBase {
     $assert_session->responseContains('<div class="webform-preview js-form-wrapper form-wrapper" data-drupal-selector="edit-preview" id="edit-preview">');
     $assert_session->responseContains('<div data-drupal-selector="edit-submission" class="webform-submission-data webform-submission-data--webform-test-form-preview webform-submission-data--view-mode-preview">');
     $assert_session->responseContains('<fieldset class="format-attributes-class webform-container webform-container-type-fieldset js-form-item form-item js-form-wrapper form-wrapper" id="test_form_preview--fieldset">');
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-textfield js-form-item form-item form-type-item js-form-type-item form-item-name js-form-item-name" id="test_form_preview--name">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-textfield js-form-item form-item js-form-type-item form-item-name js-form-item-name" id="test_form_preview--name">'),
-    );
+    $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-textfield js-form-item form-item form-type-item js-form-type-item form-item-name js-form-item-name" id="test_form_preview--name">');
     $assert_session->responseContains('<label>Name</label>' . PHP_EOL . '        test');
 
     $assert_session->responseContains('<section class="format-attributes-class js-form-item form-item js-form-wrapper form-wrapper webform-section" id="test_form_preview--container">');
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-email js-form-item form-item form-type-item js-form-type-item form-item-email js-form-item-email" id="test_form_preview--email">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-email js-form-item form-item js-form-type-item form-item-email js-form-item-email" id="test_form_preview--email">'),
-    );
+    $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-email js-form-item form-item form-type-item js-form-type-item form-item-email js-form-item-email" id="test_form_preview--email">');
     $assert_session->responseContains('<label>Email</label>' . PHP_EOL . '        <a href="mailto:example@example.com">example@example.com</a>');
 
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-checkbox js-form-item form-item form-type-item js-form-type-item form-item-checkbox js-form-item-checkbox" id="test_form_preview--checkbox">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-checkbox js-form-item form-item js-form-type-item form-item-checkbox js-form-item-checkbox" id="test_form_preview--checkbox">'),
-    );
+    $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-checkbox js-form-item form-item form-type-item js-form-type-item form-item-checkbox js-form-item-checkbox" id="test_form_preview--checkbox">');
     $assert_session->responseContains('<section class="format-attributes-class js-form-item form-item js-form-wrapper form-wrapper webform-section" id="test_form_preview--section">');
     $assert_session->responseContains('<label>Checkbox</label>' . PHP_EOL . '        Yes');
     $assert_session->responseContains('<div class="webform-preview js-form-wrapper form-wrapper" data-drupal-selector="edit-preview" id="edit-preview">');
@@ -136,12 +120,7 @@ class WebformSettingsPreviewTest extends WebformBrowserTestBase {
     $edit = ['name' => '', 'email' => '', 'checkbox' => FALSE];
     $this->submitForm($edit, 'Preview');
     $assert_session->responseContains('<label>Name</label>' . PHP_EOL . '        {Empty}');
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-email js-form-item form-item form-type-item js-form-type-item form-item-email js-form-item-email" id="test_form_preview--email">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-email js-form-item form-item js-form-type-item form-item-email js-form-item-email" id="test_form_preview--email">'),
-    );
+    $assert_session->responseContains('<div class="format-attributes-class webform-element webform-element-type-email js-form-item form-item form-type-item js-form-type-item form-item-email js-form-item-email" id="test_form_preview--email">');
     $assert_session->responseContains('<label>Email</label>' . PHP_EOL . '        {Empty}');
     $assert_session->responseContains('<label>Checkbox</label>' . PHP_EOL . '        No');
 

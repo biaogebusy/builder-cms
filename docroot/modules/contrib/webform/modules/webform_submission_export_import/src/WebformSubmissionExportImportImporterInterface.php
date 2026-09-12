@@ -17,7 +17,7 @@ interface WebformSubmissionExportImportImporterInterface {
    * @param \Drupal\webform\WebformInterface $webform
    *   A webform.
    */
-  public function setWebform(WebformInterface $webform = NULL);
+  public function setWebform(?WebformInterface $webform = NULL);
 
   /**
    * Get the webform whose submissions are being imported.
@@ -33,7 +33,7 @@ interface WebformSubmissionExportImportImporterInterface {
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   A webform's source entity.
    */
-  public function setSourceEntity(EntityInterface $entity = NULL);
+  public function setSourceEntity(?EntityInterface $entity = NULL);
 
   /**
    * Get the webform source entity whose submissions are being imported.

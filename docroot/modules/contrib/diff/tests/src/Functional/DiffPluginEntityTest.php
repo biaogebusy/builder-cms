@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Diff module entity plugins.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffPluginEntityTest extends DiffPluginTestBase {
 
   use FieldUiTestTrait;
-  use CoreVersionUiTestTrait;
 
   /**
    * {@inheritdoc}
@@ -74,18 +75,20 @@ class DiffPluginEntityTest extends DiffPluginTestBase {
     ]);
 
     // Reference article B in article A.
+    $this->drupalGet($node1->toUrl('edit-form'));
     $edit = [
       'field_reference[0][target_id]' => 'Article B (' . $node2->id() . ')',
       'revision' => TRUE,
     ];
-    $this->drupalPostNodeForm('node/' . $node1->id() . '/edit', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
 
     // Update article A so it points to article C instead of B.
+    $this->drupalGet($node1->toUrl('edit-form'));
     $edit = [
       'field_reference[0][target_id]' => 'Article C (' . $node3->id() . ')',
       'revision' => TRUE,
     ];
-    $this->drupalPostNodeForm('node/' . $node1->id() . '/edit', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
 
     // Check differences between revisions.
     $this->clickLink(\t('Revisions'));

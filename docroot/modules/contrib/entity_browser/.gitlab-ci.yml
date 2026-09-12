@@ -19,6 +19,22 @@ variables:
   # Broaden test coverage.
   OPT_IN_TEST_PREVIOUS_MINOR: 1
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 1
+  # Cross-dependencies that are not Drupal 12 ready yet; allow them to install
+  # against the next major so we can get actual test results (see #3576977).
+  _LENIENT_ALLOW_LIST: "paragraphs,entity_embed,embed,entityqueue,inline_entity_form,search_api"
   KUBERNETES_CPU_REQUEST: 8
   _CONCURRENCY_THREADS: 16
   _PHPUNIT_CONCURRENT: 1
+
+# We are only interested in PHPStan on the current version.
+phpstan (previous major):
+  rules:
+    - when: never
+phpstan (next minor):
+  rules:
+    - when: never
+phpstan (next major):
+  rules:
+    - when: never

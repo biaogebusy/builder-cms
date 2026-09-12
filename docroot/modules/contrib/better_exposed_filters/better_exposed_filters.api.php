@@ -5,6 +5,9 @@
  * Hooks provided by the Better Exposed Filters module.
  */
 
+use Drupal\views\ViewExecutable;
+use Drupal\views\Plugin\views\display\DisplayPluginBase;
+
 /**
  * Alters BEF options before the exposed form widgets are built.
  *
@@ -17,6 +20,6 @@
  */
 function hook_better_exposed_filters_options_alter(array &$options, ViewExecutable $view, DisplayPluginBase $displayHandler) {
   // Set the min/max value of a slider.
-  $settings['field_price_value']['slider_options']['bef_slider_min'] = 500;
-  $settings['field_price_value']['slider_options']['bef_slider_max'] = 5000;
+  $options['field_price_value']['slider_options']['bef_slider_min'] = 500;
+  $options['field_price_value']['slider_options']['bef_slider_max'] = 5000;
 }

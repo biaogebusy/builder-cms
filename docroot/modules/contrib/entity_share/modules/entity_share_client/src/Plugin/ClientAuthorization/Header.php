@@ -4,17 +4,18 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\ClientAuthorization;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_share_client\Attribute\ClientAuthorization;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationPluginBase;
 
 /**
  * Provides Header based client authorization.
- *
- * @ClientAuthorization(
- *   id = "header",
- *   label = @Translation("Header"),
- * )
  */
+#[ClientAuthorization(
+  id: 'header',
+  label: new TranslatableMarkup('Header'),
+)]
 class Header extends ClientAuthorizationPluginBase {
 
   /**

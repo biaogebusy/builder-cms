@@ -41,7 +41,7 @@ class EntityLocalTaskTest extends BrowserTestBase {
 
     $entity = EnhancedEntity::create([
       'type' => 'default',
-      'name' => 'Enhanced Entity test'
+      'name' => 'Enhanced Entity test',
     ]);
     $entity->save();
     $this->viewPath = $entity->toUrl()->toString();

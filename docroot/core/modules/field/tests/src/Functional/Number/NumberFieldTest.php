@@ -8,12 +8,14 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldConfigInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the creation of numeric fields.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class NumberFieldTest extends BrowserTestBase {
 
   /**
@@ -197,7 +199,7 @@ class NumberFieldTest extends BrowserTestBase {
     $this->assertSession()->fieldValueEquals("{$field_name}[0][value]", '');
     $this->assertSession()->responseContains('placeholder="4"');
 
-    // Submit a valid integer
+    // Submit a valid integer.
     $value = rand($minimum, $maximum);
     $edit = [
       "{$field_name}[0][value]" => $value,
@@ -207,7 +209,7 @@ class NumberFieldTest extends BrowserTestBase {
     $id = $match[1];
     $this->assertSession()->pageTextContains('entity_test ' . $id . ' has been created.');
 
-    // Try to set a value below the minimum value
+    // Try to set a value below the minimum value.
     $this->drupalGet('entity_test/add');
     $edit = [
       "{$field_name}[0][value]" => $minimum - 1,
@@ -215,7 +217,7 @@ class NumberFieldTest extends BrowserTestBase {
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("{$field_name} must be higher than or equal to {$minimum}.");
 
-    // Try to set a decimal value
+    // Try to set a decimal value.
     $this->drupalGet('entity_test/add');
     $edit = [
       "{$field_name}[0][value]" => 1.5,
@@ -223,7 +225,7 @@ class NumberFieldTest extends BrowserTestBase {
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("{$field_name} is not a valid number.");
 
-    // Try to set a value above the maximum value
+    // Try to set a value above the maximum value.
     $this->drupalGet('entity_test/add');
     $edit = [
       "{$field_name}[0][value]" => $maximum + 1,
@@ -261,7 +263,8 @@ class NumberFieldTest extends BrowserTestBase {
       $this->assertSession()->elementNotExists('xpath', '//div[@content="' . $valid_entry . '"]');
     }
 
-    // Test for the content attribute when a Prefix is displayed. Presumably this also tests for the attribute when a Suffix is displayed.
+    // Test for the content attribute when a Prefix is displayed. Presumably
+    // this also tests for the attribute when a Suffix is displayed.
     $display_repository->getViewDisplay('entity_test', 'entity_test')
       ->setComponent($field_name, [
         'type' => 'number_integer',

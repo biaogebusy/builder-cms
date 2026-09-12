@@ -63,7 +63,7 @@ class ParagraphsLibraryItemHasAllowedParagraphsTypeConstraintValidator extends C
   /**
    * {@inheritdoc}
    */
-  public function validate($value, Constraint $constraint) {
+  public function validate(mixed $value, Constraint $constraint): void {
     if (!$value instanceof EntityReferenceFieldItemListInterface) {
       throw new UnexpectedTypeException($value, EntityReferenceFieldItemListInterface::class);
     }

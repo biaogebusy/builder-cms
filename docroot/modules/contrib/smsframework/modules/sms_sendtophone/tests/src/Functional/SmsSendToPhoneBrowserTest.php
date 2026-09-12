@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms_sendtophone\Functional;
 
@@ -9,12 +9,12 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\node\Entity\NodeType;
+use Drupal\sms\Entity\PhoneNumberSettings;
 use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\sms_sendtophone\Plugin\Field\FieldFormatter\SmsLinkFormatter;
 use Drupal\sms_sendtophone\Plugin\Filter\FilterInlineSms;
 use Drupal\Tests\sms\Functional\SmsFrameworkBrowserTestBase;
-use Drupal\sms\Entity\PhoneNumberSettings;
 
 /**
  * Integration tests for the SMS SendToPhone Module.
@@ -23,9 +23,6 @@ use Drupal\sms\Entity\PhoneNumberSettings;
  */
 final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms',
     'sms_sendtophone',
@@ -35,18 +32,12 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
     'field_ui',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected $defaultTheme = 'stark';
 
   private FieldStorageConfigInterface $phoneField;
   private PhoneNumberSettingsInterface $phoneNumberSettings;
   private SmsGatewayInterface $gateway;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -68,7 +59,7 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
 
     $this->phoneField = FieldStorageConfig::create([
       'entity_type' => 'user',
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => \mb_strtolower($this->randomMachineName()),
       'type' => 'telephone',
     ]);
     $this->phoneField->save();
@@ -100,7 +91,7 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
     $expected = [];
     foreach (NodeType::loadMultiple() as $type) {
       $this->assertSession()->pageTextContains($type->get('name'));
-      if (rand(0, 1) > 0.5) {
+      if (\rand(0, 1) > 0.5) {
         $edit["content_types[" . $type->get('type') . "]"] = $expected[$type->get('type')] = $type->get('type');
       }
     }
@@ -113,11 +104,11 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
 
     // Create a new node with sendtophone enabled and verify that the button is
     // added.
-    $types = array_keys(array_filter($expected));
+    $types = \array_keys(\array_filter($expected));
     $node = $this->drupalCreateNode(['type' => $types[0]]);
     $this->drupalGet($node->toUrl());
     // Confirm message for user without confirmed number.
-    $this->assertSession()->pageTextContains(t('Set up and confirm your mobile number to send to phone.'));
+    $this->assertSession()->pageTextContains(\t('Set up and confirm your mobile number to send to phone.'));
 
     // Confirm phone number.
     $phone_number = $this->randomPhoneNumbers(1)[0];
@@ -141,7 +132,7 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
     $this->submitForm(['number' => $phone_number], 'Send');
 
     $sms_message = $this->getLastTestMessage($this->gateway);
-    static::assertTrue(in_array($phone_number, $sms_message->getRecipients()));
+    static::assertTrue(\in_array($phone_number, $sms_message->getRecipients()));
     static::assertEquals($sms_message->getMessage(), $node->toUrl()->setAbsolute()->toString());
   }
 
@@ -161,10 +152,10 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
     $this->drupalGet('admin/config/content/formats/manage/plain_text');
     $this->submitForm($edit, 'Save configuration');
     // Create a new node sms markup and verify that a link is created.
-    $type_names = array_keys(NodeType::loadMultiple());
+    $type_names = \array_keys(NodeType::loadMultiple());
     $node_body = $this->randomMachineName(30);
     $node = $this->drupalCreateNode([
-      'type' => array_pop($type_names),
+      'type' => \array_pop($type_names),
       'body' => [
         [
           'value' => "[sms]{$node_body}[/sms]",
@@ -205,8 +196,8 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
    */
   public function testFieldFormatAndWidget(): void {
     // Create a custom field of type 'text' using the sms_sendtophone formatter.
-    $bundles = array_keys(NodeType::loadMultiple());
-    $field_name = mb_strtolower($this->randomMachineName());
+    $bundles = \array_keys(NodeType::loadMultiple());
+    $field_name = \mb_strtolower($this->randomMachineName());
     $field_definition = [
       'field_name' => $field_name,
       'entity_type' => 'node',
@@ -265,7 +256,7 @@ final class SmsSendToPhoneBrowserTest extends SmsFrameworkBrowserTestBase {
     $this->submitForm([], 'Send');
 
     $sms_message = $this->getLastTestMessage($this->gateway);
-    static::assertTrue(in_array($phone_number, $sms_message->getRecipients()), 'Message sent to correct number');
+    static::assertTrue(\in_array($phone_number, $sms_message->getRecipients()), 'Message sent to correct number');
     static::assertEquals($sms_message->getMessage(), $random_text, 'Field content sent to user');
   }
 

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\node\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\node\Plugin\migrate\source\d6\Node;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore tnid
-
 /**
  * Tests D6 node source plugin with 'node_type' configuration.
- *
- * @covers \Drupal\node\Plugin\migrate\source\d6\Node
- *
- * @group node
  */
+#[CoversClass(Node::class)]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeByNodeTypeTest extends MigrateSqlSourceTestBase {
 
   /**

@@ -7,7 +7,8 @@
         "ext-json": "*"
     },
     "require-dev": {
-        "acquia/coding-standards": "^2"
+        "acquia/coding-standards": "^2",
+        "drupal/key": "^1 || ^2"
     },
     "extra": {
         "branch-alias": {

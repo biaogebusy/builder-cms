@@ -9,7 +9,3 @@ services:
     arguments: ['@config.factory']
     tags:
       - { name: encoder, format: xlsx }
-  xls_serialization.subscriber:
-    class: Drupal\xls_serialization\EventSubscriber\Subscriber
-    tags:
-      - { name: event_subscriber }

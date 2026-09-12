@@ -7,12 +7,14 @@ namespace Drupal\Tests\menu_link_content\Kernel\Migrate\d6;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Menu link migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateMenuLinkTranslationTest extends MigrateDrupal6TestBase {
 
   use UserCreationTrait;

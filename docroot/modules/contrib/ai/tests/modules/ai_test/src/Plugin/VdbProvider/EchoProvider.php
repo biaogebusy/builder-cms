@@ -104,7 +104,7 @@ class EchoProvider extends AiVdbProviderClientBase implements ContainerFactoryPl
    * {@inheritdoc}
    */
   public function isSetup(): bool {
-    return TRUE;
+    return FALSE;
   }
 
   /**

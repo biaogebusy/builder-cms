@@ -2,12 +2,17 @@
 
 namespace Drupal\ai_automators\Plugin\FieldWidgetAction;
 
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 
 /**
- * The AltText action.
+ * The Tags Taxonomy Autocomplete action.
+ *
+ * Targets the entity_reference_autocomplete_tags widget — a single text
+ * input where all referenced terms are stored as a comma-separated list,
+ * not as per-delta sub-elements.
  */
 #[FieldWidgetAction(
   id: 'automator_autocomplete_tags_on_taxonomy',
@@ -20,51 +25,23 @@ class AutoCompleteTagsTaxonomy extends AutomatorBaseAction {
 
   /**
    * {@inheritdoc}
+   *
+   * The tags autocomplete widget renders a single text input where all
+   * tags are stored as a comma-separated list. The default per-delta
+   * setFormInput() would write the wrong shape.
    */
-  public string $formElementProperty = 'target_id';
-
-  /**
-   * Ajax handler for Automators.
-   */
-  public function aiAutomatorsAjax(array &$form, FormStateInterface $form_state) {
-    // Get the triggering element, as it contains the settings.
-    $triggering_element = $form_state->getTriggeringElement();
-    $array_parents = $triggering_element['#array_parents'];
-    array_pop($array_parents);
-    $array_parents[] = static::FORM_ELEMENT_PROPERTY;
-    $form_key = $array_parents[0];
-    return $this->populateAutomatorValues($form, $form_state, $form_key, NULL);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function saveFormValues(array &$form, string $form_key, $entity, ?int $key = NULL): array {
-    // Specific saving for autocomplete tags on taxonomy.
-    if (is_null($key)) {
-      // If not key is provided, we should iterate through all items.
-      $text_items = [];
-      foreach ($entity->get($form_key) as $index => $item) {
-        if ($item->get($this->formElementProperty)) {
-          $form[$form_key]['widget']['target_id']['#default_value'][$index] = $item->entity;
-          $text_items[] = $item->entity->label() . ' (' . $item->entity->id() . ')';
-        }
+  protected function setFormInput(FieldableEntityInterface $entity, FormStateInterface $form_state, $form_key): void {
+    $input = $form_state->getUserInput();
+    $tags = [];
+    foreach ($entity->get($form_key) as $item) {
+      $term = $item->entity ?? NULL;
+      if (!$term) {
+        continue;
       }
-      $form[$form_key]['widget']['target_id']['#value'] = implode(', ', $text_items);
+      $tags[] = $term->label() . ' (' . $term->id() . ')';
     }
-    else {
-      if (isset($entity->get($form_key)[0])) {
-        $item = $entity->get($form_key)[0];
-        $text_items = [];
-        if ($item->get($this->formElementProperty)) {
-          $form[$form_key]['widget']['target_id']['#default_value'][$key] = $item->entity;
-          $text_items[] = $item->entity->label() . ' (' . $item->entity->id() . ')';
-        }
-        $form[$form_key]['widget']['target_id']['#value'] = implode(', ', $text_items);
-      }
-    }
-
-    return $form[$form_key];
+    $input[$form_key]['target_id'] = implode(', ', $tags);
+    $form_state->setUserInput($input);
   }
 
 }

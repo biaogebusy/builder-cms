@@ -12,19 +12,12 @@ use Symfony\Component\Routing\RouteCollection;
 class TestRouteSubscriber extends RouteSubscriberBase {
 
   /**
-   * The state store.
-   */
-  protected State $state;
-
-  /**
    * Constructor method.
    *
    * @param \Drupal\Core\State\State $state
    *   The object State.
    */
-  public function __construct(State $state) {
-    $this->state = $state;
-  }
+  public function __construct(protected State $state) {}
 
   /**
    * {@inheritdoc}

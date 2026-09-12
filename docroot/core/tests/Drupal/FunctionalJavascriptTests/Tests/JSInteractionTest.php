@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Drupal\FunctionalJavascriptTests\Tests;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use WebDriver\Exception;
 
 /**
  * Tests fault tolerant interactions.
- *
- * @group javascript
  */
+#[Group('javascript')]
+#[RunTestsInSeparateProcesses]
 class JSInteractionTest extends WebDriverTestBase {
 
   /**

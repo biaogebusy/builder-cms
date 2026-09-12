@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\webform\Utility\WebformElementHelper;
 
 /**
@@ -27,10 +27,7 @@ class WebformElementPluginDefinitionsTest extends WebformElementBrowserTestBase 
     'webform_cards',
     'webform_entity_print_attachment',
     'webform_image_select',
-    'webform_location_geocomplete',
-    'webform_location_places',
     'webform_options_custom',
-    'webform_toggles',
   ];
 
   /**
@@ -43,7 +40,7 @@ class WebformElementPluginDefinitionsTest extends WebformElementBrowserTestBase 
   /**
    * Test element definitions.
    */
-  public function testElementDefinitions() {
+  public function testElementDefinitions(): void {
     // Comparing all element's expected and actual definitions ensures
     // that there are not unexpected changes to any element's definitions.
     $expected_definitions = $this->getExpectedElementDefinitions();
@@ -1350,44 +1347,6 @@ webform_link:
   container: false
   root: false
   multiple: true
-webform_location_geocomplete:
-  dependencies: {  }
-  default_key: ''
-  category: 'Composite elements'
-  description: 'Provides a form element to collect valid location information (address, longitude, latitude, geolocation) using Google Maps API''s Geocoding and Places Autocomplete.'
-  hidden: false
-  multiline: true
-  composite: true
-  states_wrapper: true
-  deprecated: true
-  deprecated_message: 'The jQuery: Geocoding and Places Autocomplete Plugin library is not being maintained. It has been <a href="https://www.drupal.org/node/2991275">deprecated</a> and will be removed before Webform 8.x-5.0.'
-  id: webform_location_geocomplete
-  label: 'Location (Geocomplete)'
-  class: Drupal\webform_location_geocomplete\Plugin\WebformElement\WebformLocationGeocomplete
-  provider: webform_location_geocomplete
-  input: true
-  container: false
-  root: false
-  multiple: true
-webform_location_places:
-  dependencies: {  }
-  default_key: ''
-  category: 'Composite elements'
-  description: 'Provides a form element to collect valid location information (address, longitude, latitude, geolocation) using Algolia Places.'
-  hidden: false
-  multiline: true
-  composite: true
-  states_wrapper: true
-  deprecated: false
-  deprecated_message: ''
-  id: webform_location_places
-  label: 'Location (Algolia Places)'
-  class: Drupal\webform_location_places\Plugin\WebformElement\WebformLocationPlaces
-  provider: webform_location_places
-  input: true
-  container: false
-  root: false
-  multiple: true
 webform_mapping:
   dependencies: {  }
   default_key: ''
@@ -1826,44 +1785,6 @@ webform_time:
   label: Time
   class: Drupal\webform\Plugin\WebformElement\WebformTime
   provider: webform
-  input: true
-  container: false
-  root: false
-  multiple: true
-webform_toggle:
-  dependencies: {  }
-  default_key: ''
-  category: 'Advanced elements'
-  description: 'Provides a form element for toggling a single on/off state.'
-  hidden: false
-  multiline: false
-  composite: false
-  states_wrapper: false
-  deprecated: true
-  deprecated_message: 'The Toggles library is not being maintained and has major accessibility issues. It has been <a href="https://www.drupal.org/project/webform/issues/2890861">deprecated</a> and will be removed before Webform 8.x-5.0.'
-  id: webform_toggle
-  label: Toggle
-  class: Drupal\webform_toggles\Plugin\WebformElement\WebformToggle
-  provider: webform_toggles
-  input: true
-  container: false
-  root: false
-  multiple: false
-webform_toggles:
-  dependencies: {  }
-  default_key: ''
-  category: 'Options elements'
-  description: 'Provides a form element for toggling multiple on/off states.'
-  hidden: false
-  multiline: false
-  composite: false
-  states_wrapper: false
-  deprecated: true
-  deprecated_message: 'The Toggles library is not being maintained and has major accessibility issues. It has been <a href="https://www.drupal.org/project/webform/issues/2890861">deprecated</a> and will be removed before Webform 8.x-5.0.'
-  id: webform_toggles
-  label: Toggles
-  class: Drupal\webform_toggles\Plugin\WebformElement\WebformToggles
-  provider: webform_toggles
   input: true
   container: false
   root: false

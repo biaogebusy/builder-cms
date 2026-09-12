@@ -10,15 +10,9 @@ use Drupal\redis\ClientFactory;
 class LockFactory {
 
   /**
-   * @var \Drupal\redis\ClientInterface
-   */
-  protected $clientFactory;
-
-  /**
    * Creates a redis LockFactory.
    */
-  public function __construct(ClientFactory $client_factory) {
-    $this->clientFactory = $client_factory;
+  public function __construct(protected ClientFactory $clientFactory) {
   }
 
   /**

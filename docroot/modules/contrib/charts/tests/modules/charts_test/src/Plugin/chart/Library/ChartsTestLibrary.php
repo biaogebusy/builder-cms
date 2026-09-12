@@ -2,10 +2,10 @@
 
 namespace Drupal\charts_test\Plugin\chart\Library;
 
+use Drupal\charts\ApplyRawOptionsTrait;
 use Drupal\charts\Attribute\Chart;
 use Drupal\charts\Plugin\chart\Library\ChartBase;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
@@ -32,6 +32,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   ]
 )]
 class ChartsTestLibrary extends ChartBase implements ContainerFactoryPluginInterface {
+
+  use ApplyRawOptionsTrait;
 
   /**
    * The element info manager.
@@ -131,12 +133,8 @@ class ChartsTestLibrary extends ChartBase implements ContainerFactoryPluginInter
     $chart_definition['tooltips'] = $element['#tooltips'];
     $chart_definition['foo_configuration'] = $this->configuration['foo'] ?? '';
 
-    // Merge in chart raw options.
-    if (!empty($element['#raw_options'])) {
-      $chart_definition = NestedArray::mergeDeep($chart_definition, $element['#raw_options']);
-    }
-
-    return $chart_definition;
+    // Merge in chart raw options and return the definition.
+    return $this->applyRawOptions($element, $chart_definition);
   }
 
   /**

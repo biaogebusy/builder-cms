@@ -412,4 +412,27 @@ class WebformArrayHelper {
     }
   }
 
+  /**
+   * Compares two arrays for equality by checking if they have the same elements.
+   *
+   * @param mixed $a
+   *   The first value to compare, which should be an array.
+   * @param mixed $b
+   *   The second value to compare, which should be an array.
+   *
+   * @return bool
+   *   Returns TRUE if both values are arrays, have the same number of elements,
+   *   and contain the same elements; otherwise, returns FALSE.
+   *
+   * @see https://www.php.net/manual/en/language.operators.comparison.php#70762
+   */
+  public static function equal($a, $b) {
+    return (
+         is_array($a)
+         && is_array($b)
+         && count($a) === count($b)
+         && array_diff($a, $b) === array_diff($b, $a)
+    );
+  }
+
 }

@@ -12,20 +12,22 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\views\Entity\View;
 use Drupal\views\ViewExecutableFactory;
 use Drupal\views_ui\ViewListBuilder;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * @coversDefaultClass \Drupal\views_ui\ViewListBuilder
- * @group views_ui
+ * Tests Drupal\views_ui\ViewListBuilder.
  */
+#[CoversClass(ViewListBuilder::class)]
+#[Group('views_ui')]
 class ViewListBuilderTest extends UnitTestCase {
 
   /**
    * Tests the listing of displays on a views list builder.
    *
    * @see \Drupal\views_ui\ViewListBuilder::getDisplaysList()
-   * @covers ::buildRow
    */
   public function testBuildRowEntityList(): void {
     $storage = $this->getMockBuilder('Drupal\Core\Config\Entity\ConfigEntityStorage')
@@ -84,7 +86,15 @@ class ViewListBuilderTest extends UnitTestCase {
     $parent_form_selector = $this->createMock(MenuParentFormSelector::class);
     $page_display = $this->getMockBuilder('Drupal\views\Plugin\views\display\Page')
       ->onlyMethods(['initDisplay', 'getPath'])
-      ->setConstructorArgs([[], 'default', $display_manager->getDefinition('page'), $route_provider, $state, $menu_storage, $parent_form_selector])
+      ->setConstructorArgs([
+        [],
+        'default',
+        $display_manager->getDefinition('page'),
+        $route_provider,
+        $state,
+        $menu_storage,
+        $parent_form_selector,
+      ])
       ->getMock();
     $page_display->expects($this->any())
       ->method('getPath')
@@ -189,8 +199,14 @@ class ViewListBuilderTest extends UnitTestCase {
 
 }
 
+/**
+ * Stub class for testing ViewListBuilder methods.
+ */
 class TestViewListBuilder extends ViewListBuilder {
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOperations(EntityInterface $entity) {
     return [];
   }

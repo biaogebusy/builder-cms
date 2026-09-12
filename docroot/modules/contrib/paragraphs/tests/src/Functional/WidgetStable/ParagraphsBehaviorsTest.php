@@ -2,11 +2,16 @@
 
 namespace Drupal\Tests\paragraphs\Functional\WidgetStable;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests paragraphs behavior plugins.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsBehaviorsTest extends ParagraphsTestBase {
 
   /**

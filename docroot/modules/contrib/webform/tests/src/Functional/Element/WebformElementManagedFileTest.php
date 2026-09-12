@@ -61,7 +61,7 @@ class WebformElementManagedFileTest extends WebformElementManagedFileTestBase {
   /**
    * Test single and multiple file upload.
    */
-  public function testFileUpload() {
+  public function testFileUpload(): void {
     $assert_session = $this->assertSession();
 
     /* Element rendering */
@@ -78,7 +78,7 @@ class WebformElementManagedFileTest extends WebformElementManagedFileTestBase {
     $assert_session->responseContains('<label style="color: red" for="edit-managed-file-single-button-custom-upload-button--2" class="button button-action webform-file-button">{Custom label}</label>');
 
     // Check comma delimited file extensions.
-    $assert_session->responseContains('Allowed types: txt, text.');
+    $assert_session->responseContains('Allowed types: txt text.');
 
     /* Element processing */
 
@@ -151,7 +151,7 @@ class WebformElementManagedFileTest extends WebformElementManagedFileTestBase {
    *
    * The property #file_name_pattern is tested.
    */
-  public function testFileRename() {
+  public function testFileRename(): void {
     $webform = Webform::load('test_element_managed_file_name');
 
     $source_for_filename = $this->randomMachineName();
@@ -197,7 +197,7 @@ class WebformElementManagedFileTest extends WebformElementManagedFileTestBase {
   /**
    * Test file management.
    */
-  public function testFileManagement() {
+  public function testFileManagement(): void {
     $this->drupalLogin($this->rootUser);
 
     $webform = Webform::load('test_element_managed_file');
@@ -264,7 +264,7 @@ class WebformElementManagedFileTest extends WebformElementManagedFileTestBase {
   /**
    * Test file upload with disabled results.
    */
-  public function testFileUploadWithDisabledResults() {
+  public function testFileUploadWithDisabledResults(): void {
     $this->drupalLogin($this->rootUser);
 
     $webform = Webform::load('test_element_managed_file_dis');

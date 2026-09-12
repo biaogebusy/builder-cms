@@ -11,3 +11,6 @@ commerce_payment.commerce_payment_gateway.plugin.test_onsite:
     api_key:
       type: string
       label: 'API key'
+    skip_add_payment_method_form:
+      type: boolean
+      label: 'Skip add payment method form in checkout'

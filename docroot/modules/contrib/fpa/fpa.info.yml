@@ -3,10 +3,11 @@ type: module
 description: Fast filtering on permissions administration form.
 core_version_requirement: ^9.4 || ^10.0 || ^11
 package: Administration
+configure: fpa.settings
 dependencies:
   - js_cookie:js_cookie
 
-# Information added by Drupal.org packaging script on 2024-12-19
-version: '4.0.1'
+# Information added by Drupal.org packaging script on 2026-07-01
+version: '4.0.2'
 project: 'fpa'
-datestamp: 1734622937
+datestamp: 1782908493

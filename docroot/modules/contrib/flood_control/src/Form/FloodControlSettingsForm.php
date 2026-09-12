@@ -9,12 +9,14 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\flood_control\FloodWhiteList;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Administration settings form.
  */
 class FloodControlSettingsForm extends ConfigFormBase {
+
 
   /**
    * The date formatter interface.
@@ -135,7 +137,7 @@ class FloodControlSettingsForm extends ConfigFormBase {
     ];
     $form['flood_control']['ip_white_list'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('IP whitelist'),
+      '#title' => $this->t('Allowed IPs'),
       '#default_value' => $flood_control_config->get('ip_white_list') ?? '',
       '#description' => $this->t('Enter the IP addresses or IP address ranges that will have unrestricted access. <br />Enter one per single line IP-address in format XXX.XXX.XXX.XXX, or IP-address range in format XXX.XXX.XXX.YYY-XXX.XXX.XXX.ZZZ.'),
     ];
@@ -177,12 +179,12 @@ class FloodControlSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Validating whitelisted ip addresses.
-    $whitelistIps = flood_control_get_whitelist_ips($form_state->getValue('ip_white_list'));
+    // Validating allowed listed ip addresses.
+    $allowedListIps = FloodWhiteList::getAllowedlistIps($form_state->getValue('ip_white_list'));
 
     // Checking single ip addresses.
-    if (!empty($whitelistIps['addresses'])) {
-      foreach ($whitelistIps['addresses'] as $ipAddress) {
+    if (!empty($allowedListIps['addresses'])) {
+      foreach ($allowedListIps['addresses'] as $ipAddress) {
         if (!filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE)) {
           $form_state->setErrorByName('ip_white_list', $this->t('IP address %ip_address is not valid.', ['%ip_address' => $ipAddress]));
         }
@@ -190,8 +192,8 @@ class FloodControlSettingsForm extends ConfigFormBase {
     }
 
     // Checking ip ranges.
-    if (!empty($whitelistIps['ranges'])) {
-      foreach ($whitelistIps['ranges'] as $ipRange) {
+    if (!empty($allowedListIps['ranges'])) {
+      foreach ($allowedListIps['ranges'] as $ipRange) {
         [$ipLower, $ipUpper] = explode('-', $ipRange, 2);
 
         if (!filter_var($ipLower, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE)) {

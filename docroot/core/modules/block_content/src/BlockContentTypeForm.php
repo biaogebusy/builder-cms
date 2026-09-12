@@ -6,6 +6,7 @@ use Drupal\Core\Entity\BundleEntityFormBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\language\Element\LanguageConfiguration;
 use Drupal\language\Entity\ContentLanguageSettings;
 
 /**
@@ -80,7 +81,7 @@ class BlockContentTypeForm extends BundleEntityFormBase {
         '#default_value' => $language_configuration,
       ];
 
-      $form['#submit'][] = 'language_configuration_element_submit';
+      $form['#submit'][] = LanguageConfiguration::class . '::submit';
     }
 
     $form['actions'] = ['#type' => 'actions'];
@@ -117,7 +118,6 @@ class BlockContentTypeForm extends BundleEntityFormBase {
       $logger->notice('Block type %label has been updated.', ['%label' => $block_type->label(), 'link' => $edit_link]);
     }
     else {
-      block_content_add_body_field($block_type->id());
       $this->messenger()->addStatus($this->t('Block type %label has been added.', ['%label' => $block_type->label()]));
       $logger->notice('Block type %label has been added.', ['%label' => $block_type->label(), 'link' => $edit_link]);
     }

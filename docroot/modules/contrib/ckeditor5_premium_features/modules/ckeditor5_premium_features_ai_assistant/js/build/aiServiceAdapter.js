@@ -1,0 +1,5 @@
+/*!
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+!function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t():"function"==typeof define&&define.amd?define([],t):"object"==typeof exports?exports.CKEditor5=t():(e.CKEditor5=e.CKEditor5||{},e.CKEditor5.aiServiceAdapter=t())}(self,()=>(()=>{"use strict";var e={d:(t,o)=>{for(var r in o)e.o(o,r)&&!e.o(t,r)&&Object.defineProperty(t,r,{enumerable:!0,get:o[r]})},o:(e,t)=>Object.prototype.hasOwnProperty.call(e,t)},t={};e.d(t,{default:()=>o});const o={AIServiceAdapter:class{static get pluginName(){return"AIServiceAdapter"}constructor(e){this.editor=e;const t=this.editor.plugins.get("AIAdapter");let o;o="aws"===(this.editor.config._config.ai.assistant??this.editor.config._config.ai).textAdapter?e.plugins.get("AWSTextAdapter"):e.plugins.get("OpenAITextAdapter"),t.set("textAdapter",o)}}};return t=t.default})());

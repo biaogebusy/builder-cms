@@ -9,10 +9,14 @@ use Drupal\Core\Recipe\InvalidConfigException;
 use Drupal\Core\Recipe\Recipe;
 use Drupal\Core\Recipe\RecipeRunner;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group Recipe
+ * Tests Config Validation.
  */
+#[Group('Recipe')]
+#[RunTestsInSeparateProcesses]
 class ConfigValidationTest extends KernelTestBase {
 
   /**
@@ -37,7 +41,7 @@ class ConfigValidationTest extends KernelTestBase {
     $dir = uniqid('public://');
     mkdir($dir . '/config', recursive: TRUE);
 
-    $data = file_get_contents($this->getDrupalRoot() . '/core/modules/config/tests/config_test/config/install/config_test.types.yml');
+    $data = file_get_contents($this->root . '/core/modules/config/tests/config_test/config/install/config_test.types.yml');
     assert(is_string($data));
     $data = Yaml::decode($data);
     // The `array` key needs to be an array, not an integer. If the config is

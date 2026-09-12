@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\user\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JS components added to the PasswordConfirm render element.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class PasswordConfirmWidgetTest extends WebDriverTestBase {
 
   /**

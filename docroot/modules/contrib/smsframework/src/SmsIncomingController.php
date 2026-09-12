@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms;
 
 use Drupal\Core\Controller\ControllerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\sms\Provider\SmsProviderInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 
@@ -57,7 +57,7 @@ class SmsIncomingController extends ControllerBase {
       ->getArguments($request, $controller);
 
     /** @var \Drupal\sms\SmsProcessingResponse $response */
-    $response = call_user_func_array($controller, $arguments);
+    $response = \call_user_func_array($controller, $arguments);
 
     foreach ($response->getMessages() as $message) {
       $this->smsProvider->queue($message);

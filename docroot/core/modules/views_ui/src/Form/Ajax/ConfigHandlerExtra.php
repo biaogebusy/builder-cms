@@ -70,13 +70,21 @@ class ConfigHandlerExtra extends ViewsFormBase {
     if ($item) {
       $handler = $executable->display_handler->getHandler($type, $id);
       if (empty($handler)) {
-        $form['markup'] = ['#markup' => $this->t("Error: handler for @table > @field doesn't exist!", ['@table' => $item['table'], '@field' => $item['field']])];
+        $form['markup'] = [
+          '#markup' => $this->t("Error: handler for @table > @field doesn't exist!", [
+            '@table' => $item['table'],
+            '@field' => $item['field'],
+          ]),
+        ];
       }
       else {
         $handler->init($executable, $executable->display_handler, $item);
         $types = ViewExecutable::getHandlerTypes();
 
-        $form['#title'] = $this->t('Configure extra settings for @type %item', ['@type' => $types[$type]['lstitle'], '%item' => $handler->adminLabel()]);
+        $form['#title'] = $this->t('Configure extra settings for @type %item', [
+          '@type' => $types[$type]['lstitle'],
+          '%item' => $handler->adminLabel(),
+        ]);
 
         $form['#section'] = $display_id . '-' . $type . '-' . $id;
 
@@ -95,6 +103,13 @@ class ConfigHandlerExtra extends ViewsFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $form_state->get('handler')->validateExtraOptionsForm($form['options'], $form_state);
+
+    if ($form_state->getErrors()) {
+      // Trigger a form rerender so error messages are displayed correctly in
+      // the AJAX modal.
+      // @see \Drupal\views_ui\Form\Ajax\ViewsFormBase::ajaxFormWrapper()
+      $form_state->set('rerender', TRUE);
+    }
   }
 
   /**
@@ -112,10 +127,10 @@ class ConfigHandlerExtra extends ViewsFormBase {
       $item[$key] = $value;
     }
 
-    // Store the item back on the view
+    // Store the item back on the view.
     $view->getExecutable()->setHandler($form_state->get('display_id'), $form_state->get('type'), $form_state->get('id'), $item);
 
-    // Write to cache
+    // Write to cache.
     $view->cacheSet();
   }
 

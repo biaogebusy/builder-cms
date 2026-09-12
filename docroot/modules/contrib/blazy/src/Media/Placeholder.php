@@ -2,8 +2,8 @@
 
 namespace Drupal\blazy\Media;
 
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Theme\Attributes;
-use Drupal\blazy\internals\Internals;
 
 /**
  * Provides placeholder thumbnail image.
@@ -46,7 +46,7 @@ class Placeholder {
    */
   public static function blur(array &$variables, array &$settings) {
     $attributes = &$variables['attributes'];
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $uri = $blazies->get('blur.uri');
     $url = $blazies->get('blur.url');
 
@@ -82,6 +82,7 @@ class Placeholder {
         'class' => ['b-blur'],
         'data-b-blur' => "$store::$id::$mime::$url",
         'decoding' => 'async',
+        'fetchpriority' => 'low',
       ],
     ] + $dimensions;
 
@@ -124,7 +125,7 @@ class Placeholder {
   /**
    * Build thumbnails, also to provide placeholder for blur effect.
    *
-   * Requires image style and dimensions setup after BlazyImage::prepare().
+   * Requires image style and dimensions setup after Image::prepare().
    * The `[data-b-thumb|data-thumb(deprecated)]` attribute usages:
    * - Zoom-in-out effect as seen at Splidebox and PhotoSwipe.
    * - Hoverable or static grid pagination/ thumbnails seen at Splide/ Slick.
@@ -150,7 +151,7 @@ class Placeholder {
     self::thumbnails($settings);
 
     // Apply attributes related to Blur and Thumbnail image style.
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     if ($url = $blazies->get('thumbnail.url')) {
       $attributes[Attributes::data($blazies, 'thumb')] = $url;
     }
@@ -167,7 +168,7 @@ class Placeholder {
    * Checks for blur settings, required Image style and dimensions setup.
    */
   private static function blurs(array &$settings): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     if (!$blazies->use('blur')) {
       return;
     }
@@ -194,20 +195,23 @@ class Placeholder {
    * which was already warned about anyway.
    */
   private static function dataImage(array &$settings, $uri, $tn_uri, $tn_url, $style): void {
-    $blazies = $settings['blazies'];
+    $manager = Internals::blazy();
+    if (!$manager) {
+      return;
+    }
+
+    $blazies = Internals::getBlazies($settings);
     if (!$blazies->use('blur')) {
       return;
     }
 
     // Provides default path, in case required by global, but not provided.
-    if ($manager = Internals::service('blazy.manager')) {
-      $style = $style ?: $manager->load('thumbnail', 'image_style');
-    }
+    $style = $style ?: $manager->load('thumbnail', 'image_style');
 
-    if (empty($tn_uri) && $style && BlazyFile::isValidUri($uri)) {
+    if (empty($tn_uri) && $style && Uri::isValid($uri)) {
       $options['unsafe'] = FALSE;
       $tn_uri = $style->buildUri($uri);
-      $tn_url = BlazyImage::url($uri, $style, $options);
+      $tn_url = Url::fromUri($uri, $style, $options);
     }
 
     // Overrides placeholder with data URI based on configured thumbnail.
@@ -234,7 +238,7 @@ class Placeholder {
    * Ensures the thumbnail exists before creating a dataURI.
    */
   private static function derivative(&$blazies, $uri, $tn_uri, $style, $key = 'blur'): bool {
-    if (BlazyFile::isValidUri($tn_uri)) {
+    if (Uri::isValid($tn_uri)) {
       $blazies->set($key . '.uri', $tn_uri);
       if (!$blazies->get($key . '.checked')) {
         if ($style && !is_file($tn_uri)) {
@@ -254,22 +258,34 @@ class Placeholder {
    * placeholder, thumbnailed slider arrows, zoomed/ projected image like
    * Splidebox/ PhotoSwipe, etc.
    *
+   * @param array $settings
+   *   The modified settings.
+   *
    * @see self::prepare()
    */
   private static function thumbnails(array &$settings): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $style   = $blazies->get('thumbnail.style');
     $width   = $height = 1;
     $uri     = $blazies->get('image.uri');
     $tn_uri  = $settings['thumbnail_uri'] ?? NULL;
     $tn_uri  = $blazies->get('thumbnail.uri') ?: $tn_uri;
+    $switch  = $settings['media_switch'] ?? '';
     $tn_url  = '';
+
+    // Fixed for reversed thumbnail when using elevatezoomplus.
+    // @todo move it to elevatezoomplus if doable.
+    if ($style && $switch === 'elevatezoomplus') {
+      if ($image_style = $blazies->get('image.style')) {
+        $style = $image_style;
+      }
+    }
 
     // Supports unique thumbnail different from main image, such as logo for
     // thumbnail and main image for company profile.
     if ($tn_uri) {
-      // $tn_url = BlazyImage::toUrl($settings, $style, $tn_uri);
-      $tn_url = BlazyImage::url($tn_uri, $style);
+      // $tn_url = Url::fromAny($settings, $style, $tn_uri);
+      $tn_url = Url::fromUri($tn_uri, $style);
     }
 
     // This one uses non-unique image, similar to the main stage image.
@@ -277,8 +293,8 @@ class Placeholder {
       $disabled = $blazies->is('external') || $blazies->is('svg');
       if (!$disabled) {
         $_tn_uri = $style->buildUri($uri);
-        // $tn_url = BlazyImage::toUrl($settings, $style, $uri);
-        $_tn_url = BlazyImage::url($uri, $style);
+        // $tn_url = Url::fromAny($settings, $style, $uri);
+        $_tn_url = Url::fromUri($uri, $style);
 
         // The latter allows keeping original for [data-b-thumb], while having
         // unique thumbnails for navigation. Not good for pagination/ dots.
@@ -319,7 +335,7 @@ class Placeholder {
     $blazies->set('placeholder.url', $placeholder);
 
     if ($blazies->get('resimage.id')) {
-      BlazyResponsiveImage::fallback($settings, $placeholder);
+      ResponsiveImage::fallback($settings, $placeholder);
 
       // @todo decide priority whether various thumbnails or one fallback style.
       // Thumbnail gives more selective styles per field than a single fallback.

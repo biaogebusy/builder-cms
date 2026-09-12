@@ -2,9 +2,9 @@
 
 /**
  * @file
+ * Install file for the Entity Construction Kit (ECK) module.
  */
 
-use Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface;
 use Drupal\eck\Entity\EckEntityBundle;
 
 /**
@@ -15,6 +15,7 @@ function eck_update_8001() {
     ->getStorage('eck_entity_type')
     ->loadMultiple();
   $names = [];
+
   foreach ($entity_types as $entity_type) {
     $names[] = "eck.eck_entity_type.{$entity_type->id()}";
   }
@@ -30,7 +31,8 @@ function eck_update_8001() {
   }
 
   drupal_flush_all_caches();
-  EntityDefinitionUpdateManagerInterface::getChangeList();
+  $definition_update_manager = \Drupal::service('entity.definition_update_manager');
+  $definition_update_manager->getChangeList();
 }
 
 /**
@@ -49,7 +51,8 @@ function eck_update_8002() {
  * @see https://www.drupal.org/node/2646412
  */
 function eck_update_8003() {
-  EntityDefinitionUpdateManagerInterface::getChangeList();
+  $definition_update_manager = \Drupal::service('entity.definition_update_manager');
+  $definition_update_manager->getChangeList();
 }
 
 /**
@@ -108,5 +111,23 @@ function eck_update_8006() {
     $keys['published'] = 'status';
     $entity_type->set('entity_keys', $keys);
     $definition_update_manager->updateEntityType($entity_type);
+  }
+}
+
+/**
+ * Add 'standalone_url' key for entity type config.
+ */
+function eck_update_8007() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('eck.eck_entity_type.') as $name) {
+    $config = $config_factory->getEditable($name);
+    if ($config->get('standalone_url') !== NULL) {
+      continue;
+    }
+
+    // By default, 'standalone_url' field will be enabled for existing
+    // entity types.
+    $config->set('standalone_url', TRUE);
+    $config->save();
   }
 }

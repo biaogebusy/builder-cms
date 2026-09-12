@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Composer\Generator;
 
+use Drupal\Composer\Composer;
 use Drupal\Composer\Generator\Builder\DrupalCoreRecommendedBuilder;
 use Drupal\Composer\Generator\Builder\DrupalDevDependenciesBuilder;
 use Drupal\Composer\Generator\Builder\DrupalPinnedDevDependenciesBuilder;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
-use Drupal\Composer\Composer;
 
 /**
  * Test DrupalCoreRecommendedBuilder.
- *
- * @group Metapackage
  */
+#[Group('Metapackage')]
 class BuilderTest extends TestCase {
 
   /**
    * Provides test data for testBuilder.
    */
-  public static function builderTestData() {
+  public static function builderTestData(): array {
     return [
       [
         DrupalCoreRecommendedBuilder::class,
@@ -32,12 +33,18 @@ class BuilderTest extends TestCase {
           'require' =>
           [
             'drupal/core' => Composer::drupalVersionBranch(),
-            'symfony/polyfill-ctype' => '~v1.12.0',
             'symfony/yaml' => '~v3.4.32',
           ],
           'conflict' =>
           [
             'webflo/drupal-core-strict' => '*',
+          ],
+          'extra' =>
+          [
+            'branch-alias' =>
+            [
+              'dev-main' => '11.4.x-dev',
+            ],
           ],
         ],
       ],
@@ -57,16 +64,25 @@ class BuilderTest extends TestCase {
           [
             'webflo/drupal-core-require-dev' => '*',
           ],
+          'extra' =>
+          [
+            'branch-alias' =>
+            [
+              'dev-main' => '11.4.x-dev',
+            ],
+          ],
         ],
       ],
 
       [
+        // @phpstan-ignore classConstant.deprecatedClass
         DrupalPinnedDevDependenciesBuilder::class,
         [
           'name' => 'drupal/core-dev-pinned',
           'type' => 'metapackage',
-          'description' => 'Pinned require-dev dependencies from drupal/drupal; use in addition to drupal/core-recommended to run tests from drupal/core.',
+          'description' => 'Deprecated. Pinned require-dev dependencies from drupal/drupal; use in addition to drupal/core-recommended to run tests from drupal/core. Use drupal/core-dev instead to avoid security vulnerabilities from pinned versions.',
           'license' => 'GPL-2.0-or-later',
+          'abandoned' => 'drupal/core-dev',
           'require' =>
           [
             'drupal/core' => Composer::drupalVersionBranch(),
@@ -77,6 +93,13 @@ class BuilderTest extends TestCase {
           [
             'webflo/drupal-core-require-dev' => '*',
           ],
+          'extra' =>
+          [
+            'branch-alias' =>
+            [
+              'dev-main' => '11.4.x-dev',
+            ],
+          ],
         ],
       ],
 
@@ -85,9 +108,8 @@ class BuilderTest extends TestCase {
 
   /**
    * Tests all of the various kinds of builders.
-   *
-   * @dataProvider builderTestData
    */
+  #[DataProvider('builderTestData')]
   public function testBuilder($builderClass, $expected): void {
     $fixtures = new Fixtures();
     $drupalCoreInfo = $fixtures->drupalCoreComposerFixture();

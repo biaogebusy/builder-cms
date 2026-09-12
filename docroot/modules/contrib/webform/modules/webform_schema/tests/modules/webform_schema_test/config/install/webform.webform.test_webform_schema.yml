@@ -58,6 +58,7 @@ elements: |
     '#selection_handler': 'default:user'
     '#selection_settings':
       include_anonymous: true
+      target_bundles: null
 css: ''
 javascript: ''
 settings:

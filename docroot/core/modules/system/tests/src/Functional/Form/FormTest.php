@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Functional\Form;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
+use Drupal\filter\Entity\FilterFormat;
 use Drupal\form_test\Form\FormTestDisabledElementsForm;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\RoleInterface;
-use Drupal\filter\Entity\FilterFormat;
-use Behat\Mink\Element\NodeElement;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests various form element validation mechanisms.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class FormTest extends BrowserTestBase {
 
   /**
@@ -60,7 +61,14 @@ class FormTest extends BrowserTestBase {
   public function testRequiredFields(): void {
     // Originates from https://www.drupal.org/node/117748.
     // Sets of empty strings and arrays.
-    $empty_strings = ['""' => "", '"\n"' => "\n", '" "' => " ", '"\t"' => "\t", '" \n\t "' => " \n\t ", '"\n\n\n\n\n"' => "\n\n\n\n\n"];
+    $empty_strings = [
+      '""' => "",
+      '"\n"' => "\n",
+      '" "' => " ",
+      '"\t"' => "\t",
+      '" \n\t "' => " \n\t ",
+      '"\n\n\n\n\n"' => "\n\n\n\n\n",
+    ];
     $empty_arrays = ['array()' => []];
     $empty_checkbox = [NULL];
 
@@ -88,16 +96,46 @@ class FormTest extends BrowserTestBase {
     $elements['textarea']['element'] = ['#title' => $this->randomMachineName(), '#type' => 'textarea'];
     $elements['textarea']['empty_values'] = $empty_strings;
 
-    $elements['radios']['element'] = ['#title' => $this->randomMachineName(), '#type' => 'radios', '#options' => ['' => 'None', $this->randomMachineName(), $this->randomMachineName(), $this->randomMachineName()]];
+    $elements['radios']['element'] = [
+      '#title' => $this->randomMachineName(),
+      '#type' => 'radios',
+      '#options' => [
+        '' => 'None',
+        $this->randomMachineName(),
+        $this->randomMachineName(),
+        $this->randomMachineName(),
+      ],
+    ];
     $elements['radios']['empty_values'] = $empty_arrays;
 
-    $elements['checkbox']['element'] = ['#title' => $this->randomMachineName(), '#type' => 'checkbox', '#required' => TRUE];
+    $elements['checkbox']['element'] = [
+      '#title' => $this->randomMachineName(),
+      '#type' => 'checkbox',
+      '#required' => TRUE,
+    ];
     $elements['checkbox']['empty_values'] = $empty_checkbox;
 
-    $elements['checkboxes']['element'] = ['#title' => $this->randomMachineName(), '#type' => 'checkboxes', '#options' => [$this->randomMachineName(), $this->randomMachineName(), $this->randomMachineName()]];
+    $elements['checkboxes']['element'] = [
+      '#title' => $this->randomMachineName(),
+      '#type' => 'checkboxes',
+      '#options' => [
+        $this->randomMachineName(),
+        $this->randomMachineName(),
+        $this->randomMachineName(),
+      ],
+    ];
     $elements['checkboxes']['empty_values'] = $empty_arrays;
 
-    $elements['select']['element'] = ['#title' => $this->randomMachineName(), '#type' => 'select', '#options' => ['' => 'None', $this->randomMachineName(), $this->randomMachineName(), $this->randomMachineName()]];
+    $elements['select']['element'] = [
+      '#title' => $this->randomMachineName(),
+      '#type' => 'select',
+      '#options' => [
+        '' => 'None',
+        $this->randomMachineName(),
+        $this->randomMachineName(),
+        $this->randomMachineName(),
+      ],
+    ];
     $elements['select']['empty_values'] = $empty_strings;
 
     $elements['file']['element'] = ['#title' => $this->randomMachineName(), '#type' => 'file'];
@@ -156,7 +194,8 @@ class FormTest extends BrowserTestBase {
         }
       }
     }
-    // Clear the expected form error messages so they don't appear as exceptions.
+    // Clear the expected form error messages so they don't appear as
+    // exceptions.
     \Drupal::messenger()->deleteAll();
   }
 
@@ -198,7 +237,7 @@ class FormTest extends BrowserTestBase {
       $expected_key = array_search($error->getText(), $expected);
       // If the error message is not one of the expected messages, fail.
       if ($expected_key === FALSE) {
-        $this->fail(new FormattableMarkup("Unexpected error message: @error", ['@error' => $error[0]]));
+        $this->fail("Unexpected error message: " . $error[0]);
       }
       // Remove the expected message from the list once it is found.
       else {
@@ -208,7 +247,7 @@ class FormTest extends BrowserTestBase {
 
     // Fail if any expected messages were not found.
     foreach ($expected as $not_found) {
-      $this->fail(new FormattableMarkup("Found error message: @error", ['@error' => $not_found]));
+      $this->fail("Found error message: " . $not_found);
     }
 
     // Verify that input elements are still empty.
@@ -306,12 +345,12 @@ class FormTest extends BrowserTestBase {
     ];
     $this->submitForm($edit, 'Submit');
     // Verify that the error message is displayed with invalid token even when
-    // required fields are filled.'
+    // required fields are filled.
     $this->assertSession()->elementExists('xpath', '//div[contains(@class, "error")]');
     $this->assertSession()->pageTextContains('The form has become outdated.');
     $this->assertSession()->fieldValueEquals('integer_step', 5);
 
-    // Check a form with a URL field
+    // Check a form with a URL field.
     $this->drupalGet(Url::fromRoute('form_test.url'));
     $this->assertSession()
       ->elementExists('css', 'input[name="form_token"]')
@@ -589,7 +628,7 @@ class FormTest extends BrowserTestBase {
    * @param string[] $order
    *   Expected order of its options.
    */
-  protected function validateSelectSorting($select, array $order) {
+  protected function validateSelectSorting($select, array $order): void {
     $option_map_function = function (NodeElement $node) {
       return ($node->getTagName() === 'optgroup') ?
         $node->getAttribute('label') : $node->getValue();
@@ -608,14 +647,6 @@ class FormTest extends BrowserTestBase {
    */
   public function testNumber(): void {
     $form = \Drupal::formBuilder()->getForm('\Drupal\form_test\Form\FormTestNumberForm');
-
-    // Array with all the error messages to be checked.
-    $error_messages = [
-      'no_number' => '%name must be a number.',
-      'too_low' => '%name must be higher than or equal to %min.',
-      'too_high' => '%name must be lower than or equal to %max.',
-      'step_mismatch' => '%name is not a valid number.',
-    ];
 
     // The expected errors.
     $expected = [
@@ -647,21 +678,26 @@ class FormTest extends BrowserTestBase {
       $this->submitForm([], 'Submit');
 
       foreach ($expected as $element => $error) {
-        // Create placeholder array.
-        $placeholders = [
-          '%name' => $form[$element]['#title'],
-          '%min' => $form[$element]['#min'] ?? '0',
-          '%max' => $form[$element]['#max'] ?? '0',
+        // Array with all the error messages to be checked.
+        $name = $form[$element]['#title'];
+        $min = $form[$element]['#min'] ?? '0';
+        $max = $form[$element]['#max'] ?? '0';
+
+        $error_messages = [
+          'no_number' => "<em class=\"placeholder\">$name</em> must be a number.",
+          'too_low' => "<em class=\"placeholder\">$name</em> must be higher than or equal to <em class=\"placeholder\">$min</em>.",
+          'too_high' => "<em class=\"placeholder\">$name</em> must be lower than or equal to <em class=\"placeholder\">$max</em>.",
+          'step_mismatch' => "<em class=\"placeholder\">$name</em> is not a valid number.",
         ];
 
         foreach ($error_messages as $id => $message) {
           // Check if the error exists on the page, if the current message ID is
           // expected. Otherwise ensure that the error message is not present.
           if ($id === $error) {
-            $this->assertSession()->responseContains(new FormattableMarkup($message, $placeholders));
+            $this->assertSession()->responseContains($message);
           }
           else {
-            $this->assertSession()->responseNotContains(new FormattableMarkup($message, $placeholders));
+            $this->assertSession()->responseNotContains($message);
           }
         }
       }
@@ -752,7 +788,8 @@ class FormTest extends BrowserTestBase {
     }
 
     // Submit the form with no input, as the browser does for disabled elements,
-    // and fetch the $form_state->getValues() that is passed to the submit handler.
+    // and fetch the $form_state->getValues() that is passed to the submit
+    // handler.
     $this->drupalGet('form-test/disabled-elements');
     $this->submitForm([], 'Submit');
     $returned_values['normal'] = Json::decode($this->getSession()->getPage()->getContent());

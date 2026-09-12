@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_image_select\Hook\WebformImageSelectHooks:
+    class: Drupal\webform_image_select\Hook\WebformImageSelectHooks
+    autowire: true

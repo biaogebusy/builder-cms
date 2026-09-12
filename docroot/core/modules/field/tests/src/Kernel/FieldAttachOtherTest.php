@@ -6,13 +6,16 @@ namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Form\FormState;
 use Drupal\entity_test\Entity\EntityTest;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests other Field API functions.
  *
- * @group field
  * @todo move this to the Entity module
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldAttachOtherTest extends FieldKernelTestBase {
 
   /**
@@ -270,11 +273,11 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
     $this->assertEquals($this->fieldTestData->field->getLabel(), $form[$this->fieldTestData->field_name]['widget']['#title'], "First field's form title is {$this->fieldTestData->field->getLabel()}");
     $this->assertEquals($this->fieldTestData->field_2->getLabel(), $form[$this->fieldTestData->field_name_2]['widget']['#title'], "Second field's form title is {$this->fieldTestData->field_2->getLabel()}");
     for ($delta = 0; $delta < $this->fieldTestData->field_storage->getCardinality(); $delta++) {
-      // field_test_widget uses 'textfield'
+      // field_test_widget uses 'textfield'.
       $this->assertEquals('textfield', $form[$this->fieldTestData->field_name]['widget'][$delta]['value']['#type'], "First field's form delta {$delta} widget is textfield");
     }
     for ($delta = 0; $delta < $this->fieldTestData->field_storage_2->getCardinality(); $delta++) {
-      // field_test_widget uses 'textfield'
+      // field_test_widget uses 'textfield'.
       $this->assertEquals('textfield', $form[$this->fieldTestData->field_name_2]['widget'][$delta]['value']['#type'], "Second field's form delta {$delta} widget is textfield");
     }
 
@@ -292,7 +295,7 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
     $this->assertFalse(isset($form[$this->fieldTestData->field_name]), 'The first field does not exist in the form');
     $this->assertEquals($this->fieldTestData->field_2->getLabel(), $form[$this->fieldTestData->field_name_2]['widget']['#title'], "Second field's form title is {$this->fieldTestData->field_2->getLabel()}");
     for ($delta = 0; $delta < $this->fieldTestData->field_storage_2->getCardinality(); $delta++) {
-      // field_test_widget uses 'textfield'
+      // field_test_widget uses 'textfield'.
       $this->assertEquals('textfield', $form[$this->fieldTestData->field_name_2]['widget'][$delta]['value']['#type'], "Second field's form delta {$delta} widget is textfield");
     }
   }
@@ -373,7 +376,8 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
     }
     $this->assertSame($expected_values_2, $entity->{$this->fieldTestData->field_name_2}->getValue(), 'Submit filters empty values');
 
-    // Call EntityFormDisplayInterface::extractFormValues() for a single field (the second field).
+    // Call EntityFormDisplayInterface::extractFormValues() for a single field
+    // (the second field).
     foreach ($display->getComponents() as $name => $options) {
       if ($name != $this->fieldTestData->field_name_2) {
         $display->removeComponent($name);

@@ -24,7 +24,8 @@
 .field-option:focus-within,
 .subfield-option:has(.field-option-radio:checked),
 .subfield-option:focus-within,
-#edit-submit.form-submit:focus
+#edit-submit.form-submit:focus,
+.toolbar-dropdown__menu .toolbar-dropdown__link:focus
 {
   outline: none;
   box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);

@@ -126,4 +126,46 @@ class OrderTest extends OrderBrowserTestBase {
     $this->assertNotEquals('successful', $order->getData('conflicting_update'));
   }
 
+  /**
+   * Tests order with order items without a purchasable entity.
+   */
+  public function testOrderItemsWithoutPurchasableEntity() {
+    $this->createEntity('commerce_order_type', [
+      'id' => 'no_purchasable_order_item',
+      'label' => 'No purchasable order item',
+      'workflow' => 'order_default',
+    ]);
+
+    // Create order item types with a not existing entity type, empty string or
+    // missing purchasable entity type.
+    $this->createEntity('commerce_order_item_type', [
+      'id' => 'no_purchasable_entity_1',
+      'label' => 'No purchasable entity one',
+      'orderType' => 'no_purchasable_order_item',
+      'purchasableEntityType' => 'not_existing_entity_type',
+    ]);
+    $this->createEntity('commerce_order_item_type', [
+      'id' => 'no_purchasable_entity_2',
+      'label' => 'No purchasable entity two',
+      'orderType' => 'no_purchasable_order_item',
+      'purchasableEntityType' => '',
+    ]);
+    $this->createEntity('commerce_order_item_type', [
+      'id' => 'no_purchasable_entity_3',
+      'label' => 'No purchasable entity three',
+      'orderType' => 'no_purchasable_order_item',
+    ]);
+
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'no_purchasable_order_item',
+      'store_id' => $this->store->id(),
+      'mail' => $this->loggedInUser->getEmail(),
+      'state' => 'draft',
+      'uid' => $this->loggedInUser,
+    ]);
+    $this->drupalGet($order->toUrl('edit-form')->toString());
+    $this->assertSession()->statusCodeEquals(200);
+  }
+
 }

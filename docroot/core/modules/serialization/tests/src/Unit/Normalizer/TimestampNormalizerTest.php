@@ -10,17 +10,23 @@ use Drupal\Core\TypedData\Plugin\DataType\IntegerData;
 use Drupal\Core\TypedData\Plugin\DataType\Timestamp;
 use Drupal\Core\TypedData\Type\DateTimeInterface;
 use Drupal\serialization\Normalizer\TimestampNormalizer;
+use Drupal\Tests\serialization\Traits\JsonSchemaTestTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
 
 /**
  * Unit test coverage for the "Timestamp" @DataType.
  *
- * @group serialization
- * @coversDefaultClass \Drupal\serialization\Normalizer\TimestampNormalizer
  * @see \Drupal\Core\TypedData\Plugin\DataType\Timestamp
  */
+#[CoversClass(TimestampNormalizer::class)]
+#[Group('serialization')]
 class TimestampNormalizerTest extends UnitTestCase {
+
+  use JsonSchemaTestTrait;
 
   /**
    * The tested data type's normalizer.
@@ -47,7 +53,7 @@ class TimestampNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::supportsNormalization
+   * Tests supports normalization.
    */
   public function testSupportsNormalization(): void {
     $this->assertTrue($this->normalizer->supportsNormalization($this->data->reveal()));
@@ -60,14 +66,14 @@ class TimestampNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::supportsDenormalization
+   * Tests supports denormalization.
    */
   public function testSupportsDenormalization(): void {
     $this->assertTrue($this->normalizer->supportsDenormalization($this->data->reveal(), Timestamp::class));
   }
 
   /**
-   * @covers ::normalize
+   * Tests normalize.
    */
   public function testNormalize(): void {
     $random_rfc_3339_string = $this->randomMachineName();
@@ -87,10 +93,8 @@ class TimestampNormalizerTest extends UnitTestCase {
 
   /**
    * Tests the denormalize function with good data.
-   *
-   * @covers ::denormalize
-   * @dataProvider providerTestDenormalizeValidFormats
    */
+  #[DataProvider('providerTestDenormalizeValidFormats')]
   public function testDenormalizeValidFormats($normalized, $expected): void {
     $denormalized = $this->normalizer->denormalize($normalized, Timestamp::class, NULL, []);
     $this->assertSame($expected, $denormalized);
@@ -100,6 +104,7 @@ class TimestampNormalizerTest extends UnitTestCase {
    * Data provider for testDenormalizeValidFormats.
    *
    * @return array
+   *   An array of test data.
    */
   public static function providerTestDenormalizeValidFormats() {
     $expected_stamp = 1478422920;
@@ -120,8 +125,6 @@ class TimestampNormalizerTest extends UnitTestCase {
 
   /**
    * Tests the denormalize function with bad data.
-   *
-   * @covers ::denormalize
    */
   public function testDenormalizeException(): void {
     $this->expectException(UnexpectedValueException::class);
@@ -132,6 +135,28 @@ class TimestampNormalizerTest extends UnitTestCase {
     $this->normalizer->denormalize($normalized, Timestamp::class, NULL, []);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public static function jsonSchemaDataProvider(): array {
+    $case = function (UnitTestCase $test) {
+      assert(in_array(JsonSchemaTestTrait::class, class_uses($test)));
+      $drupal_date_time = $test->doProphesize(TimestampNormalizerTestDrupalDateTime::class);
+      $drupal_date_time->setTimezone(new \DateTimeZone('UTC'))
+        ->willReturn($drupal_date_time->reveal());
+      $drupal_date_time->format(\DateTime::RFC3339)
+        ->willReturn('1983-07-12T09:05:00-05:00');
+
+      $data = $test->doProphesize(Timestamp::class);
+      $data->getDateTime()
+        ->willReturn($drupal_date_time->reveal());
+      return $data->reveal();
+    };
+    return [
+      'RFC 3339' => [fn (UnitTestCase $test) => $case($test)],
+    ];
+  }
+
 }
 
 /**
@@ -139,12 +164,16 @@ class TimestampNormalizerTest extends UnitTestCase {
  *
  * Note: Prophecy does not support magic methods. By subclassing and specifying
  * an explicit method, Prophecy works.
+ *
  * @see https://github.com/phpspec/prophecy/issues/338
  * @see https://github.com/phpspec/prophecy/issues/34
  * @see https://github.com/phpspec/prophecy/issues/80
  */
 class TimestampNormalizerTestDrupalDateTime extends DrupalDateTime {
 
+  /**
+   * Sets the timezone.
+   */
   public function setTimezone(\DateTimeZone $timezone) {
     parent::setTimezone($timezone);
   }

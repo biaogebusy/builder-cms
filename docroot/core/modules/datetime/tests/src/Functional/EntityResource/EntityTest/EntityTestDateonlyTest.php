@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Drupal\Tests\datetime\Functional\EntityResource\EntityTest;
 
 use Drupal\Core\Url;
-use Drupal\entity_test\Entity\EntityTest;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\entity_test\Functional\Rest\EntityTestResourceTestBase;
 use Drupal\Tests\rest\Functional\AnonResourceTestTrait;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the datetime field constraint with 'date' items.
- *
- * @group datetime
  */
+#[Group('datetime')]
+#[RunTestsInSeparateProcesses]
 class EntityTestDateOnlyTest extends EntityTestResourceTestBase {
 
   use AnonResourceTestTrait;

@@ -8,3 +8,7 @@ services:
     class: Drupal\commerce_log\LogCategoryManager
     arguments: ['@module_handler', '@cache.discovery']
   Drupal\commerce_log\LogCategoryManagerInterface: '@plugin.manager.commerce_log_category'
+
+  Drupal\commerce_log\Hook\CommerceLogHooks:
+    class: Drupal\commerce_log\Hook\CommerceLogHooks
+    autowire: true

@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\layout_library\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\FieldConfigInterface;
 use Drupal\KernelTests\KernelTestBase;
@@ -13,6 +16,8 @@ use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
  *
  * @group layout_library
  */
+#[Group('layout_library')]
+#[RunTestsInSeparateProcesses]
 class LayoutSelectionFieldTest extends KernelTestBase {
 
   use ContentTypeCreationTrait;
@@ -37,6 +42,7 @@ class LayoutSelectionFieldTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installConfig('node');
+    $this->installEntitySchema('node');
     $this->createContentType(['type' => 'test']);
   }
 

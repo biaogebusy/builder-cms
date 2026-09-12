@@ -13,15 +13,16 @@ use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\WebAssert;
 use PHPUnit\Framework\AssertionFailedError;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\BrowserKit\AbstractBrowser;
 use Symfony\Component\BrowserKit\Response;
 
 /**
  * Tests WebAssert functionality.
- *
- * @group browsertestbase
- * @coversDefaultClass \Drupal\Tests\WebAssert
  */
+#[CoversClass(WebAssert::class)]
+#[Group('browsertestbase')]
 class WebAssertTest extends UnitTestCase {
 
   /**
@@ -69,8 +70,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests WebAssert::responseHeaderExists().
-   *
-   * @covers ::responseHeaderExists
    */
   public function testResponseHeaderExists(): void {
     $this->visit('', '', ['Null-Header' => '']);
@@ -82,8 +81,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests WebAssert::responseHeaderDoesNotExist().
-   *
-   * @covers ::responseHeaderDoesNotExist
    */
   public function testResponseHeaderDoesNotExist(): void {
     $this->visit('', '', ['Null-Header' => '']);
@@ -95,7 +92,7 @@ class WebAssertTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::pageTextMatchesCount
+   * Tests page text matches count.
    */
   public function testPageTextMatchesCount(): void {
     $this->visit('', 'Test page text. <a href="#">Foo</a>');
@@ -107,7 +104,7 @@ class WebAssertTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::pageTextContainsOnce
+   * Tests page text contains once.
    */
   public function testPageTextContainsOnce(): void {
     $this->visit('', 'Test page text. <a href="#">Foo</a>');
@@ -119,7 +116,7 @@ class WebAssertTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::elementTextEquals
+   * Tests element text equals.
    */
   public function testElementTextEquals(): void {
     $this->visit('', '<h1>Test page</h1>');
@@ -131,7 +128,7 @@ class WebAssertTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::addressEquals
+   * Tests address equals.
    */
   public function testAddressEquals(): void {
     $this->visit('http://localhost/test-page');
@@ -163,7 +160,7 @@ class WebAssertTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::addressNotEquals
+   * Tests address not equals exception.
    */
   public function testAddressNotEqualsException(): void {
     $this->visit('http://localhost/test-page?a=b&c=d');
@@ -176,7 +173,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests linkExists() with pipe character (|) in locator.
    *
-   * @covers ::linkExists
+   * @legacy-covers ::linkExists
    */
   public function testPipeCharInLocator(): void {
     $this->visit('', '<a href="http://example.com">foo|bar|baz</a>');
@@ -186,8 +183,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests linkExistsExact() functionality.
-   *
-   * @covers ::linkExistsExact
    */
   public function testLinkExistsExact(): void {
     $this->visit('', '<a href="http://example.com">foo|bar|baz</a>');
@@ -198,7 +193,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests linkExistsExact() functionality fail.
    *
-   * @covers ::linkExistsExact
+   * @legacy-covers ::linkExistsExact
    */
   public function testInvalidLinkExistsExact(): void {
     $this->visit('', '<a href="http://example.com">foo|bar|baz</a>');
@@ -209,8 +204,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests linkNotExistsExact() functionality.
-   *
-   * @covers ::linkNotExistsExact
    */
   public function testLinkNotExistsExact(): void {
     $this->visit('', '<a href="http://example.com">foo|bar|baz</a>');
@@ -221,7 +214,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests linkNotExistsExact() functionality fail.
    *
-   * @covers ::linkNotExistsExact
+   * @legacy-covers ::linkNotExistsExact
    */
   public function testInvalidLinkNotExistsExact(): void {
     $this->visit('', '<a href="http://example.com">foo|bar|baz</a>');
@@ -233,8 +226,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests linkExistsByHref() functionality.
-   *
-   * @covers ::linkByHrefExists
    */
   public function testLinkByHrefExists(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -248,7 +239,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests linkExistsByHref() functionality fail.
    *
-   * @covers ::linkByHrefExists
+   * @legacy-covers ::linkByHrefExists
    */
   public function testInvalidLinkByHrefExists(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -259,8 +250,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests linkByHrefNotExists() functionality.
-   *
-   * @covers ::linkByHrefNotExists
    */
   public function testLinkByHrefNotExists(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -271,7 +260,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests LinkByHrefNotExists() functionality fail partial match.
    *
-   * @covers ::linkByHrefNotExists
+   * @legacy-covers ::linkByHrefNotExists
    */
   public function testInvalidLinkByHrefNotExistsPartial(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -283,7 +272,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests LinkByHrefNotExists() functionality fail full match.
    *
-   * @covers ::linkByHrefNotExists
+   * @legacy-covers ::linkByHrefNotExists
    */
   public function testInvalidLinkByHrefNotExistsFull(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -293,8 +282,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests linkExistsByHref() functionality.
-   *
-   * @covers ::linkByHrefExistsExact
    */
   public function testLinkByHrefExistsExact(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -305,7 +292,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests linkByHrefExistsExact() functionality fail.
    *
-   * @covers ::linkByHrefExistsExact
+   * @legacy-covers ::linkByHrefExistsExact
    */
   public function testInvalidLinkByHrefExistsExact(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -315,8 +302,6 @@ class WebAssertTest extends UnitTestCase {
 
   /**
    * Tests linkByHrefNotExistsExact() functionality.
-   *
-   * @covers ::linkByHrefNotExistsExact
    */
   public function testLinkByHrefNotExistsExact(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -327,7 +312,7 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests linkByHrefNotExistsExact() functionality fail.
    *
-   * @covers ::linkByHrefNotExistsExact
+   * @legacy-covers ::linkByHrefNotExistsExact
    */
   public function testInvalidLinkByHrefNotExistsExact(): void {
     $this->visit('', '<a href="/user/login">Log in</a><a href="/user/register">Register</a>');
@@ -338,8 +323,8 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests legacy text asserts.
    *
-   * @covers ::responseContains
-   * @covers ::responseNotContains
+   * @legacy-covers ::responseContains
+   * @legacy-covers ::responseNotContains
    */
   public function testTextAsserts(): void {
     $this->visit('', 'Bad html &lt;script&gt;alert(123);&lt;/script&gt;');
@@ -353,8 +338,8 @@ class WebAssertTest extends UnitTestCase {
   /**
    * Tests legacy field asserts for button field type.
    *
-   * @covers ::buttonExists
-   * @covers ::buttonNotExists
+   * @legacy-covers ::buttonExists
+   * @legacy-covers ::buttonNotExists
    */
   public function testFieldAssertsForButton(): void {
     $this->visit('', <<<HTML
@@ -387,7 +372,7 @@ HTML);
       $this->assertSession()->buttonNotExists('Duplicate button 2');
       $this->fail('The "duplicate_button" field with the value Duplicate button 2 was not found.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
     $this->addToAssertionCount(11);
@@ -395,8 +380,6 @@ HTML);
 
   /**
    * Tests pageContainsNoDuplicateId() functionality.
-   *
-   * @covers ::pageContainsNoDuplicateId
    */
   public function testPageContainsNoDuplicateId(): void {
     $this->visit('', <<<HTML
@@ -418,8 +401,8 @@ HTML);
   /**
    * Tests assertEscaped() and assertUnescaped().
    *
-   * @covers ::assertNoEscaped
-   * @covers ::assertEscaped
+   * @legacy-covers ::assertNoEscaped
+   * @legacy-covers ::assertEscaped
    */
   public function testEscapingAssertions(): void {
     $assert = $this->assertSession();

@@ -42,7 +42,7 @@ class CurrentLocale implements CurrentLocaleInterface {
    */
   public function getLocale() {
     $request = $this->requestStack->getCurrentRequest();
-    if (!$request || !$this->locales->contains($request)) {
+    if (!$request || !$this->locales->offsetExists($request)) {
       $locale = $this->chainResolver->resolve();
       if (!$request) {
         return $locale;

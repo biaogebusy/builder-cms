@@ -1,0 +1,22 @@
+services:
+  ckeditor5_premium_features_import_word.config_handler.settings:
+    class: Drupal\ckeditor5_premium_features_import_word\Config\ImportWordConfigHandler
+    arguments:
+      - '@config.factory'
+  ckeditor5_premium_features_import_word.route_subscriber:
+    class: Drupal\ckeditor5_premium_features_import_word\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  ckeditor5_premium_features_import_word.media_uploader:
+    class: Drupal\ckeditor5_premium_features_import_word\Utility\ImportWordMediaUploader
+    arguments:
+      - '@entity_type.manager'
+      - '@file_system'
+      - '@lock'
+      - '@current_user'
+
+  ckeditor5_premium_features_import_word.token_generator:
+    class: Drupal\ckeditor5_premium_features\Generator\ExportTokenGenerator
+    arguments:
+      - '@current_user'
+      - '@ckeditor5_premium_features_import_word.config_handler.settings'

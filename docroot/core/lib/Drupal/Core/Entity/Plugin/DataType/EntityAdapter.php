@@ -20,6 +20,8 @@ use Drupal\Core\TypedData\TypedData;
  *
  * In addition to the "entity" data type, this exposes derived
  * "entity:$entity_type" and "entity:$entity_type:$bundle" data types.
+ *
+ * @implements \IteratorAggregate<string, \Drupal\Core\TypedData\TypedDataInterface>
  */
 #[DataType(
   id: "entity",
@@ -160,10 +162,12 @@ class EntityAdapter extends TypedData implements \IteratorAggregate, ComplexData
   }
 
   /**
-   * {@inheritdoc}
+   * Retrieves the iterator for the object.
+   *
+   * @return \ArrayIterator<string, \Drupal\Core\TypedData\TypedDataInterface>
+   *   The iterator.
    */
-  #[\ReturnTypeWillChange]
-  public function getIterator() {
+  public function getIterator(): \ArrayIterator {
     return $this->entity instanceof \IteratorAggregate ? $this->entity->getIterator() : new \ArrayIterator([]);
   }
 

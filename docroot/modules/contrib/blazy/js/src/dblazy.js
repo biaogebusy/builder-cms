@@ -527,23 +527,30 @@
   }
 
   /**
-   * Returns true if the x is valid for querySelector.
+   * Returns true if x is a valid querySelector/querySelectorAll root.
    *
    * @private
    *
    * @param {Mixed} x
-   *   The x to check for its type truthy.
+   *   The value to inspect.
    *
    * @return {bool}
-   *   True if x is valid for querySelector.
+   *   True if x supports querySelector().
    *
-   * 1: Node.ELEMENT_NODE
-   * 9: Node.DOCUMENT_NODE
-   * 11: Node.DOCUMENT_FRAGMENT_NODE
+   * Supported node types:
+   * - 1: Element
+   * - 9: Document
+   * - 11: DocumentFragment
+   *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
    */
   function isQsa(x) {
-    return x && (x.querySelector || [1, 9, 11].indexOf(!!x && x.nodeType) !== -1);
+    // return x && (x.querySelector || [1, 9, 11].indexOf(!!x && x.nodeType) !== -1);
+    return !!(
+      x &&
+      isFun(x.querySelector) &&
+      [1, 9, 11].indexOf(x.nodeType) !== -1
+    );
   }
 
   /**
@@ -580,17 +587,24 @@
     return x && 'getAttribute' in x;
   }
 
+  // BigPipe compat methods.
   function isBigPipe() {
-    return 'bigPipePlaceholderIds' in _ds;
+    return !!(_ds && _ds.bigPipePlaceholderIds);
   }
 
   // Checks if BigPipe replacement jobs are done.
   function wwoBigPipeDone() {
-    if (isBigPipe()) {
-      return isEmpty(_ds.bigPipePlaceholderIds);
+    if (!isBigPipe()) {
+      return true;
     }
-    // If BigPipe is not installed, always done.
-    return true;
+
+    // D10.3+ fast path.
+    if (isEmpty(_ds.bigPipePlaceholderIds)) {
+      return true;
+    }
+
+    // D9.x / D10.0-10.2 compatibility.
+    return !find(_doc, '[data-big-pipe-placeholder-id]');
   }
 
   // Wait for BigPipe to be done before calling a function, not really once.
@@ -1541,7 +1555,11 @@
    *   True if the image is loaded.
    */
   function isDecoded(img) {
-    return img.decoded || img.complete;
+    // Fixed for inconsistent img.complete on reload.
+    if (img.naturalWidth !== 0) {
+      return true;
+    }
+    return img.complete && img.naturalWidth !== 0;
   }
 
   /**
@@ -2009,7 +2027,7 @@
       img.onload = function () {
         resolve(img);
       };
-      img.onerror = reject();
+      img.onerror = reject;
     });
   };
 
@@ -2157,47 +2175,101 @@
    * A simple wrapper for context insanity.
    *
    * Context is unreliable with AJAX contents like product variations, etc.
-   * This can be null after Colorbox close, or absurd <script> element, likely
-   * arbitrary, etc. Since D10, or blazy:2.17, also identified that the context
-   * can be returned as the element with the given selector itself to QSA for
-   * causing QSA fail since it QSA itself.
+   * This can be null after Colorbox close, or arbitrary elements such as
+   * temporary <script> nodes during AJAX/BigPipe replacements.
    *
-   * @param {Document|Element} ctx
-   *   Any element, including weird script element.
+   * Since D10 / blazy:2.17, it was also observed that some integrations
+   * accidentally pass the selector string itself as the context, or otherwise
+   * resolve the selector into the element being queried. This causes
+   * querySelector()/querySelectorAll() to search the element itself rather than
+   * its intended root, often resulting in empty matches.
+   *
+   * This helper attempts to normalize these historical edge cases while
+   * preserving any valid Element, Document or DocumentFragment contexts.
+   *
+   * @param {Document|DocumentFragment|Element|string} ctx
+   *   Any element, document, document fragment, selector string, or other value.
    * @param {string} selector
-   *   The selector to compare against ctx in case borked somewhere.
+   *   The selector used for the current lookup.
    *
    * @return {Element|Document|DocumentFragment}
-   *   The Element|Document|DocumentFragment to not fail querySelector, etc.
+   *   A safe context for querySelector()/querySelectorAll().
    *
-   * @todo refine core/once expects Element only, or patch it for [1,9,11].
+   * @todo Refine once/core expectations for supported query roots
+   *   (Element, Document and DocumentFragment).
    */
   function context(ctx, selector) {
-    // Weirdo: context may be null after Colorbox close.
-    ctx = ctx || _doc;
+    // 1. Colorbox and some AJAX callbacks may provide a null context.
+    var root = ctx || _doc;
 
-    // In case a string, and if none is found, give a default document here on.
-    ctx = toElm(ctx, true) || _doc;
-
+    // 2. Some integrations accidentally pass the selector itself as the
+    // context, e.g.:
+    //
+    //   context(player, '.media--player')
+    //
+    // Resolve this to the document before the selector string is converted into
+    // an element by toElm().
     // @todo fix why the selector itself is given as context on lightboxes
     // since D10/ blazy:2.17. And also check it around for internal mistakes.
-    if (selector) {
-      if (is(ctx, selector) ||
-        is(selector, S_BODY) ||
-        is(selector, S_HTML)) {
-        ctx = _doc;
-      }
+    // Seen at BlazyPhotoSwipe, and likely other lightboxes with media player.
+    if (
+      selector &&
+      (
+        // Since 3.18, #3538028, out-of-context "valid" context is identified.
+        // @fixme figure out a better way. While "no match" does not necessarily
+        // mean "wrong context", the proof disagrees. At least, more efficient
+        // than hard-coded document. With this, those with valid ancestors skip.
+        isStr(selector) && isQsa(root) && !root.querySelector(selector) ||
+        isStr(root) ||
+        root === selector ||
+        isStr(selector) && is(root, selector)
+      )
+    ) {
+      root = _doc;
     }
 
-    // Absurd arbitrary <script> elements which have no children may be spit on
-    // AJAX causing temporary failures as seen at Views UI.
-    if (isQsa(ctx) && ctx.children && ctx.children.length) {
-      return ctx;
+    // 3. Normalize selector strings, jQuery/Cash collections, dBlazy
+    // collections, etc. Falls back to the document when no valid element is
+    // resolved.
+    root = toElm(root, true) || _doc;
+
+    // 4. BODY and HTML should always resolve to the document.
+    if (
+      selector &&
+      (
+        selector === S_BODY ||
+        selector === S_HTML
+      )
+    ) {
+      return _doc;
     }
 
-    // IE9 knows not deprecated HTMLDocument, IE8 does.
-    // Node.DOCUMENT_NODE|Node.DOCUMENT_FRAGMENT_NODE is not just _doc.
-    return isDoc(ctx) ? ctx : _doc;
+    // 5. Reject non-element / unsafe node types. Only Element, Document and
+    // DocumentFragment are valid querySelector roots.
+    if (!isQsa(root)) {
+      return _doc;
+    }
+
+    // 6. Ignore transient nodes occasionally observed during AJAX, Views UI and
+    // BigPipe replacement cycles. These may be valid Elements, but are not
+    // useful query roots for behavior attachment.
+    if (
+      isElm(root) &&
+      (
+        is(root, 'script') ||
+        is(root, 'style') ||
+        is(root, 'template')
+      )
+    ) {
+      return _doc;
+    }
+
+    // 7. If root is a Document -> keep it.
+    if (root.nodeType === 9) {
+      return root;
+    }
+
+    return root;
   }
 
   // Valid elements for querySelector with length: form, select, etc.
@@ -2222,6 +2294,8 @@
     }
 
     // jQuery may pass its array as non-expected context identified by length.
+    // Ensure to not convert valid elements for querySelector with length:
+    // form, select, etc.
     var isJq = IS_JQ && el instanceof _win.jQuery;
     var isCash = IS_CASH && el instanceof _win.cash;
     return el && (isMe(el) || isJq || isCash) ? el[0] : el;

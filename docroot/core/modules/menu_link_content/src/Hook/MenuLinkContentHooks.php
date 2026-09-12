@@ -1,0 +1,158 @@
+<?php
+
+namespace Drupal\menu_link_content\Hook;
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\path_alias\PathAliasInterface;
+use Drupal\system\MenuInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Menu\MenuLinkManagerInterface;
+
+/**
+ * Hook implementations for menu_link_content.
+ */
+class MenuLinkContentHooks {
+
+  use StringTranslationTrait;
+
+  public function __construct(
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly ModuleHandlerInterface $moduleHandler,
+    protected readonly MenuLinkManagerInterface $menuLinkManager,
+  ) {}
+
+  /**
+   * Implements hook_help().
+   */
+  #[Hook('help')]
+  public function help($route_name, RouteMatchInterface $route_match): ?string {
+    switch ($route_name) {
+      case 'help.page.menu_link_content':
+        $output = '';
+        $output .= '<h2>' . $this->t('About') . '</h2>';
+        $output .= '<p>' . $this->t('The Custom Menu Links module allows users to create menu links. These links can be translated if multiple languages are used for the site.');
+        if ($this->moduleHandler->moduleExists('menu_ui')) {
+          $output .= ' ' . $this->t('It is required by the Menu UI module, which provides an interface for managing menus and menu links. For more information, see the <a href=":menu-help">Menu UI module help page</a> and the <a href=":drupal-org-help">online documentation for the Custom Menu Links module</a>.', [
+            ':menu-help' => Url::fromRoute('help.page', [
+              'name' => 'menu_ui',
+            ])->toString(),
+            ':drupal-org-help' => 'https://www.drupal.org/documentation/modules/menu_link',
+          ]);
+        }
+        else {
+          $output .= ' ' . $this->t('For more information, see the <a href=":drupal-org-help">online documentation for the Custom Menu Links module</a>. If you install the Menu UI module, it provides an interface for managing menus and menu links.', [':drupal-org-help' => 'https://www.drupal.org/documentation/modules/menu_link']);
+        }
+        $output .= '</p>';
+        return $output;
+    }
+    return NULL;
+  }
+
+  /**
+   * Implements hook_entity_type_alter().
+   */
+  #[Hook('entity_type_alter')]
+  public function entityTypeAlter(array &$entity_types) : void {
+    // @todo Moderation is disabled for custom menu links until when we have an UI
+    //   for them.
+    //   @see https://www.drupal.org/project/drupal/issues/2350939
+    $entity_types['menu_link_content']->setHandlerClass('moderation', '');
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_delete().
+   */
+  #[Hook('menu_delete')]
+  public function menuDelete(MenuInterface $menu): void {
+    $storage = $this->entityTypeManager->getStorage('menu_link_content');
+    $menu_links = $storage->loadByProperties(['menu_name' => $menu->id()]);
+    $storage->delete($menu_links);
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_insert() for 'path_alias'.
+   */
+  #[Hook('path_alias_insert')]
+  public function pathAliasInsert(PathAliasInterface $path_alias): void {
+    $this->updatePathAlias($path_alias->getAlias());
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_update() for 'path_alias'.
+   */
+  #[Hook('path_alias_update')]
+  public function pathAliasUpdate(PathAliasInterface $path_alias): void {
+    if ($path_alias->getAlias() != $path_alias->getOriginal()->getAlias()) {
+      $this->updatePathAlias($path_alias->getAlias());
+      $this->updatePathAlias($path_alias->getOriginal()->getAlias());
+    }
+    elseif ($path_alias->getPath() != $path_alias->getOriginal()->getPath()) {
+      $this->updatePathAlias($path_alias->getAlias());
+    }
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_delete() for 'path_alias'.
+   */
+  #[Hook('path_alias_delete')]
+  public function pathAliasDelete(PathAliasInterface $path_alias): void {
+    $this->updatePathAlias($path_alias->getAlias());
+  }
+
+  /**
+   * Implements hook_entity_predelete().
+   */
+  #[Hook('entity_predelete')]
+  public function entityPredelete(EntityInterface $entity): void {
+    $entity_type_id = $entity->getEntityTypeId();
+    foreach ($entity->uriRelationships() as $rel) {
+      $url = $entity->toUrl($rel);
+      // Entities can provide uri relationships that are not routed, in this
+      // case getRouteParameters() will throw an exception.
+      if (!$url->isRouted()) {
+        continue;
+      }
+      $route_parameters = $url->getRouteParameters();
+      if (!isset($route_parameters[$entity_type_id])) {
+        // Do not delete links which do not relate to this exact entity. For
+        // example, "collection", "add-form", etc.
+        continue;
+      }
+      // Delete all MenuLinkContent links that point to this entity route.
+      $result = $this->menuLinkManager->loadLinksByRoute($url->getRouteName(), $route_parameters);
+      if ($result) {
+        foreach ($result as $id => $instance) {
+          if ($instance->isDeletable() && str_starts_with($id, 'menu_link_content:')) {
+            $instance->deleteLink();
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Helper function to update plugin definition using internal scheme.
+   *
+   * @param string $path
+   *   The path alias.
+   */
+  protected function updatePathAlias(string $path): void {
+    /** @var \Drupal\menu_link_content\MenuLinkContentInterface[] $entities */
+    $entities = $this->entityTypeManager
+      ->getStorage('menu_link_content')
+      ->loadByProperties(['link.uri' => 'internal:' . $path]);
+    foreach ($entities as $menu_link) {
+      // An entity can exist while its definition is absent from the menu tree;
+      // only refresh definitions that are actually present.
+      if ($this->menuLinkManager->hasDefinition($menu_link->getPluginId())) {
+        $this->menuLinkManager->updateDefinition($menu_link->getPluginId(), $menu_link->getPluginDefinition(), FALSE);
+      }
+    }
+  }
+
+}

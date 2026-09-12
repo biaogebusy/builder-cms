@@ -1,0 +1,10 @@
+parameters:
+	ignoreErrors:
+		-
+			message: """
+				#^Class Drupal\\\\inline_entity_form\\\\Element\\\\InlineEntityForm extends deprecated class Drupal\\\\Core\\\\Render\\\\Element\\\\RenderElement\\:
+				in drupal\\:10\\.3\\.0 and is removed from drupal\\:12\\.0\\.0\\. Use
+				  \\\\Drupal\\\\Core\\\\Render\\\\Element\\\\RenderElementBase instead\\.$#
+			"""
+			count: 1
+			path: src/Element/InlineEntityForm.php

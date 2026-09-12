@@ -6,3 +6,127 @@
   display: inline-block;
   padding-left: 1em;
 }
+
+/* Gin Specific css. */
+.gin--vertical-toolbar #module-filter-update-status-form .table-filter,
+.gin--horizontal-toolbar #module-filter-update-status-form .table-filter,
+.gin--classic-toolbar #module-filter-update-status-form .table-filter,
+.gin--navigation #module-filter-update-status-form .table-filter {
+  float: none;
+  text-align: start;
+}
+.gin--vertical-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .module-filter-status
+  .form-item,
+.gin--horizontal-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .module-filter-status
+  .form-item,
+.gin--classic-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .module-filter-status
+  .form-item,
+.gin--navigation
+  #module-filter-update-status-form
+  .table-filter
+  .module-filter-status
+  .form-item {
+  display: inline-block;
+  padding-left: 1em;
+}
+
+.gin--vertical-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-input,
+.gin--horizontal-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-input,
+.gin--classic-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-input,
+.gin--navigation #module-filter-update-status-form .table-filter .winnow-input {
+  width: 100%;
+}
+
+.gin--vertical-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-clear,
+.gin--horizontal-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-clear,
+.gin--classic-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-clear,
+.gin--navigation #module-filter-update-status-form .table-filter .winnow-clear {
+  width: 44px;
+}
+
+.gin--vertical-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-clear::after,
+.gin--horizontal-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-clear::after,
+.gin--classic-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-clear::after,
+.gin--navigation
+  #module-filter-update-status-form
+  .table-filter
+  .winnow-clear::after {
+  inset-block-start: 10px;
+  inset-inline-end: var(--gin-spacing-xs);
+}
+
+.gin--vertical-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  input.form-search,
+.gin--horizontal-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  input.form-search,
+.gin--classic-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  input.form-search,
+.gin--navigation
+  #module-filter-update-status-form
+  .table-filter
+  input.form-search {
+  width: 100%;
+  padding: var(--gin-spacing-m);
+}
+
+.gin--vertical-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .form-type--search,
+.gin--horizontal-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .form-type--search,
+.gin--classic-toolbar
+  #module-filter-update-status-form
+  .table-filter
+  .form-type--search,
+.gin--navigation
+  #module-filter-update-status-form
+  .table-filter
+  .form-type--search {
+  margin-block-start: 0;
+  margin-block-end: var(--gin-spacing-xs);
+}

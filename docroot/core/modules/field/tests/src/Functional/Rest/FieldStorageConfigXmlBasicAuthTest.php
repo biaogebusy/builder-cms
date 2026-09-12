@@ -6,10 +6,14 @@ namespace Drupal\Tests\field\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Field Storage Config Xml Basic Auth.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class FieldStorageConfigXmlBasicAuthTest extends FieldStorageConfigResourceTestBase {
 
   use BasicAuthResourceTestTrait;
@@ -33,7 +37,7 @@ class FieldStorageConfigXmlBasicAuthTest extends FieldStorageConfigResourceTestB
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

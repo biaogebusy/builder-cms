@@ -11,10 +11,15 @@
 
 namespace Symfony\Component\Serializer\Normalizer;
 
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\PropertyInfo\Type as LegacyType;
 use Symfony\Component\Serializer\Exception\BadMethodCallException;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
+use Symfony\Component\TypeInfo\Type;
+use Symfony\Component\TypeInfo\Type\BuiltinType;
+use Symfony\Component\TypeInfo\Type\CollectionType;
+use Symfony\Component\TypeInfo\Type\UnionType;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
 /**
  * Denormalizes arrays of objects.
@@ -23,18 +28,9 @@ use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
  *
  * @final
  */
-class ArrayDenormalizer implements ContextAwareDenormalizerInterface, DenormalizerAwareInterface, CacheableSupportsMethodInterface
+class ArrayDenormalizer implements DenormalizerInterface, DenormalizerAwareInterface
 {
     use DenormalizerAwareTrait;
-
-    public function setDenormalizer(DenormalizerInterface $denormalizer): void
-    {
-        if (!method_exists($denormalizer, 'getSupportedTypes')) {
-            trigger_deprecation('symfony/serializer', '6.3', 'Not implementing the "DenormalizerInterface::getSupportedTypes()" in "%s" is deprecated.', get_debug_type($denormalizer));
-        }
-
-        $this->denormalizer = $denormalizer;
-    }
 
     public function getSupportedTypes(?string $format): array
     {
@@ -46,11 +42,11 @@ class ArrayDenormalizer implements ContextAwareDenormalizerInterface, Denormaliz
      */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): array
     {
-        if (null === $this->denormalizer) {
+        if (!isset($this->denormalizer)) {
             throw new BadMethodCallException('Please set a denormalizer before calling denormalize()!');
         }
         if (!\is_array($data)) {
-            throw NotNormalizableValueException::createForUnexpectedDataType(\sprintf('Data expected to be "%s", "%s" given.', $type, get_debug_type($data)), $data, [Type::BUILTIN_TYPE_ARRAY], $context['deserialization_path'] ?? null);
+            throw NotNormalizableValueException::createForUnexpectedDataType(\sprintf('Data expected to be "%s", "%s" given.', $type, get_debug_type($data)), $data, ['array'], $context['deserialization_path'] ?? null);
         }
         if (!str_ends_with($type, '[]')) {
             throw new InvalidArgumentException('Unsupported class: '.$type);
@@ -58,10 +54,28 @@ class ArrayDenormalizer implements ContextAwareDenormalizerInterface, Denormaliz
 
         $type = substr($type, 0, -2);
 
-        $builtinTypes = array_map(static fn (Type $keyType) => $keyType->getBuiltinType(), \is_array($keyType = $context['key_type'] ?? []) ? $keyType : [$keyType]);
+        $typeIdentifiers = [];
+        if (null !== $keyType = ($context['key_type'] ?? null)) {
+            if ($keyType instanceof Type) {
+                // BC layer for type-info < 7.2
+                if (method_exists(Type::class, 'getBaseType')) {
+                    $typeIdentifiers = array_map(static fn (Type $t): string => $t->getBaseType()->getTypeIdentifier()->value, $keyType instanceof UnionType ? $keyType->getTypes() : [$keyType]);
+                } else {
+                    /** @var list<BuiltinType<TypeIdentifier::INT>|BuiltinType<TypeIdentifier::STRING>> */
+                    $keyTypes = $keyType instanceof UnionType ? $keyType->getTypes() : [$keyType];
+
+                    $typeIdentifiers = array_map(static fn (BuiltinType $t): string => $t->getTypeIdentifier()->value, $keyTypes);
+                }
+            } else {
+                $typeIdentifiers = array_map(static fn (LegacyType $t): string => $t->getBuiltinType(), \is_array($keyType) ? $keyType : [$keyType]);
+            }
+        }
 
         $valueType = $context['value_type'] ?? null;
-        if ($valueType instanceof Type && $valueType->isCollection()) {
+        if ($valueType instanceof CollectionType) {
+            $context['key_type'] = $valueType->getCollectionKeyType();
+            $context['value_type'] = $valueType->getCollectionValueType();
+        } elseif ($valueType instanceof LegacyType && $valueType->isCollection()) {
             if ($collectionKeyTypes = $valueType->getCollectionKeyTypes()) {
                 $context['key_type'] = \count($collectionKeyTypes) > 1 ? $collectionKeyTypes : $collectionKeyTypes[0];
             }
@@ -71,11 +85,21 @@ class ArrayDenormalizer implements ContextAwareDenormalizerInterface, Denormaliz
             }
         }
 
+        if (\is_array($objectsToPopulate = $context[AbstractNormalizer::OBJECT_TO_POPULATE] ?? null)) {
+            unset($context[AbstractNormalizer::OBJECT_TO_POPULATE]);
+        } else {
+            $objectsToPopulate = [];
+        }
+
         foreach ($data as $key => $value) {
             $subContext = $context;
             $subContext['deserialization_path'] = ($context['deserialization_path'] ?? false) ? \sprintf('%s[%s]', $context['deserialization_path'], $key) : "[$key]";
 
-            $this->validateKeyType($builtinTypes, $key, $subContext['deserialization_path']);
+            if (\is_object($objectsToPopulate[$key] ?? null) || \is_array($objectsToPopulate[$key] ?? null)) {
+                $subContext[AbstractNormalizer::OBJECT_TO_POPULATE] = $objectsToPopulate[$key];
+            }
+
+            $this->validateKeyType($typeIdentifiers, $key, $subContext['deserialization_path']);
 
             $data[$key] = $this->denormalizer->denormalize($value, $type, $format, $subContext);
         }
@@ -85,39 +109,38 @@ class ArrayDenormalizer implements ContextAwareDenormalizerInterface, Denormaliz
 
     public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
-        if (null === $this->denormalizer) {
+        if (!isset($this->denormalizer)) {
             throw new BadMethodCallException(\sprintf('The nested denormalizer needs to be set to allow "%s()" to be used.', __METHOD__));
         }
 
-        return str_ends_with($type, '[]')
-            && $this->denormalizer->supportsDenormalization($data, substr($type, 0, -2), $format, $context);
+        if (!str_ends_with($type, '[]') || !\is_array($data)) {
+            return false;
+        }
+
+        $itemType = substr($type, 0, -2);
+
+        foreach ($data as $item) {
+            return $this->denormalizer->supportsDenormalization($item, $itemType, $format, $context);
+        }
+
+        return true;
     }
 
     /**
-     * @deprecated since Symfony 6.3, use "getSupportedTypes()" instead
+     * @param list<string> $typeIdentifiers
      */
-    public function hasCacheableSupportsMethod(): bool
+    private function validateKeyType(array $typeIdentifiers, mixed $key, string $path): void
     {
-        trigger_deprecation('symfony/serializer', '6.3', 'The "%s()" method is deprecated, use "getSupportedTypes()" instead.', __METHOD__);
-
-        return $this->denormalizer instanceof CacheableSupportsMethodInterface && $this->denormalizer->hasCacheableSupportsMethod();
-    }
-
-    /**
-     * @param mixed $key
-     */
-    private function validateKeyType(array $builtinTypes, $key, string $path): void
-    {
-        if (!$builtinTypes) {
+        if (!$typeIdentifiers) {
             return;
         }
 
-        foreach ($builtinTypes as $builtinType) {
-            if (('is_'.$builtinType)($key)) {
+        foreach ($typeIdentifiers as $typeIdentifier) {
+            if (('is_'.$typeIdentifier)($key)) {
                 return;
             }
         }
 
-        throw NotNormalizableValueException::createForUnexpectedDataType(\sprintf('The type of the key "%s" must be "%s" ("%s" given).', $key, implode('", "', $builtinTypes), get_debug_type($key)), $key, $builtinTypes, $path, true);
+        throw NotNormalizableValueException::createForUnexpectedDataType(\sprintf('The type of the key "%s" must be "%s" ("%s" given).', $key, implode('", "', $typeIdentifiers), get_debug_type($key)), $key, $typeIdentifiers, $path, true);
     }
 }

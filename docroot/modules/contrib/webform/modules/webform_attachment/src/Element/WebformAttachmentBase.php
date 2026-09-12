@@ -3,7 +3,7 @@
 namespace Drupal\webform_attachment\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Url;
 use Drupal\webform\WebformSubmissionForm;
 use Drupal\webform\WebformSubmissionInterface;
@@ -11,7 +11,7 @@ use Drupal\webform\WebformSubmissionInterface;
 /**
  * Provides a base class for 'webform_attachment' elements.
  */
-abstract class WebformAttachmentBase extends RenderElement implements WebformAttachmentInterface {
+abstract class WebformAttachmentBase extends RenderElementBase implements WebformAttachmentInterface {
 
   /**
    * {@inheritdoc}

@@ -13,11 +13,13 @@ use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- *
+ * Manage conditions form.
  */
 abstract class ManageConditions extends FormBase {
 
   /**
+   * The condition plugin manager.
+   *
    * @var \Drupal\Core\Condition\ConditionManager
    */
   protected $manager;
@@ -30,12 +32,15 @@ abstract class ManageConditions extends FormBase {
   protected $formBuilder;
 
   /**
+   * The machine name.
+   *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $machine_name;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static(
@@ -45,7 +50,12 @@ abstract class ManageConditions extends FormBase {
   }
 
   /**
+   * Constructs a new ManageConditions object.
    *
+   * @param \Drupal\Component\Plugin\PluginManagerInterface $manager
+   *   The condition plugin manager.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
    */
   public function __construct(PluginManagerInterface $manager, FormBuilderInterface $form_builder) {
     $this->manager = $manager;
@@ -109,7 +119,15 @@ abstract class ManageConditions extends FormBase {
   }
 
   /**
+   * Add a condition.
    *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The AJAX response.
    */
   public function add(array &$form, FormStateInterface $form_state) {
     $condition = $form_state->getValue('conditions');
@@ -131,9 +149,13 @@ abstract class ManageConditions extends FormBase {
   }
 
   /**
-   * @param $cached_values
+   * Render the rows.
+   *
+   * @param mixed $cached_values
+   *   The cached values.
    *
    * @return array
+   *   The rendered rows.
    */
   public function renderRows($cached_values) {
     $configured_conditions = [];
@@ -146,8 +168,8 @@ abstract class ManageConditions extends FormBase {
         '#links' => $this->getOperations($route_name, $route_parameters),
       ];
       $configured_conditions[] = [
-        $instance->getPluginId(),
-        $instance->summary(),
+        0 => $instance->getPluginId(),
+        1 => $instance->summary(),
         'operations' => [
           'data' => $build,
         ],
@@ -157,7 +179,15 @@ abstract class ManageConditions extends FormBase {
   }
 
   /**
+   * Get the operations.
    *
+   * @param string $route_name_base
+   *   The base route name.
+   * @param array $route_parameters
+   *   The route parameters.
+   *
+   * @return array
+   *   The operations array.
    */
   protected function getOperations($route_name_base, array $route_parameters = []) {
     $operations['edit'] = [
@@ -195,6 +225,7 @@ abstract class ManageConditions extends FormBase {
    * route information to control the modal/redirect needs of your use case.
    *
    * @return string
+   *   The condition class name.
    */
   abstract protected function getConditionClass();
 
@@ -202,8 +233,10 @@ abstract class ManageConditions extends FormBase {
    * The route to which condition 'add' actions should submit.
    *
    * @param mixed $cached_values
+   *   The cached values.
    *
    * @return string
+   *   The add route name.
    */
   abstract protected function getAddRoute($cached_values);
 
@@ -211,6 +244,7 @@ abstract class ManageConditions extends FormBase {
    * Provide the tempstore id for your specified use case.
    *
    * @return string
+   *   The tempstore id.
    */
   abstract protected function getTempstoreId();
 
@@ -224,32 +258,38 @@ abstract class ManageConditions extends FormBase {
    * approach quite seamlessly.
    *
    * @param mixed $cached_values
-   *
+   *   The cached values.
    * @param string $machine_name
-   *
+   *   The machine name.
    * @param string $row
+   *   The row.
    *
    * @return array
    *   In the format of
-   *   return ['route.base.name', ['machine_name' => $machine_name, 'context' => $row]];
+   *   ['route.base.name', ['machine_name' => $machine_name,
+   *   'context' => $row]].
    */
   abstract protected function getOperationsRouteInfo($cached_values, $machine_name, $row);
 
   /**
    * Custom logic for retrieving the conditions array from cached_values.
    *
-   * @param $cached_values
+   * @param mixed $cached_values
+   *   The cached values.
    *
    * @return array
+   *   The conditions array.
    */
   abstract protected function getConditions($cached_values);
 
   /**
    * Custom logic for retrieving the contexts array from cached_values.
    *
-   * @param $cached_values
+   * @param mixed $cached_values
+   *   The cached values.
    *
    * @return \Drupal\Core\Plugin\Context\ContextInterface[]
+   *   The contexts array.
    */
   abstract protected function getContexts($cached_values);
 

@@ -5,36 +5,40 @@
  * Contains better_exposed_filters.install.
  */
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Entity\EntityStorageException;
+
 /**
- * Implements hook_requirements().
+ * Implements hook_uninstall().
  */
-function better_exposed_filters_requirements($phase): array {
-  if ($phase !== 'runtime') {
-    return [];
-  }
+function better_exposed_filters_uninstall(): void {
+  try {
+    $views = \Drupal::entityTypeManager()->getStorage('view')->loadMultiple();
 
-  // Check installed libraries.
-  $libraries_directory_file_finder = \Drupal::service('library.libraries_directory_file_finder');
-  $lib_slider_internal = $libraries_directory_file_finder->find('nouislider');
+    foreach ($views as $view) {
+      $dependencies = $view->getDependencies();
+      if (!in_array('better_exposed_filters', $dependencies['module'])) {
+        continue;
+      }
 
-  if ($lib_slider_internal) {
-    $requirements['bef_nouislider'] = [
-      'title' => t('BEF: library noUiSlider'),
-      'value' => t('Better exposed filters library noUiSlider is installed locally.'),
-      'description' => 'The library is installed and will be loaded from this Drupal site.',
-      'severity' => REQUIREMENT_OK,
-    ];
-  }
-  else {
-    $requirements['bef_nouislider'] = [
-      'title' => t('BEF: library noUiSlider'),
-      'value' => t('Better exposed filters library noUiSlider is not installed locally and will be loaded from CDN. Loading external files from a CDN may be a data protection violation.'),
-      'description' => 'Please install the library. For more information see README.md',
-      'severity' => REQUIREMENT_WARNING,
-    ];
-  }
+      $changed = FALSE;
+      $displays = $view->get('display');
+      foreach ($displays as &$display) {
+        if (!empty($display['display_options']['exposed_form']['type']) && $display['display_options']['exposed_form']['type'] === 'bef') {
+          $display['display_options']['exposed_form']['type'] = 'basic';
+          $changed = TRUE;
+        }
+      }
 
-  return $requirements;
+      if ($changed) {
+        $view->set('display', $displays);
+        $view->save();
+      }
+    }
+  }
+  catch (InvalidPluginDefinitionException | PluginNotFoundException | EntityStorageException) {
+  }
 }
 
 /**

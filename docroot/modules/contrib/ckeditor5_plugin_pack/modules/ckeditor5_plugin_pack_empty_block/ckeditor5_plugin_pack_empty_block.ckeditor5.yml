@@ -1,0 +1,8 @@
+ckeditor5_plugin_pack_empty_block__empty_block:
+  ckeditor5:
+    plugins:
+      - htmlSupport.EmptyBlock
+  drupal:
+    label: Empty Block
+    class: \Drupal\ckeditor5_plugin_pack_empty_block\Plugin\CKEditor5Plugin\EmptyBlock
+    elements: false

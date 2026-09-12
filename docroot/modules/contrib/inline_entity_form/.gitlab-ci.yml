@@ -47,10 +47,166 @@ include:
 # Docs at https://git.drupalcode.org/project/gitlab_templates/-/blob/1.0.x/includes/include.drupalci.variables.yml
 ################
 variables:
-  SKIP_PHPSTAN: 1
-  OPT_IN_TEST_CURRENT: 1
-  OPT_IN_TEST_MAX_PHP: 1
-  OPT_IN_TEST_NEXT_MINOR: 1
-  OPT_IN_TEST_NEXT_MAJOR: 1
-  OPT_IN_TEST_PREVIOUS_MINOR: 1
-  OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  _CSPELL_IGNORE_PATHS: 'tests/fixtures/*'
+  # _PHPUNIT_CONCURRENT=1 uses run-tests.sh, 0 uses phpunit directly.
+  _PHPUNIT_CONCURRENT: 1
+
+# Job overrides
+composer:
+  extends: .composer-base
+  variables:
+    DRUPAL_CORE: "11.3.x"
+    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+    PHP_VERSION: "8.4"
+    PHP_IMAGE_VARIANT: "ubuntu-apache"
+
+cspell:
+  allow_failure: false
+
+phpcs:
+  allow_failure: false
+
+#
+# Manual builds (all other combinations)
+#
+
+## Drupal 11 (next minor)
+composer-d11_next:
+  stage: build
+  extends: .composer-base
+  variables:
+    DRUPAL_CORE: "11.x-dev"
+    MINIMUM_STABILITY_OVERRIDE: 'dev'
+    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+    PHP_VERSION: "8.4"
+    PHP_IMAGE_VARIANT: "ubuntu-apache"
+  dependencies: []
+  rules:
+    - when: manual
+  allow_failure: true
+
+## Drupal 10.6
+composer-d10_6:
+  stage: build
+  extends: .composer-base
+  variables:
+    DRUPAL_CORE: "10.6.x"
+    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+    PHP_VERSION: "8.3"
+    PHP_IMAGE_VARIANT: "ubuntu-apache"
+  dependencies: []
+  rules:
+    - when: manual
+  allow_failure: true
+
+## Drupal 10.5
+composer-d10_5:
+  stage: build
+  extends: .composer-base
+  variables:
+    DRUPAL_CORE: "10.5.x"
+    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+    PHP_VERSION: "8.2"
+    PHP_IMAGE_VARIANT: "apache"
+  dependencies: []
+  rules:
+    - when: manual
+  allow_failure: true
+
+## Drupal 9.5
+composer-d9_5:
+  stage: build
+  extends: .composer-base
+  variables:
+    DRUPAL_CORE: "9.5.x"
+    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+    PHP_VERSION: "8.1"
+    PHP_IMAGE_VARIANT: "apache"
+    COMPOSER_AUDIT_BLOCK_INSECURE: false
+  dependencies: []
+  rules:
+    - when: manual
+  allow_failure: true
+
+## Drupal 8.9
+composer-d8_9:
+  stage: build
+  extends: .composer-base
+  variables:
+    DRUPAL_CORE: "8.9.x"
+    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+    PHP_VERSION: "7.4"
+    PHP_IMAGE_VARIANT: "apache"
+    COMPOSER_AUDIT_BLOCK_INSECURE: false
+  dependencies: []
+  rules:
+    - when: manual
+  allow_failure: true
+
+#
+# Manual validate jobs
+#
+
+phpstan-d11_next:
+  extends: .phpstan-base
+  stage: validate
+  needs:
+    - composer-d11_next
+  allow_failure: true
+  rules:
+    - when: manual
+
+phpstan-d10_6:
+  extends: .phpstan-base
+  stage: validate
+  needs:
+    - composer-d10_6
+  allow_failure: true
+  rules:
+    - when: manual
+
+#
+# Manual tests
+#
+
+phpunit-d11_next:
+  extends: .phpunit-base
+  stage: test
+  needs:
+    - composer-d11_next
+
+phpunit-d11_next-all_deprecations:
+  extends: .phpunit-base
+  stage: test
+  needs:
+    - composer-d11_next
+  allow_failure: true
+  rules:
+    - when: manual
+  variables:
+    # Use core ignoreFile to show deprecations. This will only work with $_PHPUNIT_CONCURRENT=1
+    SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
+
+phpunit-d10_6:
+  extends: .phpunit-base
+  stage: test
+  needs:
+    - composer-d10_6
+
+phpunit-d10_5:
+  extends: .phpunit-base
+  stage: test
+  needs:
+    - composer-d10_5
+
+phpunit-d9_5:
+  extends: .phpunit-base
+  stage: test
+  needs:
+    - composer-d9_5
+
+phpunit-d8_9:
+  extends: .phpunit-base
+  stage: test
+  needs:
+    - composer-d8_9

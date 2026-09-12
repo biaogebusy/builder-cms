@@ -36,7 +36,7 @@ include:
     # "ref" value can be:
     # - Recommended (default) - `ref: $_GITLAB_TEMPLATES_REF` - The Drupal Association will update this value to the recommended tag for contrib.
     # - Latest - `ref: main` - Get the latest additions and bug fixes as they are merged into the templates.
-    # - Minor or Major latests - `ref: 1.x-latest` or `ref: 1.0.x-latest` - Get the latest additions within a minor (mostly bugfixes) or major (bugs and new features).
+    # - Minor or Major latest - `ref: 1.x-latest` or `ref: 1.0.x-latest` - Get the latest additions within a minor (mostly bugfixes) or major (bugs and new features).
     # - Fixed tag - `ref: 1.0.1` - Set the value to a known tag. This will not get any updates.
     # If you change the default value of ref, you should set the _CURL_TEMPLATES_REF variable in the variables section to be the same as set here.
     ref: $_GITLAB_TEMPLATES_REF
@@ -56,8 +56,14 @@ include:
 ################
 variables:
   _PHPUNIT_CONCURRENT: "1"
-  _PHPUNIT_EXTRA: "--suppress-deprecations"
+  #  _PHPUNIT_EXTRA: "--suppress-deprecations"
+  OPT_IN_TEST_MAX_PHP: '1'
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'
+  OPT_IN_TEST_NEXT_MINOR: '1'
+  OPT_IN_TEST_NEXT_MAJOR: '1'
+  _AUTORUN_MAX_PHP: 'push'
+  _AUTORUN_PREVIOUS_MAJOR: 'push'
+  _AUTORUN_NEXT_MINOR: 'push'
 
 #
 # Linting jobs are passing so any issue that breaks them should fix them.
@@ -65,13 +71,24 @@ variables:
 cspell:
   allow_failure: false
 eslint:
-  allow_failure: true
+  allow_failure: false
 phpcs:
-  script:
-    - cp $_WEB_ROOT/core/phpcs.xml.dist ./
-    - vendor/bin/phpcs -s $_WEB_ROOT/modules/custom --report-junit=junit.xml --report-full --report-summary --report-source
   allow_failure: false
 phpstan:
   allow_failure: false
+phpstan (previous major):
+  rules:
+    - when: never
+phpstan (next minor):
+  allow_failure: true
+phpstan (next major):
+  allow_failure: true
 stylelint:
   allow_failure: false
+phpunit (next minor):
+  allow_failure: false
+phpunit (next minor - with deprecations):
+  extends: phpunit (next minor)
+  allow_failure: true
+  before_script:
+    - unset SYMFONY_DEPRECATIONS_HELPER

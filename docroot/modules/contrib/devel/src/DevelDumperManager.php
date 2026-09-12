@@ -29,33 +29,13 @@ class DevelDumperManager implements DevelDumperManagerInterface {
   protected ImmutableConfig $config;
 
   /**
-   * The current account.
-   */
-  protected AccountProxyInterface $account;
-
-  /**
-   * The devel dumper plugin manager.
-   */
-  protected DevelDumperPluginManagerInterface $dumperManager;
-
-  /**
-   * The entity type manager.
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The messenger.
-   */
-  protected MessengerInterface $messenger;
-
-  /**
    * Constructs a DevelDumperPluginManager object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Core\Session\AccountProxyInterface $account
    *   The current account.
-   * @param \Drupal\devel\DevelDumperPluginManagerInterface $dumper_manager
+   * @param \Drupal\devel\DevelDumperPluginManagerInterface $dumperManager
    *   The devel dumper plugin manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
@@ -66,17 +46,13 @@ class DevelDumperManager implements DevelDumperManagerInterface {
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
-    AccountProxyInterface $account,
-    DevelDumperPluginManagerInterface $dumper_manager,
-    EntityTypeManagerInterface $entityTypeManager,
-    MessengerInterface $messenger,
+    protected AccountProxyInterface $account,
+    protected DevelDumperPluginManagerInterface $dumperManager,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected MessengerInterface $messenger,
     TranslationInterface $string_translation,
   ) {
     $this->config = $config_factory->get('devel.settings');
-    $this->account = $account;
-    $this->dumperManager = $dumper_manager;
-    $this->entityTypeManager = $entityTypeManager;
-    $this->messenger = $messenger;
     $this->stringTranslation = $string_translation;
   }
 

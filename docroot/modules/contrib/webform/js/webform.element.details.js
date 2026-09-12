@@ -4,16 +4,13 @@
  */
 
 (function ($, Drupal) {
-
-  'use strict';
-
   /**
    * Attach handler to details with invalid inputs.
    *
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformDetailsInvalid = {
-    attach: function (context) {
+    attach(context) {
       $('details :input', context).on('invalid', function () {
         $(this).parents('details:not([open])').children('summary').trigger('click');
 

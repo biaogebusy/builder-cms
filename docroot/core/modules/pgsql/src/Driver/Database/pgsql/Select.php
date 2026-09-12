@@ -17,13 +17,6 @@ class Select extends QuerySelect {
   /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $connection, $table, $alias = NULL, array $options = []) {
-    // @todo Remove the __construct in Drupal 11.
-    // @see https://www.drupal.org/project/drupal/issues/3256524
-    parent::__construct($connection, $table, $alias, $options);
-    unset($this->queryOptions['return']);
-  }
-
   public function orderRandom() {
     $alias = $this->addExpression('RANDOM()', 'random_field');
     $this->orderBy($alias);
@@ -150,15 +143,21 @@ class Select extends QuerySelect {
    * {@inheritdoc}
    */
   public function execute() {
-    $this->connection->addSavepoint();
+    if ($this->connection->inTransaction()) {
+      $savepoint = $this->connection->startTransaction('mimic_implicit_commit');
+    }
     try {
       $result = parent::execute();
     }
     catch (\Exception $e) {
-      $this->connection->rollbackSavepoint();
+      if (isset($savepoint)) {
+        $savepoint->rollback();
+      }
       throw $e;
     }
-    $this->connection->releaseSavepoint();
+    if (isset($savepoint)) {
+      $savepoint->commitOrRelease();
+    }
 
     return $result;
   }

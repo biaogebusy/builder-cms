@@ -11,6 +11,7 @@ use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -21,7 +22,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Menu\MenuLinkManager;
+use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\ParamConverter\ParamNotConvertedException;
 use Drupal\Core\Path\CurrentPathStack;
@@ -128,7 +129,7 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   /**
    * The menu link manager.
    *
-   * @var \Drupal\Core\Menu\MenuLinkManager
+   * @var \Drupal\Core\Menu\MenuLinkManagerInterface
    */
   protected $menuLinkManager;
 
@@ -202,7 +203,7 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    *   The current user object.
    * @param \Drupal\Core\Path\CurrentPathStack $current_path
    *   The current path.
-   * @param \Drupal\Core\Menu\MenuLinkManager $menu_link_manager
+   * @param \Drupal\Core\Menu\MenuLinkManagerInterface $menu_link_manager
    *   The menu link manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager service.
@@ -219,7 +220,7 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    * @param \Drupal\Core\Path\PathMatcherInterface $path_matcher
    *   The path matcher.
    */
-  public function __construct(RequestContext $context, AccessManagerInterface $access_manager, RequestMatcherInterface $router, RequestStack $request_stack, InboundPathProcessorInterface $path_processor, ConfigFactoryInterface $config_factory, TitleResolverInterface $title_resolver, AccountInterface $current_user, CurrentPathStack $current_path, MenuLinkManager $menu_link_manager, LanguageManagerInterface $language_manager, EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository, LoggerChannelFactoryInterface $logger, MessengerInterface $messenger, ModuleHandlerInterface $module_handler, PathMatcherInterface $path_matcher) {
+  public function __construct(RequestContext $context, AccessManagerInterface $access_manager, RequestMatcherInterface $router, RequestStack $request_stack, InboundPathProcessorInterface $path_processor, ConfigFactoryInterface $config_factory, TitleResolverInterface $title_resolver, AccountInterface $current_user, CurrentPathStack $current_path, MenuLinkManagerInterface $menu_link_manager, LanguageManagerInterface $language_manager, EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository, LoggerChannelFactoryInterface $logger, MessengerInterface $messenger, ModuleHandlerInterface $module_handler, PathMatcherInterface $path_matcher) {
     $this->context = $context;
     $this->accessManager = $access_manager;
     $this->router = $router;
@@ -244,7 +245,12 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   /**
    * {@inheritdoc}
    */
-  public function applies(RouteMatchInterface $route_match) {
+  public function applies(RouteMatchInterface $route_match, ?CacheableMetadata $cacheable_metadata = NULL) {
+
+    // @todo Remove null safe operator in Drupal 12.0.0, see
+    //   https://www.drupal.org/project/drupal/issues/3459277.
+    $cacheable_metadata?->addCacheContexts(['route', 'url', 'languages']);
+
     $applies_admin_routes = $this->config->get(EasyBreadcrumbConstants::APPLIES_ADMIN_ROUTES);
 
     // If never set before ensure Applies to administration pages is on.
@@ -267,6 +273,37 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    */
   public function build(RouteMatchInterface $route_match) {
     $breadcrumb = new Breadcrumb();
+
+    // Expire cache by languages and config changes.
+    // @todo Remove in Drupal 12.0.0, will be added from ::applies(). See
+    //   https://www.drupal.org/project/drupal/issues/3459277
+    $breadcrumb->addCacheContexts(['route', 'url', 'languages']);
+
+    // Expire cache context for config changes.
+    $breadcrumb->addCacheableDependency($this->config);
+
+    $parameters = $route_match->getParameters();
+    foreach ($parameters as $key => $parameter) {
+      // Handle views path cache expiration.
+      if ($key === 'view_id') {
+        $breadcrumb->addCacheTags(['config:views.view.' . $parameter]);
+      }
+      // Handles most other types of path-based cache expiration.
+      if ($parameter instanceof CacheableDependencyInterface) {
+        $breadcrumb->addCacheableDependency($parameter);
+      }
+    }
+
+    $home_segment_keep = $this->config->get(EasyBreadcrumbConstants::HOME_SEGMENT_KEEP);
+    $home_segment_title = $this->config->get(EasyBreadcrumbConstants::HOME_SEGMENT_TITLE);
+    if ($this->pathMatcher->isFrontPage()) {
+      if ($home_segment_keep) {
+        $breadcrumb->addLink(Link::createFromRoute($home_segment_title, '<none>'));
+      }
+
+      return $breadcrumb;
+    }
+
     $links = [];
     $exclude = [];
     $curr_lang = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
@@ -298,13 +335,12 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     $path = urldecode($path);
     $path_elements = explode('/', trim($path, '/'));
-    $front = $this->siteConfig->get('page.front');
+    $front = $this->siteConfig->get('page.front') ?? '<front>';
 
-    // Give the option to keep the breadcrumb on the front page.
-    $keep_front = !empty($this->config->get(EasyBreadcrumbConstants::HOME_SEGMENT_TITLE))
-                  && $this->config->get(EasyBreadcrumbConstants::HOME_SEGMENT_KEEP);
-    $exclude[$front] = !$keep_front;
-    $exclude[''] = !$keep_front;
+    // Excludes the home segment if the home segment title text is empty.
+    $exclude_front = empty($home_segment_title);
+    $exclude[$front] = $exclude_front;
+    $exclude[''] = $exclude_front;
     $exclude['/user'] = TRUE;
 
     // See if we are doing a Custom Path override.
@@ -339,7 +375,7 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         || (!$is_regex && $internal_path == $custom_path)
       ) {
         if ($this->config->get(EasyBreadcrumbConstants::INCLUDE_HOME_SEGMENT)) {
-          $links[] = Link::createFromRoute($this->config->get(EasyBreadcrumbConstants::HOME_SEGMENT_TITLE), '<front>');
+          $links[] = Link::createFromRoute($home_segment_title, '<front>');
         }
 
         if ($is_regex && count($regex_group_matches) > 1) {
@@ -434,43 +470,10 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
           }
         }
 
-        // Handle views path expiration cache expiration.
-        $parameters = $route_match->getParameters();
-        foreach ($parameters as $key => $parameter) {
-          if ($key === 'view_id') {
-            $breadcrumb->addCacheTags(['config:views.view.' . $parameter]);
-          }
-
-          if ($parameter instanceof CacheableDependencyInterface) {
-            $breadcrumb->addCacheableDependency($parameter);
-          }
-        }
-
-        // Expire cache by languages and config changes.
-        $breadcrumb->addCacheContexts(['route', 'url.path', 'languages']);
-
-        // Expire cache context for config changes.
-        $breadcrumb->addCacheableDependency($this->config);
-
         return $breadcrumb->setLinks($links);
       }
     }
 
-    // Handle views path expiration cache expiration.
-    $parameters = $route_match->getParameters();
-    foreach ($parameters as $key => $parameter) {
-      if ($key === 'view_id') {
-        $breadcrumb->addCacheTags(['config:views.view.' . $parameter]);
-      }
-
-      if ($parameter instanceof CacheableDependencyInterface) {
-        $breadcrumb->addCacheableDependency($parameter);
-      }
-    }
-
-    // Expire cache by languages and config changes.
-    $breadcrumb->addCacheContexts(['route', 'url.path', 'languages']);
-    $breadcrumb->addCacheableDependency($this->config);
     $i = 0;
     $add_langcode = FALSE;
 
@@ -502,6 +505,17 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     while (count($path_elements) > 0) {
       $exclude_match_found = FALSE;
       $check_path = '/' . implode('/', $path_elements);
+
+      // Skips this element if HOME_SEGMENT_VALIDATION_SKIP is not enabled and
+      // this is a duplicate of the home page crumb.
+      if (
+        !$this->config->get(EasyBreadcrumbConstants::HOME_SEGMENT_VALIDATION_SKIP)
+        && $this->pathMatcher->matchPath($check_path, $front)
+      ) {
+        array_pop($path_elements);
+        continue;
+      }
+
       if ($add_langcode) {
         $check_path = '/' . $curr_lang . $check_path;
       }
@@ -549,7 +563,11 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         // The set of breadcrumb links depends on the access result, so merge
         // the access result's cacheability metadata.
         if ($access->isAllowed()) {
-          if ($this->config->get(EasyBreadcrumbConstants::TITLE_FROM_PAGE_WHEN_AVAILABLE)) {
+          // Sets title based on alternative field.
+          $title = $this->normalizeText($this->getAlternateTitleString($route_request, $route_match, $replacedTitles));
+
+          // Sets title based on page title.
+          if (empty($title) && $this->config->get(EasyBreadcrumbConstants::TITLE_FROM_PAGE_WHEN_AVAILABLE)) {
             // Get the title if the current route represents an entity.
             $title = FALSE;
             if (($route = $route_match->getRouteObject()) && ($parameters = $route->getOption('parameters'))) {
@@ -570,24 +588,30 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
               $title = $this->normalizeText($this->getTitleString($route_request, $route_match, $replacedTitles));
             }
           }
-          // Set title based on alternative field.
-          if ($this->config->get(EasyBreadcrumbConstants::ALTERNATIVE_TITLE_FIELD)) {
-            $alternativeTitle = $this->normalizeText($this->getTitleString($route_request, $route_match, $replacedTitles));
-            if ($this->config->get(EasyBreadcrumbConstants::TRUNCATOR_MODE)) {
-              $alternativeTitle = $this->truncator($alternativeTitle);
-            }
-            if (!empty($alternativeTitle)) {
-              $title = $alternativeTitle;
-            }
-          }
-          if (!isset($title)) {
 
+          if (empty($title)) {
+            // Sets title based on the menu title.
             if ($this->config->get(EasyBreadcrumbConstants::USE_MENU_TITLE_AS_FALLBACK)) {
 
               // Try resolve the menu title from the route.
               $route_name = $route_match->getRouteName();
               $route_parameters = $route_match->getRawParameters()->all();
               $menu_links = $this->menuLinkManager->loadLinksByRoute($route_name, $route_parameters);
+
+              // Prefer menu links without a URL fragment. Links pointing to an
+              // anchor on the page (e.g. /publications#2008) share the page's
+              // route, so loadLinksByRoute() returns them alongside the link
+              // for the page itself. Using a fragment link would show the
+              // section title (e.g. "2008") instead of the page title.
+              if (count($menu_links) > 1) {
+                $non_fragment_links = array_filter($menu_links, function ($link) {
+                  $options = $link->getUrlObject()->getOptions();
+                  return empty($options['fragment']);
+                });
+                if (!empty($non_fragment_links)) {
+                  $menu_links = $non_fragment_links;
+                }
+              }
 
               if (empty($menu_links)) {
                 if ($this->config->get(EasyBreadcrumbConstants::USE_PAGE_TITLE_AS_MENU_TITLE_FALLBACK)) {
@@ -618,7 +642,7 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
             // Fallback to using the raw path component as the title if the
             // route is missing a _title or _title_callback attribute.
-            if (!isset($title)) {
+            if (empty($title)) {
               $title = $this->normalizeText(str_replace(['-', '_'], ' ', end($path_elements)));
             }
           }
@@ -676,12 +700,9 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     if ($this->config->get(EasyBreadcrumbConstants::INCLUDE_HOME_SEGMENT)) {
 
       $home_route_name = '<front>';
-      if ($this->pathMatcher->isFrontPage() && !$this->config->get(EasyBreadcrumbConstants::TITLE_SEGMENT_AS_LINK)) {
-        $home_route_name = '<none>';
-      }
 
       if (!$this->config->get(EasyBreadcrumbConstants::USE_SITE_TITLE)) {
-        $links[] = Link::createFromRoute($this->normalizeText($this->config->get(EasyBreadcrumbConstants::HOME_SEGMENT_TITLE)), $home_route_name);
+        $links[] = Link::createFromRoute($this->normalizeText($home_segment_title), $home_route_name);
       }
       else {
         $links[] = Link::createFromRoute($this->siteConfig->get('name'), $home_route_name);
@@ -706,6 +727,7 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $home_segment = array_shift($links);
         $segment_limit--;
       }
+      $segment_limit = max(0, $segment_limit);
       while (count($links) > $segment_limit) {
         array_shift($links);
       }
@@ -784,58 +806,30 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     catch (\InvalidArgumentException $exception) {
       $title = NULL;
     }
-    $this->applyTitleReplacement($title, $replacedTitles);
+    return $this->formatTitle($title, $replacedTitles, $route_match);
+  }
 
-    // Title resolver only returns title if route defines a _title or
-    // _title_callback but some core routes like node.edit or block_content.edit
-    // uses $main_content['#title'] to set a title. Add an special case to set a
-    // title for {entity_type_id}.{operation} when it's possible.
-    if (NULL === $title && $entityForm = $route_match->getRouteObject()->getDefault('_entity_form')) {
-      $entityFormParts = explode('.', $entityForm);
-
-      if (2 === count($entityFormParts)) {
-        $entity_type_id = $entityFormParts[0];
-        $operation      = $entityFormParts[1];
-
-        // Operations that can be used as a title: add, edit or delete.
-        if (in_array($operation, ['add', 'edit', 'delete'])) {
-          $title = $operation;
-        }
-        // Operations used to show the entity: default, view or preview.
-        elseif (in_array($operation, ['default', 'view', 'preview'])) {
-          if ($entity = $route_match->getParameter($entity_type_id)) {
-            if (is_object($entity)) {
-              if (method_exists($entity, 'getTitle')) {
-                $title = $entity->getTitle();
-              }
-              elseif (method_exists($entity, 'label')) {
-                $title = $entity->label();
-              }
-            }
-          }
-        }
-      }
+  /**
+   * Get alternate string title for route.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $route_request
+   *   A request object.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   A RouteMatch object.
+   * @param array $replacedTitles
+   *   A array replaced titles.
+   *
+   * @return string|null
+   *   Either the alternate title string or NULL if unable to determine it.
+   */
+  public function getAlternateTitleString(Request $route_request, RouteMatchInterface $route_match, array $replacedTitles) {
+    try {
+      $title = $this->titleResolver->getAlternateTitle($route_request);
     }
-
-    // If title is object then try to render it.
-    if ($title instanceof MarkupInterface) {
-      $title = strip_tags(Html::decodeEntities($title));
+    catch (\InvalidArgumentException $exception) {
+      $title = NULL;
     }
-    // Other paths, such as admin/structure/menu/manage/main, will
-    // return a render array suitable to render using core's XSS filter.
-    elseif (is_array($title) && array_key_exists('#markup', $title)) {
-
-      // If this render array has #allowed tags use that instead of default.
-      $tags = array_key_exists('#allowed_tags', $title) ? $title['#allowed_tags'] : NULL;
-      $title = Html::decodeEntities(Xss::filter($title['#markup'], $tags));
-    }
-
-    if (!is_string($title)) {
-
-      return NULL;
-    }
-
-    return $title;
+    return $this->formatTitle($title, $replacedTitles, $route_match);
   }
 
   /**
@@ -967,7 +961,7 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // @todo Use the RequestHelper once https://www.drupal.org/node/2090293 is
     // fixed.
     // The path in the request should start with a slash.
-    $request = Request::create('/' . ltrim($path, '/'));
+    $request = Request::create('/' . urlencode(ltrim($path, '/')));
 
     // Performance optimization: set a short accept header to reduce overhead in
     // AcceptHeaderMatcher when matching the request.
@@ -1116,6 +1110,73 @@ class EasyBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       $this->config->get(EasyBreadcrumbConstants::TRUNCATOR_DOTS) ? '...' : '',
       'utf8'
     );
+    return $title;
+  }
+
+  /**
+   * Formats a title.
+   *
+   * @param mixed $title
+   *   The title to format.
+   * @param array $replacedTitles
+   *   An array of titles to replace.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The current route match.
+   *
+   * @return string|null
+   *   Either the current title string or NULL if unable to determine it
+   */
+  public function formatTitle(mixed $title, array $replacedTitles, RouteMatchInterface $route_match): ?string {
+    $this->applyTitleReplacement($title, $replacedTitles);
+
+    // Title resolver only returns title if route defines a _title or
+    // _title_callback but some core routes like node.edit or block_content.edit
+    // uses $main_content['#title'] to set a title. Add an special case to set a
+    // title for {entity_type_id}.{operation} when it's possible.
+    if (NULL === $title && $entityForm = $route_match->getRouteObject()->getDefault('_entity_form')) {
+      $entityFormParts = explode('.', $entityForm);
+
+      if (2 === count($entityFormParts)) {
+        $entity_type_id = $entityFormParts[0];
+        $operation = $entityFormParts[1];
+
+        // Operations that can be used as a title: add, edit or delete.
+        if (in_array($operation, ['add', 'edit', 'delete'])) {
+          $title = $operation;
+        }
+        // Operations used to show the entity: default, view or preview.
+        elseif (in_array($operation, ['default', 'view', 'preview'])) {
+          if ($entity = $route_match->getParameter($entity_type_id)) {
+            if (is_object($entity)) {
+              if (method_exists($entity, 'getTitle')) {
+                $title = $entity->getTitle();
+              }
+              elseif (method_exists($entity, 'label')) {
+                $title = $entity->label();
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Sanitizes strings and instances of MarkupInterface with default allowed
+    // tags.
+    if ($title instanceof MarkupInterface || is_string($title)) {
+      $title = Html::decodeEntities(Xss::filter($title));
+    }
+    // Other paths, such as admin/structure/menu/manage/main, return a render
+    // array that may contain allowed tags.
+    elseif (is_array($title) && array_key_exists('#markup', $title)) {
+      $tags = array_key_exists('#allowed_tags', $title) ? $title['#allowed_tags'] : NULL;
+      $title = Html::decodeEntities(Xss::filter($title['#markup'], $tags));
+    }
+
+    if (!is_string($title)) {
+
+      return NULL;
+    }
+
     return $title;
   }
 

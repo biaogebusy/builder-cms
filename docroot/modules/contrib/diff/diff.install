@@ -7,11 +7,15 @@
 
 declare(strict_types=1);
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
+use Drupal\Core\Hook\Attribute\LegacyRequirementsHook;
 use Drupal\Core\Url;
 
 /**
  * Implements hook_requirements().
  */
+#[LegacyRequirementsHook]
 function diff_requirements(string $phase): array {
   $requirements = [];
 
@@ -28,12 +32,14 @@ function diff_requirements(string $phase): array {
     if (!$has_htmlDiffAdvanced) {
       if ($setting_enabled) {
         $requirements['html_diff_advanced']['value'] = t('Dependencies not found');
-        $requirements['html_diff_advanced']['severity'] = REQUIREMENT_ERROR;
+        // @phpstan-ignore-next-line
+        $requirements['html_diff_advanced']['severity'] = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', static fn() => RequirementSeverity::Error->value, static fn() => REQUIREMENT_ERROR);
         $requirements['html_diff_advanced']['description'] = t("The HTML Diff layout requires the HtmlDiffAdvanced library. Please consult README.txt for installation instructions.");
       }
       else {
         $requirements['html_diff_advanced']['value'] = t('Visual inline layout');
-        $requirements['html_diff_advanced']['severity'] = REQUIREMENT_INFO;
+        // @phpstan-ignore-next-line
+        $requirements['html_diff_advanced']['severity'] = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', static fn() => RequirementSeverity::Info->value, static fn() => REQUIREMENT_INFO);
         $requirements['html_diff_advanced']['description'] = t('Diff adds a visual rendered display, consult README.txt for installation instructions and enable it in <a href=":settings">settings</a>.', [':settings' => Url::fromRoute('diff.general_settings')->toString()]);
       }
     }
@@ -77,7 +83,7 @@ function diff_update_8002(): void {
   $config_factory = \Drupal::configFactory();
   $config = $config_factory->getEditable('diff.settings');
   $config->set('general_settings.revision_pager_limit', 50);
-  $config->save(TRUE);
+  $config->save();
 }
 
 /**

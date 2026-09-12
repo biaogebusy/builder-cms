@@ -5,6 +5,7 @@ namespace Drupal\search_api\Task;
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\search_api\Event\SearchApiEvents;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\SearchApiException;
@@ -31,7 +32,7 @@ class ServerTaskManager implements ServerTaskManagerInterface, EventSubscriberIn
     $events = [];
 
     foreach (static::getSupportedTypes() as $type) {
-      $events['search_api.task.' . $type][] = ['processEvent'];
+      $events[SearchApiEvents::EXECUTE_TASK_EVENT_PREFIX . $type][] = ['processEvent'];
     }
 
     return $events;

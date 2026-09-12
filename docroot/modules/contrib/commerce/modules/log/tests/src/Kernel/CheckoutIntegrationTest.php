@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_log\Kernel;
 
+use Drupal\commerce_log\LogStorageInterface;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_checkout\Event\CheckoutEvents;
 use Drupal\commerce_order\Entity\Order;
@@ -13,13 +14,6 @@ use Drupal\commerce_order\Event\OrderEvent;
  * @group commerce
  */
 class CheckoutIntegrationTest extends OrderKernelTestBase {
-
-  /**
-   * The log storage.
-   *
-   * @var \Drupal\commerce_log\LogStorageInterface
-   */
-  protected $logStorage;
 
   /**
    * The log view builder.
@@ -46,7 +40,6 @@ class CheckoutIntegrationTest extends OrderKernelTestBase {
 
     $this->installEntitySchema('commerce_log');
     $this->installConfig('commerce_checkout');
-    $this->logStorage = $this->container->get('entity_type.manager')->getStorage('commerce_log');
     $this->logViewBuilder = $this->container->get('entity_type.manager')->getViewBuilder('commerce_log');
   }
 
@@ -63,7 +56,9 @@ class CheckoutIntegrationTest extends OrderKernelTestBase {
     $order->save();
     $this->container->get('event_dispatcher')->dispatch(new OrderEvent($order), CheckoutEvents::COMPLETION);
 
-    $logs = $this->logStorage->loadMultipleByEntity($order);
+    $log_storage = $this->entityTypeManager->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    $logs = $log_storage->loadMultipleByEntity($order);
     $this->assertEquals(1, count($logs));
     $log = end($logs);
     $build = $this->logViewBuilder->view($log);

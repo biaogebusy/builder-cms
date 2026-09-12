@@ -177,7 +177,7 @@ class WebformNodeAccess {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public static function checkAccess($operation, $entity_access, NodeInterface $node, WebformSubmissionInterface $webform_submission = NULL, AccountInterface $account = NULL) {
+  public static function checkAccess($operation, $entity_access, NodeInterface $node, ?WebformSubmissionInterface $webform_submission = NULL, ?AccountInterface $account = NULL) {
     /** @var \Drupal\webform\WebformEntityReferenceManagerInterface $entity_reference_manager */
     $entity_reference_manager = \Drupal::service('webform.entity_reference_manager');
 
@@ -204,13 +204,16 @@ class WebformNodeAccess {
       elseif (\Drupal::entityTypeManager()->hasDefinition('group_relation')) {
         $is_group_node = \Drupal::entityTypeManager()->getStorage('group_relation')->loadByEntity($node);
       }
+      elseif (\Drupal::entityTypeManager()->hasDefinition('group_relationship')) {
+        $is_group_node = \Drupal::entityTypeManager()->getStorage('group_relationship')->loadByEntity($node);
+      }
     }
 
     // Check the node operation.
     if (!$operation) {
       $result = AccessResult::neutral();
     }
-    elseif ($is_group_node && strpos($operation, 'webform_submission_') === 0) {
+    elseif ($is_group_node && str_starts_with($operation, 'webform_submission_')) {
       // For group nodes, we need to bypass node access checking for
       // 'webform_submission_*' operations which trigger access forbidden.
       // @see group_entity_access()
@@ -225,11 +228,11 @@ class WebformNodeAccess {
     // Check entity access.
     if ($entity_access) {
       // Check entity access for the webform.
-      if (strpos($entity_access, 'webform.') === 0) {
+      if (str_starts_with($entity_access, 'webform.')) {
         $result = $result->orIf($webform->access(str_replace('webform.', '', $entity_access), $account, TRUE));
       }
       // Check entity access for the webform submission.
-      if (strpos($entity_access, 'webform_submission.') === 0) {
+      if (str_starts_with($entity_access, 'webform_submission.')) {
         $result = $result->orIf($webform_submission->access(str_replace('webform_submission.', '', $entity_access), $account, TRUE));
       }
     }

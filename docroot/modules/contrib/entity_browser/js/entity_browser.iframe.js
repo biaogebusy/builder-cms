@@ -17,7 +17,7 @@
       $(once('iframe-auto-open', '.entity-browser-handle.entity-browser-iframe', context)).each(function () {
         var uuid = $(this).attr('data-uuid');
         if (drupalSettings.entity_browser.iframe[uuid].auto_open) {
-          $(this).click();
+          $(this).trigger('click');
         }
       });
     }
@@ -33,7 +33,7 @@
     var original_path = $(this).attr('data-original-path');
     var iframeSettings = drupalSettings['entity_browser']['iframe'][uuid];
     var iframe = $(
-      '<iframe />',
+      '<iframe></iframe>',
       {
         'src': iframeSettings['src'],
         'width': '100%',

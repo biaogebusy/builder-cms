@@ -3,3 +3,7 @@ services:
     class: Drupal\webform_ui\PathProcessor\WebformUiPathProcessor
     tags:
       - {name: path_processor_outbound}
+
+  Drupal\webform_ui\Hook\WebformUiHooks:
+    class: Drupal\webform_ui\Hook\WebformUiHooks
+    autowire: true

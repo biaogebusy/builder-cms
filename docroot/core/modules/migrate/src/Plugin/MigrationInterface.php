@@ -107,6 +107,7 @@ interface MigrationInterface extends PluginInspectionInterface, DerivativeInspec
    * Get a list of required plugin IDs.
    *
    * @return string[]
+   *   An array of required plugin IDs.
    */
   public function getRequirements(): array;
 
@@ -260,34 +261,6 @@ interface MigrationInterface extends PluginInspectionInterface, DerivativeInspec
   public function mergeProcessOfProperty($property, array $process_of_property);
 
   /**
-   * Checks if the migration should track time of last import.
-   *
-   * @return bool
-   *   TRUE if the migration is tracking last import time.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
-   * replacement.
-   *
-   * @see https://www.drupal.org/node/3282894
-   */
-  public function isTrackLastImported();
-
-  /**
-   * Set if the migration should track time of last import.
-   *
-   * @param bool $track_last_imported
-   *   Boolean value to indicate if the migration should track last import time.
-   *
-   * @return $this
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
-   * replacement.
-   *
-   * @see https://www.drupal.org/node/3282894
-   */
-  public function setTrackLastImported($track_last_imported);
-
-  /**
    * Get the dependencies for this migration.
    *
    * @return array
@@ -312,19 +285,6 @@ interface MigrationInterface extends PluginInspectionInterface, DerivativeInspec
   public function getSourceConfiguration();
 
   /**
-   * If true, track time of last import.
-   *
-   * @return bool
-   *   Flag to determine desire of tracking time of last import.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
-   * replacement.
-   *
-   * @see https://www.drupal.org/node/3282894
-   */
-  public function getTrackLastImported();
-
-  /**
    * The destination identifiers.
    *
    * An array of destination identifiers: the keys are the name of the
@@ -347,6 +307,7 @@ interface MigrationInterface extends PluginInspectionInterface, DerivativeInspec
    * Indicates if the migration is auditable.
    *
    * @return bool
+   *   TRUE if the migration is auditable, FALSE otherwise.
    */
   public function isAuditable();
 

@@ -4,15 +4,25 @@ namespace Drupal\blazy\Media\Svg;
 
 use Drupal\Component\Utility\Color;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Media\BlazyFile;
-use Drupal\blazy\internals\Internals;
-use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
 use enshrined\svgSanitize\Sanitizer;
 
 /**
- * Provides Svg utility for blazy_file with SVG, and blur images.
+ * Provides Svg utility SVG inline, and probably blur images.
+ *
+ * Media component services deprecated in 3.x, and is removed in 4.x or 5.x.
+ * Public access is available via @blazy.media_context coordinating layer.
+ *
+ * @internal
+ *   This is an internal part of the Blazy system and should only be used by
+ *   blazy-related code in Blazy module. Media integration is being reworked.
  *
  * @todo make this class also functional for SVG blur.
+ * @todo enable @trigger_error('Svg is deprecated in blazy:4.0.0 and is
+ * removed from blazy:5.0.0. Use @blazy.media_context instead.
+ * See https://www.drupal.org/node/3575429', E_USER_DEPRECATED);
  */
 class Svg extends BlazyFile implements SvgInterface {
 
@@ -20,7 +30,7 @@ class Svg extends BlazyFile implements SvgInterface {
    * {@inheritdoc}
    */
   public function sanitize($file, array $options = []): ?string {
-    $uri   = $file instanceof File ? $file->getFileUri() : $file;
+    $uri   = $file instanceof FileInterface ? $file->getFileUri() : $file;
     $ext   = pathinfo($uri, PATHINFO_EXTENSION);
     $ext   = strtolower($ext);
     $svg   = NULL;
@@ -198,8 +208,8 @@ class Svg extends BlazyFile implements SvgInterface {
         }
 
         if ($width && $height) {
-          $dom->documentElement->setAttribute('height', (int) $height);
-          $dom->documentElement->setAttribute('width', (int) $width);
+          $dom->documentElement->setAttribute('height', (string) $height);
+          $dom->documentElement->setAttribute('width', (string) $width);
         }
 
         // Credits: svg_formatter module.

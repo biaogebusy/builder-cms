@@ -29,17 +29,16 @@ class Color extends FormElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#process' => [
-        [$class, 'processAjaxForm'],
+        [static::class, 'processAjaxForm'],
       ],
       '#element_validate' => [
-        [$class, 'validateColor'],
+        [static::class, 'validateColor'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderColor'],
+        [static::class, 'preRenderColor'],
       ],
       '#theme' => 'input__color',
       '#theme_wrappers' => ['form_element'],
@@ -62,7 +61,7 @@ class Color extends FormElementBase {
       try {
         $form_state->setValueForElement($element, ColorUtility::rgbToHex(ColorUtility::hexToRgb($value)));
       }
-      catch (\InvalidArgumentException $e) {
+      catch (\InvalidArgumentException) {
         $form_state->setError($element, t('%name must be a valid color.', ['%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title']]));
       }
     }

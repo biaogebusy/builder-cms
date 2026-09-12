@@ -2,13 +2,13 @@
 
 namespace Drupal\ai\Plugin\AiDataTypeConverter;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ai\Attribute\AiDataTypeConverter;
 use Drupal\ai\Base\AiDataTypeConverterPluginBase;
 use Drupal\ai\DataTypeConverter\AppliesResult;
 use Drupal\ai\DataTypeConverter\AppliesResultInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * Plugin implementation of the ai_data_type_converter.
@@ -49,7 +49,7 @@ class ListConverter extends AiDataTypeConverterPluginBase {
       }
       // If YAML, and YAML returns an indexed array, defer to YAML deserializer.
       try {
-        $parsed = Yaml::parse($value);
+        $parsed = Yaml::decode($value);
         if (is_array($parsed) && (empty($parsed) || isset($parsed[0]))) {
           return AppliesResult::notApplicable('The value is YAML and should be handled by the YAML deserializer.');
         }

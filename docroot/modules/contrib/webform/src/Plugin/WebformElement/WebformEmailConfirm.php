@@ -47,7 +47,7 @@ class WebformEmailConfirm extends Email {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
     // Set confirm description.
     if (isset($element['#confirm__description'])) {

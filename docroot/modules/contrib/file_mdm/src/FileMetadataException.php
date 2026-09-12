@@ -9,7 +9,7 @@ namespace Drupal\file_mdm;
  */
 class FileMetadataException extends \Exception {
 
-  public function __construct(string $message, string $plugin_id = NULL, string $method = NULL, \Exception $previous = NULL) {
+  public function __construct(string $message, ?string $plugin_id = NULL, ?string $method = NULL, ?\Exception $previous = NULL) {
     $msg = $message;
     $msg .= $plugin_id ? " (plugin: {$plugin_id})" : "";
     $msg .= $method ? " (method: {$method})" : "";

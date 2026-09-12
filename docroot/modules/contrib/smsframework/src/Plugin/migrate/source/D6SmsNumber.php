@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Plugin\migrate\source;
 
@@ -50,7 +50,7 @@ class D6SmsNumber extends DrupalSqlBase {
    * {@inheritdoc}
    */
   public function query() {
-    return $this->select('sms_user', 'su')->fields('su', array_keys($this->fields()));
+    return $this->select('sms_user', 'su')->fields('su', \array_keys($this->fields()));
   }
 
 }

@@ -2,55 +2,57 @@
 
 namespace Drupal\responsive_image\Entity;
 
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Entity\EntityDeleteForm;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\image\Entity\ImageStyle;
-use Drupal\responsive_image\ResponsiveImageConfigUpdater;
+use Drupal\responsive_image\ResponsiveImageStyleForm;
 use Drupal\responsive_image\ResponsiveImageStyleInterface;
+use Drupal\responsive_image\ResponsiveImageStyleListBuilder;
 
 /**
  * Defines the responsive image style entity.
- *
- * @ConfigEntityType(
- *   id = "responsive_image_style",
- *   label = @Translation("Responsive image style"),
- *   label_collection = @Translation("Responsive image styles"),
- *   label_singular = @Translation("responsive image style"),
- *   label_plural = @Translation("responsive image styles"),
- *   label_count = @PluralTranslation(
- *     singular = "@count responsive image style",
- *     plural = "@count responsive image styles",
- *   ),
- *   handlers = {
- *     "list_builder" = "Drupal\responsive_image\ResponsiveImageStyleListBuilder",
- *     "form" = {
- *       "edit" = "Drupal\responsive_image\ResponsiveImageStyleForm",
- *       "add" = "Drupal\responsive_image\ResponsiveImageStyleForm",
- *       "delete" = "Drupal\Core\Entity\EntityDeleteForm",
- *       "duplicate" = "Drupal\responsive_image\ResponsiveImageStyleForm"
- *     }
- *   },
- *   admin_permission = "administer responsive images",
- *   config_prefix = "styles",
- *   entity_keys = {
- *     "id" = "id",
- *     "label" = "label"
- *   },
- *   config_export = {
- *     "id",
- *     "label",
- *     "image_style_mappings",
- *     "breakpoint_group",
- *     "fallback_image_style",
- *   },
- *   links = {
- *     "edit-form" = "/admin/config/media/responsive-image-style/{responsive_image_style}",
- *     "duplicate-form" = "/admin/config/media/responsive-image-style/{responsive_image_style}/duplicate",
- *     "delete-form" = "/admin/config/media/responsive-image-style/{responsive_image_style}/delete",
- *     "collection" = "/admin/config/media/responsive-image-style",
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'responsive_image_style',
+  label: new TranslatableMarkup('Responsive image style'),
+  label_collection: new TranslatableMarkup('Responsive image styles'),
+  label_singular: new TranslatableMarkup('responsive image style'),
+  label_plural: new TranslatableMarkup('responsive image styles'),
+  config_prefix: 'styles',
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'label',
+  ],
+  handlers: [
+    'list_builder' => ResponsiveImageStyleListBuilder::class,
+    'form' => [
+      'edit' => ResponsiveImageStyleForm::class,
+      'add' => ResponsiveImageStyleForm::class,
+      'delete' => EntityDeleteForm::class,
+      'duplicate' => ResponsiveImageStyleForm::class,
+    ],
+  ],
+  links: [
+    'edit-form' => '/admin/config/media/responsive-image-style/{responsive_image_style}',
+    'duplicate-form' => '/admin/config/media/responsive-image-style/{responsive_image_style}/duplicate',
+    'delete-form' => '/admin/config/media/responsive-image-style/{responsive_image_style}/delete',
+    'collection' => '/admin/config/media/responsive-image-style',
+  ],
+  admin_permission: 'administer responsive images',
+  label_count: [
+    'singular' => '@count responsive image style',
+    'plural' => '@count responsive image styles',
+  ],
+  config_export: [
+    'id',
+    'label',
+    'image_style_mappings',
+    'breakpoint_group',
+    'fallback_image_style',
+  ],
+)]
 class ResponsiveImageStyle extends ConfigEntityBase implements ResponsiveImageStyleInterface {
 
   /**
@@ -115,15 +117,6 @@ class ResponsiveImageStyle extends ConfigEntityBase implements ResponsiveImageSt
   /**
    * {@inheritdoc}
    */
-  public function preSave(EntityStorageInterface $storage) {
-    parent::preSave($storage);
-    $config_updater = \Drupal::classResolver(ResponsiveImageConfigUpdater::class);
-    $config_updater->orderMultipliersNumerically($this);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function addImageStyleMapping($breakpoint_id, $multiplier, array $image_style_mapping) {
     // If there is an existing mapping, overwrite it.
     foreach ($this->image_style_mappings as &$mapping) {
@@ -158,6 +151,7 @@ class ResponsiveImageStyle extends ConfigEntityBase implements ResponsiveImageSt
       $breakpoint_b = $breakpoints[$b['breakpoint_id']] ?? NULL;
       $first = ((float) mb_substr($a['multiplier'], 0, -1)) * 100;
       $second = ((float) mb_substr($b['multiplier'], 0, -1)) * 100;
+      // phpcs:ignore Drupal.Arrays.Array.LongLineDeclaration
       return [$breakpoint_b ? $breakpoint_b->getWeight() : 0, $first] <=> [$breakpoint_a ? $breakpoint_a->getWeight() : 0, $second];
     });
   }

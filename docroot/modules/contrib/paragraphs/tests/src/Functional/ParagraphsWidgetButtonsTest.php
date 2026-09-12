@@ -5,12 +5,16 @@ namespace Drupal\Tests\paragraphs\Functional;
 use Drupal\Tests\paragraphs\Functional\WidgetStable\ParagraphsTestBase;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests paragraphs stable widget buttons.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsWidgetButtonsTest extends ParagraphsTestBase {
 
   /**

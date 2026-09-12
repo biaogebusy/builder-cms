@@ -2,30 +2,28 @@
 
 namespace Drupal\entity_browser\Plugin\Field\FieldWidget;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Entity browser file widget.
- *
- * @FieldWidget(
- *   id = "entity_browser_file",
- *   label = @Translation("Entity browser"),
- *   provider = "entity_browser",
- *   multiple_values = TRUE,
- *   field_types = {
- *     "file",
- *     "image"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'entity_browser_file',
+  label: new TranslatableMarkup('Entity browser'),
+  field_types: ['file', 'image'],
+  multiple_values: TRUE,
+)]
 class FileBrowserWidget extends EntityReferenceBrowserWidget {
 
   /**
@@ -57,12 +55,20 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
   protected $mimeTypeGuesser;
 
   /**
+   * The image factory service.
+   *
+   * @var \Drupal\Core\Image\ImageFactory
+   */
+  protected $imageFactory;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->configFactory = $container->get('config.factory');
     $instance->mimeTypeGuesser = $container->get('file.mime_type.guesser');
+    $instance->imageFactory = $container->get('image.factory');
     return $instance;
   }
 
@@ -103,7 +109,7 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
     $element['preview_image_style'] = [
       '#title' => $this->t('Preview image style'),
       '#type' => 'select',
-      '#options' => image_style_options(FALSE),
+      '#options' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', fn() => \Drupal::service('Drupal\image\ImageDerivativeUtilities')->styleOptions(FALSE), fn() => image_style_options(FALSE)),
       '#default_value' => $this->getSetting('preview_image_style'),
       '#description' => $this->t('The preview image will be shown while editing the content. Only relevant if using the default file view mode.'),
       '#weight' => 15,
@@ -435,8 +441,10 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
     // Images have expected defaults for file extensions.
     // See \Drupal\image\Plugin\Field\FieldWidget::formElement() for details.
     if ($this->fieldDefinition->getType() == 'image') {
-      // If not using custom extension validation, ensure this is an image.
-      $supported_extensions = ['png', 'gif', 'jpg', 'jpeg'];
+      // Use the image factory to get supported extensions dynamically from the
+      // active image toolkit, instead of a hardcoded list. This ensures that
+      // additional formats like webp, avif, etc. are not silently stripped.
+      $supported_extensions = $this->imageFactory->getSupportedExtensions();
       $extensions = $settings['file_extensions'] ?? implode(' ', $supported_extensions);
       $extensions = array_intersect(explode(' ', $extensions), $supported_extensions);
       $validators['FileExtension'] = ['extensions' => implode(' ', $extensions)];

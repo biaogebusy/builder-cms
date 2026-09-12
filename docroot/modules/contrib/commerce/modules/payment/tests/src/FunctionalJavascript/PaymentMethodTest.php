@@ -64,6 +64,48 @@ class PaymentMethodTest extends CommerceWebDriverTestBase {
   }
 
   /**
+   * Tests that form for a new address is available.
+   */
+  public function testPaymentMethodNewAddressForm() {
+    $default_address = [
+      'country_code' => 'US',
+      'administrative_area' => 'SC',
+      'locality' => 'Greenville',
+      'postal_code' => '29616',
+      'address_line1' => '9 Drupal Ave',
+      'given_name' => 'Bryan',
+      'family_name' => 'Centarro',
+    ];
+    $this->createEntity('profile', [
+      'type' => 'customer',
+      'uid' => $this->user->id(),
+      'address' => $default_address,
+    ]);
+
+    $this->drupalGet($this->collectionUrl . '/add');
+    // When "Enter a new address" is selected make sure that form is rendered
+    // instead of rendered address.
+    $this->getSession()->getPage()->fillField('add_payment_method[billing_information][select_address]', '_new');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $fields = [
+      'given_name',
+      'family_name',
+      'organization',
+      'address_line1',
+      'address_line2',
+      'locality',
+      'administrative_area',
+      'postal_code',
+    ];
+    foreach ($fields as $field) {
+      $this->assertSession()
+        ->elementExists('css', sprintf('[name="add_payment_method[billing_information][address][0][address][%s]"]', $field));
+    }
+    $this->assertSession()
+      ->elementExists('css', '[name="add_payment_method[billing_information][copy_to_address_book]"]');
+  }
+
+  /**
    * Tests the payment method add form in case of multiple gateways.
    */
   public function testPaymentMethodCreateWithMultipleGateways() {

@@ -7,13 +7,15 @@ namespace Drupal\KernelTests\Core\Entity;
 use Drupal\entity_test\Entity\EntityTestMulChanged;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests basic EntityChangedInterface functionality.
- *
- * @group Entity
- * @group #slow
  */
+#[Group('Entity')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class ContentEntityChangedTest extends EntityKernelTestBase {
 
   /**
@@ -21,11 +23,6 @@ class ContentEntityChangedTest extends EntityKernelTestBase {
    */
   protected static $modules = [
     'language',
-    'user',
-    'system',
-    'field',
-    'text',
-    'filter',
     'entity_test',
   ];
 
@@ -420,8 +417,6 @@ class ContentEntityChangedTest extends EntityKernelTestBase {
     // EntityForm::save().
     $form_entity_builder_clone->save();
 
-    // The assertion fails unless https://www.drupal.org/node/2513094 is
-    // committed.
     $this->assertFalse(
       $this->getRevisionTranslationAffectedFlag($entity),
       'Changed flag of original language is reset by adding a new translation and a new revision.'
@@ -472,6 +467,29 @@ class ContentEntityChangedTest extends EntityKernelTestBase {
   }
 
   /**
+   * Tests the changed functionality when an entity is syncing.
+   */
+  public function testChangedSyncing(): void {
+    $entity = EntityTestMulChanged::create();
+    $entity->save();
+    $changed_time_1 = $entity->getChangedTime();
+
+    // Without the syncing flag the changed time will increment when content is
+    // changed.
+    $entity->setName($this->randomString());
+    $entity->save();
+    $changed_time_2 = $entity->getChangedTime();
+    $this->assertTrue($changed_time_2 > $changed_time_1);
+
+    // With the syncing flag, the changed time will not change.
+    $entity->setName($this->randomString());
+    $entity->setSyncing(TRUE);
+    $entity->save();
+    $changed_time_3 = $entity->getChangedTime();
+    $this->assertEquals($changed_time_2, $changed_time_3);
+  }
+
+  /**
    * Retrieves the revision translation affected flag value.
    *
    * @param \Drupal\entity_test\Entity\EntityTestMulRevChanged $entity
@@ -480,7 +498,7 @@ class ContentEntityChangedTest extends EntityKernelTestBase {
    * @return bool
    *   The flag value.
    */
-  protected function getRevisionTranslationAffectedFlag(EntityTestMulRevChanged $entity) {
+  protected function getRevisionTranslationAffectedFlag(EntityTestMulRevChanged $entity): bool {
     $query = $this->mulRevChangedStorage->getQuery()->accessCheck(FALSE);
     $ids = $query->condition('revision_translation_affected', 1, '=', $entity->language()->getId())->execute();
     $id = reset($ids);

@@ -8,11 +8,14 @@ colorboxdompurify
 colorboxplugin
 dompurify
 iframed
+imgerror
 lightbox
 mobiledetect
 mobiledevicewidth
 mycolorbox
 mystyle
+slideshowstart
+slideshowstop
 stockholmsyndrome
 
 # Config variables defined in module's schema file:

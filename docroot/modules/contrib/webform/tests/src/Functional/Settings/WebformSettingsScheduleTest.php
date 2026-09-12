@@ -27,7 +27,7 @@ class WebformSettingsScheduleTest extends WebformBrowserTestBase {
   /**
    * Tests webform settings opening and closed schedule.
    */
-  public function testSchedule() {
+  public function testSchedule(): void {
     $assert_session = $this->assertSession();
 
     /* ********************************************************************** */

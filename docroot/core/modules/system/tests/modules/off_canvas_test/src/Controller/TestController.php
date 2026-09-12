@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\off_canvas_test\Controller;
 
 use Drupal\Component\Serialization\Json;
@@ -130,8 +132,8 @@ class TestController {
   /**
    * Displays dialogs links to be displayed inside the off-canvas dialog.
    *
-   * This links are used to test opening a modal and another off_canvas link from
-   * inside the off-canvas dialog.
+   * This links are used to test opening a modal and another off_canvas link
+   * from inside the off-canvas dialog.
    *
    * @todo Update tests to check these links work in the off-canvas dialog.
    *       https://www.drupal.org/node/2790073

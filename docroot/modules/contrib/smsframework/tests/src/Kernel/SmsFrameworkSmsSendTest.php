@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
+use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsGateway;
 use Drupal\sms\Message\SmsMessage;
 use Drupal\sms\Message\SmsMessageResultInterface;
-use Drupal\sms\Direction;
 use Drupal\sms\Plugin\SmsGateway\LogGateway;
 use Drupal\sms\Provider\SmsProviderInterface;
 
@@ -18,9 +18,6 @@ use Drupal\sms\Provider\SmsProviderInterface;
  */
 final class SmsFrameworkSmsSendTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test_gateway', 'telephone', 'dynamic_entity_reference',
   ];
@@ -32,9 +29,6 @@ final class SmsFrameworkSmsSendTest extends SmsFrameworkKernelBase {
    */
   private SmsProviderInterface $defaultSmsProvider;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->defaultSmsProvider = $this->container->get('sms.provider');
@@ -48,7 +42,7 @@ final class SmsFrameworkSmsSendTest extends SmsFrameworkKernelBase {
   public function testGatewayInstall(): void {
     static::assertEquals(
       [LogGateway::PLUGIN_ID],
-      array_keys(SmsGateway::loadMultiple()),
+      \array_keys(SmsGateway::loadMultiple()),
     );
   }
 

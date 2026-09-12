@@ -8,12 +8,16 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests orphan composite revisions are properly removed.
  *
  * @group entity_reference_revisions
  */
+#[RunTestsInSeparateProcesses]
+#[Group('entity_reference_revisions')]
 class EntityReferenceRevisionsOrphanRemovalTest extends BrowserTestBase {
 
   /**

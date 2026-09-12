@@ -130,7 +130,7 @@ abstract class WebformSubmissionsDeleteFormBase extends WebformDeleteFormBase {
    * @param \Drupal\Core\Entity\EntityInterface|null $entity
    *   The webform's source entity.
    */
-  public function batchSet(WebformInterface $webform = NULL, EntityInterface $entity = NULL) {
+  public function batchSet(?WebformInterface $webform = NULL, ?EntityInterface $entity = NULL) {
     $parameters = [
       $webform,
       $entity,
@@ -171,7 +171,7 @@ abstract class WebformSubmissionsDeleteFormBase extends WebformDeleteFormBase {
    * @param mixed|array $context
    *   The batch current context.
    */
-  public function batchProcess(WebformInterface $webform = NULL, EntityInterface $entity = NULL, $max_sid = NULL, &$context = []) {
+  public function batchProcess(?WebformInterface $webform = NULL, ?EntityInterface $entity = NULL, $max_sid = NULL, &$context = []) {
     if (empty($context['sandbox'])) {
       $context['sandbox']['progress'] = 0;
       $context['sandbox']['max'] = $this->getSubmissionStorage()->getTotal($webform, $entity, NULL, ['in_draft' => NULL]);

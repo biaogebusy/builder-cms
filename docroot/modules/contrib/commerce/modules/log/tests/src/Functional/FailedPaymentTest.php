@@ -22,11 +22,6 @@ class FailedPaymentTest extends OrderBrowserTestBase {
   protected OrderInterface $order;
 
   /**
-   * The log storage.
-   */
-  protected LogStorageInterface $logStorage;
-
-  /**
    * The log view builder.
    */
   protected LogViewBuilder $logViewBuilder;
@@ -75,7 +70,6 @@ class FailedPaymentTest extends OrderBrowserTestBase {
     parent::setUp();
 
     $entity_type_manager = $this->container->get('entity_type.manager');
-    $this->logStorage = $entity_type_manager->getStorage('commerce_log');
     $this->logViewBuilder = $entity_type_manager->getViewBuilder('commerce_log');
 
     /** @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface $payment_gateway */
@@ -150,7 +144,9 @@ class FailedPaymentTest extends OrderBrowserTestBase {
     $this->assertSame($expected, \Drupal::state()->get(CommerceEventRecorder::STATE_KEY_PREFIX . 'onPaymentFailure'));
 
     // Check the payment failed log.
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $log_storage = $this->container->get('entity_type.manager')->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     /** @var \Drupal\commerce_log\Entity\Log $log */
     $log = reset($logs);

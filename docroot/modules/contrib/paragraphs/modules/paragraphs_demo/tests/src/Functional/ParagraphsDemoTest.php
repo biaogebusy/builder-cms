@@ -4,12 +4,16 @@ namespace Drupal\Tests\paragraphs_demo\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\paragraphs\Traits\ParagraphsCoreVersionUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the demo module for Paragraphs.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsDemoTest extends BrowserTestBase {
 
   use ParagraphsCoreVersionUiTestTrait;

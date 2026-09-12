@@ -3,10 +3,21 @@ base:
     base:
       css/commerce.base.css: {}
 
+admin:
+  dependencies:
+    - commerce/base
+    - commerce/admin-components
+    - commerce/admin-layout
+
 admin-layout:
   css:
     layout:
       css/commerce.admin-layout.css: {}
+
+admin-components:
+  css:
+    component:
+      css/commerce.admin-components.css: {}
 
 dashboard:
   css:
@@ -42,6 +53,8 @@ local-actions:
   css:
     theme:
       css/commerce.local-actions.css: {}
+  dependencies:
+    - commerce/base
 
 field-ui:
   css:

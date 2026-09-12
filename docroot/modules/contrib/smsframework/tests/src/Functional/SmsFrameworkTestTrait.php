@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -8,8 +8,8 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 use Drupal\sms\Entity\SmsGateway;
 use Drupal\sms\Entity\SmsGatewayInterface;
-use Drupal\sms\Message\SmsMessage;
 use Drupal\sms\Message\SmsDeliveryReport;
+use Drupal\sms\Message\SmsMessage;
 use Drupal\sms\Message\SmsMessageInterface;
 use Drupal\sms\Message\SmsMessageResult;
 
@@ -41,7 +41,7 @@ trait SmsFrameworkTestTrait {
    *   A saved memory gateway.
    */
   protected function createMemoryGateway(array $values = []): SmsGatewayInterface {
-    $id = $values['id'] ?? mb_strtolower($this->randomMachineName(16));
+    $id = $values['id'] ?? \mb_strtolower($this->randomMachineName(16));
     $gateway = SmsGateway::create($values + [
       'plugin' => 'memory',
       'id' => $id,
@@ -80,7 +80,7 @@ trait SmsFrameworkTestTrait {
   public function getLastTestMessage(SmsGatewayInterface $sms_gateway) {
     $gateway_id = $sms_gateway->id();
     $sms_messages = \Drupal::state()->get('sms_test_gateway.memory.send', []);
-    return isset($sms_messages[$gateway_id]) ? end($sms_messages[$gateway_id]) : FALSE;
+    return isset($sms_messages[$gateway_id]) ? \end($sms_messages[$gateway_id]) : FALSE;
   }
 
   /**
@@ -127,7 +127,7 @@ trait SmsFrameworkTestTrait {
   protected function getLastIncomingMessage(SmsGatewayInterface $sms_gateway) {
     $gateway_id = $sms_gateway->id();
     $sms_messages = \Drupal::state()->get('sms_test_gateway.memory.incoming', []);
-    return isset($sms_messages[$gateway_id]) ? end($sms_messages[$gateway_id]) : FALSE;
+    return isset($sms_messages[$gateway_id]) ? \end($sms_messages[$gateway_id]) : FALSE;
   }
 
   /**
@@ -174,7 +174,7 @@ trait SmsFrameworkTestTrait {
   protected function getLastTestMessageReport(SmsGatewayInterface $sms_gateway) {
     $gateway_id = $sms_gateway->id();
     $sms_reports = \Drupal::state()->get('sms_test_gateway.memory.report', []);
-    return isset($sms_reports[$gateway_id]) ? end($sms_reports[$gateway_id]) : FALSE;
+    return isset($sms_reports[$gateway_id]) ? \end($sms_reports[$gateway_id]) : FALSE;
   }
 
   /**
@@ -245,7 +245,7 @@ trait SmsFrameworkTestTrait {
         'entity__target_id' => $entity->id(),
         'phone' => $phone_number,
       ]);
-    $verification = reset($verifications);
+    $verification = \reset($verifications);
     $verification->setStatus(TRUE)
       ->save();
   }
@@ -267,7 +267,7 @@ trait SmsFrameworkTestTrait {
       ->execute();
     $verifications = $verification_storage->loadMultiple($verification_ids);
 
-    return reset($verifications);
+    return \reset($verifications);
   }
 
   /**
@@ -280,7 +280,7 @@ trait SmsFrameworkTestTrait {
    *   A message result with reports for each message recipient.
    */
   protected function createMessageResult(SmsMessageInterface $sms_message): SmsMessageResult {
-    $reports = array_map(
+    $reports = \array_map(
       static function ($recipient) {
         return (new SmsDeliveryReport())
           ->setRecipient($recipient);
@@ -317,10 +317,10 @@ trait SmsFrameworkTestTrait {
    *   An array of phone numbers.
    */
   protected function randomPhoneNumbers($quantity = NULL): array {
-    $quantity = $quantity ?? rand(2, 20);
+    $quantity = $quantity ?? \rand(2, 20);
     $numbers = [];
     for ($i = 0; $i < $quantity; $i++) {
-      $numbers[] = '+' . rand(1000, 999999999);
+      $numbers[] = '+' . \rand(1000, 999999999);
     }
     return $numbers;
   }

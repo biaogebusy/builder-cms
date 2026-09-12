@@ -7,18 +7,21 @@ namespace Drupal\Tests\Core\Annotation;
 use Drupal\Core\Annotation\PluralTranslation;
 use Drupal\Tests\UnitTestCase;
 use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Annotation\PluralTranslation
- * @group Annotation
+ * Tests Drupal\Core\Annotation\PluralTranslation.
  */
+#[CoversClass(PluralTranslation::class)]
+#[Group('Annotation')]
 class PluralTranslationTest extends UnitTestCase {
 
   /**
-   * @covers ::get
-   *
-   * @dataProvider providerTestGet
+   * Tests get.
    */
+  #[DataProvider('providerTestGet')]
   public function testGet(array $values): void {
     $annotation = new PluralTranslation($values);
 
@@ -31,7 +34,7 @@ class PluralTranslationTest extends UnitTestCase {
   /**
    * Provides data to self::testGet().
    */
-  public static function providerTestGet() {
+  public static function providerTestGet(): array {
     $data = [];
     $data[] = [
       [
@@ -51,14 +54,15 @@ class PluralTranslationTest extends UnitTestCase {
   }
 
   /**
-   * @dataProvider providerTestMissingData
-   */
+ * Tests missing data.
+ */
+  #[DataProvider('providerTestMissingData')]
   public function testMissingData($data): void {
     $this->expectException(\InvalidArgumentException::class);
     new PluralTranslation($data);
   }
 
-  public static function providerTestMissingData() {
+  public static function providerTestMissingData(): array {
     $data = [];
     $data['all-missing'] = [[]];
     $data['singular-missing'] = [['plural' => 'muh']];

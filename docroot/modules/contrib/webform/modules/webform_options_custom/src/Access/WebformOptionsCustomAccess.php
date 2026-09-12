@@ -15,7 +15,7 @@ class WebformOptionsCustomAccess {
    * Check that webform options custom source can be updated by a user.
    *
    * @param \Drupal\webform_options_custom\WebformOptionsCustomInterface $webform_options_custom
-   *   A webform options custome entity.
+   *   A webform options custom entity.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   Run access checks for this account.
    *

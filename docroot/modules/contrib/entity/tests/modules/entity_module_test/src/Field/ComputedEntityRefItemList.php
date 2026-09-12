@@ -19,4 +19,5 @@ class ComputedEntityRefItemList extends FieldItemList {
     // Always make the field value empty.
     $this->list = [];
   }
+
 }

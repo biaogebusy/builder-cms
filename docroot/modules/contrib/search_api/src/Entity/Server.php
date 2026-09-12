@@ -197,8 +197,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function hasValidBackend() {
+    $backend_id = $this->getBackendId();
     /** @noinspection PhpUnhandledExceptionInspection */
-    return (bool) $this->backendPluginManager()->getDefinition($this->getBackendId(), FALSE);
+    return $backend_id !== NULL
+      && $this->backendPluginManager()->getDefinition($backend_id, FALSE);
   }
 
   /**
@@ -213,15 +215,19 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function getBackend() {
     if (!$this->backendPlugin) {
+      $backend_id = $this->getBackendId();
+      if ($backend_id === NULL) {
+        $label = $this->label() ?: $this->id();
+        throw new SearchApiException("Backend ID not set for server \"$label\".");
+      }
       $backend_plugin_manager = $this->backendPluginManager();
       $config = $this->backend_config;
       $config['#server'] = $this;
       try {
-        $this->backendPlugin = $backend_plugin_manager->createInstance($this->getBackendId(), $config);
+        $this->backendPlugin = $backend_plugin_manager->createInstance($backend_id, $config);
       }
       catch (PluginException) {
-        $backend_id = $this->getBackendId();
-        $label = $this->label();
+        $label = $this->label() ?: $this->id();
         throw new SearchApiException("The backend with ID '$backend_id' could not be retrieved for server '$label'.");
       }
     }
@@ -587,6 +593,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $backend_id = $this->getBackendId();
       if (isset($overrides['backend'])) {
         $backend_id = $overrides['backend'];
+      }
+      if ($backend_id === NULL) {
+        $label = $this->label() ?: $this->id();
+        throw new SearchApiException("Backend ID not set for server \"$label\".");
       }
       $backend_plugin_manager = $this->backendPluginManager();
       $backend_config['#server'] = $this;

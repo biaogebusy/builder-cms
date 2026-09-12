@@ -28,6 +28,14 @@ class WebformEntityBulkForm extends WebformBulkFormBase {
     else {
       unset($actions['webform_unarchive_action']);
     }
+
+    // Check delete webform access.
+    if (!$this->currentUser->hasPermission('delete any webform')
+      && !$this->currentUser->hasPermission('delete any webform')
+      && !$this->currentUser->hasPermission('delete own webform')) {
+      unset($actions['webform_delete_action']);
+    }
+
     return $actions;
   }
 

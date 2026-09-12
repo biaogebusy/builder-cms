@@ -49,14 +49,13 @@ include:
 # Docs at https://git.drupalcode.org/project/gitlab_templates/-/blob/1.0.x/includes/include.drupalci.variables.yml
 ################
 variables:
-  _PHPUNIT_EXTRA: --verbose
-  OPT_IN_TEST_PREVIOUS_MAJOR: 0
+  OPT_IN_TEST_PREVIOUS_MAJOR: 1
   OPT_IN_TEST_PREVIOUS_MINOR: 1
   OPT_IN_TEST_NEXT_MINOR: 1
-  OPT_IN_TEST_NEXT_MAJOR: 0
+  OPT_IN_TEST_NEXT_MAJOR: 1
   OPT_IN_TEST_MAX_PHP: 1
-  # _PHPUNIT_CONCURRENT=1 uses run-tests.sh, 0 uses phpunit directly.
-  _PHPUNIT_CONCURRENT: 1
+  _PHPUNIT_CONCURRENT: 0
+  RUN_JOB_UPGRADE_STATUS: 1
 
 composer (message dev):
   extends: .composer-base
@@ -84,18 +83,49 @@ phpunit (message notify dev):
   needs:
     - "composer (message notify dev)"
 
-composer (flag dev):
+composer (flag):
   extends: .composer-base
   stage: build
   after_script:
-    - composer require 'drupal/flag:4.x-dev@dev'
+    - composer require 'drupal/flag:^5'
 
-phpunit (flag dev):
+phpunit (flag):
   extends: phpunit
   rules:
     - when: on_success
   needs:
-    - "composer (flag dev)"
+    - "composer (flag)"
+
+phpunit (coverage):
+  extends: phpunit
+  rules:
+    - if: '$SKIP_PHPUNIT == "1"'
+      when: never
+    - when: on_success
+  before_script:
+    # Install and enable PCOV.
+    - echo -e '[pcov]\npcov.directory=.' > /usr/local/etc/php/conf.d/pcov.ini
+    - docker-php-ext-enable pcov
+  variables:
+    REPORT_COVERAGE: "true"
+    _PHPUNIT_EXTRA:
+      value: --coverage-cobertura $CI_PROJECT_DIR/coverage.xml --coverage-text --colors=never --coverage-html $CI_PROJECT_DIR/coverage
+  coverage: /^\s*Lines:\s*\d+.\d+\%/
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - junit.xml
+      - apache.access.log.txt
+      - $BROWSERTEST_OUTPUT_DIRECTORY
+      - coverage.xml
+      - coverage
+
+phpunit:
+  rules:
+    - when: never
 
 ###################################################################################
 #

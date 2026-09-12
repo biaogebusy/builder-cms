@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Drupal\config_ignore\EventSubscriber;
 
 use Drupal\config_ignore\ConfigIgnoreConfig;
-use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
+use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Config\StorageTransformEvent;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Site\Settings;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Makes the import/export aware of ignored configs.
  */
-class ConfigIgnoreEventSubscriber implements EventSubscriberInterface, CacheTagsInvalidatorInterface {
+class ConfigIgnoreEventSubscriber implements EventSubscriberInterface {
 
   /**
    * The config factory service.
@@ -48,6 +49,13 @@ class ConfigIgnoreEventSubscriber implements EventSubscriberInterface, CacheTags
   protected $syncStorage;
 
   /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Statically cached ignored config patterns from hooks.
    *
    * @var \Drupal\config_ignore\ConfigIgnoreConfig|null
@@ -65,22 +73,15 @@ class ConfigIgnoreEventSubscriber implements EventSubscriberInterface, CacheTags
    *   The config active storage.
    * @param \Drupal\Core\Config\StorageInterface $sync_storage
    *   The sync config storage.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, StorageInterface $config_storage, StorageInterface $sync_storage) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, StorageInterface $config_storage, StorageInterface $sync_storage, LoggerInterface $logger) {
     $this->configFactory = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->activeStorage = $config_storage;
     $this->syncStorage = $sync_storage;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function invalidateTags(array $tags) {
-    // Invalidate static cache if config changes.
-    if (in_array('config:config_ignore.settings', $tags, TRUE)) {
-      $this->hookList = NULL;
-    }
+    $this->logger = $logger;
   }
 
   /**
@@ -91,6 +92,7 @@ class ConfigIgnoreEventSubscriber implements EventSubscriberInterface, CacheTags
     return [
       ConfigEvents::STORAGE_TRANSFORM_IMPORT => ['onImportTransform', Settings::get('config_ignore_import_priority', -100)],
       ConfigEvents::STORAGE_TRANSFORM_EXPORT => ['onExportTransform', Settings::get('config_ignore_export_priority', -100)],
+      ConfigEvents::SAVE => ['onConfigSave', 0],
     ];
   }
 
@@ -119,6 +121,18 @@ class ConfigIgnoreEventSubscriber implements EventSubscriberInterface, CacheTags
   }
 
   /**
+   * React on when config is saved to catch changes to our settings.
+   *
+   * @param \Drupal\Core\Config\ConfigCrudEvent $event
+   *   The config event.
+   */
+  public function onConfigSave(ConfigCrudEvent $event): void {
+    if ($event->getConfig()->getName() === 'config_ignore.settings') {
+      $this->hookList = NULL;
+    }
+  }
+
+  /**
    * Makes the import or export storages aware about ignored configs.
    *
    * @param \Drupal\Core\Config\StorageInterface $transformation_storage
@@ -132,26 +146,13 @@ class ConfigIgnoreEventSubscriber implements EventSubscriberInterface, CacheTags
     $collection_names = array_unique(array_merge($transformation_storage->getAllCollectionNames(), $destination_storage->getAllCollectionNames()));
     array_unshift($collection_names, StorageInterface::DEFAULT_COLLECTION);
 
-    // Get the config ignore settings form the transformation storage.
     $transformation_storage = $transformation_storage->createCollection(StorageInterface::DEFAULT_COLLECTION);
     if (empty($transformation_storage->listAll())) {
       // Skip if the transformation storage is empty in the default collection.
       return;
     }
-    if ($transformation_storage->exists('config_ignore.settings')) {
-      try {
-        // This can be used to hook into config ignore via an event subscriber
-        // which alters the data prior to the config ignore subscriber.
-        $settings = $transformation_storage->read('config_ignore.settings');
-        $ignoreConfig = new ConfigIgnoreConfig($settings['mode'] ?? 'simple', $settings['ignored_config_entities'] ?? []);
-      }
-      catch (\InvalidArgumentException $exception) {
-        // We should probably log this exception.
-      }
-    }
-    if (!isset($ignoreConfig)) {
-      $ignoreConfig = ConfigIgnoreConfig::fromConfig($this->configFactory->get('config_ignore.settings'));
-    }
+    // Get the config ignore config from the different storages.
+    $ignoreConfig = $this->getIgnoreConfig($transformation_storage, $destination_storage, $direction);
     $ignoreConfig->mergeWith($this->getHookList());
     // @todo decide if we really need to invoke an alter hook here.
     $this->moduleHandler->alter('config_ignore_ignored', $ignoreConfig);
@@ -413,6 +414,55 @@ class ConfigIgnoreEventSubscriber implements EventSubscriberInterface, CacheTags
     $pattern = '/^' . preg_quote($pattern, '/') . '$/';
     $pattern = str_replace('\*', '.*', $pattern);
     return (bool) preg_match($pattern, $string);
+  }
+
+  /**
+   * Get the ignore config based on the storages and settings.php.
+   *
+   * @param \Drupal\Core\Config\StorageInterface $transformation_storage
+   *   The source/transformation storage.
+   * @param \Drupal\Core\Config\StorageInterface $destination_storage
+   *   The destination storage.
+   * @param string $direction
+   *   The destination.
+   *
+   * @return \Drupal\config_ignore\ConfigIgnoreConfig
+   *   The object which decides what to ignore.
+   */
+  protected function getIgnoreConfig(StorageInterface $transformation_storage, StorageInterface $destination_storage, string $direction): ConfigIgnoreConfig {
+    // It may not be the most efficient to do it,
+    // but it is much easier to read and understand.
+    $active = $transformation = $destination = ConfigIgnoreConfig::fromConfig($this->configFactory->get('config_ignore.settings'));
+    if ($transformation_storage->exists('config_ignore.settings')) {
+      try {
+        // This can be used to hook into config ignore via an event subscriber
+        // which alters the data prior to the config ignore subscriber.
+        $settings = $transformation_storage->read('config_ignore.settings');
+        $transformation = new ConfigIgnoreConfig($settings['mode'] ?? 'simple', $settings['ignored_config_entities'] ?? []);
+      }
+      catch (\InvalidArgumentException $exception) {
+        $this->logger->error($exception->getMessage());
+      }
+    }
+    if ($destination_storage->exists('config_ignore.settings')) {
+      try {
+        $settings = $destination_storage->read('config_ignore.settings');
+        $destination = new ConfigIgnoreConfig($settings['mode'] ?? 'simple', $settings['ignored_config_entities'] ?? []);
+      }
+      catch (\InvalidArgumentException $exception) {
+        $this->logger->error($exception->getMessage());
+      }
+    }
+
+    // Select which rules should apply based on settings.php.
+    return match (Settings::get('config_ignore_storage')) {
+      'active' => $active,
+      'sync' => $direction == 'import' ? $transformation : $destination,
+      'source' => $transformation,
+      'target' => $destination,
+      'merge' => $transformation->mergeWith($destination),
+      default => $destination->isIgnored(StorageInterface::DEFAULT_COLLECTION, 'config_ignore.settings', $direction, 'update') ? $destination : $transformation,
+    };
   }
 
   /**

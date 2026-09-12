@@ -2,6 +2,7 @@
 
 namespace Drupal\pathauto\Plugin\pathauto\AliasType;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -12,19 +13,21 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\ContextAwarePluginTrait;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\pathauto\Attribute\AliasType;
 use Drupal\pathauto\AliasTypeBatchUpdateInterface;
 use Drupal\pathauto\AliasTypeInterface;
+use Drupal\pathauto\PathautoGeneratorInterface;
 use Drupal\pathauto\PathautoState;
+use Drupal\pathauto\Plugin\Deriver\EntityAliasTypeDeriver;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * A pathauto alias type plugin for entities with canonical links.
- *
- * @AliasType(
- *   id = "canonical_entities",
- *   deriver = "\Drupal\pathauto\Plugin\Deriver\EntityAliasTypeDeriver"
- * )
  */
+#[AliasType(
+  id: 'canonical_entities',
+  deriver: EntityAliasTypeDeriver::class,
+)]
 class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, AliasTypeBatchUpdateInterface, ContainerFactoryPluginInterface {
 
   use ContextAwarePluginTrait;
@@ -72,6 +75,13 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
   protected $prefix;
 
   /**
+   * The path auto generator service.
+   *
+   * @var \Drupal\pathauto\PathautoGeneratorInterface
+   */
+  protected PathautoGeneratorInterface $pathautoGenerator;
+
+  /**
    * Constructs a EntityAliasTypeBase instance.
    *
    * @param array $configuration
@@ -90,14 +100,18 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
    *   The key/value manager service.
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
+   * @param \Drupal\pathauto\PathautoGeneratorInterface|null $pathauto_generator
+   *   The Pathauto generator service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler, LanguageManagerInterface $language_manager, EntityTypeManagerInterface $entity_type_manager, KeyValueFactoryInterface $key_value, Connection $database) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler, LanguageManagerInterface $language_manager, EntityTypeManagerInterface $entity_type_manager, KeyValueFactoryInterface $key_value, Connection $database, ?PathautoGeneratorInterface $pathauto_generator = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->moduleHandler = $module_handler;
     $this->languageManager = $language_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->keyValue = $key_value;
     $this->database = $database;
+    // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
+    $this->pathautoGenerator = $pathauto_generator ?: \Drupal::service('pathauto.generator');
   }
 
   /**
@@ -112,7 +126,8 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
       $container->get('language_manager'),
       $container->get('entity_type.manager'),
       $container->get('keyvalue'),
-      $container->get('database')
+      $container->get('database'),
+      $container->get('pathauto.generator')
     );
   }
 
@@ -190,11 +205,11 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
     $context['sandbox']['count'] += count($ids);
     $context['sandbox']['current'] = !empty($ids) ? max($ids) : 0;
     $context['results']['updates'] += $updates;
-    $context['message'] = $this->t('Updated alias for %label @id.', [
+    $context['message'] = $this->t('Processed @count of @total aliases for %label.', [
+      '@count' => $context['sandbox']['count'],
+      '@total' => $context['sandbox']['total'],
       '%label' => $entity_type->getLabel(),
-      '@id' => end($ids),
     ]);
-
     if ($context['sandbox']['count'] != $context['sandbox']['total']) {
       $context['finished'] = $context['sandbox']['count'] / $context['sandbox']['total'];
     }
@@ -236,6 +251,13 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
     $pids_by_id = $query->execute()->fetchAllKeyed();
 
     PathautoState::bulkDelete($this->getEntityTypeId(), $pids_by_id);
+
+    // Invalidate entity render caches and the routing cache so pages
+    // reflect the removed aliases.
+    $cache_tags = Cache::buildTags($this->getEntityTypeId(), array_keys($pids_by_id));
+    $cache_tags[] = 'route_match';
+    Cache::invalidateTags($cache_tags);
+
     $context['sandbox']['count'] += count($pids_by_id);
     $context['sandbox']['current'] = !empty($pids_by_id) ? max($pids_by_id) : 0;
     $context['results']['deletions'][] = $this->getLabel();
@@ -269,18 +291,23 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
   protected function bulkUpdate(array $ids, array $options = []) {
     $options += ['message' => FALSE];
     $updates = 0;
+    $cache_tags = [];
 
     $entities = $this->entityTypeManager->getStorage($this->getEntityTypeId())->loadMultiple($ids);
     foreach ($entities as $entity) {
       // Update aliases for the entity's default language and its translations.
       foreach ($entity->getTranslationLanguages() as $langcode => $language) {
         $translated_entity = $entity->getTranslation($langcode);
-        $result = \Drupal::service('pathauto.generator')->updateEntityAlias($translated_entity, 'bulkupdate', $options);
+        $result = $this->pathautoGenerator->updateEntityAlias($translated_entity, 'bulkupdate', $options);
         if ($result) {
           $updates++;
+          $cache_tags = array_merge($cache_tags, $translated_entity->getCacheTagsToInvalidate());
         }
       }
     }
+
+    // Invalidate the cache for the entities we updated the path aliases for.
+    Cache::invalidateTags(array_unique($cache_tags));
 
     if (!empty($options['message'])) {
       $this->messenger->addMessage($this->formatPlural(count($ids), 'Updated 1 %label URL alias.', 'Updated @count %label URL aliases.'), [
@@ -297,7 +324,10 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
    * @param int[] $pids_by_id
    *   A list of path IDs keyed by entity ID.
    *
-   * @deprecated Use \Drupal\pathauto\PathautoState::bulkDelete() instead.
+   * @deprecated in pathauto:8.x-1.0 and is removed from pathauto:2.0.0. Use
+   * \Drupal\pathauto\PathautoState::bulkDelete() instead.
+   *
+   * @see https://www.drupal.org/node/2892809
    */
   protected function bulkDelete(array $pids_by_id) {
     PathautoState::bulkDelete($this->getEntityTypeId(), $pids_by_id);

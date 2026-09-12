@@ -17,6 +17,9 @@ internal.navigation:
       css/components/admin-toolbar-control-bar.css: {}
       css/components/toolbar-menu.css: {}
       css/components/toolbar-block.css: {}
+  fonts:
+    assets/fonts/inter-var.woff2:
+      preload: true
   dependencies:
     - core/drupal.displace
     - core/once
@@ -27,6 +30,16 @@ internal.navigation:
     - navigation/internal.tooltip
     - navigation/internal.popover
     - navigation/internal.safe-triangle
+
+internal.navigation-workspaces:
+  # Internal library. Do not depend on it outside core nor add core usage
+  # beyond the Navigation module.
+  version: VERSION
+  css:
+    theme:
+      css/components/toolbar-workspaces.css: {}
+  dependencies:
+    - navigation/internal.navigation
 
 admin-reset-styles:
   css:

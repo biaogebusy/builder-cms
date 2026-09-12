@@ -18,7 +18,6 @@ use Drush\Commands\DrushCommands;
 use Drush\Utils\StringUtils;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -47,17 +46,17 @@ final class PathautoCommands extends DrushCommands {
     protected ConfigFactoryInterface $configFactory,
     #[Autowire(service: 'plugin.manager.alias_type')]
     protected AliasTypeManager $aliasTypeManager,
-    protected AliasStorageHelperInterface $aliasStorageHelper)
-  {
+    protected AliasStorageHelperInterface $aliasStorageHelper,
+  ) {
     parent::__construct();
   }
 
   /**
-   * (Re)generate URL aliases.
+   * Regenerate URL aliases.
    */
   #[CLI\Command(name: 'pathauto:aliases-generate', aliases: ['pag'])]
   #[CLI\Argument(name: 'action', description: 'The action to take. Possible actions are <info>create</info> (generate aliases for un-aliased paths only), <info>update</info> (update aliases for paths that have an existing alias) or <info>all</info> (generate aliases for all paths).')]
-  #[CLI\Argument(name: 'types', description: 'Comma-separated list of aliase typess to generate. Pass <info>all</info> to generate aliases for all types.')]
+  #[CLI\Argument(name: 'types', description: 'Comma-separated list of alias types to generate. Pass <info>all</info> to generate aliases for all types.')]
   #[CLI\Usage(name: 'drush pathauto:aliases-generate create all', description: 'Generate all URL aliases.')]
   #[CLI\Usage(name: 'drush pathauto:aliases-generate create canonical_entities:node', description: 'Generate URL aliases for un-aliased node paths only.')]
   #[CLI\Usage(name: 'drush pathauto:aliases-generate', description: 'When the arguments are omitted they can be chosen from an interactive menu.')]
@@ -80,7 +79,7 @@ final class PathautoCommands extends DrushCommands {
   }
 
   /**
-   * Delete URL aliases
+   * Delete URL aliases.
    */
   #[CLI\Command(name: 'pathauto:aliases-delete', aliases: ['pad'])]
   #[CLI\Argument(name: 'types', description: 'Comma-separated list of alias types to delete. Pass "all" to delete aliases for all types.')]
@@ -138,6 +137,14 @@ final class PathautoCommands extends DrushCommands {
     }
   }
 
+  /**
+   * Interact with the user to obtain alias types if not provided.
+   *
+   * @param \Symfony\Component\Console\Input\Input $input
+   *   The input interface used to retrieve arguments and options.
+   * @param \Symfony\Component\Console\Output\Output $output
+   *   The output interface used to display messages to the user.
+   */
   #[CLI\Hook(type: HookManager::INTERACT)]
   public function interactAliasTypes(Input $input, Output $output) {
     if (!$input->getArgument('types')) {
@@ -153,7 +160,7 @@ final class PathautoCommands extends DrushCommands {
    * Validate 'action' argument.
    *
    * @throws \InvalidArgumentException
-   *   Thrown when one of the passed arguments is invalid
+   *   Thrown when one of the passed arguments is invalid.
    */
   #[CLI\Hook(type: HookManager::ARGUMENT_VALIDATOR, target: 'pathauto:aliases-generate')]
   public function validateGenerateAliases(CommandData $commandData) {
@@ -170,15 +177,15 @@ final class PathautoCommands extends DrushCommands {
   }
 
   /**
-   * Validate 'types' argument
+   * Validate 'types' argument.
    *
    * @throws \InvalidArgumentException
-   *   Thrown when one of the passed arguments is invalid
+   *   Thrown when one of the passed arguments is invalid.
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    *   Thrown when an alias type can not be instantiated.
    */
   #[CLI\Hook(type: HookManager::ARGUMENT_VALIDATOR)]
-  public function validateAliaseTypes(CommandData $commandData) {
+  public function validateAliasTypes(CommandData $commandData) {
     $input = $commandData->input();
 
     // Convert the comma-separated list of types to an array with no duplicates.

@@ -12,6 +12,8 @@ use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
 use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationContentEntity;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ServerBag;
@@ -20,10 +22,10 @@ use Symfony\Component\Routing\Route;
 /**
  * Tests the LanguageNegotiationContentEntity plugin class.
  *
- * @group language
- * @coversDefaultClass \Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationContentEntity
  * @see \Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationContentEntity
  */
+#[CoversClass(LanguageNegotiationContentEntity::class)]
+#[Group('language')]
 class LanguageNegotiationContentEntityTest extends LanguageNegotiationTestBase {
 
   /**
@@ -95,7 +97,7 @@ class LanguageNegotiationContentEntityTest extends LanguageNegotiationTestBase {
   }
 
   /**
-   * @covers ::getLangcode
+   * Tests get langcode.
    */
   public function testGetLangcode(): void {
     $languageNegotiationContentEntity = $this->createLanguageNegotiationPlugin();
@@ -129,7 +131,7 @@ class LanguageNegotiationContentEntityTest extends LanguageNegotiationTestBase {
   }
 
   /**
-   * @covers ::processOutbound
+   * Tests process outbound.
    */
   public function testProcessOutbound(): void {
 
@@ -192,7 +194,8 @@ class LanguageNegotiationContentEntityTest extends LanguageNegotiationTestBase {
     $this->assertTrue(isset($options['query'][LanguageNegotiationContentEntity::QUERY_PARAMETER]));
     $this->assertEquals('en', $options['query'][LanguageNegotiationContentEntity::QUERY_PARAMETER]);
 
-    // Case 3a1: via $options['language'] with an additional $options['query'][static::QUERY_PARAMETER].
+    // Case 3a1: via $options['language'] with an additional
+    // $options['query'][static::QUERY_PARAMETER].
     $options['language'] = $this->languages['en'];
     $options['query'][LanguageNegotiationContentEntity::QUERY_PARAMETER] = 'xx';
     $this->assertEquals($path, $languageNegotiationContentEntityMock->processOutbound($path, $options, $request, $bubbleableMetadataMock));
@@ -206,7 +209,7 @@ class LanguageNegotiationContentEntityTest extends LanguageNegotiationTestBase {
   }
 
   /**
-   * @covers ::getLanguageSwitchLinks
+   * Tests get language switch links.
    */
   public function testGetLanguageSwitchLinks(): void {
     $languageNegotiationContentEntity = $this->createLanguageNegotiationPlugin();

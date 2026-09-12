@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\webform_node\Functional;
 
+use Drupal\paragraphs\Entity\Paragraph;
+
 /**
  * Tests for webform node references.
  *
@@ -14,7 +16,7 @@ class WebformNodeReferencesTest extends WebformNodeBrowserTestBase {
    *
    * @var array
    */
-  protected static $modules = ['block', 'help', 'webform', 'webform_node'];
+  protected static $modules = ['block', 'help', 'webform', 'webform_node', 'webform_test_paragraphs'];
 
   /**
    * Webforms to load.
@@ -26,7 +28,7 @@ class WebformNodeReferencesTest extends WebformNodeBrowserTestBase {
   /**
    * Tests webform node references.
    */
-  public function testReferences() {
+  public function testReferences(): void {
     global $base_path;
 
     $assert_session = $this->assertSession();
@@ -84,6 +86,49 @@ class WebformNodeReferencesTest extends WebformNodeBrowserTestBase {
     $assert_session->responseContains('>letter: a
 number: &#039;1&#039;
 </textarea>');
+
+    // Create webform node with paragraph and variant.
+    $node = $this->drupalCreateNode(
+      [
+        'type' => 'webform_test_paragraphs',
+        'title' => '{webform_test_paragraphs}',
+        'field_webform_test_paragraphs' => Paragraph::create([
+          'type' => 'webform_test_inline',
+          'field_webform_test' => [
+            'target_id' => 'test_variant_multiple',
+            'default_data' => "letter: a
+number: 2",
+          ],
+        ]),
+      ],
+    );
+    $node->save();
+
+    // Check webform node with paragraph and variants.
+    $this->drupalGet('/admin/structure/webform/manage/test_variant_multiple/references');
+    $assert_session->responseContains('<td><a href="' . $base_path . 'node/8" hreflang="en">{webform_test_paragraphs}</a></td>');
+    $assert_session->responseContains('<td class="priority-medium">Webform Test Paragraphs</td>');
+    $assert_session->responseContains('<td>{webform_test_paragraphs} &gt; Webform test_paragraphs</td>');
+    $assert_session->responseContains('<td class="priority-medium">Webform test inline</td>');
+    $assert_session->responseContains('<td class="priority-low">A</td>');
+    $assert_session->responseContains('<td class="priority-low">2</td>');
+
+    // Check webform node with paragraph and NO variants.
+    $node = $this->drupalCreateNode(
+      [
+        'type' => 'webform_test_paragraphs',
+        'title' => '{webform_test_paragraphs}',
+        'field_webform_test_paragraphs' => Paragraph::create([
+          'type' => 'webform_test_inline',
+          'field_webform_test' => [
+            'target_id' => 'contact',
+          ],
+        ]),
+      ],
+    );
+    $node->save();
+    $this->drupalGet('/admin/structure/webform/manage/contact/references');
+    $assert_session->responseContains('<td class="priority-medium">Webform Test Paragraphs (Paragraphs)</td>');
   }
 
 }

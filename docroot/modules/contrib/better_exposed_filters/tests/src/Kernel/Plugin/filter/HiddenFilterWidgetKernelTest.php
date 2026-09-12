@@ -1,16 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\better_exposed_filters\Kernel\Plugin\filter;
 
+use Drupal\better_exposed_filters\Plugin\better_exposed_filters\filter\Hidden;
 use Drupal\Tests\better_exposed_filters\Kernel\BetterExposedFiltersKernelTestBase;
 use Drupal\views\Views;
 
 /**
- * Tests the options of a hidden filter widget.
+ * Tests the Hidden filter widget.
  *
  * @group better_exposed_filters
  *
- * @see \Drupal\better_exposed_filters\Plugin\better_exposed_filters\filter\FilterWidgetBase
+ * @see \Drupal\better_exposed_filters\Plugin\better_exposed_filters\filter\Hidden
  */
 class HiddenFilterWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
 
@@ -20,13 +23,52 @@ class HiddenFilterWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
   public static $testViews = ['bef_test'];
 
   /**
-   * Tests hiding element with single option.
+   * Tests that the Hidden widget applies to standard option filters.
    */
-  public function testSingleExposedHiddenElement() {
+  public function testIsApplicableToOptionFilter(): void {
+    $view = Views::getView('bef_test');
+    $view->initDisplay();
+    $view->initHandlers();
+
+    // Integer filter with 'in' operator should be applicable via parent.
+    $this->assertTrue(
+      Hidden::isApplicable($view->filter['field_bef_integer_value']),
+    );
+  }
+
+  /**
+   * Tests that the Hidden widget applies to date filters.
+   */
+  public function testIsApplicableToDateFilter(): void {
     $view = Views::getView('bef_test');
     $display = &$view->storage->getDisplay('default');
+    $display['display_options']['filters']['created'] = [
+      'id' => 'created',
+      'table' => 'node_field_data',
+      'field' => 'created',
+      'plugin_id' => 'date',
+      'exposed' => TRUE,
+      'expose' => ['identifier' => 'created'],
+    ];
+    $view->storage->save();
 
-    // Change exposed filter "field_bef_boolean" to hidden (i.e. 'bef_hidden').
+    $view = Views::getView('bef_test');
+    $view->initDisplay();
+    $view->initHandlers();
+
+    $this->assertTrue(
+      Hidden::isApplicable($view->filter['created']),
+    );
+  }
+
+  /**
+   * Tests hiding element with single option.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function testSingleExposedHiddenElement(): void {
+    $view = Views::getView('bef_test');
+
     $this->setBetterExposedOptions($view, [
       'filter' => [
         'field_bef_boolean_value' => [
@@ -35,27 +77,25 @@ class HiddenFilterWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
       ],
     ]);
 
-    // Render the exposed form.
     $this->renderExposedForm($view);
 
-    // Check our "FIELD_BEF_BOOLEAN" filter is rendered as a hidden element.
     $actual = $this->xpath('//form//input[@type="hidden" and starts-with(@name, "field_bef_boolean_value")]');
-    $this->assertCount(1, $actual, 'Exposed filter "FIELD_BEF_BOOLEAN" is hidden.');
+    $this->assertCount(1, $actual);
 
     $view->destroy();
   }
 
   /**
    * Tests hiding element with multiple options.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function testMultipleExposedHiddenElement() {
+  public function testMultipleExposedHiddenElement(): void {
     $view = Views::getView('bef_test');
     $display = &$view->storage->getDisplay('default');
 
-    // Set filter to "multiple".
     $display['display_options']['filters']['field_bef_integer_value']['expose']['multiple'] = TRUE;
 
-    // Change exposed filter "field_bef_integer" to hidden (i.e. 'bef_hidden').
     $this->setBetterExposedOptions($view, [
       'filter' => [
         'field_bef_integer_value' => [
@@ -64,15 +104,13 @@ class HiddenFilterWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
       ],
     ]);
 
-    // Render the exposed form.
     $this->renderExposedForm($view);
 
-    // Check our "FIELD_BEF_INTEGER" filter is rendered as a hidden element.
     $actual = $this->xpath('//form//label[@type="label" and starts-with(@for, "edit-field-bef-integer-value")]');
-    $this->assertCount(0, $actual, 'Exposed filter "FIELD_BEF_INTEGER" is hidden.');
+    $this->assertCount(0, $actual);
 
     $actual = $this->xpath('//form//input[@type="hidden" and starts-with(@name, "field_bef_integer_value")]');
-    $this->assertCount(0, $actual, 'Exposed filter "FIELD_BEF_INTEGER" has no selected values.');
+    $this->assertCount(0, $actual);
   }
 
 }

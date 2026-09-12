@@ -6,11 +6,18 @@ namespace Drupal\KernelTests\Core\StreamWrapper;
 
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\stream_wrapper_service_test\StreamWrapper\ServiceDependencyStreamWrapper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\StreamWrapper\StreamWrapperManager
- * @group File
+ * Tests Drupal\Core\StreamWrapper\StreamWrapperManager.
  */
+#[CoversClass(StreamWrapperManager::class)]
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class StreamWrapperManagerTest extends KernelTestBase {
 
   /**
@@ -23,21 +30,17 @@ class StreamWrapperManagerTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['system'];
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->streamWrapperManager = \Drupal::service('stream_wrapper_manager');
   }
 
   /**
-   * @covers ::getScheme
+   * Tests uri scheme.
    *
-   * @dataProvider providerTestUriScheme
+   * @legacy-covers ::getScheme
    */
+  #[DataProvider('providerTestUriScheme')]
   public function testUriScheme($uri, $expected): void {
     $this->assertSame($expected, StreamWrapperManager::getScheme($uri));
   }
@@ -45,7 +48,7 @@ class StreamWrapperManagerTest extends KernelTestBase {
   /**
    * Data provider.
    */
-  public static function providerTestUriScheme() {
+  public static function providerTestUriScheme(): array {
     $data = [];
     $data[] = [
       'public://filename',
@@ -60,6 +63,20 @@ class StreamWrapperManagerTest extends KernelTestBase {
       FALSE,
     ];
     return $data;
+  }
+
+  /**
+   * Tests installing a module providing a stream wrapper using services.
+   */
+  public function testModuleInstallRegistration(): void {
+    $this->container->get('stream_wrapper_manager')->register();
+    $this->container->get('module_installer')->install(['stream_wrapper_service_test']);
+
+    $manager = \Drupal::service('stream_wrapper_manager');
+    $this->assertSame(ServiceDependencyStreamWrapper::class, $manager->getClass('test'));
+    $wrapper = $manager->getViaScheme('test');
+    $this->assertInstanceOf(ServiceDependencyStreamWrapper::class, $wrapper);
+    $this->assertSame($manager, $wrapper->streamWrapperManager);
   }
 
 }

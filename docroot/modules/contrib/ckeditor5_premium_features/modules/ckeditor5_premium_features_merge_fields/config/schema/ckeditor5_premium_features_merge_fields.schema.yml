@@ -1,0 +1,61 @@
+ckeditor5.plugin.ckeditor5_premium_features_merge_fields__merge_fields:
+  type: mapping
+  label: 'Merge Fields'
+  mapping:
+    enabled_items:
+      type: string
+      label: 'Enabled Merge Fields'
+
+ckeditor5_premium_features_merge_fields.merge_fields_group.*:
+  type: config_entity
+  label: 'Merge Fields Group'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+      label: 'UUID'
+    weight:
+      type: integer
+      label: 'Weight'
+
+ckeditor5_premium_features_merge_fields.merge_fields_item.*:
+  type: config_entity
+  label: 'Merge Fields Item'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+      label: 'UUID'
+    weight:
+      type: integer
+      label: 'Weight'
+    token:
+      type: string
+      label: 'Token'
+    group:
+      type: string
+      label: 'Group ID'
+    type:
+      type: string
+      label: 'Type'
+    default_value:
+      type: string
+      label: 'Default Value'
+    height:
+      type: integer
+      label: 'Height'
+      nullable: true
+    width:
+      type: integer
+      label: 'Width'
+      nullable: true

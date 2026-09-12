@@ -1,11 +1,10 @@
 # Colorbox
 
-Colorbox is a light-weight, customizable lightbox plugin for jQuery 1.4.3+.
+Colorbox is a light-weight, customizable lightbox plugin for jQuery.
 This module allows for integration of Colorbox into Drupal.
-The jQuery library is a part of Drupal since version 5+.
 
 - [jQuery](https://jquery.com/)
-- [Colorbox](https://www.jacklmoore.com/colorbox/)
+- [Colorbox]https://github.com/TurbojetTechnologies/colorbox)
 
 
 ## Contents of this file
@@ -33,8 +32,7 @@ The Colorbox module:
 
 The Colorbox plugin:
 
--  Compatible with: jQuery 1.3.2+ in Firefox, Safari, Chrome, Opera, Internet
-  Explorer 7+
+- Compatible with modern versions of jQuery in all major browsers.
 - Supports photos, grouping, slideshow, ajax, inline, and iframed content.
 - Lightweight: 10KB of JavaScript (less than 5KBs gzipped).
 - Appearance is controlled through CSS so it can be restyled.
@@ -43,14 +41,15 @@ The Colorbox plugin:
 - Completely unobtrusive, options are set in the JS and require no changes to
   existing HTML.
 - Preloads upcoming images in a photo group.
-- Currently used on more than 2 million websites.
 - Released under the MIT License.
 
 
 ## Requirements
 
-Just [Colorbox](https://www.jacklmoore.com/colorbox/) plugin in "libraries".
+Just [Colorbox](https://github.com/TurbojetTechnologies/colorbox) plugin in "libraries".
 
+You can install the Colorbox library using drush:
+`drush colorbox:plugin`
 
 ## Optional HTML captions
 
@@ -82,8 +81,8 @@ will convert all captions to plain text.
 2. Download and unpack the Colorbox plugin in "libraries" inside root folder.
    Make sure the path to the plugin file becomes:
    `libraries/colorbox/jquery.colorbox-min.js`
-   [Colorbox plugin link](https://github.com/jackmoore/colorbox/archive/master.zip)
-   Drush users can use the command `drush colorbox-plugin`.
+   [Colorbox plugin link](https://github.com/TurbojetTechnologies/colorbox/archive/master.zip)
+   Drush users can use the command `drush colorbox:plugin`.
 
 3. Change the permission of colorbox plugin inside 'libraries' folder.
    Right click on 'libraries' folder -> properties -> "permissions"
@@ -128,7 +127,7 @@ Colorbox image as well. Link: https://www.drupal.org/project/colorbox_inline
 
 A Drush command is provided for easy installation of the Colorbox plugin itself.
 
-- `drush colorbox-plugin`
+- `drush colorbox:plugin`
 
 The command will download the plugin and unpack it in "libraries/".
 It is possible to add another path as an option to the command, but not
@@ -137,7 +136,7 @@ recommended unless you know what you are doing.
 
 ## Required Drupal core version
 
-Drupal 9.3+ or 10.x
+Drupal 10.2+ or 11.x
 
 
 ## License

@@ -6,12 +6,14 @@ namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the form API email element.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class EmailTest extends BrowserTestBase {
 
   /**

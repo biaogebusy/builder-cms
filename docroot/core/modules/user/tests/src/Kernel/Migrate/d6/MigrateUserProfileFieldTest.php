@@ -6,12 +6,14 @@ namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user profile field migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateUserProfileFieldTest extends MigrateDrupal6TestBase {
 
   /**
@@ -43,7 +45,17 @@ class MigrateUserProfileFieldTest extends MigrateDrupal6TestBase {
     $field_storage = FieldStorageConfig::load('user.profile_sold_to');
     $this->assertSame('list_string', $field_storage->getType(), 'Field type is list_string.');
     $settings = $field_storage->getSettings();
-    $this->assertEquals(['Pill spammers' => 'Pill spammers', 'Fitness spammers' => 'Fitness spammers', 'Back\\slash' => 'Back\\slash', 'Forward/slash' => 'Forward/slash', 'Dot.in.the.middle' => 'Dot.in.the.middle', 'Faithful servant' => 'Faithful servant', 'Anonymous donor' => 'Anonymous donor'], $settings['allowed_values']);
+    $this->assertEquals([
+      'Pill spammers' => 'Pill spammers',
+      'Fitness spammers' => 'Fitness spammers',
+      'Back\\slash' => 'Back\\slash',
+      'Forward/slash' => 'Forward/slash',
+      'Dot.in.the.middle' => 'Dot.in.the.middle',
+      'Faithful servant' => 'Faithful servant',
+      'Anonymous donor' => 'Anonymous donor',
+    ],
+    $settings['allowed_values']
+    );
     $this->assertSame('list_string', $field_storage->getType(), 'Field type is list_string.');
 
     // Migrated list field.

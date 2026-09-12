@@ -266,7 +266,7 @@ class OverviewForm extends FormBase {
           '#markup' => $queue->numberOfItems(),
         ],
         'class' => [
-          '#markup' => $this->queueUIManager->queueClassName($queue),
+          '#markup' => $queue::class . ' (' . $this->queueUIManager->queueClassName($queue) . ')',
         ],
         'cron' => [
           '#markup' => $detected_derivative_worker_id ? '' : $cron_display,

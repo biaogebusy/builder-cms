@@ -1,0 +1,14 @@
+ckeditor5_premium_features_ai_assistant.form.settings:
+  title: AI Assistant
+  route_name: ckeditor5_premium_features_ai_assistant.form.settings
+  base_route: ckeditor5_premium_features.form.settings
+  description: 'AI Assistant Configuration Form'
+  weight: 40
+
+entity.ckeditor5_ai_command_group.collection:
+  title: AI Commands Group
+  route_name: entity.ckeditor5_ai_command_group.collection
+  base_route: ckeditor5_premium_features.form.settings
+  description: 'List of CKEditor 5 AI Commands Group.'
+  weight: 41
+

@@ -1,0 +1,2 @@
+parameters:
+  datetime_range.skip_procedural_hook_scan: true

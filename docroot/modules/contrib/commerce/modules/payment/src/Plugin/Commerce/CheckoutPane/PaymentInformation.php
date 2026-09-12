@@ -264,8 +264,9 @@ class PaymentInformation extends PaymentCheckoutPaneBase {
 
     // If this payment gateway plugin supports creating tokenized payment
     // methods before processing payment, we build the "add-payment-method"
-    // plugin form.
-    if ($payment_gateway_plugin instanceof SupportsCreatingPaymentMethodsInterface) {
+    // plugin form, only if the payment method creation should not be deferred.
+    if ($payment_gateway_plugin instanceof SupportsCreatingPaymentMethodsInterface &&
+      $payment_gateway_plugin->hasFormClass('checkout-add-payment-method')) {
       $pane_form = $this->buildPaymentMethodForm($pane_form, $form_state, $default_option);
     }
     // Check if the billing profile form should be rendered for the payment
@@ -304,7 +305,7 @@ class PaymentInformation extends PaymentCheckoutPaneBase {
       $this->order->getBillingProfile()
     );
     $inline_form = $this->inlineFormManager->createInstance('payment_gateway_form', [
-      'operation' => 'add-payment-method',
+      'operation' => 'checkout-add-payment-method',
     ], $payment_method);
 
     $pane_form['add_payment_method'] = [
@@ -429,7 +430,8 @@ class PaymentInformation extends PaymentCheckoutPaneBase {
     }
 
     $payment_gateway_plugin = $payment_gateway->getPlugin();
-    if ($payment_gateway_plugin instanceof SupportsCreatingPaymentMethodsInterface) {
+    if ($payment_gateway_plugin instanceof SupportsCreatingPaymentMethodsInterface &&
+      $payment_gateway_plugin->hasFormClass('checkout-add-payment-method')) {
       if (!empty($selected_option->getPaymentMethodTypeId())) {
         /** @var \Drupal\commerce\Plugin\Commerce\InlineForm\EntityInlineFormInterface $inline_form */
         $inline_form = $pane_form['add_payment_method']['#inline_form'];
@@ -507,7 +509,7 @@ class PaymentInformation extends PaymentCheckoutPaneBase {
    */
   protected function noPaymentGatewayErrorMessage() {
     if ($this->currentUser->hasPermission('administer commerce_payment_gateway')) {
-      $message = $this->t('There are no <a href=":url"">payment gateways</a> available for this order.', [
+      $message = $this->t('There are no <a href=":url">payment gateways</a> available for this order.', [
         ':url' => Url::fromRoute('entity.commerce_payment_gateway.collection')->toString(),
       ]);
     }

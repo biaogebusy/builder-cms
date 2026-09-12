@@ -141,7 +141,7 @@ class DatabaseBackendTest extends KernelTestBase {
     $this->assertEquals(Job::STATE_QUEUED, $fourth_job->getState());
     $this->assertEquals(1, $fourth_job->getNumRetries());
     $this->assertEquals(635814000 + 9, $fourth_job->getAvailableTime());
-    $this->assertEmpty($fourth_job->getExpiresTime());
+    $this->assertEquals(0, $fourth_job->getExpiresTime());
 
     $this->rewindTime(635814010);
     $fourth_job->setState(Job::STATE_PROCESSING);

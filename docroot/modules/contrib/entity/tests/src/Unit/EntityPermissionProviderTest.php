@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\entity\Unit;
 
-use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;

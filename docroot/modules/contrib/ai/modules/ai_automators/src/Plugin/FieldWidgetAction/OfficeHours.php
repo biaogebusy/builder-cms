@@ -2,12 +2,18 @@
 
 namespace Drupal\ai_automators\Plugin\FieldWidgetAction;
 
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 
 /**
  * The Office Hours action.
+ *
+ * Uses the legacy dispatch (custom aiAutomatorsAjax + saveFormValues) —
+ * the office_hours widget pre-allocates slot elements per day and maps
+ * each entity item to a day-specific slot, which doesn't fit the generic
+ * per-delta setFormInput user-input contract.
  */
 #[FieldWidgetAction(
   id: 'automator_office_hours',
@@ -19,29 +25,50 @@ class OfficeHours extends AutomatorBaseAction {
 
   /**
    * {@inheritdoc}
-   */
-  public string $formElementProperty = 'value';
-
-  /**
-   * Do not filter empty items, as day 0 (Sunday) is valid but falsy.
    *
-   * @var bool
+   * Do not filter empty items: day 0 (Sunday) is a valid value but falsy
+   * under the default filter.
    */
   protected bool $clearEntity = FALSE;
 
   /**
-   * Ajax handler for Automators.
+   * {@inheritdoc}
+   *
+   * Opt out of submit-phase automator run — saveFormValues must operate
+   * on the REBUILT form's render tree so the day-slot mapping is
+   * carried into the AJAX response.
+   */
+  public function runAutomatorSubmit(array &$form, FormStateInterface $form_state): void {
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * No-op: OfficeHours delivers values via saveFormValues (form render
+   * tree), not $form_state->getUserInput().
+   */
+  protected function setFormInput(FieldableEntityInterface $entity, FormStateInterface $form_state, $form_key): void {
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Runs the automator on the rebuilt form so saveFormValues can map
+   * day entries into their pre-allocated slots on the widget render array.
    */
   public function aiAutomatorsAjax(array &$form, FormStateInterface $form_state) {
-    // Get the triggering element, as it contains the settings.
     $triggering_element = $form_state->getTriggeringElement();
-    $array_parents = $triggering_element['#array_parents'];
-    array_pop($array_parents);
-    $array_parents[] = $this->formElementProperty;
-    $raw_key = $array_parents[2] ?? NULL;
-    $key = is_numeric($raw_key) ? (int) $raw_key : NULL;
-    $form_key = $array_parents[0];
-    return $this->populateAutomatorValues($form, $form_state, $form_key, $key);
+    $form_key = $triggering_element['#field_widget_action_field_name'] ?? NULL;
+    if ($form_key === NULL) {
+      $array_parents = $triggering_element['#array_parents'];
+      array_pop($array_parents);
+      $form_key = $array_parents[0] ?? NULL;
+    }
+    if (!$form_key || !isset($form[$form_key])) {
+      return [];
+    }
+    $key = $triggering_element['#field_widget_action_field_delta'] ?? NULL;
+    return $this->populateAutomatorValues($form, $form_state, $form_key, is_numeric($key) ? (int) $key : NULL);
   }
 
   /**

@@ -6,14 +6,18 @@ namespace Drupal\Tests\views\Functional\Update;
 
 use Drupal\FunctionalTests\Update\UpdatePathTestBase;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the upgrade path for converting numeric arguments to entity_target_id.
  *
- * @group Update
- *
  * @see views_post_update_views_data_argument_plugin_id()
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
+#[IgnoreDeprecations]
 class EntityArgumentUpdateTest extends UpdatePathTestBase {
 
   /**

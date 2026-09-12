@@ -33,7 +33,7 @@ class IgnoreSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, Request $request = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?Request $request = NULL) {
 
     $config = $this->config('config_ignore.settings');
     $ignoreConfig = ConfigIgnoreConfig::fromConfig($config);
@@ -53,7 +53,12 @@ Examples: <ul>
 <li>language.fr|field.field.* (will ignore all fr field translations)</li>
 <li>~language.fr|field.field.media.file.field_media_file (will force import for certain field translation)</li>
 <li>language.*|system.site:name (will ignore just the site name but in all translations)</li>
-</ul>');
+</ul><br />
+By default, the config ignore settings present in the storage to be transformed are used. <br />
+That means that when importing config, the config_ignore.settings.yml from the sync storage is used and the active config_ignore.settings is used when exporting.
+However, if you ignore config_ignore.settings it will use the other storage, so the active config when importing and the one from the sync directory when exporting.
+You can also configure the source in settings.php. Consult the readme for more information.
+');
 
     $form['mode'] = [
       '#type' => 'radios',
@@ -102,7 +107,7 @@ Examples: <ul>
       '#type' => 'textarea',
       '#rows' => 25,
       '#title' => $this->t('Import'),
-      '#description' => $this->t('The configuration ignored when importing <br/>This means the active configuration will not be replaced by what is in the sync folder.'),
+      '#description' => $this->t('The configuration ignored when importing <br />This means the active configuration will not be replaced by what is in the sync folder.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('import', 'update')),
       '#size' => 60,
     ];
@@ -110,7 +115,7 @@ Examples: <ul>
       '#type' => 'textarea',
       '#rows' => 25,
       '#title' => $this->t('Export'),
-      '#description' => $this->t('The configuration ignored when exporting <br/>This means the configuration in the sync folder will not be replaced by what is active on the site.'),
+      '#description' => $this->t('The configuration ignored when exporting <br />This means the configuration in the sync folder will not be replaced by what is active on the site.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('export', 'update')),
       '#size' => 60,
     ];
@@ -127,56 +132,58 @@ Examples: <ul>
     $form['advanced']['import'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Import'),
+      '#description' => $this->t('Configuration listed here will be ignored during configuration import (e.g. <code>drush config:import</code>). The active site configuration will be preserved instead of being overwritten by the sync folder.'),
     ];
     $form['advanced']['export'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Export'),
+      '#description' => $this->t('Configuration listed here will be ignored during configuration export (e.g. <code>drush config:export</code>). The sync folder configuration will be preserved instead of being overwritten by what is active on the site.'),
     ];
     $form['advanced']['import']['import_create'] = [
       '#type' => 'textarea',
       '#rows' => 25,
-      '#title' => $this->t('Create'),
-      '#description' => $this->t('The configuration to ignore which would be created.<br/>Configuration which does not exist on the site but only in the sync folder will not be created.<br/>Keys listed here are used when updated config would add the key.'),
+      '#title' => $this->t('Ignore create on import'),
+      '#description' => $this->t('Configuration that exists in the sync folder but not on the site would normally be created during import. Listing config names here prevents them from being created on the site.<br />For config keys: if an existing config is updated during import and the update would add a new key, listing that key here prevents it from being added.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('import', 'create')),
       '#size' => 60,
     ];
     $form['advanced']['import']['import_update'] = [
       '#type' => 'textarea',
       '#rows' => 25,
-      '#title' => $this->t('Update'),
-      '#description' => $this->t('The configuration to ignore which would be updated.<br/>Configuration which does exist on the site and in the sync folder will not be changed.'),
+      '#title' => $this->t('Ignore update on import'),
+      '#description' => $this->t('Configuration that exists both on the site and in the sync folder would normally be updated during import. Listing config names here preserves the active site configuration as-is.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('import', 'update')),
       '#size' => 60,
     ];
     $form['advanced']['import']['import_delete'] = [
       '#type' => 'textarea',
       '#rows' => 25,
-      '#title' => $this->t('Delete'),
-      '#description' => $this->t('The configuration to ignore which would be deleted.<br/>Configuration which does exist on the site but not in the sync folder will not be removed.<br/>Keys listed here are used when updated config would remove the key.'),
+      '#title' => $this->t('Ignore delete on import'),
+      '#description' => $this->t('Configuration that exists on the site but not in the sync folder would normally be deleted during import. Listing config names here preserves them on the site.<br />For config keys: if an existing config is updated during import and the update would remove a key, listing that key here prevents it from being removed.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('import', 'delete')),
       '#size' => 60,
     ];
     $form['advanced']['export']['export_create'] = [
       '#type' => 'textarea',
       '#rows' => 25,
-      '#title' => $this->t('Create'),
-      '#description' => $this->t('The configuration to ignore which would be created.<br/>Configuration which does not exist in the sync folder but only on the site folder will not be exported.<br/>Keys listed here are used when updated config would add the key.'),
+      '#title' => $this->t('Ignore create on export'),
+      '#description' => $this->t('Configuration that exists on the site but not yet in the sync folder would normally be added to the sync folder during export. Listing config names here prevents them from being exported.<br />For config keys: if an existing config is exported and the site version has a key not present in the sync folder, listing that key here prevents it from being added to the sync folder.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('export', 'create')),
       '#size' => 60,
     ];
     $form['advanced']['export']['export_update'] = [
       '#type' => 'textarea',
       '#rows' => 25,
-      '#title' => $this->t('Update'),
-      '#description' => $this->t('The configuration to ignore which would be updated.<br/>Configuration which does exist on the site and in the sync folder will not be exported.'),
+      '#title' => $this->t('Ignore update on export'),
+      '#description' => $this->t('Configuration that exists both on the site and in the sync folder would normally be updated in the sync folder during export. Listing config names here preserves the sync folder configuration as-is.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('export', 'update')),
       '#size' => 60,
     ];
     $form['advanced']['export']['export_delete'] = [
       '#type' => 'textarea',
       '#rows' => 25,
-      '#title' => $this->t('Delete'),
-      '#description' => $this->t('The configuration to ignore which would be deleted.<br/>Configuration which does exist in the sync folder but not on the site will not be removed from the sync folder.<br/>Keys listed here are used when updated config would remove the key.'),
+      '#title' => $this->t('Ignore delete on export'),
+      '#description' => $this->t('Configuration that exists in the sync folder but not on the site would normally be removed from the sync folder during export. Listing config names here preserves them in the sync folder.<br />For config keys: if an existing config is exported and the sync folder has a key not present on the site, listing that key here prevents it from being removed from the sync folder.'),
       '#default_value' => implode(PHP_EOL, $ignoreConfig->getList('export', 'delete')),
       '#size' => 60,
     ];

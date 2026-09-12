@@ -6,7 +6,6 @@ use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\search_api\Kernel\PostRequestIndexingTrait;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -59,12 +58,6 @@ class CliTest extends KernelTestBase {
       'backend' => 'search_api_test',
     ]);
     $this->server->save();
-
-    // Disable the use of batches for item tracking to simulate a CLI
-    // environment.
-    if (!Utility::isRunningInCli()) {
-      \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
-    }
   }
 
   /**

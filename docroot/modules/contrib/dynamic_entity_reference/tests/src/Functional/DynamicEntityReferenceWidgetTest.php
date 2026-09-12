@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
@@ -13,6 +16,8 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceWidgetTest extends BrowserTestBase {
 
   /**

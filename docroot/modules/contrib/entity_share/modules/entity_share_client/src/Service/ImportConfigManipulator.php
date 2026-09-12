@@ -45,11 +45,11 @@ class ImportConfigManipulator implements ImportConfigManipulatorInterface {
    *   Missing configurations are either taken from the index's stored settings,
    *   if they are present there, or default to an empty array.
    *
-   * @throws \Exception
-   *   Thrown if an unknown $type or plugin ID is given.
-   *
    * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface[]
    *   The created plugin objects.
+   *
+   * @throws \Exception
+   *   Thrown if an unknown $type or plugin ID is given.
    */
   protected function createImportProcessorPlugins(ImportConfigInterface $import_config, ?array $plugin_ids = NULL, array $configurations = []) {
     if ($plugin_ids === NULL) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Traits;
 
 /**
@@ -124,14 +126,14 @@ trait BlazyPropertiesTestTrait {
   /**
    * The blazy entity service.
    *
-   * @var \Drupal\blazy\BlazyEntity
+   * @var \Drupal\blazy\BlazyEntityInterface
    */
   protected $blazyEntity;
 
   /**
    * The blazy media service.
    *
-   * @var \Drupal\blazy\Media\BlazyMedia
+   * @var \Drupal\blazy\Media\BlazyMediaInterface
    */
   protected $blazyMedia;
 
@@ -166,9 +168,9 @@ trait BlazyPropertiesTestTrait {
   /**
    * The entity.
    *
-   * @var \Drupal\Core\Entity\EntityInterface
+   * @var \Drupal\Core\Entity\FieldableEntityInterface|null
    */
-  protected $entity;
+  protected $entity = NULL;
 
   /**
    * The entity.
@@ -257,9 +259,16 @@ trait BlazyPropertiesTestTrait {
   /**
    * The created item.
    *
-   * @var \Drupal\image\Plugin\Field\FieldType\ImageItem
+   * @var \Drupal\image\Plugin\Field\FieldType\ImageItem|\Drupal\Core\Field\FieldItemListInterface|null
    */
-  protected $testItem;
+  protected $testItem = NULL;
+
+  /**
+   * The created mock item.
+   *
+   * @var \PHPUnit\Framework\MockObject\MockObject|\stdClass|null
+   */
+  protected $mockItem = NULL;
 
   /**
    * The created image item.
@@ -271,9 +280,9 @@ trait BlazyPropertiesTestTrait {
   /**
    * The created items.
    *
-   * @var array
+   * @var \Drupal\Core\Field\FieldItemListInterface
    */
-  protected $testItems = [];
+  protected $testItems = NULL;
 
   /**
    * The formatter definition.
@@ -364,14 +373,14 @@ trait BlazyPropertiesTestTrait {
    *
    * @var \Drupal\filter\Entity\FilterFormat
    */
-  protected $filterFormatFull = NULL;
+  protected $filterFormatFull;
 
   /**
    * The filter format.
    *
    * @var \Drupal\filter\Entity\FilterFormat
    */
-  protected $filterFormatRestricted = NULL;
+  protected $filterFormatRestricted;
 
   /**
    * The file system service.
@@ -383,9 +392,9 @@ trait BlazyPropertiesTestTrait {
   /**
    * The formatter instance.
    *
-   * @var \Drupal\blazy\Plugin\Field\FieldFormatter\BlazyImageFormatter
+   * @var \Drupal\Core\Field\FormatterInterface|\Drupal\blazy\BlazyFormatterInterface|null
    */
-  protected $formatterInstance;
+  protected $formatterInstance = NULL;
 
   /**
    * Test directory path.

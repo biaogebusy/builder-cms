@@ -48,7 +48,11 @@ class OrderAssignment implements OrderAssignmentInterface {
     $this->eventDispatcher->dispatch($event, OrderEvents::ORDER_ASSIGN);
 
     $order->setCustomer($customer);
-    $order->setEmail($customer->getEmail());
+
+    // Only set email if not overridden.
+    if (!$order->getData('customer_email_overridden', FALSE)) {
+      $order->setEmail($customer->getEmail());
+    }
 
     if ($save_order) {
       $order->save();

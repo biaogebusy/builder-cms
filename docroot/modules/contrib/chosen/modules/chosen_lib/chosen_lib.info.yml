@@ -2,9 +2,9 @@ name: Chosen Library
 type: module
 description: Add <a href="https://github.com/noli42/chosen">chosen</a> library definition.
 package: User interface
-core_version_requirement: ^10.2 || ^11
+core_version_requirement: ^10.3 || ^11 || ^12
 
-# Information added by Drupal.org packaging script on 2025-05-03
-version: '5.0.2'
+# Information added by Drupal.org packaging script on 2026-08-05
+version: '5.0.7'
 project: 'chosen'
-datestamp: 1746293869
+datestamp: 1785921879

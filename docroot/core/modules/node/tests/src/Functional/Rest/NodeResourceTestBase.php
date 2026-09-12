@@ -9,7 +9,11 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 use Drupal\user\Entity\User;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\Before;
 
+/**
+ * Resource test base for the node entity.
+ */
 abstract class NodeResourceTestBase extends EntityResourceTestBase {
 
   /**
@@ -42,9 +46,8 @@ abstract class NodeResourceTestBase extends EntityResourceTestBase {
 
   /**
    * Marks some tests as skipped because XML cannot be deserialized.
-   *
-   * @before
    */
+  #[Before]
   public function nodeResourceTestBaseSkipTests(): void {
     if (static::$format === 'xml' && $this->name() === 'testPatchPath') {
       $this->markTestSkipped('Deserialization of the XML format is not supported.');
@@ -155,7 +158,7 @@ abstract class NodeResourceTestBase extends EntityResourceTestBase {
       ],
       'promote' => [
         [
-          'value' => TRUE,
+          'value' => FALSE,
         ],
       ],
       'sticky' => [

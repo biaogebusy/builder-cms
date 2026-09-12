@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Database;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests serializing and unserializing a query.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class SerializeQueryTest extends DatabaseTestBase {
 
   /**

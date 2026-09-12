@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\form_test\Form;
 
 use Drupal\Core\Form\FormBase;
@@ -23,14 +25,24 @@ class FormTestClickedButtonForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $first = NULL, $second = NULL, $third = NULL) {
-    // A single text field. In IE, when a form has only one non-button input field
-    // and the ENTER key is pressed while that field has focus, the form is
-    // submitted without any information identifying the button responsible for
-    // the submission. In other browsers, the form is submitted as though the
-    // first button were clicked.
+    // A single text field. In IE, when a form has only one non-button input
+    // field and the ENTER key is pressed while that field has focus, the form
+    // is submitted without any information identifying the button responsible
+    // for the submission. In other browsers, the form is submitted as though
+    // the first button were clicked.
     $form['text'] = [
       '#title' => 'Text',
       '#type' => 'textfield',
+    ];
+
+    // Get button configurations, filter out NULL values.
+    $args = array_filter([$first, $second, $third]);
+
+    // Define button types for each argument.
+    $button_types = [
+      's' => 'submit',
+      'i' => 'image_button',
+      'b' => 'button',
     ];
 
     // Loop through each path argument, adding buttons based on the information
@@ -38,27 +50,13 @@ class FormTestClickedButtonForm extends FormBase {
     // form-test/clicked-button/s/i/rb, then 3 buttons are added: a 'submit', an
     // 'image_button', and a 'button' with #access=FALSE. This enables form.test
     // to test a variety of combinations.
-    $i = 0;
-    $args = [$first, $second, $third];
-    foreach ($args as $arg) {
-      $name = 'button' . ++$i;
-      // 's', 'b', or 'i' in the argument define the button type wanted.
-      if (!is_string($arg)) {
-        $type = NULL;
-      }
-      elseif (str_contains($arg, 's')) {
-        $type = 'submit';
-      }
-      elseif (str_contains($arg, 'b')) {
-        $type = 'button';
-      }
-      elseif (str_contains($arg, 'i')) {
-        $type = 'image_button';
-      }
-      else {
-        $type = NULL;
-      }
-      if (isset($type)) {
+    foreach ($args as $index => $arg) {
+      // Get the button type based on the index of the argument.
+      $type = $button_types[$arg] ?? NULL;
+      $name = 'button' . ($index + 1);
+
+      if ($type) {
+        // Define the button.
         $form[$name] = [
           '#type' => $type,
           '#name' => $name,
@@ -86,7 +84,7 @@ class FormTestClickedButtonForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if ($triggering_element = $form_state->getTriggeringElement()) {
-      $this->messenger()->addStatus(t('The clicked button is %name.', ['%name' => $triggering_element['#name']]));
+      $this->messenger()->addStatus($this->t('The clicked button is %name.', ['%name' => $triggering_element['#name']]));
     }
     else {
       $this->messenger()->addStatus('There is no clicked button.');

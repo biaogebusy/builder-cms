@@ -47,7 +47,8 @@ abstract class ConfigIgnoreBrowserTestBase extends BrowserTestBase {
       $this->container->get('module_installer'),
       $this->container->get('theme_handler'),
       $this->container->get('string_translation'),
-      $this->container->get('extension.list.module')
+      $this->container->get('extension.list.module'),
+      $this->container->get('extension.list.theme')
     );
 
     $config_importer->reset()->import();

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Installer;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests translation files for multiple languages get imported during install.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerTranslationMultipleLanguageTest extends InstallerTestBase {
 
   /**
@@ -26,11 +29,11 @@ class InstallerTranslationMultipleLanguageTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpLanguage() {
+  protected function setUpLanguage(): void {
     // Place custom local translations in the translations directory.
     mkdir(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations', 0777, TRUE);
-    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0.de.po', $this->getPo('de'));
-    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0.es.po', $this->getPo('es'));
+    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '.de.po', $this->getPo('de'));
+    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '.es.po', $this->getPo('es'));
 
     parent::setUpLanguage();
   }
@@ -162,12 +165,14 @@ PO;
     // Spanish is always an override (never used as installation language).
     $this->assertEquals('Anonymous es', $override_es->get('anonymous'));
 
+    // Verify that config entities get the correct language assumptions.
+    $this->verifyConfigLanguageAssumptions();
   }
 
   /**
    * Helper function to verify that the expected strings are translated.
    */
-  protected function verifyImportedStringsTranslated() {
+  protected function verifyImportedStringsTranslated(): void {
     $test_samples = ['Save and continue', 'Anonymous', 'Language'];
     $langcodes = ['de', 'es'];
 
@@ -182,6 +187,29 @@ PO;
         $this->assertSession()->pageTextContains($sample . ' ' . $langcode);
       }
     }
+  }
+
+  /**
+   * Verifies config entity and simple config langcode assumptions.
+   */
+  protected function verifyConfigLanguageAssumptions(): void {
+    if ($this->langcode === 'en') {
+      return;
+    }
+
+    $config_factory = \Drupal::configFactory();
+    foreach (['language.entity.de', 'language.entity.es'] as $config_name) {
+      $this->assertEquals(
+        $this->langcode,
+        $config_factory->get($config_name)->get('langcode'),
+        "Config entity '$config_name' should use the installation language langcode."
+      );
+    }
+
+    $this->assertNull(
+      $config_factory->get('system.performance')->get('langcode'),
+      'Non-entity config without translatable data should not be rewritten to the installation language.'
+    );
   }
 
 }

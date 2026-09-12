@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+const { execSync } = require('node:child_process');
 const { commandAsWebserver } = require('../globals');
 
 /**
@@ -17,7 +17,7 @@ exports.command = function drupalUninstall(callback) {
   if (!this.currentTest.results.errors && !this.currentTest.results.failed) {
     const dbOption =
       process.env.DRUPAL_TEST_DB_URL.length > 0
-        ? `--db-url ${process.env.DRUPAL_TEST_DB_URL}`
+        ? `--db-url "${process.env.DRUPAL_TEST_DB_URL}"`
         : '';
     try {
       if (!prefix || !prefix.length) {

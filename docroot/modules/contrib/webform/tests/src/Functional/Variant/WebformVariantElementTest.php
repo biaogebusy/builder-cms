@@ -37,7 +37,7 @@ class WebformVariantElementTest extends WebformBrowserTestBase {
   /**
    * Test variant element.
    */
-  public function testVariantElement() {
+  public function testVariantElement(): void {
     $assert_session = $this->assertSession();
 
     $variant_user = $this->drupalCreateUser(['administer webform', 'edit webform variants']);
@@ -63,14 +63,14 @@ class WebformVariantElementTest extends WebformBrowserTestBase {
 
     // Check that only the override variant plugins is available to all webforms.
     $this->drupalGet('/admin/structure/webform/manage/contact/element/add/webform_variant');
-    $assert_session->responseContains('<option value="override">Override</option>');
-    $assert_session->responseNotContains('<option value="test">Test</option>');
+    $this->assertEquals('override', $assert_session->optionExists('properties[variant]', 'Override')->getValue());
+    $assert_session->optionNotExists('properties[variant]', 'Test');
 
     // Check that only the test variant plugins is available to test_variant_*.
     // @see \Drupal\webform_test_variant\Plugin\WebformVariant\TestWebformVariant::isApplicable
     $this->drupalGet('/admin/structure/webform/manage/test_variant_multiple/element/add/webform_variant');
-    $assert_session->responseContains('<option value="override">Override</option>');
-    $assert_session->responseContains('<option value="test">Test</option>');
+    $this->assertEquals('override', $assert_session->optionExists('properties[variant]', 'Override')->getValue());
+    $this->assertEquals('test', $assert_session->optionExists('properties[variant]', 'Test')->getValue());
 
     // Login as variant user to display 'Variants' tab info messages.
     $this->drupalLogin($variant_user);

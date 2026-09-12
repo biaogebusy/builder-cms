@@ -13,3 +13,9 @@ views.cache.custom_tag:
         custom_tag:
           type: string
           label: 'Custom tag list'
+        custom_tag_output_lifespan:
+          type: string
+          label: 'The fixed output lifespan or custom if the relative expression should be used'
+        custom_tag_output_lifespan_expression:
+          type: string
+          label: 'Expression used in strtotime().'

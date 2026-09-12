@@ -58,3 +58,26 @@ function ai_provider_openai_update_10001() {
   }
   return $return_message;
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Migrate the default text_to_image model from dall-e-3 to gpt-image-1 for
+ * existing installs that still have the old default stored.
+ */
+function ai_provider_openai_update_10002() {
+  $ai_provider = \Drupal::service('ai.provider');
+  $config = \Drupal::configFactory()->getEditable('ai.settings');
+  $default_providers = $config->get('default_providers') ?? [];
+
+  // Only update if the stored default is still dall-e-3. Users who explicitly
+  // chose dall-e-3 keep their setting; this only replaces the old hard-coded
+  // default that was set automatically during initial setup.
+  if (!empty($default_providers['text_to_image']['model_id']) && $default_providers['text_to_image']['model_id'] === 'dall-e-3') {
+    $default_providers['text_to_image']['model_id'] = 'gpt-image-1';
+    $config->set('default_providers', $default_providers)->save();
+    return t('Updated default text_to_image model from dall-e-3 to gpt-image-1.');
+  }
+
+  return t('No changes made to OpenAI provider default text_to_image model.');
+}

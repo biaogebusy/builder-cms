@@ -2,9 +2,9 @@
 
 namespace Drupal\webform_submission_export_import\Controller;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\EntityStorage\WebformEntityStorageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -92,12 +92,12 @@ class WebformSubmissionExportImportController extends ControllerBase implements 
       $handle = fopen('php://output', 'r+');
 
       $header = $this->importer->exportHeader();
-      fputcsv($handle, $header);
+      fputcsv($handle, $header, escape: '\\');
 
       for ($i = 1; $i <= 3; $i++) {
         $webform_submission = $this->generateSubmission($i);
         $record = $this->importer->exportSubmission($webform_submission);
-        fputcsv($handle, $record);
+        fputcsv($handle, $record, escape: '\\');
       }
 
       fclose($handle);

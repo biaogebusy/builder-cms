@@ -6,20 +6,16 @@ namespace Drupal\Tests\system\Kernel\Theme;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Twig\Error\LoaderError;
 
 /**
  * Tests including files in Twig templates.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class TwigIncludeTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
-
   /**
    * The Twig configuration to set the container parameter to during rebuilds.
    *
@@ -136,7 +132,7 @@ class TwigIncludeTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
     if (!empty($this->twigConfig)) {
       $container->setParameter('twig.config', $this->twigConfig);

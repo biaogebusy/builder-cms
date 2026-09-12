@@ -1,14 +1,14 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\EventSubscriber;
 
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\sms\Event\SmsDeliveryReportEvent;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Drupal\sms\Event\SmsDeliveryReportEvent;
 use Drupal\sms\Event\SmsEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Handles delivery reports as they come in and updates storage.
@@ -44,7 +44,7 @@ class SmsDeliveryReportsProcessor implements EventSubscriberInterface {
       if ($report->getMessageId()) {
         $existing = $this->reportStorage->loadByProperties(['message_id' => $report->getMessageId()]);
         if ($existing) {
-          $existing = reset($existing);
+          $existing = \reset($existing);
           $existing
             ->setStatus($report->getStatus())
             ->setStatusMessage($report->getStatusMessage())

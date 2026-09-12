@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   /**
    * Attach behaviors to trigger submit button from input onchange.
    *
@@ -16,7 +13,7 @@
    *   Attaches form trigger submit events.
    */
   Drupal.behaviors.webformSubmitTrigger = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-trigger-submit', '[data-webform-trigger-submit]')).on('change', function () {
         var submit = $(this).attr('data-webform-trigger-submit');
         $(submit).trigger('mousedown');

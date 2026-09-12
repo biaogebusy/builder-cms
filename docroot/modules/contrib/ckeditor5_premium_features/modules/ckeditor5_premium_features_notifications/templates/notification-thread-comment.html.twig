@@ -1,0 +1,9 @@
+<div class="thread-wrapper thread-comment-wrapper">
+  <div class="info">
+    <span class="author">{{ comment.getAuthor().getAccountName() }}</span>
+    <span class="date">{{ comment.getCreatedDate() }}</span>
+  </div>
+  <div class="content">
+    {{ comment.getContent()|raw }}
+  </div>
+</div>

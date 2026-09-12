@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   Drupal.webform = Drupal.webform || {};
   Drupal.webform.detailsToggle = Drupal.webform.detailsToggle || {};
   Drupal.webform.detailsToggle.options = Drupal.webform.detailsToggle.options || {};
@@ -17,7 +14,7 @@
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformDetailsToggle = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-details-toggle', '.js-webform-details-toggle', context)).each(function () {
         var $form = $(this);
         var $tabs = $form.find('.webform-tabs');

@@ -12,3 +12,11 @@ views.area.commerce_coupon_redemption:
     allow_multiple:
       type: boolean
       label: 'Allow multiple coupons to be redeemed'
+
+commerce_promotion.settings:
+  type: config_object
+  label: 'Promotion settings'
+  mapping:
+    enforce_weight_ordering:
+      type: boolean
+      label: 'Apply all promotions by sort order to enforce compatibility, including those with coupons'

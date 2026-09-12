@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\node\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\node\Plugin\migrate\source\d7\NodeEntityTranslation;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore tnid
-
 /**
  * Tests Drupal 7 node entity translations source plugin.
- *
- * @covers \Drupal\node\Plugin\migrate\source\d7\NodeEntityTranslation
- *
- * @group node
  */
+#[CoversClass(NodeEntityTranslation::class)]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeEntityTranslationTest extends MigrateSqlSourceTestBase {
 
   /**

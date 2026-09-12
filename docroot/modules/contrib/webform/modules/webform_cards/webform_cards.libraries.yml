@@ -1,5 +1,4 @@
 webform_cards:
-  version: VERSION
   css:
     component:
       css/webform_cards.css: { }
@@ -12,7 +11,6 @@ webform_cards:
     - webform/webform.scroll
 
 webform_cards.admin:
-  version: VERSION
   js:
     js/webform_cards.admin.js: { }
   dependencies:
@@ -21,7 +19,6 @@ webform_cards.admin:
     - core/once
 
 webform_cards.test:
-  version: VERSION
   js:
     js/webform_cards.test.js: { }
   dependencies:

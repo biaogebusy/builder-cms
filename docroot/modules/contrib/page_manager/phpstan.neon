@@ -1,0 +1,49 @@
+# PHPStan configuration for Page Manager.
+#
+# This mirrors the default contrib configuration that the GitLab CI template
+# supplies when a project ships no config of its own
+# (gitlab_templates assets/phpstan.neon), plus the exclusions documented below.
+# When a project provides this file the template uses it verbatim, so the
+# baseline include from the default file is deliberately not carried over.
+parameters:
+    level: 0
+    fileExtensions:
+        - php
+        - module
+        - inc
+        - install
+        - theme
+        - profile
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # new static() is a best practice in Drupal, so we cannot fix that.
+        - "#^Unsafe usage of new static#"
+
+        # page_manager_update_8002() converts Panels layout ids and loads
+        # panels.install to do it. Panels is not a dependency of Page Manager,
+        # so it is absent from the analysed codebase, but the call is already
+        # guarded at runtime by moduleExists('panels').
+        -
+            message: "#could not be loaded from Drupal\\\\Core\\\\Extension\\\\ModuleHandlerInterface::loadInclude because panels module is not found#"
+            path: page_manager.install
+
+        # Storing an entity storage handler in a property is discouraged, but
+        # these are long-standing protected properties that subclasses in other
+        # projects may read. Removing them would be an API break, so they are
+        # left in place. New code should call getStorage() at the call site.
+        -
+            message: "#^Storing entity storage as a class property is not recommended#"
+            paths:
+                - page_manager_ui/src/Form/PageGeneralForm.php
+                - src/Routing/PageManagerRoutes.php
+                - src/Routing/VariantRouteFilter.php
+
+        # PageListBuilder::getDefaultOperations() intentionally keeps the
+        # one-parameter signature and reads the Drupal 11.3 $cacheability
+        # argument with func_get_args(), exactly as Drupal core's
+        # EntityListBuilder does, so that subclasses overriding the old
+        # signature do not become fatally incompatible.
+        # @see https://www.drupal.org/node/3533080
+        -
+            message: "#is missing the CacheableMetadata parameter added in Drupal 11\\.3#"
+            path: page_manager_ui/src/Entity/PageListBuilder.php

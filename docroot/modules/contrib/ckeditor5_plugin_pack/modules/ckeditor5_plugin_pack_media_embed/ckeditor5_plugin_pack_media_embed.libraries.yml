@@ -1,0 +1,5 @@
+admin.media_embed:
+  version: 20250731
+  css:
+    theme:
+      css/media_embed.admin.css: { }

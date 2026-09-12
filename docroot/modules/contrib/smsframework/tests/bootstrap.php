@@ -5,7 +5,7 @@
  * Searches for the core bootstrap file.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 $dir = __DIR__;
 

@@ -38,14 +38,13 @@ abstract class ImageStyleResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**
    * Marks some tests as skipped because XML cannot be deserialized.
-   *
-   * @before
    */
-  public function imageStyleResourceTestBaseSkipTests(): void {
-    if ($this->name() === 'testGet' && static::$format === 'xml') {
+  protected function setUp(): void {
+    if ($this->name() === 'testCrud' && static::$format === 'xml') {
       // @todo Remove this method override in https://www.drupal.org/node/2905655
       $this->markTestSkipped('XML encoder does not support UUIDs as keys: makes ImageStyle config entity XML serialization crash');
     }
+    parent::setUp();
   }
 
   /**

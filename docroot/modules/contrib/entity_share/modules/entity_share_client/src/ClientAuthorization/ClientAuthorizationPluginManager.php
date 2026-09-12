@@ -7,6 +7,8 @@ namespace Drupal\entity_share_client\ClientAuthorization;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\entity_share_client\Annotation\ClientAuthorization as ClientAuthorizationAnnotation;
+use Drupal\entity_share_client\Attribute\ClientAuthorization;
 
 /**
  * Provides the Client authorization plugin manager.
@@ -25,7 +27,14 @@ class ClientAuthorizationPluginManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/ClientAuthorization', $namespaces, $module_handler, 'Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface', 'Drupal\entity_share_client\Annotation\ClientAuthorization');
+    parent::__construct(
+      'Plugin/ClientAuthorization',
+      $namespaces,
+      $module_handler,
+      ClientAuthorizationInterface::class,
+      ClientAuthorization::class,
+      ClientAuthorizationAnnotation::class,
+    );
 
     $this->alterInfo('entity_share_client_authorization_info');
     $this->setCacheBackend($cache_backend, 'entity_share_client_authorization_plugins');
@@ -37,10 +46,10 @@ class ClientAuthorizationPluginManager extends DefaultPluginManager {
    * @param string $uuid
    *   Allow the uuid to be explicitly set.
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   *
    * @return \Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface[]
    *   The array of plugins.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getAvailablePlugins($uuid = '') {
     $plugins = [];

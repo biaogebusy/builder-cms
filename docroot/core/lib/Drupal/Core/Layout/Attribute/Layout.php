@@ -26,9 +26,9 @@ class Layout extends Plugin {
   /**
    * Any additional properties and values.
    *
-   * @see \Drupal\Core\Layout\LayoutDefinition::$additional
-   *
    * @var array
+   *
+   * @see \Drupal\Core\Layout\LayoutDefinition::$additional
    */
   public readonly array $additional;
 
@@ -50,7 +50,8 @@ class Layout extends Plugin {
    * @param string $theme_hook
    *   (optional) The template hook to render the layout.
    * @param string|null $path
-   *   (optional) Path (relative to the module or theme) to resources like icon or template.
+   *   (optional) Path (relative to the module or theme) to resources like icon
+   *   or template.
    * @param string|null $library
    *   (optional) The asset library.
    * @param string|null $icon
@@ -99,6 +100,9 @@ class Layout extends Plugin {
     // @see \Drupal\Core\Layout\LayoutDefinition::$additional
     // @see \Drupal\Core\Layout\LayoutDefinition::get()
     $this->additional = $additional;
+    if ($this->label === NULL && $this->deriver === NULL) {
+      @trigger_error('A layout plugin not having at least one of the label or deriver properties is deprecated in drupal:11.4.0 and having at least one of these properties will be enforced in drupal:12.0.0. See https://www.drupal.org/node/3464076', E_USER_DEPRECATED);
+    }
   }
 
   /**

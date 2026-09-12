@@ -1,0 +1,11 @@
+ckeditor5_premium_features_email_editing__email_editing:
+  ckeditor5:
+    plugins:
+      - email.EmailConfigurationHelper
+      - exportInlineStyles.ExportInlineStyles
+      - exportInlineStylesAdapter.ExportInlineStylesAdapter
+  drupal:
+    label: Email editing
+    library: ckeditor5_premium_features_email_editing/email-editing
+    class: Drupal\ckeditor5_premium_features_email_editing\Plugin\CKEditor5Plugin\EmailEditing
+    elements: false

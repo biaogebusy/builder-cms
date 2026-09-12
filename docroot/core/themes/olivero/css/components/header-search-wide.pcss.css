@@ -12,7 +12,6 @@
 
 .block-search-wide__wrapper {
   position: absolute;
-  z-index: 1; /* Ensure left border shows above social region in IE11. */
   inset-block-start: 100%;
   inset-inline-start: calc(-1 * var(--content-left));
   display: none;
@@ -127,21 +126,6 @@
       & span::after {
         transform: scaleX(1);
       }
-
-      @media screen and (-ms-high-contrast: active) {
-        border-bottom-width: var(--sp0-5);
-
-        & span::after {
-          content: none;
-        }
-      }
-    }
-
-    @media screen and (-ms-high-contrast: active) {
-      /* Edge's high contrast does show the background image, so we hide it. */
-      & .icon--search {
-        display: none;
-      }
     }
   }
 }
@@ -252,7 +236,7 @@ html:not(.js) .search-block-form:focus-within .block-search-wide__wrapper {
 /* Necessary to override specificity of transpiled PostCSS properties from default input focus styling. */
 [dir] .block-search-wide__wrapper input[type="search"] {
   background-color: transparent;
-  background-image: linear-gradient(var(--color--primary-50), var(--color--primary-50)); /* Two values are needed for IE11 support. */
+  background-image: linear-gradient(var(--color--primary-50));
   background-repeat: no-repeat;
   background-position: bottom left; /* LTR */
   background-size: 0% 10px;

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests building and processing of core form elements.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class ElementTest extends BrowserTestBase {
 
   /**
@@ -31,6 +33,7 @@ class ElementTest extends BrowserTestBase {
     $this->testOptions();
     $this->testRadiosChecked();
     $this->testWrapperIds();
+    $this->testChildAttributes();
     $this->testButtonClasses();
     $this->testSubmitButtonAttribute();
     $this->testGroupElements();
@@ -38,6 +41,7 @@ class ElementTest extends BrowserTestBase {
     $this->testFormAutocomplete();
     $this->testFormElementErrors();
     $this->testDetailsSummaryAttributes();
+    $this->testDetailsDescriptionAttributes();
   }
 
   /**
@@ -136,6 +140,17 @@ class ElementTest extends BrowserTestBase {
   }
 
   /**
+   * Tests checkboxes and radios child element attributes.
+   */
+  protected function testChildAttributes(): void {
+    $this->drupalGet('form-test/checkboxes-radios');
+
+    // Verify that the child elements don't have aria-describedby attributes.
+    $this->assertSession()->elementsCount('xpath', "//input[@type='checkbox' and @aria-describedby]", 0);
+    $this->assertSession()->elementsCount('xpath', "//input[@type='radio' and @aria-describedby]", 0);
+  }
+
+  /**
    * Tests button classes.
    */
   protected function testButtonClasses(): void {
@@ -153,10 +168,10 @@ class ElementTest extends BrowserTestBase {
    * Tests the submit_button attribute.
    */
   protected function testSubmitButtonAttribute(): void {
-    // Set the submit_button attribute to true
+    // Set the submit_button attribute to true.
     $this->drupalGet('form-test/submit-button-attribute');
     $this->assertSession()->elementsCount('xpath', '//input[@type="submit"]', 1);
-    // Set the submit_button attribute to false
+    // Set the submit_button attribute to false.
     $this->drupalGet('form-test/submit-button-attribute/1');
     $this->assertSession()->elementsCount('xpath', '//input[@type="button"]', 1);
   }
@@ -192,7 +207,7 @@ class ElementTest extends BrowserTestBase {
   }
 
   /**
-   * Tests a form with an autocomplete setting..
+   * Tests a form with an autocomplete setting.
    */
   protected function testFormAutocomplete(): void {
     $this->drupalGet('form-test/autocomplete');
@@ -228,6 +243,15 @@ class ElementTest extends BrowserTestBase {
   protected function testDetailsSummaryAttributes(): void {
     $this->drupalGet('form-test/group-details');
     $this->assertSession()->elementExists('css', 'summary[data-summary-attribute="test"]');
+  }
+
+  /**
+   * Tests description attributes of details.
+   */
+  protected function testDetailsDescriptionAttributes(): void {
+    $this->drupalGet('form-test/group-details');
+    $this->assertSession()->elementExists('css', 'details[aria-describedby="edit-description-attributes--description"]');
+    $this->assertSession()->elementExists('css', 'div[id="edit-description-attributes--description"]');
   }
 
 }

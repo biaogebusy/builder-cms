@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrates various configuration objects owned by the System module.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateSystemConfigurationTest extends MigrateDrupal6TestBase {
 
   /**
@@ -18,6 +20,11 @@ class MigrateSystemConfigurationTest extends MigrateDrupal6TestBase {
    */
   protected static $modules = ['file', 'system'];
 
+  /**
+   * The expected configuration after migration.
+   *
+   * @var array
+   */
   protected $expectedConfig = [
     'system.cron' => [
       'threshold' => [
@@ -75,7 +82,7 @@ class MigrateSystemConfigurationTest extends MigrateDrupal6TestBase {
       'css' => [
         'preprocess' => FALSE,
         // Gzip is not handled by the migration.
-        'gzip' => TRUE,
+        'compress' => TRUE,
       ],
       // fast_404 is not handled by the migration.
       'fast_404' => [
@@ -87,12 +94,7 @@ class MigrateSystemConfigurationTest extends MigrateDrupal6TestBase {
       'js' => [
         'preprocess' => FALSE,
         // Gzip is not handled by the migration.
-        'gzip' => TRUE,
-      ],
-    ],
-    'system.rss' => [
-      'items' => [
-        'view_mode' => 'title',
+        'compress' => TRUE,
       ],
     ],
     'system.site' => [
@@ -136,7 +138,6 @@ class MigrateSystemConfigurationTest extends MigrateDrupal6TestBase {
       'system_logging',
       'system_maintenance',
       'd6_system_performance',
-      'system_rss',
       'system_site',
     ];
     $this->executeMigrations($migrations);

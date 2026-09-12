@@ -1,16 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_blast;
 
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\sms\Message\SmsMessage;
 use Drupal\sms\Provider\PhoneNumberProviderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\sms\Message\SmsMessage;
 
 /**
  * Defines a form for sending mass messages.
@@ -41,7 +41,11 @@ class SmsBlastForm extends FormBase {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, PhoneNumberProviderInterface $phone_number_provider, MessengerInterface $messenger) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    PhoneNumberProviderInterface $phone_number_provider,
+    MessengerInterface $messenger,
+  ) {
     $this->phoneNumberVerificationStorage = $entity_type_manager
       ->getStorage('sms_phone_number_verification');
     $this->phoneNumberProvider = $phone_number_provider;
@@ -104,7 +108,7 @@ class SmsBlastForm extends FormBase {
     /** @var \Drupal\sms\Entity\PhoneNumberVerificationInterface $verification */
     foreach ($this->phoneNumberVerificationStorage->loadMultiple($ids) as $verification) {
       // Ensure entity exists and one message is sent to each entity.
-      if (($entity = $verification->getEntity()) && !in_array($entity->id(), $entity_ids)) {
+      if (($entity = $verification->getEntity()) && !\in_array($entity->id(), $entity_ids)) {
         $entity_ids[] = $entity->id();
 
         try {

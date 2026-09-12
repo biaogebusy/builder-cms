@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
-use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\node\Entity\Node;
+use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade taxonomy term node associations.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class MigrateTermNodeTranslationTest extends MigrateDrupal6TestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'config_translation',
     'content_translation',
     'language',
-    'locale',
     'menu_ui',
     'taxonomy',
   ];

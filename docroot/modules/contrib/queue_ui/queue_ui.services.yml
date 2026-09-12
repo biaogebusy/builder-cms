@@ -1,3 +1,5 @@
+parameters:
+  queue_ui.hooks_converted: true
 services:
   plugin.manager.queue_ui:
     class: Drupal\queue_ui\QueueUIManager
@@ -11,3 +13,6 @@ services:
       - '@messenger'
       - '@queue'
       - '@logger.factory'
+  Drupal\queue_ui\Hook\AlterHooks:
+    class: Drupal\queue_ui\Hook\AlterHooks
+    autowire: true

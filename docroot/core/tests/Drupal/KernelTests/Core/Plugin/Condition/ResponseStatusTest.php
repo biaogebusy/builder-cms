@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Plugin\Condition;
 
 use Drupal\Core\Condition\ConditionManager;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,9 +19,9 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Tests the Response Status Condition, provided by the system module.
- *
- * @group Plugin
  */
+#[Group('Plugin')]
+#[RunTestsInSeparateProcesses]
 class ResponseStatusTest extends KernelTestBase {
 
   /**
@@ -52,9 +56,8 @@ class ResponseStatusTest extends KernelTestBase {
 
   /**
    * Tests the request path condition.
-   *
-   * @dataProvider providerTestConditions
    */
+  #[DataProvider('providerTestConditions')]
   public function testConditions(array $status_codes, bool $negate, int $response_code, bool $expected_execute): void {
     if ($response_code === Response::HTTP_OK) {
       $request = Request::create('/my/valid/page');
@@ -285,6 +288,49 @@ class ResponseStatusTest extends KernelTestBase {
       'expected_execute' => TRUE,
     ];
 
+  }
+
+  /**
+   * Provides test data for ::testStatusCodesValidation().
+   */
+  public static function providerStatusCodesValidation(): \Iterator {
+    yield 'OK: empty status_codes' => [[], []];
+    yield 'OK: 200' => [[Response::HTTP_OK], []];
+    yield 'OK: all supported status codes' => [
+      [Response::HTTP_OK, Response::HTTP_FORBIDDEN, Response::HTTP_NOT_FOUND],
+      [],
+    ];
+    yield 'INVALID: 418' => [
+      [Response::HTTP_I_AM_A_TEAPOT],
+      ['status_codes.0' => 'The value you selected is not a valid choice.'],
+    ];
+    yield 'INVALID: 200 and 418' => [
+      [Response::HTTP_OK, Response::HTTP_I_AM_A_TEAPOT],
+      ['status_codes.1' => 'The value you selected is not a valid choice.'],
+    ];
+  }
+
+  /**
+   * Tests the schema constraints on the `status_codes` config.
+   */
+  #[DataProvider('providerStatusCodesValidation')]
+  public function testStatusCodesValidation(array $status_codes, array $expected_messages): void {
+    $typed_config = $this->container->get(TypedConfigManagerInterface::class);
+    $data = [
+      'id' => 'response_status',
+      'negate' => FALSE,
+      'context_mapping' => [],
+      'status_codes' => $status_codes,
+    ];
+    $definition = $typed_config->getDefinition('condition.plugin.response_status');
+    $data_definition = $typed_config->buildDataDefinition($definition, $data);
+    $violations = $typed_config->create($data_definition, $data)->validate();
+
+    $actual_messages = [];
+    foreach ($violations as $violation) {
+      $actual_messages[$violation->getPropertyPath()] = (string) $violation->getMessage();
+    }
+    $this->assertSame($expected_messages, $actual_messages);
   }
 
 }

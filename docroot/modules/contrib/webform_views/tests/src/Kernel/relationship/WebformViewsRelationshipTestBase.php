@@ -3,6 +3,7 @@
 namespace Drupal\Tests\webform_views\Kernel\relationship;
 
 use Drupal\Tests\webform_views\Kernel\WebformViewsTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Reasonable starting point for testing webform views relationships.
@@ -21,14 +22,13 @@ abstract class WebformViewsRelationshipTestBase extends WebformViewsTestBase {
    *
    * @param array $expected
    *   Expected output from $this->renderView().
-   *
-   * @dataProvider providerRelationship()
    */
-  public function testRelationship($expected) {
-    $this->webform = $this->createWebform($this->webform_elements);
-    $this->createWebformSubmissions($this->webform_submissions_data, $this->webform);
+  #[DataProvider('providerRelationship')]
+  public function testRelationship(array $expected): void {
+    $this->webform = $this->createWebform(static::$webform_elements);
+    $this->createWebformSubmissions(static::$webform_submissions_data, $this->webform);
 
-    $this->view = $this->initView($this->webform, $this->view_handlers);
+    $this->view = $this->initView($this->webform, static::$view_handlers);
 
     $rendered_cells = $this->renderView($this->view);
 
@@ -41,11 +41,11 @@ abstract class WebformViewsRelationshipTestBase extends WebformViewsTestBase {
    * You might want to override this method with more specific cases in a child
    * class.
    */
-  public function providerRelationship() {
+  public static function providerRelationship(): array {
     $tests = [];
 
     $expected = [];
-    foreach ($this->webform_submissions_data as $webform_submission) {
+    foreach (static::$webform_submissions_data as $webform_submission) {
       $target_id = reset($webform_submission);
       $expected[] = ['entity_id' => (string) $target_id];
     }
@@ -61,12 +61,11 @@ abstract class WebformViewsRelationshipTestBase extends WebformViewsTestBase {
    *
    * @param array $expected
    *   Expected output from $this->renderView().
-   *
-   * @dataProvider providerReverseRelationship()
    */
-  public function testReverseRelationship($expected) {
-    $this->webform = $this->createWebform($this->webform_elements);
-    $this->createWebformSubmissions($this->webform_submissions_data, $this->webform);
+  #[DataProvider('providerReverseRelationship')]
+  public function testReverseRelationship(array $expected): void {
+    $this->webform = $this->createWebform(static::$webform_elements);
+    $this->createWebformSubmissions(static::$webform_submissions_data, $this->webform);
 
     $this->view = $this->initView($this->webform, [], 'webform_views_reverse_entity_reference_test');
 
@@ -81,11 +80,11 @@ abstract class WebformViewsRelationshipTestBase extends WebformViewsTestBase {
    * You might want to override this method with more specific cases in a child
    * class.
    */
-  public function providerReverseRelationship() {
+  public static function providerReverseRelationship(): array {
     $tests = [];
 
     $expected = [];
-    foreach ($this->webform_submissions_data as $webform_submission) {
+    foreach (static::$webform_submissions_data as $webform_submission) {
       $target_id = reset($webform_submission);
       $expected[] = [
         'entity_id' => (string) $target_id,

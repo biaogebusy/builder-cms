@@ -5,7 +5,7 @@ namespace Drupal\webform_test_handler_remote_post;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\Site\Settings;
-use function GuzzleHttp\default_user_agent;
+use GuzzleHttp\Utils;
 
 /**
  * Extend Drupal client so that we can override Guzzel client.
@@ -22,7 +22,7 @@ class WebformTestHandlerRemotePostClientFactory extends ClientFactory {
       'verify' => TRUE,
       'timeout' => 30,
       'headers' => [
-        'User-Agent' => 'Drupal/' . \Drupal::VERSION . ' (+https://www.drupal.org/) ' . default_user_agent(),
+        'User-Agent' => 'Drupal/' . \Drupal::VERSION . ' (+https://www.drupal.org/) ' . Utils::defaultUserAgent(),
       ],
       'handler' => $this->stack,
       'proxy' => [

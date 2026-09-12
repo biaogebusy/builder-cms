@@ -97,6 +97,9 @@ class TempstoreConverter implements ParamConverterInterface {
    * Constructs a TempstoreConverter.
    *
    * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+   *   The tempstore factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
   public function __construct(SharedTempStoreFactory $tempstore, EntityTypeManagerInterface $entity_type_manager) {
     $this->tempstore = $tempstore;

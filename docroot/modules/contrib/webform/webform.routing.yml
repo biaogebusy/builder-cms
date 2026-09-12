@@ -72,16 +72,6 @@ webform.config.repair:
   requirements:
     _permission: 'administer webform'
 
-# Add-ons
-
-webform.addons:
-  path: '/admin/structure/webform/addons'
-  defaults:
-    _controller: '\Drupal\webform\Controller\WebformAddonsController::index'
-    _title: 'Webforms: Add-ons'
-  requirements:
-    _permission: 'administer webform'
-
 # Help
 
 webform.help:
@@ -98,6 +88,23 @@ webform.help.video:
     _form: '\Drupal\webform\Form\WebformHelpVideoForm'
   requirements:
     _permission: 'access content'
+
+# Assets
+webform.assets.javascript:
+  path: '/webform/assets/global.js'
+  defaults:
+    _controller: '\Drupal\webform\Controller\WebformAssetsController::javascript'
+  requirements:
+    # Global JavaScript is available to all users.
+    _access: 'TRUE'
+
+webform.assets.css:
+  path: '/webform/assets/global.css'
+  defaults:
+    _controller: '\Drupal\webform\Controller\WebformAssetsController::css'
+  requirements:
+    # Global CSS is available to all users.
+    _access: 'TRUE'
 
 # Forms
 
@@ -608,7 +615,7 @@ entity.webform_submission.duplicate_form:
     _title_callback: '\Drupal\webform\Controller\WebformSubmissionViewController::title'
     duplicate: TRUE
   requirements:
-    _entity_access: 'webform_submission.update_any'
+    _entity_access: 'webform_submission.update'
 
 entity.webform_submission.delete_form:
   path: '/admin/structure/webform/manage/{webform}/submission/{webform_submission}/delete'

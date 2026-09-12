@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_data\Plugin\views\style;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -27,18 +29,18 @@ class MappingTest extends Mapping {
   protected function defineMapping() {
     return [
       'title_field' => [
-        '#title' => $this->t('Title field'),
-        '#description' => $this->t('Choose the field with the custom title.'),
+        '#title' => 'Title field',
+        '#description' => 'Choose the field with the custom title.',
         '#toggle' => TRUE,
         '#required' => TRUE,
       ],
       'name_field' => [
-        '#title' => $this->t('Name field'),
-        '#description' => $this->t('Choose the field with the custom name.'),
+        '#title' => 'Name field',
+        '#description' => 'Choose the field with the custom name.',
       ],
       'numeric_field' => [
-        '#title' => $this->t('Numeric field'),
-        '#description' => $this->t('Select one or more numeric fields.'),
+        '#title' => 'Numeric field',
+        '#description' => 'Select one or more numeric fields.',
         '#multiple' => TRUE,
         '#toggle' => TRUE,
         '#filter' => 'filterNumericFields',

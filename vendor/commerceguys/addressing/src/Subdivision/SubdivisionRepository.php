@@ -101,8 +101,8 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
     {
         $countryCode = $parents[0];
         $addressFormat = $this->addressFormatRepository->get($countryCode);
-        $depth = $addressFormat->getSubdivisionDepth();
-        if ($depth === 0) {
+        $subdivisionDataFields = $addressFormat->getSubdivisionDataFields();
+        if (empty($subdivisionDataFields)) {
             return false;
         }
         // At least the first level has data.
@@ -119,9 +119,9 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
                 $hasData = !empty($definition['has_children']);
             } else {
                 // The parent definition wasn't loaded previously, fallback
-                // to guessing based on depth.
+                // to guessing based on the count of subdivision data fields.
                 $neededDepth = count($parents);
-                $hasData = ($neededDepth <= $depth);
+                $hasData = ($neededDepth <= count($subdivisionDataFields));
             }
         }
         return $hasData;
@@ -146,8 +146,8 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
         if ($this->hasData($parents)) {
             $filename = $this->definitionPath . $group . '.json';
             if ($rawDefinition = @file_get_contents($filename)) {
-                $this->definitions[$group] = json_decode($rawDefinition, true);
-                $this->definitions[$group] = $this->processDefinitions($this->definitions[$group]);
+                $definitions = json_decode($rawDefinition, true);
+                $this->definitions[$group] = $this->processDefinitions(is_array($definitions) ? $definitions : []);
             }
         }
 
@@ -165,6 +165,11 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
      */
     protected function processDefinitions(array $definitions): array
     {
+        // Malformed definitions are treated as if they didn't exist.
+        if (!isset($definitions['subdivisions']) || !is_array($definitions['subdivisions'])) {
+            return [];
+        }
+
         foreach ($definitions['subdivisions'] as $id => &$definition) {
             // Add common keys from the root level.
             $definition['country_code'] = $definitions['country_code'];
@@ -174,6 +179,11 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
             }
             if (!isset($definition['name'])) {
                 $definition['name'] = $id;
+            }
+            // The local_name value is only specified if it doesn't match
+            // the name one.
+            if (isset($definitions['locale']) && !isset($definition['local_name'])) {
+                $definition['local_name'] = $definition['name'];
             }
             // The code and local_code values are only specified if they
             // don't match the name and local_name ones.

@@ -1,0 +1,5 @@
+admin.restricted_editing:
+  version: 20251201
+  css:
+    theme:
+      css/restricted-editing.admin.css: { }

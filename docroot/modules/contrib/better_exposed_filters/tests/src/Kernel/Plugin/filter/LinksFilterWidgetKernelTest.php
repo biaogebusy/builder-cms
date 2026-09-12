@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\better_exposed_filters\Kernel\Plugin\filter;
 
+use Drupal\better_exposed_filters\Plugin\better_exposed_filters\filter\Links;
 use Drupal\Tests\better_exposed_filters\Kernel\BetterExposedFiltersKernelTestBase;
 use Drupal\views\Views;
 
 /**
- * Tests the links filter widget (i.e. "bef_links").
+ * Tests the Links filter widget.
  *
  * @group better_exposed_filters
  *
@@ -20,17 +23,46 @@ class LinksFilterWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
   public static $testViews = ['bef_test'];
 
   /**
-   * Tests the exposed links filter widget.
+   * Tests that the Links widget applies to option-based filters.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function testExposedLinks() {
+  public function testIsApplicableToOptionFilter(): void {
+    $view = Views::getView('bef_test');
+    $view->initDisplay();
+    $view->initHandlers();
+
+    $this->assertTrue(
+      Links::isApplicable($view->filter['field_bef_integer_value']),
+    );
+  }
+
+  /**
+   * Tests that the Links widget does not apply to numeric filters.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function testIsNotApplicableToNumericFilter(): void {
+    $view = Views::getView('bef_test');
+    $view->initDisplay();
+    $view->initHandlers();
+
+    $this->assertFalse(
+      Links::isApplicable($view->filter['field_bef_price_value']),
+    );
+  }
+
+  /**
+   * Tests the exposed links filter widget.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function testExposedLinks(): void {
     $view = Views::getView('bef_test');
     $display = &$view->storage->getDisplay('default');
 
-    // Ensure our filter "term_node_tid_depth" has show hierarchy enabled.
     $display['display_options']['filters']['term_node_tid_depth']['hierarchy'] = TRUE;
 
-    // Change exposed filter "field_bef_integer" and "term_node_tid_depth" to
-    // links (i.e. 'bef_links').
     $this->setBetterExposedOptions($view, [
       'filter' => [
         'field_bef_integer_value' => [
@@ -42,25 +74,24 @@ class LinksFilterWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
       ],
     ]);
 
-    // Render the exposed form.
     $this->renderExposedForm($view);
 
-    // Check our "FIELD_BEF_INTEGER" filter is rendered as links.
-    $actual = $this->xpath('//form//a[starts-with(@name, "field_bef_integer_value")]');
-    $this->assertCount(6, $actual, 'Exposed filter "FIELD_BEF_INTEGER" has correct number of exposed links.');
+    // Check "FIELD_BEF_INTEGER" filter is rendered as links.
+    $actual = $this->xpath('//form//div[contains(@id, "field-bef-integer-value")]//a[@data-bef-value]');
+    $this->assertCount(7, $actual);
 
-    // Check our "TERM_NODE_TID_DEPTH" filter is rendered as nested links.
+    // Check "TERM_NODE_TID_DEPTH" filter is rendered as nested links.
     $actual = $this->xpath("//form//div[contains(concat(' ',normalize-space(@class),' '),' bef-nested ')]");
-    $this->assertCount(1, $actual, 'Exposed filter "TERM_NODE_TID_DEPTH" has bef-nested class');
+    $this->assertCount(1, $actual);
 
-    $actual = $this->xpath('//form//div[@id="edit-term-node-tid-depth--2"]/ul/li/a[starts-with(@name, "term_node_tid_depth")]');
-    $this->assertCount(4, $actual, 'Exposed filter "TERM_NODE_TID_DEPTH" has correct number of exposed top-level links.');
+    $actual = $this->xpath('//form//div[@id="edit-term-node-tid-depth--2"]/ul/li/a[@data-bef-value]');
+    $this->assertCount(4, $actual);
 
-    $actual = $this->xpath('//form//div[@id="edit-term-node-tid-depth--2"]/ul/li/ul/li/a[starts-with(@name, "term_node_tid_depth")]');
-    $this->assertCount(5, $actual, 'Exposed filter "TERM_NODE_TID_DEPTH" has correct number of exposed second-level links.');
+    $actual = $this->xpath('//form//div[@id="edit-term-node-tid-depth--2"]/ul/li/ul/li/a[@data-bef-value]');
+    $this->assertCount(5, $actual);
 
-    $actual = $this->xpath('//form//div[@id="edit-term-node-tid-depth--2"]/ul/li/ul/li/ul/li/a[starts-with(@name, "term_node_tid_depth")]');
-    $this->assertCount(14, $actual, 'Exposed filter "TERM_NODE_TID_DEPTH" has correct number of exposed third-level links.');
+    $actual = $this->xpath('//form//div[@id="edit-term-node-tid-depth--2"]/ul/li/ul/li/ul/li/a[@data-bef-value]');
+    $this->assertCount(14, $actual);
 
     $view->destroy();
   }

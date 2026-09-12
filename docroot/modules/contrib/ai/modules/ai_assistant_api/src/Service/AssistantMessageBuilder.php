@@ -4,7 +4,7 @@ namespace Drupal\ai_assistant_api\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\TitleResolverInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -51,7 +51,7 @@ class AssistantMessageBuilder {
   /**
    * Constructs a new AssistantMessageBuilder object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\ai_assistant_api\AiAssistantActionPluginManager $actions
    *   The actions service.
@@ -73,7 +73,7 @@ class AssistantMessageBuilder {
    *   The module handler.
    */
   public function __construct(
-    protected EntityTypeManager $entityTypeManager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected AiAssistantActionPluginManager $actions,
     protected EventDispatcherInterface $eventDispatcher,
     protected AccountProxyInterface $currentUser,

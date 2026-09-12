@@ -193,7 +193,7 @@
   --gin-color-title: #fff;
   --gin-color-text: #d2d3d3;
   --gin-color-text-light: #9e9fa0;
-  --gin-shadow-button: rgba(#111, .9);
+  --gin-shadow-button: #00000000;
   --gin-color-button-text: #111;
   --gin-color-focus: rgb(81, 168, 255);
   --gin-color-focus-border: rgba(0, 0, 0, .8);

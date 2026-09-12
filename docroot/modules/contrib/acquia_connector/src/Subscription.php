@@ -123,15 +123,7 @@ class Subscription {
    */
   public function populateSettings() {
     $event = new AcquiaSubscriptionSettingsEvent($this->configFactory);
-
-    // @todo Remove after dropping support for Drupal 8.
-    if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
-      $this->dispatcher->dispatch($event, AcquiaConnectorEvents::GET_SETTINGS);
-    }
-    else {
-      // @phpstan-ignore-next-line
-      $this->dispatcher->dispatch(AcquiaConnectorEvents::GET_SETTINGS, $event);
-    }
+    $this->dispatcher->dispatch($event, AcquiaConnectorEvents::GET_SETTINGS);
 
     $this->settings = $event->getSettings();
     $this->settingsProvider = $event->getProvider();
@@ -218,14 +210,8 @@ class Subscription {
     }
     // Allow other modules to add metadata to the subscription.
     $event = new AcquiaSubscriptionDataEvent($this->configFactory, $subscriptionData);
-    // @todo Remove after dropping support for Drupal 8.
-    if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
-      $this->dispatcher->dispatch($event, AcquiaConnectorEvents::GET_SUBSCRIPTION);
-    }
-    else {
-      // @phpstan-ignore-next-line
-      $this->dispatcher->dispatch(AcquiaConnectorEvents::GET_SUBSCRIPTION, $event);
-    }
+    $this->dispatcher->dispatch($event, AcquiaConnectorEvents::GET_SUBSCRIPTION);
+
     // Get data from subscription event.
     $this->subscriptionData = $event->getData();
 

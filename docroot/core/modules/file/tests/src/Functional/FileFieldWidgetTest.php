@@ -10,17 +10,19 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
-use Drupal\user\RoleInterface;
 use Drupal\file\Entity\File;
+use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\user\Entity\User;
+use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the file field widget with public and private files.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileFieldWidgetTest extends FileFieldTestBase {
 
   use CommentTestTrait;
@@ -160,7 +162,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
       $remaining = 3;
       // Test clicking each "Remove" button. For extra robustness, test them out
       // of sequential order. They are 0-indexed, and get renumbered after each
-      // iteration, so array(1, 1, 0) means:
+      // iteration, so [1, 1, 0] means:
       // - First remove the 2nd file.
       // - Then remove what is then the 2nd file (was originally the 3rd file).
       // - Then remove the first file.
@@ -320,7 +322,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     $text_file = $this->getTestFile('text');
     $edit = [
       'files[field_' . $name . '_' . 0 . ']' => \Drupal::service('file_system')->realpath($text_file->getFileUri()),
-      'comment_body[0][value]' => $comment_body = $this->randomMachineName(),
+      'comment_body[0][value]' => $this->randomMachineName(),
     ];
     $this->drupalGet('node/' . $node->id());
     $this->submitForm($edit, 'Save');
@@ -367,7 +369,6 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     $this->createFileField($field_name, 'node', $type_name);
     $this->updateFileField($field_name, $type_name, ['file_extensions' => 'txt']);
 
-    $type = 'nojs';
     // Create node and prepare files for upload.
     $node = $this->drupalCreateNode(['type' => 'article']);
     $nid = $node->id();
@@ -480,7 +481,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     $type_name = 'article';
     $field_name = $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
-    /** @var \Drupal\Field\FieldConfigInterface $field */
+    /** @var \Drupal\field\FieldConfigInterface $field */
     $field = FieldConfig::loadByName('node', $type_name, $field_name);
     $field_id = $field->id();
     $this->drupalGet("admin/structure/types/manage/$type_name/fields/$field_id");
@@ -491,7 +492,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     $this->assertSession()->pageTextContains('Saved ' . $field_name . ' configuration.');
 
     // Reload the field config to check for the saved value.
-    /** @var \Drupal\Field\FieldConfigInterface $field */
+    /** @var \Drupal\field\FieldConfigInterface $field */
     $field = FieldConfig::loadByName('node', $type_name, $field_name);
     $settings = $field->getSettings();
     $this->assertEquals('5.1 megabytes', $settings['max_filesize'], 'The max filesize value had been trimmed on save.');
@@ -559,7 +560,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
    * @param \Drupal\user\UserInterface $attacker_user
    *   The attacker user.
    */
-  protected function doTestTemporaryFileRemovalExploit(UserInterface $victim_user, UserInterface $attacker_user) {
+  protected function doTestTemporaryFileRemovalExploit(UserInterface $victim_user, UserInterface $attacker_user): void {
     $type_name = 'article';
     $field_name = 'test_file_field';
     $this->createFileField($field_name, 'node', $type_name);
@@ -583,7 +584,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
 
     // Attach a file to a node.
     $edit['files[' . $field_name . '_0]'] = $this->container->get('file_system')->realpath($test_file->getFileUri());
-    $this->drupalGet(Url::fromRoute('node.add', ['node_type' => $type_name]));
+    $this->drupalGet(Url::fromRoute('entity.node.add_form', ['node_type' => $type_name]));
     $this->submitForm($edit, 'Save');
     $node = $this->drupalGetNodeByTitle($edit['title[0][value]']);
 

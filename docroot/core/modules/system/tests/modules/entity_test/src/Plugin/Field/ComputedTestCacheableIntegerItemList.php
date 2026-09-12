@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test\Plugin\Field;
 
 use Drupal\Core\Cache\CacheableDependencyInterface;
@@ -26,7 +28,7 @@ class ComputedTestCacheableIntegerItemList extends FieldItemList implements Cach
     $value = \Drupal::state()->get('entity_test_computed_integer_value', 0);
     $item = $this->createItem(0, $value);
     $cacheability = (new CacheableMetadata())
-      ->setCacheContexts(['url.query_args:computed_test_cacheable_integer_field'])
+      ->setCacheContexts(['headers:X-computed_test_cacheable_integer_field=1'])
       ->setCacheTags(['field:computed_test_cacheable_integer_field'])
       ->setCacheMaxAge(31536000);
     $this->setCacheability($cacheability);

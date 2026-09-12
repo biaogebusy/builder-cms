@@ -4,61 +4,28 @@ namespace Drupal\Core\Asset;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
 use Drupal\Core\File\FileUrlGeneratorInterface;
-use Drupal\Core\State\StateInterface;
 
 /**
  * Renders JavaScript assets.
  */
 class JsCollectionRenderer implements AssetCollectionRendererInterface {
 
-  use DeprecatedServicePropertyTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected array $deprecatedProperties = ['state' => 'state'];
-
-  /**
-   * The asset query string.
-   *
-   * @var \Drupal\Core\Asset\AssetQueryStringInterface
-   */
-  protected AssetQueryStringInterface $assetQueryString;
-
-  /**
-   * The file URL generator.
-   *
-   * @var \Drupal\Core\File\FileUrlGeneratorInterface
-   */
-  protected $fileUrlGenerator;
-
   /**
    * Constructs a JsCollectionRenderer.
    *
-   * @param \Drupal\Core\State\StateInterface|\Drupal\Core\Asset\AssetQueryStringInterface $asset_query_string
+   * @param \Drupal\Core\Asset\AssetQueryStringInterface $assetQueryString
    *   The asset query string.
-   * @param \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator
+   * @param \Drupal\Core\File\FileUrlGeneratorInterface $fileUrlGenerator
    *   The file URL generator.
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
   public function __construct(
-    AssetQueryStringInterface|StateInterface $asset_query_string,
-    FileUrlGeneratorInterface $file_url_generator,
-    protected ?TimeInterface $time = NULL,
+    protected AssetQueryStringInterface $assetQueryString,
+    protected FileUrlGeneratorInterface $fileUrlGenerator,
+    protected TimeInterface $time,
   ) {
-    if ($asset_query_string instanceof StateInterface) {
-      @trigger_error('Calling ' . __METHOD__ . '() with the $asset_query_string argument as \Drupal\Core\State\StateInterface instead of \Drupal\Core\Asset\AssetQueryStringInterface is deprecated in drupal:10.2.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3358337', E_USER_DEPRECATED);
-      $asset_query_string = \Drupal::service('asset.query_string');
-    }
-    $this->assetQueryString = $asset_query_string;
-    $this->fileUrlGenerator = $file_url_generator;
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
   }
 
   /**
@@ -72,13 +39,6 @@ class JsCollectionRenderer implements AssetCollectionRendererInterface {
    */
   public function render(array $js_assets) {
     $elements = [];
-
-    // A dummy query-string is added to filenames, to gain control over
-    // browser-caching. The string changes on every update or full cache
-    // flush, forcing browsers to load a new copy of the files, as the
-    // URL changed. Files that should not be cached get the request time as a
-    // query-string instead, to enforce reload on every page request.
-    $default_query_string = $this->assetQueryString->get();
 
     // Defaults for each SCRIPT element.
     $element_defaults = [
@@ -104,12 +64,14 @@ class JsCollectionRenderer implements AssetCollectionRendererInterface {
           break;
 
         case 'file':
-          $query_string = $js_asset['version'] == -1 ? $default_query_string : 'v=' . $js_asset['version'];
-          $query_string_separator = str_contains($js_asset['data'], '?') ? '&' : '?';
           $element['#attributes']['src'] = $this->fileUrlGenerator->generateString($js_asset['data']);
-          // Only add the cache-busting query string if this isn't an aggregate
-          // file.
           if (!isset($js_asset['preprocessed'])) {
+            // For unaggregated assets, add a either the library version or a
+            // default query string to force edge/browser cache invalidation.
+            // This query string is updated after each full cache clear or when
+            // the library version changes.
+            $query_string = $js_asset['version'] == -1 ? $this->assetQueryString->get() : 'v=' . $js_asset['version'];
+            $query_string_separator = str_contains($js_asset['data'], '?') ? '&' : '?';
             $element['#attributes']['src'] .= $query_string_separator . ($js_asset['cache'] ? $query_string : $this->time->getRequestTime());
           }
           break;

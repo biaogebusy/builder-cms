@@ -3,6 +3,7 @@
 namespace Drupal\video_embed_field\Plugin\video_embed_field\Provider;
 
 use Drupal\Core\Url;
+use Drupal\video_embed_field\Plugin\Field\FieldFormatter\Video;
 use Drupal\video_embed_field\ProviderPluginBase;
 
 /**
@@ -18,27 +19,28 @@ class YouTube extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE) {
+  public function renderEmbed(array $options) {
     $embed_code = [
       '#type' => 'video_embed_iframe',
       '#provider' => 'youtube',
       '#url' => sprintf('https://www.youtube.com/embed/%s', $this->getVideoId()),
       '#query' => [
-        'autoplay' => $autoplay,
+        'autoplay' => $options['autoplay'],
         'start' => $this->getTimeIndex(),
         'rel' => '0',
         // Video needs to be muted if autoplay is set.
-        'mute' => $autoplay,
+        'mute' => $options['autoplay'],
       ],
       '#attributes' => [
-        'width' => $width,
-        'height' => $height,
+        'width' => $options['width'],
+        'height' => $options['height'],
         'frameborder' => '0',
         'allowfullscreen' => 'allowfullscreen',
         'referrerpolicy' => 'strict-origin-when-cross-origin',
+        'loading' => $options['loading'],
       ],
     ];
-    $title = $this->getName($title_format, $use_title_fallback);
+    $title = $this->getName($options['title_format'], $options['use_title_fallback']);
     if (isset($title)) {
       $embed_code['#attributes']['title'] = $title;
     }
@@ -46,6 +48,21 @@ class YouTube extends ProviderPluginBase {
       $embed_code['#query']['cc_lang_pref'] = $language;
     }
     return $embed_code;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE) {
+    @trigger_error('Calling renderEmbedCode() is deprecated in video_embed_field:3.1.0 and is removed from video_embed_field:3.2.0. Use \Drupal\video_embed_field\ProviderPluginInterface::renderEmbed() instead. See https://www.drupal.org/project/video_embed_field/issues/3580405', E_USER_DEPRECATED);
+    return $this->renderEmbed([
+      'width' => $width,
+      'height' => $height,
+      'autoplay' => $autoplay,
+      'title_format' => $title_format,
+      'use_title_fallback' => $use_title_fallback,
+      'loading' => Video::defaultSettings()['loading'],
+    ]);
   }
 
   /**

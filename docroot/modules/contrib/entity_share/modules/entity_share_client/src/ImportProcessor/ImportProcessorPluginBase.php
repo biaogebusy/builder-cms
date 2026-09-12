@@ -32,19 +32,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * A complete plugin definition should be written as in this example:
  *
  * @code
- *
- * @ImportProcessor(
- *   id = "my_processor",
- *   label = @Translation("My Processor"),
- *   description = @Translation("Does … something."),
- *   stages = {
- *     "prepare_entity_data" = 0,
- *     "is_entity_importable" = 0,
- *     "prepare_importable_entity_data" = 0,
- *     "process_entity" = 0,
- *     "post_entity_save" = 0,
- *   },
- *   locked = false,
+ * #[ImportProcessor(
+ *   id: 'my_processor',
+ *   label: new TranslatableMarkup('My Processor'),
+ *   description: new TranslatableMarkup('Does … something.'),
+ *   stages: [
+ *     'prepare_entity_data' => 0,
+ *     'is_entity_importable' => 0,
+ *     'prepare_importable_entity_data' => 0,
+ *     'process_entity' => 0,
+ *     'post_entity_save' => 0,
+ *   ],
+ *   locked: FALSE,
  * )
  *
  * @endcode

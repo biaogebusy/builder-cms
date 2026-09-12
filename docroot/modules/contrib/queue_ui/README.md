@@ -30,6 +30,7 @@ Submit bug reports and feature suggestions, or track changes in the
 - Requirements
 - Installation
 - Configuration
+- Custom Queue Backends
 - Maintainers
 
 
@@ -48,6 +49,34 @@ information, see
 ## Configuration
 
 There are no configuration provided.
+
+
+## Custom Queue Backends
+
+Queue UI uses a plugin system to support different queue backends. By default, it
+supports the core `DatabaseQueue`.
+
+To support a custom queue backend (e.g., Redis, SQS), you need to implement a
+`QueueUI` plugin in your module.
+
+1. Create a plugin class in `src/Plugin/QueueUI/YourQueueBackend.php`.
+2. Use the `@QueueUI` annotation.
+3. The `class_name` property in the annotation must match either the short class
+   name or the full class name of your `QueueInterface` implementation.
+
+Example:
+
+```php
+/**
+ * @QueueUI(
+ *   id = "my_custom_queue",
+ *   class_name = "\Drupal\my_module\Queue\MyCustomQueue"
+ * )
+ */
+class MyCustomQueue extends QueueUIBase {
+  // Implement required methods from QueueUIInterface.
+}
+```
 
 
 ## Maintainers

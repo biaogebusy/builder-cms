@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\search\Functional;
 
+use Drupal\filter\FilterFormatRepositoryInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests searching with date filters that exclude some translations.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchDateIntervalTest extends BrowserTestBase {
 
   /**
@@ -22,6 +25,7 @@ class SearchDateIntervalTest extends BrowserTestBase {
     'search_date_query_alter',
     'node',
     'search',
+    'search_node',
   ];
 
   /**
@@ -57,7 +61,7 @@ class SearchDateIntervalTest extends BrowserTestBase {
     // search_date_query_alter test module.
     $created_time_en = new \DateTime('February 10 2016 10PM');
     $created_time_es = new \DateTime('March 19 2016 10PM');
-    $default_format = filter_default_format();
+    $default_format = \Drupal::service(FilterFormatRepositoryInterface::class)->getDefaultFormat()->id();
 
     $node = $this->drupalCreateNode([
       'title' => 'Node EN',

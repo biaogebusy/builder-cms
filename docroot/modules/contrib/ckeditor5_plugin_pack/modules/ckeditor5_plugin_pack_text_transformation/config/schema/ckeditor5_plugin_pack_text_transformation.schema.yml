@@ -1,0 +1,40 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_text_transformation__text_transformation:
+  type: mapping
+  label: 'Text Transformation'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+    extra_transformations:
+      type: string
+      label: 'Extra transformations'
+    extra_regex_transformations:
+      type: sequence
+      label: 'Extra transformations regex'
+      sequence:
+        type: mapping
+        mapping:
+          from:
+            type: string
+            label: "Regex pattern"
+          to:
+            type: string
+            label: "Regex replace"
+    groups:
+      type: sequence
+      label: 'Transformations groups'
+      sequence:
+        type: mapping
+        mapping:
+          transformations:
+            type: sequence
+            label: 'Transformation'
+            sequence:
+              type: mapping
+              mapping:
+                enabled:
+                  type: integer
+          enabled:
+            type: integer
+            label: 'Enabled'
+

@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Core\Recipe;
 
-use Drupal\shortcut\Entity\Shortcut;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Tests\standard\Functional\StandardTest;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Standard recipe installation expectations.
- *
- * @group #slow
- * @group Recipe
  */
+#[Group('#slow')]
+#[Group('Recipe')]
+#[RunTestsInSeparateProcesses]
 class StandardRecipeTest extends StandardTest {
 
   use RecipeTestTrait;
@@ -35,8 +37,13 @@ class StandardRecipeTest extends StandardTest {
     $theme_installer->uninstall(['claro', 'olivero']);
 
     // Determine which modules to uninstall.
-    $uninstall = array_diff(array_keys(\Drupal::moduleHandler()->getModuleList()), ['user', 'system', 'path_alias', \Drupal::database()->getProvider()]);
-    foreach (['shortcut', 'field_config', 'filter_format', 'field_storage_config'] as $entity_type) {
+    // If the database module has dependencies, they are expected too.
+    $database_module_extension = \Drupal::service(ModuleExtensionList::class)->get(\Drupal::database()->getProvider());
+    $database_modules = $database_module_extension->requires ? array_keys($database_module_extension->requires) : [];
+    $database_modules[] = \Drupal::database()->getProvider();
+    $keep = array_merge(['user', 'system', 'path_alias'], $database_modules);
+    $uninstall = array_diff(array_keys(\Drupal::moduleHandler()->getModuleList()), $keep);
+    foreach (['field_config', 'filter_format', 'field_storage_config'] as $entity_type) {
       $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
       $storage->delete($storage->loadMultiple());
     }
@@ -115,16 +122,39 @@ class StandardRecipeTest extends StandardTest {
 
     // Ensure we have truly rebuilt the standard profile using recipes.
     // Uncomment the code below to see the differences in a single file.
+    // phpcs:ignore Drupal.Commenting.InlineComment.InvalidEndChar, Drupal.Files.LineLength
     // $this->assertSame($sync->read('node.settings'), $active->read('node.settings'));
     $comparer = $this->configImporter()->getStorageComparer();
     $expected_list = $comparer->getEmptyChangelist();
+    $expected_list['create'] = [
+      'image.style.wide',
+      'core.entity_view_mode.node.teaser',
+      'core.entity_view_mode.node.rss',
+      'core.entity_view_mode.node.full',
+      'system.action.node_delete_action',
+      'system.action.node_make_sticky_action',
+      'system.action.node_make_unsticky_action',
+      'system.action.node_promote_action',
+      'system.action.node_publish_action',
+      'system.action.node_save_action',
+      'system.action.node_unpromote_action',
+      'system.action.node_unpublish_action',
+      'system.action.taxonomy_term_unpublish_action',
+      'system.action.taxonomy_term_publish_action',
+      'core.entity_view_mode.taxonomy_term.full',
+      'taxonomy.settings',
+      'taxonomy.vocabulary.tags',
+      'views.view.taxonomy_term',
+    ];
     // We expect core.extension to be different because standard is no longer
     // installed.
-    $expected_list['update'] = ['core.extension'];
+    $expected_list['update'] = [
+      'core.extension',
+      'user.role.content_editor',
+      'views.view.archive',
+      'views.view.frontpage',
+    ];
     $this->assertSame($expected_list, $comparer->getChangelist());
-
-    // Standard ships two shortcuts; ensure they exist.
-    $this->assertCount(2, Shortcut::loadMultiple());
 
     parent::testStandard();
   }

@@ -2,14 +2,25 @@
 
 namespace Drupal\Core\Updater;
 
-use Drupal\Core\Url;
-
 /**
  * Defines a class for updating themes.
  *
  * Uses Drupal\Core\FileTransfer\FileTransfer classes via authorize.php.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3512364
  */
 class Theme extends Updater implements UpdaterInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($source, $root) {
+    @trigger_error('The ' . __NAMESPACE__ . '\Theme class is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+    parent::__construct($source, $root);
+  }
 
   /**
    * Returns the directory where a theme should be installed.
@@ -72,45 +83,10 @@ class Theme extends Updater implements UpdaterInterface {
    *   The project to check.
    *
    * @return bool
+   *   TRUE if the the project can be updated, FALSE otherwise.
    */
   public static function canUpdate($project_name) {
     return (bool) \Drupal::service('extension.list.theme')->getPath($project_name);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postInstall() {
-    // Update the theme info.
-    clearstatcache();
-    \Drupal::service('extension.list.theme')->reset();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postInstallTasks() {
-    // Since this is being called outside of the primary front controller,
-    // the base_url needs to be set explicitly to ensure that links are
-    // relative to the site root.
-    // @todo Simplify with https://www.drupal.org/node/2548095
-    $default_options = [
-      '#type' => 'link',
-      '#options' => [
-        'absolute' => TRUE,
-        'base_url' => $GLOBALS['base_url'],
-      ],
-    ];
-    return [
-      $default_options + [
-        '#url' => Url::fromRoute('system.themes_page'),
-        '#title' => t('Install newly added themes'),
-      ],
-      $default_options + [
-        '#url' => Url::fromRoute('system.admin'),
-        '#title' => t('Administration pages'),
-      ],
-    ];
   }
 
 }

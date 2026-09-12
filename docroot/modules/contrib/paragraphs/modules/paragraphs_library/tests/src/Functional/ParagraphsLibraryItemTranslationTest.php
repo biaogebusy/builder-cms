@@ -10,12 +10,16 @@ use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\paragraphs\FunctionalJavascript\LoginAdminTrait;
 use Drupal\Tests\paragraphs\FunctionalJavascript\ParagraphsTestBaseTrait;
 use Drupal\Tests\paragraphs\Traits\ParagraphsCoreVersionUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the multilingual functionality of the Paragraphs Library.
  *
  * @group paragraphs_library
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs_library')]
 class ParagraphsLibraryItemTranslationTest extends BrowserTestBase {
 
   use ParagraphsTestBaseTrait;

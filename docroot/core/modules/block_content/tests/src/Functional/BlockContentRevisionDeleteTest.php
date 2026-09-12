@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\block_content\Functional;
 
+use Drupal\Core\Entity\Form\RevisionDeleteForm;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Block content revision delete form test.
- *
- * @group block_content
- * @coversDefaultClass \Drupal\Core\Entity\Form\RevisionDeleteForm
  */
+#[CoversClass(RevisionDeleteForm::class)]
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentRevisionDeleteTest extends BlockContentTestBase {
 
   /**
@@ -70,7 +75,7 @@ class BlockContentRevisionDeleteTest extends BlockContentTestBase {
     $revision2 = \Drupal::entityTypeManager()->getStorage('block_content')
       ->loadRevision($nonDefaultRevisionId);
     $this->drupalGet($revision2->toUrl('revision-delete-form'));
-    $this->assertSession()->pageTextContains('Are you sure you want to delete the revision from Sun, 01/11/2009 - 17:00?');
+    $this->assertSession()->pageTextContains('Are you sure you want to delete the revision from Sun, 11 Jan 2009 - 17:00?');
     $this->assertSession()->buttonExists('Delete');
     $this->assertSession()->linkExists('Cancel');
     $this->assertTrue($revision2->access('delete revision', $this->adminUser, FALSE));
@@ -89,7 +94,7 @@ class BlockContentRevisionDeleteTest extends BlockContentTestBase {
     $this->assertEquals($count - 1, $countRevisions());
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->addressEquals(sprintf('admin/content/block/%s/revisions', $entity->id()));
-    $this->assertSession()->pageTextContains(sprintf('Revision from Sun, 01/11/2009 - 17:00 of basic %s has been deleted.', $entity->label()));
+    $this->assertSession()->pageTextContains(sprintf('Revision from Sun, 11 Jan 2009 - 17:00 of basic %s has been deleted.', $entity->label()));
     $this->assertSession()->elementsCount('css', 'table tbody tr', 1);
   }
 

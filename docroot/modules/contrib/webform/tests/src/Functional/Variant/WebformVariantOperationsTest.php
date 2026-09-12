@@ -23,7 +23,7 @@ class WebformVariantOperationsTest extends WebformBrowserTestBase {
   /**
    * Test variant operation.
    */
-  public function testVariantOperations() {
+  public function testVariantOperations(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_variant_multiple');

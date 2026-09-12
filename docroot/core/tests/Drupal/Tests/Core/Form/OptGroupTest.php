@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Form;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Form\OptGroup;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Form\OptGroup
- * @group Form
+ * Tests Drupal\Core\Form\OptGroup.
  */
+#[CoversClass(OptGroup::class)]
+#[Group('Form')]
 class OptGroupTest extends UnitTestCase {
 
   /**
    * Tests the flattenOptions() method.
-   *
-   * @dataProvider providerTestFlattenOptions
    */
+  #[DataProvider('providerTestFlattenOptions')]
   public function testFlattenOptions($options): void {
     $this->assertSame(['foo' => 'foo'], OptGroup::flattenOptions($options));
   }
@@ -26,8 +29,9 @@ class OptGroupTest extends UnitTestCase {
    * Provides test data for the flattenOptions() method.
    *
    * @return array
+   *   An array of option structures to be flattened.
    */
-  public static function providerTestFlattenOptions() {
+  public static function providerTestFlattenOptions(): array {
     $object1 = new \stdClass();
     $object1->option = ['foo' => 'foo'];
     $object2 = new \stdClass();

@@ -6,6 +6,30 @@
  */
 
 /**
+ * Implements hook_requirements().
+ */
+function webform_bootstrap_requirements() {
+  $bootstrap_enabled = FALSE;
+  $themes = \Drupal::service('theme_handler')->listInfo();
+  foreach ($themes as $theme_name => $theme) {
+    if ($theme_name === 'bootstrap' && str_starts_with($theme->info['version'], '8.x-3')) {
+      $bootstrap_enabled = TRUE;
+    }
+  }
+
+  $requirements = [];
+  if (!$bootstrap_enabled) {
+    $requirements['webform_bootstrap'] = [
+      'title' => t('Webform Bootstrap'),
+      'value' => t('Bootstrap 3.x missing.'),
+      'description' => t('Bootstrap 3.x. must be enabled to install the Webform Bootstrap module.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+  return $requirements;
+}
+
+/**
  * Implements hook_install().
  */
 function webform_bootstrap_install() {

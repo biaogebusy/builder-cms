@@ -1,14 +1,14 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Defines the phone number verification entity.
@@ -112,27 +112,27 @@ class PhoneNumberVerification extends ContentEntityBase implements PhoneNumberVe
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields['id'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Phone verification ID'))
-      ->setDescription(t('The phone verification ID.'))
+      ->setLabel(\t('Phone verification ID'))
+      ->setDescription(\t('The phone verification ID.'))
       ->setReadOnly(TRUE)
       ->setSetting('unsigned', TRUE);
 
     $fields['entity'] = BaseFieldDefinition::create('dynamic_entity_reference')
-      ->setLabel(t('Entity'))
-      ->setDescription(t('The entity for this verification code.'))
+      ->setLabel(\t('Entity'))
+      ->setDescription(\t('The entity for this verification code.'))
       ->setRequired(TRUE)
       ->setReadOnly(TRUE);
 
     // Bundle field is required for statistics and bulk cleanup.
     $fields['bundle'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Bundle'))
-      ->setDescription(t('The bundle of the entity.'))
+      ->setLabel(\t('Bundle'))
+      ->setDescription(\t('The bundle of the entity.'))
       ->setRequired(TRUE)
       ->setReadOnly(TRUE);
 
     $fields['phone'] = BaseFieldDefinition::create('telephone')
-      ->setLabel(t('Phone'))
-      ->setDescription(t('Phone number.'))
+      ->setLabel(\t('Phone'))
+      ->setDescription(\t('Phone number.'))
       ->setDefaultValue('')
       ->setCardinality(1)
       ->setDisplayOptions('form', [
@@ -140,18 +140,18 @@ class PhoneNumberVerification extends ContentEntityBase implements PhoneNumberVe
       ]);
 
     $fields['code'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Verification code'))
-      ->setDescription(t('The generated verification code.'))
+      ->setLabel(\t('Verification code'))
+      ->setDescription(\t('The generated verification code.'))
       ->setRequired(TRUE)
       ->setDefaultValue('');
 
     $fields['created'] = BaseFieldDefinition::create('created')
-      ->setLabel(t('Created on'))
-      ->setDescription(t('The time that the verification code was created.'));
+      ->setLabel(\t('Created on'))
+      ->setDescription(\t('The time that the verification code was created.'));
 
     $fields['status'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Status'))
-      ->setDescription(t('Verification status. 0=not verified, 1=verified.'))
+      ->setLabel(\t('Status'))
+      ->setDescription(\t('Verification status. 0=not verified, 1=verified.'))
       ->setDefaultValue(FALSE)
       ->setRequired(TRUE);
 

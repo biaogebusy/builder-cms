@@ -8,6 +8,8 @@ use GuzzleHttp\Client;
 
 /**
  * Provides extra utilities to work with core Media.
+ *
+ * @todo add return and parameter types at 4.x.
  */
 interface BlazyMediaInterface {
 

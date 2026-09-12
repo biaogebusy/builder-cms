@@ -155,4 +155,22 @@ interface OrderTypeInterface extends CommerceBundleEntityInterface {
    */
   public function setReceiptSubject(string $receipt_subject);
 
+  /**
+   * Gets whether to show order edit form links.
+   *
+   * @return bool
+   *   Whether to show order edit form links.
+   */
+  public function shouldShowOrderEditLinks(): bool;
+
+  /**
+   * Sets whether to show order edit form links.
+   *
+   * @param bool $show_order_edit_links
+   *   TRUE to show order edit form links, FALSE otherwise.
+   *
+   * @return $this
+   */
+  public function setShowOrderEditLinks(bool $show_order_edit_links): static;
+
 }

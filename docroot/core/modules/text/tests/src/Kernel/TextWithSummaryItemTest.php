@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\text\Kernel;
 
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
+use Drupal\Tests\field\Kernel\FieldKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests using entity fields of the text summary field type.
- *
- * @group text
  */
+#[Group('text')]
+#[RunTestsInSeparateProcesses]
 class TextWithSummaryItemTest extends FieldKernelTestBase {
 
   /**
@@ -101,7 +103,7 @@ class TextWithSummaryItemTest extends FieldKernelTestBase {
    * @param string $entity_type
    *   Entity type for which the field should be created.
    */
-  protected function createField($entity_type) {
+  protected function createField($entity_type): void {
     // Create a field .
     $this->fieldStorage = FieldStorageConfig::create([
       'field_name' => 'summary_field',

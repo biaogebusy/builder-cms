@@ -82,6 +82,7 @@ class WebformAccessGroupForm extends EntityForm {
     switch ($this->operation) {
       case 'duplicate':
         $form['#title'] = $this->t("Duplicate '@label' access group", ['@label' => $webform_access_group->label()]);
+        $form['#attached']['library'][] = 'webform/webform.admin.machine-name';
         break;
 
       case 'edit':
@@ -292,8 +293,8 @@ class WebformAccessGroupForm extends EntityForm {
       '#type' => 'webform_entity_select',
       '#title' => $this->t('Administrators'),
       '#description' => $this->t('Administrators will be able to add and remove users and custom email addresses from this group.') .
-        '<br/><br/>' .
-        "<em>Please note: Administrators are not automatically assigned access to this group's webforms and will not receive any emails. If administrators should also be able access this access group's webforms or receive emails, you must explicitly add the administrator as a user or email address to this access group.</em>",
+      '<br/><br/>' .
+      "<em>Please note: Administrators are not automatically assigned access to this group's webforms and will not receive any emails. If administrators should also be able access this access group's webforms or receive emails, you must explicitly add the administrator as a user or email address to this access group.</em>",
       '#target_type' => 'user',
       '#multiple' => TRUE,
       '#selection_handler' => 'default:user',
@@ -343,7 +344,7 @@ class WebformAccessGroupForm extends EntityForm {
     $webform_access_group->setUserIds($form_state->getValue('users'));
     $webform_access_group->setEntityIds($form_state->getValue('entities'));
     $webform_access_group->setEmails($form_state->getValue('emails'));
-    $webform_access_group->save();
+    $status = $webform_access_group->save();
 
     // Log and display message.
     $context = [
@@ -355,6 +356,8 @@ class WebformAccessGroupForm extends EntityForm {
 
     // Redirect to list.
     $form_state->setRedirect('entity.webform_access_group.collection');
+
+    return $status;
   }
 
   /**
@@ -371,7 +374,7 @@ class WebformAccessGroupForm extends EntityForm {
 
     $table_names = $this->webformEntityReferenceManager->getTableNames();
     foreach ($table_names as $table_name => $field_name) {
-      if (strpos($table_name, 'node_revision__') !== 0) {
+      if (!str_starts_with($table_name, 'node_revision__')) {
         continue;
       }
       $query = $this->database->select($table_name, 'n');

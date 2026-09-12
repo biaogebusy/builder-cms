@@ -34,7 +34,7 @@ class WebformAttachmentUrl extends WebformAttachmentBase {
       // Url can be a URI.
       $url = \Drupal::service('file_url_generator')->generateAbsoluteString($url) ?: $url;
       // Prepend scheme and host to root relative path.
-      if (strpos($url, '/') === 0) {
+      if (str_starts_with($url, '/')) {
         $url = \Drupal::request()->getSchemeAndHttpHost() . $url;
       }
       $content = (string) \Drupal::httpClient()->get($url)->getBody();

@@ -75,7 +75,7 @@ class Table extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // Add .js-form.wrapper to fix #states handling.
@@ -159,7 +159,7 @@ class Table extends WebformElementBase {
   protected function formatTextItem(array $element, WebformSubmissionInterface $webform_submission, array $options = []) {
     // Render the HTML table.
     $build = $this->formatHtml($element, $webform_submission, $options);
-    $html = $this->renderer->renderPlain($build);
+    $html = $this->renderer->renderInIsolation($build);
 
     // Convert table in pipe delimited plain text.
     $html = preg_replace('#\s*</td>\s*<td[^>]*>\s*#', ' | ', $html);

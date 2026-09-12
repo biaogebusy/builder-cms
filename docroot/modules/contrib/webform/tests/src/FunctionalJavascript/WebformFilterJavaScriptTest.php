@@ -10,9 +10,16 @@ namespace Drupal\Tests\webform\FunctionalJavascript;
 class WebformFilterJavaScriptTest extends WebformWebDriverTestBase {
 
   /**
+   * Modules to enable.
+   *
+   * @var array
+   */
+  protected static $modules = ['webform', 'help'];
+
+  /**
    * Test filter.
    */
-  public function testFilter() {
+  public function testFilter(): void {
     // Set admin theme to claro.
     \Drupal::service('theme_installer')->install(['claro']);
     \Drupal::configFactory()->getEditable('system.theme')
@@ -23,38 +30,34 @@ class WebformFilterJavaScriptTest extends WebformWebDriverTestBase {
     $page = $session->getPage();
     $assert_session = $this->assertSession();
 
-    /** @var \Drupal\webform\WebformAddonsManagerInterface $addons_manager */
-    $addons_manager = \Drupal::service('webform.addons_manager');
-
     /* ********************************************************************** */
 
     $this->drupalLogin($this->rootUser);
 
     // Check filter loaded.
-    $this->drupalGet('/admin/structure/webform/addons');
-    $assert_session->fieldExists('text');
+    $this->drupalGet('/admin/help/webform');
 
     // Check results.
-    $assert_session->waitForElementVisible('css', '.webform-addons-summary');
-    $assert_session->waitForText(count($addons_manager->getProjects()) . ' add-ons');
-    $this->assertTrue($page->findLink('Address')->isVisible());
+    $assert_session->waitForElementVisible('css', '.webform-help-videos-summary');
+    $assert_session->waitForText('53 videos');
+    $this->assertTrue($page->findLink('Introduction to Webform for Drupal 8 | Slides')->isVisible());
     sleep(1);
-    $this->assertFalse($page->find('css', '.webform-addons-no-results')->isVisible());
+    $this->assertFalse($page->find('css', '.webform-help-videos-no-results')->isVisible());
     $this->assertFalse($page->find('css', '.webform-form-filter-reset')->isVisible());
 
     // Check no results.
-    $session->executeScript("jQuery(':input[name=\"text\"]').val('xxx').keyup()");
+    $session->executeScript("jQuery('.webform-form-filter-text').val('xxx').keyup()");
     $assert_session->waitForText('0 add-ons');
-    $this->assertFalse($page->findLink('Address')->isVisible());
-    $this->assertTrue($page->find('css', '.webform-addons-no-results')->isVisible());
+    $this->assertFalse($page->findLink('Introduction to Webform for Drupal 8 | Slides')->isVisible());
+    $this->assertTrue($page->find('css', '.webform-help-videos-no-results')->isVisible());
     $this->assertTrue($page->find('css', '.webform-form-filter-reset')->isVisible());
 
     // Check reset.
     $session->executeScript("jQuery('.webform-form-filter-reset').click()");
-    $assert_session->waitForElementVisible('css', '.webform-addons-summary');
-    $assert_session->waitForText(count($addons_manager->getProjects()) . ' add-ons');
-    $this->assertTrue($page->findLink('Address')->isVisible());
-    $this->assertFalse($page->find('css', '.webform-addons-no-results')->isVisible());
+    $assert_session->waitForElementVisible('css', '.webform-help-videos-summary');
+    $assert_session->waitForText('53 videos');
+    $this->assertTrue($page->findLink('Introduction to Webform for Drupal 8 | Slides')->isVisible());
+    $this->assertFalse($page->find('css', '.webform-help-videos-no-results')->isVisible());
     $this->assertFalse($page->find('css', '.webform-form-filter-reset')->isVisible());
   }
 

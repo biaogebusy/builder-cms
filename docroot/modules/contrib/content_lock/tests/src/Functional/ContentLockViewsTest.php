@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\content_lock\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\content_lock\Tools\LogoutTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Views tests.
  *
  * @group content_lock
  */
+#[RunTestsInSeparateProcesses]
 class ContentLockViewsTest extends BrowserTestBase {
+  use LogoutTrait;
 
   /**
    * {@inheritdoc}
@@ -32,7 +36,7 @@ class ContentLockViewsTest extends BrowserTestBase {
   /**
    * Test Content Lock view display.
    */
-  public function testViewDisplay() {
+  public function testViewDisplay(): void {
     $this->drupalPlaceBlock('local_tasks_block');
     $this->drupalCreateContentType(['type' => 'article']);
     $admin = $this->drupalCreateUser([
@@ -54,6 +58,14 @@ class ContentLockViewsTest extends BrowserTestBase {
       'access content',
       'administer nodes',
       'break content lock',
+    ]);
+
+    $user2 = $this->drupalCreateUser([
+      'access content overview',
+      'create article content',
+      'edit any article content',
+      'delete any article content',
+      'access content',
     ]);
 
     $this->drupalLogin($admin);
@@ -104,7 +116,7 @@ class ContentLockViewsTest extends BrowserTestBase {
     // Login as a different user to break the lock of the second article.
     $this->drupalLogin($user1);
     $this->drupalGet('node/2/edit');
-    $this->getSession()->getPage()->clickLink('Break lock');
+    $this->getSession()->getPage()->clickLink('Break the lock.');
     $this->getSession()->getPage()->pressButton('Confirm break lock');
 
     // Verify view updates. Article 2 should appear as the lock was taken over
@@ -121,6 +133,27 @@ class ContentLockViewsTest extends BrowserTestBase {
     $this->assertSession()->addressEquals('admin/content/locked-content');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->elementTextNotContains('css', '#views-form-locked-content-page-1', 'Article 1');
+
+    // Lock content as different users.
+    $this->drupalLogin($user1);
+    $this->drupalGet('node/1/edit');
+    $this->drupalLogin($user2);
+    $this->drupalGet('node/2/edit');
+
+    // Test a user can break their own lock from the view even if they don't
+    // have the break lock permission.
+    $this->drupalGet('admin/content');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->elementTextContains('xpath', '//table/tbody/tr[1]/td[7]', 'Break lock');
+    $this->assertSession()->elementTextNotContains('xpath', '//table/tbody/tr[2]/td[7]', 'Break lock');
+
+    // Test a user can break all locks from the view if they have the break lock
+    // permission.
+    $this->drupalLogin($user1);
+    $this->drupalGet('admin/content');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->elementTextContains('xpath', '//table/tbody/tr[1]/td[7]', 'Break lock');
+    $this->assertSession()->elementTextContains('xpath', '//table/tbody/tr[2]/td[7]', 'Break lock');
 
     // Test trying to use a view cache plugin.
     $this->drupalLogin($admin);

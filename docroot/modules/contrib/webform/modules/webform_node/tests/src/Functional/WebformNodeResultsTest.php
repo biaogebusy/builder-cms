@@ -34,7 +34,7 @@ class WebformNodeResultsTest extends WebformNodeBrowserTestBase {
   /**
    * Tests webform node results.
    */
-  public function testResults() {
+  public function testResults(): void {
     global $base_path;
 
     $assert_session = $this->assertSession();

@@ -5,14 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\block\Unit\Plugin\migrate\process;
 
 use Drupal\block\Plugin\migrate\process\BlockSettings;
+use Drupal\Core\Block\BlockManagerInterface;
+use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\block\Plugin\migrate\process\BlockSettings
- * @group block
+ * Tests Drupal\block\Plugin\migrate\process\BlockSettings.
  */
+#[CoversClass(BlockSettings::class)]
+#[Group('block')]
+#[IgnoreDeprecations]
 class BlockSettingsTest extends UnitTestCase {
 
   /**
@@ -22,17 +31,27 @@ class BlockSettingsTest extends UnitTestCase {
    *   The source value for the plugin.
    * @param array $expected
    *   The expected result.
-   *
-   * @covers ::transform
-   *
-   * @dataProvider providerTestTransform
    */
+  #[DataProvider('providerTestTransform')]
   public function testTransform($value, $expected): void {
     $executable = $this->prophesize(MigrateExecutableInterface::class)
       ->reveal();
     $row = $this->prophesize(Row::class)->reveal();
 
-    $plugin = new BlockSettings([], 'block_settings', []);
+    // The block plugin should be asked to provide default configuration.
+    $expected['default'] = 'value';
+
+    $mock_plugin = $this->prophesize(BlockPluginInterface::class);
+    $mock_plugin->getConfiguration()
+      ->shouldBeCalled()
+      ->willReturn($expected);
+
+    $block_manager = $this->prophesize(BlockManagerInterface::class);
+    $block_manager->createInstance($value[0], Argument::type('array'))
+      ->shouldBeCalled()
+      ->willReturn($mock_plugin->reveal());
+
+    $plugin = new BlockSettings([], 'block_settings', [], $block_manager->reveal());
     $actual = $plugin->transform($value, $executable, $row, 'foo');
     $this->assertSame($expected, $actual);
   }

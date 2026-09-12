@@ -1,0 +1,9 @@
+
+services:
+  Drupal\webform_devel\Hook\WebformDevelDrushHooks:
+    class: Drupal\webform_devel\Hook\WebformDevelDrushHooks
+    autowire: true
+
+  Drupal\webform_devel\Hook\WebformDevelHooks:
+    class: Drupal\webform_devel\Hook\WebformDevelHooks
+    autowire: true

@@ -19,7 +19,7 @@ class WebformElementExcludedColumnsTest extends WebformElementBrowserTestBase {
   /**
    * Test excluded columns element.
    */
-  public function testExcludedElements() {
+  public function testExcludedElements(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_excluded_columns');

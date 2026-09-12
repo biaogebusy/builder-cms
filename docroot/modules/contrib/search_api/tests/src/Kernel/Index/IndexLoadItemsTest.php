@@ -46,7 +46,9 @@ class IndexLoadItemsTest extends KernelTestBase {
       'id' => 'test',
       'backend' => 'search_api_test',
     ]);
+    $server->save();
     $this->index = Index::create([
+      'id' => 'test',
       'tracker_settings' => [
         'search_api_test' => [],
       ],
@@ -55,6 +57,7 @@ class IndexLoadItemsTest extends KernelTestBase {
       ],
     ]);
     $this->index->setServer($server);
+    $this->index->save();
   }
 
   /**

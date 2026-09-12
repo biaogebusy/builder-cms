@@ -7,14 +7,16 @@ namespace Drupal\Tests\views\Kernel;
 use Drupal\Core\Render\RenderContext;
 use Drupal\views\Form\ViewsFormMainForm;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that views hooks are registered when defined in $module.views.inc.
  *
- * @group views
- *
  * @see views_hook_info()
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewsHooksTest extends ViewsKernelTestBase {
 
   /**
@@ -82,7 +84,15 @@ class ViewsHooksTest extends ViewsKernelTestBase {
       $this->assertTrue($this->moduleHandler->hasImplementations($hook, 'views_test_data'), "The hook $hook was registered.");
 
       if ($hook == 'views_post_render') {
-        $this->moduleHandler->invoke('views_test_data', $hook, [$view, &$view->display_handler->output, $view->display_handler->getPlugin('cache')]);
+        $this->moduleHandler->invoke(
+          'views_test_data',
+          $hook,
+          [
+            $view,
+            &$view->display_handler->output,
+            $view->display_handler->getPlugin('cache'),
+          ]
+        );
         continue;
       }
 

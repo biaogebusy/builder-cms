@@ -20,10 +20,15 @@ class BetterExposedFiltersKernelTest extends BetterExposedFiltersKernelTestBase 
 
   /**
    * Tests hiding the submit button when auto-submit is enabled.
+   *
+   * Checks the submit button is hidden both when the exposed form has a
+   * reset button (the actions element has more than one child) and when it
+   * does not (the actions element contains only the submit button).
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testHideSubmitButtonOnAutoSubmit() {
     $view = Views::getView('bef_test');
-    $display = &$view->storage->getDisplay('default');
 
     // Enable auto-submit and hide auto-submit button.
     $this->setBetterExposedOptions($view, [
@@ -38,9 +43,28 @@ class BetterExposedFiltersKernelTest extends BetterExposedFiltersKernelTestBase 
 
     // Check our "submit" button is hidden.
     $actual = $this->xpath("//form//input[@type='submit'][contains(concat(' ',normalize-space(@class),' '),' js-hide ')]");
-    $this->assertCount(1, $actual, 'Submit button was hidden successfully.');
+    $this->assertCount(1, $actual);
 
     $view->destroy();
+
+    // Repeat with the reset button disabled, so the actions element holds
+    // only the submit button.
+    $view = Views::getView('bef_test');
+    $display = &$view->storage->getDisplay('default');
+    $display['display_options']['exposed_form']['options']['reset_button'] = FALSE;
+    $this->setBetterExposedOptions($view, [
+      'general' => [
+        'autosubmit' => TRUE,
+        'autosubmit_hide' => TRUE,
+      ],
+    ]);
+
+    // Render the exposed form.
+    $this->renderExposedForm($view);
+
+    // Check our "submit" button is hidden.
+    $actual = $this->xpath("//form//input[@type='submit'][contains(concat(' ',normalize-space(@class),' '),' js-hide ')]");
+    $this->assertCount(1, $actual);
   }
 
   /**
@@ -50,7 +74,6 @@ class BetterExposedFiltersKernelTest extends BetterExposedFiltersKernelTestBase 
    */
   public function testSecondaryOptions() {
     $view = Views::getView('bef_test');
-    $display = &$view->storage->getDisplay('default');
 
     // Enable secondary options and set label.
     $this->setBetterExposedOptions($view, [
@@ -65,7 +88,7 @@ class BetterExposedFiltersKernelTest extends BetterExposedFiltersKernelTestBase 
 
     // Assert our "secondary" options detail is hidden if no fields are placed.
     $actual = $this->xpath("//form//details[@data-drupal-selector='edit-secondary']");
-    $this->assertCount(0, $actual, 'Secondary options are hidden because no fields were placed.');
+    $this->assertCount(0, $actual);
 
     $view->destroy();
 
@@ -104,19 +127,19 @@ class BetterExposedFiltersKernelTest extends BetterExposedFiltersKernelTestBase 
 
     // Assert our "secondary" options detail is visible.
     $actual = $this->xpath("//form//details[@data-drupal-selector='edit-secondary']");
-    $this->assertCount(1, $actual, 'Secondary options is visible.');
+    $this->assertCount(1, $actual);
 
     // Assert sort option was placed in secondary details.
     $actual = $this->xpath("//form//details[@data-drupal-selector='edit-secondary']//select[@name='sort_by']");
-    $this->assertCount(1, $actual, 'Exposed sort was placed in secondary fieldset.');
+    $this->assertCount(1, $actual);
 
-    // Assert pager option was placed in secondary details.
+    // Assert a pager option was placed in secondary details.
     $actual = $this->xpath("//form//details[@data-drupal-selector='edit-secondary']//select[@name='items_per_page']");
-    $this->assertCount(1, $actual, 'Exposed pager was placed in secondary fieldset.');
+    $this->assertCount(1, $actual);
 
     // Assert filter option was placed in secondary details.
     $actual = $this->xpath("//form//details[@data-drupal-selector='edit-secondary']//select[@name='field_bef_boolean_value']");
-    $this->assertCount(1, $actual, 'Exposed filter "field_bef_boolean" was placed in secondary fieldset.');
+    $this->assertCount(1, $actual);
 
     $view->destroy();
   }

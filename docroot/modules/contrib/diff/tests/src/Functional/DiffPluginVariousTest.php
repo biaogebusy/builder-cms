@@ -4,21 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\diff\Functional;
 
+use Drupal\comment\CommentingStatus;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\comment\Tests\CommentTestTrait;
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\link\LinkItemInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Diff module plugins.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffPluginVariousTest extends DiffPluginTestBase {
 
   use CommentTestTrait;
-  use CoreVersionUiTestTrait;
 
   /**
    * {@inheritdoc}
@@ -52,10 +56,10 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
       'bundle' => 'article',
       'label' => $label,
     ])->save();
-    $this->formDisplay->load('node.article.default')
+    \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.article.default')
       ->setComponent($field_name, ['type' => $widget_type])
       ->save();
-    $this->viewDisplay->load('node.article.default')
+    \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.article.default')
       ->setComponent($field_name)
       ->save();
   }
@@ -71,20 +75,24 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
 
     // Create an article with comments enabled..
     $title = 'Sample article';
+    $this->drupalGet('node/add/article');
     $edit = [
       'title[0][value]' => $title,
       'body[0][value]' => '<p>Revision 1</p>',
-      'comment[0][status]' => (string) CommentItemInterface::OPEN,
+      // @phpstan-ignore-next-line
+      'comment[0][status]' => (string) DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', static fn() => CommentingStatus::Open->value, static fn() => CommentItemInterface::OPEN),
     ];
-    $this->drupalPostNodeForm('node/add/article', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $node = $this->drupalGetNodeByTitle($title);
 
     // Edit the article and close its comments.
+    $this->drupalGet($node->toUrl('edit-form'));
     $edit = [
-      'comment[0][status]' => (string) CommentItemInterface::HIDDEN,
+      // @phpstan-ignore-next-line
+      'comment[0][status]' => (string) DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', static fn() => CommentingStatus::Hidden->value, static fn() => CommentItemInterface::HIDDEN),
       'revision' => TRUE,
     ];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
 
     // Check the difference between the last two revisions.
     $this->clickLink('Revisions');
@@ -116,12 +124,12 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
     ])->save();
 
     // Add the email field to the article form.
-    $this->formDisplay->load('node.article.default')
+    $this->loadFormDisplay('node.article.default')
       ->setComponent($field_name, ['type' => 'email_default'])
       ->save();
 
     // Add the email field to the default display.
-    $this->viewDisplay->load('node.article.default')
+    $this->loadViewDisplay('node.article.default')
       ->setComponent($field_name, ['type' => 'basic_string'])
       ->save();
 
@@ -169,12 +177,12 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
     ])->save();
 
     // Add the timestamp field to the article form.
-    $this->formDisplay->load('node.article.default')
+    $this->loadFormDisplay('node.article.default')
       ->setComponent($field_name, ['type' => 'datetime_timestamp'])
       ->save();
 
     // Add the timestamp field to the default display.
-    $this->viewDisplay->load('node.article.default')
+    $this->loadViewDisplay('node.article.default')
       ->setComponent($field_name, ['type' => 'timestamp'])
       ->save();
 
@@ -229,7 +237,7 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
         'link_type' => LinkItemInterface::LINK_GENERIC,
       ],
     ])->save();
-    $this->formDisplay->load('node.article.default')
+    $this->loadFormDisplay('node.article.default')
       ->setComponent($field_name, [
         'type' => 'link_default',
         'settings' => [
@@ -237,7 +245,7 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
         ],
       ])
       ->save();
-    $this->viewDisplay->load('node.article.default')
+    $this->loadViewDisplay('node.article.default')
       ->setComponent($field_name, ['type' => 'link'])
       ->save();
 
@@ -306,10 +314,10 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
       'label' => 'List',
     ])->save();
 
-    $this->formDisplay->load('node.article.default')
+    $this->loadFormDisplay('node.article.default')
       ->setComponent($field_name, ['type' => 'options_select'])
       ->save();
-    $this->viewDisplay->load('node.article.default')
+    $this->loadViewDisplay('node.article.default')
       ->setComponent($field_name, ['type' => 'list_default'])
       ->save();
 
@@ -380,18 +388,40 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
    * @covers \Drupal\diff\Plugin\diff\Field\TextWithSummaryFieldBuilder
    */
   public function testTextWithSummaryPlugin(): void {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'body_summary',
+      'type' => 'text_with_summary',
+      'entity_type' => 'node',
+      'cardinality' => 1,
+      'persist_with_no_fields' => TRUE,
+    ]);
+    $fieldStorage->save();
+    FieldConfig::create([
+      'field_storage' => $fieldStorage,
+      'bundle' => 'article',
+      'label' => 'Body with summary',
+      'settings' => [
+        'allowed_formats' => [],
+      ],
+    ])->save();
+    $display_repository = \Drupal::service(EntityDisplayRepositoryInterface::class);
+
+    // Assign widget settings for the default form mode.
+    $display_repository->getFormDisplay('node', 'article')->setComponent('body_summary', [
+      'type' => 'text_textarea_with_summary',
+    ])->save();
     // Enable the comparison of the summary.
     $config = \Drupal::configFactory()->getEditable('diff.plugins');
     $settings['compare_summary'] = TRUE;
-    $config->set('fields.node.body.type', 'text_summary_field_diff_builder');
-    $config->set('fields.node.body.settings', $settings);
+    $config->set('fields.node.body_summary.type', 'text_summary_field_diff_builder');
+    $config->set('fields.node.body_summary.settings', $settings);
     $config->save();
 
     // Create an article, setting the body field.
     $node = $this->drupalCreateNode([
       'type' => 'article',
       'title' => 'Test article',
-      'body' => [
+      'body_summary' => [
         'value' => 'Foo value',
         'summary' => 'Foo summary',
       ],
@@ -399,8 +429,8 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
 
     // Edit the article and update these fields, creating a new revision.
     $edit = [
-      'body[0][value]' => 'Bar value',
-      'body[0][summary]' => 'Bar summary',
+      'body_summary[0][value]' => 'Bar value',
+      'body_summary[0][summary]' => 'Bar summary',
       'revision' => TRUE,
     ];
     $this->drupalGet($node->toUrl('edit-form'));

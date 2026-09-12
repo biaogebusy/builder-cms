@@ -256,17 +256,17 @@ class PageEditWizard extends PageWizardBase {
       $actions['submit']['#ajax'] = [
         'callback' => '::ajaxSubmit',
         'url' => Url::fromRoute($this->getRouteName(), $ajax_parameters),
-        'options' => ['query' => \Drupal::request()->query->all() + [FormBuilderInterface::AJAX_FORM_REQUEST => TRUE]],
+        'options' => ['query' => $this->getRequest()->query->all() + [FormBuilderInterface::AJAX_FORM_REQUEST => TRUE]],
       ];
       $actions['update_and_save']['#ajax'] = [
         'callback' => '::ajaxFinish',
         'url' => Url::fromRoute($this->getRouteName(), $ajax_parameters),
-        'options' => ['query' => \Drupal::request()->query->all() + [FormBuilderInterface::AJAX_FORM_REQUEST => TRUE]],
+        'options' => ['query' => $this->getRequest()->query->all() + [FormBuilderInterface::AJAX_FORM_REQUEST => TRUE]],
       ];
       $actions['finish']['#ajax'] = [
         'callback' => '::ajaxFinish',
         'url' => Url::fromRoute($this->getRouteName(), $ajax_parameters),
-        'options' => ['query' => \Drupal::request()->query->all() + [FormBuilderInterface::AJAX_FORM_REQUEST => TRUE]],
+        'options' => ['query' => $this->getRequest()->query->all() + [FormBuilderInterface::AJAX_FORM_REQUEST => TRUE]],
       ];
     }
 

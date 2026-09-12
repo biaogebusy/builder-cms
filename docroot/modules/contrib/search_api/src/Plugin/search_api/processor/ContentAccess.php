@@ -3,11 +3,13 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\comment\CommentInterface;
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\node\NodeGrantsHelper;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Datasource\DatasourceInterface;
@@ -346,7 +348,12 @@ class ContentAccess extends ProcessorPluginBase {
     }
     $node_grants_field_id = $node_grants_field->getFieldIdentifier();
     $grants_conditions = $query->createConditionGroup('OR', ['content_access_grants']);
-    $grants = node_access_grants('view', $account);
+    $grants = DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4.0',
+      fn () => \Drupal::service(NodeGrantsHelper::class)->nodeAccessGrants('view', $account),
+      fn () => node_access_grants('view', $account),
+    );
     foreach ($grants as $realm => $gids) {
       foreach ($gids as $gid) {
         $grants_conditions->addCondition($node_grants_field_id, "node_access_$realm:$gid");

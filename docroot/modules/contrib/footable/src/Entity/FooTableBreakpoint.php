@@ -4,7 +4,6 @@ namespace Drupal\footable\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\footable\FooTableBreakpointInterface;
 
 /**
  * Defines the FooTable Breakpoint Config entity.
@@ -12,28 +11,39 @@ use Drupal\footable\FooTableBreakpointInterface;
  * @ConfigEntityType(
  *   id = "footable_breakpoint",
  *   label = @Translation("FooTable breakpoint"),
+ *   label_collection = @Translation("FooTable breakpoints"),
+ *   label_singular = @Translation("FooTable breakpoint"),
+ *   label_plural = @Translation("FooTable breakpoints"),
+ *   label_count = @PluralTranslation(
+ *     singular = "@count FooTable breakpoint",
+ *     plural = "@count FooTable breakpoints"
+ *   ),
  *   admin_permission = "administer footable",
  *   handlers = {
  *     "list_builder" = "Drupal\footable\FooTableBreakpointListBuilder",
  *     "form" = {
- *       "add" = "Drupal\footable\Form\FooTableBreakpointEditForm",
- *       "edit" = "Drupal\footable\Form\FooTableBreakpointEditForm",
+ *       "add" = "Drupal\footable\Form\FooTableBreakpointForm",
+ *       "edit" = "Drupal\footable\Form\FooTableBreakpointForm",
  *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
- *     }
+ *     },
+ *     "route_provider" = {
+ *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
+ *     },
  *   },
  *   entity_keys = {
  *     "id" = "name",
  *     "label" = "label"
  *   },
- *   links = {
- *     "edit-form" = "/admin/config/user-interface/footable/breakpoint/{footable_breakpoint}/edit",
- *     "delete-form" = "/admin/config/user-interface/footable/breakpoint/{footable_breakpoint}/delete",
- *     "collection" = "/admin/config/user-interface/footable/breakpoint"
- *   },
  *   config_export = {
  *     "name",
  *     "label",
  *     "breakpoint",
+ *   },
+ *   links = {
+ *     "add-form" = "/admin/config/user-interface/footable/breakpoint/add",
+ *     "edit-form" = "/admin/config/user-interface/footable/breakpoint/{footable_breakpoint}/edit",
+ *     "delete-form" = "/admin/config/user-interface/footable/breakpoint/{footable_breakpoint}/delete",
+ *     "collection" = "/admin/config/user-interface/footable/breakpoint"
  *   }
  * )
  */
@@ -49,7 +59,7 @@ class FooTableBreakpoint extends ConfigEntityBase implements FooTableBreakpointI
   /**
    * The breakpoint of the FooTable breakpoint.
    *
-   * @var string|int
+   * @var int
    */
   protected $breakpoint;
 
@@ -70,14 +80,6 @@ class FooTableBreakpoint extends ConfigEntityBase implements FooTableBreakpointI
   /**
    * {@inheritdoc}
    */
-  public function setBreakpoint($breakpoint) {
-    $this->breakpoint = $breakpoint;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function loadAll() {
     $breakpoints = self::loadMultiple();
 
@@ -89,7 +91,7 @@ class FooTableBreakpoint extends ConfigEntityBase implements FooTableBreakpointI
     ];
     $breakpoints['all'] = new self($values, 'footable_breakpoint');
 
-    uasort($breakpoints, ['Drupal\footable\Entity\FooTableBreakpoint', 'sort']);
+    uasort($breakpoints, [__CLASS__, 'sort']);
     return $breakpoints;
   }
 
@@ -97,13 +99,16 @@ class FooTableBreakpoint extends ConfigEntityBase implements FooTableBreakpointI
    * {@inheritdoc}
    */
   public static function sort(ConfigEntityInterface $a, ConfigEntityInterface $b) {
-    $a_breakpoint = $a->getBreakpoint();
-    $b_breakpoint = $b->getBreakpoint();
+    if (!$a instanceof FooTableBreakpointInterface || !$b instanceof FooTableBreakpointInterface) {
+      return 0;
+    }
+    $breakpointA = $a->getBreakpoint();
+    $breakpointB = $b->getBreakpoint();
 
-    if ($a_breakpoint == $b_breakpoint) {
+    if ($breakpointA === $breakpointB) {
       return strnatcasecmp($a->label(), $b->label());
     }
-    return ($a_breakpoint < $b_breakpoint) ? -1 : 1;
+    return ($breakpointA < $breakpointB) ? -1 : 1;
   }
 
 }

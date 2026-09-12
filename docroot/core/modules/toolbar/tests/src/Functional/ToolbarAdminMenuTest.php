@@ -6,11 +6,14 @@ namespace Drupal\Tests\toolbar\Functional;
 
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the caching of the admin menu subtree items.
@@ -26,10 +29,12 @@ use Drupal\user\RoleInterface;
  *
  * Each hook invocation is simulated and then the previous hash of the admin
  * menu subtrees is compared to the new hash.
- *
- * @group toolbar
  */
+#[Group('toolbar')]
+#[RunTestsInSeparateProcesses]
 class ToolbarAdminMenuTest extends BrowserTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * A user with permission to access the administrative toolbar.
@@ -308,7 +313,8 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
     ];
     $this->drupalGet('admin/config/regional/language/add');
     $this->submitForm($edit, 'Add custom language');
-    t($name, [], ['langcode' => $langcode]);
+    // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
+    $this->t($name, [], ['langcode' => $langcode]);
     // Reset locale cache.
     $this->container->get('string_translation')->reset();
     $this->assertSession()->responseContains('"edit-languages-' . $langcode . '-weight"');
@@ -385,7 +391,15 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
     $this->drupalGet('toolbar/subtrees/' . $subtrees_hash, ['query' => [MainContentViewSubscriber::WRAPPER_FORMAT => 'drupal_ajax']], ['X-Requested-With' => 'XMLHttpRequest']);
     $ajax_result = json_decode($this->getSession()->getPage()->getContent(), TRUE);
     $this->assertEquals('setToolbarSubtrees', $ajax_result[0]['command'], 'Subtrees response uses the correct command.');
-    $this->assertEquals(['system-admin_content', 'system-admin_structure', 'system-themes_page', 'system-modules_list', 'system-admin_config', 'entity-user-collection', 'front'], array_keys($ajax_result[0]['subtrees']), 'Correct subtrees returned.');
+    $this->assertEquals([
+      'system-admin_content',
+      'system-admin_structure',
+      'system-themes_page',
+      'system-modules_list',
+      'system-admin_config',
+      'entity-user-collection',
+      'front',
+    ], array_keys($ajax_result[0]['subtrees']), 'Correct subtrees returned.');
   }
 
   /**

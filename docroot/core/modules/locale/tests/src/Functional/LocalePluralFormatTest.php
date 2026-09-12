@@ -8,14 +8,15 @@ use Drupal\Component\Gettext\PoItem;
 use Drupal\Core\Database\Database;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
-// cspell:ignore heure heures jours lundi ponedjeljak
-
+// cspell:ignore nmsgid nmsgstr heure heures jours lundi ponedjeljak
 /**
  * Tests plural handling for various languages.
- *
- * @group locale
  */
+#[Group('locale')]
+#[RunTestsInSeparateProcesses]
 class LocalePluralFormatTest extends BrowserTestBase {
 
   /**
@@ -221,7 +222,7 @@ class LocalePluralFormatTest extends BrowserTestBase {
     $this->drupalGet($path);
     $this->submitForm($edit, 'Save translations');
 
-    // User interface input for translating seconds should not be duplicated
+    // User interface input for translating seconds should not be duplicated.
     $this->assertSession()->pageTextContainsOnce('@count seconds');
 
     // Member for time should be translated. Change the created time to ensure
@@ -385,7 +386,7 @@ class LocalePluralFormatTest extends BrowserTestBase {
    * @param array $options
    *   Additional options to pass to the translation import form.
    */
-  public function importPoFile($contents, array $options = []) {
+  public function importPoFile($contents, array $options = []): void {
     $file_system = \Drupal::service('file_system');
     $name = $file_system->tempnam('temporary://', "po_") . '.po';
     file_put_contents($name, $contents);
@@ -404,7 +405,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -432,7 +433,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\\n"
 
@@ -456,7 +457,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 
 msgid "Monday"
@@ -473,7 +474,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: broken, will not parse\\n"
 

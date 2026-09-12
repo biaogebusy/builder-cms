@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\user\Entity\Role;
 
 /**
@@ -9,6 +11,8 @@ use Drupal\user\Entity\Role;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class UploadWidgetTest extends EntityBrowserWebDriverTestBase {
 
   /**

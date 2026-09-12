@@ -137,4 +137,11 @@ class SerializerDecorator implements SerializerInterface, NormalizerInterface, D
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return ['object' => TRUE];
+  }
+
 }

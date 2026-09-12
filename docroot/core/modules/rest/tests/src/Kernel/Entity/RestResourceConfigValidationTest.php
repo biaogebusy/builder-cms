@@ -7,12 +7,16 @@ namespace Drupal\Tests\rest\Kernel\Entity;
 use Drupal\KernelTests\Core\Config\ConfigEntityValidationTestBase;
 use Drupal\rest\Entity\RestResourceConfig;
 use Drupal\rest\RestResourceConfigInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validation of rest_resource_config entities.
- *
- * @group rest
  */
+#[Group('rest')]
+#[Group('config')]
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class RestResourceConfigValidationTest extends ConfigEntityValidationTestBase {
 
   /**

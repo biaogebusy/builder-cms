@@ -175,7 +175,7 @@ class ViewsPropertyExtractionTest extends KernelTestBase {
       '_item' => $item,
       '_object' => $object,
       '_relationship_objects' => [
-        NULL => [$object],
+        '' => [$object],
       ],
     ]);
     // For the configurable property, change the property path if it matches a
@@ -326,6 +326,239 @@ class ViewsPropertyExtractionTest extends KernelTestBase {
         TRUE,
         TRUE,
         ['Other value', 'Foobar'],
+      ],
+    ];
+  }
+
+  /**
+   * Tests delta options functionality for multi-valued fields.
+   *
+   * @param list<string> $field_values
+   *   The field values to test with.
+   * @param array{delta_limit: string, delta_offset: string, delta_reversed: string, delta_first_last: string} $options
+   *   The field options to apply.
+   * @param list<string> $expected
+   *   The expected result after applying delta options.
+   *
+   * @dataProvider deltaOptionsDataProvider
+   */
+  public function testDeltaOptions(array $field_values, array $options, array $expected): void {
+    $datasource_id = 'entity:user';
+    $property_path = 'property1';
+
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit\Framework\MockObject\MockObject $index */
+    $index = $this->createMock(IndexInterface::class);
+    $index->method('getPropertyDefinitions')->willReturnMap([
+      [
+        NULL,
+        [
+          'property1' => new ProcessorProperty([
+            'processor_id' => 'processor1',
+          ]),
+        ],
+      ],
+    ]);
+
+    $processor1 = $this->createMock(ProcessorInterface::class);
+    $processor1->method('addFieldValues')
+      ->willReturnCallback(function (ItemInterface $item) use ($field_values) {
+        foreach ($item->getFields() as $field) {
+          $field->setValues($field_values);
+        }
+      });
+    $index->method('getProcessor')->willReturnMap([
+      ['processor1', $processor1],
+    ]);
+
+    $fields_helper = $this->container->get('search_api.fields_helper');
+    $fields = [
+      'test' => $fields_helper->createField($index, 'test', [
+        'datasource_id' => NULL,
+        'property_path' => $property_path,
+      ]),
+    ];
+    $index->method('getFields')->willReturn($fields);
+
+    $query = $this->getMockBuilder(SearchApiQuery::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $query->method('getIndex')->willReturn($index);
+
+    /** @var \Drupal\views\ViewExecutable $view */
+    $view = $this->getMockBuilder(ViewExecutable::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $view->query = $query;
+
+    /** @var \Drupal\views\Plugin\views\display\DisplayPluginBase $display */
+    $display = $this->getMockBuilder(DisplayPluginBase::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $configuration = [
+      'real field' => $property_path,
+      'search_api field' => 'test',
+    ];
+    $field = new SearchApiStandard($configuration, '', []);
+    $field->init($view, $display, $options);
+    $field->query();
+
+    $user = User::create([
+      'name' => 'Test user',
+    ]);
+    $object = $user->getTypedData();
+    $id = Utility::createCombinedId($datasource_id, $user->id());
+    $item = $fields_helper->createItemFromObject($index, $object, $id);
+    $row = new ResultRow([
+      '_item' => $item,
+      '_object' => $object,
+      '_relationship_objects' => [
+        '' => [$object],
+      ],
+    ]);
+
+    $values = [$row];
+    $field->preRender($values);
+
+    // Test the getItems method which applies delta options
+    $items = $field->getItems($row);
+    $actual_values = array_map(function ($item) {
+      return $item['value'];
+    }, $items);
+
+    $this->assertEquals($expected, $actual_values);
+  }
+
+  /**
+   * Provides test data sets for the delta options test.
+   *
+   * @return array<string, array{0: list<string>, 1: array{delta_limit: string, delta_offset: string, delta_reversed: string, delta_first_last: string}, 2: list<string>}>
+   *   Array of argument lists for testDeltaOptions(), keyed by data set label.
+   *
+   * @see testDeltaOptions()
+   */
+  public static function deltaOptionsDataProvider(): array {
+    $full_values = ['Value 1', 'Value 2', 'Value 3', 'Value 4', 'Value 5'];
+
+    return [
+      'no delta options' => [
+        $full_values,
+        [],
+        $full_values,
+      ],
+      'delta_limit only' => [
+        $full_values,
+        ['delta_limit' => 3],
+        ['Value 1', 'Value 2', 'Value 3'],
+      ],
+      'delta_offset only' => [
+        $full_values,
+        ['delta_offset' => 2],
+        ['Value 3', 'Value 4', 'Value 5'],
+      ],
+      'delta_limit and delta_offset' => [
+        $full_values,
+        [
+          'delta_limit' => 2,
+          'delta_offset' => 1,
+        ],
+        ['Value 2', 'Value 3'],
+      ],
+      'delta_reversed only' => [
+        $full_values,
+        ['delta_reversed' => TRUE],
+        ['Value 5', 'Value 4', 'Value 3', 'Value 2', 'Value 1'],
+      ],
+      'delta_reversed with limit' => [
+        $full_values,
+        [
+          'delta_reversed' => TRUE,
+          'delta_limit' => 3,
+        ],
+        ['Value 5', 'Value 4', 'Value 3'],
+      ],
+      'delta_reversed with offset' => [
+        $full_values,
+        [
+          'delta_reversed' => TRUE,
+          'delta_offset' => 1,
+        ],
+        ['Value 4', 'Value 3', 'Value 2', 'Value 1'],
+      ],
+      'delta_reversed with limit and offset' => [
+        $full_values,
+        [
+          'delta_reversed' => TRUE,
+          'delta_limit' => 2,
+          'delta_offset' => 1,
+        ],
+        ['Value 4', 'Value 3'],
+      ],
+      'delta_first_last only' => [
+        $full_values,
+        ['delta_first_last' => TRUE],
+        ['Value 1', 'Value 5'],
+      ],
+      'delta_first_last with limit' => [
+        $full_values,
+        [
+          'delta_first_last' => TRUE,
+          'delta_limit' => 3,
+        ],
+        ['Value 1', 'Value 3'],
+      ],
+      'delta_first_last with offset' => [
+        $full_values,
+        [
+          'delta_first_last' => TRUE,
+          'delta_offset' => 1,
+        ],
+        ['Value 2', 'Value 5'],
+      ],
+      'delta_first_last with limit and offset' => [
+        $full_values,
+        [
+          'delta_first_last' => TRUE,
+          'delta_limit' => 2,
+          'delta_offset' => 2,
+        ],
+        ['Value 3', 'Value 4'],
+      ],
+      'all options combined' => [
+        $full_values,
+        [
+          'delta_reversed' => TRUE,
+          'delta_first_last' => TRUE,
+          'delta_limit' => 3,
+          'delta_offset' => 1,
+        ],
+        ['Value 4', 'Value 2'],
+      ],
+      'single value field' => [
+        ['Single Value'],
+        [
+          'delta_limit' => 1,
+          'delta_offset' => 0,
+        ],
+        ['Single Value'],
+      ],
+      'empty values' => [
+        [],
+        [
+          'delta_limit' => 3,
+          'delta_offset' => 1,
+        ],
+        [],
+      ],
+      'delta_limit exceeds available values' => [
+        ['Value 1', 'Value 2'],
+        ['delta_limit' => 5],
+        ['Value 1', 'Value 2'],
+      ],
+      'delta_offset exceeds available values' => [
+        ['Value 1', 'Value 2'],
+        ['delta_offset' => 5],
+        [],
       ],
     ];
   }

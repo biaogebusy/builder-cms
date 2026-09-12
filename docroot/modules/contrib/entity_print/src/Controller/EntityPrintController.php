@@ -2,14 +2,14 @@
 
 namespace Drupal\entity_print\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\entity_print\Plugin\EntityPrintPluginManagerInterface;
 use Drupal\entity_print\Plugin\ExportTypeManagerInterface;
 use Drupal\entity_print\PrintBuilderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\entity_print\Plugin\EntityPrintPluginManagerInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -76,14 +76,17 @@ class EntityPrintController extends ControllerBase {
    *   The entity type.
    * @param int $entity_id
    *   The entity id.
+   * @param int|null $revision_id
+   *   The entity revision id, or NULL if this is not a revision route.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response object on error otherwise the Print is sent.
    */
-  public function viewPrint($export_type, $entity_type, $entity_id) {
+  public function viewPrint($export_type, $entity_type, $entity_id, $revision_id = NULL) {
     // Create the Print engine plugin.
     $config = $this->config('entity_print.settings');
-    $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
+    $entity_storage = $this->entityTypeManager->getStorage($entity_type);
+    $entity = $revision_id ? $entity_storage->loadRevision($revision_id) : $entity_storage->load($entity_id);
 
     $print_engine = $this->pluginManager->createSelectedInstance($export_type);
     return (new StreamedResponse(function () use ($entity, $print_engine, $config) {
@@ -101,14 +104,17 @@ class EntityPrintController extends ControllerBase {
    *   The entity type.
    * @param int $entity_id
    *   The entity id.
+   * @param int|null $revision_id
+   *   The entity revision id, or NULL if this is not a revision route.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response object.
    *
    * @todo improve permissions in https://www.drupal.org/node/2759553
    */
-  public function viewPrintDebug($export_type, $entity_type, $entity_id) {
-    $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
+  public function viewPrintDebug($export_type, $entity_type, $entity_id, $revision_id = NULL) {
+    $entity_storage = $this->entityTypeManager->getStorage($entity_type);
+    $entity = $revision_id ? $entity_storage->loadRevision($revision_id) : $entity_storage->load($entity_id);
     $use_default_css = $this->config('entity_print.settings')->get('default_css');
     return new Response($this->printBuilder->printHtml($entity, $use_default_css, FALSE));
   }
@@ -125,11 +131,13 @@ class EntityPrintController extends ControllerBase {
    *   The entity type.
    * @param int $entity_id
    *   The entity id.
+   * @param int|null $revision_id
+   *   The entity revision id, or NULL if this is not a revision route.
    *
    * @return \Drupal\Core\Access\AccessResult
    *   The access result object.
    */
-  public function checkAccess($export_type, $entity_type, $entity_id) {
+  public function checkAccess($export_type, $entity_type, $entity_id, $revision_id = NULL) {
     if (empty($entity_id)) {
       return AccessResult::forbidden();
     }
@@ -141,8 +149,16 @@ class EntityPrintController extends ControllerBase {
       return AccessResult::forbidden();
     }
 
-    // Unable to find the entity requested.
-    if (!$entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id)) {
+    $entity_storage = $this->entityTypeManager->getStorage($entity_type);
+    $entity = $revision_id ? $entity_storage->loadRevision($revision_id) : $entity_storage->load($entity_id);
+
+    if (!$entity) {
+      // Entity or revision was not found.
+      return AccessResult::forbidden();
+    }
+
+    if ($revision_id && $entity->id() != $entity_id) {
+      // If the entity IDs mismatch, the revision is not for the same entity.
       return AccessResult::forbidden();
     }
 
@@ -180,7 +196,7 @@ class EntityPrintController extends ControllerBase {
    * @param string $entity_type
    *   The entity type.
    * @param string|int $entity_id
-   *   The entity type id.
+   *   The entity id.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
    *   The redirect response.

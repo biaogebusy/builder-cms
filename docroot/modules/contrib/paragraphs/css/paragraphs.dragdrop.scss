@@ -1,4 +1,4 @@
-@import "variables";
+@use "variables" as *;
 
 .paragraphs-dragdrop-wrapper {
   --dnd-item-chosen-bg: #fff;
@@ -71,8 +71,9 @@
 
 // <li> container for individual draggable Paragraphs field items.
 .paragraphs-dragdrop__item {
-  display: flex;
   position: relative;
+  display: flex;
+  overflow: hidden;
   flex: 0 0 100%;
   flex-flow: row wrap;
   align-items: center;
@@ -88,7 +89,6 @@
   border-left-width: 10px;
   border-radius: 3px;
   background: #fff;
-  overflow: hidden;
 
   [dir="rtl"] & {
     margin-right: 0;
@@ -121,8 +121,8 @@
     // This is needed for the animation, but causes the scrollbar jumping, so
     // it's temporarily disabled.
     height: var(--dnd-item-min-height);
-    background: #fff;
     opacity: 1;
+    background: #fff;
   }
 
   // Item drop placeholder. Applies when dragging near drop-enabled area. The
@@ -131,11 +131,11 @@
   &.sortable-ghost {
     min-height: 0;
     max-height: var(--dnd-item-min-height);
-    border-style: dashed;
-    border-left-style: solid;
-    border-color: var(--dnd-item-ghost-border);
-    background-color: var(--dnd-item-ghost-bg);
     opacity: 1;
+    border-style: dashed;
+    border-color: var(--dnd-item-ghost-border);
+    border-left-style: solid;
+    background-color: var(--dnd-item-ghost-bg);
 
     [dir="rtl"] & {
       border-right-style: solid;
@@ -183,19 +183,19 @@
 
 // The drag handle.
 .paragraphs-dragdrop__handle {
-  display: flex;
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
+  display: flex;
   flex: 0 0 var(--dnd-icon-size);
   align-self: stretch;
   justify-content: center;
   width: var(--dnd-icon-size);
   height: 100%;
-  background: transparent;
-  text-decoration: none;
   cursor: move;
+  text-decoration: none;
+  background: transparent;
 
   [dir="rtl"] & {
     right: 0;
@@ -205,8 +205,8 @@
 
   // Drag handle, while dragging a selected item.
   .sortable-chosen > & {
-    background-color: #f8f8f8;
     cursor: grab;
+    background-color: #f8f8f8;
   }
 
   // Prevent above styles from applying to nested item icons.
@@ -217,8 +217,8 @@
 
 // Drag handle icon.
 .paragraphs-dragdrop__icon {
-  display: block;
   position: relative;
+  display: block;
   width: 100%;
   height: calc(var(--dnd-icon-size) + 2px);
   background: transparent url(../icons/icon-drag-move.svg) no-repeat 50% 50%;
@@ -235,8 +235,8 @@
 // Labels for Paragraph field name or bundle.
 .paragraphs-dragdrop__label {
   display: block;
-  line-height: inherit;
   white-space: nowrap;
+  line-height: inherit;
 
   &--field {
     margin: 10px 0;

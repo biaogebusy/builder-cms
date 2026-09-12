@@ -11,6 +11,10 @@ use Drupal\Component\Annotation\Plugin;
  *
  * For a working example, see \Drupal\system\Plugin\Archiver\Zip
  *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3556927
  * @see \Drupal\Core\Archiver\ArchiverManager
  * @see \Drupal\Core\Archiver\ArchiverInterface
  * @see plugin_api
@@ -30,18 +34,18 @@ class Archiver extends Plugin {
   /**
    * The human-readable name of the archiver plugin.
    *
-   * @ingroup plugin_translatable
-   *
    * @var \Drupal\Core\Annotation\Translation
+   *
+   * @ingroup plugin_translatable
    */
   public $title;
 
   /**
    * The description of the archiver plugin.
    *
-   * @ingroup plugin_translatable
-   *
    * @var \Drupal\Core\Annotation\Translation
+   *
+   * @ingroup plugin_translatable
    */
   public $description;
 

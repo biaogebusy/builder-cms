@@ -2,13 +2,17 @@
 
 namespace Drupal\entity_reference_revisions;
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\RevisionableInterface;
+use Drupal\Core\Entity\RevisionableStorageInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\FieldItemListTranslationChangesInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
+use Drupal\entity_reference_revisions\Plugin\Field\FieldType\EntityReferenceRevisionsItem;
 
 /**
  * Defines a item list class for entity reference fields.
@@ -19,11 +23,63 @@ class EntityReferenceRevisionsFieldItemList extends EntityReferenceFieldItemList
    * {@inheritdoc}
    */
   public function referencedEntities() {
-    $target_entities = [];
+    if ($this->isEmpty()) {
+      return [];
+    }
+
+    $target_entities = $ids = $revision_ids = [];
+
     foreach ($this->list as $delta => $item) {
-      if ($item->entity) {
+      assert($item instanceof EntityReferenceRevisionsItem);
+      if ($item->isEntityLoaded()) {
         $target_entities[$delta] = $item->entity;
       }
+      elseif ($item->target_revision_id !== NULL) {
+        $ids[$item->target_revision_id] = $item->target_id;
+        $revision_ids[$delta] = $item->target_revision_id;
+      }
+      elseif ($item->entity) {
+        $target_entities[$delta] = $item->entity;
+      }
+    }
+    if ($revision_ids) {
+      $target_type = $this->getFieldDefinition()->getSetting('target_type');
+      $storage = \Drupal::entityTypeManager()->getStorage($target_type);
+      assert($storage instanceof RevisionableStorageInterface);
+
+      // Drupal 11.3+ supports static and persistent revision caching, load revisions directly.
+      if (\version_compare(\Drupal::VERSION, '11.2.99', '>')) {
+        $revisions = $storage->loadMultipleRevisions($revision_ids);
+        foreach ($revision_ids as $delta => $revision_id) {
+          if (isset($revisions[$revision_id])) {
+            $target_entities[$delta] = $revisions[$revision_id];
+          }
+        }
+      }
+      else {
+        // Deprecated fallback for Drupal 11.2 and earlier that assumes that referenced entities are in the default
+        // revision to benefit form the entity cache and only falls back to the revision if that assumption was wrong.
+        $entities = [];
+        foreach ($storage->loadMultiple($ids) as $entity) {
+          if ($entity instanceof RevisionableInterface && in_array($entity->getRevisionId(), $revision_ids)) {
+            unset($ids[$entity->getRevisionId()]);
+            $entities[$entity->getRevisionId()] = $entity;
+          }
+        }
+        if ($ids) {
+          $entities += $storage->loadMultipleRevisions(array_flip($ids));
+        }
+        foreach ($revision_ids as $delta => $revision_id) {
+          $entity = $entities[$revision_id] ?? NULL;
+          if ($entity) {
+            $target_entities[$delta] = $entity;
+          }
+        }
+
+      }
+
+      // Ensure the returned array is ordered by deltas.
+      ksort($target_entities);
     }
     return $target_entities;
   }
@@ -120,8 +176,16 @@ class EntityReferenceRevisionsFieldItemList extends EntityReferenceFieldItemList
       }
       // If it is the same entity, only consider it as having affecting changes
       // if the target entity itself has changes.
-      if ($item->entity && $item->entity->hasTranslation($langcode) && $item->entity->getTranslation($langcode)->hasTranslationChanges()) {
-        return TRUE;
+      if ($item->entity && $item->entity->hasTranslation($langcode)) {
+        $entity = $item->entity;
+        assert($entity instanceof ContentEntityInterface);
+        // Ensure it is compared against the loaded revision on 11.3+.
+        if (version_compare(\Drupal::VERSION, '11.2.99', '>') && !$entity->getOriginal()) {
+          $storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId());
+          assert($storage instanceof RevisionableStorageInterface);
+          $entity->setOriginal($storage->loadRevisionUnchanged($entity->getLoadedRevisionId()));
+        }
+        return $entity->getTranslation($langcode)->hasTranslationChanges();
       }
     }
 

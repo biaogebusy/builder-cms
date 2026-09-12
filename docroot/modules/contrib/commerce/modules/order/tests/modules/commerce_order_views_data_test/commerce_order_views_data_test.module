@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks for the Commerce Order Views Data Test module.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+
+/**
+ * Implements hook_entity_base_field_info().
+ *
+ * Mirrors the shape of commerce_promotion's "coupons" field: a multi-valued
+ * entity reference base field on the order, which requires dedicated table
+ * storage.
+ *
+ * @see https://www.drupal.org/project/commerce/issues/3157342
+ */
+function commerce_order_views_data_test_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+
+  if ($entity_type->id() === 'commerce_order') {
+    $fields['test_uninstalled_references'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Uninstalled references'))
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+      ->setSetting('target_type', 'user')
+      ->setDisplayConfigurable('view', TRUE);
+  }
+
+  return $fields;
+}

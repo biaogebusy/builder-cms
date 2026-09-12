@@ -24,7 +24,7 @@ class WebformNodeAccessRulesTest extends WebformNodeBrowserTestBase {
    *
    * @see \Drupal\webform\Tests\WebformEntityAccessControlsTest::testAccessRules
    */
-  public function testAccessRules() {
+  public function testAccessRules(): void {
     $assert_session = $this->assertSession();
 
     /** @var \Drupal\webform\WebformAccessRulesManagerInterface $access_rules_manager */

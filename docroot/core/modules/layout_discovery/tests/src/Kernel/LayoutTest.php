@@ -6,12 +6,16 @@ namespace Drupal\Tests\layout_discovery\Kernel;
 
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\layout_discovery\Hook\LayoutDiscoveryThemeHooks;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Layout functionality.
- *
- * @group Layout
  */
+#[Group('Layout')]
+#[RunTestsInSeparateProcesses]
 class LayoutTest extends KernelTestBase {
 
   /**
@@ -43,14 +47,13 @@ class LayoutTest extends KernelTestBase {
     $this->config('system.theme')->set('default', 'test_layout_theme')->save();
 
     $theme_definitions = $this->container->get('theme.registry')->get();
-    $this->assertContains('template_preprocess_layout', $theme_definitions['test_layout_theme']['preprocess functions']);
+    $this->assertSame(LayoutDiscoveryThemeHooks::class . ':preprocessLayout', $theme_definitions['test_layout_theme']['initial preprocess']);
   }
 
   /**
    * Tests rendering a layout.
-   *
-   * @dataProvider renderLayoutData
    */
+  #[DataProvider('renderLayoutData')]
   public function testRenderLayout($layout_id, $config, $regions, array $html): void {
     $layout = $this->layoutPluginManager->createInstance($layout_id, $config);
     $built['layout'] = $layout->build($regions);

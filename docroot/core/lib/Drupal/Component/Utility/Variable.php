@@ -42,7 +42,8 @@ class Variable {
    * @param mixed $var
    *   The variable to export.
    * @param string $prefix
-   *   A prefix that will be added at the beginning of every lines of the output.
+   *   A prefix that will be added at the beginning of every lines of the
+   *   output.
    *
    * @return string
    *   The variable exported in a way compatible to Drupal's coding standards.
@@ -50,16 +51,16 @@ class Variable {
   public static function export($var, $prefix = '') {
     if (is_array($var)) {
       if (empty($var)) {
-        $output = 'array()';
+        $output = '[]';
       }
       else {
-        $output = "array(\n";
+        $output = "[\n";
         // Don't export keys if the array is non associative.
         $export_keys = array_values($var) != $var;
         foreach ($var as $key => $value) {
           $output .= '  ' . ($export_keys ? static::export($key) . ' => ' : '') . static::export($value, '  ') . ",\n";
         }
-        $output .= ')';
+        $output .= ']';
       }
     }
     elseif (is_bool($var)) {
@@ -85,6 +86,8 @@ class Variable {
       $output = '(object) ' . static::export((array) $var, $prefix);
     }
     else {
+      // @todo var_export() does not use long array syntax. Fix in
+      // https://www.drupal.org/project/drupal/issues/3476894
       $output = var_export($var, TRUE);
     }
 

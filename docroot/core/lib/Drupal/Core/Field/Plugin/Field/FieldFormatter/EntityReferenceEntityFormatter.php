@@ -10,7 +10,6 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'entity reference rendered entity' formatter.
@@ -29,6 +28,12 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
    * The number of times this formatter allows rendering the same entity.
    *
    * @var int
+   *
+   * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0.
+   * EntityViewBuilder #pre_render and #post_render callbacks prevent recursion.
+   *
+   * @see https://www.drupal.org/node/3316878
+   * @see \Drupal\Core\Entity\EntityViewBuilder::getBuildDefaults()
    */
   const RECURSIVE_RENDER_LIMIT = 20;
 
@@ -56,12 +61,19 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
   /**
    * An array of counters for the recursive rendering protection.
    *
+   * @var array
+   *
    * Each counter takes into account all the relevant information about the
    * field and the referenced entity that is being rendered.
    *
-   * @see \Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceEntityFormatter::viewElements()
+   * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0.
+   *  EntityViewBuilder #pre_render and #post_render callbacks prevent
+   *  recursion.
    *
-   * @var array
+   * @see https://www.drupal.org/node/3316878
+   * @see \Drupal\Core\Entity\EntityViewBuilder::getBuildDefaults()
+   *
+   * @see \Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceEntityFormatter::viewElements()
    */
   protected static $recursiveRenderDepth = [];
 
@@ -94,24 +106,6 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
     $this->loggerFactory = $logger_factory;
     $this->entityTypeManager = $entity_type_manager;
     $this->entityDisplayRepository = $entity_display_repository;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['label'],
-      $configuration['view_mode'],
-      $configuration['third_party_settings'],
-      $container->get('logger.factory'),
-      $container->get('entity_type.manager'),
-      $container->get('entity_display.repository')
-    );
   }
 
   /**
@@ -160,40 +154,6 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
     $elements = [];
 
     foreach ($this->getEntitiesToView($items, $langcode) as $delta => $entity) {
-      // Due to render caching and delayed calls, the viewElements() method
-      // will be called later in the rendering process through a '#pre_render'
-      // callback, so we need to generate a counter that takes into account
-      // all the relevant information about this field and the referenced
-      // entity that is being rendered.
-      $recursive_render_id = $items->getFieldDefinition()->getTargetEntityTypeId()
-        . $items->getFieldDefinition()->getTargetBundle()
-        . $items->getName()
-        // We include the referencing entity, so we can render default images
-        // without hitting recursive protections.
-        . $items->getEntity()->id()
-        . $entity->getEntityTypeId()
-        . $entity->id();
-
-      if (isset(static::$recursiveRenderDepth[$recursive_render_id])) {
-        static::$recursiveRenderDepth[$recursive_render_id]++;
-      }
-      else {
-        static::$recursiveRenderDepth[$recursive_render_id] = 1;
-      }
-
-      // Protect ourselves from recursive rendering.
-      if (static::$recursiveRenderDepth[$recursive_render_id] > static::RECURSIVE_RENDER_LIMIT) {
-        $this->loggerFactory->get('entity')->error('Recursive rendering detected when rendering entity %entity_type: %entity_id, using the %field_name field on the %parent_entity_type:%parent_bundle %parent_entity_id entity. Aborting rendering.', [
-          '%entity_type' => $entity->getEntityTypeId(),
-          '%entity_id' => $entity->id(),
-          '%field_name' => $items->getName(),
-          '%parent_entity_type' => $items->getFieldDefinition()->getTargetEntityTypeId(),
-          '%parent_bundle' => $items->getFieldDefinition()->getTargetBundle(),
-          '%parent_entity_id' => $items->getEntity()->id(),
-        ]);
-        return $elements;
-      }
-
       $view_builder = $this->entityTypeManager->getViewBuilder($entity->getEntityTypeId());
       $elements[$delta] = $view_builder->view($entity, $view_mode, $entity->language()->getId());
 

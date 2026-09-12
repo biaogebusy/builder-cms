@@ -157,10 +157,9 @@ class AiCKEditor extends CKEditor5PluginDefault implements ContainerFactoryPlugi
         '#description' => $this->t('Enable this editor feature.'),
       ];
 
-      $subform = $form['config']['plugin_config'] ?? [];
-      $subform_state = SubformState::createForSubform($subform, $form, $form_state);
+      $subform_state = SubformState::createForSubform($form['plugins'][$plugin_id], $form, $form_state);
       $instance = $this->pluginManager->createInstance($plugin_id, $this->configuration['plugins'][$plugin_id] ?? []);
-      $form['plugins'][$plugin_id] = $form['plugins'][$plugin_id] + $instance->buildConfigurationForm($subform, $subform_state);
+      $form['plugins'][$plugin_id] = $instance->buildConfigurationForm($form['plugins'][$plugin_id], $subform_state);
     }
 
     return $form;

@@ -239,6 +239,53 @@ use Drupal\Core\Database\Query\SelectInterface;
  * @endcode
  * if you had a connection object variable $connection available to use. See
  * also the @link container Services and Dependency Injection topic. @endlink
+ * In Object Oriented code:
+ * - If possible, use dependency injection to use the "database" service.
+ *   @code
+ *   use Drupal\Core\Database\Connection;
+ *
+ *   class myClass {
+ *
+ *   public function __construct(protected Connection $database) {
+ *     // ...
+ *   }
+ *   @endcode
+ * - If it is not possible to use dependency injection, for example in a static
+ *   method, use \Drupal::database().
+ *   @code
+ *   $connection = \Drupal::database();
+ *   $query = $connection->query('...');
+ *   @endcode
+ * - If services are not yet available, use
+ *   \Drupal\Core\Database\Database::getConnection() to get a database
+ *   connection;
+ *   @code
+ *   use Drupal\Core\Database\Database;
+ *
+ *   // ...
+ *
+ *   $connection = Database::getConnection();
+ *   $query = $connection->query('...');
+ *   @endcode
+ * - In unit tests, we do not have a booted kernel or a built container. Unit
+ *   tests that need a database service should be converted to a kernel test.
+ * - In kernel and functional test classes, use
+ *   \Drupal\Core\Database\Database::getConnection() to get a database
+ *   connection.
+ *   @code
+ *   use Drupal\Core\Database\Database;
+ *
+ *   // ...
+ *
+ *   $connection = Database::getConnection();
+ *   $query = $connection->query('...');
+ *   @endcode
+ * In procedural code, such as *.module, *.inc or script files:
+ * - Use \Drupal::database(); to get database connection.
+ *   @code
+ *   $connection = \Drupal::database();
+ *   $query = $connection->query('...');
+ *   @endcode
  *
  * @see https://www.drupal.org/docs/drupal-apis/database-api
  * @see entity_api
@@ -422,10 +469,10 @@ use Drupal\Core\Database\Query\SelectInterface;
 /**
  * Perform alterations to a structured query.
  *
- * Structured (aka dynamic) queries that have tags associated may be altered by any module
- * before the query is executed.
+ * Structured (aka dynamic) queries that have tags associated may be altered by
+ * any module before the query is executed.
  *
- * @param $query
+ * @param \Drupal\Core\Database\Query\AlterableInterface $query
  *   A Query object describing the composite parts of a SQL query.
  *
  * @see hook_query_TAG_alter()
@@ -450,7 +497,7 @@ function hook_query_alter(Drupal\Core\Database\Query\AlterableInterface $query) 
  * - ENTITY_TYPE . '_access': For queries of entities that will be displayed in
  *   a listing (e.g., from Views) and therefore require access control.
  *
- * @param $query
+ * @param \Drupal\Core\Database\Query\AlterableInterface $query
  *   A Query object describing the composite parts of a SQL query.
  *
  * @see hook_query_alter()
@@ -502,6 +549,8 @@ function hook_query_TAG_alter(Drupal\Core\Database\Query\AlterableInterface $que
 /**
  * Define the current version of the database schema.
  *
+ * Only procedural implementations are supported for this hook.
+ *
  * A Drupal schema definition is an array structure representing one or more
  * tables and their related keys and indexes. A schema is defined by
  * hook_schema() which must live in your module's .install file.
@@ -528,7 +577,7 @@ function hook_query_TAG_alter(Drupal\Core\Database\Query\AlterableInterface $que
  *
  * @ingroup schemaapi
  */
-function hook_schema() {
+function hook_schema(): array {
   $schema['users_data'] = [
     'description' => 'Stores module data as key/value pairs per user.',
     'fields' => [

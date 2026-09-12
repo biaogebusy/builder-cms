@@ -1,21 +1,21 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
 use Drupal\Core\Datetime\Entity\DateFormat;
+use Drupal\Core\Render\RenderContext;
+use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsGatewayInterface;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Provider\SmsProviderInterface;
 use Drupal\Tests\sms\Functional\SmsFrameworkTestTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\views\Views;
-use Drupal\views\Tests\ViewTestData;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
-use Drupal\sms\Entity\SmsMessage;
-use Drupal\Core\Render\RenderContext;
-use Drupal\sms\Direction;
+use Drupal\views\Tests\ViewTestData;
+use Drupal\views\Views;
 
 /**
  * Tests SMS Framework integration with Views.
@@ -26,9 +26,6 @@ final class SmsFrameworkViewsTest extends ViewsKernelTestBase {
 
   use SmsFrameworkTestTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'user', 'sms', 'sms_test_gateway', 'sms_test_views', 'telephone',
     'dynamic_entity_reference', 'field',
@@ -140,7 +137,7 @@ final class SmsFrameworkViewsTest extends ViewsKernelTestBase {
       'message', 'created', 'gateway', 'sender_entity__target_id',
       'recipient_entity__target_id', 'automated', 'processed', 'queued',
     ];
-    static::assertEquals($cols, array_keys($view->field));
+    static::assertEquals($cols, \array_keys($view->field));
 
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
@@ -174,13 +171,13 @@ final class SmsFrameworkViewsTest extends ViewsKernelTestBase {
 
     $number1 = $message1->getRecipients()[0];
     $number2 = $message1->getRecipients()[1];
-    static::assertEquals('<a href="tel:' . urlencode($number1) . '">' . $number1 . '</a>, <a href="tel:' . urlencode($number2) . '">' . $number2 . '</a>', (string) $render);
+    static::assertEquals('<a href="tel:' . \urlencode($number1) . '">' . $number1 . '</a>, <a href="tel:' . \urlencode($number2) . '">' . $number2 . '</a>', (string) $render);
 
     $number1 = $message2->getRecipients()[0];
     $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['recipient_phone_number']->advancedRender($view->result[1]);
     });
-    static::assertEquals('<a href="tel:' . urlencode($number1) . '">' . $number1 . '</a>', (string) $render);
+    static::assertEquals('<a href="tel:' . \urlencode($number1) . '">' . $number1 . '</a>', (string) $render);
 
     // message.
     $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {

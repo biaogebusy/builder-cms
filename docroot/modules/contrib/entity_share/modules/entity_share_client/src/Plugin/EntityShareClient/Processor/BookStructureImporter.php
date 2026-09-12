@@ -4,28 +4,28 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Import book structure.
- *
- * @ImportProcessor(
- *   id = "book_structure_importer",
- *   label = @Translation("Book structure"),
- *   description = @Translation("Recognizes the optional book structure of nodes and stores that locally with correcting mapping to their new node IDs. Requires JSON:API Book module enabled on the server website."),
- *   stages = {
- *     "prepare_importable_entity_data" = 20,
- *     "post_entity_save" = 20,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'book_structure_importer',
+  label: new TranslatableMarkup('Book structure'),
+  description: new TranslatableMarkup('Recognizes the optional book structure of nodes and stores that locally with correcting mapping to their new node IDs. Requires JSON:API Book module enabled on the server website.'),
+  stages: [
+    'prepare_importable_entity_data' => 20,
+    'post_entity_save' => 20,
+  ],
+)]
 class BookStructureImporter extends ImportProcessorReferencePluginBase {
 
   /**

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\migrate\Unit;
 
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the SQL ID map plugin ensureTables() method.
- *
- * @group migrate
  */
+#[Group('migrate')]
 class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
 
   /**
@@ -161,12 +161,12 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
   /**
    * Actually run the test.
    *
-   * @param array $schema
+   * @param \Drupal\Core\Database\Schema $schema
    *   The mock schema object with expectations set. The Sql constructor calls
    *   ensureTables() which in turn calls this object and the expectations on
    *   it are the actual test and there are no additional asserts added.
    */
-  protected function runEnsureTablesTest($schema) {
+  protected function runEnsureTablesTest($schema): void {
     $database = $this->getMockBuilder('Drupal\Core\Database\Connection')
       ->disableOriginalConstructor()
       ->getMock();
@@ -174,7 +174,7 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
       ->method('schema')
       ->willReturn($schema);
     $database->expects($this->any())
-      ->method('tablePrefix')
+      ->method('getPrefix')
       ->willReturn('');
     $migration = $this->getMigration();
     $plugin = $this->createMock('Drupal\migrate\Plugin\MigrateSourceInterface');

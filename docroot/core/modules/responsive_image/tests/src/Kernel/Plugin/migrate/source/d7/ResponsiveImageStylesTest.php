@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\responsive_image\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\responsive_image\Plugin\migrate\source\d7\ResponsiveImageStyles;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D7 responsive image styles source plugin.
- *
- * @covers \Drupal\responsive_image\Plugin\migrate\source\d7\ResponsiveImageStyles
- * @group image
  */
+#[CoversClass(ResponsiveImageStyles::class)]
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ResponsiveImageStylesTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,6 +24,7 @@ class ResponsiveImageStylesTest extends MigrateSqlSourceTestBase {
   protected static $modules = [
     'migrate_drupal',
     'responsive_image',
+    'breakpoint',
   ];
 
   /**

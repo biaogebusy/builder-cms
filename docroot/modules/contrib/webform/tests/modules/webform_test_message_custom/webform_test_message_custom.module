@@ -2,27 +2,21 @@
 
 /**
  * @file
+ * Test module for custom message.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_test_message_custom\Hook\WebformTestMessageCustomHooks;
+
+/**
+ * @file
  * Support module for Webform module custom message testing.
  */
 
 /**
  * Implements hook_webform_message_custom().
  */
+#[LegacyHook]
 function webform_test_message_custom_webform_message_custom($operation, $id) {
-  // Handle 'webform_test_message_custom' defined in
-  // webform.webform.test_element_message.yml.
-  if ($id === 'webform_test_message_custom') {
-    switch ($operation) {
-      case 'closed':
-        return \Drupal::state()->get($id, FALSE);
-
-      case 'close':
-        \Drupal::state()->set($id, TRUE);
-        return NULL;
-
-      case 'reset':
-        \Drupal::state()->delete($id);
-        return NULL;
-    }
-  }
+  return \Drupal::service(WebformTestMessageCustomHooks::class)->webformMessageCustom($operation, $id);
 }

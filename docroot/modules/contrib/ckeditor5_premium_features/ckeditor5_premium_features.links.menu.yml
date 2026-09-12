@@ -1,0 +1,13 @@
+ckeditor5_premium_features.form.settings_general:
+  title: General Settings
+  route_name: ckeditor5_premium_features.form.settings_general
+  parent: ckeditor5_premium_features.form.settings
+  description: 'General configuration for all premium features (such as license keys etc.).'
+  weight: 20
+
+ckeditor5_premium_features.form.settings:
+  title: CKEditor 5 Premium Features
+  route_name: ckeditor5_premium_features.form.settings
+  parent: system.admin_config_content
+  description: 'Setup additional features such as Real-time collaboration, Track changes or Export to PDF/Word.'
+  weight: 20

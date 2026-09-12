@@ -31,7 +31,7 @@ class WebformUiPathProcessorTest extends UnitTestCase {
   /**
    * @covers ::processOutbound
    */
-  public function testBasicPathsOnly() {
+  public function testBasicPathsOnly(): void {
     $path = $this->pathProcessor->processOutbound('/node');
     $this->assertEquals('/node', $path);
 
@@ -42,7 +42,7 @@ class WebformUiPathProcessorTest extends UnitTestCase {
   /**
    * @covers ::processOutbound
    */
-  public function testUnmatchedQueryString() {
+  public function testUnmatchedQueryString(): void {
     $options = [];
     $request = $this->createMock(Request::class);
     $request->method('getQueryString')
@@ -56,7 +56,7 @@ class WebformUiPathProcessorTest extends UnitTestCase {
   /**
    * @covers ::processOutbound
    */
-  public function testMatchedQueryString() {
+  public function testMatchedQueryString(): void {
     $options = [];
     $request = $this->createMock(Request::class);
     $request->method('getQueryString')

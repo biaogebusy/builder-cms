@@ -52,7 +52,7 @@ class Select extends OptionsBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     $config = $this->configFactory->get('webform.settings');
 
     // Always include empty option.
@@ -221,8 +221,8 @@ class Select extends OptionsBase {
     if ($placeholder_states) {
       $form['form']['placeholder']['#states']['visible'] = [
         [
-        ':input[name="properties[multiple][container][cardinality]"]' => ['value' => 'number'],
-        ':input[name="properties[multiple][container][cardinality_number]"]' => ['!value' => 1],
+          ':input[name="properties[multiple][container][cardinality]"]' => ['value' => 'number'],
+          ':input[name="properties[multiple][container][cardinality_number]"]' => ['!value' => 1],
         ],
         $placeholder_states,
       ];

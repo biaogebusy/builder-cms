@@ -86,9 +86,13 @@ class Predis implements ClientInterface {
     $info['used_memory_human'] = $info['used_memory_human'] ?? $info['Memory']['used_memory_human'] ?? NULL;
 
     if (empty($info['maxmemory_policy'])) {
-      $memory_config = $this->activeClient()->config('get', 'maxmemory*');
-      $info['maxmemory_policy'] = $memory_config['maxmemory-policy'];
-      $info['maxmemory'] = $memory_config['maxmemory'];
+      try {
+        // Hosted Redis instances may disallow CONFIG commands.
+        $memory_config = $this->activeClient()->config('get', 'maxmemory*');
+      }
+      catch (\Exception) {}
+      $info['maxmemory_policy'] = $memory_config['maxmemory-policy'] ?? '';
+      $info['maxmemory'] = $memory_config['maxmemory'] ?? '';
     }
 
     $info['uptime_in_seconds'] = $info['uptime_in_seconds'] ?? $info['Server']['uptime_in_seconds'] ?? NULL;
@@ -105,6 +109,13 @@ class Predis implements ClientInterface {
    */
   public function getName() {
     return 'Predis';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function rawCommand(... $args) {
+    return $this->activeClient()->executeRaw($args);
   }
 
   /**

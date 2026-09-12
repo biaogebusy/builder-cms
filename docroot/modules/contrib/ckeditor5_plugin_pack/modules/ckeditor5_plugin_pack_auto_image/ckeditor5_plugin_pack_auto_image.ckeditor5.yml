@@ -1,0 +1,11 @@
+ckeditor5_plugin_pack_auto_image__auto_image:
+  ckeditor5:
+    plugins:
+      - image.AutoImage
+  drupal:
+    label: Auto Image
+    class: Drupal\ckeditor5_plugin_pack_auto_image\Plugin\CKEditor5Plugin\AutoImage
+    elements: false
+    conditions:
+      plugins:
+        - ckeditor5_image

@@ -60,9 +60,12 @@ class PageVariantContextsForm extends ManageContext {
 
   /**
    * {@inheritdoc}
+   *
+   * Relationships are not supported by Page Manager. ::$relationships is FALSE,
+   * so this is never reached; there is no form class to return.
    */
   protected function getRelationshipClass($cached_values) {
-    // Return VariantRelationshipConfigure::class;.
+    return '';
   }
 
   /**

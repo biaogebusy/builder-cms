@@ -117,7 +117,10 @@ class LanguageAddForm extends LanguageFormBase {
       $this->validateCommon($form['custom_language'], $form_state);
 
       if ($language = $this->languageManager->getLanguage($langcode)) {
-        $form_state->setErrorByName('langcode', $this->t('The language %language (%langcode) already exists.', ['%language' => $language->getName(), '%langcode' => $langcode]));
+        $form_state->setErrorByName('langcode', $this->t('The language %language (%langcode) already exists.', [
+          '%language' => $language->getName(),
+          '%langcode' => $langcode,
+        ]));
       }
     }
     else {
@@ -135,7 +138,10 @@ class LanguageAddForm extends LanguageFormBase {
     }
     else {
       if ($language = $this->languageManager->getLanguage($langcode)) {
-        $form_state->setErrorByName('predefined_langcode', $this->t('The language %language (%langcode) already exists.', ['%language' => $language->getName(), '%langcode' => $langcode]));
+        $form_state->setErrorByName('predefined_langcode', $this->t('The language %language (%langcode) already exists.', [
+          '%language' => $language->getName(),
+          '%langcode' => $langcode,
+        ]));
       }
     }
   }
@@ -152,7 +158,11 @@ class LanguageAddForm extends LanguageFormBase {
     }
     else {
       $standard_languages = LanguageManager::getStandardLanguageList();
-      $label = $standard_languages[$langcode][0];
+      // Translate the label to the current language, this is consistent with
+      // the label in the form select, see
+      // \Drupal\language\ConfigurableLanguageManager::getStandardLanguageListWithoutConfigured().
+      // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
+      $label = $this->t($standard_languages[$langcode][0]);
       $direction = $standard_languages[$langcode][2] ?? ConfigurableLanguage::DIRECTION_LTR;
     }
     $entity->set('id', $langcode);

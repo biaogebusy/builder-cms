@@ -21,11 +21,17 @@ class BasicAuthConnector extends StandardConnector {
    * {@inheritdoc}
    */
   public function getClient(): Client {
-    // We only support one host.
-    return ClientBuilder::create()
-      ->setHosts([$this->configuration['url']])
-      ->setBasicAuthentication($this->configuration['username'], $this->configuration['password'])
-      ->build();
+    $clientBuilder = ClientBuilder::create();
+
+    $clientBuilder->setHttpClient($this->httpClient);
+    $clientBuilder->setHosts([$this->configuration['url']]);
+    $clientBuilder->setBasicAuthentication($this->configuration['username'], $this->configuration['password']);
+
+    if ($this->configuration['enable_debug_logging']) {
+      $clientBuilder->setLogger($this->logger);
+    }
+
+    return $clientBuilder->build();
   }
 
   /**

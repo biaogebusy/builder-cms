@@ -14,16 +14,17 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore funciona
-
 /**
  * Tests Language Negotiation.
  *
  * Uses different negotiators for content and interface.
- *
- * @group language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class ConfigurableLanguageManagerTest extends BrowserTestBase {
 
   use WaitTerminateTestTrait;
@@ -90,10 +91,6 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
 
     // Set the preferred language of the user for admin pages to English.
     $user->set('preferred_admin_langcode', 'en')->save();
-
-    // Make sure node edit pages are administration pages.
-    $this->config('node.settings')->set('use_admin_theme', '1')->save();
-    $this->container->get('router.builder')->rebuild();
 
     // Place a Block with a translatable string on the page.
     $this->placeBlock('system_powered_by_block', ['region' => 'content']);

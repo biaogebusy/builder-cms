@@ -424,6 +424,35 @@ abstract class BaseClassFunctionalJavascriptTests extends WebDriverTestBase {
   }
 
   /**
+   * Fill a prompt textarea that is hidden by the MDX editor.
+   *
+   * The MDX editor (main.jsx) hides the underlying textarea and renders a
+   * React-based rich text editor in its place. Direct fillField() calls on
+   * the hidden textarea cause ElementNotInteractable. Instead, dispatch the
+   * 'drupal:mdx-fill' custom event that the editor listens for to set content
+   * programmatically.
+   *
+   * @param string $field_name
+   *   The HTML name attribute of the textarea (e.g.
+   *   'ai_prompt_subform[foo][add_prompt][prompt]').
+   * @param string $content
+   *   The text content to set.
+   */
+  protected function fillMdxEditorField(string $field_name, string $content): void {
+    $name_json = json_encode($field_name);
+    $content_json = json_encode($content);
+    $this->getSession()->executeScript(
+      "var ta = document.querySelector('textarea[name={$name_json}]');" .
+      "if (ta) {" .
+      "  ta.value = {$content_json};" .
+      "  ta.dispatchEvent(new CustomEvent('drupal:mdx-fill', { detail: { content: {$content_json} } }));" .
+      "  ta.dispatchEvent(new Event('input', { bubbles: true }));" .
+      "  ta.dispatchEvent(new Event('change', { bubbles: true }));" .
+      "}"
+    );
+  }
+
+  /**
    * Set the default AI provider for a given operation type.
    *
    * @param string $operationType

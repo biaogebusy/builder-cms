@@ -21,7 +21,9 @@ class BlazyViewsFieldFile extends BlazyViewsFieldPluginBase {
     $entity = $this->getEntity($values);
 
     if ($entity instanceof File) {
+      /** @var array $settings */
       $settings = $this->mergedViewsSettings([], $entity);
+      $data = [];
 
       $data['#entity']   = $entity;
       $data['#settings'] = $settings;

@@ -5,9 +5,12 @@
  * Redis install related functions.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyRequirementsHook;
+
 /**
  * Implements hook_requirements().
  */
+#[LegacyRequirementsHook]
 function redis_requirements($phase) {
 
   // This module is configured via settings.php file. Using any other phase

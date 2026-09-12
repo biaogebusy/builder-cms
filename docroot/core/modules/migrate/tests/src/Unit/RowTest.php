@@ -7,11 +7,15 @@ namespace Drupal\Tests\migrate\Unit;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\migrate\Row
- * @group migrate
+ * Tests Drupal\migrate\Row.
  */
+#[CoversClass(Row::class)]
+#[Group('migrate')]
 class RowTest extends UnitTestCase {
 
   /**
@@ -210,8 +214,8 @@ class RowTest extends UnitTestCase {
   /**
    * Tests getting/setting the ID Map.
    *
-   * @covers ::setIdMap
-   * @covers ::getIdMap
+   * @legacy-covers ::setIdMap
+   * @legacy-covers ::getIdMap
    */
   public function testGetSetIdMap(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
@@ -267,8 +271,6 @@ class RowTest extends UnitTestCase {
 
   /**
    * Tests getting the source property.
-   *
-   * @covers ::getSourceProperty
    */
   public function testGetSourceProperty(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
@@ -289,6 +291,43 @@ class RowTest extends UnitTestCase {
     $row->setDestinationProperty('nid', 2);
     $this->assertTrue($row->hasDestinationProperty('nid'));
     $this->assertEquals(['nid' => 2], $row->getDestination());
+  }
+
+  /**
+   * Tests checking for and removing destination properties that may be empty.
+   *
+   * @legacy-covers ::hasEmptyDestinationProperty
+   * @legacy-covers ::removeEmptyDestinationProperty
+   */
+  public function testDestinationOrEmptyProperty(): void {
+    $row = new Row($this->testValues, $this->testSourceIds);
+
+    // Set a destination.
+    $row->setDestinationProperty('nid', 2);
+    $this->assertTrue($row->hasDestinationProperty('nid'));
+    $this->assertFalse($row->hasEmptyDestinationProperty('nid'));
+
+    // Set an empty destination.
+    $row->setEmptyDestinationProperty('a_property_with_no_value');
+    $this->assertTrue($row->hasEmptyDestinationProperty('a_property_with_no_value'));
+    $this->assertFalse($row->hasDestinationProperty('a_property_with_no_value'));
+
+    // Removing an empty destination that is not actually empty has no effect.
+    $row->removeEmptyDestinationProperty('nid');
+    $this->assertTrue($row->hasDestinationProperty('nid'));
+    $this->assertFalse($row->hasEmptyDestinationProperty('nid'));
+
+    // Removing a destination that is actually empty has no effect.
+    $row->removeDestinationProperty('a_property_with_no_value');
+    $this->assertTrue($row->hasEmptyDestinationProperty('a_property_with_no_value'));
+
+    // Remove the empty destination.
+    $row->removeEmptyDestinationProperty('a_property_with_no_value');
+    $this->assertFalse($row->hasEmptyDestinationProperty('a_property_with_no_value'));
+
+    // Removing a destination that does not exist does not throw an error.
+    $this->assertFalse($row->hasEmptyDestinationProperty('not_a_property'));
+    $row->removeEmptyDestinationProperty('not_a_property');
   }
 
   /**
@@ -318,10 +357,8 @@ class RowTest extends UnitTestCase {
    *   The key to look up.
    * @param string $expected_value
    *   The expected value.
-   *
-   * @dataProvider getDataProvider
-   * @covers ::get
    */
+  #[DataProvider('getDataProvider')]
   public function testGet($key, $expected_value): void {
     $row = $this->createRowWithDestinationProperties($this->testGetSourceProperties, $this->testGetSourceIds, $this->testGetDestinationProperties);
     $this->assertSame($expected_value, $row->get($key));
@@ -362,10 +399,8 @@ class RowTest extends UnitTestCase {
    *   An array of keys to look up.
    * @param array $expected_values
    *   An array of expected values.
-   *
-   * @covers ::getMultiple
-   * @dataProvider getMultipleDataProvider
    */
+  #[DataProvider('getMultipleDataProvider')]
   public function testGetMultiple(array $keys, array $expected_values): void {
     $row = $this->createRowWithDestinationProperties($this->testGetSourceProperties, $this->testGetSourceIds, $this->testGetDestinationProperties);
     $this->assertEquals(array_combine($keys, $expected_values), $row->getMultiple($keys));

@@ -51,15 +51,15 @@ class MieDemoBaseUtility {
    *
    * @param string $term_name
    *   New term name.
-   * @param string $description
+   * @param string|null $description
    *   (optional) New term description.
-   * @param \Drupal\file\Entity\File $file
+   * @param \Drupal\file\Entity\File|null $file
    *   (optional) File for the term field `field_mie_image`.
    *
    * @return \Drupal\taxonomy\Entity\Term
    *   Drupal Term entity.
    */
-  public static function createMieDemoContentTerm($term_name, $description = NULL, File $file = NULL) {
+  public static function createMieDemoContentTerm(string $term_name, ?string $description = NULL, ?File $file = NULL): Term {
     $values = [
       'vid' => 'mie_demo_content',
       'name' => $term_name,
@@ -102,15 +102,15 @@ class MieDemoBaseUtility {
    *   (optional) Show as expanded menu link.
    * @param string $field_body_value
    *   (optional) Value for menu link body field.
-   * @param \Drupal\taxonomy\Entity\Term[] $taxonomy_terms
+   * @param \Drupal\taxonomy\Entity\Term[]|null $taxonomy_terms
    *   (optional) Taxonomy terms for attaching to menu link.
-   * @param string $image_file_id
+   * @param string|null $image_file_id
    *   (optional) File ID for image field.
    *
    * @return \Drupal\menu_link_content\Entity\MenuLinkContent
    *   Drupal Menu Link Content entity.
    */
-  public static function createMieDemoBaseMenuMenuLinkContent($title, $uri, $weight = 0, $description = '', $parent_uuid = '', $view_mode = '', $show_expanded = FALSE, $field_body_value = '', array $taxonomy_terms = NULL, $image_file_id = NULL) {
+  public static function createMieDemoBaseMenuMenuLinkContent(string $title, string $uri, int $weight = 0, string $description = '', string $parent_uuid = '', string $view_mode = '', bool $show_expanded = FALSE, string $field_body_value = '', ?array $taxonomy_terms = NULL, ?string $image_file_id = NULL): MenuLinkContent {
     $values = [
       'bundle' => 'mie-demo-base-menu',
       'menu_name' => 'mie-demo-base-menu',

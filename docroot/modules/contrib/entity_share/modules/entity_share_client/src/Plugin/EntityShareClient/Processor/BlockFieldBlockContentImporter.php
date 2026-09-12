@@ -4,22 +4,22 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 
 /**
  * Import block contents from block fields.
- *
- * @ImportProcessor(
- *   id = "block_field_block_content_importer",
- *   label = @Translation("Block field block content"),
- *   description = @Translation("Import block contents from block fields. Require the 'Block field (Block field only) (Entity Share)' field enhancer enabled on both client and server websites."),
- *   stages = {
- *     "prepare_importable_entity_data" = 20,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'block_field_block_content_importer',
+  label: new TranslatableMarkup('Block field block content'),
+  description: new TranslatableMarkup('Import block contents from block fields. Require the \'Block field (Block field only) (Entity Share)\' field enhancer enabled on both client and server websites.'),
+  stages: [
+    'prepare_importable_entity_data' => 20,
+  ],
+)]
 class BlockFieldBlockContentImporter extends ImportProcessorReferencePluginBase {
 
   /**

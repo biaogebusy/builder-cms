@@ -10,12 +10,23 @@ field_settings:
       fields:
         - search_api_test/foo
         - 'entity:entity_test/name'
+        - 'entity:entity_test_mul/name'
         - 'entity:entity_test_string_id/name'
+  name:
+    label: Name
+    type: text
+    datasource_id: 'entity:entity_test'
+    property_path: name
+  language_with_fallback:
+    label: 'Language (with fallback)'
+    property_path: language_with_fallback
+    type: string
 options:
   index_directly: true
 datasource_settings:
   search_api_test: {  }
   'entity:entity_test': {  }
+  'entity:entity_test_mul': {  }
   'entity:entity_test_string_id': {  }
 processor_settings: {  }
 tracker_settings:

@@ -36,9 +36,6 @@ services:
 
   # Services.
 
-  webform.addons_manager:
-    class: Drupal\webform\WebformAddonsManager
-
   webform.conditions_manager:
     class: Drupal\webform\WebformEntityConditionsManager
     arguments: ['@plugin.manager.webform.element']
@@ -49,7 +46,7 @@ services:
 
   webform.email_provider:
     class: Drupal\webform\WebformEmailProvider
-    arguments: ['@config.factory', '@module_handler', '@plugin.manager.mail']
+    arguments: ['@config.factory', '@module_handler', '@plugin.manager.mail', '@extension.list.module']
 
   webform.entity_reference_manager:
     class: Drupal\webform\WebformEntityReferenceManager
@@ -57,7 +54,7 @@ services:
 
   webform.help_manager:
     class: Drupal\webform\WebformHelpManager
-    arguments: ['@current_user', '@config.factory', '@module_handler', '@state', '@path.matcher', '@webform.addons_manager', '@webform.libraries_manager', '@plugin.manager.webform.element']
+    arguments: ['@current_user', '@config.factory', '@module_handler', '@state', '@path.matcher', '@webform.libraries_manager', '@plugin.manager.webform.element']
 
   webform.libraries_manager:
     class: Drupal\webform\WebformLibrariesManager
@@ -93,7 +90,7 @@ services:
 
   webform.third_party_settings_manager:
     class: Drupal\webform\WebformThirdPartySettingsManager
-    arguments: ['@config.factory', '@module_handler', '@path.validator', '@webform.addons_manager']
+    arguments: ['@config.factory', '@module_handler', '@path.validator']
 
   webform.token_manager:
     class: Drupal\webform\WebformTokenManager
@@ -127,6 +124,12 @@ services:
     tags:
       - { name: event_subscriber }
 
+  webform.filter_format_subscriber:
+    class: Drupal\webform\EventSubscriber\WebformFilterFormatSubscriber
+    arguments: ['@current_route_match']
+    tags:
+      - { name: event_subscriber }
+
   # Route subscriber.
 
   webform.route_subscriber:
@@ -134,6 +137,7 @@ services:
     arguments: ['@module_handler', '@config.factory']
     tags:
       - { name: event_subscriber }
+
 
   # Route context.
 
@@ -163,3 +167,51 @@ services:
     class: Drupal\webform\Twig\WebformTwigExtension
     tags:
       - { name: twig.extension }
+
+  Drupal\webform\Hook\WebformEditorHooks:
+    class: Drupal\webform\Hook\WebformEditorHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformFormAlterHooks:
+    class: Drupal\webform\Hook\WebformFormAlterHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformLibrariesHooks:
+    class: Drupal\webform\Hook\WebformLibrariesHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformQueryHooks:
+    class: Drupal\webform\Hook\WebformQueryHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformThemeHooks:
+    class: Drupal\webform\Hook\WebformThemeHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformTokensHooks:
+    class: Drupal\webform\Hook\WebformTokensHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformTranslationHooks:
+    class: Drupal\webform\Hook\WebformTranslationHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformAntibotHooks:
+    class: Drupal\webform\Hook\WebformAntibotHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformCaptchaHooks:
+    class: Drupal\webform\Hook\WebformCaptchaHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformHoneypotHooks:
+    class: Drupal\webform\Hook\WebformHoneypotHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformMaillogHooks:
+    class: Drupal\webform\Hook\WebformMaillogHooks
+    autowire: true
+
+  Drupal\webform\Hook\WebformHooks:
+    class: Drupal\webform\Hook\WebformHooks
+    autowire: true

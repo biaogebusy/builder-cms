@@ -13,6 +13,7 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
    * {@inheritdoc}
    */
   public function basicImageForm(array &$form, array $definition): void {
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes = $this->toScopes($definition);
     $data = $scopes->get('data');
 
@@ -32,6 +33,7 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
    * {@inheritdoc}
    */
   public function imageStyleForm(array &$form, array $definition): void {
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes     = $this->toScopes($definition);
     $blazies    = $definition['blazies'];
     $field_type = $blazies->get('field.type');
@@ -99,7 +101,7 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
       $title   = Unicode::ucfirst(str_replace('_', ' ', $key));
       $vanilla = !empty($settings['vanilla']);
 
-      // @todo remove deprecated breakpoints anytime before 3.x.
+      // @todo deprecate and remove deprecated breakpoints anytime before 3.x.
       if ($key == 'breakpoints') {
         continue;
       }
@@ -142,8 +144,12 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
 
   /**
    * Exclude the field formatter settings summary as required.
+   *
+   * @param array $definition
+   *   The definition being modified.
    */
   protected function getExcludedSettingsSummary(array &$definition): void {
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes       = $this->toScopes($definition);
     $settings     = &$definition['settings'];
     $excludes     = $scopes->data('excludes');

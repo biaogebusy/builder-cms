@@ -2,6 +2,7 @@
 
 namespace Drupal\pathauto\Form;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\pathauto\AliasStorageHelperInterface;
@@ -155,6 +156,9 @@ class PathautoAdminDelete extends FormBase {
         $this->aliasStorageHelper->deleteBySourcePrefix((string) $alias_type->getSourcePrefix());
         $this->messenger()->addMessage($this->t('All of your %label path aliases have been deleted.', ['%label' => $alias_type->getLabel()]));
       }
+      // Invalidate all rendered caches and the routing cache so pages
+      // reflect the removed aliases.
+      Cache::invalidateTags(['rendered', 'route_match']);
     }
   }
 

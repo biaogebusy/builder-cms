@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_cards_test\Hook\WebformCardsTestHooks:
+    class: Drupal\webform_cards_test\Hook\WebformCardsTestHooks
+    autowire: true

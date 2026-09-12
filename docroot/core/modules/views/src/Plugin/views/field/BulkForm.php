@@ -22,7 +22,7 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\style\Table;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Defines an actions-based bulk operation form element.
@@ -107,7 +107,17 @@ class BulkForm extends FieldPluginBase implements CacheableDependencyInterface, 
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, MessengerInterface $messenger, EntityRepositoryInterface $entity_repository, ?ResettableStackedRouteMatchInterface $route_match = NULL) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    EntityTypeManagerInterface $entity_type_manager,
+    LanguageManagerInterface $language_manager,
+    MessengerInterface $messenger,
+    EntityRepositoryInterface $entity_repository,
+    #[Autowire(service: 'current_route_match')]
+    ResettableStackedRouteMatchInterface $route_match,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entity_type_manager;
@@ -115,27 +125,7 @@ class BulkForm extends FieldPluginBase implements CacheableDependencyInterface, 
     $this->languageManager = $language_manager;
     $this->messenger = $messenger;
     $this->entityRepository = $entity_repository;
-    if (!$route_match) {
-      @trigger_error('Calling BulkForm::__construct() without the $route_match argument is deprecated in drupal:10.3.0 and the $route_match argument will be required in drupal:11.0.0. See https://www.drupal.org/node/3115868', E_USER_DEPRECATED);
-      $route_match = \Drupal::routeMatch();
-    }
     $this->routeMatch = $route_match;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('messenger'),
-      $container->get('entity.repository'),
-      $container->get('current_route_match')
-    );
   }
 
   /**
@@ -332,7 +322,8 @@ class BulkForm extends FieldPluginBase implements CacheableDependencyInterface, 
       // Replace the form submit button label.
       $form['actions']['submit']['#value'] = $this->t('Apply to selected items');
 
-      // Ensure a consistent container for filters/operations in the view header.
+      // Ensure a consistent container for filters/operations in the view
+      // header.
       $form['header'] = [
         '#type' => 'container',
         '#weight' => -100,

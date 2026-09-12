@@ -3,7 +3,6 @@
 namespace Drupal\commerce_price\Form;
 
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -11,30 +10,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CurrencyForm extends EntityForm {
 
   /**
-   * The currency storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storage;
-
-  /**
-   * Creates a new CurrencyForm object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The currency storage.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->storage = $entity_type_manager->getStorage('commerce_currency');
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
-    $entity_type_manager = $container->get('entity_type.manager');
-
-    return new static($entity_type_manager);
+    $instance = parent::create($container);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    return $instance;
   }
 
   /**
@@ -106,7 +87,7 @@ class CurrencyForm extends EntityForm {
       $form_state->setError($element, $this->t('The currency code must consist of three uppercase letters.'));
     }
     elseif ($currency->isNew()) {
-      $loaded_currency = $this->storage->load($currency_code);
+      $loaded_currency = $this->entityTypeManager->getStorage('commerce_currency')->load($currency_code);
       if ($loaded_currency) {
         $form_state->setError($element, $this->t('The currency code is already in use.'));
       }
@@ -123,7 +104,7 @@ class CurrencyForm extends EntityForm {
       $form_state->setError($element, $this->t('The numeric code must consist of three digits.'));
     }
     elseif ($currency->isNew()) {
-      $loaded_currencies = $this->storage->loadByProperties([
+      $loaded_currencies = $this->entityTypeManager->getStorage('commerce_currency')->loadByProperties([
         'numericCode' => $numeric_code,
       ]);
       if ($loaded_currencies) {

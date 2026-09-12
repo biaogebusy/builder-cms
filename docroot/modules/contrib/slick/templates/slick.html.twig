@@ -70,7 +70,7 @@
     </div>
     {% block slick_arrow %}
       <nav{{ arrow_attributes.addClass(arrow_classes) }}>
-        <button type="button" data-role="none" class="slick-prev" aria-label="{{ settings.prevArrow|t|striptags }}" tabindex="0">{{ settings.prevArrow|t }}</button>
+        <button type="button" data-role="none" class="slick-prev" aria-label="{{ settings.prevArrow|t|striptags }}">{{ settings.prevArrow|t }}</button>
         {%- if arrow_down_attributes is defined -%}
           <button{{ arrow_down_attributes.addClass('slick-down')
             .setAttribute('type', 'button')
@@ -78,7 +78,7 @@
             .setAttribute('data-target', settings.downArrowTarget)
             .setAttribute('data-offset', settings.downArrowOffset) }}></button>
         {%- endif -%}
-        <button type="button" data-role="none" class="slick-next" aria-label="{{ settings.nextArrow|t|striptags }}" tabindex="0">{{ settings.nextArrow|t }}</button>
+        <button type="button" data-role="none" class="slick-next" aria-label="{{ settings.nextArrow|t|striptags }}">{{ settings.nextArrow|t }}</button>
       </nav>
     {% endblock %}
   {%- endif -%}

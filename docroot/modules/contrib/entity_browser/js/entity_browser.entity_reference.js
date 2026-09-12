@@ -29,13 +29,13 @@
         var data_drupal_selector = '[data-drupal-selector^="edit-' + drupalSettings.entity_browser_reopen_browser.replace(/_/g, '-') + '-entity-browser-entity-browser-' + '"][data-uuid]';
         var $launch_browser_element = $(context).find(data_drupal_selector);
         if ($launch_browser_element.attr('data-uuid') in drupalSettings.entity_browser && !drupalSettings.entity_browser[$launch_browser_element.attr('data-uuid')].auto_open) {
-          $launch_browser_element.click();
+          $launch_browser_element.trigger('click');
         }
         // In case this is inside a fieldset closed by default, open it so the
         // user doesn't need to guess the browser is open but hidden there.
         var $fieldset_summary = $launch_browser_element.closest('details').find('summary');
         if ($fieldset_summary.length && $fieldset_summary.attr('aria-expanded') === 'false') {
-          $fieldset_summary.click();
+          $fieldset_summary.trigger('click');
         }
       }
     }

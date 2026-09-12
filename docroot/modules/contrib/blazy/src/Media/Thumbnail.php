@@ -3,8 +3,9 @@
 namespace Drupal\blazy\Media;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Internals\CheckItem;
 use Drupal\blazy\Theme\Attributes;
-use Drupal\blazy\internals\Internals;
 
 /**
  * Provides thumbnail-related methods.
@@ -59,7 +60,7 @@ class Thumbnail {
    * @see https://www.drupal.org/node/2489544
    */
   private static function image(array $settings, $item = NULL, $class = NULL): array {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $tn_uri  = $blazies->get('thumbnail.uri');
     $uri     = $tn_uri ?: $blazies->get('image.uri');
 
@@ -77,17 +78,25 @@ class Thumbnail {
     $style = $blazies->get('thumbnail.id')
       ?: $settings['thumbnail_style'] ?? $blazies->get('thumbnail.fallback');
 
-    // @todo remove if against previous convention with core thumbnail fallback.
+    // @todo deprecate and remove if against previous convention with core thumbnail fallback.
     // Thumbnail URI may be provided via Views style, but not thumbnail_style.
     if (!$style && !$tn_uri) {
       return [];
     }
 
+    // @todo move it out of here, required by vanilla Splide navigation.
+    CheckItem::unstyled($settings, $uri);
+
+    // @todo figure out for phpstan w/o checkImplicitMixed.
+    // $settings = is_array($settings) ? $settings : [];.
+    $blazies = Internals::getBlazies($settings);
+
     // Thumbnails can use image styles, except for SVG for now.
     // @todo check for any modules (ImageMagick) which convert SVG to image,
     // and remove this check if present, leaving it for external URL + data URI.
     $unstyled = $blazies->is('unstyled');
-    $valid = $blazies->get('image.valid') ?: BlazyFile::isValidUri($uri);
+    $valid = $blazies->get('image.valid') ?: Uri::isValid($uri);
+
     if ($valid && !$blazies->is('svg')) {
       $unstyled = FALSE;
     }
@@ -100,7 +109,6 @@ class Thumbnail {
     // sure no unknown edge cases get in the way.
     $alt = $blazies->get('image.alt');
     $alt = $alt ? Attributes::escape($alt) : t('Thumbnail');
-    $delta = $blazies->get('thumbnail.lazy_delta', 4);
 
     $content = [
       '#theme'      => $unstyled ? 'image' : 'image_style',
@@ -110,7 +118,8 @@ class Thumbnail {
       '#alt'        => $alt,
       '#attributes' => [
         'decoding' => 'async',
-        'loading'  => $blazies->get('delta', 0) < $delta ? 'eager' : 'lazy',
+        'loading'  => 'lazy',
+        'fetchpriority' => 'low',
       ],
     ];
 

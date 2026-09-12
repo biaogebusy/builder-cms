@@ -24,6 +24,7 @@ class AiPromptTest extends BrowserTestBase {
     'toolbar',
     'menu_ui',
     'block',
+    'file',
   ];
 
   /**

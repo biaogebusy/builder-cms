@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_payment\Plugin\views\area;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
@@ -62,11 +63,13 @@ class PaymentTotalSummary extends AreaPluginBase {
         }
         /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
         if ($order = $order_storage->load($argument->getValue())) {
+          $payment_total_summary = [
+            '#theme' => 'commerce_payment_total_summary',
+            '#order_entity' => $order,
+          ];
+          CacheableMetadata::createFromObject($order)->applyTo($payment_total_summary);
           return [
-            'payment_total_summary' => [
-              '#theme' => 'commerce_payment_total_summary',
-              '#order_entity' => $order,
-            ],
+            'payment_total_summary' => $payment_total_summary,
           ];
         }
       }

@@ -12,7 +12,7 @@ interface ExifTagMapperInterface {
   /**
    * Resolves a metadata 'key' to the default EXIF IFD and TAG.
    *
-   * @param string|array $key
+   * @param string|array{0: int|string, 1: int|string} $key
    *   A metadata 'key' as passed in by the file metadata manager. It can be a
    *   string, in which case the default IFD and TAG are returned. If it is an
    *   array, then the first and the second array elements define respectively
@@ -20,7 +20,7 @@ interface ExifTagMapperInterface {
    *   they are converted to EXIF integer identifiers, or integers, in which
    *   case they are returned as such.
    *
-   * @return array
+   * @return array{'ifd': int, 'tag': int}
    *   An associative array with the following keys:
    *     'ifd' - the IFD EXIF integer identifier.
    *     'tag' - the TAG EXIF integer identifier.
@@ -33,14 +33,15 @@ interface ExifTagMapperInterface {
   /**
    * Returns a list of default metadata 'keys' supported.
    *
-   * @param array $options
+   * @param array{'ifds'?: bool, 'ifd'?: string}|null $options
    *   (optional) If specified, restricts the results returned. By default, all
    *   the available EXIF IFD/TAG combinations for any IFD are returned.
    *   If $options contains ['ifds' => TRUE], the supported IFDs are returned.
    *   If $options contains ['ifd' => $value], the IFD/TAG combinations
    *   supported by the IFD specified by $value are returned.
+   *   If $options is NULL, no restrictions are applied.
    *
-   * @return array
+   * @return list<array{0: string, 1: int|string}>
    *   A simple array.
    *   When returning a list of supported IFDs, each array element is a simple
    *   array with:
@@ -51,6 +52,6 @@ interface ExifTagMapperInterface {
    *     0 => the string identifier of the IFD.
    *     1 => the string identifier of the TAG.
    */
-  public function getSupportedKeys(array $options = NULL): array;
+  public function getSupportedKeys(?array $options = NULL): array;
 
 }

@@ -24,6 +24,7 @@
 
 .webform-filter-form .form-item input {
   max-width: 300px;
+  margin-inline-end: 0;
 }
 
 .webform-filter-form .form-item select {

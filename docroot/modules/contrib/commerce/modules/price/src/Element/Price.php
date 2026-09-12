@@ -2,10 +2,13 @@
 
 namespace Drupal\commerce_price\Element;
 
+use Drupal\commerce_price\Entity\CurrencyInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element\FormElementBase;
-use Drupal\commerce_price\Entity\CurrencyInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a price form element.
@@ -27,7 +30,21 @@ use Drupal\commerce_price\Entity\CurrencyInterface;
 #[FormElement(
   id: "commerce_price",
 )]
-class Price extends FormElementBase {
+class Price extends FormElementBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The module handler.
+   */
+  protected ModuleHandlerInterface $moduleHandler;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->moduleHandler = $container->get('module_handler');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -38,7 +55,7 @@ class Price extends FormElementBase {
       // List of currencies codes. If empty, all currencies will be available.
       '#available_currencies' => [],
       // The check is performed here so that it is cached.
-      '#price_inline_errors' => \Drupal::moduleHandler()->moduleExists('inline_form_errors'),
+      '#price_inline_errors' => $this->moduleHandler->moduleExists('inline_form_errors'),
 
       '#size' => 10,
       '#maxlength' => 128,

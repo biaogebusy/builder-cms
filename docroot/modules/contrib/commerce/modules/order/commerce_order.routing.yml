@@ -50,9 +50,23 @@ entity.commerce_order.user_view:
     _custom_access: '\Drupal\commerce_order\Access\OrderUserViewAccessCheck::checkAccess'
   options:
     parameters:
-      entity:
-        user: 'entity:user'
-        commerce_order: 'entity:order'
+      user:
+        type: 'entity:user'
+      commerce_order:
+        type: 'entity:commerce_order'
+
+commerce_order.entity_form.form_mode:
+  path: '/admin/commerce/orders/{commerce_order}/form/{form_mode}'
+  defaults:
+    _controller: '\Drupal\commerce_order\Controller\OrderEntityForm::form'
+    _title: 'Order form'
+  options:
+    parameters:
+      commerce_order:
+        type: 'entity:commerce_order'
+  requirements:
+    _entity_access: 'commerce_order.update'
+    _custom_access: '\Drupal\commerce_order\Controller\OrderEntityForm::access'
 
 commerce_order.address_book.overview:
   path: '/user/{user}/address-book'

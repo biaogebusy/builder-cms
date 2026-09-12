@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests pluggable dumper feature.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelDumperTest extends DevelBrowserTestBase {
 
   /**

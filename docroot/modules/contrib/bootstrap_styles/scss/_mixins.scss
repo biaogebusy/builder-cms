@@ -1,5 +1,5 @@
 // Mixins
-@mixin sr-only() {
+@mixin visually-hidden() {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -79,7 +79,7 @@
   }
 
   input {
-    @include sr-only;
+    @include visually-hidden;
 
     + label {
       @include smooth-all-transition;
@@ -128,7 +128,7 @@
   padding: 0;
 
   input {
-    @include sr-only;
+    @include visually-hidden;
 
     + label {
       @include smooth-all-transition;
@@ -245,7 +245,7 @@
   }
 
   input {
-    @include sr-only();
+    @include visually-hidden();
 
     &:checked + label.option {
       border-color: $panel_link_color;

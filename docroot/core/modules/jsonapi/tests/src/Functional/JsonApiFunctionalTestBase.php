@@ -19,6 +19,7 @@ use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Provides helper methods for the JSON:API module's functional tests.
@@ -57,6 +58,13 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
    * @var \Drupal\user\Entity\User
    */
   protected $user;
+
+  /**
+   * Test admin user.
+   *
+   * @var \Drupal\user\Entity\User
+   */
+  protected $adminUser;
 
   /**
    * Test user with access to view profiles.
@@ -184,6 +192,14 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
       'edit any article content',
       'delete any article content',
     ]);
+    $this->adminUser = $this->drupalCreateUser([
+      'create article content',
+      'edit any article content',
+      'delete any article content',
+    ],
+      'jsonapi_admin_user',
+      TRUE,
+    );
 
     // Create a user that can.
     $this->userCanViewProfiles = $this->drupalCreateUser([
@@ -218,7 +234,7 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
    *
    * @see \GuzzleHttp\ClientInterface::request
    */
-  protected function request($method, Url $url, array $request_options) {
+  protected function request($method, Url $url, array $request_options): ResponseInterface {
     try {
       $response = $this->httpClient->request($method, $url->toString(), $request_options);
     }
@@ -268,6 +284,7 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
       $values = [
         'uid' => ['target_id' => $this->user->id()],
         'type' => 'article',
+        'promote' => TRUE,
       ];
 
       if ($referencing_twice) {

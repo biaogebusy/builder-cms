@@ -21,6 +21,9 @@
 'administer webform element access':
   title: 'Administer webform element access'
   description: 'Restrict webform element access to certain roles and users.'
+'administer webform overview':
+  title: 'Administer webform overview'
+  description: 'Filter webforms and perform bulk actions on overview page.'
 
 'edit webform source':
   title: 'Edit webform source code'

@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Routing;
 
+use Drupal\Core\Database\Connection;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
-
-use Drupal\Core\Database\Connection;
 
 /**
  * Utility methods to generate sample data, database configuration, etc.
@@ -20,7 +19,7 @@ class RoutingFixtures {
    * @param \Drupal\Core\Database\Connection $connection
    *   The connection to use to create the tables.
    */
-  public function createTables(Connection $connection) {
+  public function createTables(Connection $connection): void {
     $tables = $this->routingTableDefinition();
     $schema = $connection->schema();
 
@@ -36,7 +35,7 @@ class RoutingFixtures {
    * @param \Drupal\Core\Database\Connection $connection
    *   The connection to use to drop the tables.
    */
-  public function dropTables(Connection $connection) {
+  public function dropTables(Connection $connection): void {
     $tables = $this->routingTableDefinition();
     $schema = $connection->schema();
 
@@ -48,7 +47,7 @@ class RoutingFixtures {
   /**
    * Returns a static version of the routes.
    */
-  public function staticSampleRouteCollection() {
+  public function staticSampleRouteCollection(): array {
     $routes = [];
     $routes['route_a'] = [
       'path' => '/path/one',
@@ -83,8 +82,9 @@ class RoutingFixtures {
    * Returns a standard set of routes for testing.
    *
    * @return \Symfony\Component\Routing\RouteCollection
+   *   An array of of predefined routes for testing.
    */
-  public function sampleRouteCollection() {
+  public function sampleRouteCollection(): RouteCollection {
     $collection = new RouteCollection();
 
     $route = new Route('path/one');
@@ -115,8 +115,9 @@ class RoutingFixtures {
    * Returns a complex set of routes for testing.
    *
    * @return \Symfony\Component\Routing\RouteCollection
+   *   A RouteCollection with varied route structures.
    */
-  public function complexRouteCollection() {
+  public function complexRouteCollection(): RouteCollection {
     $collection = new RouteCollection();
 
     $route = new Route('/path/{thing}/one');
@@ -145,8 +146,9 @@ class RoutingFixtures {
    * Returns a complex set of routes for testing.
    *
    * @return \Symfony\Component\Routing\RouteCollection
+   *   A RouteCollection containing routes with mixed casing and Unicode characters.
    */
-  public function mixedCaseRouteCollection() {
+  public function mixedCaseRouteCollection(): RouteCollection {
     $collection = new RouteCollection();
 
     $route = new Route('/path/one');
@@ -179,8 +181,9 @@ class RoutingFixtures {
    * Returns a complex set of routes for testing.
    *
    * @return \Symfony\Component\Routing\RouteCollection
+   *   A RouteCollection containing duplicate paths with different route names.
    */
-  public function duplicatePathsRouteCollection() {
+  public function duplicatePathsRouteCollection(): RouteCollection {
     $collection = new RouteCollection();
 
     $route = new Route('/path/one');
@@ -217,8 +220,9 @@ class RoutingFixtures {
    * Returns a Content-type restricted set of routes for testing.
    *
    * @return \Symfony\Component\Routing\RouteCollection
+   *   A RouteCollection containing routes with Content-type restrictions for testing.
    */
-  public function contentRouteCollection() {
+  public function contentRouteCollection(): RouteCollection {
     $collection = new RouteCollection();
 
     $route = new Route('path/three');
@@ -234,12 +238,33 @@ class RoutingFixtures {
   }
 
   /**
+   * Returns a set of routes and aliases for testing.
+   */
+  public function aliasedRouteCollection(): RouteCollection {
+    $collection = new RouteCollection();
+
+    $route = new Route('path/one');
+    $collection->add('route_a', $route);
+
+    $collection->addAlias('route_b', 'route_a');
+
+    $collection->addAlias('route_c', 'route_a')
+      ->setDeprecated(
+        'drupal/core',
+        '11.2.0',
+        '%alias_id% is deprecated!',
+      );
+
+    return $collection;
+  }
+
+  /**
    * Returns the table definition for the routing fixtures.
    *
    * @return array
    *   Table definitions.
    */
-  public function routingTableDefinition() {
+  public function routingTableDefinition(): array {
 
     $tables['test_routes'] = [
       'description' => 'Maps paths to various callbacks (access, page and title)',
@@ -299,13 +324,20 @@ class RoutingFixtures {
         ],
         'route' => [
           'description' => 'A serialized Route object',
-          'type' => 'text',
+          'type' => 'blob',
+          'size' => 'big',
+        ],
+        'alias' => [
+          'description' => 'The alias of the route, if applicable.',
+          'type' => 'varchar_ascii',
+          'length' => 255,
         ],
       ],
       'indexes' => [
         'fit' => ['fit'],
         'pattern_outline' => ['pattern_outline'],
         'provider' => ['provider'],
+        'alias' => ['alias'],
       ],
       'primary key' => ['name'],
     ];

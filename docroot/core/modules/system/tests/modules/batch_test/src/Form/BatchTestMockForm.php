@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\batch_test\Form;
 
+use Drupal\batch_test\BatchTestHelper;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -24,12 +27,12 @@ class BatchTestMockForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['test_value'] = [
-      '#title' => t('Test value'),
+      '#title' => $this->t('Test value'),
       '#type' => 'textfield',
     ];
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Submit'),
+      '#value' => $this->t('Submit'),
     ];
 
     return $form;
@@ -39,7 +42,8 @@ class BatchTestMockForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    batch_test_stack('mock form submitted with value = ' . $form_state->getValue('test_value'));
+    $batch_test_helper = new BatchTestHelper();
+    $batch_test_helper->stack('mock form submitted with value = ' . $form_state->getValue('test_value'));
   }
 
 }

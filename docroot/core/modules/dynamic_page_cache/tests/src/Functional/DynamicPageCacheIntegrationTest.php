@@ -8,6 +8,8 @@ use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Url;
 use Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Enables the Dynamic Page Cache and tests it in various scenarios.
@@ -18,10 +20,10 @@ use Drupal\Tests\BrowserTestBase;
  * all of that again. It is tested in
  * RendererBubblingTest::testConditionalCacheContextBubblingSelfHealing().
  *
- * @group dynamic_page_cache
- *
  * @see \Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber
  */
+#[Group('dynamic_page_cache')]
+#[RunTestsInSeparateProcesses]
 class DynamicPageCacheIntegrationTest extends BrowserTestBase {
 
   /**
@@ -129,6 +131,38 @@ class DynamicPageCacheIntegrationTest extends BrowserTestBase {
     $this->drupalGet('/dynamic-page-cache-test/html/uncacheable/route-access');
     $this->assertSession()->responseHeaderExists(DynamicPageCacheSubscriber::HEADER);
     $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'UNCACHEABLE (poor cacheability)');
+
+    // For the 403 responses, the main request is ignored but the sub-request
+    // for the 403 page is cached.
+    $this->drupalGet('/dynamic-page-cache-test/cacheable-html/access-denied');
+    $this->assertSession()->statusCodeEquals(403);
+    $this->assertSession()->responseHeaderExists(DynamicPageCacheSubscriber::HEADER);
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'UNCACHEABLE (403, sub-request: MISS)');
+    $this->drupalGet('/dynamic-page-cache-test/cacheable-html/access-denied');
+    $this->assertSession()->statusCodeEquals(403);
+    $this->assertSession()->responseHeaderExists(DynamicPageCacheSubscriber::HEADER);
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'UNCACHEABLE (403, sub-request: HIT)');
+
+    // The Dynamic Page Cache header is also present for JSON responses, but
+    // there is no sub-request in that case.
+    $this->drupalGet('/dynamic-page-cache-test/cacheable-json/access-denied');
+    $this->assertSession()->statusCodeEquals(403);
+    $this->assertSession()->responseHeaderExists(DynamicPageCacheSubscriber::HEADER);
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'UNCACHEABLE (403)');
+    $this->drupalGet('/dynamic-page-cache-test/cacheable-json/access-denied');
+    $this->assertSession()->statusCodeEquals(403);
+    $this->assertSession()->responseHeaderExists(DynamicPageCacheSubscriber::HEADER);
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'UNCACHEABLE (403)');
+
+    // Same behavior for 404 responses.
+    $this->drupalGet('/does/not/exist');
+    $this->assertSession()->statusCodeEquals(404);
+    $this->assertSession()->responseHeaderExists(DynamicPageCacheSubscriber::HEADER);
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'UNCACHEABLE (404, sub-request: MISS)');
+    $this->drupalGet('/does/not/exist');
+    $this->assertSession()->statusCodeEquals(404);
+    $this->assertSession()->responseHeaderExists(DynamicPageCacheSubscriber::HEADER);
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'UNCACHEABLE (404, sub-request: HIT)');
   }
 
 }

@@ -7,3 +7,22 @@ total_summary:
   css:
     layout:
       css/commerce_order.total_summary.css: {}
+
+admin-order:
+  css:
+    theme:
+      css/commerce_order.admin-order.css: {}
+  dependencies:
+    - commerce/admin
+
+order-items-widget:
+  js:
+    js/commerce_order.order-items-widget.js: {}
+  dependencies:
+    - core/once
+
+order-item-edit-form:
+  js:
+    js/commerce_order.order-item-edit-form.js: {}
+  dependencies:
+    - core/once

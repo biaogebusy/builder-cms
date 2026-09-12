@@ -2,11 +2,10 @@
 
 namespace Drupal\commerce_promotion;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,34 +35,13 @@ class CouponListBuilder extends EntityListBuilder {
   protected $usageCounts;
 
   /**
-   * Constructs a new CouponListBuilder object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   *   The entity storage.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The current route match.
-   * @param \Drupal\commerce_promotion\PromotionUsageInterface $usage
-   *   The usage.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RouteMatchInterface $route_match, PromotionUsageInterface $usage) {
-    parent::__construct($entity_type, $storage);
-
-    $this->routeMatch = $route_match;
-    $this->usage = $usage;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('current_route_match'),
-      $container->get('commerce_promotion.usage')
-    );
+    $instance = parent::createInstance($container, $entity_type);
+    $instance->routeMatch = $container->get('current_route_match');
+    $instance->usage = $container->get('commerce_promotion.usage');
+    return $instance;
   }
 
   /**
@@ -71,7 +49,7 @@ class CouponListBuilder extends EntityListBuilder {
    */
   public function load() {
     $promotion = $this->routeMatch->getParameter('commerce_promotion');
-    $coupons = $this->storage->loadMultipleByPromotion($promotion);
+    $coupons = $this->getStorage()->loadMultipleByPromotion($promotion);
     // Load the usage counts for each coupon.
     $this->usageCounts = $this->usage->loadMultipleByCoupon($coupons);
 
@@ -83,8 +61,11 @@ class CouponListBuilder extends EntityListBuilder {
    */
   public function buildHeader() {
     $header['code'] = $this->t('Code');
+    $header['status'] = $this->t('Status');
     $header['usage'] = $this->t('Usage');
     $header['customer_limit'] = $this->t('Per-customer limit');
+    $header['start_date'] = $this->t('Start date');
+    $header['end_date'] = $this->t('End date');
     return $header + parent::buildHeader();
   }
 
@@ -98,14 +79,49 @@ class CouponListBuilder extends EntityListBuilder {
     $usage_limit = $usage_limit ?: $this->t('Unlimited');
     $customer_limit = $entity->getCustomerUsageLimit();
     $customer_limit = $customer_limit ?: $this->t('Unlimited');
+    $start_date = $entity->getStartDate();
+    $end_date = $entity->getEndDate();
     $row['code'] = $entity->label();
-    if (!$entity->isEnabled()) {
-      $row['code'] .= ' (' . $this->t('Disabled') . ')';
-    }
+    $row['status'] = $entity->isEnabled() ? $this->t('Enabled') : $this->t('Disabled');
     $row['usage'] = $current_usage . ' / ' . $usage_limit;
     $row['customer_limit'] = $customer_limit;
+    // These are floating wall-clock values, so format them as-is without any
+    // timezone handling (matching PromotionListBuilder).
+    $row['start_date'] = $start_date ? $start_date->format('M jS Y H:i:s') : '—';
+    $row['end_date'] = $end_date ? $end_date->format('M jS Y H:i:s') : '—';
 
     return $row + parent::buildRow($entity);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $cacheability = func_num_args() > 1 ? func_get_arg(1) : NULL;
+    $operations = parent::getDefaultOperations($entity, $cacheability);
+
+    $access = $entity->access('update', NULL, TRUE);
+    if ($cacheability instanceof CacheableMetadata) {
+      $cacheability->addCacheableDependency($access);
+    }
+    if ($access->isAllowed()) {
+      if (!$entity->isEnabled() && $entity->hasLinkTemplate('enable-form')) {
+        $operations['enable'] = [
+          'title' => $this->t('Enable'),
+          'weight' => -10,
+          'url' => $this->ensureDestination($entity->toUrl('enable-form')),
+        ];
+      }
+      elseif ($entity->hasLinkTemplate('disable-form')) {
+        $operations['disable'] = [
+          'title' => $this->t('Disable'),
+          'weight' => 40,
+          'url' => $this->ensureDestination($entity->toUrl('disable-form')),
+        ];
+      }
+    }
+
+    return $operations;
   }
 
 }

@@ -59,10 +59,6 @@
  * grid to inline vertical radios.
  */
 @media (max-width: 768px) {
-  .form-type-webform-likert table.sticky-header {
-    display: none;
-  }
-
   .form-type-webform-likert table {
     border-collapse: collapse;
     font-size: inherit;

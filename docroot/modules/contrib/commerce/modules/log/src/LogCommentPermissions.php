@@ -12,30 +12,17 @@ class LogCommentPermissions implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
-   * The entity type manager.
+   * Constructs a new LogCommentPermissions object.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The log template manager.
-   *
-   * @var \Drupal\commerce_log\LogTemplateManagerInterface
-   */
-  protected $logTemplateManager;
-
-  /**
-   * Constructs a new CommentPermissions object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\commerce_log\LogTemplateManagerInterface $log_template_manager
+   * @param \Drupal\commerce_log\LogTemplateManagerInterface $logTemplateManager
    *   The log template manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, LogTemplateManagerInterface $log_template_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->logTemplateManager = $log_template_manager;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected LogTemplateManagerInterface $logTemplateManager,
+  ) {
   }
 
   /**
@@ -49,7 +36,7 @@ class LogCommentPermissions implements ContainerInjectionInterface {
   }
 
   /**
-   * Builds a list of permissions for entity types that support comments..
+   * Builds a list of permissions for entity types that support comments.
    *
    * @return array
    *   The permissions.

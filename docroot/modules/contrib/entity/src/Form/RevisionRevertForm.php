@@ -138,7 +138,11 @@ class RevisionRevertForm extends ConfirmFormBase {
 
     $this->revision->save();
 
-    $this->logger('content')->notice('@type: reverted %title revision %revision.', ['@type' => $this->revision->bundle(), '%title' => $this->revision->label(), '%revision' => $this->revision->getRevisionId()]);
+    $this->logger('content')->notice('@type: reverted %title revision %revision.', [
+      '@type' => $this->revision->bundle(),
+      '%title' => $this->revision->label(),
+      '%revision' => $this->revision->getRevisionId(),
+    ]);
     $form_state->setRedirect(
       "entity.{$this->revision->getEntityTypeId()}.version_history",
       [$this->revision->getEntityTypeId() => $this->revision->id()]
@@ -168,6 +172,7 @@ class RevisionRevertForm extends ConfirmFormBase {
    *   The entity revision.
    *
    * @return string
+   *   The bundle label.
    */
   protected function getBundleLabel(RevisionableInterface $revision) {
     /** @var \Drupal\Core\Entity\EntityInterface|\Drupal\Core\Entity\RevisionableInterface $revision */

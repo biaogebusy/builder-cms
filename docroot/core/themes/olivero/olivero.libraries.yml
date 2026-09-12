@@ -1,5 +1,14 @@
 global-styling:
   version: VERSION
+  fonts:
+    fonts/metropolis/Metropolis-Regular.woff2:
+      preload: true
+    fonts/metropolis/Metropolis-SemiBold.woff2:
+      preload: true
+    fonts/metropolis/Metropolis-Bold.woff2:
+      preload: true
+    fonts/lora/lora-v14-latin-regular.woff2:
+      preload: true
   css:
     base:
       css/base/fonts.css: {}
@@ -38,15 +47,12 @@ global-styling:
       css/components/hero.css: {}
       css/components/links.css: {}
       css/components/layout-field.css: {}
-      css/components/messages.css: {}
       css/components/navigation/nav-button-mobile.css: {}
       css/components/node.css: {}
       css/components/node-teaser.css: {}
-      css/components/page-title.css: {}
       css/components/site-header.css: {}
       css/components/skip-link.css: {}
       css/components/pager.css: {}
-      css/components/table.css: {}
       css/components/text-content.css: {}
       css/components/wide-content.css: {}
 
@@ -58,12 +64,6 @@ global-styling:
     - core/once
     - core/tabbable
     - olivero/navigation-base
-
-book:
-  version: VERSION
-  css:
-    theme:
-      css/components/book.css: {}
 
 cke-dialog:
   version: VERSION
@@ -146,12 +146,6 @@ filter.theme:
     component:
       css/theme/filter.theme.css: {}
 
-forum:
-  version: VERSION
-  css:
-    component:
-      css/components/forum.css: {}
-
 layout_builder_fourcol_section:
   version: VERSION
   css:
@@ -210,6 +204,9 @@ messages:
   version: VERSION
   js:
     js/messages.js: {}
+  css:
+    component:
+      css/components/messages.css: {}
   dependencies:
     - olivero/global-styling
 
@@ -301,3 +298,18 @@ tags:
   css:
     theme:
       css/components/tags.css: {}
+
+olivero.table:
+  version: VERSION
+  css:
+    component:
+      css/components/table.css: {}
+  moved_files:
+    olivero/global-styling:
+      deprecation_version: 11.3.0
+      removed_version: 12.0.0
+      deprecation_link: https://www.drupal.org/node/3517675
+      css:
+        component:
+          css/components/table.css:
+            base: css/components/table.css

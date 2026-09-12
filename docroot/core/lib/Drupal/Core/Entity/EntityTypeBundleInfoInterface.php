@@ -30,7 +30,18 @@ interface EntityTypeBundleInfoInterface {
    *   The inner arrays are associative arrays of bundle information, such as
    *   the label for the bundle.
    */
-  public function getBundleInfo($entity_type_id);
+  public function getBundleInfo(/* string */ $entity_type_id);
+
+  /**
+   * Gets an array of bundle labels for an entity type.
+   *
+   * @param string $entity_type_id
+   *   The entity type ID.
+   *
+   * @return array
+   *   An array of bundle labels, keyed by bundle id.
+   */
+  public function getBundleLabels(string $entity_type_id): array;
 
   /**
    * Clears static and persistent bundles.

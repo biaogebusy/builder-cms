@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Functional\Entity;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\system\Functional\Cache\PageCacheTagsTestBase;
+use Drupal\Tests\system\Traits\CacheTestTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 
@@ -22,6 +23,7 @@ use Drupal\user\RoleInterface;
  * Provides helper methods for Entity cache tags tests.
  */
 abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
+  use CacheTestTrait;
 
   /**
    * {@inheritdoc}
@@ -220,7 +222,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
 
     // Create a "foo" bundle for the given entity type.
     $bundle = 'foo';
-    entity_test_create_bundle($bundle, NULL, $entity_type);
+    EntityTestHelper::createBundle($bundle, NULL, $entity_type);
 
     // Add a field of the given type to the given entity type's "foo" bundle.
     $field_name = $referenced_entity->getEntityTypeId() . '_reference';
@@ -305,7 +307,8 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
    * - entity cache tag: "<entity type>:<entity ID>"
    * - entity type list cache tag: "<entity type>_list"
    * - referencing entity type view cache tag: "<referencing entity type>_view"
-   * - referencing entity type cache tag: "<referencing entity type>:<referencing entity ID>"
+   * - referencing entity type cache tag: "
+   *   <referencing entity type>:<referencing entity ID>"
    */
   public function testReferencedEntity(): void {
     $entity_type = $this->entity->getEntityTypeId();
@@ -322,7 +325,10 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     // The default cache contexts for rendered entities.
     $default_cache_contexts = ['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'user.permissions'];
     $entity_cache_contexts = Cache::mergeContexts($default_cache_contexts, ['url.site']);
-    $page_cache_contexts = Cache::mergeContexts($default_cache_contexts, ['url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT, 'user.roles:authenticated']);
+    $page_cache_contexts = Cache::mergeContexts(
+      $default_cache_contexts,
+      ['url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT, 'user.roles:authenticated'],
+    );
 
     // Cache tags present on every rendered page.
     // 'user.permissions' is a required cache context, and responses that vary
@@ -609,64 +615,21 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
   }
 
   /**
-   * Creates a cache ID from a list of cache keys and a set of cache contexts.
-   *
-   * @param string[] $keys
-   *   A list of cache keys.
-   * @param string[] $contexts
-   *   A set of cache contexts.
-   *
-   * @return string
-   *   The cache ID string.
-   *
-   * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no
-   *   replacement.
-   *
-   * @see https://www.drupal.org/node/3354596
-   */
-  protected function createCacheId(array $keys, array $contexts) {
-    @trigger_error(__FUNCTION__ . '() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3354596', E_USER_DEPRECATED);
-    $cid_parts = $keys;
-
-    $contexts = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($contexts);
-    $cid_parts = array_merge($cid_parts, $contexts->getKeys());
-
-    return implode(':', $cid_parts);
-  }
-
-  /**
-   * Verify that a given render cache entry exists, with the correct cache tags.
-   *
-   * @param string[] $keys
-   *   The render cache item keys.
-   * @param array $tags
-   *   An array of expected cache tags.
-   * @param \Drupal\Core\Cache\CacheableDependencyInterface $cacheability
-   *   The initial cacheability the item was rendered with.
-   */
-  protected function verifyRenderCache(array $keys, array $tags, CacheableDependencyInterface $cacheability) {
-    $cache_bin = $this->getRenderCacheBackend();
-
-    // Also verify the existence of an entity render cache entry.
-    $cache_entry = $cache_bin->get($keys, $cacheability);
-    $this->assertInstanceOf(\stdClass::class, $cache_entry);
-    sort($cache_entry->tags);
-    sort($tags);
-    $this->assertSame($cache_entry->tags, $tags);
-  }
-
-  /**
    * Retrieves the render cache backend as a variation cache.
    *
    * This is how Drupal\Core\Render\RenderCache uses the render cache backend.
+   *
+   * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0.
+   * Use ::getRenderVariationCache() instead, which is inherited
+   * from CacheTestTrait.
+   *
+   * @see https://www.drupal.org/project/drupal/issues/3085475
    *
    * @return \Drupal\Core\Cache\VariationCacheInterface
    *   The render cache backend as a variation cache.
    */
   protected function getRenderCacheBackend() {
-    /** @var \Drupal\Core\Cache\VariationCacheFactoryInterface $variation_cache_factory */
-    $variation_cache_factory = \Drupal::service('variation_cache_factory');
-    return $variation_cache_factory->get('render');
+    return $this->getRenderVariationCache();
   }
 
 }

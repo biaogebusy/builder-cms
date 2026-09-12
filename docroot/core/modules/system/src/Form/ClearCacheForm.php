@@ -4,13 +4,14 @@ namespace Drupal\system\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 
 /**
  * Clear caches for this site.
  *
  * @internal
  */
-class ClearCacheForm extends FormBase {
+class ClearCacheForm extends FormBase implements WorkspaceSafeFormInterface {
 
   /**
    * {@inheritdoc}
@@ -23,14 +24,7 @@ class ClearCacheForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
-    $form['clear_cache'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Clear cache'),
-      '#open' => TRUE,
-    ];
-
-    $form['clear_cache']['clear'] = [
+    $form['clear'] = [
       '#type' => 'submit',
       '#value' => $this->t('Clear all caches'),
     ];

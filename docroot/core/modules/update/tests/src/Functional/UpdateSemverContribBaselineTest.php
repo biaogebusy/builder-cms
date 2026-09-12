@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\update\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
- * Tests the Update Manager module with a contrib module with semver versions.
- *
- * @group update
+ * Tests the Update Status module with a contrib module with semver versions.
  */
+#[Group('update')]
+#[RunTestsInSeparateProcesses]
 class UpdateSemverContribBaselineTest extends UpdateSemverContribTestBase {
 
   use UpdateSemverTestBaselineTrait;

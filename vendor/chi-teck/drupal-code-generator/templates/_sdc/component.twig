@@ -26,3 +26,13 @@ props:
       examples: []
     {% endfor %}
 {% endif %}
+{% if component_slots|length > 0 %}
+slots:
+  {% for slot in component_slots %}
+  {{ slot.name }}:
+    title: {{ slot.title }}
+    {% if slot.description %}
+    description: {{ slot.description }}
+    {% endif %}
+  {% endfor %}
+{% endif %}

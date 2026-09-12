@@ -7,13 +7,16 @@ namespace Drupal\Tests\Core\Session;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Session\UserSession;
 use Drupal\Tests\UnitTestCase;
-use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @coversDefaultClass \Drupal\Core\Session\UserSession
- * @group Session
+ * Tests Drupal\Core\Session\UserSession.
  */
+#[CoversClass(UserSession::class)]
+#[Group('Session')]
 class UserSessionTest extends UnitTestCase {
 
   /**
@@ -55,8 +58,8 @@ class UserSessionTest extends UnitTestCase {
   /**
    * Tests the method getRoles exclude or include locked roles based in param.
    *
-   * @covers ::getRoles
    * @todo Move roles constants to a class/interface
+   * @legacy-covers ::getRoles
    */
   public function testUserGetRoles(): void {
     $user = $this->createUserSession(['role_two'], TRUE);
@@ -66,8 +69,6 @@ class UserSessionTest extends UnitTestCase {
 
   /**
    * Tests the hasRole method.
-   *
-   * @covers ::hasRole
    */
   public function testHasRole(): void {
     $user1 = $this->createUserSession(['role_one']);
@@ -83,18 +84,47 @@ class UserSessionTest extends UnitTestCase {
   }
 
   /**
-   * Tests deprecation when permission is not a string.
+   * Tests the name property deprecation.
    *
-   * @covers ::hasPermission
-   * @group legacy
+   * @legacy-covers ::__get
+   * @legacy-covers ::__isset
+   * @legacy-covers ::__set
    */
-  public function testHasPermissionLegacy(): void {
-    $this->expectDeprecation('Calling Drupal\Core\Session\UserSession::hasPermission() with a $permission parameter of type other than string is deprecated in drupal:10.3.0 and will cause an error in drupal:11.0.0. See https://www.drupal.org/node/3411485');
-    $this->assertFalse((new UserSession())->hasPermission(NULL));
-    $this->expectDeprecation('Calling Drupal\user\Entity\User::hasPermission() with a $permission parameter of type other than string is deprecated in drupal:10.3.0 and will cause an error in drupal:11.0.0. See https://www.drupal.org/node/3411485');
-    $reflection = new \ReflectionClass(User::class);
-    $user = $reflection->newInstanceWithoutConstructor();
-    $this->assertFalse($user->hasPermission(NULL));
+  #[IgnoreDeprecations]
+  public function testNamePropertyDeprecation(): void {
+    $user = new UserSession([
+      'name' => 'test',
+    ]);
+    $this->expectUserDeprecationMessage('Getting the name property is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Session\UserSession::getAccountName() instead. See https://www.drupal.org/node/3513856');
+    self::assertEquals($user->name, $user->getAccountName());
+    $this->expectUserDeprecationMessage('Checking for the name property is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Session\UserSession::getAccountName() instead. See https://www.drupal.org/node/3513856');
+    self::assertTrue(isset($user->name));
+
+    // Test setting the name property.
+    $this->expectUserDeprecationMessage('Setting the name property is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Set the name via the constructor when creating the UserSession instance. See https://www.drupal.org/node/3513856');
+    $user->name = 'test new';
+    $this->assertEquals('test new', $user->getAccountName());
+
+    // Verify protected properties cannot be accessed.
+    $this->expectExceptionMessage('Cannot access protected property mail in Drupal\Core\Session\UserSession');
+    $user->mail;
+
+    // Verify dynamic properties can be set and accessed.
+    $user->foo = 'bar';
+    $this->assertEquals('bar', $user->foo);
+  }
+
+  /**
+   * Tests that ::getLastAccessedTime() returns an integer.
+   *
+   * @legacy-covers ::getLastAccessedTime
+   */
+  public function testGetLastAccessedTime(): void {
+    $user = new UserSession([
+      'access' => '1234567890',
+    ]);
+
+    $this->assertSame(1234567890, $user->getLastAccessedTime());
   }
 
 }

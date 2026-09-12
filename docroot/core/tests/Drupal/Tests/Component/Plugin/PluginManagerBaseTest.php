@@ -7,13 +7,16 @@ namespace Drupal\Tests\Component\Plugin;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Plugin\Mapper\MapperInterface;
 use Drupal\Component\Plugin\PluginManagerBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
- * @coversDefaultClass \Drupal\Component\Plugin\PluginManagerBase
- * @group Plugin
+ * Tests Drupal\Component\Plugin\PluginManagerBase.
  */
+#[CoversClass(PluginManagerBase::class)]
+#[Group('Plugin')]
 class PluginManagerBaseTest extends TestCase {
 
   use ProphecyTrait;
@@ -21,7 +24,7 @@ class PluginManagerBaseTest extends TestCase {
   /**
    * A callback method for mocking FactoryInterface objects.
    */
-  public function createInstanceCallback() {
+  public function createInstanceCallback(): array {
     $args = func_get_args();
     $plugin_id = $args[0];
     $configuration = $args[1];
@@ -47,12 +50,9 @@ class PluginManagerBaseTest extends TestCase {
 
   /**
    * Tests createInstance() with no fallback methods.
-   *
-   * @covers ::createInstance
    */
   public function testCreateInstance(): void {
-    $manager = $this->getMockBuilder('Drupal\Component\Plugin\PluginManagerBase')
-      ->getMockForAbstractClass();
+    $manager = new StubPluginManagerBase();
     // PluginManagerBase::createInstance() looks for a factory object and then
     // calls createInstance() on it. So we have to mock a factory object.
     $factory_ref = new \ReflectionProperty($manager, 'factory');
@@ -67,8 +67,6 @@ class PluginManagerBaseTest extends TestCase {
 
   /**
    * Tests createInstance() with a fallback method.
-   *
-   * @covers ::createInstance
    */
   public function testCreateInstanceFallback(): void {
     // We use our special stub class which extends PluginManagerBase and also
@@ -94,7 +92,7 @@ class PluginManagerBaseTest extends TestCase {
   }
 
   /**
-   * @covers ::getInstance
+   * Tests get instance.
    */
   public function testGetInstance(): void {
     $options = [
@@ -111,16 +109,14 @@ class PluginManagerBaseTest extends TestCase {
   }
 
   /**
-   * @covers ::getInstance
+   * Tests get instance without mapper should throw exception.
    */
   public function testGetInstanceWithoutMapperShouldThrowException(): void {
     $options = [
       'foo' => 'F00',
       'bar' => 'bAr',
     ];
-    /** @var \Drupal\Component\Plugin\PluginManagerBase $manager */
-    $manager = $this->getMockBuilder(PluginManagerBase::class)
-      ->getMockForAbstractClass();
+    $manager = new StubPluginManagerBase();
     // Set the expected exception thrown by ::getInstance.
     $this->expectException(\BadMethodCallException::class);
     $this->expectExceptionMessage(sprintf('%s does not support this method unless %s::$mapper is set.', get_class($manager), get_class($manager)));

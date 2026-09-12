@@ -272,12 +272,11 @@ class VariantRouteFilterTest extends UnitTestCase {
   }
 
   /**
+   * Tests an allowed first page_manager route alongside other routes.
+   *
    * @covers ::filter
    * @covers ::getVariantRouteName
    * @covers ::sortRoutes
-   *
-   * Tests when the first page_manager route is allowed, but other
-   * non-page_manager routes are also present.
    */
   public function testFilterAllowedAccessFirstRoute() {
     $route_collection = new RouteCollection();
@@ -452,7 +451,6 @@ class VariantRouteFilterTest extends UnitTestCase {
     $this->assertSame([], $request->attributes->all());
 
     $method = new \ReflectionMethod($this->routeFilter, 'getRequestAttributes');
-    $method->setAccessible(TRUE);
     $attributes = $method->invoke($this->routeFilter, $route, $route_name, $request);
 
     $this->assertSame([

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\field\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\field\Plugin\migrate\source\d6\FieldInstancePerFormDisplay;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore filefield
-
 /**
  * Tests d6_field_instance_per_form_display source plugin.
- *
- * @covers \Drupal\field\Plugin\migrate\source\d6\FieldInstancePerFormDisplay
- * @group field
  */
+#[CoversClass(FieldInstancePerFormDisplay::class)]
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldInstancePerFormDisplayTest extends MigrateSqlSourceTestBase {
 
   /**

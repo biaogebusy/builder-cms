@@ -29,6 +29,6 @@
     }
   ],
   "require": {
-    "drupal/nouislider_js": "^15.8"
+    "drupal/nouislider_js": "^15.8.1"
   }
 }

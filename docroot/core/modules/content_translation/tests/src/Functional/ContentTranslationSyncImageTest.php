@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\content_translation\Functional;
 
+use Drupal\content_translation\Hook\ContentTranslationFormLanguageHooks;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field synchronization behavior for the image field.
- *
- * @covers ::_content_translation_form_language_content_settings_form_alter
- * @group content_translation
  */
+#[Group('content_translation')]
+#[CoversClass(ContentTranslationFormLanguageHooks::class)]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationSyncImageTest extends ContentTranslationTestBase {
 
   use TestFileCreationTrait {
@@ -64,7 +68,7 @@ class ContentTranslationSyncImageTest extends ContentTranslationTestBase {
   /**
    * Creates the test image field.
    */
-  protected function setupTestFields() {
+  protected function setupTestFields(): void {
     $this->fieldName = 'field_test_et_ui_image';
     $this->cardinality = 3;
 
@@ -95,7 +99,7 @@ class ContentTranslationSyncImageTest extends ContentTranslationTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEditorPermissions() {
+  protected function getEditorPermissions(): array {
     // Every entity-type-specific test needs to define these.
     return ['administer entity_test_mul fields', 'administer languages', 'administer content translation'];
   }
@@ -262,7 +266,7 @@ class ContentTranslationSyncImageTest extends ContentTranslationTestBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The saved entity.
    */
-  protected function saveEntity(EntityInterface $entity) {
+  protected function saveEntity(EntityInterface $entity): EntityInterface {
     $entity->save();
     $entity = \Drupal::entityTypeManager()->getStorage('entity_test_mul')->loadUnchanged($entity->id());
     return $entity;

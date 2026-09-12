@@ -8,13 +8,21 @@ use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Recipe\InstallConfigurator;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @covers \Drupal\Core\Recipe\InstallConfigurator
- * @group Recipe
+ * Tests Install Configurator.
  */
+#[Group('Recipe')]
+#[CoversClass(InstallConfigurator::class)]
+#[RunTestsInSeparateProcesses]
 class InstallConfiguratorTest extends KernelTestBase {
 
+  /**
+   * Tests the modules and themes to be installed.
+   */
   public function testDependenciesAreAutomaticallyIncluded(): void {
     $configurator = new InstallConfigurator(
       ['node', 'test_theme_depending_on_modules'],

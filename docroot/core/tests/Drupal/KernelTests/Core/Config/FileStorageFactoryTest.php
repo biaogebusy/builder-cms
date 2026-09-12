@@ -9,15 +9,20 @@ use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\FileStorageFactory;
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Config\FileStorageFactory
- * @group config
+ * Tests Drupal\Core\Config\FileStorageFactory.
  */
+#[CoversClass(FileStorageFactory::class)]
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class FileStorageFactoryTest extends KernelTestBase {
 
   /**
-   * @covers ::getSync
+   * Tests get sync.
    */
   public function testGetSync(): void {
 

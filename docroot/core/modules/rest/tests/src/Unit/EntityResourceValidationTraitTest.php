@@ -9,17 +9,20 @@ use Drupal\node\Entity\Node;
 use Drupal\rest\Plugin\rest\resource\EntityResourceValidationTrait;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
- * @group rest
- * @coversDefaultClass \Drupal\rest\Plugin\rest\resource\EntityResourceValidationTrait
+ * Tests Drupal\rest\Plugin\rest\resource\EntityResourceValidationTrait.
  */
+#[CoversClass(EntityResourceValidationTrait::class)]
+#[Group('rest')]
 class EntityResourceValidationTraitTest extends UnitTestCase {
 
   /**
-   * @covers ::validate
+   * Tests validate.
    */
   public function testValidate(): void {
     $trait = new EntityResourceValidationTraitTestClass();
@@ -37,7 +40,9 @@ class EntityResourceValidationTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests failed validate.
+   *
+   * @legacy-covers ::validate
    */
   public function testFailedValidate(): void {
     $violation1 = $this->prophesize(ConstraintViolationInterface::class);

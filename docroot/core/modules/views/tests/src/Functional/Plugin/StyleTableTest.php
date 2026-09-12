@@ -8,12 +8,14 @@ use Drupal\Core\Database\Database;
 use Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the table style views plugin.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class StyleTableTest extends ViewTestBase {
 
   /**
@@ -245,6 +247,21 @@ class StyleTableTest extends ViewTestBase {
     $this->drupalGet('test-table');
     $this->assertSession()->elementExists('xpath', '//tbody/tr/td[contains(concat(" ", @class, " "), " priority-low views-field views-field-job views-field-job-1 ")]');
     $this->assertSession()->elementExists('xpath', '//tbody/tr/td[contains(., "Drummer, Drummer")]');
+  }
+
+  /**
+   * Tests custom CSS classes are added to table element.
+   */
+  public function testCssTableClass(): void {
+    // Add 2 custom CSS classes separated by a space.
+    $view = View::load('test_table');
+    $display = &$view->getDisplay('default');
+    $display['display_options']['style']['options']['class'] = 'test-css-table-class1 test-css-table-class2';
+    $view->save();
+
+    // Ensure all CSS classes are added to table element.
+    $this->drupalGet('test-table');
+    $this->assertSession()->elementExists('xpath', '//table[contains(concat(" ", @class, " "), " test-css-table-class1 test-css-table-class2 ")]');
   }
 
   /**

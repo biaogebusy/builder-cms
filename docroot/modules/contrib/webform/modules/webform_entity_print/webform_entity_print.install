@@ -5,7 +5,7 @@
  * Installation information for the 'Webform Entity Print' module.
  */
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\system\Entity\Action;
 
 // Webform Entity Print install helper functions.

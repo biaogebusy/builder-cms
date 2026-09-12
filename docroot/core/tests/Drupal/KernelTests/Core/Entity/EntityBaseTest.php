@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal\Core\Entity\EntityBase;
 use Drupal\Core\Entity\Plugin\DataType\ConfigEntityAdapter;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
-
 use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\entity_test\Entity\EntityTestWithBundle;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality provided by \Drupal\Core\Entity\EntityBase.
- *
- * @coversDefaultClass \Drupal\Core\Entity\EntityBase
- * @group Entity
  */
+#[CoversClass(EntityBase::class)]
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityBaseTest extends EntityKernelTestBase {
 
   /**
@@ -29,8 +32,6 @@ class EntityBaseTest extends EntityKernelTestBase {
 
   /**
    * Tests that the correct entity adapter is returned.
-   *
-   * @covers ::getTypedData
    */
   public function testGetTypedData(): void {
     $bundle = EntityTestBundle::create([

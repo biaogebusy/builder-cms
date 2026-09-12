@@ -6,11 +6,14 @@ namespace Drupal\Tests\search\Unit;
 
 use Drupal\search\Plugin\SearchPluginCollection;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\search\Plugin\SearchPluginCollection
- * @group search
+ * Tests Drupal\search\Plugin\SearchPluginCollection.
  */
+#[CoversClass(SearchPluginCollection::class)]
+#[Group('search')]
 class SearchPluginCollectionTest extends UnitTestCase {
 
   /**
@@ -41,7 +44,11 @@ class SearchPluginCollectionTest extends UnitTestCase {
     parent::setUp();
 
     $this->pluginManager = $this->createMock('Drupal\Component\Plugin\PluginManagerInterface');
-    $this->searchPluginCollection = new SearchPluginCollection($this->pluginManager, 'banana', ['id' => 'banana', 'color' => 'yellow'], 'fruit_stand');
+    $this->searchPluginCollection = new SearchPluginCollection(
+      $this->pluginManager,
+      'banana',
+      ['id' => 'banana', 'color' => 'yellow'],
+      'fruit_stand');
   }
 
   /**

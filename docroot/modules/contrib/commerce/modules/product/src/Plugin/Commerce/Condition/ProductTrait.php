@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_product\Plugin\Commerce\Condition;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -10,11 +11,11 @@ use Drupal\Core\Form\FormStateInterface;
 trait ProductTrait {
 
   /**
-   * The product storage.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $productStorage;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The entity UUID mapper.
@@ -41,7 +42,7 @@ trait ProductTrait {
     $products = NULL;
     $product_ids = $this->getProductIds();
     if (!empty($product_ids)) {
-      $products = $this->productStorage->loadMultiple($product_ids);
+      $products = $this->entityTypeManager->getStorage('commerce_product')->loadMultiple($product_ids);
     }
     $form['products'] = [
       '#type' => 'entity_autocomplete',

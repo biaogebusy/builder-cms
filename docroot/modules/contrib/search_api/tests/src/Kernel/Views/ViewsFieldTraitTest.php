@@ -157,7 +157,7 @@ class ViewsFieldTraitTest extends KernelTestBase {
       '_item' => $item,
       '_object' => $item->getOriginalObject(),
       '_relationship_objects' => [
-        NULL => [$item->getOriginalObject()],
+        '' => [$item->getOriginalObject()],
       ],
     ]);
     $item_id = Utility::createCombinedId($datasource_id, '2:en');

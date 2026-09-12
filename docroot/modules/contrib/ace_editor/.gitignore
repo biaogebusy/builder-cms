@@ -1,0 +1,34 @@
+# Ignore node modules
+node_modules
+/*/node_modules
+
+# Ignore yarn
+.yarn/
+yarn-error.log
+
+# Playwright MCP scratch output
+.playwright-mcp/
+
+# gitlab-ci-local runner state + job artifacts
+.gitlab-ci-local/
+/public/
+
+# varbase-e2e generated artefacts (keep the tracked READMEs / structure)
+tests/reports/**/*.json
+tests/reports/**/*.html
+tests/reports/**/*.pdf
+tests/reports/**/*.xml
+tests/screenshots/**/*.png
+tests/screenshots/**/*.jpeg
+tests/videos/**/*.webm
+.cucumber.js.bak
+
+# webship-js / varbase-e2e generated artefacts (keep only the tracked READMEs)
+tests/reports/*.json
+tests/reports/*.html
+tests/reports/*.xml
+tests/reports/*.pdf
+tests/screenshots/failed_*
+tests/screenshots/*.html
+tests/screenshots/*.png
+tests/videos/*.webm

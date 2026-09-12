@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Database;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the hook_query_alter capabilities of the Select builder.
  *
- * @group Database
  * @see database_test_query_alter()
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class AlterTest extends DatabaseTestBase {
 
   /**

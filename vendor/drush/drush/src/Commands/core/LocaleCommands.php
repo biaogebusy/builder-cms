@@ -13,12 +13,14 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\locale\LocaleSource;
 use Drupal\locale\PoDatabaseReader;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
 use Drush\Exceptions\CommandFailedException;
 use Drush\Utils\StringUtils;
+use Symfony\Component\Console\Output\OutputInterface;
 
 final class LocaleCommands extends DrushCommands
 {
@@ -133,7 +135,11 @@ final class LocaleCommands extends DrushCommands
         // If the status was updated recently we can immediately start fetching the
         // translation updates. If the status is expired we clear it an run a batch to
         // update the status and then fetch the translation updates.
-        $last_checked = $this->getState()->get('locale.translation_last_checked');
+        if (version_compare(\Drupal::VERSION, '11.4.0', '<')) {
+            $last_checked = $this->getState()->get('locale.translation_last_checked');
+        } else {
+            $last_checked = \Drupal::service(LocaleSource::class)->getLastChecked();
+        }
         if ($last_checked < time() - LOCALE_TRANSLATION_STATUS_TTL) {
             locale_translation_clear_status();
             $batch = locale_translation_batch_update_build([], $langcodes, $translationOptions);
@@ -175,7 +181,7 @@ final class LocaleCommands extends DrushCommands
 
         $file_uri = drush_tempnam('drush_', null, '.po');
         if ($this->writePoFile($file_uri, $language, $poreader_options)) {
-            $this->output()->writeln(file_get_contents($file_uri));
+            $this->output()->writeln(file_get_contents($file_uri), OutputInterface::OUTPUT_RAW);
         } else {
             $this->logger()->success(dt('Nothing to export.'));
         }
@@ -285,19 +291,19 @@ final class LocaleCommands extends DrushCommands
     }
 
     /**
-     * Imports to a gettext translation file.
+     * Imports from a gettext translation file.
      */
     #[CLI\Command(name: self::IMPORT, aliases: ['locale-import'])]
     #[CLI\Argument(name: 'langcode', description: 'The language code of the imported translations.')]
     #[CLI\Argument(name: 'file', description: 'Path and file name of the gettext file. Relative paths calculated from Drupal root.')]
-    #[CLI\Option(name: 'type', description: 'String types to include, defaults to all types. Recognized values: <info>not-customized</info>, <info>customized</info>, </info>not-translated<info>')]
-    #[CLI\Option(name: 'override', description: 'Whether and how imported strings will override existing translations. Defaults to the Import behavior configured in the admin interface. Recognized values: <info>none</info>, <info>customized</info>, <info>not-customized</info>, <info>all</info>')]
+    #[CLI\Option(name: 'type', description: 'Treat imported strings as this type of translation. Recognized values: <info>not-customized</info>, <info>customized</info>, </info>not-translated<info>')]
+    #[CLI\Option(name: 'override', description: 'Whether and how imported strings will override existing translations. Defaults to the import behavior configured in the admin interface. Recognized values: <info>none</info>, <info>customized</info>, <info>not-customized</info>, <info>all</info>')]
     #[CLI\Option(name: 'autocreate-language', description: 'Create the language in addition to import.')]
     #[CLI\Usage(name: 'drush locale-import nl drupal-8.4.2.nl.po', description: 'Import the Dutch drupal core translation.')]
     #[CLI\Usage(name: 'drush locale-import --type=customized nl drupal-8.4.2.nl.po', description: 'Import the Dutch drupal core translation. Treat imported strings as custom translations.')]
     #[CLI\Usage(name: 'drush locale-import --override=none nl drupal-8.4.2.nl.po', description: "Import the Dutch drupal core translation. Don't overwrite existing translations. Only append new translations.")]
     #[CLI\Usage(name: 'drush locale-import --override=not-customized nl drupal-8.4.2.nl.po', description: 'Import the Dutch drupal core translation. Only override non-customized translations, customized translations are kept.')]
-    #[CLI\Usage(name: 'drush locale-import nl custom-translations.po --type=customized --override=all', description: 'Import customized Dutch translations and override any existing translation.')]
+    #[CLI\Usage(name: 'drush locale-import nl custom-translations.po --type=customized --override=all', description: 'Import customized Dutch translations and override any existing translations.')]
     #[CLI\ValidateModulesEnabled(modules: ['locale'])]
     public function import($langcode, $file, $options = ['type' => 'not-customized', 'override' => self::REQ, 'autocreate-language' => false]): void
     {

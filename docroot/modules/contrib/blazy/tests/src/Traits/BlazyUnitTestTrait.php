@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Traits;
 
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyApi;
 use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\Internals\Entity;
 use Drupal\blazy\Traits\PluginScopesTrait;
 
 /**
@@ -66,10 +69,10 @@ trait BlazyUnitTestTrait {
       'ratio'           => 'fluid',
       'caption'         => ['alt' => 'alt', 'title' => 'title'],
     ] + BlazyDefault::extendedSettings()
-      + Blazy::init()
+      + BlazyApi::init()
       + $this->getDefaultFieldDefinition();
 
-    Blazy::entitySettings($defaults, $this->entity);
+    Entity::settings($defaults, $this->entity);
 
     return empty($this->formatterSettings) ? $defaults : array_merge($defaults, $this->formatterSettings);
   }
@@ -111,8 +114,12 @@ trait BlazyUnitTestTrait {
    *   The default field definition.
    */
   protected function getDefaultFieldDefinition() {
+    $bundle = $this->bundle;
+    if (!$bundle) {
+      $bundle = 'bundle_test';
+    }
     return [
-      'bundle'      => $this->bundle ?? 'bundle_test',
+      'bundle'      => $bundle,
       'entity_type' => $this->entityType,
       'field_name'  => $this->testFieldName,
       'field_type'  => 'image',
@@ -232,13 +239,17 @@ trait BlazyUnitTestTrait {
    *   The pre_render element.
    */
   protected function doPreRenderImage(array $build) {
+    /** @var array $settings */
     $settings = $this->blazyManager->toHashtag($build);
     $this->blazyManager->postSettings($settings);
 
+    /** @var array $image */
     $image = $this->blazyManager->getBlazy($build);
 
-    $image['#build']['#item'] = empty($image['#build']['#item'])
-      ? $build['#item'] : $image['#build']['#item'];
+    /** @var array $subbuild */
+    $subbuild = $image['#build'] ?? [];
+
+    $image['#build']['#item'] = $subbuild['#item'] ?? ($build['#item'] ?? []);
     return $this->blazyManager->preRenderBlazy($image);
   }
 
@@ -303,7 +314,7 @@ trait BlazyUnitTestTrait {
       '#item' => $item,
     ];
 
-    $this->testItem = $item;
+    $this->mockItem = $item;
   }
 
   /**
@@ -312,41 +323,28 @@ trait BlazyUnitTestTrait {
   protected function setUpMockImage() {
     $entity = $this->createMock('\Drupal\Core\Entity\ContentEntityInterface');
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $entity->expects($this->any())
       ->method('label')
       ->willReturn($this->randomMachineName());
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $entity->expects($this->any())
       ->method('getEntityTypeId')
-      ->will($this->returnValue('node'));
+      ->willReturn('node');
 
     $item = $this->createMock('\Drupal\Core\Field\FieldItemListInterface');
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $item->expects($this->any())
       ->method('getEntity')
       ->willReturn($entity);
 
     $this->setUpUnitImages();
 
-    $this->testItem = $item;
+    $this->mockItem = $item;
     $this->data['#item'] = $item;
     $item->entity = $entity;
-  }
-
-}
-
-namespace Drupal\blazy;
-
-if (!function_exists('blazy')) {
-
-  /**
-   * Dummy function.
-   */
-  function blazy() {
-    // Empty block to satisfy coder.
   }
 
 }

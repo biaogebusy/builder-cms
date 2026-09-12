@@ -3,6 +3,7 @@
 namespace Drupal\page_manager\Entity;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Condition\ConditionAccessResolverTrait;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityHandlerInterface;
@@ -73,7 +74,15 @@ class PageVariantAccess extends EntityAccessControlHandler implements EntityHand
           $this->contextHandler()->applyContextMapping($condition, $contexts);
         }
       }
-      return AccessResult::allowedIf($this->resolveConditions($conditions, $entity->getSelectionLogic()));
+      // The result was computed from the conditions, so it has to vary by
+      // whatever they vary by.
+      $access = AccessResult::allowedIf($this->resolveConditions($conditions, $entity->getSelectionLogic()));
+      foreach ($conditions as $condition) {
+        if ($condition instanceof CacheableDependencyInterface) {
+          $access->addCacheableDependency($condition);
+        }
+      }
+      return $access;
     }
     return parent::checkAccess($entity, $operation, $account);
   }

@@ -168,6 +168,9 @@ ai.guardrail.settings.regexp_guardrail:
     regexp_pattern:
       type: string
       label: Regexp pattern
+    scan_all_user_messages:
+      type: boolean
+      label: Scan all user messages
     violation_message:
       type: string
       label: Violation message
@@ -182,6 +185,9 @@ ai.guardrail.settings.restrict_to_topic:
     invalid_topics:
       type: string
       label: Invalid topics
+    scan_all_user_messages:
+      type: boolean
+      label: Scan all user messages
     invalid_topics_present_message:
       type: string
       label: Invalid topics present message

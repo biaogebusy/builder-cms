@@ -1,21 +1,21 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_sendtophone\Form;
 
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\sms\Provider\SmsProviderInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
-use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Direction;
-use Drupal\user\Entity\User;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Exception\PhoneNumberSettingsException;
+use Drupal\sms\Provider\SmsProviderInterface;
+use Drupal\user\Entity\User;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Default controller for the sms_sendtophone module.
@@ -44,7 +44,10 @@ class SendToPhoneForm extends FormBase {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(SmsProviderInterface $sms_provider, MessengerInterface $messenger) {
+  public function __construct(
+    SmsProviderInterface $sms_provider,
+    MessengerInterface $messenger,
+  ) {
     $this->smsProvider = $sms_provider;
     $this->setMessenger($messenger);
   }
@@ -75,11 +78,11 @@ class SendToPhoneForm extends FormBase {
     catch (PhoneNumberSettingsException $e) {
     }
 
-    if ($user->hasPermission('send to any number') || count($this->phoneNumbers)) {
+    if ($user->hasPermission('send to any number') || \count($this->phoneNumbers)) {
       $form = $this->getForm($form, $form_state, $type, $extra);
     }
     else {
-      if (!count($this->phoneNumbers)) {
+      if (!\count($this->phoneNumbers)) {
         // User has no phone number, or unconfirmed.
         $form['message'] = [
           '#type' => 'markup',
@@ -130,7 +133,7 @@ class SendToPhoneForm extends FormBase {
         break;
 
       case 'node':
-        if (is_numeric($extra)) {
+        if (\is_numeric($extra)) {
           $node = Node::load($extra);
           $form['message_display'] = [
             '#type' => 'textarea',
@@ -154,8 +157,8 @@ class SendToPhoneForm extends FormBase {
       '#title' => $this->t('Phone number'),
     ];
 
-    if (count($this->phoneNumbers)) {
-      $form['number']['#default_value'] = reset($this->phoneNumbers);
+    if (\count($this->phoneNumbers)) {
+      $form['number']['#default_value'] = \reset($this->phoneNumbers);
     }
 
     $form['submit'] = [

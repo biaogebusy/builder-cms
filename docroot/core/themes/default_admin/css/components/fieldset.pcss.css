@@ -1,0 +1,157 @@
+/**
+ * @file
+ * Fieldset styles.
+ */
+
+.fieldset {
+  min-width: 0;
+  margin: var(--admin-space-m) 0;
+  padding: 0;
+  color: var(--admin-color-text);
+  border: var(--details-border-size) solid var(--details-border-color);
+  border-radius: var(--admin-radius-2xs);
+  background-color: var(--admin-color-bg-surface);
+  box-shadow: var(--details-box-shadow);
+
+  &:not(.fieldgroup) {
+    padding-block-start: var(--admin-space-xs);
+    color: var(--admin-color-text-soft);
+    border-color: var(--admin-color-border);
+    border-radius: var(--admin-radius-m);
+    background: transparent;
+    box-shadow: none;
+    padding-inline: 0;
+
+    > legend {
+      inset-block-start: 20px;
+    }
+
+    > .fieldset-wrapper {
+      margin-block-start: 20px;
+    }
+
+    &.error {
+      border: 2px solid var(--admin-color-error);
+    }
+  }
+}
+
+.fieldset--group {
+  color: inherit;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/**
+ * Fieldset legend.
+ */
+.fieldset__legend {
+  display: contents; /* For Firefox. */
+  float: left; /* iOS Safari, Android Chrome, Edge. */
+  width: 100%; /* iOS Safari, Android Chrome, Edge. */
+  margin-block-end: var(--admin-space-m);
+  color: var(--admin-color-text-soft);
+  font-weight: bold;
+
+  @media screen and (min-width: 48em) {
+    margin-bottom: var(--admin-space-l);
+  }
+}
+
+.fieldset__legend--composite {
+  float: none;
+  width: auto;
+  margin-block: calc(var(--admin-space-xs) / 2); /* 4px */
+  color: inherit;
+  font-size: var(--admin-font-size-s); /* 14px */
+  line-height: calc(18rem / 16); /* 18px */
+}
+
+/* This is used only on install configure form. */
+.fieldset__legend--group {
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.fieldset__label {
+  display: block;
+  margin-block-start: 0;
+  margin-block-end: var(--admin-space-xs);
+  padding: var(--admin-space-m);
+  color: var(--admin-color-text-loud);
+  font-size: var(--admin-font-size-s);
+  font-weight: var(--admin-font-weight-semibold);
+  line-height: var(--admin-space-m);
+
+  &.is-disabled {
+    color: var(--input--disabled-fg-color);
+  }
+
+  &.has-error {
+    color: var(--input--error-color);
+  }
+
+  @media screen and (min-width: 48em) {
+    padding-inline: var(--admin-space-l);
+  }
+}
+
+.fieldset__label--group {
+  margin-block-start: 0;
+  margin-block-end: var(--admin-space-xs);
+  padding: 0;
+  color: var(--admin-color-text-loud);
+  font-size: var(--admin-font-size-s);
+  font-weight: var(--admin-font-weight-semibold);
+  line-height: inherit;
+
+  @media screen and (min-width: 48em) {
+    padding: 0;
+  }
+}
+
+.fieldset__description {
+  max-width: var(--admin-max-line-length);
+  color: var(--admin-color-text-soft);
+  font-size: var(--admin-font-size-xs); /* ~13px */
+  line-height: calc(17rem / 16); /* 17px */
+  margin-block: calc(6rem / 16); /* 6px */
+
+  &.is-disabled {
+    color: var(--input--disabled-fg-color);
+  }
+}
+
+/* Error message (Inline form errors). */
+.fieldset__error-message {
+  margin-block: calc(6rem / 16); /* 6px */
+  color: var(--input--error-color);
+  font-size: var(--admin-font-size-xs); /* ~13px */
+  font-weight: normal;
+  line-height: calc(17rem / 16); /* 17px */
+}
+
+.fieldset__wrapper {
+  margin: var(--admin-space-m);
+
+  /**
+   * Remove the extra padding of container-inline wrapper if it's used inside a fieldset
+   */
+  & > .container-inline {
+    padding: 0;
+  }
+
+  @media screen and (min-width: 48em) {
+    margin: var(--admin-space-l) var(--admin-space-l) calc(var(--admin-space-m) + var(--admin-space-s));
+  }
+}
+
+.fieldset__legend--visible ~ .fieldset__wrapper {
+  margin-block-start: 0;
+}
+
+.fieldset__wrapper--group {
+  margin: 0;
+}

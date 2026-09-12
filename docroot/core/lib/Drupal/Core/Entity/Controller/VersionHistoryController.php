@@ -15,13 +15,24 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a controller showing revision history for an entity.
  *
  * This controller is agnostic to any entity type by using
  * \Drupal\Core\Entity\RevisionLogInterface.
+ *
+ * For full functionality, entity types should define the following link
+ * templates in their attributes:
+ * - 'revision-revert-form': Path to the form for reverting a revision.
+ *   Required to show revert links in the revision history table.
+ * - 'revision-delete-form': Path to the form for deleting a revision.
+ *   Required to show delete links in the revision history table.
+ * - 'revision': Path to view a specific revision. Used to make revision
+ *   dates/labels clickable links to the revision view.
+ *
+ * @see \Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider
+ * @see \Drupal\Core\Entity\RevisionableInterface
  */
 class VersionHistoryController extends ControllerBase {
 
@@ -50,18 +61,6 @@ class VersionHistoryController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('date.formatter'),
-      $container->get('renderer'),
-    );
-  }
-
-  /**
    * Generates an overview table of revisions for an entity.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
@@ -84,7 +83,8 @@ class VersionHistoryController extends ControllerBase {
    *
    * @return array|null
    *   A link to revert an entity revision, or NULL if the entity type does not
-   *   have an a route to revert an entity revision.
+   *   define a 'revision-revert-form' link template or the user does not have
+   *   access to the revert form.
    */
   protected function buildRevertRevisionLink(RevisionableInterface $revision): ?array {
     if (!$revision->hasLinkTemplate('revision-revert-form')) {
@@ -111,7 +111,9 @@ class VersionHistoryController extends ControllerBase {
    *   The entity to build a delete revision link for.
    *
    * @return array|null
-   *   A link render array.
+   *   A link render array, or NULL if the entity type does not define a
+   *   'revision-delete-form' link template or the user does not have access
+   *   to the delete form.
    */
   protected function buildDeleteRevisionLink(RevisionableInterface $revision): ?array {
     if (!$revision->hasLinkTemplate('revision-delete-form')) {
@@ -147,12 +149,10 @@ class VersionHistoryController extends ControllerBase {
       ['type' => $dateFormatType, 'format' => $dateFormatFormat] = $this->getRevisionDescriptionDateFormat($revision);
       $linkText = $this->dateFormatter->format($revision->getRevisionCreationTime(), $dateFormatType, $dateFormatFormat);
 
-      // @todo Simplify this when https://www.drupal.org/node/2334319 lands.
-      $username = [
+      $context['username'] = [
         '#theme' => 'username',
         '#account' => $revision->getRevisionUser(),
       ];
-      $context['username'] = $this->renderer->render($username);
     }
     else {
       $linkText = $revision->access('view label') ? $revision->label() : $this->t('- Restricted access -');
@@ -210,23 +210,27 @@ class VersionHistoryController extends ControllerBase {
     $entityStorage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     assert($entityStorage instanceof RevisionableStorageInterface);
 
-    $result = $entityStorage->getQuery()
+    $query = $entityStorage->getQuery()
       ->accessCheck(FALSE)
       ->allRevisions()
       ->condition($entityType->getKey('id'), $entity->id())
       ->sort($entityType->getKey('revision'), 'DESC')
-      ->pager(self::REVISIONS_PER_PAGE)
-      ->execute();
+      ->pager(self::REVISIONS_PER_PAGE);
+
+    // Only show revisions that are affected by the language that is being
+    // displayed.
+    if ($translatable) {
+      $query->condition($entityType->getKey('langcode'), $entity->language()->getId())
+        ->condition($entityType->getKey('revision_translation_affected'), '1');
+    }
+
+    $result = $query->execute();
 
     $currentLangcode = $this->languageManager
       ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)
       ->getId();
     foreach ($entityStorage->loadMultipleRevisions(array_keys($result)) as $revision) {
-      // Only show revisions that are affected by the language that is being
-      // displayed.
-      if (!$translatable || ($revision->hasTranslation($currentLangcode) && $revision->getTranslation($currentLangcode)->isRevisionTranslationAffected())) {
-        yield ($translatable ? $revision->getTranslation($currentLangcode) : $revision);
-      }
+      yield ($translatable ? $revision->getTranslation($currentLangcode) : $revision);
     }
   }
 

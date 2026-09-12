@@ -75,6 +75,9 @@ parameters:
     - message: '#on an unknown class League\\\\CommonMark\\\\CommonMarkConverter.#'
     - message: '#has invalid return type League\\\\CommonMark\\\\CommonMarkConverter.#'
 
+    # Traits intended for use in sub-modules or external provider modules.
+    - "#Trait Drupal\\\\ai\\\\Traits\\\\OpenAi\\\\FileApiTrait is used zero times#"
+
   reportUnmatchedIgnoredErrors: false
   excludePaths:
     - modules/ai_search/tests/modules/test_ai_vdb_provider_mysql/src/TestVectorTable.php

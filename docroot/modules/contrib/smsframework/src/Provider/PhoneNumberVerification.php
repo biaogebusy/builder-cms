@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Provider;
 
@@ -75,7 +75,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
    */
   public function getPhoneNumberSettingsForEntity(EntityInterface $entity) {
     if (!$phone_number_settings = $this->getPhoneNumberSettings($entity->getEntityTypeId(), $entity->bundle())) {
-      throw new PhoneNumberSettingsException(sprintf('Entity phone number config does not exist for bundle %s:%s', $entity->getEntityTypeId(), $entity->bundle()));
+      throw new PhoneNumberSettingsException(\sprintf('Entity phone number config does not exist for bundle %s:%s', $entity->getEntityTypeId(), $entity->bundle()));
     }
     return $phone_number_settings;
   }
@@ -88,7 +88,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
       ->loadByProperties([
         'code' => $code,
       ]);
-    return reset($entities);
+    return \reset($entities);
   }
 
   /**
@@ -116,7 +116,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
         'entity__target_type' => $entity->getEntityTypeId(),
         'phone' => $phone_number,
       ]);
-    return reset($entities);
+    return \reset($entities);
   }
 
   /**
@@ -128,7 +128,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
 
     // @todo Replace with code generator.
     $random = new Random();
-    $code = strtoupper($random->name(6));
+    $code = \strtoupper($random->name(6));
 
     /** @var \Drupal\sms\Entity\PhoneNumberVerificationInterface $phone_verification */
     $phone_verification = $this->phoneNumberVerificationStorage->create();
@@ -184,7 +184,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
     }
 
     $numbers = [];
-    assert($items instanceof FieldItemListInterface);
+    \assert($items instanceof FieldItemListInterface);
     foreach ($items as $item) {
       $phone_number = $item->value;
       $numbers[] = $phone_number;
@@ -198,7 +198,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
       foreach ($items_original as $item) {
         $phone_number = $item->value;
         // A phone number was deleted.
-        if (!in_array($phone_number, $numbers)) {
+        if (!\in_array($phone_number, $numbers)) {
           if ($phone_verification = $this->getPhoneVerificationByEntity($entity, $phone_number)) {
             $phone_verification->delete();
           }

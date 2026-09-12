@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Message;
 
@@ -107,7 +107,13 @@ class SmsMessage implements SmsMessageInterface {
    * @param int|null $uid
    *   (optional) The user who created the SMS message.
    */
-  public function __construct(?string $sender_phone_number = NULL, array $recipients = [], string $message = '', array $options = [], ?int $uid = NULL) {
+  public function __construct(
+    ?string $sender_phone_number = NULL,
+    array $recipients = [],
+    string $message = '',
+    array $options = [],
+    ?int $uid = NULL,
+  ) {
     $this->setSenderNumber($sender_phone_number);
     $this->addRecipients($recipients);
     $this->setMessage($message);
@@ -172,7 +178,7 @@ class SmsMessage implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function addRecipient($recipient) {
-    if (!in_array($recipient, $this->recipients, TRUE)) {
+    if (!\in_array($recipient, $this->recipients, TRUE)) {
       $this->recipients[] = $recipient;
     }
     return $this;
@@ -192,7 +198,7 @@ class SmsMessage implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function removeRecipient($recipient) {
-    $this->recipients = array_values(array_diff($this->recipients, [$recipient]));
+    $this->recipients = \array_values(\array_diff($this->recipients, [$recipient]));
     return $this;
   }
 
@@ -200,7 +206,7 @@ class SmsMessage implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function removeRecipients(array $recipients) {
-    $this->recipients = array_values(array_diff($this->recipients, $recipients));
+    $this->recipients = \array_values(\array_diff($this->recipients, $recipients));
     return $this;
   }
 
@@ -245,7 +251,7 @@ class SmsMessage implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getOption($name) {
-    if (array_key_exists($name, $this->options)) {
+    if (\array_key_exists($name, $this->options)) {
       return $this->options[$name];
     }
     return NULL;
@@ -336,7 +342,7 @@ class SmsMessage implements SmsMessageInterface {
     $recipients_all = $this->getRecipients();
 
     // Save processing by returning early.
-    if ($size < 1 || count($recipients_all) <= $size) {
+    if ($size < 1 || \count($recipients_all) <= $size) {
       return [$this];
     }
 
@@ -344,7 +350,7 @@ class SmsMessage implements SmsMessageInterface {
     $base->removeRecipients($recipients_all);
 
     $messages = [];
-    foreach (array_chunk($recipients_all, $size) as $recipients) {
+    foreach (\array_chunk($recipients_all, $size) as $recipients) {
       $message = clone $base;
       $messages[] = $message->addRecipients($recipients);
     }

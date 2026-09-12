@@ -4,22 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\field\Kernel\EntityReference\Views;
 
-use Drupal\entity_test\Entity\EntityTestMulChanged;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestMul;
+use Drupal\entity_test\Entity\EntityTestMulChanged;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity reference relationship data.
  *
- * @group entity_reference
- *
- * @see core_field_views_data()
+ * @see \Drupal\views\Hook\ViewsViewsHooks::fieldViewsData()
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceRelationshipTest extends ViewsKernelTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -42,10 +44,8 @@ class EntityReferenceRelationshipTest extends ViewsKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'user',
     'field',
     'entity_test',
-    'views',
     'entity_reference_test_views',
   ];
 
@@ -80,7 +80,8 @@ class EntityReferenceRelationshipTest extends ViewsKernelTestBase {
     // @see \Drupal\Core\Entity\Sql\DefaultTableMapping::generateFieldTableName()
     $this->createEntityReferenceField('entity_test_mul_changed', 'entity_test_mul_changed', 'field_test_data_with_a_long_name', 'field_test_data_with_a_long_name', 'entity_test');
 
-    // Create reference from entity_test_mul to entity_test cardinality: infinite.
+    // Create reference from entity_test_mul to entity_test cardinality:
+    // infinite.
     $this->createEntityReferenceField('entity_test_mul', 'entity_test_mul', 'field_data_test_unlimited', 'field_data_test_unlimited', 'entity_test', 'default', [], FieldStorageConfig::CARDINALITY_UNLIMITED);
 
     ViewTestData::createTestViews(static::class, ['entity_reference_test_views']);
@@ -279,7 +280,7 @@ class EntityReferenceRelationshipTest extends ViewsKernelTestBase {
       $this->assertEquals($this->entities[$index]->id(), $row->_entity->id());
 
       // Test the forward relationship.
-      // $this->assertEquals(1, $row->entity_test_entity_test_mul__field_data_test_id);
+      // $this->assertEquals(1, $row->entity_test_entity_test_mul__field_data_test_id);.
 
       // Test that the correct relationship entity is on the row.
       $this->assertEquals(1, $row->_relationship_entities['field_test_data_with_a_long_name']->id());

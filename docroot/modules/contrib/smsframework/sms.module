@@ -5,10 +5,10 @@
  * Provides hooks for SMS Framework.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Implements hook_cron().

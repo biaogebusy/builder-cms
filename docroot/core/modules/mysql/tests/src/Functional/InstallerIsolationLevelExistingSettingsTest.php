@@ -6,18 +6,20 @@ namespace Drupal\Tests\mysql\Functional;
 
 use Drupal\Core\Database\Database;
 use Drupal\FunctionalTests\Installer\InstallerExistingSettingsTest;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the isolation_level setting with existing database settings.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerIsolationLevelExistingSettingsTest extends InstallerExistingSettingsTest {
 
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
 
     $connection_info = Database::getConnectionInfo();
@@ -46,13 +48,7 @@ class InstallerIsolationLevelExistingSettingsTest extends InstallerExistingSetti
     unset($driver_test_connection['init_commands']);
 
     $connection = Database::getConnection('default', 'default');
-    $query = 'SELECT @@SESSION.tx_isolation';
-    // The database variable "tx_isolation" has been removed in MySQL v8.0 and
-    // has been replaced by "transaction_isolation".
-    // @see https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_tx_isolation
-    if (!$connection->isMariaDb() && version_compare($connection->version(), '8.0.0-AnyName', '>')) {
-      $query = 'SELECT @@SESSION.transaction_isolation';
-    }
+    $query = $connection->isMariaDb() ? 'SELECT @@SESSION.tx_isolation' : 'SELECT @@SESSION.transaction_isolation';
     $original_transaction_level = $connection->query($query)->fetchField();
     Database::renameConnection('default', 'original_database_connection');
     Database::addConnectionInfo('default', 'default', $driver_test_connection);

@@ -36,3 +36,9 @@ services:
     class: Drupal\commerce_tax\EventSubscriber\OrderTotalSummarySubscriber
     tags:
       - { name: 'event_subscriber' }
+
+  Drupal\commerce_tax\Hook\CommerceTaxHooks:
+    class: Drupal\commerce_tax\Hook\CommerceTaxHooks
+
+  Drupal\commerce_tax\Hook\CommerceTaxThemeHooks:
+    class: Drupal\commerce_tax\Hook\CommerceTaxThemeHooks

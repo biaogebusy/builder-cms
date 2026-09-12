@@ -126,6 +126,14 @@ function menu_item_extras_theme() {
 }
 
 /**
+ * Implements hook_theme_registry_alter().
+ */
+function menu_item_extras_theme_registry_alter(&$theme_registry) {
+  // Add $menu_item_extras_region as a variable to the 'menu' theme hook.
+  $theme_registry['menu']['variables']['menu_item_extras_region'] = NULL;
+}
+
+/**
  * Implements hook_preprocess_block().
  */
 function menu_item_extras_preprocess_block(&$variables) {
@@ -148,6 +156,7 @@ function menu_item_extras_preprocess_block(&$variables) {
       /** @var \Drupal\block\BlockInterface $block */
       $block = $block_storage->load($variables['elements']['#id']);
       if (!empty($block)) {
+        $variables['content']['#menu_item_extras_region'] = $block->getRegion();
         $variables['content']['#attributes']['data-region'] = $block->getRegion();
       }
     }
@@ -225,8 +234,9 @@ function menu_item_extras_theme_suggestions_menu(array $variables): array {
       $suggestions[] = $suggestion_prefix;
       $suggestions[] = $utility::suggestion($suggestion_prefix, $menu_name);
       // Custom suggestions for the parent region.
-      if (isset($variables['attributes']['data-region'])) {
-        $suggestions[] = $utility::suggestion($suggestion_prefix, $menu_name, $variables['attributes']['data-region']);
+      if (!empty($variables['menu_item_extras_region'])) {
+        $region = $utility::sanitizeMachineName($variables['menu_item_extras_region']);
+        $suggestions[] = $utility::suggestion($suggestion_prefix, $menu_name, $region);
       }
     }
   }

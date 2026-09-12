@@ -37,7 +37,14 @@ class QueueUIManager extends DefaultPluginManager {
     ModuleHandlerInterface $module_handler,
     protected QueueFactory $queueService,
   ) {
-    parent::__construct('Plugin/QueueUI', $namespaces, $module_handler, 'Drupal\queue_ui\QueueUIInterface', 'Drupal\queue_ui\Annotation\QueueUI');
+    parent::__construct(
+      'Plugin/QueueUI',
+      $namespaces,
+      $module_handler,
+      'Drupal\queue_ui\QueueUIInterface',
+      'Drupal\queue_ui\Attribute\QueueUI',
+      'Drupal\queue_ui\Annotation\QueueUI',
+    );
 
     $this->setCacheBackend($cache_backend, 'queue_ui_plugins');
     $this->alterInfo('queue_ui_info');
@@ -54,10 +61,13 @@ class QueueUIManager extends DefaultPluginManager {
    */
   public function fromQueueName(string $queueName): object|false {
     $queue = $this->queueService->get($queueName);
+    $full_class_name = get_class($queue);
+    $short_class_name = $this->queueClassName($queue);
 
     try {
       foreach ($this->getDefinitions() as $definition) {
-        if ($definition['class_name'] === $this->queueClassName($queue)) {
+        $definition_class = ltrim($definition['class_name'], '\\');
+        if ($definition_class === $full_class_name || $definition_class === $short_class_name) {
           return $this->createInstance($definition['id']);
         }
       }
@@ -75,7 +85,9 @@ class QueueUIManager extends DefaultPluginManager {
    *   An array of queue information.
    *
    * @return string|null
-   *   A mixed value of queue class
+   *   A mixed value of queue class.
+   *
+   * @see https://www.drupal.org/node/3537446
    */
   public function queueClassName(QueueInterface $queue): ?string {
     $namespace = explode('\\', get_class($queue));

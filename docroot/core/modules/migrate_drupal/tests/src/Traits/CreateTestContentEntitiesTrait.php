@@ -13,8 +13,9 @@ trait CreateTestContentEntitiesTrait {
    * Gets required modules.
    *
    * @return array
+   *   An array of required modules.
    */
-  protected function getRequiredModules() {
+  protected function getRequiredModules(): array {
     return [
       'block_content',
       'comment',
@@ -30,20 +31,6 @@ trait CreateTestContentEntitiesTrait {
       'text',
       'user',
     ];
-  }
-
-  /**
-   * Install required entity schemas.
-   */
-  protected function installEntitySchemas() {
-    $this->installEntitySchema('block_content');
-    $this->installEntitySchema('comment');
-    $this->installEntitySchema('file');
-    $this->installEntitySchema('menu_link_content');
-    $this->installEntitySchema('node');
-    $this->installEntitySchema('path_alias');
-    $this->installEntitySchema('taxonomy_term');
-    $this->installEntitySchema('user');
   }
 
   /**

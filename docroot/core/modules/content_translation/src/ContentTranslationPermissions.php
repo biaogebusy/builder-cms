@@ -68,11 +68,12 @@ class ContentTranslationPermissions implements ContainerInjectionInterface {
    * Returns an array of content translation permissions.
    *
    * @return array
+   *   An associative array of permissions keyed by permission name.
    */
   public function contentPermissions() {
     $permissions = [];
-    // Create a translate permission for each enabled entity type and (optionally)
-    // bundle.
+    // Create a translate permission for each enabled entity type and
+    // (optionally) bundle.
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       if ($permission_granularity = $entity_type->getPermissionGranularity()) {
         switch ($permission_granularity) {

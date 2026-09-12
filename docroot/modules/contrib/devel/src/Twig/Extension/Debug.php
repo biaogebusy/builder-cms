@@ -19,19 +19,12 @@ use Twig\TwigFunction;
 class Debug extends AbstractExtension {
 
   /**
-   * The devel dumper service.
-   */
-  protected DevelDumperManagerInterface $dumper;
-
-  /**
    * Constructs a Debug object.
    *
    * @param \Drupal\devel\DevelDumperManagerInterface $dumper
    *   The devel dumper service.
    */
-  public function __construct(DevelDumperManagerInterface $dumper) {
-    $this->dumper = $dumper;
-  }
+  public function __construct(protected DevelDumperManagerInterface $dumper) {}
 
   /**
    * {@inheritdoc}

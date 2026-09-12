@@ -11,17 +11,18 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\serialization\Normalizer\ConfigEntityNormalizer;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\serialization\Normalizer\ConfigEntityNormalizer
- * @group serialization
+ * Tests Drupal\serialization\Normalizer\ConfigEntityNormalizer.
  */
+#[CoversClass(ConfigEntityNormalizer::class)]
+#[Group('serialization')]
 class ConfigEntityNormalizerTest extends UnitTestCase {
 
   /**
    * Tests the normalize() method.
-   *
-   * @covers ::normalize
    */
   public function testNormalize(): void {
     $test_export_properties = [
@@ -50,7 +51,7 @@ class ConfigEntityNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
+   * Tests denormalize.
    */
   public function testDenormalize(): void {
     $test_value = $this->randomMachineName();

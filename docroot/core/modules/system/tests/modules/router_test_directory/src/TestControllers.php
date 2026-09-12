@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\router_test;
 
 use Drupal\Core\Cache\CacheableResponse;
@@ -61,7 +63,7 @@ class TestControllers {
         $text = sprintf('User route "%s" was matched.', $match[RouteObjectInterface::ROUTE_NAME]);
       }
     }
-    catch (ParamNotConvertedException $e) {
+    catch (ParamNotConvertedException) {
     }
     return new Response($text);
   }

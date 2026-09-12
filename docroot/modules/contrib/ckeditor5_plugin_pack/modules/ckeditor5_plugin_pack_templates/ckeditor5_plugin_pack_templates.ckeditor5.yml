@@ -1,0 +1,13 @@
+ckeditor5_plugin_pack_templates__content_templates:
+  ckeditor5:
+    plugins:
+      - template.Template
+  drupal:
+    label: Content templates
+    elements: false
+    library: ckeditor5_plugin_pack_templates/template
+    admin_library: ckeditor5_plugin_pack_templates/admin.content_templates
+    class: Drupal\ckeditor5_plugin_pack_templates\Plugin\CKEditor5Plugin\Template
+    toolbar_items:
+      insertTemplate:
+        label: Insert template

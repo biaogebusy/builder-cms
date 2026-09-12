@@ -5,6 +5,8 @@
  * A database agnostic dump for testing purposes.
  */
 
+// cspell:ignore whitelisted
+
 use Drupal\Core\Database\Database;
 
 $connection = Database::getConnection();

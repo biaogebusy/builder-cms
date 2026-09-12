@@ -3,12 +3,16 @@
 namespace Drupal\Tests\paragraphs\Functional\WidgetStable;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Paragraphs user interface.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsUiTest extends ParagraphsTestBase {
 
   /**

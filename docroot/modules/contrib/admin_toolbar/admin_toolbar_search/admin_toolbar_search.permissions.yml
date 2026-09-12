@@ -1,2 +1,5 @@
+# Permissions for the Admin Toolbar Search module.
+
+# Controls access to the Admin Toolbar Search display and functionality.
 use admin toolbar search:
-  title: 'Use Admin Toolbar search'
+  title: 'Use Admin Toolbar Search'

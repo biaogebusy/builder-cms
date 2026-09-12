@@ -1,0 +1,12 @@
+name: CKEditor 5 Layout Table
+type: module
+description: "Provides the CKEditor 5 Layout Table plugin."
+package: CKEditor 5 Plugin Pack
+core_version_requirement: ^10.5 || ^11.2
+dependencies:
+  - ckeditor5_plugin_pack:ckeditor5_plugin_pack
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.5.4'
+project: 'ckeditor5_plugin_pack'
+datestamp: 1785320334

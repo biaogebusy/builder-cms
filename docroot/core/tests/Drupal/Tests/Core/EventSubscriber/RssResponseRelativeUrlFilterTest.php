@@ -6,18 +6,23 @@ namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\EventSubscriber\RssResponseRelativeUrlFilter;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
+// cspell:ignore xfbml
 /**
- * @coversDefaultClass \Drupal\Core\EventSubscriber\RssResponseRelativeUrlFilter
- * @group event_subscriber
+ * Tests Drupal\Core\EventSubscriber\RssResponseRelativeUrlFilter.
  */
+#[CoversClass(RssResponseRelativeUrlFilter::class)]
+#[Group('event_subscriber')]
 class RssResponseRelativeUrlFilterTest extends UnitTestCase {
 
-  public static function providerTestOnResponse() {
+  public static function providerTestOnResponse(): array {
     $data = [];
 
     $valid_feed = <<<RSS
@@ -88,7 +93,7 @@ Drupal is an open source content management platform powering millions of websit
   js = d.createElement(s); js.id = id;
   js.src = "//connect.facebook.net/de_DE/sdk.js#xfbml=1&version=v2.3";
   fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));
+}(document, 'script', 'facebook-js-sdk'));
 //--><!]]]]]]><![CDATA[><![CDATA[>
 
 //--><!]]]]><![CDATA[>
@@ -107,13 +112,14 @@ RSS;
   }
 
   /**
-   * @dataProvider providerTestOnResponse
+   * Tests on response.
    *
    * @param string $content
    *   The content for the request.
    * @param string $expected_content
    *   The expected content from the response.
    */
+  #[DataProvider('providerTestOnResponse')]
   public function testOnResponse($content, $expected_content): void {
     $event = new ResponseEvent(
       $this->prophesize(HttpKernelInterface::class)->reveal(),

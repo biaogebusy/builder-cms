@@ -6,6 +6,9 @@ use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Bundle plugin handler.
+ */
 class BundlePluginHandler implements BundlePluginHandlerInterface {
 
   /**
@@ -53,7 +56,7 @@ class BundlePluginHandler implements BundlePluginHandlerInterface {
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $definition) {
       $bundles[$plugin_id] = [
         'label' => $definition['label'],
-        'description' => isset($definition['description']) ? $definition['description'] : '',
+        'description' => $definition['description'] ?? '',
         'translatable' => $this->entityType->isTranslatable(),
         'provider' => $definition['provider'],
       ];

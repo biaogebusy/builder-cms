@@ -23,6 +23,12 @@ class LinkFieldTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'field',
+    'text',
+    'link',
+    'menu_ui',
+    'entity_share_test',
     'jsonapi_extras',
   ];
 

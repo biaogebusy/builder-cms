@@ -1,0 +1,26 @@
+ckeditor5_premium_features_ai__ai:
+  ckeditor5:
+    plugins:
+      - aiSidebarAdapter.AiSidebarAdapter
+      - ai.AIChat
+      - ai.AIChatShortcuts
+      - ai.AIQuickActions
+      - ai.AIActions
+      - ai.AIReviewMode
+      - ai.AIBalloon
+      - ai.AIEditorIntegration
+      - cloudServices.CloudServices
+      - comments.Comments
+      - aiAdapter.AiAdapter
+      - trackChanges.TrackChanges
+  drupal:
+    label: CKEditor AI
+    elements: false
+    library: ckeditor5_premium_features_ai/ai-adapter
+    class: Drupal\ckeditor5_premium_features_ai\Plugin\CKEditor5Plugin\CKEditorAi
+    admin_library: ckeditor5_premium_features_ai/admin.ai
+    toolbar_items:
+      toggleAi:
+        label: AI
+      aiQuickActions:
+        label: AI Quick Actions

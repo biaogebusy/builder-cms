@@ -1,0 +1,6 @@
+ckeditor5_premium_features_mentions.form.settings:
+  title: Mentions
+  route_name: ckeditor5_premium_features_mentions.form.settings
+  base_route: ckeditor5_premium_features.form.settings
+  description: 'Configuration for mentions feature.'
+  weight: 31

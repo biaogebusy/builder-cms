@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Drupal\Tests\Core;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\MemoryBackend;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\Cache\MemoryBackend;
 use Drupal\Core\Cron;
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
 use Drupal\Core\Lock\NullLockBackend;
@@ -17,6 +17,9 @@ use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\State\State;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Prophecy\Argument\ArgumentsWildcard;
 use Psr\Log\LoggerInterface;
@@ -24,10 +27,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * Tests the Cron class.
- *
- * @group Cron
- * @coversDefaultClass \Drupal\Core\Cron
  */
+#[CoversClass(Cron::class)]
+#[Group('Cron')]
 class CronTest extends UnitTestCase {
 
   const REQUEUE_COUNT = 3;
@@ -77,7 +79,7 @@ class CronTest extends UnitTestCase {
     // Set a flag to track when a message is logged by adding a callback
     // function for each logging method.
     foreach (get_class_methods(LoggerInterface::class) as $logger_method) {
-      $logger->{$logger_method}(Argument::cetera())->will(function () {
+      $logger->{$logger_method}(Argument::cetera())->will(function (): void {
         \Drupal::state()->set('cron_test.message_logged', TRUE);
       });
     }
@@ -144,7 +146,7 @@ class CronTest extends UnitTestCase {
     // This is avoided by throwing RequeueException for the first few calls to
     // ::processItem() and then returning void. ::testRequeueException()
     // establishes sanity assertions for this case.
-    $queue_worker_plugin->processItem('RequeueException')->will(function ($args, $mock, $method) {
+    $queue_worker_plugin->processItem('RequeueException')->will(function ($args, $mock, $method): void {
       // Fetch the number of calls to this prophesied method. This value will
       // start at zero during the first call.
       $method_calls = count($mock->findProphecyMethodCalls($method->getMethodName(), new ArgumentsWildcard($args)));
@@ -167,7 +169,7 @@ class CronTest extends UnitTestCase {
   /**
    * Resets the testing state.
    */
-  protected function resetTestingState() {
+  protected function resetTestingState(): void {
     $this->queue->deleteQueue();
     $this->state->set('cron_test.message_logged', FALSE);
     $this->state->set('cron_test.requeue_count', NULL);
@@ -176,7 +178,7 @@ class CronTest extends UnitTestCase {
   /**
    * Data provider for ::testProcessQueues() method.
    */
-  public static function processQueuesTestData() {
+  public static function processQueuesTestData(): array {
     return [
       ['Complete', 'assertFalse', 0],
       ['Exception', 'assertTrue', 1],
@@ -188,10 +190,8 @@ class CronTest extends UnitTestCase {
 
   /**
    * Tests the ::processQueues() method.
-   *
-   * @covers ::processQueues
-   * @dataProvider processQueuesTestData
    */
+  #[DataProvider('processQueuesTestData')]
   public function testProcessQueues($item, $message_logged_assertion, $count_post_run): void {
     $this->resetTestingState();
     $this->queue->createItem($item);

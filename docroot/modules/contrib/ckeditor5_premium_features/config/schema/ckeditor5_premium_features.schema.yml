@@ -1,0 +1,34 @@
+ckeditor5_premium_features.settings:
+  type: config_object
+  label: 'CKEditor 5 Premium Features'
+  mapping:
+    license_key:
+      type: string
+      label: 'License key'
+    auth_type:
+      type: string
+      label: 'Authorization type'
+    env:
+      type: string
+      label: 'Environment ID'
+    access_key:
+      type: string
+      label: 'Access key'
+    web_socket_url:
+      type: string
+      label: 'Web Socket Url'
+    dev_token_url:
+      type: string
+      label: 'Development token URL'
+    dev_token_accept:
+      type: integer
+      label: 'Accept using development token URL'
+    dll_location:
+      type: string
+      label: 'DLL packages location'
+    organization_id:
+      type: string
+      label: 'Organization ID'
+    alter_node_form_css:
+      type: boolean
+      label: 'Allow the module to alter the default Drupal theme CSS'

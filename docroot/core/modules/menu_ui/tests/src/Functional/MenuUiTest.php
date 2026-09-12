@@ -9,21 +9,23 @@ use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Menu\MenuLinkInterface;
 use Drupal\Core\Url;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
-use Drupal\system\Entity\Menu;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\system\Entity\Menu;
 use Drupal\system\MenuStorage;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\menu_ui\Traits\MenuUiTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the menu UI.
  *
  * This test adds a custom menu, adds menu links to the custom menu and the
  * Tools menu, checks their data, and deletes them using the UI.
- *
- * @group menu_ui
  */
+#[Group('menu_ui')]
+#[RunTestsInSeparateProcesses]
 class MenuUiTest extends BrowserTestBase {
 
   use MenuUiTrait;
@@ -234,7 +236,7 @@ class MenuUiTest extends BrowserTestBase {
   /**
    * Adds a custom menu using CRUD functions.
    */
-  public function addCustomMenuCRUD() {
+  public function addCustomMenuCRUD(): void {
     // Add a new custom menu.
     $menu_name = $this->randomMachineName(MenuStorage::MAX_ID_LENGTH);
     $label = $this->randomMachineName(16);
@@ -261,7 +263,10 @@ class MenuUiTest extends BrowserTestBase {
     $this->drupalGet('admin/structure/menu');
     $this->assertSession()->pageTextContains($new_label);
     // Click the "Delete menu" operation in the Tools row.
-    $links = $this->xpath('//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]', [':menu_label' => $new_label, ':link_label' => 'Delete menu']);
+    $links = $this->xpath(
+      '//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]',
+      [':menu_label' => $new_label, ':link_label' => 'Delete menu'],
+    );
     $links[0]->click();
     $this->submitForm([], 'Delete');
     $this->assertSession()->addressEquals('admin/structure/menu');
@@ -311,7 +316,11 @@ class MenuUiTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains($label);
 
     // Enable the block.
-    $block = $this->drupalPlaceBlock('system_menu_block:' . $menu_name);
+    $block = $this->drupalPlaceBlock('system_menu_block:' . $menu_name, [
+      'level' => 1,
+      'depth' => NULL,
+      'expand_all_items' => FALSE,
+    ]);
     $this->blockPlacements[$menu_name] = $block->id();
     return Menu::load($menu_name);
   }
@@ -322,7 +331,7 @@ class MenuUiTest extends BrowserTestBase {
    * This deletes the custom menu that is stored in $this->menu and performs
    * tests on the menu delete user interface.
    */
-  public function deleteCustomMenu() {
+  public function deleteCustomMenu(): void {
     $menu_name = $this->menu->id();
     $label = $this->menu->label();
 
@@ -350,12 +359,12 @@ class MenuUiTest extends BrowserTestBase {
   /**
    * Tests menu functionality.
    */
-  public function doMenuTests() {
+  public function doMenuTests(): void {
     // Add a link to the tools menu first, to test cacheability metadata of the
     // destination query string.
     $this->drupalGet('admin/structure/menu/manage/tools');
     $this->clickLink('Add link');
-    $link_title = $this->randomString();
+    $link_title = $this->randomMachineName();
     $this->submitForm(['link[0][uri]' => '/', 'title[0][value]' => $link_title], 'Save');
     $this->assertSession()->linkExists($link_title);
     $this->assertSession()->addressEquals('admin/structure/menu/manage/tools');
@@ -363,10 +372,13 @@ class MenuUiTest extends BrowserTestBase {
     // Test adding a menu link direct from the menus listing page.
     $this->drupalGet('admin/structure/menu');
     // Click the "Add link" operation in the Tools row.
-    $links = $this->xpath('//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]', [':menu_label' => 'Tools', ':link_label' => 'Add link']);
+    $links = $this->xpath(
+      '//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]',
+      [':menu_label' => 'Tools', ':link_label' => 'Add link'],
+    );
     $links[0]->click();
     $this->assertMatchesRegularExpression('#admin/structure/menu/manage/tools/add\?destination=(/[^/]*)*/admin/structure/menu/manage/tools$#', $this->getSession()->getCurrentUrl());
-    $link_title = $this->randomString();
+    $link_title = $this->randomMachineName();
     $this->submitForm(['link[0][uri]' => '/', 'title[0][value]' => $link_title], 'Save');
     $this->assertSession()->linkExists($link_title);
     $this->assertSession()->addressEquals('admin/structure/menu/manage/tools');
@@ -378,18 +390,24 @@ class MenuUiTest extends BrowserTestBase {
     $this->drupalGet('admin/structure/menu');
 
     // Select the edit menu link for our menu.
-    $links = $this->xpath('//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]', [':menu_label' => (string) $this->menu->label(), ':link_label' => 'Edit menu']);
+    $links = $this->xpath(
+      '//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]',
+      [
+        ':menu_label' => (string) $this->menu->label(),
+        ':link_label' => 'Edit menu',
+      ],
+    );
     $links[0]->click();
 
     // Test the 'Add link' local action.
     $this->clickLink('Add link');
-    $link_title = $this->randomString();
+    $link_title = $this->randomMachineName();
     $this->submitForm(['link[0][uri]' => '/', 'title[0][value]' => $link_title], 'Save');
     $this->assertSession()->addressEquals(Url::fromRoute('entity.menu.edit_form', ['menu' => $menu_name]));
     // Test the 'Edit' operation.
     $this->clickLink('Edit');
     $this->assertSession()->fieldValueEquals('title[0][value]', $link_title);
-    $link_title = $this->randomString();
+    $link_title = $this->randomMachineName();
     $this->submitForm(['title[0][value]' => $link_title], 'Save');
     $this->assertSession()->addressEquals(Url::fromRoute('entity.menu.edit_form', ['menu' => $menu_name]));
     // Test the 'Delete' operation.
@@ -404,12 +422,15 @@ class MenuUiTest extends BrowserTestBase {
     $this->drupalGet('admin/structure/menu');
 
     // Select the edit menu link for our menu.
-    $links = $this->xpath('//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]', [':menu_label' => (string) $this->menu->label(), ':link_label' => 'Edit menu']);
+    $links = $this->xpath(
+      '//*/td[contains(text(),:menu_label)]/following::a[normalize-space()=:link_label]',
+      [':menu_label' => (string) $this->menu->label(), ':link_label' => 'Edit menu'],
+    );
     $links[0]->click();
 
     // Test the 'Add link' local action.
     $this->clickLink('Add link');
-    $link_title = $this->randomString();
+    $link_title = $this->randomMachineName();
     $this->submitForm(['link[0][uri]' => '/', 'title[0][value]' => $link_title], 'Save');
     $this->assertSession()->linkExists($link_title);
     $this->assertSession()->addressEquals(Url::fromRoute('entity.menu.edit_form', ['menu' => $menu_name]));
@@ -634,7 +655,7 @@ class MenuUiTest extends BrowserTestBase {
   /**
    * Ensures that the proper default values are set when adding a menu link.
    */
-  protected function doMenuLinkFormDefaultsTest() {
+  protected function doMenuLinkFormDefaultsTest(): void {
     $this->drupalGet("admin/structure/menu/manage/tools/add");
     $this->assertSession()->statusCodeEquals(200);
 
@@ -789,7 +810,7 @@ class MenuUiTest extends BrowserTestBase {
   /**
    * Attempts to add menu link with invalid path or no access permission.
    */
-  public function addInvalidMenuLink() {
+  public function addInvalidMenuLink(): void {
     foreach (['access' => '/admin/people/permissions'] as $type => $link_path) {
       $edit = [
         'link[0][uri]' => $link_path,
@@ -804,7 +825,7 @@ class MenuUiTest extends BrowserTestBase {
   /**
    * Tests that parent options are limited by depth when adding menu links.
    */
-  public function checkInvalidParentMenuLinks() {
+  public function checkInvalidParentMenuLinks(): void {
     $last_link = NULL;
     $plugin_ids = [];
 
@@ -866,7 +887,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param object $parent_node
    *   Parent menu link content node.
    */
-  public function verifyMenuLink(MenuLinkContent $item, $item_node, ?MenuLinkContent $parent = NULL, $parent_node = NULL) {
+  public function verifyMenuLink(MenuLinkContent $item, $item_node, ?MenuLinkContent $parent = NULL, $parent_node = NULL): void {
     // View home page.
     $this->drupalGet('');
     $this->assertSession()->statusCodeEquals(200);
@@ -898,12 +919,12 @@ class MenuUiTest extends BrowserTestBase {
    *
    * @param \Drupal\menu_link_content\Entity\MenuLinkContent $item
    *   The menu link item to move.
-   * @param int $parent
+   * @param string $parent
    *   The id of the new parent.
    * @param string $menu_name
    *   The menu the menu link will be moved to.
    */
-  public function moveMenuLink(MenuLinkContent $item, $parent, $menu_name) {
+  public function moveMenuLink(MenuLinkContent $item, $parent, $menu_name): void {
     $menu_link_id = $item->id();
 
     $edit = [
@@ -920,7 +941,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param \Drupal\menu_link_content\Entity\MenuLinkContent $item
    *   Menu link entity.
    */
-  public function modifyMenuLink(MenuLinkContent $item) {
+  public function modifyMenuLink(MenuLinkContent $item): void {
     $item->title->value = $this->randomMachineName(16);
 
     $menu_link_id = $item->id();
@@ -965,7 +986,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param int $old_weight
    *   Original title for menu link.
    */
-  public function resetMenuLink(MenuLinkInterface $menu_link, $old_weight) {
+  public function resetMenuLink(MenuLinkInterface $menu_link, $old_weight): void {
     // Reset menu link.
     $this->drupalGet("admin/structure/menu/link/{$menu_link->getPluginId()}/reset");
     $this->submitForm([], 'Reset');
@@ -983,7 +1004,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param \Drupal\menu_link_content\Entity\MenuLinkContent $item
    *   Menu link.
    */
-  public function deleteMenuLink(MenuLinkContent $item) {
+  public function deleteMenuLink(MenuLinkContent $item): void {
     $menu_link_id = $item->id();
     $title = $item->getTitle();
 
@@ -1004,7 +1025,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param \Drupal\menu_link_content\Entity\MenuLinkContent $item
    *   Menu link.
    */
-  public function toggleMenuLink(MenuLinkContent $item) {
+  public function toggleMenuLink(MenuLinkContent $item): void {
     $this->disableMenuLink($item);
 
     // Verify menu link is absent.
@@ -1023,7 +1044,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param \Drupal\menu_link_content\Entity\MenuLinkContent $item
    *   Menu link.
    */
-  public function disableMenuLink(MenuLinkContent $item) {
+  public function disableMenuLink(MenuLinkContent $item): void {
     $menu_link_id = $item->id();
     $edit['enabled[value]'] = FALSE;
     $this->drupalGet("admin/structure/menu/item/{$menu_link_id}/edit");
@@ -1040,7 +1061,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param \Drupal\menu_link_content\Entity\MenuLinkContent $item
    *   Menu link.
    */
-  public function enableMenuLink(MenuLinkContent $item) {
+  public function enableMenuLink(MenuLinkContent $item): void {
     $menu_link_id = $item->id();
     $edit['enabled[value]'] = TRUE;
     $this->drupalGet("admin/structure/menu/item/{$menu_link_id}/edit");
@@ -1130,7 +1151,7 @@ class MenuUiTest extends BrowserTestBase {
    * @param int $response
    *   (optional) The expected HTTP response code. Defaults to 200.
    */
-  private function verifyAccess($response = 200) {
+  private function verifyAccess($response = 200): void {
     // View menu help page.
     $this->drupalGet('admin/help/menu');
     $this->assertSession()->statusCodeEquals($response);
@@ -1171,7 +1192,7 @@ class MenuUiTest extends BrowserTestBase {
   /**
    * Tests menu block settings.
    */
-  protected function doTestMenuBlock() {
+  protected function doTestMenuBlock(): void {
     $menu_id = $this->menu->id();
     $block_id = $this->blockPlacements[$menu_id];
     $this->drupalGet('admin/structure/block/manage/' . $block_id);
@@ -1184,7 +1205,7 @@ class MenuUiTest extends BrowserTestBase {
     $this->assertEquals(3, $settings['depth']);
     $this->assertEquals(2, $settings['level']);
     // Reset settings.
-    $block->getPlugin()->setConfigurationValue('depth', 0);
+    $block->getPlugin()->setConfigurationValue('depth', NULL);
     $block->getPlugin()->setConfigurationValue('level', 1);
     $block->save();
   }

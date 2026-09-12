@@ -33,7 +33,7 @@ class WebformSubmissionFilterForm extends FormBase {
       '#type' => 'search',
       '#title' => $this->t('Keyword'),
       '#title_display' => 'invisible',
-      '#placeholder' => $this->t('Filter by submitted data and/or notes'),
+      '#placeholder' => $this->t('Filter by data and/or notes'),
       '#maxlength' => 128,
       '#size' => 40,
       '#default_value' => $search,

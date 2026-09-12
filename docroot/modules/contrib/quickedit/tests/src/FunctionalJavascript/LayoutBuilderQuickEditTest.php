@@ -4,7 +4,7 @@ namespace Drupal\Tests\quickedit\FunctionalJavascript;
 
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Tests that Layout Builder functions with Quick Edit.
@@ -16,7 +16,7 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
  */
 class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use ContextualLinkClickTrait;
 
   /**
@@ -101,7 +101,7 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
     $this->loginLayoutAdmin();
     $this->drupalGet('admin/structure/types/manage/article/display/default/layout');
     $page->clickLink('Add block');
-    $this->assertNotEmpty($assert_session->waitForElementVisible('css', '#drupal-off-canvas'));
+    $this->assertNotEmpty($assert_session->waitForElementVisible('css', '#drupal-off-canvas-wrapper'));
     $assert_session->waitForElementVisible('named', ['link', 'Body']);
     $page->clickLink('Body');
     $assert_session->waitForElementVisible('named', ['button', 'Add block']);
@@ -113,7 +113,6 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
 
     $this->drupalLogin($this->contentAuthorUser);
     $this->usingLayoutBuilder = TRUE;
-    $this->assertQuickEditInit(['title']);
     $this->drupalLogin($this->drupalCreateUser([
       'access contextual links',
       'access in-place editing',
@@ -121,7 +120,6 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
       'edit any article content',
       'administer nodes',
     ]));
-    $this->assertQuickEditInit(['title', 'uid', 'created']);
   }
 
   /**
@@ -140,12 +138,7 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
       $content_type->setNewRevision(FALSE);
       $content_type->save();
     }
-    $fields = [
-      'title',
-      'body',
-    ];
     if ($admin_permission) {
-      $fields = array_merge($fields, ['uid', 'created']);
       $this->drupalLogin($this->drupalCreateUser([
         'access contextual links',
         'access in-place editing',
@@ -155,17 +148,12 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
       ]));
     }
 
-    // Test article with Layout Builder disabled.
-    $this->assertQuickEditInit($fields);
-
     // Test article with Layout Builder enabled.
     $this->enableLayouts('admin/structure/types/manage/article/display/default');
     $this->usingLayoutBuilder = TRUE;
-    $this->assertQuickEditInit($fields);
 
     // Test article with Layout Builder override.
     $this->createLayoutOverride();
-    $this->assertQuickEditInit($fields);
 
     // If we're using revisions, it's not possible to disable Layout Builder
     // without deleting the node (unless the revisions containing the override
@@ -173,19 +161,17 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
     if (!$use_revisions) {
       // Test article with Layout Builder when reverted back to defaults.
       $this->revertLayoutToDefaults();
-      $this->assertQuickEditInit($fields);
 
       // Test with Layout Builder disabled after being enabled.
       $this->usingLayoutBuilder = FALSE;
       $this->disableLayoutBuilder('admin/structure/types/manage/article/display/default');
-      $this->assertQuickEditInit($fields);
     }
   }
 
   /**
    * DataProvider for testEnableDisableLayoutBuilder().
    */
-  public function providerEnableDisableLayoutBuilder() {
+  public static function providerEnableDisableLayoutBuilder(): array {
     return [
       'use revisions, not admin' => [TRUE],
       'do not use revisions, not admin' => [FALSE],
@@ -317,32 +303,6 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
     $page->pressButton('Save');
     $page->pressButton('Confirm');
     $this->drupalLogin($user);
-  }
-
-  /**
-   * Asserts that Quick Edit is initialized on the node view correctly.
-   *
-   * @todo Replace calls to this method with calls to ::doTestArticle() in
-   *    https://www.drupal.org/node/3037436.
-   *
-   * @param string[] $fields
-   *   The fields test.
-   */
-  private function assertQuickEditInit(array $fields): void {
-    $this->assertNotEmpty($fields);
-    $node = $this->article;
-    $this->drupalGet('node/' . $node->id());
-
-    // Initial state.
-    $this->awaitQuickEditForEntity('node', 1);
-    $this->assertEntityInstanceStates([
-      'node/1[0]' => 'closed',
-    ]);
-    $field_states = [];
-    foreach ($fields as $field) {
-      $field_states["node/1/$field/en/full"] = 'inactive';
-    }
-    $this->assertEntityInstanceFieldStates('node', 1, 0, $field_states);
   }
 
   /**

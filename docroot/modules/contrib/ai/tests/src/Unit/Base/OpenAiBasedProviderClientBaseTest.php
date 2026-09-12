@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai\Unit\Base;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\ai\Base\OpenAiBasedProviderClientBase;
 use Drupal\ai\Exception\AiQuotaException;
 use Drupal\ai\Exception\AiRateLimitException;
 use Drupal\ai\Exception\AiResponseErrorException;
+use Drupal\ai\OperationType\Chat\ChatInput;
+use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\Service\HostnameFilter;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * Tests error handling in OpenAiBasedProviderClientBase.
@@ -189,8 +198,60 @@ class OpenAiBasedProviderClientBaseTest extends TestCase {
 
     $parent = new \ReflectionMethod(OpenAiBasedProviderClientBase::class, 'handleApiException');
     $parentType = $parent->getParameters()[0]->getType();
-    $this->assertNotNull($parentType);
-    $this->assertSame('Exception', ltrim((string) $parentType, '?\\'));
+    $this->assertInstanceOf(\ReflectionNamedType::class, $parentType);
+    $this->assertSame('Exception', $parentType->getName());
+  }
+
+  /**
+   * Tests that the Fiber branch keeps token usage from the consumed stream.
+   *
+   * Regression test for issue #3586522: when chat() executes inside a
+   * \Fiber — which is the case for every web request since Drupal core 11.x
+   * wraps controller execution in a Fiber — the streamed response is
+   * consumed and reconstructed, but the token usage collected during
+   * consumption was discarded from the returned ChatOutput.
+   *
+   * @covers ::chat
+   */
+  public function testFiberBranchKeepsTokenUsage(): void {
+    // The streamed iterator falls back to the global container for the event
+    // dispatcher (PostStreamingResponseEvent on full consumption) and the
+    // hostname filter service (URL-safety buffer flush), and the hostname
+    // filter reads the Settings singleton.
+    new Settings([]);
+    $config = $this->createMock(ImmutableConfig::class);
+    $config_factory = $this->createMock(ConfigFactoryInterface::class);
+    $config_factory->method('get')->willReturn($config);
+    $container = new ContainerBuilder();
+    $container->set('event_dispatcher', new EventDispatcher());
+    $container->set('ai.hostname_filter_service', new HostnameFilter(
+      $this->createMock(LoggerChannelFactoryInterface::class),
+      $config_factory,
+    ));
+    \Drupal::setContainer($container);
+
+    $reflection = new \ReflectionClass(FiberTokenUsageStubProvider::class);
+    /** @var \Drupal\Tests\ai\Unit\Base\FiberTokenUsageStubProvider $provider */
+    $provider = $reflection->newInstanceWithoutConstructor();
+    $client = new \ReflectionProperty(OpenAiBasedProviderClientBase::class, 'client');
+    $client->setValue($provider, new FiberTokenUsageStubClient());
+
+    $input = new ChatInput([new ChatMessage('user', 'Hello')]);
+
+    $usage = NULL;
+    $fiber = new \Fiber(static function () use ($provider, $input, &$usage): void {
+      $output = $provider->chat($input, 'stub-model');
+      $usage = $output->getTokenUsage();
+    });
+    $fiber->start();
+    while (!$fiber->isTerminated()) {
+      $fiber->resume();
+    }
+
+    $this->assertNotNull($usage, 'chat() completed inside the Fiber.');
+    $this->assertSame(10, $usage->input);
+    $this->assertSame(5, $usage->output);
+    $this->assertSame(15, $usage->total);
   }
 
 }
@@ -220,6 +281,158 @@ abstract class LegacyExceptionSignatureProvider extends OpenAiBasedProviderClien
   }
 
   // phpcs:enable Squiz.Scope.MethodScope.Missing, Generic.CodeAnalysis.UselessOverridingMethod.Found
+
+}
+
+/**
+ * Fixture: minimal concrete provider for exercising the chat() Fiber branch.
+ */
+// phpcs:disable Drupal.Classes.ClassFileName.NoMatch
+final class FiberTokenUsageStubProvider extends OpenAiBasedProviderClientBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguredModels(?string $operation_type = NULL, array $capabilities = []): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedOperationTypes(): array {
+    return ['chat'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getModelSettings(string $model_id, array $generalConfig = []): array {
+    return $generalConfig;
+  }
+
+}
+
+/**
+ * Fixture: stand-in for the OpenAI SDK client used by the Fiber branch test.
+ */
+final class FiberTokenUsageStubClient {
+
+  /**
+   * Returns a chat resource whose streamed response yields canned chunks.
+   *
+   * @return object
+   *   The chat resource stub.
+   */
+  public function chat(): object {
+    return new class {
+
+      /**
+       * Returns a traversable streamed response.
+       *
+       * @param array $payload
+       *   The request payload (ignored).
+       *
+       * @return \IteratorAggregate
+       *   The canned stream.
+       */
+      public function createStreamed(array $payload): \IteratorAggregate {
+        return new class implements \IteratorAggregate {
+
+          /**
+           * {@inheritdoc}
+           */
+          public function getIterator(): \Generator {
+            yield new FiberTokenUsageStubChunk([
+              new FiberTokenUsageStubChoice(new FiberTokenUsageStubDelta('assistant', 'Hello'), NULL),
+            ]);
+            yield new FiberTokenUsageStubChunk([
+              new FiberTokenUsageStubChoice(new FiberTokenUsageStubDelta('', ' world.'), 'stop'),
+            ]);
+            // OpenAI-compatible APIs send the usage data in a trailing chunk
+            // with an empty choices list when stream_options.include_usage is
+            // set.
+            yield new FiberTokenUsageStubChunk([], new FiberTokenUsageStubUsage(10, 5, 15));
+          }
+
+        };
+      }
+
+    };
+  }
+
+}
+
+/**
+ * Fixture: a single streamed completion chunk.
+ */
+final class FiberTokenUsageStubChunk {
+
+  public function __construct(
+    public array $choices,
+    public ?FiberTokenUsageStubUsage $usage = NULL,
+  ) {}
+
+  /**
+   * Mirrors the SDK response object API.
+   *
+   * @return array
+   *   The raw chunk data.
+   */
+  public function toArray(): array {
+    return [];
+  }
+
+}
+
+/**
+ * Fixture: the usage block of a trailing streamed chunk.
+ */
+final class FiberTokenUsageStubUsage {
+
+  public function __construct(
+    public int $promptTokens,
+    public int $completionTokens,
+    public int $totalTokens,
+  ) {}
+
+  /**
+   * Mirrors the SDK usage object API.
+   *
+   * @return array
+   *   The raw usage data.
+   */
+  public function toArray(): array {
+    return [
+      'prompt_tokens' => $this->promptTokens,
+      'completion_tokens' => $this->completionTokens,
+      'total_tokens' => $this->totalTokens,
+    ];
+  }
+
+}
+
+/**
+ * Fixture: the delta part of a streamed chunk choice.
+ */
+final class FiberTokenUsageStubDelta {
+
+  public function __construct(
+    public string $role = '',
+    public string $content = '',
+  ) {}
+
+}
+
+/**
+ * Fixture: a single choice of a streamed chunk.
+ */
+final class FiberTokenUsageStubChoice {
+
+  public function __construct(
+    public FiberTokenUsageStubDelta $delta,
+    public ?string $finishReason = NULL,
+  ) {}
 
 }
 // phpcs:enable Drupal.Classes.ClassFileName.NoMatch

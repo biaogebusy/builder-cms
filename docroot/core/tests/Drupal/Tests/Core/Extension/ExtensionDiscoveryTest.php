@@ -4,26 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Extension;
 
-use Drupal\Component\FileCache\FileCacheFactory;
-use Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Tests\UnitTestCase;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Yaml\Yaml;
 
 /**
  * Tests discovery of extensions.
- *
- * @coversDefaultClass \Drupal\Core\Extension\ExtensionDiscovery
- * @group Extension
  */
+#[CoversClass(ExtensionDiscovery::class)]
+#[Group('Extension')]
 class ExtensionDiscoveryTest extends UnitTestCase {
 
   /**
    * Tests extension discovery in a virtual filesystem with vfsStream.
    *
-   * @covers ::scan
+   * @legacy-covers ::scan
    */
   public function testExtensionDiscoveryVfs(): void {
 
@@ -68,43 +67,9 @@ class ExtensionDiscoveryTest extends UnitTestCase {
   }
 
   /**
-   * Tests changing extension discovery file cache objects to arrays.
-   *
-   * @covers ::scan
-   * @runInSeparateProcess
-   */
-  public function testExtensionDiscoveryCache(): void {
-    // Set up an extension object in the cache to mimic site prior to changing
-    // \Drupal\Core\Extension\ExtensionDiscovery::scanDirectory() to cache an
-    // array instead of an object. Note we cannot use the VFS file system
-    // because FileCache does not support stream wrappers.
-    $extension = new Extension($this->root, 'module', 'core/modules/user/user.info.yml', 'user.module');
-    $extension->subpath = 'modules/user';
-    $extension->origin = 'core';
-    // Undo \Drupal\Tests\UnitTestCase::setUp() so FileCache works.
-    FileCacheFactory::setConfiguration([]);
-    $file_cache = FileCacheFactory::get('extension_discovery');
-    $file_cache->set($this->root . '/core/modules/user/user.info.yml', $extension);
-
-    // Create an ExtensionDiscovery object to test.
-    $extension_discovery = new ExtensionDiscovery($this->root, TRUE, [], 'sites/default');
-    $modules = $extension_discovery->scan('module', FALSE);
-    $this->assertArrayHasKey('user', $modules);
-    $this->assertEquals((array) $extension, (array) $modules['user']);
-    $this->assertNotSame($extension, $modules['user']);
-    // FileCache item should now be an array.
-    $this->assertSame([
-      'type' => 'module',
-      'pathname' => 'core/modules/user/user.info.yml',
-      'filename' => 'user.module',
-      'subpath' => 'modules/user',
-    ], $file_cache->get($this->root . '/core/modules/user/user.info.yml'));
-  }
-
-  /**
    * Tests finding modules that have a trailing comment on the type property.
    *
-   * @covers ::scan
+   * @legacy-covers ::scan
    */
   public function testExtensionDiscoveryTypeComment(): void {
     $extension_discovery = new ExtensionDiscovery($this->root, TRUE, [], 'sites/default');
@@ -122,7 +87,7 @@ class ExtensionDiscoveryTest extends UnitTestCase {
    *   Format: $[$type][$name] = $yml_file
    *   E.g. $['module']['system'] = 'system.info.yml'
    */
-  protected function populateFilesystemStructure(array &$filesystem_structure) {
+  protected function populateFilesystemStructure(array &$filesystem_structure): array {
     $info_by_file = [
       'core/profiles/standard/standard.info.yml' => [
         'type' => 'profile',
@@ -195,7 +160,7 @@ class ExtensionDiscoveryTest extends UnitTestCase {
    * @param string $content
    *   The contents of the file.
    */
-  protected function addFileToFilesystemStructure(array &$filesystem_structure, array $pieces, $content) {
+  protected function addFileToFilesystemStructure(array &$filesystem_structure, array $pieces, $content): void {
     $piece = array_shift($pieces);
     if ($pieces !== []) {
       $filesystem_structure += [$piece => []];
@@ -204,18 +169,6 @@ class ExtensionDiscoveryTest extends UnitTestCase {
     else {
       $filesystem_structure[$piece] = $content;
     }
-  }
-
-  /**
-   * Tests deprecated iterator.
-   *
-   * @covers \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator
-   * @group legacy
-   */
-  public function testDeprecatedIterator(): void {
-    $this->expectDeprecation('The Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterCallback instead. See https://www.drupal.org/node/3343023');
-    $recursive_extension_filter_iterator = new RecursiveExtensionFilterIterator(new \RecursiveDirectoryIterator('.'));
-    $this->assertInstanceOf(RecursiveExtensionFilterIterator::class, $recursive_extension_filter_iterator);
   }
 
 }

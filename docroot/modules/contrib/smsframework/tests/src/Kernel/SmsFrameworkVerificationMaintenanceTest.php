@@ -1,16 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
+use Drupal\entity_test\Entity\EntityTest;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\sms\Entity\PhoneNumberSettings;
 use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 use Drupal\sms\Entity\PhoneNumberVerificationInterface;
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\entity_test\Entity\EntityTest;
 
 /**
  * Tests verification maintenance executed during cron.
@@ -19,9 +19,6 @@ use Drupal\entity_test\Entity\EntityTest;
  */
 final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test_gateway', 'entity_test', 'user', 'field', 'telephone',
     'dynamic_entity_reference',
@@ -41,9 +38,6 @@ final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBa
    */
   private FieldStorageConfigInterface $phoneField;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('entity_test');
@@ -51,7 +45,7 @@ final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBa
 
     $this->phoneField = FieldStorageConfig::create([
       'entity_type' => 'entity_test',
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => \mb_strtolower($this->randomMachineName()),
       'type' => 'telephone',
     ]);
     $this->phoneField->save();

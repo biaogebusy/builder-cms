@@ -4,8 +4,10 @@ namespace Drupal\entity_reference_revisions\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'entity reference revisions label' formatter.
@@ -19,6 +21,12 @@ use Drupal\Core\Form\FormStateInterface;
  *   }
  * )
  */
+#[FieldFormatter(
+  id: 'entity_reference_revisions_label',
+  label: new TranslatableMarkup('Label'),
+  description: new TranslatableMarkup('Display the label of the referenced entity revisions.'),
+  field_types: ['entity_reference_revisions'],
+)]
 class EntityReferenceRevisionsLabelFormatter extends EntityReferenceRevisionsFormatterBase {
 
   /**

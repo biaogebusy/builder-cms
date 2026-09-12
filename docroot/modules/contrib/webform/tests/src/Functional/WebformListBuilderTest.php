@@ -19,10 +19,10 @@ class WebformListBuilderTest extends WebformBrowserTestBase {
   /**
    * Tests the webform overview filter and limit.
    */
-  public function testFilterAndLimit() {
+  public function testFilterAndLimit(): void {
     $assert_session = $this->assertSession();
 
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($this->createUser(['administer webform']));
 
     // Check filter default category and state.
     $this->drupalGet('/admin/structure/webform');
@@ -72,7 +72,7 @@ class WebformListBuilderTest extends WebformBrowserTestBase {
   /**
    * Tests the webform overview bulk operations.
    */
-  public function testBulkOperations() {
+  public function testBulkOperations(): void {
     $assert_session = $this->assertSession();
 
     // Add three test webforms.
@@ -83,7 +83,7 @@ class WebformListBuilderTest extends WebformBrowserTestBase {
       $this->createWebform(['id' => 'three']),
     ];
 
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($this->createUser(['administer webform', 'delete any webform']));
 
     // Check bulk operation access.
     $this->drupalGet('/admin/structure/webform');
@@ -208,19 +208,14 @@ class WebformListBuilderTest extends WebformBrowserTestBase {
   /**
    * Tests the webform overview access.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $assert_session = $this->assertSession();
 
-    // Test with a superuser.
-    $any_webform_user = $this->createUser([
-      'access webform overview',
-      'create webform',
-      'edit any webform',
-      'delete any webform',
-    ]);
-    $this->drupalLogin($any_webform_user);
-    $list_path = '/admin/structure/webform';
-    $this->drupalGet($list_path);
+    // Test with a administer.
+    $this->drupalLogin($this->createUser([
+      'administer webform',
+    ]));
+    $this->drupalGet('/admin/structure/webform');
     $assert_session->linkExists('Test: Submissions');
     $assert_session->linkExists('Results');
     $assert_session->linkExists('Build');
@@ -228,16 +223,52 @@ class WebformListBuilderTest extends WebformBrowserTestBase {
     $assert_session->linkExists('View');
     $assert_session->linkExists('Duplicate');
     $assert_session->linkExists('Delete');
+    $assert_session->responseContains('All [2]');
+    $assert_session->elementExists('css', '#webform-bulk-form');
+
+    // Test with a superuser.
+    $this->drupalLogin($this->createUser([
+      'access webform overview',
+      'administer webform overview',
+      'create webform',
+      'edit any webform',
+      'delete any webform',
+    ]));
+    $this->drupalGet('/admin/structure/webform');
+    $assert_session->linkExists('Test: Submissions');
+    $assert_session->linkExists('Results');
+    $assert_session->linkExists('Build');
+    $assert_session->linkExists('Settings');
+    $assert_session->linkExists('View');
+    $assert_session->linkExists('Duplicate');
+    $assert_session->linkExists('Delete');
+    $assert_session->responseNotContains('All [2]');
+    $assert_session->elementExists('css', '#webform-bulk-form');
+
+    // Test with access and administer overview.
+    $this->drupalLogin($this->createUser([
+      'access webform overview',
+      'administer webform overview',
+    ]));
+    $this->drupalGet('/admin/structure/webform');
+    $assert_session->elementExists('css', '#webform-bulk-form');
+
+    // Test with access and NOT administer overview.
+    $this->drupalLogin($this->createUser([
+      'access webform overview',
+    ]));
+    $this->drupalGet('/admin/structure/webform');
+    $assert_session->responseNotContains('All [2]');
+    $assert_session->elementNotExists('css', '#webform-bulk-form');
 
     // Test with a user that only has submission access.
-    $any_webform_submission_user = $this->createUser([
+    $this->drupalLogin($this->createUser([
       'access webform overview',
       'view any webform submission',
       'edit any webform submission',
       'delete any webform submission',
-    ]);
-    $this->drupalLogin($any_webform_submission_user);
-    $this->drupalGet($list_path);
+    ]));
+    $this->drupalGet('/admin/structure/webform');
     // Webform name should not be a link as the user doesn't have access to the
     // submission page.
     $assert_session->linkExists('Test: Submissions');
@@ -247,16 +278,19 @@ class WebformListBuilderTest extends WebformBrowserTestBase {
     $assert_session->linkExists('View');
     $assert_session->linkNotExists('Duplicate');
     $assert_session->linkNotExists('Delete');
+    $assert_session->responseNotContains('All [2]');
+    $assert_session->elementNotExists('css', '#webform-bulk-form');
 
     // Disable webform page setting to ensure the view links get removed.
     $webform_config = \Drupal::configFactory()->getEditable('webform.webform.test_submissions');
     $settings = $webform_config->get('settings');
     $settings['page'] = FALSE;
     $webform_config->set('settings', $settings)->save();
-    $this->drupalGet($list_path);
+    $this->drupalGet('/admin/structure/webform');
     $assert_session->linkNotExists('Test: Submissions');
     $assert_session->responseContains('Test: Submissions');
     $this->assertLinkNotInRow('Test: Submissions', 'View');
+    $assert_session->elementNotExists('css', '#webform-bulk-form');
 
     // Test with role that is configured via webform access settings.
     $rid = $this->drupalCreateRole(['access webform overview']);
@@ -267,9 +301,11 @@ class WebformListBuilderTest extends WebformBrowserTestBase {
     $access['view_any']['roles'][] = $rid;
     $webform_config->set('access', $access)->save();
     $this->drupalLogin($special_access_user);
-    $this->drupalGet($list_path);
+    $this->drupalGet('/admin/structure/webform');
     $assert_session->responseContains('Test: Submissions');
     $assert_session->linkExists('Results');
+    $assert_session->responseNotContains('All [2]');
+    $assert_session->elementNotExists('css', '#webform-bulk-form');
   }
 
   /**

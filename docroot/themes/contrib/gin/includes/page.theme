@@ -17,7 +17,7 @@ function gin_preprocess_page(&$variables) {
   // Required for allowing subtheming Gin.
   $activeThemeName = \Drupal::theme()->getActiveTheme()->getName();
   $variables['active_admin_theme'] = $activeThemeName;
-  $variables['active_navigation_top_bar'] = _gin_module_is_active('navigation_top_bar');
+  $variables['active_core_navigation'] = _gin_module_is_active('navigation');
 
   /** @var \Drupal\gin\GinSettings $settings */
   $settings = \Drupal::classResolver(GinSettings::class);
@@ -39,7 +39,7 @@ function gin_preprocess_page(&$variables) {
 
   // Get form actions.
   if ($form_actions = _gin_form_actions()) {
-    if (_gin_module_is_active('navigation_top_bar')) {
+    if (_gin_module_is_active('navigation')) {
       $variables['gin_form_actions'] = '';
     }
     else {

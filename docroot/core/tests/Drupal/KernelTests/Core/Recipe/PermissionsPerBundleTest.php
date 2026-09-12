@@ -7,6 +7,8 @@ namespace Drupal\KernelTests\Core\Recipe;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Action\ConfigActionException;
+use Drupal\Core\Config\Action\Plugin\ConfigAction\Deriver\PermissionsPerBundleDeriver;
+use Drupal\Core\Config\Action\Plugin\ConfigAction\PermissionsPerBundle;
 use Drupal\Core\Recipe\RecipeRunner;
 use Drupal\FunctionalTests\Core\Recipe\RecipeTestTrait;
 use Drupal\KernelTests\KernelTestBase;
@@ -16,13 +18,18 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
- * @covers \Drupal\Core\Config\Action\Plugin\ConfigAction\PermissionsPerBundle
- * @covers \Drupal\Core\Config\Action\Plugin\ConfigAction\Deriver\PermissionsPerBundleDeriver
- *
- * @group Recipe
+ * Tests Permissions Per Bundle.
  */
+#[Group('Recipe')]
+#[CoversClass(PermissionsPerBundle::class)]
+#[CoversClass(PermissionsPerBundleDeriver::class)]
+#[RunTestsInSeparateProcesses]
 class PermissionsPerBundleTest extends KernelTestBase {
 
   use ContentTypeCreationTrait;
@@ -36,8 +43,10 @@ class PermissionsPerBundleTest extends KernelTestBase {
    */
   protected static $modules = [
     'field',
+    'file',
     'media',
     'media_test_source',
+    'image',
     'node',
     'system',
     'taxonomy',
@@ -50,6 +59,7 @@ class PermissionsPerBundleTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('node');
     $this->installConfig('node');
 
     $this->createRole([], 'super_editor');
@@ -58,6 +68,7 @@ class PermissionsPerBundleTest extends KernelTestBase {
     $this->createContentType(['type' => 'blog']);
     $this->createContentType(['type' => 'landing_page']);
 
+    $this->installEntitySchema('media');
     $this->createMediaType('test', ['id' => 'beautiful']);
     $this->createMediaType('test', ['id' => 'controversial']);
     $this->createMediaType('test', ['id' => 'special']);
@@ -197,11 +208,10 @@ YAML;
    *
    * @param mixed $value
    *   The permission template which should raise an error.
-   *
-   * @testWith [["a %Bundle permission"]]
-   *   [""]
-   *   [[]]
    */
+  #[TestWith([["a %Bundle permission"]])]
+  #[TestWith([""])]
+  #[TestWith([[]])]
   public function testInvalidValue(mixed $value): void {
     $value = Json::encode($value);
 

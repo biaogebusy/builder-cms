@@ -105,7 +105,7 @@ class ShsController extends ControllerBase {
       $cache_tags[] = sprintf('taxonomy_term:%d', $tid);
     }
 
-    $response->addCacheableDependency(new ShsTermCacheDependency($cache_tags));
+    $response->addCacheableDependency(new ShsTermCacheDependency($cache_tags, $bundle));
     $response->setData($result, TRUE);
 
     return $response;

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\commerce_log\Kernel;
 
+use Drupal\commerce_log\Form\LogSettingsForm;
+use Drupal\commerce_log\LogStorageInterface;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
@@ -31,13 +33,6 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
   protected $order;
 
   /**
-   * The log storage.
-   *
-   * @var \Drupal\commerce_log\LogStorageInterface
-   */
-  protected $logStorage;
-
-  /**
    * The log view builder.
    *
    * @var \Drupal\commerce_log\LogViewBuilder
@@ -62,7 +57,6 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
 
     $this->installEntitySchema('commerce_log');
     $user = $this->createUser();
-    $this->logStorage = $this->container->get('entity_type.manager')->getStorage('commerce_log');
     $this->logViewBuilder = $this->container->get('entity_type.manager')->getViewBuilder('commerce_log');
 
     // Change the workflow of the default order type.
@@ -132,7 +126,8 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
     $this->order->getState()->applyTransitionById('place');
     $this->order->save();
 
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $log_storage = $this->getLogStorage();
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     $log = reset($logs);
     $build = $this->logViewBuilder->view($log);
@@ -144,7 +139,7 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
     $this->order->getState()->applyTransitionById('validate');
     $this->order->save();
 
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(2, count($logs));
     $log = $logs[2];
     $build = $this->logViewBuilder->view($log);
@@ -156,7 +151,7 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
     $this->order->getState()->applyTransitionById('fulfill');
     $this->order->save();
 
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(3, count($logs));
     $log = $logs[3];
     $build = $this->logViewBuilder->view($log);
@@ -177,13 +172,30 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
 
     $order_assignment = $this->container->get('commerce_order.order_assignment');
     $order_assignment->assign($this->order, $new_user);
-
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $this->getLogStorage()->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     $log = reset($logs);
     $build = $this->logViewBuilder->view($log);
     $this->render($build);
     $this->assertText("The order was assigned to {$new_user->getDisplayName()}.");
+  }
+
+  /**
+   * Test disable log for order reassignment.
+   */
+  public function testDisabledOrderAssignedLog() {
+    // Add the lot templates for order assignment to the disabled list.
+    $this->container->get('config.factory')
+      ->getEditable(LogSettingsForm::CONFIG_NAME)
+      ->set('disabled_templates', ['order_assigned'])
+      ->save();
+    // Reassignment is currently only done on user login.
+    $new_user = $this->createUser();
+    $order_assignment = $this->container->get('commerce_order.order_assignment');
+    $order_assignment->assign($this->order, $new_user);
+
+    $logs = $this->getLogStorage()->loadMultipleByEntity($this->order);
+    $this->assertEquals(0, count($logs));
   }
 
   /**
@@ -206,7 +218,8 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
     $this->order->setData('simulate_mail_failure', TRUE);
     $mail_handler->sendMail($this->order->getEmail(), $subject, [], $params);
 
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $log_storage = $this->getLogStorage();
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(4, count($logs));
     $success_log = reset($logs);
     $build = $this->logViewBuilder->view($success_log);
@@ -227,6 +240,18 @@ class OrderIntegrationTest extends OrderKernelTestBase implements ServiceModifie
     $build = $this->logViewBuilder->view($order_test_failure_log);
     $this->render($build);
     $this->assertText(new FormattableMarkup('Failed to send "order_test" to @mail.', ['@mail' => $this->order->getEmail()]));
+  }
+
+  /**
+   * Gets the log storage.
+   *
+   * @return \Drupal\commerce_log\LogStorageInterface
+   *   The log storage.
+   */
+  protected function getLogStorage(): LogStorageInterface {
+    $log_storage = $this->entityTypeManager->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    return $log_storage;
   }
 
 }

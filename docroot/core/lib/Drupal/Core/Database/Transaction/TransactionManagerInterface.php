@@ -50,11 +50,31 @@ interface TransactionManagerInterface {
   public function push(string $name = ''): Transaction;
 
   /**
+   * Purges a Drupal transaction from the manager.
+   *
+   * This is only called by a Transaction object's ::__destruct() method and
+   * should only be called internally by a database driver.
+   *
+   * @param string $name
+   *   The name of the transaction.
+   * @param string $id
+   *   The id of the transaction.
+   *
+   * @throws \Drupal\Core\Database\TransactionOutOfOrderException
+   *   If a Drupal Transaction with the specified name does not exist.
+   * @throws \Drupal\Core\Database\TransactionCommitFailedException
+   *   If the commit of the root transaction failed.
+   *
+   * @internal
+   */
+  public function purge(string $name, string $id): void;
+
+  /**
    * Removes a Drupal transaction from the stack.
    *
    * The unpiled item does not necessarily need to be the last on the stack.
-   * This method should only be called by a Transaction object going out of
-   * scope.
+   * This method should only be called by a Transaction object's
+   * ::commitOrRelease() method.
    *
    * This method should only be called internally by a database driver.
    *
@@ -67,6 +87,8 @@ interface TransactionManagerInterface {
    *   If a Drupal Transaction with the specified name does not exist.
    * @throws \Drupal\Core\Database\TransactionCommitFailedException
    *   If the commit of the root transaction failed.
+   *
+   * @see \Drupal\Core\Database\Transaction::__destruct()
    */
   public function unpile(string $name, string $id): void;
 
@@ -92,6 +114,8 @@ interface TransactionManagerInterface {
    *   to the stack.
    * @throws \Drupal\Core\Database\TransactionCommitFailedException
    *   If the commit of the root transaction failed.
+   *
+   * @see \Drupal\Core\Database\Transaction::rollback()
    */
   public function rollback(string $name, string $id): void;
 
@@ -102,7 +126,7 @@ interface TransactionManagerInterface {
    * database server (for example, MySql when a DDL statement is executed
    * during a transaction). In such cases we need to void the remaining items
    * on the stack so that when outliving Transaction object get out of scope
-   * the do not try operations on the database.
+   * they will not try operations on the database.
    *
    * This method should only be called internally by a database driver.
    */
@@ -111,9 +135,6 @@ interface TransactionManagerInterface {
   /**
    * Adds a root transaction end callback.
    *
-   * These callbacks are invoked immediately after the client transaction has
-   * been committed or rolled back.
-   *
    * It can for example be used to avoid deadlocks on write-heavy tables that
    * do not need to be part of the transaction, like cache tag invalidations.
    *
@@ -121,8 +142,23 @@ interface TransactionManagerInterface {
    * and Memcache cache implementations can replicate the transaction-behavior
    * of the database cache backend and avoid race conditions.
    *
-   * An argument is passed to the callbacks that indicates whether the
-   * transaction was successful or not.
+   * These callbacks are invoked during the destruction of the root Transaction
+   * object.
+   *
+   * The callback should have the following signature:
+   * @code
+   *   callback(
+   *     bool $success,
+   *   ): void
+   * @endcode
+   *
+   * When callbacks are executed, the $success parameter passed to the callbacks
+   * is a boolean that indicates
+   *   - if TRUE, that the complete transaction was successfully committed, or
+   *     in the edge case of a transaction that was auto-committed after a DDL
+   *     statement, that no rollbacks were attempted after the DDL statement;
+   *   - if FALSE, that the complete transaction was rolled back, or that the
+   *     transaction processing failed for any other reason.
    *
    * @param callable $callback
    *   The callback to invoke.

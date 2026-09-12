@@ -6,13 +6,16 @@ namespace Drupal\BuildTests\Framework\Tests;
 
 use Drupal\BuildTests\Framework\BuildTestBase;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 
 /**
- * @coversDefaultClass \Drupal\BuildTests\Framework\BuildTestBase
- * @group Build
+ * Tests Drupal\BuildTests\Framework\BuildTestBase.
  */
+#[CoversClass(BuildTestBase::class)]
+#[Group('Build')]
 class BuildTestTest extends BuildTestBase {
 
   /**
@@ -34,7 +37,7 @@ class BuildTestTest extends BuildTestBase {
   }
 
   /**
-   * @covers ::copyCodebase
+   * Tests copy codebase.
    */
   public function testCopyCodebase(): void {
     $test_directory = 'copied_codebase';
@@ -55,8 +58,6 @@ class BuildTestTest extends BuildTestBase {
 
   /**
    * Ensure we're not copying directories we wish to exclude.
-   *
-   * @covers ::copyCodebase
    */
   public function testCopyCodebaseExclude(): void {
     // Create a virtual file system containing items that should be
@@ -92,7 +93,8 @@ class BuildTestTest extends BuildTestBase {
     /** @var \PHPUnit\Framework\MockObject\MockBuilder|\Drupal\BuildTests\Framework\BuildTestBase $base */
     $base = $this->getMockBuilder(BuildTestBase::class)
       ->onlyMethods(['getDrupalRoot', 'getComposerRoot'])
-      ->getMockForAbstractClass();
+      ->setConstructorArgs(['test'])
+      ->getMock();
     $base->expects($this->exactly(1))
       ->method('getDrupalRoot')
       ->willReturn(vfsStream::url('drupal'));
@@ -127,8 +129,6 @@ class BuildTestTest extends BuildTestBase {
 
   /**
    * Tests copying codebase when Drupal and Composer roots are different.
-   *
-   * @covers ::copyCodebase
    */
   public function testCopyCodebaseDocRoot(): void {
     // Create a virtual file system containing items that should be
@@ -170,7 +170,8 @@ class BuildTestTest extends BuildTestBase {
     /** @var \PHPUnit\Framework\MockObject\MockBuilder|\Drupal\BuildTests\Framework\BuildTestBase $base */
     $base = $this->getMockBuilder(BuildTestBase::class)
       ->onlyMethods(['getDrupalRoot', 'getComposerRoot'])
-      ->getMockForAbstractClass();
+      ->setConstructorArgs(['test'])
+      ->getMock();
     $base->expects($this->exactly(3))
       ->method('getDrupalRoot')
       ->willReturn(vfsStream::url('drupal/docroot'));
@@ -191,7 +192,7 @@ class BuildTestTest extends BuildTestBase {
     $this->assertFileExists($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/default.settings.php');
     $this->assertFileExists($full_path . DIRECTORY_SEPARATOR . 'vendor');
 
-    // Verify expected files do not exist
+    // Verify expected files do not exist.
     $this->assertFileDoesNotExist($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/settings.php');
     $this->assertFileDoesNotExist($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/settings.local.php');
     $this->assertFileDoesNotExist($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/files');
@@ -204,7 +205,7 @@ class BuildTestTest extends BuildTestBase {
   }
 
   /**
-   * @covers ::findAvailablePort
+   * @legacy-covers ::findAvailablePort
    */
   public function testPortMany(): void {
     $iterator = (new Finder())->in($this->getDrupalRoot())
@@ -232,7 +233,7 @@ class BuildTestTest extends BuildTestBase {
   }
 
   /**
-   * @covers ::standUpServer
+   * Tests stand up server.
    */
   public function testStandUpServer(): void {
     // Stand up a server with working directory 'first'.

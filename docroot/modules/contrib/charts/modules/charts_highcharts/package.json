@@ -1,0 +1,86 @@
+{
+  "name": "drupal-charts-highcharts-libraries",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Manages Highcharts JS libraries for the Drupal Charts module.",
+  "scripts": {
+    "libraries:copy": "rimraf ../../../../../libraries/highcharts* && copy-files-from-to"
+  },
+  "dependencies": {
+    "highcharts": "~12.5.0"
+  },
+  "devDependencies": {
+    "copy-files-from-to": "^3.9.0",
+    "rimraf": "^5.0.7"
+  },
+  "copyFiles": [
+    {
+      "from": "../../../../../../node_modules/highcharts/highcharts.js",
+      "to": "../../../../../libraries/highcharts/highcharts.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/highcharts-3d.js",
+      "to": "../../../../../libraries/highcharts_3d/highcharts-3d.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/accessibility.js",
+      "to": "../../../../../libraries/highcharts_accessibility/accessibility.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/annotations.js",
+      "to": "../../../../../libraries/highcharts_annotations/annotations.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/boost.js",
+      "to": "../../../../../libraries/highcharts_boost/boost.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/coloraxis.js",
+      "to": "../../../../../libraries/highcharts_coloraxis/coloraxis.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/data.js",
+      "to": "../../../../../libraries/highcharts_data/data.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/dumbbell.js",
+      "to": "../../../../../libraries/highcharts_dumbbell/dumbbell.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/export-data.js",
+      "to": "../../../../../libraries/highcharts_export-data/export-data.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/exporting.js",
+      "to": "../../../../../libraries/highcharts_exporting/exporting.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/heatmap.js",
+      "to": "../../../../../libraries/highcharts_heatmap/heatmap.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/themes/high-contrast-light.js",
+      "to": "../../../../../libraries/highcharts_high-contrast-light/high-contrast-light.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/highcharts-more.js",
+      "to": "../../../../../libraries/highcharts_more/highcharts-more.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/no-data-to-display.js",
+      "to": "../../../../../libraries/highcharts_no-data-to-display/no-data-to-display.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/pattern-fill.js",
+      "to": "../../../../../libraries/highcharts_pattern-fill/pattern-fill.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/pareto.js",
+      "to": "../../../../../libraries/highcharts_pareto/pareto.js"
+    },
+    {
+      "from": "../../../../../../node_modules/highcharts/modules/solid-gauge.js",
+      "to": "../../../../../libraries/highcharts_solid-gauge/solid-gauge.js"
+    }
+  ]
+}

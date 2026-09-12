@@ -33,7 +33,7 @@ class WebformHandlerEmailRenderingTest extends WebformBrowserTestBase {
   /**
    * Test email handler rendering.
    */
-  public function testEmailRendering() {
+  public function testEmailRendering(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

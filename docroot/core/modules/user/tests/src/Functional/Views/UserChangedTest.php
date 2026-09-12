@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\user\Functional\Views;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the changed field.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserChangedTest extends ViewTestBase {
 
   /**

@@ -7,12 +7,14 @@ namespace Drupal\Tests\path_alias\Kernel;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests path alias on entities.
- *
- * @group path_alias
  */
+#[Group('path_alias')]
+#[RunTestsInSeparateProcesses]
 class EntityAliasTest extends KernelTestBase {
 
   use PathAliasTestTrait;

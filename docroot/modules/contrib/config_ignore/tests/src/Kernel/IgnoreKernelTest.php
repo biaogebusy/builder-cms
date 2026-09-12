@@ -2,13 +2,11 @@
 
 namespace Drupal\Tests\config_ignore\Kernel;
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\config_ignore\ConfigIgnoreConfig;
-use Drupal\Core\Config\MemoryStorage;
-use Drupal\Core\Config\StorageInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\config_filter\Kernel\ConfigStorageTestTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Test the transformations.
@@ -20,11 +18,10 @@ use Drupal\Tests\config_filter\Kernel\ConfigStorageTestTrait;
 class IgnoreKernelTest extends KernelTestBase {
 
   use ConfigStorageTestTrait;
+  use KernelTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
@@ -62,9 +59,8 @@ class IgnoreKernelTest extends KernelTestBase {
    *   Modifications to the sync storage.
    * @param array $expected
    *   Modifications to the expected storage.
-   *
-   * @dataProvider simpleAndLenientProvider
    */
+  #[DataProvider('simpleAndLenientProvider')]
   public function testImport(string $mode, array $patterns, array $active, array $sync, array $expected) {
     $this->saveConfigWithLenient($mode, $patterns);
     $expectedStorage = $this->setUpStorages($active, $sync, $expected);
@@ -85,9 +81,8 @@ class IgnoreKernelTest extends KernelTestBase {
    *   Modifications to the sync storage.
    * @param array $expected
    *   Modifications to the expected storage.
-   *
-   * @dataProvider simpleAndLenientProvider
    */
+  #[DataProvider('simpleAndLenientProvider')]
   public function testExport(string $mode, array $patterns, array $active, array $sync, array $expected) {
     $this->saveConfigWithLenient($mode, $patterns);
     // Reverse the active and sync to set up the expectations for export.
@@ -138,7 +133,7 @@ class IgnoreKernelTest extends KernelTestBase {
    * @return \Generator
    *   The test case.
    */
-  public function simpleAndLenientProvider() {
+  public static function simpleAndLenientProvider() {
     yield 'empty test' => [
         // Mode, can be either one of "simple", "intermediate" or "advanced"
         // For testing legacy tests we also allow "lenient".
@@ -439,87 +434,6 @@ class IgnoreKernelTest extends KernelTestBase {
       $sync,
       $expected,
     ];
-  }
-
-  /**
-   * Set up the active, sync and expected storages.
-   *
-   * @param array $active
-   *   Modifications to the active config.
-   * @param array $sync
-   *   Modifications to the sync storage.
-   * @param array $expected
-   *   Modifications to the expected storage.
-   *
-   * @return \Drupal\Core\Config\StorageInterface
-   *   The expected storage.
-   */
-  protected function setUpStorages(array $active, array $sync, array $expected): StorageInterface {
-    // Copy the active config to the sync storage and the expected storage.
-    $syncStorage = $this->getSyncFileStorage();
-    $expectedStorage = new MemoryStorage();
-    $this->copyConfig($this->getActiveStorage(), $syncStorage);
-    $this->copyConfig($this->getActiveStorage(), $expectedStorage);
-
-    // Then modify the active storage by saving the config which was given.
-    foreach ($active as $lang => $configs) {
-      foreach ($configs as $name => $data) {
-        if ($lang === '') {
-          $config = $this->config($name);
-        }
-        else {
-          // Load the config override.
-          $config = \Drupal::languageManager()->getLanguageConfigOverride($lang, $name);
-        }
-
-        if ($data !== FALSE) {
-          $config->merge($data)->save();
-        }
-        else {
-          // If the data is not an array we want to delete it.
-          $config->delete();
-        }
-      }
-    }
-
-    // Apply modifications to the storages.
-    static::modifyStorage($syncStorage, $sync);
-    static::modifyStorage($expectedStorage, $expected);
-
-    return $expectedStorage;
-  }
-
-  /**
-   * Helper method to modify a config storage.
-   *
-   * @param \Drupal\Core\Config\StorageInterface $storage
-   *   The storage to modify.
-   * @param array $modifications
-   *   The modifications keyed by language.
-   */
-  protected static function modifyStorage(StorageInterface $storage, array $modifications) {
-    foreach ($modifications as $lang => $configs) {
-      $lang = $lang === '' ? StorageInterface::DEFAULT_COLLECTION : 'language.' . $lang;
-      $storage = $storage->createCollection($lang);
-      if ($configs === NULL) {
-        // If it is set to null explicitly remove everything.
-        $storage->deleteAll();
-        return;
-      }
-      foreach ($configs as $name => $data) {
-        if ($data !== FALSE) {
-          if (is_array($storage->read($name))) {
-            // Merge nested arrays if the storage already has data.
-            $data = NestedArray::mergeDeepArray([$storage->read($name), $data], TRUE);
-          }
-          $storage->write($name, $data);
-        }
-        else {
-          // A config name set to false means deleting it.
-          $storage->delete($name);
-        }
-      }
-    }
   }
 
 }

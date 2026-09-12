@@ -3,7 +3,12 @@
 namespace Drupal\entity_reference_revisions\Plugin\DataType;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityReference;
+use Drupal\Core\Entity\RevisionableStorageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\Attribute\DataType;
+use Drupal\Core\TypedData\DataReferenceDefinition;
 
 /**
  * Defines an 'entity_reference_revisions' data type.
@@ -31,6 +36,11 @@ use Drupal\Core\Entity\Plugin\DataType\EntityReference;
  *   definition_class = "\Drupal\Core\TypedData\DataReferenceDefinition"
  * )
  */
+#[DataType(
+  id: 'entity_revision_reference',
+  label: new TranslatableMarkup('Entity reference revisions'),
+  definition_class: DataReferenceDefinition::class,
+)]
 class EntityReferenceRevisions extends EntityReference {
 
   /**
@@ -74,15 +84,32 @@ class EntityReferenceRevisions extends EntityReference {
   public function getTarget() {
     if (!isset($this->target) && isset($this->revision_id)) {
       $storage = \Drupal::entityTypeManager()->getStorage($this->getTargetDefinition()->getEntityTypeId());
-      // By default always load the default revision, so caches get used.
-      $entity = $storage->load($this->id);
-      if ($entity !== NULL && $entity->getRevisionId() != $this->revision_id) {
-        // A non-default revision is a referenced, so load this one.
+      assert($storage instanceof RevisionableStorageInterface);
+      // Drupal 11.3+ supports static and persistent revision caching, load revisions directly.
+      if (\version_compare(\Drupal::VERSION, '11.2.99', '>')) {
         $entity = $storage->loadRevision($this->revision_id);
       }
-      $this->target = isset($entity) ? $entity->getTypedData() : NULL;
+      else {
+        // By default always load the default revision, so caches get used.
+        $entity = $storage->load($this->id);
+        if ($entity !== NULL && $entity->getRevisionId() != $this->revision_id) {
+          // A non-default revision is a referenced, so load this one.
+          $entity = $storage->loadRevision($this->revision_id);
+        }
+
+      }
+      $this->target = $entity?->getTypedData();
     }
     return $this->target;
+  }
+
+  /**
+   * Returns whether the target entity is already loaded.
+   *
+   * @return bool
+   */
+  public function isTargetLoaded(): bool {
+    return isset($this->target);
   }
 
   /**

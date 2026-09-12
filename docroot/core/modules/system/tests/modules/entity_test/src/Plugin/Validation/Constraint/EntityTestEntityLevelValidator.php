@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test\Plugin\Validation\Constraint;
 
 use Symfony\Component\Validator\Constraint;
@@ -13,7 +15,7 @@ class EntityTestEntityLevelValidator extends ConstraintValidator {
   /**
    * {@inheritdoc}
    */
-  public function validate($value, Constraint $constraint) {
+  public function validate($value, Constraint $constraint): void {
     if ($value->name->value === 'entity-level-violation') {
       $this->context->buildViolation($constraint->message)
         ->addViolation();

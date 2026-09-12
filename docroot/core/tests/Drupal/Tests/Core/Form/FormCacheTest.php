@@ -7,11 +7,14 @@ namespace Drupal\Tests\Core\Form;
 use Drupal\Core\Form\FormCache;
 use Drupal\Core\Form\FormState;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Form\FormCache
- * @group Form
+ * Tests Drupal\Core\Form\FormCache.
  */
+#[CoversClass(FormCache::class)]
+#[Group('Form')]
 class FormCacheTest extends UnitTestCase {
 
   /**
@@ -87,16 +90,6 @@ class FormCacheTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected $runTestInSeparateProcess = TRUE;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $preserveGlobalState = FALSE;
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -125,7 +118,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCache
+   * Tests get cache valid token.
    */
   public function testGetCacheValidToken(): void {
     $form_build_id = 'the_form_build_id';
@@ -149,7 +142,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCache
+   * Tests get cache invalid token.
    */
   public function testGetCacheInvalidToken(): void {
     $form_build_id = 'the_form_build_id';
@@ -173,7 +166,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCache
+   * Tests get cache anon user.
    */
   public function testGetCacheAnonUser(): void {
     $form_build_id = 'the_form_build_id';
@@ -195,7 +188,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCache
+   * Tests get cache auth user.
    */
   public function testGetCacheAuthUser(): void {
     $form_build_id = 'the_form_build_id';
@@ -215,7 +208,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCache
+   * Tests get cache no form.
    */
   public function testGetCacheNoForm(): void {
     $form_build_id = 'the_form_build_id';
@@ -234,33 +227,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCache
-   */
-  public function testGetCacheImmutableForm(): void {
-    $form_build_id = 'the_form_build_id';
-    $form_state = (new FormState())
-      ->addBuildInfo('immutable', TRUE);
-    $cached_form = [
-      '#build_id' => 'the_old_build_form_id',
-    ];
-
-    $this->account->expects($this->once())
-      ->method('isAnonymous')
-      ->willReturn(TRUE);
-    $this->formCacheStore->expects($this->once())
-      ->method('get')
-      ->with($form_build_id)
-      ->willReturn($cached_form);
-
-    $form = $this->formCache->getCache($form_build_id, $form_state);
-    $this->assertSame($cached_form['#build_id'], $form['#build_id_old']);
-    $this->assertNotSame($cached_form['#build_id'], $form['#build_id']);
-    $this->assertSame($form['#build_id'], $form['form_build_id']['#value']);
-    $this->assertSame($form['#build_id'], $form['form_build_id']['#id']);
-  }
-
-  /**
-   * @covers ::loadCachedFormState
+   * Tests load cached form state.
    */
   public function testLoadCachedFormState(): void {
     $form_build_id = 'the_form_build_id';
@@ -286,7 +253,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::loadCachedFormState
+   * Tests load cached form state with files.
    */
   public function testLoadCachedFormStateWithFiles(): void {
     $form_build_id = 'the_form_build_id';
@@ -326,7 +293,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setCache
+   * Tests set cache with form.
    */
   public function testSetCacheWithForm(): void {
     $form_build_id = 'the_form_build_id';
@@ -337,18 +304,18 @@ class FormCacheTest extends UnitTestCase {
 
     $this->formCacheStore->expects($this->once())
       ->method('setWithExpire')
-      ->with($form_build_id, $form, $this->isType('int'));
+      ->with($form_build_id, $form, $this->isInt());
 
     $form_state_data = $form_state->getCacheableArray();
     $this->formStateCacheStore->expects($this->once())
       ->method('setWithExpire')
-      ->with($form_build_id, $form_state_data, $this->isType('int'));
+      ->with($form_build_id, $form_state_data, $this->isInt());
 
     $this->formCache->setCache($form_build_id, $form, $form_state);
   }
 
   /**
-   * @covers ::setCache
+   * Tests set cache without form.
    */
   public function testSetCacheWithoutForm(): void {
     $form_build_id = 'the_form_build_id';
@@ -361,13 +328,13 @@ class FormCacheTest extends UnitTestCase {
     $form_state_data = $form_state->getCacheableArray();
     $this->formStateCacheStore->expects($this->once())
       ->method('setWithExpire')
-      ->with($form_build_id, $form_state_data, $this->isType('int'));
+      ->with($form_build_id, $form_state_data, $this->isInt());
 
     $this->formCache->setCache($form_build_id, $form, $form_state);
   }
 
   /**
-   * @covers ::setCache
+   * Tests set cache auth user.
    */
   public function testSetCacheAuthUser(): void {
     $form_build_id = 'the_form_build_id';
@@ -379,12 +346,12 @@ class FormCacheTest extends UnitTestCase {
     $form_data['#cache_token'] = $cache_token;
     $this->formCacheStore->expects($this->once())
       ->method('setWithExpire')
-      ->with($form_build_id, $form_data, $this->isType('int'));
+      ->with($form_build_id, $form_data, $this->isInt());
 
     $form_state_data = $form_state->getCacheableArray();
     $this->formStateCacheStore->expects($this->once())
       ->method('setWithExpire')
-      ->with($form_build_id, $form_state_data, $this->isType('int'));
+      ->with($form_build_id, $form_state_data, $this->isInt());
 
     $this->csrfToken->expects($this->once())
       ->method('get')
@@ -397,7 +364,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setCache
+   * Tests set cache build id mismatch.
    */
   public function testSetCacheBuildIdMismatch(): void {
     $form_build_id = 'the_form_build_id';
@@ -418,7 +385,7 @@ class FormCacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::deleteCache
+   * Tests delete cache.
    */
   public function testDeleteCache(): void {
     $form_build_id = 'the_form_build_id';

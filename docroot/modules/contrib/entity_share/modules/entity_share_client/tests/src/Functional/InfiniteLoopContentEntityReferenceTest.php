@@ -17,6 +17,16 @@ class InfiniteLoopContentEntityReferenceTest extends InfiniteLoopTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'node',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->postSetupFixture();

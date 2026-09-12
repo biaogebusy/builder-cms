@@ -4,6 +4,7 @@ namespace Drupal\field_ui;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -76,13 +77,15 @@ class EntityDisplayModeListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getOperations(EntityInterface $entity) {
+  public function getOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
     // Make the edit form render in a dialog, like the add form.
     // The edit form also contains an option to delete the view mode, which
     // also spawns a dialog. Rather than have nested dialogs, we allow the
     // existing dialog to be replaced, so users will be shown the list again
     // if they cancel deleting the view mode.
-    $operations = parent::getOperations($entity);
+    $operations = parent::getOperations($entity, $cacheability);
     if (isset($operations['edit'])) {
       $operations['edit'] = NestedArray::mergeDeepArray([[
         'attributes' => [
@@ -149,7 +152,10 @@ class EntityDisplayModeListBuilder extends ConfigEntityListBuilder {
         'data' => [
           '#type' => 'link',
           '#url' => Url::fromRoute($short_type == 'view' ? 'entity.entity_view_mode.add_form' : 'entity.entity_form_mode.add_form', ['entity_type_id' => $entity_type]),
-          '#title' => $this->t('Add %label for @entity-type', ['@entity-type' => $this->entityTypes[$entity_type]->getLabel(), '%label' => $this->entityType->getSingularLabel()]),
+          '#title' => $this->t('Add %label for @entity-type', [
+            '@entity-type' => $this->entityTypes[$entity_type]->getLabel(),
+            '%label' => $this->entityType->getSingularLabel(),
+          ]),
           '#button_type' => 'primary',
           '#attributes' => [
             'class' => ['button', 'use-ajax', 'button--small'],
@@ -175,7 +181,7 @@ class EntityDisplayModeListBuilder extends ConfigEntityListBuilder {
   /**
    * Filters entities based on their view builder handlers.
    *
-   * @param $entity_type
+   * @param string $entity_type
    *   The entity type of the entity that needs to be validated.
    *
    * @return bool

@@ -1,0 +1,22 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Commerce Status Badge
+description: A status badge component for displaying status indicators with different variants.
+status: stable
+props:
+  type: object
+  properties:
+    text:
+      type: string
+      title: Text
+      description: The badge text content
+    variant:
+      type: string
+      title: Variant
+      description: The badge style variant (warning, success, danger, neutral)
+      enum:
+        - warning
+        - success
+        - danger
+        - neutral
+      default: neutral
+

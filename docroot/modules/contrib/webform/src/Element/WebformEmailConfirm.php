@@ -4,7 +4,7 @@ namespace Drupal\webform\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\webform\Utility\WebformElementHelper;
 
 /**
@@ -15,7 +15,7 @@ use Drupal\webform\Utility\WebformElementHelper;
  *
  * @FormElement("webform_email_confirm")
  */
-class WebformEmailConfirm extends FormElement {
+class WebformEmailConfirm extends FormElementBase {
 
   use WebformCompositeFormElementTrait;
 
@@ -110,7 +110,7 @@ class WebformEmailConfirm extends FormElement {
     $element['mail_2'] = $element_shared_properties;
     $element['mail_2']['#title'] = t('Confirm email');
     foreach ($element as $key => $value) {
-      if (strpos($key, '#confirm__') === 0) {
+      if (str_starts_with($key, '#confirm__')) {
         $element['mail_2'][str_replace('#confirm__', '#', $key)] = $value;
       }
     }

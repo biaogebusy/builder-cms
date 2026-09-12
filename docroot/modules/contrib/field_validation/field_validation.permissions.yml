@@ -1,4 +1,4 @@
 administer field validation rule set:
   title: 'Administer field validation rules'
-  description: 'Allow access to configure field validation rules.'
+  description: 'Allow access to configure field validation rules. Warning: the "Callback constraint" and "Expression constraint" rule types let a user with this permission execute arbitrary PHP static methods or expression-language code against field values. Only grant this permission to fully trusted roles.'
   restrict access: true

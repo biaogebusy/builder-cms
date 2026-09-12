@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
-use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\views_ui\Functional\UITestBase;
-use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Entity\View;
+use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the taxonomy index filter handler UI.
  *
- * @group taxonomy
  * @see \Drupal\taxonomy\Plugin\views\field\TaxonomyIndexTid
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyIndexTidUiTest extends UITestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -164,7 +167,7 @@ class TaxonomyIndexTidUiTest extends UITestBase {
 
     // Create the tag field itself.
     $field_name = 'taxonomy_tags';
-    $this->createEntityReferenceField('node', $node_type->id(), $field_name, NULL, 'taxonomy_term');
+    $this->createEntityReferenceField('node', $node_type->id(), $field_name, '', 'taxonomy_term');
 
     // Create 4 nodes: 1 without a term, 2 with the same term, and 1 with a
     // different term.
@@ -294,7 +297,7 @@ class TaxonomyIndexTidUiTest extends UITestBase {
     // Create a content type with a taxonomy field.
     $this->drupalCreateContentType(['type' => 'article']);
     $field_name = 'field_views_testing_tags';
-    $this->createEntityReferenceField('node', 'article', $field_name, NULL, 'taxonomy_term');
+    $this->createEntityReferenceField('node', 'article', $field_name, '', 'taxonomy_term');
 
     $nodes = [];
     for ($i = 0; $i < 3; $i++) {
@@ -378,11 +381,11 @@ class TaxonomyIndexTidUiTest extends UITestBase {
 
     // Create the tag field itself.
     $field_name = 'taxonomy_tags';
-    $this->createEntityReferenceField('node', $node_type->id(), $field_name, NULL, 'taxonomy_term');
+    $this->createEntityReferenceField('node', $node_type->id(), $field_name, '', 'taxonomy_term');
 
     // Create the other tag field itself.
     $field_name2 = 'taxonomy_other_tags';
-    $this->createEntityReferenceField('node', $node_type->id(), $field_name2, NULL, 'taxonomy_term');
+    $this->createEntityReferenceField('node', $node_type->id(), $field_name2, '', 'taxonomy_term');
 
     // Create 5 nodes: 1 node without any tagging, 2 nodes tagged with 1 term,
     // 1 node with 2 tagged terms and 1 with other tags term.

@@ -3,6 +3,7 @@ status: true
 label: Default
 id: default
 workflow: order_default
+showOrderEditLinks: false
 numberPattern: order_default
 refresh_mode: customer
 refresh_frequency: 300

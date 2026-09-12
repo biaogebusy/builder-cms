@@ -10,7 +10,7 @@ use Psr\Log\LogLevel;
 /**
  * The Chosen plugin URI.
  */
-define('CHOSEN_DOWNLOAD_URI', 'https://github.com/noli42/chosen/releases/download/3.0.0/chosen-assets-v3.0.0.zip');
+define('CHOSEN_DOWNLOAD_URI', 'https://github.com/noli42/chosen/releases/download/3.1.4/chosen-assets-v3.1.4.zip');
 
 /**
  * A Drush commandfile.
@@ -52,7 +52,7 @@ class ChosenLibCommands extends DrushCommands {
     // Create the path if it does not exist.
     if (!is_dir($path)) {
       drush_op('mkdir', $path);
-      $this->drush_log(dt('Directory @path was created', ['@path' => $path]), 'notice');
+      $this->drushLog(dt('Directory @path was created', ['@path' => $path]), 'notice');
     }
 
     // Set the directory to the download location.
@@ -60,7 +60,7 @@ class ChosenLibCommands extends DrushCommands {
     chdir($path);
 
     // Download the zip archive.
-    if ($filepath = $this->drush_download_file(CHOSEN_DOWNLOAD_URI)) {
+    if ($filepath = $this->drushDownloadFile(CHOSEN_DOWNLOAD_URI)) {
       $filename = basename($filepath);
       $dirname = basename($filepath, '.zip');
 
@@ -69,21 +69,22 @@ class ChosenLibCommands extends DrushCommands {
         $fileservice = $this->fileSystem;
         $fileservice->deleteRecursive('chosen');
 
-        $this->drush_log(dt('A existing Chosen plugin was deleted from @path', ['@path' => $path]), 'notice');
+        $this->drushLog(dt('A existing Chosen plugin was deleted from @path', ['@path' => $path]), 'notice');
       }
 
       // Decompress the zip archive.
-      $this->drush_tarball_extract($filename, $dirname);
+      $this->drushTarballExtract($filename, $dirname);
 
       // Change the directory name to "chosen" if needed.
       if ('chosen' !== $dirname) {
         $subdirname = $dirname . '/chosen-' . $dirname;
         if (is_dir($subdirname)) {
-          $this->drush_move_dir($subdirname, 'chosen');
+          $this->drushMoveDir($subdirname, 'chosen');
           $fileservice = $this->fileSystem;
           $fileservice->deleteRecursive($dirname);
-        } else {
-          $this->drush_move_dir($dirname, 'chosen');
+        }
+        else {
+          $this->drushMoveDir($dirname, 'chosen');
         }
         $dirname = 'chosen';
       }
@@ -92,10 +93,10 @@ class ChosenLibCommands extends DrushCommands {
     }
 
     if (is_dir($dirname)) {
-      $this->drush_log(dt('Chosen plugin has been installed in @path', ['@path' => $path]), 'success');
+      $this->drushLog(dt('Chosen plugin has been installed in @path', ['@path' => $path]), 'success');
     }
     else {
-      $this->drush_log(dt('Drush was unable to install the Chosen plugin to @path', ['@path' => $path]), 'error');
+      $this->drushLog(dt('Drush was unable to install the Chosen plugin to @path', ['@path' => $path]), 'error');
     }
 
     // Set working directory back to the previous working directory.
@@ -110,27 +111,31 @@ class ChosenLibCommands extends DrushCommands {
    * @param mixed $type
    *   The log type.
    */
-  public function drush_log($message, $type = LogLevel::INFO) {
+  public function drushLog($message, $type = LogLevel::INFO) {
     $this->logger()->log($type, $message);
   }
 
   /**
+   * Downloads a file from a given URL and saves it to a destination.
+   *
    * @param string $url
    *   The download url.
    * @param mixed $destination
    *   The destination path.
+   *
    * @return bool|string
    *   The destination file.
+   *
    * @throws \Exception
    */
-  public function drush_download_file($url, $destination = FALSE) {
+  public function drushDownloadFile($url, $destination = FALSE) {
     // Generate destination if omitted.
     if (!$destination) {
       $file = basename(current(explode('?', $url, 2)));
       $destination = getcwd() . '/' . basename($file);
     }
 
-    // Copied from: \Drush\Commands\SyncViaHttpCommands::downloadFile
+    // Copied from: \Drush\Commands\SyncViaHttpCommands::downloadFile.
     static $use_wget;
     if ($use_wget === NULL) {
       $process = Drush::process(['which', 'wget']);
@@ -164,39 +169,64 @@ class ChosenLibCommands extends DrushCommands {
   }
 
   /**
+   * Moves a file or directory to a new location.
+   *
+   * This function uses Drupal's FileSystem service to move a file or directory
+   * from the source path to the destination path. If the destination already
+   * exists, it will be replaced.
+   *
    * @param string $src
-   *   The origin filename or directory.
+   *   The absolute path of the source file or directory.
    * @param string $dest
-   *   The new filename or directory.
+   *   The absolute path of the destination file or directory.
+   *
    * @return bool
+   *   Returns TRUE after the move operation is attempted.
    */
-  public function drush_move_dir($src, $dest) {
+  public function drushMoveDir($src, $dest) {
     $fileservice = $this->fileSystem;
     $fileservice->move($src, $dest, TRUE);
     return TRUE;
   }
 
   /**
+   * Creates a directory at the specified path.
+   *
+   * This function uses Drupal's FileSystem service to create a directory.
+   * If the directory already exists, no action is taken.
+   *
    * @param string $path
-   *   The make directory path.
+   *   The absolute path of the directory to be created.
+   *
    * @return bool
+   *   Returns TRUE if the directory creation is attempted.
    */
-  public function drush_mkdir($path) {
+  public function drushMkdir($path) {
     $fileservice = $this->fileSystem;
     $fileservice->mkdir($path);
     return TRUE;
   }
 
   /**
+   * Extracts a tarball or zip archive to the specified destination.
+   *
+   * This function supports both `.tgz` and `.zip` file extraction.
+   * It ensures the destination directory exists before extraction.
+   *
    * @param string $path
-   *   The filename or directory.
-   * @param bool $destination
-   *   The destination path.
-   * @return mixed
+   *   The absolute path to the archive file (.tgz or .zip).
+   * @param string|bool $destination
+   *   The destination directory where the archive should be extracted.
+   *   If FALSE, the function does nothing.
+   *
+   * @return bool
+   *   TRUE if the extraction was successful, FALSE otherwise.
+   *
    * @throws \Exception
+   *   If the extraction fails.
    */
-  public function drush_tarball_extract($path, $destination = FALSE) {
-    $this->drush_mkdir($destination);
+  public function drushTarballExtract($path, $destination = FALSE) {
+    $this->drushMkdir($destination);
     $cwd = getcwd();
     if (preg_match('/\.tgz$/', $path)) {
       drush_op('chdir', dirname($path));

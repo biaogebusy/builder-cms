@@ -14,18 +14,16 @@ class AccessTest extends FunctionalTestBase {
   /**
    * Information about the entity type we are using for testing.
    *
-   * @see \Drupal\Tests\eck\Functional\FunctionalTestBase::createEntityType()
-   *
    * @var array
+   * @see \Drupal\Tests\eck\Functional\FunctionalTestBase::createEntityType()
    */
   protected $entityTypeInfo;
 
   /**
    * Information about the bundle we are using for testing.
    *
-   * @see \Drupal\Tests\eck\Functional\FunctionalTestBase::createEntityBundle()
-   *
    * @var array
+   * @see \Drupal\Tests\eck\Functional\FunctionalTestBase::createEntityBundle()
    */
   protected $bundleInfo;
 
@@ -227,6 +225,16 @@ class AccessTest extends FunctionalTestBase {
     $this->drupalLogin($viewUnpublishedAndAnyEntityUser);
     $this->drupalGet(Url::fromRoute("entity.{$entityTypeName}.canonical", $arguments));
     $this->assertSession()->statusCodeEquals(200);
+
+    // Entities should not be viewable if the standalone_url option is disabled.
+    $config = \Drupal::configFactory()->getEditable("eck.eck_entity_type.{$entityTypeName}");
+    $config->set('standalone_url', FALSE);
+    $config->save();
+    \Drupal::service('router.builder')->rebuild();
+
+    $this->drupalGet(Url::fromRoute("entity.{$entityTypeName}.canonical", $arguments));
+    $this->assertSession()->statusCodeEquals(403);
+
   }
 
 }

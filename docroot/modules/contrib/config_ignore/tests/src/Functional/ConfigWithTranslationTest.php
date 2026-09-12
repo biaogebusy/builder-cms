@@ -182,6 +182,7 @@ class ConfigWithTranslationTest extends BrowserTestBase {
     $this->assertFalse($this->config('user.role.authenticated')->get('is_admin'));
 
     // Check that the user.role.anonymous translation has been also preserved.
+    /** @var \Drupal\language\ConfigurableLanguageManagerInterface $language_manager */
     $language_manager = \Drupal::languageManager();
     $original_language = $language_manager->getConfigOverrideLanguage();
     /** @var \Drupal\language\Config\LanguageConfigOverride $translated */
@@ -246,6 +247,7 @@ class ConfigWithTranslationTest extends BrowserTestBase {
    *   The langcode.
    */
   protected function translateConfig($config_name, $key, $value, $langcode) {
+    /** @var \Drupal\language\ConfigurableLanguageManagerInterface $language_manager */
     $language_manager = \Drupal::languageManager();
     $original_language = $language_manager->getConfigOverrideLanguage();
     /** @var \Drupal\language\Config\LanguageConfigOverride $translated */

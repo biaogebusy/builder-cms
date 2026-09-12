@@ -2,6 +2,7 @@
 
 namespace Drupal\elasticsearch_connector\SearchAPI\Query;
 
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Psr\Log\LoggerInterface;
 
@@ -58,7 +59,7 @@ class FacetParamBuilder {
         continue;
       }
       // Default to term bucket aggregation.
-      $aggs += $this->buildTermBucketAgg($facet_id, $facet, $facetFilters);
+      $aggs += $this->buildTermBucketAgg($query, $facet_id, $facet, $facetFilters, $indexFields[$field]);
     }
 
     return $aggs;
@@ -67,19 +68,44 @@ class FacetParamBuilder {
   /**
    * Builds a bucket aggregation.
    *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   Search API query.
    * @param string $facet_id
    *   The key.
    * @param array $facet
    *   The facet.
    * @param array $postFilter
    *   The filter for the facets.
+   * @param \Drupal\search_api\Item\FieldInterface|null $indexField
+   *   The index field.
    *
    * @return array
    *   The bucket aggregation.
    */
-  protected function buildTermBucketAgg(string $facet_id, array $facet, array $postFilter): array {
+  protected function buildTermBucketAgg(QueryInterface $query, string $facet_id, array $facet, array $postFilter, ?FieldInterface $indexField = NULL): array {
+    $fieldName = $facet['field'];
+    if ($indexField) {
+      $fieldName = str_replace(':', '.', $indexField->getPropertyPath());
+      $facet_id = $fieldName;
+    }
+
+    // Get fulltext fields from the index.
+    $query_full_text_fields = $query->getIndex()->getFulltextFields();
+
+    // For text/fulltext fields, use the .keyword subfield for aggregations.
+    // Elasticsearch text fields are analyzed/tokenized, making them unsuitable
+    // for aggregations. By default, Elasticsearch creates a .keyword subfield
+    // (type: keyword) which stores the exact, non-analyzed value.
+    // Attempting to aggregate on a text field will fail with the error:
+    // "Fielddata is disabled on [field]. Text fields are not optimized for
+    // operations that require per-document field data like aggregations...".
+    // @see https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-terms-aggregation.html#search-aggregations-bucket-terms-aggregation-text
+    if (in_array($facet['field'], $query_full_text_fields)) {
+      $fieldName .= '.keyword';
+    }
+
     $agg = [
-      $facet_id => ["terms" => ["field" => $facet['field']]],
+      $facet_id => ["terms" => ["field" => $fieldName]],
     ];
 
     $size = $facet['limit'] ?? self::DEFAULT_FACET_SIZE;
@@ -123,7 +149,8 @@ class FacetParamBuilder {
 
     $filtered_facet_id = \sprintf('%s_filtered', $facet_id);
 
-    switch ($facet['operator']) {
+    $condition = $query->getConditionGroup()->getConjunction();
+    switch (\strtolower($condition)) {
       case 'or':
         $facet_operator = 'should';
         break;

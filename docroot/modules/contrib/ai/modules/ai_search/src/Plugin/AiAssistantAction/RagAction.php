@@ -8,6 +8,7 @@ use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -45,6 +46,8 @@ class RagAction extends AiAssistantActionBase {
    *   The html to markdown converter.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entityDisplayRepository
    *   The entity display repository.
+   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
+   *   The current user.
    */
   public function __construct(
     array $configuration,
@@ -53,6 +56,7 @@ class RagAction extends AiAssistantActionBase {
     protected RendererInterface $renderer,
     protected HtmlConverter $converter,
     protected EntityDisplayRepositoryInterface $entityDisplayRepository,
+    protected AccountProxyInterface $currentUser,
   ) {
     parent::__construct($configuration, $tmpStore);
 
@@ -73,6 +77,7 @@ class RagAction extends AiAssistantActionBase {
       $container->get('renderer'),
       new HtmlConverter(),
       $container->get('entity_display.repository'),
+      $container->get('current_user'),
     );
   }
 
@@ -333,7 +338,7 @@ class RagAction extends AiAssistantActionBase {
       $query = $index->query([
         'limit' => $rag_database['max_results'],
       ]);
-      $query->setOption('search_api_bypass_access', !$rag_database['access_check']);
+      $query->setOption('search_api_bypass_access', !empty($rag_database['allow_access_bypass']));
       $query->setOption('search_api_ai_get_chunks_result', $rag_database['output_mode'] == 'chunks');
       $queries = $query_string;
       $query->keys($queries);
@@ -368,6 +373,16 @@ class RagAction extends AiAssistantActionBase {
       [$entity_type, $entity_id] = explode('/', $entity_parts);
       /** @var \Drupal\Core\Entity\ContentEntityBase */
       $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
+
+      if (!$entity) {
+        continue;
+      }
+
+      // Deny access by default; only skip the check when the administrator
+      // has explicitly opted into bypassing access control.
+      if (empty($rag_database['allow_access_bypass']) && !$entity->access('view', $this->currentUser)) {
+        continue;
+      }
 
       // Get translated if possible.
       if (
@@ -538,11 +553,11 @@ The article(s) are:
       ],
     ];
 
-    $form['rag_' . $i]['access_check'] = [
+    $form['rag_' . $i]['allow_access_bypass'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('RAG access check'),
-      '#description' => $this->t('With this enabled the system will do a post query access check on every chunk to see if the user has access to that content. Note that this might lead to no results and be slower, but it makes sure that none-accessible items are not reached. This is done before the Assistant prompt, so its secure to prompt injection.'),
-      '#default_value' => $this->configuration['rag_' . $i]['access_check'] ?? $form_state->getValue('access_check'),
+      '#title' => $this->t('Bypass access control'),
+      '#description' => $this->t('WARNING: Only enable this for fully public indexes or when you have other appropriate access controls in place. When enabled the results are returned without checking whether the current user has permission to view the source content. By default, access control checks whether the current user has permission to view the content item.'),
+      '#default_value' => $this->configuration['rag_' . $i]['allow_access_bypass'] ?? FALSE,
     ];
 
     $form['rag_' . $i]['try_reuse'] = [

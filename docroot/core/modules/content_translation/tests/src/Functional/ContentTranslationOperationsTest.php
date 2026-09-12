@@ -7,12 +7,14 @@ namespace Drupal\Tests\content_translation\Functional;
 use Drupal\Tests\language\Traits\LanguageTestTrait;
 use Drupal\Tests\node\Functional\NodeTestBase;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the content translation operations available in the content listing.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationOperationsTest extends NodeTestBase {
 
   use LanguageTestTrait;
@@ -139,20 +141,21 @@ class ContentTranslationOperationsTest extends NodeTestBase {
   /**
    * Tests the access to the overview page for translations.
    *
-   * @see content_translation_translate_access()
+   * @see \Drupal\content_translation\ContentTranslationManagerInterface::access()
    */
   public function testContentTranslationOverviewAccess(): void {
     $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('node');
+    $content_translation_manager = \Drupal::service('content_translation.manager');
     $user = $this->createUser(['create content translations', 'access content']);
     $this->drupalLogin($user);
 
     $node = $this->drupalCreateNode(['status' => FALSE, 'type' => 'article']);
-    $this->assertFalse(content_translation_translate_access($node)->isAllowed());
+    $this->assertFalse($content_translation_manager->access($node)->isAllowed());
     $access_control_handler->resetCache();
 
     $node->setPublished();
     $node->save();
-    $this->assertTrue(content_translation_translate_access($node)->isAllowed());
+    $this->assertTrue($content_translation_manager->access($node)->isAllowed());
     $access_control_handler->resetCache();
 
     user_role_change_permissions(
@@ -164,7 +167,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
 
     $user = $this->createUser(['create content translations']);
     $this->drupalLogin($user);
-    $this->assertFalse(content_translation_translate_access($node)->isAllowed());
+    $this->assertFalse($content_translation_manager->access($node)->isAllowed());
     $access_control_handler->resetCache();
   }
 

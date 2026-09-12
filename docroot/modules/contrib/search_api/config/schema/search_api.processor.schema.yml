@@ -242,6 +242,14 @@ search_api.property_configuration.aggregated_field:
         type: string
         label: 'A property that should be part of the aggregation'
 
+search_api.property_configuration.custom_value:
+  type: mapping
+  label: Custom value
+  mapping:
+    value:
+      type: string
+      label: 'The field value'
+
 search_api.property_configuration.rendered_item:
   type: mapping
   label: 'Rendered item processor configuration'
@@ -265,6 +273,14 @@ search_api.property_configuration.rendered_item:
           type: string
           label: 'The view mode used to render the entity for the specified bundle'
 
+search_api.property_configuration.search_api_custom_value:
+  type: mapping
+  label: Custom value
+  mapping:
+    value:
+      type: string
+      label: 'The field value'
+
 search_api.property_configuration.search_api_url:
   type: mapping
   label: 'Add URL configuration'
@@ -272,11 +288,3 @@ search_api.property_configuration.search_api_url:
     absolute:
       type: boolean
       label: 'Whether to generate an absolute URL'
-
-search_api.property_configuration.custom_value:
-  type: mapping
-  label: Custom value
-  mapping:
-    value:
-      type: string
-      label: 'The field value'

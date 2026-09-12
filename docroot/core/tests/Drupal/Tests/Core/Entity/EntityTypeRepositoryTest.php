@@ -14,12 +14,15 @@ use Drupal\Core\Entity\EntityTypeRepository;
 use Drupal\Core\Entity\Exception\AmbiguousEntityClassException;
 use Drupal\Core\Entity\Exception\NoCorrespondingEntityClassException;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\EntityTypeRepository
- * @group Entity
+ * Tests Drupal\Core\Entity\EntityTypeRepository.
  */
+#[CoversClass(EntityTypeRepository::class)]
+#[Group('Entity')]
 class EntityTypeRepositoryTest extends UnitTestCase {
 
   /**
@@ -61,11 +64,11 @@ class EntityTypeRepositoryTest extends UnitTestCase {
    * @param \Drupal\Core\Entity\EntityTypeInterface[]|\Prophecy\Prophecy\ProphecyInterface[] $definitions
    *   (optional) An array of entity type definitions.
    */
-  protected function setUpEntityTypeDefinitions($definitions = []) {
+  protected function setUpEntityTypeDefinitions($definitions = []): void {
     foreach ($definitions as $key => $entity_type) {
       // \Drupal\Core\Entity\EntityTypeInterface::getLinkTemplates() is called
-      // by \Drupal\Core\Entity\EntityTypeManager::processDefinition() so it must
-      // always be mocked.
+      // by \Drupal\Core\Entity\EntityTypeManager::processDefinition() so it
+      // must always be mocked.
       $entity_type->getLinkTemplates()->willReturn([]);
 
       // Give the entity type a legitimate class to return.
@@ -94,8 +97,6 @@ class EntityTypeRepositoryTest extends UnitTestCase {
 
   /**
    * Tests the getEntityTypeLabels() method.
-   *
-   * @covers ::getEntityTypeLabels
    */
   public function testGetEntityTypeLabels(): void {
     $apple = $this->prophesize(EntityTypeInterface::class);
@@ -119,7 +120,7 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getEntityTypeFromClass
+   * Tests get entity type from class.
    */
   public function testGetEntityTypeFromClass(): void {
     $apple = $this->prophesize(EntityTypeInterface::class);
@@ -130,9 +131,9 @@ class EntityTypeRepositoryTest extends UnitTestCase {
       'banana' => $banana,
     ]);
 
-    $apple->getOriginalClass()->willReturn('\Drupal\apple\Entity\Apple');
+    $apple->getDecoratedClasses()->willReturn(['\Drupal\apple\Entity\Apple']);
 
-    $banana->getOriginalClass()->willReturn('\Drupal\banana\Entity\Banana');
+    $banana->getDecoratedClasses()->willReturn(['\Drupal\banana\Entity\Banana']);
     $banana->getClass()->willReturn('\Drupal\mango\Entity\Mango');
     $banana->id()
       ->willReturn('banana')
@@ -145,7 +146,7 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getEntityTypeFromClass
+   * Tests get entity type from class no match.
    */
   public function testGetEntityTypeFromClassNoMatch(): void {
     $apple = $this->prophesize(EntityTypeInterface::class);
@@ -156,8 +157,8 @@ class EntityTypeRepositoryTest extends UnitTestCase {
       'banana' => $banana,
     ]);
 
-    $apple->getOriginalClass()->willReturn('\Drupal\apple\Entity\Apple');
-    $banana->getOriginalClass()->willReturn('\Drupal\banana\Entity\Banana');
+    $apple->getDecoratedClasses()->willReturn(['\Drupal\apple\Entity\Apple']);
+    $banana->getDecoratedClasses()->willReturn(['\Drupal\banana\Entity\Banana']);
 
     $this->expectException(NoCorrespondingEntityClassException::class);
     $this->expectExceptionMessage('The \Drupal\pear\Entity\Pear class does not correspond to an entity type.');
@@ -165,15 +166,15 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getEntityTypeFromClass
+   * Tests get entity type from class ambiguous.
    */
   public function testGetEntityTypeFromClassAmbiguous(): void {
     $jazz = $this->prophesize(EntityTypeInterface::class);
-    $jazz->getOriginalClass()->willReturn('\Drupal\apple\Entity\Apple');
+    $jazz->getDecoratedClasses()->willReturn(['\Drupal\apple\Entity\Apple']);
     $jazz->id()->willReturn('jazz');
 
     $gala = $this->prophesize(EntityTypeInterface::class);
-    $gala->getOriginalClass()->willReturn('\Drupal\apple\Entity\Apple');
+    $gala->getDecoratedClasses()->willReturn(['\Drupal\apple\Entity\Apple']);
     $gala->id()->willReturn('gala');
 
     $this->setUpEntityTypeDefinitions([
@@ -187,16 +188,16 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getEntityTypeFromClass
+   * Tests get entity type from class ambiguous bundle class.
    */
   public function testGetEntityTypeFromClassAmbiguousBundleClass(): void {
     $blackcurrant = $this->prophesize(EntityTypeInterface::class);
-    $blackcurrant->getOriginalClass()->willReturn(Apple::class);
+    $blackcurrant->getDecoratedClasses()->willReturn([Apple::class]);
     $blackcurrant->getClass()->willReturn(Blackcurrant::class);
     $blackcurrant->id()->willReturn('blackcurrant');
 
     $gala = $this->prophesize(EntityTypeInterface::class);
-    $gala->getOriginalClass()->willReturn(Apple::class);
+    $gala->getDecoratedClasses()->willReturn([Apple::class]);
     $gala->getClass()->willReturn(RoyalGala::class);
     $gala->id()->willReturn('gala');
 
@@ -217,16 +218,44 @@ class EntityTypeRepositoryTest extends UnitTestCase {
     $this->assertSame('gala', $this->entityTypeRepository->getEntityTypeFromClass(RoyalGala::class));
   }
 
+  /**
+   * Tests the ::getEntityTypeFromClass() method.
+   */
+  public function testGetEntityTypeFromClassDecoratedClass(): void {
+    $apple = $this->prophesize(EntityTypeInterface::class);
+    $apple->getDecoratedClasses()->willReturn([Apple::class, RoyalGala::class]);
+    $apple->getClass()->willReturn(Apple::class);
+    $apple->id()->willReturn('apple');
+
+    $this->setUpEntityTypeDefinitions([
+      'apple' => $apple,
+    ]);
+
+    $this->assertSame('apple', $this->entityTypeRepository->getEntityTypeFromClass(RoyalGala::class));
+  }
+
 }
 
+/**
+ * A simple entity for testing.
+ */
 class Fruit extends EntityBase {
 }
 
+/**
+ * A Fruit class for testing.
+ */
 class Apple extends Fruit {
 }
 
+/**
+ * An Apple class for testing.
+ */
 class RoyalGala extends Apple {
 }
 
+/**
+ * A Fruit class for testing.
+ */
 class Blackcurrant extends Fruit {
 }

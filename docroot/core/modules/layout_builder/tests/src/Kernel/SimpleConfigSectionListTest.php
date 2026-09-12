@@ -9,14 +9,16 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionStorage\SectionStorageDefinition;
 use Drupal\layout_builder_test\Plugin\SectionStorage\SimpleConfigSectionStorage;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the test implementation of section storage.
- *
- * @coversDefaultClass \Drupal\layout_builder_test\Plugin\SectionStorage\SimpleConfigSectionStorage
- *
- * @group layout_builder
  */
+#[CoversClass(SimpleConfigSectionStorage::class)]
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class SimpleConfigSectionListTest extends SectionListTestBase {
 
   /**

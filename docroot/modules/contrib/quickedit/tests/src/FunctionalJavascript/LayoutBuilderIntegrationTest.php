@@ -9,14 +9,14 @@ use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * @group quickedit
  */
 class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -24,7 +24,7 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
   protected static $modules = [
     'node',
     'editor',
-    'ckeditor',
+    'ckeditor5',
     'taxonomy',
     'block',
     'block_content',
@@ -48,7 +48,7 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    // Create text format, associate CKEditor.
+    // Create text format, associate CKEditor5.
     FilterFormat::create([
       'format' => 'some_format',
       'name' => 'Some format',
@@ -64,7 +64,7 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
     ])->save();
     Editor::create([
       'format' => 'some_format',
-      'editor' => 'ckeditor',
+      'editor' => 'ckeditor5',
     ])->save();
 
     // Create the Article node type.
@@ -100,17 +100,25 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
     $this->drupalPlaceBlock('page_title_block');
     $this->drupalPlaceBlock('system_main_block');
 
+    // Create the basic type of block content.
+    $block_content_type = BlockContentType::create([
+      'id' => 'basic',
+      'label' => 'basic',
+      'revision' => FALSE,
+    ]);
+    $block_content_type->save();
+    block_content_add_body_field($block_content_type->id());
+
     // Log in as a content author who can use Quick Edit and edit Articles.
     $this->contentAuthorUser = $this->drupalCreateUser([
       'access contextual links',
       'access toolbar',
       'access in-place editing',
-      'access content',
       'create article content',
       'edit any article content',
       'use text format some_format',
+      'administer block content',
       'edit terms in tags',
-      'administer blocks',
     ]);
     $this->drupalLogin($this->contentAuthorUser);
   }
@@ -210,10 +218,10 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
     hold_test_response(FALSE);
 
     $this->assertEntityInstanceFieldMarkup([
-      'node/1/body/en/full'       => '.cke_editable_inline',
+      'node/1/body/en/full'       => '.ck-editor__editable_inline',
       'node/1/field_tags/en/full' => ':not(.quickedit-editor-is-popup)',
     ]);
-    $this->assertSession()->elementExists('css', '#quickedit-entity-toolbar .quickedit-toolgroup.wysiwyg-main > .cke_chrome .cke_top[role="presentation"] .cke_toolbar[role="toolbar"] .cke_toolgroup[role="presentation"] > .cke_button[title~="Bold"][role="button"]');
+    $this->assertSession()->elementExists('css', '#quickedit-entity-toolbar .quickedit-toolgroup.wysiwyg-main .ck-toolbar_grouping .ck-toolbar__items .ck-button[data-cke-tooltip-text^="Bold"]');
 
     // Wait for the validating & saving of the title to complete.
     $this->awaitEntityInstanceFieldState('node', 1, 0, 'title', 'en', 'candidate');
@@ -224,9 +232,9 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
     $assert_session->waitForElement('css', '.quickedit-toolbar-field div[id*="tags"]');
     $this->assertQuickEditEntityToolbar((string) $node->label(), 'Tags');
     $this->assertEntityInstanceFieldStates('node', 1, 0, [
+      'node/1/title/en/full'      => 'candidate',
       'node/1/body/en/full'       => 'candidate',
       'node/1/field_tags/en/full' => 'activating',
-      'node/1/title/en/full'      => 'candidate',
     ]);
     $this->assertEntityInstanceFieldMarkup([
       'node/1/title/en/full'      => '.quickedit-changed',
@@ -286,14 +294,6 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
    * Tests if a custom can be in-place edited with Quick Edit.
    */
   public function testCustomBlock() {
-    $block_content_type = BlockContentType::create([
-      'id' => 'basic',
-      'label' => 'basic',
-      'revision' => FALSE,
-    ]);
-    $block_content_type->save();
-    block_content_add_body_field($block_content_type->id());
-
     $block_content = BlockContent::create([
       'info' => 'Llama',
       'type' => 'basic',
@@ -341,9 +341,9 @@ class LayoutBuilderIntegrationTest extends QuickEditJavascriptTestBase {
       'block_content/1/body/en/full' => 'active',
     ]);
     $this->assertEntityInstanceFieldMarkup([
-      'block_content/1/body/en/full' => '.cke_editable_inline',
+      'block_content/1/body/en/full' => '.ck-editor__editable_inline',
     ]);
-    $this->assertSession()->elementExists('css', '#quickedit-entity-toolbar .quickedit-toolgroup.wysiwyg-main > .cke_chrome .cke_top[role="presentation"] .cke_toolbar[role="toolbar"] .cke_toolgroup[role="presentation"] > .cke_button[title~="Bold"][role="button"]');
+    $this->assertSession()->elementExists('css', '#quickedit-entity-toolbar .quickedit-toolgroup.wysiwyg-main .ck-toolbar_grouping .ck-toolbar__items .ck-button[data-cke-tooltip-text^="Bold"]');
   }
 
   /**

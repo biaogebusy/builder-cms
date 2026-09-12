@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\performance_test;
 
 use Drupal\Core\Database\Event\DatabaseEvent;
@@ -8,6 +10,9 @@ use Drupal\Core\Database\Event\StatementExecutionFailureEvent;
 use Drupal\Core\DestructableInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * Collects and stores performance data for database and cache operations.
+ */
 class PerformanceDataCollector implements EventSubscriberInterface, DestructableInterface {
 
   /**

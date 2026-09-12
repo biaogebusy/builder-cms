@@ -14,7 +14,7 @@ class WebformTokenSuffixesTest extends WebformBrowserTestBase {
   /**
    * Test webform token suffixes.
    */
-  public function testTokenSuffixes() {
+  public function testTokenSuffixes(): void {
     /** @var \Drupal\webform\WebformTokenManagerInterface $token_manager */
     $token_manager = \Drupal::service('webform.token_manager');
 

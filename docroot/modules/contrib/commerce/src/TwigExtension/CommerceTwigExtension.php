@@ -14,7 +14,7 @@ class CommerceTwigExtension extends AbstractExtension {
   /**
    * {@inheritdoc}
    */
-  public function getFilters() {
+  public function getFilters(): array {
     return [
       new TwigFilter('commerce_entity_render', [$this, 'renderEntity']),
     ];

@@ -7,14 +7,15 @@ namespace Drupal\Tests\navigation\Functional;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore foobarbaz baznew
-
 /**
  * Tests for navigation content_top section.
- *
- * @group navigation
  */
+#[Group('navigation')]
+#[RunTestsInSeparateProcesses]
 class NavigationContentTopTest extends BrowserTestBase {
 
   /**

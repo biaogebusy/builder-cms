@@ -6,12 +6,14 @@ namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI of storage properties of views.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class StorageTest extends UITestBase {
 
   /**

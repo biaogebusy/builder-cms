@@ -7,6 +7,8 @@ use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 
+// cspell:ignore Colour
+
 /**
  * Create, edit, delete, and change product attributes.
  *

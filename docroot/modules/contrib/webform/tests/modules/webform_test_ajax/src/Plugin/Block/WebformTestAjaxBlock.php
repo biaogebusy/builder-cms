@@ -53,7 +53,7 @@ class WebformTestAjaxBlock extends BlockBase implements ContainerFactoryPluginIn
     // Ajax links.
     $ajax_links = [];
     foreach ($webforms as $webform_id => $webform) {
-      if (strpos($webform_id, 'test_ajax') !== 0 && $webform_id !== 'test_form_wizard_long_100') {
+      if (!str_starts_with($webform_id, 'test_ajax') && $webform_id !== 'test_form_wizard_long_100') {
         continue;
       }
 

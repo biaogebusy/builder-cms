@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   // Revert: Set currency prefix to empty by default #2066.
   // @see https://github.com/RobinHerbots/Inputmask/issues/2066
   if (window.Inputmask) {
@@ -80,7 +77,7 @@
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformInputMask = {
-    attach: function (context) {
+    attach(context) {
       if (!$.fn.inputmask) {
         return;
       }

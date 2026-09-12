@@ -14,7 +14,7 @@ class WebformVariantEditForm extends WebformVariantFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $webform_variant = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $webform_variant = NULL) {
     $form = parent::buildForm($form, $form_state, $webform, $webform_variant);
     $form['#title'] = $this->t('Edit @label variant', ['@label' => $this->webformVariant->label()]);
 

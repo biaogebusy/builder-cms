@@ -32,13 +32,16 @@
 			"name": "Dependencias Federales"
 		},
 		"A": {
-			"name": "Distrito Federal"
+			"name": "Distrito Capital"
 		},
 		"I": {
 			"name": "Falcón"
 		},
 		"J": {
 			"name": "Guárico"
+		},
+		"X": {
+			"name": "La Guaira"
 		},
 		"K": {
 			"name": "Lara"
@@ -66,9 +69,6 @@
 		},
 		"T": {
 			"name": "Trujillo"
-		},
-		"X": {
-			"name": "La Guaira"
 		},
 		"U": {
 			"name": "Yaracuy"

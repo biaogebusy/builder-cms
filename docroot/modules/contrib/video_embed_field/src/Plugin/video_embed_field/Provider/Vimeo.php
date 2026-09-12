@@ -3,6 +3,7 @@
 namespace Drupal\video_embed_field\Plugin\video_embed_field\Provider;
 
 use Drupal\Core\Url;
+use Drupal\video_embed_field\Plugin\Field\FieldFormatter\Video;
 use Drupal\video_embed_field\ProviderPluginBase;
 
 /**
@@ -18,24 +19,25 @@ class Vimeo extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE) {
+  public function renderEmbed(array $options) {
     $iframe = [
       '#type' => 'video_embed_iframe',
       '#provider' => 'vimeo',
       '#url' => sprintf('https://player.vimeo.com/video/%s', $this->getVideoId()),
       '#query' => [
-        'autoplay' => $autoplay,
+        'autoplay' => $options['autoplay'],
         // Video needs to be muted if autoplay is set.
-        'muted' => $autoplay,
+        'muted' => $options['autoplay'],
       ],
       '#attributes' => [
-        'width' => $width,
-        'height' => $height,
+        'width' => $options['width'],
+        'height' => $options['height'],
         'frameborder' => '0',
         'allowfullscreen' => 'allowfullscreen',
+        'loading' => $options['loading'],
       ],
     ];
-    $title = $this->getName($title_format, $use_title_fallback);
+    $title = $this->getName($options['title_format'], $options['use_title_fallback']);
     if (isset($title)) {
       $iframe['#attributes']['title'] = $title;
     }
@@ -43,6 +45,21 @@ class Vimeo extends ProviderPluginBase {
       $iframe['#fragment'] = sprintf('t=%s', $time_index);
     }
     return $iframe;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE) {
+    @trigger_error('Calling renderEmbedCode() is deprecated in video_embed_field:3.1.0 and is removed from video_embed_field:3.2.0. Use \Drupal\video_embed_field\ProviderPluginInterface::renderEmbed() instead. See https://www.drupal.org/project/video_embed_field/issues/3580405', E_USER_DEPRECATED);
+    return $this->renderEmbed([
+      'width' => $width,
+      'height' => $height,
+      'autoplay' => $autoplay,
+      'title_format' => $title_format,
+      'use_title_fallback' => $use_title_fallback,
+      'loading' => Video::defaultSettings()['loading'],
+    ]);
   }
 
   /**
@@ -68,7 +85,7 @@ class Vimeo extends ProviderPluginBase {
    * {@inheritdoc}
    */
   public static function getIdFromInput($input) {
-    preg_match('/^https?:\/\/(www\.|player\.)?vimeo\.com\/(video\/)?(channels\/[a-zA-Z0-9]*\/)?(progressive_redirect\/playback\/)?(?<id>[0-9]*)(\/[a-zA-Z0-9]+)?(\#t=(\d+)s)?$/', $input, $matches);
+    preg_match('/^https?:\/\/(www\.|player\.)?vimeo\.com\/(video\/)?(channels\/[a-zA-Z0-9]*\/)?(progressive_redirect\/playback\/)?(?<id>[0-9]+)(\/[a-zA-Z0-9]+)?(\?[^#\s]*)?(\#t=(\d+)s)?$/', $input, $matches);
     return $matches['id'] ?? FALSE;
   }
 

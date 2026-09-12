@@ -7,11 +7,13 @@
 
 use CommerceGuys\Addressing\AddressFormat\AddressField;
 use CommerceGuys\Addressing\AddressFormat\FieldOverride;
+use Drupal\commerce\CommerceContentEntityStorageSchema;
 use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\commerce\CommerceContentEntityStorageSchema;
 use Drupal\field\Entity\FieldConfig;
 
 /**
@@ -450,4 +452,168 @@ function commerce_order_update_8223() {
   /** @var \Drupal\Core\Config\StorageInterface $active_storage */
   $active_storage = \Drupal::service('config.storage');
   $active_storage->write($config_name, $source->read($config_name));
+}
+
+/**
+ * Enable the billing_profile field in the Default view mode.
+ */
+function commerce_order_update_10301(): void {
+  $bundle_info_service = \Drupal::service('entity_type.bundle.info');
+  $order_bundles = $bundle_info_service->getBundleInfo('commerce_order');
+
+  $billing_profile_settings = [
+    'type' => 'commerce_billing_information',
+    'label' => 'hidden',
+    'settings' => [
+      'profile_view_mode' => 'admin',
+    ],
+    'third_party_settings' => [],
+    'weight' => 5,
+    'region' => 'content',
+  ];
+  if (\Drupal::moduleHandler()->moduleExists('commerce_payment')) {
+    $billing_profile_settings['settings']['show_payment_information'] = TRUE;
+  }
+
+  foreach ($order_bundles as $bundle => $bundle_info) {
+    $order_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_view_display')
+      ->load("commerce_order.$bundle.default");
+    if (!$order_display) {
+      continue;
+    }
+    $order_display->setComponent('billing_profile', $billing_profile_settings);
+    $order_display->save();
+  }
+}
+
+/**
+ * Create a new "Order details" form mode and displays for order types.
+ */
+function commerce_order_update_10302(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  // Create a new form mode.
+  $form_mode_storage = $entity_type_manager->getStorage('entity_form_mode');
+  $form_mode = $form_mode_storage->load('commerce_order.order_details');
+  if (!$form_mode) {
+    /** @var \Drupal\Core\Entity\EntityFormModeInterface $form_mode */
+    $form_mode = $form_mode_storage->create([
+      'id' => 'commerce_order.order_details',
+      'label' => 'Order details',
+      'targetEntityType' => 'commerce_order',
+    ]);
+    $form_mode->save();
+  }
+
+  // Create entity form displays for the "Order details" form mode.
+  $form_display_storage = $entity_type_manager->getStorage('entity_form_display');
+  $order_types_storage = $entity_type_manager->getStorage('commerce_order_type');
+  $hidden_fields = [
+    'adjustments',
+    'billing_profile',
+    'ip_address',
+    'order_items',
+    'order_number',
+    'state',
+    'store_id',
+    'uid',
+  ];
+  /** @var \Drupal\commerce_order\Entity\OrderTypeInterface[] $order_types */
+  $order_types = $order_types_storage->loadMultiple();
+  foreach ($order_types as $order_type) {
+    $form_display_id = sprintf('commerce_order.%s.order_details', $order_type->id());
+    $form_display = $form_display_storage->load($form_display_id);
+    if (!($form_display instanceof EntityFormDisplayInterface)) {
+      $form_display = $form_display_storage->create([
+        'id' => $form_display_id,
+        'targetEntityType' => 'commerce_order',
+        'bundle' => $order_type->id(),
+        'mode' => 'order_details',
+        'status' => TRUE,
+      ]);
+      $form_display->save();
+    }
+    $hidden_components = $form_display->get('hidden');
+    foreach ($hidden_fields as $hidden_field) {
+      $form_display->removeComponent($hidden_field);
+      $hidden_components[$hidden_field] = TRUE;
+    }
+    ksort($hidden_components);
+    $form_display->set('hidden', $hidden_components);
+    $form_display->save();
+  }
+}
+
+/**
+ * New order item table view for the admin, and tweaks to the default view mode.
+ */
+function commerce_order_update_10303(): void {
+  $path = \Drupal::service('extension.list.module')->getPath('commerce_order') . '/config/install';
+  $source = new FileStorage($path);
+  $config_name = 'views.view.commerce_order_item_table_admin';
+  /** @var \Drupal\Core\Config\StorageInterface $active_storage */
+  $active_storage = \Drupal::service('config.storage');
+  if (!$active_storage->read($config_name)) {
+    $active_storage->write($config_name, $source->read($config_name));
+  }
+  /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+  /** @var \Drupal\Core\Field\FormatterPluginManager $field_formatter_manager */
+  $field_formatter_manager = \Drupal::service('plugin.manager.field.formatter');
+  $shipping_information_formatter_exists = $field_formatter_manager->hasDefinition('commerce_shipping_information');
+  $bundle_info_service = \Drupal::service('entity_type.bundle.info');
+  $order_bundles = $bundle_info_service->getBundleInfo('commerce_order');
+  $order_items_component = [
+    'type' => 'commerce_order_item_table',
+    'label' => 'hidden',
+    'region' => 'content',
+    'settings' => [
+      'view' => 'commerce_order_item_table_admin',
+      'show_add_items_link' => FALSE,
+    ],
+    'third_party_settings' => [],
+  ];
+  foreach ($order_bundles as $bundle => $bundle_info) {
+    $order_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_view_display')
+      ->load("commerce_order.$bundle.default");
+    if (!$order_display instanceof EntityViewDisplayInterface) {
+      continue;
+    }
+    $field_definitions = $entity_field_manager->getFieldDefinitions('commerce_order', $bundle);
+    // Configure the "shipments" field if present on the bundle and if the
+    // new "commerce_shipping_information" exists.
+    if (isset($field_definitions['shipments']) && $shipping_information_formatter_exists) {
+      $order_display->setComponent('shipments', [
+        'type' => 'commerce_shipping_information',
+        'label' => 'above',
+        'region' => 'content',
+      ]);
+    }
+    $existing_order_items_component = $order_display->getComponent('order_items');
+    // We only alter the "order_items" component if it's already configured to
+    // use the "commerce_order_item_table" field formatter.
+    if (isset($existing_order_items_component['type']) &&
+      $existing_order_items_component['type'] === 'commerce_order_item_table') {
+      // Don't override the view used with the "commerce_order_item_table" field
+      // formatter, if it was customized.
+      if (isset($existing_order_items_component['settings']['view']) &&
+        $existing_order_items_component['settings']['view'] !== 'commerce_order_item_table') {
+        $order_items_component['settings']['view'] = $existing_order_items_component['settings']['view'];
+      }
+      // For recurring orders, don't show the "add order items" link.
+      if ($bundle !== 'recurring') {
+        $order_items_component['settings']['show_add_items_link'] = TRUE;
+      }
+      // If the "commerce_order_item_table_admin" view is used, the total price
+      // is rendered from the OrderTotal views area handler, so no need to
+      // render the "total_price" separately.
+      if ($order_items_component['settings']['view'] === 'commerce_order_item_table_admin') {
+        $order_display->removeComponent('total_price');
+      }
+      $order_display->setComponent('order_items', $order_items_component);
+    }
+    $order_display->save();
+  }
 }

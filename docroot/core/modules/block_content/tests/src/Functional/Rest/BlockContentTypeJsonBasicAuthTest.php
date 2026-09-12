@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\block_content\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Block Content Type Json Basic Auth.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class BlockContentTypeJsonBasicAuthTest extends BlockContentTypeResourceTestBase {
 
   use BasicAuthResourceTestTrait;

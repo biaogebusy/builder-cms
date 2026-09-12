@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PHPSTORM_META {
+
+  registerArgumentsSet('hooks',
+{% for hook in hooks %}
+    '{{ hook }}',
+{% endfor %}
+  );
+  registerArgumentsSet('modules',
+{% for module in modules %}
+    '{{ module }}',
+{% endfor %}
+  );
+  expectedArguments(\Drupal\Core\Hook\Attribute\Hook::__construct(), 0, argumentsSet('hooks'));
+  expectedArguments(\Drupal\Core\Hook\Attribute\Hook::__construct(), 2, argumentsSet('modules'));
+
+}

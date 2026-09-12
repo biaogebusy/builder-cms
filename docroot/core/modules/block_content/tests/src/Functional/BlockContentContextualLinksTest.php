@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\block_content\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests views contextual links on block content.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentContextualLinksTest extends BlockContentTestBase {
 
   /**

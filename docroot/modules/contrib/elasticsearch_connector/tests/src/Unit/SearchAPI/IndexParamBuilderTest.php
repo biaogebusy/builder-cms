@@ -54,6 +54,7 @@ class IndexParamBuilderTest extends UnitTestCase {
     $index = $this->prophesize(IndexInterface::class);
     $indexId = "index_" . $this->randomMachineName();
     $index->id()->willReturn($indexId);
+    $index->getOriginalId()->willReturn($indexId);
 
     $field1Id = "field1_" . $this->randomMachineName(8);
     $field2Id = "field2_" . $this->randomMachineName(8);

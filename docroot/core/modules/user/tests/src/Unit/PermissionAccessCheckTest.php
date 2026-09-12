@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Context\CacheContextsManager;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\Access\PermissionAccessCheck;
-use Symfony\Component\Routing\Route;
-use Drupal\Core\Cache\Context\CacheContextsManager;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\user\Access\PermissionAccessCheck
- * @group Routing
- * @group Access
+ * Tests Drupal\user\Access\PermissionAccessCheck.
  */
+#[CoversClass(PermissionAccessCheck::class)]
+#[Group('Routing')]
+#[Group('Access')]
 class PermissionAccessCheckTest extends UnitTestCase {
 
   /**
@@ -52,31 +57,40 @@ class PermissionAccessCheckTest extends UnitTestCase {
    * Provides data for the testAccess method.
    *
    * @return array
+   *   An array of test data.
    */
   public static function providerTestAccess() {
     return [
       [[], FALSE],
       [['_permission' => 'allowed'], TRUE, ['user.permissions']],
-      [['_permission' => 'denied'], FALSE, ['user.permissions'], "The 'denied' permission is required."],
+      [
+        ['_permission' => 'denied'],
+        FALSE,
+        ['user.permissions'],
+        "The 'denied' permission is required.",
+      ],
       [['_permission' => 'allowed+denied'], TRUE, ['user.permissions']],
       [['_permission' => 'allowed+denied+other'], TRUE, ['user.permissions']],
-      [['_permission' => 'allowed,denied'], FALSE, ['user.permissions'], "The following permissions are required: 'allowed' AND 'denied'."],
+      [
+        ['_permission' => 'allowed,denied'],
+        FALSE,
+        ['user.permissions'],
+        "The following permissions are required: 'allowed' AND 'denied'.",
+      ],
     ];
   }
 
   /**
    * Tests the access check method.
-   *
-   * @dataProvider providerTestAccess
-   * @covers ::access
    */
+  #[DataProvider('providerTestAccess')]
   public function testAccess($requirements, $access, array $contexts = [], $message = ''): void {
     $access_result = AccessResult::allowedIf($access)->addCacheContexts($contexts);
     if (!empty($message)) {
       $access_result->setReason($message);
     }
-    $user = $this->createMock('Drupal\Core\Session\AccountInterface');
-    $user->expects($this->any())
+    $user = $this->createStub(AccountInterface::class);
+    $user
       ->method('hasPermission')
       ->willReturnMap([
         ['allowed', TRUE],

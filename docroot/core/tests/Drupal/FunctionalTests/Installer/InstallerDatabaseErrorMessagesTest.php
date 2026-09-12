@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Database\Database;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the installer with database errors.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerDatabaseErrorMessagesTest extends InstallerTestBase {
 
   /**
@@ -21,7 +23,7 @@ class InstallerDatabaseErrorMessagesTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpSettings() {
+  protected function setUpSettings(): void {
     // We are creating a table here to force an error in the installer because
     // it will try and create the drupal_install_test table as this is part of
     // the standard database tests performed by the installer in
@@ -43,7 +45,7 @@ class InstallerDatabaseErrorMessagesTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpSite() {
+  protected function setUpSite(): void {
     // This step should not appear as we had a failure on the settings screen.
   }
 

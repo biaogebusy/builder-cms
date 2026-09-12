@@ -12,7 +12,7 @@ interface DateFormatterInterface {
    *
    * @param int $timestamp
    *   A UNIX timestamp to format.
-   * @param string $type
+   * @param non-empty-string $type
    *   (optional) The format to use, one of:
    *   - One of the built-in formats: 'short', 'medium',
    *     'long', 'html_datetime', 'html_date', 'html_time',
@@ -87,7 +87,7 @@ interface DateFormatterInterface {
   /**
    * Formats the time difference from the current request time to a timestamp.
    *
-   * @param $timestamp
+   * @param int $timestamp
    *   A UNIX timestamp to compare against the current request time.
    * @param array $options
    *   (optional) An associative array with additional options. The following
@@ -117,7 +117,7 @@ interface DateFormatterInterface {
   /**
    * Formats the time difference from a timestamp to the current request time.
    *
-   * @param $timestamp
+   * @param int $timestamp
    *   A UNIX timestamp to compare against the current request time.
    * @param array $options
    *   (optional) An associative array with additional options. The following

@@ -5,6 +5,7 @@ namespace Drupal\migrate_drupal;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\migrate\Exception\RequirementsException;
 use Drupal\migrate\Plugin\RequirementsInterface;
 
@@ -70,7 +71,7 @@ trait MigrationConfigurationTrait {
     $system_data = [];
     try {
       $results = $connection->select('system', 's', [
-        'fetch' => \PDO::FETCH_ASSOC,
+        'fetch' => FetchAs::Associative,
       ])
         ->fields('s')
         ->execute();
@@ -78,7 +79,7 @@ trait MigrationConfigurationTrait {
         $system_data[$result['type']][$result['name']] = $result;
       }
     }
-    catch (DatabaseExceptionWrapper $e) {
+    catch (DatabaseExceptionWrapper) {
       // The table might not exist for example in tests.
     }
     return $system_data;
@@ -113,7 +114,7 @@ trait MigrationConfigurationTrait {
    *
    * @param string $database_state_key
    *   The state key.
-   * @param int $drupal_version
+   * @param numeric $drupal_version
    *   The version of Drupal we're getting the migrations for.
    *
    * @return \Drupal\migrate\Plugin\MigrationInterface[]
@@ -167,7 +168,7 @@ trait MigrationConfigurationTrait {
         }
         $migrations[] = $migration;
       }
-      catch (RequirementsException $e) {
+      catch (RequirementsException) {
         // Migrations which are not applicable given the source and destination
         // site configurations (e.g., what modules are enabled) will be silently
         // ignored.
@@ -181,6 +182,7 @@ trait MigrationConfigurationTrait {
    * Returns the follow-up migration tags.
    *
    * @return string[]
+   *   An array of follow-up migration tags.
    */
   protected function getFollowUpMigrationTags() {
     if ($this->followUpMigrationTags === NULL) {
@@ -212,7 +214,7 @@ trait MigrationConfigurationTrait {
           ->query('SELECT [schema_version] FROM {system} WHERE [name] = :module', [':module' => 'system'])
           ->fetchField();
       }
-      catch (DatabaseExceptionWrapper $e) {
+      catch (DatabaseExceptionWrapper) {
         // All database errors return FALSE.
       }
     }

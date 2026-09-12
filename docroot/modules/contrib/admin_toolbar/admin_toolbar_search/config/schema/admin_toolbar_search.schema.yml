@@ -1,10 +1,14 @@
+# Configuration schema for the Admin Toolbar Search module.
+
+# Declare the schema definition as a config object for module settings form.
 admin_toolbar_search.settings:
   type: config_object
   label: 'Admin Toolbar Search settings'
   mapping:
+    # Declare two boolean configuration properties (on/off checkboxes).
     display_menu_item:
       type: boolean
-      label: 'How the search input will be displayed'
+      label: 'Display the search input as a menu item.'
     enable_keyboard_shortcut:
       type: boolean
-      label: 'Enable keyboard shortcut'
+      label: 'Enable keyboard shortcut (Alt + a)'

@@ -19,7 +19,11 @@ class FilterController {
    * @return array
    *   A renderable array.
    *
-   * @see template_preprocess_filter_tips()
+   * @deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. There is
+   *   no replacement.
+   *
+   * @see https://www.drupal.org/node/3567879
+   * @see \Drupal\filter\FilterThemeHooks::preprocessFilterTips()
    */
   public function filterTips(?FilterFormatInterface $filter_format = NULL) {
     $tips = $filter_format ? $filter_format->id() : -1;

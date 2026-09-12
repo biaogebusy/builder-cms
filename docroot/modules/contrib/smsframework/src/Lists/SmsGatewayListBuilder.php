@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Lists;
 
@@ -38,7 +38,7 @@ class SmsGatewayListBuilder extends ConfigEntityListBuilder {
    */
   public function render() {
     $render = parent::render();
-    $render['table']['#empty'] = t('No gateways found.');
+    $render['table']['#empty'] = \t('No gateways found.');
     return $render;
   }
 

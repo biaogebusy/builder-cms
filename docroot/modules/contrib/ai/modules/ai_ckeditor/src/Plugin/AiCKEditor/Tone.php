@@ -132,6 +132,13 @@ final class Tone extends AiCKEditorPluginBase {
   /**
    * {@inheritdoc}
    */
+  protected function getNoSelectedTextMessage(): TranslatableMarkup {
+    return $this->t('You must select some text before you can change the tone.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $this->configuration['provider'] = $form_state->getValue('provider');
     $this->configuration['autocreate'] = (bool) $form_state->getValue('autocreate');
@@ -146,7 +153,13 @@ final class Tone extends AiCKEditorPluginBase {
    * {@inheritdoc}
    */
   public function buildCkEditorModalForm(array $form, FormStateInterface $form_state, array $settings = []) {
-    $form = parent::buildCkEditorModalForm($form, $form_state);
+    $form = parent::buildCkEditorModalForm($form, $form_state, $settings);
+
+    // If no text was selected, don't append plugin-specific fields.
+    $storage = $form_state->getStorage();
+    if (empty($storage['selected_text'])) {
+      return $form;
+    }
 
     $form['tone'] = [
       '#type' => $this->configuration['autocreate'] ? 'entity_autocomplete' : 'select',
@@ -202,6 +215,13 @@ final class Tone extends AiCKEditorPluginBase {
         throw new \Exception('Term could not be loaded.');
       }
 
+      if (!$term->isNew()) {
+        $language = $this->languageManager->getCurrentLanguage()->getId();
+        if ($term->hasTranslation($language)) {
+          $term = $term->getTranslation($language);
+        }
+      }
+
       if ($term->isNew() && $this->configuration['autocreate'] && $this->account->hasPermission('create terms in ' . $this->configuration['tone_vocabulary'])) {
         $term->save();
       }
@@ -233,11 +253,17 @@ final class Tone extends AiCKEditorPluginBase {
    *   The options array.
    */
   protected function getTermOptions(string $vid): array {
-    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid);
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid, 0, NULL, TRUE);
     $options = [];
+    $language = $this->languageManager->getCurrentLanguage()->getId();
 
     foreach ($terms as $term) {
-      $options[$term->tid] = $term->name;
+      if ($term->hasTranslation($language)) {
+        $options[$term->id()] = $term->getTranslation($language)->label();
+      }
+      else {
+        $options[$term->id()] = $term->label();
+      }
     }
 
     return $options;

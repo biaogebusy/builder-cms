@@ -6,14 +6,16 @@ namespace Drupal\FunctionalTests\EventSubscriber;
 
 use Drupal\file\Entity\File;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the fast 404 functionality.
  *
- * @group EventSubscriber
- *
  * @see \Drupal\Core\EventSubscriber\Fast404ExceptionHtmlSubscriber
  */
+#[Group('EventSubscriber')]
+#[RunTestsInSeparateProcesses]
 class Fast404Test extends BrowserTestBase {
 
   /**

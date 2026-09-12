@@ -5,6 +5,7 @@ namespace Drupal\Core\Theme\Component;
 use Drupal\Core\Extension\ExtensionLifecycle;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Render\Component\Exception\InvalidComponentException;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Component metadata.
@@ -12,6 +13,11 @@ use Drupal\Core\Render\Component\Exception\InvalidComponentException;
 class ComponentMetadata {
 
   use StringTranslationTrait;
+
+  /**
+   * The ID of the component, in the form of provider:machine_name.
+   */
+  public readonly string $id;
 
   /**
    * The absolute path to the component directory.
@@ -92,6 +98,16 @@ class ComponentMetadata {
   public readonly array $slots;
 
   /**
+   * The available variants.
+   */
+  public readonly array $variants;
+
+  /**
+   * Internal component, hidden in ui.
+   */
+  public readonly bool $noUi;
+
+  /**
    * ComponentMetadata constructor.
    *
    * @param array $metadata_info
@@ -110,6 +126,7 @@ class ComponentMetadata {
     if (str_starts_with($path, $app_root)) {
       $path = substr($path, strlen($app_root));
     }
+    $this->id = $metadata_info['id'];
     $this->mandatorySchemas = $enforce_schemas;
     $this->path = $path;
 
@@ -125,8 +142,10 @@ class ComponentMetadata {
     $this->group = $metadata_info['group'] ?? $this->t('All Components');
 
     // Save the schemas.
-    $this->parseSchemaInfo($metadata_info);
+    $this->schema = $this->parseSchemaInfo($metadata_info);
     $this->slots = $metadata_info['slots'] ?? [];
+    $this->variants = $metadata_info['variants'] ?? [];
+    $this->noUi = $metadata_info['noUi'] ?? FALSE;
   }
 
   /**
@@ -135,12 +154,15 @@ class ComponentMetadata {
    * @param array $metadata_info
    *   The metadata information as decoded from the component definition file.
    *
+   * @return array|null
+   *   The schema for the component props.
+   *
    * @throws \Drupal\Core\Render\Component\Exception\InvalidComponentException
    */
-  private function parseSchemaInfo(array $metadata_info): void {
+  private function parseSchemaInfo(array $metadata_info): ?array {
     if (empty($metadata_info['props'])) {
       if ($this->mandatorySchemas) {
-        throw new InvalidComponentException(sprintf('The component "%s" does not provide schema information. Schema definitions are mandatory for components declared in modules. For components declared in themes, schema definitions are only mandatory if the "enforce_prop_schemas" key is set to "true" in the theme info file.', $metadata_info['id']));
+        throw new InvalidComponentException(sprintf('The component "%s" does not provide schema information. Schema definitions are mandatory for components declared in modules. For components declared in themes, schema definitions are only mandatory if the "enforce_prop_schemas" key is set to "true" in the theme info file.', $this->id));
       }
       $schema = NULL;
     }
@@ -153,10 +175,28 @@ class ComponentMetadata {
         throw new InvalidComponentException('The schema for the %s in the component metadata is invalid. Arbitrary additional properties are not allowed.');
       }
       $schema['additionalProperties'] = FALSE;
-      // All props should also support "object" this allows deferring rendering
-      // in Twig to the render pipeline.
-      $schema_props = $metadata_info['props'];
-      foreach ($schema_props['properties'] ?? [] as $name => $prop_schema) {
+      foreach ($schema['properties'] ?? [] as $name => $prop_schema) {
+        if (isset($prop_schema['enum'])) {
+          // Ensure all enum values are also in meta:enum.
+          $enum = array_combine($prop_schema['enum'], $prop_schema['enum']);
+          $prop_schema['meta:enum'] = array_replace($enum, $prop_schema['meta:enum'] ?? []);
+
+          // Remove meta:enum values which are not in enum.
+          $prop_schema['meta:enum'] = array_intersect_key($prop_schema['meta:enum'], $enum);
+
+          // Make meta:enum label translatable.
+          $translation_context = $prop_schema['x-translation-context'] ?? '';
+          $prop_schema['meta:enum'] = array_map(
+            // @phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
+            fn($label) => new TranslatableMarkup((string) $label, [], ['context' => $translation_context]),
+            $prop_schema['meta:enum']
+          );
+
+          $schema['properties'][$name] = $prop_schema;
+        }
+
+        // All props should also support "object" this allows deferring
+        // rendering in Twig to the render pipeline.
         $type = $prop_schema['type'] ?? '';
         $schema['properties'][$name]['type'] = array_unique([
           ...(array) $type,
@@ -164,7 +204,7 @@ class ComponentMetadata {
         ]);
       }
     }
-    $this->schema = $schema;
+    return $schema;
   }
 
   /**
@@ -194,6 +234,7 @@ class ComponentMetadata {
       'status' => $this->status,
       'name' => $this->name,
       'group' => $this->group,
+      'variants' => $this->variants,
     ];
   }
 

@@ -9,12 +9,14 @@ use Drupal\system\Entity\Menu;
 use Drupal\system\MenuStorage;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
 use Drupal\Tests\menu_ui\Traits\MenuUiTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests custom menu and menu links operations using the UI.
- *
- * @group menu_ui
  */
+#[Group('menu_ui')]
+#[RunTestsInSeparateProcesses]
 class MenuUiJavascriptTest extends WebDriverTestBase {
 
   use ContextualLinkClickTrait;

@@ -2,14 +2,14 @@
 
 namespace Drupal\webform\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a render element for more.
  *
  * @FormElement("webform_more")
  */
-class WebformMore extends RenderElement {
+class WebformMore extends RenderElementBase {
 
   /**
    * {@inheritdoc}

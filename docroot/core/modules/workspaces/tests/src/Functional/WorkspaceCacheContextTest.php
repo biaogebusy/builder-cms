@@ -9,13 +9,15 @@ use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\workspaces\Entity\Workspace;
 use Drupal\workspaces\WorkspaceCacheContext;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the workspace cache context.
- *
- * @group workspaces
- * @group Cache
  */
+#[Group('workspaces')]
+#[Group('Cache')]
+#[RunTestsInSeparateProcesses]
 class WorkspaceCacheContextTest extends BrowserTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
@@ -23,7 +25,7 @@ class WorkspaceCacheContextTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'node', 'workspaces'];
+  protected static $modules = ['block', 'node', 'workspaces', 'workspaces_ui'];
 
   /**
    * {@inheritdoc}
@@ -66,17 +68,22 @@ class WorkspaceCacheContextTest extends BrowserTestBase {
     $cache_bin = $variation_cache_factory->get($build['#cache']['bin']);
     $this->assertInstanceOf(\stdClass::class, $cache_bin->get($build['#cache']['keys'], CacheableMetadata::createFromRenderArray($build)));
 
-    // Switch to the 'stage' workspace and check that the correct workspace
-    // cache context is used.
+    // Switch to the test workspace and check that the correct workspace cache
+    // context is used.
     $test_user = $this->drupalCreateUser(['view any workspace']);
     $this->drupalLogin($test_user);
 
-    $stage = Workspace::load('stage');
+    $vultures = Workspace::create([
+      'id' => 'vultures',
+      'label' => 'Vultures',
+    ]);
+    $vultures->save();
+
     $workspace_manager = \Drupal::service('workspaces.manager');
-    $workspace_manager->setActiveWorkspace($stage);
+    $workspace_manager->setActiveWorkspace($vultures);
 
     $cache_context = new WorkspaceCacheContext($workspace_manager);
-    $this->assertSame('stage', $cache_context->getContext());
+    $this->assertSame('vultures', $cache_context->getContext());
 
     $build = \Drupal::entityTypeManager()->getViewBuilder('node')->view($node, 'full');
 
@@ -85,7 +92,7 @@ class WorkspaceCacheContextTest extends BrowserTestBase {
     $this->assertContains('workspace', $build['#cache']['contexts']);
 
     $context_tokens = $cache_contexts_manager->convertTokensToKeys($build['#cache']['contexts'])->getKeys();
-    $this->assertContains('[workspace]=stage', $context_tokens);
+    $this->assertContains('[workspace]=vultures', $context_tokens);
 
     // Test that a cache entry is created.
     $cache_bin = $variation_cache_factory->get($build['#cache']['bin']);

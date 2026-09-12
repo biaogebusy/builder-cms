@@ -13,7 +13,7 @@ class FieldValidationRuleEditForm extends FieldValidationRuleFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL, $field_name = '') {
+  public function buildForm(array $form, FormStateInterface $form_state, ?FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL, $field_name = '') {
     $form = parent::buildForm($form, $form_state, $field_validation_rule_set, $field_validation_rule);
 
     $form['#title'] = $this->t('Edit %label rule', ['%label' => $this->fieldValidationRule->label()]);

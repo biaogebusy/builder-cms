@@ -1,0 +1,25 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a 'form' element.
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The child elements of the form.
+ *
+ * @see\Drupal\Core\Form\FormPreprocess::preprocessForm()
+ *
+ * @ingroup themeable
+ */
+#}
+{{ attach_library('commerce/admin') }}
+<div class="layout-payment-form layout-commerce-form">
+  <div class="layout-region layout-region--commerce-main">
+    <div class="layout-region__content">
+      {{ form|without('order_summary') }}
+    </div>
+  </div>
+  <div class="layout-region layout-region--commerce-secondary">
+    {{ form.order_summary }}
+  </div>
+</div>

@@ -10,12 +10,14 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file upload scenario's with Inline Form Errors.
- *
- * @group inline_form_errors
  */
+#[Group('inline_form_errors')]
+#[RunTestsInSeparateProcesses]
 class FormErrorHandlerFileUploadTest extends BrowserTestBase {
 
   /**

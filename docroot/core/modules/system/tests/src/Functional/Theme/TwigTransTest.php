@@ -6,16 +6,17 @@ namespace Drupal\Tests\system\Functional\Theme;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Twig\Error\SyntaxError;
 
 // cspell:ignore contaynz errrf herro kontex muun playsholdr starrrrr starzzzz
 // cspell:ignore sunz sunzzzzzzz txtzzzz
-
 /**
  * Tests Twig "trans" tags.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class TwigTransTest extends BrowserTestBase {
 
   /**
@@ -73,8 +74,8 @@ class TwigTransTest extends BrowserTestBase {
     $this->installLanguages();
 
     // Assign Lolspeak (xx) to be the default language.
-    $this->config('system.site')->set('default_langcode', 'xx')->save();
     $this->rebuildContainer();
+    $this->config('system.site')->set('default_langcode', 'xx')->save();
 
     // Check that lolspeak is the default language for the site.
     $this->assertEquals('xx', \Drupal::languageManager()->getDefaultLanguage()->getId(), 'Lolspeak is the default language');
@@ -119,9 +120,30 @@ class TwigTransTest extends BrowserTestBase {
     catch (SyntaxError $e) {
       $this->assertStringContainsString('{% trans %} tag cannot be empty', $e->getMessage());
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       $this->fail('{% trans %}{% endtrans %} threw an unexpected exception.');
     }
+  }
+
+  /**
+   * Testing trans with render array value.
+   */
+  public function testTransRenderArray(): void {
+    $elements = [
+      '#type' => 'inline_template',
+      '#template' => '{% trans %}This is a {{ var }}.{% endtrans %}',
+      '#context' => [
+        'var' => [
+          '#prefix' => '<strong>',
+          '#markup' => 'trans render array',
+          '#suffix' => '</strong>',
+        ],
+      ],
+    ];
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
+    $renderer = \Drupal::service('renderer');
+    $text = (string) $renderer->renderInIsolation($elements);
+    $this->assertSame('This is a <strong>trans render array</strong>.', $text);
   }
 
   /**
@@ -188,7 +210,7 @@ class TwigTransTest extends BrowserTestBase {
   /**
    * Helper function: install languages.
    */
-  protected function installLanguages() {
+  protected function installLanguages(): void {
     $file_system = \Drupal::service('file_system');
     foreach ($this->languages as $langcode => $name) {
       // Generate custom .po contents for the language.
@@ -239,7 +261,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -281,7 +303,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 

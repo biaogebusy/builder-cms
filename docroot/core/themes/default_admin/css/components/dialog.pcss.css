@@ -1,0 +1,171 @@
+/**
+ * @file
+ * Dialog and modal styles, including theme overrides for form elements,
+ * links, and controls.
+ */
+
+.ui-dialog {
+  position: absolute;
+  border-radius: var(--admin-radius-m);
+  outline: none;
+  background: var(--admin-color-bg-surface);
+  box-shadow: var(--admin-shadow-1);
+  font-family: var(--admin-font-family);
+
+  .ui-dialog-titlebar {
+    position: relative;
+    padding: var(--admin-space-m) var(--admin-space-l);
+    /* Fixed white (not a surface token): text sits on the always-dark titlebar
+       (background #1b1b1d below), so it must stay light in both modes. */
+    color: var(--admin-color-white);
+    border: 0 none;
+    border-radius: var(--admin-radius-m) var(--admin-radius-m) 0 0;
+    background: #1b1b1d;
+    line-height: 1.2;
+
+    @media (forced-colors: active) {
+      border-block-end: 1px solid buttonBorder;
+    }
+  }
+
+  .ui-dialog-titlebar-close {
+    position: absolute;
+    width: 2rem;
+    height: 2rem;
+    margin: 0 var(--admin-space-m);
+    transform: translateY(-50%);
+    opacity: 0.8;
+    color: inherit;
+    border: none;
+    background: none;
+    inset-block-start: 50%;
+    inset-inline-end: 0;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    .ui-icon-closethick {
+      width: 100%;
+      height: 100%;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      margin: 0;
+      transform: none;
+      background: currentColor;
+      mask-image: url("../../migration/media/icons/general/close.svg");
+      mask-size: var(--admin-icon-size-close) var(--admin-icon-size-close);
+      mask-repeat: no-repeat;
+      mask-position: center;
+
+      @media (forced-colors: active) {
+        background: linktext;
+      }
+    }
+  }
+
+  .ui-dialog-title {
+    padding-inline-end: var(--admin-space-xl);
+    font-size: var(--admin-font-size-h6);
+  }
+
+  .ui-dialog-content {
+    color: var(--admin-color-text);
+
+    &:first-of-type {
+      border-start-start-radius: var(--admin-radius-m);
+      border-start-end-radius: var(--admin-radius-m);
+    }
+  }
+
+  .ui-widget-content {
+    padding-inline: var(--admin-space-l);
+    background: var(--admin-color-bg-surface);
+
+    &.ui-dialog-content {
+      overflow: auto;
+    }
+  }
+
+  .ui-widget-content.ui-dialog-buttonpane {
+    padding: var(--admin-space-s) var(--admin-space-l);
+    border-block-start: 1px solid var(--admin-color-border-soft);
+    background: var(--admin-color-bg);
+
+    .button {
+      padding-block: calc(var(--admin-space-s) - 2px);
+      padding-inline: var(--admin-space-m);
+      margin-block: 0;
+
+      &:last-of-type {
+        margin-inline-end: 0;
+      }
+    }
+  }
+
+  .ui-dialog-buttonset {
+    margin: 0;
+  }
+
+  [data-drupal-selector*="-remove-form"] .button.button--danger {
+    border-color: var(--admin-color-error) !important;
+  }
+
+  .gin--dark-mode & {
+    .views-exposed-form,
+    .views-form {
+      background: var(--admin-color-bg-surface-nested);
+    }
+  }
+
+  .form-edit .form-actions {
+    margin-block-end: 0;
+    padding: 0;
+    border: 0 none;
+    background-color: transparent;
+  }
+
+  tr .form-item {
+    margin-block: 0;
+  }
+
+  .layout-region-node-actions {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: var(--admin-space-m);
+    inset-block-start: auto;
+    inset-inline-end: auto;
+  }
+
+  .layout-region--secondary {
+    width: 100%;
+  }
+
+  .gin-layer-wrapper {
+    margin-block: var(--admin-space-l);
+  }
+
+  .gin-confirm-form {
+    margin-block-start: var(--admin-space-m);
+    margin-block-end: var(--admin-space-s);
+  }
+
+  @media (--admin-to-small) {
+    min-width: 92%;
+    max-width: 92%;
+  }
+}
+
+.ui-widget-overlay {
+  opacity: 0.9;
+  background: var(--admin-color-bg-surface-nested);
+}
+
+.ui-widget.ui-widget-content {
+  padding: 0;
+  border: 1px solid var(--admin-color-border);
+}
+
+#drupal-modal .gin-sticky-form-actions.form-actions {
+  display: none;
+}

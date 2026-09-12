@@ -1,5 +1,5 @@
 .mdxeditor-wrapper {
-  border: 1px solid var(--gin-border-color,#ddd);
+  border: 1px solid var(--gin-border-color, var(--color-gray-200, #ddd));
   border-radius: var(--gin-border-m, 0.5rem);
 }
 
@@ -21,27 +21,31 @@
 }
 
 .mdxeditor .typeahead-popover {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px #00000026;
+  border: 1px solid var(--gin-border-color, var(--color-gray-200, #ddd));
+  border-radius: var(--gin-border-m, 6px);
+  box-shadow: var(--gin-shadow-l2, 0 4px 12px rgba(0, 0, 0, 0.15));
   min-width: 300px;
   max-height: 250px;
   overflow-y: auto;
+  background-color: var(--gin-bg-layer, var(--color-bg, #fff));
+  color: var(--gin-color-text, var(--color-text, #000));
 }
 
 .mdxeditor .typeahead-popover ul li {
   padding: 14px 18px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  background-color: white;
+  border-bottom: 1px solid var(--gin-border-color-layer2, var(--color-gray-100, #f0f0f0));
+  background-color: var(--gin-bg-layer, var(--color-bg, #fff));
+  color: var(--gin-color-text, var(--color-text, #000));
   line-height: normal;
 }
-.mdxeditor .typeahead-popover ul li.selected{
-  background-color: var(--gin-bg-item-hover);
+
+.mdxeditor .typeahead-popover ul li.selected {
+  background-color: var(--gin-bg-item-hover, rgba(0, 122, 255, 0.1));
 }
 
 .mdxeditor .typeahead-popover ul li.selected .typeahead-item-title {
-  color: var(--gin-color-primary);
+  color: var(--gin-color-primary, var(--color-absolutezero, #0036b1));
 }
 
 .mdxeditor .typeahead-popover ul li .typeahead-item-title {
@@ -55,7 +59,7 @@
   display: block;
   font-size: 12px;
   margin-top: 4px;
-  color: var(--gin-color-text-light, #666);
+  color: var(--gin-color-text-light, var(--color-text-neutral, #666));
 }
 
 .mdxeditor .typeahead-popover ul li:last-child {

@@ -4,11 +4,13 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Drupal\file\FileInterface;
@@ -17,17 +19,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Handle physical file import.
- *
- * @ImportProcessor(
- *   id = "physical_file",
- *   label = @Translation("Physical file"),
- *   description = @Translation("When importing a File entity, also import the physical file."),
- *   stages = {
- *     "process_entity" = 0,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'physical_file',
+  label: new TranslatableMarkup('Physical file'),
+  description: new TranslatableMarkup('When importing a File entity, also import the physical file.'),
+  stages: [
+    'process_entity' => 0,
+  ],
+)]
 class PhysicalFile extends ImportProcessorPluginBase implements PluginFormInterface {
 
   /**

@@ -3,6 +3,7 @@
 namespace Drupal\commerce_order\Form;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 
@@ -14,11 +15,9 @@ use Drupal\commerce_order\Entity\OrderInterface;
 trait CustomerFormTrait {
 
   /**
-   * The user storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * The entity type manager.
    */
-  protected $userStorage;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The password generator.
@@ -34,7 +33,7 @@ trait CustomerFormTrait {
    *   The parent form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   * @param \Drupal\commerce_order\Entity\OrderInterface $order
+   * @param \Drupal\commerce_order\Entity\OrderInterface|null $order
    *   The current order, if known.
    *
    * @return array
@@ -147,8 +146,9 @@ trait CustomerFormTrait {
   public function validateCustomerForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     if (isset($values['mail'], $values['customer_type']) && $values['customer_type'] == 'new') {
+      $user_storage = $this->entityTypeManager->getStorage('user');
       /** @var \Drupal\user\UserInterface $user */
-      $user = $this->userStorage->create([
+      $user = $user_storage->create([
         'name' => $values['mail'],
         'mail' => $values['mail'],
         'pass' => ($values['generate']) ? $this->passwordGenerator->generate() : $values['pass'],
@@ -174,7 +174,8 @@ trait CustomerFormTrait {
   public function submitCustomerForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     if ($values['customer_type'] == 'existing') {
-      $values['mail'] = $this->userStorage->load($values['uid'])->getEmail();
+      $user_storage = $this->entityTypeManager->getStorage('user');
+      $values['mail'] = $user_storage->load($values['uid'])->getEmail();
     }
     else {
       $user = $form_state->get('customer');

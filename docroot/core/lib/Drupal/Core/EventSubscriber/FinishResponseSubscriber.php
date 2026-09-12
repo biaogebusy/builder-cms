@@ -11,11 +11,11 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\PageCache\RequestPolicyInterface;
 use Drupal\Core\PageCache\ResponsePolicyInterface;
 use Drupal\Core\Site\Settings;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Response subscriber to handle finished responses.
@@ -23,11 +23,26 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class FinishResponseSubscriber implements EventSubscriberInterface {
 
   /**
-   * The language manager object for retrieving the correct language code.
+   * The character length limit for Drupal cache headers.
    *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
+   * This is used for the 'X-Drupal-Cache-Tags' and 'X-Drupal-Cache-Contexts'
+   * headers. Apache has a hardcoded limit of 8190 bytes for response header
+   * line length, so this value is set slightly below that.
    */
-  protected $languageManager;
+  protected const int RESPONSE_HEADER_LINE_MAX_LENGTH = 8000;
+
+  /**
+   * Separator between cache tags and cache context in respective debug headers.
+   *
+   * When setting multiple response headers with the same name, the value for
+   * the header name is meant to be interpreted as the concatenation,
+   * comma-separated, of all the header values with that name. Since the headers
+   * here are meant to be used for debug only, the values are space-separated
+   * for legibility instead.
+   *
+   * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-field-lines-and-combined-fi
+   */
+  protected const string RESPONSE_HEADER_CACHE_ITEM_SEPARATOR = ' ';
 
   /**
    * A config object for the system performance configuration.
@@ -37,71 +52,33 @@ class FinishResponseSubscriber implements EventSubscriberInterface {
   protected $config;
 
   /**
-   * A policy rule determining the cacheability of a request.
-   *
-   * @var \Drupal\Core\PageCache\RequestPolicyInterface
-   */
-  protected $requestPolicy;
-
-  /**
-   * A policy rule determining the cacheability of the response.
-   *
-   * @var \Drupal\Core\PageCache\ResponsePolicyInterface
-   */
-  protected $responsePolicy;
-
-  /**
-   * The cache contexts manager service.
-   */
-  protected CacheContextsManager $cacheContextsManager;
-
-  /**
-   * Whether to send cacheability headers for debugging purposes.
-   *
-   * @var bool
-   */
-  protected $debugCacheabilityHeaders = FALSE;
-
-  /**
    * Constructs a FinishResponseSubscriber object.
    *
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager object for retrieving the correct language code.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
-   * @param \Drupal\Core\PageCache\RequestPolicyInterface $request_policy
+   * @param \Drupal\Core\PageCache\RequestPolicyInterface $requestPolicy
    *   A policy rule determining the cacheability of a request.
-   * @param \Drupal\Core\PageCache\ResponsePolicyInterface $response_policy
+   * @param \Drupal\Core\PageCache\ResponsePolicyInterface $responsePolicy
    *   A policy rule determining the cacheability of a response.
-   * @param \Drupal\Core\Cache\Context\CacheContextsManager $cache_contexts_manager
+   * @param \Drupal\Core\Cache\Context\CacheContextsManager $cacheContextsManager
    *   The cache contexts manager service.
-   * @param \Drupal\Component\Datetime\TimeInterface|null|bool $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
-   * @param bool $http_response_debug_cacheability_headers
+   * @param bool $debugCacheabilityHeaders
    *   (optional) Whether to send cacheability headers for debugging purposes.
    */
   public function __construct(
-    LanguageManagerInterface $language_manager,
+    protected LanguageManagerInterface $languageManager,
     ConfigFactoryInterface $config_factory,
-    RequestPolicyInterface $request_policy,
-    ResponsePolicyInterface $response_policy,
-    CacheContextsManager $cache_contexts_manager,
-    protected TimeInterface|bool|null $time = NULL,
-    $http_response_debug_cacheability_headers = FALSE,
+    protected RequestPolicyInterface $requestPolicy,
+    protected ResponsePolicyInterface $responsePolicy,
+    protected CacheContextsManager $cacheContextsManager,
+    protected TimeInterface $time,
+    protected bool $debugCacheabilityHeaders = FALSE,
   ) {
-    $this->languageManager = $language_manager;
     $this->config = $config_factory->get('system.performance');
-    $this->requestPolicy = $request_policy;
-    $this->responsePolicy = $response_policy;
-    $this->cacheContextsManager = $cache_contexts_manager;
-    if (!$time || is_bool($time)) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be the 5th argument in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      if (is_bool($time)) {
-        $http_response_debug_cacheability_headers = $time;
-      }
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
-    $this->debugCacheabilityHeaders = $http_response_debug_cacheability_headers;
   }
 
   /**
@@ -165,15 +142,11 @@ class FinishResponseSubscriber implements EventSubscriberInterface {
     }
 
     if ($this->debugCacheabilityHeaders) {
-      // Expose the cache contexts and cache tags associated with this page in a
-      // X-Drupal-Cache-Contexts and X-Drupal-Cache-Tags header respectively.
+      // Expose the cache contexts and cache tags associated with this page in
+      // X-Drupal-Cache-Contexts and X-Drupal-Cache-Tags headers respectively.
       $response_cacheability = $response->getCacheableMetadata();
-      $cache_tags = $response_cacheability->getCacheTags();
-      sort($cache_tags);
-      $response->headers->set('X-Drupal-Cache-Tags', implode(' ', $cache_tags));
-      $cache_contexts = $this->cacheContextsManager->optimizeTokens($response_cacheability->getCacheContexts());
-      sort($cache_contexts);
-      $response->headers->set('X-Drupal-Cache-Contexts', implode(' ', $cache_contexts));
+      $this->addDebugCacheHeaders('X-Drupal-Cache-Tags', $response_cacheability->getCacheTags(), $response);
+      $this->addDebugCacheHeaders('X-Drupal-Cache-Contexts', $this->cacheContextsManager->optimizeTokens($response_cacheability->getCacheContexts()), $response);
       $max_age_message = $response_cacheability->getCacheMaxAge();
       if ($max_age_message === 0) {
         $max_age_message = '0 (Uncacheable)';
@@ -219,13 +192,13 @@ class FinishResponseSubscriber implements EventSubscriberInterface {
    * not Cache-Control, then 'private, must-revalidate' (in exactly this order)
    * is returned.
    *
-   * @see \Symfony\Component\HttpFoundation\ResponseHeaderBag::computeCacheControlValue()
-   *
    * @param \Symfony\Component\HttpFoundation\Response $response
    *   The response object.
    *
    * @return bool
    *   TRUE when Cache-Control header was set explicitly on the given response.
+   *
+   * @see \Symfony\Component\HttpFoundation\ResponseHeaderBag::computeCacheControlValue()
    */
   protected function isCacheControlCustomized(Response $response) {
     // Symfony >= 3.2 explicitly removes the Cache-Control header for 301
@@ -324,6 +297,29 @@ class FinishResponseSubscriber implements EventSubscriberInterface {
    */
   protected function setExpiresNoCache(Response $response) {
     $response->setExpires(\DateTime::createFromFormat('j-M-Y H:i:s T', '19-Nov-1978 05:00:00 UTC'));
+  }
+
+  /**
+   * Adds cache metadata information as headers in the response.
+   *
+   * If a header exceeds the maximum response header length, the data will be
+   * split across multiple header lines with the same header name. By default,
+   * Apache uses the header merge strategy that merges and glues all the lines
+   * into one with ', ' separating them. Nginx will send separate headers lines
+   * with the same name.
+   *
+   * @param string $header
+   *   The response header name.
+   * @param list<string> $values
+   *   The list of either cache tags or contexts.
+   * @param \Symfony\Component\HttpFoundation\Response $response
+   *   The response object.
+   */
+  protected function addDebugCacheHeaders(string $header, array $values, Response $response): void {
+    sort($values);
+    $values_as_string = implode(static::RESPONSE_HEADER_CACHE_ITEM_SEPARATOR, $values);
+    $headers = explode("\n", wordwrap($values_as_string, static::RESPONSE_HEADER_LINE_MAX_LENGTH));
+    $response->headers->set($header, $headers);
   }
 
   /**

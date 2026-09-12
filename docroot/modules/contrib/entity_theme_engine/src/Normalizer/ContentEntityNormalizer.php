@@ -111,15 +111,17 @@ class ContentEntityNormalizer extends NormalizerBase {
     switch ($entity->getEntityTypeId()) {
       case 'media':
         $media_source = $entity->getSource()->getSourceFieldValue($entity);
-        $file = $this->entityTypeManager->getStorage('file')->load($media_source);
-        if($file && $file instanceof File) {
-          if($entity->bundle() == 'image') {
-            $data['styles'] = $this->getImageStylesVariables($file);
+        if ($media_source) {
+          $file = $this->entityTypeManager->getStorage('file')->load($media_source);
+          if($file && $file instanceof File) {
+            if($entity->bundle() == 'image') {
+              $data['styles'] = $this->getImageStylesVariables($file);
+            }
+            $media_source = \Drupal::service('file_url_generator')->generateString($file->getFileUri());
+            $data['filesize'] = $file->filesize->value;
           }
-          $media_source = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+          $data['media_source'] = $media_source;
         }
-        $data['media_source'] = $media_source;
-        $data['filesize'] = $file->filesize->value;
         break;
       case 'image':
         $data['styles'] = $this->getImageStylesVariables($entity);
@@ -166,7 +168,10 @@ class ContentEntityNormalizer extends NormalizerBase {
     $variables = [];
     $styles = static::getStyles();
     foreach ($styles as $id => $style) {
-      $variables[$id] = $style->buildUrl($entity->getFileUri());
+      // buildUrl() returns an absolute URL, transform it into a root-relative
+      // path (without the domain), keeping the derivative security token.
+      $variables[$id] = \Drupal::service('file_url_generator')
+        ->transformRelative($style->buildUrl($entity->getFileUri()));
     }
     return $variables;
   }

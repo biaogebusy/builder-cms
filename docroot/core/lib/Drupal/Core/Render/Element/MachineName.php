@@ -35,10 +35,12 @@ use Drupal\Core\Render\Attribute\FormElement;
  *     human-readable name (i.e., as contained in the $form structure) to use as
  *     source for the machine name. Defaults to ['label'].
  *   - label: (optional) Text to display as label for the machine name value
- *     after the human-readable name form element. Defaults to t('Machine name').
+ *     after the human-readable name form element. Defaults to t('Machine
+ *     name').
  *   - replace_pattern: (optional) A regular expression (without delimiters)
  *     matching disallowed characters in the machine name. Defaults to
- *     '[^a-z0-9_]+'.
+ *     '[^a-z0-9_]+'. If a different replace_pattern is used, the machine
+ *      name element's '#description' should be updated accordingly.
  *   - replace: (optional) A character to replace disallowed characters in the
  *     machine name via JavaScript. Defaults to '_' (underscore). When using a
  *     different character, 'replace_pattern' needs to be set accordingly.
@@ -76,7 +78,6 @@ class MachineName extends Textfield {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#default_value' => NULL,
@@ -85,15 +86,15 @@ class MachineName extends Textfield {
       '#size' => 60,
       '#autocomplete_route_name' => FALSE,
       '#process' => [
-        [$class, 'processMachineName'],
-        [$class, 'processAutocomplete'],
-        [$class, 'processAjaxForm'],
+        [static::class, 'processMachineName'],
+        [static::class, 'processAutocomplete'],
+        [static::class, 'processAjaxForm'],
       ],
       '#element_validate' => [
-        [$class, 'validateMachineName'],
+        [static::class, 'validateMachineName'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderTextfield'],
+        [static::class, 'preRenderTextfield'],
       ],
       '#theme' => 'input__textfield',
       '#theme_wrappers' => ['form_element'],
@@ -139,8 +140,9 @@ class MachineName extends Textfield {
       '#suffix' => '',
     ];
     // A form element that only wants to set one #machine_name property (usually
-    // 'source' only) would leave all other properties undefined, if the defaults
-    // were defined by an element plugin. Therefore, we apply the defaults here.
+    // 'source' only) would leave all other properties undefined, if the
+    // defaults were defined by an element plugin. Therefore, we apply the
+    // defaults here.
     $element['#machine_name'] += [
       'source' => ['label'],
       'target' => '#' . $element['#id'],
@@ -163,8 +165,8 @@ class MachineName extends Textfield {
       $form_state->set('machine_name.initial_values', $initial_values);
     }
 
-    // By default, machine names are restricted to Latin alphanumeric characters.
-    // So, default to LTR directionality.
+    // By default, machine names are restricted to Latin alphanumeric
+    // characters. So, default to LTR directionality.
     if (!isset($element['#attributes'])) {
       $element['#attributes'] = [];
     }
@@ -295,7 +297,7 @@ class MachineName extends Textfield {
       return $overrides[$langcode];
     }
 
-    $file = dirname(__DIR__, 3) . '/Component/Transliteration/data' . '/' . preg_replace('/[^a-zA-Z\-]/', '', $langcode) . '.php';
+    $file = dirname(__DIR__, 3) . '/Component/Transliteration/data/' . preg_replace('/[^a-zA-Z\-]/', '', $langcode) . '.php';
 
     $overrides[$langcode] = [];
     if (is_file($file)) {

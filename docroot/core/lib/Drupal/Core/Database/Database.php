@@ -13,51 +13,10 @@ use Drupal\Core\Cache\NullBackend;
  * This class is un-extendable. It acts to encapsulate all control and
  * shepherding of database connections into a single location without the use of
  * globals.
+ *
+ * @final
  */
 abstract class Database {
-
-  /**
-   * Flag to indicate a query call should simply return NULL.
-   *
-   * This is used for queries that have no reasonable return value anyway, such
-   * as INSERT statements to a table without a serial primary key.
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no
-   *   replacement.
-   *
-   * @see https://www.drupal.org/node/3185520
-   */
-  const RETURN_NULL = 0;
-
-  /**
-   * Flag to indicate a query call should return the prepared statement.
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no
-   *   replacement.
-   *
-   * @see https://www.drupal.org/node/3185520
-   */
-  const RETURN_STATEMENT = 1;
-
-  /**
-   * Flag to indicate a query call should return the number of matched rows.
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no
-   *   replacement.
-   *
-   * @see https://www.drupal.org/node/3185520
-   */
-  const RETURN_AFFECTED = 2;
-
-  /**
-   * Flag to indicate a query call should return the "last insert id".
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no
-   *   replacement.
-   *
-   * @see https://www.drupal.org/node/3185520
-   */
-  const RETURN_INSERT_ID = 3;
 
   /**
    * A nested array of active connections, keyed by database name and target.
@@ -90,14 +49,15 @@ abstract class Database {
   /**
    * An array of active query log objects.
    *
+   * @var array
    * Every connection has one and only one logger object for all targets and
    * logging keys.
    *
-   * array(
-   *   '$db_key' => DatabaseLog object.
-   * );
-   *
-   * @var array
+   * @code
+   *   [
+   *     '$db_key' => DatabaseLog object.
+   *   ]
+   * @endcode
    */
   protected static $logs = [];
 
@@ -346,6 +306,7 @@ abstract class Database {
    *   (optional) The connection key for which to return information.
    *
    * @return array|null
+   *   An associative array of database information. Defaults to an empty array.
    */
   final public static function getConnectionInfo($key = 'default') {
     if (!empty(self::$databaseInfo[$key])) {
@@ -357,6 +318,8 @@ abstract class Database {
    * Gets connection information for all available databases.
    *
    * @return array
+   *   An associative array of database information for all available database,
+   *   keyed by the database name. Defaults to an empty array.
    */
   final public static function getAllConnectionInfo() {
     return self::$databaseInfo;
@@ -500,6 +463,13 @@ abstract class Database {
       }
       unset(self::$connections[$key]);
     }
+
+    // When last connection for $key is closed, we also stop any active
+    // logging.
+    if (empty(self::$connections[$key])) {
+      unset(self::$logs[$key]);
+    }
+
     // Force garbage collection to run. This ensures that client connection
     // objects and results in the connection being closed are destroyed.
     gc_collect_cycles();
@@ -508,9 +478,10 @@ abstract class Database {
   /**
    * Instructs the system to temporarily ignore a given key/target.
    *
-   * At times we need to temporarily disable replica queries. To do so, call this
-   * method with the database key and the target to disable. That database key
-   * will then always fall back to 'default' for that key, even if it's defined.
+   * At times we need to temporarily disable replica queries. To do so, call
+   * this method with the database key and the target to disable. That database
+   * key will then always fall back to 'default' for that key, even if it's
+   * defined.
    *
    * @param string $key
    *   The database connection key.
@@ -526,8 +497,8 @@ abstract class Database {
    *
    * @param string $url
    *   The URL.
-   * @param string $root
-   *   The root directory of the Drupal installation.
+   * @param string|bool|null $root
+   *   (deprecated) The root directory of the Drupal installation.
    * @param bool|null $include_test_drivers
    *   (optional) Whether to include test extensions. If FALSE, all 'tests'
    *   directories are excluded in the search. When NULL will be determined by
@@ -542,7 +513,16 @@ abstract class Database {
    * @throws \RuntimeException
    *   Exception thrown when a module provided database driver does not exist.
    */
-  public static function convertDbUrlToConnectionInfo($url, $root, ?bool $include_test_drivers = NULL) {
+  public static function convertDbUrlToConnectionInfo(string $url, $root = NULL, ?bool $include_test_drivers = NULL): array {
+    if ($root !== NULL) {
+      if (is_bool($root)) {
+        $include_test_drivers = $root;
+      }
+      else {
+        @trigger_error("Passing a string \$root value to " . __METHOD__ . "() is deprecated in drupal:11.3.0 and will be removed in drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3511287", E_USER_DEPRECATED);
+      }
+    }
+
     // Check that the URL is well formed, starting with 'scheme://', where
     // 'scheme' is a database driver name.
     if (preg_match('/^(.*):\/\//', $url, $matches) !== 1) {
@@ -557,16 +537,11 @@ abstract class Database {
     $url_component_query = $url_components['query'] ?? '';
     parse_str($url_component_query, $query);
 
-    // Add the module key for core database drivers when the module key is not
-    // set.
-    if (!isset($query['module']) && in_array($driverName, ['mysql', 'pgsql', 'sqlite'], TRUE)) {
-      $query['module'] = $driverName;
-    }
-    if (!isset($query['module'])) {
-      throw new \InvalidArgumentException("Can not convert '$url' to a database connection, the module providing the driver '{$driverName}' is not specified");
-    }
+    // Use the driver name as the module name when the module name is not
+    // provided.
+    $module = $query['module'] ?? $driverName;
 
-    $driverNamespace = "Drupal\\{$query['module']}\\Driver\\Database\\{$driverName}";
+    $driverNamespace = "Drupal\\{$module}\\Driver\\Database\\{$driverName}";
 
     /** @var \Drupal\Core\Extension\DatabaseDriver $driver */
     $driver = self::getDriverList()
@@ -595,7 +570,7 @@ abstract class Database {
 
     $additional_class_loader->register(TRUE);
 
-    $options = $connection_class::createConnectionOptionsFromUrl($url, $root);
+    $options = $connection_class::createConnectionOptionsFromUrl($url, NULL);
 
     // Add the necessary information to autoload code.
     // @see \Drupal\Core\Site\Settings::initialize()
@@ -623,75 +598,6 @@ abstract class Database {
   }
 
   /**
-   * Finds the directory to add to the autoloader for the driver's namespace.
-   *
-   * For Drupal sites that manage their codebase with Composer, the package
-   * that provides the database driver should add the driver's namespace to
-   * Composer's autoloader. However, to support sites that add Drupal modules
-   * without Composer, and because the database connection must be established
-   * before Drupal adds the module's entire namespace to the autoloader, the
-   * database connection info array can include an "autoload" key containing
-   * the autoload directory for the driver's namespace. For requests that
-   * connect to the database via a connection info array, the value of the
-   * "autoload" key is automatically added to the autoloader.
-   *
-   * This method can be called to find the default value of that key when the
-   * database connection info array isn't available. This includes:
-   * - Console commands and test runners that connect to a database specified
-   *   by a database URL rather than a connection info array.
-   * - During installation, prior to the connection info array being written to
-   *   settings.php.
-   *
-   * This method returns the directory that must be added to the autoloader for
-   * the given namespace.
-   * - If the namespace is a sub-namespace of a Drupal module, then this method
-   *   returns the autoload directory for that namespace, allowing Drupal
-   *   modules containing database drivers to be added to a Drupal website
-   *   without Composer.
-   * - If the namespace is a sub-namespace of Drupal\Core or Drupal\Driver,
-   *   then this method returns FALSE, because Drupal core's autoloader already
-   *   includes these namespaces, so no additional autoload directory is
-   *   required for any code within them.
-   * - If the namespace is anything else, then this method returns FALSE,
-   *   because neither drupal_get_database_types() nor
-   *   static::convertDbUrlToConnectionInfo() support that anyway. One can
-   *   manually edit the connection info array in settings.php to reference
-   *   any arbitrary namespace, but requests using that would use the
-   *   corresponding 'autoload' key in that connection info rather than calling
-   *   this method.
-   *
-   * @param string $namespace
-   *   The database driver's namespace.
-   * @param string $root
-   *   The root directory of the Drupal installation.
-   * @param bool|null $include_test_drivers
-   *   (optional) Whether to include test extensions. If FALSE, all 'tests'
-   *   directories are excluded in the search. When NULL will be determined by
-   *   the extension_discovery_scan_tests setting.
-   *
-   * @return string|false
-   *   The PSR-4 directory to add to the autoloader for the namespace if the
-   *   namespace is a sub-namespace of a Drupal module. FALSE otherwise, as
-   *   explained above.
-   *
-   * @throws \RuntimeException
-   *   Exception thrown when a module provided database driver does not exist.
-   *
-   * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use
-   *   DatabaseDriverList::getList() instead.
-   *
-   * @see https://www.drupal.org/node/3258175
-   */
-  public static function findDriverAutoloadDirectory($namespace, $root, ?bool $include_test_drivers = NULL) {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use DatabaseDriverList::getList() instead. See https://www.drupal.org/node/3258175', E_USER_DEPRECATED);
-    $autoload_info = static::getDriverList()
-      ->includeTestDrivers($include_test_drivers)
-      ->get($namespace)
-      ->getAutoloadInfo();
-    return $autoload_info['autoload'] ?? FALSE;
-  }
-
-  /**
    * Gets database connection info as a URL.
    *
    * @param string $key
@@ -709,44 +615,12 @@ abstract class Database {
       throw new \RuntimeException("Database connection $key not defined or missing the 'default' settings");
     }
     $namespace = $db_info['default']['namespace'];
-
-    // If the driver namespace is within a Drupal module, add the module name
-    // to the connection options to make it easy for the connection class's
-    // createUrlFromConnectionOptions() method to add it to the URL.
-    if (static::isWithinModuleNamespace($namespace)) {
-      $db_info['default']['module'] = explode('\\', $namespace)[1];
-    }
-
+    // Add the module name to the connection options to make it easy for the
+    // connection class's createUrlFromConnectionOptions() method to add it to
+    // the URL.
+    $db_info['default']['module'] = explode('\\', $namespace)[1];
     $connection_class = $namespace . '\\Connection';
     return $connection_class::createUrlFromConnectionOptions($db_info['default']);
-  }
-
-  /**
-   * Checks whether a namespace is within the namespace of a Drupal module.
-   *
-   * This can be used to determine if a database driver's namespace is provided
-   * by a Drupal module.
-   *
-   * @param string $namespace
-   *   The namespace (for example, of a database driver) to check.
-   *
-   * @return bool
-   *   TRUE if the passed in namespace is a sub-namespace of a Drupal module's
-   *   namespace.
-   *
-   * @todo remove in Drupal 11.
-   *
-   * @see https://www.drupal.org/node/3256524
-   */
-  private static function isWithinModuleNamespace(string $namespace) {
-    [$first, $second] = explode('\\', $namespace, 3);
-
-    // The namespace for Drupal modules is Drupal\MODULE_NAME, and the module
-    // name must be all lowercase. Second-level namespaces containing uppercase
-    // letters (e.g., "Core", "Component", "Driver") are not modules.
-    // @see \Drupal\Core\DrupalKernel::getModuleNamespacesPsr4()
-    // @see https://www.drupal.org/docs/8/creating-custom-modules/naming-and-placing-your-drupal-8-module#s-name-your-module
-    return ($first === 'Drupal' && strtolower($second) === $second);
   }
 
   /**
@@ -758,8 +632,6 @@ abstract class Database {
    * @param bool $shutdown
    *   Internal param to denote that the method is being called by
    *   _drupal_shutdown_function().
-   *
-   * @return void
    *
    * @internal
    *   This method exists only to work around a bug caused by Drupal incorrectly

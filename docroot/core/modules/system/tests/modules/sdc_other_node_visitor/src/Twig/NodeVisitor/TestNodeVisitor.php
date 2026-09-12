@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\sdc_other_node_visitor\Twig\NodeVisitor;
 
 use Drupal\sdc_other_node_visitor\Twig\Profiler\EnterProfileNode;
@@ -18,8 +20,14 @@ use Twig\NodeVisitor\NodeVisitorInterface;
  */
 final class TestNodeVisitor implements NodeVisitorInterface {
 
+  /**
+   * The name of the extension.
+   */
   private string $extensionName;
 
+  /**
+   * The variable name.
+   */
   private string $varName;
 
   /**

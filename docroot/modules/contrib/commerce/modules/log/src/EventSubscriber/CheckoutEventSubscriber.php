@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_log\EventSubscriber;
 
+use Drupal\commerce_log\LogStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_checkout\Event\CheckoutEvents;
 use Drupal\commerce_order\Event\OrderEvent;
@@ -10,20 +11,14 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class CheckoutEventSubscriber implements EventSubscriberInterface {
 
   /**
-   * The log storage.
-   *
-   * @var \Drupal\commerce_log\LogStorageInterface
-   */
-  protected $logStorage;
-
-  /**
    * Constructs a new CheckoutEventSubscriber object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->logStorage = $entity_type_manager->getStorage('commerce_log');
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
   }
 
   /**
@@ -43,9 +38,11 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    */
   public function onCheckoutCompletion(OrderEvent $event) {
     $order = $event->getOrder();
-    $this->logStorage->generate($order, 'checkout_complete')->save();
+    $log_storage = $this->entityTypeManager->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    $log_storage->generate($order, 'checkout_complete')->save();
     if ($comments = $order->getCustomerComments()) {
-      $this->logStorage->generate($order, 'commerce_order_from_customer_comment', [
+      $log_storage->generate($order, 'commerce_order_from_customer_comment', [
         'comment' => $comments,
       ])->save();
     }

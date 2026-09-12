@@ -11,27 +11,31 @@ use Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery;
 use Drupal\migrate_drupal\Annotation\MigrateField;
 use Drupal\migrate_drupal\Plugin\MigrateFieldPluginManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the MigrateFieldPluginManager class.
  *
- * @group migrate_drupal
- * @coversDefaultClass \Drupal\migrate_drupal\Plugin\MigrateFieldPluginManager
+ * @phpstan-ignore classConstant.deprecatedClass
  */
+#[CoversClass(MigrateFieldPluginManager::class)]
+#[Group('migrate_drupal')]
 class MigrateFieldPluginManagerTest extends UnitTestCase {
 
   /**
    * Tests the plugin weighting system.
    *
-   * @covers ::getPluginIdFromFieldType
-   * @covers ::sortDefinitions
-   * @covers ::findDefinitions
-   * @dataProvider weightsData
+   * @legacy-covers ::getPluginIdFromFieldType
+   * @legacy-covers ::sortDefinitions
+   * @legacy-covers ::findDefinitions
    */
+  #[DataProvider('weightsData')]
   public function testWeights($field_type, $core, $expected_plugin_id): void {
     /** @var \Drupal\Core\Cache\CacheBackendInterface $cache */
     $cache = $this->prophesize(CacheBackendInterface::class)->reveal();
-    /** @var \Drupal\Core\Extension\ModuleHandlerInterfaceModuleHandlerInterface $module_handler */
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
     $module_handler = $this->prophesize(ModuleHandlerInterface::class)->reveal();
     $discovery = $this->prophesize(AnnotatedClassDiscovery::class);
     $discovery->getDefinitions()->willReturn($this->pluginFixtureData());
@@ -112,7 +116,7 @@ class MigrateFieldPluginManagerTest extends UnitTestCase {
    * @return array
    *   The test plugin data.
    */
-  protected function pluginFixtureData() {
+  protected function pluginFixtureData(): array {
     return [
       // Represents a deprecated core field plugin that applied to field_1
       // and field_2 for Drupal 6.

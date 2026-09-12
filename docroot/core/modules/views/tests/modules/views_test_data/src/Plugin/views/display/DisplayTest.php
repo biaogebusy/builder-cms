@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_data\Plugin\views\display;
 
 use Drupal\Component\Utility\Unicode;
@@ -53,18 +55,18 @@ class DisplayTest extends DisplayPluginBase {
     parent::optionsSummary($categories, $options);
 
     $categories['display_test'] = [
-      'title' => $this->t('Display test settings'),
+      'title' => 'Display test settings',
       'column' => 'second',
       'build' => [
         '#weight' => -100,
       ],
     ];
 
-    $test_option = $this->getOption('test_option') ?: $this->t('Empty');
+    $test_option = $this->getOption('test_option') ?: 'Empty';
 
     $options['test_option'] = [
       'category' => 'display_test',
-      'title' => $this->t('Test option'),
+      'title' => 'Test option',
       'value' => Unicode::truncate($test_option, 24, FALSE, TRUE),
     ];
   }
@@ -77,11 +79,11 @@ class DisplayTest extends DisplayPluginBase {
 
     switch ($form_state->get('section')) {
       case 'test_option':
-        $form['#title'] .= $this->t('Test option');
+        $form['#title'] .= 'Test option';
         $form['test_option'] = [
-          '#title' => $this->t('Test option'),
+          '#title' => 'Test option',
           '#type' => 'textfield',
-          '#description' => $this->t('This is a textfield for test_option.'),
+          '#description' => 'This is a textfield for test_option.',
           '#default_value' => $this->getOption('test_option'),
         ];
         break;
@@ -97,7 +99,7 @@ class DisplayTest extends DisplayPluginBase {
     switch ($form_state->get('section')) {
       case 'test_option':
         if (!trim($form_state->getValue('test_option'))) {
-          $form_state->setError($form['test_option'], $this->t('You cannot have an empty option.'));
+          $form_state->setError($form['test_option'], 'You cannot have an empty option.');
         }
         break;
     }
@@ -149,7 +151,8 @@ class DisplayTest extends DisplayPluginBase {
    */
   public function validate() {
     $errors = parent::validate();
-    foreach ($this->view->displayHandlers as $display_handler) {
+    $displayHandlersCount = count($this->view->displayHandlers);
+    for ($i = 0; $i < $displayHandlersCount; $i++) {
       $errors[] = 'error';
     }
     return $errors;

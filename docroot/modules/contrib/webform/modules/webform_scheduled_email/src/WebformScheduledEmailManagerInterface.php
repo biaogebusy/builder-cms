@@ -144,34 +144,34 @@ interface WebformScheduledEmailManagerInterface {
   /* ************************************************************************ */
 
   /**
-   * Get scheduled email date type (date or datetime).
+   * Get the configured date type ("date" or "datetime").
    *
    * @return string
-   *   Scheduled email date type (date or datetime).
+   *   The configured date type ("date" or "datetime").
    */
   public function getDateType();
 
   /**
-   * Get scheduled email date label (date or date/time).
+   * Get the configured date type label ("date" or "date/time").
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
-   *   Scheduled email date label (date or date/time).
+   *   The configured date type label ("date" or "date/time").
    */
   public function getDateTypeLabel();
 
   /**
-   * Get scheduled email date format (Y-m-d or Y-m-d H:i:s).
+   * Get the date format ("Y-m-d" or "c").
    *
    * @return string
-   *   Scheduled email date format (Y-m-d or Y-m-d H:i:s).
+   *   The date format ("Y-m-d" or "c").
    */
   public function getDateFormat();
 
   /**
-   * Get scheduled email date format label (YYYY-DD-MM or YYYY-DD-MM HH:MM:SS).
+   * Get the date format label ("YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS").
    *
    * @return string
-   *   Scheduled email date format label (YYYY-DD-MM or YYYY-DD-MM HH:MM:SS).
+   *   The date format label ("YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS").
    */
   public function getDateFormatLabel();
 
@@ -210,8 +210,10 @@ interface WebformScheduledEmailManagerInterface {
    *   A webform handler id.
    *
    * @return string|bool
-   *   A send date using ISO date (YYYY-MM-DD) or datetime
-   *   format (YYYY-MM-DD HH:MM:SS) or FALSE if the send date is invalid.
+   *   The webform submission's formatted send date string or FALSE if the
+   *   send date is invalid.
+   *
+   * @see \Drupal\webform_scheduled_email\WebformScheduledEmailManagerInterface::getDateFormat()
    */
   public function getSendDate(WebformSubmissionInterface $webform_submission, $handler_id);
 
@@ -264,7 +266,7 @@ interface WebformScheduledEmailManagerInterface {
   public function delete(EntityInterface $entity, $handler_id = NULL);
 
   /* ************************************************************************ */
-  // Queuing/sending functions (aka the tumbleweed).
+  // Queueing/sending functions (aka the tumbleweed).
   /* ************************************************************************ */
 
   /**
@@ -291,7 +293,7 @@ interface WebformScheduledEmailManagerInterface {
    *   - WebformScheduledEmailManagerInterface::EMAIL_UNSCHEDULED
    *   - WebformScheduledEmailManagerInterface::EMAIL_SENT
    */
-  public function cron(EntityInterface $entity = NULL, $handler_id = NULL, $schedule_limit = 1000, $send_limit = NULL);
+  public function cron(?EntityInterface $entity = NULL, $handler_id = NULL, $schedule_limit = 1000, $send_limit = NULL);
 
   /* ************************************************************************ */
   // Statistic/tracking functions.
@@ -308,7 +310,7 @@ interface WebformScheduledEmailManagerInterface {
    * @return array
    *   An array containing the handler waiting, queued, ready, and total submissions.
    */
-  public function stats(EntityInterface $entity = NULL, $handler_id = NULL);
+  public function stats(?EntityInterface $entity = NULL, $handler_id = NULL);
 
   /**
    * Get the number of emails waiting to be queued.
@@ -321,7 +323,7 @@ interface WebformScheduledEmailManagerInterface {
    * @return int
    *   The number of emails waiting to be queued.
    */
-  public function waiting(EntityInterface $entity = NULL, $handler_id = NULL);
+  public function waiting(?EntityInterface $entity = NULL, $handler_id = NULL);
 
   /**
    * Get the number of emails queued but not ready to be sent.
@@ -334,7 +336,7 @@ interface WebformScheduledEmailManagerInterface {
    * @return int
    *   The number of emails queued but not ready to be sent.
    */
-  public function queued(EntityInterface $entity = NULL, $handler_id = NULL);
+  public function queued(?EntityInterface $entity = NULL, $handler_id = NULL);
 
   /**
    * Get the number of emails ready to be sent during the next cron task.
@@ -347,7 +349,7 @@ interface WebformScheduledEmailManagerInterface {
    * @return int
    *   The number of emails ready to be sent.
    */
-  public function ready(EntityInterface $entity = NULL, $handler_id = NULL);
+  public function ready(?EntityInterface $entity = NULL, $handler_id = NULL);
 
   /**
    * Get the total number of scheduled emails.
@@ -362,6 +364,6 @@ interface WebformScheduledEmailManagerInterface {
    * @return int
    *   The total number of scheduled emails.
    */
-  public function total(EntityInterface $entity = NULL, $handler_id = NULL, $state = NULL);
+  public function total(?EntityInterface $entity = NULL, $handler_id = NULL, $state = NULL);
 
 }

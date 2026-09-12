@@ -29,6 +29,7 @@ class AiTranslateSettingsFormTest extends BrowserTestBase {
   protected static $modules = [
     'ai_translate',
     'ai',
+    'file',
     'node',
     'language',
     'content_translation',

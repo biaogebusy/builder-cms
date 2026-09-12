@@ -203,7 +203,7 @@ class PageManagerSectionStorage extends SectionStorageBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function access($operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $result = AccessResult::allowedIf($this->isLayoutBuilderEnabled())->addCacheableDependency($this);
     return $return_as_object ? $result : $result->isAllowed();
   }

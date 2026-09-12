@@ -3,12 +3,16 @@
 namespace Drupal\Tests\paragraphs\Functional\WidgetStable;
 
 use Drupal\paragraphs\Entity\ParagraphsType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests paragraphs add modes.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsAddModesTest extends ParagraphsTestBase {
 
   /**

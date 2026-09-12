@@ -4,6 +4,10 @@ commerce.admin_commerce:
   parent: 'system.admin'
   description: 'Administer and configure your Commerce store.'
   weight: -9
+  options:
+    icon:
+      pack_id: commerce
+      icon_id: drupal-cart
 
 commerce.configuration:
   title: 'Configuration'

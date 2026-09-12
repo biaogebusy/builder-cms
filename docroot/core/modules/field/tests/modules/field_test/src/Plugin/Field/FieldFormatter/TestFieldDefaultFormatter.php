@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\field_test\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\Attribute\FieldFormatter;
@@ -51,7 +53,10 @@ class TestFieldDefaultFormatter extends FormatterBase {
    */
   public function settingsSummary() {
     $summary = [];
-    $summary[] = $this->t('@setting: @value', ['@setting' => 'test_formatter_setting', '@value' => $this->getSetting('test_formatter_setting')]);
+    $summary[] = $this->t('@setting: @value', [
+      '@setting' => 'test_formatter_setting',
+      '@value' => $this->getSetting('test_formatter_setting'),
+    ]);
     return $summary;
   }
 

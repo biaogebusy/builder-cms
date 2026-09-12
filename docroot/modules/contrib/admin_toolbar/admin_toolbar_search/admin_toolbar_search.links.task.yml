@@ -1,3 +1,5 @@
+# Local tasks (tabs) for the Admin Toolbar Search module.
+
 # Add Admin Toolbar Search settings as a local task displayed as a tab.
 admin_toolbar_search.settings:
   title: 'Search settings'

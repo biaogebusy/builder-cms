@@ -2,9 +2,9 @@
 
 namespace Drupal\webform_devel\Commands;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\State\StateInterface;
 use Drupal\user\UserDataInterface;
 use Drupal\webform\Utility\WebformYaml;
@@ -83,7 +83,7 @@ class WebformDevelCommands extends DrushCommands {
         $tidied_yaml = $original_yaml;
         $data = Yaml::decode($tidied_yaml);
 
-        // Skip translated configu files which don't include a langcode.
+        // Skip translated configuration files which don't include a langcode.
         // @see tests/modules/webform_test_translation/config/install/language
         if (empty($data['langcode'])) {
           continue;

@@ -7,15 +7,19 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\TranslatableRevisionableInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinition;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Field\PreconfiguredFieldUiOptionsInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataReferenceDefinition;
 use Drupal\Core\TypedData\DataReferenceTargetDefinition;
 use Drupal\Core\TypedData\OptionsProviderInterface;
 use Drupal\entity_reference_revisions\EntityNeedsSaveInterface;
+use Drupal\entity_reference_revisions\EntityReferenceRevisionsFieldItemList;
+use Drupal\entity_reference_revisions\Plugin\DataType\EntityReferenceRevisions;
 
 /**
  * Defines the 'entity_reference_revisions' entity field type.
@@ -38,6 +42,15 @@ use Drupal\entity_reference_revisions\EntityNeedsSaveInterface;
  *   default_widget = "entity_reference_revisions_autocomplete"
  * )
  */
+#[FieldType(
+  id: 'entity_reference_revisions',
+  label: new TranslatableMarkup('Entity reference revisions'),
+  description: new TranslatableMarkup('An entity field containing an entity reference to a specific revision.'),
+  category: 'reference',
+  default_widget: 'entity_reference_revisions_autocomplete',
+  default_formatter: 'entity_reference_revisions_entity_view',
+  list_class: EntityReferenceRevisionsFieldItemList::class,
+)]
 class EntityReferenceRevisionsItem extends EntityReferenceItem implements OptionsProviderInterface, PreconfiguredFieldUiOptionsInterface {
 
   /**
@@ -90,12 +103,6 @@ class EntityReferenceRevisionsItem extends EntityReferenceItem implements Option
           ]
         ]
       ];
-
-      // Change the label on Drupal 10.1+.
-      if (version_compare(\Drupal::VERSION, '10.1.999', '<')) {
-        $options[$entity_type->id()]['label'] = $entity_type->getLabel();
-      }
-
 
       $default_reference_settings = $entity_type->get('default_reference_revision_settings');
       if (is_array($default_reference_settings)) {
@@ -280,11 +287,13 @@ class EntityReferenceRevisionsItem extends EntityReferenceItem implements Option
       if ($is_affected && !$host->isNew() && $this->entity && $this->entity->getEntityType()->get('entity_revision_parent_id_field')) {
         if ($host->isNewRevision()) {
           $this->entity->setNewRevision();
+          // Additionally ensure that the default revision state is kept synced.
+          $this->entity->isDefaultRevision($host->isDefaultRevision());
           $needs_save = TRUE;
         }
-        // Additionally ensure that the default revision state is kept in sync.
-        if ($this->entity && $host->isDefaultRevision() != $this->entity->isDefaultRevision()) {
-          $this->entity->isDefaultRevision($host->isDefaultRevision());
+        elseif (!$host->wasDefaultRevision() && $host->isDefaultRevision() && !$this->entity->isDefaultRevision()) {
+          // Ensure that the default revision is synced when the parent changes.
+          $this->entity->isDefaultRevision(TRUE);
           $needs_save = TRUE;
         }
       }
@@ -344,9 +353,16 @@ class EntityReferenceRevisionsItem extends EntityReferenceItem implements Option
     // Keep in sync the translation languages between the parent and the child.
     // For non translatable fields we have to do this in ::preSave but for
     // translatable fields we have all the information we need in ::delete.
-    if (isset($parent_entity->original) && !$this->getFieldDefinition()->isTranslatable()) {
+    $original = NULL;
+    if (method_exists($parent_entity, 'getOriginal')) {
+      $original = $parent_entity->getOriginal();
+    }
+    elseif (isset($parent_entity->original)) {
+      $original = $parent_entity->original;
+    }
+    if ($original && !$this->getFieldDefinition()->isTranslatable()) {
       $langcodes = array_keys($parent_entity->getTranslationLanguages());
-      $original_langcodes = array_keys($parent_entity->original->getTranslationLanguages());
+      $original_langcodes = array_keys($original->getTranslationLanguages());
       if ($removed_langcodes = array_diff($original_langcodes, $langcodes)) {
         foreach ($removed_langcodes as $removed_langcode) {
           if ($entity->hasTranslation($removed_langcode)  && $entity->getUntranslated()->language()->getId() != $removed_langcode) {
@@ -388,7 +404,14 @@ class EntityReferenceRevisionsItem extends EntityReferenceItem implements Option
     // revision is either:
     // 1: Missing.
     // 2: A default revision.
-    if (!$child || $child->isDefaultRevision()) {
+    if (!$child) {
+      return;
+    }
+    if ($child->isDefaultRevision()) {
+      \Drupal::queue('entity_reference_revisions_orphan_purger')->createItem([
+        'entity_id' => $child->id(),
+        'entity_type_id' => $child->getEntityTypeId(),
+      ]);
       return;
     }
 
@@ -522,6 +545,21 @@ class EntityReferenceRevisionsItem extends EntityReferenceItem implements Option
       'target_id' => $entity->id(),
       'target_revision_id' => $entity->getRevisionId(),
     ];
+  }
+
+  /**
+   * Returns whether the entity has already been loaded.
+   *
+   * @return bool
+   *   True if the entity has been loaded already.
+   */
+  public function isEntityLoaded(): bool {
+    // If the property has not been initialized, it can not be loaded yet.
+    if (!isset($this->properties['entity'])) {
+      return FALSE;
+    }
+    assert($this->properties['entity'] instanceof EntityReferenceRevisions);
+    return $this->properties['entity']->isTargetLoaded();
   }
 
 }

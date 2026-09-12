@@ -1,0 +1,10 @@
+word-count-adapter:
+  version: 20260421
+  css:
+    theme:
+      css/word-count.css: { }
+  js:
+    js/build/wordCountAdapter.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_plugin_pack_word_count/word-count

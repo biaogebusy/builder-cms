@@ -50,18 +50,25 @@ include:
 #   SKIP_ESLINT: '1'
 variables:
   OPT_IN_TEST_PREVIOUS_MINOR: '1'
+  OPT_IN_TEST_PREVIOUS_MAJOR: '1'
   _PHPUNIT_CONCURRENT: 1
 
-composer (next major):
+# history is not compatible with D10 and D11.2, add it to lenient and then
+# remove from the code base, so that the core version of the history module
+# is used.
+# @todo revisit this when adding D12 compatibility, will need to be conditional
+#   then. Alternatively, resolving https://www.drupal.org/project/drupal/issues/3579778
+#   would allow this to be removed too.
+.composer-base:
   variables:
-    _LENIENT_ALLOW_LIST: "ctools"
-    PHP_VERSION: $CORE_PHP_MAX
-    DRUPAL_CORE: $CORE_MAJOR_DEVELOPMENT
-    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+    _LENIENT_ALLOW_LIST: "ctools,history"
+  after_script:
+    - rm -r web/modules/contrib/history
 
-phpunit (next major):
-  variables:
-    SYMFONY_DEPRECATIONS_HELPER: "disabled"
+phpstan (previous major):
+  rules:
+    # We are only interested in PHPStan on the current version.
+    - when: never
 
 ###################################################################################
 #

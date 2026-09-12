@@ -40,3 +40,13 @@ services:
 
   commerce_promotion.cron:
     class: Drupal\commerce_promotion\Cron
+  Drupal\commerce_promotion\Cron: '@commerce_promotion.cron'
+
+  Drupal\commerce_promotion\Hook\CommercePromotionHooks:
+    class: Drupal\commerce_promotion\Hook\CommercePromotionHooks
+
+  Drupal\commerce_promotion\Hook\CommercePromotionThemeHooks:
+    class: Drupal\commerce_promotion\Hook\CommercePromotionThemeHooks
+
+  Drupal\commerce_promotion\Hook\CommercePromotionViewsHooks:
+    class: Drupal\commerce_promotion\Hook\CommercePromotionViewsHooks

@@ -62,7 +62,7 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
   /**
    * Generate a query and a countQuery from all of the information supplied.
    *
-   * @param $get_count
+   * @param bool $get_count
    *   Provide a countQuery if this is true, otherwise provide a normal query.
    */
   public function query($get_count = FALSE) {}
@@ -115,10 +115,19 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
    */
   public function getAggregationInfo() {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function summaryTitle() {
     return $this->t('Settings');
   }
@@ -162,13 +171,13 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
   /**
    * Create a new grouping for the WHERE or HAVING clause.
    *
-   * @param $type
+   * @param string $type
    *   Either 'AND' or 'OR'. All items within this group will be added
    *   to the WHERE clause with this logical operator.
-   * @param $group
+   * @param string|null $group
    *   An ID to use for this group. If unspecified, an ID will be generated.
-   * @param $where
-   *   'where' or 'having'.
+   * @param string $where
+   *   The type of clause, either 'where' or 'having'.
    *
    * @return int|string
    *   The group ID generated.
@@ -181,7 +190,7 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
       $group = empty($groups) ? 1 : max(array_keys($groups)) + 1;
     }
 
-    // Create an empty group
+    // Create an empty group.
     if (empty($groups[$group])) {
       $groups[$group] = ['conditions' => [], 'args' => []];
     }
@@ -193,8 +202,8 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
   /**
    * Control how all WHERE and HAVING groups are put together.
    *
-   * @param $type
-   *   Either 'AND' or 'OR'
+   * @param string $type
+   *   Either 'AND' or 'OR'.
    */
   public function setGroupOperator($type = 'AND') {
     $this->groupOperator = strtoupper($type);
@@ -304,7 +313,12 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
 
         // If this is not one of the entity base tables, skip it.
         $entity_type = \Drupal::entityTypeManager()->getDefinition($table_data['table']['entity type']);
-        $entity_base_tables = [$entity_type->getBaseTable(), $entity_type->getDataTable(), $entity_type->getRevisionTable(), $entity_type->getRevisionDataTable()];
+        $entity_base_tables = [
+          $entity_type->getBaseTable(),
+          $entity_type->getDataTable(),
+          $entity_type->getRevisionTable(),
+          $entity_type->getRevisionDataTable(),
+        ];
         if (!in_array($relationship->definition['base'], $entity_base_tables)) {
           continue;
         }

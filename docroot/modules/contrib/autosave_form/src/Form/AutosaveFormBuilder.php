@@ -19,6 +19,7 @@ use Drupal\Core\Form\FormSubmitterInterface;
 use Drupal\Core\Form\FormValidatorInterface;
 use Drupal\Core\Render\ElementInfoManagerInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\Core\Utility\CallableResolver;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -87,8 +88,8 @@ class AutosaveFormBuilder extends FormBuilder {
    * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token
    *   The CSRF token generator.
    */
-  public function __construct(FormBuilderInterface $form_builder, FormValidatorInterface $form_validator, FormSubmitterInterface $form_submitter, FormCacheInterface $form_cache, ModuleHandlerInterface $module_handler, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, ClassResolverInterface $class_resolver, ElementInfoManagerInterface $element_info, ThemeManagerInterface $theme_manager, AutosaveEntityFormStorageInterface $autosave_entity_form_storage, ?CsrfTokenGenerator $csrf_token = NULL) {
-    parent::__construct($form_validator, $form_submitter, $form_cache, $module_handler, $event_dispatcher, $request_stack, $class_resolver, $element_info, $theme_manager, $csrf_token);
+  public function __construct(FormBuilderInterface $form_builder, FormValidatorInterface $form_validator, FormSubmitterInterface $form_submitter, FormCacheInterface $form_cache, ModuleHandlerInterface $module_handler, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, ClassResolverInterface $class_resolver, ElementInfoManagerInterface $element_info, ThemeManagerInterface $theme_manager, AutosaveEntityFormStorageInterface $autosave_entity_form_storage, CsrfTokenGenerator $csrf_token, CallableResolver $callable_resolver) {
+    parent::__construct($form_validator, $form_submitter, $form_cache, $module_handler, $event_dispatcher, $request_stack, $class_resolver, $element_info, $theme_manager, $csrf_token, $callable_resolver);
     $this->formBuilder = $form_builder;
     $this->autosaveEntityFormStorage = $autosave_entity_form_storage;
   }

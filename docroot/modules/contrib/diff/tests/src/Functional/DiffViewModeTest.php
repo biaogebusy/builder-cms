@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\diff\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests field visibility when using a custom view mode.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffViewModeTest extends DiffTestBase {
 
   /**
@@ -43,7 +46,7 @@ class DiffViewModeTest extends DiffTestBase {
     $edit = [
       'fields[body][region]' => 'hidden',
     ];
-    $this->drupalGet('admin/structure/types/manage/article/display');
+    $this->drupalGet('admin/structure/types/manage/article/display/default');
     $this->submitForm($edit, 'Save');
     $this->drupalGet('admin/structure/types/manage/article/display/teaser');
     $this->submitForm($edit, 'Save');
@@ -93,6 +96,42 @@ class DiffViewModeTest extends DiffTestBase {
     // Test query param defaulting.
     $this->clickLink('Default');
     $this->assertEquals('Default', $this->getActiveViewMode());
+  }
+
+  /**
+   * Tests an edge case where there are no display modes configured.
+   */
+  public function testNoConfiguredViewModes(): void {
+    // Nuke all display modes from orbit.
+    $view_modes = \Drupal::entityTypeManager()
+      ->getStorage('entity_view_display')
+      ->loadMultiple();
+
+    foreach ($view_modes as $view_mode) {
+      $view_mode->delete();
+    }
+
+    // Enable visual inline.
+    $this->config('diff.settings')
+      ->set('general_settings.layout_plugins.visual_inline.enabled', TRUE)
+      ->save();
+
+    $this->drupalLogin($this->rootUser);
+
+    $node = $this->drupalCreateNode([
+      'type' => 'article',
+      'title' => 'Sample node',
+      'body' => [
+        'value' => 'Foo',
+      ],
+    ]);
+    $node->set('body', 'Fighters');
+    $node->setNewRevision(TRUE);
+    $node->save();
+
+    $this->drupalGet('node/' . $node->id() . '/revisions');
+    $this->submitForm([], 'Compare selected revisions');
+    $this->assertSession()->statusCodeEquals(200);
   }
 
   /**

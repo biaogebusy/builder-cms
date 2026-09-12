@@ -77,6 +77,7 @@ class PaymentMethodEditForm extends EntityForm implements ContainerInjectionInte
    */
   public function save(array $form, FormStateInterface $form_state) {
     // The entity was saved by the inline form.
+    return SAVED_UPDATED;
   }
 
 }

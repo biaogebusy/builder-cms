@@ -11,27 +11,25 @@ use Drupal\Core\Config\ConfigValueException;
 use Drupal\Core\Config\DatabaseStorage;
 use Drupal\Core\Config\UnsupportedDataTypeConfigException;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests CRUD operations on configuration objects.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigCRUDTest extends KernelTestBase {
 
   /**
    * Exempt from strict schema checking.
    *
-   * @see \Drupal\Core\Config\Development\ConfigSchemaChecker
-   *
    * @var bool
+   *
+   * @see \Drupal\Core\Config\Development\ConfigSchemaChecker
    */
   protected $strictConfigSchema = FALSE;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * Tests CRUD operations.
@@ -217,7 +215,7 @@ class ConfigCRUDTest extends KernelTestBase {
         $config = $this->config($name);
         $config->save();
       }
-      catch (ConfigNameException $e) {
+      catch (ConfigNameException) {
         unset($test_characters[$i]);
       }
     }
@@ -229,7 +227,7 @@ class ConfigCRUDTest extends KernelTestBase {
       $config = $this->config($name);
       $config->save();
     }
-    catch (ConfigNameException $e) {
+    catch (ConfigNameException) {
       $this->fail('ConfigNameException was not thrown for a valid object name.');
     }
 
@@ -315,21 +313,13 @@ class ConfigCRUDTest extends KernelTestBase {
     $this->assertSame($data, $config->get());
     $this->assertSame($data, $storage->read($name));
 
-    // Test that schema type enforcement can be overridden by trusting the data.
-    $this->assertSame(99, $config->get('int'));
-    $config->set('int', '99')->save(TRUE);
-    $this->assertSame('99', $config->get('int'));
-    // Test that re-saving without testing the data enforces the schema type.
-    $config->save();
-    $this->assertSame($data, $config->get());
-
     // Test that setting an unsupported type for a config object with a schema
     // fails.
     try {
       $config->set('stream', fopen(__FILE__, 'r'))->save();
       $this->fail('No Exception thrown upon saving invalid data type.');
     }
-    catch (UnsupportedDataTypeConfigException $e) {
+    catch (UnsupportedDataTypeConfigException) {
       // Expected exception; just continue testing.
     }
 
@@ -344,9 +334,30 @@ class ConfigCRUDTest extends KernelTestBase {
       $config->set('stream', fopen(__FILE__, 'r'))->save();
       $this->fail('No Exception thrown upon saving invalid data type.');
     }
-    catch (UnsupportedDataTypeConfigException $e) {
+    catch (UnsupportedDataTypeConfigException) {
       // Expected exception; just continue testing.
     }
+  }
+
+  /**
+   * Tests deprecation of trusted data.
+   *
+   * @legacy-covers \Drupal\Core\Config\Config::save()
+   */
+  #[IgnoreDeprecations]
+  public function testTrustedDataDeprecation(): void {
+    $this->expectUserDeprecationMessage('Calling Drupal\\Core\\Config\\Config::save() with the $has_trusted_data argument is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3348180');
+    \Drupal::service('module_installer')->install(['config_test']);
+    $name = 'config_test.types';
+    $config = $this->config($name);
+
+    // Test that schema type enforcement can be overridden by trusting the data.
+    $this->assertSame(99, $config->get('int'));
+    $config->set('int', '99')->save(TRUE);
+    $this->assertSame('99', $config->get('int'));
+    // Test that re-saving without testing the data enforces the schema type.
+    $config->save();
+    $this->assertSame(99, $config->get('int'));
   }
 
 }

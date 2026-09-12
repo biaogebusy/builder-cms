@@ -7,18 +7,21 @@ namespace Drupal\Tests\node\Functional\Views;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
+use Drupal\filter\FilterFormatRepositoryInterface;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Tests\AssertViewsCacheTagsTrait;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the default frontpage provided by views.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class FrontPageTest extends ViewTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
@@ -62,7 +65,8 @@ class FrontPageTest extends ViewTestBase {
 
     $view = Views::getView('frontpage');
 
-    // Tests \Drupal\node\Plugin\views\row\RssPluginBase::calculateDependencies().
+    // Tests
+    // \Drupal\node\Plugin\views\row\RssPluginBase::calculateDependencies().
     $expected = [
       'config' => [
         'core.entity_view_mode.node.rss',
@@ -222,7 +226,7 @@ class FrontPageTest extends ViewTestBase {
    * @param bool $do_assert_views_caches
    *   Whether to check Views' result & output caches.
    */
-  protected function doTestFrontPageViewCacheTags($do_assert_views_caches) {
+  protected function doTestFrontPageViewCacheTags($do_assert_views_caches): void {
     $view = Views::getView('frontpage');
     $view->setDisplay('page_1');
 
@@ -270,13 +274,14 @@ class FrontPageTest extends ViewTestBase {
         'body' => [
           [
             'value' => $this->randomMachineName(32),
-            'format' => filter_default_format(),
+            'format' => \Drupal::service(FilterFormatRepositoryInterface::class)->getDefaultFormat()->id(),
           ],
         ],
         'type' => 'article',
         'created' => $i,
         'title' => $this->randomMachineName(8),
         'nid' => $i + 1,
+        'promote' => TRUE,
       ]);
       $node->enforceIsNew(TRUE);
       $node->save();

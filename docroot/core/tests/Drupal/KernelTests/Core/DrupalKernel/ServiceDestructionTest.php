@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\DrupalKernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Tests that services are correctly destructed.
- *
- * @group DrupalKernel
  */
+#[Group('DrupalKernel')]
+#[RunTestsInSeparateProcesses]
 class ServiceDestructionTest extends KernelTestBase {
 
   /**
@@ -28,7 +30,7 @@ class ServiceDestructionTest extends KernelTestBase {
     // The service has not been destructed yet.
     $this->assertNull(\Drupal::state()->get('service_provider_test.destructed'));
 
-    // Call the class and then terminate the kernel
+    // Call the class and then terminate the kernel.
     $this->container->get('service_provider_test_class');
 
     $response = new Response();
@@ -50,15 +52,17 @@ class ServiceDestructionTest extends KernelTestBase {
     // The service has not been destructed yet.
     $this->assertNull(\Drupal::state()->get('service_provider_test.destructed'));
 
-    // Terminate the kernel. The test class has not been called, so it should not
-    // be destructed.
+    // Terminate the kernel. The test class has not been called, so it should
+    // not be destructed.
     $response = new Response();
     $kernel->terminate($request, $response);
     $this->assertNull(\Drupal::state()->get('service_provider_test.destructed'));
   }
 
   /**
-   * @covers \Drupal\Core\DependencyInjection\Compiler\RegisterServicesForDestructionPass::process
+   * Tests destructable services order.
+   *
+   * @legacy-covers \Drupal\Core\DependencyInjection\Compiler\RegisterServicesForDestructionPass::process
    */
   public function testDestructableServicesOrder(): void {
     // Destructable services before the module is enabled.

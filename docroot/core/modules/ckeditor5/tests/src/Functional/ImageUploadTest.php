@@ -13,13 +13,17 @@ use Drupal\Tests\jsonapi\Functional\JsonApiRequestTestTrait;
 use Drupal\Tests\TestFileCreationTrait;
 use Drupal\user\RoleInterface;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Test image upload.
  *
- * @group ckeditor5
  * @internal
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class ImageUploadTest extends BrowserTestBase {
 
   use JsonApiRequestTestTrait;
@@ -66,10 +70,10 @@ class ImageUploadTest extends BrowserTestBase {
       'status' => TRUE,
       'scheme' => 'public',
       'directory' => 'inline-images',
-      'max_size' => '',
+      'max_size' => NULL,
       'max_dimensions' => [
-        'width' => 0,
-        'height' => 0,
+        'width' => NULL,
+        'height' => NULL,
       ],
     ]);
 
@@ -94,8 +98,8 @@ class ImageUploadTest extends BrowserTestBase {
       'directory' => 'inline-images',
       'max_size' => 30000,
       'max_dimensions' => [
-        'width' => 0,
-        'height' => 0,
+        'width' => NULL,
+        'height' => NULL,
       ],
     ]);
 
@@ -128,8 +132,8 @@ class ImageUploadTest extends BrowserTestBase {
       'directory' => 'inline-images',
       'max_size' => 30000,
       'max_dimensions' => [
-        'width' => 0,
-        'height' => 0,
+        'width' => NULL,
+        'height' => NULL,
       ],
     ]);
 
@@ -161,7 +165,7 @@ class ImageUploadTest extends BrowserTestBase {
    * @return \Psr\Http\Message\ResponseInterface
    *   The response.
    */
-  protected function uploadRequest(Url $url, string $file_contents, string $file_name) {
+  protected function uploadRequest(Url $url, string $file_contents, string $file_name): ResponseInterface {
     $request_options[RequestOptions::HEADERS] = [
       'Accept' => 'application/json',
     ];
@@ -192,7 +196,7 @@ class ImageUploadTest extends BrowserTestBase {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function createBasicFormat() {
+  protected function createBasicFormat(): void {
     $basic_html_format = FilterFormat::create([
       'format' => 'basic_html',
       'name' => 'Basic HTML',

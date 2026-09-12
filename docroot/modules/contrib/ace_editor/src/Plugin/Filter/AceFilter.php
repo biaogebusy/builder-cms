@@ -12,7 +12,7 @@ use Drupal\filter\Plugin\FilterBase;
  * @Filter(
  *   id = "ace_filter",
  *   title = @Translation("Ace Filter"),
- *   description = @Translation("Use &lt;ace&gt; and &lt;/ace&gt; tags to show it with syntax highlighting. Add attributes to <ace> tag to control formatting, see module's README.txt for examples."),
+ *   description = @Translation("Use @open and @close tags to show it with syntax highlighting. Add attributes to the @open tag to control formatting, see the module's documentation for examples.", arguments = {"@open" = "<ace>", "@close" = "</ace>"}),
  *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
  *   settings = {
  *           "theme" = "cobalt",
@@ -112,31 +112,32 @@ class AceFilter extends FilterBase {
    * Processing the filters and return the processed result.
    */
   public function process($text, $langcode) {
-    // Instantiate a static variable for js settings content.
-    // This allows multiple invocations of this method per page load to append
-    // as opposed to overwriting the data structure.
-    $js_settings = &drupal_static(__FUNCTION__);
+    // The settings and libraries are built for THIS text only, so a filtered
+    // field carries exactly its own snippets. A previous version accumulated
+    // every field on the page in a drupal_static, which a render-cached field
+    // then re-emitted with the wrong instances.
+    $js_settings = [
+      'instances' => [],
+      'theme_settings' => $this->getConfiguration()['settings'],
+    ];
+    // Collect the theme/mode libraries of every tag; declared before the loop
+    // so an earlier tag's libraries are not dropped by a later one.
+    $attach_lib = [];
 
-    $text = html_entity_decode($text);
-
+    // Do NOT html_entity_decode the whole text: that would reverse the
+    // sanitization of any filter that ran before this one (for example
+    // "Limit allowed HTML tags"). Only the snippet content inside an <ace>
+    // tag is decoded below, and it is handed to Ace as text, never as HTML.
     if (preg_match_all("/<ace.*?>(.*?)\s*<\/ace>/s", $text, $match)) {
-      // Stub out js settings data structure once per page load.
-      if (!isset($js_settings)) {
-        $js_settings = [
-          'instances' => [],
-          'theme_settings' => $this->getConfiguration()['settings'],
-        ];
-      }
 
       foreach ($match[0] as $key => $value) {
         // Generate a truly unique id to append as element ID.
         $unique_id = uniqid();
         $element_id = 'ace-editor-inline' . $unique_id;
-        $content = trim($match[1][$key], "\n\r\0\x0B");
+        $content = html_entity_decode(trim($match[1][$key], "\n\r\0\x0B"));
         $replace = '<pre id="' . $element_id . '"></pre>';
         // Override settings with attributes on the tag.
         $settings = $this->getConfiguration()['settings'];
-        $attach_lib = [];
 
         foreach ($this->tagAttributes('ace', $value) as $attribute_key => $attribute_value) {
           $settings[$attribute_key] = $attribute_value;
@@ -179,6 +180,9 @@ class AceFilter extends FilterBase {
 
   /**
    * Get all attributes of an <ace> tag in key/value pairs.
+   *
+   * @return array
+   *   The attributes, keyed by name, empty when the tag carries none.
    */
   public function tagAttributes($element_name, $xml) {
     // Grab the string of attributes inside the editor tag.
@@ -194,17 +198,23 @@ class AceFilter extends FilterBase {
         // with their values.
         foreach ($matches as $attribute) {
           $value = substr($attribute[2], 1, -1);
-          if ($value == "1" || $value == "0" || $value == "TRUE" || $value == "FALSE") {
-            $value = intval($value);
+          // Normalise boolean-ish attribute values. intval() alone turned
+          // "TRUE" into 0, the opposite of what the author wrote.
+          $lower = strtolower($value);
+          if ($lower === '1' || $lower === 'true') {
+            $value = 1;
+          }
+          elseif ($lower === '0' || $lower === 'false') {
+            $value = 0;
           }
           $attribute_array[str_replace('-', '_', $attribute[1])] = $value;
         }
         return $attribute_array;
       }
     }
-    // Attributes either weren't found, or couldn't be extracted
-    // by the regular expression.
-    return FALSE;
+    // A tag without attributes, or attributes the regular expression could not
+    // extract, is simply an empty set: the caller iterates over the result.
+    return [];
   }
 
   /**

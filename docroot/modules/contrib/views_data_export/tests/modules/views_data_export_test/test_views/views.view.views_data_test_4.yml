@@ -209,7 +209,7 @@ display:
               company: ''
       export_method: batch
       export_batch_size: 4
-      store_in_public_file_directory: false
+      export_filesystem: private
       redirect_to_display: none
       custom_redirect_path: false
       include_query_params: false

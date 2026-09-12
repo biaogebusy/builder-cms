@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\elasticsearch_connector\Functional;
 
 use Drupal\Component\Serialization\Yaml;

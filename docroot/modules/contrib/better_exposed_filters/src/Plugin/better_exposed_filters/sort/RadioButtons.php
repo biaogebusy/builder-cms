@@ -2,16 +2,17 @@
 
 namespace Drupal\better_exposed_filters\Plugin\better_exposed_filters\sort;
 
+use Drupal\better_exposed_filters\Attribute\SortWidget;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Radio Buttons sort widget implementation.
- *
- * @BetterExposedFiltersSortWidget(
- *   id = "bef",
- *   label = @Translation("Radio Buttons"),
- * )
  */
+#[SortWidget(
+  id: 'bef',
+  title: new TranslatableMarkup('Radio Buttons'),
+)]
 class RadioButtons extends SortWidgetBase {
 
   /**

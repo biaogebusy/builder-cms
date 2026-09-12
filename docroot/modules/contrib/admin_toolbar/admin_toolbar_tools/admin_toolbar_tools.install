@@ -32,3 +32,10 @@ function admin_toolbar_tools_update_8202() {
     ->set('hoverintent_functionality', TRUE)
     ->save(TRUE);
 }
+
+/**
+ * Module CSS file refactoring requires cache rebuild.
+ */
+function admin_toolbar_tools_update_8203() {
+  drupal_flush_all_caches();
+}

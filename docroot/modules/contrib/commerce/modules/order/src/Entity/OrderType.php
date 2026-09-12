@@ -47,6 +47,7 @@ use Drupal\commerce_number_pattern\Entity\NumberPattern;
  *     "label",
  *     "id",
  *     "workflow",
+ *     "showOrderEditLinks",
  *     "numberPattern",
  *     "refresh_mode",
  *     "refresh_frequency",
@@ -73,6 +74,13 @@ class OrderType extends CommerceBundleEntityBase implements OrderTypeInterface {
    * @var string
    */
   protected $workflow;
+
+  /**
+   * Whether to show edit links.
+   *
+   * @var bool
+   */
+  protected $showOrderEditLinks;
 
   /**
    * The number pattern ID.
@@ -244,6 +252,22 @@ class OrderType extends CommerceBundleEntityBase implements OrderTypeInterface {
     $workflow = $workflow_manager->createInstance($this->getWorkflowId());
     $this->calculatePluginDependencies($workflow);
 
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function shouldShowOrderEditLinks(): bool {
+    // The absence of a value should be treated like the presence of TRUE.
+    return $this->showOrderEditLinks ?? TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setShowOrderEditLinks(bool $show_order_edit_links): static {
+    $this->showOrderEditLinks = $show_order_edit_links;
     return $this;
   }
 

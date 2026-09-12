@@ -9,6 +9,8 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\paragraphs_library\Entity\LibraryItem;
+use Drupal\paragraphs_library\LibraryItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -65,10 +67,14 @@ class ParagraphAccessControlHandler extends EntityAccessControlHandler implement
       // Delete permission on the paragraph, should just depend on 'update'
       // access permissions on the parent.
       $operation = ($operation == 'delete') ? 'update' : $operation;
-      // Library items have no support for parent entity access checking.
-      if ($paragraph->getParentEntity()->getEntityTypeId() != 'paragraphs_library_item') {
-        $parent_access = $paragraph->getParentEntity()->access($operation, $account, TRUE);
+      $parent = $paragraph->getParentEntity();
+      if (!$parent instanceof LibraryItemInterface || $operation !== 'view') {
+        $parent_access = $parent->access($operation, $account, TRUE);
         $access_result = $access_result->andIf($parent_access);
+      }
+      elseif (!$parent->isPublished()) {
+        // Replicate the \Drupal\paragraphs_library\LibraryItemAccessControlHandler::checkAccess() access check.
+        $access_result = $access_result->andIf(AccessResult::allowedIfHasPermission($account, $parent->getEntityType()->getAdminPermission()));
       }
     }
     return $access_result;

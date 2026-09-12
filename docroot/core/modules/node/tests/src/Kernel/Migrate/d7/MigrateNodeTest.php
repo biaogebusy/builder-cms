@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Kernel\Migrate\d7;
 
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\file\Kernel\Migrate\d7\FileMigrationSetupTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests node migration.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeTest extends MigrateDrupal7TestBase {
 
   use FileMigrationSetupTrait;
@@ -73,7 +75,7 @@ class MigrateNodeTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getFileMigrationInfo() {
+  protected function getFileMigrationInfo(): array {
     return [
       'path' => 'public://sites/default/files/cube.jpeg',
       'size' => 3620,

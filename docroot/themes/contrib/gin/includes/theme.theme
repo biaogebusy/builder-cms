@@ -145,13 +145,3 @@ function gin_theme_suggestions_table_alter(array &$suggestions, array $variables
     $suggestions[] = 'table__simple';
   }
 }
-
-/**
- * Implements views_view_field_alter() for status field.
- */
-function gin_theme_suggestions_views_view_field_alter(array &$suggestions, array $variables) {
-  $field_name = $variables['field']->field;
-  if ($field_name == 'status') {
-    $suggestions[] = 'views_view_field__' . $field_name;
-  }
-}

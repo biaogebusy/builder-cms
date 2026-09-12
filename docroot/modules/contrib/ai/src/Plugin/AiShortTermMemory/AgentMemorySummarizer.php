@@ -14,6 +14,7 @@ use Drupal\ai\Attribute\AiShortTermMemory;
 use Drupal\ai\Base\AiShortTermMemoryPluginBase;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\Utility\ChatHistorySlicer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Yaml;
 
@@ -284,30 +285,13 @@ The following variables are available to use in the instructions:
       }
     }
 
-    // Create a new assistant message.
-    $new_message = new ChatMessage('assistant', $message);
-    // Keep the original user message.
-    $user_message = $this->getOriginalChatHistory()[0];
-    // Rewrite the chat history to only include the suggested number of
-    // messages, but make sure to keep the tool usage message if you expose
-    // a tool result message.
-    $loop_with_padding = $data['tool_loops_to_keep'] + 1;
-    $messages = array_slice($this->getOriginalChatHistory(), -$loop_with_padding, $loop_with_padding, TRUE);
-    // Reset the array.
-    $messages = array_values($messages);
-    // Check if the first message is a tool usage message, if so we do not
-    // remove it.
-    if (empty($messages[0]->getTools())) {
-      // Remove the first message to make space for the new summary message.
-      array_shift($messages);
-    }
-    // Reset the array keys.
-    $messages = array_values($messages);
-    // Add the new message to the start of the array.
-    array_unshift($messages, $new_message);
-    // Add back the original user message to the start of the array.
-    array_unshift($messages, $user_message);
-    $this->setChatHistory($messages);
+    // Slice by complete tool loops and not by message count, since providers
+    // reject a history where a tool call and its results are split up.
+    $this->setChatHistory(ChatHistorySlicer::sliceWithSummary(
+      $this->getOriginalChatHistory(),
+      new ChatMessage('assistant', $message),
+      (int) ($data['tool_loops_to_keep'] ?? 0),
+    ));
   }
 
   /**

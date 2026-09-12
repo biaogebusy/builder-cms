@@ -18,7 +18,7 @@ class TestAvailabilityChecker implements AvailabilityCheckerInterface {
    */
   public function applies(OrderItemInterface $order_item) {
     $purchased_entity = $order_item->getPurchasedEntity();
-    return $purchased_entity instanceof ProductVariationInterface && strpos($purchased_entity->getSku(), 'TEST_') !== FALSE;
+    return $purchased_entity instanceof ProductVariationInterface && str_contains($purchased_entity->getSku(), 'TEST_');
   }
 
   /**

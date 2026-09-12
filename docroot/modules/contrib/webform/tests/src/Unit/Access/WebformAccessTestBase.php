@@ -54,7 +54,7 @@ abstract class WebformAccessTestBase extends UnitTestCase {
 
     $account->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap($value_map));
+      ->willReturnMap($value_map);
 
     /** @var \Drupal\Core\Session\AccountInterface $account */
     return $account;

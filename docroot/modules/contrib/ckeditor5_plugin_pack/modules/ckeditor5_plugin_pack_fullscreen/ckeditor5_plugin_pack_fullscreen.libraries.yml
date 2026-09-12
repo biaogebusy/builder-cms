@@ -1,0 +1,15 @@
+admin.fullscreen:
+  version: 20250411
+  css:
+    theme:
+      css/fullscreen.admin.css: { }
+
+ckeditor5_plugin_pack_fullscreen__fullscreen:
+  version: 20251230
+  js:
+     js/build/fullscreenAdapter.js: { }
+  css:
+    theme:
+      css/fullscreen.css: { }
+  dependencies:
+    - ckeditor5_plugin_pack_fullscreen/fullscreen

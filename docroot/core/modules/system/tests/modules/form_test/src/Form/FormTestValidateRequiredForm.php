@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\form_test\Form;
 
 use Drupal\Core\Form\FormBase;
@@ -30,14 +32,14 @@ class FormTestValidateRequiredForm extends FormBase {
       '#type' => 'textfield',
       '#title' => 'Name',
       '#required' => TRUE,
-      '#required_error' => t('Enter a name.'),
+      '#required_error' => $this->t('Enter a name.'),
     ];
     $form['checkboxes'] = [
       '#type' => 'checkboxes',
       '#title' => 'Checkboxes',
       '#options' => $options,
       '#required' => TRUE,
-      '#form_test_required_error' => t('Choose at least one option.'),
+      '#form_test_required_error' => $this->t('Choose at least one option.'),
       '#element_validate' => $validate,
     ];
     $form['select'] = [
@@ -45,7 +47,7 @@ class FormTestValidateRequiredForm extends FormBase {
       '#title' => 'Select',
       '#options' => $options,
       '#required' => TRUE,
-      '#form_test_required_error' => t('Select something.'),
+      '#form_test_required_error' => $this->t('Select something.'),
       '#element_validate' => $validate,
     ];
     $form['radios'] = [

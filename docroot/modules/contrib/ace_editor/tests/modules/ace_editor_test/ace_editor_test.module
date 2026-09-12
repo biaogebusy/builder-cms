@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Test helper for the Ace Editor automated tests.
+ */
+
+use Drupal\ace_editor_test\Hook\AceEditorTestHooks;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Hook\Attribute\LegacyHook;
+
+/**
+ * Implements hook_form_alter().
+ */
+#[LegacyHook]
+function ace_editor_test_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  \Drupal::service(AceEditorTestHooks::class)->formAlter($form, $form_state, $form_id);
+}

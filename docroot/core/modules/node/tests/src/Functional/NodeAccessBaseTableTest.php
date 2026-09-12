@@ -7,17 +7,22 @@ namespace Drupal\Tests\node\Functional;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\node\Entity\NodeType;
+use Drupal\node\NodeAccessRebuild;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\Tests\node\Traits\NodeAccessTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests behavior of the node access subsystem if the base table is not node.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeAccessBaseTableTest extends NodeTestBase {
 
   use EntityReferenceFieldCreationTrait;
+  use NodeAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -102,9 +107,9 @@ class NodeAccessBaseTableTest extends NodeTestBase {
       ])
       ->save();
 
-    node_access_test_add_field(NodeType::load('article'));
+    $this->addPrivateField(NodeType::load('article'));
 
-    node_access_rebuild();
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
     \Drupal::state()->set('node_access_test.private', TRUE);
   }
 
@@ -126,7 +131,7 @@ class NodeAccessBaseTableTest extends NodeTestBase {
     $num_simple_users = 2;
     $simple_users = [];
 
-    // Nodes keyed by uid and nid: $nodes[$uid][$nid] = $is_private;
+    // Nodes keyed by uid and nid: "$nodes[$uid][$nid] = $is_private".
     $this->nodesByUser = [];
     // Titles keyed by nid.
     $titles = [];
@@ -224,7 +229,7 @@ class NodeAccessBaseTableTest extends NodeTestBase {
     // Rebuild the node access permissions, repeat the test. This is done to
     // ensure that node access is rebuilt correctly even if the current user
     // does not have the bypass node access permission.
-    node_access_rebuild();
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
 
     foreach ($this->nodesByUser as $private_status) {
       foreach ($private_status as $nid => $is_private) {
@@ -267,7 +272,17 @@ class NodeAccessBaseTableTest extends NodeTestBase {
           if (!$is_admin && $tid_is_private) {
             $should_be_visible = $should_be_visible && $uid == $this->webUser->id();
           }
-          $this->assertSame($should_be_visible, isset($this->nidsVisible[$nid]), strtr('A %private node by user %uid is %visible for user %current_uid on the %tid_is_private page.', ['%private' => $is_private ? 'private' : 'public', '%uid' => $uid, '%visible' => isset($this->nidsVisible[$nid]) ? 'visible' : 'not visible', '%current_uid' => $this->webUser->id(), '%tid_is_private' => $tid_is_private ? 'private' : 'public']));
+          $this->assertSame(
+            $should_be_visible,
+            isset($this->nidsVisible[$nid]),
+            strtr('A %private node by user %uid is %visible for user %current_uid on the %tid_is_private page.', [
+              '%private' => $is_private ? 'private' : 'public',
+              '%uid' => $uid,
+              '%visible' => isset($this->nidsVisible[$nid]) ? 'visible' : 'not visible',
+              '%current_uid' => $this->webUser->id(),
+              '%tid_is_private' => $tid_is_private ? 'private' : 'public',
+            ]),
+          );
         }
       }
     }

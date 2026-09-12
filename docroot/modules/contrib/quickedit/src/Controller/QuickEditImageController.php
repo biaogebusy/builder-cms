@@ -115,7 +115,10 @@ class QuickEditImageController extends ControllerBase {
 
     // Add upload resolution validation.
     if ($field_settings['max_resolution'] || $field_settings['min_resolution']) {
-      $field_validators['file_validate_image_resolution'] = [$field_settings['max_resolution'], $field_settings['min_resolution']];
+      $field_validators['FileImageDimensions'] = [
+        'maxDimensions' => $field_settings['max_resolution'],
+        'minDimensions' => $field_settings['min_resolution'],
+      ];
     }
 
     // Create the destination directory if it does not already exist.

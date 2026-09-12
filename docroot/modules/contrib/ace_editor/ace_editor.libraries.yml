@@ -1,5 +1,16 @@
 # Path to Ace library is defined using hook_library_info_alter().
 # See ace_editor.module
+
+# Applies the settings every Ace instance needs, whichever integration
+# rendered it. Each integration depends on this, and each loads its own copy
+# of ace.js, so the settings are applied wherever Ace appears.
+setup:
+  version: VERSION
+  js:
+    js/setup.js: {}
+  dependencies:
+    - core/drupalSettings
+
 primary:
   version: VERSION
   js:
@@ -12,6 +23,7 @@ primary:
     - core/drupal
     - core/drupalSettings
     - editor/drupal.editor
+    - ace_editor/setup
 
 formatter:
   version: VERSION
@@ -24,6 +36,8 @@ formatter:
     - core/jquery
     - core/drupal
     - core/drupalSettings
+    - core/once
+    - ace_editor/setup
 
 filter:
   version: VERSION
@@ -36,3 +50,17 @@ filter:
     - core/jquery
     - core/drupal
     - core/drupalSettings
+    - ace_editor/setup
+
+widget:
+  version: VERSION
+  js:
+    js/widget.js: {}
+  css:
+    component:
+      styles/editor.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - ace_editor/setup

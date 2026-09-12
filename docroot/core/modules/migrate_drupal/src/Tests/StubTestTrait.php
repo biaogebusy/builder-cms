@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_drupal\Tests;
 
 use Drupal\migrate\Row;
@@ -28,7 +30,7 @@ trait StubTestTrait {
    * @param string $entity_type_id
    *   The entity type we are stubbing.
    *
-   * @return int
+   * @return string
    *   ID of the created entity.
    */
   protected function createEntityStub($entity_type_id) {

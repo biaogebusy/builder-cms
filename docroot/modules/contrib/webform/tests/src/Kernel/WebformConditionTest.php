@@ -23,7 +23,7 @@ class WebformConditionTest extends EntityKernelTestBase {
   /**
    * Tests conditions.
    */
-  public function testConditions() {
+  public function testConditions(): void {
     $this->installSchema('webform', ['webform']);
 
     $manager = $this->container->get('plugin.manager.condition');

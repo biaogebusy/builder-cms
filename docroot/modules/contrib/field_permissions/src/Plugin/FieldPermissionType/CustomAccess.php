@@ -71,10 +71,14 @@ class CustomAccess extends Base implements CustomPermissionsInterface, AdminForm
    */
   public function submitAdminForm(array &$form, FormStateInterface $form_state, RoleStorageInterface $role_storage) {
     $this_plugin_applies = $form_state->getValue('type') === $this->getPluginId();
-    $custom_permissions = $form_state->getValue('permissions');
+    $custom_permissions = $form_state->getValue('permissions') ?? [];
     $keys = array_keys($custom_permissions);
     $custom_permissions = $this->transposeArray($custom_permissions);
+    /** @var \Drupal\user\RoleInterface $role */
     foreach ($role_storage->loadMultiple() as $role) {
+      if ($role->isAdmin()) {
+        continue;
+      }
       $permissions = $role->getPermissions();
       $removed = array_values(array_intersect($permissions, $keys));
       $added = $this_plugin_applies ? array_keys(array_filter($custom_permissions[$role->id()])) : [];

@@ -18,6 +18,16 @@ class PullFormTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'node',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'node';
 
   /**

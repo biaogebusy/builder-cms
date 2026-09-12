@@ -3,3 +3,18 @@
   display: inline-block;
   padding-right: 1em;
 }
+
+/* Gin polish re-homed from Gin theme. */
+.gin--vertical-toolbar .system-modules-uninstall .winnow-input,
+.gin--horizontal-toolbar .system-modules-uninstall .winnow-input,
+.gin--classic-toolbar .system-modules-uninstall .winnow-input,
+.gin--navigation .system-modules-uninstall .winnow-input {
+  width: 100%;
+}
+
+.gin--vertical-toolbar .system-modules td details a,
+.gin--horizontal-toolbar .system-modules td details a,
+.gin--classic-toolbar .system-modules td details a,
+.gin--navigation .system-modules td details a {
+  color: var(--gin-color-primary);
+}

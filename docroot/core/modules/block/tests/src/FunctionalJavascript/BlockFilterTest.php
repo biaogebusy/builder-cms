@@ -6,18 +6,20 @@ namespace Drupal\Tests\block\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript functionality of the block add filter.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockFilterTest extends WebDriverTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['user', 'block'];
+  protected static $modules = ['user', 'block', 'block_test'];
 
   /**
    * {@inheritdoc}
@@ -80,6 +82,13 @@ class BlockFilterTest extends WebDriverTestBase {
     $this->assertCount(0, $visible_rows);
     $expected_message = '0 blocks are available in the modified list.';
     $this->assertAnnounceContains($expected_message);
+
+    $this->placeBlock('test_xss');
+    $this->failOnJavascriptConsoleErrors = FALSE;
+    $this->drupalGet('admin/structure/block');
+
+    // If the XSS variable exists, it means the payload has been executed.
+    $this->assertJsCondition("typeof window.XSS === 'undefined'");
   }
 
   /**
@@ -89,8 +98,9 @@ class BlockFilterTest extends WebDriverTestBase {
    *   An array of node elements.
    *
    * @return \Behat\Mink\Element\NodeElement[]
+   *   An array of visible elements.
    */
-  protected function filterVisibleElements(array $elements) {
+  protected function filterVisibleElements(array $elements): array {
     $elements = array_filter($elements, function (NodeElement $element) {
       return $element->isVisible();
     });

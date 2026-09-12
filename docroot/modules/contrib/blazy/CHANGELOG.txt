@@ -1,3 +1,74 @@
+Blazy 3.0.x-dev, 2026-07-04
+---------------------------
+- fix: #3401623 Blazy library not firing correctly sometimes on responsive
+  images
+
+Blazy 3.0.x-dev, 2026-02-24
+---------------------------
+- Issue #3572391 by filipeabreu: PHP 8.1+: Fix deprecated str_ireplace() warning
+  in Multimedia::provider() when URL host is NULL.
+- Added deprecation notices for 4.x smooth revamp.
+
+Blazy 3.0.x-dev, 2026-02-11
+---------------------------
+- Marked blazy.base and media component services as deprecated.
+- Added \Drupal\blazy\BlazyApi to replace Blazy class static methods.
+- Added deprecation errors for all Blazy class static methods.
+
+Blazy 3.0.x-dev, 2026-01-31
+---------------------------
+- Fixed for Colorbox local/remote video collapsed against modern CSS aspect
+  ratio option.
+
+Blazy 3.0.x-dev, 2026-01-31
+---------------------------
+- Added minimum todo list for blazy 4.x.
+- Added deprecated methods for blazy 4.x.
+- Refactored some Internals and static methods for D12.
+
+Blazy 3.0.x-dev, 2026-01-30
+---------------------------
+- Moved some @internal non-generic classes from Utility to Internals.
+
+Blazy 3.0.x-dev, 2026-01-22
+---------------------------
+- Refactored hooks for easy D12 update.
+- Disengaged lazy.html from regular lazyload for being standalone option.
+- Fixed for BG with No JavaScript. BG requires JS for multi-breakpoint.
+- Removed blazies.is.bg for blazies.use.bg.
+
+Blazy 3.0.x-dev, 2026-01-21
+---------------------------
+- Issue #3511029 by skymen, jura.khrapunov: Deprecated function: strpos() ...
+  in Drupal\blazy\BlazyManagerBase->preSettings() (line 220)
+- Added Blur effect replacement strategy with animate.css.
+
+Blazy 3.0.x-dev, 2026-01-19
+---------------------------
+- Fixed for markdown table.
+- Fixed for preload mime type given image_convert new extension.
+- Fixed for potential external hijacks which might affect Heroes LCP scores.
+- Moved CSS from blazy/base into blazy/css due to zero-JS regression.
+
+Blazy 3.0.x-dev, 2026-01-10
+---------------------------
+- Fixed for tests.
+
+Blazy 3.0.x-dev, 2026-01-08
+---------------------------
+- Added third-party cookies and data tracking concent to media player buttons.
+
+Blazy 3.0.x-dev, 2026-01-06
+---------------------------
+- Added a static hero image in tandem with grid.
+
+Blazy 3.0.x-dev, 2026-01-05
+---------------------------
+- Implemented modern CSS aspect-ratio.
+
+Blazy 3.0.x-dev, 2026-01-03
+---------------------------
+- Micro optimization with fetchpriority specific for sliders.
 
 Blazy 3.0.x-dev, 2025-07-29
 ---------------------------

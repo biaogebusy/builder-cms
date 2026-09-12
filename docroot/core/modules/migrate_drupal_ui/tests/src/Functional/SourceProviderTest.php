@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests that a missing source provider error message is displayed.
- *
- * @group migrate_drupal_ui
- * @group #slow
  */
+#[Group('migrate_drupal_ui')]
+#[Group('#slow')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class SourceProviderTest extends MigrateUpgradeTestBase {
 
   /**
@@ -23,9 +29,8 @@ class SourceProviderTest extends MigrateUpgradeTestBase {
 
   /**
    * Test missing source provider.
-   *
-   * @dataProvider providerSourceProvider
    */
+  #[DataProvider('providerSourceProvider')]
   public function testSourceProvider($path_to_database): void {
     $this->loadFixture($this->getModulePath('migrate_drupal') . $path_to_database);
 
@@ -78,28 +83,28 @@ class SourceProviderTest extends MigrateUpgradeTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getAvailablePaths() {
+  protected function getAvailablePaths(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCounts() {
+  protected function getEntityCounts(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCountsIncremental() {
+  protected function getEntityCountsIncremental(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getMissingPaths() {
+  protected function getMissingPaths(): array {
     return [];
   }
 

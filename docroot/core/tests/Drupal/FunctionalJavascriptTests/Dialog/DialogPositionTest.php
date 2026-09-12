@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\FunctionalJavascriptTests\Dialog;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript functionality of the dialog position.
- *
- * @group dialog
  */
+#[Group('dialog')]
+#[RunTestsInSeparateProcesses]
 class DialogPositionTest extends WebDriverTestBase {
 
   /**

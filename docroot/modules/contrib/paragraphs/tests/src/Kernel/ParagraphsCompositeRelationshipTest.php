@@ -12,12 +12,16 @@ use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\Entity\ParagraphsType;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ERR composite relationship upgrade path.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsCompositeRelationshipTest extends KernelTestBase {
 
   /**
@@ -48,7 +52,6 @@ class ParagraphsCompositeRelationshipTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('paragraph');
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     \Drupal::moduleHandler()->loadInclude('paragraphs', 'install');
   }

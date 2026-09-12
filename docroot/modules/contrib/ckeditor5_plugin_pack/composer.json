@@ -1,0 +1,28 @@
+{
+    "name": "drupal/ckeditor5_plugin_pack",
+    "type": "drupal-module",
+    "description": "The plugin pack for the CKEditor 5 WYSIWYG editor.",
+    "license": "GPL-2.0+",
+    "minimum-stability": "dev",
+    "homepage": "https://www.drupal.org/project/ckeditor5_plugin_pack",
+    "authors": [
+        {
+            "name": "Wojciech Kukowski (salmonek)",
+            "homepage": "https://www.drupal.org/u/salmonek",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Dawid Olszewski (dolszewski)",
+            "homepage": "https://www.drupal.org/u/dolszewski",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/ckeditor5_plugin_pack"
+    },
+    "require": {
+        "php": "^8.0",
+        "drupal/core": "^10.3 || ^11.0",
+        "drupal/ckeditor5_premium_features": "^1.6.4 || ^1.7"
+    }
+}

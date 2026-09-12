@@ -2,9 +2,10 @@ entity.migration_group.list:
   path: '/admin/structure/migrate'
   defaults:
     _entity_list: 'migration_group'
-    _title: 'Migrations'
+    _title: 'Migration groups'
   requirements:
     _permission: 'administer migrations'
+    _module_dependencies: 'migrate_plus'
 
 entity.migration_group.add_form:
   path: '/admin/structure/migrate/add'
@@ -13,11 +14,12 @@ entity.migration_group.add_form:
     _entity_form: migration_group.add
   requirements:
     _entity_create_access: migration_group
+    _module_dependencies: 'migrate_plus'
 
 entity.migration_group.edit_form:
   path: '/admin/structure/migrate/manage/{migration_group}'
   defaults:
-    _title: 'Edit migration group'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _entity_form: migration_group.edit
   requirements:
     _entity_access: migration_group.update
@@ -25,7 +27,7 @@ entity.migration_group.edit_form:
 entity.migration_group.delete_form:
   path: '/admin/structure/migrate/manage/{migration_group}/delete'
   defaults:
-    _title: 'Delete migration group'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _entity_form: migration_group.delete
   requirements:
     _entity_access: migration_group.delete
@@ -34,7 +36,7 @@ entity.migration.list:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations'
   defaults:
     _entity_list: 'migration'
-    _title: 'Migrations'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
   requirements:
     _permission: 'administer migrations'
 
@@ -42,7 +44,7 @@ entity.migration.overview:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations/{migration}'
   defaults:
     _controller: '\Drupal\migrate_tools\Controller\MigrationController::overview'
-    _title: 'Migration overview'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _migrate_group: true
   requirements:
     _permission: 'administer migrations'
@@ -56,7 +58,7 @@ entity.migration.source:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations/{migration}/source'
   defaults:
     _controller: '\Drupal\migrate_tools\Controller\MigrationController::source'
-    _title: 'Source'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _migrate_group: true
   requirements:
     _permission: 'administer migrations'
@@ -70,7 +72,7 @@ entity.migration.process:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations/{migration}/process'
   defaults:
     _controller: '\Drupal\migrate_tools\Controller\MigrationController::process'
-    _title: 'Process'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _migrate_group: true
   requirements:
     _permission: 'administer migrations'
@@ -84,7 +86,7 @@ entity.migration.destination:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations/{migration}/destination'
   defaults:
     _controller: '\Drupal\migrate_tools\Controller\MigrationController::destination'
-    _title: 'Destination'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _migrate_group: true
   requirements:
     _permission: 'administer migrations'
@@ -97,7 +99,7 @@ entity.migration.destination:
 entity.migration.edit_form:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations/{migration}/edit'
   defaults:
-    _title: 'Edit migration'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _entity_form: migration.edit
     _migrate_group: true
   requirements:
@@ -111,7 +113,7 @@ entity.migration.edit_form:
 entity.migration.delete_form:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations/{migration}/delete'
   defaults:
-    _title: 'Delete migration'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _entity_form: migration.delete
     _migrate_group: true
   requirements:
@@ -140,7 +142,7 @@ migrate_tools.execute:
   path: '/admin/structure/migrate/manage/{migration_group}/migrations/{migration}/execute'
   defaults:
     _form: '\Drupal\migrate_tools\Form\MigrationExecuteForm'
-    _title: 'Execute migration'
+    _title_callback: '\Drupal\migrate_tools\Controller\MigrationController::title'
     _migrate_group: true
   requirements:
     _permission: 'administer migrations'

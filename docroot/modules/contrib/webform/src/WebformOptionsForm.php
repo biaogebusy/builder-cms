@@ -2,9 +2,9 @@
 
 namespace Drupal\webform;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
 use Drupal\webform\Entity\WebformOptions;
 use Drupal\webform\Utility\WebformArrayHelper;
@@ -55,6 +55,7 @@ class WebformOptionsForm extends EntityForm {
     switch ($this->operation) {
       case 'duplicate':
         $form['#title'] = $this->t("Duplicate '@label' options", ['@label' => $webform_options->label()]);
+        $form['#attached']['library'][] = 'webform/webform.admin.machine-name';
         break;
 
       case 'edit':
@@ -203,7 +204,7 @@ class WebformOptionsForm extends EntityForm {
       '#mode' => 'yaml',
       '#title' => $this->t('Options (YAML)'),
       '#description' => $this->t('Key-value pairs MUST be specified as "safe_key: \'Some readable option\'". Use of only alphanumeric characters and underscores is recommended in keys. One option per line. Option groups can be created by using just the group name followed by indented group options.') . ' ' .
-        $this->t("Descriptions, which are only applicable to radios and checkboxes, can be delimited using ' -- '."),
+      $this->t("Descriptions, which are only applicable to radios and checkboxes, can be delimited using ' -- '."),
       '#attributes' => ['style' => 'min-height: 200px'],
       '#default_value' => Yaml::encode($this->getOptions()),
     ];
@@ -260,7 +261,7 @@ class WebformOptionsForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\webform\WebformOptionsInterface $webform_options */
     $webform_options = $this->getEntity();
-    $webform_options->save();
+    $status = $webform_options->save();
 
     $context = [
       '@label' => $webform_options->label(),
@@ -271,6 +272,8 @@ class WebformOptionsForm extends EntityForm {
     $this->messenger()->addStatus($this->t('Options %label saved.', ['%label' => $webform_options->label()]));
 
     $form_state->setRedirect('entity.webform_options.collection');
+
+    return $status;
   }
 
 }

@@ -1,0 +1,7 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_empty_block__empty_block:
+  type: mapping
+  label: 'CKEditor 5 Empty Block plugin settings'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enable Empty Block'

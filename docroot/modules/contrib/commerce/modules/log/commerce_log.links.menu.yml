@@ -1,0 +1,11 @@
+commerce_log.configuration:
+  title: 'Log'
+  route_name: 'commerce_log.configuration'
+  parent: 'commerce.configuration'
+  weight: -1
+
+commerce_log.settings:
+  title: 'Log settings'
+  route_name: 'commerce_log.settings'
+  parent: 'commerce_log.configuration'
+  description: 'Configure log settings.'

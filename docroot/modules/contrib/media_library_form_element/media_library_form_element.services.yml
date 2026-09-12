@@ -4,3 +4,7 @@ services:
   media_library.opener.form_element:
     class: Drupal\media_library_form_element\MediaLibraryFormElementOpener
     arguments: ['@entity_type.manager']
+
+  Drupal\media_library_form_element\Hook\MediaLibraryFormElementHooks:
+    class: Drupal\media_library_form_element\Hook\MediaLibraryFormElementHooks
+    autowire: true

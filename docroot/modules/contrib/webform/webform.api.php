@@ -5,6 +5,14 @@
  * Hooks related to Webform module.
  */
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\webform\Element\WebformMessage;
+use Drupal\webform\Plugin\WebformHandlerInterface;
+use Drupal\webform\WebformSubmissionInterface;
+
 // phpcs:disable DrupalPractice.CodeAnalysis.VariableAnalysis.UnusedVariable
 
 /**
@@ -98,7 +106,7 @@ function hook_webform_element_translatable_properties_alter(array &$properties, 
  * @see webform_example_element_properties.module
  * @ingroup form_api
  */
-function hook_webform_element_configuration_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function hook_webform_element_configuration_form_alter(array &$form, FormStateInterface $form_state) {
   /** @var \Drupal\webform_ui\Form\WebformUiElementEditForm $form_object */
   $form_object = $form_state->getFormObject();
   $element_plugin = $form_object->getWebformElementPlugin();
@@ -163,7 +171,7 @@ function hook_webform_element_configuration_form_alter(array &$form, \Drupal\Cor
  * @see \Drupal\webform\WebformSubmissionForm::prepareElements()
  * @see hook_webform_element_ELEMENT_TYPE_alter()
  */
-function hook_webform_element_alter(array &$element, \Drupal\Core\Form\FormStateInterface $form_state, array $context) {
+function hook_webform_element_alter(array &$element, FormStateInterface $form_state, array $context) {
   // Code here acts on all elements included in a webform.
   /** @var \Drupal\webform\WebformSubmissionForm $form_object */
   $form_object = $form_state->getFormObject();
@@ -217,7 +225,7 @@ function hook_webform_element_alter(array &$element, \Drupal\Core\Form\FormState
  * @see \Drupal\webform\WebformSubmissionForm::prepareElements()
  * @see hook_webform_element_alter(()
  */
-function hook_webform_element_ELEMENT_TYPE_alter(array &$element, \Drupal\Core\Form\FormStateInterface $form_state, array $context) {
+function hook_webform_element_ELEMENT_TYPE_alter(array &$element, FormStateInterface $form_state, array $context) {
   // Add custom data attributes to a specific element type.
   $element['#attributes']['data-custom'] = '{custom data goes here}';
 
@@ -266,12 +274,12 @@ function hook_webform_element_ELEMENT_TYPE_alter(array &$element, \Drupal\Core\F
  * @return \Drupal\Core\Access\AccessResult
  *   The access provided. Return neutral if no change.
  */
-function hook_webform_element_access($operation, array &$element, \Drupal\Core\Session\AccountInterface $account = NULL, array $context = []) {
+function hook_webform_element_access($operation, array &$element, ?AccountInterface $account = NULL, array $context = []) {
   // Load the current webform and submission for element's context.
   $webform = $context['webform'];
   $webform_submission = $context['webform_submission'];
 
-  return !empty($element['#confidential']) ? \Drupal\Core\Access\AccessResult::forbidden() : \Drupal\Core\Access\AccessResult::neutral();
+  return !empty($element['#confidential']) ? AccessResult::forbidden() : AccessResult::neutral();
 }
 
 /**
@@ -377,7 +385,7 @@ function hook_webform_submissions_post_purge(array $webform_submissions) {
  *
  * @ingroup form_api
  */
-function hook_webform_submission_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function hook_webform_submission_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
 
 }
 
@@ -397,7 +405,7 @@ function hook_webform_submission_form_alter(array &$form, \Drupal\Core\Form\Form
  *
  * @ingroup form_api
  */
-function hook_webform_admin_third_party_settings_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function hook_webform_admin_third_party_settings_form_alter(array &$form, FormStateInterface $form_state) {
 
 }
 
@@ -417,7 +425,7 @@ function hook_webform_admin_third_party_settings_form_alter(array &$form, \Drupa
  *
  * @ingroup form_api
  */
-function hook_webform_third_party_settings_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function hook_webform_third_party_settings_form_alter(array &$form, FormStateInterface $form_state) {
 
 }
 
@@ -441,7 +449,7 @@ function hook_webform_third_party_settings_form_alter(array &$form, \Drupal\Core
  *
  * @see \Drupal\webform\Plugin\WebformHandlerInterface
  */
-function hook_webform_handler_invoke_alter(\Drupal\webform\Plugin\WebformHandlerInterface $handler, $method_name, array &$args) {
+function hook_webform_handler_invoke_alter(WebformHandlerInterface $handler, $method_name, array &$args) {
   $handler_id = $handler->getHandlerId();
   $webform = $handler->getWebform();
   if ($webform) {
@@ -469,7 +477,7 @@ function hook_webform_handler_invoke_alter(\Drupal\webform\Plugin\WebformHandler
  *
  * @see \Drupal\webform\Plugin\WebformHandlerInterface
  */
-function hook_webform_handler_invoke_METHOD_NAME_alter(\Drupal\webform\Plugin\WebformHandlerInterface $handler, array &$args) {
+function hook_webform_handler_invoke_METHOD_NAME_alter(WebformHandlerInterface $handler, array &$args) {
   $webform = $handler->getWebform();
   $webform_submission = $handler->getWebformSubmission();
 
@@ -559,7 +567,7 @@ function hook_webform_help_info() {
     'message_id' => '',
     'message_type' => 'warning',
     'message_close' => TRUE,
-    'message_storage' => \Drupal\webform\Element\WebformMessage::STORAGE_STATE,
+    'message_storage' => WebformMessage::STORAGE_STATE,
   ];
 
   return $help;
@@ -668,20 +676,20 @@ function hook_webform_access_rules_alter(array &$access_rules) {
  *
  * Implements *_any and *_own operations for a module.
  */
-function hook_webform_submission_access(\Drupal\webform\WebformSubmissionInterface $webform_submission, $operation, \Drupal\Core\Session\AccountInterface $account) {
+function hook_webform_submission_access(WebformSubmissionInterface $webform_submission, $operation, AccountInterface $account) {
   /** @var \Drupal\webform\WebformAccessRulesManagerInterface $access_rules_manager */
   $access_rules_manager = \Drupal::service('webform.access_rules_manager');
 
   // Add support for some module *_any and *_own access rules.
   $access_rules = \Drupal::moduleHandler()->invoke('MY_MODULE', 'webform_access_rules');
-  $access_any = isset($access_rules[$operation . '_any']) ? $access_rules_manager->checkWebformSubmissionAccess($operation . '_any', $account, $webform_submission) : \Drupal\Core\Access\AccessResult::forbidden();
-  $access_own = (isset($access_rules[$operation . '_own']) && $webform_submission->isOwner($account)) ? $access_rules_manager->checkWebformSubmissionAccess($operation . '_own', $account, $webform_submission) : \Drupal\Core\Access\AccessResult::forbidden();
+  $access_any = isset($access_rules[$operation . '_any']) ? $access_rules_manager->checkWebformSubmissionAccess($operation . '_any', $account, $webform_submission) : AccessResult::forbidden();
+  $access_own = (isset($access_rules[$operation . '_own']) && $webform_submission->isOwner($account)) ? $access_rules_manager->checkWebformSubmissionAccess($operation . '_own', $account, $webform_submission) : AccessResult::forbidden();
   $access = $access_any->orIf($access_own);
   if ($access->isAllowed()) {
     return $access;
   }
   else {
-    return \Drupal\Core\Access\AccessResult::neutral();
+    return AccessResult::neutral();
   }
 }
 
@@ -735,7 +743,7 @@ function hook_webform_message_custom($operation, $id) {
  *
  * @see webform_query_webform_submission_access_alter()
  */
-function hook_webform_submission_query_access_alter(\Drupal\Core\Database\Query\AlterableInterface $query, array $webform_submission_tables) {
+function hook_webform_submission_query_access_alter(AlterableInterface $query, array $webform_submission_tables) {
   // Always allow the current user access to their submissions.
   foreach ($webform_submission_tables as $table) {
     $table['condition']->condition($table['alias'] . '.uid', \Drupal::currentUser()->id());

@@ -123,8 +123,9 @@ interface CacheBackendInterface {
    *
    * If the cache item is being deleted because it is no longer "fresh", you may
    * consider using invalidate() instead. This allows callers to retrieve the
-   * invalid item by calling get() with $allow_invalid set to TRUE. In some cases
-   * an invalid item may be acceptable rather than having to rebuild the cache.
+   * invalid item by calling get() with $allow_invalid set to TRUE. In some
+   * cases an invalid item may be acceptable rather than having to rebuild the
+   * cache.
    *
    * @param string $cid
    *   The cache ID to delete.
@@ -140,8 +141,8 @@ interface CacheBackendInterface {
    *
    * If the cache items are being deleted because they are no longer "fresh",
    * you may consider using invalidateMultiple() instead. This allows callers to
-   * retrieve the invalid items by calling get() with $allow_invalid set to TRUE.
-   * In some cases an invalid item may be acceptable rather than having to
+   * retrieve the invalid items by calling get() with $allow_invalid set to
+   * TRUE. In some cases an invalid item may be acceptable rather than having to
    * rebuild the cache.
    *
    * @param array $cids
@@ -156,7 +157,6 @@ interface CacheBackendInterface {
   /**
    * Deletes all cache items in a bin.
    *
-   * @see \Drupal\Core\Cache\CacheBackendInterface::invalidateAll()
    * @see \Drupal\Core\Cache\CacheBackendInterface::delete()
    * @see \Drupal\Core\Cache\CacheBackendInterface::deleteMultiple()
    */
@@ -165,42 +165,41 @@ interface CacheBackendInterface {
   /**
    * Marks a cache item as invalid.
    *
-   * Invalid items may be returned in later calls to get(), if the $allow_invalid
-   * argument is TRUE.
+   * Invalid items may be returned in later calls to get(), if the
+   * $allow_invalid argument is TRUE.
    *
    * @param string $cid
    *   The cache ID to invalidate.
    *
    * @see \Drupal\Core\Cache\CacheBackendInterface::delete()
    * @see \Drupal\Core\Cache\CacheBackendInterface::invalidateMultiple()
-   * @see \Drupal\Core\Cache\CacheBackendInterface::invalidateAll()
    */
   public function invalidate($cid);
 
   /**
    * Marks cache items as invalid.
    *
-   * Invalid items may be returned in later calls to get(), if the $allow_invalid
-   * argument is TRUE.
+   * Invalid items may be returned in later calls to get(), if the
+   * $allow_invalid argument is TRUE.
    *
    * @param string[] $cids
    *   An array of cache IDs to invalidate.
    *
    * @see \Drupal\Core\Cache\CacheBackendInterface::deleteMultiple()
    * @see \Drupal\Core\Cache\CacheBackendInterface::invalidate()
-   * @see \Drupal\Core\Cache\CacheBackendInterface::invalidateAll()
    */
   public function invalidateMultiple(array $cids);
 
   /**
    * Marks all cache items as invalid.
    *
-   * Invalid items may be returned in later calls to get(), if the $allow_invalid
-   * argument is TRUE.
+   * Invalid items may be returned in later calls to get(), if the
+   * $allow_invalid argument is TRUE.
    *
-   * @see \Drupal\Core\Cache\CacheBackendInterface::deleteAll()
-   * @see \Drupal\Core\Cache\CacheBackendInterface::invalidate()
-   * @see \Drupal\Core\Cache\CacheBackendInterface::invalidateMultiple()
+   * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use
+   *   CacheBackendInterface::deleteAll() or cache tag invalidation instead.
+   *
+   * @see https://www.drupal.org/node/3500622
    */
   public function invalidateAll();
 

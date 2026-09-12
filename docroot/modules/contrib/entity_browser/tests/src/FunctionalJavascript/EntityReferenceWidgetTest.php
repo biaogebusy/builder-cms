@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_browser\Element\EntityBrowserElement;
 use Drupal\field\Entity\FieldConfig;
@@ -15,6 +17,8 @@ use Drupal\user\Entity\Role;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
 
   use SortableTestTrait;
@@ -126,6 +130,23 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $title_field = $edit_dialog->findField('title[0][value]');
     $title = $title_field->getValue();
     $this->assertEquals('Walrus', $title);
+
+    // Submitting the dialog with an empty required title should rebuild the
+    // form and display the validation error inside the dialog (issue
+    // #2644020). Without the status_messages element, the modal would
+    // silently swallow the error.
+    $title_field->setValue('');
+    $this->assertSession()
+      ->elementExists('css', '.ui-dialog-buttonset.form-actions .form-submit')
+      ->press();
+    $this->waitForAjaxToFinish();
+    // Use theme-agnostic markup: the system status-messages template (used by
+    // Stark, the test default theme) wraps error messages in [role="alert"]
+    // inside [data-drupal-messages]. The "messages--error" class only exists
+    // in Claro/Olivero.
+    $this->assertSession()->elementExists('xpath', '//div[contains(@id, "node-' . $target_node->id() . '-edit-dialog")]//div[@data-drupal-messages]//div[@role="alert"]');
+
+    $title_field = $edit_dialog->findField('title[0][value]');
     $title_field->setValue('Alpaca');
     $this->assertSession()
       ->elementExists('css', '.ui-dialog-buttonset.form-actions .form-submit')
@@ -332,7 +353,7 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     // not show up, even if configured to.
     /** @var \Drupal\user\RoleInterface $role */
     $role = Role::load('authenticated');
-    $role->revokePermission('bypass node access')->trustData()->save();
+    $role->revokePermission('bypass node access')->save();
     $this->drupalGet('node/add/article');
     $open_iframe_link = $this->assertSession()->elementExists('css', 'a[data-drupal-selector="edit-field-entity-reference1-entity-browser-entity-browser-link"]');
     $open_iframe_link->click();

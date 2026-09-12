@@ -9,6 +9,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\Core\Site\Settings;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -106,8 +107,8 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
       'theme' => $this->themeManager->getActiveTheme()->getName(),
       'include' => UrlHelper::compressQueryParameter(implode(',', $this->dependencyResolver->getMinimalRepresentativeSubset($libraries))),
     ];
-    $ajax_page_state = $this->requestStack->getCurrentRequest()->get('ajax_page_state');
-    $already_loaded = isset($ajax_page_state) ? explode(',', $ajax_page_state['libraries']) : [];
+    $ajax_page_state = $this->requestStack->getCurrentRequest()->attributes->get('ajax_page_state');
+    $already_loaded = isset($ajax_page_state['libraries']) ? explode(',', $ajax_page_state['libraries']) : [];
     if ($already_loaded) {
       $query_args['exclude'] = UrlHelper::compressQueryParameter(implode(',', $this->dependencyResolver->getMinimalRepresentativeSubset($already_loaded)));
     }
@@ -130,16 +131,17 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
   /**
    * {@inheritdoc}
    */
-  public function getAll() {
-    @trigger_error(__METHOD__ . ' is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3301744', E_USER_DEPRECATED);
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function deleteAll() {
-    $this->fileSystem->deleteRecursive('assets://css');
+    if (!\is_dir('assets://css')) {
+      return;
+    }
+    $directory_iterator = new \DirectoryIterator('assets://css');
+    $threshold = Settings::get('aggregate_gc_threshold', 86400 * 45);
+    foreach ($directory_iterator as $file) {
+      if ($file->isFile() && $this->time->getRequestTime() - $file->getMtime() > $threshold) {
+        $this->fileSystem->delete($file->getPathName());
+      }
+    }
   }
 
   /**
@@ -156,7 +158,18 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
         $data .= "/* @license " . $css_asset['license']['name'] . " " . $css_asset['license']['url'] . " */\n";
       }
       $current_license = $css_asset['license'];
-      $data .= $this->optimizer->optimize($css_asset);
+
+      // Only external minified files can skip optimization.
+      // Local files (even if minified) must be processed to ensure resource
+      // paths are rewritten relative to the cached aggregated file location.
+      $is_minified = isset($css_asset['minified']) && $css_asset['minified'];
+      $is_external = isset($css_asset['type']) && $css_asset['type'] === 'external';
+      if ($is_minified && $is_external) {
+        $data .= file_get_contents($css_asset['data']);
+      }
+      else {
+        $data .= $this->optimizer->optimize($css_asset);
+      }
     }
     // Per the W3C specification at
     // https://www.w3.org/TR/REC-CSS2/cascade.html#at-import, @import rules must

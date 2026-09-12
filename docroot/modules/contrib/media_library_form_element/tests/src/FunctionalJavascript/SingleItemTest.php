@@ -4,14 +4,18 @@ namespace Drupal\Tests\media_library_form_element\FunctionalJavascript;
 
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\MediaType;
-use Drupal\Tests\TestFileCreationTrait;
 use Drupal\Tests\media_library\FunctionalJavascript\MediaLibraryTestBase;
+use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test using the media library element.
  *
  * @group media_library
  */
+#[Group('media_library_form_element')]
+#[RunTestsInSeparateProcesses]
 class SingleItemTest extends MediaLibraryTestBase {
 
   use TestFileCreationTrait;

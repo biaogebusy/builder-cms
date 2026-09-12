@@ -9,12 +9,14 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Attaches a body field to the block type.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class MigrateBlockContentBodyFieldTest extends MigrateDrupal7TestBase {
 
   /**
@@ -32,6 +34,7 @@ class MigrateBlockContentBodyFieldTest extends MigrateDrupal7TestBase {
     $this->executeMigrations([
       'block_content_type',
       'block_content_body_field',
+      'block_content_body_field_storage',
     ]);
   }
 

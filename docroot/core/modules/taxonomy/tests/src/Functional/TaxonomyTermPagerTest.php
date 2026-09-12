@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\taxonomy\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Ensures that the term pager works properly.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyTermPagerTest extends TaxonomyTestBase {
 
   /**
@@ -107,7 +110,8 @@ class TaxonomyTermPagerTest extends TaxonomyTestBase {
     $loaded_terms = $state->get('taxonomy_test_taxonomy_term_load');
     $this->assertCount(4, $loaded_terms);
 
-    // Adding a new term with weight < 0 implies that all root terms are updated.
+    // Adding a new term with weight < 0 implies that all root terms are
+    // updated.
     $this->createTerm($this->vocabulary, ['weight' => -1]);
     $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/overview', ['query' => ['page' => 2]]);
     $state->set('taxonomy_test_taxonomy_term_load', []);

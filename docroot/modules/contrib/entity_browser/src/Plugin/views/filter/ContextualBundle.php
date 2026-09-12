@@ -3,6 +3,7 @@
 namespace Drupal\entity_browser\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\filter\Bundle;
 use Drupal\views\Plugin\views\HandlerBase;
@@ -13,9 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Filter class which allows filtering by entity bundles.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("entity_browser_bundle")
  */
+#[ViewsFilter("entity_browser_bundle")]
 class ContextualBundle extends Bundle {
 
   /**

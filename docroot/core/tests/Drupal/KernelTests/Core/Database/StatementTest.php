@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Database;
 
+use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\Database\StatementInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Statement classes.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class StatementTest extends DatabaseTestBase {
 
   /**
@@ -170,8 +173,8 @@ class StatementTest extends DatabaseTestBase {
     }
 
     // Trying to iterate through the same statement again should fail.
-    $this->expectError();
-    $this->expectErrorMessage('Attempted rewinding a StatementInterface object when fetching has already started. Refactor your code to avoid rewinding statement objects.');
+    $this->expectException(DatabaseExceptionWrapper::class);
+    $this->expectExceptionMessage('Attempted rewinding a StatementInterface object when fetching has already started. Refactor your code to avoid rewinding statement objects.');
     foreach ($statement as $row) {
       $this->assertNotNull($row);
     }
@@ -185,9 +188,11 @@ class StatementTest extends DatabaseTestBase {
 
     $count = 0;
 
+    // phpcs:ignore DrupalPractice.CodeAnalysis.VariableAnalysis
     foreach ($statement as $row) {
       $count++;
     }
+    // phpcs:ignore DrupalPractice.CodeAnalysis.VariableAnalysis
     foreach ($statement as $row) {
       $count++;
     }
@@ -206,9 +211,9 @@ class StatementTest extends DatabaseTestBase {
     $rowCount = iterator_count($statement);
     $this->assertSame(4, $rowCount);
 
-    $this->expectError();
-    $this->expectErrorMessage('Attempted rewinding a StatementInterface object when fetching has already started. Refactor your code to avoid rewinding statement objects.');
-    $rowCount = iterator_count($statement);
+    $this->expectException(DatabaseExceptionWrapper::class);
+    $this->expectExceptionMessage('Attempted rewinding a StatementInterface object when fetching has already started. Refactor your code to avoid rewinding statement objects.');
+    iterator_count($statement);
   }
 
   /**
@@ -244,8 +249,8 @@ class StatementTest extends DatabaseTestBase {
     // Restart iterating through the same statement. The foreach loop will try
     // rewinding the statement which should fail, and the counter should not be
     // increased.
-    $this->expectError();
-    $this->expectErrorMessage('Attempted rewinding a StatementInterface object when fetching has already started. Refactor your code to avoid rewinding statement objects.');
+    $this->expectException(DatabaseExceptionWrapper::class);
+    $this->expectExceptionMessage('Attempted rewinding a StatementInterface object when fetching has already started. Refactor your code to avoid rewinding statement objects.');
     foreach ($statement as $row) {
       // No-op.
     }

@@ -331,6 +331,7 @@ class Store extends ContentEntityBase implements StoreInterface {
 
     $fields['mail'] = BaseFieldDefinition::create('email')
       ->setLabel(t('Email'))
+      ->setTranslatable(TRUE)
       ->setDescription(t('Store email notifications are sent from this address. If omitted, the "site" email address will be used.'))
       ->setDisplayOptions('form', [
         'type' => 'email_default',

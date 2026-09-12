@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_print\Kernel;
 
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\entity_print\Controller\EntityPrintController;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -42,6 +44,18 @@ class TranslationTest extends KernelTestBase {
     $node_type = NodeType::create(['name' => 'Page', 'type' => 'page']);
     $node_type->setDisplaySubmitted(FALSE);
     $node_type->save();
+
+    // Set up a view mode and display for the PDF so titles are displayed.
+    EntityViewMode::create([
+      'targetEntityType' => 'node',
+      'id' => 'node.pdf',
+    ])->save();
+    EntityViewDisplay::create([
+      'targetEntityType' => 'node',
+      'bundle' => 'page',
+      'mode' => 'pdf',
+      'status' => TRUE,
+    ])->setComponent('body', ['label' => 'hidden', 'type' => 'text_default'])->save();
 
     ConfigurableLanguage::createFromLangcode('de')->save();
     ConfigurableLanguage::createFromLangcode('en')->save();

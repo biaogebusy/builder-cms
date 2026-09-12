@@ -7,20 +7,14 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 class Rounder implements RounderInterface {
 
   /**
-   * The currency storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $currencyStorage;
-
-  /**
    * Constructs a new Rounder object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->currencyStorage = $entity_type_manager->getStorage('commerce_currency');
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
   }
 
   /**
@@ -28,8 +22,9 @@ class Rounder implements RounderInterface {
    */
   public function round(Price $price, $mode = PHP_ROUND_HALF_UP) {
     $currency_code = $price->getCurrencyCode();
+    $currency_storage = $this->entityTypeManager->getStorage('commerce_currency');
     /** @var \Drupal\commerce_price\Entity\CurrencyInterface $currency */
-    $currency = $this->currencyStorage->load($currency_code);
+    $currency = $currency_storage->load($currency_code);
     if (!$currency) {
       throw new \InvalidArgumentException(sprintf('Could not load the "%s" currency.', $currency_code));
     }

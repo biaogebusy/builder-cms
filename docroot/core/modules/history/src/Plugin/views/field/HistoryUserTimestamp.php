@@ -37,7 +37,10 @@ class HistoryUserTimestamp extends Node {
       $this->additional_fields['created'] = ['table' => 'node_field_data', 'field' => 'created'];
       $this->additional_fields['changed'] = ['table' => 'node_field_data', 'field' => 'changed'];
       if (\Drupal::moduleHandler()->moduleExists('comment') && !empty($this->options['comments'])) {
-        $this->additional_fields['last_comment'] = ['table' => 'comment_entity_statistics', 'field' => 'last_comment_timestamp'];
+        $this->additional_fields['last_comment'] = [
+          'table' => 'comment_entity_statistics',
+          'field' => 'last_comment_timestamp',
+        ];
       }
     }
   }
@@ -83,8 +86,6 @@ class HistoryUserTimestamp extends Node {
    */
   public function render(ResultRow $values) {
     // Let's default to 'read' state.
-    // This code shadows node_mark, but it reads from the db directly and
-    // we already have that info.
     $mark = MARK_READ;
     if (\Drupal::currentUser()->isAuthenticated()) {
       $last_read = $this->getValue($values);

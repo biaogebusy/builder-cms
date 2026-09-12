@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -28,7 +29,7 @@ class WebformElementManagedFileLimitTest extends WebformElementManagedFileTestBa
   /**
    * Test file limit.
    */
-  public function testLimits() {
+  public function testLimits(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -43,12 +44,14 @@ class WebformElementManagedFileLimitTest extends WebformElementManagedFileTestBa
 
     // Check form file limit.
     $this->drupalGet('/webform/test_element_managed_file_limit');
-    $assert_session->responseContains('1 MB limit per form.');
+    $assert_session->responseContains('The accumulated size of all files in this form cannot exceed 1 MB.');
+    $assert_session->responseContains('512 KB limit per file. The accumulated size of all files in this form cannot exceed 1 MB.');
+    $assert_session->responseContains('The accumulated size of all files in this form cannot exceed 1 MB.');
 
     // Check empty form file limit.
     $webform->setSetting('form_file_limit', '')->save();
     $this->drupalGet('/webform/test_element_managed_file_limit');
-    $assert_session->responseNotContains('1 MB limit per form.');
+    $assert_session->responseNotContains('The accumulated size of all files in this form cannot exceed 1 MB.');
 
     // Check default form file limit.
     \Drupal::configFactory()
@@ -56,7 +59,7 @@ class WebformElementManagedFileLimitTest extends WebformElementManagedFileTestBa
       ->set('settings.default_form_file_limit', '2 MB')
       ->save();
     $this->drupalGet('/webform/test_element_managed_file_limit');
-    $assert_session->responseContains('2 MB limit per form.');
+    $assert_session->responseContains('The accumulated size of all files in this form cannot exceed 2 MB.');
 
     // Set limit to 2 files.
     \Drupal::configFactory()
@@ -64,7 +67,7 @@ class WebformElementManagedFileLimitTest extends WebformElementManagedFileTestBa
       ->set('settings.default_form_file_limit', ($bytes * 2) . ' bytes')
       ->save();
     $this->drupalGet('/webform/test_element_managed_file_limit');
-    $assert_session->responseContains(format_size($bytes * 2) . ' limit per form.');
+    $assert_session->responseContains('The accumulated size of all files in this form cannot exceed ' . ByteSizeMarkup::create($bytes * 2));
 
     // Check valid file upload.
     $edit = [

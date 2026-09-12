@@ -4,8 +4,7 @@ namespace Drupal\blazy;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\blazy\Media\BlazyOEmbedInterface;
-use Drupal\blazy\Utility\CheckItem;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Entity;
 use Drupal\media\MediaInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,8 +24,17 @@ class BlazyEntity implements BlazyEntityInterface {
    * The blazy manager service.
    *
    * @var \Drupal\blazy\BlazyManagerInterface
+   *
+   * @todo deprecate and remove for $manager before or at 4.x.
    */
   protected $blazyManager;
+
+  /**
+   * The blazy manager service.
+   *
+   * @var \Drupal\blazy\BlazyManagerInterface
+   */
+  protected $manager;
 
   /**
    * The blazy media service.
@@ -40,7 +48,7 @@ class BlazyEntity implements BlazyEntityInterface {
    */
   public function __construct(BlazyOEmbedInterface $oembed) {
     $this->oembed = $oembed;
-    $this->blazyManager = $oembed->blazyManager();
+    $this->blazyManager = $this->manager = $oembed->blazyManager();
     $this->blazyMedia = $oembed->blazyMedia();
   }
 
@@ -70,6 +78,13 @@ class BlazyEntity implements BlazyEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function manager(): BlazyManagerInterface {
+    return $this->manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function blazyMedia() {
     return $this->blazyMedia;
   }
@@ -78,7 +93,7 @@ class BlazyEntity implements BlazyEntityInterface {
    * {@inheritdoc}
    */
   public function build(array $data): array {
-    $manager = $this->blazyManager;
+    $manager = $this->manager;
     $manager->hashtag($data);
 
     $access   = $data['#access'] ?? FALSE;
@@ -93,7 +108,7 @@ class BlazyEntity implements BlazyEntityInterface {
       return $denied;
     }
 
-    // @todo remove $settings after sub-modules: gridstack, slick_browser.
+    // @todo deprecate and remove $settings after sub-modules: gridstack, slick_browser.
     $data['#access'] = TRUE;
     $data['#delta']  = $data['#delta'] ?? ($settings['delta'] ?? -1);
 
@@ -108,7 +123,7 @@ class BlazyEntity implements BlazyEntityInterface {
     $this->prepare($data);
 
     // Individual entity settings.
-    self::settings($settings, $entity);
+    Entity::settings($settings, $entity);
 
     // Since 3.0.9, mimicking Blazy formatters so to swap settings once.
     // At most cases, this class is accessed from Views, or Entity Browser.
@@ -140,18 +155,18 @@ class BlazyEntity implements BlazyEntityInterface {
 
     // Allows a standalone blazy layout media to have container for lightboxes.
     if ($config = $build['#build']['#settings'] ?? []) {
-      if ($blazies = $config['blazies'] ?? NULL) {
-        if ($blazies->use('container')) {
-          $content = $build;
-          $attrs = [];
-          Blazy::containerAttributes($attrs, $config);
+      $blazies = $this->manager->getBlazies($config);
 
-          $build = [
-            '#type' => 'container',
-            '#attributes' => $attrs,
-            'content' => $content,
-          ];
-        }
+      if ($blazies->use('container')) {
+        $content = $build;
+        $attrs = [];
+        $manager->containerAttributes($attrs, $config);
+
+        $build = [
+          '#type' => 'container',
+          '#attributes' => $attrs,
+          'content' => $content,
+        ];
       }
     }
 
@@ -162,10 +177,13 @@ class BlazyEntity implements BlazyEntityInterface {
    * {@inheritdoc}
    */
   public function prepare(array &$data): void {
-    $manager = $this->blazyManager;
+    $manager = $this->manager;
     $manager->hashtag($data);
 
+    /** @var array $settings */
     $settings = &$data['#settings'];
+
+    /** @var \Drupal\blazy\BlazySettings $blazies */
     $blazies = $manager->verifySafely($settings);
 
     if ($blazies->was('entity_prepared')) {
@@ -187,7 +205,7 @@ class BlazyEntity implements BlazyEntityInterface {
    * {@inheritdoc}
    */
   public function view(array $data): array {
-    $manager  = $this->blazyManager;
+    $manager  = $this->manager;
     $settings = $manager->toHashtag($data);
     $entity   = $data['#entity'] ?? NULL;
     $build    = [];
@@ -218,21 +236,12 @@ class BlazyEntity implements BlazyEntityInterface {
   }
 
   /**
-   * Modifies the common settings extracted from the given entity.
+   * Alias for Entity::settings().
+   *
+   * @todo deprecate and remove at D11.
    */
   public static function settings(array &$settings, $entity): void {
-    // Might be accessed by tests, or anywhere outside the workflow.
-    $blazies  = Internals::verify($settings);
-    $langcode = $blazies->get('language.current');
-
-    if ($info = CheckItem::entity($entity, $langcode)) {
-      $data = $info['data'];
-      $id   = $data['id'];
-      $rid  = $data['rid'];
-
-      $blazies->set('cache.metadata.keys', [$id, $rid], TRUE)
-        ->set('entity', $data, TRUE);
-    }
+    Entity::settings($settings, $entity);
   }
 
 }

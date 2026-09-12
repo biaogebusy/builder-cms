@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\entity_share\EntityShareUtility;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
@@ -11,16 +13,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Skip already imported entities.
- *
- * @ImportProcessor(
- *   id = "skip_imported",
- *   label = @Translation("Skip already imported entities"),
- *   description = @Translation("If the entities haven't changed on Remote, this plugin prevents saving of the entities."),
- *   stages = {
- *     "is_entity_importable" = -5,
- *   },
- * )
  */
+#[ImportProcessor(
+  id: 'skip_imported',
+  label: new TranslatableMarkup('Skip already imported entities'),
+  description: new TranslatableMarkup('If the entities haven\'t changed on Remote, this plugin prevents saving of the entities.'),
+  stages: [
+    'is_entity_importable' => -5,
+  ]
+)]
 class SkipImported extends ImportProcessorPluginBase {
 
   /**

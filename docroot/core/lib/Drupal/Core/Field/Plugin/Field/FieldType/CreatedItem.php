@@ -15,6 +15,18 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
   default_widget: "datetime_timestamp",
   default_formatter: "timestamp",
   no_ui: TRUE,
+  constraints: [
+    "ComplexData" => [
+      'properties' => [
+        "value" => [
+          "Range" => [
+            "min" => "-2147483648",
+            "max" => "2147483648",
+          ],
+        ],
+      ],
+    ],
+  ]
 )]
 class CreatedItem extends TimestampItem {
 

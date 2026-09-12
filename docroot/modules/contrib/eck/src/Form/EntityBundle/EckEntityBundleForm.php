@@ -2,6 +2,7 @@
 
 namespace Drupal\eck\Form\EntityBundle;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -33,16 +34,26 @@ class EckEntityBundleForm extends EntityForm {
   protected $entityFieldManager;
 
   /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * The constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, ConfigFactoryInterface $configFactory) {
+    $this->entityTypeManager = $entityTypeManager;
+    $this->entityFieldManager = $entityFieldManager;
+    $this->configFactory = $configFactory;
   }
 
   /**
@@ -51,7 +62,8 @@ class EckEntityBundleForm extends EntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
-      $container->get('entity_field.manager')
+      $container->get('entity_field.manager'),
+      $container->get('config.factory')
     );
   }
 
@@ -107,7 +119,7 @@ class EckEntityBundleForm extends EntityForm {
     ];
 
     // Field title overrides.
-    $entity_type_config = \Drupal::config('eck.eck_entity_type.' . $entity_type_id);
+    $entity_type_config = $this->configFactory->get('eck.eck_entity_type.' . $entity_type_id);
 
     $base_fields = $this->entityFieldManager->getBaseFieldDefinitions($type->getEntityType()->getBundleOf());
     $bundle_overrides = [];
@@ -157,7 +169,10 @@ class EckEntityBundleForm extends EntityForm {
         $fieldset[$field . '_description_override'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Description'),
-          '#description' => $this->t('New description for the base @title field. Enter %none to hide the default description.', ['@title' => $field, '%none' => '<none>']),
+          '#description' => $this->t('New description for the base @title field. Enter %none to hide the default description.', [
+            '@title' => $field,
+            '%none' => '<none>',
+          ]),
           '#default_value' => $description_override ?? '',
         ];
       }
@@ -181,8 +196,6 @@ class EckEntityBundleForm extends EntityForm {
    * {@inheritdoc}
    */
   public function validate(array $form, FormStateInterface $form_state) {
-    parent::validate($form, $form_state);
-
     $id = trim($form_state->getValue('type'));
     // '0' is invalid, since elsewhere we check it using empty().
     if ($id == '0') {
@@ -209,10 +222,10 @@ class EckEntityBundleForm extends EntityForm {
     $t_args = ['%name' => $type->label()];
 
     if ($status == SAVED_UPDATED) {
-      \Drupal::messenger()->addMessage($this->t('The entity bundle %name has been updated.', $t_args));
+      $this->messenger()->addMessage($this->t('The entity bundle %name has been updated.', $t_args));
     }
     elseif ($status == SAVED_NEW) {
-      \Drupal::messenger()->addMessage($this->t('The entity bundle %name has been added.', $t_args));
+      $this->messenger()->addMessage($this->t('The entity bundle %name has been added.', $t_args));
       $context = array_merge(
         $t_args,
         [
@@ -259,6 +272,7 @@ class EckEntityBundleForm extends EntityForm {
     $form_state->setRedirect(
       'eck.entity.' . $type->getEntityType()->getBundleOf() . '_type.list'
     );
+    return $status;
   }
 
   /**
@@ -275,7 +289,7 @@ class EckEntityBundleForm extends EntityForm {
    *   TRUE if this bundle already exists in the entity type, FALSE otherwise.
    */
   public function exists($type, array $element, FormStateInterface $form_state) {
-    $bundleStorage = \Drupal::entityTypeManager()->getStorage($this->entity->getEckEntityTypeMachineName() . '_type');
+    $bundleStorage = $this->entityTypeManager->getStorage($this->entity->getEckEntityTypeMachineName() . '_type');
     return (bool) $bundleStorage->load($type);
   }
 

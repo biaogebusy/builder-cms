@@ -33,10 +33,17 @@ class ProductVariationFieldRenderer implements ProductVariationFieldRendererInte
   public function renderFields(ProductVariationInterface $variation, $view_mode = 'default') {
     $build = $this->variationViewBuilder->view($variation, $view_mode);
     // Formatters aren't called until #pre_render.
+    // Drupal 11.4 adds recursive render protection as paired #pre_render and
+    // #post_render callbacks. This method builds fields without rendering the
+    // complete entity, so running the first callback would leave a stale lock.
     foreach ($build['#pre_render'] as $callable) {
+      $method = is_array($callable) ? ($callable[1] ?? NULL) : NULL;
+      if ($method === 'setRecursiveRenderProtection') {
+        continue;
+      }
       $build = call_user_func($callable, $build);
     }
-    unset($build['#pre_render']);
+    unset($build['#pre_render'], $build['#post_render']);
     // Rendering the product can cause an infinite loop.
     unset($build['product_id']);
     // Fields are rendered individually, top-level properties are not needed.

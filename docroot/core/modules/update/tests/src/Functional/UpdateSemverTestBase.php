@@ -11,8 +11,6 @@ use Drupal\Tests\Traits\Core\CronRunTrait;
  *
  * For classes that extend this class, the XML fixtures they use will start with
  * ::$projectTitle.
- *
- * @group update
  */
 abstract class UpdateSemverTestBase extends UpdateTestBase {
 

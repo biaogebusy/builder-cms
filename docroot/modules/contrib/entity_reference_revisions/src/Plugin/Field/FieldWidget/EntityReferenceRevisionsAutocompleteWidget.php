@@ -2,8 +2,11 @@
 
 namespace Drupal\entity_reference_revisions\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\EntityReferenceAutocompleteWidget;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'entity_reference_autocomplete' widget.
@@ -17,6 +20,12 @@ use Drupal\Core\Form\FormStateInterface;
  *   }
  * )
  */
+#[FieldWidget(
+  id: 'entity_reference_revisions_autocomplete',
+  label: new TranslatableMarkup('Autocomplete'),
+  description: new TranslatableMarkup('An autocomplete text field.'),
+  field_types: ['entity_reference_revisions'],
+)]
 class EntityReferenceRevisionsAutocompleteWidget extends EntityReferenceAutocompleteWidget {
 
   /**

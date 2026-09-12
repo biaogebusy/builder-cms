@@ -168,3 +168,11 @@ field.widget.settings.commerce_product_single_variation:
     field_title_text:
       type: label
       label: 'Field title text'
+
+field.widget.settings.commerce_product_variation_attributes:
+  type: mapping
+  label: 'Product variation attributes'
+  mapping:
+    hide_single:
+      type: boolean
+      label: 'Hide if there''s only one product variation'

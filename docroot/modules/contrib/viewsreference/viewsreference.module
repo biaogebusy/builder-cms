@@ -48,6 +48,10 @@ function viewsreference_theme($existing, $type, $theme, $path) {
       'template' => 'viewsreference--view-title',
       'render element' => 'variables',
     ],
+    'viewsreference__lazy_builder_loading' => [
+      'template' => 'viewsreference--lazy-builder-loading',
+      'render element' => 'variables',
+    ],
   ];
 }
 
@@ -84,9 +88,15 @@ function viewsreference_views_pre_view(ViewExecutable $view, $display_id, array 
   if (!empty($view->getRequest()->query->all('viewsreference'))) {
     $view->element['#viewsreference'] = $view->getRequest()->query->all('viewsreference');
     // For ajax views we reset all handlers and make the view initialize again
-    // to allow changes from the settings plugins.
-    $view->display_handler->handlers = [];
-    $view->inited = FALSE;
+    // to allow changes from the settings plugins. Only reset when the view has
+    // not yet been built: hook_views_pre_view fires a second time during
+    // View::preRenderViewElement() → executeDisplay() and at that point the
+    // view is already built. Resetting handlers then clears the relationship
+    // aliases that were set during build(), breaking relationship-based fields.
+    if (empty($view->built)) {
+      $view->display_handler->handlers = [];
+      $view->inited = FALSE;
+    }
   }
 
   // Decompress the Views Reference settings.

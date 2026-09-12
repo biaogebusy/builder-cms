@@ -157,7 +157,7 @@ display:
           field: filename
           entity_type: file
           entity_field: filename
-          label: ''
+          label: 'Filename'
           alter:
             alter_text: false
             make_link: false

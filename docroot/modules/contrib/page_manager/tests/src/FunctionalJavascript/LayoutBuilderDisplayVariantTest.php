@@ -4,6 +4,7 @@ namespace Drupal\Tests\page_manager\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+use Drupal\Tests\page_manager\Traits\WebDriverFormSubmitTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
@@ -13,6 +14,7 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
  */
 class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
 
+  use WebDriverFormSubmitTrait;
   use UserCreationTrait;
   use ContextualLinkClickTrait;
 
@@ -84,6 +86,7 @@ class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '.layout-builder-block__content-preview-placeholder-label'));
 
     $page->pressButton('Finish');
+    $this->waitForPage();
     $assert_session->pageTextContains('The layout has been saved.');
 
     // Go the layout builder variant.
@@ -119,6 +122,7 @@ class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
 
     // Save page.
     $page->pressButton('Update and save');
+    $this->waitForPage();
 
     // Check if block is rendered in the correct region.
     $this->drupalGet('test-page');

@@ -3,12 +3,16 @@
 namespace Drupal\Tests\chosen\Kernel;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Chosen migration.
  *
  * @group chosen
  */
+#[RunTestsInSeparateProcesses]
+#[Group('chosen')]
 class ChosenMigrationTest extends MigrateDrupal7TestBase {
 
   /**

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\block_content\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\block_content\Plugin\migrate\source\d7\BlockCustomTranslation;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore objectid objectindex plid
-
 /**
  * Tests i18n content block translations source plugin.
- *
- * @covers \Drupal\block_content\Plugin\migrate\source\d7\BlockCustomTranslation
- *
- * @group content_translation
  */
+#[CoversClass(BlockCustomTranslation::class)]
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class BlockCustomTranslationTest extends MigrateSqlSourceTestBase {
 
   /**

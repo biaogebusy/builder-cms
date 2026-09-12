@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -20,6 +23,8 @@ use Drupal\user\Entity\User;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceItemTest extends FieldKernelTestBase {
 
   /**
@@ -272,8 +277,12 @@ class DynamicEntityReferenceItemTest extends FieldKernelTestBase {
     $entity->name->value = $this->randomMachineName();
     // This is equal to storing an entity to tempstore or cache and retrieving
     // it back. An example for this is node preview.
+    // @codingStandardIgnoreStart
+    // phpcs:disable
     $entity = serialize($entity);
     $entity = unserialize($entity);
+    // phpcs:enable
+    // @codingStandardIgnoreEnd
     // And then the entity.
     $entity->save();
     $term = $this->container->get('entity.repository')->loadEntityByUuid($term->getEntityTypeId(), $term->uuid());
@@ -298,8 +307,12 @@ class DynamicEntityReferenceItemTest extends FieldKernelTestBase {
     $entity->name->value = $this->randomMachineName();
     // This is equal to storing an entity to tempstore or cache and retrieving
     // it back. An example for this is node preview.
+    // @codingStandardIgnoreStart
+    // phpcs:disable
     $entity = serialize($entity);
     $entity = unserialize($entity);
+    // phpcs:enable
+    // @codingStandardIgnoreEnd
     // And then the entity.
     $entity->save();
     $term = $this->container->get('entity.repository')->loadEntityByUuid($term->getEntityTypeId(), $term->uuid());

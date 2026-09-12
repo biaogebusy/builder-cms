@@ -7,13 +7,16 @@ namespace Drupal\Tests\views\Functional;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the views bulk form test.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\field\BulkForm
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class BulkFormTest extends BrowserTestBase {
 
   use NodeCreationTrait;
@@ -106,12 +109,10 @@ class BulkFormTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('Unpublish content was applied to 1 item.');
 
     // Load the node again.
-    $node_storage->resetCache([$node->id()]);
     $node = $node_storage->load($node->id());
     $this->assertFalse($node->isPublished(), 'A single node has been unpublished.');
 
     // The second node should still be published.
-    $node_storage->resetCache([$nodes[1]->id()]);
     $node = $node_storage->load($nodes[1]->id());
     $this->assertTrue($node->isPublished(), 'An unchecked node is still published.');
 
@@ -232,7 +233,7 @@ class BulkFormTest extends BrowserTestBase {
     // by another user before the loaded bulk form was submitted.
     $this->drupalGet('test_bulk_form');
     // Call the node delete action.
-    foreach ($nodes as $key => $node) {
+    foreach ($nodes as $node) {
       $node->delete();
     }
     $edit = [

@@ -22,8 +22,19 @@ class BasicFieldsTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'field',
+    'options',
+    'datetime',
+    'datetime_range',
+    'telephone',
+    'link',
+    'text',
+    // @todo Check if this is actually needed for testing, and if not, remove
+    // from config that depends on it.
+    'menu_ui',
+    'entity_share_test',
     'entity_share_entity_test',
-    'jsonapi_extras',
   ];
 
   /**

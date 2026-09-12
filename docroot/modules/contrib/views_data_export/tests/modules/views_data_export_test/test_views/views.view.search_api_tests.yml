@@ -204,7 +204,7 @@ display:
             encoding: utf8
             utf8_bom: '0'
       export_limit: 8
-      store_in_public_file_directory: false
+      export_filesystem: private
       redirect_to_display: none
       custom_redirect_path: false
       include_query_params: false

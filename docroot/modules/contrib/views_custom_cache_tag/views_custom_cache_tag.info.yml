@@ -3,7 +3,7 @@ type: module
 description: 'Add views custom cache tag.'
 core_version_requirement: ^8.7.7 || ^9 || ^10 || ^11
 
-# Information added by Drupal.org packaging script on 2025-02-08
-version: '8.x-1.4'
+# Information added by Drupal.org packaging script on 2026-03-03
+version: '8.x-1.5'
 project: 'views_custom_cache_tag'
-datestamp: 1739000547
+datestamp: 1772572224

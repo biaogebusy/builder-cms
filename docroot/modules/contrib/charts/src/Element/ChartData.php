@@ -38,6 +38,8 @@ class ChartData extends RenderElementBase {
       '#date_format' => NULL,
       '#prefix' => NULL,
       '#suffix' => NULL,
+      // Allows properties or options not coded in the Charts module.
+      '#raw_options' => [],
     ];
   }
 

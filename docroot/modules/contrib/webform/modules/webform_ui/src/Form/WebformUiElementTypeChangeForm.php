@@ -23,7 +23,7 @@ class WebformUiElementTypeChangeForm extends WebformUiElementTypeFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $key = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $key = NULL) {
     $element = $webform->getElement($key);
 
     /** @var \Drupal\webform\Plugin\WebformElementInterface $webform_element */

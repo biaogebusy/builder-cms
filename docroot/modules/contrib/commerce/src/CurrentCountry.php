@@ -42,7 +42,7 @@ class CurrentCountry implements CurrentCountryInterface {
    */
   public function getCountry() {
     $request = $this->requestStack->getCurrentRequest();
-    if (!$request || !$this->countries->contains($request)) {
+    if (!$request || !$this->countries->offsetExists($request)) {
       $country = $this->chainResolver->resolve();
       if (!$request) {
         return $country;

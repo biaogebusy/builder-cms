@@ -7,3 +7,6 @@ services:
     arguments: ['@plugin.manager.ai_ckeditor']
     tags:
       - { name: paramconverter }
+  Drupal\ai_ckeditor\Hook\AiCKEditorHooks:
+    class: Drupal\ai_ckeditor\Hook\AiCKEditorHooks
+    autowire: true

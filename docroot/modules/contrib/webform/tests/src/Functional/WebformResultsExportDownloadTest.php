@@ -30,7 +30,7 @@ class WebformResultsExportDownloadTest extends WebformBrowserTestBase {
   /**
    * Tests download files.
    */
-  public function testDownloadFiles() {
+  public function testDownloadFiles(): void {
     $this->drupalLogin($this->rootUser);
 
     /** @var \Drupal\webform\WebformInterface $webform */
@@ -149,7 +149,7 @@ class WebformResultsExportDownloadTest extends WebformBrowserTestBase {
    *   Array of archive contents.
    */
   protected function getArchiveContents($filepath) {
-    if (strpos($filepath, '.zip') !== FALSE) {
+    if (str_contains($filepath, '.zip')) {
       $archive = new \ZipArchive();
       $archive->open($filepath);
       $files = [];

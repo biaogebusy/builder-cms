@@ -5,21 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\views\Entity\View;
-use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
-use Drupal\Core\Entity\Entity\EntityViewMode;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\field\RenderedEntity handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldRenderedEntityTest extends ViewsKernelTestBase {
 
   /**
@@ -44,7 +46,7 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpFixtures() {
+  protected function setUpFixtures(): void {
     $this->installEntitySchema('user');
     $this->installEntitySchema('entity_test');
     $this->installConfig(['entity_test']);
@@ -165,7 +167,7 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
    * Ensures that the expected cacheability metadata is applied.
    *
    * @param array $build
-   *   The render array
+   *   The render array.
    *
    * @internal
    */

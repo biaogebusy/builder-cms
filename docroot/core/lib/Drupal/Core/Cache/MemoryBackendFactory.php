@@ -4,6 +4,9 @@ namespace Drupal\Core\Cache;
 
 use Drupal\Component\Datetime\TimeInterface;
 
+/**
+ * Defines a memory cache backend factory.
+ */
 class MemoryBackendFactory implements CacheFactoryInterface {
 
   /**
@@ -16,14 +19,10 @@ class MemoryBackendFactory implements CacheFactoryInterface {
   /**
    * Constructs a MemoryBackendFactory object.
    *
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(protected ?TimeInterface $time = NULL) {
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
+  public function __construct(protected TimeInterface $time) {
   }
 
   /**

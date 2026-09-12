@@ -60,9 +60,12 @@ class HttpStatusCodeDisplayVariant extends VariantBase implements ContextAwareVa
    *
    * @param \Drupal\Component\Plugin\Context\ContextInterface[] $contexts
    *   An array of contexts, keyed by context name.
+   *
+   * @return $this
    */
   public function setContexts(array $contexts) {
     $this->contexts = $contexts;
+    return $this;
   }
 
   /**

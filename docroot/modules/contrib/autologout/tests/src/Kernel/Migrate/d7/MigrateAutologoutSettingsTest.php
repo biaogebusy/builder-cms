@@ -4,6 +4,8 @@ namespace Drupal\Tests\autologout\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 
+// cspell:ignore whitelisted
+
 /**
  * Upgrade variables to autologout.settings.yml.
  *

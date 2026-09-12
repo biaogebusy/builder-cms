@@ -1,0 +1,199 @@
+/**
+ * @file
+ * Claro styles for the System Status Report.
+ */
+
+:root {
+  --system-admin-status-report-border-color: var(--admin-color-border);
+}
+
+.system-status-report {
+  position: relative;
+  margin-block-start: var(--admin-space-l);
+  padding: var(--admin-space-m);
+
+  h3 + .divider,
+  .divider:last-child {
+    display: none;
+  }
+
+  @media screen and (max-width: 48em) {
+    word-wrap: break-word;
+  }
+}
+
+.system-status-report__status-title {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  vertical-align: top;
+  color: var(--admin-color-text-loud);
+  background-color: transparent;
+  font-weight: var(--admin-font-weight-semibold);
+  padding-block: 1em;
+  padding-inline: 3em 1em;
+
+  .color-checked &::before,
+  #checked + .gin-details__wrapper--system-status-report &::before {
+    position: absolute;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    margin-inline-end: 10px;
+    content: "";
+    background-color: var(--admin-color-success);
+    background-image: none;
+    mask-image: var(--admin-icon-status);
+    mask-repeat: no-repeat;
+    mask-position: center center;
+    mask-size: 20px 20px;
+    inset-block-start: 1em;
+    inset-inline-start: 10px;
+  }
+
+  @media screen and (min-width: 48em) {
+    width: 18rem;
+    cursor: default;
+
+    &:hover,
+    &:focus {
+      text-decoration: none;
+    }
+
+    html.js &::-webkit-details-marker {
+      display: none;
+    }
+  }
+}
+
+.system-status-report__status-icon::before {
+  position: absolute;
+  inset-block-start: 1em;
+  inset-inline-start: 10px;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  margin-inline-end: 10px;
+  content: "";
+  vertical-align: top;
+  mask-repeat: no-repeat;
+  mask-position: center center;
+  mask-size: 20px 20px;
+
+  @media (forced-colors: active) {
+    background-color: canvastext;
+  }
+}
+
+.system-status-report__status-icon--checked {
+  &::before,
+  .details-title::before {
+    background-color: var(--admin-color-success);
+    mask-image: var(--admin-icon-status);
+  }
+}
+
+.system-status-report__status-icon--error {
+  &::before,
+  .details-title::before {
+    background-color: var(--admin-color-error);
+    mask-image: var(--admin-icon-error);
+  }
+}
+
+.system-status-report__status-icon--warning {
+  &::before,
+  .details-title::before {
+    background-color: var(--admin-color-warning);
+    mask-image: var(--admin-icon-warning);
+  }
+}
+
+.cron-description__run-cron {
+  display: block;
+  margin-block-start: var(--admin-space-m);
+}
+
+.system-status-report__row {
+  display: flex;
+  border-bottom: 1px solid var(--system-admin-status-report-border-color);
+  border-block-end: 1px solid var(--admin-color-border);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.system-status-report__requirements-group {
+  padding: var(--admin-space-m);
+
+  h3 {
+    margin-block-start: 0;
+  }
+
+  h3 + .divider,
+  .divider:last-child {
+    display: none;
+  }
+
+  & > h3 {
+    padding: var(--admin-space-m) var(--admin-space-l);
+    text-transform: none;
+    color: var(--admin-color-primary-active);
+    border: 0 none;
+    border-radius: var(--admin-radius-m);
+    background: var(--admin-color-bg-header);
+    font-size: var(--admin-font-size-l);
+    font-weight: var(--admin-font-weight-bold);
+    margin-block: 0 var(--admin-space-m);
+    margin-inline: 0;
+  }
+}
+
+.system-status-report__entry {
+  overflow: auto;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+
+  & h3 {
+    margin-block: 10px;
+    font-size: 1.231em;
+  }
+
+  @media screen and (min-width: 48em) {
+    &::after {
+      display: table;
+      clear: both;
+      content: "";
+    }
+  }
+}
+
+.system-status-report__entry--error {
+  background-color: transparent;
+}
+
+.system-status-report__entry--warning {
+  background-color: transparent;
+}
+
+.system-status-report__entry__value {
+  box-sizing: border-box;
+  padding-block: 0 1em;
+  padding-inline: 3em 1em;
+  font-size: var(--admin-font-size-s);
+
+  @media screen and (min-width: 48em) {
+    display: block;
+    width: calc(100% - 23em);
+    padding-block-start: 1em;
+    padding-inline-start: 0;
+  }
+}
+
+.gin-details__summary--system-status-report {
+  background: transparent;
+}

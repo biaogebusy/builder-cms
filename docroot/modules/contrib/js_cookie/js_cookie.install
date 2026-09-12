@@ -5,6 +5,8 @@
  * Install for js_cookie module.
  */
 
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
+
 /**
  * Implements hook_requirements().
  */
@@ -14,28 +16,25 @@ function js_cookie_requirements($phase) {
   }
 
   $requirements = [];
-  $libraries = \Drupal::service('library.discovery')->getLibrariesByExtension('js_cookie');
+  /** @var \Drupal\Core\Asset\LibrariesDirectoryFileFinder $library_file_finder */
+  $library_file_finder = \Drupal::service('library.libraries_directory_file_finder');
+  $is_locally_installed = file_exists($library_file_finder->find('js-cookie/dist/js.cookie.min.js'));
 
-  // Check installed libraries.
-  foreach ($libraries as $library_name => &$library) {
-    if (isset($library['directory'])) {
-      if (!file_exists(DRUPAL_ROOT . $library['directory'])) {
-        $requirements['js_cookie_' . $library_name] = [
-          'title' => t('JS Cookie Library @library', ['@library' => $library_name]),
-          'value' => t('Library %library is not installed locally and will be loaded from CDN. Loading external files from a CDN may be a data protection violation.', ['%library' => $library_name]),
-          'description' => 'Please install the library. For more information see README.md',
-          'severity' => REQUIREMENT_WARNING,
-        ];
-      }
-      else {
-        $requirements['js_cookie_' . $library_name] = [
-          'title' => t('JS Cookie Library @library', ['@library' => $library_name]),
-          'value' => t('Library %library is installed.', ['%library' => $library_name]),
-          'description' => 'The library is installed and will be loaded from the local libraries directory.',
-          'severity' => REQUIREMENT_OK,
-        ];
-      }
-    }
+  // Check if the library is installed locally:
+  if (!$is_locally_installed) {
+    $requirements['js_cookie'] = [
+      'title' => t('JS Cookie'),
+      'value' => t('Required library "js-cookie" not found locally under "/libraries/js-cookie/dist/js.cookie.min.js". Loading from CDN instead.'),
+      'description' => 'Loading external files from a CDN may be a data protection violation! For more information read the README.md',
+      'severity' => RequirementSeverity::Warning,
+    ];
+  }
+  else {
+    $requirements['js_cookie'] = [
+      'title' => t('JS Cookie'),
+      'value' => t('The "js-cookie" library is installed locally.'),
+      'severity' => RequirementSeverity::Info,
+    ];
   }
 
   return $requirements;

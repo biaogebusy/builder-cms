@@ -6,19 +6,25 @@ namespace Drupal\Tests\media\Functional\FieldFormatter;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\media\Entity\Media;
+use Drupal\media\Plugin\Field\FieldFormatter\OEmbedFormatter;
 use Drupal\media_test_oembed\Controller\ResourceController;
 use Drupal\media_test_oembed\UrlResolver;
 use Drupal\Tests\media\Functional\MediaFunctionalTestBase;
 use Drupal\Tests\media\Traits\OEmbedTestTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore Schipulcon
 
 /**
- * @covers \Drupal\media\Plugin\Field\FieldFormatter\OEmbedFormatter
- *
- * @group media
- * @group #slow
+ * Tests OEmbed Formatter.
  */
+#[Group('media')]
+#[Group('#slow')]
+#[CoversClass(OEmbedFormatter::class)]
+#[RunTestsInSeparateProcesses]
 class OEmbedFormatterTest extends MediaFunctionalTestBase {
 
   use OEmbedTestTrait;
@@ -47,7 +53,7 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
-      ->save(TRUE);
+      ->save();
 
     $this->container->get('router.builder')->rebuild();
   }
@@ -58,6 +64,7 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
    * @see ::testRender()
    *
    * @return array
+   *   An array of test data.
    */
   public static function providerRender() {
     return [
@@ -189,9 +196,8 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
    *   name, that the element is expected to have.
    * @param bool $self_closing
    *   Indicator if the HTML element is self closing i.e. <p/> vs <p></p>.
-   *
-   * @dataProvider providerRender
    */
+  #[DataProvider('providerRender')]
   public function testRender($url, $resource_url, array $formatter_settings, array $selectors, bool $self_closing): void {
     $account = $this->drupalCreateUser(['view media']);
     $this->drupalLogin($account);

@@ -1,11 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
-			count: 1
-			path: diff.module
-
-		-
 			message: "#^Function diff_help\\(\\) has parameter \\$route_name with no type specified\\.$#"
 			count: 1
 			path: diff.module
@@ -31,32 +26,12 @@ parameters:
 			path: src/DiffBuilderManager.php
 
 		-
-			message: "#^Access to an undefined property Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\:\\:\\$moderation_state\\.$#"
-			count: 1
-			path: src/DiffEntityComparison.php
-
-		-
 			message: "#^Method Drupal\\\\diff\\\\DiffEntityComparison\\:\\:getRows\\(\\) should return array but returns string\\.$#"
 			count: 1
 			path: src/DiffEntityComparison.php
 
 		-
-			message: "#^Only booleans are allowed in &&, Drupal\\\\diff\\\\FieldDiffBuilderInterface\\|null given on the left side\\.$#"
-			count: 1
-			path: src/DiffEntityComparison.php
-
-		-
-			message: "#^PHPDoc tag @var for variable \\$field_items contains generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
-			count: 1
-			path: src/DiffEntityComparison.php
-
-		-
 			message: "#^Parameter \\#1 \\$from_lines of class Drupal\\\\Component\\\\Diff\\\\Diff constructor expects array, string given\\.$#"
-			count: 1
-			path: src/DiffEntityComparison.php
-
-		-
-			message: "#^Parameter \\#1 \\$revision of method Drupal\\\\diff\\\\DiffEntityComparison\\:\\:summary\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\EntityInterface given\\.$#"
 			count: 1
 			path: src/DiffEntityComparison.php
 
@@ -103,11 +78,6 @@ parameters:
 		-
 			message: "#^Implicit array creation is not allowed \\- variable \\$revision_link does not exist\\.$#"
 			count: 2
-			path: src/DiffLayoutBase.php
-
-		-
-			message: "#^Method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:buildConfigurationForm\\(\\) should return array but return statement is missing\\.$#"
-			count: 1
 			path: src/DiffLayoutBase.php
 
 		-
@@ -191,11 +161,6 @@ parameters:
 			path: src/Form/FieldsSettingsForm.php
 
 		-
-			message: "#^Method Drupal\\\\diff\\\\Form\\\\FieldsSettingsForm\\:\\:create\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Form/FieldsSettingsForm.php
-
-		-
 			message: "#^Only booleans are allowed in &&, array given on the left side\\.$#"
 			count: 1
 			path: src/Form/FieldsSettingsForm.php
@@ -226,11 +191,6 @@ parameters:
 			path: src/Form/GeneralSettingsForm.php
 
 		-
-			message: "#^Method Drupal\\\\diff\\\\Form\\\\GeneralSettingsForm\\:\\:create\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Form/GeneralSettingsForm.php
-
-		-
 			message: "#^Method Drupal\\\\diff\\\\Form\\\\GeneralSettingsForm\\:\\:submitForm\\(\\) has no return type specified\\.$#"
 			count: 1
 			path: src/Form/GeneralSettingsForm.php
@@ -241,7 +201,7 @@ parameters:
 			path: src/Form/GeneralSettingsForm.php
 
 		-
-			message: "#^Only booleans are allowed in a negated boolean, array\\<int\\<0, max\\>, mixed\\> given\\.$#"
+			message: "#^Only booleans are allowed in a negated boolean, list\\<mixed\\> given\\.$#"
 			count: 1
 			path: src/Form/GeneralSettingsForm.php
 
@@ -259,56 +219,6 @@ parameters:
 			message: "#^Unsafe usage of new static\\(\\)\\.$#"
 			count: 1
 			path: src/Form/GeneralSettingsForm.php
-
-		-
-			message: "#^Call to an undefined method Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\:\\:getRevisionCreationTime\\(\\)\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Call to an undefined method Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\:\\:getRevisionUser\\(\\)\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Implicit array creation is not allowed \\- variable \\$build does not exist\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildForm\\(\\) has parameter \\$node with no type specified\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:create\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:submitForm\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:validateForm\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Only booleans are allowed in an if condition, Drupal\\\\Core\\\\Entity\\\\RevisionableInterface\\|null given\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Parameter \\#4 \\$previous_revision of method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildRevision\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\|null, Drupal\\\\Core\\\\Entity\\\\RevisionableInterface\\|null given\\.$#"
-			count: 2
-			path: src/Form/RevisionOverviewForm.php
-
-		-
-			message: "#^Unsafe usage of new static\\(\\)\\.$#"
-			count: 1
-			path: src/Form/RevisionOverviewForm.php
 
 		-
 			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\CommentFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
@@ -478,11 +388,6 @@ parameters:
 
 		-
 			message: "#^Method Drupal\\\\diff\\\\Routing\\\\RouteSubscriber\\:\\:alterRoutes\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Routing/RouteSubscriber.php
-
-		-
-			message: "#^Only booleans are allowed in an if condition, Symfony\\\\Component\\\\Routing\\\\Route\\|null given\\.$#"
 			count: 1
 			path: src/Routing/RouteSubscriber.php
 

@@ -19,5 +19,8 @@
   "support": {
     "issues": "https://www.drupal.org/project/issues/easy_breadcrumb",
     "source": "https://git.drupalcode.org/project/easy_breadcrumb"
+  },
+  "require-dev": {
+    "drush/drush":"^13"
   }
 }

@@ -69,7 +69,7 @@ elements: |
   managed_file_extensions:
     '#type': managed_file
     '#title': managed_file_extensions
-    '#file_extensions': 'txt, text'
+    '#file_extensions': 'txt text'
 css: ''
 javascript: ''
 settings:

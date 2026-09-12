@@ -68,6 +68,66 @@ $response = $provider->chat($input, 'gpt-4o');
 
 You can also create the schema from an array with `StructuredOutputSchema::fromArray([...])`, or pass a plain array directly to `setChatStructuredJsonSchema()` (keys: `name`, `description`, `strict`, and `schema` or `json_schema` for the schema content). The DTO validates the schema (e.g. `name` must be lowercase letters, numbers, underscores, hyphens; schema content must be a non-empty array). See `\Drupal\ai\Dto\StructuredOutputSchema` and `ChatInput::setChatStructuredJsonSchema()` in the codebase for full usage and validation details.
 
+### Token usage
+
+Every `ChatOutput` carries information about how many tokens the call used, read via `getTokenUsage()`, which returns a `Drupal\ai\Dto\TokenUsageDto`.
+
+```php
+/** @var \Drupal\ai\OperationType\Chat\ChatOutput $response */
+$usage = $response->getTokenUsage();
+echo $usage->total;
+// Returns something like 42
+```
+
+`TokenUsageDto` has five public, nullable integer properties:
+
+* `input` - the number of input (prompt) tokens.
+* `output` - the number of output (completion) tokens.
+* `total` - the total number of tokens used.
+* `reasoning` - the number of reasoning tokens, for models that report them.
+* `cached` - the number of cached tokens, for providers that support prompt caching.
+
+Any of these may be `NULL` rather than `0` - that means the provider did not report that particular value, not that it was zero.
+
+`TokenUsageDto` also gets `create()` and `toArray()` from `DtoBaseMethodsTrait`. `create()` builds an instance from an associative array (unknown keys are ignored), and `toArray()` converts it back to an array of its public properties - useful for logging or serializing usage data.
+
+```php
+use Drupal\ai\Dto\TokenUsageDto;
+
+$usage = TokenUsageDto::create(['input' => 10, 'output' => 20, 'total' => 30]);
+$array = $usage->toArray();
+// ['input' => 10, 'output' => 20, 'total' => 30, 'reasoning' => NULL, 'cached' => NULL]
+```
+
+For streamed responses, usage is only available once the stream is fully consumed - see [Streaming Chat Call](call_chat_streaming.md#token-usage).
+
+!!! warning "Deprecated per-value methods"
+    The individual accessors below on `ChatOutput` are deprecated in `ai:1.2.0` and **removed in `ai:2.0.0`** ([issue 3541284](https://www.drupal.org/project/ai/issues/3541284)). Use `getTokenUsage()` / `setTokenUsage()` instead.
+
+#### Deprecated getters
+
+| Deprecated | Replacement |
+|---|---|
+| `getTotalTokenUsage()` | `getTokenUsage()->total` |
+| `getInputTokenUsage()` | `getTokenUsage()->input` |
+| `getOutputTokenUsage()` | `getTokenUsage()->output` |
+| `getReasoningTokenUsage()` | `getTokenUsage()->reasoning` |
+| `getCachedTokenUsage()` | `getTokenUsage()->cached` |
+
+#### Deprecated setters
+
+| Deprecated | Replacement |
+|---|---|
+| `setTotalTokenUsage($tokens)` | `getTokenUsage()->total = $tokens` |
+| `setInputTokenUsage($tokens)` | `getTokenUsage()->input = $tokens` |
+| `setOutputTokenUsage($tokens)` | `getTokenUsage()->output = $tokens` |
+| `setReasoningTokenUsage($tokens)` | `getTokenUsage()->reasoning = $tokens` |
+| `setCachedTokenUsage($tokens)` | `getTokenUsage()->cached = $tokens` |
+
+Setting several values at once (e.g. right after an API call)? Replace the whole DTO instead: `setTokenUsage(new TokenUsageDto(total: ..., input: ..., output: ...))`.
+
+If you are implementing a provider, see [Reporting token usage](writing_an_ai_provider.md#reporting-token-usage) in the "Develop a new AI Provider" guide.
+
 ### Streaming vs Non-Streaming output.
 There is a helper method when using the chat providers that makes it possible to stream the output, if the chat provider has the possibility to do so. This can be set via the method `$input->setStreamedOutput(TRUE);` on the ChatInput object. This will give you back an iterator or generator that you can do a foreach on and flush the output buffers each time. See the section in [Develop Third Party module](develop_third_party_module.md/#streaming-chat) about how to add checks for it.
 

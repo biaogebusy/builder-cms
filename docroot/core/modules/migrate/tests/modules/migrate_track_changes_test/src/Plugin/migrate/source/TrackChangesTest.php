@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_track_changes_test\Plugin\migrate\source;
 
+use Drupal\migrate\Attribute\MigrateSource;
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
 
 /**
  * Source plugin for migration track changes tests.
- *
- * @MigrateSource(
- *   id = "track_changes_test"
- * )
  */
+#[MigrateSource('track_changes_test')]
 class TrackChangesTest extends SqlBase {
 
   /**
@@ -32,9 +32,9 @@ class TrackChangesTest extends SqlBase {
    */
   public function fields() {
     $fields = [
-      'tid' => $this->t('Term id'),
-      'name' => $this->t('Name'),
-      'description' => $this->t('Description'),
+      'tid' => 'Term id',
+      'name' => 'Name',
+      'description' => 'Description',
     ];
 
     return $fields;

@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\KernelTests\Core\ClassLoader;
+
+use Doctrine\Common\Annotations\AnnotationException as DoctrineAnnotationException;
+use Drupal\Component\Annotation\Doctrine\AnnotationException;
+use Drupal\Component\Utility\Random;
+use Drupal\Core\ClassLoader\BackwardsCompatibilityClassLoader;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\StringTranslation\TranslationWrapper;
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\module_autoload_test\Foo;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
+/**
+ * Tests Drupal\Core\ClassLoader\BackwardsCompatibilityClassLoader.
+ */
+#[CoversClass(BackwardsCompatibilityClassLoader::class)]
+#[Group('ClassLoader')]
+#[RunTestsInSeparateProcesses]
+class BackwardsCompatibilityClassLoaderTest extends KernelTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['module_autoload_test'];
+
+  /**
+   * Tests that the bc layer for TranslationWrapper works.
+   */
+  public function testTranslationWrapper(): void {
+    // @phpstan-ignore class.notFound
+    $object = new TranslationWrapper('Backward compatibility');
+    $this->assertInstanceOf(TranslatableMarkup::class, $object);
+  }
+
+  /**
+   * Tests that a moved class from a module works.
+   */
+  #[IgnoreDeprecations]
+  public function testModuleMovedClass():  void {
+    // @phpstan-ignore class.notFound
+    $this->expectUserDeprecationMessage('Class ' . Foo::class . ' is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0, use Drupal\Component\Utility\Random instead. See https://example.com/change_record');
+    // @phpstan-ignore class.notFound
+    $object = new Foo();
+    $this->assertInstanceOf(Random::class, $object);
+  }
+
+  /**
+   * Tests that the BC layer for Doctrine's AnnotationException works.
+   */
+  #[IgnoreDeprecations]
+  public function testDoctrineException(): void {
+    // @phpstan-ignore class.notFound
+    $this->expectException(DoctrineAnnotationException::class);
+    $this->expectExceptionMessage('[Syntax Error] test');
+    $this->expectUserDeprecationMessage('Class Doctrine\Common\Annotations\AnnotationException is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0, use Drupal\Component\Annotation\Doctrine\AnnotationException instead. See https://www.drupal.org/node/3551049');
+    throw AnnotationException::syntaxError('test');
+  }
+
+}

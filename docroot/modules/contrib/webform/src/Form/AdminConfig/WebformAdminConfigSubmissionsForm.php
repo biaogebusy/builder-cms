@@ -116,7 +116,7 @@ class WebformAdminConfigSubmissionsForm extends WebformAdminConfigBaseForm {
       'default_submission_log' => [
         'title' => $this->t('Log all submission events for all webforms'),
         'description' => $this->t('If checked, all submission events will be logged to dedicated submission log available to all webforms and submissions.') . '<br/><br/>' .
-          '<em>' . $this->t('The webform submission log will track more detailed user information including email addresses and subjects.') . '</em>',
+        '<em>' . $this->t('The webform submission log will track more detailed user information including email addresses and subjects.') . '</em>',
       ],
       'default_results_customize' => [
         'title' => $this->t('Allow users to customize the submission results table'),

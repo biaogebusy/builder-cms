@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
-/* cspell:ignore drupalelementstylecommand */
+/* cspell:ignore drupalelementstyle drupalelementstylecommand */
+/* cspell:ignore drupalelementstyleediting */
 import { Plugin } from 'ckeditor5/src/core';
 import * as icons from '@ckeditor/ckeditor5-icons';
 import { first } from 'ckeditor5/src/utils';

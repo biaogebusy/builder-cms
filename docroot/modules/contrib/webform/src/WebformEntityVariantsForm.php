@@ -371,7 +371,7 @@ class WebformEntityVariantsForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = $this->getEntity();
-    $webform->save();
+    $status = $webform->save();
 
     $context = [
       '@label' => $webform->label(),
@@ -380,6 +380,8 @@ class WebformEntityVariantsForm extends EntityForm {
     $this->logger('webform')->notice('Webform @label variant saved.', $context);
 
     $this->messenger()->addStatus($this->t('Webform %label variant saved.', ['%label' => $webform->label()]));
+
+    return $status;
   }
 
   /**

@@ -35,6 +35,26 @@ display:
           table: search_api_index_test_index
           field: search_api_id
           plugin_id: standard
+        name:
+          id: name
+          table: search_api_index_test_index
+          field: name
+          plugin_id: standard
+      filters:
+        language_with_fallback:
+          id: language_with_fallback
+          table: search_api_index_test_index
+          field: language_with_fallback
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: search_api_language
+          operator: in
+          value:
+            '***LANGUAGE_language_interface***': '***LANGUAGE_language_interface***'
+          group: 1
+          exposed: false
+          is_grouped: false
       sorts:
         search_api_id:
           id: search_api_id

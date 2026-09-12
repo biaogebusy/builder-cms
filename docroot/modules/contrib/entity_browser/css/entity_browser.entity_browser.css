@@ -6,3 +6,12 @@
 .layout-container {
   margin: 0 !important;
 }
+
+/** Dock form actions in modal (except for selection displays) **/
+.entity-browser-form:not(.entity-browser-form--multi-step-display)
+  > .form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background-color: var(--color-white, white);
+}

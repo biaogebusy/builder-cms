@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Layout;
 
 use Drupal\Core\Layout\LayoutDefinition;
+use Drupal\Core\Layout\LayoutPluginManager;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Layout\LayoutPluginManager
- * @group Layout
+ * Tests Drupal\Core\Layout\LayoutPluginManager.
  */
+#[CoversClass(LayoutPluginManager::class)]
+#[Group('Layout')]
+#[RunTestsInSeparateProcesses]
 class LayoutPluginManagerTest extends KernelTestBase {
 
   /**

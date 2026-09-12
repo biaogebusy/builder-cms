@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\form_test\Form;
 
 use Drupal\Core\Form\ConfigTarget;
@@ -60,6 +62,16 @@ class NestedConfigTargetForm extends TreeConfigTargetForm {
         fn (?string $second_favorite_fruit) : string => $second_favorite_fruit ?? 'Orange',
         // The "toConfig" callable for the first choice sets all choices.
         fn () => ToConfig::NoOp,
+      ),
+    ];
+    $form['favorites']['motivation'] = [
+      '#type' => 'text_format',
+      '#title' => 'Motivation',
+      '#format' => $this->config('form_test.object')->get('motivation.format'),
+      '#config_target' => new ConfigTarget(
+        'form_test.object',
+        'motivation',
+        fromConfig: fn (?array $value = NULL): string => $value['value'] ?? ''
       ),
     ];
     $form['could_not_live_without'] = [

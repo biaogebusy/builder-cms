@@ -7,12 +7,14 @@ namespace Drupal\KernelTests\Core\TypedData;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\MapDataDefinition;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests ComplexData validation with both valid and invalid values.
- *
- * @group Validation
  */
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class ComplexDataConstraintValidatorTest extends KernelTestBase {
 
   /**
@@ -20,14 +22,14 @@ class ComplexDataConstraintValidatorTest extends KernelTestBase {
    *
    * @var \Drupal\Core\TypedData\TypedDataManager
    */
-  protected $typedData;
+  protected $typedDataManager;
 
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->typedData = $this->container->get('typed_data_manager');
+    $this->typedDataManager = $this->container->get('typed_data_manager');
   }
 
   /**
@@ -41,17 +43,19 @@ class ComplexDataConstraintValidatorTest extends KernelTestBase {
       ->setPropertyDefinition('key', DataDefinition::create('integer'))
       ->addConstraint('ComplexData', [
         'key' => [
-          'AllowedValues' => [1, 2, 3],
+          'AllowedValues' => [
+            'choices' => [1, 2, 3],
+          ],
         ],
       ]);
 
     // Test the validation.
-    $typed_data = $this->typedData->create($definition, ['key' => 1]);
+    $typed_data = $this->typedDataManager->create($definition, ['key' => 1]);
     $violations = $typed_data->validate();
     $this->assertEquals(0, $violations->count(), 'Validation passed for correct value.');
 
     // Test the validation when an invalid value is passed.
-    $typed_data = $this->typedData->create($definition, ['key' => 4]);
+    $typed_data = $this->typedDataManager->create($definition, ['key' => 4]);
     $violations = $typed_data->validate();
     $this->assertEquals(1, $violations->count(), 'Validation failed for incorrect value.');
 
@@ -63,19 +67,21 @@ class ComplexDataConstraintValidatorTest extends KernelTestBase {
 
     // Test using the constraint with a map without the specified key. This
     // should be ignored as long as there is no NotNull or NotBlank constraint.
-    $typed_data = $this->typedData->create($definition, ['foo' => 'bar']);
+    $typed_data = $this->typedDataManager->create($definition, ['foo' => 'bar']);
     $violations = $typed_data->validate();
     $this->assertEquals(0, $violations->count(), 'Constraint on non-existing key is ignored.');
 
     $definition = MapDataDefinition::create()
       ->setPropertyDefinition('key', DataDefinition::create('integer'))
       ->addConstraint('ComplexData', [
-        'key' => [
-          'NotNull' => [],
+        'properties' => [
+          'key' => [
+            'NotNull' => [],
+          ],
         ],
       ]);
 
-    $typed_data = $this->typedData->create($definition, ['foo' => 'bar']);
+    $typed_data = $this->typedDataManager->create($definition, ['foo' => 'bar']);
     $violations = $typed_data->validate();
     $this->assertEquals(1, $violations->count(), 'Key is required.');
   }

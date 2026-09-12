@@ -10,12 +10,14 @@ use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\views\Entity\View;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests deletion of a field and their dependencies in the UI.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class FieldUIDeleteTest extends BrowserTestBase {
 
   use FieldUiTestTrait;
@@ -111,6 +113,8 @@ class FieldUIDeleteTest extends BrowserTestBase {
     $this->assertSession()->pageTextNotContains('The listed configuration will be deleted.');
     $this->assertSession()->elementNotExists('xpath', '//ul[@data-drupal-selector="edit-view"]');
     $this->assertSession()->pageTextNotContains('test_view_field_delete');
+    // Test Breadcrumbs.
+    $this->assertSession()->linkExists($field_label, 0, 'Field label is correct in the breadcrumb of the field delete page.');
 
     // Delete the first field.
     $this->fieldUIDeleteField($bundle_path1, "node.$type_name1.$field_name", $field_label, $type_name1, 'content type');

@@ -18,20 +18,25 @@
 {% else %}
   {% if delta %}
     {% for i in 1..delta %}
-      {% if new_nesting_level > current_nesting_level  %}
+      {% if new_nesting_level > current_nesting_level %}
         <ul>
       {% else %}
-        </ul>
+        </li></ul>
       {% endif %}
     {% endfor %}
+  {% else %}
+    </li>
   {% endif %}
 {% endif %}
 
 <li>{{ item }}
 
 {% if loop.last %}
-  {# Close any remaining <li> tags #}
-  {% for i in new_nesting_level..0 %}
-    </li></ul>
-  {% endfor %}
+  </li>
+  {% if new_nesting_level > 0 %}
+    {% for i in 1..new_nesting_level %}
+      </ul></li>
+    {% endfor %}
+  {% endif %}
+  </ul>
 {% endif %}

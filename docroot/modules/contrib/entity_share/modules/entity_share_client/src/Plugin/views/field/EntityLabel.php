@@ -75,6 +75,13 @@ class EntityLabel extends FieldPluginBase {
     $import_status_language = $import_status_entity->language();
 
     $entity_type_id = $import_status_entity->entity_type_id->value;
+
+    // This can happen if a database was imported and left the entity import
+    // status table in place.
+    if (!isset($this->loadedEntities[$entity_type_id][$value])) {
+      return $this->t('Entity not found');
+    }
+
     $imported_entity = $this->loadedEntities[$entity_type_id][$value];
 
     if (!$import_status_language->isLocked()) {

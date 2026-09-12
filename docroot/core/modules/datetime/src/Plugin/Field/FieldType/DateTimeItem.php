@@ -15,11 +15,11 @@ use Drupal\Core\TypedData\DataDefinition;
  */
 #[FieldType(
   id: "datetime",
-  label: new TranslatableMarkup("Date"),
+  label: new TranslatableMarkup("Datetime"),
   description: [
-    new TranslatableMarkup("Ideal when date and time needs to be input by users, like event dates and times"),
-    new TranslatableMarkup("Date or date and time stored in a readable string format"),
-    new TranslatableMarkup("Easy to read and understand for humans"),
+    new TranslatableMarkup("Human-readable string format"),
+    new TranslatableMarkup("Choose either date or date and time"),
+    new TranslatableMarkup("Examples: 2001-01-15, 2001-01-15T05:28:07"),
   ],
   category: "date_time",
   default_widget: "datetime_default",
@@ -137,7 +137,7 @@ class DateTimeItem extends FieldItemBase implements DateTimeItemInterface {
   public function onChange($property_name, $notify = TRUE) {
     // Enforce that the computed date is recalculated.
     if ($property_name == 'value') {
-      $this->date = NULL;
+      $this->set('date', NULL);
     }
     parent::onChange($property_name, $notify);
   }

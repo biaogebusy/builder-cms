@@ -5,8 +5,15 @@ namespace Drupal\Core\Cache;
 /**
  * Indicates that caching is optional.
  *
- * This interface is backported to Drupal 10.5 to make it easier to support it,
- * There are no usages in Drupal core before 11.2
+ * This interface can be used to suggest that certain implementations are fast
+ * enough that they do not require additional caching.
+ *
+ * If and how exactly this is implemented and used depends on the specific
+ * system.
+ *
+ * Examples:
+ *  - If all active access policies implement this interface,
+ *    \Drupal\Core\Session\AccessPolicyProcessor will skip the persistent cache.
  */
 interface CacheOptionalInterface {
 

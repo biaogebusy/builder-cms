@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\user\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrates user flood control configuration.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class MigrateUserFloodTest extends MigrateDrupal7TestBase {
 
   /**

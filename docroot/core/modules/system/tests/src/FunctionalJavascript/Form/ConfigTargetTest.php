@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\FunctionalJavascript\Form;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests forms using #config_target and #ajax together.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class ConfigTargetTest extends WebDriverTestBase {
 
   /**

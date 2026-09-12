@@ -65,3 +65,14 @@ services:
     tags:
       - { name: needs_destruction }
   Drupal\commerce_payment\PaymentOrderUpdaterInterface: '@commerce_payment.order_updater'
+
+  Drupal\commerce_payment\Hook\CommercePaymentHooks:
+    class: Drupal\commerce_payment\Hook\CommercePaymentHooks
+
+  Drupal\commerce_payment\Hook\CommercePaymentThemeHooks:
+    class: Drupal\commerce_payment\Hook\CommercePaymentThemeHooks
+
+  commerce_payment.route_subscriber:
+    class: Drupal\commerce_payment\EventSubscriber\OrderPaymentAddFormRouteSubscriber
+    tags:
+      - { name: event_subscriber }

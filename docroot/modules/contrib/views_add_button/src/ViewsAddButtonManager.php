@@ -5,6 +5,7 @@ namespace Drupal\views_add_button;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\views_add_button\Annotation\ViewsAddButton;
 
 /**
  * Class ViewsAddButtonManager .
@@ -36,9 +37,9 @@ class ViewsAddButtonManager extends DefaultPluginManager {
      * The name of the interface that plugins should adhere to.
      * Drupal will enforce this as a requirement.
      */
-    $plugin_interface = 'Drupal\views_add_button\ViewsAddButtonInterface';
+    $plugin_interface = ViewsAddButtonInterface::class;
     // The name of the annotation class that contains the plugin definition.
-    $plugin_definition_annotation_name = 'Drupal\views_add_button\Annotation\ViewsAddButton';
+    $plugin_definition_annotation_name = ViewsAddButton::class;
     parent::__construct($subdir, $namespaces, $module_handler, $plugin_interface, $plugin_definition_annotation_name);
     /*
      * This allows the plugin definitions to be altered by an alter hook.

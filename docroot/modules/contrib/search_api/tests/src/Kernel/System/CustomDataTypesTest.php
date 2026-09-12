@@ -6,7 +6,6 @@ use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Utility\Utility;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
@@ -66,13 +65,6 @@ class CustomDataTypesTest extends KernelTestBase {
     $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installEntitySchema('search_api_task');
     $this->installConfig('search_api');
-
-    // Do not use a batch for tracking the initial items after creating an
-    // index when running the tests via the GUI. Otherwise, it seems Drupal's
-    // Batch API gets confused and the test fails.
-    if (!Utility::isRunningInCli()) {
-      \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
-    }
 
     $this->installConfig(['search_api_test_db']);
 

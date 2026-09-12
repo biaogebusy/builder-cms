@@ -5,7 +5,7 @@ core_version_requirement: ^10.3 || ^11
 package: 'Web services'
 configure: entity_share.admin_config_page
 
-# Information added by Drupal.org packaging script on 2025-08-13
-version: '4.0.0-alpha1'
+# Information added by Drupal.org packaging script on 2025-12-03
+version: '4.0.0-alpha2'
 project: 'entity_share'
-datestamp: 1755088824
+datestamp: 1764766397

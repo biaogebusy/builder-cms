@@ -37,13 +37,12 @@
   .layout-region--commerce-main,
   .layout-region--commerce-footer {
     grid-column: 1;
-    margin-inline: auto;
     width: var(--commerce-layout-content-width);
+    margin-inline: auto;
   }
 
   /* Push sidebar down to horizontal align with form section. */
   .layout-region--commerce-secondary {
     grid-row: span 2;
-    margin-block-start: 2rem;
   }
 }

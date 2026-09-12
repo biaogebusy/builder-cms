@@ -2,16 +2,29 @@
 
 namespace Drupal\blazy\Media;
 
-use Drupal\blazy\Blazy;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\BlazyManagerInterface;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Utility\Sanitize;
 use Drupal\media\MediaInterface;
 use Drupal\media\OEmbed\Resource;
 use Drupal\media\OEmbed\ResourceFetcherInterface;
 use Drupal\media\OEmbed\UrlResolverInterface;
+
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides OEmbed integration.
+ *
+ * Media component services deprecated in 3.x, and is removed in 4.x or 5.x.
+ * Public access is available via @blazy.media_context  coordinating layer.
+ *
+ * @internal
+ *   This is an internal part of the Blazy system and should only be used by
+ *   blazy-related code in Blazy module. Media integration is being reworked.
+ *
+ * @todo enable @trigger_error('BlazyMedia is deprecated in blazy:4.0.0 and is
+ * removed from blazy:5.0.0. Use @blazy.media_context instead.
+ * See https://www.drupal.org/node/3575429', E_USER_DEPRECATED);
  */
 class BlazyOEmbed implements BlazyOEmbedInterface {
 
@@ -33,8 +46,17 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
    * The blazy manager service.
    *
    * @var \Drupal\blazy\BlazyManagerInterface
+   *
+   * @todo deprecate and remove for $manager before or at 4.x.
    */
   protected $blazyManager;
+
+  /**
+   * The blazy manager service.
+   *
+   * @var \Drupal\blazy\BlazyManagerInterface
+   */
+  protected $manager;
 
   /**
    * The blazy manager service.
@@ -113,6 +135,13 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
   /**
    * {@inheritdoc}
    */
+  public function manager(): BlazyManagerInterface {
+    return $this->manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function blazyMedia() {
     return $this->blazyMedia;
   }
@@ -146,10 +175,11 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
    * {@inheritdoc}
    */
   public function build(array &$build): void {
+    /** @var array $settings */
+    $settings = &$build['#settings'];
     $access   = $build['#access'] ?? FALSE;
     $entity   = $build['#entity'] ?? NULL;
-    $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $valid    = $entity instanceof MediaInterface;
     $stage    = $settings['image'] ?? NULL;
     $stage    = $blazies->get('field.formatter.image', $stage);
@@ -176,7 +206,7 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
       }
     }
 
-    // Required early by BlazyImage::fromAny() below to get media metadata.
+    // Required early by Image::fromAny() below to get media metadata.
     if ($valid) {
       $build['#media'] = $media;
       // Prepare Media needed settings, extract Media thumbnail, except type.
@@ -187,36 +217,35 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
     }
 
     // Provides image url earlier for file_video at ::fromMedia to have posters.
-    if (!BlazyImage::isValidItem($build)) {
+    if (!Image::isValid($build)) {
       $entity = $valid ? $media : $entity;
       /** @var \Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem $entity */
-      if ($item = BlazyImage::fromAny($entity, $settings)) {
+      if ($item = Image::fromAny($entity, $settings)) {
         $build['#item'] = $item;
       }
     }
 
     // BlazyFilter/ VEF without file upload [data-entity-uuid], nor File API.
     // Soundcloud, etc.
-    if (!BlazyImage::isValidItem($build)) {
+    if (!Image::isValid($build)) {
       $build['#item'] = $this->getThumbnail($settings);
     }
 
     // If we have a valid image item, fake or real, no biggies.
-    if (BlazyImage::isValidItem($build)) {
+    if (Image::isValid($build)) {
       // Marks a hires if valid and so configured, normally field_media_image.
       $blazies->set('is.hires', !empty($stage));
 
       // Extract ImageItem info so to be consumed by SVG attributes.
       if ($item = $this->blazyManager->toHashtag($build, 'item', NULL)) {
-        if ($data = BlazyImage::toArray($item)) {
+        if ($data = Image::toArray($item)) {
           $blazies->set('image', $data, TRUE)
-            // @todo remove this pingpong at 3.x:
+            // @todo deprecate and remove this pingpong at 3.x:
             ->set('image.item', $item);
         }
       }
     }
 
-    /** @var \Drupal\media\Entity\Media $entity */
     if ($valid) {
       $this->fromMedia($build);
     }
@@ -234,8 +263,20 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
    * {@inheritdoc}
    */
   public function checkInputUrl(array &$settings, $input): ?string {
-    $blazies = $settings['blazies'];
-    $input = Blazy::sanitizeInputUrl($input);
+    $blazies = Internals::getBlazies($settings);
+    $privacy = $blazies->is('privacy_consent');
+    $use_data_uri = !empty($settings['use_data_uri']);
+    $options = [
+      'filter' => $blazies->is('filter'),
+      'use_data_uri' => $use_data_uri,
+    ];
+
+    // Checks if youtube-cookie.com is enabled.
+    $input = Internals::youtube($input, $privacy);
+
+    // Sanitize UGC filter input only, not Field UI input.
+    $input = Sanitize::inputUrl($input, $options);
+
     $blazies->set('media.input_url', $input);
     return $input;
   }
@@ -244,7 +285,7 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
    * {@inheritdoc}
    */
   public function getThumbnail(array &$settings, $fallback = TRUE): ?object {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $input   = $blazies->get('media.input_url', $settings['input_url'] ?? NULL);
     $item    = NULL;
 
@@ -386,8 +427,9 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
    *   The modified array containing: settings, and candidate video thumbnail.
    */
   private function fromMedia(array &$build): void {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $input    = $blazies->get('media.value');
     $source   = $blazies->get('media.source');
 
@@ -504,7 +546,7 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
    *   The settings array being modified.
    */
   private function toEmbed(array &$settings): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $input   = $blazies->get('media.input_url');
     $switch  = $settings['media_switch'] ?? NULL;
 

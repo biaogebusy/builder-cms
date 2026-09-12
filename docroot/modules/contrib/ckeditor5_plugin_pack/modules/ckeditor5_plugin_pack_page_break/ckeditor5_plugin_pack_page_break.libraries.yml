@@ -1,0 +1,13 @@
+admin.page_break:
+  version: 20240521
+  css:
+    theme:
+      css/page-break.admin.css: { }
+
+page-break_integration:
+  version: 20260114
+  css:
+    theme:
+      css/page-break.css: { }
+  dependencies:
+    - ckeditor5_plugin_pack_page_break/page-break

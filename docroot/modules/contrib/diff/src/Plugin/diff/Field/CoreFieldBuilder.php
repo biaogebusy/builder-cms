@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\diff\Plugin\diff\Field;
 
-use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -27,6 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'email',
     'telephone',
     'date',
+    'daterange',
     'uri',
     'string',
     'timestamp',
@@ -81,13 +81,7 @@ class CoreFieldBuilder extends FieldDiffBuilderBase {
         $values = $field_item->getValue();
         if (isset($values['value'])) {
           $value = $field_item->view(['label' => 'hidden']);
-          // @see https://www.drupal.org/node/3407994
-          $result[$field_key][] = DeprecationHelper::backwardsCompatibleCall(
-            currentVersion: \Drupal::VERSION,
-            deprecatedVersion: '10.3',
-            currentCallable: fn() => $this->renderer->renderInIsolation($value),
-            deprecatedCallable: fn() => $this->renderer->renderPlain($value),
-          );
+          $result[$field_key][] = $this->renderer->renderInIsolation($value);
         }
       }
     }

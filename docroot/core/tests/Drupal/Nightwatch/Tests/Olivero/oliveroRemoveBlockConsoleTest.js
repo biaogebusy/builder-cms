@@ -11,23 +11,11 @@ module.exports = {
         browser
           .drupalRelativeURL('/admin/structure/block')
 
-          // Disable narrow search form block.
-          .click(
-            '[data-drupal-selector="edit-blocks-olivero-search-form-narrow-operations"] .dropbutton-toggle button',
-          )
-          .click('[href*="olivero_search_form_narrow/disable"]')
-
           // Disable main menu block.
           .click(
             '[data-drupal-selector="edit-blocks-olivero-main-menu-operations"] .dropbutton-toggle button',
           )
           .click('[href*="olivero_main_menu/disable"]')
-
-          // Disable wide search form block.
-          .click(
-            '[data-drupal-selector="edit-blocks-olivero-search-form-wide-operations"] .dropbutton-toggle button',
-          )
-          .click('[href*="olivero_search_form_wide/disable"]')
 
           // Disable user account menu block.
           .click(

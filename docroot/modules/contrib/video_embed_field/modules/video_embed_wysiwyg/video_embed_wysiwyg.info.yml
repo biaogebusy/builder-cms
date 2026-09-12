@@ -11,7 +11,7 @@ dependencies:
 ckeditor5-stylesheets:
   - css/video_embed.ckeditor5.css
 
-# Information added by Drupal.org packaging script on 2025-11-04
-version: '3.0.0-beta3'
+# Information added by Drupal.org packaging script on 2026-04-20
+version: '3.1.0'
 project: 'video_embed_field'
-datestamp: 1762283620
+datestamp: 1776704166

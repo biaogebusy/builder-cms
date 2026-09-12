@@ -44,12 +44,21 @@ class EventOnlyQueryAccessHandlerTest extends EntityKernelTestBase {
     $render_context = new RenderContext();
 
     $node_type_storage = $this->entityTypeManager->getStorage('node_type');
-    $node_type_storage->create(['type' => 'foo', 'name' => $this->randomString()])->save();
+    $node_type_storage->create([
+      'type' => 'foo',
+      'name' => $this->randomString(),
+    ])->save();
 
     $node_storage = $this->entityTypeManager->getStorage('node');
-    $node_1 = $node_storage->create(['type' => 'foo', 'title' => $this->randomString()]);
+    $node_1 = $node_storage->create([
+      'type' => 'foo',
+      'title' => $this->randomString(),
+    ]);
     $node_1->save();
-    $node_2 = $node_storage->create(['type' => 'bar', 'title' => $this->randomString()]);
+    $node_2 = $node_storage->create([
+      'type' => 'bar',
+      'title' => $this->randomString(),
+    ]);
     $node_2->save();
 
     $renderer->executeInRenderContext($render_context, static function () use ($node_storage) {
@@ -75,13 +84,25 @@ class EventOnlyQueryAccessHandlerTest extends EntityKernelTestBase {
    */
   public function testEventOnlyQueryAccessHandlerEventSubscriber() {
     $node_type_storage = $this->entityTypeManager->getStorage('node_type');
-    $node_type_storage->create(['type' => 'foo', 'name' => $this->randomString()])->save();
-    $node_type_storage->create(['type' => 'bar', 'name' => $this->randomString()])->save();
+    $node_type_storage->create([
+      'type' => 'foo',
+      'name' => $this->randomString(),
+    ])->save();
+    $node_type_storage->create([
+      'type' => 'bar',
+      'name' => $this->randomString(),
+    ])->save();
 
     $node_storage = $this->entityTypeManager->getStorage('node');
-    $node_1 = $node_storage->create(['type' => 'foo', 'title' => $this->randomString()]);
+    $node_1 = $node_storage->create([
+      'type' => 'foo',
+      'title' => $this->randomString(),
+    ]);
     $node_1->save();
-    $node_2 = $node_storage->create(['type' => 'bar', 'title' => $this->randomString()]);
+    $node_2 = $node_storage->create([
+      'type' => 'bar',
+      'title' => $this->randomString(),
+    ]);
     $node_2->save();
 
     $unfiltered = $node_storage->getQuery()->accessCheck(FALSE)->execute();

@@ -2,6 +2,7 @@
 
 namespace Drupal\charts\Plugin\views\style;
 
+use Drupal\charts\ColorHelperTrait;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Xss;
@@ -36,6 +37,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactoryPluginInterface {
 
   use LibraryRetrieverTrait;
+  use ColorHelperTrait;
 
   /**
    * {@inheritdoc}
@@ -286,7 +288,10 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
 
     $title = !empty($chart_settings['display']['title']) ? $chart_settings['display']['title'] : '';
     $subtitle = !empty($chart_settings['display']['subtitle']) ? $chart_settings['display']['subtitle'] : '';
-    if (!empty($title) || !empty($subtitle)) {
+    $figure_caption = !empty($chart_settings['display']['figure_caption']) ? $chart_settings['display']['figure_caption'] : '';
+    $chart_summary = !empty($chart_settings['display']['chart_summary']) ? $chart_settings['display']['chart_summary'] : '';
+    // Check if any of our text fields have content to tokenize.
+    if ($title || $subtitle || $figure_caption || $chart_summary) {
       $tokens = [];
       $global_tokens = [];
       foreach ($field_handlers as $field_id => $field_handler) {
@@ -307,6 +312,8 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
         $title = $this->viewsTokenReplace($title, $tokens);
         // Allow argument tokens in the subtitle.
         $subtitle = $this->viewsTokenReplace($subtitle, $tokens);
+        $figure_caption = $this->viewsTokenReplace($figure_caption, $tokens);
+        $chart_summary = $this->viewsTokenReplace($chart_summary, $tokens);
       }
     }
 
@@ -330,6 +337,11 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
       '#title' => $title,
       '#title_position' => $chart_settings['display']['title_position'],
       '#subtitle' => $subtitle,
+      '#figure_caption' => $figure_caption,
+      '#chart_summary' => $chart_summary,
+      '#accessible_table' => $chart_settings['display']['accessible_table'] ?? 'disabled',
+      '#accessible_table_button_text' => $chart_settings['display']['accessible_table_button_text'] ?? '',
+      '#accessible_table_button_class' => $chart_settings['display']['accessible_table_button_class'] ?? '',
       '#tooltips' => $chart_settings['display']['tooltips'],
       '#data_labels' => $chart_settings['display']['data_labels'],
       '#data_markers' => $chart_settings['display']['data_markers'],
@@ -448,7 +460,9 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
               $value = $this->processNumberValueFromField($result_number, $field_key);
               $chart[$element_key]['#data'][] = $value;
               $chart[$element_key]['#mapped_data'][$xaxis_label] = $value;
-              if (strpos($field_handler['id'], 'field_charts_fields_scatter') === 0 || strpos($field_handler['id'], 'field_charts_fields_bubble') === 0) {
+              // Array-based fields (scatter, bubble, numeric array) supply
+              // their own x values, so categorical x-axis labels do not apply.
+              if ($this->fieldProvidesArrayData($field_key)) {
                 $chart['xaxis']['#labels'] = [];
               }
             }
@@ -591,6 +605,10 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
               $set[$grouping]['color'] = $this->extractGroupedSelectedColorByEntity($grouping_entity_field, $row, $group_field_name);
               break;
 
+            case 'by_entity_field_property_value':
+              $set[$grouping]['color'] = $this->extractGroupedSelectedColorOnPropertyValueColorsEntityField($grouping_entity_field, $row, $group_field_name);
+              break;
+
             case 'by_field_on_referenced_entity':
               $set[$grouping]['color'] = $this->extractGroupedSelectedColorOnReferencedEntityField($grouping_entity_field, $row, $group_field_name);
               break;
@@ -672,10 +690,9 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
 
     $value = trim(strip_tags($value));
 
-    // Get the field plugin class to determine if a Charts-specific field
-    // is being used.
-    $field_plugin = $this->view->field[$field];
-    if ($field_plugin instanceof ChartViewsFieldInterface && $field_plugin->getChartFieldDataType() === 'array') {
+    // Charts-specific fields (scatter, bubble, numeric array) provide their
+    // value as a JSON-encoded array of numbers; decode and return it as-is.
+    if ($this->fieldProvidesArrayData($field)) {
       return Json::decode($value);
     }
 
@@ -689,6 +706,27 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
     }
 
     return $value;
+  }
+
+  /**
+   * Determines whether a views field provides array-based chart data.
+   *
+   * Array-based fields (scatter, bubble, and numeric array fields) each
+   * contribute a single multi-value data point (for example [x, y] or
+   * [x, y, z]) per row, rather than a scalar value mapped onto an x-axis
+   * label. They all implement ChartViewsFieldInterface and report a chart
+   * field data type of "array".
+   *
+   * @param string $field_key
+   *   The views field handler key.
+   *
+   * @return bool
+   *   TRUE if the field provides array data, FALSE otherwise.
+   */
+  protected function fieldProvidesArrayData(string $field_key): bool {
+    $field_plugin = $this->view->field[$field_key] ?? NULL;
+    return $field_plugin instanceof ChartViewsFieldInterface
+      && $field_plugin->getChartFieldDataType() === 'array';
   }
 
   /**
@@ -749,6 +787,10 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
     $series_index = 0;
     $element_key_prefix = $this->view->current_display . '__' . $label_field_key;
     $chart_settings = $this->options['chart_settings'];
+    // Tracks series elements whose placeholder data has been cleared before
+    // appending array-based points (scatter/bubble/numeric array), so the
+    // clearing happens once per series instead of on every row.
+    $array_series_initialized = [];
     foreach ($sets as $set_label => $data_set) {
       $name = strtolower(Html::cleanCssIdentifier('set-label-' . $set_label));
       // Remove the added prefix after processing.
@@ -775,14 +817,25 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
             continue;
           }
           $value = $this->processNumberValueFromField($result_number, $field_key);
-          if (strpos($field_handler['id'], 'field_charts_fields_scatter') === 0 || strpos($field_handler['id'], 'field_charts_fields_bubble') === 0) {
-            $chart[$element_key]['#data'] = [];
+          if ($this->fieldProvidesArrayData($field_key)) {
+            // Array-based series (scatter, bubble, numeric array) accumulate
+            // one point per row. Clear the placeholder data the first time a
+            // point is added for this series, then append each subsequent
+            // point.
+            if (empty($array_series_initialized[$element_key])) {
+              $chart[$element_key]['#data'] = [];
+              $array_series_initialized[$element_key] = TRUE;
+            }
             $chart[$element_key]['#data'][] = $value;
             $chart['xaxis'] = $original_xaxis;
           }
           else {
             $chart[$element_key]['#data'][$set_id] = $value;
-            $chart[$element_key]['#mapped_data'][$set_id] = $value;
+            // Fetch the actual string label for mapped_data to ensure
+            // alignSubChartData() can successfully match attachment data
+            // against the parent's string labels.
+            $mapped_key = $chart['xaxis']['#labels'][$set_id] ?? $set_id;
+            $chart[$element_key]['#mapped_data'][$mapped_key] = $value;
           }
         }
       }
@@ -849,8 +902,10 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
    *
    * @return string
    *   The color.
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
-  private function extractGroupedSelectedColorOnReferencedEntityField(EntityField $view_entity_field, ResultRow $row, string $group_field_name) {
+  private function extractGroupedSelectedColorOnReferencedEntityField(EntityField $view_entity_field, ResultRow $row, string $group_field_name): string {
     $chart_settings = $this->options['chart_settings'];
     $color_field_name = $chart_settings['fields']['entity_grouping']['selected_method']['color_field_name'] ?? '';
     if (!$color_field_name) {
@@ -860,7 +915,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
     $host_entity = $view_entity_field->getEntity($row);
     /** @var \Drupal\Core\Entity\ContentEntityInterface $referenced_entity */
     $referenced_entity = $host_entity->get($group_field_name)->entity;
-    $field_item_list = $referenced_entity ? $referenced_entity->get($color_field_name) : NULL;
+    $field_item_list = $referenced_entity?->get($color_field_name);
     if (!$field_item_list || $field_item_list->isEmpty()) {
       return '';
     }
@@ -931,6 +986,48 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
       }
     }
     return $grouping_colors;
+  }
+
+  /**
+   * Extracts the grouped selected color based on a property value of a field.
+   *
+   * This method processes the provided entity field and row data to determine
+   * the color associated with the given property value, using the chart
+   * settings configuration to match values and return the corresponding color.
+   *
+   * @param \Drupal\views\Plugin\views\field\EntityField $view_entity_field
+   *   The entity field from which to extract the property value.
+   * @param \Drupal\views\ResultRow $row
+   *   The result row that contains the contextual data for the field.
+   * @param string $group_field_name
+   *   The name of the grouping field that determines the context of property
+   *   value selection.
+   *
+   * @return string
+   *   Returns the matched color if found in the configuration; otherwise, a
+   *   random color.
+   */
+  private function extractGroupedSelectedColorOnPropertyValueColorsEntityField(EntityField $view_entity_field, ResultRow $row, string $group_field_name): string {
+    $chart_settings = $this->options['chart_settings'];
+    $color_field_property = $chart_settings['fields']['entity_grouping']['selected_method']['color_field_property'];
+    $field_name = $view_entity_field->configuration['field_name'];
+    $entity = $view_entity_field->getEntity($row);
+    $property_value = $entity->{$field_name}->{$color_field_property} ?? NULL;
+    if (!is_scalar($property_value)) {
+      // @todo pick from the default site settings.
+      return static::randomColor();
+    }
+
+    $property_value = is_string($property_value) ? mb_strtolower(trim(strip_tags(htmlspecialchars_decode($property_value)))) : $property_value;
+    foreach ($chart_settings['fields']['entity_grouping']['selected_method']['colors'] as $selected_property_value_color) {
+      $selected_property_value = !is_numeric($selected_property_value_color['property_value']) ? mb_strtolower(trim(strip_tags(htmlspecialchars_decode($selected_property_value_color['property_value'])))) : $selected_property_value_color['property_value'];
+      if ($property_value === $selected_property_value) {
+        return $selected_property_value_color['color'];
+      }
+    }
+
+    // @todo pick from the default site settings.
+    return static::randomColor();
   }
 
 }

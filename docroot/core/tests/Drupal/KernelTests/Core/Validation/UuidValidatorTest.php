@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Validation;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UUID validator.
- *
- * @group Validation
  */
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class UuidValidatorTest extends KernelTestBase {
 
   /**
@@ -28,6 +30,8 @@ class UuidValidatorTest extends KernelTestBase {
   }
 
   /**
+   * Tests the UUID.
+   *
    * @see \Drupal\Core\Validation\Plugin\Validation\Constraint\UuidConstraint
    */
   public function testUuid(): void {

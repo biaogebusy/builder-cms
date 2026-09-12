@@ -13,10 +13,10 @@
   parent.jQuery(parent.document)
     .find(':input[data-uuid*=' + drupalSettings.entity_browser.modal.uuid + ']')
     .trigger('entities-selected', [drupalSettings.entity_browser.modal.uuid, drupalSettings.entity_browser.modal.entities])
-    .unbind('entities-selected').show();
+    .off('entities-selected').show();
 
   // This is a silly solution, but works fo now. We should close the modal
   // via ajax commands.
-  parent.jQuery(parent.document).find('.entity-browser-modal-iframe').parents('.ui-dialog').eq(0).find('.ui-dialog-titlebar-close').click();
+  parent.jQuery(parent.document).find('.entity-browser-modal-iframe').parents('.ui-dialog').eq(0).find('.ui-dialog-titlebar-close').trigger('click');
 
 }(drupalSettings));

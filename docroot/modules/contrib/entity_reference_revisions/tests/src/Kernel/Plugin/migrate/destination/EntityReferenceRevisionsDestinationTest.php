@@ -9,13 +9,17 @@ use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\MigrateMessageInterface;
 use Drupal\migrate\Plugin\Migration;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the migration destination plugin.
  *
- * @coversDefaultClass \Drupal\entity_reference_revisions\Plugin\migrate\destination\EntityReferenceRevisions
  * @group entity_reference_revisions
  */
+#[RunTestsInSeparateProcesses]
+#[Group('entity_reference_revisions')]
 class EntityReferenceRevisionsDestinationTest extends KernelTestBase implements MigrateMessageInterface {
 
   /**
@@ -31,6 +35,7 @@ class EntityReferenceRevisionsDestinationTest extends KernelTestBase implements 
   protected static $modules = [
     'migrate',
     'entity_reference_revisions',
+    'entity_test',
     'entity_composite_relationship_test',
     'user',
     'system',
@@ -43,7 +48,6 @@ class EntityReferenceRevisionsDestinationTest extends KernelTestBase implements 
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('entity_test_composite');
-    $this->installSchema('system', ['sequences']);
     $this->installConfig(static::$modules);
 
     $this->migrationPluginManager = \Drupal::service('plugin.manager.migration');
@@ -53,9 +57,8 @@ class EntityReferenceRevisionsDestinationTest extends KernelTestBase implements 
    * Tests get entity type id.
    *
    * @dataProvider getEntityTypeIdDataProvider
-   *
-   * @covers ::getEntityTypeId
    */
+  #[DataProvider('getEntityTypeIdDataProvider')]
   public function testGetEntityTypeId(array $definition, $expected) {
     /** @var \Drupal\migrate\Plugin\Migration $migration */
     $migration = $this->migrationPluginManager->createStubMigration($definition);
@@ -90,11 +93,8 @@ class EntityReferenceRevisionsDestinationTest extends KernelTestBase implements 
    * Tests get entity.
    *
    * @dataProvider getEntityDataProvider
-   *
-   * @covers ::getEntity
-   * @covers ::rollback
-   * @covers ::rollbackNonTranslation
    */
+  #[DataProvider('getEntityDataProvider')]
   public function testGetEntity(array $definition, array $expected) {
     /** @var \Drupal\migrate\Plugin\Migration $migration */
     $migration = $this->migrationPluginManager->createStubMigration($definition);
@@ -246,11 +246,8 @@ class EntityReferenceRevisionsDestinationTest extends KernelTestBase implements 
    * Tests get entity.
    *
    * @dataProvider getEntityDataProviderForceRevision
-   *
-   * @covers ::getEntity
-   * @covers ::rollback
-   * @covers ::rollbackNonTranslation
    */
+  #[DataProvider('getEntityDataProviderForceRevision')]
   public function testGetEntityForceRevision(array $definition, array $expected) {
     /** @var \Drupal\migrate\Plugin\Migration $migration */
     $migration = $this->migrationPluginManager->createStubMigration($definition);
@@ -359,6 +356,7 @@ class EntityReferenceRevisionsDestinationTest extends KernelTestBase implements 
    *
    * @dataProvider destinationFieldMappingDataProvider
    */
+  #[DataProvider('destinationFieldMappingDataProvider')]
   public function testDestinationFieldMapping(array $data) {
     $this->enableModules(['node', 'field']);
     $this->installEntitySchema('node');

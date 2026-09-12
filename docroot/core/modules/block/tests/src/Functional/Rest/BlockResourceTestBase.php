@@ -8,6 +8,9 @@ use Drupal\block\Entity\Block;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
+/**
+ * Resource test base for the block entity.
+ */
 abstract class BlockResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**
@@ -82,7 +85,7 @@ abstract class BlockResourceTestBase extends ConfigEntityResourceTestBase {
     $normalization = [
       'uuid' => $this->entity->uuid(),
       'id' => 'llama',
-      'weight' => NULL,
+      'weight' => 0,
       'langcode' => 'en',
       'status' => TRUE,
       'dependencies' => [
@@ -119,7 +122,9 @@ abstract class BlockResourceTestBase extends ConfigEntityResourceTestBase {
    */
   protected function getExpectedCacheContexts() {
     // @see ::createEntity()
-    return ['url.site'];
+    // 'session' is bubbled by URL generation for CSRF-protected routes
+    // referenced in the response normalization.
+    return ['session', 'url.site'];
   }
 
   /**
@@ -161,8 +166,8 @@ abstract class BlockResourceTestBase extends ConfigEntityResourceTestBase {
   protected function getExpectedUnauthorizedEntityAccessCacheability($is_authenticated) {
     // @see \Drupal\block\BlockAccessControlHandler::checkAccess()
     return parent::getExpectedUnauthorizedEntityAccessCacheability($is_authenticated)
+      ->addCacheTags($this->entity->getCacheTags())
       ->addCacheTags([
-        'config:block.block.llama',
         $is_authenticated ? 'user:2' : 'user:0',
       ]);
   }

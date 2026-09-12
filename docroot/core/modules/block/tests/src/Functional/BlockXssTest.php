@@ -10,12 +10,14 @@ use Drupal\Core\Url;
 use Drupal\system\Entity\Menu;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the block module properly escapes block descriptions.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockXssTest extends BrowserTestBase {
 
   /**
@@ -45,12 +47,14 @@ class BlockXssTest extends BrowserTestBase {
    * Tests XSS in title.
    */
   public function testXssInTitle(): void {
-    $this->container->get('module_installer')->install(['block_test']);
-    $this->drupalPlaceBlock('test_xss_title', ['label' => '<script>alert("XSS label");</script>']);
+    $this->drupalPlaceBlock('system_powered_by_block', [
+      'label' => '<script>alert("XSS label");</script>',
+      'label_display' => 'visible',
+    ]);
 
-    \Drupal::keyValue('block_test')->set('content', $this->randomMachineName());
     $this->drupalGet('');
     // Check that the block title was properly sanitized when rendered.
+    $this->assertSession()->assertEscaped('<script>alert("XSS label");</script>');
     $this->assertSession()->responseNotContains('<script>alert("XSS label");</script>');
 
     $this->drupalLogin($this->drupalCreateUser([
@@ -61,22 +65,8 @@ class BlockXssTest extends BrowserTestBase {
     $this->drupalGet('admin/structure/block/list/' . $default_theme);
     // Check that the block title was properly sanitized in Block Plugin UI
     // Admin page.
+    $this->assertSession()->assertEscaped('<script>alert("XSS label");</script>');
     $this->assertSession()->responseNotContains("<script>alert('XSS subject');</script>");
-  }
-
-  /**
-   * Tests XSS in category.
-   */
-  public function testXssInCategory(): void {
-    $this->container->get('module_installer')->install(['block_test']);
-    $this->drupalPlaceBlock('test_xss_title');
-    $this->drupalLogin($this->drupalCreateUser([
-      'administer blocks',
-      'access administration pages',
-    ]));
-    $this->drupalGet(Url::fromRoute('block.admin_display'));
-    $this->clickLink('Place block');
-    $this->assertSession()->responseNotContains("<script>alert('XSS category');</script>");
   }
 
   /**
@@ -101,7 +91,7 @@ class BlockXssTest extends BrowserTestBase {
   /**
    * Tests XSS coming from View block labels.
    */
-  protected function doViewTest() {
+  protected function doViewTest(): void {
     // Create a View without a custom label for its block Display. The
     // admin_label of the block then becomes just the View's label.
     $view = View::create([
@@ -151,7 +141,7 @@ class BlockXssTest extends BrowserTestBase {
   /**
    * Tests XSS coming from Menu block labels.
    */
-  protected function doMenuTest() {
+  protected function doMenuTest(): void {
     Menu::create([
       'id' => $this->randomMachineName(),
       'label' => '<script>alert("menu");</script>',
@@ -167,7 +157,7 @@ class BlockXssTest extends BrowserTestBase {
   /**
    * Tests XSS coming from Block Content block info.
    */
-  protected function doBlockContentTest() {
+  protected function doBlockContentTest(): void {
     BlockContentType::create([
       'id' => 'basic',
       'label' => 'basic',

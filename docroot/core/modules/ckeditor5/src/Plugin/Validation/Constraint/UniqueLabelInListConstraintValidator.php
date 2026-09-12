@@ -21,9 +21,14 @@ class UniqueLabelInListConstraintValidator extends ConstraintValidator {
    * @throws \Symfony\Component\Validator\Exception\UnexpectedTypeException
    *   Thrown when the given constraint is not supported by this validator.
    */
-  public function validate($list, Constraint $constraint) {
+  public function validate($list, Constraint $constraint): void {
     if (!$constraint instanceof UniqueLabelInListConstraint) {
       throw new UnexpectedTypeException($constraint, UniqueLabelInListConstraint::class);
+    }
+
+    // This validation constraint supports nullable sequences.
+    if (!is_array($list)) {
+      return;
     }
 
     $labels = array_column($list, $constraint->labelKey);

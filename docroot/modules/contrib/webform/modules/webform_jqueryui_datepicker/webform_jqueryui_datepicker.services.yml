@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_jqueryui_datepicker\Hook\WebformJqueryuiDatepickerHooks:
+    class: Drupal\webform_jqueryui_datepicker\Hook\WebformJqueryuiDatepickerHooks
+    autowire: true

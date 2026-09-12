@@ -2,14 +2,11 @@
 
 namespace Drupal\chosen\Form;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\Core\Link;
-use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Implements a ChosenConfig form.
@@ -63,14 +60,11 @@ class ChosenConfigForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $chosen_path = _chosen_lib_get_chosen_path();
     if (!$chosen_path) {
-      $url = Url::fromUri(CHOSEN_WEBSITE_URL);
-      $link = Link::fromTextAndUrl($this->t('Chosen JavaScript file'), $url)->toString();
-
-      $this->messenger->addError($this->t('The library could not be detected. You need to download the @chosen and extract the entire contents of the archive into the %path directory on your server.',
-        ['@chosen' => $link, '%path' => 'libraries']
-      ));
-      return $form;
+      $this->messenger->addWarning($this->t('The local Chosen library could not be detected in %path. Chosen will be loaded from jsDelivr CDN. For production sites, installing the library locally with Composer is recommended.', [
+        '%path' => 'libraries/chosen',
+      ]));
     }
+
     $form = parent::buildForm($form, $form_state);
 
     // Chosen settings:
@@ -183,7 +177,7 @@ class ChosenConfigForm extends ConfigFormBase {
     $form['theme_options']['disabled_themes'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Disable the default Chosen theme for the following themes'),
-      '#options' => $this->chosen_enabled_themes_options(),
+      '#options' => $this->chosenEnabledThemesOptions(),
       '#default_value' => $default_disabled_themes,
       '#description' => $this->t('Enable or disable the default Chosen CSS file. Select a theme if it contains custom styles for Chosen replacements.'),
     ];
@@ -267,7 +261,7 @@ class ChosenConfigForm extends ConfigFormBase {
   /**
    * Helper function to get options for enabled themes.
    */
-  private function chosen_enabled_themes_options() {
+  private function chosenEnabledThemesOptions() {
     $options = [];
 
     // Get a list of available themes.

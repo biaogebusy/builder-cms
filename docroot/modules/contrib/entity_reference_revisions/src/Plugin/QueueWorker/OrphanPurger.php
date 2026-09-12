@@ -5,7 +5,9 @@ namespace Drupal\entity_reference_revisions\Plugin\QueueWorker;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Queue\Attribute\QueueWorker;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_reference_revisions\EntityReferenceRevisionsOrphanPurger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,7 +20,19 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   cron = {"time" = 60}
  * )
  */
+#[QueueWorker(
+  id: 'entity_reference_revisions_orphan_purger',
+  title: new TranslatableMarkup('Entity Reference Revisions Orphan Purger'),
+  cron: ['time' => 60]
+)]
 class OrphanPurger extends QueueWorkerBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The processed entities cache.
+   *
+   * @var array
+   */
+  protected static array $processedEntities = [];
 
   /**
    * The entity type manager service.
@@ -82,8 +96,14 @@ class OrphanPurger extends QueueWorkerBase implements ContainerFactoryPluginInte
    * {@inheritdoc}
    */
   public function processItem($data) {
+    $entity_cache_key = $data['entity_type_id'] . ':' . $data['entity_id'];
+    if (isset(static::$processedEntities[$entity_cache_key])) {
+      return;
+    }
+
     $entity_type_id = $data['entity_type_id'];
     if (!$this->entityTypeManager->hasDefinition($entity_type_id)) {
+      static::$processedEntities[$entity_cache_key] = TRUE;
       return;
     }
 
@@ -105,7 +125,9 @@ class OrphanPurger extends QueueWorkerBase implements ContainerFactoryPluginInte
     /** @var \Drupal\Core\Entity\ContentEntityInterface $composite_revision */
     foreach ($composite_storage->loadMultipleRevisions($entity_revision_ids) as $composite_revision) {
       if (!$this->purger->isUsed($composite_revision)) {
-        $this->purger->deleteUnusedRevision($composite_revision);
+        if ($this->purger->deleteUnusedRevision($composite_revision)) {
+          static::$processedEntities[$entity_cache_key] = TRUE;
+        }
       }
     }
   }

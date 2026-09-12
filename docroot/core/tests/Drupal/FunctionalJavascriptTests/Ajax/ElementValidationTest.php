@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Various tests of AJAX behavior.
- *
- * @group Ajax
  */
+#[Group('Ajax')]
+#[RunTestsInSeparateProcesses]
 class ElementValidationTest extends WebDriverTestBase {
 
   /**

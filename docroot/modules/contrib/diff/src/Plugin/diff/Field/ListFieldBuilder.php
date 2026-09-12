@@ -7,6 +7,7 @@ namespace Drupal\diff\Plugin\diff\Field;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\OptionsProviderInterface;
 use Drupal\diff\Attribute\FieldDiffBuilder;
 use Drupal\diff\FieldDiffBuilderBase;
 
@@ -32,6 +33,7 @@ class ListFieldBuilder extends FieldDiffBuilderBase {
 
     // Every item from $field_items is of type FieldItemInterface.
     foreach ($field_items as $field_key => $field_item) {
+      \assert($field_item instanceof OptionsProviderInterface);
       // Build the array for comparison only if the field is not empty.
       if (!$field_item->isEmpty()) {
         $possible_options = $field_item->getPossibleOptions();

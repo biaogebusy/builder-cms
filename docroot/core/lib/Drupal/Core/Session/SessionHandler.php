@@ -8,46 +8,30 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\Storage\Proxy\AbstractProxy;
+use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHandler;
 
 /**
  * Default session handler.
  */
-class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
+class SessionHandler extends AbstractSessionHandler implements \SessionHandlerInterface, \SessionUpdateTimestampHandlerInterface {
 
   use DependencySerializationTrait;
 
   /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
    * Constructs a new SessionHandler instance.
    *
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(RequestStack $request_stack, Connection $connection, protected ?TimeInterface $time = NULL) {
-    $this->requestStack = $request_stack;
-    $this->connection = $connection;
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
+  public function __construct(
+    protected RequestStack $requestStack,
+    protected Connection $connection,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -60,13 +44,13 @@ class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  public function read(#[\SensitiveParameter] string $sid): string|false {
+  public function doRead(#[\SensitiveParameter] string $sessionId): string {
     $data = '';
-    if (!empty($sid)) {
+    if (!empty($sessionId)) {
       try {
         // Read the session data from the database.
         $query = $this->connection
-          ->queryRange('SELECT [session] FROM {sessions} WHERE [sid] = :sid', 0, 1, [':sid' => Crypt::hashBase64($sid)]);
+          ->queryRange('SELECT [session] FROM {sessions} WHERE [sid] = :sid', 0, 1, [':sid' => Crypt::hashBase64($sessionId)]);
         $data = (string) $query->fetchField();
       }
       // Swallow the error if the table hasn't been created yet.
@@ -79,19 +63,19 @@ class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  public function write(#[\SensitiveParameter] string $sid, string $value): bool {
+  public function doWrite(#[\SensitiveParameter] string $sessionId, string $data): bool {
     $try_again = FALSE;
     $request = $this->requestStack->getCurrentRequest();
-    $fields = [
-      'uid' => $request->getSession()->get('uid', 0),
-      'hostname' => $request->getClientIP(),
-      'session' => $value,
-      'timestamp' => $this->time->getRequestTime(),
-    ];
     $doWrite = fn() =>
-      $this->connection->merge('sessions')
-        ->keys(['sid' => Crypt::hashBase64($sid)])
-        ->fields($fields)
+      $this->connection->upsert('sessions')
+        ->key('sid')
+        ->fields([
+          'sid' => Crypt::hashBase64($sessionId),
+          'uid' => $request->getSession()->get('uid', 0),
+          'hostname' => $request->getClientIP(),
+          'session' => $data,
+          'timestamp' => $this->time->getRequestTime(),
+        ])
         ->execute();
     try {
       $doWrite();
@@ -122,11 +106,18 @@ class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  public function destroy(#[\SensitiveParameter] string $sid): bool {
+  public function destroy(#[\SensitiveParameter] string $sessionId): bool {
+    return $this->doDestroy($sessionId);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doDestroy(#[\SensitiveParameter] string $sessionId): bool {
     try {
       // Delete session data.
       $this->connection->delete('sessions')
-        ->condition('sid', Crypt::hashBase64($sid))
+        ->condition('sid', Crypt::hashBase64($sessionId))
         ->execute();
     }
     // Swallow the error if the table hasn't been created yet.
@@ -154,6 +145,16 @@ class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
     catch (\Exception) {
     }
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateTimestamp(#[\SensitiveParameter] string $sessionId, string $data): bool {
+    // This function is intentionally a no-op. Drupal manages session expiry in
+    // the MetadataBag, and the timestamp should not be updated here.
+    // @see \Drupal\Core\Session\MetadataBag::__construct()
+    return TRUE;
   }
 
   /**
@@ -231,9 +232,9 @@ class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
     // If another process has already created the table, attempting to create
     // it will throw an exception. In this case just catch the exception and do
     // nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;

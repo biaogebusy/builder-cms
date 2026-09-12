@@ -5,21 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\views\Kernel\Plugin\Display;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Menu link test.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewsMenuLinkTest extends ViewsKernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'user',
-    'views',
-  ];
 
   /**
    * {@inheritdoc}

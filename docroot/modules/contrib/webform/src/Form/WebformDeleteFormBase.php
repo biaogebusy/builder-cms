@@ -70,7 +70,7 @@ abstract class WebformDeleteFormBase extends ConfirmFormBase implements WebformD
       '#type' => 'webform_message',
       '#message_type' => 'warning',
       '#message_message' => $this->t('Are you sure you want to delete this?') . '<br/>' .
-        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+      '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
     ];
   }
 

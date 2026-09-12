@@ -6,12 +6,14 @@ namespace Drupal\Tests\block_content\Functional\Views;
 
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests block_content field filters with translations.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentFieldFilterTest extends BlockContentTestBase {
 
   /**
@@ -62,7 +64,12 @@ class BlockContentFieldFilterTest extends BlockContentTestBase {
     ];
 
     // Create block_content with translations.
-    $block_content = $this->createBlockContent(['info' => $this->blockContentInfos['en'], 'langcode' => 'en', 'type' => 'basic', 'body' => [['value' => $this->blockContentInfos['en']]]]);
+    $block_content = $this->createBlockContent([
+      'info' => $this->blockContentInfos['en'],
+      'langcode' => 'en',
+      'type' => 'basic',
+      'body' => [['value' => $this->blockContentInfos['en']]],
+    ]);
     foreach (['es', 'fr'] as $langcode) {
       $translation = $block_content->addTranslation($langcode, ['info' => $this->blockContentInfos[$langcode]]);
       $translation->body->value = $this->blockContentInfos[$langcode];

@@ -1,0 +1,129 @@
+services:
+  ckeditor5_premium_features.config_handler.settings:
+    class: Drupal\ckeditor5_premium_features\Config\SettingsConfigHandler
+    arguments:
+      - '@config.factory'
+      - '@library.discovery'
+      - '@ckeditor5_premium_features.core_library_version_checker'
+      - '@module_handler'
+
+  ckeditor5_premium_features.config_handler.export_settings:
+    class: Drupal\ckeditor5_premium_features\Config\ExportFeaturesConfigHandler
+    arguments:
+      - '@config.factory'
+
+  ckeditor5_premium_features.token_generator:
+    class: Drupal\ckeditor5_premium_features\Generator\TokenGenerator
+    arguments:
+      - '@current_user'
+      - '@ckeditor5_premium_features.config_handler.settings'
+      - '@ckeditor5_premium_features.user_helper'
+      - '@ckeditor5_premium_features.access_handler'
+      - '@module_handler'
+      - '@service_container'
+
+  ckeditor5_premium_features.user_helper:
+    class: Drupal\ckeditor5_premium_features\Utility\UserHelper
+    arguments:
+      - '@file_url_generator'
+      - '@entity_type.manager'
+      - '@config.factory'
+
+  ckeditor5_premium_features.file_name_generator:
+    class: \Drupal\ckeditor5_premium_features\Generator\FileNameGenerator
+    arguments:
+      - '@current_route_match'
+
+  ckeditor5_premium_features.css_style_provider:
+    class: \Drupal\ckeditor5_premium_features\Utility\CssStyleProvider
+    arguments:
+      - '@theme.manager'
+      - '@file_system'
+      - '@file_url_generator'
+      - '@plugin.manager.ckeditor5.plugin'
+      - '@library.discovery'
+
+  ckeditor5_premium_features.plugin_helper:
+    class: \Drupal\ckeditor5_premium_features\Utility\PluginHelper
+
+  ckeditor5_premium_features.html_helper:
+    class: \Drupal\ckeditor5_premium_features\Utility\HtmlHelper
+
+  ckeditor5_premium_features.permission_helper:
+    class: \Drupal\ckeditor5_premium_features\Utility\PermissionHelper
+    arguments:
+      - '@entity_type.manager'
+      - '@module_handler'
+
+  ckeditor5_premium_features.api_adapter:
+    class: Drupal\ckeditor5_premium_features\Utility\ApiAdapter
+    arguments:
+      - '@ckeditor5_premium_features.config_handler.settings'
+      - '@http_client'
+      - '@current_user'
+      - '@config.factory'
+
+  ckeditor5_premium_features.mention_integrator:
+    class: \Drupal\ckeditor5_premium_features\Utility\MentionsIntegrator
+    arguments:
+      - '@module_handler'
+      - '@service_container'
+
+  ckeditor5_premium_features.storage_handler.editor:
+    class: Drupal\ckeditor5_premium_features\Storage\EditorStorageHandler
+    arguments:
+      - '@entity_type.manager'
+      - '@ckeditor5_premium_features.config_handler.settings'
+      - '@current_user'
+      - '@messenger'
+
+  ckeditor5_premium_features.context_helper:
+    class: Drupal\ckeditor5_premium_features\Utility\ContextHelper
+    arguments:
+      - '@ckeditor5_premium_features.html_helper'
+      - '@ckeditor5_premium_features.core_library_version_checker'
+
+  ckeditor5_premium_features.diff:
+    class: Drupal\ckeditor5_premium_features\Diff\Ckeditor5Diff
+    arguments:
+      - '@ckeditor5_premium_features.context_helper'
+
+  ckeditor5_premium_features.document_diff_helper:
+    class: Drupal\ckeditor5_premium_features\Diff\DocumentDiffHelper
+    arguments:
+      - '@ckeditor5_premium_features.diff'
+      - '@plugin.manager.filter'
+
+  ckeditor5_premium_features.access_handler:
+    class: Drupal\ckeditor5_premium_features\CollaborationAccessHandler
+    arguments:
+      - '@entity_type.manager'
+
+  ckeditor5_premium_features.config_event_subscriber:
+    class: Drupal\ckeditor5_premium_features\EventSubscriber\ConfigSubscriber
+    arguments: [ '@config.factory', '@entity_type.manager', '@ckeditor5_premium_features.permission_helper' ]
+    tags:
+      - { name: event_subscriber }
+
+  ckeditor5_premium_features.core_library_version_checker:
+    class: Drupal\ckeditor5_premium_features\Utility\LibraryVersionChecker
+    arguments:
+      - '@module_handler'
+      - '@config.factory'
+      - '@cache.discovery'
+
+  ckeditor5_premium_features.collaborators:
+    class: Drupal\ckeditor5_premium_features\Utility\Collaborators
+    arguments:
+      - '@database'
+      - '@entity_type.manager'
+      - '@ckeditor5_premium_features.mention_integrator'
+      - '@ckeditor5_premium_features.collaboration_module_integrator'
+
+  ckeditor5_premium_features.collaboration_module_integrator:
+    class: Drupal\ckeditor5_premium_features\Utility\CollaborationModuleIntegrator
+    arguments:
+      - '@module_handler'
+
+  ckeditor5_premium_features.composer_dependency_checker:
+    class: Drupal\ckeditor5_premium_features\Service\ComposerDependencyChecker

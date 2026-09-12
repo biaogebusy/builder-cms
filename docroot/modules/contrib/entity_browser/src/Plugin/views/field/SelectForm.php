@@ -3,6 +3,7 @@
 namespace Drupal\entity_browser\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\Plugin\views\style\Table;
 use Drupal\views\Render\ViewsRenderPipelineMarkup;
@@ -11,9 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a bulk operation form element that works with entity browser.
- *
- * @ViewsField("entity_browser_select")
  */
+#[ViewsField("entity_browser_select")]
 class SelectForm extends FieldPluginBase {
 
   /**

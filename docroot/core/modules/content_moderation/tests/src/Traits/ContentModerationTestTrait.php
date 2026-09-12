@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\content_moderation\Traits;
 
+use Drupal\content_moderation\Plugin\WorkflowType\ContentModerationInterface;
 use Drupal\workflows\Entity\Workflow;
 use Drupal\workflows\WorkflowInterface;
 
@@ -102,9 +103,12 @@ trait ContentModerationTestTrait {
    * @param string $bundle
    *   The bundle ID to add.
    */
-  protected function addEntityTypeAndBundleToWorkflow(WorkflowInterface $workflow, $entity_type_id, $bundle) {
-    $workflow->getTypePlugin()->addEntityTypeAndBundle($entity_type_id, $bundle);
-    $workflow->save();
+  protected function addEntityTypeAndBundleToWorkflow(WorkflowInterface $workflow, $entity_type_id, $bundle): void {
+    $moderation = $workflow->getTypePlugin();
+    if ($moderation instanceof ContentModerationInterface) {
+      $moderation->addEntityTypeAndBundle($entity_type_id, $bundle);
+      $workflow->save();
+    }
   }
 
 }

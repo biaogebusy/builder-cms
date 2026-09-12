@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
@@ -21,9 +21,6 @@ use Drupal\sms\Provider\SmsProviderInterface;
  */
 final class SmsFrameworkProcessorTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test', 'sms_test_gateway', 'field', 'telephone',
     'dynamic_entity_reference',
@@ -57,9 +54,6 @@ final class SmsFrameworkProcessorTest extends SmsFrameworkKernelBase {
    */
   private SmsGatewayInterface $gatewayOutgoingResult;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -105,7 +99,7 @@ final class SmsFrameworkProcessorTest extends SmsFrameworkKernelBase {
       ->setGateway($this->gatewayMemory)
       ->setResult($result);
 
-    $recipient_count = count($sms_message->getRecipients());
+    $recipient_count = \count($sms_message->getRecipients());
     $this->expectException(SmsPluginReportException::class);
     $this->expectExceptionMessage("Missing reports for $recipient_count recipient(s).");
     $this->smsProvider->queue($sms_message);
@@ -119,7 +113,7 @@ final class SmsFrameworkProcessorTest extends SmsFrameworkKernelBase {
   public function testOutgoingMissingReports(): void {
     $this->setFallbackGateway($this->gatewayOutgoingResult);
 
-    $delete_count = rand(1, 5);
+    $delete_count = \rand(1, 5);
     \Drupal::state()->set('sms_test_gateway.memory_outgoing_result.delete_reports', $delete_count);
 
     // Must skip queue for send() for post-process to run.

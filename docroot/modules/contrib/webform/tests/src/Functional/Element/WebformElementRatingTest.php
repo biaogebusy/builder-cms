@@ -19,7 +19,7 @@ class WebformElementRatingTest extends WebformElementBrowserTestBase {
   /**
    * Test rating element.
    */
-  public function testRating() {
+  public function testRating(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_rating');
@@ -36,7 +36,12 @@ class WebformElementRatingTest extends WebformElementBrowserTestBase {
 
     // Check required rating display.
     $assert_session->responseContains('<label for="edit-rating-required" class="js-form-required form-required">rating_required</label>');
-    $assert_session->responseContains('<input data-drupal-selector="edit-rating-required" type="range" class="js-webform-visually-hidden form-webform-rating required" id="edit-rating-required" name="rating_required" value="0" step="1" min="0" max="5" required="required" aria-required="true" />');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<input data-drupal-selector="edit-rating-required" type="range" class="js-webform-visually-hidden form-webform-rating required" id="edit-rating-required" name="rating_required" value="0" step="1" min="0" max="5" required="required" aria-required="true" />');
+    }
+    else {
+      $assert_session->responseContains('<input data-drupal-selector="edit-rating-required" type="range" class="js-webform-visually-hidden form-webform-rating required" id="edit-rating-required" name="rating_required" value="0" step="1" min="0" max="5" required="required" />');
+    }
     $assert_session->responseContains('<div class="rateit svg rateit-medium" data-rateit-min="0" data-rateit-max="5" data-rateit-step="1" data-rateit-resetable="false" data-rateit-readonly="false" data-rateit-backingfld="[data-drupal-selector=&quot;edit-rating-required&quot;]" data-rateit-value="" data-rateit-starheight="24" data-rateit-starwidth="24"></div>');
 
     // Check processing.

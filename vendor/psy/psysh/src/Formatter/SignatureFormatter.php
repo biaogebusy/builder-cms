@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,6 +14,8 @@ namespace Psy\Formatter;
 use Psy\Manual\ManualInterface;
 use Psy\Reflection\ReflectionConstant;
 use Psy\Reflection\ReflectionLanguageConstruct;
+use Psy\Reflection\ReflectionMagicMethod;
+use Psy\Reflection\ReflectionMagicProperty;
 use Psy\Util\Json;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 
@@ -81,8 +83,14 @@ class SignatureFormatter implements ReflectorFormatter
             case $reflector instanceof \ReflectionClassConstant:
                 return self::formatClassConstant($reflector);
 
+            case $reflector instanceof ReflectionMagicMethod:
+                return self::formatMagicMethod($reflector);
+
             case $reflector instanceof \ReflectionMethod:
                 return self::formatMethod($reflector);
+
+            case $reflector instanceof ReflectionMagicProperty:
+                return self::formatMagicProperty($reflector);
 
             case $reflector instanceof \ReflectionProperty:
                 return self::formatProperty($reflector);
@@ -104,7 +112,7 @@ class SignatureFormatter implements ReflectorFormatter
      */
     public static function formatName(\Reflector $reflector): string
     {
-        return $reflector->getName();
+        return self::normalizeName($reflector->getName());
     }
 
     /**
@@ -116,9 +124,12 @@ class SignatureFormatter implements ReflectorFormatter
      */
     private static function formatModifiers(\Reflector $reflector): string
     {
-        return \implode(' ', \array_map(function ($modifier) {
-            return \sprintf('<keyword>%s</keyword>', $modifier);
-        }, \Reflection::getModifierNames($reflector->getModifiers())));
+        $modifiers = \array_map(
+            fn ($modifier) => \sprintf('<keyword>%s</keyword>', $modifier),
+            \Reflection::getModifierNames($reflector->getModifiers())
+        );
+
+        return \implode(' ', $modifiers);
     }
 
     /**
@@ -147,7 +158,7 @@ class SignatureFormatter implements ReflectorFormatter
         if ($parent = $reflector->getParentClass()) {
             $chunks[] = 'extends';
             $parentHref = self::getManualHref($parent);
-            $chunks[] = LinkFormatter::styleWithHref('class', $parent->getName(), $parentHref);
+            $chunks[] = LinkFormatter::styleWithHref('class', self::normalizeName($parent->getName()), $parentHref);
         }
 
         $interfaces = $reflector->getInterfaceNames();
@@ -162,7 +173,7 @@ class SignatureFormatter implements ReflectorFormatter
                     $interfaceHref = null;
                 }
 
-                return LinkFormatter::styleWithHref('class', $name, $interfaceHref);
+                return LinkFormatter::styleWithHref('class', self::normalizeName($name), $interfaceHref);
             }, $interfaces));
         }
 
@@ -296,6 +307,68 @@ class SignatureFormatter implements ReflectorFormatter
     }
 
     /**
+     * Format a magic method signature.
+     *
+     * @param ReflectionMagicMethod $reflector
+     *
+     * @return string Formatted signature
+     */
+    private static function formatMagicMethod(ReflectionMagicMethod $reflector): string
+    {
+        $parts = [];
+
+        $parts[] = self::formatModifiers($reflector);
+        $parts[] = '<keyword>function</keyword>';
+
+        $ref = $reflector->returnsReference() ? '&' : '';
+
+        $signature = \sprintf(
+            '%s<function>%s</function>(%s)',
+            $ref,
+            $reflector->getName(),
+            OutputFormatter::escape($reflector->getParameterString())
+        );
+
+        $returnType = $reflector->getDocblockReturnType();
+        if ($returnType !== null) {
+            $signature .= \sprintf(': <keyword>%s</keyword>', OutputFormatter::escape($returnType));
+        }
+
+        $parts[] = $signature;
+
+        return \implode(' ', \array_filter($parts));
+    }
+
+    /**
+     * Format a magic property signature.
+     *
+     * @param ReflectionMagicProperty $reflector
+     *
+     * @return string Formatted signature
+     */
+    private static function formatMagicProperty(ReflectionMagicProperty $reflector): string
+    {
+        $parts = [];
+
+        $parts[] = self::formatModifiers($reflector);
+
+        $type = $reflector->getDocblockType();
+        if ($type !== null) {
+            $parts[] = \sprintf('<keyword>%s</keyword>', OutputFormatter::escape($type));
+        }
+
+        $parts[] = \sprintf('<strong>$%s</strong>', $reflector->getName());
+
+        if ($reflector->isReadOnly()) {
+            $parts[] = '<aside>(read-only)</aside>';
+        } elseif ($reflector->isWriteOnly()) {
+            $parts[] = '<aside>(write-only)</aside>';
+        }
+
+        return \implode(' ', \array_filter($parts));
+    }
+
+    /**
      * Print the function params.
      *
      * @param \ReflectionFunctionAbstract $reflector
@@ -316,7 +389,7 @@ class SignatureFormatter implements ReflectorFormatter
                     if ($param->isArray()) {
                         $hint = '<keyword>array</keyword>';
                     } elseif ($class = $param->getClass()) {
-                        $hint = LinkFormatter::styleWithHref('class', $class->getName(), self::getManualHref($class));
+                        $hint = LinkFormatter::styleWithHref('class', self::normalizeName($class->getName()), self::getManualHref($class));
                     }
                 }
             } catch (\Throwable $e) {
@@ -335,7 +408,8 @@ class SignatureFormatter implements ReflectorFormatter
                 // @codeCoverageIgnoreEnd
             }
 
-            if ($param->isOptional()) {
+            $isVariadic = $param->isVariadic();
+            if ($param->isOptional() && !$isVariadic) {
                 if (!$param->isDefaultValueAvailable()) {
                     $value = 'unknown';
                     $typeStyle = 'urgent';
@@ -350,8 +424,9 @@ class SignatureFormatter implements ReflectorFormatter
             }
 
             $params[] = \sprintf(
-                '%s%s%s<strong>$%s</strong>%s',
+                '%s%s%s%s<strong>$%s</strong>%s',
                 $param->isPassedByReference() ? '&' : '',
+                $isVariadic ? '...' : '',
                 $hint,
                 $hint !== '' ? ' ' : '',
                 $param->getName(),
@@ -365,7 +440,7 @@ class SignatureFormatter implements ReflectorFormatter
     /**
      * Print function param or return type(s).
      *
-     * @param \ReflectionType $type
+     * @param \ReflectionType|null $type
      */
     private static function formatReflectionType(?\ReflectionType $type, bool $indicateNullable): string
     {
@@ -395,7 +470,7 @@ class SignatureFormatter implements ReflectorFormatter
     private static function formatReflectionNamedType(\ReflectionNamedType $type, bool $indicateNullable): string
     {
         $nullable = $indicateNullable && $type->allowsNull() ? '?' : '';
-        $typeName = $type->getName();
+        $typeName = self::normalizeName($type->getName());
 
         if ($type->isBuiltin()) {
             return \sprintf('<keyword>%s%s</keyword>', $nullable, OutputFormatter::escape($typeName));
@@ -447,17 +522,17 @@ class SignatureFormatter implements ReflectorFormatter
             case \ReflectionClass::class:
             case \ReflectionObject::class:
             case \ReflectionFunction::class:
-                $query = $reflector->name;
+                $query = self::normalizeName($reflector->name);
                 break;
 
             case \ReflectionMethod::class:
-                $query = $reflector->class.'.'.$reflector->name;
+                $query = self::normalizeName($reflector->class).'.'.self::normalizeName($reflector->name);
                 break;
 
             case \ReflectionProperty::class:
             case \ReflectionClassConstant::class:
                 // No simple redirect URLs for properties/constants, link to class instead
-                $query = $reflector->class;
+                $query = self::normalizeName($reflector->class);
                 break;
 
             default:
@@ -484,23 +559,20 @@ class SignatureFormatter implements ReflectorFormatter
             case \ReflectionClass::class:
             case \ReflectionObject::class:
             case \ReflectionFunction::class:
-                $id = $reflector->name;
+                $id = self::normalizeName($reflector->name);
                 break;
 
             case \ReflectionMethod::class:
-                $id = $reflector->class.'::'.$reflector->name;
+            case \ReflectionClassConstant::class:
+                $id = self::normalizeName($reflector->class).'::'.self::normalizeName($reflector->name);
                 break;
 
             case \ReflectionProperty::class:
-                $id = $reflector->class.'::$'.$reflector->name;
-                break;
-
-            case \ReflectionClassConstant::class:
-                $id = $reflector->class.'::'.$reflector->name;
+                $id = self::normalizeName($reflector->class).'::$'.self::normalizeName($reflector->name);
                 break;
 
             case ReflectionConstant::class:
-                $id = $reflector->name;
+                $id = self::normalizeName($reflector->name);
                 break;
 
             default:
@@ -508,5 +580,13 @@ class SignatureFormatter implements ReflectorFormatter
         }
 
         return self::$manual->get($id) ?? false;
+    }
+
+    /**
+     * Strip scoped PHAR namespace prefixes from a name.
+     */
+    private static function normalizeName(string $name): string
+    {
+        return (string) \preg_replace('/^_Psy[a-f0-9]+\\\\/i', '', $name);
     }
 }

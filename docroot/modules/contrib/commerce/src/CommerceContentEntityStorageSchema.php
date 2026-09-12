@@ -17,7 +17,7 @@ class CommerceContentEntityStorageSchema extends SqlContentEntityStorageSchema {
     $schema = parent::getSharedTableFieldSchema($storage_definition, $table_name, $column_mapping);
 
     $entity_type = $this->entityTypeManager->getDefinition($storage_definition->getTargetEntityTypeId());
-    $field_indexes = $entity_type->get('field_indexes');
+    $field_indexes = $entity_type->get('field_indexes') ?? [];
     foreach ($field_indexes as $field_name) {
       if ($field_name == $storage_definition->getName()) {
         $this->addSharedTableFieldIndex($storage_definition, $schema);

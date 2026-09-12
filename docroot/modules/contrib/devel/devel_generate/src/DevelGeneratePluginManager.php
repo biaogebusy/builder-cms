@@ -18,26 +18,6 @@ use Drupal\devel_generate\Annotation\DevelGenerate;
 class DevelGeneratePluginManager extends DefaultPluginManager {
 
   /**
-   * The entity type manager.
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The messenger service.
-   */
-  protected MessengerInterface $messenger;
-
-  /**
-   * The language manager.
-   */
-  protected LanguageManagerInterface $languageManager;
-
-  /**
-   * The translation manager.
-   */
-  protected TranslationInterface $stringTranslation;
-
-  /**
    * Constructs a DevelGeneratePluginManager object.
    *
    * @param \Traversable $namespaces
@@ -47,13 +27,13 @@ class DevelGeneratePluginManager extends DefaultPluginManager {
    *   Cache backend instance to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler to invoke the alter hook with.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $stringTranslation
    *   The translation manager.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
@@ -62,18 +42,14 @@ class DevelGeneratePluginManager extends DefaultPluginManager {
     \Traversable $namespaces,
     CacheBackendInterface $cache_backend,
     ModuleHandlerInterface $module_handler,
-    EntityTypeManagerInterface $entity_type_manager,
-    MessengerInterface $messenger,
-    LanguageManagerInterface $language_manager,
-    TranslationInterface $string_translation,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected MessengerInterface $messenger,
+    protected LanguageManagerInterface $languageManager,
+    protected TranslationInterface $stringTranslation,
     protected EntityFieldManagerInterface $entityFieldManager,
   ) {
     parent::__construct('Plugin/DevelGenerate', $namespaces, $module_handler, NULL, DevelGenerate::class);
-    $this->entityTypeManager = $entity_type_manager;
-    $this->messenger = $messenger;
-    $this->languageManager = $language_manager;
     $this->moduleHandler = $module_handler;
-    $this->stringTranslation = $string_translation;
     $this->alterInfo('devel_generate_info');
     $this->setCacheBackend($cache_backend, 'devel_generate_plugins');
   }

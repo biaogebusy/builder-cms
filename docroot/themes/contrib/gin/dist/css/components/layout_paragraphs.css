@@ -479,16 +479,10 @@
 .erl-loading div.spinner {
   width: 1.125rem;
   height: 1.125rem;
+  animation: gin-throbber .75s linear infinite;
   border: 2px solid var(--gin-color-primary);
   border-inline-end: 2px dotted transparent;
   border-radius: 50%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .layout-paragraphs-loading div.spinner,
-  .erl-loading div.spinner {
-    animation: gin-throbber .75s linear infinite;
-  }
 }
 
 .layout-paragraphs-add-content:focus,

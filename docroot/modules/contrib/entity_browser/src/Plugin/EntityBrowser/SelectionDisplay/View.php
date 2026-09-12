@@ -4,22 +4,23 @@ namespace Drupal\entity_browser\Plugin\EntityBrowser\SelectionDisplay;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserSelectionDisplay;
 use Drupal\entity_browser\SelectionDisplayBase;
 use Drupal\views\Views;
 use Drupal\views\Entity\View as ViewEntity;
 
 /**
  * Displays current selection in a View.
- *
- * @EntityBrowserSelectionDisplay(
- *   id = "view",
- *   label = @Translation("View selection display"),
- *   description = @Translation("Use a pre-configured view as selection area."),
- *   acceptPreselection = TRUE,
- *   provider = "views",
- *   js_commands = FALSE
- * )
  */
+#[EntityBrowserSelectionDisplay(
+  id: 'view',
+  label: new TranslatableMarkup('View selection display'),
+  description: new TranslatableMarkup('Use a pre-configured view as selection area.'),
+  acceptPreselection: TRUE,
+  js_commands: FALSE,
+  provider: 'views',
+)]
 class View extends SelectionDisplayBase {
 
   /**
@@ -36,6 +37,7 @@ class View extends SelectionDisplayBase {
    * {@inheritdoc}
    */
   public function getForm(array &$original_form, FormStateInterface $form_state) {
+    $original_form['#attributes']['class'][] = 'entity-browser-form--view';
     $form = [];
 
     // @todo do we need better error handling for view and view_display

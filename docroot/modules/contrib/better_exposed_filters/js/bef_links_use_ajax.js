@@ -5,53 +5,60 @@
  * Allows to use ajax with Bef links.
  */
 
-(function ($, once) {
+(function (once) {
 
   // This is only needed to provide ajax functionality
   Drupal.behaviors.better_exposed_filters_select_as_links = {
     attach: function (context) {
-      $(once('bef-links-use-ajax', '.bef-links.bef-links-use-ajax', context)).each(function () {
-        let $links = $(this);
-        let links_name = $(this).attr('name');
-        let links_multiple = $(this).attr('multiple');
-        let $form = $(this).closest('form');
-        let $filters = $form.find('input[name^="' + links_name + '"]');
+      once('bef-links-use-ajax', '.bef-links.bef-links-use-ajax', context).forEach(function (element) {
+        const links_name = element.getAttribute('data-name');
+        const links_multiple = element.getAttribute('data-multiple');
+        const form = element.closest('form');
 
-        $(this).find('a').click(function (event) {
+        element.querySelectorAll('a').forEach((el) => el.addEventListener('click', (event) => {
           // Prevent following the link URL.
           event.preventDefault();
 
-          let link_name = links_multiple ? $(this).attr('name') : links_name;
-          let link_value = $(this).attr('name').substring(links_name.length).replace(/^\[|\]$/g, '');
-          let $filter = $form.find('input[name="' + link_name + '"]');
+          const target = event.currentTarget;
 
-          if ($(this).hasClass('bef-link--selected')) {
+          const link_value = target.getAttribute('data-bef-value');
+          const base_name = links_name.replace(/\[]$/, '');
+          const link_name = links_multiple ? base_name + '[' + link_value + ']' : links_name;
+          const filter = form.querySelector('input[name="' + link_name + '"]');
+          const filters = form.querySelectorAll('input[name^="' + base_name + '"]');
+
+          if (target.classList.contains('bef-link--selected')) {
             // The previously selected link is selected again. Deselect it.
-            $(this).removeClass('bef-link--selected');
+            target.classList.remove('bef-link--selected');
             if (!links_multiple || link_value === 'All') {
-              $filters.remove();
+              filters.forEach((el) => el.remove());
             }
             else {
-              $filter.remove();
+              filter.remove();
             }
           }
           else {
             if (!links_multiple || link_value === 'All') {
-              $links.find('.bef-link--selected').removeClass('bef-link--selected');
+              element.querySelectorAll('.bef-link--selected').forEach((el) => el.classList.remove('bef-link--selected'));
             }
-            $(this).addClass('bef-link--selected');
+            target.classList.add('bef-link--selected');
 
-            if (!$filter.length) {
-              $filter = $('<input type="hidden" name="' + link_name + '" />')
-                .prependTo($links);
+            if (!filter) {
+              const newFilter = document.createElement("input");
+              newFilter.type = "hidden";
+              newFilter.name = link_name;
+              newFilter.value = link_value;
+              element.appendChild(newFilter);
             }
-            $filter.val(link_value);
+ else {
+              filter.value = link_value;
+            }
           }
 
           // Submit the form.
-          $form.find('.form-submit').not('[data-drupal-selector*=edit-reset]').click();
-        });
+          form.querySelector('.form-submit:not([data-drupal-selector*=edit-reset])').click();
+        }));
       });
     }
   };
-})(jQuery, once);
+})(once);

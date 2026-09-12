@@ -6,6 +6,9 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
 
+include_once __DIR__ . '/../gin.theme';
+_gin_include_theme_includes();
+
 /**
  * User picture build callback for the gin theme.
  */

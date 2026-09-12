@@ -8,25 +8,27 @@ use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests detection of triggering_element for programmed form submissions.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class TriggeringElementProgrammedTest extends KernelTestBase implements FormInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'triggering_element_programmed_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['one'] = [
       '#type' => 'textfield',
       '#title' => 'One',
@@ -54,7 +56,7 @@ class TriggeringElementProgrammedTest extends KernelTestBase implements FormInte
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     // Verify that the only submit button was recognized as triggering_element.
     $this->assertEquals($form['actions']['submit']['#array_parents'], $form_state->getTriggeringElement()['#array_parents']);
   }

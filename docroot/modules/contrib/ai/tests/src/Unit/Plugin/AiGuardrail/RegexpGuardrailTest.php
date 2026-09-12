@@ -25,47 +25,37 @@ use PHPUnit\Framework\TestCase;
 class RegexpGuardrailTest extends TestCase {
 
   /**
-   * Creates a RegexpGuardrail instance with the given configuration.
+   * The email pattern reused across the test cases.
+   */
+  protected const EMAIL_PATTERN = '/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i';
+
+  /**
+   * Builds a configured RegexpGuardrail instance.
    *
-   * @param string $pattern
-   *   The regex pattern.
-   * @param string $message
-   *   The violation message.
+   * @param array $configuration
+   *   The guardrail configuration array.
    *
    * @return \Drupal\ai\Plugin\AiGuardrail\RegexpGuardrail
    *   The configured guardrail.
    */
-  protected function createGuardrail(string $pattern, string $message = 'Blocked.'): RegexpGuardrail {
+  protected function createGuardrail(array $configuration): RegexpGuardrail {
     $guardrail = new RegexpGuardrail(
-      ['regexp_pattern' => $pattern, 'violation_message' => $message],
+      $configuration,
       'regexp_guardrail',
       ['label' => 'Regexp Guardrail'],
     );
-    $guardrail->setConfiguration([
-      'regexp_pattern' => $pattern,
-      'violation_message' => $message,
-    ]);
+    $guardrail->setConfiguration($configuration);
     return $guardrail;
-  }
-
-  /**
-   * Tests processInput blocks matching text.
-   */
-  public function testProcessInputBlocksMatch(): void {
-    $guardrail = $this->createGuardrail('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i');
-    $input = new ChatInput([
-      new ChatMessage('user', 'My email is test@example.com'),
-    ]);
-
-    $result = $guardrail->processInput($input);
-    $this->assertInstanceOf(StopResult::class, $result);
   }
 
   /**
    * Tests processInput passes non-matching text.
    */
   public function testProcessInputPassesCleanText(): void {
-    $guardrail = $this->createGuardrail('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
     $input = new ChatInput([
       new ChatMessage('user', 'Hello, how are you?'),
     ]);
@@ -78,7 +68,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput blocks matching text in AI response.
    */
   public function testProcessOutputBlocksMatch(): void {
-    $guardrail = $this->createGuardrail('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
     $output = new ChatOutput(
       new ChatMessage('assistant', 'Contact us at support@example.com for help.'),
       [],
@@ -93,7 +86,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput passes non-matching AI response.
    */
   public function testProcessOutputPassesCleanText(): void {
-    $guardrail = $this->createGuardrail('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
     $output = new ChatOutput(
       new ChatMessage('assistant', 'Here is the information you requested.'),
       [],
@@ -108,7 +104,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput handles streamed responses gracefully.
    */
   public function testProcessOutputSkipsStreamedOutput(): void {
-    $guardrail = $this->createGuardrail('/test/');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => '/test/',
+      'violation_message' => 'Blocked.',
+    ]);
     $streamed = $this->createStub(StreamedChatMessageIteratorInterface::class);
     $output = new ChatOutput($streamed, [], []);
 
@@ -120,7 +119,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput with empty pattern configuration.
    */
   public function testProcessOutputSkipsEmptyPattern(): void {
-    $guardrail = $this->createGuardrail('');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => '',
+      'violation_message' => 'Blocked.',
+    ]);
     $output = new ChatOutput(
       new ChatMessage('assistant', 'test@example.com'),
       [],
@@ -135,7 +137,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput detects credit card numbers.
    */
   public function testProcessOutputBlocksCreditCard(): void {
-    $guardrail = $this->createGuardrail('/(?<!\d)(?:\d[\s\-]?){12,19}\d(?!\d)/');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => '/(?<!\d)(?:\d[\s\-]?){12,19}\d(?!\d)/',
+      'violation_message' => 'Blocked.',
+    ]);
     $output = new ChatOutput(
       new ChatMessage('assistant', 'Your card number is 4111 1111 1111 1111.'),
       [],
@@ -150,7 +155,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput blocks a regex match inside a tool call argument.
    */
   public function testProcessOutputBlocksMatchInToolArgument(): void {
-    $guardrail = $this->createGuardrail('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
     $output = $this->buildChatOutputWithToolArguments(['to' => 'support@example.com']);
 
     $result = $guardrail->processOutput($output);
@@ -161,7 +169,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput passes when tool call arguments are clean.
    */
   public function testProcessOutputPassesCleanToolArguments(): void {
-    $guardrail = $this->createGuardrail('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
     $output = $this->buildChatOutputWithToolArguments(['city' => 'Berlin']);
 
     $result = $guardrail->processOutput($output);
@@ -172,7 +183,10 @@ class RegexpGuardrailTest extends TestCase {
    * Tests processOutput recurses into nested array tool argument values.
    */
   public function testProcessOutputBlocksMatchInNestedToolArgument(): void {
-    $guardrail = $this->createGuardrail('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
     $output = $this->buildChatOutputWithToolArguments([
       'payload' => [
         'recipients' => [
@@ -197,7 +211,10 @@ class RegexpGuardrailTest extends TestCase {
    * string.
    */
   public function testProcessOutputScansRawControlCharactersInToolArguments(): void {
-    $guardrail = $this->createGuardrail('/\t/');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => '/\t/',
+      'violation_message' => 'Blocked.',
+    ]);
     $output = $this->buildChatOutputWithToolArguments([
       'body' => "line one\tline two",
     ]);
@@ -215,7 +232,10 @@ class RegexpGuardrailTest extends TestCase {
    * escapes the value.
    */
   public function testProcessOutputDoesNotMatchJsonEscapeForms(): void {
-    $guardrail = $this->createGuardrail('/\\\\t/');
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => '/\\\\t/',
+      'violation_message' => 'Blocked.',
+    ]);
     $output = $this->buildChatOutputWithToolArguments([
       'body' => "line one\tline two",
     ]);
@@ -252,16 +272,128 @@ class RegexpGuardrailTest extends TestCase {
   }
 
   /**
-   * Tests processInput with empty pattern configuration.
+   * Default mode blocks an email address in the latest user message.
    */
-  public function testProcessInputSkipsEmptyPattern(): void {
-    $guardrail = $this->createGuardrail('');
+  public function testDefaultBlocksMatchInLatestUserMessage(): void {
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
+    $input = new ChatInput([
+      new ChatMessage('user', 'Hello'),
+      new ChatMessage('assistant', 'Hi'),
+      new ChatMessage('user', 'My email is test@example.com'),
+    ]);
+
+    $this->assertInstanceOf(StopResult::class, $guardrail->processInput($input));
+  }
+
+  /**
+   * Default mode passes when the latest user message is clean.
+   *
+   * Even if an earlier user message contained a match, the default path
+   * only scans the most recent user message. This documents the BC
+   * contract: the default behavior is unchanged.
+   */
+  public function testDefaultIgnoresEarlierUserMessages(): void {
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
+    $input = new ChatInput([
+      new ChatMessage('user', 'My email is test@example.com'),
+      new ChatMessage('assistant', 'Got it'),
+      new ChatMessage('user', 'thanks'),
+    ]);
+
+    $this->assertInstanceOf(PassResult::class, $guardrail->processInput($input));
+  }
+
+  /**
+   * Default mode walks back past tool result messages (the role guard).
+   *
+   * Without the role guard, end($messages) would land on the tool result
+   * and the user prompt containing the email would never be scanned.
+   */
+  public function testDefaultWalksBackPastToolResultMessages(): void {
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
+    $input = new ChatInput([
+      new ChatMessage('user', 'send the report to test@example.com'),
+      new ChatMessage('assistant', ''),
+      new ChatMessage('tool', 'report sent successfully'),
+    ]);
+
+    $this->assertInstanceOf(StopResult::class, $guardrail->processInput($input));
+  }
+
+  /**
+   * Scan-all mode blocks a match in any user message in the conversation.
+   */
+  public function testScanAllBlocksMatchInEarlierUserMessage(): void {
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+      'scan_all_user_messages' => TRUE,
+    ]);
+    $input = new ChatInput([
+      new ChatMessage('user', 'My email is test@example.com'),
+      new ChatMessage('assistant', 'Got it'),
+      new ChatMessage('user', 'thanks'),
+    ]);
+
+    $this->assertInstanceOf(StopResult::class, $guardrail->processInput($input));
+  }
+
+  /**
+   * Scan-all mode passes when every user message is clean.
+   */
+  public function testScanAllPassesWhenAllUserMessagesClean(): void {
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+      'scan_all_user_messages' => TRUE,
+    ]);
+    $input = new ChatInput([
+      new ChatMessage('user', 'first message'),
+      new ChatMessage('assistant', 'ok'),
+      new ChatMessage('user', 'second message'),
+    ]);
+
+    $this->assertInstanceOf(PassResult::class, $guardrail->processInput($input));
+  }
+
+  /**
+   * No user messages at all returns a pass.
+   */
+  public function testPassesWhenNoUserMessages(): void {
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => self::EMAIL_PATTERN,
+      'violation_message' => 'Blocked.',
+    ]);
+    $input = new ChatInput([
+      new ChatMessage('assistant', 'hello'),
+      new ChatMessage('tool', 'result'),
+    ]);
+
+    $this->assertInstanceOf(PassResult::class, $guardrail->processInput($input));
+  }
+
+  /**
+   * Empty pattern configuration short-circuits to a pass.
+   */
+  public function testPassesWhenPatternEmpty(): void {
+    $guardrail = $this->createGuardrail([
+      'regexp_pattern' => '',
+      'violation_message' => 'Blocked.',
+    ]);
     $input = new ChatInput([
       new ChatMessage('user', 'test@example.com'),
     ]);
 
-    $result = $guardrail->processInput($input);
-    $this->assertInstanceOf(PassResult::class, $result);
+    $this->assertInstanceOf(PassResult::class, $guardrail->processInput($input));
   }
 
 }

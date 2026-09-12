@@ -13,7 +13,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\link\AttributeXss;
 use Drupal\link\LinkItemInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'link' formatter.
@@ -33,22 +32,6 @@ class LinkFormatter extends FormatterBase {
    * @var \Drupal\Core\Path\PathValidatorInterface
    */
   protected $pathValidator;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['label'],
-      $configuration['view_mode'],
-      $configuration['third_party_settings'],
-      $container->get('path.validator')
-    );
-  }
 
   /**
    * Constructs a new LinkFormatter.
@@ -169,6 +152,8 @@ class LinkFormatter extends FormatterBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param \Drupal\Core\Field\FieldItemListInterface<\Drupal\link\LinkItemInterface> $items
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $element = [];
@@ -239,13 +224,13 @@ class LinkFormatter extends FormatterBase {
     try {
       $url = $item->getUrl();
     }
-    catch (\InvalidArgumentException $e) {
+    catch (\InvalidArgumentException) {
       // @todo Add logging here in https://www.drupal.org/project/drupal/issues/3348020
       $url = Url::fromRoute('<none>');
     }
 
     $settings = $this->getSettings();
-    $options = $item->options;
+    $options = $item->options ?? [];
     $options += $url->getOptions();
 
     // Add optional 'rel' attribute to link options.

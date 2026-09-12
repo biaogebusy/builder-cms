@@ -8,7 +8,7 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Tests in-place editing of autocomplete tags.
@@ -17,7 +17,7 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
  */
 class QuickEditAutocompleteTermTest extends WebDriverTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use ContextualLinkClickTrait;
 
   /**
@@ -28,7 +28,7 @@ class QuickEditAutocompleteTermTest extends WebDriverTestBase {
     'taxonomy',
     'quickedit',
     'contextual',
-    'ckeditor',
+    'ckeditor5',
   ];
 
   /**

@@ -2,13 +2,16 @@
 
 namespace Drupal\pathauto;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\path_alias\AliasRepositoryInterface;
 
 /**
@@ -73,8 +76,8 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
    *   The messenger.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manger.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface|null $entity_type_manager
+   *   The entity type manager.
    */
   public function __construct(ConfigFactoryInterface $config_factory, AliasRepositoryInterface $alias_repository, Connection $database, MessengerInterface $messenger, TranslationInterface $string_translation, ?EntityTypeManagerInterface $entity_type_manager = NULL) {
     $this->configFactory = $config_factory;
@@ -82,7 +85,8 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
     $this->database = $database;
     $this->messenger = $messenger;
     $this->stringTranslation = $string_translation;
-    $this->entityTypeManager = $entity_type_manager ?: \Drupal::service('entity_type.manager');
+    // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
+    $this->entityTypeManager = $entity_type_manager ?: \Drupal::entityTypeManager();
   }
 
   /**
@@ -119,14 +123,17 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
       return NULL;
     }
 
+    // Generate a link to the alias.
+    $alias_link = Link::fromTextAndUrl($alias, Url::fromUri('internal:' . $alias))->toString();
+
     // Update the existing alias if there is one and the configuration is set to
     // replace it.
     if ($existing_alias && $config->get('update_action') == PathautoGeneratorInterface::UPDATE_ACTION_DELETE) {
       $old_alias = $existing_alias->getAlias();
       $existing_alias->setAlias($alias)->save();
 
-      $this->messenger->addMessage($this->t('Created new alias %alias for %source, replacing %old_alias.', [
-        '%alias' => $alias,
+      $this->messenger->addMessage($this->t('Created new URL alias %alias for %source, replacing %old_alias.', [
+        '%alias' => $alias_link,
         '%source' => $source,
         '%old_alias' => $old_alias,
       ]));
@@ -142,8 +149,8 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
       ]);
       $path_alias->save();
 
-      $this->messenger->addMessage($this->t('Created new alias %alias for %source.', [
-        '%alias' => $path_alias->getAlias(),
+      $this->messenger->addMessage($this->t('Created new URL alias %alias for %source.', [
+        '%alias' => $alias_link,
         '%source' => $path_alias->getPath(),
       ]));
 
@@ -171,6 +178,7 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
         'langcode' => $alias['langcode'],
       ];
     }
+    return FALSE;
   }
 
   /**
@@ -193,15 +201,25 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
       $this->database->truncate($table_name)->execute();
     }
     $this->entityTypeManager->getStorage('path_alias')->resetCache();
+
+    // Invalidate all rendered caches and the routing cache since we
+    // just wiped every alias.
+    Cache::invalidateTags(['rendered', 'route_match']);
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteEntityPathAll(EntityInterface $entity, $default_uri = NULL) {
-    $this->deleteBySourcePrefix('/' . $entity->toUrl('canonical')->getInternalPath());
-    if (isset($default_uri) && $entity->toUrl('canonical')->toString() != $default_uri) {
-      $this->deleteBySourcePrefix($default_uri);
+    $url = $entity->toUrl('canonical');
+    if ($url->isRouted()) {
+      $internal_path = $url->getInternalPath();
+      if ($internal_path !== '') {
+        $this->deleteBySourcePrefix('/' . $internal_path);
+        if (isset($default_uri) && $url->toString() != $default_uri) {
+          $this->deleteBySourcePrefix($default_uri);
+        }
+      }
     }
   }
 

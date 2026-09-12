@@ -1,0 +1,6 @@
+text_transformation_adapter:
+  version: 20240527
+  js:
+    js/build/textTransformationAdapter.js: { minified: true }
+  dependencies:
+    - core/ckeditor5.essentials

@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\default_format_test;
 
 use Drupal\Core\Cache\CacheableResponse;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Controller for testing default route format.
+ */
 class DefaultFormatTestController {
 
   public function content(Request $request) {

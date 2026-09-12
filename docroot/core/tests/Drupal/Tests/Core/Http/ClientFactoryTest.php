@@ -7,11 +7,15 @@ namespace Drupal\Tests\Core\Http;
 use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\Site\Settings;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Http\ClientFactory
- * @group Http
+ * Tests Drupal\Core\Http\ClientFactory.
  */
+#[CoversClass(ClientFactory::class)]
+#[Group('Http')]
 class ClientFactoryTest extends UnitTestCase {
 
   /**
@@ -34,8 +38,7 @@ class ClientFactoryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::fromOptions
-   * @dataProvider providerTestCreateFromOptions
+   * Tests create from options.
    *
    * @param array $settings_config
    *   The settings configuration.
@@ -43,7 +46,10 @@ class ClientFactoryTest extends UnitTestCase {
    *   The parameter configuration.
    * @param array $expected_config_keys
    *   The expected config keys.
+   *
+   * @legacy-covers ::fromOptions
    */
+  #[DataProvider('providerTestCreateFromOptions')]
   public function testCreateFromOptions($settings_config, $parameter_config, $expected_config_keys): void {
     if ($settings_config) {
       new Settings(['http_client_config' => $settings_config]);
@@ -63,8 +69,9 @@ class ClientFactoryTest extends UnitTestCase {
    * Data provider for testCreateFromOptions.
    *
    * @return array
+   *   An array of test data for testCreateFromOptions.
    */
-  public static function providerTestCreateFromOptions() {
+  public static function providerTestCreateFromOptions(): array {
     return [
       [[], [], ['verify' => TRUE, 'timeout' => 30]],
       [['timeout' => 40], [], ['verify' => TRUE, 'timeout' => 40]],

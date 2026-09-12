@@ -64,7 +64,10 @@ class MailFormatHelper {
       $text = preg_replace('/(?(?<!^--) +\n|  +\n)/m', "\n", $text);
       // Wrap each line at the needed width.
       $lines = explode("\n", $text);
-      array_walk($lines, '\Drupal\Core\Mail\MailFormatHelper::wrapMailLine', ['soft' => $soft, 'length' => strlen($indent)]);
+      array_walk($lines, '\Drupal\Core\Mail\MailFormatHelper::wrapMailLine', [
+        'soft' => $soft,
+        'length' => strlen($indent),
+      ]);
       $text = implode("\n", $lines);
     }
     else {
@@ -84,8 +87,9 @@ class MailFormatHelper {
   /**
    * Transforms an HTML string into plain text, preserving its structure.
    *
-   * The output will be suitable for use as 'format=flowed; delsp=yes' text
-   * (RFC 3676) and can be passed directly to MailManagerInterface::mail() for sending.
+   * The output will be suitable for use as 'format=flowed; delsp=yes' text (RFC
+   * 3676) and can be passed directly to MailManagerInterface::mail() for
+   * sending.
    *
    * We deliberately use LF rather than CRLF, see MailManagerInterface::mail().
    *
@@ -126,7 +130,7 @@ class MailFormatHelper {
     // 'See <a href="https://www.drupal.org">the Drupal site</a>' becomes
     // 'See the Drupal site [1]' with the URL included as a footnote.
     static::htmlToMailUrls(NULL, TRUE);
-    $pattern = '@(<a[^>]+?href="([^"]*)"[^>]*?>(.+?)</a>)@i';
+    $pattern = '@(<a[^>]+?href="([^"]*)"[^>]*?>([^<]*)</a>)@i';
     $string = preg_replace_callback($pattern, [static::class, 'htmlToMailUrls'], $string);
     $urls = static::htmlToMailUrls();
     $footnotes = '';
@@ -339,7 +343,8 @@ class MailFormatHelper {
         [, , $url, $label] = $match;
         // Ensure all URLs are absolute.
         static::$urls[] = strpos($url, '://') ? $url : preg_replace(static::$regexp, $base_url . '/', $url);
-        return $label . ' [' . count(static::$urls) . ']';
+        // Strip newlines and carriage returns from anchor text.
+        return preg_replace('/\r?\n|\r/', '', $label) . ' [' . count(static::$urls) . ']';
       }
     }
     return static::$urls;

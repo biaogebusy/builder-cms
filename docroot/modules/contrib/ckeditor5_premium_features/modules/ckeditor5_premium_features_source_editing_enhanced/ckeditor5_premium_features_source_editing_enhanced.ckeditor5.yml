@@ -1,0 +1,13 @@
+ckeditor5_premium_features_source_editing_enhanced__source_editing_enhanced:
+  ckeditor5:
+    plugins:
+      - sourceEditingEnhanced.SourceEditingEnhanced
+  drupal:
+    label: Source editing enhanced
+    library: ckeditor5_premium_features_source_editing_enhanced/editor.source-editing-enhanced
+    admin_library: ckeditor5_premium_features_source_editing_enhanced/admin.source-editing-enhanced
+    class: Drupal\ckeditor5_premium_features_source_editing_enhanced\Plugin\CKEditor5Plugin\SourceEditingEnhanced
+    toolbar_items:
+      sourceEditingEnhanced:
+        label: Enhanced Source editing
+    elements: false

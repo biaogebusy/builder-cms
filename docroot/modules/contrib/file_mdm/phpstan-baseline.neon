@@ -1,11 +1,115 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Parameter \\#2 \\$value of class lsolesen\\\\pel\\\\PelEntryShort constructor expects int\\|null, array\\<int, int\\> given\\.$#"
-			count: 1
-			path: file_mdm_exif/tests/src/Kernel/FileMetadataExifTest.php
-
-		-
-			message: "#^Parameter \\#2 \\$message of method Drupal\\\\Core\\\\Form\\\\FormStateInterface\\:\\:setError\\(\\) expects string, Drupal\\\\Core\\\\StringTranslation\\\\TranslatableMarkup given\\.$#"
+			message: '#^Method Drupal\\file_mdm\\Element\\FileMetadataCaching\:\:getInfo\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: src/Element/FileMetadataCaching.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Element\\FileMetadataCaching\:\:valueCallback\(\) has parameter \$element with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Element/FileMetadataCaching.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:buildForm\(\) has parameter \$form with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:buildForm\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:create\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:getEditableConfigNames\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:submitForm\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:submitForm\(\) has parameter \$form with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:validateForm\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Form\\SettingsForm\:\:validateForm\(\) has parameter \$form with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Form/SettingsForm.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: src/Hook/FileMetadataHooks.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadata\\FileMetadataPluginBase\:\:buildConfigurationForm\(\) has parameter \$form with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Plugin/FileMetadata/FileMetadataPluginBase.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadata\\FileMetadataPluginBase\:\:buildConfigurationForm\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Plugin/FileMetadata/FileMetadataPluginBase.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadata\\FileMetadataPluginBase\:\:submitConfigurationForm\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Plugin/FileMetadata/FileMetadataPluginBase.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadata\\FileMetadataPluginBase\:\:submitConfigurationForm\(\) has parameter \$form with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Plugin/FileMetadata/FileMetadataPluginBase.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadata\\FileMetadataPluginBase\:\:validateConfigurationForm\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Plugin/FileMetadata/FileMetadataPluginBase.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadata\\FileMetadataPluginBase\:\:validateConfigurationForm\(\) has parameter \$form with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Plugin/FileMetadata/FileMetadataPluginBase.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadataPluginManager\:\:__construct\(\) has parameter \$namespaces with no value type specified in iterable type Traversable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Plugin/FileMetadataPluginManager.php
+
+		-
+			message: '#^Method Drupal\\file_mdm\\Plugin\\FileMetadataPluginManager\:\:createInstance\(\) has parameter \$configuration with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Plugin/FileMetadataPluginManager.php

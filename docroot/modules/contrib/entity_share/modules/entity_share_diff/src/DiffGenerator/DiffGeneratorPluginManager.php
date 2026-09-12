@@ -56,11 +56,11 @@ class DiffGeneratorPluginManager extends DefaultPluginManager {
    * @param string $field_type
    *   The field type.
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   *
    * @return \Drupal\entity_share_diff\DiffGenerator\DiffGeneratorInterface|null
    *   The plugin instance, NULL if none.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function createInstanceForFieldDefinition(string $field_type) {
     if (!isset($this->pluginDefinitions)) {

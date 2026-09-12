@@ -256,7 +256,6 @@ class PageTest extends UnitTestCase {
     $this->assertEquals($expected, $page->getParameters());
 
     $method = new \ReflectionMethod($page, 'filterParameters');
-    $method->setAccessible(TRUE);
     $method->invoke($page);
 
     $expected = [

@@ -6,12 +6,14 @@ namespace Drupal\Tests\responsive_image\Kernel\Migrate\d7;
 
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of responsive image styles.
- *
- * @group responsive_image
  */
+#[Group('responsive_image')]
+#[RunTestsInSeparateProcesses]
 class MigrateResponsiveImageStylesTest extends MigrateDrupal7TestBase {
 
   /**

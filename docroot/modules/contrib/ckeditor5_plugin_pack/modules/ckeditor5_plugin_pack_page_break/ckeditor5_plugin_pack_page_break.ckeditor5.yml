@@ -1,0 +1,15 @@
+ckeditor5_plugin_pack_page_break__page_break:
+  ckeditor5:
+    plugins:
+      - pageBreak.PageBreak
+  drupal:
+    label: Page break
+    elements:
+      - <div>
+      - <div class>
+      - <span>
+    library: ckeditor5_plugin_pack_page_break/page-break_integration
+    admin_library: ckeditor5_plugin_pack_page_break/admin.page_break
+    toolbar_items:
+      pageBreak:
+        label: Page break

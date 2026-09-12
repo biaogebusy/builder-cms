@@ -2,11 +2,13 @@
 
 namespace Drupal\charts_c3\Plugin\chart\Library;
 
+use Drupal\charts\ApplyRawOptionsTrait;
 use Drupal\charts\Attribute\Chart;
+use Drupal\charts\BackgroundColorTrait;
 use Drupal\charts\Plugin\chart\Library\ChartBase;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
@@ -36,6 +38,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 )]
 class C3 extends ChartBase implements ContainerFactoryPluginInterface {
 
+  use ApplyRawOptionsTrait;
+  use BackgroundColorTrait;
+
   /**
    * The element info manager.
    *
@@ -54,11 +59,13 @@ class C3 extends ChartBase implements ContainerFactoryPluginInterface {
    *   The plugin implementation definition.
    * @param \Drupal\Core\Render\ElementInfoManagerInterface $element_info
    *   The element info manager.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface|null $module_handler
    *   The module handler service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ElementInfoManagerInterface $element_info, ?ModuleHandlerInterface $module_handler = NULL) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ElementInfoManagerInterface $element_info, FormBuilderInterface $form_builder, ?ModuleHandlerInterface $module_handler = NULL) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler, $form_builder);
     $this->elementInfo = $element_info;
   }
 
@@ -71,6 +78,7 @@ class C3 extends ChartBase implements ContainerFactoryPluginInterface {
       $plugin_id,
       $plugin_definition,
       $container->get('element_info'),
+      $container->get('form_builder'),
       $container->get('module_handler'),
     );
   }
@@ -127,25 +135,109 @@ class C3 extends ChartBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function preRender(array $element) {
-    // Populate chart settings.
-    $chart_definition = [];
-
-    $chart_definition = $this->populateOptions($element, $chart_definition);
-    $chart_definition = $this->populateData($element, $chart_definition);
-    $chart_definition = $this->populateAxes($element, $chart_definition);
-
-    if (!empty($element['#height']) || !empty($element['#width'])) {
-      $element['#attributes']['style'] = 'height:' . $element['#height'] . $element['#height_units'] . ';width:' . $element['#width'] . $element['#width_units'] . ';';
-    }
-
+    // Ensure ID is set early so we can use it for 'bindto'.
     if (!isset($element['#id'])) {
       $element['#id'] = Html::getUniqueId('chart-c3');
     }
+
+    // Handle dimensions (optimized to avoid empty properties).
+    if (!empty($element['#height']) || !empty($element['#width'])) {
+      $style = '';
+      if (!empty($element['#height'])) {
+        $style .= 'height:' . $element['#height'] . $element['#height_units'] . ';';
+      }
+      if (!empty($element['#width'])) {
+        $style .= 'width:' . $element['#width'] . $element['#width_units'] . ';';
+      }
+      if ($style) {
+        $element['#attributes']['style'] = $style;
+      }
+    }
+
+    // Use raw definition if provided, otherwise build from elements.
+    if (!empty($element['#chart_definition'])) {
+      $chart_definition = $element['#chart_definition'];
+    }
+    else {
+      // Populate chart settings.
+      $chart_definition = [];
+      $chart_definition = $this->populateOptions($element, $chart_definition);
+      $chart_definition = $this->populateData($element, $chart_definition);
+      $chart_definition = $this->populateAxes($element, $chart_definition);
+    }
+
+    // Workaround because C3.js does not natively support background color.
+    $element = $this->applyBackgroundColor($element);
+
+    // Merge in chart raw options (applies to both methods).
+    $chart_definition = $this->applyRawOptions($element, $chart_definition);
+
+    // Ensure the chart knows where to render.
+    // This must happen regardless of how the definition was built.
     $chart_definition['bindto'] = '#' . $element['#id'];
 
     $element['#attached']['library'][] = 'charts_c3/c3';
     $element['#attributes']['class'][] = 'charts-c3';
     $element['#chart_definition'] = $chart_definition;
+
+    if (!empty($element['#color_changer']) && empty($element['#in_preview_mode'])) {
+      $element = $this->applyColorChanger($element, $chart_definition);
+    }
+
+    return $element;
+  }
+
+  /**
+   * Utility to apply color changer options.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   The chart element.
+   *
+   * @throws \Drupal\Core\Form\EnforcedResponseException
+   * @throws \Drupal\Core\Form\FormAjaxException
+   */
+  private function applyColorChanger(array $element, array $chart_definition): array {
+    $chart_type = $chart_definition['data']['type'] ?? 'line';
+    $columns = $chart_definition['data']['columns'] ?? [];
+    $colors = $chart_definition['color']['pattern'] ?? [];
+
+    $formatted_series = [];
+    $color_index = 0;
+
+    foreach ($columns as $column) {
+      $series_id = $column[0];
+      if ($series_id === 'x') {
+        continue;
+      }
+
+      if (in_array($chart_type, ['pie', 'donut'])) {
+        $formatted_series[0]['data'][] = [
+          'name' => (string) $series_id,
+          'color' => $colors[$color_index] ?? '#000000',
+        ];
+      }
+      else {
+        $formatted_series[] = [
+          'name' => (string) $series_id,
+          'color' => $colors[$color_index] ?? '#000000',
+        ];
+      }
+      $color_index++;
+    }
+
+    $form_state_items = [
+      'chart_series' => $formatted_series,
+      'chart_id' => $element['#id'],
+      'chart_type' => $chart_type,
+    ];
+
+    $element['#attached']['library'][] = 'charts_c3/color_changer';
+    $element['#content_suffix']['color_changer'] = $this->colorChangerFormBuilder($form_state_items);
 
     return $element;
   }
@@ -279,15 +371,9 @@ class C3 extends ChartBase implements ContainerFactoryPluginInterface {
       }
     }
     $chart_definition['data']['type'] = $type;
-    // Merge in chart raw options.
-    if (!empty($element['#raw_options'])) {
-      $chart_definition = NestedArray::mergeDeepArray([
-        $chart_definition,
-        $element['#raw_options'],
-      ]);
-    }
 
-    return $chart_definition;
+    // Merge in chart raw options and return the definition.
+    return $this->applyRawOptions($element, $chart_definition);
   }
 
   /**

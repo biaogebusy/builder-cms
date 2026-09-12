@@ -26,7 +26,7 @@ class WebformStatesPreviewTest extends WebformBrowserTestBase {
   /**
    * Tests visible conditions (#states) validator for elements .
    */
-  public function testStatesValidatorElementVisible() {
+  public function testStatesValidatorElementVisible(): void {
     $assert_session = $this->assertSession();
 
     $webform_preview = Webform::load('test_states_server_preview');

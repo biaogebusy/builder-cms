@@ -10,6 +10,7 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @package Drupal\Tests\queue_ui\Functional
  * @group queue_ui
+ * @runTestsInSeparateProcesses
  */
 class CronTimeLimitChangeTest extends BrowserTestBase {
 

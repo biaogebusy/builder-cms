@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 
@@ -13,17 +15,15 @@ use Drupal\entity_share_client\RuntimeImportContext;
  *
  * Need to act before the entity is deserialized to ensure the src attribute of
  * img tags will be updated.
- *
- * @ImportProcessor(
- *   id = "embedded_entity_importer",
- *   label = @Translation("Embedded entity"),
- *   description = @Translation("Import embedded entities from text formatted fields. Require the 'Embedded entities (formatted text field only) (Entity Share)' field enhancer enabled on both client and server websites."),
- *   stages = {
- *     "prepare_importable_entity_data" = 20,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'embedded_entity_importer',
+  label: new TranslatableMarkup('Embedded entity'),
+  description: new TranslatableMarkup('Import embedded entities from text formatted fields. Require the \'Embedded entities (formatted text field only) (Entity Share)\' field enhancer enabled on both client and server websites.'),
+  stages: [
+    'prepare_importable_entity_data' => 20,
+  ],
+)]
 class EmbeddedEntityImporter extends ImportProcessorReferencePluginBase {
 
   /**

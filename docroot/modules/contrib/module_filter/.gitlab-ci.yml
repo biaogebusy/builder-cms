@@ -59,11 +59,3 @@ variables:
   OPT_IN_TEST_NEXT_MINOR: '1'
   # There are several part-words used for matching in tests. Tell CSpell not to report these.
   _CSPELL_WORDS: 'nana, untain, toco, ctools, interdif, unskip'
-
-eslint:
-  before_script:
-    - echo "ESLINT version $(${CI_PROJECT_DIR}/${_WEB_ROOT}/core/node_modules/.bin/eslint --version)"
-    - cd $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME
-    - yarn install
-  allow_failure: false
-

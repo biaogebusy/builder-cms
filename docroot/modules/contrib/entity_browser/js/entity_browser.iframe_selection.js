@@ -14,6 +14,6 @@
     .find('iframe[data-uuid*=' + drupalSettings.entity_browser.iframe.uuid + ']').hide().prev().hide()
     .parent().find('a[data-uuid*=' + drupalSettings.entity_browser.iframe.uuid + ']')
     .trigger('entities-selected', [drupalSettings.entity_browser.iframe.uuid, drupalSettings.entity_browser.iframe.entities])
-    .unbind('entities-selected').show();
+    .off('entities-selected').show();
 
 }(drupalSettings));

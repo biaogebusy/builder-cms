@@ -73,15 +73,16 @@ class GeneralSettingsForm extends ConfigFormBase {
       '#description' => $this->t('<em>Simple exclusion</em> means that users will not be able to select the same revision, <em>Linear restrictions</em> means that users can only select older or newer revisions of the current selections.'),
     ];
 
-    $layout_plugins = $this->diffLayoutManager->getDefinitions();
-    $weight = \count($layout_plugins) + 1;
+    $discovered_plugins = $this->diffLayoutManager->getDefinitions();
+    $weight = \count($discovered_plugins) + 1;
     $layout_plugins_order = [];
-    foreach ($layout_plugins as $id => $layout_plugin) {
-      $layout_plugin_settings = $config->get('general_settings.layout_plugins')[$id];
+    $configured_plugins = $config->get('general_settings.layout_plugins');
+    foreach ($discovered_plugins as $id => $layout_plugin) {
+      $layout_plugin_settings = $configured_plugins[$id] ?? NULL;
       $layout_plugins_order[$id] = [
         'label' => $layout_plugin['label'],
         'description' => $layout_plugin['description'] ?: '',
-        'enabled' => $layout_plugin_settings['enabled'],
+        'enabled' => $layout_plugin_settings['enabled'] ?? FALSE,
         'weight' => $layout_plugin_settings['weight'] ?? $weight,
       ];
       $weight++;

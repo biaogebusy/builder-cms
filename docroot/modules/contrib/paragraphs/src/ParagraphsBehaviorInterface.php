@@ -115,8 +115,9 @@ interface ParagraphsBehaviorInterface extends PluginFormInterface, ConfigurableI
    * @param \Drupal\paragraphs\Entity\Paragraph $paragraph
    *   The paragraph.
    *
-   * @return string[]
-   *   The plugin settings.
+   * @return array[]
+   *   An array of associative arrays, each containing 'label' and 'value' keys
+   *   that describe the current behavior settings for display.
    */
   public function settingsSummary(Paragraph $paragraph);
 
@@ -129,8 +130,10 @@ interface ParagraphsBehaviorInterface extends PluginFormInterface, ConfigurableI
    * @param \Drupal\paragraphs\Entity\Paragraph $paragraph
    *   The paragraph.
    *
-   * @return string[]
-   *   The plugin settings.
+   * @return array[]
+   *   An associative array of render arrays keyed by icon identifier. Each
+   *   render array typically contains '#theme', '#message', and '#icon' keys
+   *   for display using the 'paragraphs_info_icon' theme.
    *
    * @see ParagraphInterface::getIcons()
    */

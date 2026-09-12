@@ -4,10 +4,8 @@ namespace Drupal\commerce_product\Form;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce\EntityHelper;
-use Drupal\commerce\EntityTraitManagerInterface;
 use Drupal\commerce\Form\CommerceBundleEntityFormBase;
 use Drupal\commerce_order\Entity\OrderItemTypeInterface;
 use Drupal\entity\Form\EntityDuplicateFormTrait;
@@ -19,45 +17,20 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
   use EntityDuplicateFormTrait;
 
   /**
-   * The variation type storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $variationTypeStorage;
-
-  /**
    * The entity field manager.
    *
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
-  protected $entityFieldManager;
-
-  /**
-   * Creates a new ProductTypeForm object.
-   *
-   * @param \Drupal\commerce\EntityTraitManagerInterface $trait_manager
-   *   The entity trait manager.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   The entity field manager.
-   */
-  public function __construct(EntityTraitManagerInterface $trait_manager, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager) {
-    parent::__construct($trait_manager);
-
-    $this->variationTypeStorage = $entity_type_manager->getStorage('commerce_product_variation_type');
-    $this->entityFieldManager = $entity_field_manager;
-  }
+  protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.commerce_entity_trait'),
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager')
-    );
+    $instance = parent::create($container);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->entityFieldManager = $container->get('entity_field.manager');
+    return $instance;
   }
 
   /**
@@ -67,7 +40,7 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
     $form = parent::form($form, $form_state);
     /** @var \Drupal\commerce_product\Entity\ProductTypeInterface $product_type */
     $product_type = $this->entity;
-    $variation_types = $this->variationTypeStorage->loadMultiple();
+    $variation_types = $this->entityTypeManager->getStorage('commerce_product_variation_type')->loadMultiple();
     // Create an empty product to get the default status value.
     // @todo Clean up once https://www.drupal.org/node/2318187 is fixed.
     if (in_array($this->operation, ['add', 'duplicate'])) {

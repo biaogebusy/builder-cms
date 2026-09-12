@@ -81,7 +81,7 @@ class PageVariantSelectionForm extends ManageConditions {
     $cached_values = $form_state->getTemporaryValue('wizard');
     $page_variant = $cached_values['page_variant'];
     $condition = $form_state->getValue('conditions');
-    $content = \Drupal::formBuilder()->getForm($this->getConditionClass(), $condition, $this->getTempstoreId(), $this->machine_name, $page_variant->id());
+    $content = $this->formBuilder->getForm($this->getConditionClass(), $condition, $this->getTempstoreId(), $this->machine_name, $page_variant->id());
     $content['#attached']['library'][] = 'core/drupal.dialog.ajax';
     [, $route_parameters] = $this->getOperationsRouteInfo($cached_values, $this->machine_name, $form_state->getValue('conditions'));
     $content['submit']['#attached']['drupalSettings']['ajax'][$content['submit']['#id']]['url'] = Url::fromRoute(

@@ -19,12 +19,17 @@ use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\Plugin\DataType\StringData;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore sisko
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\ContextAwarePluginTrait
- *
- * @group Plugin
+ * Tests Drupal\Core\Plugin\ContextAwarePluginTrait.
  */
+#[CoversClass(ContextAwarePluginTrait::class)]
+#[Group('Plugin')]
+#[RunTestsInSeparateProcesses]
 class ContextAwarePluginTraitTest extends KernelTestBase {
 
   /**
@@ -53,14 +58,14 @@ class ContextAwarePluginTraitTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getContextDefinitions
+   * Tests get context definitions.
    */
   public function testGetContextDefinitions(): void {
     $this->assertIsArray($this->plugin->getContextDefinitions());
   }
 
   /**
-   * @covers ::getContextDefinition
+   * Tests get context definition.
    */
   public function testGetContextDefinition(): void {
     // The context is not defined, so an exception will be thrown.
@@ -70,7 +75,7 @@ class ContextAwarePluginTraitTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getContextValue
+   * Tests get context value.
    */
   public function testGetContextValue(): void {
     $this->plugin->setContextValue('nato_letter', 'Alpha');
@@ -78,7 +83,7 @@ class ContextAwarePluginTraitTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::setContextValue
+   * Tests set context value.
    */
   public function testSetContextValue(): void {
     $typed_data_manager = $this->prophesize(TypedDataManagerInterface::class);
@@ -95,12 +100,18 @@ class ContextAwarePluginTraitTest extends KernelTestBase {
 
 }
 
+/**
+ * A plugin definition test class.
+ */
 class TestContextAwarePluginDefinition extends PluginDefinition implements ContextAwarePluginDefinitionInterface {
 
   use ContextAwarePluginDefinitionTrait;
 
 }
 
+/**
+ * Context aware plugin test class.
+ */
 class TestContextAwarePlugin extends PluginBase implements ContextAwarePluginInterface {
 
   use ContextAwarePluginTrait {
@@ -117,13 +128,16 @@ class TestContextAwarePlugin extends PluginBase implements ContextAwarePluginInt
   /**
    * {@inheritdoc}
    */
-  public function setContext($name, ComponentContextInterface $context) {
+  public function setContext($name, ComponentContextInterface $context): void {
     $this->setContextTrait($name, $context);
     $this->setContextCalled = TRUE;
   }
 
 }
 
+/**
+ * Configurable context aware plugin test class.
+ */
 class TestConfigurableContextAwarePlugin extends PluginBase implements ConfigurableInterface, ContextAwarePluginInterface {
 
   use ContextAwarePluginTrait;
@@ -131,14 +145,14 @@ class TestConfigurableContextAwarePlugin extends PluginBase implements Configura
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfiguration() {
+  public function getConfiguration(): array {
     return [
       'context' => [
         'nato_letter' => 'Alpha',

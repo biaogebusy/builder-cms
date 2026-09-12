@@ -12,16 +12,18 @@ use Drupal\node\Entity\Node;
 use Drupal\Tests\ckeditor5\Traits\CKEditor5TestTrait;
 use Drupal\Tests\TestFileCreationTrait;
 use Drupal\user\RoleInterface;
-use Symfony\Component\Validator\ConstraintViolation;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 
 // cspell:ignore esque māori sourceediting splitbutton upcasted
-
 /**
  * Tests for CKEditor 5.
  *
- * @group ckeditor5
  * @internal
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class CKEditor5MarkupTest extends CKEditor5TestBase {
 
   use TestFileCreationTrait;
@@ -68,7 +70,7 @@ class CKEditor5MarkupTest extends CKEditor5TestBase {
       ],
     ])->save();
     $this->assertSame([], array_map(
-      function (ConstraintViolation $v) {
+      function (ConstraintViolationInterface $v) {
         return (string) $v->getMessage();
       },
       iterator_to_array(CKEditor5::validatePair(
@@ -175,7 +177,7 @@ class CKEditor5MarkupTest extends CKEditor5TestBase {
       ],
     ])->save();
     $this->assertSame([], array_map(
-      function (ConstraintViolation $v) {
+      function (ConstraintViolationInterface $v) {
         return (string) $v->getMessage();
       },
       iterator_to_array(CKEditor5::validatePair(
@@ -321,7 +323,7 @@ class CKEditor5MarkupTest extends CKEditor5TestBase {
       ],
     ])->save();
     $this->assertSame([], array_map(
-      function (ConstraintViolation $v) {
+      function (ConstraintViolationInterface $v) {
         return (string) $v->getMessage();
       },
       iterator_to_array(CKEditor5::validatePair(

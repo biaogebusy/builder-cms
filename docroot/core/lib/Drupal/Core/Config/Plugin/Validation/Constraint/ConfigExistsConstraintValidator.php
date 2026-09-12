@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\Core\Config\Plugin\Validation\Constraint;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\Schema\TypeResolver;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Validator\Constraint;
@@ -42,13 +43,15 @@ class ConfigExistsConstraintValidator extends ConstraintValidator implements Con
   /**
    * {@inheritdoc}
    */
-  public function validate(mixed $name, Constraint $constraint) {
+  public function validate(mixed $name, Constraint $constraint): void {
     assert($constraint instanceof ConfigExistsConstraint);
 
     // This constraint may be used to validate nullable (optional) values.
     if ($name === NULL) {
       return;
     }
+
+    $constraint->prefix = TypeResolver::resolveDynamicTypeName($constraint->prefix, $this->context->getObject());
 
     if (!in_array($constraint->prefix . $name, $this->configFactory->listAll($constraint->prefix), TRUE)) {
       $this->context->addViolation($constraint->message, ['@name' => $constraint->prefix . $name]);

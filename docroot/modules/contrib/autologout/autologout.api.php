@@ -21,13 +21,13 @@
 function hook_autologout_prevent() {
   // Don't include autologout JS checks on ajax callbacks.
   $path_args = explode('/', current_path());
-  $blacklist = [
+  $deny_list = [
     'ajax',
     'autologout_ajax_logout',
     'autologout_ajax_set_last',
   ];
 
-  if (in_array($path_args[0], $blacklist)) {
+  if (in_array($path_args[0], $deny_list)) {
     return TRUE;
   }
 }

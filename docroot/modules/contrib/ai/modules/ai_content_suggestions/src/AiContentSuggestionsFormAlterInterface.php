@@ -31,6 +31,11 @@ interface AiContentSuggestionsFormAlterInterface {
    *
    * @return array
    *   The appropriate section of the updated form.
+   *
+   * @deprecated in ai_content_suggestions:1.4.0 and is removed from
+   *    ai_content_suggestions:2.0.0. The method was moved to plugin class.
+   *
+   * @see https://www.drupal.org/node/3591230
    */
   public static function getPluginResponse(array $form, FormStateInterface $form_state): array;
 

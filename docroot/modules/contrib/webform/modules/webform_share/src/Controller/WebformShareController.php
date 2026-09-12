@@ -117,7 +117,7 @@ class WebformShareController extends ControllerBase {
       '#javascript' => TRUE,
       '#query' => $request->query->all(),
     ];
-    $iframe = $this->renderer->renderPlain($build);
+    $iframe = $this->renderer->renderInIsolation($build);
 
     $iframe_script = json_encode($iframe);
     $iframe_script = str_replace('src=\\"\/\/', 'src=\\"' . $request->getScheme() . ':\/\/', $iframe_script);

@@ -8,12 +8,14 @@ use Drupal\Core\Extension\ExtensionNameLengthException;
 use Drupal\Core\Extension\ExtensionNameReservedException;
 use Drupal\Core\Extension\ModuleInstallerInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the installation of modules.
- *
- * @group Module
  */
+#[Group('Module')]
+#[RunTestsInSeparateProcesses]
 class InstallTest extends KernelTestBase {
 
   /**

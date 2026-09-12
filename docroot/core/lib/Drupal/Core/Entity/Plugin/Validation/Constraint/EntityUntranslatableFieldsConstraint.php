@@ -4,6 +4,7 @@ namespace Drupal\Core\Entity\Plugin\Validation\Constraint;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Attribute\HasNamedArguments;
 use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 
 /**
@@ -16,7 +17,15 @@ use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 )]
 class EntityUntranslatableFieldsConstraint extends SymfonyConstraint {
 
-  public $defaultRevisionMessage = 'Non-translatable fields can only be changed when updating the current revision.';
-  public $defaultTranslationMessage = 'Non-translatable fields can only be changed when updating the original language.';
+  #[HasNamedArguments]
+  public function __construct(
+    mixed $options = NULL,
+    public $defaultRevisionMessage = 'Non-translatable fields can only be changed when updating the current revision.',
+    public $defaultTranslationMessage = 'Non-translatable fields can only be changed when updating the original language.',
+    ?array $groups = NULL,
+    mixed $payload = NULL,
+  ) {
+    parent::__construct($options, $groups, $payload);
+  }
 
 }

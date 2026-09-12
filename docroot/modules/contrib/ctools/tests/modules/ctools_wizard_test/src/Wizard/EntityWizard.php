@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ctools\Wizard\FormWizardBase;
 
 /**
- *
+ * Class used for testing.
  */
 class EntityWizard extends FormWizardBase {
 

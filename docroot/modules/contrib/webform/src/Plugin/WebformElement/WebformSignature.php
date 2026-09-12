@@ -68,7 +68,7 @@ class WebformSignature extends WebformElementBase implements WebformElementFileD
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     if (empty($element['#description'])) {
       $element['#description'] = $this->t('Sign above');
       $element['#description_display'] = 'after';
@@ -222,7 +222,7 @@ class WebformSignature extends WebformElementBase implements WebformElementFileD
       $form['signature']['signature_message'] = [
         '#type' => 'webform_message',
         '#message_message' => '<strong>' . $this->t('Saving of results is disabled.') . '</strong> ' .
-          $this->t('Signatures will still be saved to %directory.', ['%directory' => $image_directory]),
+        $this->t('Signatures will still be saved to %directory.', ['%directory' => $image_directory]),
         '#message_type' => 'warning',
         '#access' => TRUE,
       ];
@@ -402,7 +402,7 @@ class WebformSignature extends WebformElementBase implements WebformElementFileD
       // Return file content headers.
       /** @var \Drupal\Core\File\FileSystemInterface $file_system */
       $file_system = \Drupal::service('file_system');
-      $filename = $file_system->basename($uri);
+      $filename = \basename($uri);
       $filesize = filesize($file_system->realpath($uri));
       return [
         'Content-Type' => 'image/png',

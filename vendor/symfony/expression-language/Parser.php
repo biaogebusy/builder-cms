@@ -12,7 +12,7 @@
 namespace Symfony\Component\ExpressionLanguage;
 
 /**
- * Parsers a token stream.
+ * Parses a token stream.
  *
  * This parser implements a "Precedence climbing" algorithm.
  *
@@ -26,26 +26,32 @@ class Parser
     public const OPERATOR_LEFT = 1;
     public const OPERATOR_RIGHT = 2;
 
+    public const IGNORE_UNKNOWN_VARIABLES = 1;
+    public const IGNORE_UNKNOWN_FUNCTIONS = 2;
+
+    private const MAX_NESTING_LEVEL = 256;
+
     private TokenStream $stream;
     private array $unaryOperators;
     private array $binaryOperators;
-    private array $functions;
-    private ?array $names;
-    private bool $lint = false;
+    private array $names;
+    private int $flags = 0;
+    private int $nestingLevel = 0;
 
-    public function __construct(array $functions)
-    {
-        $this->functions = $functions;
-
+    public function __construct(
+        private array $functions,
+    ) {
         $this->unaryOperators = [
             'not' => ['precedence' => 50],
             '!' => ['precedence' => 50],
             '-' => ['precedence' => 500],
             '+' => ['precedence' => 500],
+            '~' => ['precedence' => 500],
         ];
         $this->binaryOperators = [
             'or' => ['precedence' => 10, 'associativity' => self::OPERATOR_LEFT],
             '||' => ['precedence' => 10, 'associativity' => self::OPERATOR_LEFT],
+            'xor' => ['precedence' => 12, 'associativity' => self::OPERATOR_LEFT],
             'and' => ['precedence' => 15, 'associativity' => self::OPERATOR_LEFT],
             '&&' => ['precedence' => 15, 'associativity' => self::OPERATOR_LEFT],
             '|' => ['precedence' => 16, 'associativity' => self::OPERATOR_LEFT],
@@ -66,6 +72,8 @@ class Parser
             'ends with' => ['precedence' => 20, 'associativity' => self::OPERATOR_LEFT],
             'matches' => ['precedence' => 20, 'associativity' => self::OPERATOR_LEFT],
             '..' => ['precedence' => 25, 'associativity' => self::OPERATOR_LEFT],
+            '<<' => ['precedence' => 25, 'associativity' => self::OPERATOR_LEFT],
+            '>>' => ['precedence' => 25, 'associativity' => self::OPERATOR_LEFT],
             '+' => ['precedence' => 30, 'associativity' => self::OPERATOR_LEFT],
             '-' => ['precedence' => 30, 'associativity' => self::OPERATOR_LEFT],
             '~' => ['precedence' => 40, 'associativity' => self::OPERATOR_LEFT],
@@ -89,36 +97,48 @@ class Parser
      * variable 'container' can be used in the expression
      * but the compiled code will use 'this'.
      *
+     * @param int-mask-of<Parser::IGNORE_*> $flags
+     *
      * @throws SyntaxError
      */
-    public function parse(TokenStream $stream, array $names = []): Node\Node
+    public function parse(TokenStream $stream, array $names = [], int $flags = 0): Node\Node
     {
-        $this->lint = false;
-
-        return $this->doParse($stream, $names);
+        return $this->doParse($stream, $names, $flags);
     }
 
     /**
      * Validates the syntax of an expression.
      *
      * The syntax of the passed expression will be checked, but not parsed.
-     * If you want to skip checking dynamic variable names, pass `null` instead of the array.
+     * If you want to skip checking dynamic variable names, pass `Parser::IGNORE_UNKNOWN_VARIABLES` instead of the array.
+     *
+     * @param int-mask-of<Parser::IGNORE_*> $flags
      *
      * @throws SyntaxError When the passed expression is invalid
      */
-    public function lint(TokenStream $stream, ?array $names = []): void
+    public function lint(TokenStream $stream, ?array $names = [], int $flags = 0): void
     {
-        $this->lint = true;
-        $this->doParse($stream, $names);
+        if (null === $names) {
+            trigger_deprecation('symfony/expression-language', '7.1', 'Passing "null" as the second argument of "%s()" is deprecated, pass "%s::IGNORE_UNKNOWN_VARIABLES" instead as a third argument.', __METHOD__, __CLASS__);
+
+            $flags |= self::IGNORE_UNKNOWN_VARIABLES;
+            $names = [];
+        }
+
+        $this->doParse($stream, $names, $flags);
     }
 
     /**
+     * @param int-mask-of<Parser::IGNORE_*> $flags
+     *
      * @throws SyntaxError
      */
-    private function doParse(TokenStream $stream, ?array $names = []): Node\Node
+    private function doParse(TokenStream $stream, array $names, int $flags): Node\Node
     {
+        $this->flags = $flags;
         $this->stream = $stream;
         $this->names = $names;
+        $this->nestingLevel = 0;
 
         $node = $this->parseExpression();
         if (!$stream->isEOF()) {
@@ -130,34 +150,36 @@ class Parser
         return $node;
     }
 
-    /**
-     * @return Node\Node
-     */
-    public function parseExpression(int $precedence = 0)
+    public function parseExpression(int $precedence = 0): Node\Node
     {
-        $expr = $this->getPrimary();
-        $token = $this->stream->current;
-        while ($token->test(Token::OPERATOR_TYPE) && isset($this->binaryOperators[$token->value]) && $this->binaryOperators[$token->value]['precedence'] >= $precedence) {
-            $op = $this->binaryOperators[$token->value];
-            $this->stream->next();
+        $nestingLevel = $this->nestingLevel;
+        $this->enterNestingLevel();
 
-            $expr1 = $this->parseExpression(self::OPERATOR_LEFT === $op['associativity'] ? $op['precedence'] + 1 : $op['precedence']);
-            $expr = new Node\BinaryNode($token->value, $expr, $expr1);
-
+        try {
+            $expr = $this->getPrimary();
             $token = $this->stream->current;
-        }
+            while ($token->test(Token::OPERATOR_TYPE) && isset($this->binaryOperators[$token->value]) && $this->binaryOperators[$token->value]['precedence'] >= $precedence) {
+                $this->enterNestingLevel();
+                $op = $this->binaryOperators[$token->value];
+                $this->stream->next();
 
-        if (0 === $precedence) {
-            return $this->parseConditionalExpression($expr);
-        }
+                $expr1 = $this->parseExpression(self::OPERATOR_LEFT === $op['associativity'] ? $op['precedence'] + 1 : $op['precedence']);
+                $expr = new Node\BinaryNode($token->value, $expr, $expr1);
 
-        return $expr;
+                $token = $this->stream->current;
+            }
+
+            if (0 === $precedence) {
+                return $this->parseConditionalExpression($expr);
+            }
+
+            return $expr;
+        } finally {
+            $this->nestingLevel = $nestingLevel;
+        }
     }
 
-    /**
-     * @return Node\Node
-     */
-    protected function getPrimary()
+    protected function getPrimary(): Node\Node
     {
         $token = $this->stream->current;
 
@@ -180,12 +202,10 @@ class Parser
         return $this->parsePrimaryExpression();
     }
 
-    /**
-     * @return Node\Node
-     */
-    protected function parseConditionalExpression(Node\Node $expr)
+    protected function parseConditionalExpression(Node\Node $expr): Node\Node
     {
         while ($this->stream->current->test(Token::PUNCTUATION_TYPE, '??')) {
+            $this->enterNestingLevel();
             $this->stream->next();
             $expr2 = $this->parseExpression();
 
@@ -193,6 +213,7 @@ class Parser
         }
 
         while ($this->stream->current->test(Token::PUNCTUATION_TYPE, '?')) {
+            $this->enterNestingLevel();
             $this->stream->next();
             if (!$this->stream->current->test(Token::PUNCTUATION_TYPE, ':')) {
                 $expr2 = $this->parseExpression();
@@ -214,10 +235,7 @@ class Parser
         return $expr;
     }
 
-    /**
-     * @return Node\Node
-     */
-    public function parsePrimaryExpression()
+    public function parsePrimaryExpression(): Node\Node
     {
         $token = $this->stream->current;
         switch ($token->type) {
@@ -238,14 +256,18 @@ class Parser
 
                     default:
                         if ('(' === $this->stream->current->value) {
-                            if (false === isset($this->functions[$token->value])) {
+                            if (!($this->flags & self::IGNORE_UNKNOWN_FUNCTIONS) && !isset($this->functions[$token->value])) {
                                 throw new SyntaxError(\sprintf('The function "%s" does not exist.', $token->value), $token->cursor, $this->stream->getExpression(), $token->value, array_keys($this->functions));
                             }
 
                             $node = new Node\FunctionNode($token->value, $this->parseArguments());
                         } else {
-                            if (!$this->lint || \is_array($this->names)) {
+                            if (!($this->flags & self::IGNORE_UNKNOWN_VARIABLES)) {
                                 if (!\in_array($token->value, $this->names, true)) {
+                                    if ($this->stream->current->test(Token::PUNCTUATION_TYPE, '??')) {
+                                        return new Node\NullCoalescedNameNode($token->value);
+                                    }
+
                                     throw new SyntaxError(\sprintf('Variable "%s" is not valid.', $token->value), $token->cursor, $this->stream->getExpression(), $token->value, $this->names);
                                 }
 
@@ -282,10 +304,7 @@ class Parser
         return $this->parsePostfixExpression($node);
     }
 
-    /**
-     * @return Node\ArrayNode
-     */
-    public function parseArrayExpression()
+    public function parseArrayExpression(): Node\ArrayNode
     {
         $this->stream->expect(Token::PUNCTUATION_TYPE, '[', 'An array element was expected');
 
@@ -309,10 +328,7 @@ class Parser
         return $node;
     }
 
-    /**
-     * @return Node\ArrayNode
-     */
-    public function parseHashExpression()
+    public function parseHashExpression(): Node\ArrayNode
     {
         $this->stream->expect(Token::PUNCTUATION_TYPE, '{', 'A hash element was expected');
 
@@ -356,14 +372,12 @@ class Parser
         return $node;
     }
 
-    /**
-     * @return Node\GetAttrNode|Node\Node
-     */
-    public function parsePostfixExpression(Node\Node $node)
+    public function parsePostfixExpression(Node\Node $node): Node\GetAttrNode|Node\Node
     {
         $token = $this->stream->current;
         while (Token::PUNCTUATION_TYPE == $token->type) {
             if ('.' === $token->value || '?.' === $token->value) {
+                $this->enterNestingLevel();
                 $isNullSafe = '?.' === $token->value;
                 $this->stream->next();
                 $token = $this->stream->current;
@@ -401,6 +415,7 @@ class Parser
 
                 $node = new Node\GetAttrNode($node, $arg, $arguments, $type);
             } elseif ('[' === $token->value) {
+                $this->enterNestingLevel();
                 $this->stream->next();
                 $arg = $this->parseExpression();
                 $this->stream->expect(Token::PUNCTUATION_TYPE, ']');
@@ -418,10 +433,8 @@ class Parser
 
     /**
      * Parses arguments.
-     *
-     * @return Node\Node
      */
-    public function parseArguments()
+    public function parseArguments(): Node\Node
     {
         $args = [];
         $this->stream->expect(Token::PUNCTUATION_TYPE, '(', 'A list of arguments must begin with an opening parenthesis');
@@ -435,5 +448,20 @@ class Parser
         $this->stream->expect(Token::PUNCTUATION_TYPE, ')', 'A list of arguments must be closed by a parenthesis');
 
         return new Node\Node($args);
+    }
+
+    /**
+     * Accounts for one more node on the branch being built.
+     *
+     * The nesting level bounds the depth of the resulting node tree. Beyond a few
+     * thousand levels, destroying such a tree overflows the native stack.
+     *
+     * @throws SyntaxError
+     */
+    private function enterNestingLevel(): void
+    {
+        if (self::MAX_NESTING_LEVEL < ++$this->nestingLevel) {
+            throw new SyntaxError(\sprintf('Expression is nested too deeply, the maximum nesting level is %d', self::MAX_NESTING_LEVEL), $this->stream->current->cursor, $this->stream->getExpression());
+        }
     }
 }

@@ -85,7 +85,7 @@ class MessageTemplateUiTest extends MessageTestBase {
     ];
     $this->drupalGet('admin/structure/message/manage/dummy_message');
     $this->submitForm($edit, 'Save message template');
-    $this->assertSession()->pageTextContains('The message template Edited Dummy message has been updated.');
+    $this->assertSession()->pageTextContains('The message template Edited dummy message has been updated.');
 
     $this->drupalGet('admin/structure/message/manage/dummy_message');
 
@@ -156,6 +156,37 @@ class MessageTemplateUiTest extends MessageTestBase {
     $this->submitForm([], 'Delete');
     $this->assertSession()->pageTextContains('There are no message templates yet.');
     $this->assertNull(MessageTemplate::load('dummy_message'), 'The message deleted via the UI successfully.');
+  }
+
+  /**
+   * Tests the template form renders multiple existing text partials.
+   */
+  public function testMultipleTextPartials(): void {
+    $this->drupalLogin($this->account);
+
+    MessageTemplate::create([
+      'template' => 'multi_partial',
+      'label' => 'Multi partial',
+      'description' => 'Has two partials',
+      'text' => [
+        [
+          'value' => '<p>First partial</p>',
+          'format' => 'filtered_html',
+        ],
+        [
+          'value' => '<p>Second partial</p>',
+          'format' => 'filtered_html',
+        ],
+      ],
+    ])->save();
+
+    $this->drupalGet('admin/structure/message/manage/multi_partial');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->fieldValueEquals('text[0][value]', '<p>First partial</p>');
+    $this->assertSession()->fieldValueEquals('text[1][value]', '<p>Second partial</p>');
+    $this->assertSession()->fieldExists('text[0][_weight]');
+    $this->assertSession()->fieldExists('text[1][_weight]');
+    $this->assertSession()->buttonExists('Add another item');
   }
 
   /**

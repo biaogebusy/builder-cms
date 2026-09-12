@@ -5,12 +5,19 @@ namespace Drupal\block\Plugin\migrate\process;
 use Drupal\Core\Config\Config;
 use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
-use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Determines the theme to use for a block.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
+ */
 #[MigrateProcess('block_theme')]
 class BlockTheme extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
@@ -35,18 +42,14 @@ class BlockTheme extends ProcessPluginBase implements ContainerFactoryPluginInte
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Config\Config|\Drupal\migrate\Plugin\MigrationInterface $theme_config
+   * @param \Drupal\Core\Config\Config $theme_config
    *   The system.theme configuration factory object.
-   * @param string[]|\Drupal\Core\Config\Config $themes
+   * @param array $themes
    *   The list of themes available on the destination.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, Config|MigrationInterface $theme_config, array|Config $themes) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, Config $theme_config, array $themes) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    if ($theme_config instanceof MigrationInterface) {
-      @trigger_error('Calling ' . __CLASS__ . '::__construct() with the $migration argument is deprecated in drupal:10.1.0 and is removed in drupal:11.0.0. See https://www.drupal.org/node/3323212', E_USER_DEPRECATED);
-      $theme_config = func_get_arg(4);
-      $themes = func_get_arg(5);
-    }
     $this->themeConfig = $theme_config;
     $this->themes = $themes;
   }

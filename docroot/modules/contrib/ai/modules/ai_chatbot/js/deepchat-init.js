@@ -111,11 +111,7 @@
         deepchatElement.responseInterceptor = (response) => {
           Drupal.behaviors.deepChatToggle.shouldContinue = response.should_continue || false;
           if (response.should_continue) {
-            Drupal.behaviors.deepChatToggle.stepMessages.push(response.html);
-            const html = response.html;
-            response.html = '<div class="loading-wrapper"><span class="loading-span">' + Drupal.t('Contacting agents..') + '</span>';
-            response.html += `<details class="step-messages loading-text"><summary class="step-messages-summary">`;
-            response.html += Drupal.t('Details') + `</summary>` + html + `</details></div>`;
+            response.html = buildStepHtml(response.html);
           }
           return response;
         };
@@ -279,6 +275,15 @@
     },
   }
 
+  function buildStepHtml(html) {
+    Drupal.behaviors.deepChatToggle.stepMessages.push(html);
+    let open = Drupal.behaviors.deepChatToggle.agentUsageIsOpen ? 'open' : '';
+    let wrapped = `<div class="loading-wrapper"><span class="loading-span">${Drupal.t('Contacting agents..')}</span>`;
+    wrapped += `<details class="step-messages loading-text" ${open}><summary class="step-messages-summary">`;
+    wrapped += `${Drupal.t('Details')}</summary>${html}</details></div>`;
+    return wrapped;
+  }
+
   function getAllMessages(deepchatElement) {
     // Start processing.
     Drupal.behaviors.deepChatToggle.processing = true;
@@ -306,21 +311,14 @@
       }
       return response.json();
     }).then(data => {
+      if (deepchatElement.responseInterceptor) {
+        data = deepchatElement.responseInterceptor(data);
+      }
       if ("should_continue" in data && data.should_continue) {
-        Drupal.behaviors.deepChatToggle.stepMessages.push(data.html);
-        let open = Drupal.behaviors.deepChatToggle.agentUsageIsOpen ? 'open' : '';
-        let html = `<div class="loading-wrapper"><span class="loading-span">` + Drupal.t('Calling agents..') + '</span>';
-        html += `<details class="step-messages loading-text" ${open}><summary class="step-messages-summary">`;
-        html += Drupal.t('Details') + `</summary>` + data.html + `</details></div>`;
-
-        // Store the messages in the stepMessages array.
-
-        // We just replace the message.
         deepchatElement.updateMessage({
           role: 'ai',
-          html: html,
+          html: data.html,
         }, n);
-        // Rerun the request to get the next messages.
         getAllMessages(deepchatElement);
       }
       else {

@@ -2,8 +2,8 @@
 
 namespace Drupal\layout_builder\EventSubscriber;
 
-use Drupal\block_content\Access\RefinableDependentAccessInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\RefinableDependentAccessInterface;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Render\Element;
@@ -104,6 +104,10 @@ class BlockComponentRenderArray implements EventSubscriberInterface {
       }
 
       $content = $block->build();
+      // @todo Remove when https://www.drupal.org/node/3164389 is resolved.
+      if (!is_array($content)) {
+        throw new \UnexpectedValueException(sprintf('The block "%s" did not return an array', get_class($block)));
+      }
 
       // We don't output the block render data if there are no render elements
       // found, but we want to capture the cache metadata from the block

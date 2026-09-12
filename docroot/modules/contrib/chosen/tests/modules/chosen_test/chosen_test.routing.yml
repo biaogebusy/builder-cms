@@ -4,4 +4,5 @@ chosen.test:
     _form: '\Drupal\chosen_test\Form\ChosenTestForm'
     _title: 'Chosen test'
   requirements:
+    # This route is intentionally left open for testing purposes only.
     _access: 'TRUE'

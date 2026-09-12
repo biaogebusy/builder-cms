@@ -1,0 +1,12 @@
+name: 'CKEditor 5 Emoji'
+type: module
+description: 'Provides the CKEditor 5 Emoji plugin.'
+package: CKEditor 5 Plugin Pack
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - ckeditor5_plugin_pack:ckeditor5_plugin_pack
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.5.4'
+project: 'ckeditor5_plugin_pack'
+datestamp: 1785320334

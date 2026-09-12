@@ -64,11 +64,11 @@
     $parWidget.removeClass('behavior-active content-active');
     if ($clickedTabParent.hasClass('paragraphs_content_tab')) {
       $parWidget.addClass('content-active');
-      $parWidget.find('.paragraphs-add-wrapper').parent().removeClass('hidden');
+      $parWidget.find('.paragraphs-add-wrapper').parent().show();
     }
     else {
       $parWidget.addClass('behavior-active');
-      $parWidget.find('.paragraphs-add-wrapper').parent().addClass('hidden');
+      $parWidget.find('.paragraphs-add-wrapper').parent().hide();
     }
   };
 

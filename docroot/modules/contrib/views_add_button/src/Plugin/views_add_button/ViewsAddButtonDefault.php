@@ -2,9 +2,9 @@
 
 namespace Drupal\views_add_button\Plugin\views_add_button;
 
+use Drupal\Core\Link;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Url;
-use Drupal\Core\Link;
 use Drupal\views_add_button\ViewsAddButtonInterface;
 
 /**
@@ -56,17 +56,15 @@ class ViewsAddButtonDefault extends PluginBase implements ViewsAddButtonInterfac
     $u = $entity_type === $bundle ? '/' . $entity_type . '/add' : '/' . $entity_type . '/add/' . $bundle;
 
     // Create URL from the data above.
-    $url = Url::fromUserInput($u, $options);
-
-    return $url;
+    return Url::fromUserInput($u, $options);
   }
 
   /**
    * Generate the add button link.
    *
-   * @param $text
+   * @param string $text
    *   The link text.
-   * @param Url $url
+   * @param \Drupal\Core\Url $url
    *   The Url for constructing the link.
    * @param array $options
    *   Array of options from the VAB settings.

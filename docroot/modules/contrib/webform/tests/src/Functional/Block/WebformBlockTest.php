@@ -28,7 +28,7 @@ class WebformBlockTest extends WebformBrowserTestBase {
   /**
    * Tests webform block.
    */
-  public function testBlock() {
+  public function testBlock(): void {
     $assert_session = $this->assertSession();
 
     // Place block.

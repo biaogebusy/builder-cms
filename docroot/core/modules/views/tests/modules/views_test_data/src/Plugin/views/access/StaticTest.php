@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_data\Plugin\views\access;
 
 use Drupal\Core\Session\AccountInterface;
@@ -18,6 +20,9 @@ use Symfony\Component\Routing\Route;
 )]
 class StaticTest extends AccessPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['access'] = ['default' => FALSE];

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_server\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Url;
 
 /**
  * Provides an interface for defining Channel entities.
@@ -37,5 +38,23 @@ interface ChannelInterface extends ConfigEntityInterface {
    *   TRUE if the authorized_users property has been changed. FALSE otherwise.
    */
   public function removeAuthorizedUser($uuid);
+
+  /**
+   * Gets the JSON:API URL for the channel's content.
+   *
+   * It is the responsibility of the caller to check access.
+   *
+   * @return \Drupal\Core\Url
+   *   The URL for the channel's JSON:API output.
+   */
+  public function getJsonApiUrl(): Url;
+
+  /**
+   * Gets a JSON:API URL for the changed timestamps of the channel's content.
+   *
+   * @return \Drupal\Core\Url
+   *   The URL for the channel's JSON:API UUID output.
+   */
+  public function getJsonApiChangedTimestampsUrl(): Url;
 
 }

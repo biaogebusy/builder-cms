@@ -4,13 +4,12 @@ namespace Drupal\commerce;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\StateInterface;
 use Drupal\commerce\Utility\Error;
 use GuzzleHttp\ClientInterface;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
 
 /**
  * Provides the InboxMessageFetcher service.
@@ -30,14 +29,12 @@ class InboxMessageFetcher implements InboxMessageFetcherInterface {
    *
    * @param \GuzzleHttp\ClientInterface $httpClient
    *   The http client.
-   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Closure $logger
    *   The logger.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler service.
    * @param \Drupal\commerce\InboxMessageStorageInterface $inboxMessageStorage
    *   The Commerce inbox message storage.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
-   *   The date formatter.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
@@ -45,10 +42,11 @@ class InboxMessageFetcher implements InboxMessageFetcherInterface {
    */
   public function __construct(
     protected ClientInterface $httpClient,
-    protected LoggerInterface $logger,
+    // Prevent circular reference:
+    #[AutowireServiceClosure('commerce.logger')]
+    protected \Closure $logger,
     protected ModuleHandlerInterface $moduleHandler,
     protected InboxMessageStorageInterface $inboxMessageStorage,
-    protected DateFormatterInterface $dateFormatter,
     protected StateInterface $state,
     protected TimeInterface $time,
   ) {
@@ -74,10 +72,14 @@ class InboxMessageFetcher implements InboxMessageFetcherInterface {
         'timeout' => 10,
       ]);
       $messages = Json::decode($response->getBody()->getContents());
-      $this->storeMessages($messages);
+      if (is_array($messages) && !empty($messages)) {
+        $this->storeMessages($messages);
+      }
     }
     catch (\Exception $exception) {
-      Error::logException($this->logger, $exception);
+      /** @var \Psr\Log\LoggerInterface $logger */
+      $logger = ($this->logger)();
+      Error::logException($logger, $exception);
     }
   }
 
@@ -93,13 +95,17 @@ class InboxMessageFetcher implements InboxMessageFetcherInterface {
         'timeout' => 10,
       ]);
       $messages = Json::decode($response->getBody()->getContents());
-      foreach ($messages as $key => $message) {
-        $messages[$key]['send_date'] = time();
+      if (is_array($messages) && !empty($messages)) {
+        foreach ($messages as $key => $message) {
+          $messages[$key]['send_date'] = $this->time->getRequestTime();
+        }
+        $this->storeMessages($messages);
       }
-      $this->storeMessages($messages);
     }
     catch (\Exception $exception) {
-      Error::logException($this->logger, $exception);
+      /** @var \Psr\Log\LoggerInterface $logger */
+      $logger = ($this->logger)();
+      Error::logException($logger, $exception);
     }
   }
 
@@ -109,9 +115,10 @@ class InboxMessageFetcher implements InboxMessageFetcherInterface {
    * @param array $messages
    *   The messages to store.
    */
-  protected function storeMessages(array $messages) {
+  protected function storeMessages(array $messages): void {
     foreach ($messages as $message) {
-      $dependencies_satisfied = empty($message['dependencies']);
+      $dependencies = $message['dependencies'] ?? [];
+      $dependencies_satisfied = empty($dependencies);
       foreach ($message['dependencies'] as $dependency) {
         if ($this->moduleHandler->moduleExists($dependency)) {
           $dependencies_satisfied = TRUE;

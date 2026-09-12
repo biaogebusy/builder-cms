@@ -20,7 +20,7 @@ class FileItemNormalizer extends FieldItemNormalizer {
     if ($field->entity) {
       $uri = $field->entity->getFileUri();
       $data['file_url'] = \Drupal::service('file_url_generator')
-        ->generateAbsoluteString($uri);
+        ->generateString($uri);
     } else {
       \Drupal::logger('entity_theme_engine')->error("fileItem: {$field->getString()} not found.");
     }

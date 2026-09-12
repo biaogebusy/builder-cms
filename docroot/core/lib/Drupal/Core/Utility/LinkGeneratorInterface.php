@@ -2,7 +2,6 @@
 
 namespace Drupal\Core\Utility;
 
-use Drupal\Core\Link;
 use Drupal\Core\Url;
 
 /**
@@ -18,7 +17,7 @@ interface LinkGeneratorInterface {
    * $link_generator = \Drupal::service('link_generator');
    * $installer_url = \Drupal\Core\Url::fromUri('base://core/install.php');
    * $installer_link = $link_generator->generate($text, $installer_url);
-   * $external_url = \Drupal\Core\Url::fromUri('http://example.com', ['query' => ['foo' => 'bar']]);
+   * $external_url = \Drupal\Core\Url::fromUri('https://example.com', ['query' => ['foo' => 'bar']]);
    * $external_link = $link_generator->generate($text, $external_url);
    * $internal_url = \Drupal\Core\Url::fromRoute('system.admin');
    * $internal_link = $link_generator->generate($text, $internal_url);
@@ -41,9 +40,9 @@ interface LinkGeneratorInterface {
    *   The URL object used for the link. Amongst its options, the following may
    *   be set to affect the generated link:
    *   - attributes: An associative array of HTML attributes to apply to the
-   *     anchor tag. If element 'class' is included, it must be an array; 'title'
-   *     must be a string; other elements are more flexible, as they just need
-   *     to work as an argument for the constructor of the class
+   *     anchor tag. If element 'class' is included, it must be an array;
+   *     'title' must be a string; other elements are more flexible, as they
+   *     just need to work as an argument for the constructor of the class
    *     Drupal\Core\Template\Attribute($options['attributes']).
    *   - language: An optional language object. If the path being linked to is
    *     internal to the site, $options['language'] is used to determine whether
@@ -72,26 +71,5 @@ interface LinkGeneratorInterface {
    *   Should not be used in user code. Use \Drupal\Core\Link instead.
    */
   public function generate($text, Url $url);
-
-  /**
-   * Renders a link from a link object.
-   *
-   * @param \Drupal\Core\Link $link
-   *   A link object to convert to a string.
-   *
-   * @return \Drupal\Core\GeneratedLink
-   *   A GeneratedLink object containing a link to the given route and
-   *   parameters and bubbleable metadata.
-   *
-   * @internal
-   *   Should not be used in user code.
-   *   Use \Drupal\Core\Link instead.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
-   *   \Drupal\Core\Utility\LinkGeneratorInterface::generate() instead.
-   *
-   * @see https://www.drupal.org/node/3342992
-   */
-  public function generateFromLink(Link $link);
 
 }

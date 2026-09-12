@@ -7,19 +7,20 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserFieldWidgetDisplay;
 use Drupal\entity_browser\FieldWidgetDisplayBase;
 use Drupal\file\FileInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Displays image thumbnail.
- *
- * @EntityBrowserFieldWidgetDisplay(
- *   id = "thumbnail",
- *   label = @Translation("Image thumbnail"),
- *   description = @Translation("Displays image files as thumbnails")
- * )
  */
+#[EntityBrowserFieldWidgetDisplay(
+  id: 'thumbnail',
+  label: new TranslatableMarkup('Image thumbnail'),
+  description: new TranslatableMarkup('Displays image files as thumbnails'),
+)]
 class ImageThumbnail extends FieldWidgetDisplayBase implements ContainerFactoryPluginInterface {
 
   /**

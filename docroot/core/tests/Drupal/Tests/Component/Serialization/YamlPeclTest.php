@@ -6,24 +6,27 @@ namespace Drupal\Tests\Component\Serialization;
 
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Serialization\YamlPecl;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
 /**
  * Tests the YamlPecl serialization implementation.
- *
- * @group Drupal
- * @group Serialization
- * @coversDefaultClass \Drupal\Component\Serialization\YamlPecl
- * @requires extension yaml
  */
+#[CoversClass(YamlPecl::class)]
+#[Group('Drupal')]
+#[Group('Serialization')]
+#[RequiresPhpExtension('yaml')]
 class YamlPeclTest extends YamlTestBase {
 
   /**
    * Tests encoding and decoding basic data structures.
    *
-   * @covers ::encode
-   * @covers ::decode
-   * @dataProvider providerEncodeDecodeTests
+   * @legacy-covers ::encode
+   * @legacy-covers ::decode
    */
+  #[DataProvider('providerEncodeDecodeTests')]
   public function testEncodeDecode(array $data): void {
     $this->assertEquals($data, YamlPecl::decode(YamlPecl::encode($data)));
   }
@@ -40,18 +43,14 @@ class YamlPeclTest extends YamlTestBase {
 
   /**
    * Tests decoding YAML node anchors.
-   *
-   * @covers ::decode
-   * @dataProvider providerDecodeTests
    */
+  #[DataProvider('providerDecodeTests')]
   public function testDecode($string, $data): void {
     $this->assertEquals($data, YamlPecl::decode($string));
   }
 
   /**
    * Tests our encode settings.
-   *
-   * @covers ::encode
    */
   public function testEncode(): void {
     // cSpell:disable
@@ -70,16 +69,14 @@ foo:
    *   String value for the YAML boolean.
    * @param string|bool $expected
    *   The expected return value.
-   *
-   * @covers ::applyBooleanCallbacks
-   * @dataProvider providerBoolTest
    */
+  #[DataProvider('providerBoolTest')]
   public function testApplyBooleanCallbacks($string, $expected): void {
     $this->assertEquals($expected, YamlPecl::applyBooleanCallbacks($string, 'bool', NULL));
   }
 
   /**
-   * @covers ::getFileExtension
+   * Tests get file extension.
    */
   public function testGetFileExtension(): void {
     $this->assertEquals('yml', YamlPecl::getFileExtension());
@@ -88,7 +85,7 @@ foo:
   /**
    * Tests that invalid YAML throws an exception.
    *
-   * @covers ::errorHandler
+   * @legacy-covers ::errorHandler
    */
   public function testError(): void {
     $this->expectException(InvalidDataTypeException::class);

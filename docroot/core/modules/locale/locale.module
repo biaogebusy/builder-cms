@@ -2,12 +2,6 @@
 
 /**
  * @file
- * Enables the translation of the user interface to languages other than English.
- *
- * When enabled, multiple languages can be added. The site interface can be
- * displayed in different languages, and nodes can have languages assigned. The
- * setup of languages and translations is completely web based. Gettext portable
- * object files are supported.
  */
 
 use Drupal\Component\Gettext\PoItem;
@@ -18,17 +12,20 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Installer\InstallerKernel;
-use Drupal\Core\Link;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\Url;
-use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Language\LanguageInterface;
-use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\Component\Utility\Crypt;
+use Drupal\locale\CurrentImport;
+use Drupal\locale\CurrentImportStorage;
+use Drupal\locale\Hook\LocaleThemeHooks;
+use Drupal\locale\LocaleDefaultOptions;
 use Drupal\locale\LocaleEvent;
 use Drupal\locale\LocaleEvents;
+use Drupal\locale\LocaleFetch;
+use Drupal\locale\File\LocaleFileManager;
+use Drupal\locale\LocaleConfigBatch;
+use Drupal\locale\LocaleProjectRepository;
+use Drupal\locale\LocaleSource;
 
 /**
  * Regular expression pattern used to localize JavaScript strings.
@@ -102,12 +99,16 @@ const LOCALE_TRANSLATION_USE_SOURCE_REMOTE_AND_LOCAL = 'remote_and_local';
 /**
  * Default location of gettext file on the translation server.
  *
- * @see locale_translation_default_translation_server().
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use
+ *   \Drupal::TRANSLATION_DEFAULT_SERVER_PATTERN instead.
+ *
+ * @see https://www.drupal.org/node/3488133
+ * @see locale_translation_default_translation_server()
  */
-const LOCALE_TRANSLATION_DEFAULT_SERVER_PATTERN = 'https://ftp.drupal.org/files/translations/%core/%project/%project-%version.%language.po';
+const LOCALE_TRANSLATION_DEFAULT_SERVER_PATTERN = \Drupal::TRANSLATION_DEFAULT_SERVER_PATTERN;
 
 /**
- * The number of seconds that the translations status entry should be considered.
+ * The number of seconds the translations status entry should be considered.
  */
 const LOCALE_TRANSLATION_STATUS_TTL = 600;
 
@@ -144,109 +145,6 @@ const LOCALE_TRANSLATION_LOCAL = 'local';
  * Translation source is the current translation.
  */
 const LOCALE_TRANSLATION_CURRENT = 'current';
-
-/**
- * Implements hook_help().
- */
-function locale_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.locale':
-      $output = '';
-      $output .= '<h2>' . t('About') . '</h2>';
-      $output .= '<p>' . t('The Interface Translation module allows you to translate interface text (<em>strings</em>) into different languages, and to switch between them for the display of interface text. It uses the functionality provided by the <a href=":language">Language module</a>. For more information, see the <a href=":doc-url">online documentation for the Interface Translation module</a>.', [':doc-url' => 'https://www.drupal.org/documentation/modules/locale/', ':language' => Url::fromRoute('help.page', ['name' => 'language'])->toString()]) . '</p>';
-      $output .= '<h2>' . t('Uses') . '</h2>';
-      $output .= '<dl>';
-      $output .= '<dt>' . t('Importing translation files') . '</dt>';
-      $output .= '<dd>' . t('Translation files with translated interface text are imported automatically when languages are added on the <a href=":languages">Languages</a> page, or when modules or themes are installed. On the <a href=":locale-settings">Interface translation settings</a> page, the <em>Translation source</em> can be restricted to local files only, or to include the <a href=":server">Drupal translation server</a>. Although modules and themes may not be fully translated in all languages, new translations become available frequently. You can specify whether and how often to check for translation file updates and whether to overwrite existing translations on the <a href=":locale-settings">Interface translation settings</a> page. You can also manually import a translation file on the <a href=":import">Interface translation import</a> page.', [':import' => Url::fromRoute('locale.translate_import')->toString(), ':locale-settings' => Url::fromRoute('locale.settings')->toString(), ':languages' => Url::fromRoute('entity.configurable_language.collection')->toString(), ':server' => 'https://localize.drupal.org']) . '</dd>';
-      $output .= '<dt>' . t('Checking the translation status') . '</dt>';
-      $output .= '<dd>' . t('You can check how much of the interface on your site is translated into which language on the <a href=":languages">Languages</a> page. On the <a href=":translation-updates">Available translation updates</a> page, you can check whether interface translation updates are available on the <a href=":server">Drupal translation server</a>.', [':languages' => Url::fromRoute('entity.configurable_language.collection')->toString(), ':translation-updates' => Url::fromRoute('locale.translate_status')->toString(), ':server' => 'https://localize.drupal.org']) . '<dd>';
-      $output .= '<dt>' . t('Translating individual strings') . '</dt>';
-      $output .= '<dd>' . t('You can translate individual strings directly on the <a href=":translate">User interface translation</a> page, or download the currently-used translation file for a specific language on the <a href=":export">Interface translation export</a> page. Once you have edited the translation file, you can then import it again on the <a href=":import">Interface translation import</a> page.', [':translate' => Url::fromRoute('locale.translate_page')->toString(), ':export' => Url::fromRoute('locale.translate_export')->toString(), ':import' => Url::fromRoute('locale.translate_import')->toString()]) . '</dd>';
-      $output .= '<dt>' . t('Overriding default English strings') . '</dt>';
-      $output .= '<dd>' . t('If translation is enabled for English, you can <em>override</em> the default English interface text strings in your site with other English text strings on the <a href=":translate">User interface translation</a> page. Translation is off by default for English, but you can turn it on by visiting the <em>Edit language</em> page for <em>English</em> from the <a href=":languages">Languages</a> page.', [':translate' => Url::fromRoute('locale.translate_page')->toString(), ':languages' => Url::fromRoute('entity.configurable_language.collection')->toString()]) . '</dd>';
-      $output .= '</dl>';
-      return $output;
-
-    case 'entity.configurable_language.collection':
-      return '<p>' . t('Interface translations are automatically imported when a language is added, or when new modules or themes are installed. The report <a href=":update">Available translation updates</a> shows the status. Interface text can be customized in the <a href=":translate">user interface translation</a> page.', [':update' => Url::fromRoute('locale.translate_status')->toString(), ':translate' => Url::fromRoute('locale.translate_page')->toString()]) . '</p>';
-
-    case 'locale.translate_page':
-      $output = '<p>' . t('This page allows a translator to search for specific translated and untranslated strings, and is used when creating or editing translations. (Note: Because translation tasks involve many strings, it may be more convenient to <a title="User interface translation export" href=":export">export</a> strings for offline editing in a desktop Gettext translation editor.) Searches may be limited to strings in a specific language.', [':export' => Url::fromRoute('locale.translate_export')->toString()]) . '</p>';
-      return $output;
-
-    case 'locale.translate_import':
-      $output = '<p>' . t('Translation files are automatically downloaded and imported when <a title="Languages" href=":language">languages</a> are added, or when modules or themes are installed.', [':language' => Url::fromRoute('entity.configurable_language.collection')->toString()]) . '</p>';
-      $output .= '<p>' . t('This page allows translators to manually import translated strings contained in a Gettext Portable Object (.po) file. Manual import may be used for customized translations or for the translation of custom modules and themes. To customize translations you can download a translation file from the <a href=":url">Drupal translation server</a> or <a title="User interface translation export" href=":export">export</a> translations from the site, customize the translations using a Gettext translation editor, and import the result using this page.', [':url' => 'https://localize.drupal.org', ':export' => Url::fromRoute('locale.translate_export')->toString()]) . '</p>';
-      $output .= '<p>' . t('Note that importing large .po files may take several minutes.') . '</p>';
-      return $output;
-
-    case 'locale.translate_export':
-      return '<p>' . t('This page exports the translated strings used by your site. An export file may be in Gettext Portable Object (<em>.po</em>) form, which includes both the original string and the translation (used to share translations with others), or in Gettext Portable Object Template (<em>.pot</em>) form, which includes the original strings only (used to create new translations with a Gettext translation editor).') . '</p>';
-  }
-}
-
-/**
- * Implements hook_theme().
- */
-function locale_theme() {
-  return [
-    'locale_translation_last_check' => [
-      'variables' => ['last' => NULL],
-      'file' => 'locale.pages.inc',
-    ],
-    'locale_translation_update_info' => [
-      'variables' => ['updates' => [], 'not_found' => []],
-      'file' => 'locale.pages.inc',
-    ],
-  ];
-}
-
-/**
- * Implements hook_ENTITY_TYPE_insert() for 'configurable_language'.
- */
-function locale_configurable_language_insert(ConfigurableLanguageInterface $language) {
-  // @todo move these two cache clears out. See
-  //   https://www.drupal.org/node/1293252.
-  // Changing the language settings impacts the interface: clear render cache.
-  \Drupal::cache('render')->deleteAll();
-  // Force JavaScript translation file re-creation for the new language.
-  _locale_invalidate_js($language->id());
-}
-
-/**
- * Implements hook_ENTITY_TYPE_update() for 'configurable_language'.
- */
-function locale_configurable_language_update(ConfigurableLanguageInterface $language) {
-  // @todo move these two cache clears out. See
-  //   https://www.drupal.org/node/1293252.
-  // Changing the language settings impacts the interface: clear render cache.
-  \Drupal::cache('render')->deleteAll();
-  // Force JavaScript translation file re-creation for the modified language.
-  _locale_invalidate_js($language->id());
-}
-
-/**
- * Implements hook_ENTITY_TYPE_delete() for 'configurable_language'.
- */
-function locale_configurable_language_delete(ConfigurableLanguageInterface $language) {
-  // Remove translations.
-  \Drupal::service('locale.storage')->deleteTranslations(['language' => $language->id()]);
-
-  // Remove interface translation files.
-  \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.bulk');
-  locale_translate_delete_translation_files([], [$language->id()]);
-
-  // Remove translated configuration objects.
-  \Drupal::service('locale.config_manager')->deleteLanguageTranslations($language->id());
-
-  // Changing the language settings impacts the interface:
-  _locale_invalidate_js($language->id());
-  \Drupal::cache('render')->deleteAll();
-
-  // Clear locale translation caches.
-  locale_translation_status_delete_languages([$language->id()]);
-  \Drupal::cache()->delete('locale:' . $language->id());
-}
 
 /**
  * Returns list of translatable languages.
@@ -286,7 +184,7 @@ function locale_get_plural($count, $langcode = NULL) {
   // individually for each language.
   $plural_indexes = &drupal_static(__FUNCTION__ . ':plurals', []);
 
-  $langcode = $langcode ? $langcode : $language_interface->getId();
+  $langcode = $langcode ?: $language_interface->getId();
 
   if (!isset($plural_indexes[$langcode][$count])) {
     // Retrieve and statically cache the plural formulas for all languages.
@@ -316,56 +214,9 @@ function locale_get_plural($count, $langcode = NULL) {
 }
 
 /**
- * Implements hook_modules_installed().
- */
-function locale_modules_installed($modules) {
-  $components['module'] = $modules;
-  locale_system_update($components);
-}
-
-/**
- * Implements hook_module_preuninstall().
- */
-function locale_module_preuninstall($module) {
-  $components['module'] = [$module];
-  locale_system_remove($components);
-}
-
-/**
- * Implements hook_themes_installed().
- */
-function locale_themes_installed($themes) {
-  $components['theme'] = $themes;
-  locale_system_update($components);
-}
-
-/**
- * Implements hook_themes_uninstalled().
- */
-function locale_themes_uninstalled($themes) {
-  $components['theme'] = $themes;
-  locale_system_remove($components);
-}
-
-/**
- * Implements hook_cron().
- *
- * @see \Drupal\locale\Plugin\QueueWorker\LocaleTranslation
- */
-function locale_cron() {
-  // Update translations only when an update frequency was set by the admin
-  // and a translatable language was set.
-  // Update tasks are added to the queue here but processed by Drupal's cron.
-  if (\Drupal::config('locale.settings')->get('translation.update_interval_days') && locale_translatable_language_list()) {
-    \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.translation');
-    locale_cron_fill_queue();
-  }
-}
-
-/**
  * Updates default configuration when new modules or themes are installed.
  */
-function locale_system_set_config_langcodes() {
+function locale_system_set_config_langcodes(): void {
   \Drupal::service('locale.config_manager')->updateDefaultConfigLangcodes();
 }
 
@@ -379,7 +230,7 @@ function locale_system_set_config_langcodes() {
  *   An array of arrays of component (theme and/or module) names to import
  *   translations for, indexed by type.
  */
-function locale_system_update(array $components) {
+function locale_system_update(array $components): void {
   $components += ['module' => [], 'theme' => []];
   $list = array_merge($components['module'], $components['theme']);
 
@@ -394,13 +245,13 @@ function locale_system_update(array $components) {
       // Update the list of translatable projects and start the import batch.
       // Only when new projects are added the update batch will be triggered.
       // Not each enabled module will introduce a new project. E.g. sub modules.
-      $projects = array_keys(locale_translation_build_projects());
+      $projects = array_keys(\Drupal::service(LocaleProjectRepository::class)->buildProjects());
       if ($list = array_intersect($list, $projects)) {
         $module_handler->loadInclude('locale', 'inc', 'locale.fetch');
         // Get translation status of the projects, download and update
         // translations.
-        $options = _locale_translation_default_update_options();
-        $batch = locale_translation_batch_update_build($list, [], $options);
+        $options = LocaleDefaultOptions::updateOptions();
+        $batch = \Drupal::service(LocaleFetch::class)->buildUpdateBatch($list, [], $options);
         batch_set($batch);
       }
     }
@@ -410,7 +261,7 @@ function locale_system_update(array $components) {
     // components. Do this even if import is not enabled because parsing new
     // configuration may expose new source strings.
     $module_handler->loadInclude('locale', 'inc', 'locale.bulk');
-    if ($batch = locale_config_batch_update_components([], [], [], TRUE)) {
+    if ($batch = \Drupal::service(LocaleConfigBatch::class)->buildBatch([], [], [], TRUE)) {
       batch_set($batch);
     }
   }
@@ -427,7 +278,7 @@ function locale_system_update(array $components) {
  *   An array of arrays of component (theme and/or module) names to import
  *   translations for, indexed by type.
  */
-function locale_system_remove($components) {
+function locale_system_remove($components): void {
   $components += ['module' => [], 'theme' => []];
   $list = array_merge($components['module'], $components['theme']);
   if (locale_translatable_language_list()) {
@@ -438,61 +289,18 @@ function locale_system_remove($components) {
     // Only when projects are removed, the translation files and records will be
     // deleted. Not each disabled module will remove a project, e.g., sub
     // modules.
-    $projects = array_keys(locale_translation_get_projects());
+    $projects = array_keys(\Drupal::service(LocaleProjectRepository::class)->getAll());
     if ($list = array_intersect($list, $projects)) {
-      locale_translation_file_history_delete($list);
-
       // Remove translation files.
-      locale_translate_delete_translation_files($list, []);
+      \Drupal::service(LocaleFileManager::class)->deleteTranslationFiles($list, []);
 
       // Remove translatable projects.
-      // Follow-up issue https://www.drupal.org/node/1842362 to replace the
-      // {locale_project} table. Then change this to a function call.
-      \Drupal::service('locale.project')->deleteMultiple($list);
+      \Drupal::service(LocaleProjectRepository::class)->deleteMultiple($list);
 
       // Clear the translation status.
-      locale_translation_status_delete_projects($list);
+      \Drupal::service(LocaleSource::class)->deleteSources($list);
     }
 
-  }
-}
-
-/**
- * Implements hook_cache_flush().
- */
-function locale_cache_flush() {
-  \Drupal::state()->delete('system.javascript_parsed');
-}
-
-/**
- * Implements hook_js_alter().
- */
-function locale_js_alter(&$javascript, AttachedAssetsInterface $assets, LanguageInterface $language) {
-  $files = [];
-  foreach ($javascript as $item) {
-    if (isset($item['type']) && $item['type'] == 'file') {
-      // Ignore the JS translation placeholder file.
-      if ($item['data'] === 'core/modules/locale/locale.translation.js') {
-        continue;
-      }
-      $files[] = $item['data'];
-    }
-  }
-
-  // Replace the placeholder file with the actual JS translation file.
-  $placeholder_file = 'core/modules/locale/locale.translation.js';
-  if (isset($javascript[$placeholder_file])) {
-    if ($translation_file = locale_js_translate($files, $language)) {
-      $js_translation_asset = &$javascript[$placeholder_file];
-      $js_translation_asset['data'] = $translation_file;
-      // @todo Remove this when https://www.drupal.org/node/1945262 lands.
-      // Decrease the weight so that the translation file is loaded first.
-      $js_translation_asset['weight'] = $javascript['core/misc/drupal.js']['weight'] - 0.001;
-    }
-    else {
-      // If no translation file exists, then remove the placeholder JS asset.
-      unset($javascript[$placeholder_file]);
-    }
   }
 }
 
@@ -518,7 +326,7 @@ function locale_js_translate(array $files = [], $language_interface = NULL) {
     $language_interface = \Drupal::languageManager()->getCurrentLanguage();
   }
 
-  $dir = 'public://' . \Drupal::config('locale.settings')->get('javascript.directory');
+  $dir = 'assets://' . \Drupal::config('locale.settings')->get('javascript.directory');
   $parsed = \Drupal::state()->get('system.javascript_parsed', []);
   $new_files = FALSE;
 
@@ -567,87 +375,13 @@ function locale_js_translate(array $files = [], $language_interface = NULL) {
 }
 
 /**
- * Implements hook_library_info_alter().
- *
- * Provides language support.
- */
-function locale_library_info_alter(array &$libraries, $module) {
-  // When the locale module is enabled, we update the core/drupal library to
-  // have a dependency on the locale/translations library, which provides
-  // window.drupalTranslations, containing the translations for all strings in
-  // JavaScript assets in the current language.
-  // @see locale_js_alter()
-  if ($module === 'core' && isset($libraries['drupal'])) {
-    $libraries['drupal']['dependencies'][] = 'locale/translations';
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for language_admin_overview_form().
- */
-function locale_form_language_admin_overview_form_alter(&$form, FormStateInterface $form_state) {
-  $languages = $form['languages']['#languages'];
-
-  $total_strings = \Drupal::service('locale.storage')->countStrings();
-  $stats = array_fill_keys(array_keys($languages), []);
-
-  // If we have source strings, count translations and calculate progress.
-  if (!empty($total_strings)) {
-    $translations = \Drupal::service('locale.storage')->countTranslations();
-    foreach ($translations as $langcode => $translated) {
-      $stats[$langcode]['translated'] = $translated;
-      if ($translated > 0) {
-        $stats[$langcode]['ratio'] = round($translated / $total_strings * 100, 2);
-      }
-    }
-  }
-
-  array_splice($form['languages']['#header'], -1, 0, ['translation-interface' => t('Interface translation')]);
-
-  foreach ($languages as $langcode => $language) {
-    $stats[$langcode] += [
-      'translated' => 0,
-      'ratio' => 0,
-    ];
-    if (!$language->isLocked() && locale_is_translatable($langcode)) {
-      $form['languages'][$langcode]['locale_statistics'] = Link::fromTextAndUrl(
-        t('@translated/@total (@ratio%)', [
-          '@translated' => $stats[$langcode]['translated'],
-          '@total' => $total_strings,
-          '@ratio' => $stats[$langcode]['ratio'],
-        ]),
-        Url::fromRoute('locale.translate_page', [], ['query' => ['langcode' => $langcode]])
-      )->toRenderable();
-    }
-    else {
-      $form['languages'][$langcode]['locale_statistics'] = [
-        '#markup' => t('not applicable'),
-      ];
-    }
-    // #type = link doesn't work with #weight on table.
-    // reset and set it back after locale_statistics to get it at the right end.
-    $operations = $form['languages'][$langcode]['operations'];
-    unset($form['languages'][$langcode]['operations']);
-    $form['languages'][$langcode]['operations'] = $operations;
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for language_admin_add_form().
- */
-function locale_form_language_admin_add_form_alter(&$form, FormStateInterface $form_state) {
-  $form['predefined_submit']['#submit'][] = 'locale_form_language_admin_add_form_alter_submit';
-  $form['custom_language']['submit']['#submit'][] = 'locale_form_language_admin_add_form_alter_submit';
-}
-
-/**
  * Form submission handler for language_admin_add_form().
  *
  * Set a batch for a newly-added language.
  */
-function locale_form_language_admin_add_form_alter_submit($form, FormStateInterface $form_state) {
+function locale_form_language_admin_add_form_alter_submit($form, FormStateInterface $form_state): void {
   \Drupal::moduleHandler()->loadInclude('locale', 'fetch.inc');
-  $options = _locale_translation_default_update_options();
+  $options = LocaleDefaultOptions::updateOptions();
 
   if ($form_state->isValueEmpty('predefined_langcode') || $form_state->getValue('predefined_langcode') == 'custom') {
     $langcode = $form_state->getValue('langcode');
@@ -658,7 +392,7 @@ function locale_form_language_admin_add_form_alter_submit($form, FormStateInterf
 
   if (\Drupal::config('locale.settings')->get('translation.import_enabled')) {
     // Download and import translations for the newly added language.
-    $batch = locale_translation_batch_update_build([], [$langcode], $options);
+    $batch = \Drupal::service(LocaleFetch::class)->buildUpdateBatch([], [$langcode], $options);
     batch_set($batch);
   }
 
@@ -667,30 +401,16 @@ function locale_form_language_admin_add_form_alter_submit($form, FormStateInterf
   // because then we extract English sources from shipped configuration.
   if (\Drupal::config('locale.settings')->get('translation.import_enabled') || $langcode == 'en') {
     \Drupal::moduleHandler()->loadInclude('locale', 'bulk.inc');
-    if ($batch = locale_config_batch_update_components($options, [$langcode])) {
+    if ($batch = \Drupal::service(LocaleConfigBatch::class)->buildBatch($options, [$langcode])) {
       batch_set($batch);
     }
   }
 }
 
 /**
- * Implements hook_form_FORM_ID_alter() for language_admin_edit_form().
- */
-function locale_form_language_admin_edit_form_alter(&$form, FormStateInterface $form_state) {
-  if ($form['langcode']['#type'] == 'value' && $form['langcode']['#value'] == 'en') {
-    $form['locale_translate_english'] = [
-      '#title' => t('Enable interface translation to English'),
-      '#type' => 'checkbox',
-      '#default_value' => \Drupal::configFactory()->getEditable('locale.settings')->get('translate_english'),
-    ];
-    $form['actions']['submit']['#submit'][] = 'locale_form_language_admin_edit_form_alter_submit';
-  }
-}
-
-/**
  * Form submission handler for language_admin_edit_form().
  */
-function locale_form_language_admin_edit_form_alter_submit($form, FormStateInterface $form_state) {
+function locale_form_language_admin_edit_form_alter_submit($form, FormStateInterface $form_state): void {
   \Drupal::configFactory()->getEditable('locale.settings')->set('translate_english', intval($form_state->getValue('locale_translate_english')))->save();
 }
 
@@ -708,37 +428,21 @@ function locale_is_translatable($langcode) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter() for system_file_system_settings().
- *
- * Add interface translation directory setting to directories configuration.
- */
-function locale_form_system_file_system_settings_alter(&$form, FormStateInterface $form_state) {
-  $form['translation_path'] = [
-    '#type' => 'textfield',
-    '#title' => t('Interface translations directory'),
-    '#default_value' => \Drupal::configFactory()->getEditable('locale.settings')->get('translation.path'),
-    '#maxlength' => 255,
-    '#description' => t('A local file system path where interface translation files will be stored.'),
-    '#required' => TRUE,
-    '#after_build' => ['system_check_directory'],
-    '#weight' => 10,
-  ];
-  if ($form['file_default_scheme']) {
-    $form['file_default_scheme']['#weight'] = 20;
-  }
-  $form['#submit'][] = 'locale_system_file_system_settings_submit';
-}
-
-/**
  * Submit handler for the file system settings form.
  *
  * Clears the translation status when the Interface translations directory
  * changes. Without a translations directory local po files in the directory
  * should be ignored. The old translation status is no longer valid.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3571594
  */
-function locale_system_file_system_settings_submit(&$form, FormStateInterface $form_state) {
+function locale_system_file_system_settings_submit(&$form, FormStateInterface $form_state): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3571594', E_USER_DEPRECATED);
   if ($form['translation_path']['#default_value'] != $form_state->getValue('translation_path')) {
-    locale_translation_clear_status();
+    \Drupal::service(LocaleSource::class)->clearSources();
   }
 
   \Drupal::configFactory()->getEditable('locale.settings')
@@ -747,45 +451,31 @@ function locale_system_file_system_settings_submit(&$form, FormStateInterface $f
 }
 
 /**
- * Implements hook_preprocess_HOOK() for node templates.
- */
-function locale_preprocess_node(&$variables) {
-  /** @var \Drupal\node\NodeInterface $node */
-  $node = $variables['node'];
-  if ($node->language()->getId() != LanguageInterface::LANGCODE_NOT_SPECIFIED) {
-    $interface_language = \Drupal::languageManager()->getCurrentLanguage();
-
-    $node_language = $node->language();
-    if ($node_language->getId() != $interface_language->getId()) {
-      // If the node language was different from the page language, we should
-      // add markup to identify the language. Otherwise the page language is
-      // inherited.
-      $variables['attributes']['lang'] = $node_language->getId();
-      if ($node_language->getDirection() != $interface_language->getDirection()) {
-        // If text direction is different form the page's text direction, add
-        // direction information as well.
-        $variables['attributes']['dir'] = $node_language->getDirection();
-      }
-    }
-  }
-}
-
-/**
  * Gets current translation status from the {locale_file} table.
  *
  * @return array
  *   Array of translation file objects.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is no direct replacement use
+ *   \Drupal::service(CurrentImportStorage::class)->get() with the
+ *   project and langcode instead.
+ *
+ *  @see https://www.drupal.org/node/3037162
  */
 function locale_translation_get_file_history() {
-  $history = &drupal_static(__FUNCTION__, []);
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no direct replacement use \Drupal::service(CurrentImportStorage::class)->get() with the project and langcode instead. See https://www.drupal.org/node/3037162', E_USER_DEPRECATED);
+  // drupal_static() was removed as invalidation no longer happens.
+  $history = [];
 
-  if (empty($history)) {
-    // Get file history from the database.
-    $result = \Drupal::database()->query('SELECT [project], [langcode], [filename], [version], [uri], [timestamp], [last_checked] FROM {locale_file}');
-    foreach ($result as $file) {
-      $file->type = $file->timestamp ? LOCALE_TRANSLATION_CURRENT : '';
-      $history[$file->project][$file->langcode] = $file;
-    }
+  // Get file history from the database.
+  $result = \Drupal::database()->select('locale_file')
+    ->fields('locale_file', ['project', 'langcode', 'filename', 'version', 'uri', 'timestamp', 'hash', 'last_checked'])
+    ->execute()
+    ->fetchAll();
+  foreach ($result as $file) {
+    $file->type = $file->timestamp ? LOCALE_TRANSLATION_CURRENT : '';
+    $history[$file->project][$file->langcode] = $file;
   }
   return $history;
 }
@@ -793,28 +483,22 @@ function locale_translation_get_file_history() {
 /**
  * Updates the {locale_file} table.
  *
- * @param object $file
- *   Object representing the file just imported.
+ * @param object $source
+ *   Object representing the project just imported.
  *
  * @return int
  *   FALSE on failure. Otherwise SAVED_NEW or SAVED_UPDATED.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(CurrentImportStorage::class)->save() instead.
+ *
+ *  @see https://www.drupal.org/node/3037162
  */
-function locale_translation_update_file_history($file) {
-  $status = \Drupal::database()->merge('locale_file')
-    ->keys([
-      'project' => $file->project,
-      'langcode' => $file->langcode,
-    ])
-    ->fields([
-      'version' => $file->version,
-      'timestamp' => $file->timestamp,
-      'last_checked' => $file->last_checked,
-    ])
-    ->execute();
-  // The file history has changed, flush the static cache now.
-  // @todo Can we make this more fine grained?
-  drupal_static_reset('locale_translation_get_file_history');
-  return $status;
+function locale_translation_update_file_history($source) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(CurrentImportStorage::class)->save(). See https://www.drupal.org/node/3037162', E_USER_DEPRECATED);
+  \Drupal::service(CurrentImportStorage::class)->save(CurrentImport::createFromSource($source));
+  // The api returns void.
+  return SAVED_NEW;
 }
 
 /**
@@ -825,46 +509,29 @@ function locale_translation_update_file_history($file) {
  *   language code(s) are specified the conditions will be ANDed.
  * @param array $langcodes
  *   Language code(s) to be deleted from the file history.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(CurrentImportStorage::class)->delete() instead.
+ *
+ *  @see https://www.drupal.org/node/3037162
  */
-function locale_translation_file_history_delete($projects = [], $langcodes = []) {
-  $query = \Drupal::database()->delete('locale_file');
-  if (!empty($projects)) {
-    $query->condition('project', $projects, 'IN');
-  }
-  if (!empty($langcodes)) {
-    $query->condition('langcode', $langcodes, 'IN');
-  }
-  $query->execute();
+function locale_translation_file_history_delete($projects = [], $langcodes = []): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(CurrentImportStorage::class)->delete(). See https://www.drupal.org/node/3037162', E_USER_DEPRECATED);
+  \Drupal::service(CurrentImportStorage::class)->delete($projects, $langcodes);
 }
 
 /**
  * Gets the current translation status.
  *
- * @todo What is 'translation status'?
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *  \Drupal::service(LocaleSource::class)->loadSources() instead.
+ *
+ * @see https://www.drupal.org/node/3591660
  */
-function locale_translation_get_status($projects = NULL, $langcodes = NULL) {
-  $result = [];
-  $status = \Drupal::keyValue('locale.translation_status')->getAll();
+function locale_translation_get_status($projects = NULL, $langcodes = NULL): array {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleSource::class)->loadSources(). See https://www.drupal.org/node/3591660', E_USER_DEPRECATED);
   \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.translation');
-  $projects = $projects ? $projects : array_keys(locale_translation_get_projects());
-  $langcodes = $langcodes ? $langcodes : array_keys(locale_translatable_language_list());
-
-  // Get the translation status of each project-language combination. If no
-  // status was stored, a new translation source is created.
-  foreach ($projects as $project) {
-    foreach ($langcodes as $langcode) {
-      if (isset($status[$project][$langcode])) {
-        $result[$project][$langcode] = $status[$project][$langcode];
-      }
-      else {
-        $sources = locale_translation_build_sources([$project], [$langcode]);
-        if (isset($sources[$project][$langcode])) {
-          $result[$project][$langcode] = $sources[$project][$langcode];
-        }
-      }
-    }
-  }
-  return $result;
+  return \Drupal::service(LocaleSource::class)->loadSources($projects, $langcodes);
 }
 
 /**
@@ -878,50 +545,15 @@ function locale_translation_get_status($projects = NULL, $langcodes = NULL) {
  *   Type of data to be stored.
  * @param object $data
  *   File object also containing timestamp when the translation is last updated.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleSource::class)->saveSource() instead.
+ *
+ * @see https://www.drupal.org/node/3591660
  */
-function locale_translation_status_save($project, $langcode, $type, $data) {
-  // Load the translation status or build it if not already available.
-  \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.translation');
-  $status = locale_translation_get_status([$project]);
-  if (empty($status)) {
-    $projects = locale_translation_get_projects([$project]);
-    if (isset($projects[$project])) {
-      $status[$project][$langcode] = locale_translation_source_build($projects[$project], $langcode);
-    }
-  }
-
-  // Merge the new status data with the existing status.
-  if (isset($status[$project][$langcode])) {
-    $request_time = \Drupal::time()->getRequestTime();
-    switch ($type) {
-      case LOCALE_TRANSLATION_REMOTE:
-      case LOCALE_TRANSLATION_LOCAL:
-        // Add the source data to the status array.
-        $status[$project][$langcode]->files[$type] = $data;
-
-        // Check if this translation is the most recent one. Set timestamp and
-        // data type of the most recent translation source.
-        if (isset($data->timestamp) && $data->timestamp) {
-          if ($data->timestamp > $status[$project][$langcode]->timestamp) {
-            $status[$project][$langcode]->timestamp = $data->timestamp;
-            $status[$project][$langcode]->last_checked = $request_time;
-            $status[$project][$langcode]->type = $type;
-          }
-        }
-        break;
-
-      case LOCALE_TRANSLATION_CURRENT:
-        $data->last_checked = $request_time;
-        $status[$project][$langcode]->timestamp = $data->timestamp;
-        $status[$project][$langcode]->last_checked = $data->last_checked;
-        $status[$project][$langcode]->type = $type;
-        locale_translation_update_file_history($data);
-        break;
-    }
-
-    \Drupal::keyValue('locale.translation_status')->set($project, $status[$project]);
-    \Drupal::state()->set('locale.translation_last_checked', $request_time);
-  }
+function locale_translation_status_save($project, $langcode, $type, $data): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleSource::class)->saveSource(). See https://www.drupal.org/node/3591660', E_USER_DEPRECATED);
+  \Drupal::service(LocaleSource::class)->saveSource($project, $langcode, $type, $data);
 }
 
 /**
@@ -929,17 +561,16 @@ function locale_translation_status_save($project, $langcode, $type, $data) {
  *
  * @param array $langcodes
  *   Language code(s) to be deleted from the cache.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleSource::class)->deleteSourcesByLanguage() instead.
+ *
+ * @see https://www.drupal.org/node/3591660
  */
-function locale_translation_status_delete_languages($langcodes) {
-  if ($status = locale_translation_get_status()) {
-    foreach ($status as $project => $languages) {
-      foreach ($languages as $langcode => $source) {
-        if (in_array($langcode, $langcodes)) {
-          unset($status[$project][$langcode]);
-        }
-      }
-      \Drupal::keyValue('locale.translation_status')->set($project, $status[$project]);
-    }
+function locale_translation_status_delete_languages($langcodes): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleSource::class)->deleteSourcesByLanguage(). See https://www.drupal.org/node/3591660', E_USER_DEPRECATED);
+  foreach ($langcodes as $langcode) {
+    \Drupal::service(LocaleSource::class)->deleteSourcesByLanguage($langcode);
   }
 }
 
@@ -948,17 +579,28 @@ function locale_translation_status_delete_languages($langcodes) {
  *
  * @param array $projects
  *   Project name(s) to be deleted from the cache.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *    \Drupal::service(LocaleSource::class)->deleteSources() instead.
+ *
+ * @see https://www.drupal.org/node/3591660
  */
-function locale_translation_status_delete_projects($projects) {
-  \Drupal::keyValue('locale.translation_status')->deleteMultiple($projects);
+function locale_translation_status_delete_projects($projects): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleSource::class)->deleteSources(). See https://www.drupal.org/node/3591660', E_USER_DEPRECATED);
+  \Drupal::service(LocaleSource::class)->deleteSources($projects);
 }
 
 /**
  * Clear the translation status cache.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *     \Drupal::service(LocaleSource::class)->clearSources() instead.
+ *
+ * @see https://www.drupal.org/node/3591660
  */
-function locale_translation_clear_status() {
-  \Drupal::keyValue('locale.translation_status')->deleteAll();
-  \Drupal::state()->delete('locale.translation_last_checked');
+function locale_translation_clear_status(): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleSource::class)->clearSources(). See https://www.drupal.org/node/3591660', E_USER_DEPRECATED);
+  \Drupal::service(LocaleSource::class)->clearSources();
 }
 
 /**
@@ -1013,7 +655,60 @@ function locale_string_is_safe($string) {
   //   string. https://www.drupal.org/node/2372127
   $string = preg_replace('/\[[a-z0-9_-]+(:[a-z0-9_-]+)+\]/i', '', $string);
 
-  return Html::decodeEntities($string) == Html::decodeEntities(Xss::filter($string, ['a', 'abbr', 'acronym', 'address', 'b', 'bdo', 'big', 'blockquote', 'br', 'caption', 'cite', 'code', 'col', 'colgroup', 'dd', 'del', 'dfn', 'dl', 'dt', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'ins', 'kbd', 'li', 'ol', 'p', 'pre', 'q', 'samp', 'small', 'span', 'strong', 'sub', 'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'tt', 'ul', 'var']));
+  return Html::decodeEntities($string) == Html::decodeEntities(Xss::filter($string, [
+    'a',
+    'abbr',
+    'acronym',
+    'address',
+    'b',
+    'bdo',
+    'big',
+    'blockquote',
+    'br',
+    'caption',
+    'cite',
+    'code',
+    'col',
+    'colgroup',
+    'dd',
+    'del',
+    'dfn',
+    'dl',
+    'dt',
+    'em',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'hr',
+    'i',
+    'ins',
+    'kbd',
+    'li',
+    'ol',
+    'p',
+    'pre',
+    'q',
+    'samp',
+    'small',
+    'span',
+    'strong',
+    'sub',
+    'sup',
+    'table',
+    'tbody',
+    'td',
+    'tfoot',
+    'th',
+    'thead',
+    'tr',
+    'tt',
+    'ul',
+    'var',
+    'wbr',
+  ]));
 }
 
 /**
@@ -1030,7 +725,7 @@ function locale_string_is_safe($string) {
  *   (optional) List of string identifiers that have been updated / created.
  *   If not provided, all caches for the affected languages are cleared.
  */
-function _locale_refresh_translations($langcodes, $lids = []) {
+function _locale_refresh_translations($langcodes, $lids = []): void {
   if (!empty($langcodes)) {
     // Update javascript translations if any of the strings has a javascript
     // location, or if no string ids were provided, update all languages.
@@ -1051,7 +746,7 @@ function _locale_refresh_translations($langcodes, $lids = []) {
  * @param array $lids
  *   List of string identifiers that have been updated / created.
  */
-function _locale_refresh_configuration(array $langcodes, array $lids) {
+function _locale_refresh_configuration(array $langcodes, array $lids): void {
   $locale_config_manager = \Drupal::service('locale.config_manager');
   if ($lids && $langcodes && $names = $locale_config_manager->getStringNames($lids)) {
     $locale_config_manager->updateConfigTranslations($names, $langcodes);
@@ -1082,7 +777,7 @@ function _locale_strip_quotes($string) {
  * @throws Exception
  *   If a non-local file is attempted to be parsed.
  */
-function _locale_parse_js_file($filepath) {
+function _locale_parse_js_file($filepath): void {
   // The file path might contain a query string, so make sure we only use the
   // actual file.
   $parsed_url = UrlHelper::parse($filepath);
@@ -1199,7 +894,7 @@ function _locale_invalidate_js($langcode = NULL) {
 }
 
 /**
- * (Re-)Creates the JavaScript translation file for a language.
+ * Creates or recreates the JavaScript translation file for a language.
  *
  * @param string|null $langcode
  *   (optional) The language that the translation file should be (re)created
@@ -1258,7 +953,7 @@ function _locale_rebuild_js($langcode = NULL) {
 
   // Construct the filepath where JS translation files are stored.
   // There is (on purpose) no front end to edit that variable.
-  $dir = 'public://' . $config->get('javascript.directory');
+  $dir = 'assets://' . $config->get('javascript.directory');
 
   // Delete old file, if we have no translations anymore, or a different file to
   // be saved.
@@ -1272,7 +967,7 @@ function _locale_rebuild_js($langcode = NULL) {
     try {
       $file_system->delete($dir . '/' . $language->getId() . '_' . $locale_javascripts[$language->getId()] . '.js');
     }
-    catch (FileException $e) {
+    catch (FileException) {
       // Ignore.
     }
     $locale_javascripts[$language->getId()] = '';
@@ -1311,7 +1006,7 @@ function _locale_rebuild_js($langcode = NULL) {
         $status = 'error';
       }
     }
-    catch (FileException $e) {
+    catch (FileException) {
       // Do nothing.
     }
   }
@@ -1367,4 +1062,50 @@ function locale_translation_language_table($form_element) {
     }
   }
   return $form_element;
+}
+
+/**
+ * Prepares variables for translation status information templates.
+ *
+ * Translation status information is displayed per language.
+ *
+ * Default template: locale-translate-edit-form-strings.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - updates: The projects which have updates.
+ *   - not_found: The projects which updates are not found.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_locale_translation_update_info(array &$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(LocaleThemeHooks::class)->preprocessLocaleTranslationUpdateInfo($variables);
+}
+
+/**
+ * Prepares variables for most recent translation update templates.
+ *
+ * Displays the last time we checked for locale update data. In addition to
+ * properly formatting the given timestamp, this function also provides a "Check
+ * manually" link that refreshes the available update and redirects back to the
+ * same page.
+ *
+ * Default template: locale-translation-last-check.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - last: The timestamp when the site last checked for available updates.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_locale_translation_last_check(array &$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(LocaleThemeHooks::class)->preprocessLocaleTranslationLastCheck($variables);
 }

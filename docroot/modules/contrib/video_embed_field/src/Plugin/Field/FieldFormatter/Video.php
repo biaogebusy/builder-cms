@@ -98,13 +98,15 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
       }
       else {
         $autoplay = $this->currentUser->hasPermission('never autoplay videos') ? FALSE : $this->getSetting('autoplay');
-        $element[$delta] = $provider->renderEmbedCode(
-          $this->getSetting('width'),
-          $this->getSetting('height'),
-          $autoplay,
-          $this->getSetting('title_format'),
-          $this->getSetting('title_fallback')
-        );
+        $options = [
+          'width' => $this->getSetting('width'),
+          'height' => $this->getSetting('height'),
+          'autoplay' => $autoplay,
+          'title_format' => $this->getSetting('title_format') ?? NULL,
+          'use_title_fallback' => $this->getSetting('title_fallback') ?? TRUE,
+          'loading' => $this->getSetting('loading') ?? static::defaultSettings()['loading'],
+        ];
+        $element[$delta] = $provider->renderEmbed($options);
         $element[$delta]['#cache']['contexts'][] = 'user.permissions';
 
         $element[$delta] = [
@@ -135,6 +137,7 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
       'autoplay' => TRUE,
       'title_format' => '@provider | @title',
       'title_fallback' => TRUE,
+      'loading' => 'lazy',
     ];
   }
 
@@ -195,6 +198,19 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
       '#type' => 'checkbox',
       '#default_value' => $this->getSetting('title_fallback'),
     ];
+    $loading_options = [
+      'lazy' => $this->t('Lazy (<em>loading="lazy"</em>)'),
+      'eager' => $this->t('Eager (<em>loading="eager"</em>)'),
+    ];
+    $elements['loading'] = [
+      '#title' => $this->t('Video loading mode'),
+      '#type' => 'select',
+      '#default_value' => $this->getSetting('loading'),
+      '#options' => $loading_options,
+      '#description' => $this->t('Select the loading attribute for video iframes. <a href=":link">Learn more about the loading attribute for iframes.</a>', [
+        ':link' => 'https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes',
+      ]),
+    ];
     return $elements;
   }
 
@@ -208,6 +224,14 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
       '@dimensions' => $dimensions,
       '@autoplay' => $this->getSetting('autoplay') ? $this->t(', autoplaying') : '',
     ]);
+
+    $loading = $this->getSetting('loading');
+    if ($loading) {
+      $summary[] = $this->t('Video loading: @loading', [
+        '@loading' => $loading,
+      ]);
+    }
+
     return $summary;
   }
 

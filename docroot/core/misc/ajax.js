@@ -1,3 +1,5 @@
+/* cspell:ignore xmlhttprequest */
+
 /**
  * @file
  * Provides Ajax page updating via jQuery $.ajax.
@@ -55,21 +57,21 @@
 
       // This class means to submit the form to the action using Ajax.
       once('ajax', '.use-ajax-submit').forEach((el) => {
-        const elementSettings = {};
-
-        // Ajax submits specified in this manner automatically submit to the
-        // normal form action.
-        elementSettings.url = $(el.form).attr('action');
-        // Form submit button clicks need to tell the form what was clicked so
-        // it gets passed in the POST request.
-        elementSettings.setClick = true;
-        // Form buttons use the 'click' event rather than mousedown.
-        elementSettings.event = 'click';
-        // Clicked form buttons look better with the throbber than the progress
-        // bar.
-        elementSettings.progress = { type: 'throbber' };
-        elementSettings.base = el.id;
-        elementSettings.element = el;
+        const elementSettings = {
+          // Ajax submits specified in this manner automatically submit to the
+          // normal form action.
+          url: $(el.form).attr('action'),
+          // Form submit button clicks need to tell the form what was clicked so
+          // it gets passed in the POST request.
+          setClick: true,
+          // Form buttons use the 'click' event rather than mousedown.
+          event: 'click',
+          // Clicked form buttons look better with the throbber than the progress
+          // bar.
+          progress: { type: 'throbber' },
+          base: el.id,
+          element: el,
+        };
 
         Drupal.ajax(elementSettings);
       });
@@ -456,7 +458,7 @@
 
     // If there isn't a form, jQuery.ajax() will be used instead, allowing us to
     // bind Ajax to links as well.
-    if (this.element && this.element.form) {
+    if (this.element?.form) {
       /**
        * @type {jQuery}
        */
@@ -490,7 +492,7 @@
     this.url = this.url.replace(/\/nojs(\/|$|\?|#)/, '/ajax$1');
     // If the 'nojs' version of the URL is trusted, also trust the 'ajax'
     // version.
-    if (drupalSettings.ajaxTrustedUrl[originalUrl]) {
+    if (drupalSettings.ajaxTrustedUrl.hasOwnProperty(originalUrl)) {
       drupalSettings.ajaxTrustedUrl[this.url] = true;
     }
 
@@ -554,7 +556,7 @@
         // Sanity check for browser support (object expected).
         // When using iFrame uploads, responses must be returned as a string.
         if (typeof response === 'string') {
-          response = $.parseJSON(response);
+          response = JSON.parse(response);
         }
 
         // Prior to invoking the response's commands, verify that they can be
@@ -567,7 +569,10 @@
         //   #ajax) can bypass header verification. This is especially useful
         //   for Ajax with multipart forms. Because IFRAME transport is used,
         //   the response headers cannot be accessed for verification.
-        if (response !== null && !drupalSettings.ajaxTrustedUrl[ajax.url]) {
+        if (
+          response !== null &&
+          !drupalSettings.ajaxTrustedUrl.hasOwnProperty(ajax.url)
+        ) {
           if (xmlhttprequest.getResponseHeader('X-Drupal-Ajax-Token') !== '1') {
             const customMessage = Drupal.t(
               'The response failed verification so will not be processed.',
@@ -634,7 +639,7 @@
     // Bind the ajaxSubmit function to the element event.
     $(ajax.element).on(elementSettings.event, function (event) {
       if (
-        !drupalSettings.ajaxTrustedUrl[ajax.url] &&
+        !drupalSettings.ajaxTrustedUrl.hasOwnProperty(ajax.url) &&
         !Drupal.url.isLocal(ajax.url)
       ) {
         throw new Error(
@@ -1438,7 +1443,7 @@
      *   The JSON response object from the Ajax request.
      * @param {string} response.selector
      *   A jQuery selector string.
-     * @param {boolean} [response.asterisk]
+     * @param {string} [response.asterisk]
      *   An optional CSS selector. If specified, an asterisk will be
      *   appended to the HTML inside the provided selector.
      * @param {number} [status]
@@ -1715,21 +1720,12 @@
      *   {@link Drupal.Ajax} object created by {@link Drupal.ajax}.
      * @param {object} response
      *   The response from the Ajax request.
-     * @param {object[]|string} response.data
+     * @param {object[]} response.data
      *   An array of styles to be added.
      * @param {number} [status]
      *   The XMLHttpRequest status.
      */
     add_css(ajax, response, status) {
-      if (typeof response.data === 'string') {
-        Drupal.deprecationError({
-          message:
-            'Passing a string to the Drupal.ajax.add_css() method is deprecated in 10.1.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3154948.',
-        });
-        $('head').prepend(response.data);
-        return;
-      }
-
       const allUniqueBundleIds = response.data.map(function (style) {
         const uniqueBundleId = style.href;
         // Force file to load as a CSS stylesheet using 'css!' flag.
@@ -1889,7 +1885,7 @@
       xhr.getResponseHeader('X-Drupal-Ajax-Token') === '1' &&
       // The isInProgress() function might not be defined if the Ajax request
       // was initiated without Drupal.ajax() or new Drupal.Ajax().
-      settings.isInProgress &&
+      typeof settings.isInProgress === 'function' &&
       // Until this is false, the Ajax request isn't completely done (the
       // response's commands might still be running).
       settings.isInProgress()

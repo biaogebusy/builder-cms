@@ -47,8 +47,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  * ];
  * @endcode
  *
- * See https://www.drupal.org/node/945102 for a full explanation.
- *
  * @see \Drupal\Core\Render\Element\Table
  */
 #[FormElement('tableselect')]
@@ -58,7 +56,6 @@ class Tableselect extends Table {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#js_select' => TRUE,
@@ -66,11 +63,11 @@ class Tableselect extends Table {
       '#responsive' => TRUE,
       '#sticky' => FALSE,
       '#pre_render' => [
-        [$class, 'preRenderTable'],
-        [$class, 'preRenderTableselect'],
+        [static::class, 'preRenderTable'],
+        [static::class, 'preRenderTableselect'],
       ],
       '#process' => [
-        [$class, 'processTableselect'],
+        [static::class, 'processTableselect'],
       ],
       '#options' => [],
       '#empty' => '',
@@ -195,8 +192,8 @@ class Tableselect extends Table {
         array_unshift($header, ['class' => ['select-all']]);
       }
       else {
-        // Add an empty header when radio buttons are displayed or a "Select all"
-        // checkbox is not desired.
+        // Add an empty header when radio buttons are displayed or a "Select
+        // all" checkbox is not desired.
         array_unshift($header, '');
       }
     }

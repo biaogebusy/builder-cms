@@ -2,8 +2,8 @@
 
 namespace Drupal\ai_chatbot\Plugin\Block;
 
-use Drupal\ai_assistant_api\AiAssistantInterface;
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
@@ -16,8 +16,9 @@ use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\Token;
+use Drupal\ai_assistant_api\AiAssistantInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * Provides an AI form block.
@@ -64,6 +65,13 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
    * @var \Drupal\Core\File\FileUrlGenerator
    */
   protected $fileUrlGenerator;
+
+  /**
+   * The token service.
+   *
+   * @var \Drupal\Core\Utility\Token
+   */
+  protected Token $token;
 
   /**
    * The module handler.
@@ -131,6 +139,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
     $plugin->currentUser = $container->get('current_user');
     $plugin->aiAssistantRunner = $container->get('ai_assistant_api.runner');
     $plugin->fileUrlGenerator = $container->get('file_url_generator');
+    $plugin->token = $container->get('token');
     $plugin->moduleHandler = $container->get('module_handler');
     $plugin->themeManager = $container->get('theme.manager');
     $plugin->themeHandler = $container->get('theme_handler');
@@ -286,12 +295,27 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
       '#default_value' => $this->configuration['use_username'],
     ];
 
+    $avatar_description = $this->t('The avatar of the user, if not fetched from the user or if not logged in.');
     $form['messages']['default_avatar'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default Avatar'),
-      '#description' => $this->t('The avatar of the user, if not fetched from the user or if not logged in.'),
+      '#description' => $avatar_description,
       '#default_value' => $this->configuration['default_avatar'],
     ];
+
+    if ($this->moduleHandler->moduleExists('token')) {
+      $form['messages']['default_avatar']['#description'] = [
+        '#type' => 'inline_template',
+        '#template' => '{{ description }} {{ token_link }}',
+        '#context' => [
+          'description' => $avatar_description . ' ' . $this->t('This field supports tokens.'),
+          'token_link' => [
+            '#theme' => 'token_tree_link',
+            '#token_types' => ['current-user'],
+          ],
+        ],
+      ];
+    }
 
     $form['messages']['use_avatar'] = [
       '#type' => 'checkbox',
@@ -492,7 +516,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
     $this->configuration['height'] = $form_state->getValue('styling')['height'];
     $this->configuration['placement'] = $form_state->getValue('styling')['placement'];
     // If the placement is toolbar, we force the toolbar style.
-    if ($this->configuration['placement'] == 'toolbar') {
+    if ($this->configuration['placement'] === 'toolbar') {
       $this->configuration['style_file'] = 'module:ai_chatbot:toolbar.yml';
       $this->configuration['width'] = '100%';
       $this->configuration['height'] = 'auto';
@@ -570,10 +594,14 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
 
     $user_data = $this->getUserData();
 
-    $this->configuration['default_username'] = $user_data['username'];
-    $this->configuration['default_avatar'] = $user_data['avatar'];
-    $block['#settings'] = $this->configuration;
-    $block['#deepchat_settings'] = $this->getDeepChatParameters($this->configuration['style_file']);
+    // Use a local copy to attach runtime user defaults without mutating the
+    // persisted block configuration.
+    $runtime_settings = $this->configuration;
+    $runtime_settings['default_username'] = $user_data['username'];
+    $runtime_settings['default_avatar'] = $user_data['avatar'];
+
+    $block['#settings'] = $runtime_settings;
+    $block['#deepchat_settings'] = $this->getDeepChatParameters($this->configuration['style_file'], $user_data);
     $block['#current_theme'] = 'chatbot-' . $active_theme;
     $block['#attached']['drupalSettings']['ai_deepchat']['assistant_id'] = $this->aiAssistantRunner->getAssistant()->id();
     $block['#attached']['drupalSettings']['ai_deepchat']['thread_id'] = $this->aiAssistantRunner->getThreadsKey();
@@ -582,8 +610,8 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
     $block['#attached']['drupalSettings']['ai_deepchat']['default_username'] = $user_data['username'];
     $block['#attached']['drupalSettings']['ai_deepchat']['default_avatar'] = $user_data['avatar'];
     $block['#attached']['drupalSettings']['ai_deepchat']['toggle_state'] = $this->configuration['toggle_state'];
-    $block['#attached']['drupalSettings']['ai_deepchat']['width'] = $this->configuration['placement'] == 'toolbar' ? '100%' : $this->configuration['width'];
-    $block['#attached']['drupalSettings']['ai_deepchat']['height'] = $this->configuration['placement'] == 'toolbar' ? 'auto' : $this->configuration['height'];
+    $block['#attached']['drupalSettings']['ai_deepchat']['width'] = $this->configuration['placement'] === 'toolbar' ? '100%' : $this->configuration['width'];
+    $block['#attached']['drupalSettings']['ai_deepchat']['height'] = $this->configuration['placement'] === 'toolbar' ? 'auto' : $this->configuration['height'];
     $block['#attached']['drupalSettings']['ai_deepchat']['first_message'] = $this->configuration['first_message'];
     $block['#attached']['drupalSettings']['ai_deepchat']['placement'] = $this->configuration['placement'];
     $block['#attached']['drupalSettings']['ai_deepchat']['show_structured_results'] = $this->configuration['show_structured_results'];
@@ -610,22 +638,24 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
    *
    * @param string $style
    *   The style to get the parameters for.
+   * @param array|null $user_data
+   *   Optional user data (username, avatar) to avoid duplicate lookups.
    *
    * @return array
    *   Return the parameters.
    */
-  public function getDeepChatParameters(string $style) {
+  public function getDeepChatParameters(string $style, ?array $user_data = NULL) {
     $deepchat = [];
     // Some basic settings.
     $style_parameters = $this->getStyleParameters($style);
     // Special solution for style.
     $style = $style_parameters['style'] ?? '';
     // Add ; if its not there.
-    if ($style && substr($style, -1) != ';') {
+    if ($style && !str_ends_with($style, ';')) {
       $style .= '; ';
     }
-    $height = $this->configuration['placement'] == 'toolbar' ? '100%' : $this->configuration['height'];
-    $width = $this->configuration['placement'] == 'toolbar' ? 'auto' : $this->configuration['width'];
+    $height = $this->configuration['placement'] === 'toolbar' ? '100%' : $this->configuration['height'];
+    $width = $this->configuration['placement'] === 'toolbar' ? 'auto' : $this->configuration['width'];
     $style .= 'height: ' . $height . '; width: ' . $width . ';';
 
     if ($style_parameters) {
@@ -642,7 +672,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
     }
 
     // Override the avatars.
-    $user_data = $this->getUserData();
+    $user_data = $user_data ?? $this->getUserData();
     $deepchat['avatars']['ai']['src'] = $this->configuration['bot_image'];
     if (empty($deepchat['avatars']['ai']['src'])) {
       unset($deepchat['avatars']['ai']);
@@ -659,7 +689,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
     $deepchat['class'] = 'deepchat-element';
     $deepchat['intromessage']['text'] = $this->configuration['first_message'];
     // @todo remove this in 2.0.0, its just for BC.
-    if ($this->configuration['placement'] == 'toolbar') {
+    if ($this->configuration['placement'] === 'toolbar') {
       $deepchat['names']['ai']['text'] = $this->configuration['bot_name'];
     }
 
@@ -767,7 +797,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
     foreach (scandir($path) as $file) {
       // If its a yaml or yml file.
       if (preg_match('/\.ya?ml$/', $file)) {
-        $style = Yaml::parse(file_get_contents($path . '/' . $file));
+        $style = Yaml::decode(file_get_contents($path . '/' . $file));
         if (isset($style['name']) && isset($style['parameters'])) {
           $key = $prefix ? $prefix . ':' . $file : $file;
           $styles[$key] = $style['name'];
@@ -786,7 +816,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
    * @return array
    *   Return the parameters.
    */
-  public function getStyleParameters(string $old_style) {
+  public function getStyleParameters(string $old_style): array {
     // If it's cached, get it cached.
     $parts = explode(':', $old_style);
     if (count($parts) == 3) {
@@ -806,39 +836,89 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
       return $data->data;
     }
 
-    if ($type == 'theme') {
+    if ($type === 'theme') {
       $type_path = $this->themeHandler->getTheme($name)->getPath();
     }
     else {
       $type_path = $this->moduleHandler->getModule($name)->getPath();
     }
     $path = $type_path . '/deepchat_styles/' . $style;
-    $style = Yaml::parse(file_get_contents($path));
+    $style = Yaml::decode(file_get_contents($path));
     $this->cache->set($key, $style['parameters'], CacheBackendInterface::CACHE_PERMANENT, [$type . ':type:' . $name . ':style']);
     return $style['parameters'];
   }
 
   /**
-   * Helper function to get the avatar and the account if wanted.
+   * Returns the display username and resolved avatar URL for the current user.
    *
-   * @return array
-   *   Return the avatar and the account.
+   * @return array{username: string, avatar: string}
+   *   An array with keys 'username' and 'avatar'
+   *   (absolute URL or empty string).
    */
-  public function getUserData() {
+  public function getUserData(): array {
     $user = $this->currentUser->getAccount();
-    // Figure out username and avatar based on settings.
+    $isAuthenticated = $user->isAuthenticated();
+
     $username = $this->configuration['default_username'];
-    if ($user->isAuthenticated() && $this->configuration['use_username']) {
+    if ($this->configuration['use_username'] && $isAuthenticated) {
       $username = $user->getDisplayName();
     }
 
-    $avatar = $this->configuration['default_avatar'];
-    if ($user->isAuthenticated() && $this->configuration['use_avatar']) {
-      $userEntity = $this->entityTypeManager->getStorage('user')->load($user->id());
-      if (!empty($userEntity->user_picture->entity)) {
-        $avatar = $this->fileUrlGenerator->generateAbsoluteString($userEntity->user_picture->entity->getFileUri());
+    $default_avatar = $this->configuration['default_avatar'] ?? '';
+    /** @var \Drupal\user\UserInterface|null $userEntity */
+    $userEntity = ($isAuthenticated && ($this->configuration['use_avatar'] || $default_avatar !== ''))
+      ? $this->entityTypeManager->getStorage('user')->load($user->id())
+      : NULL;
+
+    $token_context = [];
+    if ($userEntity) {
+      $token_context = [
+        'user' => $userEntity,
+        'current-user' => $userEntity,
+      ];
+    }
+
+    if ($userEntity && $this->entityTypeManager->hasDefinition('profile')) {
+      $avatar_parts = explode(':', $default_avatar);
+      $profileType = (count($avatar_parts) > 2 && str_starts_with($avatar_parts[0], '[current-user'))
+        ? $avatar_parts[1]
+        : NULL;
+      $profile = NULL;
+      if ($profileType) {
+        // Pattern of the
+        // token: [current-user:admin_profile:field_profile_image].
+        /** @var \Drupal\profile\Entity\ProfileInterface[] $loaded */
+        $loaded = $this->entityTypeManager
+          ->getStorage('profile')
+          ->loadByProperties(['uid' => $user->id(), 'type' => $profileType]);
+        $profile = !empty($loaded) ? reset($loaded) : NULL;
+      }
+      $token_context += [
+        'profile' => $profile,
+      ];
+    }
+
+    $avatar = '';
+    if ($default_avatar) {
+      $avatar = $this->token->replace($default_avatar, $token_context, ['clear' => TRUE]);
+      // Image field tokens render as a full <img> tag; extract the src URL.
+      if ($avatar && str_contains($avatar, '<img')) {
+        preg_match('/src=["\']([^"\']+)["\']/', $avatar, $matches);
+        $avatar = $matches[1] ?? '';
       }
     }
+
+    // Fall back to the user picture
+    // field when token resolution yielded nothing.
+    if ($userEntity && empty($avatar) && !empty($userEntity->user_picture->entity)) {
+      $avatar = $this->fileUrlGenerator->generateAbsoluteString($userEntity->user_picture->entity->getFileUri());
+    }
+
+    // Normalize any remaining stream wrapper URIs (e.g. from token output).
+    if ($avatar && (str_starts_with($avatar, 'public://') || str_starts_with($avatar, 'private://'))) {
+      $avatar = $this->fileUrlGenerator->generateAbsoluteString($avatar);
+    }
+
     return [
       'username' => $username,
       'avatar' => $avatar,
@@ -853,7 +933,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
    */
   public function historicalMessages() {
     $messages = [];
-    if ($this->aiAssistantRunner->getAssistant()->get('allow_history') == 'none') {
+    if ($this->aiAssistantRunner->getAssistant()->get('allow_history') === 'none') {
       return $messages;
     }
     $session_messages = $this->aiAssistantRunner->getMessageHistory();
@@ -873,7 +953,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
         ];
         // Add the buttons.
         $buttons = [];
-        if ($message['role'] == 'assistant') {
+        if ($message['role'] === 'assistant') {
           if ($this->configuration['show_copy_icon']) {
             $buttons[] = [
               'svg' => $this->moduleHandler->getModule('ai_chatbot')->getPath() . '/assets/copy-icon.svg',
@@ -912,7 +992,7 @@ class DeepChatFormBlock extends BlockBase implements ContainerFactoryPluginInter
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags() {
+  public function getCacheTags(): array {
     return Cache::mergeTags(parent::getCacheTags(), [
       'block:' . $this->getPluginId(),
     ]);

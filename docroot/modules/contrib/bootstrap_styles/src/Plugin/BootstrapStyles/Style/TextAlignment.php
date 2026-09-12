@@ -97,7 +97,9 @@ class TextAlignment extends StylePluginBase {
     $build = $this->addClassesToBuild($build, $classes, $theme_wrapper);
 
     // Attach bs-classes to the build.
-    $build['#attached']['library'][] = 'bootstrap_styles/plugin.text_alignment.build';
+    if (isset($storage['text_alignment']['class']) && $storage['text_alignment']['class'] !== '_none') {
+      $build['#attached']['library'][] = 'bootstrap_styles/plugin.text_alignment.build';
+    }
 
     return $build;
   }

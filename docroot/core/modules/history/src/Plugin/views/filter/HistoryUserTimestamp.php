@@ -7,7 +7,6 @@ use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Filter for new content.
@@ -37,27 +36,11 @@ class HistoryUserTimestamp extends FilterPluginBase {
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected ?TimeInterface $time = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected TimeInterface $time) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . ' without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3395991', E_USER_DEPRECATED);
-      $this->time = \Drupal::service('datetime.time');
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('datetime.time'),
-    );
   }
 
   /**

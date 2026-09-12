@@ -216,6 +216,9 @@ class AddressBookTest extends OrderWebDriverTestBase {
     $this->assertSession()->pageTextContains('9 Drupal Ave');
     $this->assertSession()->linkExists('Add address');
     $this->getSession()->getPage()->clickLink('Add address');
+    /** @var \Drupal\address\Plugin\Field\FieldType\AddressItem $address */
+    $address = $this->store->getAddress();
+    $this->assertSession()->fieldValueEquals('address[0][address][country_code]', $address->getCountryCode());
     $this->getSession()->getPage()->fillField('address[0][address][country_code]', 'FR');
     $this->assertSession()->assertWaitOnAjaxRequest();
     foreach ($this->fourthAddress as $property => $value) {

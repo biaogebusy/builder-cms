@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\admin_toolbar_tools\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
@@ -28,6 +30,13 @@ class AdminToolbarToolsSettingsForm extends ConfigFormBase {
   protected $menuLinkManager;
 
   /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * {@inheritdoc}
    *
    * @return static
@@ -37,6 +46,7 @@ class AdminToolbarToolsSettingsForm extends ConfigFormBase {
     $instance = parent::create($container);
     $instance->cacheMenu = $container->get('cache.menu');
     $instance->menuLinkManager = $container->get('plugin.manager.menu.link');
+    $instance->moduleHandler = $container->get('module_handler');
     return $instance;
   }
 
@@ -81,12 +91,15 @@ class AdminToolbarToolsSettingsForm extends ConfigFormBase {
       '#max' => 500,
     ];
 
-    $form['show_local_tasks'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable/Disable local tasks display'),
-      '#description' => $this->t('Local tasks such as node edit and delete.'),
-      '#default_value' => $config->get('show_local_tasks'),
-    ];
+    // Hide the option to show local tasks if the core toolbar is disabled.
+    if ($this->moduleHandler->moduleExists('toolbar')) {
+      $form['show_local_tasks'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable/Disable local tasks display'),
+        '#description' => $this->t('Local tasks such as node edit and delete.'),
+        '#default_value' => $config->get('show_local_tasks'),
+      ];
+    }
 
     return parent::buildForm($form, $form_state);
   }

@@ -95,7 +95,7 @@ class LibraryItemController extends ControllerBase implements ContainerInjection
           '#context' => [
             'date' => $revision->toLink($date, $revision->isDefaultRevision() ? 'canonical' : 'revision')->toString(),
             'label' => $revision->label(),
-            'author' => $this->renderer->renderPlain($username),
+            'author' => $this->renderer->renderInIsolation($username),
             'message' => ['#markup' => $revision->get('revision_log')->value, '#allowed_tags' => Xss::getHtmlTagList()],
           ],
         ],

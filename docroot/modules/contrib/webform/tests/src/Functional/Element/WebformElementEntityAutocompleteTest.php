@@ -30,7 +30,7 @@ class WebformElementEntityAutocompleteTest extends WebformElementBrowserTestBase
   /**
    * Test entity reference elements.
    */
-  public function testEntityReferenceTest() {
+  public function testEntityReferenceTest(): void {
     $assert_session = $this->assertSession();
 
     $node_1 = $this->drupalCreateNode(['title' => 'node 01']);

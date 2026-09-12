@@ -24,6 +24,8 @@ interface PlaceholderGeneratorInterface {
    *   analyzed.
    *
    * @return bool
+   *   Returns TRUE is the render array can be overwritten with placeholders,
+   *   FALSE otherwise.
    */
   public function canCreatePlaceholder(array $element);
 
@@ -61,5 +63,18 @@ interface PlaceholderGeneratorInterface {
    *   replacement metadata.
    */
   public function createPlaceholder(array $element);
+
+  /**
+   * Generates a placeholder HTML tag.
+   *
+   * @param string $tag
+   *   The placeholder tag.
+   * @param array $attributes
+   *   An array of key-value pairs to use as tag attributes.
+   *
+   * @return string
+   *   The HTML placeholder.
+   */
+  public static function createPlaceholderTag(string $tag, array $attributes): string;
 
 }

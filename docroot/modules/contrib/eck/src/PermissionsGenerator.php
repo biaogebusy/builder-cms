@@ -116,9 +116,17 @@ class PermissionsGenerator {
    */
   private function getEditPermission(EckEntityType $entity_type, $op, $ownership) {
     $ucfirst_op = ucfirst($op);
+    $typeLabel = $entity_type->label();
+
+    $title = $this->t('@operation @ownership %type_name entities', [
+      '@operation' => $ucfirst_op,
+      '@ownership' => $ownership,
+      '%type_name' => $typeLabel,
+    ]);
+
     return [
       "{$op} {$ownership} {$entity_type->id()} entities" => [
-        'title' => $this->t("{$ucfirst_op} {$ownership} %type_name entities", ['%type_name' => $entity_type->label()]),
+        'title' => $title,
       ],
     ];
   }

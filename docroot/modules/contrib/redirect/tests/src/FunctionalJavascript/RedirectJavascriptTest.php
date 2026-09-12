@@ -93,8 +93,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->fillField('redirect_source[0][path]', 'non-existing');
     $page->fillField('redirect_redirect[0][uri]', '/node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->pressButton('Save');
+    $this->submitForm([], 'Save');
 
     // Try to find the redirect we just created.
     $redirect = $this->repository->findMatchingRedirect('non-existing');
@@ -132,24 +131,27 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $redirect = array_shift($redirects);
     $this->assertEquals(Url::fromUri('base:non-existing', ['query' => ['key' => 'value']])->toString(), $redirect->getSourceUrl());
 
-    // Test the source url hints.
-    // The hint about an existing base path.
-    $this->drupalGet('admin/config/search/redirect/add');
-    $page->fillField('redirect_source[0][path]', 'non-existing?key=value');
-    $page->fillField('redirect_redirect[0][uri]', '');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->responseContains(
-      'The base source path <em class="placeholder">non-existing?key=value</em> is already being redirected. Do you want to <a href="' . $redirect->toUrl('edit-form')->toString() . '">edit the existing redirect</a>?'
-    );
-
+    // Test validation.
     // The hint about a valid path.
     $this->drupalGet('admin/config/search/redirect/add');
-    $page->fillField('redirect_source[0][path]', 'node');
-    $page->fillField('redirect_redirect[0][uri]', '');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->submitForm([
+      'redirect_source[0][path]' => 'node',
+      'redirect_redirect[0][uri]' => '<front>',
+    ], 'Save');
     $this->assertSession()->responseContains(
-      'The source path <em class="placeholder">node</em> is likely a valid path. It is preferred to <a href="' . Url::fromRoute('entity.path_alias.add_form')->toString() . '">create URL aliases</a> for existing paths rather than redirects.'
+      'The source path <em class="placeholder">node</em> appears to be a valid path. It is preferred to <a href="' . Url::fromRoute('entity.path_alias.add_form')->toString() . '">create URL aliases</a> for existing paths rather than redirects.',
     );
+
+    // Change the path and ensure the warning still occurs.
+    $page->fillField('redirect_source[0][path]', 'node/add');
+    $this->submitForm([], 'Save');
+    $this->assertSession()->responseContains(
+      'The source path <em class="placeholder">node/add</em> appears to be a valid path. It is preferred to <a href="' . Url::fromRoute('entity.path_alias.add_form')->toString() . '">create URL aliases</a> for existing paths rather than redirects.',
+    );
+
+    // Ensure you can click save again and create the redirect if you like.
+    $this->submitForm([], 'Save');
+    $this->assertSession()->pageTextContains('The redirect has been saved.');
 
     // Test validation.
     // Duplicate redirect.
@@ -157,8 +159,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->fillField('redirect_source[0][path]', 'non-existing?key=value');
     $page->fillField('redirect_redirect[0][uri]', '/node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->pressButton('Save');
+    $this->submitForm([], 'Save');
     $this->assertSession()->responseContains(
       'The source path <em class="placeholder">non-existing?key=value</em> is already being redirected. Do you want to <a href="' . $redirect->toUrl('edit-form')->toString() . '">edit the existing redirect</a>?'
     );
@@ -168,8 +169,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->fillField('redirect_source[0][path]', 'node');
     $page->fillField('redirect_redirect[0][uri]', '/node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->pressButton('Save');
+    $this->submitForm([], 'Save');
     $this->assertSession()->responseContains('You are attempting to redirect the page to itself. This will result in an infinite loop.');
 
     // Redirecting the front page.
@@ -177,8 +177,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->fillField('redirect_source[0][path]', '<front>');
     $page->fillField('redirect_redirect[0][uri]', '/node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->pressButton('Save');
+    $this->submitForm([], 'Save');
     $this->assertSession()->responseContains('It is not allowed to create a redirect from the front page.');
 
     // Redirecting a url with fragment.
@@ -186,8 +185,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->fillField('redirect_source[0][path]', 'page-to-redirect#content');
     $page->fillField('redirect_redirect[0][uri]', '/node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->pressButton('Save');
+    $this->submitForm([], 'Save');
     $this->assertSession()->responseContains('The anchor fragments are not allowed.');
 
     // Adding path that starts with /.
@@ -196,8 +194,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $page->fillField('redirect_source[0][path]', '/page-to-redirect');
     $page->fillField('redirect_redirect[0][uri]', '/node');
     // Wait on ajax is unpredictable, wait for one second.
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->pressButton('Save');
+    $this->submitForm([], 'Save');
     $this->assertSession()->responseContains('The url to redirect from should not start with a forward slash (/).');
 
     // Test filters.
@@ -206,8 +203,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->fillField('redirect_source[0][path]', 'test27');
     $page->fillField('redirect_redirect[0][uri]', '/node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->pressButton('Save');
+    $this->submitForm([], 'Save');
 
     // Filter with non existing value.
     $this->drupalGet(
@@ -278,9 +274,11 @@ class RedirectJavascriptTest extends WebDriverTestBase {
 
     // Test the bulk delete action.
     $this->getSession()->getPage()->selectFieldOption("action", "redirect_delete_action", TRUE);
-    $this->submitForm(['redirect_bulk_form[0]' => TRUE], 'Apply to selected items');
-    $this->assertSession()->pageTextContains('Are you sure you want to delete this redirect?');
+    $this->getSession()->getPage()->find('css', 'input.form-checkbox:nth-child(1)')->check();
+    $this->submitForm([], 'Apply to selected items');
+    $this->assertSession()->pageTextContains('Are you sure you want to delete these redirects');
     $this->assertSession()->pageTextContains('test27');
+    $this->assertSession()->pageTextContains('node/add');
     $this->submitForm([], 'Delete');
 
     $this->assertSession()->pageTextContains('There is no redirect yet.');

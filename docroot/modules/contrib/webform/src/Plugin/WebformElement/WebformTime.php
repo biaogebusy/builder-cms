@@ -40,7 +40,7 @@ class WebformTime extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     // Set default time format to HTML time.
     if (!isset($element['#time_format'])) {
       $element['#time_format'] = $this->getDefaultProperty('time_format');

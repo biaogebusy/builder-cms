@@ -1,13 +1,33 @@
 <?php
 
+use Drupal\Core\Url;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
  * @file
  * Contains entity_theme_engine.module.
  */
 
+ 
+/**
+ * Implements hook_help().
+ */
+function entity_theme_engine_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.entity_theme_engine':
+      $output = '';
+      $output .= '<h2>' . t('About') . '</h2>';
+      $output .= '<p>' . t('The Entity theme engine module can change entity template with twig.') . '</p>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Using Entity theme engine module') . '</dt>';
+      $output .= '<dd>' . t('<a href=":actions">online documentation for the Entity theme engine module</a>.', [':actions' => Url::fromRoute('entity.entity_widget.collection')->toString()]) . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
 
 /**
  * Implements hook_entity_view_alter().

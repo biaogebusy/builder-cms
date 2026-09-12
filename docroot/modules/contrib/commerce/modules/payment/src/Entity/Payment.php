@@ -3,6 +3,7 @@
 namespace Drupal\commerce_payment\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -57,6 +58,8 @@ use Drupal\commerce_price\Price;
  * )
  */
 class Payment extends ContentEntityBase implements PaymentInterface {
+
+  use EntityChangedTrait;
 
   /**
    * {@inheritdoc}
@@ -343,6 +346,25 @@ class Payment extends ContentEntityBase implements PaymentInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCreatedTime(): ?int {
+    if ($this->get('created')->isEmpty()) {
+      return NULL;
+    }
+
+    return (int) $this->get('created')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCreatedTime(int $timestamp): static {
+    $this->set('created', $timestamp);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
@@ -412,7 +434,14 @@ class Payment extends ContentEntityBase implements PaymentInterface {
       ->setLabel(t('Payment gateway'))
       ->setDescription(t('The payment gateway.'))
       ->setRequired(TRUE)
-      ->setSetting('target_type', 'commerce_payment_gateway');
+      ->setSetting('target_type', 'commerce_payment_gateway')
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'entity_reference_label',
+        'settings' => [
+          'link' => FALSE,
+        ],
+      ]);
 
     $fields['payment_gateway_mode'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Payment gateway mode'))
@@ -423,7 +452,14 @@ class Payment extends ContentEntityBase implements PaymentInterface {
       ->setLabel(t('Payment method'))
       ->setDescription(t('The payment method.'))
       ->setSetting('target_type', 'commerce_payment_method')
-      ->setReadOnly(TRUE);
+      ->setReadOnly(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'entity_reference_label',
+        'settings' => [
+          'link' => FALSE,
+        ],
+      ]);
 
     $fields['order_id'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Order'))
@@ -447,7 +483,11 @@ class Payment extends ContentEntityBase implements PaymentInterface {
       ->setLabel(t('Amount'))
       ->setDescription(t('The payment amount.'))
       ->setRequired(TRUE)
-      ->setDisplayConfigurable('view', TRUE);
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'commerce_price_default',
+      ]);
 
     $fields['refunded_amount'] = BaseFieldDefinition::create('commerce_price')
       ->setLabel(t('Refunded amount'))
@@ -460,9 +500,8 @@ class Payment extends ContentEntityBase implements PaymentInterface {
       ->setRequired(TRUE)
       ->setSetting('max_length', 255)
       ->setDisplayOptions('view', [
-        'label' => 'hidden',
+        'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 0,
       ])
       ->setDisplayConfigurable('view', TRUE)
       ->setSetting('workflow_callback', ['\Drupal\commerce_payment\Entity\Payment', 'getWorkflowId']);
@@ -502,7 +541,39 @@ class Payment extends ContentEntityBase implements PaymentInterface {
     $fields['captured'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Captured'))
       ->setDescription(t('The time when the payment was captured.'))
-      ->setDisplayConfigurable('view', TRUE);
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+        'settings' => [
+          'date_format' => 'short',
+        ],
+      ]);
+
+    $fields['created'] = BaseFieldDefinition::create('created')
+      ->setLabel(t('Created'))
+      ->setDescription(t('The time when the payment was created.'))
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+        'settings' => [
+          'date_format' => 'short',
+        ],
+      ]);
+
+    $fields['changed'] = BaseFieldDefinition::create('changed')
+      ->setLabel(t('Changed'))
+      ->setDescription(t('The time when the payment was last saved.'))
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+        'settings' => [
+          'date_format' => 'short',
+        ],
+      ]);
 
     return $fields;
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\test_fieldtype_boolean_emoji_normalizer\Normalizer;
 
 use Drupal\Core\Field\Plugin\Field\FieldType\BooleanItem;
@@ -12,9 +14,19 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 class BooleanItemNormalizer extends FieldItemNormalizer implements DenormalizerInterface {
 
   /**
-   * {@inheritdoc}
+   * Normalizes data into a set of arrays/scalars.
+   *
+   * @param object $object
+   *   Data to normalize.
+   * @param string|null $format
+   *   Format the normalization result will be encoded as.
+   * @param array<string, mixed> $context
+   *   Context options for the normalizer.
+   *
+   * @return array
+   *   The normalized data.
    */
-  public function normalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
+  public function normalize($object, $format = NULL, array $context = []): array {
     $data = parent::normalize($object, $format, $context);
     $data['value'] = $data['value'] ? '👍' : '👎';
     return $data;

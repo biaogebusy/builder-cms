@@ -16,3 +16,9 @@ entity.commerce_promotion_coupon.generate_form:
   title: 'Generate coupons'
   appears_on:
     - entity.commerce_promotion_coupon.collection
+
+entity.commerce_order.manage_coupons_form:
+  route_name: entity.commerce_order.manage_coupons_form
+  title: 'Manage coupons'
+  appears_on:
+    - entity.commerce_order.canonical

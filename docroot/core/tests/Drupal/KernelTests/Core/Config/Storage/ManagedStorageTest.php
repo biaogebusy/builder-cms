@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Config\Storage;
 
-use Drupal\Core\Config\StorageManagerInterface;
 use Drupal\Core\Config\ManagedStorage;
 use Drupal\Core\Config\MemoryStorage;
+use Drupal\Core\Config\StorageManagerInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests ManagedStorage operations.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ManagedStorageTest extends ConfigStorageTestBase implements StorageManagerInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function getStorage() {
+  public function getStorage(): MemoryStorage {
     // We return a new storage every time to make sure the managed storage
     // only calls this once and retains the configuration by itself.
     return new MemoryStorage();
@@ -42,21 +44,21 @@ class ManagedStorageTest extends ConfigStorageTestBase implements StorageManager
   /**
    * {@inheritdoc}
    */
-  protected function insert($name, $data) {
+  protected function insert($name, $data): void {
     $this->storage->write($name, $data);
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function update($name, $data) {
+  protected function update($name, $data): void {
     $this->storage->write($name, $data);
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function delete($name) {
+  protected function delete($name): void {
     $this->storage->delete($name);
   }
 

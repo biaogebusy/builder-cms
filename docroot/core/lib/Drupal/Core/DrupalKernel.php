@@ -3,15 +3,16 @@
 namespace Drupal\Core;
 
 use Composer\Autoload\ClassLoader;
+use Drupal\Component\DependencyInjection\ReverseContainer;
 use Drupal\Component\EventDispatcher\Event;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Serialization\PhpSerialize;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\DatabaseBackend;
+use Drupal\Core\ClassLoader\BackwardsCompatibilityClassLoader;
 use Drupal\Core\Config\BootstrapConfigStorageFactory;
 use Drupal\Core\Config\NullStorage;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Component\DependencyInjection\ReverseContainer;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
 use Drupal\Core\DependencyInjection\YamlFileLoader;
@@ -25,6 +26,7 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Security\RequestSanitizer;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Test\TestDatabase;
+use Drupal\DrupalInstalled;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -43,7 +45,7 @@ use Symfony\Component\HttpKernel\TerminableInterface;
  * also deals with the registration of service providers. It allows registered
  * service providers to add their services to the container. Core provides the
  * CoreServiceProvider, which, in addition to registering any core services that
- * cannot be registered in the core.services.yaml file, adds any compiler passes
+ * cannot be registered in the core.services.yml file, adds any compiler passes
  * needed by core, e.g. for processing tagged services. Each module can add its
  * own service provider, i.e. a class implementing
  * Drupal\Core\DependencyInjection\ServiceProvider, to register services to the
@@ -163,6 +165,23 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   protected $moduleData = [];
 
   /**
+   * Holds the list of enabled themes from core.extension config.
+   *
+   * @var array|null
+   *   An associative array whose keys are theme names and whose values are
+   *   ignored.
+   */
+  protected ?array $themeList;
+
+  /**
+   * List of available themes.
+   *
+   * @var \Drupal\Core\Extension\Extension[]
+   */
+  protected array $themeExtensions = [];
+
+
+  /**
    * The class loader object.
    *
    * @var \Composer\Autoload\ClassLoader
@@ -227,9 +246,9 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   /**
    * List of instantiated service provider classes.
    *
-   * @see \Drupal\Core\DrupalKernel::$serviceProviderClasses
-   *
    * @var array
+   *
+   * @see \Drupal\Core\DrupalKernel::$serviceProviderClasses
    */
   protected $serviceProviders;
 
@@ -264,21 +283,11 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   protected $root;
 
   /**
-   * A mapping from service classes to service IDs.
-   *
-   * @deprecated in drupal:9.5.1 and is removed from drupal:11.0.0. Use the
-   *   'Drupal\Component\DependencyInjection\ReverseContainer' service instead.
-   *
-   * @see https://www.drupal.org/node/3327942
-   */
-  protected $serviceIdMapping = [];
-
-  /**
    * Create a DrupalKernel object from a request.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request.
-   * @param $class_loader
+   * @param \Composer\Autoload\ClassLoader $class_loader
    *   The class loader. Normally Composer's ClassLoader, as included by the
    *   front controller, but may also be decorated.
    * @param string $environment
@@ -307,7 +316,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    *
    * @param string $environment
    *   String indicating the environment, e.g. 'prod' or 'dev'.
-   * @param $class_loader
+   * @param \Composer\Autoload\ClassLoader $class_loader
    *   The class loader. Normally \Composer\Autoload\ClassLoader, as included by
    *   the front controller, but may also be decorated.
    * @param bool $allow_dumping
@@ -414,7 +423,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
 
     // Determine whether multi-site functionality is enabled. If not, return
     // the default directory.
-    if (!file_exists($app_root . '/sites/sites.php')) {
+    if (!is_file($app_root . '/sites/sites.php')) {
       return 'sites/default';
     }
 
@@ -445,10 +454,10 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
         // If the identifier is a key in $sites, check for a directory matching
         // the corresponding value. Otherwise, check for a directory matching
         // the identifier.
-        if (isset($sites[$site_id]) && file_exists($app_root . '/sites/' . $sites[$site_id])) {
+        if (isset($sites[$site_id]) && is_dir($app_root . '/sites/' . $sites[$site_id])) {
           $site_id = $sites[$site_id];
         }
-        if (file_exists($app_root . '/sites/' . $site_id . '/settings.php') || (!$require_settings && file_exists($app_root . '/sites/' . $site_id))) {
+        if (is_file($app_root . '/sites/' . $site_id . '/settings.php') || (!$require_settings && is_file($app_root . '/sites/' . $site_id))) {
           return "sites/$site_id";
         }
       }
@@ -516,11 +525,17 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
 
     // Add the APCu prefix to use to cache found/not-found classes.
     if (Settings::get('class_loader_auto_detect', TRUE) && method_exists($this->classLoader, 'setApcuPrefix')) {
-      // Vary the APCu key by which modules are installed to allow
+      // Vary the APCu key by which extensions are installed to allow
       // class_exists() checks to determine functionality.
-      $id = 'class_loader:' . crc32(implode(':', array_keys($this->container->getParameter('container.modules'))));
+      $installed_extensions = array_keys($this->container->getParameter('container.modules') + $this->container->getParameter('container.themes'));
+      $id = 'class_loader:' . crc32(implode(':', $installed_extensions));
       $prefix = Settings::getApcuPrefix($id, $this->root);
       $this->classLoader->setApcuPrefix($prefix);
+    }
+
+    if ($this->container->hasParameter('moved_classes')) {
+      $bc_class_loader = new BackwardsCompatibilityClassLoader($this->container->getParameter('moved_classes'));
+      spl_autoload_register([$bc_class_loader, 'loadClass']);
     }
 
     $this->booted = TRUE;
@@ -541,6 +556,8 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     $this->container = NULL;
     $this->moduleList = NULL;
     $this->moduleData = [];
+    $this->themeList = NULL;
+    $this->themeExtensions = [];
   }
 
   /**
@@ -548,25 +565,6 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    */
   public function getContainer() {
     return $this->container;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
-   * phpcs:ignore Drupal.Commenting.FunctionComment.InvalidReturnVoid
-   * @return void
-   */
-  public function setContainer(?ContainerInterface $container = NULL) {
-    if (isset($this->container)) {
-      throw new \Exception('The container should not override an existing container.');
-    }
-    if ($this->booted) {
-      throw new \Exception('The container cannot be set after a booted kernel.');
-    }
-
-    $this->container = $container;
-    return $this;
   }
 
   /**
@@ -620,7 +618,9 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     // Initialize legacy request globals.
     $this->initializeRequestGlobals($request);
 
-    // Put the request on the stack.
+    // Put the request on the stack. Main requests will be popped in
+    // \Drupal\Core\DrupalKernel::terminate() and sub requests will be popped in
+    // \Drupal\Core\StackMiddleware\KernelPreHandle::handle().
     $this->container->get('request_stack')->push($request);
 
     // Set the allowed protocols.
@@ -648,26 +648,35 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     $this->serviceProviderClasses['app']['core'] = 'Drupal\Core\CoreServiceProvider';
 
     // Retrieve enabled modules and register their namespaces.
-    if (!isset($this->moduleList)) {
-      $extensions = $this->getConfigStorage()->read('core.extension');
-      // If core.extension configuration does not exist and we're not in the
-      // installer itself, then we need to put the kernel into a pre-installer
-      // mode. The container should not be dumped because Drupal is yet to be
-      // installed. The installer service provider is registered to ensure that
-      // cache and other automatically created tables are not created if
-      // database settings are available. None of this is required when the
-      // installer is running because the installer has its own kernel and
-      // manages the addition of its own service providers.
-      // @see install_begin_request()
-      if ($extensions === FALSE && !InstallerKernel::installationAttempted()) {
-        $this->allowDumping = FALSE;
-        $this->containerNeedsDumping = FALSE;
-        $GLOBALS['conf']['container_service_providers']['InstallerServiceProvider'] = 'Drupal\Core\Installer\InstallerServiceProvider';
+    if (!isset($this->moduleList) || !isset($this->themeList)) {
+      $extensions = $this->getExtensions();
+      // The module list is manipulated in the TestRunnerKernel, so we should
+      // only set it if it is not set.
+      if (!isset($this->moduleList)) {
+        // If core.extension configuration does not exist and we're not in the
+        // installer itself, then we need to put the kernel into a pre-installer
+        // mode. The container should not be dumped because Drupal is yet to be
+        // installed. The installer service provider is registered to ensure
+        // that cache and other automatically created tables are not created if
+        // database settings are available. None of this is required when the
+        // installer is running because the installer has its own kernel and
+        // manages the addition of its own service providers.
+        // @see install_begin_request()
+        if ($extensions === FALSE && !InstallerKernel::installationAttempted()) {
+          $this->allowDumping = FALSE;
+          $this->containerNeedsDumping = FALSE;
+          $GLOBALS['conf']['container_service_providers']['InstallerServiceProvider'] = 'Drupal\Core\Installer\InstallerServiceProvider';
+        }
+        $this->moduleList = $extensions['module'] ?? [];
       }
-      $this->moduleList = $extensions['module'] ?? [];
+
+      $this->themeList = $extensions['theme'] ?? [];
     }
-    $module_filenames = $this->getModuleFileNames();
-    $this->classLoaderAddMultiplePsr4($this->getModuleNamespacesPsr4($module_filenames));
+
+    $module_filenames = $this->getExtensionFileNames($this->moduleList, [$this, 'moduleData']);
+    $this->classLoaderAddMultiplePsr4($this->getExtensionNamespacesPsr4($module_filenames));
+    $theme_filenames = $this->getExtensionFileNames($this->themeList, [$this, 'themeExtensions']);
+    $this->classLoaderAddMultiplePsr4($this->getExtensionNamespacesPsr4($theme_filenames));
 
     // Load each module's serviceProvider class.
     foreach ($module_filenames as $module => $filename) {
@@ -678,7 +687,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
         $this->serviceProviderClasses['app'][$module] = $class;
       }
       $filename = dirname($filename) . "/$module.services.yml";
-      if (file_exists($filename)) {
+      if (is_file($filename)) {
         $this->serviceYamls['app'][$module] = $filename;
       }
     }
@@ -703,11 +712,8 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
-   * @return void
    */
-  public function terminate(Request $request, Response $response) {
+  public function terminate(Request $request, Response $response): void {
     if ($this->booted && $this->getHttpKernel() instanceof TerminableInterface) {
       // Only run terminate() when essential services have been set up properly
       // by preHandle() before.
@@ -722,6 +728,12 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
           $service = $this->container->get($id);
           $service->destruct();
         }
+      }
+
+      // Pop the request added in \Drupal\Core\DrupalKernel::preHandle() from
+      // request stack at the end of the execution cycle.
+      if ($this->prepared === TRUE) {
+        $this->container->get('request_stack')->pop();
       }
     }
   }
@@ -758,9 +770,9 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Converts an exception into a response.
    *
    * @param \Exception $e
-   *   An exception
+   *   An exception.
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   A Request instance
+   *   A Request instance.
    * @param int $type
    *   The type of the request (one of HttpKernelInterface::MAIN_REQUEST or
    *   HttpKernelInterface::SUB_REQUEST)
@@ -789,29 +801,42 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   /**
    * Returns module data on the filesystem.
    *
-   * @param $module
+   * @param string $module
    *   The name of the module.
    *
-   * @return \Drupal\Core\Extension\Extension|bool
+   * @return \Drupal\Core\Extension\Extension|false
    *   Returns an Extension object if the module is found, FALSE otherwise.
    */
   protected function moduleData($module) {
     if (!$this->moduleData) {
-      // First, find profiles.
-      $listing = new ExtensionDiscovery($this->root);
-      $listing->setProfileDirectories([]);
-      $all_profiles = $listing->scan('profile');
-      $profiles = array_intersect_key($all_profiles, $this->moduleList);
-
-      $profile_directories = array_map(function (Extension $profile) {
-        return $profile->getPath();
-      }, $profiles);
-      $listing->setProfileDirectories($profile_directories);
-
-      // Now find modules.
-      $this->moduleData = $profiles + $listing->scan('module');
+      $this->setExtensionData();
     }
     return $this->moduleData[$module] ?? FALSE;
+  }
+
+  /**
+   * Sets extension data to class properties using ExtensionDiscovery.
+   *
+   * This function is expensive to call as it scans the filesystem for
+   * extensions. Use ::moduleData() and ::themeExtensions() instead.
+   */
+  private function setExtensionData(): void {
+    // First, find profiles.
+    $listing = new ExtensionDiscovery($this->root);
+    $listing->setProfileDirectories([]);
+    $all_profiles = $listing->scan('profile');
+    $profiles = array_intersect_key($all_profiles, $this->moduleList);
+
+    $profile_directories = array_map(function (Extension $profile) {
+      return $profile->getPath();
+    }, $profiles);
+    $listing->setProfileDirectories($profile_directories);
+
+    // Now find modules.
+    $this->moduleData = $profiles + $listing->scan('module');
+
+    // Now find themes.
+    $this->themeExtensions = $listing->scan('theme');
   }
 
   /**
@@ -823,7 +848,9 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   public function updateModules(array $module_list, array $module_filenames = []) {
     $pre_existing_module_namespaces = [];
     if ($this->booted && is_array($this->moduleList)) {
-      $pre_existing_module_namespaces = $this->getModuleNamespacesPsr4($this->getModuleFileNames());
+      $pre_existing_module_namespaces = $this->getExtensionNamespacesPsr4(
+        $this->getExtensionFileNames($this->moduleList, [$this, 'moduleData'])
+      );
     }
     $this->moduleList = $module_list;
     foreach ($module_filenames as $name => $extension) {
@@ -842,7 +869,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       // class that is now available.
       // @see \Composer\Autoload\ClassLoader::findFile()
       $new_namespaces = array_diff_key(
-        $this->getModuleNamespacesPsr4($this->getModuleFileNames()),
+        $this->getExtensionNamespacesPsr4($this->getExtensionFileNames($this->moduleList, [$this, 'moduleData'])),
         $pre_existing_module_namespaces
       );
       if (!empty($new_namespaces)) {
@@ -856,36 +883,65 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   }
 
   /**
-   * Generate a unique hash for a service object.
+   * Returns theme data on the filesystem.
    *
-   * @param object $object
-   *   A service object.
+   * This allows us to update the container parameters and namespaces during
+   * compile, theme install and theme uninstall. This ensures that the
+   * container remains in sync before compiler passes.
    *
-   * @return string
-   *   A unique hash value.
+   * @param string $theme
+   *   The name of the theme.
    *
-   * @deprecated in drupal:9.5.1 and is removed from drupal:11.0.0. Use the
-   *   'Drupal\Component\DependencyInjection\ReverseContainer' service instead.
-   *
-   * @see https://www.drupal.org/node/3327942
+   * @return \Drupal\Core\Extension\Extension|false
+   *   Returns an Extension object if the theme is found, FALSE otherwise.
    */
-  public static function generateServiceIdHash($object) {
-    @trigger_error(__METHOD__ . "() is deprecated in drupal:9.5.1 and is removed from drupal:11.0.0. Use the 'Drupal\Component\DependencyInjection\ReverseContainer' service instead. See https://www.drupal.org/node/3327942", E_USER_DEPRECATED);
-    // Include class name as an additional namespace for the hash since
-    // spl_object_hash's return can be recycled. This still is not a 100%
-    // guarantee to be unique but makes collisions incredibly difficult and even
-    // then the interface would be preserved.
-    // @see https://php.net/spl_object_hash#refsect1-function.spl-object-hash-notes
-    return hash('sha256', get_class($object) . spl_object_hash($object));
+  protected function themeExtensions($theme): Extension|false {
+    if (!$this->themeExtensions) {
+      $this->setExtensionData();
+    }
+    return $this->themeExtensions[$theme] ?? FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getServiceIdMapping() {
-    @trigger_error(__METHOD__ . "() is deprecated in drupal:9.5.1 and is removed from drupal:11.0.0. Use the 'Drupal\Component\DependencyInjection\ReverseContainer' service instead. See https://www.drupal.org/node/3327942", E_USER_DEPRECATED);
-    $this->collectServiceIdMapping();
-    return $this->serviceIdMapping;
+  public function updateThemes(array $register_themes = []): void {
+    $pre_existing_theme_namespaces = [];
+    if ($this->booted && isset($this->themeList)) {
+      $pre_existing_theme_namespaces = $this->getExtensionNamespacesPsr4(
+        $this->getExtensionFileNames($this->themeList, [$this, 'themeExtensions'])
+      );
+    }
+    $this->themeList = $register_themes;
+    foreach ($register_themes as $name => $extension) {
+      $this->themeExtensions[$name] = $extension;
+    }
+
+    // If we haven't yet booted, we don't need to do anything: the new theme
+    // list will take effect when boot() is called. However we set a
+    // flag that the container needs a rebuild, so that a potentially cached
+    // container is not used. If we have already booted, then rebuild the
+    // container in order to refresh the serviceProvider list and container.
+    $this->containerNeedsRebuild = TRUE;
+    if ($this->booted) {
+      // We need to register any new namespaces to a new class loader because
+      // the current class loader might have stored a negative result for a
+      // class that is now available.
+      // @see \Composer\Autoload\ClassLoader::findFile()
+      $new_namespaces = array_diff_key(
+        $this->getExtensionNamespacesPsr4(
+          $this->getExtensionFileNames($this->themeList, [$this, 'themeExtensions'])
+        ),
+        $pre_existing_theme_namespaces
+      );
+      if (!empty($new_namespaces)) {
+        $additional_class_loader = new ClassLoader();
+        $this->classLoaderAddMultiplePsr4($new_namespaces, $additional_class_loader);
+        $additional_class_loader->register();
+      }
+
+      $this->initializeContainer();
+    }
   }
 
   /**
@@ -893,7 +949,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    *
    * The 'environment' consists of:
    * - The kernel environment string.
-   * - The Drupal version constant.
+   * - A hash based on all the installed package versions.
    * - The deployment identifier from settings.php. This allows custom
    *   deployments to force a container rebuild.
    * - The operating system running PHP. This allows compiler passes to optimize
@@ -904,14 +960,22 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    *   The cache key used for the service container.
    */
   protected function getContainerCacheKey() {
-    $parts = ['service_container', $this->environment, \Drupal::VERSION, Settings::get('deployment_identifier'), PHP_OS, serialize(Settings::get('container_yamls'))];
+    $parts = [
+      'service_container',
+      $this->environment,
+      class_exists(DrupalInstalled::class) ? DrupalInstalled::VERSIONS_HASH : \Drupal::VERSION,
+      Settings::get('deployment_identifier'),
+      PHP_OS,
+      serialize(Settings::get('container_yamls')),
+    ];
     return implode(':', $parts);
   }
 
   /**
    * Returns the kernel parameters.
    *
-   * @return array An array of kernel parameters
+   * @return array
+   *   An associative array of kernel parameters
    */
   protected function getKernelParameters() {
     return [
@@ -923,16 +987,25 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Initializes the service container.
    *
    * @return \Symfony\Component\DependencyInjection\ContainerInterface
+   *   An initialized container object.
    */
   protected function initializeContainer() {
     $this->containerNeedsDumping = FALSE;
     $session_started = FALSE;
     $all_messages = [];
+    $config_is_syncing = FALSE;
+    $source_storage = NULL;
+    $stream_wrappers_registered = FALSE;
     if (isset($this->container)) {
       // Save the id of the currently logged in user.
       if ($this->container->initialized('current_user')) {
         $current_user_id = $this->container->get('current_user')->id();
       }
+
+      if ($this->container->initialized('stream_wrapper_manager') && !empty($this->container->get('stream_wrapper_manager')->getWrappers())) {
+        $stream_wrappers_registered = TRUE;
+      }
+
       // After rebuilding the container some objects will have stale services.
       // Record a map of objects to service IDs prior to rebuilding the
       // container in order to ensure
@@ -951,13 +1024,8 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       }
 
       $all_messages = $this->container->get('messenger')->all();
-    }
-
-    // If we haven't booted yet but there is a container, then we're asked to
-    // boot the container injected via setContainer().
-    // @see \Drupal\KernelTests\KernelTestBase::setUp()
-    if (isset($this->container) && !$this->booted) {
-      $container = $this->container;
+      $config_is_syncing = $this->container->get('config.installer')->isSyncing();
+      $source_storage = $this->container->get('config.installer')->getSourceStorage();
     }
 
     // If the module list hasn't already been set in updateModules and we are
@@ -966,9 +1034,9 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       $container_definition = $this->getCachedContainerDefinition();
     }
 
-    // If there is no container and no cached container definition, build a new
-    // one from scratch.
-    if (!isset($container) && !isset($container_definition)) {
+    // If there is no cached container definition, build a new container from
+    // scratch.
+    if (!isset($container_definition)) {
       $container = $this->compileContainer();
 
       // Only dump the container if dumping is allowed. This is useful for
@@ -1000,6 +1068,11 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       $this->container->get('session')->start();
     }
 
+    if ($stream_wrappers_registered) {
+      // Re-register the stream wrappers with the manager service.
+      $this->container->get('stream_wrapper_manager')->register();
+    }
+
     // The request stack is preserved across container rebuilds. Re-inject the
     // new session into the main request if one was present before.
     if (($request_stack = $this->container->get('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE))) {
@@ -1017,6 +1090,15 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     foreach ($all_messages as $type => $messages) {
       foreach ($messages as $message) {
         $this->container->get('messenger')->addMessage($message, $type);
+      }
+    }
+
+    // Restore syncing flag, as this is often set when modules or themes
+    // are installed which triggers a container rebuild.
+    if ($config_is_syncing) {
+      $this->container->get('config.installer')->setSyncing(TRUE);
+      if ($source_storage) {
+        $this->container->get('config.installer')->setSourceStorage($source_storage);
       }
     }
 
@@ -1066,6 +1148,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       // Use session cookies, not transparent sessions that puts the session id
       // in the query string.
       ini_set('session.use_cookies', '1');
+      ini_set('session.use_strict_mode', '1');
       if (\PHP_VERSION_ID < 80400) {
         ini_set('session.use_only_cookies', '1');
         ini_set('session.use_trans_sid', '0');
@@ -1085,21 +1168,43 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     mb_internal_encoding('utf-8');
     mb_language('uni');
 
-    // Indicate that code is operating in a test child site.
+    // Set DRUPAL_TEST_IN_CHILD_SITE if we're inside a test.
+    static::setupDrupalTestInChildSite($app_root);
+
+    // Set the Drupal custom error handler.
+    set_error_handler('_drupal_error_handler');
+    set_exception_handler('_drupal_exception_handler');
+
+    static::$isEnvironmentInitialized = TRUE;
+  }
+
+  /**
+   * Define the DRUPAL_TEST_IN_CHILD_SITE constant as appropriate.
+   *
+   * @param string $app_root
+   *   The path to the application root.
+   *
+   * @internal This method is only intended to be called by this class and
+   *   \Drupal\Core\Command\DrupalApplication. We aim to remove the need for it
+   *   without a BC layer during Drupal 12.
+   * @see https://www.drupal.org/node/2690035
+   */
+  public static function setupDrupalTestInChildSite(string $app_root): void {
+    // Indicate if code is operating in a test child site or not.
     if (!defined('DRUPAL_TEST_IN_CHILD_SITE')) {
       if ($test_prefix = drupal_valid_test_ua()) {
         $test_db = new TestDatabase($test_prefix);
         // Only code that interfaces directly with tests should rely on this
-        // constant; e.g., the error/exception handler conditionally adds further
-        // error information into HTTP response headers that are consumed by
-        // the internal browser.
+        // constant; e.g., the error/exception handler conditionally adds
+        // further error information into HTTP response headers that are
+        // consumed by the internal browser.
         define('DRUPAL_TEST_IN_CHILD_SITE', TRUE);
 
         // Log fatal errors to the test site directory.
         ini_set('log_errors', 1);
         ini_set('error_log', $app_root . '/' . $test_db->getTestSitePath() . '/error.log');
 
-        // Ensure that a rewritten settings.php is used if opcache is on.
+        // Ensure that a rewritten settings.php is used if OPcache is on.
         ini_set('opcache.validate_timestamps', 'on');
         ini_set('opcache.revalidate_freq', 0);
       }
@@ -1108,12 +1213,6 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
         define('DRUPAL_TEST_IN_CHILD_SITE', FALSE);
       }
     }
-
-    // Set the Drupal custom error handler.
-    set_error_handler('_drupal_error_handler');
-    set_exception_handler('_drupal_exception_handler');
-
-    static::$isEnvironmentInitialized = TRUE;
   }
 
   /**
@@ -1200,8 +1299,8 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   protected function persistServices(ContainerInterface $container, array $persist) {
     foreach ($persist as $id => $object) {
       // Do not override services already set() on the new container, for
-      // example 'service_container'.
-      if (!$container->initialized($id)) {
+      // example 'service_container', always replace the request stack.
+      if (!$container->initialized($id) || $id === 'request_stack') {
         $container->set($id, $object);
       }
     }
@@ -1214,8 +1313,14 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     // Empty module properties and for them to be reloaded from scratch.
     $this->moduleList = NULL;
     $this->moduleData = [];
+    $this->themeList = NULL;
+    $this->themeExtensions = [];
     $this->containerNeedsRebuild = TRUE;
-    return $this->initializeContainer();
+    $container = $this->initializeContainer();
+    // ThemeManager::render() fails without this. Normally ::preHandle() has
+    // a ->loadAll() call.
+    $container->get('module_handler')->loadAll();
+    return $container;
   }
 
   /**
@@ -1225,6 +1330,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     $session_started = FALSE;
     $subrequest = FALSE;
     $reload_module_handler = FALSE;
+    $stream_wrappers_registered = FALSE;
 
     // Save the id of the currently logged in user.
     if ($this->container->initialized('current_user')) {
@@ -1233,6 +1339,10 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
 
     if ($this->container->initialized('module_handler') && $this->container->get('module_handler')->isLoaded()) {
       $reload_module_handler = TRUE;
+    }
+
+    if ($this->container->initialized('stream_wrapper_manager') && !empty($this->container->get('stream_wrapper_manager')->getWrappers())) {
+      $stream_wrappers_registered = TRUE;
     }
 
     // After rebuilding the container some objects will have stale services.
@@ -1254,14 +1364,30 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
 
     $all_messages = $this->container->get('messenger')->all();
 
+    // Track the config installer syncing flag for when multiple modules are
+    // installed and container is reset.
+    $config_is_syncing = $this->container->get('config.installer')->isSyncing();
+    $source_storage = $this->container->get('config.installer')->getSourceStorage();
     $persist = $this->getServicesToPersist($this->container);
     $this->container->reset();
     $this->persistServices($this->container, $persist);
+    // Restore syncing flag to new container.
+    if ($config_is_syncing) {
+      $this->container->get('config.installer')->setSyncing(TRUE);
+      if ($source_storage) {
+        $this->container->get('config.installer')->setSourceStorage($source_storage);
+      }
+    }
 
     $this->container->set('kernel', $this);
 
     // Set the class loader which was registered as a synthetic service.
     $this->container->set('class_loader', $this->classLoader);
+
+    if ($stream_wrappers_registered) {
+      // Re-register the stream wrappers with the manager service.
+      $this->container->get('stream_wrapper_manager')->register();
+    }
 
     if ($reload_module_handler) {
       $this->container->get('module_handler')->reload();
@@ -1322,9 +1448,10 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Attach synthetic values on to kernel.
    *
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
-   *   Container object
+   *   Container object.
    *
    * @return \Symfony\Component\DependencyInjection\ContainerInterface
+   *   The container object with the kernel and the class loader added.
    */
   protected function attachSynthetic(ContainerInterface $container) {
     $persist = [];
@@ -1347,7 +1474,8 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   /**
    * Compiles a new service container.
    *
-   * @return \Drupal\Core\DependencyInjection\ContainerBuilder The compiled service container
+   * @return \Drupal\Core\DependencyInjection\ContainerBuilder
+   *   The compiled service container
    */
   protected function compileContainer() {
     // We are forcing a container build so it is reasonable to assume that the
@@ -1360,16 +1488,21 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     $this->initializeServiceProviders();
     $container = $this->getContainerBuilder();
     $container->set('kernel', $this);
-    $container->setParameter('container.modules', $this->getModulesParameter());
+    $container->setParameter('container.modules', $this->getExtensionsParameter($this->moduleList, [$this, 'moduleData']));
+    $container->setParameter('container.themes', $this->getExtensionsParameter(
+      $this->themeList ?? [], [$this, 'themeExtensions'])
+    );
     $container->setParameter('install_profile', $this->getInstallProfile());
 
     // Get a list of namespaces and put it onto the container.
-    $namespaces = $this->getModuleNamespacesPsr4($this->getModuleFileNames());
-    // Add all components in \Drupal\Core and \Drupal\Component that have one of
-    // the following directories:
-    // - Element
-    // - Entity
-    // - Plugin
+    $namespaces = $this->getExtensionNamespacesPsr4(
+      $this->getExtensionFileNames($this->moduleList, [$this, 'moduleData'])
+    );
+    $namespaces += $this->getExtensionNamespacesPsr4(
+      $this->getExtensionFileNames($this->themeList ?? [], [$this, 'themeExtensions'])
+    );
+    // Add all components in \Drupal\Core and \Drupal\Component that have one or
+    // more of Element, Entity and Plugin directories.
     foreach (['Core', 'Component'] as $parent_directory) {
       $path = 'core/lib/Drupal/' . $parent_directory;
       $parent_namespace = 'Drupal\\' . $parent_directory;
@@ -1377,6 +1510,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
         /** @var \DirectoryIterator $component */
         $pathname = $component->getPathname();
         if (!$component->isDot() && $component->isDir() && (
+          is_dir($pathname . '/Command') ||
           is_dir($pathname . '/Plugin') ||
           is_dir($pathname . '/Entity') ||
           is_dir($pathname . '/Element')
@@ -1477,6 +1611,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Gets a new ContainerBuilder instance used to build the service container.
    *
    * @return \Drupal\Core\DependencyInjection\ContainerBuilder
+   *   The Drupal dependency injection container builder.
    */
   protected function getContainerBuilder() {
     return new ContainerBuilder(new ParameterBag($this->getKernelParameters()));
@@ -1496,7 +1631,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     try {
       $this->bootstrapContainer->get('cache.container')->set($this->getContainerCacheKey(), $container_definition);
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       // There is no way to get from the Cache API if the cache set was
       // successful or not, hence an Exception is caught and the caller informed
       // about the error condition.
@@ -1510,15 +1645,17 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Gets a http kernel from the container.
    *
    * @return \Symfony\Component\HttpKernel\HttpKernelInterface
+   *   The Symfony HTTP kernel service.
    */
   protected function getHttpKernel() {
     return $this->container->get('http_kernel');
   }
 
   /**
-   * Returns the active configuration storage to use during building the container.
+   * Gets the active configuration storage to use during building the container.
    *
    * @return \Drupal\Core\Config\StorageInterface
+   *   The configuration storage.
    */
   protected function getConfigStorage() {
     if (!isset($this->configStorage)) {
@@ -1527,7 +1664,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       try {
         $this->configStorage = BootstrapConfigStorageFactory::get($this->classLoader);
       }
-      catch (\Exception $e) {
+      catch (\Exception) {
         $this->configStorage = new NullStorage();
       }
     }
@@ -1538,12 +1675,36 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Returns an array of Extension class parameters for all enabled modules.
    *
    * @return array
+   *   An associated array of module class parameters, keyed by module name, for
+   *   all enabled modules.
+   *
+   * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use
+   *   getExtensionsParameter() instead.
+   *
+   * @see https://www.drupal.org/node/3551652
    */
   protected function getModulesParameter() {
+    @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use getExtensionsParameter() instead. See https://www.drupal.org/node/3551652', E_USER_DEPRECATED);
+    return $this->getExtensionsParameter($this->moduleList, [$this, 'moduleData']);
+  }
+
+  /**
+   * Returns an array of Extension class parameters for all enabled extensions.
+   *
+   * @param array $extension_list
+   *   The list of extensions to return filenames for.
+   * @param callable $get_data
+   *   The method to get data for the extension type.
+   *
+   * @return array
+   *   An associated array of extension class parameters, keyed by extension
+   *   name, for all enabled themes.
+   */
+  protected function getExtensionsParameter(array $extension_list, callable $get_data): array {
     $extensions = [];
-    foreach ($this->moduleList as $name => $weight) {
-      if ($data = $this->moduleData($name)) {
-        $extensions[$name] = [
+    foreach ($extension_list as $extension => $weight) {
+      if ($data = $get_data($extension)) {
+        $extensions[$extension] = [
           'type' => $data->getType(),
           'pathname' => $data->getPathname(),
           'filename' => $data->getExtensionFilename(),
@@ -1554,17 +1715,39 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   }
 
   /**
-   * Gets the file name for each enabled module.
+   * Gets the filenames for each enabled module.
    *
    * @return array
    *   Array where each key is a module name, and each value is a path to the
    *   respective *.info.yml file.
+   *
+   * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use
+   *   getExtensionFileNames() instead.
+   *
+   * @see https://www.drupal.org/node/3551652
    */
   protected function getModuleFileNames() {
+    @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use getExtensionFileNames() instead. See https://www.drupal.org/node/3551652', E_USER_DEPRECATED);
+    return $this->getExtensionFileNames($this->moduleList, [$this, 'moduleData']);
+  }
+
+  /**
+   * Gets the filenames for each enabled extension.
+   *
+   * @param array $extension_list
+   *   The list of extensions to return filenames for.
+   * @param callable $get_data
+   *   The method to get data for the extension type.
+   *
+   * @return array
+   *   Array where each key is a theme name, and each value is a path to the
+   *   respective *.info.yml file.
+   */
+  protected function getExtensionFileNames(array $extension_list, callable $get_data) {
     $filenames = [];
-    foreach ($this->moduleList as $module => $weight) {
-      if ($data = $this->moduleData($module)) {
-        $filenames[$module] = $data->getPathname();
+    foreach ($extension_list as $extension => $weight) {
+      if ($data = $get_data($extension)) {
+        $filenames[$extension] = $data->getPathname();
       }
     }
     return $filenames;
@@ -1574,17 +1757,40 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Gets the PSR-4 base directories for module namespaces.
    *
    * @param string[] $module_file_names
-   *   Array where each key is a module name, and each value is a path to the
-   *   respective *.info.yml file.
+   *   Array where each key is a module name, and each value is a path to
+   *   the respective *.info.yml file.
    *
    * @return string[]
-   *   Array where each key is a module namespace like 'Drupal\system', and each
-   *   value is the PSR-4 base directory associated with the module namespace.
+   *   Array where each key is a module namespace like 'Drupal\system', and
+   *   each value is the PSR-4 base directory associated with the module
+   *   namespace.
+   *
+   * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use
+   *   getExtensionNamespacesPsr4() instead.
+   *
+   * @see https://www.drupal.org/node/3551652
    */
   protected function getModuleNamespacesPsr4($module_file_names) {
+    @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use getExtensionNamespacesPsr4() instead. See https://www.drupal.org/node/3551652', E_USER_DEPRECATED);
+    return $this->getExtensionNamespacesPsr4($module_file_names);
+  }
+
+  /**
+   * Gets the PSR-4 base directories for extension namespaces.
+   *
+   * @param string[] $extension_file_names
+   *   Array where each key is an extension name, and each value is a path to
+   *   the respective *.info.yml file.
+   *
+   * @return string[]
+   *   Array where each key is an extension namespace like 'Drupal\system', and
+   *   each value is the PSR-4 base directory associated with the extension
+   *   namespace.
+   */
+  protected function getExtensionNamespacesPsr4(array $extension_file_names): array {
     $namespaces = [];
-    foreach ($module_file_names as $module => $filename) {
-      $namespaces["Drupal\\$module"] = dirname($filename) . '/src';
+    foreach ($extension_file_names as $extension => $filename) {
+      $namespaces["Drupal\\$extension"] = dirname($filename) . '/src';
     }
     return $namespaces;
   }
@@ -1640,7 +1846,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * Validates the hostname supplied from the HTTP request.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The request object
+   *   The request object.
    *
    * @return bool
    *   TRUE if the hostname is valid, or FALSE otherwise.
@@ -1651,7 +1857,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     try {
       $http_host = $request->getHost();
     }
-    catch (\UnexpectedValueException $e) {
+    catch (\UnexpectedValueException) {
       return FALSE;
     }
 
@@ -1706,10 +1912,10 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       // TrustedHostsRequestFactory makes sure to pass in the server variables
       // from the main request.
       $request_factory = new TrustedHostsRequestFactory($host);
-      Request::setFactory([$request_factory, 'createRequest']);
+      Request::setFactory([$request_factory, 'createRequest'](...));
 
     }
-    catch (\UnexpectedValueException $e) {
+    catch (\UnexpectedValueException) {
       return FALSE;
     }
 
@@ -1723,24 +1929,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    *   A list of service files.
    */
   protected function addServiceFiles(array $service_yamls) {
-    $this->serviceYamls['site'] = array_filter($service_yamls, 'file_exists');
-  }
-
-  /**
-   * Collect a mapping between service to ids.
-   *
-   * @deprecated in drupal:9.5.1 and is removed from drupal:11.0.0. Use the
-   *   'Drupal\Component\DependencyInjection\ReverseContainer' service instead.
-   *
-   * @see https://www.drupal.org/node/3327942
-   */
-  protected function collectServiceIdMapping() {
-    @trigger_error(__METHOD__ . "() is deprecated in drupal:9.5.1 and is removed from drupal:11.0.0. Use the 'Drupal\Component\DependencyInjection\ReverseContainer' service instead. See https://www.drupal.org/node/3327942", E_USER_DEPRECATED);
-    if (isset($this->container)) {
-      foreach ($this->container->getServiceIdMappings() as $hash => $service_id) {
-        $this->serviceIdMapping[$hash] = $service_id;
-      }
-    }
+    $this->serviceYamls['site'] = array_filter($service_yamls, 'is_file');
   }
 
   /**
@@ -1751,7 +1940,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    *   no install profile or NULL if Drupal is being installed.
    */
   protected function getInstallProfile() {
-    $config = $this->getConfigStorage()->read('core.extension');
+    $config = $this->getExtensions();
     if (is_array($config) && !array_key_exists('profile', $config)) {
       return FALSE;
     }
@@ -1775,6 +1964,16 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     $session = new Session(new MockArraySessionStorage());
     $session->start();
     $request->setSession($session);
+  }
+
+  /**
+   * Get the core.extension config object.
+   *
+   * @return array|false
+   *   The core.extension config object if it exists or FALSE.
+   */
+  protected function getExtensions(): array|false {
+    return $this->getConfigStorage()->read('core.extension');
   }
 
 }

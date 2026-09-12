@@ -4,7 +4,9 @@
   // @fixme, the correct local, but failed on gitlab:
   // "extends": "../../../blazy/.eslintrc.json",
   "extends": "../../../../../core/.eslintrc.legacy.json",
-  "ignorePatterns": ["*.yml", "config/**/*", "tests/*"],
+  // Eslint reading unwanted .yml?
+  // @todo enable when using modern eslint.
+  // "ignorePatterns": ["*.yml", "config/**/*", "tests/*"],
   // Eslint reading unwanted .yml?
   "globals": {
     "Sortable": true

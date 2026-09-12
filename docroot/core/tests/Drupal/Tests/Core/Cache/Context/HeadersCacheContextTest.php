@@ -6,20 +6,23 @@ namespace Drupal\Tests\Core\Cache\Context;
 
 use Drupal\Core\Cache\Context\HeadersCacheContext;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * @coversDefaultClass \Drupal\Core\Cache\Context\HeadersCacheContext
- * @group Cache
+ * Tests Drupal\Core\Cache\Context\HeadersCacheContext.
  */
+#[CoversClass(HeadersCacheContext::class)]
+#[Group('Cache')]
 class HeadersCacheContextTest extends UnitTestCase {
 
   /**
-   * @covers ::getContext
-   *
-   * @dataProvider providerTestGetContext
+   * Tests get context.
    */
+  #[DataProvider('providerTestGetContext')]
   public function testGetContext($headers, $header_name, $context): void {
     $request_stack = new RequestStack();
     $request = Request::create('/', 'GET');
@@ -34,17 +37,41 @@ class HeadersCacheContextTest extends UnitTestCase {
   /**
    * Provides a list of headers and expected cache contexts.
    */
-  public static function providerTestGetContext() {
+  public static function providerTestGetContext(): array {
     return [
       [[], NULL, ''],
       [[], 'foo', ''],
       // Non-empty headers.
-      [['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'], NULL, 'alpaca=&llama=rocks&panda=drools&z=0'],
-      [['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'], 'llama', 'rocks'],
-      [['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'], 'alpaca', '?valueless?'],
-      [['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'], 'panda', 'drools'],
-      [['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'], 'z', '0'],
-      [['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'], 'chicken', ''],
+      [
+        ['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'],
+        NULL,
+        'alpaca=&llama=rocks&panda=drools&z=0',
+      ],
+      [
+        ['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'],
+        'llama',
+        'rocks',
+      ],
+      [
+        ['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'],
+        'alpaca',
+        '?valueless?',
+      ],
+      [
+        ['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'],
+        'panda',
+        'drools',
+      ],
+      [
+        ['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'],
+        'z',
+        '0',
+      ],
+      [
+        ['llama' => 'rocks', 'alpaca' => '', 'panda' => 'drools', 'z' => '0'],
+        'chicken',
+        '',
+      ],
       // Header value could be an array.
       [['z' => ['0', '1']], NULL, 'z=0,1'],
       // Values are sorted to minimize cache variations.

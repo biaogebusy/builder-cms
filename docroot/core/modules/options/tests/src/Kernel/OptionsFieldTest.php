@@ -8,12 +8,14 @@ use Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for the 'Options' field types.
- *
- * @group options
  */
+#[Group('options')]
+#[RunTestsInSeparateProcesses]
 class OptionsFieldTest extends OptionsFieldUnitTestBase {
 
   /**
@@ -42,7 +44,7 @@ class OptionsFieldTest extends OptionsFieldUnitTestBase {
       $this->fieldStorage->save();
       $this->fail('Cannot update a list field storage to not include keys with existing data.');
     }
-    catch (FieldStorageDefinitionUpdateForbiddenException $e) {
+    catch (FieldStorageDefinitionUpdateForbiddenException) {
       // Expected exception; just continue testing.
     }
     // Empty the value, so that we can actually remove the option.

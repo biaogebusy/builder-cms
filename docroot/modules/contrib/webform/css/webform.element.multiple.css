@@ -5,7 +5,7 @@
  * @see /webform/test_element_multiple
  */
 
-.form-type-webform-multiple:after {
+.form-type-webform-multiple::after {
   display: table;
   clear: both;
   content: " ";
@@ -186,7 +186,7 @@
     background: transparent;
   }
 
-  .webform-multiple-table-responsive td:after {
+  .webform-multiple-table-responsive td::after {
     display: table;
     clear: both;
     content: "";

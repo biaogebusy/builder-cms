@@ -1,3 +1,0 @@
-layout_library.layout.*.third_party.core_context:
-  type: core_context.sequence
-  label: 'Contexts'

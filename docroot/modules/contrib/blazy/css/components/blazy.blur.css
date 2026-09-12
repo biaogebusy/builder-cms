@@ -36,6 +36,12 @@
   }
 }
 
+/* Prevents potential overrides. */
+.blazy .media.media--fx[data-b-animation="blur"] {
+  position: relative;
+  overflow: hidden;
+}
+
 /**
  * Js dynamic classes during animation to match animate.css convention.
  * The .animates.blur classes are triggered after being loaded, when visible.
@@ -92,9 +98,9 @@ Opacity is the cheapest among all animations, fine with longer time.
 
 /* To minimize mutations we do not remove it from DOM, instead hide it.
 Ugly, but nobody except devs pressing F12 at browsers. */
-.media.is-b-animated .b-blur,
+.media.is-b-animated img.b-blur,
 /* Blur animation needs extra works for IEs, not supported, disabled. */
-.media.is-b-loaded .b-blur.is-b-ie {
+.media.is-b-loaded img.b-blur.is-b-ie {
   z-index: -1;
   right: auto;
   /* display: none; */
@@ -120,7 +126,7 @@ Ugly, but nobody except devs pressing F12 at browsers. */
     animation-iteration-count: 1 !important; /* csslint allow: known-properties, important */
   }
 
-  .media--fx-lg.is-b-loaded .b-blur {
+  .media--fx-lg.is-b-loaded img.b-blur {
     opacity: 0.9;
     filter: blur(1px);
   }

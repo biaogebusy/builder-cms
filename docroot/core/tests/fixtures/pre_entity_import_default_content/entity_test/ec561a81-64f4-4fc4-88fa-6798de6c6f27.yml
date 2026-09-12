@@ -1,0 +1,32 @@
+# cspell:ignore Entité traduisible Entidad prueba traducible
+_meta:
+  version: '1.0'
+  entity_type: entity_test
+  uuid: ec561a81-64f4-4fc4-88fa-6798de6c6f27
+  bundle: entity_test
+  default_langcode: en
+default:
+  name:
+    -
+      value: 'Translatable Test Entity'
+  user_id:
+    -
+      target_id: 1
+  langcode:
+    -
+      value: en
+translations:
+  fr:
+    name:
+      -
+        value: 'Entité de test traduisible'
+    langcode:
+      -
+        value: fr
+  es:
+    name:
+      -
+        value: 'Entidad de prueba traducible'
+    langcode:
+      -
+        value: es

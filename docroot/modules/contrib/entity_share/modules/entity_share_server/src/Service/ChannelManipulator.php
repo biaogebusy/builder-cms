@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_server\Service;
 
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -41,10 +42,13 @@ class ChannelManipulator implements ChannelManipulatorInterface {
    *   The entity type manager.
    * @param \Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface $resource_type_repository
    *   The resource type repository.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   *   The entity field manager.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
-    ResourceTypeRepositoryInterface $resource_type_repository
+    ResourceTypeRepositoryInterface $resource_type_repository,
+    protected EntityFieldManagerInterface $entityFieldManager,
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->resourceTypeRepository = $resource_type_repository;
@@ -158,8 +162,16 @@ class ChannelManipulator implements ChannelManipulatorInterface {
 
     $search_configuration = [];
     if (isset($entity_keys['label']) && !empty($entity_keys['label'] && $resource_type->hasField($entity_keys['label']))) {
+      $path = $resource_type->getPublicName($entity_keys['label']);
+
+      $label_field_storage = $this->entityFieldManager->getFieldStorageDefinitions($channel_entity_type)[$entity_keys['label']];
+      if ($label_field_storage->getType() != 'string') {
+        $main_property_name = $label_field_storage->getMainPropertyName();
+        $path .= '.' . $main_property_name;
+      }
+
       $search_configuration['label'] = [
-        'path' => $resource_type->getPublicName($entity_keys['label']),
+        'path' => $path,
         'label' => $this->t('Label'),
       ];
     }

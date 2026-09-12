@@ -18,6 +18,7 @@ use Drupal\Tests\UnitTestCase;
 class BlockVariantTraitTest extends UnitTestCase {
 
   use ProphecyTrait;
+
   /**
    * Tests the getRegionAssignments() method.
    *
@@ -38,7 +39,7 @@ class BlockVariantTraitTest extends UnitTestCase {
   }
 
   /**
-   *
+   * Provides test data for getRegionAssignments test.
    */
   public static function providerTestGetRegionAssignments() {
     return [
@@ -81,23 +82,30 @@ class BlockVariantTraitTest extends UnitTestCase {
 
 }
 /**
- *
+ * Test class for BlockVariantTrait.
  */
 class TestBlockVariantTrait {
   use BlockVariantTrait;
 
   /**
+   * The block configuration.
+   *
    * @var array
    */
   protected $blockConfig = [];
 
   /**
+   * The UUID generator.
+   *
    * @var \Drupal\Component\Uuid\UuidInterface
    */
   protected $uuidGenerator;
 
   /**
+   * Sets the block plugin collection.
+   *
    * @param \Drupal\ctools\Plugin\BlockPluginCollection $block_plugin_collection
+   *   The block plugin collection.
    *
    * @return $this
    */
@@ -107,7 +115,10 @@ class TestBlockVariantTrait {
   }
 
   /**
+   * Sets the UUID generator.
+   *
    * @param \Drupal\Component\Uuid\UuidInterface $uuid_generator
+   *   The UUID generator.
    *
    * @return $this
    */

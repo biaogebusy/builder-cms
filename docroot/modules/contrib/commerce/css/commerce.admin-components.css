@@ -1,0 +1,149 @@
+/**
+ * @file
+ * Commerce admin interface components.
+ */
+
+:root {
+  /* Edit link */
+  --commerce-edit-link-icon: var(--commerce-icon--pencil-square);
+  --commerce-edit-link-icon-size: 1rem;
+}
+
+/* Text colors */
+.commerce-text--warning {
+  color: var(--commerce-color--warning);
+}
+
+.commerce-text--success {
+  color: var(--commerce-color--success);
+}
+
+.commerce-text--danger {
+  color: var(--commerce-color--danger);
+}
+
+.commerce-text--neutral {
+  color: var(--commerce-color--neutral);
+}
+
+.commerce-text--muted {
+  color: var(--commerce-color--neutral);
+  font-size: 0.85em;
+}
+
+/* Text alignment */
+.commerce-text--left {
+  text-align: left;
+}
+
+.commerce-text--nowrap {
+  white-space: nowrap;
+}
+
+.commerce-text--center {
+  text-align: center;
+}
+
+.commerce-text--right {
+  text-align: right;
+}
+
+[dir="rtl"] .commerce-text--left {
+  text-align: right;
+}
+
+[dir="rtl"] .commerce-text--right {
+  text-align: left;
+}
+
+/* Table alignment utilities
+   Apply .commerce-table to your table, then use modifiers or cell classes. */
+
+/* Last column aligned right (e.g. for totals, actions, price columns) */
+.commerce-table--last-col-right th:last-child,
+.commerce-table--last-col-right td:last-child {
+  text-align: right;
+}
+
+[dir="rtl"] .commerce-table--last-col-right th:last-child,
+[dir="rtl"] .commerce-table--last-col-right td:last-child {
+  text-align: left;
+}
+
+/* Edit link */
+.commerce-edit-link {
+  display: inline-flex;
+  align-items: center;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: bold;
+  gap: 0.5rem;
+}
+
+.commerce-edit-link::before {
+  display: inline-block;
+  width: var(--commerce-edit-link-icon-size);
+  height: var(--commerce-edit-link-icon-size);
+  content: "";
+  background-color: currentColor;
+  mask-image: var(--commerce-edit-link-icon);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: var(--commerce-edit-link-icon-size);
+}
+
+/* Commerce actions */
+.commerce-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.commerce-actions__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.commerce-actions__local-actions {
+  margin: 0;
+  padding: 0;
+}
+
+.commerce-actions__local-actions .local-actions__item:first-child {
+  margin-left: 0;
+}
+
+.commerce-actions__local-actions .local-actions__item:last-child {
+  margin-right: 0;
+}
+
+.commerce-actions__actions .form-wrapper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.commerce-actions__actions .button {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+/* Help text */
+.commerce-help-text {
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.2em;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none;
+  }
+}

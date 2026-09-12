@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\simple_oauth\Access;
 
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccessPolicyBase;
@@ -43,9 +44,10 @@ final class Oauth2AccessPolicy extends AccessPolicyBase {
     /** @var \Drupal\simple_oauth\Oauth2ScopeInterface $oauth2_scope */
     foreach ($oauth2_scopes as $oauth2_scope) {
       $allowed_permissions = array_merge($allowed_permissions, $this->scopeProvider->getPermissions($oauth2_scope));
-      $cacheable_metadata
-        ->addCacheableDependency($oauth2_scope)
-        ->addCacheContexts($this->getPersistentCacheContexts());
+      $cacheable_metadata->addCacheContexts($this->getPersistentCacheContexts());
+      if ($oauth2_scope instanceof CacheableDependencyInterface) {
+        $cacheable_metadata->addCacheableDependency($oauth2_scope);
+      }
     }
 
     /** @var \Drupal\Core\Session\CalculatedPermissionsItem $item */

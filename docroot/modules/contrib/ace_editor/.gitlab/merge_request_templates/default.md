@@ -1,4 +1,4 @@
-### Remaining tasks
+### Checkpoints
 - [x] File an issue
 - [x] Addition/Change/Update/Fix
 - [ ] Testing to ensure no regression

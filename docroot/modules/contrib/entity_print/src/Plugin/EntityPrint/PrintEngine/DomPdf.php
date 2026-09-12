@@ -276,6 +276,9 @@ class DomPdf extends PdfEngineBase implements ContainerFactoryPluginInterface {
         'verify_peer' => $this->configuration['verify_peer'],
         'verify_peer_name' => $this->configuration['verify_peer_name'],
       ],
+      'http' => [
+        'user_agent' => 'Drupal/' . \Drupal::VERSION . ' (+https://www.drupal.org/) Dompdf/' . $this->dompdf->version,
+      ],
     ];
     if ($this->configuration['cafile']) {
       $context_options['ssl']['cafile'] = $this->configuration['cafile'];

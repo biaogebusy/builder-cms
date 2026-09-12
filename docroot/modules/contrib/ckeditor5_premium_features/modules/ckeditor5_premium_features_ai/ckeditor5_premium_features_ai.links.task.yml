@@ -1,0 +1,29 @@
+ckeditor5_premium_features_ai.admin_tab:
+  title: 'CKEditor AI'
+  route_name: ckeditor5_premium_features_ai.admin
+  base_route: ckeditor5_premium_features.form.settings
+  weight: 30
+
+ckeditor5_premium_features_ai.settings_subtab:
+  title: 'Settings'
+  route_name: ckeditor5_premium_features_ai.settings
+  parent_id: ckeditor5_premium_features_ai.admin_tab
+  weight: 1
+
+entity.ckeditor5_ai_custom_action.collection:
+  title: 'Custom Actions'
+  route_name: entity.ckeditor5_ai_custom_action.collection
+  parent_id: ckeditor5_premium_features_ai.admin_tab
+  weight: 2
+
+entity.ckeditor5_ai_custom_review.collection:
+  title: 'Custom Reviews'
+  route_name: entity.ckeditor5_ai_custom_review.collection
+  parent_id: ckeditor5_premium_features_ai.admin_tab
+  weight: 3
+
+entity.ckeditor5_ai_chat_shortcut.collection:
+  title: 'Chat Shortcuts'
+  route_name: entity.ckeditor5_ai_chat_shortcut.collection
+  parent_id: ckeditor5_premium_features_ai.admin_tab
+  weight: 4

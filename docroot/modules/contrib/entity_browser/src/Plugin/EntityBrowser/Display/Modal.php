@@ -5,7 +5,9 @@ namespace Drupal\entity_browser\Plugin\EntityBrowser\Display;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\OpenDialogCommand;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\entity_browser\Attribute\EntityBrowserDisplay;
 use Drupal\entity_browser\DisplayBase;
 use Drupal\entity_browser\Events\Events;
 use Drupal\entity_browser\Events\RegisterJSCallbacks;
@@ -14,15 +16,14 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity_browser\Events\AlterEntityBrowserDisplayData;
 
 /**
- * Presents entity browser in an Modal.
- *
- * @EntityBrowserDisplay(
- *   id = "modal",
- *   label = @Translation("Modal"),
- *   description = @Translation("Displays the entity browser in a modal window."),
- *   uses_route = TRUE
- * )
+ * Presents entity browser in a Modal.
  */
+#[EntityBrowserDisplay(
+  id: 'modal',
+  label: new TranslatableMarkup('Modal'),
+  description: new TranslatableMarkup('Displays the entity browser in a modal window.'),
+  uses_route: TRUE
+)]
 class Modal extends IFrame {
 
   /**
@@ -56,7 +57,8 @@ class Modal extends IFrame {
         '#value' => Url::fromRoute('entity_browser.' . $this->configuration['entity_browser_id'], [], $data['query_parameters'])->toString(),
       ],
       'open_modal' => [
-        '#type' => 'submit',
+        '#type' => 'button',
+        '#submit_button' => FALSE,
         '#value' => $this->configuration['link_text'],
         '#limit_validation_errors' => [],
         '#submit' => [],

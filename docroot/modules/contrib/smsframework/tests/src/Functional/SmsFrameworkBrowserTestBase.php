@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -19,9 +19,6 @@ abstract class SmsFrameworkBrowserTestBase extends BrowserTestBase {
 
   use SmsFrameworkTestTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms',
     'sms_test_gateway',
@@ -29,9 +26,6 @@ abstract class SmsFrameworkBrowserTestBase extends BrowserTestBase {
     'dynamic_entity_reference',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected $defaultTheme = 'stark';
 
   /**
@@ -48,9 +42,6 @@ abstract class SmsFrameworkBrowserTestBase extends BrowserTestBase {
    */
   protected SmsProviderInterface $defaultSmsProvider;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->gatewayManager = $this->container->get('plugin.manager.sms_gateway');
@@ -72,7 +63,7 @@ abstract class SmsFrameworkBrowserTestBase extends BrowserTestBase {
     $field_storage = $entity_type_manager->getStorage('field_storage_config')
       ->create([
         'entity_type' => $entity_type_id,
-        'field_name' => mb_strtolower($this->randomMachineName()),
+        'field_name' => \mb_strtolower($this->randomMachineName()),
         'type' => 'telephone',
       ]);
     $field_storage

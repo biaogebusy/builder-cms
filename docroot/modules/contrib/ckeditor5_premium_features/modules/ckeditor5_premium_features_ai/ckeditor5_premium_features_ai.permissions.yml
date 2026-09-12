@@ -1,0 +1,22 @@
+administer ckeditor ai:
+  title: 'Administer CKEditor AI settings'
+  restrict access: true
+ckeditor ai full access:
+  title: 'Full access to all CKEditor AI functionalities'
+ckeditor ai all models:
+  title: 'Allows to use all models'
+  description: 'Models selection can be limited in the text format settings'
+ckeditor ai conversations:
+  title: 'Access to AI Chat'
+ckeditor ai conversations websearch:
+  title: 'Access to web search capability in AI Chat'
+ckeditor ai reasoning:
+  title: 'Access to extended reasoning capability in AI Chat'
+ckeditor ai context files:
+  title: 'Add files as context to AI Chat'
+ckeditor ai context urls:
+  title: 'Add URLs as context to AI Chat'
+ckeditor ai actions:
+  title: 'Access to AI Quick Actions'
+ckeditor ai reviews:
+  title: 'Access to AI Reviews'

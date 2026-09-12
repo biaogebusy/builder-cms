@@ -1,0 +1,26 @@
+<div class="document-context-wrapper highlight-item-wrapper">
+
+  {% if title is defined and title is not empty %}
+    <div class="title">
+      <h3>{{ title|render }}</h3>
+    </div>
+  {% endif %}
+
+  {% if messageContent is defined and messageContent is not empty %}
+    <div class="content">
+      {{ messageContent|render }}
+    </div>
+  {% endif %}
+
+  {% if context is defined and context is not empty %}
+    <div class="context-content">
+      {{ context|render }}
+    </div>
+  {% endif %}
+
+  {% if thread is defined and thread is not empty %}
+    <div class="thread comment-thread-wrapper">
+      {{ thread|render }}
+    </div>
+  {% endif %}
+</div>

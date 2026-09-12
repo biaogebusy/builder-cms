@@ -13,7 +13,7 @@ devel.toolbar.settings_form:
     _title: 'Devel Toolbar Settings'
   requirements:
     _permission: 'administer site configuration'
-    _module_dependencies: 'toolbar'
+    _module_dependencies: 'toolbar, navigation'
 
 devel.reinstall:
   path: '/devel/reinstall'

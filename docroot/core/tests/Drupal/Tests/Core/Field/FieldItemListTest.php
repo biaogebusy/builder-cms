@@ -13,18 +13,21 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Field\FieldItemList
- * @group Field
+ * Tests Drupal\Core\Field\FieldItemList.
  */
+#[CoversClass(FieldItemList::class)]
+#[Group('Field')]
 class FieldItemListTest extends UnitTestCase {
 
   /**
-   * @covers ::equals
-   *
-   * @dataProvider providerTestEquals
+   * Tests equals.
    */
+  #[DataProvider('providerTestEquals')]
   public function testEquals($expected, ?FieldItemInterface $first_field_item = NULL, ?FieldItemInterface $second_field_item = NULL): void {
 
     // Mock the field type manager and place it in the container.
@@ -78,7 +81,7 @@ class FieldItemListTest extends UnitTestCase {
   /**
    * Data provider for testEquals.
    */
-  public static function providerTestEquals() {
+  public static function providerTestEquals(): array {
     // Tests field item lists with no values.
     $datasets[] = [TRUE];
 
@@ -162,11 +165,8 @@ class FieldItemListTest extends UnitTestCase {
 
   /**
    * Tests identical behavior of ::hasAffectingChanges with ::equals.
-   *
-   * @covers ::hasAffectingChanges
-   *
-   * @dataProvider providerTestEquals
    */
+  #[DataProvider('providerTestEquals')]
   public function testHasAffectingChanges($expected, ?FieldItemInterface $first_field_item = NULL, ?FieldItemInterface $second_field_item = NULL): void {
     // Mock the field type manager and place it in the container.
     $field_type_manager = $this->createMock(FieldTypePluginManagerInterface::class);
@@ -226,7 +226,7 @@ class FieldItemListTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::equals
+   * Tests equals empty items.
    */
   public function testEqualsEmptyItems(): void {
     /** @var \Drupal\Core\Field\FieldItemBase  $fv */
@@ -290,7 +290,7 @@ class FieldItemListTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::defaultValuesForm
+   * Tests default values form.
    */
   public function testDefaultValuesForm(): void {
     $field_definition = $this->createMock(FieldDefinitionInterface::class);
@@ -314,7 +314,7 @@ class FieldItemListTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::defaultValuesFormValidate
+   * Tests default values form validate.
    */
   public function testDefaultValuesFormValidate(): void {
     $field_definition = $this->createMock(FieldDefinitionInterface::class);
@@ -335,7 +335,7 @@ class FieldItemListTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::defaultValuesFormSubmit
+   * Tests default values form submit.
    */
   public function testDefaultValuesFormSubmit(): void {
     $field_definition = $this->createMock(FieldDefinitionInterface::class);

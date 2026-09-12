@@ -28,11 +28,6 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
   protected OrderInterface $order;
 
   /**
-   * The log storage.
-   */
-  protected LogStorageInterface $logStorage;
-
-  /**
    * The log view builder.
    */
   protected LogViewBuilder $logViewBuilder;
@@ -60,9 +55,6 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     $this->installEntitySchema('commerce_payment');
     $this->installEntitySchema('commerce_payment_method');
     $this->installConfig('commerce_payment');
-
-    $this->logStorage = $this->container->get('entity_type.manager')
-      ->getStorage('commerce_log');
     $this->logViewBuilder = $this->container->get('entity_type.manager')
       ->getViewBuilder('commerce_log');
 
@@ -149,7 +141,8 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
 
     // Check the payment added log.
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $log_storage = $this->getLogStorage();
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     $log = $logs[1];
     $build = $this->logViewBuilder->view($log);
@@ -162,7 +155,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     // Check the payment become authorized log.
     $payment->setState('authorization');
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(2, count($logs));
     $log = $logs[2];
     $build = $this->logViewBuilder->view($log);
@@ -175,7 +168,8 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     // Check the payment become completed log.
     $payment->setState('completed');
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $log_storage = $this->getLogStorage();
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(3, count($logs));
     $log = $logs[3];
     $build = $this->logViewBuilder->view($log);
@@ -189,7 +183,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     $payment->setRefundedAmount(new Price('10.00', 'USD'));
     $payment->setState('partially_refunded');
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(4, count($logs));
     $log = $logs[4];
     $build = $this->logViewBuilder->view($log);
@@ -201,7 +195,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
 
     // Check the payment deleted log.
     $payment->delete();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(5, count($logs));
     $log = $logs[5];
     $build = $this->logViewBuilder->view($log);
@@ -229,7 +223,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
 
     // Check the payment added log.
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $this->getLogStorage()->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     $log = $logs[1];
     $build = $this->logViewBuilder->view($log);
@@ -257,7 +251,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
 
     // Check the payment added log.
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $this->getLogStorage()->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     $log = $logs[1];
     $build = $this->logViewBuilder->view($log);
@@ -283,7 +277,8 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     ]);
     // Check that log was added on creation.
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $log_storage = $this->getLogStorage();
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     $log = $logs[1];
     $build = $this->logViewBuilder->view($log);
@@ -296,7 +291,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     // Check that log was added on update.
     $payment->setState('completed');
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(2, count($logs));
     $log = $logs[2];
     $build = $this->logViewBuilder->view($log);
@@ -308,7 +303,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
 
     // Check the payment deleted log.
     $payment->delete();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(3, count($logs));
     $log = $logs[3];
     $build = $this->logViewBuilder->view($log);
@@ -340,7 +335,8 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     ]);
     // Check that log was added on creation.
     $payment->save();
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $log_storage = $this->getLogStorage();
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(1, count($logs));
     $log = $logs[1];
     $build = $this->logViewBuilder->view($log);
@@ -354,12 +350,24 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     $payment->setState('completed');
     $payment->save();
 
-    $logs = $this->logStorage->loadMultipleByEntity($this->order);
+    $logs = $log_storage->loadMultipleByEntity($this->order);
     $this->assertEquals(2, count($logs));
     $log = $logs[2];
     $build = $this->logViewBuilder->view($log);
     $this->render($build);
     $this->assertText('Payment received via Manual for $39.99.');
+  }
+
+  /**
+   * Gets the log storage.
+   *
+   * @return \Drupal\commerce_log\LogStorageInterface
+   *   The log storage.
+   */
+  protected function getLogStorage(): LogStorageInterface {
+    $log_storage = $this->entityTypeManager->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    return $log_storage;
   }
 
 }

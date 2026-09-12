@@ -5,6 +5,8 @@
  * Webform scheduled email module drush commands.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_scheduled_email\Hook\WebformScheduledEmailDrushHooks;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform_scheduled_email\Plugin\WebformHandler\ScheduleEmailWebformHandler;
 use Drush\Drush;
@@ -12,28 +14,9 @@ use Drush\Drush;
 /**
  * Implements hook_drush_command().
  */
+#[LegacyHook]
 function webform_scheduled_email_drush_command() {
-  $items = [];
-
-  /* Submissions */
-
-  $items['webform-scheduled-email-cron'] = [
-    'description' => 'Executes cron task for webform scheduled emails.',
-    'core' => ['8+'],
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_SITE,
-    'arguments' => [
-      'webform_id' => '(optional) The webform ID you want the cron task to be executed for',
-      'handler_id' => '(optional) The handler ID you want the cron task to be executed for',
-    ],
-    'options' => [
-      'schedule_limit' => 'The maximum number of emails to be scheduled. If set to 0 no emails will be scheduled. (Default 1000)',
-      'send_limit' => 'The maximum number of emails to be sent. If set to 0 no emails will be sent. (Default 500)',
-    ],
-    'callback' => 'webform_scheduled_email_cron_process',
-    'aliases' => ['wfsec', 'webform:scheduled-email:cron'],
-  ];
-
-  return $items;
+  return \Drupal::service(WebformScheduledEmailDrushHooks::class)->drushCommand();
 }
 
 /**
@@ -68,7 +51,9 @@ function webform_scheduled_email_help($section) {
  * @see \Drupal\webform_scheduled_email\Commands\WebformScheduledEmailCommands::drush_webform_scheduled_email_cron()
  */
 function webform_scheduled_email_cron_process($webform_id = NULL, $handler_id = NULL) {
+  // @phpstan-ignore-next-line
   $schedule_limit = drush_get_option('schedule_limit') ?: 1000;
+  // @phpstan-ignore-next-line
   $send_limit = drush_get_option('send_limit') ?: 500;
 
   // Get and validate optional $webform_id parameter.
@@ -76,6 +61,7 @@ function webform_scheduled_email_cron_process($webform_id = NULL, $handler_id = 
   if ($webform_id) {
     $webform = Webform::load($webform_id);
     if (!$webform) {
+      // @phpstan-ignore-next-line
       return drush_set_error(dt('Webform @id not recognized.', ['@id' => $webform_id]));
     }
   }
@@ -86,9 +72,11 @@ function webform_scheduled_email_cron_process($webform_id = NULL, $handler_id = 
       $handler = $webform->getHandler($handler_id);
     }
     catch (\Exception $exception) {
+      // @phpstan-ignore-next-line
       return drush_set_error(dt('Handler @id not recognized.', ['@id' => $handler_id]));
     }
     if (!($handler instanceof ScheduleEmailWebformHandler)) {
+      // @phpstan-ignore-next-line
       return drush_set_error(dt('Handler @id is not a scheduled email handler.', ['@id' => $handler_id]));
     }
   }

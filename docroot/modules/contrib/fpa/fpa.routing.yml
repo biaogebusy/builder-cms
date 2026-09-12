@@ -1,0 +1,7 @@
+fpa.settings:
+  path: '/admin/config/people/fpa-settings'
+  defaults:
+    _form: '\Drupal\fpa\Form\FpaSettingForm'
+    _title: 'Manage fast permissions administration settings'
+  requirements:
+    _permission: 'manage fast permissions administration settings'

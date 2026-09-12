@@ -1,2 +1,6 @@
 permission_callbacks:
   - \Drupal\commerce_log\LogCommentPermissions::buildPermissions
+
+access log settings:
+  title: 'Access log settings page'
+  restrict access: true

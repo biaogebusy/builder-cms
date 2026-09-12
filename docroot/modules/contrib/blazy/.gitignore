@@ -1,0 +1,4 @@
+# Ignore overrides of phpcs.xml.dist and phpunit.xml.dist.
+# phpcs.xml
+phpunit.xml
+phpstan.local.neon

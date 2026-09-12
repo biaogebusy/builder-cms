@@ -6,16 +6,18 @@ namespace Drupal\Tests\search\Kernel;
 
 use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\Plugin\Search\NodeSearch;
+use Drupal\search_node\Plugin\Search\SearchNode;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that search works with numeric locale settings.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchSetLocaleTest extends KernelTestBase {
 
   use ContentTypeCreationTrait;
@@ -30,6 +32,7 @@ class SearchSetLocaleTest extends KernelTestBase {
     'filter',
     'node',
     'search',
+    'search_node',
     'system',
     'text',
     'user',
@@ -38,7 +41,7 @@ class SearchSetLocaleTest extends KernelTestBase {
   /**
    * A node search plugin instance.
    */
-  protected NodeSearch $nodeSearchPlugin;
+  protected SearchNode $nodeSearchPlugin;
 
   /**
    * {@inheritdoc}

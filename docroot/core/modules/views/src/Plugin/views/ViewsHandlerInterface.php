@@ -66,9 +66,9 @@ interface ViewsHandlerInterface extends ViewsPluginInterface {
   /**
    * Sanitize the value for output.
    *
-   * @param $value
+   * @param mixed $value
    *   The value being rendered.
-   * @param $type
+   * @param string $type
    *   The type of sanitization needed. If not provided,
    *   \Drupal\Component\Utility\Html::escape() is used.
    *
@@ -86,6 +86,7 @@ interface ViewsHandlerInterface extends ViewsPluginInterface {
    *   The table to join to.
    *
    * @return \Drupal\views\Plugin\views\join\JoinPluginBase
+   *   The table join.
    */
   public static function getTableJoin($table, $base_table);
 

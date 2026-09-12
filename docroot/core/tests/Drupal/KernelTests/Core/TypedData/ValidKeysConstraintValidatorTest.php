@@ -7,17 +7,22 @@ namespace Drupal\KernelTests\Core\TypedData;
 use Drupal\block\Entity\Block;
 use Drupal\Core\TypedData\MapDataDefinition;
 use Drupal\Core\TypedData\TraversableTypedDataInterface;
+use Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint;
+use Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraintValidator;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 
 /**
  * Tests the ValidKeys validation constraint.
- *
- * @group Validation
- *
- * @covers \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint
- * @covers \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraintValidator
  */
+#[CoversClass(ValidKeysConstraint::class)]
+#[CoversClass(ValidKeysConstraintValidator::class)]
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class ValidKeysConstraintValidatorTest extends KernelTestBase {
 
   /**
@@ -57,12 +62,7 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
         'use_site_logo' => TRUE,
         'use_site_name' => TRUE,
         'use_site_slogan' => TRUE,
-        'label_display' => FALSE,
-        // TRICKY: these 4 are inherited from `type: block_settings`.
-        'status' => TRUE,
-        'info' => '',
-        'view_mode' => 'full',
-        'context_mapping' => [],
+        'label_display' => '0',
       ],
     ]);
     $block->save();
@@ -84,7 +84,8 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
     $data = $this->config->toArray();
     $data['settings']['foobar'] = TRUE;
     $this->assertValidationErrors('block.block.branding', $data,
-      // Now 1 validation error should be triggered: one for the unsupported key.
+      // Now 1 validation error should be triggered: one for the unsupported
+      // key.
       // @see \Drupal\system\Plugin\Block\SystemBrandingBlock::defaultConfiguration()
       // @see \Drupal\system\Plugin\Block\SystemPoweredByBlock::defaultConfiguration()
       [
@@ -124,11 +125,10 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
   /**
    * Tests detecting missing required keys.
    *
-   * @testWith [true, {"settings": "'label_display' is a required key."}]
-   *           [false, {}]
-   *
    * @see \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint::$missingRequiredKeyMessage
    */
+  #[TestWith([TRUE, ["settings" => "'label_display' is a required key."]])]
+  #[TestWith([FALSE, []])]
   public function testRequiredKeys(bool $block_is_fully_validatable, array $expected_validation_errors): void {
     // Set or unset the `FullyValidatable` constraint on `block.block.*`.
     \Drupal::state()->set('config_schema_test_block_fully_validatable', $block_is_fully_validatable);
@@ -156,11 +156,15 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
   /**
    * Tests detecting missing dynamically required keys.
    *
-   * @testWith [true, {"settings": "'use_site_name' is a required key because plugin is system_branding_block (see config schema type block.settings.system_branding_block)."}]
-   *           [false, {}]
-   *
    * @see \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint::$dynamicMissingRequiredKeyMessage
    */
+  #[TestWith([
+    TRUE,
+    [
+      "settings" => "'use_site_name' is a required key because plugin is system_branding_block (see config schema type block.settings.system_branding_block).",
+    ],
+  ])]
+  #[TestWith([FALSE, []])]
   public function testDynamicallyRequiredKeys(bool $block_is_fully_validatable, array $expected_validation_errors): void {
     // Set or unset the `FullyValidatable` constraint on `block.block.*`.
     \Drupal::state()->set('config_schema_test_block_fully_validatable', $block_is_fully_validatable);
@@ -188,12 +192,17 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
   /**
    * Tests detecting both unknown and required keys.
    *
-   * @testWith [true, ["'primary' is a required key because plugin is local_tasks_block (see config schema type block.settings.local_tasks_block).", "'secondary' is a required key because plugin is local_tasks_block (see config schema type block.settings.local_tasks_block)."]]
-   *           [false, []]
-   *
    * @see \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint::$dynamicInvalidKeyMessage
    * @see \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint::$dynamicMissingRequiredKeyMessage
    */
+  #[TestWith([
+    TRUE,
+    [
+      "'primary' is a required key because plugin is local_tasks_block (see config schema type block.settings.local_tasks_block).",
+      "'secondary' is a required key because plugin is local_tasks_block (see config schema type block.settings.local_tasks_block).",
+    ],
+  ])]
+  #[TestWith([FALSE, []])]
   public function testBothUnknownAndDynamicallyRequiredKeys(bool $block_is_fully_validatable, array $additional_expected_validation_errors): void {
     // Set or unset the `FullyValidatable` constraint on `block.block.*`.
     \Drupal::state()->set('config_schema_test_block_fully_validatable', $block_is_fully_validatable);
@@ -232,7 +241,7 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
   public function testValidation(): void {
     // Create a data definition that specifies certain allowed keys.
     $definition = MapDataDefinition::create('mapping')
-      ->addConstraint('ValidKeys', ['north', 'south', 'west']);
+      ->addConstraint('ValidKeys', ['allowedKeys' => ['north', 'south', 'west']]);
     $definition['mapping'] = [
       'north' => ['type' => 'string', 'requiredKey' => FALSE],
       'east' => ['type' => 'string', 'requiredKey' => FALSE],
@@ -250,8 +259,8 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
 
     // Passing a non-array value should raise an exception.
     try {
-      // TRICKY: we must clone the definition because the instance is modified
-      // when processing.
+      // We must clone the definition because the instance is modified when
+      // processing.
       // @see \Drupal\Core\Config\Schema\Mapping::processRequiredKeyFlags()
       $typed_config->create(clone $definition, 2501)->validate();
       $this->fail('Expected an exception but none was raised.');
@@ -330,7 +339,7 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
     $config = $this->container->get('config.typed')
       ->get('system.site');
     $config->getDataDefinition()
-      ->addConstraint('ValidKeys', '<infer>');
+      ->addConstraint('ValidKeys', ['allowedKeys' => '<infer>'],);
 
     $data = $config->getValue();
     $data['invalid-key'] = "There's a snake in my boots.";
@@ -342,7 +351,7 @@ class ValidKeysConstraintValidatorTest extends KernelTestBase {
     // Ensure that ValidKeys will freak out if the option is not exactly
     // `<infer>`.
     $config->getDataDefinition()
-      ->addConstraint('ValidKeys', 'infer');
+      ->addConstraint('ValidKeys', ['allowedKeys' => 'infer']);
     $this->expectExceptionMessage("'infer' is not a valid set of allowed keys.");
     $config->validate();
   }

@@ -2,13 +2,23 @@
 
 namespace Drupal\Core\Updater;
 
+@trigger_error('The ' . __NAMESPACE__ . '\Updater base class is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+
 use Drupal\Core\FileTransfer\FileTransferException;
 use Drupal\Core\FileTransfer\FileTransfer;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Defines the base class for Updaters used in Drupal.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3512364
  */
 abstract class Updater {
+
+  use StringTranslationTrait;
 
   /**
    * Directory to install from.
@@ -126,7 +136,7 @@ abstract class Updater {
       return FALSE;
     }
     foreach ($info_files as $info_file) {
-      if (mb_substr($info_file->filename, 0, -9) == $file_system->basename($directory)) {
+      if (mb_substr($info_file->filename, 0, -9) == basename($directory)) {
         // Info file Has the same name as the directory, return it.
         return $info_file->uri;
       }
@@ -171,7 +181,7 @@ abstract class Updater {
    *   The name of the project.
    */
   public static function getProjectName($directory) {
-    return \Drupal::service('file_system')->basename($directory);
+    return basename($directory);
   }
 
   /**
@@ -290,6 +300,7 @@ abstract class Updater {
    * @throws \Drupal\Core\Updater\UpdaterFileTransferException
    */
   public function install(&$filetransfer, $overrides = []) {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
     try {
       // Establish arguments with possible overrides.
       $args = $this->getInstallArgs($overrides);
@@ -348,8 +359,12 @@ abstract class Updater {
             $filetransfer->chmod($parent_dir, $old_perms);
           }
           catch (FileTransferException $e) {
-            $message = t($e->getMessage(), $e->arguments);
-            $throw_message = t('Unable to create %directory due to the following: %reason', ['%directory' => $directory, '%reason' => $message]);
+            // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
+            $message = $this->t($e->getMessage(), $e->arguments);
+            $throw_message = $this->t('Unable to create %directory due to the following: %reason', [
+              '%directory' => $directory,
+              '%reason' => $message,
+            ]);
             throw new UpdaterException($throw_message);
           }
         }
@@ -400,15 +415,10 @@ abstract class Updater {
   }
 
   /**
-   * Performs actions after new code is updated.
-   */
-  public function postUpdate() {
-  }
-
-  /**
    * Performs actions after installation.
    */
   public function postInstall() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
   }
 
   /**
@@ -418,7 +428,14 @@ abstract class Updater {
    *   Links which provide actions to take after the install is finished.
    */
   public function postInstallTasks() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
     return [];
+  }
+
+  /**
+   * Performs actions after new code is updated.
+   */
+  public function postUpdate() {
   }
 
   /**

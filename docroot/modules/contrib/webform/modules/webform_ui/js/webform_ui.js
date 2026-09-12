@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, drupalSettings, once) {
-
-  'use strict';
-
   /**
    * Move toggle weight element to the first child of the edit form.
    *
@@ -126,7 +123,7 @@
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformUiElementKey = {
-    attach: function (context) {
+    attach(context) {
       if (!drupalSettings.webform_ui ||
         !drupalSettings.webform_ui.reserved_keys ||
         !$(context).find(':input[name="key"]').length) {

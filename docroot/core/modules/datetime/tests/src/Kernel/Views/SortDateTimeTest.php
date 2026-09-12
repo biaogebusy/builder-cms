@@ -6,12 +6,14 @@ namespace Drupal\Tests\datetime\Kernel\Views;
 
 use Drupal\node\Entity\Node;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for core Drupal\datetime\Plugin\views\sort\Date handler.
- *
- * @group datetime
  */
+#[Group('datetime')]
+#[RunTestsInSeparateProcesses]
 class SortDateTimeTest extends DateTimeHandlerTestBase {
 
   /**

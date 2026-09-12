@@ -54,13 +54,13 @@ class AggregatedFields extends ProcessorPluginBase {
     $aggregated_fields = $this->getFieldsHelper()
       ->filterForPropertyPath($fields, NULL, 'aggregated_field');
     $required_properties_by_datasource = [
-      NULL => [],
+      '' => [],
       $item->getDatasourceId() => [],
     ];
     foreach ($aggregated_fields as $field) {
       foreach ($field->getConfiguration()['fields'] as $combined_id) {
         [$datasource_id, $property_path] = Utility::splitCombinedId($combined_id);
-        $required_properties_by_datasource[$datasource_id][$property_path] = $combined_id;
+        $required_properties_by_datasource["$datasource_id"][$property_path] = $combined_id;
       }
     }
 

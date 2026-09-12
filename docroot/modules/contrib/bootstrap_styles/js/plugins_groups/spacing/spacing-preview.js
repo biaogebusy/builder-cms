@@ -5,7 +5,7 @@
 
 (function ($, Drupal, once) {
   "use strict";
-  
+
   // Spacing preview box.
   Drupal.behaviors.spacingPreview = {
     attach: function (context,settings) {
@@ -24,29 +24,32 @@
         var padding_right_val = $('input.bs-field-padding-right').val();
         var padding_bottom_val = $('input.bs-field-padding-bottom').val();
         var padding_classes = '';
-        var padding_class = spacing.padding_classes_options.padding[padding_val];
-        if (padding_class != '_none') {
-          padding_classes += padding_class + ' ';
-        }
-        var padding_left_class = spacing.padding_classes_options.padding_left[padding_left_val];
-        if (padding_left_class != '_none') {
-          padding_classes += padding_left_class + ' ';
-        }
-        var padding_top_class = spacing.padding_classes_options.padding_top[padding_top_val];
-        if (padding_top_class != '_none') {
-          padding_classes += padding_top_class + ' ';
-        }
-        var padding_right_class = spacing.padding_classes_options.padding_right[padding_right_val];
-        if (padding_right_class != '_none') {
-          padding_classes += padding_right_class + ' ';
-        }
-        var padding_bottom_class = spacing.padding_classes_options.padding_bottom[padding_bottom_val];
-        if (padding_bottom_class != '_none') {
-          padding_classes += padding_bottom_class + ' ';
-        }
 
-        // Responsive.
-        padding_classes += getActiveBreakpointPaddingClasses();
+        if (typeof spacing.padding_classes_options !== 'undefined') {
+          var padding_class = spacing.padding_classes_options.padding[padding_val];
+          if (padding_class != '_none') {
+            padding_classes += padding_class + ' ';
+          }
+          var padding_left_class = spacing.padding_classes_options.padding_left[padding_left_val];
+          if (padding_left_class != '_none') {
+            padding_classes += padding_left_class + ' ';
+          }
+          var padding_top_class = spacing.padding_classes_options.padding_top[padding_top_val];
+          if (padding_top_class != '_none') {
+            padding_classes += padding_top_class + ' ';
+          }
+          var padding_right_class = spacing.padding_classes_options.padding_right[padding_right_val];
+          if (padding_right_class != '_none') {
+            padding_classes += padding_right_class + ' ';
+          }
+          var padding_bottom_class = spacing.padding_classes_options.padding_bottom[padding_bottom_val];
+          if (padding_bottom_class != '_none') {
+            padding_classes += padding_bottom_class + ' ';
+          }
+
+          // Responsive.
+          padding_classes += getActiveBreakpointPaddingClasses();
+        }
 
         // Remove all classes.
         $('#bs_spacing_preview_calc').removeClass();
@@ -110,25 +113,27 @@
         var margin_bottom_val = $('input.bs-field-margin-bottom').val();
 
         var margin_classes = '';
-        var margin_class = spacing.margin_classes_options.margin[margin_val];
-        if (margin_class != '_none') {
-          margin_classes += margin_class + ' ';
-        }
-        var margin_left_class = spacing.margin_classes_options.margin_left[margin_left_val];
-        if (margin_left_class != '_none') {
-          margin_classes += margin_left_class + ' ';
-        }
-        var margin_top_class = spacing.margin_classes_options.margin_top[margin_top_val];
-        if (margin_top_class != '_none') {
-          margin_classes += margin_top_class + ' ';
-        }
-        var margin_right_class = spacing.margin_classes_options.margin_right[margin_right_val];
-        if (margin_right_class != '_none') {
-          margin_classes += margin_right_class + ' ';
-        }
-        var margin_bottom_class = spacing.margin_classes_options.margin_bottom[margin_bottom_val];
-        if (margin_bottom_class != '_none') {
-          margin_classes += margin_bottom_class + ' ';
+        if (typeof spacing.margin_classes_options !== 'undefined') {
+          var margin_class = spacing.margin_classes_options.margin[margin_val];
+          if (margin_class != '_none') {
+            margin_classes += margin_class + ' ';
+          }
+          var margin_left_class = spacing.margin_classes_options.margin_left[margin_left_val];
+          if (margin_left_class != '_none') {
+            margin_classes += margin_left_class + ' ';
+          }
+          var margin_top_class = spacing.margin_classes_options.margin_top[margin_top_val];
+          if (margin_top_class != '_none') {
+            margin_classes += margin_top_class + ' ';
+          }
+          var margin_right_class = spacing.margin_classes_options.margin_right[margin_right_val];
+          if (margin_right_class != '_none') {
+            margin_classes += margin_right_class + ' ';
+          }
+          var margin_bottom_class = spacing.margin_classes_options.margin_bottom[margin_bottom_val];
+          if (margin_bottom_class != '_none') {
+            margin_classes += margin_bottom_class + ' ';
+          }
         }
 
         // Remove all classes.

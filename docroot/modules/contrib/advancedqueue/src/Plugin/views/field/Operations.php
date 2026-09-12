@@ -5,6 +5,7 @@ namespace Drupal\advancedqueue\Plugin\views\field;
 use Drupal\advancedqueue\Job;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
@@ -17,6 +18,7 @@ use Drupal\views\ViewExecutable;
  *
  * @ViewsField("advancedqueue_job_operations")
  */
+#[ViewsField("advancedqueue_job_operations")]
 class Operations extends FieldPluginBase {
 
   /**

@@ -7,8 +7,6 @@ use Drupal\Core\Entity\BundleEntityFormBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce\EntityHelper;
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_product\ProductAttributeFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ProductAttributeForm extends BundleEntityFormBase {
@@ -28,26 +26,32 @@ class ProductAttributeForm extends BundleEntityFormBase {
   protected $inlineFormManager;
 
   /**
-   * Constructs a new ProductAttributeForm object.
+   * The content translation manager.
    *
-   * @param \Drupal\commerce_product\ProductAttributeFieldManagerInterface $attribute_field_manager
-   *   The attribute field manager.
-   * @param \Drupal\commerce\InlineFormManager $inline_form_manager
-   *   The inline form manager.
+   * @var \Drupal\content_translation\ContentTranslationManagerInterface|null
    */
-  public function __construct(ProductAttributeFieldManagerInterface $attribute_field_manager, InlineFormManager $inline_form_manager) {
-    $this->attributeFieldManager = $attribute_field_manager;
-    $this->inlineFormManager = $inline_form_manager;
-  }
+  protected $contentTranslationManager;
+
+  /**
+   * The router builder.
+   *
+   * @var \Drupal\Core\Routing\RouteBuilderInterface
+   */
+  protected $routerBuilder;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('commerce_product.attribute_field_manager'),
-      $container->get('plugin.manager.commerce_inline_form')
-    );
+    $instance = parent::create($container);
+    $instance->attributeFieldManager = $container->get('commerce_product.attribute_field_manager');
+    $instance->inlineFormManager = $container->get('plugin.manager.commerce_inline_form');
+    if ($container->has('content_translation.manager')) {
+      $instance->contentTranslationManager = $container->get('content_translation.manager');
+    }
+    $instance->routerBuilder = $container->get('router.builder');
+
+    return $instance;
   }
 
   /**
@@ -126,8 +130,7 @@ class ProductAttributeForm extends BundleEntityFormBase {
     if ($this->moduleHandler->moduleExists('content_translation')) {
       $enabled = TRUE;
       if (!$attribute->isNew()) {
-        $translation_manager = \Drupal::service('content_translation.manager');
-        $enabled = $translation_manager->isEnabled('commerce_product_attribute_value', $attribute->id());
+        $enabled = $this->contentTranslationManager->isEnabled('commerce_product_attribute_value', $attribute->id());
       }
       $form['enable_value_translation'] = [
         '#type' => 'checkbox',
@@ -412,13 +415,12 @@ class ProductAttributeForm extends BundleEntityFormBase {
     }
 
     if ($this->moduleHandler->moduleExists('content_translation')) {
-      $translation_manager = \Drupal::service('content_translation.manager');
       // Logic from content_translation_language_configuration_element_submit().
       $enabled = $form_state->getValue('enable_value_translation');
-      if ($translation_manager->isEnabled('commerce_product_attribute_value', $this->entity->id()) != $enabled) {
-        $translation_manager->setEnabled('commerce_product_attribute_value', $this->entity->id(), $enabled);
+      if ($this->contentTranslationManager->isEnabled('commerce_product_attribute_value', $this->entity->id()) != $enabled) {
+        $this->contentTranslationManager->setEnabled('commerce_product_attribute_value', $this->entity->id(), $enabled);
         $this->entityTypeManager->clearCachedDefinitions();
-        \Drupal::service('router.builder')->setRebuildNeeded();
+        $this->routerBuilder->setRebuildNeeded();
       }
     }
 

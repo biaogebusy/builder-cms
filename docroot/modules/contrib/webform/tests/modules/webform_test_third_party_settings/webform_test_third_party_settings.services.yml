@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_test_third_party_settings\Hook\WebformTestThirdPartySettingsWebformHooks:
+    class: Drupal\webform_test_third_party_settings\Hook\WebformTestThirdPartySettingsWebformHooks
+    autowire: true

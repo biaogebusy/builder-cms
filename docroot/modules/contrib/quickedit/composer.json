@@ -1,0 +1,14 @@
+{
+    "name": "drupal/quickedit",
+    "description": "In-place content editing (contrib).",
+    "type": "drupal-module",
+    "homepage": "https://drupal.org/project/quickedit",
+    "support": {
+        "issues": "https://drupal.org/project/issues/quickedit",
+        "source": "https://git.drupalcode.org/project/quickedit"
+    },
+    "keywords": ["Drupal"],
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev",
+    "require": {}
+}

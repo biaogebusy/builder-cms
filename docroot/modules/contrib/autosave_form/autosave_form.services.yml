@@ -16,7 +16,7 @@ services:
     # will not call further decorators, but directly override the core form
     # builder by extending from it and just calling the parent methods.
     decoration_priority: 10000
-    arguments: ['@form_builder.autosave_form.inner', '@form_validator', '@form_submitter', '@form_cache', '@module_handler', '@event_dispatcher', '@request_stack', '@class_resolver', '@element_info', '@theme.manager', '@autosave_form.entity_form_storage', '@?csrf_token']
+    arguments: ['@form_builder.autosave_form.inner', '@form_validator', '@form_submitter', '@form_cache', '@module_handler', '@event_dispatcher', '@request_stack', '@class_resolver', '@element_info', '@theme.manager', '@autosave_form.entity_form_storage', '@csrf_token', '@callable_resolver']
   form_error_handler.autosave_form:
     public:    false
     class: Drupal\autosave_form\Form\AutosaveFormErrorHandler

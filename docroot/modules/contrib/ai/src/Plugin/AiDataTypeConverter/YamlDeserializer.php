@@ -2,13 +2,13 @@
 
 namespace Drupal\ai\Plugin\AiDataTypeConverter;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ai\Attribute\AiDataTypeConverter;
 use Drupal\ai\Base\AiDataTypeConverterPluginBase;
 use Drupal\ai\DataTypeConverter\AppliesResult;
 use Drupal\ai\DataTypeConverter\AppliesResultInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * Plugin implementation of the ai_data_type_converter for YAML.
@@ -39,7 +39,7 @@ class YamlDeserializer extends AiDataTypeConverterPluginBase {
       return AppliesResult::notApplicable('The value is not a valid YAML string.');
     }
     try {
-      Yaml::parse($value);
+      Yaml::decode($value);
       return AppliesResult::applicable();
     }
     catch (ParseException $e) {
@@ -51,7 +51,7 @@ class YamlDeserializer extends AiDataTypeConverterPluginBase {
    * {@inheritdoc}
    */
   public function convert(string $data_type, mixed $value): mixed {
-    return Yaml::parse($value);
+    return Yaml::decode($value);
   }
 
 }

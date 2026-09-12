@@ -1,20 +1,20 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_user\Form;
 
-use Drupal\Core\Messenger\MessengerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 use Drupal\sms\Provider\PhoneNumberVerificationInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a general settings form for SMS User.
@@ -108,7 +108,7 @@ class AdminSettingsForm extends ConfigFormBase {
     foreach ($config->get('active_hours.ranges') as $range) {
       $start = new DrupalDateTime($range['start']);
       $end = new DrupalDateTime($range['end']);
-      $start_day = strtolower($start->format('l'));
+      $start_day = \strtolower($start->format('l'));
 
       $day_defaults[$start_day]['start'] = $start->format('G');
 
@@ -134,7 +134,7 @@ class AdminSettingsForm extends ConfigFormBase {
     for ($i = 0; $i < 7; $i++) {
       $row = ['#tree' => TRUE];
       $day = $date->format('l');
-      $day_lower = strtolower($day);
+      $day_lower = \strtolower($day);
 
       $row['day']['#plain_text'] = $day;
 
@@ -388,8 +388,8 @@ class AdminSettingsForm extends ConfigFormBase {
       $form_state->setError($form['account_registration']['behaviour']['incoming_pattern_options']['incoming_message'], $this->t('Incoming message must be filled if using pre-incoming_pattern option.'));
     }
     elseif (!empty($incoming_message)) {
-      $contains_email = strpos($incoming_message, '[email]') !== FALSE;
-      $contains_password = strpos($incoming_message, '[password]') !== FALSE;
+      $contains_email = \strpos($incoming_message, '[email]') !== FALSE;
+      $contains_password = \strpos($incoming_message, '[password]') !== FALSE;
       $activation_email = $account_registration['incoming_pattern_options']['send_activation_email'];
       if ($activation_email && !$contains_email) {
         // Email placeholder must be present if activation email is on.
@@ -405,16 +405,16 @@ class AdminSettingsForm extends ConfigFormBase {
       $placeholders = ['[username]', '[email]', '[password]'];
       $regex_placeholder = [];
       foreach ($placeholders as $placeholder) {
-        $regex_placeholder[] = preg_quote($placeholder);
+        $regex_placeholder[] = \preg_quote($placeholder);
       }
 
-      $regex = '/(' . implode('|', $regex_placeholder) . '+)/';
+      $regex = '/(' . \implode('|', $regex_placeholder) . '+)/';
       $last_word_is_placeholder = FALSE;
-      foreach (preg_split($regex, $incoming_message, -1, PREG_SPLIT_DELIM_CAPTURE) as $word) {
+      foreach (\preg_split($regex, $incoming_message, -1, PREG_SPLIT_DELIM_CAPTURE) as $word) {
         if ($word === '') {
           continue;
         }
-        $this_word_is_placeholder = in_array($word, $placeholders);
+        $this_word_is_placeholder = \in_array($word, $placeholders);
         if ($last_word_is_placeholder && $this_word_is_placeholder) {
           $form_state->setError($form['account_registration']['behaviour']['incoming_pattern_options']['incoming_message'], $this->t('There must be a separator between placeholders.'));
         }
@@ -457,7 +457,7 @@ class AdminSettingsForm extends ConfigFormBase {
       ->set('active_hours.status', (boolean) $form_state->getValue(['active_hours', 'status']))
       // Days make sense for this form, however storage uses generic 'range'
       // term. Remove keys so it is a raw sequence.
-      ->set('active_hours.ranges', array_values($form_state->getValue(['active_hours', 'days'])))
+      ->set('active_hours.ranges', \array_values($form_state->getValue(['active_hours', 'days'])))
       ->save();
 
     parent::submitForm($form, $form_state);
@@ -492,7 +492,7 @@ class AdminSettingsForm extends ConfigFormBase {
         $token = "[$token:*]";
       }
       return [
-        '#markup' => $this->t('Available tokens include: @token_types', ['@token_types' => implode(' ', $tokens)]),
+        '#markup' => $this->t('Available tokens include: @token_types', ['@token_types' => \implode(' ', $tokens)]),
       ];
     }
   }

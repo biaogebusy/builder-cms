@@ -1,0 +1,14 @@
+name: CKEditor 5 Premium Features Real-time Collaboration
+type: module
+description: "Provides Real-time collaborative editing along with Track Changes, Comments and Revision History features. WARNING: Do not enable it together with CKEditor 5 Non-realtime Collaboration."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^10.3 || ^11
+configure: ckeditor5_premium_features_realtime_collaboration.form.settings
+dependencies:
+  - ckeditor5_premium_features:ckeditor5_premium_features
+  - ckeditor5_premium_features:ckeditor5_premium_features_cloud_services
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

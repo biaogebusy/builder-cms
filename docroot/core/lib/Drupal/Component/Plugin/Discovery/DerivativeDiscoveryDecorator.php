@@ -127,17 +127,17 @@ class DerivativeDiscoveryDecorator implements CachedDiscoveryInterface {
    *
    * @return array
    *   An array with the base plugin id as the first index and the derivative id
-   *   as the second. If there is no derivative id it will be null.
+   *   as the second. If there is no derivative id it will be an empty string.
    */
   protected function decodePluginId($plugin_id) {
     // Try and split the passed plugin definition into a plugin and a
     // derivative id. We don't need to check for !== FALSE because a leading
-    // colon would break the derivative system and doesn't makes sense.
+    // colon would break the derivative system and doesn't make sense.
     if (strpos($plugin_id, ':')) {
       return explode(':', $plugin_id, 2);
     }
 
-    return [$plugin_id, NULL];
+    return [$plugin_id, ''];
   }
 
   /**

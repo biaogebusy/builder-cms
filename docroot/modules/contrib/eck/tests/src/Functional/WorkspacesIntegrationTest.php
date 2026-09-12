@@ -5,13 +5,15 @@ namespace Drupal\Tests\eck\Functional;
 use Drupal\eck\Entity\EckEntityType;
 
 /**
- * Class WorkspacesIntegrationTest.
+ * Defines functional tests for Workspaces integration.
  *
  * @group eck
  */
 class WorkspacesIntegrationTest extends FunctionalTestBase {
 
   /**
+   * Tests that workspaces can be enabled when no entity types are defined.
+   *
    * @test
    */
   public function workspacesCanBeEnabledWhenNoEntityTypesAreDefined() {
@@ -19,6 +21,8 @@ class WorkspacesIntegrationTest extends FunctionalTestBase {
   }
 
   /**
+   * Tests that workspaces can be enabled when an entity type is defined.
+   *
    * @test
    */
   public function workspacesCanBeEnabledWhenEntityTypeIsDefined() {
@@ -32,6 +36,8 @@ class WorkspacesIntegrationTest extends FunctionalTestBase {
   }
 
   /**
+   * Tests that cache can be cleared when Workbench is enabled.
+   *
    * @test
    */
   public function cacheCanBeClearedWhenWorkbenchIsEnabled() {
@@ -47,6 +53,8 @@ class WorkspacesIntegrationTest extends FunctionalTestBase {
   }
 
   /**
+   * Tests that new entity types can be created when Workbench is enabled.
+   *
    * @test
    */
   public function newEntityTypesCanBeCreatedWhenWorkbenchIsEnabled() {

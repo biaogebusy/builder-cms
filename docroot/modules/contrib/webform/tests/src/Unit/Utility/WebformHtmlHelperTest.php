@@ -27,7 +27,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @dataProvider providerToPlainText
    */
-  public function testToPlainText($text, $expected) {
+  public function testToPlainText($text, $expected): void {
     $config_factory = $this->getConfigFactoryStub([
       'webform.settings' => ['element' => ['allowed_tags' => 'b']],
     ]);
@@ -46,7 +46,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @see testToPlainText()
    */
-  public function providerToPlainText() {
+  public static function providerToPlainText() {
     $tests = [];
     $tests[] = ['some text', 'some text'];
     $tests[] = ['some &amp; text', 'some & text'];
@@ -67,7 +67,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @dataProvider providerToHtmlMarkup
    */
-  public function testToHtmlMarkup($text, $expected) {
+  public function testToHtmlMarkup($text, $expected): void {
     $config_factory = $this->getConfigFactoryStub([
       'webform.settings' => ['element' => ['allowed_tags' => 'b']],
     ]);
@@ -86,7 +86,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @see testToHtmlMarkup()
    */
-  public function providerToHtmlMarkup() {
+  public static function providerToHtmlMarkup() {
     $tests = [];
     $tests[] = ['some text', 'some text'];
     $tests[] = ['some & text', 'some & text'];
@@ -107,7 +107,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @dataProvider providerContainsHtml
    */
-  public function testContainsHtml($text, $expected) {
+  public function testContainsHtml($text, $expected): void {
     $result = WebformHtmlHelper::containsHtml($text);
     $this->assertEquals($expected, $result, $text);
   }
@@ -117,7 +117,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @see testContainsHtml()
    */
-  public function providerContainsHtml() {
+  public static function providerContainsHtml() {
     $tests = [];
     $tests[] = ['some text', FALSE];
     $tests[] = ['<b>some text</b>', TRUE];
@@ -136,7 +136,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @dataProvider providerHasBlockTags
    */
-  public function testHasBlockTags($text, $expected) {
+  public function testHasBlockTags($text, $expected): void {
     $result = WebformHtmlHelper::hasBlockTags($text);
     $this->assertEquals($expected, $result, $text);
   }
@@ -146,7 +146,7 @@ class WebformHtmlHelperTest extends UnitTestCase {
    *
    * @see testHasBlockTags()
    */
-  public function providerHasBlockTags() {
+  public static function providerHasBlockTags() {
     $tests = [];
     $tests[] = ['some text', FALSE];
     $tests[] = ['<b>some text</b>', FALSE];

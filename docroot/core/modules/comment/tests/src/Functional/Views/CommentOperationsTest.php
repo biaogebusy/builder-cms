@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\comment\Functional\Views;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests comment operations.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentOperationsTest extends CommentTestBase {
 
   /**

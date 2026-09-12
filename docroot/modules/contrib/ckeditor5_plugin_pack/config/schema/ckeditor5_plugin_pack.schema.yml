@@ -1,0 +1,10 @@
+ckeditor5_plugin_pack.settings:
+  type: config_object
+  label: 'CKEditor 5 Plugin Pack settings'
+  mapping:
+    dll_location:
+      type: string
+      label: 'Dll location'
+    block_cdn:
+      type: boolean
+      label: 'Block CDN'

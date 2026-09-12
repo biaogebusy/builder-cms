@@ -2,18 +2,18 @@
 
 namespace Drupal\chosen\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 
 /**
  * Changes widget type based on source field's widget type.
- *
- * @MigrateProcessPlugin(
- *   id = "chosen",
- *   handle_multiples = TRUE
- * )
  */
+#[MigrateProcess(
+  id: 'chosen',
+  handle_multiples: TRUE,
+)]
 class Chosen extends ProcessPluginBase {
 
   /**

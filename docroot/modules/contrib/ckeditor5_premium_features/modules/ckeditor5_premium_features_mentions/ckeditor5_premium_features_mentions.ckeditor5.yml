@@ -1,0 +1,13 @@
+
+ckeditor5_premium_features_mentions__mention_integration:
+  ckeditor5:
+    plugins:
+      - mention.Mention
+      - mentionsIntegration.MentionsIntegration
+  drupal:
+    label: Initialisation of the mentions tool.
+    library: ckeditor5_premium_features_mentions/mention-integration
+    elements:
+      - <span>
+      - <span data-mention class="mention">
+    conditions: [ ]

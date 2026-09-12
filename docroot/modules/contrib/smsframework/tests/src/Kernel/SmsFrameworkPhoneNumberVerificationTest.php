@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\sms\Entity\PhoneNumberSettings;
 use Drupal\sms\Entity\PhoneNumberSettingsInterface;
@@ -24,9 +24,6 @@ use Drupal\sms\Provider\PhoneNumberVerificationInterface as PhoneNumberVerificat
  */
 final class SmsFrameworkPhoneNumberVerificationTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'entity_test', 'user', 'field', 'telephone',
     'dynamic_entity_reference', 'sms_test_gateway',
@@ -67,9 +64,6 @@ final class SmsFrameworkPhoneNumberVerificationTest extends SmsFrameworkKernelBa
    */
   private SmsGatewayInterface $gateway;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('entity_test');
@@ -82,7 +76,7 @@ final class SmsFrameworkPhoneNumberVerificationTest extends SmsFrameworkKernelBa
 
     $this->phoneField = FieldStorageConfig::create([
       'entity_type' => 'entity_test',
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => \mb_strtolower($this->randomMachineName()),
       'type' => 'telephone',
     ]);
     $this->phoneField->save();
@@ -265,7 +259,7 @@ final class SmsFrameworkPhoneNumberVerificationTest extends SmsFrameworkKernelBa
     $sent_messages = $this->getTestMessages($this->gateway);
     static::assertCount(1, $sent_messages);
 
-    $verification_message = reset($sent_messages);
+    $verification_message = \reset($sent_messages);
     static::assertTrue($verification_message->getOption('_is_verification_message'));
 
     $verification = $this->getLastVerification();

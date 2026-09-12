@@ -14,5 +14,30 @@ parameters:
     - .
 
   ignoreErrors:
-    # new static() is a best practice in Drupal, so we cannot fix that.
-    - "#^Unsafe usage of new static#"
+    # Drupal\views\ContextualLinksHelper only exists in Drupal core 11.4+;
+    # this module also supports older core versions, where the class is
+    # absent. Its use is guarded at runtime via $container->has() and
+    # \Drupal::hasService(), so PHPStan's "class not found" style errors
+    # here are expected rather than real bugs. reportUnmatched is disabled
+    # because the class exists (and this pattern never matches) when
+    # analysis runs against core 11.4+.
+    - message: '#Drupal\\views\\ContextualLinksHelper#'
+      reportUnmatched: false
+
+    # Drupal\filter\FilterFormatRepositoryInterface only exists in Drupal
+    # core 11.4+; this module also supports older core versions, where the
+    # class is absent and filter_default_format() is used instead.
+    # @todo Remove this and the version check in ViewsReferenceSettingsTest
+    #   once Drupal 10 (and any core < 11.4) is no longer supported.
+    - message: '#Drupal\\filter\\FilterFormatRepositoryInterface#'
+      reportUnmatched: false
+
+    # PHPUnit\Framework\Attributes\* were introduced in PHPUnit 10, but
+    # Drupal 10 pins PHPUnit ^9, so these classes do not exist there. Test
+    # classes using them are dual-annotated with the equivalent legacy
+    # docblock annotations (@group, @dataProvider, etc.) so they still run
+    # correctly under PHPUnit 9.
+    # @todo Remove this once Drupal 10 is no longer supported and the
+    #   docblock annotations can be dropped in favor of only the attributes.
+    - message: '#Attribute class PHPUnit\\Framework\\Attributes\\\w+ does not exist#'
+      reportUnmatched: false

@@ -32,7 +32,7 @@ class WebformSubmissionLogNodeTest extends WebformNodeBrowserTestBase {
   /**
    * Tests webform submission log.
    */
-  public function testSubmissionLog() {
+  public function testSubmissionLog(): void {
     global $base_path;
 
     $assert_session = $this->assertSession();

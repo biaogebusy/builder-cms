@@ -43,6 +43,10 @@
   --icon: #{icon('create')};
 }
 
+.toolbar-button--icon--thin-pencil::before {
+  --icon: #{icon('edit')};
+}
+
 .toolbar-icon-system-modules-list::before,
 .toolbar-link--system-modules-list::before,
 .toolbar-button--icon--system-modules-list::before {
@@ -108,7 +112,8 @@
 
 .toolbar-icon-user::before,
 .toolbar-link--user::before,
-.toolbar-button--icon--user::before {
+.toolbar-button--icon--user::before,
+.toolbar-button--icon--navigation-user-links-user-wrapper::before {
   --icon: #{icon('user')};
 }
 

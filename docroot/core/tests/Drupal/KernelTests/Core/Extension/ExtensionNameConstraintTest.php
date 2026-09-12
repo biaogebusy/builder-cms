@@ -4,22 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Extension;
 
+use Drupal\Core\Extension\Plugin\Validation\Constraint\ExtensionNameConstraint;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ExtensionName constraint.
- *
- * @group Validation
- *
- * @covers \Drupal\Core\Extension\Plugin\Validation\Constraint\ExtensionNameConstraint
  */
+#[Group('Validation')]
+#[CoversClass(ExtensionNameConstraint::class)]
+#[RunTestsInSeparateProcesses]
 class ExtensionNameConstraintTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * Tests the ExtensionName constraint.
@@ -39,7 +37,7 @@ class ExtensionNameConstraintTest extends KernelTestBase {
     $data->setValue('invalid-name');
     $violations = $data->validate();
     $this->assertCount(1, $violations);
-    $this->assertSame('This value is not valid.', (string) $violations->get(0)->getMessage());
+    $this->assertSame('This value is not a valid extension name.', (string) $violations->get(0)->getMessage());
   }
 
 }

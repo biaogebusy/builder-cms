@@ -7,12 +7,16 @@ use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+
+include_once __DIR__ . '/../gin.theme';
+_gin_include_theme_includes();
 
 /**
  * Service to handle content form overrides.
@@ -159,7 +163,7 @@ class GinContentFormHelper implements ContainerInjectionInterface {
       // Attach library.
       $form['#attached']['library'][] = 'gin/more_actions';
 
-      $form['#after_build'][] = 'gin_form_after_build';
+      $form['#after_build'][] = [self::class, 'formAfterBuild'];
     }
 
     // Remaining changes only apply to content forms.
@@ -248,6 +252,73 @@ class GinContentFormHelper implements ContainerInjectionInterface {
   }
 
   /**
+   * Helper function to remember the form actions after form has been built.
+   */
+  public static function formAfterBuild(array $form, FormStateInterface $form_state): array {
+    // In some cases the form might be cached, including the `after_build`
+    // callback, but maybe Gin is not the active theme anymore.
+    // In that case `gin.theme` and the included files there won't be loaded, so
+    // we better do an early return.
+    if (!_gin_is_active()) {
+      return $form;
+    }
+
+    // Allowlist for visible actions.
+    $includes = ['save', 'submit', 'preview'];
+
+    // Secondary action container options.
+    $form['gin_sticky_actions']['more_actions']['more_actions_items']['#weight'] = 2;
+    $form['gin_sticky_actions']['more_actions']['more_actions_items']['#attributes']['class'] = ['gin-more-actions__menu'];
+
+    // Build actions.
+    foreach (Element::children($form['actions']) as $key) {
+      $button = ($form['actions'][$key]) ?? [];
+
+      if (!($button['#access'] ?? TRUE)) {
+        continue;
+      }
+
+      if (_gin_module_is_active('navigation')) {
+        $form['gin_sticky_actions']['actions'][$key] = $button;
+      }
+
+      // The media_type_add_form form is a special case.
+      // @see https://www.drupal.org/project/gin/issues/3534385
+      // @see \Drupal\media\MediaTypeForm::actions
+      if ($button['#type'] ?? '' === 'submit' || $form['#form_id'] === 'media_type_add_form') {
+        // Update button.
+        $button['#attributes']['id'] = 'gin-sticky-' . $button['#id'];
+        $button['#attributes']['form'] = $form['#id'];
+        $button['#attributes']['data-drupal-selector'] = 'gin-sticky-' . $button['#attributes']['data-drupal-selector'];
+        $button['#attributes']['data-gin-sticky-form-selector'] = $button['#attributes']['data-drupal-selector'];
+
+        // Add the button to the form actions array.
+        if (_gin_module_is_active('navigation') || in_array($key, $includes, TRUE) || !empty($button['#gin_action_item'])) {
+          $form['gin_sticky_actions']['actions'][$key] = $button;
+        }
+        // Add to more menu.
+        else {
+          $form['gin_sticky_actions']['more_actions']['more_actions_items'][$key] = $button;
+        }
+      }
+      // Else add button to more menu.
+      elseif (!in_array($key, $includes, TRUE)) {
+        $form['gin_sticky_actions']['more_actions']['more_actions_items'][$key] = $button;
+        $form['gin_sticky_actions']['more_actions']['more_actions_items'][$key]['#attributes']['form'] = $button['#id'];
+      }
+    }
+
+    if (_gin_module_is_active('navigation')) {
+      unset($form['gin_sticky_actions']['more_actions']);
+    }
+
+    _gin_form_actions($form['gin_sticky_actions'] ?? NULL);
+    unset($form['gin_sticky_actions']);
+
+    return $form;
+  }
+
+  /**
    * Sticky action buttons.
    *
    * @param array $form
@@ -266,6 +337,11 @@ class GinContentFormHelper implements ContainerInjectionInterface {
 
     // Sets default to TRUE if setting is enabled.
     $sticky_action_buttons = $settings->get('sticky_action_buttons') ? TRUE : FALSE;
+
+    // Always enable if navigation is active.
+    if (_gin_module_is_active('navigation')) {
+      $sticky_action_buttons = TRUE;
+    }
 
     // API check.
     $form_ids = $this->moduleHandler->invokeAll('gin_ignore_sticky_form_actions');

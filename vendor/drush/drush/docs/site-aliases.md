@@ -30,7 +30,7 @@ used to identify the different environments available for this site. These
 may be used on the command line to select a different target environment
 to operate on by prepending an `@` character, e.g. `@live` or `@stage`.
 
-Following these steps, a cache:rebuild on the live environment would be:
+Following these steps, a [cache:rebuild](commands/cache_rebuild.md) on the live environment would be:
 ```bash
   $ drush @live cache:rebuild
 ```
@@ -278,6 +278,7 @@ Drush provides transport for running drush commands on your Kubernetes cluster v
  ```yml
  prod: 
    kubectl:
+     context: "gke_production_cluster"
      namespace: 'my-drupal-namespace'
      resource: 'pods/my-drupal-pod' 
      container: 'drupal'
@@ -285,6 +286,7 @@ Drush provides transport for running drush commands on your Kubernetes cluster v
 
 #### Key options
 
+  * **context:** The context name defined in the `kubeconfig`.
   * **namespace:** The namespace where your Drupal deployment resides.
   * **resource:**  Kubernetes resource type (usually 'pods').
   * **container:** The specific container within the pod where Drupal runs.
@@ -317,4 +319,3 @@ dev:
           mode: rlptz
           exclude-paths: 'css:imagecache:ctools:js:tmp:php:styles'
 ```
-

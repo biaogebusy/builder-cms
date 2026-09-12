@@ -18,7 +18,7 @@ function webform_options_custom_test_webform_load(array $entities) {
   $webform = $entities['test_element_options_custom'];
   $elements = $webform->getElementsDecodedAndFlattened();
   foreach ($elements as $element_key => $element) {
-    if (isset($element['#url']) && strpos($element['#url'], '/') === FALSE) {
+    if (isset($element['#url']) && !str_contains($element['#url'], '/')) {
       $element['#url'] = $base_url . '/' . \Drupal::service('extension.list.module')->getPath('webform_options_custom_test') . '/images/' . $element['#url'];
     }
     $webform->setElementProperties($element_key, $element);

@@ -55,8 +55,8 @@ class SortArray {
    * Callback for uasort().
    *
    * @param array $a
-   *   First item for comparison. The compared items should be associative arrays
-   *   that optionally include a 'title' key.
+   *   First item for comparison. The compared items should be associative
+   *   arrays that optionally include a 'title' key.
    * @param array $b
    *   Second item for comparison.
    *
@@ -73,8 +73,8 @@ class SortArray {
    * Callback for uasort().
    *
    * @param array $a
-   *   First item for comparison. The compared items should be associative arrays
-   *   that optionally include a '#title' key.
+   *   First item for comparison. The compared items should be associative
+   *   arrays that optionally include a '#title' key.
    * @param array $b
    *   Second item for comparison.
    *
@@ -123,6 +123,24 @@ class SortArray {
     $b_weight = (is_array($b) && isset($b[$key])) ? $b[$key] : 0;
 
     return $a_weight <=> $b_weight;
+  }
+
+  /**
+   * Sorts an array recursively, by key, alphabetically.
+   *
+   * @param array $data
+   *   The array to sort, passed by reference.
+   */
+  public static function sortByKeyRecursive(array &$data): void {
+    // If the array is a list, it is by definition already sorted.
+    if (!array_is_list($data)) {
+      ksort($data);
+    }
+    foreach ($data as &$value) {
+      if (is_array($value)) {
+        self::sortByKeyRecursive($value);
+      }
+    }
   }
 
 }

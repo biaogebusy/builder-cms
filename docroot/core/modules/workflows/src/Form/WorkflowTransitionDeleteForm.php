@@ -46,7 +46,10 @@ class WorkflowTransitionDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete %transition from %workflow?', ['%transition' => $this->transition->label(), '%workflow' => $this->workflow->label()]);
+    return $this->t('Are you sure you want to delete %transition from %workflow?', [
+      '%transition' => $this->transition->label(),
+      '%workflow' => $this->workflow->label(),
+    ]);
   }
 
   /**
@@ -82,7 +85,7 @@ class WorkflowTransitionDeleteForm extends ConfirmFormBase {
     try {
       $this->transition = $workflow->getTypePlugin()->getTransition($workflow_transition);
     }
-    catch (\InvalidArgumentException $e) {
+    catch (\InvalidArgumentException) {
       throw new NotFoundHttpException();
     }
     $this->workflow = $workflow;

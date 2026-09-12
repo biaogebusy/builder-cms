@@ -1,0 +1,7 @@
+charts_highcharts_api_example.display:
+  path: /charts/example/highcharts
+  defaults:
+    _controller: '\Drupal\charts_highcharts_api_example\Controller\HighchartsApiExample::display'
+    _title: 'Highcharts API Example'
+  requirements:
+    _permission: 'access content'

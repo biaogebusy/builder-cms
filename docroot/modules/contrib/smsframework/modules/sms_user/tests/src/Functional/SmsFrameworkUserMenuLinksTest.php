@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms_user\Functional;
 
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
-use Drupal\Tests\sms\Functional\SmsFrameworkBrowserTestBase;
 use Drupal\Core\Url;
+use Drupal\Tests\sms\Functional\SmsFrameworkBrowserTestBase;
 
 /**
  * Tests dynamically created SMS User menu links.
@@ -15,19 +15,10 @@ use Drupal\Core\Url;
  */
 class SmsFrameworkUserMenuLinksTest extends SmsFrameworkBrowserTestBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = ['sms_user'];
 
-  /**
-   * {@inheritdoc}
-   */
   protected $defaultTheme = 'stark';
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $user = $this->drupalCreateUser([
@@ -42,7 +33,7 @@ class SmsFrameworkUserMenuLinksTest extends SmsFrameworkBrowserTestBase {
    */
   public function testDynamicMenuLinks(): void {
     $entityDisplayRepo = \Drupal::service('entity_display.repository');
-    assert($entityDisplayRepo instanceof EntityDisplayRepositoryInterface);
+    \assert($entityDisplayRepo instanceof EntityDisplayRepositoryInterface);
     $entityDisplayRepo->getFormDisplay('user', 'user', 'default')->save();
     $this->createPhoneNumberSettings('user', 'user');
     $this->drupalGet(Url::fromRoute('user.admin_index'));

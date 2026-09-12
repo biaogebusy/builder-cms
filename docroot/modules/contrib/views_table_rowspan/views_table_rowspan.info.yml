@@ -2,11 +2,11 @@ name: Views Table Rowspan
 type: module
 description: Provide views display format Table Rowspan.
 package: Views
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10 || ^11
 dependencies:
   - 'drupal:views'
 
-# Information added by Drupal.org packaging script on 2022-08-14
-version: '3.0.1'
+# Information added by Drupal.org packaging script on 2026-07-31
+version: '4.0.0'
 project: 'views_table_rowspan'
-datestamp: 1660494565
+datestamp: 1785534941

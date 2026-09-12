@@ -1,0 +1,5 @@
+charts_highcharts_api_example.display:
+  title: 'Highcharts API Example'
+  description: 'Charts API demonstrations rendered with Highcharts.'
+  parent: charts_api_example.display
+  route_name: charts_highcharts_api_example.display

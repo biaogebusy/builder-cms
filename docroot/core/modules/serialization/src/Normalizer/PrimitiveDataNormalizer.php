@@ -4,6 +4,7 @@ namespace Drupal\serialization\Normalizer;
 
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\TypedData\PrimitiveInterface;
+use Drupal\Core\TypedData\TypedDataInterface;
 
 /**
  * Converts primitive data objects to their casted values.
@@ -11,11 +12,24 @@ use Drupal\Core\TypedData\PrimitiveInterface;
 class PrimitiveDataNormalizer extends NormalizerBase {
 
   use SerializedColumnNormalizerTrait;
+  use SchematicNormalizerTrait;
+  use JsonSchemaReflectionTrait;
 
   /**
-   * {@inheritdoc}
+   * Normalizes data into a set of arrays/scalars.
+   *
+   * @param object $object
+   *   Data to normalize.
+   * @param string|null $format
+   *   Format the normalization result will be encoded as.
+   * @param array<string, mixed> $context
+   *   Context options for the normalizer.
+   *
+   * @return array|string|int|float|bool|\ArrayObject<mixed, mixed>|null
+   *   \ArrayObject is used to make sure an empty object is encoded as an
+   *   object not an array.
    */
-  public function normalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
+  public function doNormalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
     // Add cacheability if applicable.
     $this->addCacheableDependency($context, $object);
 
@@ -23,7 +37,7 @@ class PrimitiveDataNormalizer extends NormalizerBase {
     if ($parent instanceof FieldItemInterface && $object->getValue()) {
       $serialized_property_names = $this->getCustomSerializedPropertyNames($parent);
       if (in_array($object->getName(), $serialized_property_names, TRUE)) {
-        return unserialize($object->getValue());
+        return unserialize($object->getValue(), ['allowed_classes' => FALSE]);
       }
     }
 
@@ -39,10 +53,14 @@ class PrimitiveDataNormalizer extends NormalizerBase {
   /**
    * {@inheritdoc}
    */
-  public function hasCacheableSupportsMethod(): bool {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-
-    return TRUE;
+  public function getNormalizationSchema(mixed $object, array $context = []): array {
+    $nullable = !$object instanceof TypedDataInterface || !$object->getDataDefinition()->isRequired();
+    return $this->getJsonSchemaForMethod(
+      $object,
+      'getCastedValue',
+      ['$comment' => 'Unable to provide schema, no type specified.'],
+      $nullable,
+    );
   }
 
   /**

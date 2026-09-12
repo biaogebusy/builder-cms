@@ -70,6 +70,7 @@ class WebformLibrariesCommands extends WebformCommandsBase {
   }
 
   /* ************************************************************************ */
+  // cSpell:disable
   // Libraries status.
   /* ************************************************************************ */
 
@@ -297,7 +298,7 @@ class WebformLibrariesCommands extends WebformCommandsBase {
   }
 
   /* ************************************************************************ */
-  // :ibraries remove.
+  // Libraries remove.
   /* ************************************************************************ */
 
   /**
@@ -394,6 +395,7 @@ class WebformLibrariesCommands extends WebformCommandsBase {
    * @aliases wfcu,webform-composer-update
    */
   public function composerUpdate(array $options = ['disable-tls' => FALSE]) {
+    // cSpell:enable
     $composer_json = $this->composer_json;
     $composer_directory = $this->composer_directory;
 
@@ -407,7 +409,7 @@ class WebformLibrariesCommands extends WebformCommandsBase {
     }
 
     // Add drupal-library to installer paths.
-    if (strpos($json, 'type:drupal-library') === FALSE) {
+    if (!str_contains($json, 'type:drupal-library')) {
       $library_path = $composer_directory . 'libraries/{$name}';
       $data->extra->{'installer-paths'}->{$library_path}[] = 'type:drupal-library';
     }
@@ -493,10 +495,10 @@ class WebformLibrariesCommands extends WebformCommandsBase {
 
       $package_version = $library['version'];
 
-      if (strpos($library_name, '/') !== FALSE) {
+      if (str_contains($library_name, '/')) {
         $package_name = $library_name;
       }
-      elseif (strpos($library_name, '.') !== FALSE) {
+      elseif (str_contains($library_name, '.')) {
         $package_name = str_replace('.', '/', $library_name);
       }
       else {

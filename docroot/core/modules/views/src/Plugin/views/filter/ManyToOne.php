@@ -38,6 +38,9 @@ class ManyToOne extends InOperator {
     $this->helper = new ManyToOneHelper($this);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
 
@@ -106,8 +109,16 @@ class ManyToOne extends InOperator {
     return $operators;
   }
 
+  /**
+   * The default form type.
+   *
+   * @var string
+   */
   protected $valueFormType = 'select';
 
+  /**
+   * {@inheritdoc}
+   */
   protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
@@ -129,6 +140,9 @@ class ManyToOne extends InOperator {
     return parent::ensureMyTable();
   }
 
+  /**
+   * Adds a filter.
+   */
   protected function opHelper() {
     if (empty($this->value)) {
       return;

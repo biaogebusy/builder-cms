@@ -16,9 +16,10 @@ interface ControllerResolverInterface extends BaseControllerResolverInterface {
    * return false when it is not able to determine the controller.
    *
    * @param mixed $controller
-   *   The controller attribute like in $request->attributes->get('_controller')
+   *   The controller attribute like in
+   *   $request->attributes->get(RouteObjectInterface::CONTROLLER_NAME).
    *
-   * @return mixed|bool
+   * @return mixed|false
    *   A PHP callable representing the Controller, or false if this resolver is
    *   not able to determine the controller
    *

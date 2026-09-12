@@ -1,6 +1,34 @@
+parameters:
+  views.skip_procedural_hook_scan: false
+
 services:
   _defaults:
     autoconfigure: true
+  views.plugin_managers:
+    class: Symfony\Component\DependencyInjection\ServiceLocator
+    arguments:
+      -
+        access: '@plugin.manager.views.access'
+        area: '@plugin.manager.views.area'
+        argument: '@plugin.manager.views.argument'
+        argument_default: '@plugin.manager.views.argument_default'
+        argument_validator: '@plugin.manager.views.argument_validator'
+        cache: '@plugin.manager.views.cache'
+        display_extender: '@plugin.manager.views.display_extender'
+        display: '@plugin.manager.views.display'
+        exposed_form: '@plugin.manager.views.exposed_form'
+        field: '@plugin.manager.views.field'
+        filter: '@plugin.manager.views.filter'
+        join: '@plugin.manager.views.join'
+        pager: '@plugin.manager.views.pager'
+        query: '@plugin.manager.views.query'
+        relationship: '@plugin.manager.views.relationship'
+        row: '@plugin.manager.views.row'
+        sort: '@plugin.manager.views.sort'
+        style: '@plugin.manager.views.style'
+        wizard: '@plugin.manager.views.wizard'
+    tags:
+      - { name: container.service_locator }
   plugin.manager.views.access:
     class: Drupal\views\Plugin\ViewsPluginManager
     arguments: [access, '@container.namespaces', '@cache.discovery', '@module_handler']
@@ -64,6 +92,10 @@ services:
     tags:
       - { name: backend_overridable }
   Drupal\views\ViewsData: '@views.views_data'
+  views.field_data_provider:
+    class: Drupal\views\FieldViewsDataProvider
+    arguments: ['@entity_type.manager', '@plugin.manager.field.field_type', '@entity_field.manager']
+  Drupal\views\FieldViewsDataProvider: '@views.field_data_provider'
   views.views_data_helper:
     class: Drupal\views\ViewsDataHelper
     arguments: ['@views.views_data']
@@ -102,3 +134,8 @@ services:
     class: Drupal\views\Plugin\views\query\CastSql
     tags:
       - { name: backend_overridable }
+  Drupal\views\Plugin\views\query\CastSqlInterface: '@views.cast_sql'
+  Drupal\views\ViewsConfigUpdater:
+    autowire: true
+  Drupal\views\ContextualLinksHelper:
+    autowire: true

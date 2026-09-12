@@ -73,7 +73,9 @@ abstract class MessageTestBase extends BrowserTestBase {
    *   The storing of the configuration. Default to message.message.
    */
   protected function configSet($config, $value, $storage = 'message.settings') {
-    \Drupal::configFactory()->getEditable($storage)->set($config, $value);
+    \Drupal::configFactory()->getEditable($storage)
+      ->set($config, $value)
+      ->save();
   }
 
 }

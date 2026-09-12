@@ -28,7 +28,7 @@ class WebformSubmissionListBuilderCustomizeTest extends WebformBrowserTestBase {
   /**
    * Tests customize.
    */
-  public function testCustomize() {
+  public function testCustomize(): void {
     global $base_path;
 
     $assert_session = $this->assertSession();

@@ -9,6 +9,9 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\EventSubscriber\ExceptionJsonSubscriber;
 use Drupal\Core\Http\Exception\CacheableMethodNotAllowedHttpException;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -17,15 +20,16 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
- * @coversDefaultClass \Drupal\Core\EventSubscriber\ExceptionJsonSubscriber
- * @group EventSubscriber
+ * Tests Drupal\Core\EventSubscriber\ExceptionJsonSubscriber.
  */
+#[CoversClass(ExceptionJsonSubscriber::class)]
+#[Group('EventSubscriber')]
 class ExceptionJsonSubscriberTest extends UnitTestCase {
 
   /**
-   * @covers ::on4xx
-   * @dataProvider providerTestOn4xx
+   * Tests on 4xx.
    */
+  #[DataProvider('providerTestOn4xx')]
   public function testOn4xx(HttpExceptionInterface $exception, $expected_response_class): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/test');
@@ -41,14 +45,17 @@ class ExceptionJsonSubscriberTest extends UnitTestCase {
     $this->assertEquals('application/json', $response->headers->get('Content-Type'));
   }
 
-  public static function providerTestOn4xx() {
+  public static function providerTestOn4xx(): array {
     return [
       'uncacheable exception' => [
         new MethodNotAllowedHttpException(['POST', 'PUT'], 'test message'),
         JsonResponse::class,
       ],
       'cacheable exception' => [
-        new CacheableMethodNotAllowedHttpException((new CacheableMetadata())->setCacheContexts(['route']), ['POST', 'PUT'], 'test message'),
+        new CacheableMethodNotAllowedHttpException((new CacheableMetadata())->setCacheContexts(['route']), [
+          'POST',
+          'PUT',
+        ], 'test message'),
         CacheableJsonResponse::class,
       ],
     ];

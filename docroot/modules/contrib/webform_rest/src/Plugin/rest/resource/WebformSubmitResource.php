@@ -201,7 +201,7 @@ class WebformSubmitResource extends ResourceBase {
     else {
       $errors = [
         'error' => [
-          'message' => $this->renderer->renderPlain($is_open),
+          'message' => $this->renderer->renderInIsolation($is_open),
         ],
       ];
       return $this->dispatchReturnEvent($values, $errors, 'error', 400);

@@ -35,7 +35,9 @@ function slick_ui_help($route_name) {
     $items = [
       'README',
       'FAQS',
+      'FORMATTER',
       'TROUBLESHOOTING',
+      'BENCHMARKING',
       'CONTRIBUTION',
       'MAINTAINERS',
     ];

@@ -1,0 +1,5 @@
+entity_share_diff.admin_settings:
+  route_name: entity_share_diff.admin_settings
+  title: Diff settings
+  base_route: entity.import_config.collection
+  weight: 40

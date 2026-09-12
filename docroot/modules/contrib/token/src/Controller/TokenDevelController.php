@@ -73,7 +73,6 @@ class TokenDevelController extends ControllerBase {
    * @see static::entityLoad
    */
   protected function renderTokenTree(EntityInterface $entity) {
-    $this->moduleHandler()->loadInclude('token', 'pages.inc');
     $entity_type = $entity->getEntityTypeId();
 
     $token_type = $this->entityMapper->getTokenTypeForEntityType($entity_type);

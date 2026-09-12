@@ -339,7 +339,7 @@ class ProductVariation extends CommerceContentEntityBase implements ProductVaria
    * {@inheritdoc}
    */
   public function getCacheContexts() {
-    return Cache::mergeContexts(parent::getCacheContexts(), ['store']);
+    return Cache::mergeContexts(parent::getCacheContexts(), ['url.query_args:v', 'store']);
   }
 
   /**
@@ -407,6 +407,21 @@ class ProductVariation extends CommerceContentEntityBase implements ProductVaria
         $product->save();
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createDuplicate() {
+    /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $duplicate */
+    $duplicate = parent::createDuplicate();
+
+    // Reset created and changed timestamps.
+    $now = time();
+    $duplicate->setCreatedTime($now);
+    $duplicate->setChangedTime($now);
+
+    return $duplicate;
   }
 
   /**

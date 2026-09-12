@@ -1,0 +1,11 @@
+*.yml
+**/*.yml
+**/*.yaml
+**/*.info
+**/*.install
+config/**
+config/**/*
+js/*.min.js
+js/*/*.min.js
+js/*/*/*.min.js
+tests/**

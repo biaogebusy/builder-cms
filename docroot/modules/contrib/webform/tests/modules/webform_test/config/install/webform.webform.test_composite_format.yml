@@ -406,6 +406,19 @@ elements: |
           q2: 1
           q3: 1
         '#format': table
+      webform_likert_average:
+        '#type': webform_likert
+        '#title': 'Likert (Average)'
+        '#questions':
+          q1: 'Question 1'
+          q2: 'Question 2'
+          q3: 'Question 3'
+        '#answers': likert_ten_scale
+        '#format': average
+        '#default_value':
+          q1: 3
+          q2: 2
+          q3: 3
 css: ''
 javascript: ''
 settings:

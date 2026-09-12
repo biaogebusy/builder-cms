@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Core\Database\Database;
-use Drupal\views_test_data\Plugin\views\join\JoinTest as JoinTestPlugin;
 use Drupal\views\Plugin\views\join\JoinPluginBase;
 use Drupal\views\Views;
+use Drupal\views_test_data\Plugin\views\join\JoinTest as JoinTestPlugin;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the join plugin.
  *
- * @group views
  * @see \Drupal\views_test_data\Plugin\views\join\JoinTest
  * @see \Drupal\views\Plugin\views\join\JoinPluginBase
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class JoinTest extends RelationshipJoinTestBase {
 
   /**

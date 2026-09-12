@@ -7,16 +7,20 @@ namespace Drupal\KernelTests\Core\Site;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Site\SettingsEditor;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the SettingsEditor::rewrite() function.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class SettingsRewriteTest extends KernelTestBase {
 
   /**
-   * @covers \Drupal\Core\Site\SettingsEditor::rewrite
+   * Tests drupal rewrite settings.
+   *
+   * @legacy-covers \Drupal\Core\Site\SettingsEditor::rewrite
    */
   public function testDrupalRewriteSettings(): void {
     include_once $this->root . '/core/includes/install.inc';
@@ -51,7 +55,7 @@ $no_index_value_foo['foo']['value'] = NULL; // comment
 EXPECTED
       ],
       [
-        'original' => '$no_index_value_array = array("old" => "value");',
+        'original' => '$no_index_value_array = ["old" => "value"];',
         'settings' => [
           'no_index_value_array' => (object) [
             'value' => FALSE,
@@ -59,7 +63,7 @@ EXPECTED
             'comment' => 'comment',
           ],
         ],
-        'expected' => '$no_index_value_array = array("old" => "value");
+        'expected' => '$no_index_value_array = ["old" => "value"];
 $no_index_value_array = false; // comment',
       ],
       [

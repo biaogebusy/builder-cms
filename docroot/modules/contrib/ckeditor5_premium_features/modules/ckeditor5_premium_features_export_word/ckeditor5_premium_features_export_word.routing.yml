@@ -1,0 +1,17 @@
+ckeditor5_premium_features_export_word.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/export-word'
+  defaults:
+    _title: 'Export to Word'
+    _form: 'Drupal\ckeditor5_premium_features_export_word\Form\SettingsForm'
+  requirements:
+    # TODO: It may be more granullar - TBD if there is a need for dedicated permission.
+    _permission: 'administer site configuration'
+
+ckeditor5_premium_features_export_word.endpoint.jwt_token:
+  path: '/ckeditor5-premium-features/token/export-word'
+  defaults:
+    _controller: '\Drupal\ckeditor5_premium_features_export_word\Controller\EndpointController::jwtToken'
+  requirements:
+    _permission: 'use ckeditor5 access token'
+  options:
+    no_cache: 'TRUE'

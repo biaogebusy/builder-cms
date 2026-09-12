@@ -1,0 +1,121 @@
+/**
+ * @file
+ * Commerce Admin Card component styles.
+ */
+
+:root {
+  /* Card components */
+  --commerce-card-header-height: 2rem;
+  --commerce-card-content-padding-top: 1rem;
+  --commerce-card-footer-padding: 1rem 0 0;
+  --commerce-card-default-title-size: 1rem;
+  --commerce-card-title-weight: 700;
+  --commerce-card-title-large-size: 1.25rem;
+  --commerce-card-spacing: 1rem;
+}
+
+/* Card components */
+.commerce-admin-card {
+  margin-bottom: var(--commerce-card-spacing);
+}
+
+.card__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.card__title {
+  margin: 0;
+  font-weight: var(--commerce-card-title-weight);
+}
+
+span.card__title {
+  font-size: var(--commerce-card-default-title-size);
+}
+
+.card__content {
+  padding-top: var(--commerce-card-content-padding-top);
+}
+
+.card__content:first-child {
+  padding-top: 0;
+}
+
+.card__content > *:first-child,
+.card__footer > *:first-child {
+  margin-top: 0;
+}
+
+.card__content > *:last-child,
+.card__footer > *:last-child {
+  margin-bottom: 0;
+}
+
+.card__toggle {
+  flex-shrink: 0;
+  width: var(--commerce-card-header-height);
+  height: var(--commerce-card-header-height);
+  margin-left: auto;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  border: none;
+  background: transparent;
+  background-color: currentColor;
+  -webkit-mask-image: var(--commerce-icon--chevron-down);
+  mask-image: var(--commerce-icon--chevron-down);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 1rem;
+  mask-size: 1rem;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.commerce-admin-card--open .card__toggle {
+  transform: rotate(-180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card__toggle {
+    transition: none;
+  }
+}
+
+.card__title--large {
+  font-size: var(--commerce-card-title-large-size);
+}
+
+.card__header .ajax-progress {
+  position: absolute;
+  right: 0;
+}
+
+.card__footer {
+  margin-top: 0.75rem;
+  padding: var(--commerce-card-footer-padding);
+  border-top: 1px solid var(--commerce-border-color, #e0e0e0);
+}
+
+/* Commerce Admin Card List */
+.commerce-admin-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 61rem) {
+  .commerce-admin-card-list {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+.commerce-admin-card-list > .commerce-admin-card {
+  flex: 1 0 auto;
+  margin-bottom: 0;
+}

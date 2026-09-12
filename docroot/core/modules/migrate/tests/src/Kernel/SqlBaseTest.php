@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\migrate\Kernel;
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\ConditionInterface;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\migrate\Exception\RequirementsException;
-use Drupal\Core\Database\Database;
+use Drupal\migrate\MigrateExecutable;
+use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of SqlBase.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class SqlBaseTest extends MigrateTestBase {
 
   /**
@@ -157,9 +163,8 @@ class SqlBaseTest extends MigrateTestBase {
    *   (optional) The high-water value to set.
    * @param array $query_result
    *   (optional) The expected query results.
-   *
-   * @dataProvider highWaterDataProvider
    */
+  #[DataProvider('highWaterDataProvider')]
   public function testHighWater($high_water = NULL, array $query_result = []): void {
     $configuration = [
       'high_water_property' => [
@@ -173,7 +178,7 @@ class SqlBaseTest extends MigrateTestBase {
     }
 
     $statement = $this->createMock(StatementInterface::class);
-    $statement->expects($this->atLeastOnce())->method('setFetchMode')->with(\PDO::FETCH_ASSOC);
+    $statement->expects($this->atLeastOnce())->method('setFetchMode')->with(FetchAs::Associative);
     $query = $this->createMock(SelectInterface::class);
     $query->method('execute')->willReturn($statement);
     $query->expects($this->atLeastOnce())->method('orderBy')->with('order', 'ASC');
@@ -196,6 +201,52 @@ class SqlBaseTest extends MigrateTestBase {
       'no high-water value set' => [],
       'high-water value set' => [33],
     ];
+  }
+
+  /**
+   * Tests prepare query method.
+   */
+  public function testPrepareQuery(): void {
+    $this->prepareSourceData();
+    $this->enableModules(['migrate_sql_prepare_query_test', 'entity_test', 'user']);
+
+    /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
+    $migration = $this->container->get('plugin.manager.migration')
+      ->createStubMigration([
+        'source' => ['plugin' => 'test_sql_prepare_query'],
+        'process' => ['id' => 'id', 'name' => 'name'],
+        'destination' => ['plugin' => 'entity:entity_test'],
+      ]);
+
+    // One item is excluded by the condition defined in the source plugin.
+    // @see \Drupal\migrate_sql_prepare_query_test\Plugin\migrate\source\TestSqlPrepareQuery
+    $count = $migration->getSourcePlugin()->count();
+    $this->assertEquals(2, $count);
+
+    // Run the migration and verify that the number of migrated items matches
+    // the initial source count.
+    (new MigrateExecutable($migration, new MigrateMessage()))->import();
+    $this->assertEquals(2, $migration->getIdMap()->processedCount());
+  }
+
+  /**
+   * Creates a custom source table and some sample data.
+   */
+  protected function prepareSourceData(): void {
+    $this->sourceDatabase->schema()->createTable('migrate_source_test', [
+      'fields' => [
+        'id' => ['type' => 'int'],
+        'name' => ['type' => 'varchar', 'length' => 32],
+      ],
+    ]);
+
+    // Add some data in the table.
+    $this->sourceDatabase->insert('migrate_source_test')
+      ->fields(['id', 'name'])
+      ->values(['id' => 1, 'name' => 'foo'])
+      ->values(['id' => 2, 'name' => 'bar'])
+      ->values(['id' => 3, 'name' => 'baz'])
+      ->execute();
   }
 
 }
@@ -240,7 +291,7 @@ class TestSqlBase extends SqlBase {
    * @param array $config
    *   The config array.
    */
-  public function setConfiguration($config) {
+  public function setConfiguration($config): void {
     $this->configuration = $config;
   }
 
@@ -271,7 +322,7 @@ class TestSqlBase extends SqlBase {
    * @param \Drupal\Core\Database\Query\SelectInterface $query
    *   The query to execute.
    */
-  public function setQuery(SelectInterface $query) {
+  public function setQuery(SelectInterface $query): void {
     $this->query = $query;
   }
 

@@ -10,6 +10,8 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\commerce\CommerceContentEntityStorageSchema;
 use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\commerce_payment\Event\PaymentEvent;
+use Drupal\commerce_payment\PaymentMethodStorageSchema;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Implements hook_install().
@@ -174,4 +176,77 @@ function commerce_payment_update_8208() {
   $definition_update_manager = \Drupal::service('entity.definition_update_manager');
   $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('remote_id', 'commerce_payment'));
   $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('remote_id', 'commerce_payment_method'));
+}
+
+/**
+ * Updates the "commerce_payment_method.expires" field to be "unsigned".
+ */
+function commerce_payment_update_10301(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $entity_type_manager->getDefinition('commerce_payment_method')
+    ->setHandlerClass('storage_schema', PaymentMethodStorageSchema::class);
+  $definition_update_manager->updateEntityType($entity_type);
+
+  $storage_schema = \Drupal::keyValue('entity.storage_schema.sql');
+  $storage_key = 'commerce_payment_method.field_schema_data.expires';
+  $field_schema = $storage_schema->get($storage_key);
+  $field_schema['commerce_payment_method']['fields']['expires']['unsigned'] = TRUE;
+  $storage_schema->set($storage_key, $field_schema);
+  $schema = \Drupal::database()->schema();
+  $schema->changeField('commerce_payment_method', 'expires', 'expires', [
+    'type' => 'int',
+    'not null' => FALSE,
+    'unsigned' => TRUE,
+  ]);
+}
+
+/**
+ * Add created and changed fields to payments.
+ */
+function commerce_payment_update_10302(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definitions['created'] = BaseFieldDefinition::create('created')
+    ->setLabel(t('Created'))
+    ->setDescription(t('The time when the payment was created.'))
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayConfigurable('view', TRUE)
+    ->setDisplayOptions('view', [
+      'label' => 'inline',
+      'type' => 'timestamp',
+      'settings' => [
+        'date_format' => 'short',
+      ],
+    ]);
+
+  $storage_definitions['changed'] = BaseFieldDefinition::create('changed')
+    ->setLabel(t('Changed'))
+    ->setDescription(t('The time when the payment was last saved.'))
+    ->setDisplayConfigurable('view', TRUE)
+    ->setDisplayOptions('view', [
+      'label' => 'inline',
+      'type' => 'timestamp',
+      'settings' => [
+        'date_format' => 'short',
+      ],
+    ]);
+
+  foreach ($storage_definitions as $name => $definition) {
+    if ($definition_update_manager->getFieldStorageDefinition($name, 'commerce_payment')) {
+      continue;
+    }
+    $definition_update_manager->installFieldStorageDefinition($name, 'commerce_payment', 'commerce_payment', $definition);
+  }
+}
+
+/**
+ * Inform users that the payment add form has been updated to a new format.
+ */
+function commerce_payment_update_10303(): TranslatableMarkup {
+  $message = t('Your payment add form has been updated to a new single page format. If you depend on the old two step method, you will need to set the "commerce_payment_use_legacy_add_payment_form" variable in settings.php to preserve it. See the release notes for Commerce Core 3.3.0 for more information.');
+  // Log the change for permanent auditing.
+  \Drupal::logger('commerce_payment')->notice($message);
+  // Returning ensures the message is displayed after running the update.
+  return $message;
 }

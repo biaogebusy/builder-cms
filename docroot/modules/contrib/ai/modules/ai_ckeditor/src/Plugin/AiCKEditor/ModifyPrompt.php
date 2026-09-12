@@ -83,7 +83,7 @@ final class ModifyPrompt extends AiCKEditorPluginBase {
    * {@inheritdoc}
    */
   public function buildCkEditorModalForm(array $form, FormStateInterface $form_state, array $settings = []): array {
-    $form = parent::buildCkEditorModalForm($form, $form_state);
+    $form = parent::buildCkEditorModalForm($form, $form_state, $settings);
 
     // Only add 'Your instructions' if selected text is available.
     $storage = $form_state->getStorage();
@@ -106,6 +106,13 @@ final class ModifyPrompt extends AiCKEditorPluginBase {
    */
   protected function getGenerateButtonLabel() {
     return $this->t('Modify text');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getNoSelectedTextMessage(): TranslatableMarkup {
+    return $this->t('You must select some text before you can modify it.');
   }
 
   /**

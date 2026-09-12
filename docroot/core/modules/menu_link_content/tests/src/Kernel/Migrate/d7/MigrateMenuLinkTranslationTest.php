@@ -6,12 +6,14 @@ namespace Drupal\Tests\menu_link_content\Kernel\Migrate\d7;
 
 use Drupal\Tests\menu_link_content\Kernel\Migrate\MigrateMenuLinkTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Menu link translation migration.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateMenuLinkTranslationTest extends MigrateDrupal7TestBase {
 
   use MigrateMenuLinkTestTrait;
@@ -24,7 +26,6 @@ class MigrateMenuLinkTranslationTest extends MigrateDrupal7TestBase {
     'language',
     'link',
     'menu_link_content',
-    'menu_ui',
   ];
 
   /**

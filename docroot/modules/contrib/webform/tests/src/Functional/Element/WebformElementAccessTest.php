@@ -29,7 +29,7 @@ class WebformElementAccessTest extends WebformElementBrowserTestBase {
   /**
    * Test element access.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $assert_session = $this->assertSession();
 
     $normal_user = $this->drupalCreateUser([

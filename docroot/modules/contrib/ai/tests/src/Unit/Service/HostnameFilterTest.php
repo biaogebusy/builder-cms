@@ -1680,4 +1680,249 @@ TEXT;
     $this->assertStringContainsString('https://example.com', $result);
   }
 
+  /**
+   * Tests reference-style Markdown links cannot smuggle a javascript: URL.
+   */
+  public function testMarkdownReferenceStyleLinkJavascriptBlocked(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = "[text][ref]\n\n[ref]: javascript:console.log(1)";
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('javascript:', $result);
+    $this->assertStringContainsString('text', $result);
+  }
+
+  /**
+   * Tests Markdown auto links cannot smuggle a javascript: URL.
+   */
+  public function testMarkdownAutolinkJavascriptBlocked(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = '<javascript:console.log(1)>';
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('javascript:', $result);
+  }
+
+  /**
+   * Tests entity-encoded whitespace in a scheme cannot smuggle javascript:.
+   *
+   * @dataProvider entityEncodedSchemeWhitespaceProvider
+   */
+  public function testEntityEncodedWhitespaceInSchemeBlocked(string $entity): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $html = '<a href="java' . $entity . 'script:alert(1)">click</a>';
+    $result = $this->hostnameFilter->filterText($html);
+    $this->assertStringNotContainsString('script:alert(1)', $result);
+    $this->assertStringContainsString('click', $result);
+  }
+
+  /**
+   * Tests entity-encoded whitespace cannot smuggle any dangerous scheme.
+   *
+   * @dataProvider dangerousSchemeEntityEncodedProvider
+   */
+  public function testEntityEncodedWhitespaceDangerousSchemeBlocked(string $url, string $payload): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $html = '<a href="' . $url . '">click</a>';
+    $result = $this->hostnameFilter->filterText($html);
+    $this->assertStringNotContainsString($payload, $result);
+    $this->assertStringContainsString('click', $result);
+  }
+
+  /**
+   * Tests reference-style Markdown links to a disallowed host are removed.
+   */
+  public function testMarkdownReferenceStyleLinkDisallowedHostRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = "[text][ref]\n\n[ref]: https://evil.com/steal";
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('evil.com', $result);
+    $this->assertStringContainsString('text', $result);
+  }
+
+  /**
+   * Tests angle-bracket-wrapped reference definitions are allowlist-checked.
+   */
+  public function testMarkdownReferenceStyleAngleBracketDisallowedHostRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = "[text][ref]\n\n[ref]: <https://evil.com/steal>";
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('evil.com', $result);
+    $this->assertStringContainsString('text', $result);
+  }
+
+  /**
+   * Tests angle-bracket protocol-relative reference definitions are removed.
+   */
+  public function testMarkdownReferenceStyleAngleBracketProtocolRelativeRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = "[text][ref]\n\n[ref]: <//evil.com/steal>";
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('evil.com', $result);
+    $this->assertStringContainsString('text', $result);
+  }
+
+  /**
+   * Tests angle-bracket reference definitions cannot smuggle a javascript: URL.
+   */
+  public function testMarkdownReferenceStyleAngleBracketJavascriptBlocked(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = "[text][ref]\n\n[ref]: <javascript:console.log(1)>";
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('javascript:', $result);
+    $this->assertStringContainsString('text', $result);
+  }
+
+  /**
+   * Tests entity-encoded schemes inside Markdown cannot smuggle dangerous URLs.
+   *
+   * The inline and reference Markdown patterns pass the raw destination to the
+   * allowlist check, so an entity-obfuscated scheme (e.g. "java&#9;script:")
+   * must be decoded before the check or the dangerous URL slips through.
+   *
+   * @dataProvider markdownEntityEncodedSchemeProvider
+   */
+  public function testMarkdownEntityEncodedSchemeBlocked(string $markdown): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('script:alert(1)', $result);
+  }
+
+  /**
+   * Provides Markdown payloads with entity-encoded dangerous schemes.
+   *
+   * @return array<string, array{0: string}>
+   *   Each case is [markdown payload].
+   */
+  public static function markdownEntityEncodedSchemeProvider(): array {
+    return [
+      'inline + decimal tab' => ['[t](java&#9;script:alert(1))'],
+      'inline + hex tab' => ['[t](java&#x9;script:alert(1))'],
+      'inline + named tab' => ['[t](java&Tab;script:alert(1))'],
+      'reference + decimal tab' => ["[t][r]\n\n[r]: java&#9;script:alert(1)"],
+    ];
+  }
+
+  /**
+   * Tests angle-bracket reference definitions to an allowed host are kept.
+   */
+  public function testMarkdownReferenceStyleAngleBracketAllowedHostKept(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = "[text][ref]\n\n[ref]: <https://example.com/page>";
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringContainsString('example.com', $result);
+  }
+
+  /**
+   * Tests Markdown auto links to a disallowed host are removed.
+   */
+  public function testMarkdownAutolinkDisallowedHostRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $markdown = '<https://evil.com/steal>';
+    $result = $this->hostnameFilter->filterText($markdown);
+    $this->assertStringNotContainsString('evil.com', $result);
+  }
+
+  /**
+   * Tests entity-encoded whitespace hiding a disallowed host is removed.
+   */
+  public function testEntityEncodedWhitespaceInSchemeDisallowedHostRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $html = '<a href="https&#9;://evil.com/steal">click</a>';
+    $result = $this->hostnameFilter->filterText($html);
+    $this->assertStringNotContainsString('evil.com', $result);
+    $this->assertStringContainsString('click', $result);
+  }
+
+  /**
+   * Tests the SVG <image> element is subject to the host allowlist.
+   *
+   * @dataProvider svgImageHrefAttributeProvider
+   */
+  public function testSvgImageElementDisallowedHostRemoved(string $attribute): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $html = '<svg><image ' . $attribute . '="https://evil.com/track.gif"></image></svg>';
+    $result = $this->hostnameFilter->filterText($html);
+    $this->assertStringNotContainsString('evil.com', $result);
+  }
+
+  /**
+   * Tests the SVG <a> element's xlink:href is subject to the allowlist.
+   */
+  public function testSvgAnchorXlinkHrefDisallowedHostRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $html = '<svg><a xlink:href="https://evil.com/steal"><text>x</text></a></svg>';
+    $result = $this->hostnameFilter->filterText($html);
+    $this->assertStringNotContainsString('evil.com', $result);
+  }
+
+  /**
+   * Tests the <link> imagesrcset attribute is subject to the allowlist.
+   */
+  public function testLinkImagesrcsetDisallowedHostRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $html = '<link rel="preload" as="image" imagesrcset="https://evil.com/t.gif 1x">';
+    $result = $this->hostnameFilter->filterText($html);
+    $this->assertStringNotContainsString('evil.com', $result);
+  }
+
+  /**
+   * Tests the <meta http-equiv="refresh"> redirect URL is allowlist-checked.
+   */
+  public function testMetaRefreshRedirectDisallowedHostRemoved(): void {
+    $this->hostnameFilter->setAllowedDomains(['example.com']);
+    $html = '<meta http-equiv="refresh" content="0;url=https://evil.com/steal">';
+    $result = $this->hostnameFilter->filterText($html);
+    $this->assertStringNotContainsString('evil.com', $result);
+  }
+
+  /**
+   * Data provider for ::testSvgImageElementDisallowedHostRemoved().
+   *
+   * @return array<string, array{string}>
+   *   The URL-bearing attributes an SVG <image> can use.
+   */
+  public static function svgImageHrefAttributeProvider(): array {
+    return [
+      'href' => ['href'],
+      'xlink:href' => ['xlink:href'],
+    ];
+  }
+
+  /**
+   * Data provider for ::testEntityEncodedWhitespaceInSchemeBlocked().
+   *
+   * Covers the ASCII whitespace characters (tab, line feed, carriage return)
+   * that browsers strip from URLs, in both decimal and hexadecimal entity form.
+   *
+   * @return array<string, array{string}>
+   *   Each case is a single HTML numeric character reference.
+   */
+  public static function entityEncodedSchemeWhitespaceProvider(): array {
+    return [
+      'decimal tab' => ['&#9;'],
+      'decimal line feed' => ['&#10;'],
+      'decimal carriage return' => ['&#13;'],
+      'hex tab' => ['&#x9;'],
+      'hex line feed' => ['&#xA;'],
+      'hex carriage return' => ['&#xD;'],
+    ];
+  }
+
+  /**
+   * Data provider for ::testEntityEncodedWhitespaceDangerousSchemeBlocked().
+   *
+   * Each case hides a tab entity inside a dangerous scheme and pairs it with a
+   * payload substring (the part after the injected whitespace) that must not
+   * survive filtering.
+   *
+   * @return array<string, array{string, string}>
+   *   Each case is [url with entity-encoded scheme, payload to assert absent].
+   */
+  public static function dangerousSchemeEntityEncodedProvider(): array {
+    return [
+      'javascript: with tab entity' => ['java&#9;script:alert(1)', 'script:alert(1)'],
+      'data: with tab entity' => ['da&#9;ta:text/html,xss', 'ta:text/html,xss'],
+      'vbscript: with tab entity' => ['vbs&#9;cript:MsgBox(1)', 'cript:MsgBox(1)'],
+    ];
+  }
+
 }

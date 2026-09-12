@@ -1,0 +1,211 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ck.ai-sidebar-container {
+  max-width: 40%;
+  max-height: calc(100vh - var(--drupal-displace-offset-top, 0px) - var(--drupal-displace-offset-bottom, 0px) - 20px);
+}
+
+.ck.ai-sidebar-container .ck-ai-tabs__sidebar {
+  height: 100%;
+  border-radius: 0;
+}
+
+.ck.ai-sidebar-container:has(.ck-ai-tabs_maximized) {
+  position: fixed;
+  top: 100px;
+  right: 10px;
+  height: calc(100% - 150px);
+  width: 680px;
+  max-width: 600px;
+  z-index: 10;
+}
+
+.ck.ai-sidebar-container:has(.ck-ai-tabs_maximized) .ck-ai-tabs__sidebar {
+  border-radius: var(--ck-border-radius);
+}
+
+.ck.ck-tabs.ck-ai-tabs.ck-ai-tabs__overlay {
+  top: 100px !important;
+  right: 10px !important;
+  height: calc(100% - 150px) !important;
+  width: 680px !important;
+  z-index: 10 !important;
+}
+
+body[class*="gin--"] .ck.ai-sidebar-container:has(.ck-ai-tabs_maximized) {
+  transition: right var(--gin-transition-fast);
+  top: 200px !important;
+  height: calc(100% - 220px) !important;
+  width: 600px !important;
+}
+
+body[class*="gin--"] .ck.ck-tabs.ck-ai-tabs.ck-ai-tabs__overlay {
+  transition: right var(--gin-transition-fast);
+  top: 200px !important;
+  height: calc(100% - 220px) !important;
+  width: 600px !important;
+  border: 1px solid var(--ck-color-base-border);
+  border-radius: var(--ck-border-radius);
+}
+
+body[class*="gin--"] .ck-tabs__panels-container_right {
+  border-top-left-radius: var(--ck-border-radius);
+  border-bottom-left-radius: var(--ck-border-radius);
+}
+
+body[class*="gin--"] .ck-ai-disclaimer {
+  border-bottom-left-radius: var(--ck-border-radius);
+}
+
+body[class*="gin--"] .ck-tabs__buttons-container_right {
+  border-top-right-radius: var(--ck-border-radius);
+  border-bottom-right-radius: var(--ck-border-radius);
+}
+
+body[class*="gin--"][data-meta-sidebar="open"] .ck.ck-tabs.ck-ai-tabs.ck-ai-tabs__overlay,
+body[class*="gin--"][data-meta-sidebar="open"] .ck.ai-sidebar-container:has(.ck-ai-tabs_maximized) {
+  transition: right var(--gin-transition-fast);
+  right: var(--gin-sidebar-width) !important;
+}
+
+.gin--dark-mode .ck {
+
+  /*--ck-color-button-default-hover-background: var(--gin-color-primary);*/
+  --ck-color-tab-button-icon: var(--gin-color-text);
+  /*--ck-color-tab-button-active-icon: var(--gin-color-primary);*/
+  --ck-color-tab-button-active-background: var(--gin-bg-layer);
+
+  --ck-ai-suggestion-inactive-color-background: hsla(128, 6%, 93%, .35);
+  --ck-ai-suggestion-inactive-color-border: hsla(128, 1%, 73%, .35);
+  --ck-ai-suggestion-marker-insertion-border-color: var(--ck-color-suggestion-marker-insertion-border, rgba(30, 174, 49, .35));
+  --ck-ai-suggestion-marker-insertion-background-color: var(--ck-color-suggestion-marker-insertion-background, rgba(102, 229, 119, .35));
+  --ck-ai-suggestion-marker-deletion-border-color: var(--ck-color-suggestion-marker-deletion-border, rgba(174, 30, 66, .35));
+  --ck-ai-suggestion-marker-deletion-background-color: var(--ck-color-suggestion-marker-deletion-background, rgba(229, 102, 134, .35));
+  --ck-ai-suggestion-marker-deletion-stroke-color: var(--ck-color-suggestion-marker-deletion-stroke, rgba(87, 15, 33, .5));
+  --ck-ai-suggestion-marker-deletion-border-color-active: rgba(109, 18, 41, .5);
+  --ck-ai-suggestion-marker-deletion-background-color-active: rgba(218, 37, 82, .5);
+  --ck-ai-suggestion-marker-insertion-border-color-active: rgba(18, 109, 31, .5);
+  --ck-ai-suggestion-marker-insertion-background-color-active: rgba(37, 218, 61, .5);
+  --ck-ai-review-mode-suggestion-color: rgba(116, 60, 205, .5);
+  --ck-ai-review-mode-suggestion-color-active: rgba(79, 35, 149, .8);
+  --ck-ai-review-color-icon: #707070;
+
+
+  --ck-ai-spinner-background: linear-gradient(90deg, var(--gin-color-text), var(--gin-color-contextual-text));
+  --ck-ai-spinner-mask: radial-gradient(farthest-side, transparent 66%, var(--gin-bg-layer) 0);
+
+  --ck-ai-disclaimer-background-color: var(--gin-bg-layer);
+  --ck-ai-disclaimer-border-color: var(--gin-border-color);
+  --ck-ai-disclaimer-text-color: var(--gin-color-contextual-text);
+
+  --ck-ai-notification-error-color-background: var(--gin-bg-layer);
+  --ck-ai-notification-warning-color-background: rgba(255, 184, 77, .1);
+  --ck-ai-notification-error-color-border: #ff825c;
+  --ck-ai-notification-warning-color-border: #ffb84d;
+
+  --ck-ai-button-primary-color: var(--gin-color-text);
+  --ck-ai-button-primary-disabled-color: var(--gin-color-text);
+  --ck-ai-button-primary-background-color: #743ccd;
+  --ck-ai-button-primary-disabled-background-color: rgba(116, 60, 205, .5);
+  --ck-ai-button-primary-hover-background-color: #582aa2;
+  --ck-ai-button-secondary-color: #743ccd;
+  --ck-ai-button-secondary-disabled-color: rgba(116, 60, 205, .5);
+  --ck-ai-button-secondary-background-color: var(--gin-bg-layer3);
+  --ck-ai-button-secondary-disabled-background-color: rgba(var(--gin-bg-layer-rgb), .5);
+  --ck-ai-button-secondary-border-color: #c5b2e6;
+  --ck-ai-button-secondary-disabled-border-color: rgba(197, 178, 230, .5);
+  --ck-ai-button-secondary-hover-background-color: var(--gin-bg-layer);
+  --ck-ai-button-secondary-active-background-color: var(--gin-bg-layer);
+  --ck-ai-button-tertiary-text-color: #743ccd;
+  --ck-ai-button-tertiary-disabled-text-color: rgba(116, 60, 205, .5);
+  --ck-ai-button-tertiary-text-background-color: transparent;
+  --ck-ai-button-tertiary-text-hover-background-color: var(--gin-bg-layer3);
+  --ck-ai-button-tertiary-text-hover-color: var(--gin-color-contextual-text);
+  --ck-ai-button-tertiary-filled-color: var(--gin-color-contextual-text);
+  --ck-ai-button-tertiary-filled-disabled-color: var(--gin-bg-layer3);
+  --ck-ai-button-tertiary-filled-hover-color: var(--gin-color-contextual-text);
+  --ck-ai-button-tertiary-filled-active-color: #743ccd;
+  --ck-ai-button-tertiary-filled-background-color: transparent;
+  --ck-ai-button-tertiary-filled-disabled-background-color: #ededed;
+  --ck-ai-button-tertiary-filled-hover-background-color: var(--gin-bg-layer3);
+  --ck-ai-button-tertiary-filled-active-background-color: var(--gin-bg-layer3);
+
+  --ck-ai-header-color-icon: var(--gin-color-contextual-text);
+  --ck-ai-header-color-text: #743ccd;
+  --ck-ai-header-border-color-button: #c5b2e6;
+
+  --ck-ai-review-mode-inactive-check-background: #fafafa;
+  --ck-color-suggestion-marker-deletion-border-inactive: hsla(345, 1%, 74%, .35);
+  --ck-color-suggestion-marker-deletion-background-inactive: rgba(244, 241, 242, .35);
+  --ck-color-suggestion-marker-deletion-stroke-inactive: hsla(0, 1%, 62%, .35);
+  --ck-color-suggestion-marker-insertion-border-inactive: hsla(128, 1%, 73%, .35);
+  --ck-color-suggestion-marker-insertion-background-inactive: hsla(128, 6%, 93%, .35);
+
+  --ck-ai-review-color-text: #743ccd;
+  --ck-ai-review-border-color-button: #c5b2e6;
+
+  --ck-ai-review-check-list-item-hover-border-color: #bda3eb;
+  --ck-ai-review-check-list-item-active-border-color: #743ccd;
+  --ck-ai-review-check-list-item-title-color: var(--ck-color-text);
+  --ck-ai-review-check-list-item-description-color: var(--gin-color-contextual-text);
+  --ck-ai-review-check-list-item-title-icon-color: var(--gin-color-contextual-text);
+  --ck-ai-review-check-list-model-dropdown-width: 426px;
+  --ck-ai-review-check-list-model-dropdown-max-height: 340px;
+  --ck-ai-review-check-list-model-dropdown-arrow-drop-shadow: 0 -2px 0px var(--ck-color-shadow-drop);
+  --ck-ai-review-check-list-model-dropdown-hover-background-color: var(--gin-bg-layer3);
+  --ck-ai-review-check-list-model-dropdown-active-color: #743ccd;
+
+  --ck-ai-quick-actions-button-color: #743ccd;
+  --ck-ai-quick-actions-button-background-color: var(--gin-bg-layer3);
+  --ck-ai-quick-actions-list-item-group-row-color: var(--gin-color-contextual-text);
+
+  --ck-ai-loader-icon-color: var(--gin-icon-color);
+  --ck-ai-loader-icon-dot-color: var(--gin-icon-color);
+
+  --ck-ai-border-color-main: #ccced1;
+  --ck-ai-border-color-button: #c5b2e6;
+  --ck-ai-background-color-action-button: #743ccd;
+  --ck-ai-font-color-action-button: var(--gin-color-text);
+  --ck-ai-chat-color-text: #743ccd;
+  --ck-ai-chat-color-icon: var(--gin-color-contextual-text);
+  --ck-ai-chat-suggestion-icon-default-color: var(--gin-color-contextual-text);
+  --ck-ai-chat-suggestion-border-hover-color: #bda3eb;
+  --ck-ai-chat-button-active-background-color: var(--gin-bg-layer3);
+  --ck-ai-chat-button-active-color: #743ccd;
+  --ck-ai-chat-button-hover-color: var(--gin-color-contextual-text);
+  --ck-ai-chat-user-context-background: var(--gin-bg-layer);
+  --ck-ai-chat-flash-color: rgba(116, 60, 205, .102);
+  --ck-ai-chat-flash-color-text: #743ccd;
+  --ck-ai-chat-controls-loader-icon-color: var(--gin-icon-color);
+  --ck-ai-chat-feed-loader-icon-color: var(--gin-icon-color);
+
+  --ck-ai-chat-color-icon-outdated: var(--ck-ai-chat-suggestion-icon-default-color);
+  --ck-ai-background-color-action-button-semi-transparent: rgba(116, 60, 205, .5);
+
+  --ck-ai-chat-feed-item-color-text: var(--gin-color-contextual-text);
+  --ck-ai-chat-feed-item-color-background: var(--gin-bg-layer);
+  --ck-ai-chat-feed-item-color-background-secondary: var(--gin-bg-layer);
+  --ck-ai-chat-feed-item-color-actions-button-hover: #582aa2;
+  --ck-ai-chat-feed-item-color-show-changes-toggle-hover-color: #582aa2;
+  --ck-ai-chat-feed-item-color-show-changes-toggle-hover-background: var(--gin-bg-layer3);
+  --ck-ai-chat-feed-item-color-show-changes-toggle-on-color: #582aa2;
+  --ck-ai-chat-feed-item-color-show-changes-toggle-on-background: var(--gin-bg-layer3);
+  --ck-ai-chat-feed-item-color-show-changes-toggle-active-background: var(--gin-bg-layer3);
+  --ck-ai-chat-feed-interaction-header-capabilities-color-text: var(--gin-color-contextual-text);
+
+  --ck-ai-chat-controls-loader-icon-dot-color: #ccced1;
+  --ck-ai-chat-controls-loader-icon-dot-active-color: var(--gin-color-contextual-text);
+  --ck-ai-chat-controls-loader-color: var(--gin-color-contextual-text);
+
+  --ck-ai-form-submit-button-text-color: var(--ck-color-text);
+  --ck-ai-form-submit-button-border-color: transparent;
+  --ck-ai-form-submit-button-disabled-border-color: transparent;
+  --ck-ai-toolbar-button-hover-color: var(--ck-color-text);
+}
+
+.gin--dark-mode .ck .ai-sidebar-container .ck-ai-tabs {
+  border-radius: 0 !important;
+}

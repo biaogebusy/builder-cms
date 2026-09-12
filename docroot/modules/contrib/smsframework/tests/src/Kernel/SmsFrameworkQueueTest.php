@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
 use Drupal\Core\CronInterface;
+use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\sms\Entity\SmsMessage;
-use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsMessageInterface;
 use Drupal\sms\Plugin\QueueWorker\SmsProcessor;
 use Drupal\sms\Provider\SmsProviderInterface;
@@ -20,9 +20,6 @@ use Drupal\sms\Provider\SmsQueueProcessorInterface;
  */
 final class SmsFrameworkQueueTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test_gateway', 'field', 'telephone', 'dynamic_entity_reference',
   ];
@@ -55,9 +52,6 @@ final class SmsFrameworkQueueTest extends SmsFrameworkKernelBase {
    */
   private CronInterface $cronService;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -104,7 +98,7 @@ final class SmsFrameworkQueueTest extends SmsFrameworkKernelBase {
     static::assertCount(0, $this->getTestMessages($this->gateway), 'Message not received yet.');
 
     $this->cronService->run();
-    static::assertEquals($sms_message->getMessage(), sms_test_gateway_get_incoming()['message'], 'Message was received.');
+    static::assertEquals($sms_message->getMessage(), \sms_test_gateway_get_incoming()['message'], 'Message was received.');
   }
 
   /**
@@ -182,7 +176,7 @@ final class SmsFrameworkQueueTest extends SmsFrameworkKernelBase {
 
     $this->cronService->run();
     $sms_messages = SmsMessage::loadMultiple();
-    $sms_message_new = reset($sms_messages);
+    $sms_message_new = \reset($sms_messages);
 
     static::assertCount(1, $this->getTestMessages($this->gateway), 'One message was sent.');
     static::assertCount(1, $sms_messages, 'There are SMS entities in storage.');

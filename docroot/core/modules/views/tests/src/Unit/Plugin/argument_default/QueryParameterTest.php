@@ -6,20 +6,22 @@ namespace Drupal\Tests\views\Unit\Plugin\argument_default;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\argument_default\QueryParameter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\argument_default\QueryParameter
- * @group views
+ * Tests Drupal\views\Plugin\views\argument_default\QueryParameter.
  */
+#[CoversClass(QueryParameter::class)]
+#[Group('views')]
 class QueryParameterTest extends UnitTestCase {
 
   /**
    * Tests the getArgument() method.
-   *
-   * @covers ::getArgument
-   * @dataProvider providerGetArgument
    */
+  #[DataProvider('providerGetArgument')]
   public function testGetArgument($options, Request $request, $expected): void {
     $view = $this->getMockBuilder('Drupal\views\ViewExecutable')
       ->disableOriginalConstructor()
@@ -87,6 +89,18 @@ class QueryParameterTest extends UnitTestCase {
       ['query_param' => 'test[tier1][tier2]'],
       new Request(['test' => 'foo']),
       NULL,
+    ];
+
+    $data[] = [
+      ['query_param' => 'test[tier1][tier2]', 'fallback' => 'baz'],
+      new Request(['test' => ['tier1' => 'foo']]),
+      'baz',
+    ];
+
+    $data[] = [
+      ['query_param' => 'test[tier1][tier2]', 'fallback' => 'baz'],
+      new Request(['test' => ['test2' => 'foo']]),
+      'baz',
     ];
 
     return $data;

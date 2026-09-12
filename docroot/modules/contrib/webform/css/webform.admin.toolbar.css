@@ -6,10 +6,10 @@
 /**
  * Toolbar tab icon.
  */
-.toolbar-bar .toolbar-icon-entity-webform-collection:before {
+.toolbar-bar .toolbar-icon-entity-webform-collection::before {
   background-image: url(../icons/787878/webform.svg);
 }
-.toolbar-bar .toolbar-icon-entity-webform-collection:active:before,
-.toolbar-bar .toolbar-icon-entity-webform-collection.is-active:before {
+.toolbar-bar .toolbar-icon-entity-webform-collection:active::before,
+.toolbar-bar .toolbar-icon-entity-webform-collection.is-active::before {
   background-image: url(../icons/000000/webform.svg);
 }

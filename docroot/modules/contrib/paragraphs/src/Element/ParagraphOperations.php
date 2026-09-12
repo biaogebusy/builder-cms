@@ -2,14 +2,16 @@
 
 namespace Drupal\paragraphs\Element;
 
+use Drupal\Core\Render\Attribute\RenderElement;
 use Drupal\Core\Render\Element\Operations;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * {@inheritdoc}
  *
  * @RenderElement("paragraph_operations")
  */
+#[RenderElement('paragraph_operations')]
 class ParagraphOperations extends Operations {
 
   /**
@@ -28,7 +30,7 @@ class ParagraphOperations extends Operations {
     // Attach #ajax events if title is a render array.
     foreach ($element['#links'] as &$link) {
       if (isset($link['title']['#ajax'])) {
-        $link['title'] = RenderElement::preRenderAjaxForm($link['title']);
+        $link['title'] = RenderElementBase::preRenderAjaxForm($link['title']);
       }
     }
 

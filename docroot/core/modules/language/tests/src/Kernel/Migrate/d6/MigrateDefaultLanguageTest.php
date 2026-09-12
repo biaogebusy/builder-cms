@@ -7,12 +7,14 @@ namespace Drupal\Tests\language\Kernel\Migrate\d6;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the default language variable migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateDefaultLanguageTest extends MigrateDrupal6TestBase {
 
   /**
@@ -77,7 +79,7 @@ class MigrateDefaultLanguageTest extends MigrateDrupal6TestBase {
    * @param string $langcode
    *   The langcode of the default language.
    */
-  protected function setDefaultLanguage($langcode) {
+  protected function setDefaultLanguage($langcode): void {
     // The default language of the test fixture is English. Change it to
     // something else before migrating, to be sure that the source site
     // default language is migrated.

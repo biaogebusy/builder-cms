@@ -12,15 +12,15 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\devel_generate\DevelGeneratePluginManager;
 use Drupal\devel_generate_example\Plugin\DevelGenerate\ExampleDevelGenerate;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 
-/**
- * @coversDefaultClass \Drupal\devel_generate\DevelGeneratePluginManager
- * @group devel_generate
- */
+#[CoversClass(DevelGeneratePluginManager::class)]
+#[Group('devel_generate')]
 class DevelGenerateManagerTest extends UnitTestCase {
 
   /**
@@ -37,9 +37,7 @@ class DevelGenerateManagerTest extends UnitTestCase {
     $this->discovery = $this->createMock(DiscoveryInterface::class);
     $this->discovery->expects($this->any())
       ->method('getDefinitions')
-      ->willReturnCallback(function (): array {
-        return $this->getMockDefinitions();
-      });
+      ->willReturnCallback(fn(): array => $this->getMockDefinitions());
   }
 
   /**

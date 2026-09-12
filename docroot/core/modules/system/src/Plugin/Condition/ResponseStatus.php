@@ -38,6 +38,9 @@ class ResponseStatus extends ConditionPluginBase implements ContainerFactoryPlug
     return $instance;
   }
 
+  /**
+   * Sets the request stack to the given input.
+   */
   public function setRequestStack(RequestStack $requestStack): void {
     $this->requestStack = $requestStack;
   }
@@ -118,7 +121,7 @@ class ResponseStatus extends ConditionPluginBase implements ContainerFactoryPlug
    */
   public function getCacheContexts(): array {
     $contexts = parent::getCacheContexts();
-    $contexts[] = 'url.path';
+    $contexts[] = 'exception_status_code';
     return $contexts;
   }
 

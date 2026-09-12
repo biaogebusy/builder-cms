@@ -9,12 +9,15 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the rendering of a layout section field.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutSectionTest extends BrowserTestBase {
 
   /**
@@ -168,9 +171,8 @@ class LayoutSectionTest extends BrowserTestBase {
 
   /**
    * Tests layout_section formatter output.
-   *
-   * @dataProvider providerTestLayoutSectionFormatter
    */
+  #[DataProvider('providerTestLayoutSectionFormatter')]
   public function testLayoutSectionFormatter($layout_data, $expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache): void {
     $node = $this->createSectionNode($layout_data);
 

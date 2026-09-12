@@ -199,6 +199,9 @@ class Config extends StorableConfigBase {
    * {@inheritdoc}
    */
   public function save($has_trusted_data = FALSE) {
+    if (func_num_args() > 0) {
+      @trigger_error('Calling ' . __METHOD__ . '() with the $has_trusted_data argument is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3348180', E_USER_DEPRECATED);
+    }
     // Validate the configuration object name before saving.
     static::validateName($this->name);
 
@@ -259,8 +262,6 @@ class Config extends StorableConfigBase {
    * configuration storage before any changes. If this is a new configuration
    * object it will be an empty array.
    *
-   * @see \Drupal\Core\Config\Config::get()
-   *
    * @param string $key
    *   A string that maps to a key within the configuration data.
    * @param bool $apply_overrides
@@ -268,6 +269,8 @@ class Config extends StorableConfigBase {
    *
    * @return mixed
    *   The data that was requested.
+   *
+   * @see \Drupal\Core\Config\Config::get()
    */
   public function getOriginal($key = '', $apply_overrides = TRUE) {
     $original_data = $this->originalData;

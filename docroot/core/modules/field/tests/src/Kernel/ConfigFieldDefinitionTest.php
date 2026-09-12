@@ -6,12 +6,14 @@ namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests exposing field definitions for configurable fields.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class ConfigFieldDefinitionTest extends FieldKernelTestBase {
 
   /**

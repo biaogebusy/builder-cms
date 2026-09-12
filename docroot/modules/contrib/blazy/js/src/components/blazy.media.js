@@ -220,7 +220,7 @@
       if ($.hasClass(p, 'media-wrapper')) {
         p.style.width = width + 'px';
         if (data.ratio !== data.oratio) {
-          el.style.padding = 'padding-bottom: ' + data.ratio + '%';
+          el.style.paddingBottom = data.ratio + '%';
         }
       }
     };

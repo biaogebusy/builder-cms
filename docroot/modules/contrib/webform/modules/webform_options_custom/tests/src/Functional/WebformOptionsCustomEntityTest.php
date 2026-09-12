@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\webform_options_custom\Functional;
 
-use Drupal\node\Entity\Node;
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
+use Drupal\node\Entity\Node;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -26,7 +26,7 @@ class WebformOptionsCustomEntityTest extends WebformBrowserTestBase {
   /**
    * Test options custom entity.
    */
-  public function testOptionsCustomEntity() {
+  public function testOptionsCustomEntity(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_options_custom_ent');

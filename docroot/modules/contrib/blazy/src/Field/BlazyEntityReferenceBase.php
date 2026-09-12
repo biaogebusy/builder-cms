@@ -55,7 +55,7 @@ abstract class BlazyEntityReferenceBase extends BlazyEntityMediaBase {
   protected function withElementExtra(array &$element): void {
     parent::withElementExtra($element);
 
-    // @todo remove helper at/ by 3.x post migrations:
+    // @todo deprecate and remove helper at/ by 3.x post migrations:
     $this->formatter->hashtag($element);
 
     $settings = &$element['#settings'];

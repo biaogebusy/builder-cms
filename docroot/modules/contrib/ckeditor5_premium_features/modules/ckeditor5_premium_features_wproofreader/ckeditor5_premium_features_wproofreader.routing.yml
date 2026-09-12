@@ -1,0 +1,30 @@
+ckeditor5_premium_features_wproofreader.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/wproofreader'
+  defaults:
+    _title: 'WProofreader spelling and grammar checker'
+    _form: 'Drupal\ckeditor5_premium_features_wproofreader\Form\SettingsForm'
+  requirements:
+    _permission: 'administer ckeditor5 wproofreader configuration'
+
+ckeditor5_premium_features_wproofreader.webspellchecker_proxy:
+  path: '/ckeditor5-premium-features-wproofreader/api'
+  defaults:
+    _title: 'WebSpellChecker Proxy'
+    _controller: '\Drupal\ckeditor5_premium_features_wproofreader\Controller\WebSpellCheckerApiProxyController'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+  requirements:
+    _permission: 'ckeditor5 webspellchecker proxy access'
+
+ckeditor5_premium_features_wproofreader.webspellchecker_service_id_checker:
+  path: '/ckeditor5-premium-features-wproofreader/validate-service-id'
+  defaults:
+    _title: 'WebSpellChecker Proxy'
+    _controller: '\Drupal\ckeditor5_premium_features_wproofreader\Controller\ValidateServiceIdController'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+  requirements:
+    _permission: 'ckeditor5 webspellchecker proxy access'
+

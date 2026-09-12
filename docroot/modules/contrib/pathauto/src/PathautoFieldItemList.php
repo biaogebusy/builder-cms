@@ -4,14 +4,22 @@ namespace Drupal\pathauto;
 
 use Drupal\path\Plugin\Field\FieldType\PathFieldItemList;
 
+/**
+ * Provides an item list class for handling Pathauto-related field items.
+ *
+ * Extends the PathFieldItemList class to integrate functionality for
+ * automatically generating path aliases for entities. This class ensures
+ * computed values and interacts with Pathauto-specific states for alias
+ * generation.
+ */
 class PathautoFieldItemList extends PathFieldItemList {
 
   /**
-   * @{inheritdoc}
+   * {@inheritdoc}
    */
   protected function delegateMethod($method) {
     // @todo Workaround until this is fixed, see
-    //   https://www.drupal.org/project/drupal/issues/2946289.
+    // https://www.drupal.org/project/drupal/issues/2946289.
     $this->ensureComputedValue();
 
     // Duplicate the logic instead of calling the parent due to the dynamic
@@ -27,7 +35,7 @@ class PathautoFieldItemList extends PathFieldItemList {
   }
 
   /**
-   * @{inheritdoc}
+   * {@inheritdoc}
    */
   protected function computeValue() {
     parent::computeValue();

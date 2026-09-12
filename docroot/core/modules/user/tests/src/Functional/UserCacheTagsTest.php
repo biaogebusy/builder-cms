@@ -8,12 +8,14 @@ use Drupal\Tests\system\Functional\Entity\EntityWithUriCacheTagsTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the User entity's cache tags.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserCacheTagsTest extends EntityWithUriCacheTagsTestBase {
 
   /**
@@ -56,7 +58,7 @@ class UserCacheTagsTest extends EntityWithUriCacheTagsTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getAdditionalCacheTagsForEntityListing() {
+  protected function getAdditionalCacheTagsForEntityListing(): array {
     return ['user:0', 'user:1'];
   }
 

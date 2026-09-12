@@ -145,7 +145,7 @@ abstract class WebformUiElementFormBase extends FormBase implements WebformUiEle
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
     // Override an element's default value using the $form_state.
     if ($form_state->get('default_value')) {
       $this->element['#default_value'] = $form_state->get('default_value');
@@ -357,7 +357,7 @@ abstract class WebformUiElementFormBase extends FormBase implements WebformUiEle
     // Get element validation errors.
     $element_errors = $subform_state->getErrors();
     foreach ($element_errors as $element_error) {
-      $form_state->setErrorByName(NULL, $element_error);
+      $form_state->setErrorByName('', $element_error);
     }
 
     // Stop validation if the element's properties has any errors.
@@ -434,7 +434,7 @@ abstract class WebformUiElementFormBase extends FormBase implements WebformUiEle
     if ($this->requestStack->getCurrentRequest()->query->get('destination')) {
       $redirect_destination = $this->getRedirectDestination();
       $destination = $redirect_destination->get();
-      $destination .= (strpos($destination, '?') !== FALSE ? '&' : '?') . 'update=' . $key;
+      $destination .= (str_contains($destination, '?') ? '&' : '?') . 'update=' . $key;
       $destination .= ($save_and_add_element) ? '&add_element=' . $add_element : '';
       $redirect_destination->set($destination);
     }
@@ -563,7 +563,7 @@ abstract class WebformUiElementFormBase extends FormBase implements WebformUiEle
 
     while ($parent_key) {
       $parent_element = $this->getWebform()->getElement($parent_key);
-      if (strpos($parent_key, '01') !== FALSE
+      if (str_contains($parent_key, '01')
         && $parent_element['#type'] === 'webform_table_row') {
         return $parent_element['#webform_key'];
       }
@@ -614,7 +614,7 @@ abstract class WebformUiElementFormBase extends FormBase implements WebformUiEle
 
     $increment = NULL;
     foreach ($elements as $element_key => $element) {
-      if (strpos($element_key, $base_key) === 0) {
+      if (str_starts_with($element_key, $base_key)) {
         if (preg_match('/^' . $base_key . '_(\d+)$/', $element_key, $match)) {
           $element_increment = intval($match[1]);
           if ($element_increment > $increment) {

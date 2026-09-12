@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
+use Drupal\Core\Database\Database;
+use Drupal\file\Entity\File;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\Tests\file\Kernel\Migrate\d6\FileMigrationTestTrait;
-use Drupal\user\Entity\User;
-use Drupal\file\Entity\File;
-use Drupal\Core\Database\Database;
-use Drupal\user\RoleInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use Drupal\user\Entity\User;
+use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Users migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateUserTest extends MigrateDrupal6TestBase {
 
   use FileMigrationTestTrait;
@@ -103,7 +105,7 @@ class MigrateUserTest extends MigrateDrupal6TestBase {
       $this->assertSame($source->name, $user->label());
       $this->assertSame($source->mail, $user->getEmail());
       $this->assertSame($source->created, $user->getCreatedTime());
-      $this->assertSame($source->access, $user->getLastAccessedTime());
+      $this->assertSame((int) $source->access, $user->getLastAccessedTime());
       $this->assertSame($source->login, $user->getLastLoginTime());
       $is_blocked = $source->status == 0;
       $this->assertSame($is_blocked, $user->isBlocked());

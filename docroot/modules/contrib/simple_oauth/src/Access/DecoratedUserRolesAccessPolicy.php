@@ -2,6 +2,7 @@
 
 namespace Drupal\simple_oauth\Access;
 
+use Drupal\Core\Config\ConfigInstallerInterface;
 use Drupal\Core\Session\AccessPolicyBase;
 use Drupal\Core\Session\AccessPolicyInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -24,12 +25,23 @@ class DecoratedUserRolesAccessPolicy extends AccessPolicyBase {
   /**
    * Constructs a new DecoratedUserRolesAccessPolicy.
    */
-  public function __construct(protected AccessPolicyInterface $inner, protected EntityTypeManagerInterface $entityTypeManager) {}
+  public function __construct(
+    protected AccessPolicyInterface $inner,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected ConfigInstallerInterface $configInstaller,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
   public function calculatePermissions(AccountInterface $account, string $scope): RefinableCalculatedPermissionsInterface {
+    // Do not perform the full permission calculation if we are being called
+    // during configuration sync. This triggers hooks and events which can cause
+    // errors if the container is not yet fully initialized.
+    if ($this->configInstaller->isSyncing()) {
+      return parent::calculatePermissions($account, $scope);
+    }
+
     if (!$account instanceof TokenAuthUserInterface) {
       return $this->inner->calculatePermissions($account, $scope);
     }

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\ServiceProvider;
 
+use Drupal\Core\Cache\CacheFactory;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\DependencyInjection\Parameter;
 use Symfony\Component\DependencyInjection\Reference;
-use Drupal\Core\Cache\CacheFactory;
 
 /**
  * Tests service provider registration to the DIC.
- *
- * @group ServiceProvider
  */
+#[Group('ServiceProvider')]
+#[RunTestsInSeparateProcesses]
 class ServiceProviderTest extends KernelTestBase {
 
   /**
@@ -25,7 +27,7 @@ class ServiceProviderTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
     // Undo cache_factory override done in parent because it can hide caching
     // issues in container build time.
@@ -50,11 +52,13 @@ class ServiceProviderTest extends KernelTestBase {
    * Tests that the DIC keeps up with module enable/disable in the same request.
    */
   public function testServiceProviderRegistrationDynamic(): void {
-    // Uninstall the module and ensure the service provider's service is not registered.
+    // Uninstall the module and ensure the service provider's service is not
+    // registered.
     \Drupal::service('module_installer')->uninstall(['service_provider_test']);
     $this->assertFalse(\Drupal::hasService('service_provider_test_class'), 'The service_provider_test_class service does not exist in the DIC.');
 
-    // Install the module and ensure the service provider's service is registered.
+    // Install the module and ensure the service provider's service is
+    // registered.
     \Drupal::service('module_installer')->install(['service_provider_test']);
     $this->assertTrue(\Drupal::hasService('service_provider_test_class'), 'The service_provider_test_class service exists in the DIC.');
   }

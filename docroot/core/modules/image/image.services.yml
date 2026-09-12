@@ -1,3 +1,6 @@
+parameters:
+  image.skip_procedural_hook_scan: true
+
 services:
   _defaults:
     autoconfigure: true
@@ -9,9 +12,7 @@ services:
   plugin.manager.image.effect:
     class: Drupal\image\ImageEffectManager
     parent: default_plugin_manager
-  image.page_cache_response_policy.deny_private_image_style_download:
-    class: Drupal\image\PageCache\DenyPrivateImageStyleDownload
-    arguments: ['@current_route_match']
-    public: false
-    tags:
-      - { name: page_cache_response_policy }
+  logger.channel.image:
+    parent: logger.channel_base
+    arguments: ['image']
+  Drupal\image\ImageDerivativeUtilities: ~

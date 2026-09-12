@@ -2,14 +2,25 @@
 
 namespace Drupal\Core\Updater;
 
-use Drupal\Core\Url;
-
 /**
  * Defines a class for updating modules.
  *
  * Uses Drupal\Core\FileTransfer\FileTransfer classes via authorize.php.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3512364
  */
 class Module extends Updater implements UpdaterInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($source, $root) {
+    @trigger_error('The ' . __NAMESPACE__ . '\Module class is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+    parent::__construct($source, $root);
+  }
 
   /**
    * Returns the directory where a module should be installed.
@@ -71,68 +82,10 @@ class Module extends Updater implements UpdaterInterface {
    *   The project to check.
    *
    * @return bool
+   *   TRUE if the the project can be updated, FALSE otherwise.
    */
   public static function canUpdate($project_name) {
     return (bool) \Drupal::service('extension.list.module')->getPath($project_name);
-  }
-
-  /**
-   * Returns available database schema updates once a new version is installed.
-   *
-   * @return array
-   *
-   * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use
-   * \Drupal\Core\Update\UpdateHookRegistry::getAvailableUpdates() instead.
-   *
-   * @see https://www.drupal.org/node/3359445
-   */
-  public function getSchemaUpdates() {
-    @trigger_error(__METHOD__ . "() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Update\UpdateHookRegistry::getAvailableUpdates() instead. See https://www.drupal.org/node/3359445", E_USER_DEPRECATED);
-    require_once DRUPAL_ROOT . '/core/includes/install.inc';
-    require_once DRUPAL_ROOT . '/core/includes/update.inc';
-
-    if (!self::canUpdate($this->name)) {
-      return [];
-    }
-    \Drupal::moduleHandler()->loadInclude($this->name, 'install');
-
-    if (!\Drupal::service('update.update_hook_registry')->getAvailableUpdates($this->name)) {
-      return [];
-    }
-    $modules_with_updates = update_get_update_list();
-    if ($updates = $modules_with_updates[$this->name]) {
-      if ($updates['start']) {
-        return $updates['pending'];
-      }
-    }
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postInstallTasks() {
-    // Since this is being called outside of the primary front controller,
-    // the base_url needs to be set explicitly to ensure that links are
-    // relative to the site root.
-    // @todo Simplify with https://www.drupal.org/node/2548095
-    $default_options = [
-      '#type' => 'link',
-      '#options' => [
-        'absolute' => TRUE,
-        'base_url' => $GLOBALS['base_url'],
-      ],
-    ];
-    return [
-      $default_options + [
-        '#url' => Url::fromRoute('system.modules_list'),
-        '#title' => t('Install newly added modules'),
-      ],
-      $default_options + [
-        '#url' => Url::fromRoute('system.admin'),
-        '#title' => t('Administration pages'),
-      ],
-    ];
   }
 
   /**

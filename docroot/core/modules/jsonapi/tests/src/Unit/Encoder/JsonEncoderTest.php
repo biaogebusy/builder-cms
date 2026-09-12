@@ -6,15 +6,16 @@ namespace Drupal\Tests\jsonapi\Unit\Encoder;
 
 use Drupal\jsonapi\Encoder\JsonEncoder;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the JSON:API encoder.
  *
- * @coversDefaultClass \Drupal\jsonapi\Encoder\JsonEncoder
- * @group jsonapi
- *
  * @internal
  */
+#[CoversClass(JsonEncoder::class)]
+#[Group('jsonapi')]
 class JsonEncoderTest extends UnitTestCase {
 
   /**

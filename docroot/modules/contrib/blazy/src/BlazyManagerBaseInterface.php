@@ -4,6 +4,8 @@ namespace Drupal\blazy;
 
 /**
  * Defines re-usable media-related methods across Blazy ecosystem to DRY.
+ *
+ * @todo add return and parameter types at 4.x.
  */
 interface BlazyManagerBaseInterface extends BlazyInterface {
 
@@ -22,7 +24,7 @@ interface BlazyManagerBaseInterface extends BlazyInterface {
   public function attach(array $attach = []): array;
 
   /**
-   * Alias for Blazy::containerAttributes().
+   * Alias for Attributes::container().
    *
    * @param array $attributes
    *   The container attributes being modified.
@@ -30,6 +32,28 @@ interface BlazyManagerBaseInterface extends BlazyInterface {
    *   The given settings.
    */
   public function containerAttributes(array &$attributes, array $settings): void;
+
+  /**
+   * Returns the BlazySettings from $settings which may contain blazies.
+   *
+   * The naming is simplified to just blazies, normally plural-like module name
+   * to be unique.
+   *
+   * @param array $settings
+   *   The settings being modified.
+   * @param bool $merge
+   *   Whether to merge with the settings or a new set.
+   * @param string $key
+   *   The key of settings: blazies, slicks, splides, etc.
+   *
+   * @return \Drupal\blazy\BlazySettings
+   *   The BlazySettings instance.
+   */
+  public function getBlazies(
+    array &$settings,
+    bool $merge = FALSE,
+    string $key = 'blazies',
+  ): BlazySettings;
 
   /**
    * Returns the supported image effects.
@@ -201,9 +225,9 @@ interface BlazyManagerBaseInterface extends BlazyInterface {
    * via Entity/Media Embed which normally means Blazy should be disabled
    * due to CKEditor not supporting JS assets.
    *
-   * @see \Drupal\blazy\Theme\BlazyTheme::blazy()
-   * @see \Drupal\blazy\Theme\BlazyTheme::field()
-   * @see \Drupal\blazy\Theme\BlazyTheme::fileVideo()
+   * @see \Drupal\blazy\Hook\ThemeHooks::preprocessBlazy()
+   * @see \Drupal\blazy\Hook\ThemeHooks::preprocessField()
+   * @see \Drupal\blazy\Hook\ThemeHooks::preprocessFileVideo()
    * @see blazy_preprocess_file_video()
    */
   public function thirdPartyFormatters(): array;
@@ -235,5 +259,15 @@ interface BlazyManagerBaseInterface extends BlazyInterface {
     array $settings,
     array $attachments = [],
   ): void;
+
+  /**
+   * Cleans out unclean module filter references after uninstalls.
+   *
+   * @param string $module
+   *   The module being uninstall.
+   *
+   * @todo deprecate and remove when core filter takes care of its own plugins removal.
+   */
+  public function filterCleanup($module = 'blazy'): void;
 
 }

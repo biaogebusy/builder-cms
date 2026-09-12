@@ -5,62 +5,43 @@
  * Defines the Store entity and associated features.
  */
 
+use Drupal\commerce_store\Hook\CommerceStoreHooks;
+use Drupal\commerce_store\Hook\CommerceStoreThemeHooks;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
+use Drupal\Core\Hook\Attribute\LegacyHook;
 
 /**
  * Implements hook_mail_alter().
  *
  * Sets the default "from" address to the current store email.
  */
-function commerce_store_mail_alter(&$message) {
-  if (substr($message['id'], 0, 9) == 'commerce_' && empty($message['params']['from'])) {
-    /** @var \Drupal\commerce_store\CurrentStoreInterface $current_store */
-    $current_store = \Drupal::service('commerce_store.current_store');
-    $current_store = $current_store->getStore();
-    if ($current_store) {
-      $message['from'] = $current_store->getEmailFromHeader();
-    }
-  }
+#[LegacyHook]
+function commerce_store_mail_alter(&$message): void {
+  \Drupal::service(CommerceStoreHooks::class)->mailAlter($message);
 }
 
 /**
  * Implements hook_theme().
  */
-function commerce_store_theme() {
-  return [
-    'commerce_store' => [
-      'render element' => 'elements',
-    ],
-    'commerce_store_form' => [
-      'render element' => 'form',
-    ],
-  ];
+#[LegacyHook]
+function commerce_store_theme(): array {
+  return \Drupal::service(CommerceStoreThemeHooks::class)->theme();
 }
 
 /**
  * Implements hook_field_widget_single_element_form_alter().
  */
-function commerce_store_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {
-  /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
-  $field_definition = $context['items']->getFieldDefinition();
-  $field_name = $field_definition->getName();
-  $entity_type = $field_definition->getTargetEntityTypeId();
-  $widget_name = $context['widget']->getPluginId();
-  if ($field_name == 'billing_countries' && $entity_type == 'commerce_store' && $widget_name == 'options_select') {
-    $element['#options']['_none'] = t('- All countries -');
-    $element['#size'] = 5;
-  }
-  elseif ($field_name == 'path' && $entity_type == 'commerce_store' && $widget_name == 'path') {
-    $element['alias']['#description'] = t('The alternative URL for this store. Use a relative path. For example, "/my-store".');
-  }
+#[LegacyHook]
+function commerce_store_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context): void {
+  \Drupal::service(CommerceStoreHooks::class)->fieldWidgetSingleElementFormAlter($element, $form_state, $context);
 }
 
 /**
  * Implements hook_theme_suggestions_commerce_store().
  */
-function commerce_store_theme_suggestions_commerce_store(array $variables) {
-  return _commerce_entity_theme_suggestions('commerce_store', $variables);
+#[LegacyHook]
+function commerce_store_theme_suggestions_commerce_store(array $variables): array {
+  return \Drupal::service(CommerceStoreThemeHooks::class)->themeSuggestionsCommerceStore($variables);
 }
 
 /**
@@ -73,16 +54,8 @@ function commerce_store_theme_suggestions_commerce_store(array $variables) {
  *   - elements: An associative array containing rendered fields.
  *   - attributes: HTML attributes for the containing element.
  */
-function template_preprocess_commerce_store(array &$variables) {
-  /** @var Drupal\commerce_store\Entity\StoreInterface $store */
-  $store = $variables['elements']['#commerce_store'];
-
-  $variables['store_entity'] = $store;
-  $variables['store_url'] = $store->isNew() ? '' : $store->toUrl();
-  $variables['store'] = [];
-  foreach (Element::children($variables['elements']) as $key) {
-    $variables['store'][$key] = $variables['elements'][$key];
-  }
+function template_preprocess_commerce_store(array &$variables): void {
+  \Drupal::service(CommerceStoreThemeHooks::class)->preprocessCommerceStore($variables);
 }
 
 /**
@@ -90,16 +63,15 @@ function template_preprocess_commerce_store(array &$variables) {
  *
  * Allow stores to render fields groups defined from Fields UI.
  */
-function commerce_store_field_group_content_element_keys_alter(&$keys) {
-  $keys['commerce_store'] = 'store';
+#[LegacyHook]
+function commerce_store_field_group_content_element_keys_alter(&$keys): void {
+  \Drupal::service(CommerceStoreHooks::class)->fieldGroupContentElementKeysAlter($keys);
 }
 
 /**
  * Implements hook_gin_content_form_routes().
  */
-function commerce_store_gin_content_form_routes() {
-  return [
-    'entity.commerce_store.edit_form',
-    'entity.commerce_store.add_form',
-  ];
+#[LegacyHook]
+function commerce_store_gin_content_form_routes(): array {
+  return \Drupal::service(CommerceStoreHooks::class)->ginContentFormRoutes();
 }

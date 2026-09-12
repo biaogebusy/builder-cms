@@ -9,11 +9,11 @@ use Drupal\performance_test\Cache\CacheTagOperation;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\Contrib\Otlp\OtlpHttpTransportFactory;
 use OpenTelemetry\Contrib\Otlp\SpanExporter;
-use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
-use OpenTelemetry\SDK\Trace\TracerProvider;
+use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
-use OpenTelemetry\SDK\Common\Attribute\Attributes;
+use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
+use OpenTelemetry\SDK\Trace\TracerProvider;
 use OpenTelemetry\SemConv\Incubating\Attributes\DeploymentIncubatingAttributes;
 use OpenTelemetry\SemConv\Incubating\Attributes\ServiceIncubatingAttributes;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -47,7 +47,7 @@ trait PerformanceTestTrait {
    *
    * @see \Drupal\Tests\BrowserTestBase::installModulesFromClassProperty()
    */
-  private function doInstallModulesFromClassProperty(ContainerInterface $container) {
+  private function doInstallModulesFromClassProperty(ContainerInterface $container): void {
     // Bypass everything that WebDriverTestBase does here to get closer to
     // a production configuration.
     BrowserTestBase::installModulesFromClassProperty($container);
@@ -76,9 +76,7 @@ trait PerformanceTestTrait {
       'performance' => 'ALL',
       'performanceTimeline' => 'ALL',
     ];
-    // Support legacy key.
-    $chrome_options_key = isset($driver_args[1]['chromeOptions']) ? 'chromeOptions' : 'goog:chromeOptions';
-    $driver_args[1][$chrome_options_key]['perfLoggingPrefs'] = [
+    $driver_args[1]['goog:chromeOptions']['perfLoggingPrefs'] = [
       'traceCategories' => 'timeline,devtools.timeline,browser',
     ];
 
@@ -134,26 +132,41 @@ trait PerformanceTestTrait {
       $cache_tag_is_valid_count = 0;
       $cache_tag_invalidation_count = 0;
       $cache_tag_checksum_count = 0;
+      $cache_tag_lookup_query_args = [];
       foreach ($performance_test_data['database_events'] as $event) {
+        $normalized_query = static::normalizeQuery($event->queryString, $this->databasePrefix);
+
         // Don't log queries from the database cache backend because they're
         // logged separately as cache operations.
         if (!static::isDatabaseCache($event)) {
-          // Make the query easier to read and log it.
-          static::logQuery(
-            $performance_data,
-            str_replace([$this->databasePrefix, "\r\n", "\r", "\n"], ['', ' ', ' ', ' '], $event->queryString),
-            $event->args
-          );
+          static::logQuery($performance_data, $normalized_query, $event->args);
+        }
+        // Keep track of cache tag lookup queries.
+        elseif (str_starts_with($normalized_query, 'SELECT "tag", "invalidations" FROM "cachetags"')) {
+          $cache_tag_lookup_query_args[] = array_values($event->args);
         }
       }
+      $cache_operations = [];
       foreach ($performance_test_data['cache_operations'] as $operation) {
         if (in_array($operation['operation'], ['get', 'getMultiple'], TRUE)) {
+          if (!isset($cache_operations['get'][$operation['bin']])) {
+            $cache_operations['get'][$operation['bin']] = [];
+          }
+          $cache_operations['get'][$operation['bin']][] = $operation['cids'];
           $cache_get_count++;
         }
         elseif (in_array($operation['operation'], ['set', 'setMultiple'], TRUE)) {
+          if (!isset($cache_operations['get'][$operation['bin']])) {
+            $cache_operations['set'][$operation['bin']] = [];
+          }
+          $cache_operations['set'][$operation['bin']][] = $operation['cids'];
           $cache_set_count++;
         }
         elseif (in_array($operation['operation'], ['delete', 'deleteMultiple'], TRUE)) {
+          if (!isset($cache_operations['delete'][$operation['bin']])) {
+            $cache_operations['delete'][$operation['bin']] = [];
+          }
+          $cache_operations['delete'][$operation['bin']][] = $operation['cids'];
           $cache_delete_count++;
         }
       }
@@ -170,6 +183,8 @@ trait PerformanceTestTrait {
       $performance_data->setCacheTagChecksumCount($cache_tag_checksum_count);
       $performance_data->setCacheTagIsValidCount($cache_tag_is_valid_count);
       $performance_data->setCacheTagInvalidationCount($cache_tag_invalidation_count);
+      $performance_data->setCacheOperations($cache_operations);
+      $performance_data->setCacheTagGroupedLookups($cache_tag_lookup_query_args);
     }
 
     return $performance_data;
@@ -248,7 +263,9 @@ trait PerformanceTestTrait {
       $args[':keys__0'] = 'KEY';
     }
 
-    // Inline query arguments and log the query.
+    // Inline query arguments and log the query, reverse arguments to avoid
+    // matches on placeholders with 2+ digits.
+    $args = array_reverse($args);
     $query = str_replace(array_keys($args), array_values(static::quoteQueryArgs($args)), $query);
     $performance_data->logQuery($query);
   }
@@ -284,7 +301,8 @@ trait PerformanceTestTrait {
    * @todo https://www.drupal.org/project/drupal/issues/3379757
    *
    * @param string|null $service_name
-   *   An optional human readable identifier so that traces can be grouped together.
+   *   An optional human readable identifier so that traces can be grouped
+   *   together.
    *
    * @return \Drupal\Tests\PerformanceData
    *   An instance of the performance data value object.
@@ -323,10 +341,11 @@ trait PerformanceTestTrait {
       // Therefore, continue collecting performance data until all of the
       // following are true, or until 30 seconds has passed:
       // - a largestContentfulPaint::candidate event has been fired
+      //   (only if an OTEL_COLLECTOR is set)
       // - all network requests have received a response
       // - no new performance log events have been recorded since the last
       //   iteration.
-      if ($lcp_count && empty($performance_log) && ($request_count === $response_count)) {
+      if (($lcp_count || !getenv('OTEL_COLLECTOR')) && empty($performance_log) && ($request_count === $response_count)) {
         break;
       }
       sleep(1);
@@ -382,26 +401,36 @@ trait PerformanceTestTrait {
     // not.
     foreach ($stylesheet_urls as $url) {
       $stylesheet_count++;
-      if ($GLOBALS['base_path'] === '/') {
-        $filename = ltrim(parse_url($url, PHP_URL_PATH), '/');
-        $stylesheet_bytes += strlen(file_get_contents($filename));
+      if (!str_starts_with($url, $GLOBALS['base_url'])) {
+        $stylesheet_bytes += strlen(file_get_contents($url));
       }
       else {
-        $filename = str_replace($GLOBALS['base_path'], '', parse_url($url, PHP_URL_PATH));
-        // Strip the basepath from the contents of the file so that tests
-        // running in a subdirectory get the same results.
-        $stylesheet_bytes += strlen(str_replace($GLOBALS['base_path'], '/', file_get_contents($filename)));
+        if ($GLOBALS['base_path'] === '/') {
+          $filename = ltrim(parse_url($url, PHP_URL_PATH), '/');
+          $stylesheet_bytes += strlen(file_get_contents($filename));
+        }
+        else {
+          $filename = str_replace($GLOBALS['base_path'], '', parse_url($url, PHP_URL_PATH));
+          // Strip the basepath from the contents of the file so that tests
+          // running in a subdirectory get the same results.
+          $stylesheet_bytes += strlen(str_replace($GLOBALS['base_path'], '/', file_get_contents($filename)));
+        }
       }
     }
     foreach ($script_urls as $url) {
       $script_count++;
-      if ($GLOBALS['base_path'] === '/') {
-        $filename = ltrim(parse_url($url, PHP_URL_PATH), '/');
+      if (!str_starts_with($url, $GLOBALS['base_url'])) {
+        $script_bytes += strlen(file_get_contents($url));
       }
       else {
-        $filename = str_replace($GLOBALS['base_path'], '', parse_url($url, PHP_URL_PATH));
+        if ($GLOBALS['base_path'] === '/') {
+          $filename = ltrim(parse_url($url, PHP_URL_PATH), '/');
+        }
+        else {
+          $filename = str_replace($GLOBALS['base_path'], '', parse_url($url, PHP_URL_PATH));
+        }
+        $script_bytes += strlen(file_get_contents($filename));
       }
-      $script_bytes += strlen(file_get_contents($filename));
     }
 
     $performance_data->setStylesheetCount($stylesheet_count);
@@ -505,7 +534,7 @@ trait PerformanceTestTrait {
       $collection = \Drupal::keyValue('performance_test');
       $performance_test_data = $collection->get('performance_test_data');
       $query_events = $performance_test_data['database_events'] ?? [];
-      foreach ($query_events as $key => $event) {
+      foreach ($query_events as $event) {
         if (static::isDatabaseCache($event)) {
           continue;
         }
@@ -592,31 +621,115 @@ trait PerformanceTestTrait {
    *   Maximum value.
    * @param int $actual
    *   The number to assert against.
+   * @param string $message
+   *   The message to display.
    *
    * @return void
+   *   No return value.
    *
    * @throws \PHPUnit\Framework\ExpectationFailedException
    */
-  protected function assertCountBetween(int $min, int $max, int $actual) {
+  protected function assertCountBetween(int $min, int $max, int $actual, string $message = '') {
+    if (!empty($message)) {
+      $message .= " ";
+    }
     static::assertThat(
       $actual,
       static::logicalAnd(static::greaterThanOrEqual($min), static::lessThanOrEqual($max)),
-      "$actual is greater or equal to $min and is smaller or equal to $max",
+      "$message$actual is greater or equal to $min and is smaller or equal to $max",
     );
   }
 
   /**
    * Checks whether a database event is from the database cache implementation.
    *
-   * @param Drupal\Core\Database\Event\DatabaseEvent $event
+   * @param \Drupal\Core\Database\Event\DatabaseEvent $event
    *   The database event.
    *
    * @return bool
    *   Whether the event was triggered by the database cache implementation.
    */
   protected static function isDatabaseCache(DatabaseEvent $event): bool {
-    $class = str_replace('\\\\', '\\', $event->caller['class']);
-    return is_a($class, '\Drupal\Core\Cache\DatabaseBackend', TRUE) || is_a($class, '\Drupal\Core\Cache\DatabaseCacheTagsChecksum', TRUE);
+    // If there is no class, then this is called from a procedural function.
+    if (isset($event->caller['class'])) {
+      $class = str_replace('\\\\', '\\', $event->caller['class']);
+      return is_a($class, '\Drupal\Core\Cache\DatabaseBackend', TRUE) || is_a($class, '\Drupal\Core\Cache\DatabaseCacheTagsChecksum', TRUE);
+    }
+    return FALSE;
+  }
+
+  /**
+   * Assert metrics from a performance data value object.
+   *
+   * @param array $expected
+   *   The expected metrics.
+   * @param \Drupal\Tests\PerformanceData $performance_data
+   *   An instance of the performance data value object.
+   *
+   * @return void
+   *   No return value.
+   */
+  protected function assertMetrics(
+    array $expected,
+    PerformanceData $performance_data,
+  ): void {
+    // Allow those metrics to have a range of +/- 500 bytes, so small changes
+    // are not significant enough to break tests.
+    $assertRange = [
+      'ScriptBytes',
+      'StylesheetBytes',
+    ];
+    $values = [];
+    foreach ($expected as $name => $metric) {
+      if (in_array($name, $assertRange)) {
+        $this->assertCountBetween($metric - 2000, $metric + 2000, $performance_data->{"get$name"}(), "Asserting $name");
+        unset($expected[$name]);
+      }
+      else {
+        $values[$name] = $performance_data->{"get$name"}();
+      }
+    }
+    $this->assertSame($expected, $values);
+
+  }
+
+  /**
+   * Get metrics from a performance data value object.
+   *
+   * @param \Drupal\Tests\PerformanceData $performance_data
+   *   An instance of the performance data value object.
+   *
+   * @return array
+   *   An array of metrics.
+   */
+  protected function getMetrics(PerformanceData $performance_data): array {
+    return [
+      'StylesheetCount' => $performance_data->getStylesheetCount(),
+      'ScriptCount' => $performance_data->getScriptCount(),
+      'StylesheetBytes' => $performance_data->getStylesheetBytes(),
+      'ScriptBytes' => $performance_data->getScriptBytes(),
+      'QueryCount' => $performance_data->getQueryCount(),
+      'CacheGetCount' => $performance_data->getCacheGetCount(),
+      'CacheSetCount' => $performance_data->getCacheSetCount(),
+      'CacheDeleteCount' => $performance_data->getCacheDeleteCount(),
+      'CacheTagLookupQueryCount' => $performance_data->getCacheTagLookupQueryCount(),
+      'CacheTagInvalidationCount' => $performance_data->getCacheTagInvalidationCount(),
+    ];
+  }
+
+  /**
+   * Normalizes a query by removing the database prefix and newlines.
+   *
+   * @param string $query_string
+   *   The query string to normalize.
+   * @param string $database_prefix
+   *   The database prefix to remove from the query.
+   *
+   * @return string
+   *   The normalized query string.
+   */
+  protected static function normalizeQuery(string $query_string, string $database_prefix): string {
+    return str_replace([$database_prefix, "\r\n", "\r", "\n"], ['', ' ', ' ', ' '], $query_string);
   }
 
 }

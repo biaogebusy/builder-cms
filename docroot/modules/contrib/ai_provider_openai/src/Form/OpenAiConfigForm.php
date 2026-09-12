@@ -28,9 +28,9 @@ class OpenAiConfigForm extends ConfigFormBase {
    * Constructs a new OpenAIConfigForm object.
    */
   final public function __construct(
-    private readonly AiProviderPluginManager $aiProviderManager,
-    private readonly KeyRepositoryInterface $keyRepository,
-    private readonly OpenAiHelper $openAiHelper,
+    protected AiProviderPluginManager $aiProviderManager,
+    protected KeyRepositoryInterface $keyRepository,
+    protected OpenAiHelper $openAiHelper,
   ) {
   }
 
@@ -103,22 +103,29 @@ class OpenAiConfigForm extends ConfigFormBase {
       $form_state->setErrorByName('api_key', $this->t('The API key is invalid. Please double-check that the selected key has a value. If you are using a file-based Key, ensure the file is present in the environment and contains a value.'));
       return;
     }
-    /** @var \Drupal\ai_provider_openai\Plugin\AiProvider\OpenAiProvider $provider */
-    $provider = $this->aiProviderManager->createInstance('openai');
-
-    // Temporarily set the API key and host for validation.
-    $provider->setAuthentication($api_key);
-    $host = $this->config(static::CONFIG_NAME)->get('host');
-    if (!empty($host)) {
-      $provider->setConfiguration(['host' => $host]);
-    }
+    // Get the current api key from config.
+    $current_api_key_id = $this->config(static::CONFIG_NAME)->get('api_key');
+    // Set the api key temporarily for validation.
+    $this->config(static::CONFIG_NAME)->set('api_key', $key)->save();
 
     try {
+      /** @var \Drupal\ai_provider_openai\Plugin\AiProvider\OpenAiProvider $provider */
+      $provider = $this->aiProviderManager->createInstance('openai');
+
+      $host = $this->config(static::CONFIG_NAME)->get('host');
+      if (!empty($host)) {
+        $provider->setConfiguration(['host' => $host]);
+      }
+
       // Test connectivity by attempting to get configured models.
       $provider->getConfiguredModels();
     }
     catch (\Exception) {
       $form_state->setErrorByName('api_key', $this->t('The selected API key is not working. Please double-check the correct API key was entered and that it has credit(s) available.'));
+    }
+    finally {
+      // Revert to the original API key after validation.
+      $this->config(static::CONFIG_NAME)->set('api_key', $current_api_key_id)->save();
     }
 
   }

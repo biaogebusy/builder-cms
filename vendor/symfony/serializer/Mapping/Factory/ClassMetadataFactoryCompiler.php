@@ -14,8 +14,12 @@ namespace Symfony\Component\Serializer\Mapping\Factory;
 use Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
 use Symfony\Component\VarExporter\VarExporter;
 
+trigger_deprecation('symfony/serializer', '7.4', 'The "%s" class is deprecated.', ClassMetadataFactoryCompiler::class);
+
 /**
  * @author Fabien Bourigault <bourigaultfabien@gmail.com>
+ *
+ * @deprecated since Symfony 7.4
  */
 final class ClassMetadataFactoryCompiler
 {
@@ -55,6 +59,7 @@ final class ClassMetadataFactoryCompiler
             $classDiscriminatorMapping = $classMetadata->getClassDiscriminatorMapping() ? [
                 $classMetadata->getClassDiscriminatorMapping()->getTypeProperty(),
                 $classMetadata->getClassDiscriminatorMapping()->getTypesMapping(),
+                $classMetadata->getClassDiscriminatorMapping()->getDefaultType(),
             ] : null;
 
             $compiled .= \sprintf("\n'%s' => %s,", $classMetadata->getName(), VarExporter::export([

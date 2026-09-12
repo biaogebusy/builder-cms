@@ -60,7 +60,7 @@ class WebformVariantApplyForm extends WebformDeleteFormBase {
         '#type' => 'webform_message',
         '#message_type' => 'warning',
         '#message_message' => $this->t('Are you sure you want to apply the %title variant?', $t_args) . '<br/>' .
-          '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
       ];
     }
     else {
@@ -68,7 +68,7 @@ class WebformVariantApplyForm extends WebformDeleteFormBase {
         '#type' => 'webform_message',
         '#message_type' => 'warning',
         '#message_message' => $this->t('Are you sure you want to apply the selected variants?') . '<br/>' .
-          '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
       ];
     }
   }
@@ -113,7 +113,7 @@ class WebformVariantApplyForm extends WebformDeleteFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL) {
     $this->webform = $webform;
 
     $variant_id = $this->getRequest()->query->get('variant_id');

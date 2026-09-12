@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\file\Kernel\Migrate\d6;
 
+use Drupal\Core\Database\Database;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\Core\Database\Database;
 use Drupal\Tests\migrate\Kernel\MigrateDumpAlterInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test file migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateFileTest extends MigrateDrupal6TestBase implements MigrateDumpAlterInterface {
 
   use FileMigrationTestTrait;

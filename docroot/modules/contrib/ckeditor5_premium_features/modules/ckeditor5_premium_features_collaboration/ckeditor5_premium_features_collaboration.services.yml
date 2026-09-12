@@ -1,0 +1,35 @@
+services:
+  ckeditor5_premium_features_collaboration.element.text_format:
+    class: Drupal\ckeditor5_premium_features_collaboration\Element\TextFormat
+    arguments:
+      - '@entity_type.manager'
+      - '@ckeditor5_premium_features.storage_handler.editor'
+      - '@ckeditor5_premium_features_collaboration.data_provider.users'
+      - '@ckeditor5_premium_features_collaboration.collaboration_settings'
+      - '@event_dispatcher'
+      - '@current_user'
+      - '@ckeditor5_premium_features.document_diff_helper'
+      - '@ckeditor5_premium_features_collaboration.access_handler'
+      - '@ckeditor5_premium_features_collaboration.revision_limit_handler'
+
+  ckeditor5_premium_features_collaboration.data_provider.users:
+    class: Drupal\ckeditor5_premium_features_collaboration\DataProvider\UserDataProvider
+    arguments:
+      - '@current_user'
+      - '@entity_type.manager'
+
+  ckeditor5_premium_features_collaboration.collaboration_settings:
+    class: Drupal\ckeditor5_premium_features_collaboration\Utility\CollaborationSettings
+    arguments:
+      - '@config.factory'
+
+  ckeditor5_premium_features_collaboration.access_handler:
+    class: Drupal\ckeditor5_premium_features_collaboration\NonRealtimeCollaborationAccessHandler
+    arguments:
+      - '@entity_type.manager'
+
+  ckeditor5_premium_features_collaboration.revision_limit_handler:
+    class: Drupal\ckeditor5_premium_features_collaboration\Utility\RevisionsLimitHandler
+    arguments:
+      - '@ckeditor5_premium_features_collaboration.collaboration_settings'
+      - '@entity_type.manager'

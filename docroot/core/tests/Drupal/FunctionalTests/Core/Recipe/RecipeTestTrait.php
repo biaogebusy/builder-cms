@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Core\Recipe;
 
+use Composer\InstalledVersions;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Recipe\Recipe;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\Composer\ComposerIntegrationTrait;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
@@ -14,6 +16,8 @@ use Symfony\Component\Process\Process;
  * Contains helper methods for interacting with recipes in functional tests.
  */
 trait RecipeTestTrait {
+
+  use ComposerIntegrationTrait;
 
   /**
    * Creates a recipe in a temporary directory.
@@ -50,41 +54,25 @@ trait RecipeTestTrait {
    * @param string $path
    *   The path of the recipe to apply. Must be a directory.
    * @param int $expected_exit_code
-   *   The expected exit code of the `drupal recipe` process. Defaults to 0,
+   *   The expected exit code of the `dr recipe` process. Defaults to 0,
    *   which indicates that no error occurred.
    * @param string[] $options
-   *   (optional) Additional options to pass to the `drupal recipe` command.
+   *   (optional) Additional options to pass to the `dr recipe` command.
    * @param string $command
    *   (optional) The name of the command to run. Defaults to `recipe`.
    *
    * @return \Symfony\Component\Process\Process
-   *   The `drupal recipe` command process, after having run.
+   *   The `dr recipe` command process, after having run.
    */
   protected function applyRecipe(string $path, int $expected_exit_code = 0, array $options = [], string $command = 'recipe'): Process {
-    assert($this instanceof BrowserTestBase);
-
-    $arguments = [
-      (new PhpExecutableFinder())->find(),
-      'core/scripts/drupal',
+    $process = $this->runDrupalCommand([
       $command,
       // Never apply recipes interactively.
       '--no-interaction',
       ...$options,
       $path,
-    ];
-    $process = (new Process($arguments))
-      ->setWorkingDirectory($this->getDrupalRoot())
-      ->setEnv([
-        'DRUPAL_DEV_SITE_PATH' => $this->siteDirectory,
-        // Ensure that the command boots Drupal into a state where it knows it's
-        // a test site.
-        // @see drupal_valid_test_ua()
-        'HTTP_USER_AGENT' => drupal_generate_test_ua($this->databasePrefix),
-      ])
-      ->setTimeout(500);
-
-    $process->run();
-    $this->assertSame($expected_exit_code, $process->getExitCode(), $process->getErrorOutput());
+    ]);
+    $this->assertSame($expected_exit_code, $process->getExitCode(), sprintf("Process exit code mismatch.\nExpected: %d\nActual: %d\n\nSTDOUT:\n%s\n\nSTDERR:\n%s", $expected_exit_code, $process->getExitCode(), $process->getOutput(), $process->getErrorOutput()));
     // Applying a recipe:
     // - creates new checkpoints, hence the "state" service in the test runner
     //   is outdated
@@ -93,7 +81,42 @@ trait RecipeTestTrait {
     // Hence the entire environment must be rebuilt for assertions to target the
     // actual post-recipe-application result.
     // @see \Drupal\Core\Config\Checkpoint\LinearHistory::__construct()
+    assert($this instanceof BrowserTestBase);
     $this->rebuildAll();
+    return $process;
+  }
+
+  /**
+   * Runs the `core/scripts/dr` script with the given arguments.
+   *
+   * @param array<string|int> $arguments
+   *   The arguments and options to pass to the script.
+   * @param int $timeout
+   *   (optional) How long the command should run before timing out, in seconds.
+   *   Defaults to 500.
+   *
+   * @return \Symfony\Component\Process\Process
+   *   The started process.
+   */
+  protected function runDrupalCommand(array $arguments, int $timeout = 500): Process {
+    assert($this instanceof BrowserTestBase);
+
+    // `dr` must be run from the project root.
+    ['install_path' => $project_root] = InstalledVersions::getRootPackage();
+    array_unshift($arguments, (new PhpExecutableFinder())->find(), static::binDir() . '/dr');
+
+    $process = (new Process($arguments))
+      ->setWorkingDirectory($project_root)
+      ->setEnv([
+        'DRUPAL_DEV_SITE_PATH' => $this->siteDirectory,
+        // Ensure that the command boots Drupal into a state where it knows it's
+        // a test site.
+        // @see drupal_valid_test_ua()
+        'HTTP_USER_AGENT' => drupal_generate_test_ua($this->databasePrefix),
+      ])
+      ->setTimeout($timeout);
+
+    $process->run();
     return $process;
   }
 

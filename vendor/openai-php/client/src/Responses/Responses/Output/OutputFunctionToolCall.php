@@ -9,7 +9,7 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
- * @phpstan-type OutputFunctionToolCallType array{arguments: string, call_id: string, name: string, type: 'function_call', id: string, status: 'in_progress'|'completed'|'incomplete'}
+ * @phpstan-type OutputFunctionToolCallType array{arguments: string, call_id: string, name: string, namespace?: ?string, type: 'function_call', id: string, status: 'in_progress'|'completed'|'incomplete'}
  *
  * @implements ResponseContract<OutputFunctionToolCallType>
  */
@@ -33,6 +33,7 @@ final class OutputFunctionToolCall implements ResponseContract
         public readonly string $type,
         public readonly string $id,
         public readonly string $status,
+        public readonly ?string $namespace,
     ) {}
 
     /**
@@ -47,6 +48,7 @@ final class OutputFunctionToolCall implements ResponseContract
             type: $attributes['type'],
             id: $attributes['id'],
             status: $attributes['status'],
+            namespace: $attributes['namespace'] ?? null,
         );
     }
 
@@ -59,6 +61,7 @@ final class OutputFunctionToolCall implements ResponseContract
             'arguments' => $this->arguments,
             'call_id' => $this->callId,
             'name' => $this->name,
+            'namespace' => $this->namespace,
             'type' => $this->type,
             'id' => $this->id,
             'status' => $this->status,

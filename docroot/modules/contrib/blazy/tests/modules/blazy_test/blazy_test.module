@@ -16,11 +16,14 @@ function blazy_test_theme() {
 
 /**
  * Prepares variables for blazy-test.html.twig templates.
+ *
+ * {@inheritdoc}
  */
-function template_preprocess_blazy_test(&$variables) {
+function template_preprocess_blazy_test(array &$variables) {
+  /** @var array $element */
   $element = $variables['element'];
 
-  $variables['content'] = $element['#children'];
+  $variables['content'] = $element['#children'] ?? [];
   $variables['settings'] = $element['#settings'] ?? [];
 }
 
@@ -31,11 +34,10 @@ function blazy_test_blazy_attach_alter(array &$load, array $settings = []) {
   if (!empty($settings['blazy_test'])) {
     $load['library'][] = 'foo/fake_library';
 
-    $manager = \Drupal::service('blazy.manager');
     $template = ['#theme' => 'blazy_test'];
     $load['drupalSettings']['blazy_test'] = [
       'options' => ['slideshow' => TRUE],
-      'container' => $manager->renderInIsolation($template),
+      'container' => blazy()->renderInIsolation($template),
     ];
   }
 }

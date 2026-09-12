@@ -1,0 +1,30 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_highlight__highlight:
+  type: mapping
+  label: Custom markers
+  mapping:
+    options:
+      type: sequence
+      label: 'Markers'
+      sequence:
+        type: mapping
+        mapping:
+          title:
+            type: string
+            label: 'Marker title'
+          color:
+            type: string
+            label: 'Color'
+          class_suffix:
+            type: string
+            label: 'Marker class suffix'
+          type:
+            type: sequence
+            label: 'Marker type'
+            sequence:
+              type: string
+    use_default_markers:
+      type: boolean
+      label: Use default markers
+    attach_styles:
+      type: boolean
+      label: 'Attach styles'

@@ -12,6 +12,19 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
 interface EckEntityTypeInterface extends ConfigEntityInterface {
 
   /**
+   * Defines the max length of entity id machine name.
+   */
+  public const ECK_ENTITY_ID_MAX_LENGTH = 27;
+
+  /**
+   * Gets the description of the entity type.
+   *
+   * @return string|null
+   *   The description of the entity type, or NULL if not set.
+   */
+  public function getDescription();
+
+  /**
    * Determines if the entity type has an 'author' field.
    *
    * @return bool
@@ -50,5 +63,13 @@ interface EckEntityTypeInterface extends ConfigEntityInterface {
    *   True if it has one.
    */
   public function hasStatusField();
+
+  /**
+   * Determines if the entity type can be viewed at /{entity_type}/{id}.
+   *
+   * @return bool
+   *   True if it has one.
+   */
+  public function hasStandaloneUrl();
 
 }

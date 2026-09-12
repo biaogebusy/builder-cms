@@ -1,0 +1,4 @@
+services:
+  Drupal\chosen\Hook\ChosenHooks:
+    class: Drupal\chosen\Hook\ChosenHooks
+    autowire: true

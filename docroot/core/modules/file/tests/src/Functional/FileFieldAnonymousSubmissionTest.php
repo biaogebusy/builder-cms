@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\file\Functional;
 
+use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\user\RoleInterface;
-use Drupal\file\Entity\File;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Confirm that file field submissions work correctly for anonymous visitors.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileFieldAnonymousSubmissionTest extends FileFieldTestBase {
 
   /**
@@ -121,7 +123,7 @@ class FileFieldAnonymousSubmissionTest extends FileFieldTestBase {
   /**
    * Helper method to test file submissions with missing node titles.
    */
-  protected function doTestNodeWithFileWithoutTitle() {
+  protected function doTestNodeWithFileWithoutTitle(): void {
     $type = 'Article';
     $title = 'Test page';
     $this->createFileField('field_image', 'node', 'article', [], ['file_extensions' => 'txt png']);

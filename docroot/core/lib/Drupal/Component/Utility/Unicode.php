@@ -12,17 +12,18 @@ class Unicode {
   /**
    * Matches Unicode characters that are word boundaries.
    *
-   * Characters with the following General_category (gc) property values are used
-   * as word boundaries. While this does not fully conform to the Word Boundaries
-   * algorithm described in http://unicode.org/reports/tr29, as PCRE does not
-   * contain the Word_Break property table, this simpler algorithm has to do.
+   * Characters with the following General_category (gc) property values are
+   * used as word boundaries. While this does not fully conform to the Word
+   * Boundaries algorithm described in http://unicode.org/reports/tr29, as PCRE
+   * does not contain the Word_Break property table, this simpler algorithm has
+   * to do.
    * - Cc, Cf, Cn, Co, Cs: Other.
    * - Pc, Pd, Pe, Pf, Pi, Po, Ps: Punctuation.
    * - Sc, Sk, Sm, So: Symbols.
    * - Zl, Zp, Zs: Separators.
    *
-   * Non-boundary characters include the following General_category (gc) property
-   * values:
+   * Non-boundary characters include the following General_category (gc)
+   * property values:
    * - Ll, Lm, Lo, Lt, Lu: Letters.
    * - Mc, Me, Mn: Combining Marks.
    * - Nd, Nl, No: Numbers.
@@ -145,7 +146,7 @@ EOD;
    *   The data possibly containing a BOM. This can be the entire contents of
    *   a file, or just a fragment containing at least the first five bytes.
    *
-   * @return string|bool
+   * @return string|false
    *   The name of the encoding, or FALSE if no byte order mark was present.
    */
   public static function encodingFromBOM($data) {
@@ -180,7 +181,7 @@ EOD;
    * @param string $encoding
    *   The encoding that the data is in.
    *
-   * @return string|bool
+   * @return string|false
    *   Converted data or FALSE.
    */
   public static function convertToUtf8($data, $encoding) {
@@ -190,8 +191,8 @@ EOD;
   /**
    * Truncates a UTF-8-encoded string safely to a number of bytes.
    *
-   * If the end position is in the middle of a UTF-8 sequence, it scans backwards
-   * until the beginning of the byte sequence.
+   * If the end position is in the middle of a UTF-8 sequence, it scans
+   * backwards until the beginning of the byte sequence.
    *
    * Use this function whenever you want to chop off a string at an unsure
    * location. On the other hand, if you're sure that you're splitting on a
@@ -277,27 +278,32 @@ EOD;
    *   An upper limit on the returned string length, including trailing ellipsis
    *   if $add_ellipsis is TRUE.
    * @param bool $wordsafe
-   *   If TRUE, attempt to truncate on a word boundary. Word boundaries are
-   *   spaces, punctuation, and Unicode characters used as word boundaries in
-   *   non-Latin languages; see Unicode::PREG_CLASS_WORD_BOUNDARY for more
-   *   information. If a word boundary cannot be found that would make the length
-   *   of the returned string fall within length guidelines (see parameters
-   *   $max_length and $min_wordsafe_length), word boundaries are ignored.
+   *   (optional) If TRUE, attempt to truncate on a word boundary. Word
+   *   boundaries are spaces, punctuation, and Unicode characters used as word
+   *   boundaries in non-Latin languages; see Unicode::PREG_CLASS_WORD_BOUNDARY
+   *   for more information. If a word boundary cannot be found that would make
+   *   the length of the returned string fall within length guidelines (see
+   *   parameters $max_length and $min_wordsafe_length), word boundaries are
+   *   ignored. Defaults to FALSE, which means the string will be truncated
+   *   at the exact character position without considering word boundaries.
    * @param bool $add_ellipsis
-   *   If TRUE, add '...' to the end of the truncated string (defaults to
-   *   FALSE). The string length will still fall within $max_length.
+   *   (optional) If TRUE, add '...' to the end of the truncated string. The
+   *   string length will still fall within $max_length. Defaults to FALSE,
+   *   which means no ellipsis will be added to the truncated string.
    * @param int $min_wordsafe_length
-   *   If $wordsafe is TRUE, the minimum acceptable length for truncation (before
-   *   adding an ellipsis, if $add_ellipsis is TRUE). Has no effect if $wordsafe
-   *   is FALSE. This can be used to prevent having a very short resulting string
-   *   that will not be understandable. For instance, if you are truncating the
-   *   string "See MyVeryLongURLExample.com for more information" to a word-safe
-   *   return length of 20, the only available word boundary within 20 characters
-   *   is after the word "See", which wouldn't leave a very informative string. If
-   *   you had set $min_wordsafe_length to 10, though, the function would realize
-   *   that "See" alone is too short, and would then just truncate ignoring word
-   *   boundaries, giving you "See MyVeryLongURL..." (assuming you had set
-   *   $add_ellipsis to TRUE).
+   *   (optional) If $wordsafe is TRUE, the minimum acceptable length for
+   *   truncation (before adding an ellipsis, if $add_ellipsis is TRUE). Has no
+   *   effect if $wordsafe is FALSE. This can be used to prevent having a very
+   *   short resulting string that will not be understandable. For instance, if
+   *   you are truncating the string "See MyVeryLongURLExample.com for more
+   *   information" to a word-safe return length of 20, the only available word
+   *   boundary within 20 characters is after the word "See", which wouldn't
+   *   leave a very informative string. If you had set $min_wordsafe_length to
+   *   10, though, the function would realize that "See" alone is too short, and
+   *   would then just truncate ignoring word boundaries, giving you
+   *   "See MyVeryLongURL..." (assuming you had set $add_ellipsis to TRUE).
+   *   Defaults to 1, which means any word-safe truncation result of at least
+   *   1 character will be acceptable.
    *
    * @return string
    *   The truncated string.
@@ -326,9 +332,9 @@ EOD;
 
     if ($wordsafe) {
       $matches = [];
-      // Find the last word boundary, if there is one within $min_wordsafe_length
-      // to $max_length characters. preg_match() is always greedy, so it will
-      // find the longest string possible.
+      // Find the last word boundary, if there is one within
+      // $min_wordsafe_length to $max_length characters. preg_match() is always
+      // greedy, so it will find the longest string possible.
       $found = preg_match('/^(.{' . $min_wordsafe_length . ',' . $max_length . '})[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']/us', $string, $matches);
       if ($found) {
         $string = $matches[1];
@@ -377,10 +383,10 @@ EOD;
    * When text containing an invalid UTF-8 lead byte (0xC0 - 0xFF) is presented
    * as UTF-8 to Internet Explorer 6, the program may misinterpret subsequent
    * bytes. When these subsequent bytes are HTML control characters such as
-   * quotes or angle brackets, parts of the text that were deemed safe by filters
-   * end up in locations that are potentially unsafe; An onerror attribute that
-   * is outside of a tag, and thus deemed safe by a filter, can be interpreted
-   * by the browser as if it were inside the tag.
+   * quotes or angle brackets, parts of the text that were deemed safe by
+   * filters end up in locations that are potentially unsafe; An onerror
+   * attribute that is outside of a tag, and thus deemed safe by a filter, can
+   * be interpreted by the browser as if it were inside the tag.
    *
    * The function does not return FALSE for strings containing character codes
    * above U+10FFFF, even though these are prohibited by RFC 3629.

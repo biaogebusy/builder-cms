@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests installing the Testing profile with update notifications on.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class TestingProfileInstallTest extends BrowserTestBase {
 
   /**
@@ -24,7 +26,7 @@ class TestingProfileInstallTest extends BrowserTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * Ensure the Update module is installed.
+   * Ensure the Update Status module is installed.
    */
   public function testUpdateModuleInstall(): void {
     $this->assertTrue(\Drupal::moduleHandler()->moduleExists('update'));

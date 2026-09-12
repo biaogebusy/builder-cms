@@ -21,7 +21,7 @@ class WebformOptionsCustomFilterForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $search = NULL, $category = NULL, array $categories = []) {
-    $form['#attributes'] = ['class' => ['webform-filter-form']];
+    $form['#attributes'] = ['class' => ['webform-filter-form', 'webform-remove-single-submit']];
     $form['filter'] = [
       '#type' => 'details',
       '#title' => $this->t('Filter custom options'),

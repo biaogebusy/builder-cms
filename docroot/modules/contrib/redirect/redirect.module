@@ -64,11 +64,11 @@ function redirect_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
- * Implements hook_entity_delete().
+ * Implements hook_entity_predelete().
  *
  * Will delete redirects based on the entity URL.
  */
-function redirect_entity_delete(EntityInterface $entity) {
+function redirect_entity_predelete(EntityInterface $entity) {
   try {
     if ($entity->getEntityType()->hasLinkTemplate('canonical') && $entity->toUrl('canonical')->isRouted()) {
       redirect_delete_by_path('internal:/' . $entity->toUrl('canonical')->getInternalPath());
@@ -202,7 +202,7 @@ function redirect_status_code_options($code = NULL) {
     305 => t('305 Use Proxy'),
     307 => t('307 Temporary Redirect'),
   ];
-  return $codes[$code] ?? $codes;
+  return $code !== NULL ? $codes[$code] : $codes;
 }
 
 /**
@@ -218,13 +218,6 @@ function locale_form_redirect_edit_form_alter(array &$form, FormStateInterface $
     '#default_value' => $form['language']['#value'],
     '#description' => t('A redirect set for a specific language will always be used when requesting this page in that language, and takes precedence over redirects set for <em>All languages</em>.'),
   ];
-}
-
-/**
- * Ajax callback for the redirect link widget.
- */
-function redirect_source_link_get_status_messages(array $form, FormStateInterface $form_state) {
-  return $form['redirect_source']['widget'][0]['status_box'];
 }
 
 /**
@@ -258,7 +251,7 @@ function redirect_form_node_form_alter(&$form, FormStateInterface $form_state, $
   $form_object = $form_state->getFormObject();
   /** @var \Drupal\node\NodeInterface $node */
   $node = $form_object->getEntity();
-  if (!$node->isNew() && \Drupal::currentUser()->hasPermission('administer redirects')) {
+  if (!$node->isNew() && $node->toUrl()->isRouted() && \Drupal::currentUser()->hasPermission('administer redirects')) {
 
     $nid = $node->id();
 

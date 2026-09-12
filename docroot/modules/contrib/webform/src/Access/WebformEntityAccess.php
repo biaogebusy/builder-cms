@@ -22,7 +22,7 @@ class WebformEntityAccess {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public static function checkDraftsAccess(WebformInterface $webform, EntityInterface $source_entity = NULL) {
+  public static function checkDraftsAccess(WebformInterface $webform, ?EntityInterface $source_entity = NULL) {
     $draft = $webform->getSetting('draft');
     switch ($draft) {
       case WebformInterface::DRAFT_AUTHENTICATED:
@@ -52,7 +52,7 @@ class WebformEntityAccess {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public static function checkResultsAccess(WebformInterface $webform, EntityInterface $source_entity = NULL) {
+  public static function checkResultsAccess(WebformInterface $webform, ?EntityInterface $source_entity = NULL) {
     // If results are not disabled return neutral.
     if (!$webform->getSetting('results_disabled')) {
       $access_result = AccessResult::allowed();
@@ -79,7 +79,7 @@ class WebformEntityAccess {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public static function checkLogAccess(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL) {
+  public static function checkLogAccess(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL) {
     // ISSUE:
     // Devel routes do not use 'webform' parameter which throws the below error.
     // Some mandatory parameters are missing ("webform") to generate a URL for
@@ -114,7 +114,7 @@ class WebformEntityAccess {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public static function checkWebformSettingValue(WebformInterface $webform = NULL, $setting = NULL, $value = NULL) {
+  public static function checkWebformSettingValue(?WebformInterface $webform = NULL, $setting = NULL, $value = NULL) {
     return AccessResult::allowedIf($webform->getSetting($setting) === $value)
       ->addCacheableDependency($webform);
   }

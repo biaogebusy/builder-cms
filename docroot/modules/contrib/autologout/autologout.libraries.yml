@@ -1,5 +1,4 @@
 drupal.autologout:
-  version: VERSION
   js:
     js/autologout.js: {}
 
@@ -7,4 +6,4 @@ drupal.autologout:
     - core/drupal.dialog
     - core/drupal.ajax
     - core/drupalSettings
-    - js_cookie/js-cookie
+    - core/once

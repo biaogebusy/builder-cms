@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Rebuilds all caches even when Drupal itself does not work.
  *
- * @param $class_loader
+ * @param \Composer\Autoload\ClassLoader $class_loader
  *   The class loader. Normally Composer's ClassLoader, as included by the
  *   front controller, but may also be decorated.
  * @param \Symfony\Component\HttpFoundation\Request $request
@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @see rebuild.php
  */
-function drupal_rebuild($class_loader, Request $request) {
+function drupal_rebuild($class_loader, Request $request): void {
   // Remove Drupal's error and exception handlers; they rely on a working
   // service container and other subsystems and will only cause a fatal error
   // that hides the actual error.

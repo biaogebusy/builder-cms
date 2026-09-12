@@ -4,7 +4,6 @@ namespace Drupal\menu_item_extras\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\menu_item_extras\Service\MenuLinkContentServiceInterface;
-use Drupal\system\MenuInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,30 +35,6 @@ class MenuController extends ControllerBase {
     return new static(
         $container->get('menu_item_extras.menu_link_content_helper')
     );
-  }
-
-  /**
-   * Provides the menu link creation form.
-   *
-   * @param \Drupal\system\MenuInterface $menu
-   *   An entity representing a custom menu.
-   *
-   * @deprecated in drupal:2.11.0 and is removed from drupal:3.0.0. https://www.drupal.org/project/drupal/issues/2923429.
-   *
-   * @see https://www.drupal.org/project/drupal/issues/2923429
-   *
-   * @return array
-   *   Returns the menu link creation form.
-   */
-  public function addLink(MenuInterface $menu) {
-    $menu_link = $this->entityTypeManager()
-      ->getStorage('menu_link_content')
-      ->create([
-        'id' => '',
-        'parent' => '',
-        'menu_name' => $menu->id(),
-      ]);
-    return $this->entityFormBuilder()->getForm($menu_link);
   }
 
   /**

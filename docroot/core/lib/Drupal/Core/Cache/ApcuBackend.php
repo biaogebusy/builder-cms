@@ -56,16 +56,12 @@ class ApcuBackend implements CacheBackendInterface {
     $bin,
     $site_prefix,
     CacheTagsChecksumInterface $checksum_provider,
-    protected ?TimeInterface $time = NULL,
+    protected TimeInterface $time,
   ) {
     $this->bin = $bin;
     $this->sitePrefix = $site_prefix;
     $this->checksumProvider = $checksum_provider;
     $this->binPrefix = $this->sitePrefix . '::' . $this->bin . '::';
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
   }
 
   /**
@@ -102,6 +98,18 @@ class ApcuBackend implements CacheBackendInterface {
     $result = apcu_fetch(array_keys($map));
     $cache = [];
     if ($result) {
+      // Before checking the validity of each item individually, register the
+      // cache tags for all returned cache items for preloading, this allows the
+      // cache tag service to optimize cache tag lookups.
+      if ($this->checksumProvider instanceof CacheTagsChecksumPreloadInterface) {
+        $tags_for_preload = [];
+        foreach ($result as $item) {
+          if ($item->tags) {
+            $tags_for_preload[] = explode(' ', $item->tags);
+          }
+        }
+        $this->checksumProvider->registerCacheTagsForPreload(array_merge(...$tags_for_preload));
+      }
       foreach ($result as $key => $item) {
         $item = $this->prepareItem($item, $allow_invalid);
         if ($item) {
@@ -255,6 +263,7 @@ class ApcuBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function invalidateAll() {
+    @trigger_error("CacheBackendInterface::invalidateAll() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use CacheBackendInterface::deleteAll() or cache tag invalidation instead. See https://www.drupal.org/node/3500622", E_USER_DEPRECATED);
     foreach ($this->getAll() as $data) {
       $cid = str_replace($this->binPrefix, '', $data['key']);
       $this->set($cid, $data['value'], $this->time->getRequestTime() - 1);
@@ -277,6 +286,7 @@ class ApcuBackend implements CacheBackendInterface {
    *   The type to list. Either pass in APC_LIST_ACTIVE or APC_LIST_DELETED.
    *
    * @return \APCUIterator
+   *   An APCUIterator class.
    */
   protected function getIterator($search = NULL, $format = APC_ITER_ALL, $chunk_size = 100, $list = APC_LIST_ACTIVE) {
     return new \APCUIterator($search, $format, $chunk_size, $list);

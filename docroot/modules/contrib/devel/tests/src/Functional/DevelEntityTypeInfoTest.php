@@ -6,12 +6,12 @@ use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Url;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests entity type info pages and links.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
 
   /**

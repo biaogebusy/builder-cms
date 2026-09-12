@@ -1,3 +1,6 @@
+parameters:
+  layout_builder.skip_procedural_hook_scan: true
+
 services:
   _defaults:
     autoconfigure: true
@@ -7,6 +10,7 @@ services:
   Drupal\layout_builder\LayoutTempstoreRepositoryInterface: '@layout_builder.tempstore_repository'
   access_check.entity.layout_builder_access:
     class: Drupal\layout_builder\Access\LayoutBuilderAccessCheck
+    arguments: ['@current_route_match']
     tags:
       - { name: access_check, applies_to: _layout_builder_access }
   plugin.manager.layout_builder.section_storage:
@@ -57,14 +61,8 @@ services:
     class: Drupal\layout_builder\InlineBlockUsage
     arguments: ['@database']
   Drupal\layout_builder\InlineBlockUsageInterface: '@inline_block.usage'
-  layout_builder.controller.entity_form:
-    # Override the entity form controller to handle the entity layout_builder
-    # operation.
-    decorates: controller.entity_form
-    class: Drupal\layout_builder\Controller\LayoutBuilderHtmlEntityFormController
-    public: false
-    arguments: ['@layout_builder.controller.entity_form.inner']
-  Drupal\layout_builder\Controller\LayoutBuilderHtmlEntityFormController: '@layout_builder.controller.entity_form'
   layout_builder.element.prepare_layout:
     class: Drupal\layout_builder\EventSubscriber\PrepareLayout
     arguments: ['@layout_builder.tempstore_repository', '@messenger']
+  Drupal\layout_builder\EventSubscriber\DefaultContentSubscriber:
+    autowire: true

@@ -2,6 +2,7 @@
 
 namespace Drupal\paragraphs\Controller;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 
@@ -48,9 +49,9 @@ class ParagraphsTypeListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
+  public function getDefaultOperations(EntityInterface $entity, ?CacheableMetadata $cacheability = NULL) {
     /** @var \Drupal\field\FieldConfigInterface $entity */
-    $operations = parent::getDefaultOperations($entity);
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     if (isset($operations['edit'])) {
       $operations['edit']['weight'] = 30;

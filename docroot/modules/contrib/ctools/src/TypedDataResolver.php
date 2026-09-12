@@ -152,7 +152,7 @@ class TypedDataResolver {
    * object.
    *
    * @param string $token
-   *   A ":" delimited set of tokens representing
+   *   A ":" delimited set of tokens representing.
    * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
    *   The array of available contexts.
    *
@@ -195,6 +195,7 @@ class TypedDataResolver {
     if (isset($tokens[$token])) {
       return $tokens[$token];
     }
+    return NULL;
   }
 
   /**

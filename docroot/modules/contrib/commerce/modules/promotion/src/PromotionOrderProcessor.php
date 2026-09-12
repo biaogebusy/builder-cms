@@ -2,13 +2,16 @@
 
 namespace Drupal\commerce_promotion;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Language\LanguageInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\OrderPreprocessorInterface;
 use Drupal\commerce_order\OrderProcessorInterface;
 use Drupal\commerce_price\Calculator;
+use Drupal\commerce_promotion\Entity\Promotion;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 
 /**
  * Applies promotions to orders during the order refresh process.
@@ -22,10 +25,13 @@ class PromotionOrderProcessor implements OrderPreprocessorInterface, OrderProces
    *   The entity type manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
    */
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
     protected LanguageManagerInterface $languageManager,
+    protected ConfigFactoryInterface $configFactory,
   ) {
   }
 
@@ -101,30 +107,64 @@ class PromotionOrderProcessor implements OrderPreprocessorInterface, OrderProces
         return !in_array($item->target_id, $coupons_to_remove, TRUE);
       });
     }
-
-    $content_langcode = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
-    /** @var \Drupal\commerce_promotion\Entity\CouponInterface[] $coupons */
-    $coupons = $order->get('coupons')->referencedEntities();
-    foreach ($coupons as $index => $coupon) {
-      $promotion = $coupon->getPromotion();
-      $promotion->apply($order);
-    }
-
-    // Non-coupon promotions are loaded and applied separately.
     /** @var \Drupal\commerce_promotion\PromotionStorageInterface $promotion_storage */
     $promotion_storage = $this->entityTypeManager->getStorage('commerce_promotion');
-    $promotions = $promotion_storage->loadAvailable($order);
+    $config = $this->configFactory->get('commerce_promotion.settings');
+
+    /** @var \Drupal\commerce_promotion\Entity\CouponInterface[] $coupons */
+    $coupons = $order->get('coupons')->referencedEntities();
+    $coupon_promotions = [];
+    foreach ($coupons as $coupon) {
+      $promotion = $coupon->getPromotion();
+      $coupon_promotions[] = $promotion;
+    }
+    $promotions = array_merge($coupon_promotions, $promotion_storage->loadAvailable($order));
+
+    // When enforce ordering is enabled, sort promotions by weight.
+    if ($config->get('enforce_weight_ordering') && $promotions) {
+      uasort($promotions, [Promotion::class, 'sort']);
+    }
+
+    // Determine if compatibility checks are necessary.
+    $promotion_compatibility_matters = FALSE;
+    if (count($promotions) > 1) {
+      foreach ($promotions as $promotion) {
+        if ($promotion->getCompatibility() === PromotionInterface::COMPATIBLE_NONE) {
+          $promotion_compatibility_matters = TRUE;
+          break;
+        }
+      }
+    }
+    $content_langcode = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+    $applied_any = FALSE;
     foreach ($promotions as $promotion) {
+      // Skip incompatible promotions if another promotion has already applied.
+      if ($promotion_compatibility_matters &&
+        $this->isIncompatibleWithOthers($promotion, $applied_any)) {
+        continue;
+      }
+
+      // Skip promotions that do not apply.
       if (!$promotion->applies($order)) {
         continue;
       }
-      // Ensure the promotion is in the right language, to ensure promotions
-      // adjustments labels are correctly translated.
+
       if ($promotion->hasTranslation($content_langcode)) {
         $promotion = $promotion->getTranslation($content_langcode);
       }
       $promotion->apply($order);
+
+      // Track whether any promotion adjustments were actually added.
+      if ($promotion_compatibility_matters && !$applied_any) {
+        $applied_any = !empty($order->collectAdjustments(['promotion', 'shipping_promotion']));
+      }
+
+      // Break the loop if this promotion blocks others.
+      if ($promotion_compatibility_matters && $this->isIncompatibleWithOthers($promotion, $applied_any)) {
+        break;
+      }
     }
+
     // Cleanup order items added by the BuyXGetY offer in case the promotion
     // no longer applies.
     foreach ($order->getItems() as $order_item) {
@@ -137,6 +177,22 @@ class PromotionOrderProcessor implements OrderPreprocessorInterface, OrderProces
         $order_item->delete();
       }
     }
+  }
+
+  /**
+   * Determines whether the given promotion is incompatible with others.
+   *
+   * @param \Drupal\commerce_promotion\Entity\PromotionInterface $promotion
+   *   The promotion being evaluated.
+   * @param bool $applied_any
+   *   Whether any previous promotion adjustments were applied.
+   *
+   * @return bool
+   *   TRUE if this promotion should block or skip further promotions.
+   */
+  private function isIncompatibleWithOthers(PromotionInterface $promotion, bool $applied_any): bool {
+    // Currently, only COMPATIBLE_NONE blocks others
+    return $promotion->getCompatibility() === PromotionInterface::COMPATIBLE_NONE && $applied_any;
   }
 
 }

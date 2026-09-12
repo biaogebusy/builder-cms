@@ -24,6 +24,10 @@ class ViewsBlock extends ViewsBlockBase {
    * {@inheritdoc}
    */
   public function build() {
+    // If the block plugin is invalid, there is nothing to do.
+    if (!method_exists($this->view->display_handler, 'preBlockBuild')) {
+      return [];
+    }
     $this->view->display_handler->preBlockBuild($this);
 
     $args = [];
@@ -60,8 +64,13 @@ class ViewsBlock extends ViewsBlockBase {
       // #pre_render callback has already been applied.
       $output = View::preRenderViewElement($output);
 
-      // Override the label to the dynamic title configured in the view.
-      if (empty($this->configuration['views_label']) && $this->view->getTitle()) {
+      // Inject the overridden block title into the view.
+      if (!empty($this->configuration['views_label'])) {
+        $this->view->setTitle($this->configuration['views_label']);
+      }
+
+      // Override the block title to match the view title.
+      if ($this->view->getTitle()) {
         $output['#title'] = ['#markup' => $this->view->getTitle(), '#allowed_tags' => Xss::getHtmlTagList()];
       }
 

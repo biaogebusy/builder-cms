@@ -3,22 +3,22 @@
 // Paragraphs summary CSS.
 //
 
-@import "variables";
+@use "variables" as *;
 
 .paragraphs {
   &-badge {
     display: inline-block;
+    margin: 3px 0;
     padding: $badge-padding-y $badge-padding-x;
-    background: $badge-color;
-    border-radius: $border-radius;
-    color: #fff;
     cursor: default;
+    text-align: center;
+    vertical-align: baseline;
+    white-space: nowrap;
+    color: #fff;
+    border-radius: $border-radius;
+    background: $badge-color;
     font-size: 90%;
     line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    margin: 3px 0;
 
     // Empty badges collapse automatically
     &:empty {
@@ -34,11 +34,11 @@
     .paragraphs-content-wrapper,
     .paragraphs-plugin-wrapper {
       position: relative;
-      height: 1.538em;
       overflow: hidden;
+      height: 1.538em;
+      text-overflow: ellipsis;
       word-break: break-all;
       line-height: 1.538em;
-      text-overflow: ellipsis;
     }
 
     .summary-plugin-label::after {
@@ -52,8 +52,8 @@
     .summary-plugin {
       display: inline-block;
       padding-right: 5px;
-      font-size: 0.7rem;
       color: $behavior-summary-color;
+      font-size: 0.7rem;
 
       &:not(:last-child) {
         border-right: 2px solid $light-grey;

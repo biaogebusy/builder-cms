@@ -1,0 +1,18 @@
+_meta:
+  version: '1.0'
+  entity_type: entity_test
+  uuid: 22cc2aad-a174-4100-91fe-36b03f3f8fc9
+  bundle: entity_test
+  default_langcode: en
+  depends:
+    2ab4da9f-7132-4578-99ac-3ee46ce8ce09: entity_test
+default:
+  name:
+    -
+      value: 'Test Entity with Dependencies'
+  user_id:
+    -
+      target_id: 1
+  langcode:
+    -
+      value: en

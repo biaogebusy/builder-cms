@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests cacheability on unpublished nodes inherited from node access.
- *
- * @group node
- * @group Cache
  */
+#[Group('node')]
+#[Group('Cache')]
+#[RunTestsInSeparateProcesses]
 class NodeAccessUnpublishedCacheabilityTest extends NodeTestBase {
 
   /**
@@ -37,7 +39,11 @@ class NodeAccessUnpublishedCacheabilityTest extends NodeTestBase {
     $test_user1 = $this->drupalCreateUser(values: ['roles' => [$rid]]);
     $test_user2 = $this->drupalCreateUser(values: ['roles' => [$rid]]);
 
-    $unpublished_node_by_test_user1 = $this->createNode(['type' => 'page', 'uid' => $test_user1->id(), 'status' => NodeInterface::NOT_PUBLISHED]);
+    $unpublished_node_by_test_user1 = $this->createNode([
+      'type' => 'page',
+      'uid' => $test_user1->id(),
+      'status' => NodeInterface::NOT_PUBLISHED,
+    ]);
 
     $this->drupalLogin($test_user2);
     $this->drupalGet('node_access_test_auto_bubbling_node_access/' . $unpublished_node_by_test_user1->id());

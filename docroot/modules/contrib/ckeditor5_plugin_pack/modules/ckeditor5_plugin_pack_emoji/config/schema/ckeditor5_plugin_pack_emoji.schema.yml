@@ -1,0 +1,19 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_emoji_emoji:
+  type: mapping
+  label: 'CKEditor 5 Emoji plugin settings'
+  mapping:
+    definitionsUrl:
+      type: string
+      label: 'Custom emoji definitions URL'
+    dropdownLimit:
+      type: integer
+      label: 'Number of emojis in the dropdown'
+    skinTone:
+      type: string
+      label: 'Default skin tone'
+    useCustomFont:
+      type: boolean
+      label: 'Use custom font'
+    version:
+      type: integer
+      label: 'Emoji version'

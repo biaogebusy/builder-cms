@@ -8,12 +8,16 @@ use Drupal\Core\Site\Settings;
 use Drupal\redis\Lock\RedisLock;
 use Drupal\Tests\system\Functional\Lock\LockFunctionalTest;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Confirm locking works between two separate requests.
  *
  * @group redis
  */
+#[Group('redis')]
+#[RunTestsInSeparateProcesses]
 class RedisLockFunctionalTest extends LockFunctionalTest {
 
   use RedisTestInterfaceTrait;

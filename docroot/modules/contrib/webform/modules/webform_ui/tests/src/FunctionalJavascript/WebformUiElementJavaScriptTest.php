@@ -24,9 +24,23 @@ class WebformUiElementJavaScriptTest extends WebformWebDriverTestBase {
   protected static $testWebforms = [];
 
   /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    // Select2 doesn't currently support jQuery4 which is what D11 uses.
+    // With this library enabled, javascript errors are thrown on element
+    // forms due to various form elements using it.
+    \Drupal::configFactory()->getEditable('webform.settings')
+      ->set('libraries.excluded_libraries', ['jquery.select2'])
+      ->save();
+  }
+
+  /**
    * Tests element.
    */
-  public function testElement() {
+  public function testElement(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 

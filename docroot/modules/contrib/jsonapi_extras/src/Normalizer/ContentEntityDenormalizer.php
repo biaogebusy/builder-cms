@@ -2,12 +2,54 @@
 
 namespace Drupal\jsonapi_extras\Normalizer;
 
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\jsonapi\ResourceType\ResourceType;
 
 /**
  * Override ContentEntityNormalizer to prepare input.
  */
 class ContentEntityDenormalizer extends JsonApiNormalizerDecoratorBase {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
+
+  /**
+   * Instantiates a ContentEntityDenormalizer object.
+   *
+   * @param \Symfony\Component\Serializer\SerializerAwareInterface|\Symfony\Component\Serializer\Normalizer\NormalizerInterface|\Symfony\Component\Serializer\Normalizer\DenormalizerInterface $inner
+   *   The decorated normalizer.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
+   */
+  public function __construct($inner, ?EntityTypeManagerInterface $entity_type_manager = NULL, ?EntityFieldManagerInterface $entity_field_manager = NULL) {
+    parent::__construct($inner);
+
+    if (!$entity_type_manager) {
+      $entity_type_manager = \Drupal::entityTypeManager();
+      @trigger_error('Calling ' . __METHOD__ . ' without the $entity_type_manager argument is deprecated in jsonapi_extras:8.x-3.27 and will be required in jsonapi_extras:8.x-4.0. See https://www.drupal.org/node/3435834', E_USER_DEPRECATED);
+    }
+    $this->entityTypeManager = $entity_type_manager;
+
+    if (!$entity_field_manager) {
+      $entity_field_manager = \Drupal::service('entity_field.manager');
+      @trigger_error('Calling ' . __METHOD__ . ' without the $entity_field_manager argument is deprecated in jsonapi_extras:8.x-3.27 and will be required in jsonapi_extras:8.x-4.0. See https://www.drupal.org/node/3435834', E_USER_DEPRECATED);
+    }
+    $this->entityFieldManager = $entity_field_manager;
+  }
 
   /**
    * {@inheritdoc}
@@ -29,7 +71,7 @@ class ContentEntityDenormalizer extends JsonApiNormalizerDecoratorBase {
    */
   protected function prepareInput(array $data, ResourceType $resource_type) {
     /** @var \Drupal\Core\Field\FieldStorageDefinitionInterface[] $field_storage_definitions */
-    $field_storage_definitions = \Drupal::service('entity_field.manager')
+    $field_storage_definitions = $this->entityFieldManager
       ->getFieldStorageDefinitions(
         $resource_type->getEntityTypeId()
       );
@@ -39,7 +81,7 @@ class ContentEntityDenormalizer extends JsonApiNormalizerDecoratorBase {
       // Skip any disabled field.
       $internal_name = $resource_type->getInternalName($public_field_name);
       $entity_type_id = $resource_type->getEntityTypeId();
-      $entity_type_definition = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+      $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type_id);
       $uuid_key = $entity_type_definition->getKey('uuid');
       if (!$resource_type->isFieldEnabled($internal_name) && $uuid_key !== $internal_name) {
         continue;

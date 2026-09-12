@@ -33,9 +33,10 @@ class Language extends TypedData {
   protected $language;
 
   /**
-   * Overrides TypedData::getValue().
+   * {@inheritdoc}
    *
    * @return \Drupal\Core\Language\LanguageInterface|null
+   *   The language object, or NULL if the language is not set.
    */
   public function getValue() {
     if (!isset($this->language) && $this->id) {

@@ -69,6 +69,16 @@ abstract class AiVdbProviderClientBase implements AiVdbProviderInterface, AiVdbP
   protected ServerInterface $server;
 
   /**
+   * Item IDs for which deletion should be skipped during indexItems().
+   *
+   * Set by the backend when an item's chunks are being progressively indexed
+   * across multiple batch runs so that already-stored chunks are not erased.
+   *
+   * @var string[]
+   */
+  protected array $skipDeleteItemIds = [];
+
+  /**
    * Constructs a new AiVdbClientBase abstract class.
    *
    * @param string $plugin_id
@@ -132,6 +142,16 @@ abstract class AiVdbProviderClientBase implements AiVdbProviderInterface, AiVdbP
    */
   public function setSearchApiServer(?ServerInterface $server = NULL): void {
     $this->server = $server;
+  }
+
+  /**
+   * Sets item IDs that should not be deleted during the next indexItems() call.
+   *
+   * @param string[] $item_ids
+   *   The Search API item IDs to skip deletion for.
+   */
+  public function setSkipDeleteItemIds(array $item_ids): void {
+    $this->skipDeleteItemIds = $item_ids;
   }
 
   /**
@@ -287,9 +307,15 @@ abstract class AiVdbProviderClientBase implements AiVdbProviderInterface, AiVdbP
     ];
 
     // Check if we need to delete some items first.
-    $this->deleteIndexItems($configuration, $index, array_values(array_map(function ($item) {
-      return $item->getId();
-    }, $items)));
+    // Items in $skipDeleteItemIds are being progressively re-indexed across
+    // multiple batch runs; deleting them would erase previously stored chunks.
+    $delete_ids = array_values(array_diff(
+      array_map(fn($item) => $item->getId(), $items),
+      $this->skipDeleteItemIds,
+    ));
+    if (!empty($delete_ids)) {
+      $this->deleteIndexItems($configuration, $index, $delete_ids);
+    }
 
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item) {

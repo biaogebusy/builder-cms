@@ -16,6 +16,7 @@ services:
       - '@config.factory'
       - '@state'
       - '@logger.factory'
+      - '@datetime.time'
   acquia_connector.client.factory:
     class: Drupal\acquia_connector\Client\ClientFactory
     arguments:

@@ -3,7 +3,7 @@
 namespace Drupal\ctools;
 
 /**
- * Interface for Constraint Conditions
+ * Interface for Constraint Conditions.
  */
 interface ConstraintConditionInterface {
 

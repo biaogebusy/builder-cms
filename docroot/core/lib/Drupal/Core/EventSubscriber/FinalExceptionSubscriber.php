@@ -65,6 +65,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
    * Gets the configured error level.
    *
    * @return string
+   *   The error level. Defaults to the configure site error level.
    */
   protected function getErrorLevel() {
     if (!isset($this->errorLevel)) {
@@ -183,6 +184,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
    * Checks whether the error level is verbose or not.
    *
    * @return bool
+   *   TRUE when verbose reporting is enabled, FALSE otherwise.
    */
   protected function isErrorLevelVerbose() {
     return $this->getErrorLevel() === ERROR_REPORTING_DISPLAY_VERBOSE;
@@ -191,10 +193,11 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
   /**
    * Wrapper for error_displayable().
    *
-   * @param $error
+   * @param array $error
    *   Optional error to examine for ERROR_REPORTING_DISPLAY_SOME.
    *
    * @return bool
+   *   TRUE if an error should be displayed, FALSE otherwise.
    *
    * @see \error_displayable
    */
@@ -208,7 +211,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
    * Attempts to reduce verbosity by removing DRUPAL_ROOT from the file path in
    * the message. This does not happen for (false) security.
    *
-   * @param $error
+   * @param array $error
    *   Optional error to examine for ERROR_REPORTING_DISPLAY_SOME.
    *
    * @return array

@@ -1,0 +1,17 @@
+ckeditor5_premium_features_merge_fields__merge_fields:
+  ckeditor5:
+    plugins:
+      - image.Image
+      - mergeFields.MergeFields
+      - mergeFieldsAdapter.MergeFieldsAdapter
+  drupal:
+    label: Merge Fields
+    library: ckeditor5_premium_features_merge_fields/merge_fields_adapter
+    admin_library: ckeditor5_premium_features_merge_fields/admin.merge_fields
+    class: Drupal\ckeditor5_premium_features_merge_fields\Plugin\CKEditor5Plugin\MergeFields
+    toolbar_items:
+      insertMergeField:
+        label: Insert Merge Field
+      previewMergeFields:
+        label: Preview Merge Fields
+    elements: false

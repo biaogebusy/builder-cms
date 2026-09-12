@@ -1,7 +1,7 @@
 name: 'XINSHI Linux.do'
 type: module
 description: 'linux.do OAuth2 federated identity provider for simple_oauth.'
-core_version_requirement: ^10.2
+core_version_requirement: ^10.2 || ^11
 version: '1.0'
 package: 'XINSHI CMS'
 dependencies:

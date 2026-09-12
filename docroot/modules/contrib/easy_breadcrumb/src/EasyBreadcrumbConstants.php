@@ -42,11 +42,6 @@ class EasyBreadcrumbConstants {
   const CUSTOM_PATHS = 'custom_paths';
 
   /**
-   * Separator between segments.
-   */
-  const SEGMENTS_SEPARATOR = 'segments_separator';
-
-  /**
    * Flag for including or not the front page as a segment.
    */
   const INCLUDE_HOME_SEGMENT = 'include_home_segment';
@@ -200,42 +195,5 @@ class EasyBreadcrumbConstants {
    * Breadcrumbs truncator dots.
    */
   const TRUNCATOR_DOTS = 'truncator_dots';
-
-  /**
-   * Default list of excluded paths.
-   *
-   * @return array
-   *   Default list of ignored paths.
-   */
-  public static function defaultExcludedPaths() {
-    static $default_excluded_paths = [
-      'search',
-      'search/node',
-    ];
-
-    return $default_excluded_paths;
-  }
-
-  /**
-   * Default list of replaced titles.
-   *
-   * @return array
-   *   Default list of replaced titles.
-   */
-  public static function defaultReplacedTitles() {
-
-    return [];
-  }
-
-  /**
-   * Default list of replaced paths.
-   *
-   * @return array
-   *   Default list of replaced paths.
-   */
-  public static function defaultCustomPaths() {
-
-    return [];
-  }
 
 }

@@ -46,6 +46,13 @@ class GoogleTest extends UnitTestCase {
   protected $plugin;
 
   /**
+   * The chart type manager.
+   *
+   * @var \Drupal\Core\Form\FormBuilderInterface
+   */
+  protected $formBuilder;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -64,6 +71,9 @@ class GoogleTest extends UnitTestCase {
 
     $this->pluginManagerChartsType = $this->createMock('Drupal\charts\TypeManager');
     $container->set('plugin.manager.charts_type', $this->pluginManagerChartsType);
+
+    $this->formBuilder = $this->createMock('Drupal\Core\Form\FormBuilderInterface');
+    $container->set('form_builder', $this->formBuilder);
 
     \Drupal::setContainer($container);
 
@@ -107,6 +117,7 @@ class GoogleTest extends UnitTestCase {
       $this->moduleHandler,
       $this->elementInfo,
       $this->pluginManagerChartsType,
+      $this->formBuilder,
     );
 
     $this->assertInstanceOf(Google::class, $plugin);

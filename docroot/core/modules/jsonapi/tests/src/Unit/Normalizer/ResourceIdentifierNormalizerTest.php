@@ -18,15 +18,19 @@ use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\jsonapi\ResourceType\ResourceTypeRelationship;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepository;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
- * @coversDefaultClass \Drupal\jsonapi\Normalizer\ResourceIdentifierNormalizer
- * @group jsonapi
+ * Tests Drupal\jsonapi\Normalizer\ResourceIdentifierNormalizer.
  *
  * @internal
  */
+#[CoversClass(ResourceIdentifierNormalizer::class)]
+#[Group('jsonapi')]
 class ResourceIdentifierNormalizerTest extends UnitTestCase {
 
   /**
@@ -49,12 +53,12 @@ class ResourceIdentifierNormalizerTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $target_resource_type = new ResourceType('lorem', 'dummy_bundle', NULL);
+    $target_resource_type = new ResourceType('lorem', 'dummy_bundle', \stdClass::class);
     $relationship_fields = [
       'field_dummy' => new ResourceTypeRelationship('field_dummy'),
       'field_dummy_single' => new ResourceTypeRelationship('field_dummy_single'),
     ];
-    $this->resourceType = new ResourceType('fake_entity_type', 'dummy_bundle', NULL, FALSE, TRUE, TRUE, FALSE, $relationship_fields);
+    $this->resourceType = new ResourceType('fake_entity_type', 'dummy_bundle', \stdClass::class, FALSE, TRUE, TRUE, FALSE, $relationship_fields);
     $this->resourceType->setRelatableResourceTypes([
       'field_dummy' => [$target_resource_type],
       'field_dummy_single' => [$target_resource_type],
@@ -108,9 +112,9 @@ class ResourceIdentifierNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
-   * @dataProvider denormalizeProvider
+   * Tests denormalize.
    */
+  #[DataProvider('denormalizeProvider')]
   public function testDenormalize($input, $field_name, $expected): void {
     $entity = $this->prophesize(FieldableEntityInterface::class);
     $context = [
@@ -149,9 +153,9 @@ class ResourceIdentifierNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
-   * @dataProvider denormalizeInvalidResourceProvider
+   * Tests denormalize invalid resource.
    */
+  #[DataProvider('denormalizeInvalidResourceProvider')]
   public function testDenormalizeInvalidResource($data, $field_name): void {
     $context = [
       'resource_type' => $this->resourceType,

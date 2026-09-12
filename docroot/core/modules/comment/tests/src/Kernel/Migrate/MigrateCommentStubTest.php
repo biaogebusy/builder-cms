@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\comment\Kernel\Migrate;
 
 use Drupal\comment\Entity\CommentType;
-use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
 use Drupal\migrate_drupal\Tests\StubTestTrait;
 use Drupal\node\Entity\NodeType;
+use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test stub creation for comment entities.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class MigrateCommentStubTest extends MigrateDrupalTestBase {
 
   use StubTestTrait;

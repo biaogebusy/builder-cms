@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - facets.facet.keywords
+  module:
+    - facets
+    - system
+  theme:
+    - stark
+id: stark_keywords
+theme: stark
+region: content
+weight: 0
+provider: null
+plugin: 'facet_block:keywords'
+settings:
+  id: 'facet_block:keywords'
+  label: Keywords
+  label_display: visible
+  provider: facets
+  context_mapping: {  }
+  block_id: stark_keywords
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '/test-elasticsearch-index-search-facets*'

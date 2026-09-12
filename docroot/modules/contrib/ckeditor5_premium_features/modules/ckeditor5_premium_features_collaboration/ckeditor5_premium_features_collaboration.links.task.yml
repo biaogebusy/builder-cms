@@ -1,0 +1,6 @@
+ckeditor5_premium_features_collaboration.form.settings:
+  title: Collaboration
+  route_name: ckeditor5_premium_features_collaboration.form.settings
+  base_route: ckeditor5_premium_features.form.settings
+  description: 'Additional configuration for module providing Comments, Track Changes and Revision history.'
+  weight: 50

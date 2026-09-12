@@ -2,10 +2,16 @@
 
 namespace Drupal\views_add_button\Plugin\views;
 
+/**
+ * Views Add Button trait.
+ */
 trait ViewsAddButtonTrait {
 
   /**
+   * Get Replacement Characters.
+   *
    * @return array
+   *   Replacement characters.
    */
   public function viewsAddButtonGetReplacementCharacters() {
     return [
@@ -13,18 +19,16 @@ trait ViewsAddButtonTrait {
       '%5D' => ']',
       '%7B' => '{',
       '%7D' => '}',
-      '&amp;' => '&'
+      '&amp;' => '&',
     ];
   }
 
   /**
-   * Perform bracket and special character replacement.
-   *
-   * For security reasons, we are not opening this to most characters.
-   * @see https://www.drupal.org/project/views_add_button/issues/3095849
+   * Cleans up special characters in a string.
    *
    * @param string $str
-   *   String to perform character replacement
+   *   String to perform character replacement.
+   *
    * @return string
    *   Transformed string
    */
@@ -35,13 +39,18 @@ trait ViewsAddButtonTrait {
   }
 
   /**
-   * @param null $values
+   * Parses the query string option and returns an associative array.
+   *
+   * @param null|object $values
+   *   Optional values object containing index property for token replacement.
+   *
    * @return array
+   *   An associative array of query options, where keys are parameters and
+   *   values are their values.
    */
   public function getQueryString($values = NULL) {
     $query_string = $this->options['query_string'];
-    $q = NULL;
-    if (isset($value->index)) {
+    if (isset($values->index)) {
       $q = $this->options['tokenize'] ? $this->tokenizeValue($query_string, $values->index) : $query_string;
     }
     else {
@@ -50,7 +59,7 @@ trait ViewsAddButtonTrait {
     $query_opts = [];
     if ($q) {
       $q = $this->viewsAddButtonCleanupSpecialCharacters($q);
-      $qparts = explode('&', $q);
+      $qparts = explode('&', (string) $q);
 
       foreach ($qparts as $part) {
         $p = explode('=', $part);

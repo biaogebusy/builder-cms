@@ -9,12 +9,16 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\user\RoleInterface;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the access check of paragraphs.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsAccessTest extends ParagraphsTestBase {
 
   use FieldUiTestTrait;

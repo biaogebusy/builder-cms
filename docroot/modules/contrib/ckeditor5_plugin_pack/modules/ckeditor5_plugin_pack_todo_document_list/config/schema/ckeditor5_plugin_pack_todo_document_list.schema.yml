@@ -1,0 +1,8 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_todo_document_list__todo_document_list:
+  type: mapping
+  label: 'To-Do List'
+  mapping:
+    attach_default_styles:
+      type: boolean
+      label: 'Attach default styles'
+

@@ -1,0 +1,75 @@
+ckeditor5_premium_features_realtime_collaboration__comment:
+  ckeditor5:
+    plugins:
+      - cloudServices.CloudServices
+      - realtimeAdapter.RealtimeAdapter
+      - realTimeCollaboration.PresenceList
+      - basicStyles.Bold
+      - basicStyles.Italic
+      - autoformat.Autoformat
+      - list.List
+      - comments.Comments
+      - commentsAdapter.CommentsAdapter
+      - realTimeCollaboration.RealTimeCollaborativeComments
+  drupal:
+    label: Comments
+    library: ckeditor5_premium_features_realtime_collaboration/realtime-comments
+    admin_library: ckeditor5_premium_features_realtime_collaboration/admin.comments
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Plugin\CKEditor5Plugin\Realtime
+    toolbar_items:
+      commentsArchive:
+        label: Comments archive
+      comment:
+        label: Comments
+    elements: false
+    conditions:
+      toolbarItem: comment
+
+ckeditor5_premium_features_realtime_collaboration__track_changes:
+  ckeditor5:
+    plugins:
+      - cloudServices.CloudServices
+      - realtimeAdapter.RealtimeAdapter
+      - realTimeCollaboration.PresenceList
+      - basicStyles.Bold
+      - basicStyles.Italic
+      - autoformat.Autoformat
+      - list.List
+      - comments.Comments
+      - trackChanges.TrackChanges
+      - trackChanges.TrackChangesPreview
+      - commentsAdapter.CommentsAdapter
+      - realTimeCollaboration.RealTimeCollaborativeTrackChanges
+
+  drupal:
+    label: Track Changes
+    library: ckeditor5_premium_features_realtime_collaboration/realtime-track-changes
+    admin_library: ckeditor5_premium_features_realtime_collaboration/admin.track-changes
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Plugin\CKEditor5Plugin\TrackChanges
+    toolbar_items:
+      trackChanges:
+        label: Track Changes
+    elements: false
+    conditions:
+      toolbarItem: trackChanges
+
+ckeditor5_premium_features_realtime_collaboration__revision_history:
+  ckeditor5:
+    plugins:
+      - cloudServices.CloudServices
+      - realtimeAdapter.RealtimeAdapter
+      - realTimeCollaboration.PresenceList
+      - revisionHistory.RevisionHistory
+      - realTimeCollaboration.RealTimeCollaborativeRevisionHistory
+      - realtimeRevisionHistoryAdapter.RealtimeRevisionHistoryAdapter
+  drupal:
+    label: Revision History
+    library: ckeditor5_premium_features_realtime_collaboration/realtime-revision-history
+    admin_library: ckeditor5_premium_features_realtime_collaboration/admin.revision-history
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Plugin\CKEditor5Plugin\Realtime
+    toolbar_items:
+      revisionHistory:
+        label: Revision History
+    elements: false
+    conditions:
+      toolbarItem: revisionHistory

@@ -2,7 +2,9 @@
 
 namespace Drupal\workspaces;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -10,6 +12,9 @@ use Drupal\Core\Utility\Error;
 use Drupal\workspaces\Event\WorkspacePostPublishEvent;
 use Drupal\workspaces\Event\WorkspacePrePublishEvent;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+
+// cspell:ignore differring
 
 /**
  * Default implementation of the workspace publisher.
@@ -20,81 +25,19 @@ class WorkspacePublisher implements WorkspacePublisherInterface {
 
   use StringTranslationTrait;
 
-  /**
-   * The source workspace entity.
-   *
-   * @var \Drupal\workspaces\WorkspaceInterface
-   */
-  protected $sourceWorkspace;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
-
-  /**
-   * The workspace manager.
-   *
-   * @var \Drupal\workspaces\WorkspaceManagerInterface
-   */
-  protected $workspaceManager;
-
-  /**
-   * The workspace association service.
-   *
-   * @var \Drupal\workspaces\WorkspaceAssociationInterface
-   */
-  protected $workspaceAssociation;
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
-   * Constructs a new WorkspacePublisher.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Database\Connection $database
-   *   Database connection.
-   * @param \Drupal\workspaces\WorkspaceManagerInterface $workspace_manager
-   *   The workspace manager.
-   * @param \Drupal\workspaces\WorkspaceAssociationInterface $workspace_association
-   *   The workspace association service.
-   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
-   *   The event dispatcher.
-   * @param \Drupal\workspaces\WorkspaceInterface $source
-   *   The source workspace entity.
-   * @param \Psr\Log\LoggerInterface|null $logger
-   *   The logger.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Connection $database, WorkspaceManagerInterface $workspace_manager, WorkspaceAssociationInterface $workspace_association, $event_dispatcher, ?WorkspaceInterface $source = NULL, protected ?LoggerInterface $logger = NULL) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->database = $database;
-    $this->workspaceManager = $workspace_manager;
-    $this->workspaceAssociation = $workspace_association;
-    if ($event_dispatcher instanceof WorkspaceInterface) {
-      @trigger_error('Calling WorkspacePublisher::__construct() without the $event_dispatcher argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3242573', E_USER_DEPRECATED);
-      $source = $event_dispatcher;
-      $event_dispatcher = \Drupal::service('event_dispatcher');
-    }
-    $this->eventDispatcher = $event_dispatcher;
-    $this->sourceWorkspace = $source;
-    if ($this->logger === NULL) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $logger argument is deprecated in drupal:10.1.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/2932520', E_USER_DEPRECATED);
-      $this->logger = \Drupal::service('logger.channel.workspaces');
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected Connection $database,
+    protected WorkspaceManagerInterface $workspaceManager,
+    protected WorkspaceTrackerInterface $workspaceTracker,
+    protected EventDispatcherInterface $eventDispatcher,
+    protected WorkspaceInterface $sourceWorkspace,
+    protected LoggerInterface $logger,
+    protected ?TimeInterface $time = NULL,
+  ) {
+    if ($time === NULL) {
+      @trigger_error('Calling ' . __CLASS__ . ' constructor without the $time argument is deprecated in drupal:11.3.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/node/3531039', E_USER_DEPRECATED);
+      $this->time = \Drupal::time();
     }
   }
 
@@ -110,7 +53,7 @@ class WorkspacePublisher implements WorkspacePublisherInterface {
       throw new WorkspaceConflictException();
     }
 
-    $tracked_entities = $this->workspaceAssociation->getTrackedEntities($this->sourceWorkspace->id());
+    $tracked_entities = $this->workspaceTracker->getTrackedEntities($this->sourceWorkspace->id());
     $event = new WorkspacePrePublishEvent($this->sourceWorkspace, $tracked_entities);
     $this->eventDispatcher->dispatch($event);
 
@@ -128,36 +71,43 @@ class WorkspacePublisher implements WorkspacePublisherInterface {
         foreach ($tracked_entities as $entity_type_id => $revision_difference) {
           $entity_revisions = $this->entityTypeManager->getStorage($entity_type_id)
             ->loadMultipleRevisions(array_keys($revision_difference));
-          $default_revisions = $this->entityTypeManager->getStorage($entity_type_id)
-            ->loadMultiple(array_values($revision_difference));
 
           /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
           foreach ($entity_revisions as $entity) {
+            // We might be saving a lot of entities during workspace publishing,
+            // so we set the original entity manually for performance.
+            $entity->setOriginal(clone $entity);
+
             // When pushing workspace-specific revisions to the default
             // workspace (Live), we simply need to mark them as default
             // revisions.
             $entity->setSyncing(TRUE);
             $entity->isDefaultRevision(TRUE);
 
+            // Update the changed time of the entity to be the publishing time.
+            if ($entity instanceof EntityChangedInterface) {
+              $entity->setChangedTime($this->time->getRequestTime());
+            }
+
             // The default revision is not workspace-specific anymore.
             $field_name = $entity->getEntityType()->getRevisionMetadataKey('workspace');
             $entity->{$field_name}->target_id = NULL;
 
-            $entity->original = $default_revisions[$entity->id()];
             $entity->save();
             $counter++;
 
             // Extend the execution time in order to allow processing workspaces
             // that contain a large number of items.
             if ((int) ($counter / $step_size) >= 1) {
-              set_time_limit($max_execution_time);
+              set_time_limit((int) $max_execution_time);
               $counter = 0;
             }
           }
         }
       });
+      $transaction->commitOrRelease();
     }
-    catch (\Exception $e) {
+    catch (\Throwable $e) {
       if (isset($transaction)) {
         $transaction->rollBack();
       }
@@ -198,7 +148,7 @@ class WorkspacePublisher implements WorkspacePublisherInterface {
   public function getDifferringRevisionIdsOnTarget() {
     $target_revision_difference = [];
 
-    $tracked_entities = $this->workspaceAssociation->getTrackedEntities($this->sourceWorkspace->id());
+    $tracked_entities = $this->workspaceTracker->getTrackedEntities($this->sourceWorkspace->id());
     foreach ($tracked_entities as $entity_type_id => $tracked_revisions) {
       $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
 
@@ -228,8 +178,8 @@ class WorkspacePublisher implements WorkspacePublisherInterface {
    * {@inheritdoc}
    */
   public function getDifferringRevisionIdsOnSource() {
-    // Get the Workspace association revisions which haven't been pushed yet.
-    return $this->workspaceAssociation->getTrackedEntities($this->sourceWorkspace->id());
+    // Get the tracked revisions that haven't been published.
+    return $this->workspaceTracker->getTrackedEntities($this->sourceWorkspace->id());
   }
 
   /**

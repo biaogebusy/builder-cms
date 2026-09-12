@@ -6,12 +6,15 @@ namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\Core\Config\Schema\SchemaCheckTrait;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of SchemaCheckTrait.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class SchemaCheckTraitTest extends KernelTestBase {
 
   use SchemaCheckTrait;
@@ -39,9 +42,8 @@ class SchemaCheckTraitTest extends KernelTestBase {
 
   /**
    * Tests \Drupal\Core\Config\Schema\SchemaCheckTrait.
-   *
-   * @dataProvider providerCheckConfigSchema
    */
+  #[DataProvider('providerCheckConfigSchema')]
   public function testCheckConfigSchema(string $type_to_validate_against, bool $validate_constraints, array|bool $nulled_expectations, array|bool $no_data_expectations, array $expectations): void {
     // Test a non existing schema.
     $ret = $this->checkConfigSchema($this->typedConfig, 'config_schema_test.no_schema', $this->config('config_schema_test.no_schema')->get());
@@ -72,6 +74,9 @@ class SchemaCheckTraitTest extends KernelTestBase {
     $this->assertEquals($no_data_expectations, $ret);
   }
 
+  /**
+   * Returns test data for validating configuration schema.
+   */
   public static function providerCheckConfigSchema(): array {
     // Storage type check errors.
     // @see \Drupal\Core\Config\Schema\SchemaCheckTrait::checkValue()

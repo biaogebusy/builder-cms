@@ -1,9 +1,9 @@
 colorbox:
-  remote: https://github.com/jackmoore/colorbox
+  remote: https://github.com/TurbojetTechnologies/colorbox
   version: VERSION
   license:
     name: MIT
-    url: https://github.com/jackmoore/colorbox/blob/master/LICENSE.md
+    url: https://github.com/TurbojetTechnologies/colorbox/blob/master/LICENSE.md
     gpl-compatible: false
   js:
     /libraries/colorbox/jquery.colorbox-min.js: { minified: true }
@@ -14,11 +14,11 @@ colorbox:
     - core/once
 
 colorbox-dev:
-  remote: https://github.com/jackmoore/colorbox
+  remote: https://github.com/TurbojetTechnologies/colorbox
   version: VERSION
   license:
     name: MIT
-    url: https://github.com/jackmoore/colorbox/blob/master/LICENSE.md
+    url: https://github.com/TurbojetTechnologies/colorbox/blob/master/LICENSE.md
     gpl-compatible: false
   js:
     /libraries/colorbox/jquery.colorbox.js: { }

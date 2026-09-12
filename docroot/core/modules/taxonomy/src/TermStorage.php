@@ -2,7 +2,6 @@
 
 namespace Drupal\taxonomy;
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Drupal\Core\Entity\Sql\TableMappingInterface;
 
@@ -91,23 +90,8 @@ class TermStorage extends SqlContentEntityStorage implements TermStorageInterfac
   /**
    * {@inheritdoc}
    */
-  public function deleteTermHierarchy($tids) {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. It is a no-op since 8.6.0. Parent references are automatically cleared when deleting a taxonomy term. See https://www.drupal.org/node/2936675', E_USER_DEPRECATED);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function updateTermHierarchy(EntityInterface $term) {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. It is a no-op since 8.6.0. Parent references are automatically updated when updating a taxonomy term. See https://www.drupal.org/node/2936675', E_USER_DEPRECATED);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function loadParents($tid) {
     $terms = [];
-    /** @var \Drupal\taxonomy\TermInterface $term */
     if ($tid && $term = $this->load($tid)) {
       foreach ($this->getParents($term) as $id => $parent) {
         // This method currently doesn't return the <root> parent.
@@ -448,7 +432,7 @@ class TermStorage extends SqlContentEntityStorage implements TermStorageInterfac
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     /** @var string[] $vars */
     $vars = parent::__sleep();
     // Do not serialize static cache.
@@ -459,7 +443,7 @@ class TermStorage extends SqlContentEntityStorage implements TermStorageInterfac
   /**
    * {@inheritdoc}
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     parent::__wakeup();
     // Initialize static caches.
     $this->ancestors = [];

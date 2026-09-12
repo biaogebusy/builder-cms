@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Core\Entity\SynchronizableInterface;
 use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\ChangedFieldItemList;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -22,6 +23,18 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
   default_formatter: "timestamp",
   no_ui: TRUE,
   list_class: ChangedFieldItemList::class,
+  constraints: [
+    "ComplexData" => [
+      'properties' => [
+        "value" => [
+          "Range" => [
+            "min" => "-2147483648",
+            "max" => "2147483648",
+          ],
+        ],
+      ],
+    ],
+  ]
 )]
 class ChangedItem extends CreatedItem {
 
@@ -44,13 +57,14 @@ class ChangedItem extends CreatedItem {
       // \Drupal\content_translation\ContentTranslationMetadataWrapperInterface::setChangedTime().
       /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
       $entity = $this->getEntity();
-      /** @var \Drupal\Core\Entity\ContentEntityInterface $original */
-      $original = $entity->original;
-      $langcode = $entity->language()->getId();
-      if (!$entity->isNew() && $original && $original->hasTranslation($langcode)) {
-        $original_value = $original->getTranslation($langcode)->get($this->getFieldDefinition()->getName())->value;
-        if ($this->value == $original_value && $entity->hasTranslationChanges()) {
-          $this->value = \Drupal::time()->getRequestTime();
+      if (!$entity instanceof SynchronizableInterface || !$entity->isSyncing()) {
+        $original = $entity->getOriginal();
+        $langcode = $entity->language()->getId();
+        if (!$entity->isNew() && $original && $original->hasTranslation($langcode)) {
+          $original_value = $original->getTranslation($langcode)->get($this->getFieldDefinition()->getName())->value;
+          if ($this->value == $original_value && $entity->hasTranslationChanges()) {
+            $this->value = \Drupal::time()->getRequestTime();
+          }
         }
       }
     }

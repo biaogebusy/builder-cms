@@ -4,6 +4,7 @@ namespace Drupal\autologout\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\autologout\AutologoutManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -23,7 +24,7 @@ class AutologoutBlockForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'autologout_block_settings';
+    return 'autologout_reset_block';
   }
 
   /**
@@ -49,6 +50,10 @@ class AutologoutBlockForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    // Generate CSRF token for the AJAX URL.
+    $url = Url::fromRoute('autologout.ajax_set_last');
+    $token = \Drupal::csrfToken()->get($url->getInternalPath());
+
     $form['reset'] = [
       '#type' => 'button',
       '#value' => $this->t('Reset Timeout'),
@@ -56,13 +61,21 @@ class AutologoutBlockForm extends FormBase {
       '#limit_validation_errors' => FALSE,
       '#executes_submit_callback' => FALSE,
       '#ajax' => [
-        'callback' => 'autologout_ajax_set_last',
+        'url' => $url,
+        'options' => [
+          'query' => [
+            'token' => $token,
+          ],
+        ],
       ],
     ];
 
     $form['timer'] = [
       '#markup' => $this->autoLogoutManager->createTimer(),
     ];
+
+    // CSRF tokens are session-specific, so vary cache by session.
+    $form['#cache']['contexts'][] = 'session';
 
     return $form;
   }

@@ -11,7 +11,7 @@
  * @internal
  */
 #drupal-off-canvas-wrapper {
-  --off-canvas-wrapper-box-shadow: 0 0 0.25rem 2px rgba(0, 0, 0, 0.3);
+  --off-canvas-wrapper-box-shadow: 0 0 0.25rem 2px rgb(0, 0, 0, 0.3);
   --off-canvas-wrapper-border-color: #2d2d2d;
   --off-canvas-wrapper-border-width: 1px;
 
@@ -23,18 +23,40 @@
   box-shadow: var(--off-canvas-wrapper-box-shadow);
 
   /*
+   * When the off-canvas appears at the top or bottom of the page (Workspaces
+   * does this), it should not obscure the Navigation module's toolbar.
+   *
+   * Note that the Layout Builder off-canvas dialog includes
+   * `data-offset-top="0"`, so we need to be sure to not select that.
+   *
+   * Note that we have to use `!important` below to override the dialog JS's
+   * inline CSS.
+   *
+   * @todo
+   * We *may* able to remove this code once the https://www.drupal.org/i/3096017
+   * is fixed.
+   */
+  [data-admin-toolbar] &:is([data-offset-top]:not([data-offset-top="0"]), [data-offset-bottom]:not([data-offset-bottom="0"])) {
+    left: var(--drupal-displace-offset-left, 0) !important;
+    width: calc(100% - var(--drupal-displace-offset-left, 0px)) !important;
+
+    &:dir(rtl) {
+      right: var(--drupal-displace-offset-right, 0) !important;
+      width: calc(100% - var(--drupal-displace-offset-right, 0px)) !important;
+    }
+  }
+
+  /*
    * Force the off-canvas dialog to be 100% width at the same breakpoint the
    * dialog system uses to expand dialog widths.
    */
-}
-@media (max-width: 48rem) {
-  #drupal-off-canvas-wrapper {
+  @media (max-width: 48rem) {
     width: 100% !important;
   }
 }
 /* When off-canvas dialog is at 100% width stop the body from scrolling */
-@media (max-width: 48rem) {
-  body.js-off-canvas-dialog-open {
+body.js-off-canvas-dialog-open {
+  @media (max-width: 48rem) {
     position: fixed;
   }
 }
@@ -44,9 +66,8 @@
     padding-right 0.7s ease,
     padding-left 0.7s ease,
     padding-top 0.3s ease;
-}
-@media (prefers-reduced-motion: reduce) {
-  .dialog-off-canvas-main-canvas {
+
+  @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
 }

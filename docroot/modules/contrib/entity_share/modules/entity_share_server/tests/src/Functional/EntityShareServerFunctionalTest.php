@@ -19,6 +19,20 @@ use Drupal\node\NodeInterface;
 class EntityShareServerFunctionalTest extends EntityShareServerFunctionalTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'taxonomy',
+    'field',
+    'datetime',
+    'text',
+    'menu_ui',
+    'entity_share_test',
+  ];
+
+  /**
    * Test that a channel provides correct URLs.
    */
   public function testBasicChannel() {

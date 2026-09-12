@@ -39,7 +39,7 @@ class WebformSettingsPrepopulateTest extends WebformBrowserTestBase {
   /**
    * Tests webform setting including confirmation.
    */
-  public function testPrepopulate() {
+  public function testPrepopulate(): void {
     $assert_session = $this->assertSession();
 
     /* ********************************************************************** */

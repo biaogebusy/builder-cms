@@ -5,7 +5,7 @@
  * Token callbacks for the sms module.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Render\BubbleableMetadata;

@@ -6,12 +6,16 @@ namespace Drupal\Tests\migrate_drupal_ui\Kernel;
 
 use Drupal\KernelTests\FileSystemModuleDiscoveryDataProviderTrait;
 use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that labels exist for all migrations.
- *
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_ui')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MigrationLabelExistTest extends MigrateDrupalTestBase {
 
   use FileSystemModuleDiscoveryDataProviderTrait;
@@ -29,7 +33,7 @@ class MigrationLabelExistTest extends MigrateDrupalTestBase {
 
     /** @var \Drupal\migrate\Plugin\MigrationPluginManager $plugin_manager */
     $plugin_manager = $this->container->get('plugin.manager.migration');
-    // Get all the migrations
+    // Get all the migrations.
     $migrations = $plugin_manager->createInstances(array_keys($plugin_manager->getDefinitions()));
     /** @var \Drupal\migrate\Plugin\Migration $migration */
     foreach ($migrations as $migration) {

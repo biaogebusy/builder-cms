@@ -6,7 +6,7 @@ dependencies:
   - commerce:commerce_order
   - commerce:commerce_product
 
-# Information added by Drupal.org packaging script on 2025-09-10
-version: '3.2.0'
+# Information added by Drupal.org packaging script on 2026-09-07
+version: '3.3.9'
 project: 'commerce'
-datestamp: 1757518221
+datestamp: 1788781842

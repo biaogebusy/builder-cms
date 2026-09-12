@@ -4,7 +4,7 @@ namespace Drupal\webform_example_element\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides a 'webform_example_element'.
@@ -17,13 +17,13 @@ use Drupal\Core\Render\Element\FormElement;
  *
  * @FormElement("webform_example_element")
  *
- * @see \Drupal\Core\Render\Element\FormElement
- * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21Element%21FormElement.php/class/FormElement
- * @see \Drupal\Core\Render\Element\RenderElement
+ * @see \Drupal\Core\Render\Element\FormElementBase
+ * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21Element%21FormElementBase.php/class/FormElementBase
+ * @see \Drupal\Core\Render\Element\RenderElementBase
  * @see https://api.drupal.org/api/drupal/namespace/Drupal%21Core%21Render%21Element
  * @see \Drupal\webform_example_element\Element\WebformExampleElement
  */
-class WebformExampleElement extends FormElement {
+class WebformExampleElement extends FormElementBase {
 
   /**
    * {@inheritdoc}

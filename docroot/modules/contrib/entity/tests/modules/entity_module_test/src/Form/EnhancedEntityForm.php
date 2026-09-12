@@ -6,6 +6,9 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity\Form\EntityDuplicateFormTrait;
 
+/**
+ * Enhanced entity form.
+ */
 class EnhancedEntityForm extends ContentEntityForm {
 
   use EntityDuplicateFormTrait;
@@ -14,11 +17,12 @@ class EnhancedEntityForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $result = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
 
     $this->messenger()->addMessage($this->t('Saved the %label enhanced entity.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.entity_test_enhanced.collection');
+    return $result;
   }
 
 }

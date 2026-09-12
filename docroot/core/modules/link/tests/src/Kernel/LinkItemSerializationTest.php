@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\link\Kernel;
 
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\link\LinkItemInterface;
-use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\entity_test\Entity\EntityTest;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\link\LinkItemInterface;
 use Drupal\Tests\field\Kernel\FieldKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests link field serialization.
- *
- * @group link
  */
+#[Group('link')]
+#[RunTestsInSeparateProcesses]
 class LinkItemSerializationTest extends FieldKernelTestBase {
 
   /**

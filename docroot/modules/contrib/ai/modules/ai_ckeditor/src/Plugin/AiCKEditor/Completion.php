@@ -85,7 +85,7 @@ final class Completion extends AiCKEditorPluginBase {
    * {@inheritdoc}
    */
   public function buildCkEditorModalForm(array $form, FormStateInterface $form_state, array $settings = []): array {
-    $form = parent::buildCkEditorModalForm($form, $form_state);
+    $form = parent::buildCkEditorModalForm($form, $form_state, $settings);
 
     $form['text_to_submit'] = [
       '#type' => 'textarea',

@@ -1,0 +1,15 @@
+commerce_log.configuration:
+  path: '/admin/commerce/config/log'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Log'
+  requirements:
+    _permission: 'access commerce administration pages'
+
+commerce_log.settings:
+  path: '/admin/commerce/config/log/settings'
+  defaults:
+    _form: '\Drupal\commerce_log\Form\LogSettingsForm'
+    _title: 'Log settings'
+  requirements:
+    _permission: 'access log settings'

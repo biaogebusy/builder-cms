@@ -131,3 +131,125 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Gin's css for polishing the style. */
+.gin--vertical-toolbar .modules-tabs,
+.gin--horizontal-toolbar .modules-tabs,
+.gin--classic-toolbar .modules-tabs,
+.gin--navigation .modules-tabs {
+  border: 0 none;
+  background: transparent;
+}
+
+.gin--vertical-toolbar .modules-tabs__pane,
+.gin--vertical-toolbar .modules-tabs__menu,
+.gin--vertical-toolbar .modules-tabs__menu-item,
+.gin--horizontal-toolbar .modules-tabs__pane,
+.gin--horizontal-toolbar .modules-tabs__menu,
+.gin--horizontal-toolbar .modules-tabs__menu-item,
+.gin--classic-toolbar .modules-tabs__pane,
+.gin--classic-toolbar .modules-tabs__menu,
+.gin--classic-toolbar .modules-tabs__menu-item,
+.gin--navigation .modules-tabs__pane,
+.gin--navigation .modules-tabs__menu,
+.gin--navigation .modules-tabs__menu-item {
+  background: var(--gin-bg-layer);
+}
+
+.gin--vertical-toolbar .modules-tabs__pane,
+.gin--horizontal-toolbar .modules-tabs__pane,
+.gin--classic-toolbar .modules-tabs__pane,
+.gin--navigation .modules-tabs__pane {
+  padding-block: var(--gin-spacing-l) 0;
+  padding-inline: var(--gin-spacing-l);
+  border-inline-start: 1px solid var(--gin-border-color);
+}
+
+.gin--vertical-toolbar .modules-tabs__pane table tr.enabling,
+.gin--horizontal-toolbar .modules-tabs__pane table tr.enabling,
+.gin--classic-toolbar .modules-tabs__pane table tr.enabling,
+.gin--navigation .modules-tabs__pane table tr.enabling {
+  background: var(--gin-bg-green-light);
+}
+
+.gin--vertical-toolbar .modules-tabs__menu-item,
+.gin--horizontal-toolbar .modules-tabs__menu-item,
+.gin--classic-toolbar .modules-tabs__menu-item,
+.gin--navigation .modules-tabs__menu-item {
+  border-block-start: 1px solid var(--gin-border-color);
+}
+
+.gin--vertical-toolbar .modules-tabs__menu-item.tab__new,
+.gin--horizontal-toolbar .modules-tabs__menu-item.tab__new,
+.gin--classic-toolbar .modules-tabs__menu-item.tab__new,
+.gin--navigation .modules-tabs__menu-item.tab__new {
+  border-block-end: 1px solid var(--gin-border-color);
+}
+
+.gin--vertical-toolbar .modules-tabs__menu-item.disabled,
+.gin--horizontal-toolbar .modules-tabs__menu-item.disabled,
+.gin--classic-toolbar .modules-tabs__menu-item.disabled,
+.gin--navigation .modules-tabs__menu-item.disabled {
+  border-block-start-color: var(--gin-border-color);
+  border-block-end-color: transparent;
+  background-color: transparent;
+}
+
+.gin--vertical-toolbar .modules-tabs__menu-item.suggest,
+.gin--vertical-toolbar .modules-tabs__menu-item a:hover,
+.gin--vertical-toolbar .modules-tabs__menu-item a:focus,
+.gin--vertical-toolbar .modules-tabs__menu-item a:active,
+.gin--horizontal-toolbar .modules-tabs__menu-item.suggest,
+.gin--horizontal-toolbar .modules-tabs__menu-item a:hover,
+.gin--horizontal-toolbar .modules-tabs__menu-item a:focus,
+.gin--horizontal-toolbar .modules-tabs__menu-item a:active,
+.gin--classic-toolbar .modules-tabs__menu-item.suggest,
+.gin--classic-toolbar .modules-tabs__menu-item a:hover,
+.gin--classic-toolbar .modules-tabs__menu-item a:focus,
+.gin--classic-toolbar .modules-tabs__menu-item a:active,
+.gin--navigation .modules-tabs__menu-item.suggest,
+.gin--navigation .modules-tabs__menu-item a:hover,
+.gin--navigation .modules-tabs__menu-item a:focus,
+.gin--navigation .modules-tabs__menu-item a:active {
+  background: var(--gin-bg-item-hover);
+}
+
+.gin--vertical-toolbar .modules-tabs__menu-item.is-selected a,
+.gin--vertical-toolbar .modules-tabs__menu-item.is-selected a:hover,
+.gin--vertical-toolbar .modules-tabs__menu-item.is-selected a:focus,
+.gin--vertical-toolbar .modules-tabs__menu-item.is-selected a:active,
+.gin--horizontal-toolbar .modules-tabs__menu-item.is-selected a,
+.gin--horizontal-toolbar .modules-tabs__menu-item.is-selected a:hover,
+.gin--horizontal-toolbar .modules-tabs__menu-item.is-selected a:focus,
+.gin--horizontal-toolbar .modules-tabs__menu-item.is-selected a:active,
+.gin--classic-toolbar .modules-tabs__menu-item.is-selected a,
+.gin--classic-toolbar .modules-tabs__menu-item.is-selected a:hover,
+.gin--classic-toolbar .modules-tabs__menu-item.is-selected a:focus,
+.gin--classic-toolbar .modules-tabs__menu-item.is-selected a:active,
+.gin--navigation .modules-tabs__menu-item.is-selected a,
+.gin--navigation .modules-tabs__menu-item.is-selected a:hover,
+.gin--navigation .modules-tabs__menu-item.is-selected a:focus,
+.gin--navigation .modules-tabs__menu-item.is-selected a:active {
+  background: var(--gin-bg-layer);
+}
+
+.gin--vertical-toolbar .modules-tabs__menu-item ul.enabling,
+.gin--horizontal-toolbar .modules-tabs__menu-item ul.enabling,
+.gin--classic-toolbar .modules-tabs__menu-item ul.enabling,
+.gin--navigation .modules-tabs__menu-item ul.enabling {
+  color: var(--gin-color-green);
+}
+
+.gin--vertical-toolbar .module-filter-status,
+.gin--horizontal-toolbar .module-filter-status,
+.gin--classic-toolbar .module-filter-status,
+.gin--navigation .module-filter-status {
+  margin-inline-start: -1em;
+}
+
+.gin--vertical-toolbar .modules-tabs .module-filter-status,
+.gin--horizontal-toolbar .modules-tabs .module-filter-status,
+.gin--classic-toolbar .modules-tabs .module-filter-status,
+.gin--navigation .modules-tabs .module-filter-status {
+  margin-inline-start: 0;
+}

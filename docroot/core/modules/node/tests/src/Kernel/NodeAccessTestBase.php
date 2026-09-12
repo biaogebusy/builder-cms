@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\node\Kernel;
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\NodeInterface;
@@ -58,8 +59,7 @@ abstract class NodeAccessTestBase extends KernelTestBase {
     $this->installSchema('node', 'node_access');
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
-    $this->installConfig('filter');
-    $this->installConfig('node');
+    $this->installConfig(['filter', 'node', 'user']);
 
     $this->accessHandler = \Drupal::entityTypeManager()->getAccessControlHandler('node');
 
@@ -110,13 +110,13 @@ abstract class NodeAccessTestBase extends KernelTestBase {
    *   Whether access should be granted or not.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user account for which to check access.
-   * @param string|null $langcode
+   * @param string $langcode
    *   (optional) The language code indicating which translation of the node
-   *   to check. If NULL, the untranslated (fallback) access is checked.
+   *   to check. If omitted, the untranslated (fallback) access is checked.
    *
    * @internal
    */
-  public function assertNodeCreateAccess(string $bundle, bool $result, AccountInterface $account, ?string $langcode = NULL) {
+  public function assertNodeCreateAccess(string $bundle, bool $result, AccountInterface $account, string $langcode = LanguageInterface::LANGCODE_DEFAULT) {
     $this->assertEquals($result, $this->accessHandler->createAccess($bundle, $account, [
       'langcode' => $langcode,
     ]), $this->nodeAccessAssertMessage('create', $result, $langcode));

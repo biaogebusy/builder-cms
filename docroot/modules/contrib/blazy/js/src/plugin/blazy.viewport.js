@@ -140,9 +140,10 @@
     },
 
     update: function (opts) {
+      var me = this;
+
       opts = opts || me.opts;
 
-      var me = this;
       var offset = opts.offset || 0;
       var html = _doc.documentElement;
 
@@ -156,9 +157,10 @@
 
     // Must be called after init and update.
     windowData: function (opts, init) {
+      var me = this;
+
       opts = opts || me.opts;
 
-      var me = this;
       var offset = opts.offset || 0;
       var mobileFirst = opts.mobileFirst || false;
 

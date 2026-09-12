@@ -5,30 +5,33 @@ declare(strict_types=1);
 namespace Drupal\Tests\serialization\Unit\Normalizer;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
 use Drupal\Core\GeneratedUrl;
 use Drupal\Core\TypedData\Type\IntegerInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
-use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Field\FieldItemInterface;
-use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Url;
 use Drupal\locale\StringInterface;
 use Drupal\serialization\Normalizer\EntityReferenceFieldItemNormalizer;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
 use Symfony\Component\Serializer\Serializer;
 
 /**
- * @coversDefaultClass \Drupal\serialization\Normalizer\EntityReferenceFieldItemNormalizer
- * @group serialization
+ * Tests Drupal\serialization\Normalizer\EntityReferenceFieldItemNormalizer.
  */
+#[CoversClass(EntityReferenceFieldItemNormalizer::class)]
+#[Group('serialization')]
 class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
 
   use InternalTypedDataTestTrait;
@@ -95,7 +98,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::supportsNormalization
+   * Tests supports normalization.
    */
   public function testSupportsNormalization(): void {
     $this->assertTrue($this->normalizer->supportsNormalization($this->fieldItem->reveal()));
@@ -103,7 +106,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::supportsDenormalization
+   * Tests supports denormalization.
    */
   public function testSupportsDenormalization(): void {
     $this->assertTrue($this->normalizer->supportsDenormalization([], EntityReferenceItem::class));
@@ -111,7 +114,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::normalize
+   * Tests normalize.
    */
   public function testNormalize(): void {
     $test_url = '/test/100';
@@ -169,6 +172,9 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
     $this->assertSame($expected, $normalized);
   }
 
+  /**
+   * Tests normalizing with an entity reference field.
+   */
   public function testNormalizeWithNewEntityReference(): void {
     $test_url = '/test/100';
 
@@ -225,7 +231,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::normalize
+   * Tests normalize with empty taxonomy term reference.
    */
   public function testNormalizeWithEmptyTaxonomyTermReference(): void {
     // Override the serializer prophecy from setUp() to return a zero value.
@@ -265,7 +271,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::normalize
+   * Tests normalize with no entity.
    */
   public function testNormalizeWithNoEntity(): void {
     $entity_reference = $this->prophesize(TypedDataInterface::class);
@@ -297,7 +303,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
+   * Tests denormalize with type and uuid.
    */
   public function testDenormalizeWithTypeAndUuid(): void {
     $data = [
@@ -324,7 +330,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
+   * Tests denormalize with uuid without type.
    */
   public function testDenormalizeWithUuidWithoutType(): void {
     $data = [
@@ -350,7 +356,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
+   * Tests denormalize with uuid with incorrect type.
    */
   public function testDenormalizeWithUuidWithIncorrectType(): void {
     $this->expectException(UnexpectedValueException::class);
@@ -371,7 +377,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
+   * Tests denormalize with type with incorrect uuid.
    */
   public function testDenormalizeWithTypeWithIncorrectUuid(): void {
     $this->expectException(InvalidArgumentException::class);
@@ -395,7 +401,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
+   * Tests denormalize with empty uuid.
    */
   public function testDenormalizeWithEmptyUuid(): void {
     $this->expectException(InvalidArgumentException::class);
@@ -415,7 +421,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::denormalize
+   * Tests denormalize with id.
    */
   public function testDenormalizeWithId(): void {
     $data = [
@@ -478,7 +484,7 @@ class EntityReferenceFieldItemNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::constructValue
+   * Tests construct value properties.
    */
   public function testConstructValueProperties(): void {
     $data = [

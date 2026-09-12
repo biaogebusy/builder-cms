@@ -13,19 +13,12 @@ use Symfony\Component\HttpKernel\KernelEvents;
 class ErrorHandlerSubscriber implements EventSubscriberInterface {
 
   /**
-   * The current user.
-   */
-  protected AccountProxyInterface $account;
-
-  /**
    * ErrorHandlerSubscriber constructor.
    *
    * @param \Drupal\Core\Session\AccountProxyInterface $account
    *   The current user.
    */
-  public function __construct(AccountProxyInterface $account) {
-    $this->account = $account;
-  }
+  public function __construct(protected AccountProxyInterface $account) {}
 
   /**
    * Register devel error handler.

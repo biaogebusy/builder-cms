@@ -10,7 +10,6 @@ use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\views\Attribute\ViewsArgumentValidator;
 use Drupal\views\Plugin\Derivative\ViewsEntityArgumentValidator;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines an argument validator plugin for each entity type.
@@ -61,19 +60,6 @@ class Entity extends ArgumentValidatorPluginBase {
 
     $this->entityTypeManager = $entity_type_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('entity_type.bundle.info')
-    );
   }
 
   /**
@@ -238,7 +224,7 @@ class Entity extends ArgumentValidatorPluginBase {
 
     // The bundle entity type might not exist. For example, users do not have
     // bundles.
-    if ($this->entityTypeManager->hasHandler($bundle_entity_type, 'storage')) {
+    if ($bundle_entity_type && $this->entityTypeManager->hasHandler($bundle_entity_type, 'storage')) {
       $bundle_entity_storage = $this->entityTypeManager->getStorage($bundle_entity_type);
 
       foreach ($bundle_entity_storage->loadMultiple(array_keys($this->options['bundles'])) as $bundle_entity) {

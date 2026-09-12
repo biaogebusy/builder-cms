@@ -5,50 +5,29 @@
  * Provides a webform element for a selecting an image.
  */
 
-use Drupal\Core\Url;
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_image_select\Hook\WebformImageSelectHooks;
 
 /**
  * Implements hook_webform_help_info().
  */
+#[LegacyHook]
 function webform_image_select_webform_help_info() {
-  $help = [];
-  $help['config_image_select_images'] = [
-    'group' => 'configuration',
-    'title' => t('Configuration: Images'),
-    'content' => t('The <strong>Images configuration</strong> page lists reusable images for the image select element.'),
-    'routes' => [
-      // @see /admin/structure/webform/options/images
-      'entity.webform_image_select_images.collection',
-    ],
-  ];
-  return $help;
+  return \Drupal::service(WebformImageSelectHooks::class)->webformHelpInfo();
 }
 
 /**
  * Implements hook_webform_libraries_info().
  */
+#[LegacyHook]
 function webform_image_select_webform_libraries_info() {
-  $libraries = [];
-  $libraries['jquery.image-picker'] = [
-    'title' => t('jQuery: Image Picker'),
-    'description' => t('A simple jQuery plugin that transforms a select element into a more user friendly graphical interface.'),
-    'notes' => t('Image Picker is used by the Image select element.'),
-    'homepage_url' => Url::fromUri('https://rvera.github.io/image-picker/'),
-    'download_url' => Url::fromUri('https://github.com/rvera/image-picker/archive/refs/tags/0.3.1.zip'),
-    'version' => '0.3.1',
-    'elements' => ['webform_image_select'],
-    'optional' => FALSE,
-    'license' => 'MIT',
-  ];
-  return $libraries;
+  return \Drupal::service(WebformImageSelectHooks::class)->webformLibrariesInfo();
 }
 
 /**
  * Implements hook_menu_local_tasks_alter().
  */
+#[LegacyHook]
 function webform_image_select_menu_local_tasks_alter(&$data, $route_name) {
-  // Change config entities 'Translate *' tab to be just label 'Translate'.
-  if (isset($data['tabs'][0]["config_translation.local_tasks:entity.webform_image_select_images.config_translation_overview"]['#link']['title'])) {
-    $data['tabs'][0]["config_translation.local_tasks:entity.webform_image_select_images.config_translation_overview"]['#link']['title'] = t('Translate');
-  }
+  \Drupal::service(WebformImageSelectHooks::class)->menuLocalTasksAlter($data, $route_name);
 }

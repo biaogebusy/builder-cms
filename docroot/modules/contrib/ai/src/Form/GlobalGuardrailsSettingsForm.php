@@ -26,7 +26,7 @@ class GlobalGuardrailsSettingsForm extends ConfigFormBase {
   public function __construct(
     ConfigFactoryInterface $config_factory,
     TypedConfigManagerInterface $typed_config_manager,
-    protected readonly AiGuardrailRepository $guardrailRepository,
+    protected AiGuardrailRepository $guardrailRepository,
   ) {
     parent::__construct($config_factory, $typed_config_manager);
   }
@@ -81,7 +81,7 @@ class GlobalGuardrailsSettingsForm extends ConfigFormBase {
     // Fieldset to add title and description.
     $form['global_guardrails_wrapper'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Global guardrail sets'),
+      '#title' => $this->t('Global AI guardrail sets'),
       '#description' => $this->t('Guardrail sets selected here run on every AI request, even those that did not explicitly opt in.'),
       'global_guardrails' => [],
     ];

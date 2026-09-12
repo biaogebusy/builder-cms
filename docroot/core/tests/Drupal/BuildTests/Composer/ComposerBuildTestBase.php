@@ -9,8 +9,6 @@ use Symfony\Component\Finder\Finder;
 
 /**
  * Base class for Composer build tests.
- *
- * @coversNothing
  */
 abstract class ComposerBuildTestBase extends BuildTestBase {
 
@@ -36,7 +34,7 @@ abstract class ComposerBuildTestBase extends BuildTestBase {
     $this->assertFileExists($drupal_php_path);
 
     // Read back the Drupal version that was set and assert it matches
-    // expectations
+    // expectations.
     $this->executeCommand("php -r 'include \"$drupal_php_path\"; print \Drupal::VERSION;'");
     $this->assertCommandSuccessful();
     $this->assertCommandOutputContains($expectedVersion);

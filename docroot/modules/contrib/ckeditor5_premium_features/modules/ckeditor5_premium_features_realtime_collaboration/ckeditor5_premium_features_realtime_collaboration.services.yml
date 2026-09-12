@@ -1,0 +1,55 @@
+services:
+  ckeditor5_premium_features_realtime_collaboration.element.text_format:
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Element\TextFormat
+    arguments:
+      - '@entity_type.manager'
+      - '@ckeditor5_premium_features_realtime_collaboration.collaboration_settings'
+      - '@ckeditor5_premium_features.api_adapter'
+      - '@ckeditor5_premium_features.storage_handler.editor'
+      - '@ckeditor5_premium_features_realtime_collaboration.notification_integrator'
+      - '@module_handler'
+      - '@config.factory'
+      - '@request_stack'
+
+
+  ckeditor5_premium_features_realtime_collaboration.collaboration_settings:
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Utility\CollaborationSettings
+    arguments:
+      - '@config.factory'
+
+  ckeditor5_premium_features_realtime_collaboration.notification_integrator:
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Utility\NotificationIntegrator
+    arguments:
+      - '@ckeditor5_premium_features.api_adapter'
+      - '@current_user'
+      - '@event_dispatcher'
+      - '@entity_type.manager'
+
+  ckeditor5_premium_features_realtime_collaboration.bundle_upload_helper:
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\BundleUploadHelper
+    arguments:
+      - '@messenger'
+      - '@logger.factory'
+      - '@config.factory'
+      - '@plugin.manager.editor'
+      - '@library.dependency_resolver'
+      - '@library.discovery'
+      - '@http_client'
+      - '@ckeditor5_premium_features.api_adapter'
+      - '@module_handler'
+
+  ckeditor5_premium_features_realtime_collaboration.bulk_notification_integrator:
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Utility\BulkNotificationIntegrator
+    arguments:
+      - '@ckeditor5_premium_features.api_adapter'
+      - '@current_user'
+      - '@event_dispatcher'
+      - '@entity_type.manager'
+      - '@ckeditor5_premium_features_realtime_collaboration.notification_integrator'
+
+  ckeditor5_premium_features_realtime_collaboration.bulk_message_body_handler:
+    class: Drupal\ckeditor5_premium_features_realtime_collaboration\Utility\RtcBulkMessageBodyHandler
+    arguments:
+      - '@ckeditor5_premium_features_realtime_collaboration.bulk_notification_integrator'
+    tags:
+      - { name: bulk_message_body_handler, priority: 90 }

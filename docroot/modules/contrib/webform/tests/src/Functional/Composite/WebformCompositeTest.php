@@ -28,7 +28,7 @@ class WebformCompositeTest extends WebformBrowserTestBase {
   /**
    * Test composite element.
    */
-  public function testComposite() {
+  public function testComposite(): void {
     $assert_session = $this->assertSession();
 
     /* Display */
@@ -39,11 +39,21 @@ class WebformCompositeTest extends WebformBrowserTestBase {
     $assert_session->responseContains('<fieldset data-drupal-selector="edit-contact-basic" id="edit-contact-basic--wrapper" class="webform-contact--wrapper fieldgroup form-composite webform-composite-hidden-title required js-webform-type-webform-contact webform-type-webform-contact js-form-item form-item js-form-wrapper form-wrapper">');
     $assert_session->responseContains('<span class="visually-hidden fieldset-legend js-form-required form-required">Contact basic</span>');
     $assert_session->responseContains('<label for="edit-contact-basic-name" class="js-form-required form-required">Name</label>');
-    $assert_session->responseContains('<input data-drupal-selector="edit-contact-basic-name" type="text" id="edit-contact-basic-name" name="contact_basic[name]" value="John Smith" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<input data-drupal-selector="edit-contact-basic-name" type="text" id="edit-contact-basic-name" name="contact_basic[name]" value="John Smith" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    }
+    else {
+      $assert_session->responseContains('<input data-drupal-selector="edit-contact-basic-name" type="text" id="edit-contact-basic-name" name="contact_basic[name]" value="John Smith" size="60" maxlength="255" class="form-text required" required="required" />');
+    }
 
     // Check custom name title, description, and required.
     $assert_session->responseContains('<label for="edit-contact-advanced-name" class="js-form-required form-required">Custom contact name</label>');
-    $assert_session->responseContains('<input data-drupal-selector="edit-contact-advanced-name" aria-describedby="edit-contact-advanced-name--description" type="text" id="edit-contact-advanced-name" name="contact_advanced[name]" value="John Smith" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<input data-drupal-selector="edit-contact-advanced-name" aria-describedby="edit-contact-advanced-name--description" type="text" id="edit-contact-advanced-name" name="contact_advanced[name]" value="John Smith" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    }
+    else {
+      $assert_session->responseContains('<input data-drupal-selector="edit-contact-advanced-name" aria-describedby="edit-contact-advanced-name--description" type="text" id="edit-contact-advanced-name" name="contact_advanced[name]" value="John Smith" size="60" maxlength="255" class="form-text required" required="required" />');
+    }
     $assert_session->responseContains('Custom contact name description');
 
     // Check custom state type and not required.
@@ -87,8 +97,9 @@ class WebformCompositeTest extends WebformBrowserTestBase {
 
     // Check editing custom options are rendered.
     $this->drupalGet('/webform/test_composite');
-    $assert_session->responseContains('<select data-drupal-selector="edit-address-custom-options-state-province" id="edit-address-custom-options-state-province" name="address_custom_options[state_province]" class="form-select"><option value="" selected="selected">- None -</option><option value="Yes">Yes</option><option value="No">No</option></select>');
-    $assert_session->responseContains('<select data-drupal-selector="edit-address-custom-options-country" id="edit-address-custom-options-country" name="address_custom_options[country]" class="form-select"><option value="" selected="selected">- None -</option><option value="one">One</option><option value="two">Two</option><option value="three">Three</option></select>');
+    $this->assertEquals('one', $assert_session->optionExists('address_custom_options[country]', 'One')->getValue());
+    $this->assertEquals('two', $assert_session->optionExists('address_custom_options[country]', 'Two')->getValue());
+    $this->assertEquals('three', $assert_session->optionExists('address_custom_options[country]', 'Three')->getValue());
 
     // Check composite element with custom options warning message.
     $this->drupalGet('/admin/structure/webform/manage/test_composite/element/address_custom_options/edit');
@@ -100,8 +111,12 @@ class WebformCompositeTest extends WebformBrowserTestBase {
 
     // Check editing custom options are not removed.
     $this->drupalGet('/webform/test_composite');
-    $assert_session->responseContains('<select data-drupal-selector="edit-address-custom-options-state-province" id="edit-address-custom-options-state-province" name="address_custom_options[state_province]" class="form-select"><option value="" selected="selected">- None -</option><option value="Yes">Yes</option><option value="No">No</option></select>');
-    $assert_session->responseContains('<select data-drupal-selector="edit-address-custom-options-country" id="edit-address-custom-options-country" name="address_custom_options[country]" class="form-select"><option value="" selected="selected">- None -</option><option value="one">One</option><option value="two">Two</option><option value="three">Three</option></select>');
+    $this->assertEquals('Yes', $assert_session->optionExists('address_custom_options[state_province]', 'Yes')->getValue());
+    $this->assertEquals('No', $assert_session->optionExists('address_custom_options[state_province]', 'No')->getValue());
+
+    $this->assertEquals('one', $assert_session->optionExists('address_custom_options[country]', 'One')->getValue());
+    $this->assertEquals('two', $assert_session->optionExists('address_custom_options[country]', 'Two')->getValue());
+    $this->assertEquals('three', $assert_session->optionExists('address_custom_options[country]', 'Three')->getValue());
 
   }
 

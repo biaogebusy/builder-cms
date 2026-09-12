@@ -2,8 +2,12 @@
 
 namespace Drupal\blazy\Media;
 
+use Drupal\blazy\BlazyManagerInterface;
+
 /**
  * Provides OEmbed integration.
+ *
+ * @todo add return and parameter types at 4.x.
  */
 interface BlazyOEmbedInterface {
 
@@ -22,8 +26,18 @@ interface BlazyOEmbedInterface {
    *
    * @return \Drupal\blazy\BlazyManagerInterface
    *   The blazy manager.
+   *
+   * @todo deprecate and remove for $manager before or at 4.x.
    */
   public function blazyManager();
+
+  /**
+   * Returns the blazy manager service.
+   *
+   * @return \Drupal\blazy\BlazyManagerInterface
+   *   The blazy manager.
+   */
+  public function manager(): BlazyManagerInterface;
 
   /**
    * Returns the blazy media.

@@ -7,31 +7,44 @@ namespace Drupal\Tests\block\Unit;
 use Drupal\block\BlockRepository;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\block\BlockRepository
- * @group block
+ * Tests Drupal\block\BlockRepository.
  */
+#[CoversClass(BlockRepository::class)]
+#[Group('block')]
 class BlockRepositoryTest extends UnitTestCase {
 
   /**
+   * The block repository.
+   *
    * @var \Drupal\block\BlockRepository
    */
   protected $blockRepository;
 
   /**
+   * The block storage or a mock.
+   *
    * @var \Drupal\Core\Entity\EntityStorageInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $blockStorage;
 
   /**
+   * The theme for the test.
+   *
    * @var string
    */
   protected $theme;
 
   /**
-   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface|\PHPUnit\Framework\MockObject\MockObject
+   * The context handler of a mock.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface|\PHPUnit\Framework\MockObject\Stub
    */
   protected $contextHandler;
 
@@ -60,11 +73,11 @@ class BlockRepositoryTest extends UnitTestCase {
       ->method('getActiveTheme')
       ->willReturn($active_theme);
 
-    $this->contextHandler = $this->createMock('Drupal\Core\Plugin\Context\ContextHandlerInterface');
+    $this->contextHandler = $this->createStub(ContextHandlerInterface::class);
     $this->blockStorage = $this->createMock('Drupal\Core\Entity\EntityStorageInterface');
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit\Framework\MockObject\MockObject $entity_type_manager */
-    $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
-    $entity_type_manager->expects($this->any())
+    $entity_type_manager = $this->createStub(EntityTypeManagerInterface::class);
+    $entity_type_manager
       ->method('getStorage')
       ->willReturn($this->blockStorage);
 
@@ -73,11 +86,8 @@ class BlockRepositoryTest extends UnitTestCase {
 
   /**
    * Tests the retrieval of block entities.
-   *
-   * @covers ::getVisibleBlocksPerRegion
-   *
-   * @dataProvider providerBlocksConfig
    */
+  #[DataProvider('providerBlocksConfig')]
   public function testGetVisibleBlocksPerRegion(array $blocks_config, array $expected_blocks): void {
     $blocks = [];
     foreach ($blocks_config as $block_id => $block_config) {
@@ -88,10 +98,10 @@ class BlockRepositoryTest extends UnitTestCase {
       $block->expects($block_config[0] ? $this->atLeastOnce() : $this->never())
         ->method('getRegion')
         ->willReturn($block_config[1]);
-      $block->expects($this->any())
+      $block
         ->method('label')
         ->willReturn($block_id);
-      $block->expects($this->any())
+      $block
         ->method('getWeight')
         ->willReturn($block_config[2]);
       $blocks[$block_id] = $block;
@@ -112,6 +122,9 @@ class BlockRepositoryTest extends UnitTestCase {
     $this->assertEquals($expected_blocks, $result);
   }
 
+  /**
+   * Provides data to testGetVisibleBlocksPerRegion().
+   */
   public static function providerBlocksConfig() {
     $blocks_config = [
       'block1' => [
@@ -146,8 +159,6 @@ class BlockRepositoryTest extends UnitTestCase {
 
   /**
    * Tests the retrieval of block entities that are context-aware.
-   *
-   * @covers ::getVisibleBlocksPerRegion
    */
   public function testGetVisibleBlocksPerRegionWithContext(): void {
     $block = $this->createMock('Drupal\block\BlockInterface');

@@ -24,6 +24,9 @@ class UserClaimsNormalizer extends NormalizerBase implements NormalizerInterface
    * The user storage.
    *
    * @var \Drupal\user\UserStorageInterface
+   * @deprecated in simple_oauth:6.2.0 and is removed from simple_oauth:7.0.0.
+   *   Use $this->entityTypeManager->getStorage('user') instead.
+   * @see https://www.drupal.org/project/simple_oauth/issues/3579430
    */
   protected $userStorage;
 
@@ -44,7 +47,7 @@ class UserClaimsNormalizer extends NormalizerBase implements NormalizerInterface
   /**
    * UserClaimsNormalizer constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param string[] $claims
    *   The list of claims being selected.
@@ -54,10 +57,13 @@ class UserClaimsNormalizer extends NormalizerBase implements NormalizerInterface
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, array $claims, ModuleHandlerInterface $module_handler) {
-    $this->userStorage = $entity_type_manager->getStorage('user');
+  public function __construct(protected EntityTypeManagerInterface $entityTypeManager, array $claims, ModuleHandlerInterface $module_handler) {
     $this->claims = $claims;
     $this->moduleHandler = $module_handler;
+
+    // Set for backwards compatibility, remove in 7.0.0.
+    // @phpstan-ignore-next-line property.deprecated
+    $this->userStorage = $entityTypeManager->getStorage('user');
   }
 
   /**
@@ -69,7 +75,7 @@ class UserClaimsNormalizer extends NormalizerBase implements NormalizerInterface
     // Check if the account is in $context. If not, load it from the database.
     $account = $context[$identifier] instanceof AccountInterface
       ? $context[$identifier]
-      : $this->userStorage->load($identifier);
+      : $this->entityTypeManager->getStorage('user')->load($identifier);
     assert($account instanceof AccountInterface);
     return $this->getClaimsFromAccount($account);
   }

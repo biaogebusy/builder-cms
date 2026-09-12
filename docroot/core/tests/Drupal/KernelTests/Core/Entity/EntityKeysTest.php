@@ -6,19 +6,21 @@ namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\entity_test\Entity\EntityTest;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the behavior of entity keys.
- *
- * @group entity
  */
+#[Group('entity')]
+#[RunTestsInSeparateProcesses]
 class EntityKeysTest extends EntityKernelTestBase {
 
   /**
    * Tests the cache when multiple keys reference a single field.
-   *
-   * @dataProvider multipleKeysCacheTestCases
    */
+  #[DataProvider('multipleKeysCacheTestCases')]
   public function testMultipleKeysCache($translatable): void {
     $this->state->set('entity_test.additional_base_field_definitions', [
       'test_field' => BaseFieldDefinition::create('string')->setTranslatable($translatable),
@@ -44,7 +46,7 @@ class EntityKeysTest extends EntityKernelTestBase {
   /**
    * Data provider for ::testMultipleKeysCache.
    */
-  public static function multipleKeysCacheTestCases() {
+  public static function multipleKeysCacheTestCases(): array {
     return [
       'translatable Entity Key' => [
         TRUE,

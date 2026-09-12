@@ -114,7 +114,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
         [$state, $negate] = $this->processState($original_state);
 
         // If hide/show we need to make sure that validation is not triggered.
-        if (strpos($state, 'visible') === 0) {
+        if (str_starts_with($state, 'visible')) {
           $element['#after_build'][] = [get_class($this), 'elementAfterBuild'];
         }
 
@@ -128,7 +128,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
         if ($all_targets_visible) {
           // Add .js-webform-states-hidden to element's that are not visible when
           // the form is rendered.
-          if (strpos($state, 'visible') === 0
+          if (str_starts_with($state, 'visible')
             && !$this->validateConditions($conditions, $webform_submission)) {
             $this->addStatesHiddenToElement($element);
           }
@@ -543,7 +543,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
       $result = ($negate) ? !$result : $result;
 
       // Apply result to element state.
-      if (strpos($state, 'visible') === 0 && $result === FALSE) {
+      if (str_starts_with($state, 'visible') && $result === FALSE) {
         $visible = FALSE;
       }
     }
@@ -672,7 +672,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
         return ($conditions_sum === 1);
 
       case 'or':
-        return (boolean) $conditions_sum;
+        return (bool) $conditions_sum;
 
       case 'and':
         return ($conditions_sum === $conditions_total);
@@ -711,7 +711,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
     // If no element is found try checking file uploads which use
     // :input[name="files[ELEMENT_KEY].
     // @see \Drupal\webform\Plugin\WebformElement\WebformManagedFileBase::getElementSelectorOptions
-    if (!$element && strpos($selector, ':input[name="files[') !== FALSE) {
+    if (!$element && str_contains($selector, ':input[name="files[')) {
       $element_key = static::getInputNameAsArray($input_name, 1);
       $element = $webform_submission->getWebform()->getElement($element_key);
     }
@@ -729,7 +729,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
         $sub_condition_results[] = $this->checkCondition($element, $selector, $sub_condition, $webform_submission);
       }
       // Evaluate sub-conditions using the 'OR' operator.
-      return (boolean) array_sum($sub_condition_results);
+      return (bool) array_sum($sub_condition_results);
     }
     else {
       return $this->checkCondition($element, $selector, $condition, $webform_submission);
@@ -820,10 +820,10 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
     switch ($trigger) {
       case 'empty':
         $empty = (empty($element_value) && $element_value !== '0');
-        return ($empty === (boolean) $trigger_value);
+        return ($empty === (bool) $trigger_value);
 
       case 'checked':
-        return ((boolean) $element_value === (boolean) $trigger_value);
+        return ((bool) $element_value === (bool) $trigger_value);
 
       case 'value':
         return ((string) $element_value === (string) $trigger_value);
@@ -854,7 +854,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
 
         $greater = NULL;
         $less = NULL;
-        if (strpos($trigger_value, ':') === FALSE) {
+        if (!str_contains($trigger_value, ':')) {
           $greater = $trigger_value;
         }
         else {
@@ -890,7 +890,7 @@ class WebformSubmissionConditionsValidator implements WebformSubmissionCondition
 
     // Set negate.
     $negate = FALSE;
-    if (strpos($state, '!') === 0) {
+    if (str_starts_with($state, '!')) {
       $negate = TRUE;
       $state = ltrim($state, '!');
     }

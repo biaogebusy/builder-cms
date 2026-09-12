@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Render;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Performs functional tests on \Drupal::service('renderer')->render().
- *
- * @group Common
  */
+#[Group('Common')]
+#[RunTestsInSeparateProcesses]
 class RenderTest extends KernelTestBase {
 
   /**
@@ -57,11 +60,11 @@ class RenderTest extends KernelTestBase {
     ];
     $this->render($build);
     $this->removeWhiteSpace();
-    $this->assertNoRaw('<div>kangarookitten</div>');
+    $this->assertNoRaw('<div>kangaroo-kitten</div>');
   }
 
   /**
-   * Tests that we get an exception when we try to attach an illegal type.
+   * Tests that we get an exception when we try to attach an invalid type.
    */
   public function testProcessAttached(): void {
     // Specify invalid attachments in a render array.
@@ -74,13 +77,12 @@ class RenderTest extends KernelTestBase {
 
   /**
    * Tests the deprecation of \Drupal\Core\Render\Renderer::renderPlain()
-   *
-   * @group legacy
    */
+  #[IgnoreDeprecations]
   public function testDeprecateRenderPlain(): void {
     $message = ['#markup' => 'Test'];
     \Drupal::service('renderer')->renderPlain($message);
-    $this->expectDeprecation('Renderer::renderPlain() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Instead, you should use ::renderInIsolation(). See https://www.drupal.org/node/3407994');
+    $this->expectUserDeprecationMessage('Renderer::renderPlain() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Instead, you should use ::renderInIsolation(). See https://www.drupal.org/node/3407994');
   }
 
 }

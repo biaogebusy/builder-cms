@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
@@ -13,6 +16,8 @@ use Drupal\Tests\SchemaCheckTestTrait;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceFieldDefaultValueTest extends BrowserTestBase {
   use SchemaCheckTestTrait;
 

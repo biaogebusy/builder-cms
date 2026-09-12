@@ -9,13 +9,14 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
 use Drupal\text\Plugin\Field\FieldType\TextFieldItemList;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests TextFieldItemList.
- *
- * @coversClass \Drupal\text\Plugin\Field\FieldType\TextFieldItemList
- * @group text
  */
+#[CoversClass(TextFieldItemList::class)]
+#[Group('text')]
 class TextFieldItemListTest extends UnitTestCase {
 
   /**

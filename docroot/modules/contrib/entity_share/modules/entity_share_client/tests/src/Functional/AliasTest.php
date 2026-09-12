@@ -19,6 +19,18 @@ class AliasTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'node',
+    'path',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+    'json_api_book',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'node';
 
   /**

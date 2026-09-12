@@ -6,12 +6,14 @@ namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests users' ability to change their own administration language.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserAdminLanguageTest extends BrowserTestBase {
 
   /**
@@ -183,7 +185,7 @@ class UserAdminLanguageTest extends BrowserTestBase {
    * @param bool $admin_first
    *   Whether the admin negotiation should be first.
    */
-  public function setLanguageNegotiation($admin_first = FALSE) {
+  public function setLanguageNegotiation($admin_first = FALSE): void {
     $edit = [
       'language_interface[enabled][language-user-admin]' => TRUE,
       'language_interface[enabled][language-url]' => TRUE,
@@ -197,7 +199,7 @@ class UserAdminLanguageTest extends BrowserTestBase {
   /**
    * Helper method for adding a custom language.
    */
-  public function addCustomLanguage() {
+  public function addCustomLanguage(): void {
     $langcode = 'xx';
     // The English name for the language.
     $name = $this->randomMachineName(16);

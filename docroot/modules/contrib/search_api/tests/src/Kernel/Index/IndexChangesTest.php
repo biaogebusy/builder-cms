@@ -191,6 +191,7 @@ class IndexChangesTest extends KernelTestBase {
     $info = [
       'datasource_id' => 'entity:entity_test_mulrev_changed',
       'property_path' => 'id',
+      'type' => 'string',
     ];
     $field = \Drupal::getContainer()
       ->get('search_api.fields_helper')
@@ -335,10 +336,12 @@ class IndexChangesTest extends KernelTestBase {
     $info = [
       'datasource_id' => 'entity:entity_test_mulrev_changed',
       'property_path' => 'id',
+      'type' => 'string',
     ];
     $this->index->addField($fields_helper->createField($this->index, 'id', $info));
     $info = [
       'property_path' => 'search_api_url',
+      'type' => 'string',
     ];
     $this->index->addField($fields_helper->createField($this->index, 'url', $info));
 
@@ -413,11 +416,13 @@ class IndexChangesTest extends KernelTestBase {
     $info = [
       'datasource_id' => $datasource_id,
       'property_path' => 'field1',
+      'type' => 'string',
     ];
     $this->index->addField($fields_helper->createField($this->index, 'field1', $info));
     $info = [
       'datasource_id' => $datasource_id,
       'property_path' => 'field2',
+      'type' => 'string',
     ];
     $this->index->addField($fields_helper->createField($this->index, 'field2', $info));
 
@@ -447,6 +452,7 @@ class IndexChangesTest extends KernelTestBase {
     $info = [
       'datasource_id' => $datasource_id,
       'property_path' => 'name',
+      'type' => 'string',
     ];
     $field = \Drupal::getContainer()
       ->get('search_api.fields_helper')

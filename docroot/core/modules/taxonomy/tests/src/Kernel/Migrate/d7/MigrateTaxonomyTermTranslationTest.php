@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\taxonomy\TermInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test migration of translated taxonomy terms.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyTermTranslationTest extends MigrateDrupal7TestBase {
 
   /**

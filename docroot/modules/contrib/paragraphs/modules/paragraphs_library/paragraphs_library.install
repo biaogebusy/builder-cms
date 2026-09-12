@@ -5,6 +5,8 @@
  * Install/Update hooks for paragraphs library.
  */
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\field\Entity\FieldConfig;
@@ -68,24 +70,22 @@ function paragraphs_library_update_8001() {
   \Drupal::service('entity_type.manager')->clearCachedDefinitions();
 
   // Load all library items and store their values in memory.
-  $library_values = \Drupal::database()->query('SELECT * FROM {paragraphs_library_item}')->fetchAll(PDO::FETCH_ASSOC);
+  $library_values = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => \Drupal::database()->query('SELECT * FROM {paragraphs_library_item}')->fetchAll(FetchAs::Associative), fn() => \Drupal::database()->query('SELECT * FROM {paragraphs_library_item}')->fetchAll(PDO::FETCH_ASSOC));
 
   // Now, truncate the tables to delete the data without invoking APIs that
   // would also delete the referenced paragraphs.
   \Drupal::database()->truncate('paragraphs_library_item')->execute();
   \Drupal::database()->truncate('paragraphs_library_item_revision')->execute();
 
-    // Make the entity type translatable.
+  // Make the entity type translatable.
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
   $entity_type = $entity_definition_update_manager->getEntityType('paragraphs_library_item');
-  //$entity_definition_update_manager->uninstallEntityType($entity_type);
-
+  // $entity_definition_update_manager->uninstallEntityType($entity_type);
   $entity_type->set('translatable', TRUE);
   $keys = $entity_type->getKeys();
   $keys['langcode'] = 'langcode';
   $entity_type->set('entity_keys', $keys);
-  //$entity_type->setHandlerClass('storage_schema', LibraryItemStorageSchema::class);
-
+  // $entity_type->setHandlerClass('storage_schema', LibraryItemStorageSchema::class);
   $entity_definition_update_manager->updateEntityType($entity_type);
 
   $langcode_field = BaseFieldDefinition::create('language')
@@ -114,7 +114,7 @@ function paragraphs_library_update_8001() {
   foreach ($library_values as $library_value) {
     $library_value['paragraphs'] = [
       'target_id' => $library_value['paragraphs__target_id'],
-      'target_revision_id' => $library_value['paragraphs__target_revision_id']
+      'target_revision_id' => $library_value['paragraphs__target_revision_id'],
     ];
     unset($library_value['paragraphs__target_id']);
     unset($library_value['paragraphs__target_revision_id']);
@@ -190,7 +190,7 @@ function paragraphs_library_update_8004() {
   \Drupal::service('entity.last_installed_schema.repository')->setLastInstalledFieldStorageDefinition($storage_definition);
 
   // Update the stored field schema.
-  // @todo: There has to be a better way to do this.
+  // @todo There has to be a better way to do this.
   $key = 'paragraphs_library_item.field_schema_data.label';
   $field_schema = \Drupal::keyValue('entity.storage_schema.sql')->get($key);
   $field_schema['paragraphs_library_item_revision_field_data']['fields']['label'] = $column_schema;
@@ -207,7 +207,7 @@ function paragraphs_library_update_8005() {
   $revision_metadata_keys += [
     'revision_created' => 'revision_created',
     'revision_user' => 'revision_uid',
-    'revision_log_message' => 'revision_log'
+    'revision_log_message' => 'revision_log',
   ];
   $entity_type->set('revision_metadata_keys', $revision_metadata_keys);
   $entity_definition_update_manager->updateEntityType($entity_type);

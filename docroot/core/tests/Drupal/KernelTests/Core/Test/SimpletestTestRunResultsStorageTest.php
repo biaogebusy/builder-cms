@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Test;
 
 use Drupal\Core\Database\Database;
-use Drupal\Core\Test\TestRun;
 use Drupal\Core\Test\SimpletestTestRunResultsStorage;
+use Drupal\Core\Test\TestRun;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Test\SimpletestTestRunResultsStorage
- * @group Test
+ * Tests Drupal\Core\Test\SimpletestTestRunResultsStorage.
  */
+#[CoversClass(SimpletestTestRunResultsStorage::class)]
+#[Group('Test')]
+#[RunTestsInSeparateProcesses]
 class SimpletestTestRunResultsStorageTest extends KernelTestBase {
 
   /**
@@ -42,8 +47,10 @@ class SimpletestTestRunResultsStorageTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::buildTestingResultsEnvironment
-   * @covers ::validateTestingResultsEnvironment
+   * Tests build new environment.
+   *
+   * @legacy-covers ::buildTestingResultsEnvironment
+   * @legacy-covers ::validateTestingResultsEnvironment
    */
   public function testBuildNewEnvironment(): void {
     $schema = $this->connection->schema();
@@ -60,11 +67,13 @@ class SimpletestTestRunResultsStorageTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::buildTestingResultsEnvironment
-   * @covers ::validateTestingResultsEnvironment
-   * @covers ::createNew
-   * @covers ::insertLogEntry
-   * @covers ::cleanUp
+   * Tests build environment keeping existing results.
+   *
+   * @legacy-covers ::buildTestingResultsEnvironment
+   * @legacy-covers ::validateTestingResultsEnvironment
+   * @legacy-covers ::createNew
+   * @legacy-covers ::insertLogEntry
+   * @legacy-covers ::cleanUp
    */
   public function testBuildEnvironmentKeepingExistingResults(): void {
     $schema = $this->connection->schema();
@@ -99,11 +108,13 @@ class SimpletestTestRunResultsStorageTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::buildTestingResultsEnvironment
-   * @covers ::createNew
-   * @covers ::insertLogEntry
-   * @covers ::setDatabasePrefix
-   * @covers ::removeResults
+   * Tests get current test run state.
+   *
+   * @legacy-covers ::buildTestingResultsEnvironment
+   * @legacy-covers ::createNew
+   * @legacy-covers ::insertLogEntry
+   * @legacy-covers ::setDatabasePrefix
+   * @legacy-covers ::removeResults
    */
   public function testGetCurrentTestRunState(): void {
     $this->testRunResultsStorage->buildTestingResultsEnvironment(FALSE);
@@ -129,11 +140,13 @@ class SimpletestTestRunResultsStorageTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::buildTestingResultsEnvironment
-   * @covers ::createNew
-   * @covers ::insertLogEntry
-   * @covers ::setDatabasePrefix
-   * @covers ::getLogEntriesByTestClass
+   * Tests get log entries by test class.
+   *
+   * @legacy-covers ::buildTestingResultsEnvironment
+   * @legacy-covers ::createNew
+   * @legacy-covers ::insertLogEntry
+   * @legacy-covers ::setDatabasePrefix
+   * @legacy-covers ::getLogEntriesByTestClass
    */
   public function testGetLogEntriesByTestClass(): void {
     $this->testRunResultsStorage->buildTestingResultsEnvironment(FALSE);
@@ -145,26 +158,30 @@ class SimpletestTestRunResultsStorageTest extends KernelTestBase {
     $this->assertEquals(2, $this->testRunResultsStorage->insertLogEntry($test_run, $this->getTestLogEntry('Test\GroundControl')));
     $this->assertEquals([
       0 => (object) [
-        'message_id' => 2,
-        'test_id' => 1,
+        'message_id' => '2',
+        'test_id' => '1',
         'test_class' => 'Test\GroundControl',
         'status' => 'pass',
         'message' => 'Major Tom',
         'message_group' => 'other',
         'function' => 'Unknown',
-        'line' => 0,
+        'line' => '0',
         'file' => 'Unknown',
+        'time' => '0',
+        'exit_code' => '0',
       ],
       1 => (object) [
-        'message_id' => 1,
-        'test_id' => 1,
+        'message_id' => '1',
+        'test_id' => '1',
         'test_class' => 'Test\PlanetEarth',
         'status' => 'pass',
         'message' => 'Major Tom',
         'message_group' => 'other',
         'function' => 'Unknown',
-        'line' => 0,
+        'line' => '0',
         'file' => 'Unknown',
+        'time' => '0',
+        'exit_code' => '0',
       ],
     ], $this->testRunResultsStorage->getLogEntriesByTestClass($test_run));
   }

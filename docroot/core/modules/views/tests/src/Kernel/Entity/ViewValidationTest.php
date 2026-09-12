@@ -7,12 +7,17 @@ namespace Drupal\Tests\views\Kernel\Entity;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\KernelTests\Core\Config\ConfigEntityValidationTestBase;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
  * Tests validation of view entities.
- *
- * @group views
  */
+#[Group('views')]
+#[Group('config')]
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class ViewValidationTest extends ConfigEntityValidationTestBase {
 
   /**
@@ -34,38 +39,28 @@ class ViewValidationTest extends ConfigEntityValidationTestBase {
   }
 
   /**
-   * @group legacy
-   */
-  public function testLabelsAreRequired(): void {
-    $this->entity->set('label', NULL);
-    $this->expectDeprecation('Saving a view without an explicit label is deprecated in drupal:10.2.0 and will raise an error in drupal:11.0.0. See https://www.drupal.org/node/3381669');
-    $this->assertSame($this->entity->id(), $this->entity->label());
-  }
-
-  /**
    * Tests that the various plugin IDs making up a view display are validated.
    *
    * @param string ...$parents
    *   The array parents of the property of the view's default display which
    *   will be set to `non_existent`.
-   *
-   * @testWith ["display_plugin"]
-   *   ["display_options", "pager", "type"]
-   *   ["display_options", "exposed_form", "type"]
-   *   ["display_options", "access", "type"]
-   *   ["display_options", "style", "type"]
-   *   ["display_options", "row", "type"]
-   *   ["display_options", "query", "type"]
-   *   ["display_options", "cache", "type"]
-   *   ["display_options", "header", "non_existent", "plugin_id"]
-   *   ["display_options", "footer", "non_existent", "plugin_id"]
-   *   ["display_options", "empty", "non_existent", "plugin_id"]
-   *   ["display_options", "arguments", "non_existent", "plugin_id"]
-   *   ["display_options", "sorts", "non_existent", "plugin_id"]
-   *   ["display_options", "fields", "non_existent", "plugin_id"]
-   *   ["display_options", "filters", "non_existent", "plugin_id"]
-   *   ["display_options", "relationships", "non_existent", "plugin_id"]
    */
+  #[TestWith(["display_plugin"])]
+  #[TestWith(["display_options", "pager", "type"])]
+  #[TestWith(["display_options", "exposed_form", "type"])]
+  #[TestWith(["display_options", "access", "type"])]
+  #[TestWith(["display_options", "style", "type"])]
+  #[TestWith(["display_options", "row", "type"])]
+  #[TestWith(["display_options", "query", "type"])]
+  #[TestWith(["display_options", "cache", "type"])]
+  #[TestWith(["display_options", "header", "non_existent", "plugin_id"])]
+  #[TestWith(["display_options", "footer", "non_existent", "plugin_id"])]
+  #[TestWith(["display_options", "empty", "non_existent", "plugin_id"])]
+  #[TestWith(["display_options", "arguments", "non_existent", "plugin_id"])]
+  #[TestWith(["display_options", "sorts", "non_existent", "plugin_id"])]
+  #[TestWith(["display_options", "fields", "non_existent", "plugin_id"])]
+  #[TestWith(["display_options", "filters", "non_existent", "plugin_id"])]
+  #[TestWith(["display_options", "relationships", "non_existent", "plugin_id"])]
   public function testInvalidPluginId(string ...$parents): void {
     // Disable the `broken` handler plugin, which is used as a fallback for
     // non-existent handler plugins. This ensures that when we use an

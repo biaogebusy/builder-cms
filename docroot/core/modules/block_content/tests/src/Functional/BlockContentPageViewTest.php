@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\block_content\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Create a block and test block access by attempting to view the block.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentPageViewTest extends BlockContentTestBase {
 
   /**

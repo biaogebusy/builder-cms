@@ -83,7 +83,7 @@ class UITest extends FunctionalTestBase {
     $this->drupalGet(Url::fromRoute('eck.entity_type.list'));
     $this->assertSession()->responseNotContains($noEntitiesYetText);
     foreach (['Add content', 'Content list'] as $option) {
-      $this->assertSession()->linkNotExists($this->t($option), $this->t('No %option option is shown when there are no bundles.', ['%option' => $this->t($option)]));
+      $this->assertSession()->linkNotExists($option, $this->t('No %option option is shown when there are no bundles.', ['%option' => $option]));
     }
     $this->assertSession()->linkExists($this->t('Add bundle'));
     $this->assertSession()->linkExists($this->t('Bundle list'));
@@ -104,7 +104,7 @@ class UITest extends FunctionalTestBase {
     // entity directly after clicking the link.
     $this->clickLink($this->t('Add content'));
     $this->submitForm(['title[0][value]' => $this->randomMachineName()], 'Save');
-    // There is now content in the datbase, which means the content list link
+    // There is now content in the database, which means the content list link
     // should also be displayed.
     $this->drupalGet(Url::fromRoute('eck.entity_type.list'));
     $this->assertSession()->responseNotContains($noEntitiesYetText);
@@ -178,7 +178,10 @@ class UITest extends FunctionalTestBase {
     $type = $this->createEntityType();
     $bundle = $this->createEntityBundle($type['id']);
 
-    $this->drupalGet(Url::fromRoute('eck.entity.add', ['eck_entity_type' => $type['id'], 'eck_entity_bundle' => $bundle['type']]));
+    $this->drupalGet(Url::fromRoute('eck.entity.add', [
+      'eck_entity_type' => $type['id'],
+      'eck_entity_bundle' => $bundle['type'],
+    ]));
     $this->assertSession()->responseContains('core/themes/starterkit_theme');
 
     // Install an administration theme and enable "Use the administration theme
@@ -191,7 +194,10 @@ class UITest extends FunctionalTestBase {
     $this->drupalGet('admin/appearance');
     $this->submitForm($edit, 'Save configuration');
 
-    $this->drupalGet(Url::fromRoute('eck.entity.add', ['eck_entity_type' => $type['id'], 'eck_entity_bundle' => $bundle['type']]));
+    $this->drupalGet(Url::fromRoute('eck.entity.add', [
+      'eck_entity_type' => $type['id'],
+      'eck_entity_bundle' => $bundle['type'],
+    ]));
     $this->assertSession()->responseContains('core/themes/claro');
   }
 

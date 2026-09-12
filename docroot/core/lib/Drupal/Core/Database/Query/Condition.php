@@ -62,7 +62,7 @@ class Condition implements ConditionInterface, \Countable {
   protected $changed = TRUE;
 
   /**
-   * The identifier of the query placeholder this condition has been compiled against.
+   * The query placeholder identifier this condition has been compiled against.
    *
    * @var string
    */
@@ -92,8 +92,7 @@ class Condition implements ConditionInterface, \Countable {
    * size of its conditional array minus one, because one element is the
    * conjunction.
    */
-  #[\ReturnTypeWillChange]
-  public function count() {
+  public function count(): int {
     return count($this->conditions) - 1;
   }
 
@@ -113,8 +112,7 @@ class Condition implements ConditionInterface, \Countable {
         throw new InvalidQueryException(sprintf("Query condition '%s %s %s' must have an array compatible operator.", $field, $operator, $value));
       }
       else {
-        $value = $value[0];
-        @trigger_error('Calling ' . __METHOD__ . '() without an array compatible operator is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3350985', E_USER_DEPRECATED);
+        throw new InvalidQueryException('Calling ' . __METHOD__ . '() without an array compatible operator is not supported. See https://www.drupal.org/node/3350985');
       }
     }
 
@@ -224,16 +222,16 @@ class Condition implements ConditionInterface, \Countable {
           }
           $arguments += $condition['field']->arguments();
           // If the operator and value were not passed in to the
-          // @see ConditionInterface::condition() method (and thus have the
-          // default value as defined over there) it is assumed to be a valid
-          // condition on its own: ignore the operator and value parts.
+          // ConditionInterface::condition() method (and thus have the default
+          // value as defined over there) it is assumed to be a valid condition
+          // on its own: ignore the operator and value parts.
           $ignore_operator = $condition['operator'] === '=' && $condition['value'] === NULL;
         }
         elseif (!isset($condition['operator'])) {
           // Left hand part is a literal string added with the
-          // @see ConditionInterface::where() method. Put brackets around
-          // the snippet and collect the arguments from the value part.
-          // Also ignore the operator and value parts.
+          // ConditionInterface::where() method. Put brackets around the snippet
+          // and collect the arguments from the value part. Also ignore the
+          // operator and value parts.
           $field_fragment = '(' . $condition['field'] . ')';
           $arguments += $condition['value'];
           $ignore_operator = TRUE;
@@ -259,14 +257,7 @@ class Condition implements ConditionInterface, \Countable {
             // Provide a string which will result into an empty query result.
             $this->stringVersion = '( AND 1 = 0 )';
 
-            // Conceptually throwing an exception caused by user input is bad
-            // as you result into a 'white screen of death', which depending on
-            // your webserver configuration can result into the assumption that
-            // your site is broken.
-            // On top of that the database API relies on __toString() which
-            // does not allow to throw exceptions.
-            trigger_error('Invalid characters in query operator: ' . $condition['operator'], E_USER_WARNING);
-            return;
+            throw new InvalidQueryException('Invalid characters in query operator: ' . $condition['operator']);
           }
 
           // For simplicity, we convert all operators to a data structure to
@@ -360,8 +351,9 @@ class Condition implements ConditionInterface, \Countable {
   /**
    * PHP magic __clone() method.
    *
-   * Only copies fields that implement Drupal\Core\Database\Query\ConditionInterface. Also sets
-   * $this->changed to TRUE.
+   * Only copies fields that implement
+   * Drupal\Core\Database\Query\ConditionInterface. Also sets $this->changed to
+   * TRUE.
    */
   public function __clone() {
     $this->changed = TRUE;

@@ -73,14 +73,14 @@ class ExampleConfigEntity extends ConfigEntityBase implements ExampleConfigEntit
   protected $two;
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function getOne() {
     return $this->one;
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function getTwo() {
     return $this->two;

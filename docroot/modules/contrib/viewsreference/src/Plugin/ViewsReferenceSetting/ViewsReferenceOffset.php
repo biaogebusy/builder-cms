@@ -27,13 +27,14 @@ class ViewsReferenceOffset extends PluginBase implements ViewsReferenceSettingIn
     $form_field['#title'] = $this->t('Offset results');
     $form_field['#type'] = 'number';
     $form_field['#weight'] = 30;
+    $form_field['#min'] = 0;
   }
 
   /**
    * {@inheritdoc}
    */
   public function alterView(ViewExecutable $view, $value) {
-    if (!empty($value)) {
+    if (is_numeric($value)) {
       $view->setOffset($value);
     }
   }

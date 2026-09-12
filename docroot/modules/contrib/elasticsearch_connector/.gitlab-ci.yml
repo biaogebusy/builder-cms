@@ -14,10 +14,10 @@ include:
   - project: $_GITLAB_TEMPLATES_REPO
     ref: $_GITLAB_TEMPLATES_REF
     file:
-      - "/includes/include.drupalci.main.yml"
-      - "/includes/include.drupalci.variables.yml"
-      - "/includes/include.drupalci.workflows.yml"
-
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+#
 ################
 # Pipeline configuration variables are defined with default values and descriptions in the file
 # https://git.drupalcode.org/project/gitlab_templates/-/blob/main/includes/include.drupalci.variables.yml
@@ -97,3 +97,18 @@ phpunit:
     - timeout 60 bash -c 'while [[ "$(curl --no-progress-meter -o /dev/null -w ''%{http_code}'' elasticsearch:9200)" != "200" ]]; do sleep 5; done'
     # Then ask ElasticSearch for a health report.
     - curl --no-progress-meter -X GET elasticsearch:9200/_health_report?pretty=true
+
+# As of 2026-04-24, the 'phpstan (previous major)' job runs PHPStan 1.12; while
+# the 'phpstan' job runs PHPStan 2.1. PHPStan 2.1 suggests changes that, when
+# made, causes PHPStan 1.12 to suggest _different_ changes. Since both versions
+# suggest different changes, we cannot ignore certain lints unless we also set
+# reportUnmatchedIgnoredErrors: false, which is not ideal, because we won't be
+# alerted when ignored errors are no longer relevant.
+# Given all this, we decided to simply disable the PHPStan 1.2 job, i.e.: the
+# 'phpstan (previous major)' job.
+# We should be able to delete this override when Drupal 12 is the new current
+# version, if ConnectorTypeSwitcherTest::testConnectorTypeSwitcher() changes, or
+# if we are able to run a fixed version of PHPStan in the (previous major) jobs.
+phpstan (previous major):
+  rules:
+    - when: never

@@ -16,7 +16,7 @@ class WebformCacheTest extends WebformBrowserTestBase {
   /**
    * Test cache.
    */
-  public function testCache() {
+  public function testCache(): void {
     /** @var \Drupal\Core\Entity\EntityFormBuilder $entity_form_builder */
     $entity_form_builder = \Drupal::service('entity.form_builder');
 
@@ -44,11 +44,8 @@ class WebformCacheTest extends WebformBrowserTestBase {
         'config:webform.webform.contact',
         'webform:contact',
       ],
-      'max-age' => -1,
+      'max-age' => version_compare(\Drupal::VERSION, '11.1', '<') ? -1 : 0,
     ];
-    if (version_compare(\Drupal::VERSION, '10.3', '<')) {
-      array_shift($expected['tags']);
-    }
     $this->assertEqualsCanonicalizing($expected, $form['#cache']);
 
     // Check that the name element does not have #cache because the
@@ -84,11 +81,8 @@ class WebformCacheTest extends WebformBrowserTestBase {
         'user:2',
         'webform:contact',
       ],
-      'max-age' => -1,
+      'max-age' => version_compare(\Drupal::VERSION, '11.1', '<') ? -1 : 0,
     ];
-    if (version_compare(\Drupal::VERSION, '10.3', '<')) {
-      array_shift($expected['tags']);
-    }
     $this->assertEqualsCanonicalizing($expected, $form['#cache']);
     $this->assertFalse(isset($form['elements']['email']['#cache']));
     $this->assertEquals($form['elements']['email']['#default_value'], $account->getEmail());
@@ -99,7 +93,7 @@ class WebformCacheTest extends WebformBrowserTestBase {
     $webform
       ->setElementProperties('email', $element)
       ->save();
-
+    $webform_submission = WebformSubmission::create(['webform_id' => 'contact']);
     $form = $entity_form_builder->getForm($webform_submission, 'add');
 
     // Check that the 'email' element does have '#cache' property because the

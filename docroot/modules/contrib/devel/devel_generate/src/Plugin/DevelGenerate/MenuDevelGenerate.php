@@ -188,14 +188,14 @@ class MenuDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
   public function validateDrushParams(array $args, array $options = []): array {
     $link_types = ['node', 'front', 'external'];
     $values = [
-      'num_menus' => array_shift($args),
-      'num_links' => array_shift($args),
+      'num_menus' => $args['number_menus'],
+      'num_links' => $args['number_links'],
       'kill' => $options['kill'],
       'link_types' => array_combine($link_types, $link_types),
     ];
 
-    $max_depth = array_shift($args);
-    $max_width = array_shift($args);
+    $max_depth = $args['max_depth'] ?: NULL;
+    $max_width = $args['max_width'] ?: NULL;
     $values['max_depth'] = $max_depth ?: 3;
     $values['max_width'] = $max_width ?: 8;
     $values['title_length'] = $this->getSetting('title_length');
@@ -228,7 +228,7 @@ class MenuDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
     if ($this->moduleHandler->moduleExists('menu_ui')) {
       $all = $this->menuStorage->loadMultiple();
       foreach ($all as $menu) {
-        if (str_starts_with($menu->id(), 'devel-')) {
+        if (str_starts_with((string) $menu->id(), 'devel-')) {
           $menu_ids[] = $menu->id();
         }
       }

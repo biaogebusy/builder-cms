@@ -7,7 +7,6 @@ use Drupal\search_api\ConsoleException;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\CommandHelper;
-use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 use Drupal\user\Entity\Role;
 use Psr\Log\NullLogger;
@@ -52,12 +51,6 @@ class CommandHelperTest extends KernelTestBase {
     $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installEntitySchema('search_api_task');
     $this->installConfig('search_api');
-
-    // Disable the use of batches for item tracking to simulate a CLI
-    // environment.
-    if (!Utility::isRunningInCli()) {
-      \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
-    }
 
     // Create a test server.
     Server::create([

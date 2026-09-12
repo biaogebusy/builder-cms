@@ -206,6 +206,18 @@ class ProductForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
+  public function processForm($element, FormStateInterface $form_state, $form): array {
+    // Move the 'Published' checkbox to the top in the Gin theme.
+    $element = parent::processForm($element, $form_state, $form);
+    if (isset($element['gin_sticky_actions'])) {
+      $element['gin_sticky_actions']['#tree'] = FALSE;
+    }
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function actions(array $form, FormStateInterface $form_state) {
     $actions = parent::actions($form, $form_state);
 

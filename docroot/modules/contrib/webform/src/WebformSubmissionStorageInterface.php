@@ -88,7 +88,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface[]
    *   An array of webform submission objects indexed by their ids.
    */
-  public function loadByEntities(WebformInterface $webform, EntityInterface $source_entity = NULL, AccountInterface $account = NULL);
+  public function loadByEntities(WebformInterface $webform, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL);
 
   /**
    * Load submission using webform (secure) token.
@@ -105,7 +105,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface|null
    *   A webform submission.
    */
-  public function loadFromToken($token, WebformInterface $webform, EntityInterface $source_entity = NULL, AccountInterface $account = NULL);
+  public function loadFromToken($token, WebformInterface $webform, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL);
 
   /**
    * Delete all webform submissions.
@@ -122,7 +122,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return int
    *   The number of webform submissions deleted.
    */
-  public function deleteAll(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, $limit = NULL, $max_sid = NULL);
+  public function deleteAll(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, $limit = NULL, $max_sid = NULL);
 
   /**
    * Get the total number of submissions.
@@ -136,14 +136,14 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    *   (optional) A user account.
    * @param array $options
    *   Options/conditions include:
-   *   - in_draft (boolean): NULL will return all saved submissions and drafts.
+   *   - in_draft (bool): NULL will return all saved submissions and drafts.
    *     Defaults to FALSE.
    *   - interval (int): Limit total within an seconds interval.
    *
    * @return int
    *   Total number of submissions.
    */
-  public function getTotal(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function getTotal(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
   /**
    * Get the maximum sid.
@@ -159,7 +159,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return int
    *   Total number of submissions.
    */
-  public function getMaxSubmissionId(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL);
+  public function getMaxSubmissionId(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL);
 
   /**
    * Determine if a webform element has submission values.
@@ -231,12 +231,12 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @param array $options
    *   (optional) Additional options and query conditions.
    *   Options/conditions include:
-   *   - in_draft (boolean): NULL will return all saved submissions and drafts.
+   *   - in_draft (bool): NULL will return all saved submissions and drafts.
    *     Defaults to NULL
-   *   - check_source_entity (boolean): Check that a source entity is defined.
+   *   - check_source_entity (bool): Check that a source entity is defined.
    *   - interval (int): Limit total within an seconds interval.
    */
-  public function addQueryConditions($query, WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function addQueryConditions($query, ?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
   /* ************************************************************************ */
   // Paging methods.
@@ -257,7 +257,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface|null
    *   The webform's first submission.
    */
-  public function getFirstSubmission(WebformInterface $webform, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function getFirstSubmission(WebformInterface $webform, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
   /**
    * Get a webform's last submission.
@@ -274,7 +274,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface|null
    *   The webform's last submission.
    */
-  public function getLastSubmission(WebformInterface $webform, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function getLastSubmission(WebformInterface $webform, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
   /**
    * Get a webform submission's previous sibling.
@@ -291,7 +291,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface|null
    *   The webform submission's previous sibling.
    */
-  public function getPreviousSubmission(WebformSubmissionInterface $webform_submission, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function getPreviousSubmission(WebformSubmissionInterface $webform_submission, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
   /**
    * Get a webform submission's next sibling.
@@ -308,7 +308,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface|null
    *   The webform submission's next sibling.
    */
-  public function getNextSubmission(WebformSubmissionInterface $webform_submission, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function getNextSubmission(WebformSubmissionInterface $webform_submission, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
   /**
    * Get webform submission source entity types.
@@ -354,7 +354,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return array
    *   An associative array of columns keyed by name.
    */
-  public function getCustomColumns(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $include_elements = TRUE);
+  public function getCustomColumns(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $include_elements = TRUE);
 
   /**
    * Get user submission columns used to display results.
@@ -371,7 +371,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return array
    *   An associative array of columns keyed by name.
    */
-  public function getUserColumns(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $include_elements = TRUE);
+  public function getUserColumns(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $include_elements = TRUE);
 
   /**
    * Get default submission columns used to display results.
@@ -388,7 +388,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return array
    *   An associative array of columns keyed by name.
    */
-  public function getDefaultColumns(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $include_elements = TRUE);
+  public function getDefaultColumns(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $include_elements = TRUE);
 
   /**
    * Get submissions columns.
@@ -421,7 +421,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return array
    *   An associative array of columns keyed by name.
    */
-  public function getColumns(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $include_elements = TRUE);
+  public function getColumns(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $include_elements = TRUE);
 
   /**
    * Get user default submission columns used to display results.
@@ -438,7 +438,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return array
    *   An associative array of columns names.
    */
-  public function getUserDefaultColumnNames(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $include_elements = TRUE);
+  public function getUserDefaultColumnNames(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $include_elements = TRUE);
 
   /**
    * Get default submission columns used to display results.
@@ -455,7 +455,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return array
    *   An associative array of columns names.
    */
-  public function getDefaultColumnNames(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $include_elements = TRUE);
+  public function getDefaultColumnNames(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $include_elements = TRUE);
 
   /* ************************************************************************ */
   // Custom settings methods.
@@ -476,7 +476,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return mixed
    *   Custom setting.
    */
-  public function getCustomSetting($name, $default, WebformInterface $webform = NULL, EntityInterface $source_entity = NULL);
+  public function getCustomSetting($name, $default, ?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL);
 
   /* ************************************************************************ */
   // Custom CRUD methods.
@@ -580,7 +580,7 @@ interface WebformSubmissionStorageInterface extends ContentEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface
    *   A webform submission.
    */
-  public function loadDraft(WebformInterface $webform, EntityInterface $source_entity = NULL, AccountInterface $account = NULL);
+  public function loadDraft(WebformInterface $webform, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL);
 
   /* ************************************************************************ */
   // Anonymous submission methods.

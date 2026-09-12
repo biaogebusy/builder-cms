@@ -44,6 +44,15 @@ class StateTransitionConfirmForm extends ContentEntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
+  public function __sleep(): array {
+    return array_diff(parent::__sleep(), [
+      'transition',
+    ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getBaseFormId() {
     return 'state_machine_transition_confirm_form';
   }
@@ -95,7 +104,13 @@ class StateTransitionConfirmForm extends ContentEntityConfirmFormBase {
       ],
     ];
 
-    return $this->renderer->renderPlain($description);
+    // @todo Update this when D9 support is dropped.
+    if (method_exists($this->renderer, 'renderInIsolation')) {
+      return $this->renderer->renderInIsolation($description);
+    }
+    else {
+      return $this->renderer->renderPlain($description);
+    }
   }
 
   /**

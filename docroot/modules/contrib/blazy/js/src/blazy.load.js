@@ -4,7 +4,6 @@
  *
  * This file is not loaded when `No JavaScript` lazy loader is enabled.
  * It uses data-[SRC|SCRSET] containing fixes for this particular approach:
- *  - Views rewrite stripping out data URI causing 404.
  *  - Reduce abrupt ratio changes specific for Picture when Fluid is ON.
  *  - Scrolling CSS selector like Modal library, parallax, etc.
  *  - Revalidation for the failing ones.
@@ -16,7 +15,7 @@
  * Works absurdly fine at IE9 at 2.6. Older versions/browsers might not.
  */
 
-(function ($, Drupal, drupalSettings, _win, _doc) {
+(function ($, Drupal, _win, _doc) {
 
   'use strict';
 
@@ -26,9 +25,6 @@
   var S_ELEMENT = '.' + ID + ':not(.' + C_MOUNTED + ')';
   var S_GLOBAL = 'body';
   var ID_ONCE_GLOBAL = 'b-root';
-  var V_DATA = 'data';
-  var V_IMAGE = 'image';
-  var V_SRC = 'src';
   var S_SCROLL_ELEMENTS = '#drupal-modal, .is-b-scroll';
 
   /**
@@ -43,35 +39,6 @@
 
       // Update picture aspect ratio on being resized.
       me.pad(el, updatePicture);
-    },
-
-    /**
-     * Attempts to fix for Views rewrite stripping out data URI causing 404.
-     *
-     * This is not needed by `No JavaScript` version due to no placeholders.
-     *
-     * E.g.: src="image/jpg;base64 should be src="data:image/jpg;base64.
-     * The browsers load it as https://mysite.com/image/jpg... which causes 404.
-     * The "Placeholder" 1px.gif via Blazy UI costs extra HTTP requests. This is
-     * a less costly solution, but not bulletproof due to being client-side
-     * which means too late to the party. Yet not bad for 404s below the fold.
-     * This must be run before any lazy (native, bLazy or IO) kicks in.
-     *
-     * @todo Remove if a permanent non-client available other than Placeholder.
-     */
-    fixDataUri: function () {
-      var me = this;
-      var els = $.findAll(_doc, me.selector('[src^="' + V_IMAGE + '"]'));
-      var fix = function (img) {
-        var src = $.attr(img, V_SRC);
-        if ($.contains(src, ['base64', 'svg+xml'])) {
-          $.attr(img, V_SRC, src.replace(V_IMAGE, V_DATA + ':' + V_IMAGE));
-        }
-      };
-
-      if (els.length) {
-        $.each(els, fix);
-      }
     }
   });
 
@@ -135,9 +102,6 @@
     opts.container = S_SCROLL_ELEMENTS;
     me.merge(opts);
 
-    // Attempts to fix for Views rewrite stripping out data URI causing 404.
-    me.fixDataUri();
-
     // Put the blazy/IO instance into a public object for references/ overrides.
     me.init = me.run(me.options);
   };
@@ -154,7 +118,7 @@
     var isUniform = $.hasClass(elm, ID + '--field b-grid ' + ID + '--uniform');
     var instance = (Math.random() * 10000).toFixed(0);
     var eventId = ID + ':uniform' + instance;
-    var localItems = $.findAll(elm, '.media--ratio');
+    var localItems;
 
     me.merge(opts);
     me.revalidate = me.revalidate || $.hasClass(elm, ID + '--revalidate');
@@ -162,33 +126,41 @@
     // Each cointainer may have different image styles and aspect ratio.
     // Provides marker to call event once, since adding classes make no sense.
     // @todo this can be removed when we figure out a better solution.
-    elm.dblazy = instance;
-    elm.dbuniform = isUniform;
-
-    me.instances.push(elm);
-
-    // @todo re-check if `No JavaScript` version needs help with reflows.
-    // @todo move it to bio.js if also needed there.
-    var swapRatio = function (e) {
-      var pad = e.detail.pad || 0;
-
-      if (pad > 10) {
-        $.each(localItems, function (cn) {
-          cn.style.paddingBottom = pad + '%';
-        });
-      }
-    };
+    if (!elm.dblazy) {
+      elm.dblazy = instance;
+      elm.dbuniform = isUniform;
+      me.instances.push(elm);
+    }
 
     // Triggered per .blazy container, not .b-lazy item on resizing to reduce
     // abrupt ratio changes for the rest after the first loaded.
     // Basically setting up the fixed frame specific for dynamic Picture as
-    // otherwise they apperar collapsed due to slow loaded images.
+    // otherwise they appear collapsed due to slow loaded images.
     // To support resizing, use debounce. To disable use $.one().
     // @todo remove to not support resizing to minimize complication.
     // @todo move it into ResizeObserver if doable otherwise.
-    if (isUniform && localItems.length) {
-      $.on(elm, eventId, swapRatio);
+    if (isUniform) {
+      localItems = $.findAll(elm, '.media--ratio');
+      if (localItems.length) {
+        // @todo re-check if `No JavaScript` version needs help with reflows.
+        // @todo move it to bio.js if also needed there.
+        var swapRatio = function (e) {
+          var pad = e.detail.pad || 0;
+
+          if (pad > 10) {
+            $.each(localItems, function (cn) {
+              cn.style.paddingBottom = pad + '%';
+            });
+          }
+
+          $.off(elm, eventId, swapRatio);
+          elm.dbpicture = false;
+        };
+
+        $.on(elm, eventId, swapRatio);
+      }
     }
+
     $.addClass(elm, C_MOUNTED);
   }
 
@@ -213,14 +185,14 @@
       $.once(process.bind(me), ID_ONCE, S_ELEMENT, context);
 
       // Initializes blazy once as a global observer, not per container.
-      $.once(init.bind(me), ID_ONCE_GLOBAL, S_GLOBAL, context);
+      $.once(init.bind(me), ID_ONCE_GLOBAL, S_GLOBAL, _doc);
     },
-    detach: function (context, setting, trigger) {
+    detach: function (context, _, trigger) {
       if (trigger === 'unload') {
         $.once.removeSafely(ID_ONCE, S_ELEMENT, context);
-        $.once.removeSafely(ID_ONCE_GLOBAL, S_GLOBAL, context);
+        $.once.removeSafely(ID_ONCE_GLOBAL, S_GLOBAL, _doc);
       }
     }
   };
 
-}(dBlazy, Drupal, drupalSettings, this, this.document));
+}(dBlazy, Drupal, this, this.document));

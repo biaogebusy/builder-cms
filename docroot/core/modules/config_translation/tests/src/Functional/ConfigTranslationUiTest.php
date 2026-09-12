@@ -6,14 +6,16 @@ namespace Drupal\Tests\config_translation\Functional;
 
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore anonyme viewsviewfiles
-
 /**
  * Translate settings and entities to various languages.
- *
- * @group config_translation
  */
+#[Group('config_translation')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class ConfigTranslationUiTest extends ConfigTranslationUiTestBase {
 
   /**
@@ -114,7 +116,8 @@ class ConfigTranslationUiTest extends ConfigTranslationUiTestBase {
     ];
 
     foreach ($languages as $langcode => $data) {
-      // Import a .po file to add a new language with a given number of plural forms
+      // Import a .po file to add a new language with a given number of plural
+      // forms.
       $name = \Drupal::service('file_system')->tempnam('temporary://', $langcode . '_') . '.po';
       file_put_contents($name, $this->getPoFile($data['plurals']));
       $this->drupalGet('admin/config/regional/translate/import');
@@ -251,7 +254,7 @@ class ConfigTranslationUiTest extends ConfigTranslationUiTestBase {
   public function testSingleLanguageUI(): void {
     $this->drupalLogin($this->adminUser);
 
-    // Delete French language
+    // Delete French language.
     $this->drupalGet('admin/config/regional/language/delete/fr');
     $this->submitForm([], 'Delete');
     $this->assertSession()->pageTextContains('The French (fr) language has been removed.');
@@ -264,7 +267,7 @@ class ConfigTranslationUiTest extends ConfigTranslationUiTestBase {
     $this->submitForm($edit, 'Save configuration');
     $this->assertSession()->pageTextContains('Configuration saved.');
 
-    // Delete English language
+    // Delete English language.
     $this->drupalGet('admin/config/regional/language/delete/en');
     $this->submitForm([], 'Delete');
     $this->assertSession()->pageTextContains('The English (en) language has been removed.');

@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_product\Plugin\Field\FieldWidget;
 
+use Drupal\commerce_product\ProductVariationStorageInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Field\Attribute\FieldWidget;
@@ -231,7 +232,9 @@ class ProductVariationAttributesWidget extends ProductVariationWidgetBase implem
     /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $product = $form_state->get('product');
     $default_variation = $product->getDefaultVariation();
-    $variations = $this->variationStorage->loadEnabled($product);
+    $variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    assert($variation_storage instanceof ProductVariationStorageInterface);
+    $variations = $variation_storage->loadEnabled($product);
 
     foreach ($values as &$value) {
       $selected_variation = $this->variationAttributeMapper->selectVariation($variations, $value['attributes'] ?? []);

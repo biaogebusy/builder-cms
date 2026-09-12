@@ -6,18 +6,22 @@ namespace Drupal\Tests\Core\DrupalKernel;
 
 use Drupal\Core\DrupalKernel;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\Core\DrupalKernel
- * @group DrupalKernel
+ * Tests Drupal\Core\DrupalKernel.
  */
+#[CoversClass(DrupalKernel::class)]
+#[Group('DrupalKernel')]
 class ValidateHostnameTest extends UnitTestCase {
 
   /**
-   * @covers ::validateHostname
-   * @dataProvider providerTestValidateHostname
+   * Tests validate hostname.
    */
+  #[DataProvider('providerTestValidateHostname')]
   public function testValidateHostname($hostname, $message, $expected = FALSE): void {
     $server = ['HTTP_HOST' => $hostname];
     $request = new Request([], [], [], [], [], $server);
@@ -28,7 +32,7 @@ class ValidateHostnameTest extends UnitTestCase {
   /**
    * Provides test data for testValidateHostname().
    */
-  public static function providerTestValidateHostname() {
+  public static function providerTestValidateHostname(): array {
     $data = [];
 
     // Verifies that DrupalKernel::validateHostname() prevents invalid
@@ -41,9 +45,18 @@ class ValidateHostnameTest extends UnitTestCase {
 
     // Verifies host names that are too long, or have too many parts are
     // invalid.
-    $data[] = [str_repeat('x', 1000) . '.security.drupal.org:80', 'HTTP_HOST with more than 1000 characters is invalid.'];
-    $data[] = [str_repeat('x.', 100) . 'security.drupal.org:80', 'HTTP_HOST with more than 100 subdomains is invalid.'];
-    $data[] = ['security.drupal.org:80' . str_repeat(':x', 100), 'HTTP_HOST with more than 100 port separators is invalid.'];
+    $data[] = [
+      str_repeat('x', 1000) . '.security.drupal.org:80',
+      'HTTP_HOST with more than 1000 characters is invalid.',
+    ];
+    $data[] = [
+      str_repeat('x.', 100) . 'security.drupal.org:80',
+      'HTTP_HOST with more than 100 subdomains is invalid.',
+    ];
+    $data[] = [
+      'security.drupal.org:80' . str_repeat(':x', 100),
+      'HTTP_HOST with more than 100 port separators is invalid.',
+    ];
 
     // Verifies that a valid hostname is allowed.
     $data[] = ['security.drupal.org:80', 'Properly formed HTTP_HOST is valid.', TRUE];

@@ -1,0 +1,5 @@
+/*!
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+!function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define([],e):"object"==typeof exports?exports.CKEditor5=e():(t.CKEditor5=t.CKEditor5||{},t.CKEditor5.highlightAdapter=e())}(self,(()=>(()=>{"use strict";var t={d:(e,o)=>{for(var r in o)t.o(o,r)&&!t.o(e,r)&&Object.defineProperty(e,r,{enumerable:!0,get:o[r]})},o:(t,e)=>Object.prototype.hasOwnProperty.call(t,e)},e={};t.d(e,{default:()=>o});const o={HighlightAdapter:class{static get pluginName(){return"HighlightAdapter"}constructor(t){this.editor=t}init(){const t=this.editor.config._config.highlight.options;for(const e of t)if(e.class.startsWith("custom-highlight")){const t=e.class,o=e.color,r=e.type,i="background-color",n="color",c=document.createElement("style");c.innerHTML="pen"===r?`.${t} { ${n}: ${o}; ${i}: transparent}`:`.${t} { ${i}: ${o};}`,document.head.appendChild(c)}}}};return e=e.default})()));

@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\media_test_source\Plugin\Validation\Constraint;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Attribute\HasNamedArguments;
 use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 
 /**
@@ -16,11 +19,14 @@ use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 )]
 class MediaTestConstraint extends SymfonyConstraint {
 
-  /**
-   * The default violation message.
-   *
-   * @var string
-   */
-  public $message = 'Inappropriate text.';
+  #[HasNamedArguments]
+  public function __construct(
+    mixed $options = NULL,
+    public $message = 'Inappropriate text.',
+    ?array $groups = NULL,
+    mixed $payload = NULL,
+  ) {
+    parent::__construct($options, $groups, $payload);
+  }
 
 }

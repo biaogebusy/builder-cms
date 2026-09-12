@@ -10,7 +10,7 @@ use Drupal\Core\Language\LanguageInterface;
 interface AliasUniquifierInterface {
 
   /**
-   * Check to ensure a path alias is unique and add suffix variants if necessary.
+   * Ensure a path alias is unique and add suffix variants if necessary.
    *
    * Given an alias 'content/test' if a path alias with the exact alias already
    * exists, the function will change the alias to 'content/test-0' and will

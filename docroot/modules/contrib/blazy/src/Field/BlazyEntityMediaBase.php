@@ -5,7 +5,7 @@ namespace Drupal\blazy\Field;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -91,7 +91,7 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
       '#settings' => $settings,
     ] = $build;
 
-    $blazies   = $settings['blazies'];
+    $blazies   = Internals::getBlazies($settings);
     $view_mode = $settings['view_mode'] ?? 'full';
     $is_blazy  = static::$namespace == 'blazy';
     $switch    = $settings['media_switch'] ?? NULL;
@@ -141,7 +141,7 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
       '#settings' => $settings,
     ] = $element;
 
-    $blazies   = $settings['blazies'];
+    $blazies   = Internals::getBlazies($settings);
     $parent    = $element['#parent'] ?? NULL;
     $view_mode = $settings['view_mode'] ?? 'full';
     $captions  = $items = $weights = [];

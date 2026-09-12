@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal\Core\Entity\ContentEntityStorageBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Vocabulary;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ContentEntityStorageBase::createWithSampleValues method.
- *
- * @coversDefaultClass \Drupal\Core\Entity\ContentEntityStorageBase
- * @group Entity
  */
+#[CoversClass(ContentEntityStorageBase::class)]
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class CreateSampleEntityTest extends KernelTestBase {
 
   /**
@@ -29,8 +33,6 @@ class CreateSampleEntityTest extends KernelTestBase {
    */
   protected static $modules = [
     'path_alias',
-    'system',
-    'field',
     'filter',
     'text',
     'file',
@@ -64,7 +66,7 @@ class CreateSampleEntityTest extends KernelTestBase {
   /**
    * Tests sample value content entity creation of all types.
    *
-   * @covers ::createWithSampleValues
+   * @legacy-covers ::createWithSampleValues
    */
   public function testSampleValueContentEntity(): void {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $definition) {

@@ -117,7 +117,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
         ->addCondition((new ConditionGroup('AND'))
           ->addCondition('user_id', $user->id())
           ->addCondition('type', ['second'])
-        ),
+      ),
       new Condition('status', '1'),
     ];
     $this->assertEquals('AND', $conditions->getConjunction());

@@ -52,8 +52,9 @@ abstract class DiscoveryTestBase extends KernelTestBase {
       $this->assertDefinitionIdentical($this->discovery->getDefinition($id), $definition);
     }
 
-    // Ensure that an empty array is returned if no plugin definitions are found.
-    $this->assertSame([], $this->emptyDiscovery->getDefinitions(), 'array() returned if no plugin definitions are found.');
+    // Ensure that an empty array is returned if no plugin definitions are
+    // found.
+    $this->assertSame([], $this->emptyDiscovery->getDefinitions(), 'Empty array returned if no plugin definitions are found.');
 
     // Ensure that NULL is returned as the definition of a non-existing plugin.
     $this->assertNull($this->emptyDiscovery->getDefinition('non_existing', FALSE), 'NULL returned as the definition of a non-existing plugin.');
@@ -70,7 +71,7 @@ abstract class DiscoveryTestBase extends KernelTestBase {
    *   The expected definition to test against.
    */
   protected function assertDefinitionIdentical(array $definition, array $expected_definition) {
-    $func = function (&$item) {
+    $func = function (&$item): void {
       if ($item instanceof TranslatableMarkup) {
         $item = (string) $item;
       }

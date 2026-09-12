@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\diff\Functional;
 
+use Drupal\Core\Extension\ModuleInstallerInterface;
+use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the Diff admin forms.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffAdminFormsTest extends DiffTestBase {
-
-  use CoreVersionUiTestTrait;
 
   /**
    * {@inheritdoc}
@@ -67,16 +72,16 @@ class DiffAdminFormsTest extends DiffTestBase {
   public function testRequirements(): void {
     \Drupal::moduleHandler()->loadInclude('diff', 'install');
     $requirements = \diff_requirements('runtime');
-    $this->assertEquals($requirements['html_diff_advanced']['title'], 'Diff');
+    $this->assertEquals('Diff', $requirements['html_diff_advanced']['title']);
 
     $has_htmlDiffAdvanced = \class_exists('\HtmlDiffAdvanced');
     if (!$has_htmlDiffAdvanced) {
       // The plugin is disabled dependencies are missing.
-      $this->assertEquals($requirements['html_diff_advanced']['value'], 'Visual inline layout');
+      $this->assertEquals('Visual inline layout', $requirements['html_diff_advanced']['value']);
     }
     else {
       // The plugin is enabled by default if dependencies are met.
-      $this->assertEquals($requirements['html_diff_advanced']['value'], 'Installed correctly');
+      $this->assertEquals('Installed correctly', $requirements['html_diff_advanced']['value']);
     }
   }
 
@@ -84,34 +89,50 @@ class DiffAdminFormsTest extends DiffTestBase {
    * Tests the Configurable Fields tab.
    */
   public function testConfigurableFieldsTab(): void {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'body_summary',
+      'type' => 'text_with_summary',
+      'entity_type' => 'node',
+      'cardinality' => 1,
+      'persist_with_no_fields' => TRUE,
+    ]);
+    $fieldStorage->save();
+    FieldConfig::create([
+      'field_storage' => $fieldStorage,
+      'bundle' => 'article',
+      'label' => 'Body with summary',
+      'settings' => [
+        'allowed_formats' => [],
+      ],
+    ])->save();
     $this->drupalGet('admin/config/content/diff/fields');
 
     // Test changing type without changing settings.
     $edit = [
-      'fields[node__body][plugin][type]' => 'text_summary_field_diff_builder',
+      'fields[node__body_summary][plugin][type]' => 'text_summary_field_diff_builder',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->fieldValueEquals('fields[node__body][plugin][type]', 'text_summary_field_diff_builder');
+    $this->assertSession()->fieldValueEquals('fields[node__body_summary][plugin][type]', 'text_summary_field_diff_builder');
     $edit = [
-      'fields[node__body][plugin][type]' => 'text_field_diff_builder',
+      'fields[node__body_summary][plugin][type]' => 'text_field_diff_builder',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->fieldValueEquals('fields[node__body][plugin][type]', 'text_field_diff_builder');
+    $this->assertSession()->fieldValueEquals('fields[node__body_summary][plugin][type]', 'text_field_diff_builder');
 
-    $this->submitForm([], 'node__body_settings_edit');
+    $this->submitForm([], 'node__body_summary_settings_edit');
     $this->assertSession()->pageTextContains('Plugin settings: Text');
     $edit = [
-      'fields[node__body][settings_edit_form][settings][show_header]' => TRUE,
-      'fields[node__body][settings_edit_form][settings][compare_format]' => FALSE,
-      'fields[node__body][settings_edit_form][settings][markdown]' => 'filter_xss_all',
+      'fields[node__body_summary][settings_edit_form][settings][show_header]' => TRUE,
+      'fields[node__body_summary][settings_edit_form][settings][compare_format]' => FALSE,
+      'fields[node__body_summary][settings_edit_form][settings][markdown]' => 'filter_xss_all',
     ];
-    $this->submitForm($edit, 'node__body_plugin_settings_update');
+    $this->submitForm($edit, 'node__body_summary_plugin_settings_update');
     $this->submitForm([], 'Save');
     $this->assertSession()->pageTextContains('Your settings have been saved.');
 
     // Check the values were saved.
-    $this->submitForm([], 'node__body_settings_edit');
-    $this->assertSession()->fieldValueEquals('fields[node__body][settings_edit_form][settings][markdown]', 'filter_xss_all');
+    $this->submitForm([], 'node__body_summary_settings_edit');
+    $this->assertSession()->fieldValueEquals('fields[node__body_summary][settings_edit_form][settings][markdown]', 'filter_xss_all');
 
     // Edit another field.
     $this->submitForm([], 'node__title_settings_edit');
@@ -122,15 +143,15 @@ class DiffAdminFormsTest extends DiffTestBase {
     $this->submitForm([], 'Save');
 
     // Check both fields and their config values.
-    $this->submitForm([], 'node__body_settings_edit');
-    $this->assertSession()->fieldValueEquals('fields[node__body][settings_edit_form][settings][markdown]', 'filter_xss_all');
+    $this->submitForm([], 'node__body_summary_settings_edit');
+    $this->assertSession()->fieldValueEquals('fields[node__body_summary][settings_edit_form][settings][markdown]', 'filter_xss_all');
     $this->submitForm([], 'node__title_settings_edit');
     $this->assertSession()->fieldValueEquals('fields[node__title][settings_edit_form][settings][markdown]', 'filter_xss_all');
 
     // Save field settings without changing anything and assert the config.
     $this->submitForm([], 'Save');
-    $this->submitForm([], 'node__body_settings_edit');
-    $this->assertSession()->fieldValueEquals('fields[node__body][settings_edit_form][settings][markdown]', 'filter_xss_all');
+    $this->submitForm([], 'node__body_summary_settings_edit');
+    $this->assertSession()->fieldValueEquals('fields[node__body_summary][settings_edit_form][settings][markdown]', 'filter_xss_all');
     $this->submitForm([], 'node__title_settings_edit');
     $this->assertSession()->fieldValueEquals('fields[node__title][settings_edit_form][settings][markdown]', 'filter_xss_all');
 
@@ -146,11 +167,12 @@ class DiffAdminFormsTest extends DiffTestBase {
    */
   public function testPluginWeight(): void {
     // Create a node with a revision.
+    $this->drupalGet('node/add/article');
     $edit = [
       'title[0][value]' => 'great_title',
       'body[0][value]' => '<p>great_body</p>',
     ];
-    $this->drupalPostNodeForm('node/add/article', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $this->clickLink('Edit');
     $edit = [
       'title[0][value]' => 'greater_title',
@@ -167,7 +189,7 @@ class DiffAdminFormsTest extends DiffTestBase {
     $this->assertSession()->linkExists('Raw');
     $this->assertSession()->linkExists('Strip tags');
     $text = $this->xpath('//tbody/tr[4]/td[3]');
-    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $text[0]->getHtml())), '<p>great_body</p>');
+    $this->assertEquals('<p>great_body</p>', \htmlspecialchars_decode(\strip_tags((string) $text[0]->getHtml())));
 
     // Change the settings of the layouts, disable the single column.
     $edit = [
@@ -219,6 +241,23 @@ class DiffAdminFormsTest extends DiffTestBase {
     $this->clickLink('Strip tags');
     $assert_session->elementContains('css', 'tr:nth-child(5) td:nth-child(2)', 'great_body');
     $assert_session->elementTextNotContains('css', 'tr:nth-child(5) td:nth-child(2)', '<p>');
+  }
+
+  /**
+   * Test case for new layout plugin discovery.
+   */
+  public function testNewLayoutPluginDiscovery(): void {
+    $module_handler = $this->container->get(ModuleInstallerInterface::class);
+
+    // Install the diff test module.
+    $module_handler->install(['diff_test']);
+
+    $this->drupalGet(Url::fromRoute('diff.general_settings'));
+
+    $assert = $this->assertSession();
+
+    // Ensure that newly discovered plugins are not enabled by default.
+    $assert->checkboxNotChecked('layout_plugins[test][enabled]');
   }
 
 }

@@ -21,21 +21,36 @@ foreach ($stream as $message) {
 
 ## Post streaming
 
-Post streaming there are a couple of things you can still do with the StreamedChatMessageIterator. You can get the total token usage, input token usage, output token usage, cached token usage, and reasoning token usage.
-
-You can also request to get a built ChatOutput object that contains all the messages that were received during the streaming process using the `getChatOutput()` method. This will return a ChatOutput object that contains all the messages that were received during the streaming process.
+Post streaming there are a couple of things you can still do with the StreamedChatMessageIterator. You can request a built `ChatOutput` object that contains all the messages that were received during the streaming process, using the `reconstructChatOutput()` method.
 
 Example:
-```
+```php
 $stream = $response->getNormalized();
 foreach ($stream as $message) {
   // Do something with the message.
   echo $message->getText();
 }
-$output = $stream->getChatOutput();
-echo $output->getTotalTokenUsage();
-$messages = $output->getMessage();
+$output = $stream->reconstructChatOutput();
+$messages = $output->getNormalized();
 ```
+
+### Token usage
+
+Once the stream has been fully consumed, `reconstructChatOutput()` also gives you a `ChatOutput` with token usage populated, via the same `getTokenUsage()` method used for non-streamed calls (see [Token usage](call_chat.md#token-usage) for the full property list and the deprecated per-value methods it replaces).
+
+```php
+$stream = $response->getNormalized();
+foreach ($stream as $message) {
+  echo $message->getText();
+}
+// Token usage is only populated once the stream above is fully drained.
+$output = $stream->reconstructChatOutput();
+$usage = $output->getTokenUsage();
+echo $usage->total;
+```
+
+!!! note
+    Token usage is aggregated from each streamed chunk as it arrives, so it is only complete once the `foreach` loop above has finished. Calling `reconstructChatOutput()` (or reading `getTokenUsage()`) before the stream is fully consumed returns a `TokenUsageDto` with `NULL` values.
 
 ## Working with callbacks
 

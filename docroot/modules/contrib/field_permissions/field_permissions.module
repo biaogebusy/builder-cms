@@ -31,7 +31,7 @@ function field_permissions_help($route_name, RouteMatchInterface $route_match) {
 /**
  * Implements hook_entity_field_access().
  */
-function field_permissions_entity_field_access($operation, FieldDefinitionInterface $field_definition, $account, FieldItemListInterface $items = NULL) {
+function field_permissions_entity_field_access($operation, FieldDefinitionInterface $field_definition, $account, ?FieldItemListInterface $items = NULL) {
   $context = ($operation == 'view') ? 'view' : 'form';
   if (!$field_definition->isDisplayConfigurable($context) || empty($items) || !is_a($field_definition->getFieldStorageDefinition(), '\Drupal\field\FieldStorageConfigInterface')) {
     return AccessResult::neutral();
@@ -125,7 +125,7 @@ function field_permissions_form_field_config_edit_form_alter(&$form, FormStateIn
 
   $user_role_storage = \Drupal::service('entity_type.manager')->getStorage('user_role');
   // Allow each plugin to add to or alter the form.
-  foreach ($plugins as $plugin) {
+  foreach ($plugins as $id => $plugin) {
     if ($plugin instanceof AdminFormSettingsInterface) {
       // Allow plugin to add to the form.
       $form['field_permissions'][$id] = [

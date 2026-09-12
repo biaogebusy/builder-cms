@@ -8,12 +8,14 @@ use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test date formatting and time zone handling, including daylight saving time.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class DateTimeTest extends BrowserTestBase {
 
   use FieldUiTestTrait;
@@ -84,7 +86,6 @@ class DateTimeTest extends BrowserTestBase {
 
     // Set time zone to Los Angeles time.
     $config->set('timezone.default', 'America/Los_Angeles')->save();
-    \Drupal::entityTypeManager()->getViewBuilder('node')->resetCache([$node1, $node2]);
 
     // Confirm date format and time zone.
     $this->drupalGet('node/' . $node1->id());
@@ -257,7 +258,7 @@ class DateTimeTest extends BrowserTestBase {
     $this->assertSession()->pageTextNotContains('Selected combination of day and month is not valid.');
 
     $this->drupalGet('node/1');
-    $this->assertSession()->pageTextContains('Mon, 02/29/2016 - 01:30');
+    $this->assertSession()->pageTextContains('Mon, 29 Feb 2016 - 01:30');
   }
 
 }

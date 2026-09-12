@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\webform\Functional\Field;
 
+use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -22,7 +22,7 @@ class WebformFieldTest extends WebformBrowserTestBase {
   /**
    * Tests the webform (entity reference) field.
    */
-  public function testWebformField() {
+  public function testWebformField(): void {
     $assert_session = $this->assertSession();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */

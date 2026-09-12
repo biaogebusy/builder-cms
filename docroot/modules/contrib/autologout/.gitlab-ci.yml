@@ -35,3 +35,4 @@ variables:
   OPT_IN_TEST_NEXT_MAJOR: 1
   # Convenient, and we have no secrets.
   _SHOW_ENVIRONMENT_VARIABLES: 1
+  _CSPELL_IGNORE_PATHS: '"README.md"'

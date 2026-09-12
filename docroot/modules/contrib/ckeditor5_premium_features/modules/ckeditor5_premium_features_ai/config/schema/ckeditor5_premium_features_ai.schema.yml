@@ -1,0 +1,133 @@
+# Plugin Drupal\ckeditor5_premium_features_ai\Plugin\CKEditor5Plugin\CKEditorAi
+ckeditor5.plugin.ckeditor5_premium_features_ai__ai:
+  type: mapping
+  label: 'CKEditor 5 AI'
+  mapping:
+    container_type:
+      type: string
+      label: 'Container type'
+    customize_models:
+      type: boolean
+      label: 'Customize models'
+    default_model:
+      type: string
+      label: 'Default AI Model'
+    available_models:
+      type: sequence
+      label: 'Available AI Models'
+      sequence:
+        type: string
+        label: 'Model id'
+    show_model_selector:
+      type: boolean
+      label: 'Always show model selector'
+    additional_context:
+      type: sequence
+      label: 'Additional context allowed in chat'
+      sequence:
+        type: string
+        label: 'Context source'
+    translation_languages:
+      type: string
+      label: 'Translation languages'
+
+# Config entity: ckeditor5_ai_custom_action
+ckeditor5_premium_features_ai.ckeditor5_ai_custom_action.*:
+  type: config_entity
+  label: 'AI Custom Action'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    uuid:
+      type: string
+      label: 'UUID'
+    label:
+      type: label
+      label: 'Label'
+    prompt:
+      type: text
+      label: 'Prompt'
+    type:
+      type: string
+      label: 'Type'
+    model:
+      type: string
+      label: 'Model'
+    textFormats:
+      type: sequence
+      label: 'Allowed text formats'
+      sequence:
+        type: string
+
+# Config entity: ckeditor5_ai_custom_review
+ckeditor5_premium_features_ai.ckeditor5_ai_custom_review.*:
+  type: config_entity
+  label: 'AI Custom Review'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    uuid:
+      type: string
+      label: 'UUID'
+    label:
+      type: label
+      label: 'Label'
+    description:
+      type: text
+      label: 'Description'
+    prompt:
+      type: text
+      label: 'Prompt'
+    model:
+      type: string
+      label: 'Model'
+    textFormats:
+      type: sequence
+      label: 'Allowed text formats'
+      sequence:
+        type: string
+
+# Config entity: ckeditor5_ai_chat_shortcut
+ckeditor5_premium_features_ai.ckeditor5_ai_chat_shortcut.*:
+  type: config_entity
+  label: 'AI Chat Shortcut'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    uuid:
+      type: string
+      label: 'UUID'
+    label:
+      type: label
+      label: 'Label'
+    type:
+      type: string
+      label: 'Type'
+    prompt:
+      type: text
+      label: 'Prompt'
+    useReasoning:
+      type: boolean
+      label: 'Use Reasoning'
+    useWebSearch:
+      type: boolean
+      label: 'Use Web Search'
+    commandId:
+      type: string
+      label: 'Command ID'
+    textFormats:
+      type: sequence
+      label: 'Allowed text formats'
+      sequence:
+        type: string
+
+ckeditor5_premium_features_ai.settings:
+  type: config_object
+  label: 'CKEditor 5 AI settings'
+  mapping:
+    service_url:
+      type: string
+      label: 'Service URL'

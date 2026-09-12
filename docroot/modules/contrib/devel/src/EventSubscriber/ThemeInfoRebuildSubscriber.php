@@ -34,55 +34,31 @@ class ThemeInfoRebuildSubscriber implements EventSubscriberInterface {
   protected Config $config;
 
   /**
-   * The current user.
-   */
-  protected AccountProxyInterface $account;
-
-  /**
-   * The theme handler.
-   */
-  protected ThemeHandlerInterface $themeHandler;
-
-  /**
-   * The messenger.
-   */
-  protected MessengerInterface $messenger;
-
-  /**
-   * The theme registry.
-   */
-  protected Registry $themeRegistry;
-
-  /**
    * Constructs a ThemeInfoRebuildSubscriber object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
    *   The config factory.
    * @param \Drupal\Core\Session\AccountProxyInterface $account
    *   The current user.
-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
+   * @param \Drupal\Core\Extension\ThemeHandlerInterface $themeHandler
    *   The theme handler.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager.
-   * @param \Drupal\Core\Theme\Registry $theme_registry
+   * @param \Drupal\Core\Theme\Registry $themeRegistry
    *   The theme registry.
    */
   public function __construct(
     ConfigFactoryInterface $config,
-    AccountProxyInterface $account,
-    ThemeHandlerInterface $theme_handler,
-    MessengerInterface $messenger,
+    protected AccountProxyInterface $account,
+    protected ThemeHandlerInterface $themeHandler,
+    protected MessengerInterface $messenger,
     TranslationInterface $string_translation,
-    Registry $theme_registry,
+    protected Registry $themeRegistry,
   ) {
     $this->config = $config->get('devel.settings');
-    $this->account = $account;
-    $this->themeHandler = $theme_handler;
-    $this->messenger = $messenger;
     $this->stringTranslation = $string_translation;
-    $this->themeRegistry = $theme_registry;
   }
 
   /**

@@ -1,0 +1,62 @@
+site_name: Message
+theme:
+  name: material
+  logo: logo.png
+  favicon: favicon.ico
+  features:
+    - navigation.footer
+    - navigation.instant
+    - content.code.annotate
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+nav:
+  - Home: index.md
+  - User guide:
+      - Overview: user/overview.md
+      - Installing and configuring: user/install-configure.md
+      - Message templates: user/templates.md
+      - Tokens and message text: user/tokens.md
+      - Partials and displays: user/partials-displays.md
+      - Listing messages with Views: user/views.md
+      - Purging and cleanup: user/purge.md
+      - Permissions: user/permissions.md
+  - Developer guide:
+      - Architecture: developer/architecture.md
+      - Creating messages: developer/creating-messages.md
+      - Arguments and callbacks: developer/arguments-callbacks.md
+      - Rendering and theming: developer/rendering-theming.md
+      - Custom tokens: developer/custom-tokens.md
+      - Custom purge plugins: developer/purge-plugins.md
+      - Hooks and services: developer/hooks-services.md
+      - Migrations from Drupal 7: developer/migrations.md
+      - Message example module: developer/message-example.md
+
+repo_url: https://git.drupalcode.org/project/message
+extra:
+  generator: false
+
+extra_css:
+  - css/extra.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          # eslint-disable-next-line
+          format: !!python/name:pymdownx.superfences.fence_code_format

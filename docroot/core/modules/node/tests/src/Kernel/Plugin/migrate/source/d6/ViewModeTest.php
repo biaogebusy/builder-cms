@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\node\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\node\Plugin\migrate\source\d6\ViewMode;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D6 view mode source plugin.
- *
- * @covers \Drupal\node\Plugin\migrate\source\d6\ViewMode
- *
- * @group node
  */
+#[CoversClass(ViewMode::class)]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class ViewModeTest extends MigrateSqlSourceTestBase {
 
   /**

@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel\Migrate;
 
@@ -20,9 +20,6 @@ final class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
 
   use MigratePhoneNumberTestTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms',
     'telephone',
@@ -30,9 +27,6 @@ final class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
     'filter',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->loadFixture(__DIR__ . '/../../../fixtures/migrate/drupal6.php');
@@ -70,16 +64,10 @@ final class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
     ];
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected function smsUserFixtureFilePath(): string {
     return __DIR__ . '/../../../fixtures/migrate/sms_user_drupal6.php';
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected function confirmationMessageFixturePath(): string {
     return __DIR__ . '/../../../fixtures/migrate/sms_confirmation_message_d6.php';
   }

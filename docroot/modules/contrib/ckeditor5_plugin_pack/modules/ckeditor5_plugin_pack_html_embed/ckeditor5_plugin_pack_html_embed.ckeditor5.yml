@@ -1,0 +1,14 @@
+ckeditor5_plugin_pack_html_embed__html_embed:
+  ckeditor5:
+    plugins:
+      - htmlEmbedAdapter.HtmlEmbedAdapter
+      - htmlEmbed.HtmlEmbed
+  drupal:
+    label: HTML embed
+    class: Drupal\ckeditor5_plugin_pack_html_embed\Plugin\CKEditor5Plugin\HtmlEmbed
+    library: ckeditor5_plugin_pack_html_embed/editor.html_embed
+    admin_library: ckeditor5_plugin_pack_html_embed/admin.html_embed
+    elements: false
+    toolbar_items:
+      htmlEmbed:
+        label: HTML embed

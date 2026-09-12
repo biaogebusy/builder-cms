@@ -9,10 +9,19 @@ use Drupal\slick\SlickDefault;
 
 /**
  * Tests the Slick field rendering using the image field type.
- *
- * @coversDefaultClass \Drupal\slick\Plugin\Field\FieldFormatter\SlickImageFormatter
- * @group slick
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class SlickFormatterTest extends BlazyKernelTestBase {
 
   use SlickUnitTestTrait;
@@ -102,14 +111,21 @@ class SlickFormatterTest extends BlazyKernelTestBase {
     $this->assertEmpty($render_empty);
 
     $this->assertInstanceOf('\Drupal\Core\Field\FieldItemListInterface', $this->testItems);
+
+    /** @phpstan-ignore-next-line */
     $this->assertInstanceOf('\Drupal\slick\Form\SlickAdminInterface', $this->formatterInstance->admin());
+
+    /** @phpstan-ignore-next-line */
     $this->assertInstanceOf('\Drupal\slick\SlickFormatterInterface', $this->formatterInstance->formatter());
+
+    /** @phpstan-ignore-next-line */
     $this->assertInstanceOf('\Drupal\slick\SlickManagerInterface', $this->formatterInstance->manager());
 
     $component = $this->display->getComponent($this->testFieldName);
     $this->assertEquals($this->testPluginId, $component['type']);
     $this->assertEquals($this->testPluginId, $build[$this->testFieldName]['#formatter']);
 
+    /** @phpstan-ignore-next-line */
     $scopes = $this->formatterInstance->getScopedFormElements();
     $this->assertEquals('slick', $scopes['blazies']->get('namespace'));
     $this->assertArrayHasKey('optionset', $scopes['settings']);
@@ -126,7 +142,6 @@ class SlickFormatterTest extends BlazyKernelTestBase {
    * @param bool $expected
    *   The expected output.
    *
-   * @covers \Drupal\slick\SlickFormatter::getThumbnail
    * @dataProvider providerTestGetThumbnail
    */
   public function testGetThumbnail($uri, $expected) {
@@ -163,12 +178,11 @@ class SlickFormatterTest extends BlazyKernelTestBase {
   /**
    * Tests for \Drupal\slick\SlickFormatter.
    *
-   * @param array $settings
+   * @param array<string, mixed> $settings
    *   The settings being tested.
    * @param mixed|bool|string $expected
    *   The expected output.
    *
-   * @covers \Drupal\slick\SlickFormatter::buildSettings
    * @dataProvider providerTestBuildSettings
    */
   public function testBuildSettings(array $settings, $expected) {
@@ -212,21 +226,6 @@ class SlickFormatterTest extends BlazyKernelTestBase {
 
   /**
    * Tests for \Drupal\slick\Form\SlickAdmin.
-   *
-   * @covers \Drupal\slick\Form\SlickAdmin::buildSettingsForm
-   * @covers \Drupal\slick\Form\SlickAdmin::openingForm
-   * @covers \Drupal\slick\Form\SlickAdmin::imageStyleForm
-   * @covers \Drupal\slick\Form\SlickAdmin::fieldableForm
-   * @covers \Drupal\slick\Form\SlickAdmin::mediaSwitchForm
-   * @covers \Drupal\slick\Form\SlickAdmin::gridForm
-   * @covers \Drupal\slick\Form\SlickAdmin::closingForm
-   * @covers \Drupal\slick\Form\SlickAdmin::finalizeForm
-   * @covers \Drupal\slick\Form\SlickAdmin::getOverridableOptions
-   * @covers \Drupal\slick\Form\SlickAdmin::getLayoutOptions
-   * @covers \Drupal\slick\Form\SlickAdmin::getOptionsetsByGroupOptions
-   * @covers \Drupal\slick\Form\SlickAdmin::getSkinsByGroupOptions
-   * @covers \Drupal\slick\Form\SlickAdmin::getSettingsSummary
-   * @covers \Drupal\slick\Form\SlickAdmin::getFieldOptions
    */
   public function testAdminOptions() {
     $definition = $this->getSlickFormatterDefinition();

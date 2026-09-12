@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\admin_toolbar_tools\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
@@ -54,13 +56,6 @@ class ToolbarController extends ControllerBase {
    * @var \Drupal\Core\Cache\CacheBackendInterface
    */
   protected $cacheRender;
-
-  /**
-   * A date time instance.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
 
   /**
    * A request stack symfony instance.
@@ -136,7 +131,6 @@ class ToolbarController extends ControllerBase {
     $instance->localTaskLinkManager = $container->get('plugin.manager.menu.local_task');
     $instance->localActionLinkManager = $container->get('plugin.manager.menu.local_action');
     $instance->cacheRender = $container->get('cache.render');
-    $instance->time = $container->get('datetime.time');
     $instance->requestStack = $container->get('request_stack');
     $instance->pluginCacheClearer = $container->get('plugin.cache_clearer');
     $instance->cacheMenu = $container->get('cache.menu');
@@ -194,7 +188,7 @@ class ToolbarController extends ControllerBase {
 
     // @todo Remove deprecated code when support for core:10.2 is dropped.
     if (floatval(\Drupal::VERSION) < 10.2) {
-      // @phpstan-ignore function.notFound
+      // @phpstan-ignore-next-line
       _drupal_flush_css_js();
     }
     else {

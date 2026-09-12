@@ -48,7 +48,7 @@ class EntityMaskTest extends KernelTestBase {
       'type' => 'basic',
     ]);
 
-    $this->assertTrue($block->hasField('body'));
+    $this->assertTrue($block->hasField('field_body'));
     $this->assertTrue($block->hasField('field_link'));
     $this->assertTrue($block->hasField('field_image'));
   }
@@ -73,7 +73,7 @@ class EntityMaskTest extends KernelTestBase {
     $this->assertTrue($display->isNew());
 
     $components = $display->getComponents();
-    $this->assertArrayHasKey('body', $components);
+    $this->assertArrayHasKey('field_body', $components);
     $this->assertArrayHasKey('field_link', $components);
     $this->assertArrayHasKey('field_image', $components);
   }
@@ -104,7 +104,7 @@ class EntityMaskTest extends KernelTestBase {
     $this->assertTrue($display->isNew());
 
     $components = $display->getComponents();
-    $this->assertArrayHasKey('body', $components);
+    $this->assertArrayHasKey('field_body', $components);
     $this->assertArrayHasKey('field_link', $components);
     $this->assertArrayHasKey('field_image', $components);
   }
@@ -127,7 +127,7 @@ class EntityMaskTest extends KernelTestBase {
   /**
    * Tests that mask entity types are not exposed to Field UI.
    */
-  public function testNotExposedToFieldUI() {
+  public function testNotExposedToFieldUi() {
     /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
     $entity_type = $this->container
       ->get('entity_type.manager')
@@ -148,14 +148,14 @@ class EntityMaskTest extends KernelTestBase {
     /** @var \Drupal\Core\Entity\EntityInterface $block */
     $block = BlockContent::create([
       'type' => 'basic',
-      'body' => $body,
+      'field_body' => $body,
       'field_link' => $link,
     ]);
 
     $block = serialize($block);
     $block = unserialize($block);
 
-    $this->assertSame($body, $block->body->value);
+    $this->assertSame($body, $block->field_body->value);
     $this->assertSame($link, $block->field_link->uri);
   }
 
@@ -223,12 +223,12 @@ class EntityMaskTest extends KernelTestBase {
     /** @var \Drupal\Core\Entity\EntityInterface $block */
     $block = BlockContent::create([
       'type' => 'basic',
-      'body' => $body,
+      'field_body' => $body,
       'field_link' => $link,
     ]);
 
     // Ensure that the field values are preserved after save...
-    $this->assertSame($body, $block->body->value);
+    $this->assertSame($body, $block->field_body->value);
     $this->assertSame($link, $block->field_link->uri);
   }
 

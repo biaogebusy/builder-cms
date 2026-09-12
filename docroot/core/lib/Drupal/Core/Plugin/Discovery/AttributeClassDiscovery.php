@@ -11,7 +11,7 @@ use Drupal\Component\Plugin\Discovery\AttributeClassDiscovery as ComponentAttrib
 class AttributeClassDiscovery extends ComponentAttributeClassDiscovery {
 
   /**
-   * A suffix to append to each PSR-4 directory associated with a base namespace.
+   * Suffix to append to each PSR-4 directory associated with a base namespace.
    *
    * This suffix is used to form the directories where plugins are found.
    *
@@ -119,6 +119,51 @@ class AttributeClassDiscovery extends ComponentAttributeClassDiscovery {
     }
 
     return $plugin_namespaces;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getClassDependencies(\ReflectionClass $reflection_class): ?array {
+    if (!($dependencies = parent::getClassDependencies($reflection_class))) {
+      return NULL;
+    }
+
+    // Get the providers from all the class namespaces. Exclude 'component',
+    // 'core', and the provider for the plugin class itself, since none of those
+    // providers will ever be missing.
+    $class_provider = $this->getProviderFromNamespace($reflection_class->getName());
+    $providers = [];
+    foreach ($dependencies as $type_dependencies) {
+      foreach ($type_dependencies as $dependency) {
+        if (($provider = $this->getProviderFromNamespace($dependency)) &&
+            ($provider !== $class_provider) &&
+            !in_array($provider, ['component', 'core']) &&
+            !in_array($provider, $providers)) {
+          $providers[] = $provider;
+        }
+      }
+    }
+
+    if ($providers) {
+      // Only need to return providers here.
+      return ['provider' => $providers];
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasMissingDependencies(array $dependencies): bool {
+    if (empty($dependencies['provider'])) {
+      return FALSE;
+    }
+
+    // Convert providers to two-level namespaces to check for availability.
+    $dependencies['provider'] = array_map(static fn ($provider) => "Drupal\\$provider", $dependencies['provider']);
+    return parent::hasMissingDependencies($dependencies);
   }
 
 }

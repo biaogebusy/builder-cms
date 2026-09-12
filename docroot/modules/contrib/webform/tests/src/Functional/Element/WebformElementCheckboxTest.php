@@ -21,7 +21,7 @@ class WebformElementCheckboxTest extends WebformElementBrowserTestBase {
   /**
    * Tests checkbox value element.
    */
-  public function testCheckboxValue() {
+  public function testCheckboxValue(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

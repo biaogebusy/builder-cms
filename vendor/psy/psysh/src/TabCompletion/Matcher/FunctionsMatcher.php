@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,9 +30,7 @@ class FunctionsMatcher extends AbstractMatcher
         $functions = \get_defined_functions();
         $allFunctions = \array_merge($functions['user'], $functions['internal']);
 
-        return \array_filter($allFunctions, function ($function) use ($func) {
-            return AbstractMatcher::startsWith($func, $function);
-        });
+        return \array_filter($allFunctions, fn ($function) => AbstractMatcher::startsWith($func, $function));
     }
 
     /**

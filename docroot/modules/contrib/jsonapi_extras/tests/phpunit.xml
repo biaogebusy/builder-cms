@@ -8,12 +8,12 @@
     </testsuite>
   </testsuites>
   <!-- Filter for coverage reports. -->
-  <filter>
-    <blacklist>
+  <source>
+    <exclude>
       <directory>./vendor</directory>
-    </blacklist>
-    <whitelist>
+    </exclude>
+    <include>
       <directory>../src</directory>
-    </whitelist>
-  </filter>
+    </include>
+  </source>
 </phpunit>

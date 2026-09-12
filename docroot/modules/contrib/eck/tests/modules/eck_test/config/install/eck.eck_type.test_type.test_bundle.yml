@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.test_type
+name: Test bundle
+type: test_bundle
+description: 'Test bundle'

@@ -117,6 +117,7 @@ elements: |
     '#selection_handler': 'default:user'
     '#selection_settings':
       include_anonymous: true
+      target_bundles: null
     '#description': '<b>Known Issues:</b><br /><a href="https://www.drupal.org/node/2826451">Issue #2826451: TermSelection returning HTML characters in select list</a>'
     '#disabled': true
   webform_entity_checkboxes:
@@ -127,6 +128,7 @@ elements: |
     '#selection_handler': 'default:user'
     '#selection_settings':
       include_anonymous: true
+      target_bundles: null
     '#options':
       1: Administrator
       0: Anonymous
@@ -139,6 +141,7 @@ elements: |
     '#selection_handler': 'default:user'
     '#selection_settings':
       include_anonymous: true
+      target_bundles: null
     '#options':
       1: Administrator
       0: Anonymous

@@ -70,7 +70,13 @@ class Full extends SqlBase {
    */
   public function summaryTitle() {
     if (!empty($this->options['offset'])) {
-      return $this->formatPlural($this->options['items_per_page'], '@count item, skip @skip', 'Paged, @count items, skip @skip', ['@count' => $this->options['items_per_page'], '@skip' => $this->options['offset']]);
+      return $this->formatPlural($this->options['items_per_page'],
+        '@count item, skip @skip',
+        'Paged, @count items, skip @skip',
+        [
+          '@count' => $this->options['items_per_page'],
+          '@skip' => $this->options['offset'],
+        ]);
     }
     return $this->formatPlural($this->options['items_per_page'], '@count item', 'Paged, @count items', ['@count' => $this->options['items_per_page']]);
   }
@@ -79,8 +85,8 @@ class Full extends SqlBase {
    * {@inheritdoc}
    */
   public function render($input) {
-    // The 0, 1, 3, 4 indexes are correct. See the template_preprocess_pager()
-    // documentation.
+    // The 0, 1, 3, 4 indexes are correct. See the
+    // \Drupal\Core\Pager\PagerPreprocess::preprocessPager() documentation.
     $tags = [
       0 => $this->options['tags']['first'],
       1 => $this->options['tags']['previous'],

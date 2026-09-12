@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\File;
 
 use Drupal\file_test\StreamWrapper\DummyRemoteStreamWrapper;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests deleteRecursive() with remote stream wrappers where realpath() is FALSE.
  *
- * @group File
+ * @internal
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class FileDeleteRecursiveRemoteTest extends FileTestBase {
 
   /**

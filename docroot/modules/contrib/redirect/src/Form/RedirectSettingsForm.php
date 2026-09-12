@@ -49,7 +49,8 @@ class RedirectSettingsForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Automatically create redirects when URL aliases are changed.'),
       '#default_value' => $config->get('auto_redirect'),
-      '#disabled' => $this->moduleHandler->moduleExists('path'),
+      // Disable only if the Path module is missing.
+      '#disabled' => !$this->moduleHandler->moduleExists('path'),
     ];
     $form['redirect_passthrough_querystring'] = [
       '#type' => 'checkbox',

@@ -35,6 +35,7 @@
 
   Drupal.behaviors.displayMessage = {
     attach(context) {
+      // eslint-disable-next-line no-jquery/no-ajax-events
       $(document).ajaxComplete(() => {
         $(
           '.field--type-viewsreference select.viewsreference-display-id',

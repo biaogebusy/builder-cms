@@ -7,7 +7,6 @@
  */
 
 @media (min-width: 768px) {
-
   .webform-flexbox {
     display: flex;
     margin: 1em -0.5em;
@@ -23,6 +22,26 @@
 
   .webform-flexbox .webform-flexbox {
     margin: 1em 0;
+  }
+
+  .webform-flexbox--justify-flex-start {
+    justify-content: flex-start;
+  }
+
+  .webform-flexbox--justify-flex-end {
+    justify-content: flex-end;
+  }
+
+  .webform-flexbox--justify-center {
+    justify-content: center;
+  }
+
+  .webform-flexbox--justify-space-between {
+    justify-content: space-between;
+  }
+
+  .webform-flexbox--justify-space-around {
+    justify-content: space-around;
   }
 
   .webform-flexbox--flex-start {

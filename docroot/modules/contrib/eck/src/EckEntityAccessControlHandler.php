@@ -25,7 +25,7 @@ class EckEntityAccessControlHandler extends EntityAccessControlHandler {
    * @return bool
    *   Can the user bypass the access check?
    */
-  private function canBypassAccessCheck(AccountInterface $account = NULL) {
+  private function canBypassAccessCheck(?AccountInterface $account = NULL) {
     $account = $this->prepareUser($account);
     return $account->hasPermission('bypass eck entity access');
   }
@@ -47,7 +47,7 @@ class EckEntityAccessControlHandler extends EntityAccessControlHandler {
   /**
    * {@inheritdoc}
    */
-  public function access(EntityInterface $entity, $operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access(EntityInterface $entity, $operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     if ($this->canBypassAccessCheck($account)) {
       return $this->getBypassAccessResult($return_as_object);
     }
@@ -59,7 +59,7 @@ class EckEntityAccessControlHandler extends EntityAccessControlHandler {
   /**
    * {@inheritdoc}
    */
-  public function createAccess($entity_bundle = NULL, AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
+  public function createAccess($entity_bundle = NULL, ?AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
     if ($this->canBypassAccessCheck($account)) {
       return $this->getBypassAccessResult($return_as_object);
     }

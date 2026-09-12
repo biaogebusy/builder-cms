@@ -2,6 +2,8 @@
 
 namespace Drupal\blazy\Media;
 
+use Drupal\blazy\Internals\Internals;
+
 /**
  * Provides SVG utility.
  *
@@ -13,11 +15,16 @@ class BlazySvg {
 
   /**
    * Provides svg dimensions, if any.
+   *
+   * @param array $settings
+   *   The settings being modified.
+   * @param string $uri
+   *   The uri.
    */
   public static function dimensions(array &$settings, $uri): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $fluid   = $blazies->is('fluid');
-    $valid   = BlazyFile::isValidUri($uri) && $blazies->is('svg');
+    $valid   = Uri::isValid($uri) && $blazies->is('svg');
     $width   = $height = NULL;
     $attrs   = $settings['svg_attributes'] ?? NULL;
 
@@ -28,7 +35,7 @@ class BlazySvg {
     // Sets default fluid to NULL.
     $blazies->set('image.fluid', NULL)
       // @todo move it out of here:
-      ->set('image.url', BlazyImage::url($uri));
+      ->set('image.url', Url::fromUri($uri));
     $applicable = $attrs != 'none' && $blazies->use('svg_dimensions');
 
     if ($fluid && !$attrs && $blazies->get('image.style')) {
@@ -76,6 +83,13 @@ class BlazySvg {
    * contents of <svg> element by a factor of 5
    * (1500 / 300 = 5 and 1000 / 200 = 5) and the contents will be 1/5 the size
    * they would be without the viewBox but the <svg>.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   * @param \SimpleXMLElement $svg
+   *   The svg instance.
+   * @param string $attrs
+   *   The attributes string.
    */
   private static function extract($blazies, \SimpleXMLElement $svg, $attrs): array {
     $width = $height = NULL;
@@ -106,11 +120,11 @@ class BlazySvg {
     // The viewBox can be insanely huge, 42000, depending on width/height units,
     // 42000 for 420mm, irrelevant for web displays in pixels for non-inline aka
     // embedded SVG in IMG. But width/height is more relevant.
-    if (!$width && isset($svg['viewBox'])) {
+    if (!$width && isset($svg['viewBox']) && is_string($svg['viewBox'])) {
       [,, $_width, $_height] = array_map('trim', explode(' ', $svg['viewBox']));
-      $width = ceil($_width);
+      $width = ceil((int) $_width);
       /* @phpstan-ignore-next-line */
-      $height = ceil($_height);
+      $height = ceil((int) $_height);
     }
 
     return ['width' => $width, 'height' => $height];

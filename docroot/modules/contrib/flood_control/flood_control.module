@@ -5,6 +5,7 @@
  * Flood control module file.
  */
 
+use Drupal\flood_control\FloodWhiteList;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -64,42 +65,18 @@ function flood_control_migrate_prepare_row(Row $row, MigrateSourceInterface $sou
 }
 
 /**
- * Parse and return whitelist IPs from config value.
+ * Get list op allowed IPs.
  *
- * @param string $whitelistIpsValue
- *   Optional. IP addresses to be whitelisted (string value from config).
+ * Parse and return allowed list of IPs from config value.
+ *
+ * cspell:disable
+ *
+ * @param string $allowedListIpsValue
+ *   Optional. IP addresses to be allowed (string value from config).
  *
  * @return array[]
- *   An array of whitelist of IPs addresses and ranges.
+ *   An array of allowed list of IPs addresses and ranges.
  */
-function flood_control_get_whitelist_ips(string $whitelistIpsValue = '') {
-  if (!$whitelistIpsValue) {
-    $config = \Drupal::configFactory()->get('flood_control.settings');
-    $whitelistIpsValue = $config->get('ip_white_list') ?? '';
-  }
-
-  $whitelistIps = [
-    'ranges' => [],
-    'addresses' => [],
-  ];
-
-  // Ensure the IPs value is trimmed before moving onward.
-  $whitelistIpsValue = trim($whitelistIpsValue);
-
-  if (empty($whitelistIpsValue)) {
-    return $whitelistIps;
-  }
-
-  $valueRows = explode("\n", $whitelistIpsValue);
-  foreach ($valueRows as $valueRow) {
-    $valueRow = trim($valueRow);
-    if (str_contains($valueRow, '-')) {
-      $whitelistIps['ranges'][] = $valueRow;
-    }
-    else {
-      $whitelistIps['addresses'][] = $valueRow;
-    }
-  }
-
-  return $whitelistIps;
+function flood_control_get_whitelist_ips(string $allowedListIpsValue = '') {
+  return FloodWhiteList::getAllowedlistIps($allowedListIpsValue);
 }

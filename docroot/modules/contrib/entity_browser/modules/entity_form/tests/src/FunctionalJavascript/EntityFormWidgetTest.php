@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser_entity_form\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -12,6 +14,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  *
  * @group entity_browser_entity_form
  */
+#[Group('entity_browser_entity_form')]
+#[RunTestsInSeparateProcesses]
 class EntityFormWidgetTest extends WebDriverTestBase {
 
   /**

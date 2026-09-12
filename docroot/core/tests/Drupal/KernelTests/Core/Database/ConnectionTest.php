@@ -6,12 +6,14 @@ namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\Condition;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests of the core database system.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class ConnectionTest extends DatabaseTestBase {
 
   /**
@@ -31,7 +33,8 @@ class ConnectionTest extends DatabaseTestBase {
     $this->assertNotNull($db2, 'replica connection is a real connection object.');
     $this->assertNotSame($db1, $db2, 'Each target refers to a different connection.');
 
-    // Try to open those targets another time, that should return the same objects.
+    // Try to open those targets another time, that should return the same
+    // objects.
     $db1b = Database::getConnection('default', 'default');
     $db2b = Database::getConnection('replica', 'default');
     $this->assertSame($db1, $db1b, 'A second call to getConnection() returns the same object.');
@@ -43,7 +46,8 @@ class ConnectionTest extends DatabaseTestBase {
     $this->assertNotNull($db3, 'Opening an unknown target returns a real connection object.');
     $this->assertSame($db1, $db3, 'An unknown target opens the default connection.');
 
-    // Try to open that unknown target another time, that should return the same object.
+    // Try to open that unknown target another time, that should return the same
+    // object.
     $db3b = Database::getConnection($unknown_target, 'default');
     $this->assertSame($db3, $db3b, 'A second call to getConnection() returns the same object.');
   }
@@ -77,7 +81,8 @@ class ConnectionTest extends DatabaseTestBase {
     Database::closeConnection('default', 'default');
     $db2 = Database::getConnection('default', 'default');
 
-    // Opening a connection after closing it should yield an object different than the original.
+    // Opening a connection after closing it should yield an object different
+    // than the original.
     $this->assertNotSame($db1, $db2, 'Opening the default connection after it is closed returns a new object.');
   }
 
@@ -128,7 +133,7 @@ class ConnectionTest extends DatabaseTestBase {
     ];
     Database::addConnectionInfo('default', 'foo', $new_connection_info);
     $this->expectException(\AssertionError::class);
-    $foo_connection = Database::getConnection('foo', 'default');
+    Database::getConnection('foo', 'default');
   }
 
   /**
@@ -142,7 +147,7 @@ class ConnectionTest extends DatabaseTestBase {
     ];
     Database::addConnectionInfo('default', 'foo', $new_connection_info);
     $this->expectException(\AssertionError::class);
-    $foo_connection = Database::getConnection('foo', 'default');
+    Database::getConnection('foo', 'default');
   }
 
   /**
@@ -175,30 +180,10 @@ class ConnectionTest extends DatabaseTestBase {
   }
 
   /**
-   * Tests deprecation of ::getUnprefixedTablesMap().
-   *
-   * @group legacy
-   */
-  public function testDeprecatedGetUnprefixedTablesMap(): void {
-    $this->expectDeprecation('Drupal\Core\Database\Connection::getUnprefixedTablesMap() is deprecated in drupal:10.0.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3257198');
-    $this->assertIsArray($this->connection->getUnprefixedTablesMap());
-  }
-
-  /**
    * Tests that the method ::hasJson() returns TRUE.
    */
   public function testHasJson(): void {
     $this->assertTrue($this->connection->hasJson());
-  }
-
-  /**
-   * Tests deprecation of ::tablePrefix().
-   *
-   * @group legacy
-   */
-  public function testDeprecatedTablePrefix(): void {
-    $this->expectDeprecation('Drupal\Core\Database\Connection::tablePrefix() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Instead, you should just use Connection::getPrefix(). See https://www.drupal.org/node/3260849');
-    $this->assertIsString($this->connection->tablePrefix());
   }
 
 }

@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\File;
 
+use Drupal\Core\File\FileSystem;
 use Drupal\Core\File\FileSystemInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the legacy file system functions.
- *
- * @group file
- * @group legacy
- * @coversDefaultClass \Drupal\Core\File\FileSystem
  */
+#[CoversClass(FileSystem::class)]
+#[Group('file')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class LegacyFileSystemTest extends FileTestBase {
 
   /**
@@ -29,41 +34,41 @@ class LegacyFileSystemTest extends FileTestBase {
   }
 
   /**
-   * @covers ::copy
+   * Tests copy with deprecated file exists.
    */
   public function testCopyWithDeprecatedFileExists(): void {
     $uri = 'public://test.txt';
     touch($uri);
-    $this->expectDeprecation('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::copy() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
+    $this->expectUserDeprecationMessage('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::copy() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
     $newUri = $this->fileSystem->copy($uri, $uri, FileSystemInterface::EXISTS_RENAME);
     $this->assertFileExists($newUri);
   }
 
   /**
-   * @covers ::move
+   * Tests move with deprecated file exists.
    */
   public function testMoveWithDeprecatedFileExists(): void {
     $uri = 'public://test.txt';
     touch($uri);
-    $this->expectDeprecation('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::move() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
+    $this->expectUserDeprecationMessage('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::move() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
     $newUri = $this->fileSystem->move($uri, $uri, FileSystemInterface::EXISTS_RENAME);
     $this->assertFileExists($newUri);
   }
 
   /**
-   * @covers ::saveData
+   * Tests save data with deprecated file exists.
    */
   public function testSaveDataWithDeprecatedFileExists(): void {
     $data = $this->randomMachineName(8);
     $uri = 'public://test.txt';
     touch($uri);
-    $this->expectDeprecation('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::saveData() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
+    $this->expectUserDeprecationMessage('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::saveData() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
     $newUri = $this->fileSystem->saveData($data, $uri, FileSystemInterface::EXISTS_RENAME);
     $this->assertFileExists($newUri);
   }
 
   /**
-   * @covers ::getDestinationFilename
+   * Tests get destination filename with deprecated file exists.
    */
   public function testGetDestinationFilenameWithDeprecatedFileExists(): void {
     $uri = 'public://test.txt';
@@ -74,24 +79,24 @@ class LegacyFileSystemTest extends FileTestBase {
   }
 
   /**
-   * @covers ::copy
+   * Tests copy with out of bounds int positive.
    */
   public function testCopyWithOutOfBoundsIntPositive(): void {
     $uri = 'public://test.txt';
     $destination = 'public://test2.txt';
     touch($uri);
-    $this->expectDeprecation('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::copy() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
+    $this->expectUserDeprecationMessage('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::copy() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
     $this->fileSystem->copy($uri, $destination, \PHP_INT_MAX);
   }
 
   /**
-   * @covers ::copy
+   * Tests copy with out of bounds int negative.
    */
   public function testCopyWithOutOfBoundsIntNegative(): void {
     $uri = 'public://test.txt';
     $destination = 'public://test2.txt';
     touch($uri);
-    $this->expectDeprecation('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::copy() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
+    $this->expectUserDeprecationMessage('Passing the $fileExists argument as an integer to Drupal\Core\File\FileSystem::copy() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\File\FileExists enum instead. See https://www.drupal.org/node/3426517');
     $this->fileSystem->copy($uri, $destination, \PHP_INT_MIN);
   }
 

@@ -26,10 +26,10 @@
               },
               () => {
                 console.log('Failed to copy link');
-              },
+              }
             );
           });
-        },
+        }
       );
     },
   };

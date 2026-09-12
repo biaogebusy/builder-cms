@@ -30,12 +30,8 @@ class EntityTypeRepository implements EntityTypeRepositoryInterface {
    */
   protected $classNameEntityTypeMap = [];
 
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, protected ?EntityTypeBundleInfoInterface $entityTypeBundleInfo = NULL) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, protected EntityTypeBundleInfoInterface $entityTypeBundleInfo) {
     $this->entityTypeManager = $entity_type_manager;
-    if (!isset($this->entityTypeBundleInfo)) {
-      @trigger_error('Calling EntityTypeRepository::__construct() without the $entityTypeBundleInfo argument is deprecated in drupal:10.3.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/3365164', E_USER_DEPRECATED);
-      $this->entityTypeBundleInfo = \Drupal::service('entity_type.bundle.info');
-    }
   }
 
   /**
@@ -81,7 +77,7 @@ class EntityTypeRepository implements EntityTypeRepositoryInterface {
     $entity_type_id = NULL;
     $definitions = $this->entityTypeManager->getDefinitions();
     foreach ($definitions as $entity_type) {
-      if ($entity_type->getOriginalClass() == $class_name || $entity_type->getClass() == $class_name) {
+      if (in_array($class_name, $entity_type->getDecoratedClasses(), TRUE) || $entity_type->getClass() == $class_name) {
         $entity_type_id = $entity_type->id();
         if ($same_class++) {
           throw new AmbiguousEntityClassException($class_name);

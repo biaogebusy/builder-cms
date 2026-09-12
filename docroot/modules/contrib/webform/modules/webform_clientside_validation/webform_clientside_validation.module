@@ -5,28 +5,24 @@
  * Helps support Webform to Clientside Validation integration.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_clientside_validation\Hook\WebformClientsideValidationHooks;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_webform_submission_form_alter().
  */
+#[LegacyHook]
 function webform_clientside_validation_webform_submission_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  if (\Drupal::moduleHandler()->moduleExists('inline_form_errors')) {
-    $form['#attached']['library'][] = 'webform_clientside_validation/webform_clientside_validation.ife';
-  }
-  if (isset($form['#attributes']['novalidate'])) {
-    $form['#attributes']['data-webform-clientside-validation-novalidate'] = TRUE;
-    $form['#attached']['library'][] = 'webform_clientside_validation/webform_clientside_validation.novalidate';
-  }
+  \Drupal::service(WebformClientsideValidationHooks::class)->webformSubmissionFormAlter($form, $form_state, $form_id);
 }
 
 /**
  * Implements hook_element_info_alter().
  */
+#[LegacyHook]
 function webform_clientside_validation_element_info_alter(array &$info) {
-  if (isset($info['webform_email_confirm'])) {
-    $info['webform_email_confirm']['#process'][] = '_webform_clientside_validation_webform_email_confirm_process';
-  }
+  \Drupal::service(WebformClientsideValidationHooks::class)->elementInfoAlter($info);
 }
 
 /**

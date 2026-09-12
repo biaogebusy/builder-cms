@@ -5,6 +5,7 @@
  * Handles integration of Twig templates with the Drupal theme system.
  */
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Twig\Error\RuntimeError;
@@ -12,21 +13,24 @@ use Twig\Error\RuntimeError;
 /**
  * Implements hook_theme().
  */
-function twig_theme($existing, $type, $theme, $path) {
+function twig_theme($existing, $type, $theme, $path): array {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use TwigThemeEngine instead. See https://www.drupal.org/node/3547356', E_USER_DEPRECATED);
   return drupal_find_theme_templates($existing, '.html.twig', $path);
 }
 
 /**
  * Implements hook_extension().
  */
-function twig_extension() {
+function twig_extension(): string {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use TwigThemeEngine instead. See https://www.drupal.org/node/3547356', E_USER_DEPRECATED);
   return '.html.twig';
 }
 
 /**
  * Implements hook_render_template().
  */
-function twig_render_template($template_file, array $variables) {
+function twig_render_template($template_file, array $variables): string|MarkupInterface {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use TwigThemeEngine instead. See https://www.drupal.org/node/3547356', E_USER_DEPRECATED);
   /** @var \Twig\Environment $twig_service */
   $twig_service = \Drupal::service('twig');
   try {
@@ -83,7 +87,8 @@ function twig_render_template($template_file, array $variables) {
       $invalid_suggestions = [];
       $base_hook = $base_hook ?? $variables['theme_hook_original'];
       foreach ($suggestions as $key => &$suggestion) {
-        // Valid suggestions are $base_hook, $base_hook__*, and contain no hyphens.
+        // Valid suggestions are $base_hook, $base_hook__*, and contain no
+        // hyphens.
         if (($suggestion !== $base_hook && !str_starts_with($suggestion, $base_hook . '__')) || str_contains($suggestion, '-')) {
           $invalid_suggestions[] = $suggestion;
           unset($suggestions[$key]);
@@ -91,6 +96,11 @@ function twig_render_template($template_file, array $variables) {
         }
         $template = strtr($suggestion, '_', '-') . $extension;
         $prefix = ($template == $current_template) ? '✅' : '▪️';
+
+        // Add deprecated hint.
+        if (isset($variables['theme_hook_suggestions__DEPRECATED'][$suggestion])) {
+          $template .= ' (deprecated)';
+        }
         $suggestion = $prefix . ' ' . $template;
       }
       $output['debug_info'] .= "\n<!-- FILE NAME SUGGESTIONS:\n   " . Html::escape(implode("\n   ", $suggestions)) . "\n-->";
@@ -102,7 +112,7 @@ function twig_render_template($template_file, array $variables) {
         $output['debug_info'] .= "\n-->";
       }
     }
-    // Check if the template_file belongs to a custom theme
+    // Check if the template_file belongs to a custom theme.
     $template_override_status_output = "BEGIN OUTPUT";
     $template_override_suffix_output = "END OUTPUT";
     if (str_starts_with($template_file, $variables['directory'])) {

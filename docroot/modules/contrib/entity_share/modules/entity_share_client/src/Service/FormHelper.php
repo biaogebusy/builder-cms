@@ -7,6 +7,7 @@ namespace Drupal\entity_share_client\Service;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -42,18 +43,11 @@ class FormHelper implements FormHelperInterface {
   protected $resourceTypeRepository;
 
   /**
-   * The bundle infos from the website.
+   * The entity type bundle info service.
    *
-   * @var array
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    */
-  protected $bundleInfos;
-
-  /**
-   * The entity type definitions.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeInterface[]
-   */
-  protected $entityDefinitions;
+  protected $entityTypeBundleInfo;
 
   /**
    * The entity type manager.
@@ -98,6 +92,8 @@ class FormHelper implements FormHelperInterface {
    *   The state information service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   *   The entity field manager.
    */
   public function __construct(
     ResourceTypeRepositoryInterface $resource_type_repository,
@@ -105,11 +101,11 @@ class FormHelper implements FormHelperInterface {
     EntityTypeManagerInterface $entity_type_manager,
     LanguageManagerInterface $language_manager,
     StateInformationInterface $state_information,
-    ModuleHandlerInterface $module_handler
+    ModuleHandlerInterface $module_handler,
+    protected EntityFieldManagerInterface $entityFieldManager,
   ) {
     $this->resourceTypeRepository = $resource_type_repository;
-    $this->bundleInfos = $entity_type_bundle_info->getAllBundleInfo();
-    $this->entityDefinitions = $entity_type_manager->getDefinitions();
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
     $this->stateInformation = $state_information;
@@ -119,10 +115,10 @@ class FormHelper implements FormHelperInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildEntitiesOptions(array $json_data, RemoteInterface $remote, $channel_id) {
+  public function buildEntitiesOptions(array $json_data, RemoteInterface $remote, $channel_id, string $channel_base_url) {
     $options = [];
     foreach (EntityShareUtility::prepareData($json_data) as $data) {
-      $this->addOptionFromJson($options, $data, $remote, $channel_id);
+      $this->addOptionFromJson($options, $data, $remote, $channel_id, $channel_base_url);
     }
     return $options;
   }
@@ -138,6 +134,8 @@ class FormHelper implements FormHelperInterface {
    *   The selected remote.
    * @param string $channel_id
    *   The selected channel id.
+   * @param string $channel_base_url
+   *   The base channel URL.
    * @param int $level
    *   The level of indentation.
    *
@@ -146,7 +144,7 @@ class FormHelper implements FormHelperInterface {
    * @throws \InvalidArgumentException
    * @throws \Drupal\entity_share_client\Exception\ResourceTypeNotFoundException
    */
-  protected function addOptionFromJson(array &$options, array $data, RemoteInterface $remote, $channel_id, $level = 0) {
+  protected function addOptionFromJson(array &$options, array $data, RemoteInterface $remote, $channel_id, string $channel_base_url, $level = 0) {
     $parsed_type = \explode('--', $data['type']);
     $entity_type_id = $parsed_type[0];
     $bundle_id = $parsed_type[1];
@@ -187,16 +185,31 @@ class FormHelper implements FormHelperInterface {
       }
     }
 
+    $entity_label = $this->getOptionLabel($data, $status_info, $entity_keys, $remote->get('url'), $level);
+    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
     $options[$data['id']] = [
-      'label' => $this->getOptionLabel($data, $status_info, $entity_keys, $remote->get('url'), $level),
+      'label' => $entity_label,
       'type' => $entity_type->getLabel(),
-      'bundle' => $this->bundleInfos[$entity_type_id][$bundle_id]['label'],
+      'bundle' => $bundle_info[$bundle_id]['label'],
       'language' => $this->getEntityLanguageLabel($data, $entity_keys),
       'changed' => $remote_changed_info,
       'status' => [
         'data' => $status_info['label'],
         'class' => $status_info['class'],
       ],
+      'source' => Link::fromTextAndUrl(
+        'source',
+        Url::fromUri(
+          $channel_base_url . '/' . $data['id'],
+          [
+            'attributes' => [
+              'aria-label' => $this->t("source for @label", [
+                '@label' => $entity_label,
+              ]),
+            ],
+          ],
+        ),
+      )->toString(),
       'policy' => $status_info['policy'],
     ];
 
@@ -272,13 +285,25 @@ class FormHelper implements FormHelperInterface {
     // using the label() method on the entity but at this step the entity is not
     // denormalized and also as we are not on the server website, we would not
     // have the data required to calculate the entity's label.
+    $label = NULL;
     if (isset($data['attributes'][$label_public_name])) {
-      $label = $data['attributes'][$label_public_name];
+      if (is_string($data['attributes'][$label_public_name])) {
+        $label = $data['attributes'][$label_public_name];
+      }
+      else {
+        $label_field_storage = $this->entityFieldManager->getFieldStorageDefinitions($entity_type_id)[$entity_keys['label']];
+        $main_property_name = $label_field_storage->getMainPropertyName();
+
+        if ($main_property_name) {
+          $label = $data['attributes'][$label_public_name][$main_property_name];
+        }
+      }
     }
     elseif (isset($entity_keys['id']) && $resource_type->hasField($entity_keys['id'])) {
       $label = $data['attributes'][$resource_type->getPublicName($entity_keys['id'])];
     }
-    else {
+
+    if (empty($label)) {
       $label = $data['id'];
     }
 
@@ -286,7 +311,7 @@ class FormHelper implements FormHelperInterface {
     // getting alias from local website.
     if (isset($entity_keys['id']) && $resource_type->hasField($entity_keys['id'])) {
       $remote_entity_id = (string) $data['attributes'][$resource_type->getPublicName($entity_keys['id'])];
-      $entity_definition = $this->entityDefinitions[$entity_type_id];
+      $entity_definition = $this->entityTypeManager->getDefinition($entity_type_id);
 
       if ($entity_definition->hasLinkTemplate('canonical')) {
         $canonical_path = $entity_definition->getLinkTemplate('canonical');

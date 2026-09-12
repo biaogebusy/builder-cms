@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\taxonomy\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\taxonomy\Plugin\migrate\source\d7\Vocabulary;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D7 vocabulary source plugin.
- *
- * @covers \Drupal\taxonomy\Plugin\migrate\source\d7\Vocabulary
- * @group taxonomy
  */
+#[CoversClass(Vocabulary::class)]
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class VocabularyTest extends MigrateSqlSourceTestBase {
 
   /**

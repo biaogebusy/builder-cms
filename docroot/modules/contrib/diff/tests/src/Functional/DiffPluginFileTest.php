@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\diff\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Diff module entity plugins.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffPluginFileTest extends DiffPluginTestBase {
 
   use FieldUiTestTrait;
-  use CoreVersionUiTestTrait;
 
   /**
    * {@inheritdoc}
@@ -69,11 +72,11 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     ])->save();
 
     // Make the field visible in the form and default display.
-    $this->viewDisplay->load('node.article.default')
+    $this->loadViewDisplay('node.article.default')
       ->setComponent('test_field')
       ->setComponent($file_field_name)
       ->save();
-    $this->formDisplay->load('node.article.default')
+    $this->loadFormDisplay('node.article.default')
       ->setComponent('test_field', ['type' => 'entity_reference_autocomplete'])
       ->setComponent($file_field_name, ['type' => 'file_generic'])
       ->save();
@@ -190,10 +193,9 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     $this->assertSession()->pageTextNotContains('Title');
 
     // Enable Title field in instance settings.
-    $this->drupalGet('admin/structure/types/manage/article/fields/node.article.field_image');
-    $this->submitForm([
-      'settings[title_field]' => 1,
-    ], 'Save settings');
+    $field = FieldConfig::loadByName('node', 'article', 'field_image');
+    $this->assertInstanceOf(FieldConfigInterface::class, $field);
+    $field->setSetting('title_field', TRUE)->save();
 
     // Add image title and alt text.
     $edit = [
@@ -272,6 +274,11 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     $this->getSession()->reload();
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Image: deleted');
+
+    // Delete the form display and ensure we don't get a 500.
+    EntityFormDisplay::load('node.article.default')->delete();
+    $this->getSession()->reload();
+    $this->assertSession()->statusCodeEquals(200);
   }
 
   /**
@@ -349,14 +356,14 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     ]);
     $field_config->save();
 
-    $this->formDisplay->load('node.article.default')
+    $this->loadFormDisplay('node.article.default')
       ->setComponent($field_name, [
         'type' => 'image_image',
         'settings' => [],
       ])
       ->save();
 
-    $this->viewDisplay->load('node.article.default')
+    $this->loadViewDisplay('node.article.default')
       ->setComponent($field_name, [
         'type' => 'image',
         'settings' => [],

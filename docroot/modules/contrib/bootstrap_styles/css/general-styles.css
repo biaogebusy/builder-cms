@@ -81,8 +81,8 @@
   align-items: center;
 }
 
-#drupal-off-canvas .sr-only,
-#layout-builder-modal .sr-only {
+#drupal-off-canvas .visually-hidden,
+#layout-builder-modal .visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;

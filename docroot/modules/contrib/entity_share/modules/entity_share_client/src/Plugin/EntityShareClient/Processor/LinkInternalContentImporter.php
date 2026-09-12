@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 
@@ -12,17 +14,15 @@ use Drupal\entity_share_client\RuntimeImportContext;
  *
  * Act in prepare_importable_entity_data stage and not process_entity stage to
  * be effective before entity denormalization.
- *
- * @ImportProcessor(
- *   id = "link_internal_content_importer",
- *   label = @Translation("Link internal content"),
- *   description = @Translation("Import internal content from link fields. Require the 'UUID for link (link field only) (Entity Share)' field enhancer enabled on both client and server websites."),
- *   stages = {
- *     "prepare_importable_entity_data" = 20,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'link_internal_content_importer',
+  label: new TranslatableMarkup('Link internal content'),
+  description: new TranslatableMarkup('Import internal content from link fields. Require the \'UUID for link (link field only) (Entity Share)\' field enhancer enabled on both client and server websites.'),
+  stages: [
+    'prepare_importable_entity_data' => 20,
+  ],
+)]
 class LinkInternalContentImporter extends ImportProcessorReferencePluginBase {
 
   /**

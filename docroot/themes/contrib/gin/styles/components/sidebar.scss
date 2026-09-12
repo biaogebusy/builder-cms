@@ -62,6 +62,7 @@ body[data-meta-sidebar=open] {
   }
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar,
 .meta-sidebar {
   &__close {
     cursor: pointer;

@@ -10,8 +10,7 @@ search.settings:
       type: integer
       label: 'AND/OR combination limit'
       constraints:
-        Range:
-          min: 0
+        PositiveOrZero: ~
     default_page:
       type: string
       label: 'Default search page'
@@ -87,6 +86,8 @@ search.settings:
 search.page.*:
   type: config_entity
   label: 'Search page'
+  constraints:
+    FullyValidatable: ~
   mapping:
     id:
       type: machine_name
@@ -95,8 +96,10 @@ search.page.*:
       type: required_label
       label: 'Label'
     path:
-      type: string
+      type: path
       label: 'Search page path'
+      constraints:
+        NotBlank: []
     weight:
       type: weight
       label: 'Weight'
@@ -113,7 +116,16 @@ search.page.*:
 block.settings.search_form_block:
   type: block_settings
   label: 'Search block'
+  constraints:
+    FullyValidatable: ~
   mapping:
     page_id:
       type: string
       label: 'Search page'
+      # Optional: falls back to the default search page.
+      # @see \Drupal\search\Form\SearchBlockForm::buildForm()
+      # @see \Drupal\search\SearchPageRepositoryInterface::getDefaultSearchPage()
+      nullable: true
+      constraints:
+        ConfigExists:
+          prefix: search.page.

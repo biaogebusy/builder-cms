@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_test\StreamWrapper;
 
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
@@ -20,14 +22,14 @@ class DummyRemoteReadOnlyStreamWrapper extends DummyRemoteStreamWrapper {
    * {@inheritdoc}
    */
   public function getName() {
-    return t('Dummy remote read-only files');
+    return 'Dummy remote read-only files';
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDescription() {
-    return t('Dummy remote read-only stream wrapper for testing.');
+    return 'Dummy remote read-only stream wrapper for testing.';
   }
 
 }

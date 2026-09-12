@@ -49,7 +49,7 @@ class Manager extends DefaultPluginManager {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function createInstance($plugin_id, array $configuration = [], FieldStorageDefinitionInterface $field_storage = NULL) {
+  public function createInstance($plugin_id, array $configuration = [], ?FieldStorageDefinitionInterface $field_storage = NULL) {
     $plugin_definition = $this->getDefinition($plugin_id);
     $plugin_class = DefaultFactory::getPluginClass($plugin_id, $plugin_definition);
     // If the plugin provides a factory method, pass the container to it.

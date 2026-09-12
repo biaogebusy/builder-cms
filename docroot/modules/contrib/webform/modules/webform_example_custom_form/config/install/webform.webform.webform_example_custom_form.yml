@@ -167,6 +167,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
     webform_entity_select:
       '#type': webform_entity_select
       '#title': 'Entity select'
@@ -174,6 +175,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
     webform_term_select:
       '#type': webform_term_select
       '#title': 'Term select'

@@ -15,10 +15,10 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Header\HeaderInterface;
 use Symfony\Component\Mime\Header\Headers;
 use Symfony\Component\Mime\Header\UnstructuredHeader;
-use Symfony\Component\Mime\Message;
 use Symfony\Component\Mime\Part\AbstractPart;
 use Symfony\Component\Mime\RawMessage;
 use Symfony\Component\Serializer\Exception\LogicException;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -30,7 +30,7 @@ use Symfony\Component\Serializer\SerializerInterface;
  *
  * Emails using resources for any parts are not serializable.
  */
-final class MimeMessageNormalizer implements NormalizerInterface, DenormalizerInterface, SerializerAwareInterface, CacheableSupportsMethodInterface
+final class MimeMessageNormalizer implements NormalizerInterface, DenormalizerInterface, SerializerAwareInterface
 {
     private NormalizerInterface&DenormalizerInterface $serializer;
     private array $headerClassMap;
@@ -44,14 +44,12 @@ final class MimeMessageNormalizer implements NormalizerInterface, DenormalizerIn
 
     public function getSupportedTypes(?string $format): array
     {
-        $isCacheable = __CLASS__ === static::class || $this->hasCacheableSupportsMethod();
-
         return [
-            Message::class => $isCacheable,
-            Headers::class => $isCacheable,
-            HeaderInterface::class => $isCacheable,
-            Address::class => $isCacheable,
-            AbstractPart::class => $isCacheable,
+            RawMessage::class => true,
+            Headers::class => true,
+            HeaderInterface::class => true,
+            Address::class => true,
+            AbstractPart::class => true,
         ];
     }
 
@@ -64,26 +62,30 @@ final class MimeMessageNormalizer implements NormalizerInterface, DenormalizerIn
         $this->normalizer->setSerializer($serializer);
     }
 
-    public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    public function normalize(mixed $data, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
     {
-        if ($object instanceof Headers) {
+        if ($data instanceof Headers) {
             $ret = [];
-            foreach ($this->headersProperty->getValue($object) as $name => $header) {
+            foreach ($this->headersProperty->getValue($data) as $name => $header) {
                 $ret[$name] = $this->serializer->normalize($header, $format, $context);
             }
 
             return $ret;
         }
 
-        $ret = $this->normalizer->normalize($object, $format, $context);
+        $ret = $this->normalizer->normalize($data, $format, $context);
 
-        if ($object instanceof AbstractPart) {
-            $ret['class'] = $object::class;
+        if ($data instanceof AbstractPart) {
+            $ret['class'] = $data::class;
             unset($ret['seekable'], $ret['cid'], $ret['handle']);
         }
 
-        if ($object instanceof RawMessage && \array_key_exists('message', $ret) && null === $ret['message']) {
-            unset($ret['message']);
+        if ($data instanceof RawMessage) {
+            $ret['class'] = $data::class;
+
+            if (\array_key_exists('message', $ret) && null === $ret['message']) {
+                unset($ret['message']);
+            }
         }
 
         return $ret;
@@ -103,9 +105,18 @@ final class MimeMessageNormalizer implements NormalizerInterface, DenormalizerIn
         }
 
         if (AbstractPart::class === $type) {
-            $type = $data['class'];
+            $type = $this->resolveClass($data, AbstractPart::class, $context);
             unset($data['class']);
             $data['headers'] = $this->serializer->denormalize($data['headers'], Headers::class, $format, $context);
+        } elseif (RawMessage::class === $type && !\is_array($data)) {
+            // a raw message is a string, an iterable of strings or a resource
+            return new RawMessage($data);
+        } elseif (\is_array($data) && is_a($type, RawMessage::class, true)) {
+            if (RawMessage::class === $type && \array_key_exists('class', $data)) {
+                $type = $this->resolveClass($data, RawMessage::class, $context);
+            }
+
+            unset($data['class']);
         }
 
         return $this->normalizer->denormalize($data, $type, $format, $context);
@@ -113,21 +124,22 @@ final class MimeMessageNormalizer implements NormalizerInterface, DenormalizerIn
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
-        return $data instanceof Message || $data instanceof Headers || $data instanceof HeaderInterface || $data instanceof Address || $data instanceof AbstractPart;
+        return $data instanceof RawMessage || $data instanceof Headers || $data instanceof HeaderInterface || $data instanceof Address || $data instanceof AbstractPart;
     }
 
     public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
-        return is_a($type, Message::class, true) || Headers::class === $type || AbstractPart::class === $type;
+        return is_a($type, RawMessage::class, true) || Headers::class === $type || AbstractPart::class === $type;
     }
 
-    /**
-     * @deprecated since Symfony 6.3, use "getSupportedTypes()" instead
-     */
-    public function hasCacheableSupportsMethod(): bool
+    private function resolveClass(mixed $data, string $baseClass, array $context): string
     {
-        trigger_deprecation('symfony/serializer', '6.3', 'The "%s()" method is deprecated, implement "%s::getSupportedTypes()" instead.', __METHOD__, get_debug_type($this));
+        $class = $data['class'] ?? null;
 
-        return true;
+        if (!\is_string($class) || !is_a($class, $baseClass, true)) {
+            throw NotNormalizableValueException::createForUnexpectedDataType(\sprintf('Expected a subclass of "%s", got "%s".', $baseClass, \is_string($class) ? $class : get_debug_type($class)), $data, [$baseClass], $context['deserialization_path'] ?? null);
+        }
+
+        return $class;
     }
 }

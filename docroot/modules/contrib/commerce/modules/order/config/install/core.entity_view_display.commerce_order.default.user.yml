@@ -42,7 +42,8 @@ content:
   order_items:
     type: commerce_order_item_table
     weight: 5
-    settings: {  }
+    settings:
+      show_add_items_link: false
     third_party_settings: {  }
     label: hidden
     region: content
@@ -79,7 +80,9 @@ content:
     label: hidden
     region: content
 hidden:
+  created: true
   changed: true
+  customer_comments: true
   ip_address: true
   store_id: true
   total_paid: true

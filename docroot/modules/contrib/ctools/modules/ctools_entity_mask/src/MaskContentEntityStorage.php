@@ -53,7 +53,7 @@ class MaskContentEntityStorage extends ContentEntityStorageBase {
   /**
    * {@inheritdoc}
    */
-  protected function doLoadMultiple(array $ids = NULL) {
+  protected function doLoadMultiple(?array $ids = NULL) {
     return [];
   }
 

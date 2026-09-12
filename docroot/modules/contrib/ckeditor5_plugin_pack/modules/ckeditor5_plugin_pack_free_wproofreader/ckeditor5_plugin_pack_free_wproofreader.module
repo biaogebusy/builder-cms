@@ -1,0 +1,44 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+declare(strict_types=1);
+
+use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
+use Drupal\ckeditor5_plugin_pack_free_wproofreader\Plugin\CKEditor5Plugin\WProofreader;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_ckeditor5_plugin_info_alter().
+ */
+function ckeditor5_plugin_pack_free_wproofreader_ckeditor5_plugin_info_alter(array &$plugin_definitions): void {
+  if (isset($plugin_definitions['ckeditor5_premium_features_wproofreader__wproofreader'])) {
+    $plugin = $plugin_definitions['ckeditor5_premium_features_wproofreader__wproofreader'];
+
+    $definition = $plugin->toArray();
+    $definition['drupal']['library'] = 'ckeditor5_premium_features_wproofreader/wproofreader';
+    $definition['drupal']['class'] = WProofreader::class;
+    $definition['ckeditor5']['plugins'] = ['wproofreader.WProofreader'];
+
+    $pluginDefinition = new CKEditor5PluginDefinition($definition);
+    $plugin_definitions['ckeditor5_premium_features_wproofreader__wproofreader'] = $pluginDefinition;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ckeditor5_plugin_pack_free_wproofreader_form_ckeditor5_premium_features_wproofreader_settings_alter(&$form, FormStateInterface $form_state, $form_id): void {
+  $form['trial_info'] = [
+    '#markup' => t('You are currently using free version of WProofreader. <br />
+                    To use premium license, uninstall CKEditor 5 Free WProofreader module, then you will be able to configure your license and settings on this page.'),
+  ];
+  unset($form['service_id']);
+  unset($form['language_container']);
+  unset($form['advanced']);
+  unset($form['actions']);
+}
+

@@ -1,0 +1,4 @@
+services:
+  inline_entity_form.migration_helper:
+    class: Drupal\inline_entity_form\MigrationHelper
+    arguments: ['@?plugin.manager.migrate.source']

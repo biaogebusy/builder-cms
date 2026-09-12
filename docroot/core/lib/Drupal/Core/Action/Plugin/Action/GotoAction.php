@@ -11,7 +11,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Utility\UnroutedUrlAssemblerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -64,13 +63,6 @@ class GotoAction extends ConfigurableActionBase implements ContainerFactoryPlugi
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('event_dispatcher'), $container->get('unrouted_url_assembler'));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function execute($object = NULL) {
     $url = $this->configuration['url'];
     // Leave external URLs unchanged, and assemble others as absolute URLs
@@ -116,7 +108,7 @@ class GotoAction extends ConfigurableActionBase implements ContainerFactoryPlugi
     $form['url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('URL'),
-      '#description' => $this->t('The URL to which the user should be redirected. This can be an internal URL like /node/1234 or an external URL like @url.', ['@url' => 'http://example.com']),
+      '#description' => $this->t('The URL to which the user should be redirected. This can be an internal URL like /node/1234 or an external URL like @url.', ['@url' => 'https://example.com']),
       '#default_value' => $this->configuration['url'],
       '#required' => TRUE,
     ];

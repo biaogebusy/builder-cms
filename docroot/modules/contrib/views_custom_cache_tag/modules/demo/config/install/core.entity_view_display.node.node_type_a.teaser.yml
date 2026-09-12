@@ -3,7 +3,6 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
-    - field.field.node.node_type_a.body
     - node.type.node_type_a
   module:
     - text

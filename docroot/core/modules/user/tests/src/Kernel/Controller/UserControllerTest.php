@@ -8,14 +8,16 @@ use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Controller\UserController;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for the User controller.
- *
- * @group user
- *
- * @coversDefaultClass \Drupal\user\Controller\UserController
  */
+#[CoversClass(UserController::class)]
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserControllerTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -57,8 +59,6 @@ class UserControllerTest extends KernelTestBase {
 
   /**
    * Tests the redirection to a user edit page.
-   *
-   * @covers ::userEditPage
    */
   public function testUserEditPage(): void {
 

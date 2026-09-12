@@ -33,16 +33,20 @@ variables:
   _PHPUNIT_CONCURRENT: '1'
   _CSPELL_FLAGWORDS: please
   _CSPELL_IGNORE_PATHS: ./phpcs.xml
-  # Use these to test against other versions of Drupal:
-#  OPT_IN_TEST_PREVIOUS_MINOR: '1'
-#  OPT_IN_TEST_PREVIOUS_MAJOR: '1'
-#  OPT_IN_TEST_NEXT_MINOR: '1'
-#  OPT_IN_TEST_NEXT_MAJOR: '1'
-  # Use this to test against the maximum supported PHP version.
-#  OPT_IN_TEST_MAX_PHP: '1'
-  # Use this to test against other database systems.
-#  OPT_IN_TEST_POSTGRES: '1'
-#  OPT_IN_TEST_SQLITE: '1'
+  # Provide the option to run other test suites as well.
+  OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  OPT_IN_TEST_PREVIOUS_MINOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 0
+  OPT_IN_TEST_DRUPAL_CMS: 1
+  OPT_IN_TEST_MAX_PHP: 1
+  # Uncomment to automatically run various optional tests:
+#  _AUTORUN_PREVIOUS_MINOR: all
+#  _AUTORUN_NEXT_MINOR: all
+#  _AUTORUN_PREVIOUS_MAJOR: all
+#  _AUTORUN_NEXT_MAJOR: all
+#  _AUTORUN_DRUPAL_CMS: all
+#  _AUTORUN_MAX_PHP: all
 
 # Overrides for the "phpunit" job.
 phpunit:

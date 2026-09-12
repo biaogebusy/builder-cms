@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views\Kernel\Plugin;
 
+use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
-use Drupal\Core\Database\DatabaseExceptionWrapper;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the views exception handling.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewsSqlExceptionTest extends ViewsKernelTestBase {
 
   /**

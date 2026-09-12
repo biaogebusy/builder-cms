@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.webform_test_paragraphs.body
     - field.field.node.webform_test_paragraphs.field_webform_test_node_value
     - field.field.node.webform_test_paragraphs.field_webform_test_paragraphs
     - field.field.node.webform_test_paragraphs.field_webform_test_value
@@ -16,13 +15,6 @@ targetEntityType: node
 bundle: webform_test_paragraphs
 mode: default
 content:
-  body:
-    type: text_default
-    label: hidden
-    settings: {  }
-    third_party_settings: {  }
-    weight: 101
-    region: content
   field_webform_test_node_value:
     type: string
     label: above

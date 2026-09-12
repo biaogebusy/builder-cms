@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\block\Kernel\Plugin\migrate\source;
 
+use Drupal\block\Plugin\migrate\source\Block;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests block source plugin.
- *
- * @covers \Drupal\block\Plugin\migrate\source\Block
- * @group block
  */
+#[CoversClass(Block::class)]
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockTest extends MigrateSqlSourceTestBase {
 
   /**

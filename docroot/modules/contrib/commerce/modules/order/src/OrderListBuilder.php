@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_order;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_order\Entity\OrderType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -20,33 +20,15 @@ class OrderListBuilder extends EntityListBuilder {
    *
    * @var \Drupal\Core\Datetime\DateFormatterInterface
    */
-  protected $dateFormatter;
-
-  /**
-   * Constructs a new OrderListBuilder object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
-   *   The date formatter.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityTypeManagerInterface $entity_type_manager, DateFormatterInterface $date_formatter) {
-    parent::__construct($entity_type, $entity_type_manager->getStorage($entity_type->id()));
-
-    $this->dateFormatter = $date_formatter;
-  }
+  protected DateFormatterInterface $dateFormatter;
 
   /**
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager'),
-      $container->get('date.formatter')
-    );
+    $instance = parent::createInstance($container, $entity_type);
+    $instance->dateFormatter = $container->get('date.formatter');
+    return $instance;
   }
 
   /**
@@ -104,37 +86,49 @@ class OrderListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  public function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $cacheability = func_num_args() > 1 ? func_get_arg(1) : NULL;
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
+    $view_access = $entity->access('view', NULL, TRUE);
     /** @var \Drupal\commerce_order\Entity\OrderInterface $entity */
-    if ($entity->access('view')) {
+    if ($view_access->isAllowed()) {
       $operations['view'] = [
         'title' => $this->t('View'),
         'weight' => 5,
         'url' => $entity->toUrl('canonical'),
       ];
     }
-    if ($entity->access('update') && $entity->hasLinkTemplate('reassign-form')) {
+    $update_access = $entity->access('update', NULL, TRUE);
+    if ($update_access->isAllowed() && $entity->hasLinkTemplate('reassign-form')) {
       $operations['reassign'] = [
         'title' => $this->t('Reassign'),
         'weight' => 20,
         'url' => $this->ensureDestination($entity->toUrl('reassign-form')),
       ];
     }
-    if ($entity->access('unlock')) {
+    $unlock_access = $entity->access('unlock', NULL, TRUE);
+    if ($unlock_access->isAllowed()) {
       $operations['unlock'] = [
         'title' => $this->t('Unlock'),
         'weight' => 25,
         'url' => $this->ensureDestination($entity->toUrl('unlock-form')),
       ];
     }
-    if ($entity->access('resend_receipt')) {
+    $resend_receipt_access = $entity->access('resend_receipt', NULL, TRUE);
+    if ($resend_receipt_access->isAllowed() && $entity->hasLinkTemplate('resend-receipt-form')) {
       $operations['resend_receipt'] = [
         'title' => $this->t('Resend receipt'),
         'weight' => 20,
         'url' => $this->ensureDestination($entity->toUrl('resend-receipt-form')),
       ];
+    }
+    if ($cacheability instanceof CacheableMetadata) {
+      $cacheability
+        ->addCacheableDependency($view_access)
+        ->addCacheableDependency($update_access)
+        ->addCacheableDependency($unlock_access)
+        ->addCacheableDependency($resend_receipt_access);
     }
 
     return $operations;

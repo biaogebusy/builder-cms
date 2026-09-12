@@ -10,15 +10,21 @@ use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
-use Drupal\Tests\Traits\PhpUnitWarnings;
-use Drupal\TestTools\TestVarDumper;
+use Drupal\TestTools\Extension\DeprecationBridge\ExpectDeprecationTrait;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Symfony\Component\VarDumper\VarDumper;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 /**
  * Provides a base class and helpers for Drupal unit tests.
+ *
+ * Module tests extending UnitTestCase must exist in the
+ * Drupal\Tests\your_module\Unit namespace and live in the
+ * modules/your_module/tests/src/Unit directory.
+ *
+ * Tests for core/lib/Drupal classes extending UnitTestCase must exist in the
+ * \Drupal\Tests\Core namespace and live in the core/lib/tests/Drupal/Tests/Core
+ * directory.
  *
  * Using Symfony's dump() function in Unit tests will produce output on the
  * command line.
@@ -27,26 +33,11 @@ use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
  */
 abstract class UnitTestCase extends TestCase {
 
-  use PhpUnitWarnings;
+  use DrupalTestCaseTrait;
   use PhpUnitCompatibilityTrait;
   use ProphecyTrait;
   use ExpectDeprecationTrait;
   use RandomGeneratorTrait;
-
-  /**
-   * The app root.
-   *
-   * @var string
-   */
-  protected $root;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function setUpBeforeClass(): void {
-    parent::setUpBeforeClass();
-    VarDumper::setHandler(TestVarDumper::class . '::cliHandler');
-  }
 
   /**
    * {@inheritdoc}
@@ -63,18 +54,7 @@ abstract class UnitTestCase extends TestCase {
     // Ensure that FileCacheFactory has a prefix.
     FileCacheFactory::setPrefix('prefix');
 
-    $this->root = dirname(substr(__DIR__, 0, -strlen(__NAMESPACE__)), 2);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __get(string $name) {
-    if ($name === 'randomGenerator') {
-      @trigger_error('Accessing the randomGenerator property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use getRandomGenerator() instead. See https://www.drupal.org/node/3358445', E_USER_DEPRECATED);
-
-      return $this->getRandomGenerator();
-    }
+    chdir($this->root);
   }
 
   /**
@@ -143,32 +123,6 @@ abstract class UnitTestCase extends TestCase {
   }
 
   /**
-   * Returns a stub config storage that returns the supplied configuration.
-   *
-   * @param array $configs
-   *   An associative array of configuration settings whose keys are
-   *   configuration object names and whose values are key => value arrays
-   *   for the configuration object in question.
-   *
-   * @return \Drupal\Core\Config\StorageInterface
-   *   A mocked config storage.
-   */
-  public function getConfigStorageStub(array $configs) {
-    $config_storage = $this->createMock('Drupal\Core\Config\NullStorage');
-    $config_storage->expects($this->any())
-      ->method('listAll')
-      ->willReturn(array_keys($configs));
-
-    foreach ($configs as $name => $config) {
-      $config_storage->expects($this->any())
-        ->method('read')
-        ->with($this->equalTo($name))
-        ->willReturn($config);
-    }
-    return $config_storage;
-  }
-
-  /**
    * Returns a stub translation manager that just returns the passed string.
    *
    * @return \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\StringTranslation\TranslationInterface
@@ -179,6 +133,7 @@ abstract class UnitTestCase extends TestCase {
     $translation->expects($this->any())
       ->method('translate')
       ->willReturnCallback(function ($string, array $args = [], array $options = []) use ($translation) {
+        // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
         return new TranslatableMarkup($string, $args, $options, $translation);
       });
     $translation->expects($this->any())
@@ -234,6 +189,34 @@ abstract class UnitTestCase extends TestCase {
         }
       });
     return $class_resolver;
+  }
+
+  /**
+   * Set up a traversable class mock to return specific items when iterated.
+   *
+   * Test doubles for types extending \Traversable are required to implement
+   * \Iterator which requires setting up five methods. Instead, this helper
+   * can be used.
+   *
+   * @param \PHPUnit\Framework\MockObject\MockObject&\Iterator $mock
+   *   A mock object mocking a traversable class.
+   * @param array $items
+   *   The items to return when this mock is iterated.
+   *
+   * @return \PHPUnit\Framework\MockObject\MockObject&\Iterator
+   *   The same mock object ready to be iterated.
+   *
+   * @template T of \PHPUnit\Framework\MockObject\MockObject&\Iterator
+   * @phpstan-param T $mock
+   * @phpstan-return T
+   * @see https://github.com/sebastianbergmann/phpunit-mock-objects/issues/103
+   */
+  protected function setupMockIterator(MockObject&\Iterator $mock, array $items): MockObject&\Iterator {
+    $iterator = new \ArrayIterator($items);
+    foreach (get_class_methods(\Iterator::class) as $method) {
+      $mock->method($method)->willReturnCallback([$iterator, $method]);
+    }
+    return $mock;
   }
 
 }

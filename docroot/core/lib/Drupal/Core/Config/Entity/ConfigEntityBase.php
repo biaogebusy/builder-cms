@@ -12,7 +12,9 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
 use Drupal\Core\Entity\SynchronizableEntityTrait;
+use Drupal\Core\Plugin\RemovableDependentPluginInterface;
 use Drupal\Core\Plugin\PluginDependencyTrait;
+use Drupal\Core\Plugin\RemovableDependentPluginReturn;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
@@ -102,6 +104,11 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
    * Trust supplied data and not use configuration schema on save.
    *
    * @var bool
+   *
+   * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no
+   *   replacement.
+   *
+   * @see https://www.drupal.org/node/3348180
    */
   protected $trustedData = FALSE;
 
@@ -140,7 +147,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
   }
 
   /**
-   * Overrides Entity::isNew().
+   * Overrides EntityBase::isNew().
    *
    * EntityInterface::enforceIsNew() is only supported for newly created
    * configuration entities but has no effect after saving, since each
@@ -233,7 +240,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
   }
 
   /**
-   * Helper callback for uasort() to sort configuration entities by weight and label.
+   * Callback for uasort() to sort configuration entities by weight and label.
    */
   public static function sort(ConfigEntityInterface $a, ConfigEntityInterface $b) {
     $a_weight = $a->weight ?? 0;
@@ -283,6 +290,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
    * Gets the typed config manager.
    *
    * @return \Drupal\Core\Config\TypedConfigManagerInterface
+   *   The typed configuration plugin manager.
    */
   protected function getTypedConfig() {
     return \Drupal::service('config.typed');
@@ -329,6 +337,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
       // If the data is trusted we need to ensure that the dependencies are
       // sorted as per their schema. If the save is not trusted then the
       // configuration will be sorted by StorableConfigBase.
+      // @phpstan-ignore-next-line
       if ($this->trustedData) {
         $mapping = ['config' => 0, 'content' => 1, 'module' => 2, 'theme' => 3, 'enforced' => 4];
         $dependency_sort = function ($dependencies) use ($mapping) {
@@ -347,7 +356,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $keys_to_unset = [];
     if ($this instanceof EntityWithPluginCollectionInterface) {
       // Get the plugin collections first, so that the properties are
@@ -479,6 +488,21 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
       $this->third_party_settings = array_diff_key($this->third_party_settings, array_flip($dependencies['module']));
       $changed = $old_count != count($this->third_party_settings);
     }
+    if ($this instanceof EntityWithPluginCollectionInterface) {
+      // Allow associated plugins to recalculate their dependencies and update
+      // settings on dependency removal.
+      foreach ($this->getPluginCollections() as $plugin_collection) {
+        foreach ($plugin_collection as $id => $instance) {
+          if ($instance instanceof RemovableDependentPluginInterface) {
+            $changed = match ($instance->onCollectionDependencyRemoval($dependencies)) {
+              RemovableDependentPluginReturn::Remove => $plugin_collection->removeInstanceId($id) || TRUE,
+              RemovableDependentPluginReturn::Changed => TRUE,
+              RemovableDependentPluginReturn::Unchanged => $changed,
+            };
+          }
+        }
+      }
+    }
     return $changed;
   }
 
@@ -599,6 +623,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
    * {@inheritdoc}
    */
   public function trustData() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3348180', E_USER_DEPRECATED);
     $this->trustedData = TRUE;
     return $this;
   }
@@ -607,6 +632,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
    * {@inheritdoc}
    */
   public function hasTrustedData() {
+    // @phpstan-ignore-next-line
     return $this->trustedData;
   }
 
@@ -615,6 +641,7 @@ abstract class ConfigEntityBase extends EntityBase implements ConfigEntityInterf
    */
   public function save() {
     $return = parent::save();
+    // @phpstan-ignore-next-line
     $this->trustedData = FALSE;
     return $return;
   }

@@ -24,13 +24,10 @@
         "forum": "https://drupal.stackexchange.com/questions/tagged/webform"
     },
     "require": {
-        "algolia/places": "*",
         "choices/choices": "*",
         "codemirror/codemirror": "*",
         "jquery/chosen": "*",
-        "jquery/geocomplete": "*",
         "jquery/hotkeys": "*",
-        "jquery/icheck": "*",
         "jquery/image-picker": "*",
         "jquery/inputmask": "*",
         "jquery/intl-tel-input": "*",
@@ -38,7 +35,6 @@
         "jquery/select2": "*",
         "jquery/textcounter": "*",
         "jquery/timepicker": "*",
-        "jquery/toggles": "*",
         "popperjs/popperjs": "*",
         "progress-tracker/progress-tracker": "*",
         "signature_pad/signature_pad": "*",
@@ -51,33 +47,17 @@
         "drupal/jquery_ui_datepicker": "Provides jQuery UI Datepicker library. Required to support datepickers. The Webform jQueryUI Datepicker module is deprecated because jQueryUI is no longer maintained."
     },
     "repositories": {
-        "algolia.places": {
-            "type": "package",
-            "package": {
-                "name": "algolia/places",
-                "version": "1.19.0",
-                "type": "drupal-library",
-                "extra": {
-                    "installer-name": "algolia.places"
-                },
-                "dist": {
-                    "url": "https://registry.npmjs.org/places.js/-/places.js-1.19.0.tgz",
-                    "type": "tar"
-                },
-                "license": "MIT"
-            }
-        },
         "choices": {
             "type": "package",
             "package": {
                 "name": "choices/choices",
-                "version": "9.0.1",
+                "version": "11.0.2",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "choices"
                 },
                 "dist": {
-                    "url": "https://github.com/Choices-js/Choices/archive/refs/tags/v9.0.1.zip",
+                    "url": "https://github.com/Choices-js/Choices/archive/refs/tags/v11.0.2.zip",
                     "type": "zip"
                 },
                 "license": "MIT"
@@ -115,22 +95,6 @@
                 "license": "MIT"
             }
         },
-        "jquery.geocomplete": {
-            "type": "package",
-            "package": {
-                "name": "jquery/geocomplete",
-                "version": "1.7.0",
-                "type": "drupal-library",
-                "extra": {
-                    "installer-name": "jquery.geocomplete"
-                },
-                "dist": {
-                    "url": "https://github.com/ubilabs/geocomplete/archive/refs/tags/1.7.0.zip",
-                    "type": "zip"
-                },
-                "license": "MIT"
-            }
-        },
         "jquery.hotkeys": {
             "type": "package",
             "package": {
@@ -142,22 +106,6 @@
                 },
                 "dist": {
                     "url": "https://github.com/jeresig/jquery.hotkeys/archive/refs/tags/0.2.0.zip",
-                    "type": "zip"
-                },
-                "license": "MIT"
-            }
-        },
-        "jquery.icheck": {
-            "type": "package",
-            "package": {
-                "name": "jquery/icheck",
-                "version": "1.0.2 ",
-                "type": "drupal-library",
-                "extra": {
-                    "installer-name": "jquery.icheck"
-                },
-                "dist": {
-                    "url": "https://api.github.com/repos/drgullin/icheck/zipball/8a6eb37bd7dab1e843c1b630c91c6398ff409d05",
                     "type": "zip"
                 },
                 "license": "MIT"
@@ -183,13 +131,13 @@
             "type": "package",
             "package": {
                 "name": "jquery/inputmask",
-                "version": "5.0.8",
+                "version": "5.0.9",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "jquery.inputmask"
                 },
                 "dist": {
-                    "url": "https://github.com/RobinHerbots/jquery.inputmask/archive/refs/tags/5.0.8.zip",
+                    "url": "https://github.com/RobinHerbots/jquery.inputmask/archive/refs/tags/5.0.9.zip",
                     "type": "zip"
                 },
                 "license": "MIT"
@@ -270,22 +218,6 @@
                 },
                 "dist": {
                     "url": "https://github.com/jonthornton/jquery-timepicker/archive/refs/tags/1.14.0.zip",
-                    "type": "zip"
-                },
-                "license": "MIT"
-            }
-        },
-        "jquery.toggles": {
-            "type": "package",
-            "package": {
-                "name": "jquery/toggles",
-                "version": "4.0.0",
-                "type": "drupal-library",
-                "extra": {
-                    "installer-name": "jquery.toggles"
-                },
-                "dist": {
-                    "url": "https://github.com/simontabor/jquery-toggles/archive/refs/tags/v4.0.0.zip",
                     "type": "zip"
                 },
                 "license": "MIT"

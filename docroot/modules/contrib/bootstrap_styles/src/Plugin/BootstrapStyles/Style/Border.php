@@ -388,7 +388,7 @@ class Border extends StylePluginBase {
 
     $form['rounded_corners'] = [
       '#type' => 'range',
-      '#title' => '<span class="sr-only">' . $this->t('Corners') . '</span><div class="bs_tooltip" data-placement="top" role="tooltip">' . $this->t('All Corners') . '</div>',
+      '#title' => '<span class="visually-hidden">' . $this->t('Corners') . '</span><div class="bs_tooltip" data-placement="top" role="tooltip">' . $this->t('All Corners') . '</div>',
       '#min' => 0,
       '#max' => $this->getStyleOptionsCount('rounded_corners'),
       '#step' => 1,
@@ -408,7 +408,7 @@ class Border extends StylePluginBase {
 
       $form['rounded_corner_' . $corner_key] = [
         '#type' => 'range',
-        '#title' => '<span class="sr-only">' . $this->t('@corner', ['@corner' => $corner_value]) . '</span><div class="bs_tooltip" data-placement="top" role="tooltip">' . $this->t('@corner', ['@corner' => $corner_value]) . '</div>',
+        '#title' => '<span class="visually-hidden">' . $this->t('@corner', ['@corner' => $corner_value]) . '</span><div class="bs_tooltip" data-placement="top" role="tooltip">' . $this->t('@corner', ['@corner' => $corner_value]) . '</div>',
         '#min' => 0,
         '#max' => $this->getStyleOptionsCount('rounded_corner_' . $corner_key),
         '#step' => 1,
@@ -536,7 +536,12 @@ class Border extends StylePluginBase {
     $build = $this->addClassesToBuild($build, $classes, $theme_wrapper);
 
     // Attach bs-classes to the build.
-    $build['#attached']['library'][] = 'bootstrap_styles/plugin.border.build';
+    foreach ($storage['border'] as $key => $value) {
+      if (isset($value['class']) && $value['class'] !== '' && $value['class'] !== '_none') {
+        $build['#attached']['library'][] = 'bootstrap_styles/plugin.border.build';
+        break;
+      }
+    }
 
     return $build;
   }

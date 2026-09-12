@@ -17,6 +17,8 @@ use Drupal\Core\Form\FormBuilderInterface;
 abstract class RequiredContext extends FormBase {
 
   /**
+   * The typed data manager.
+   *
    * @var \Drupal\Core\TypedData\TypedDataManager
    */
   protected $typedDataManager;
@@ -29,8 +31,11 @@ abstract class RequiredContext extends FormBase {
   protected $formBuilder;
 
   /**
+   * The machine name.
+   *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $machine_name;
 
   /**
@@ -96,7 +101,7 @@ abstract class RequiredContext extends FormBase {
         'event' => 'click',
       ],
       '#submit' => [
-        'callback' => [$this, 'submitform'],
+        'callback' => [$this, 'submitForm'],
       ],
     ];
     return $form;
@@ -115,9 +120,12 @@ abstract class RequiredContext extends FormBase {
    * Custom ajax form submission handler.
    *
    * @param array $form
+   *   The form array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The ajax response.
    */
   public function add(array &$form, FormStateInterface $form_state) {
     $context = $form_state->getValue('contexts');
@@ -131,7 +139,7 @@ abstract class RequiredContext extends FormBase {
   /**
    * Render The contexts in the form.
    *
-   * @param $cached_values
+   * @param array $cached_values
    *   Cached context values.
    *
    * @return array
@@ -147,8 +155,11 @@ abstract class RequiredContext extends FormBase {
         '#links' => $this->getOperations($route_name, $route_parameters),
       ];
       $configured_contexts[] = [
-        $this->t('<strong>Label:</strong> @label<br /> <strong>Type:</strong> @type', ['@label' => $label, '@type' => $plugin_id]),
-        $this->t('@description', ['@description' => $description]),
+        0 => $this->t('<strong>Label:</strong> @label<br /> <strong>Type:</strong> @type', [
+          '@label' => $label,
+          '@type' => $plugin_id,
+        ]),
+        1 => $this->t('@description', ['@description' => $description]),
         'operations' => [
           'data' => $build,
         ],
@@ -158,9 +169,9 @@ abstract class RequiredContext extends FormBase {
   }
 
   /**
-   * Retrieve Form Operations
+   * Retrieve Form Operations.
    *
-   * @param $route_name_base
+   * @param string $route_name_base
    *   The base route name.
    * @param array $route_parameters
    *   Route Parameters.
@@ -229,11 +240,11 @@ abstract class RequiredContext extends FormBase {
    * this approach quite seamlessly.
    *
    * @param mixed $cached_values
-   *  The Cached Values.
+   *   The Cached Values.
    * @param string $machine_name
-   *  The form machine name.
+   *   The form machine name.
    * @param string $row
-   *  The form row to operate on.
+   *   The form row to operate on.
    *
    * @return array
    *   In the format of

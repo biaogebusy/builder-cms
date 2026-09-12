@@ -48,7 +48,7 @@ interface QueryAggregateInterface extends QueryInterface {
    *   The aggregation function, for example COUNT or MIN.
    * @param mixed $value
    *   The actual value of the field.
-   * @param $operator
+   * @param string $operator
    *   Possible values:
    *   - '=', '<>', '>', '>=', '<', '<=', 'STARTS_WITH', 'CONTAINS',
    *     'ENDS_WITH': These operators expect $value to be a literal of the
@@ -74,7 +74,7 @@ interface QueryAggregateInterface extends QueryInterface {
    *   The name of the field.
    * @param string $function
    *   The aggregate function.
-   * @param $langcode
+   * @param string $langcode
    *   (optional) The language code.
    *
    * @return $this
@@ -117,8 +117,7 @@ interface QueryAggregateInterface extends QueryInterface {
    * @param string $field
    *   The name of a field.
    * @param string $function
-   *   The aggregate function. This is only marked optional for interface
-   *   compatibility, it is illegal to leave it out.
+   *   The aggregate function.
    * @param string $direction
    *   The order of sorting, either DESC for descending of ASC for ascending.
    * @param string $langcode
@@ -140,7 +139,7 @@ interface QueryAggregateInterface extends QueryInterface {
    *     $result = $query
    *       ->aggregate('nid', 'count')
    *       ->condition('status', 1)
-   *       ->groupby('type')
+   *       ->groupBy('type')
    *       ->execute();
    *   @endcode
    *   Will return:

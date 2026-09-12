@@ -11,20 +11,14 @@ use Drupal\commerce_order\Entity\OrderItemInterface;
 class DefaultOrderTypeResolver implements OrderTypeResolverInterface {
 
   /**
-   * The order item type storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $orderItemTypeStorage;
-
-  /**
    * Constructs a new DefaultOrderTypeResolver object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->orderItemTypeStorage = $entity_type_manager->getStorage('commerce_order_item_type');
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
   }
 
   /**
@@ -32,7 +26,7 @@ class DefaultOrderTypeResolver implements OrderTypeResolverInterface {
    */
   public function resolve(OrderItemInterface $order_item) {
     /** @var \Drupal\commerce_order\Entity\OrderItemTypeInterface $order_item_type */
-    $order_item_type = $this->orderItemTypeStorage->load($order_item->bundle());
+    $order_item_type = $this->entityTypeManager->getStorage('commerce_order_item_type')->load($order_item->bundle());
 
     return $order_item_type->getOrderTypeId();
   }

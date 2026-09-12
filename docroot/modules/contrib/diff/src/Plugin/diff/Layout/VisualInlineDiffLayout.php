@@ -112,30 +112,35 @@ class VisualInlineDiffLayout extends DiffLayoutBase {
     }
 
     $default_view_mode = $this->configFactory->get('diff.settings')->get('general_settings.visual_default_view_mode');
-    // If the configured default view mode is not enabled on the current
-    // bundle type, fallback to one of the enabled ones.
-    if (!\is_string($default_view_mode) || !\in_array($default_view_mode, \array_keys($view_modes), TRUE)) {
-      $keys = \array_keys($options);
-      $active_option = \reset($keys);
-    }
-    else {
-      $active_option = $default_view_mode;
-    }
-    $active_view_mode = $this->requestStack->getCurrentRequest()->query->get('view_mode') ?: $active_option;
+    $active_view_mode = $default_view_mode;
+    // Some bundles may not have any valid view modes.
+    if (\count($options) > 0) {
+      // If the configured default view mode is not enabled on the current
+      // bundle type, fallback to one of the enabled ones.
+      if (!\is_string($default_view_mode) || !\in_array($default_view_mode, \array_keys($view_modes), TRUE)) {
+        $active_option = \key($options);
+      }
+      else {
+        $active_option = $default_view_mode;
+      }
+      $active_view_mode = $this->requestStack->getCurrentRequest()->query->get('view_mode') ?: $active_option;
 
-    $filter = $options[$active_view_mode];
-    unset($options[$active_view_mode]);
-    \array_unshift($options, $filter);
+      $filter = $options[$active_view_mode];
+      unset($options[$active_view_mode]);
+      \array_unshift($options, $filter);
 
-    $build['controls']['view_mode'] = [
-      '#type' => 'item',
-      '#title' => $this->t('View mode'),
-      '#wrapper_attributes' => ['class' => 'diff-controls__item'],
-      'filter' => [
-        '#type' => 'operations',
-        '#links' => $options,
-      ],
-    ];
+      if (\count($options) > 0) {
+        $build['controls']['view_mode'] = [
+          '#type' => 'item',
+          '#title' => $this->t('View mode'),
+          '#wrapper_attributes' => ['class' => ['diff-controls__item']],
+          'filter' => [
+            '#type' => 'operations',
+            '#links' => $options,
+          ],
+        ];
+      }
+    }
 
     $view_builder = $this->entityTypeManager->getViewBuilder($entity->getEntityTypeId());
     // Trigger exclusion of interactive items like on preview.

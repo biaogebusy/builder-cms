@@ -8,30 +8,35 @@ use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ways that field entities handle their settings.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldEntitySettingsTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['entity_test', 'field'];
+  protected static $modules = ['entity_test', 'field', 'user'];
 
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('entity_test_with_bundle');
     EntityTestBundle::create(['id' => 'test', 'label' => 'Test'])->save();
   }
 
   /**
-   * @group legacy
-   */
+ * Tests field entities carry default settings.
+ */
+  #[IgnoreDeprecations]
   public function testFieldEntitiesCarryDefaultSettings(): void {
     /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */
     $field_storage = FieldStorageConfig::create([

@@ -6,12 +6,14 @@ namespace Drupal\Tests\layout_builder\Functional;
 
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests template suggestions.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderThemeSuggestionsTest extends BrowserTestBase {
 
   /**
@@ -66,7 +68,7 @@ class LayoutBuilderThemeSuggestionsTest extends BrowserTestBase {
 
     $this->drupalGet('node/1/layout');
     $page->clickLink('Add section');
-    $assert_session->pageTextContains('layout_builder_theme_suggestions_test_preprocess_item_list__layouts');
+    $assert_session->pageTextContains('itemListLayouts');
   }
 
   /**

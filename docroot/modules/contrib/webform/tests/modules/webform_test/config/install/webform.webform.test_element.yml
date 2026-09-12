@@ -65,7 +65,7 @@ elements: |
       '#default_value': |
         {textarea line 1}
         {textarea line 2}
-        
+
     textfield:
       '#type': textfield
       '#title': textfield
@@ -204,6 +204,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
       '#default_value': '1'
@@ -215,6 +216,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
       '#default_value':

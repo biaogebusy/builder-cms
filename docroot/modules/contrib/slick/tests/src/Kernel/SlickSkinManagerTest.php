@@ -8,11 +8,19 @@ use Drupal\Tests\slick\Traits\SlickUnitTestTrait;
 
 /**
  * Tests the Slick skin manager methods.
- *
- * @coversDefaultClass \Drupal\slick\SlickSkinManager
- *
- * @group slick
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class SlickSkinManagerTest extends BlazyKernelTestBase {
 
   use SlickUnitTestTrait;
@@ -59,10 +67,6 @@ class SlickSkinManagerTest extends BlazyKernelTestBase {
 
   /**
    * Tests cases for various methods.
-   *
-   * @covers ::getSkins
-   * @covers ::getSkinsByGroup
-   * @covers ::libraryInfoBuild
    */
   public function testSlickManagerMethods() {
     $skins = $this->slickSkinManager->getSkins();

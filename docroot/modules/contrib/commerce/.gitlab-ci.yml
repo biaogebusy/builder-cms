@@ -22,15 +22,10 @@ include:
 ################
 variables:
   # Broaden test coverage.
-  OPT_IN_TEST_NEXT_MAJOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 0
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
   OPT_IN_TEST_MAX_PHP: 1
   _PHPUNIT_CONCURRENT: "1"
   _PHPUNIT_EXTRA: --verbose --suppress-deprecations
   _CSPELL_IGNORE_PATHS: 'modules/tax/tests/fixtures/*, modules/promotion/tests/src/Kernel/PromotionMultilingualTest.php'
-
-.run-daily: &run-daily
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" && $CI_PROJECT_ROOT_NAMESPACE == "project" && $DAILY_TEST == "1"
-      allow_failure: true

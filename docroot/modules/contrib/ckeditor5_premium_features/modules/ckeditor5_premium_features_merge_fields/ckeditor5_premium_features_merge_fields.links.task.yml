@@ -1,0 +1,6 @@
+ckeditor5_premium_features_merge_fields.overview:
+  title: 'Merge Fields'
+  description: 'Manage merge fields for use in the CKEditor 5 Merge Fields plugin.'
+  route_name: ckeditor5_premium_features_merge_fields.overview
+  base_route: ckeditor5_premium_features.form.settings
+  weight: 100

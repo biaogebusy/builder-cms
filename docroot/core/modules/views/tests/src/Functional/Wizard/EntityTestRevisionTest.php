@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views\Functional\Wizard;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests wizard for generic revisionable entities.
- *
- * @group Views
  */
+#[Group('Views')]
+#[RunTestsInSeparateProcesses]
 class EntityTestRevisionTest extends WizardTestBase {
 
   /**

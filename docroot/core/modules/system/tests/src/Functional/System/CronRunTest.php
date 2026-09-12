@@ -7,12 +7,14 @@ namespace Drupal\Tests\system\Functional\System;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
 use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests cron runs.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class CronRunTest extends BrowserTestBase {
 
   use CronRunTrait;
@@ -54,8 +56,8 @@ class CronRunTest extends BrowserTestBase {
   /**
    * Ensure that the automated cron run module is working.
    *
-   * In these tests we do not use \Drupal::time()->getRequestTime() to track start time, because we
-   * need the exact time when cron is triggered.
+   * In these tests we do not use \Drupal::time()->getRequestTime() to track
+   * start time, because we need the exact time when cron is triggered.
    */
   public function testAutomatedCron(): void {
     // To prevent race conditions between the admin_user login triggering cron
@@ -118,13 +120,24 @@ class CronRunTest extends BrowserTestBase {
    * Make sure the cron UI reads from the state storage.
    */
   public function testCronUI(): void {
+    // To prevent race conditions between the admin_user login triggering cron
+    // and updating its state, and this test doing the same thing, we use
+    // \Drupal\Tests\WaitTerminateTestTrait::setWaitForTerminate().
+    $this->setWaitForTerminate();
+
     $admin_user = $this->drupalCreateUser(['administer site configuration']);
     $this->drupalLogin($admin_user);
+    \Drupal::state()->delete('system.cron_last');
     $this->drupalGet('admin/config/system/cron');
-    // Don't use REQUEST to calculate the exact time, because that will
-    // fail randomly. Look for the word 'years', because without a timestamp,
-    // the time will start at 1 January 1970.
-    $this->assertSession()->pageTextNotContains('years');
+    // Check that cron has never run.
+    $this->assertSession()->pageTextContains('Last run: never');
+
+    // Now check that it has run.
+    // Sleep to allow cron time to complete since it happens during kernel
+    // terminate after the page response is set.
+    sleep(3);
+    $this->drupalGet('admin/config/system/cron');
+    $this->assertSession()->pageTextNotContains('Last run: never');
 
     $cron_last = time() - 200;
     \Drupal::state()->set('system.cron_last', $cron_last);

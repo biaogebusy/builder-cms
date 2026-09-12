@@ -88,7 +88,7 @@ abstract class WebformComputedBase extends WebformElementBase implements Webform
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // Hide element if it should not be displayed on 'form'.
@@ -100,7 +100,7 @@ abstract class WebformComputedBase extends WebformElementBase implements Webform
   /**
    * {@inheritdoc}
    */
-  protected function prepareElementValidateCallbacks(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  protected function prepareElementValidateCallbacks(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepareElementValidateCallbacks($element, $webform_submission);
     $element['#element_validate'][] = [get_class($this), 'validateWebformComputed'];
   }

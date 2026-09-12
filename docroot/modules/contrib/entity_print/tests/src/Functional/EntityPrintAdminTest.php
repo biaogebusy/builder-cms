@@ -75,7 +75,7 @@ class EntityPrintAdminTest extends BrowserTestBase {
 
     $full_view_mode = 'Full view mode';
     $pdf_view_mode = 'PDF view mode';
-    $this->drupalGet('admin/structure/types/manage/page/display');
+    $this->drupalGet('admin/structure/types/manage/page/display/default');
     $this->submitForm([
       'fields[entity_print_view_pdf][empty_cell]' => $full_view_mode,
       'fields[entity_print_view_pdf][region]' => 'content',
@@ -93,9 +93,15 @@ class EntityPrintAdminTest extends BrowserTestBase {
     $this->drupalGet('admin/structure/types/manage/page/display');
 
     // Configure the PDF view mode.
-    $this->submitForm([
-      'display_modes_custom[pdf]' => 1,
-    ], 'Save');
+    if ((float) \Drupal::VERSION >= 11.4) {
+      $this->clickLink('Enable (PDF)');
+      $assert->pageTextContains('The PDF view mode has been enabled.');
+    }
+    else {
+      $this->submitForm([
+        'display_modes_custom[pdf]' => 1,
+      ], 'Save');
+    }
     $this->drupalGet('admin/structure/types/manage/page/display/pdf');
     $this->submitForm([
       'fields[entity_print_view_pdf][empty_cell]' => $pdf_view_mode,
@@ -114,7 +120,7 @@ class EntityPrintAdminTest extends BrowserTestBase {
     $this->assertSame($full_view_mode, $display->getThirdPartySetting('entity_print', 'pdf_label'));
 
     // Ensure the View PDF links appear on a entity type without a bundle.
-    $this->drupalGet('/admin/config/people/accounts/display');
+    $this->drupalGet('/admin/config/people/accounts/display/default');
     $assert->pageTextContains('View PDF');
   }
 

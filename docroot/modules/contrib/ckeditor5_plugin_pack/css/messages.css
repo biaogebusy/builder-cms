@@ -1,0 +1,8 @@
+.messages--ckeditor5_plugin_pack {
+  border-color: #771BFF!important;
+
+  & .messages__header {
+    background: url(../img/ck-logo.png) no-repeat center left;
+    background-size: 20px;
+  }
+}

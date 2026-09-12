@@ -7,14 +7,15 @@ namespace Drupal\Tests\block_content\Functional;
 use Drupal\block_content\BlockContentInterface;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\Core\Database\Database;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore testblock
-
 /**
  * Create a block and test saving it.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentCreationTest extends BlockContentTestBase {
 
   /**
@@ -74,6 +75,13 @@ class BlockContentCreationTest extends BlockContentTestBase {
     // Check that the block exists in the database.
     $block = $this->getBlockByLabel($edit['info[0][value]']);
     $this->assertNotEmpty($block, 'Content Block found in database.');
+
+    // Ensure a user with just the create permission can access the page.
+    $this->drupalLogin($this->drupalCreateUser([
+      'create basic block content',
+    ]));
+    $this->drupalGet('block/add/basic');
+    $this->assertSession()->statusCodeEquals(200);
   }
 
   /**
@@ -99,15 +107,18 @@ class BlockContentCreationTest extends BlockContentTestBase {
     $this->drupalGet('block/add/basic');
     $this->submitForm($edit, 'Save and configure');
 
-    // Save our block permanently
+    // Save our block permanently.
     $this->submitForm(['region' => 'content'], 'Save block');
 
     // Set test_view_mode as a custom display to be available on the list.
-    $this->drupalGet('admin/structure/block-content/manage/basic/display');
-    $custom_view_mode = [
-      'display_modes_custom[test_view_mode]' => 1,
-    ];
-    $this->submitForm($custom_view_mode, 'Save');
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+    $display = $storage->create([
+      'targetEntityType' => 'block_content',
+      'bundle' => 'basic',
+      'mode' => 'test_view_mode',
+      'status' => TRUE,
+    ]);
+    $display->save();
 
     // Go to the configure page and change the view mode.
     $this->drupalGet('admin/structure/block/manage/stark_testblock');
@@ -148,11 +159,7 @@ class BlockContentCreationTest extends BlockContentTestBase {
     // Create a block and place in block layout.
     $this->drupalGet('/admin/content/block');
     $this->clickLink('Add content block');
-    // Verify destination URL, when clicking "Save and configure" this
-    // destination will be ignored.
-    $base = base_path();
-    $url = 'block/add?destination=' . $base . 'admin/content/block';
-    $this->assertSession()->addressEquals($url);
+    $this->assertSession()->addressEquals('/block/add/basic');
     $edit = [];
     $edit['info[0][value]'] = 'Test Block';
     $edit['body[0][value]'] = $this->randomMachineName(16);
@@ -220,7 +227,7 @@ class BlockContentCreationTest extends BlockContentTestBase {
       $this->createBlockContent('fail_creation');
       $this->fail('Expected exception has not been thrown.');
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       // Expected exception; just continue testing.
     }
 

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\field\Kernel\Migrate\d6;
 
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\Core\Database\Database;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\migrate\Kernel\MigrateDumpAlterInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of field label and description translations.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldInstanceLabelDescriptionTest extends MigrateDrupal6TestBase implements MigrateDumpAlterInterface {
 
   /**
@@ -21,11 +24,8 @@ class MigrateFieldInstanceLabelDescriptionTest extends MigrateDrupal6TestBase im
    */
   protected static $modules = [
     'config_translation',
-    'locale',
     'language',
     'menu_ui',
-    'node',
-    'field',
   ];
 
   /**
@@ -45,7 +45,7 @@ class MigrateFieldInstanceLabelDescriptionTest extends MigrateDrupal6TestBase im
   /**
    * {@inheritdoc}
    */
-  public static function migrateDumpAlter(KernelTestBase $test) {
+  public static function migrateDumpAlter(KernelTestBase $test): void {
     $db = Database::getConnection('default', 'migrate');
     // Alter the database to test the migration is successful when a translated
     // field is deleted but the translation data for that field remains in both

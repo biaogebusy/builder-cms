@@ -10,13 +10,17 @@ use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\sqlite\Driver\Database\sqlite\Connection;
 use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests query batching.
- *
- * @covers \Drupal\migrate_query_batch_test\Plugin\migrate\source\QueryBatchTest
- * @group migrate
  */
+#[Group('migrate')]
+#[CoversClass(\Drupal\migrate_query_batch_test\Plugin\migrate\source\QueryBatchTest::class)]
+#[RunTestsInSeparateProcesses]
 class QueryBatchTest extends KernelTestBase {
 
   /**
@@ -111,11 +115,11 @@ class QueryBatchTest extends KernelTestBase {
         ];
       }
       $tests[$data_set]['expected_data'] = $tests[$data_set]['source_data'][$table];
-      $tests[$data_set][2] = $num_rows;
+      $tests[$data_set]['num_rows'] = $num_rows;
       // Plugin configuration array.
-      $tests[$data_set][3] = ['batch_size' => $batch_size];
+      $tests[$data_set]['configuration'] = ['batch_size' => $batch_size];
       // Expected batch size.
-      $tests[$data_set][4] = $batch_size;
+      $tests[$data_set]['expected_batch_size'] = $batch_size;
       // Expected batch count is 0 unless a batch size is set.
       $expected_batch_count = 0;
       if ($batch_size > 0) {
@@ -126,7 +130,7 @@ class QueryBatchTest extends KernelTestBase {
           $expected_batch_count++;
         }
       }
-      $tests[$data_set][5] = $expected_batch_count;
+      $tests[$data_set]['expected_batch_count'] = $expected_batch_count;
       $data_set++;
     }
     return $tests;
@@ -148,9 +152,8 @@ class QueryBatchTest extends KernelTestBase {
    *   The expected batch size, will be set to zero for invalid batch sizes.
    * @param int $expected_batch_count
    *   The total number of batches.
-   *
-   * @dataProvider queryDataProvider
    */
+  #[DataProvider('queryDataProvider')]
   public function testQueryBatch($source_data, $expected_data, $num_rows, $configuration, $expected_batch_size, $expected_batch_count): void {
     $plugin = $this->getPlugin($configuration);
 

@@ -10,7 +10,7 @@
   background-color: #f0f0f0;
 }
 
-.webform-signature-pad:before {
+.webform-signature-pad::before {
   display: block;
   width: 100%;
   padding-top: 33%;

@@ -6,44 +6,14 @@ use Drupal\advancedqueue\Entity\QueueInterface;
 use Drupal\advancedqueue\Event\AdvancedQueueEvents;
 use Drupal\advancedqueue\Event\JobEvent;
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Utility\Error;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides the default queue processor.
- *
- * @todo Throw events.
  */
 class Processor implements ProcessorInterface {
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
-   * The current time.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
-
-  /**
-   * The job type manager.
-   *
-   * @var \Drupal\advancedqueue\JobTypeManager
-   */
-  protected $jobTypeManager;
-
-  /**
-   * A logger instance.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
 
   /**
    * Indicates if the processor should stop.
@@ -55,24 +25,21 @@ class Processor implements ProcessorInterface {
   /**
    * Constructs a new Processor object.
    *
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The current time.
-   * @param \Drupal\advancedqueue\JobTypeManager $job_type_manager
+   * @param \Drupal\advancedqueue\JobTypeManager $jobTypeManager
    *   The queue job type manager.
-   * @param \Psr\Log\LoggerInterface|null $logger
-   *   The logger.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher, TimeInterface $time, JobTypeManager $job_type_manager, ?LoggerInterface $logger = NULL) {
-    if ($logger === NULL) {
-      @trigger_error('Calling Processor::__construct() without the $logger argument is deprecated in advancedqueue:8.x-1.0 and will be required before advancedqueue:8.x-2.0. See https://www.drupal.org/project/advancedqueue/issues/3192113', E_USER_DEPRECATED);
-      $logger = \Drupal::service('logger.channel.cron');
-    }
-    $this->eventDispatcher = $event_dispatcher;
-    $this->time = $time;
-    $this->jobTypeManager = $job_type_manager;
-    $this->logger = $logger;
+  public function __construct(
+    protected EventDispatcherInterface $eventDispatcher,
+    protected TimeInterface $time,
+    protected JobTypeManager $jobTypeManager,
+    protected LoggerChannelFactoryInterface $loggerChannelFactory,
+  ) {
   }
 
   /**
@@ -139,7 +106,7 @@ class Processor implements ProcessorInterface {
       $result = JobResult::failure($e->getMessage());
 
       $variables = Error::decodeException($e);
-      $this->logger->error('%type: @message in %function (line %line of %file).', $variables);
+      $this->loggerChannelFactory->get('cron')->error('%type: @message in %function (line %line of %file).', $variables);
     }
 
     // Update the job with the result.
@@ -150,19 +117,23 @@ class Processor implements ProcessorInterface {
     $queue_backend = $queue->getBackend();
     if ($job->getState() == Job::STATE_SUCCESS) {
       $queue_backend->onSuccess($job);
+      $this->eventDispatcher->dispatch(new JobEvent($job), AdvancedQueueEvents::JOB_SUCCESS);
     }
     elseif ($job->getState() == Job::STATE_FAILURE && !$job_type) {
       // The job failed because of an exception, no need to retry.
       $queue_backend->onFailure($job);
+      $this->eventDispatcher->dispatch(new JobEvent($job), AdvancedQueueEvents::JOB_FAILURE);
     }
     elseif ($job->getState() == Job::STATE_FAILURE && $job_type) {
       $max_retries = !is_null($result->getMaxRetries()) ? $result->getMaxRetries() : $job_type->getMaxRetries();
       $retry_delay = !is_null($result->getRetryDelay()) ? $result->getRetryDelay() : $job_type->getRetryDelay();
       if ($job->getNumRetries() < $max_retries) {
         $queue_backend->retryJob($job, $retry_delay);
+        $this->eventDispatcher->dispatch(new JobEvent($job), AdvancedQueueEvents::JOB_RETRY);
       }
       else {
         $queue_backend->onFailure($job);
+        $this->eventDispatcher->dispatch(new JobEvent($job), AdvancedQueueEvents::JOB_FAILURE);
       }
     }
 

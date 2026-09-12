@@ -6,15 +6,17 @@ namespace Drupal\Tests\menu_link_content\Kernel;
 
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\menu_link_content\Entity\MenuLinkContent;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Routing\Route;
 
 /**
  * Tests the menu link content deriver.
- *
- * @group menu_link_content
  */
+#[Group('menu_link_content')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkContentDeriverTest extends KernelTestBase {
 
   /**

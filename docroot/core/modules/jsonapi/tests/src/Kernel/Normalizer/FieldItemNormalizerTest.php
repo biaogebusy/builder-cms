@@ -10,21 +10,24 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\jsonapi\Normalizer\FieldItemNormalizer;
 use Drupal\jsonapi\Normalizer\Value\CacheableNormalization;
 use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\jsonapi\Normalizer\FieldItemNormalizer
- * @group jsonapi
+ * Tests Drupal\jsonapi\Normalizer\FieldItemNormalizer.
  *
  * @internal
  */
+#[CoversClass(FieldItemNormalizer::class)]
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class FieldItemNormalizerTest extends JsonapiKernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'file',
-    'system',
     'user',
     'link',
     'entity_test',
@@ -57,8 +60,6 @@ class FieldItemNormalizerTest extends JsonapiKernelTestBase {
 
   /**
    * Tests a field item that has no properties.
-   *
-   * @covers ::normalize
    */
   public function testNormalizeFieldItemWithoutProperties(): void {
     $item = $this->prophesize(FieldItemInterface::class);
@@ -83,6 +84,7 @@ class FieldItemNormalizerTest extends JsonapiKernelTestBase {
           'options' => [
             'query' => 'foo=bar',
           ],
+          'resolvable_uri' => 'https://www.drupal.org',
         ],
       ],
       'internal_property_value' => [
@@ -111,6 +113,7 @@ class FieldItemNormalizerTest extends JsonapiKernelTestBase {
       'options' => [
         'query' => 'foo=bar',
       ],
+      'resolvable_uri' => 'https://www.drupal.org',
     ], $result->getNormalization());
 
     // Verify a field with one public property and one internal only returns the

@@ -6,12 +6,14 @@ namespace Drupal\KernelTests\Core\Session;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test case for getting permissions from user roles.
- *
- * @group Session
  */
+#[Group('Session')]
+#[RunTestsInSeparateProcesses]
 class UserRolesPermissionsTest extends KernelTestBase {
 
   use UserCreationTrait;

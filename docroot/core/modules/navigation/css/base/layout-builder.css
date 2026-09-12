@@ -5,11 +5,13 @@
  * @preserve
  */
 
-.admin-toolbar .layout-builder-block {
-  padding: 0;
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) {
+  &.admin-toolbar .layout-builder-block {
+    padding: 0;
+  }
 }
 
-#navigation-layout .layout-builder {
+.layout-builder.layout-builder--navigation {
   border: none;
 }
 

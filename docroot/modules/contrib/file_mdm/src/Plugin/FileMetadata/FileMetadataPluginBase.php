@@ -63,22 +63,12 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
   protected bool $hasMetadataChangedFromCacheVersion = FALSE;
 
   /**
-   * Constructs a FileMetadataPluginBase plugin.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param array $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
-   *   The cache service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   The config factory.
-   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager
-   *   The stream wrapper manager service.
+   * @param array<mixed> $configuration
+   *   The plugin configuration.
+   * @param array<mixed> $plugin_definition
+   *   The plugin definition.
    */
-  final public function __construct(
+  public function __construct(
     array $configuration,
     string $plugin_id,
     array $plugin_definition,
@@ -89,7 +79,16 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
+  /**
+   * @param array<mixed> $configuration
+   *   The plugin configuration.
+   * @param string $plugin_id
+   *   The plugin id.
+   * @param array<mixed> $plugin_definition
+   *   The plugin definition.
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    // @phpstan-ignore new.static
     return new static(
       $configuration,
       $plugin_id,
@@ -261,7 +260,7 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
   /**
    * Checks if file metadata should be cached.
    *
-   * @return array|bool
+   * @return array<mixed>|false
    *   The caching settings array retrieved from configuration if file metadata
    *   is cacheable, FALSE otherwise.
    */

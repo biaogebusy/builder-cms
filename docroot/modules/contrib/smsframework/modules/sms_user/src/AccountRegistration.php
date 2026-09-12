@@ -1,24 +1,24 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_user;
 
+use Drupal\Component\Utility\Random;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Utility\Token;
-use Drupal\sms\Entity\PhoneNumberSettingsInterface;
-use Drupal\sms\Provider\SmsProviderInterface;
-use Drupal\sms\Provider\PhoneNumberVerificationInterface;
-use Drupal\sms\Message\SmsMessageInterface;
 use Drupal\sms\Direction;
-use Drupal\user\Entity\User;
-use Drupal\Component\Utility\Random;
+use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 use Drupal\sms\Entity\SmsMessage;
-use Drupal\Core\Entity\EntityConstraintViolationListInterface;
+use Drupal\sms\Message\SmsMessageInterface;
+use Drupal\sms\Provider\PhoneNumberVerificationInterface;
+use Drupal\sms\Provider\SmsProviderInterface;
+use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Drupal\user\UserNameValidator;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
-use Drupal\user\UserInterface;
 
 /**
  * Defines the account registration service.
@@ -59,7 +59,7 @@ class AccountRegistration implements AccountRegistrationInterface {
       // Any users with this phone number?
       $entities = $this->phoneNumberVerificationProvider
         ->getPhoneVerificationByPhoneNumber($sender_number, NULL, 'user');
-      if (!count($entities)) {
+      if (!\count($entities)) {
         if (!empty($this->settings('unrecognized_sender.status'))) {
           $this->allUnknownNumbers($sms_message);
         }
@@ -107,7 +107,7 @@ class AccountRegistration implements AccountRegistrationInterface {
       // Optionally send a reply.
       if (!empty($this->settings('unrecognized_sender.reply.status'))) {
         $message = $this->settings('unrecognized_sender.reply.message');
-        $message = str_replace('[user:password]', $password, $message);
+        $message = \str_replace('[user:password]', $password, $message);
         $this->sendReply($sender_number, $user, $message);
       }
     }
@@ -127,13 +127,13 @@ class AccountRegistration implements AccountRegistrationInterface {
   protected function incomingPatternMessage(SmsMessageInterface $sms_message) {
     if (!empty($this->settings('incoming_pattern.incoming_messages.0'))) {
       $incoming_form = $this->settings('incoming_pattern.incoming_messages.0');
-      $incoming_form = str_replace("\r\n", "\n", $incoming_form);
+      $incoming_form = \str_replace("\r\n", "\n", $incoming_form);
       $compiled = $this->compileFormRegex($incoming_form, '/');
       $matches = [];
-      if (preg_match_all('/^' . $compiled . '$/', $sms_message->getMessage(), $matches)) {
-        $contains_email = strpos($incoming_form, '[email]') !== FALSE;
-        $contains_username = strpos($incoming_form, '[username]') !== FALSE;
-        $contains_password = strpos($incoming_form, '[password]') !== FALSE;
+      if (\preg_match_all('/^' . $compiled . '$/', $sms_message->getMessage(), $matches)) {
+        $contains_email = \strpos($incoming_form, '[email]') !== FALSE;
+        $contains_username = \strpos($incoming_form, '[username]') !== FALSE;
+        $contains_password = \strpos($incoming_form, '[password]') !== FALSE;
 
         $username = (!empty($matches['username'][0]) && $contains_username) ? $matches['username'][0] : $this->generateUniqueUsername();
         $user = User::create(['name' => $username]);
@@ -164,7 +164,7 @@ class AccountRegistration implements AccountRegistrationInterface {
           // @todo autoconfirm the number?
           // @see https://www.drupal.org/node/2709911
           $message = $this->settings('incoming_pattern.reply.message');
-          $message = str_replace('[user:password]', $password, $message);
+          $message = \str_replace('[user:password]', $password, $message);
 
           \Drupal::logger('sms_user.account_registration.incoming_pattern')
             ->info('Creating new account for %sender_phone_number. Username: %name. User ID: %uid', $t_args + [
@@ -174,14 +174,14 @@ class AccountRegistration implements AccountRegistrationInterface {
 
           // Send an activation email if no password placeholder is found.
           if (!$contains_password && !empty($this->settings('incoming_pattern.send_activation_email'))) {
-            _user_mail_notify('register_no_approval_required', $user);
+            \_user_mail_notify('register_no_approval_required', $user);
           }
         }
         else {
           $message = $this->settings('incoming_pattern.reply.message_failure');
 
           $error = $this->buildError($validate);
-          $message = str_replace('[error]', $error, $message);
+          $message = \str_replace('[error]', $error, $message);
 
           \Drupal::logger('sms_user.account_registration.incoming_pattern')
             ->warning('Could not create new account for %sender_phone_number because there was a problem with validation: @error', $t_args + [
@@ -248,15 +248,15 @@ class AccountRegistration implements AccountRegistrationInterface {
     // Placeholders enclosed in square brackets and escaped for use in regular
     // expressions. \[user\] , \[email\] etc.
     $regex_placeholders = [];
-    foreach (array_keys($placeholders) as $d) {
-      $regex_placeholders[] = preg_quote('[' . $d . ']');
+    foreach (\array_keys($placeholders) as $d) {
+      $regex_placeholders[] = \preg_quote('[' . $d . ']');
     }
 
     // Split message so placeholders are separated from other text.
     // e.g. for 'U [username] P [password], splits to:
     // 'U ', '[username]', ' P ', '[password]'.
-    $regex = '/(' . implode('|', $regex_placeholders) . '+)/';
-    $words = preg_split($regex, $form_string, -1, PREG_SPLIT_DELIM_CAPTURE);
+    $regex = '/(' . \implode('|', $regex_placeholders) . '+)/';
+    $words = \preg_split($regex, $form_string, -1, PREG_SPLIT_DELIM_CAPTURE);
 
     // Track if a placeholder was used, so subsequent usages create a named back
     // reference. This allows you to use placeholders more than once as a form
@@ -266,12 +266,12 @@ class AccountRegistration implements AccountRegistrationInterface {
     $compiled = '';
     foreach ($words as $word) {
       // Remove square brackets from word to determine if it is a placeholder.
-      $placeholder = mb_substr($word, 1, -1);
+      $placeholder = \mb_substr($word, 1, -1);
 
       // Determine if word is a placeholder.
       if (isset($placeholders[$placeholder])) {
         $placeholder_regex = $placeholders[$placeholder];
-        if (!in_array($placeholder, $placeholder_usage)) {
+        if (!\in_array($placeholder, $placeholder_usage)) {
           // Convert placeholder to a capture group.
           $compiled .= '(?<' . $placeholder . '>' . $placeholder_regex . ')';
           $placeholder_usage[] = $placeholder;
@@ -283,7 +283,7 @@ class AccountRegistration implements AccountRegistrationInterface {
       }
       else {
         // Text is not a placeholder, do not convert to a capture group.
-        $compiled .= preg_quote($word, $delimiter);
+        $compiled .= \preg_quote($word, $delimiter);
       }
     }
 
@@ -304,7 +304,7 @@ class AccountRegistration implements AccountRegistrationInterface {
     foreach ($violations as $violation) {
       $error .= (string) $violation->getMessage() . " ";
     }
-    return strip_tags($error);
+    return \strip_tags($error);
   }
 
   /**
@@ -318,7 +318,7 @@ class AccountRegistration implements AccountRegistrationInterface {
     do {
       $userName = $random->name(8, TRUE);
     } while (
-      count($this->userNameValidator->validateName($userName)) > 0 ||
+      \count($this->userNameValidator->validateName($userName)) > 0 ||
       $this->userNameExists($userName)
     );
     return $userName;
@@ -343,7 +343,7 @@ class AccountRegistration implements AccountRegistrationInterface {
    */
   protected function removeAcceptableViolations(EntityConstraintViolationListInterface $violations, $incoming_form = NULL) {
     // 'mail' will not fail validation if current user has 'administer users'.
-    $needs_email = isset($incoming_form) && (strpos($incoming_form, '[email]') !== FALSE);
+    $needs_email = isset($incoming_form) && (\strpos($incoming_form, '[email]') !== FALSE);
     if (!$needs_email) {
       // Invalid email field is acceptable if it is not required.
       foreach ($violations as $offset => $violation) {

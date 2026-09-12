@@ -7,6 +7,8 @@ namespace Drupal\KernelTests\Core\Database;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 
+// cspell:ignore processlist
+
 /**
  * Tests management of database connections.
  */
@@ -66,6 +68,7 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
    * Returns the connection ID of the current test connection.
    *
    * @return int
+   *   The connection ID.
    */
   protected function getConnectionId(): int {
     return (int) Database::getConnection(static::TEST_TARGET_CONNECTION)->query($this->getQuery()['connection_id'])->fetchField();

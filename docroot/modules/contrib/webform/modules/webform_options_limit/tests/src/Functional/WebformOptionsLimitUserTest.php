@@ -24,7 +24,7 @@ class WebformOptionsLimitUserTest extends WebformBrowserTestBase {
   /**
    * Test options limit user.
    */
-  public function testOptionsLimitUserTest() {
+  public function testOptionsLimitUserTest(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_handler_options_limit_user');

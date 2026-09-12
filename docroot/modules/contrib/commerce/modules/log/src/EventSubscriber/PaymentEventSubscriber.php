@@ -17,18 +17,14 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class PaymentEventSubscriber implements EventSubscriberInterface {
 
   /**
-   * The log storage.
-   */
-  protected LogStorageInterface $logStorage;
-
-  /**
    * Constructs a new PaymentEventSubscriber object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->logStorage = $entity_type_manager->getStorage('commerce_log');
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
   }
 
   /**
@@ -70,7 +66,7 @@ class PaymentEventSubscriber implements EventSubscriberInterface {
       $template_id = 'payment_manual_received';
     }
 
-    $this->logStorage->generate($payment->getOrder(), $template_id, [
+    $this->getLogStorage()->generate($payment->getOrder(), $template_id, [
       'id' => $payment->id(),
       'remote_id' => $payment->getRemoteId(),
       'amount' => $payment->getAmount(),
@@ -116,7 +112,7 @@ class PaymentEventSubscriber implements EventSubscriberInterface {
       }
     }
 
-    $this->logStorage->generate($payment->getOrder(), $template_id, [
+    $this->getLogStorage()->generate($payment->getOrder(), $template_id, [
       'id' => $payment->id(),
       'remote_id' => $payment->getRemoteId(),
       'amount' => $payment->getBalance(),
@@ -140,7 +136,7 @@ class PaymentEventSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    $this->logStorage->generate($payment->getOrder(), 'payment_deleted', [
+    $this->getLogStorage()->generate($payment->getOrder(), 'payment_deleted', [
       'id' => $payment->id(),
       'remote_id' => $payment->getRemoteId(),
       'amount' => $payment->getBalance(),
@@ -168,13 +164,25 @@ class PaymentEventSubscriber implements EventSubscriberInterface {
     else {
       $params = [];
     }
-    $this->logStorage->generate($event->getOrder(), 'payment_failed', [
+    $this->getLogStorage()->generate($event->getOrder(), 'payment_failed', [
       'remote_id' => $payment?->getRemoteId(),
       'method' => $payment_method?->label(),
       'error_message' => $event->getGatewayException()->getMessage(),
       'gateway' => $event->getPaymentGateway()->label(),
       'amount' => $payment?->getBalance(),
     ] + $params)->save();
+  }
+
+  /**
+   * Gets the log storage.
+   *
+   * @return \Drupal\commerce_log\LogStorageInterface
+   *   The log storage.
+   */
+  protected function getLogStorage(): LogStorageInterface {
+    $log_storage = $this->entityTypeManager->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    return $log_storage;
   }
 
 }

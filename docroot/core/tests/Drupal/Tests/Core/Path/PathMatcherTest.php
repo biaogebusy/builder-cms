@@ -6,11 +6,15 @@ namespace Drupal\Tests\Core\Path;
 
 use Drupal\Core\Path\PathMatcher;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Path\PathMatcher
- * @group Path
+ * Tests Drupal\Core\Path\PathMatcher.
  */
+#[CoversClass(PathMatcher::class)]
+#[Group('Path')]
 class PathMatcherTest extends UnitTestCase {
 
   /**
@@ -41,9 +45,8 @@ class PathMatcherTest extends UnitTestCase {
 
   /**
    * Tests that standard paths works with multiple patterns.
-   *
-   * @dataProvider getMatchPathData
    */
+  #[DataProvider('getMatchPathData')]
   public function testMatchPath($patterns, $paths): void {
     foreach ($paths as $path => $expected_result) {
       $actual_result = $this->pathMatcher->matchPath($path, $patterns);
@@ -73,7 +76,7 @@ class PathMatcherTest extends UnitTestCase {
    * @return array
    *   A nested array of pattern arrays and path arrays.
    */
-  public static function getMatchPathData() {
+  public static function getMatchPathData(): array {
     return [
       [
         // Single absolute paths.

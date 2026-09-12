@@ -13,11 +13,13 @@ use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Installer\InstallerKernel;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\file\FileInterface;
 use Drupal\link\Plugin\Field\FieldType\LinkItem;
 use Drupal\user\EntityOwnerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * A service for handling import of content.
@@ -45,6 +47,7 @@ final class Importer implements LoggerAwareInterface {
     private readonly FileSystemInterface $fileSystem,
     private readonly LanguageManagerInterface $languageManager,
     private readonly EntityRepositoryInterface $entityRepository,
+    private readonly EventDispatcherInterface $eventDispatcher,
   ) {}
 
   /**
@@ -59,18 +62,29 @@ final class Importer implements LoggerAwareInterface {
    *   - \Drupal\Core\DefaultContent\Existing::Error: Throw an exception.
    *   - \Drupal\Core\DefaultContent\Existing::Skip: Leave the existing entity
    *     as-is.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   (optional) The account to use when importing the entities. Defaults to
+   *   the administrator account.
    *
    * @throws \Drupal\Core\DefaultContent\ImportException
    *   - If any of the entities being imported are not content entities.
    *   - If any of the entities being imported already exists, by UUID, and
    *     $existing is \Drupal\Core\DefaultContent\Existing::Error.
    */
-  public function importContent(Finder $content, Existing $existing = Existing::Error): void {
+  public function importContent(Finder $content, Existing $existing = Existing::Error, ?AccountInterface $account = NULL): void {
     if (count($content->data) === 0) {
       return;
     }
 
-    $account = $this->accountSwitcher->switchToAdministrator();
+    $event = new PreImportEvent($content, $existing);
+    $skip = $this->eventDispatcher->dispatch($event)->getSkipList();
+
+    if ($account !== NULL) {
+      $this->accountSwitcher->switchTo($account);
+    }
+    else {
+      $account = $this->accountSwitcher->switchToAdministrator();
+    }
 
     try {
       /** @var array{_meta: array<mixed>} $decoded */
@@ -79,6 +93,19 @@ final class Importer implements LoggerAwareInterface {
         assert(is_string($uuid));
         assert(is_string($entity_type_id));
         assert(is_string($path));
+
+        // The event subscribers asked to skip importing this entity. If they
+        // explained why, log that.
+        if (array_key_exists($uuid, $skip)) {
+          if ($skip[$uuid]) {
+            $this->logger?->info('Skipped importing @entity_type @uuid because: %reason', [
+              '@entity_type' => $entity_type_id,
+              '@uuid' => $uuid,
+              '%reason' => $skip[$uuid],
+            ]);
+          }
+          continue;
+        }
 
         $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
         /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
@@ -96,7 +123,7 @@ final class Importer implements LoggerAwareInterface {
           }
         }
 
-        $entity = $this->toEntity($decoded)->enforceIsNew();
+        $entity = $this->toEntity($decoded)->enforceIsNew()->setSyncing(TRUE);
 
         // Ensure that the entity is not owned by the anonymous user.
         if ($entity instanceof EntityOwnerInterface && empty($entity->getOwnerId())) {
@@ -157,8 +184,11 @@ final class Importer implements LoggerAwareInterface {
       }
     }
 
+    $scheme = parse_url($destination, PHP_URL_SCHEME);
     $target_directory = dirname($destination);
-    $this->fileSystem->prepareDirectory($target_directory, FileSystemInterface::CREATE_DIRECTORY);
+    if (!isset($scheme) || rtrim($target_directory, ':') !== $scheme) {
+      $this->fileSystem->prepareDirectory($target_directory, FileSystemInterface::CREATE_DIRECTORY);
+    }
     if ($copy_file) {
       $uri = $this->fileSystem->copy($source, $destination);
       $entity->setFileUri($uri);
@@ -184,6 +214,11 @@ final class Importer implements LoggerAwareInterface {
     if (empty($data['_meta']['uuid'])) {
       throw new ImportException('The uuid metadata must be specified.');
     }
+
+    // Allow third-party code to modify the entity data before the entity is
+    // created.
+    $event = new PreEntityImportEvent($data);
+    $data = ['_meta' => $event->metadata] + $this->eventDispatcher->dispatch($event)->data;
 
     $is_root = FALSE;
     // @see ::loadEntityDependency()
@@ -261,7 +296,7 @@ final class Importer implements LoggerAwareInterface {
         unset($item_value['target_uuid']);
       }
 
-      $serialized_property_names = $this->getCustomSerializedPropertyNames($item);
+      $serialized_property_names = self::getCustomSerializedPropertyNames($item);
       foreach ($item_value as $property_name => $value) {
         if (\in_array($property_name, $serialized_property_names)) {
           if (\is_string($value)) {
@@ -301,7 +336,7 @@ final class Importer implements LoggerAwareInterface {
    *
    * @see \Drupal\serialization\Normalizer\SerializedColumnNormalizerTrait::getCustomSerializedPropertyNames
    */
-  private function getCustomSerializedPropertyNames(FieldItemInterface $field_item): array {
+  public static function getCustomSerializedPropertyNames(FieldItemInterface $field_item): array {
     if ($field_item instanceof PluginInspectionInterface) {
       $definition = $field_item->getPluginDefinition();
       $serialized_fields = $field_item->getEntity()->getEntityType()->get('serialized_field_property_names');
@@ -350,12 +385,11 @@ final class Importer implements LoggerAwareInterface {
   private function verifyNormalizedLanguage(array $data): array {
     $default_langcode = $data['_meta']['default_langcode'];
     $default_language = $this->languageManager->getDefaultLanguage();
-    // Check the language. If the default language isn't known, import as one
-    // of the available translations if one exists with those values. If none
-    // exists, create the entity in the default language.
-    // During the installer, when installing with an alternative language,
-    // `en` is still the default when modules are installed so check the default language
-    // instead.
+    // Check the language. If the default language isn't known, import as one of
+    // the available translations if one exists with those values. If none
+    // exists, create the entity in the default language. During the installer,
+    // when installing with an alternative language, `en` is still the default
+    // when modules are installed so check the default language instead.
     if (!$this->languageManager->getLanguage($default_langcode) || (InstallerKernel::installationAttempted() && $default_language->getId() !== $default_langcode)) {
       $use_default = TRUE;
       foreach ($data['translations'] ?? [] as $langcode => $translation_data) {

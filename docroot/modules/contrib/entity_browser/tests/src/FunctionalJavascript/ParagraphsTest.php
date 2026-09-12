@@ -2,11 +2,16 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests entity browser integration with paragraphs.
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class ParagraphsTest extends EntityBrowserWebDriverTestBase {
 
   /**

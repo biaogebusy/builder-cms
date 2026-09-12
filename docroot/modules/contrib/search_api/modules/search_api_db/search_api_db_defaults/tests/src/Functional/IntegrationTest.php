@@ -2,13 +2,17 @@
 
 namespace Drupal\Tests\search_api_db_defaults\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\Tests\CommentTestTrait;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Entity\Entity\EntityViewMode;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\FunctionalTests\Core\Recipe\RecipeTestTrait;
+use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\views\Entity\View;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
@@ -19,7 +23,16 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 #[RunTestsInSeparateProcesses]
 class IntegrationTest extends BrowserTestBase {
 
-  use StringTranslationTrait, CommentTestTrait, EntityReferenceFieldCreationTrait;
+  use CommentTestTrait;
+  use EntityReferenceFieldCreationTrait;
+  use RecipeTestTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'comment',
+  ];
 
   /**
    * The profile to install as a basis for testing.
@@ -52,6 +65,32 @@ class IntegrationTest extends BrowserTestBase {
     // accessible, and an admin to do the setup.
     $this->authenticatedUser = $this->drupalCreateUser();
     $this->adminUser = $this->drupalCreateUser([], NULL, TRUE);
+
+    // In newer versions of Drupal, the "standard" profile does not include any
+    // node types anymore. To be able to install this module we therefore have
+    // to add them manually.
+    // @see https://www.drupal.org/node/3587118
+    if (!NodeType::load('article')) {
+      // Easiest way is probably to use the "default_content_base" test recipe
+      // provided by Core.
+      $recipe_dir = $this->root . '/core/tests/fixtures/recipes/default_content_base';
+      $this->applyRecipe($recipe_dir);
+      // Remove some nonsense that comes with that.
+      FieldStorageConfig::load('taxonomy_term.field_serialized_stuff')
+        ->delete();
+
+      // The "comment" field still needs to be manually added, as well as the
+      // "search_result" entity view mode.
+      $this->addDefaultCommentField('node', 'article');
+      EntityViewMode::create([
+        'id' => 'node.search_result',
+        'targetEntityType' => 'node',
+      ])->save();
+      // Also, we do not want Content Moderation or Workspaces, as they just
+      // complicate the test.
+      \Drupal::getContainer()->get('module_installer')
+        ->uninstall(['content_moderation', 'workspaces']);
+    }
   }
 
   /**
@@ -60,16 +99,16 @@ class IntegrationTest extends BrowserTestBase {
   public function testInstallAndDefaultSetupWorking() {
     $this->drupalLogin($this->adminUser);
 
-    // Installation invokes a batch and this breaks it.
-    \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
-
-    // Uninstall the Core search module.
-    $edit_enable = [
-      'uninstall[search]' => TRUE,
-    ];
-    $this->drupalGet('admin/modules/uninstall');
-    $this->submitForm($edit_enable, 'Uninstall');
-    $this->submitForm([], 'Uninstall');
+    // Uninstall the Core search module if it was enabled.
+    // @todo Remove once we depend on Drupal 11.4+.
+    if (\Drupal::moduleHandler()->moduleExists('search')) {
+      $edit_uninstall = [
+        'uninstall[search]' => TRUE,
+      ];
+      $this->drupalGet('admin/modules/uninstall');
+      $this->submitForm($edit_uninstall, 'Uninstall');
+      $this->submitForm([], 'Uninstall');
+    }
 
     // Install the search_api_db_defaults module.
     $edit_enable = [
@@ -97,6 +136,9 @@ class IntegrationTest extends BrowserTestBase {
 
     $index = Index::load('default_index');
     $this->assertInstanceOf(Index::class, $index, 'Index can be loaded');
+
+    $view = View::load('search_content');
+    $this->assertInstanceOf(View::class, $view, 'View can be loaded');
 
     $this->drupalLogin($this->authenticatedUser);
     $this->drupalGet('search/content');

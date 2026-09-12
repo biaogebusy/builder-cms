@@ -12,7 +12,7 @@ class WebformEmailProviderTest extends WebformBrowserTestBase {
   /**
    * Test webform email provider.
    */
-  public function testEmailProvider() {
+  public function testEmailProvider(): void {
     $assert_session = $this->assertSession();
 
     // Revert system.mail back to  php_mail.

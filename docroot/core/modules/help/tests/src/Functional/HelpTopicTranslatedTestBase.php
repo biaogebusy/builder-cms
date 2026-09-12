@@ -36,7 +36,7 @@ abstract class HelpTopicTranslatedTestBase extends BrowserTestBase {
     \Drupal::service('theme_installer')->install(['claro']);
     \Drupal::configFactory()->getEditable('system.theme')
       ->set('admin', 'claro')
-      ->save(TRUE);
+      ->save();
 
     // Place various blocks.
     $settings = [
@@ -81,8 +81,7 @@ msgid "Non-word-item to translate."
 msgstr "Non-word-german sdfwedrsdf."
 
 PO;
-    $version = explode('.', \Drupal::VERSION)[0] . '.0.0';
-    file_put_contents($this->publicFilesDirectory . "/translations/drupal-{$version}.de.po", $contents);
+    file_put_contents($this->publicFilesDirectory . '/translations/drupal-' . \Drupal::VERSION . '.de.po', $contents);
     return $parameters;
   }
 

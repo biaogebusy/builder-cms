@@ -321,22 +321,22 @@ class WebformSubmissionLimitBlock extends BlockBase implements ContainerFactoryP
    */
   protected function replaceTokens($text) {
     // Replace [total] token.
-    if (strpos($text, '[total]') !== FALSE) {
+    if (str_contains($text, '[total]')) {
       $text = str_replace('[total]', $this->getTotal(), $text);
     }
 
     // Replace [limit] token.
-    if (strpos($text, '[limit]') !== FALSE) {
+    if (str_contains($text, '[limit]')) {
       $text = str_replace('[limit]', $this->getLimit(), $text);
     }
 
     // Replace [remaining] token.
-    if (strpos($text, '[remaining]') !== FALSE) {
+    if (str_contains($text, '[remaining]')) {
       $text = str_replace('[remaining]', $this->getLimit() - $this->getTotal(), $text);
     }
 
     // Replace [interval] token.
-    if (strpos($text, '[interval]') !== FALSE) {
+    if (str_contains($text, '[interval]')) {
       $text = str_replace('[interval]', $this->getIntervalText(), $text);
     }
 
@@ -518,7 +518,7 @@ class WebformSubmissionLimitBlock extends BlockBase implements ContainerFactoryP
     $token_manager = \Drupal::service('webform.token_manager');
 
     // Get token name and descriptions.
-    \Drupal::moduleHandler()->loadInclude('webform', 'tokens.inc');
+    \Drupal::moduleHandler()->loadInclude('webform', 'tokens.inc', 'includes/webform');
     $token_info = webform_token_info();
     $tokens = $token_info['tokens']['webform_submission'];
 

@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\menu_link_content\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Menu Link Content Json Basic Auth.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkContentJsonBasicAuthTest extends MenuLinkContentResourceTestBase {
 
   use BasicAuthResourceTestTrait;

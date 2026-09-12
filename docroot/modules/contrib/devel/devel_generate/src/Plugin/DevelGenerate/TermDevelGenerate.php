@@ -2,13 +2,13 @@
 
 namespace Drupal\devel_generate\Plugin\DevelGenerate;
 
+use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\devel_generate\DevelGenerateBase;
 use Drupal\taxonomy\TermInterface;
 use Drupal\taxonomy\TermStorageInterface;
@@ -66,7 +66,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
   /**
    * The content translation manager.
    */
-  protected ?ContentTranslationManagerInterface $contentTranslationManager;
+  protected ?ContentTranslationManagerInterface $contentTranslationManager = NULL;
 
   /**
    * {@inheritdoc}
@@ -421,7 +421,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       }
     }
 
-    $number = array_shift($args) ?: $defaultSettings['num'];
+    $number = $args['num'] ?: $defaultSettings['num'];
     if (!$this->isNumber($number)) {
       throw new \Exception(dt('Invalid number of terms: @num', ['@num' => $number]));
     }

@@ -23,7 +23,7 @@
  */
 .webform-ajax-messages {
   position: fixed;
-  z-index: 100;
+  z-index: 501;
   bottom: 0;
   width: 100%;
 }

@@ -7,8 +7,9 @@ configure: ai.settings_form
 
 dependencies:
   - key:key
+  - drupal:file
 
-# Information added by Drupal.org packaging script on 2026-06-03
-version: '1.4.1'
+# Information added by Drupal.org packaging script on 2026-09-02
+version: '1.4.8'
 project: 'ai'
-datestamp: 1780493209
+datestamp: 1788353620

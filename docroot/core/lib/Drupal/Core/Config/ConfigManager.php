@@ -166,9 +166,10 @@ class ConfigManager implements ConfigManagerInterface {
     if (!isset($target_name)) {
       $target_name = $source_name;
     }
-    // The output should show configuration object differences formatted as YAML.
-    // But the configuration is not necessarily stored in files. Therefore, they
-    // need to be read and parsed, and lastly, dumped into YAML strings.
+    // The output should show configuration object differences formatted as
+    // YAML. But the configuration is not necessarily stored in files.
+    // Therefore, they need to be read and parsed, and lastly, dumped into YAML
+    // strings.
     $source_data = explode("\n", Yaml::encode($source_storage->read($source_name)));
     $target_data = explode("\n", Yaml::encode($target_storage->read($target_name)));
 
@@ -302,7 +303,7 @@ class ConfigManager implements ConfigManagerInterface {
     $entities_to_return = array_fill_keys(array_keys($dependencies), NULL);
     foreach ($entities as $entity_type_id => $entities_to_load) {
       $storage = $this->entityTypeManager->getStorage($entity_type_id);
-      $loaded_entities = $storage->loadMultiple($entities_to_load);
+      $loaded_entities = $storage->loadMultipleOverrideFree($entities_to_load);
       foreach ($loaded_entities as $loaded_entity) {
         $entities_to_return[$loaded_entity->getConfigDependencyName()] = $loaded_entity;
       }

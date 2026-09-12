@@ -76,7 +76,7 @@ class WebformSubmissionLogController extends ControllerBase {
    * @return array
    *   A render array as expected by drupal_render().
    */
-  public function overview(WebformInterface $webform = NULL, WebformSubmissionInterface $webform_submission = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL) {
+  public function overview(?WebformInterface $webform = NULL, ?WebformSubmissionInterface $webform_submission = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL) {
     // Entities.
     if (empty($webform) && !empty($webform_submission)) {
       $webform = $webform_submission->getWebform();
@@ -152,7 +152,7 @@ class WebformSubmissionLogController extends ControllerBase {
       $row['operation'] = $log->operation;
       $row['message'] = [
         'data' => [
-          '#markup' => $this->t($log->message, $log->variables),
+          '#plain_text' => $this->t($log->message, $log->variables),
         ],
       ];
       $row['uid'] = [
@@ -180,7 +180,7 @@ class WebformSubmissionLogController extends ControllerBase {
   /**
    * Wrapper that allows the $node to be used as $source_entity.
    */
-  public function nodeOverview(WebformInterface $webform = NULL, WebformSubmissionInterface $webform_submission = NULL, EntityInterface $node = NULL) {
+  public function nodeOverview(?WebformInterface $webform = NULL, ?WebformSubmissionInterface $webform_submission = NULL, ?EntityInterface $node = NULL) {
     return $this->overview($webform, $webform_submission, $node);
   }
 

@@ -6,23 +6,26 @@ namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\Core\Database\Connection;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\layout_builder\InlineBlockUsage;
 use Drupal\layout_builder\InlineBlockUsageInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Class for testing the InlineBlockUsage service.
- *
- * @coversDefaultClass \Drupal\layout_builder\InlineBlockUsage
- *
- * @group layout_builder
  */
+#[CoversClass(InlineBlockUsage::class)]
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class InlineBlockUsageTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'layout_discovery',
     'layout_builder',
     'entity_test',
     'user',
@@ -43,12 +46,15 @@ class InlineBlockUsageTest extends KernelTestBase {
    */
   protected EntityTest $entity;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->database = $this->container->get('database');
     $this->inlineBlockUsage = $this->container->get('inline_block.usage');
     $this->installSchema('layout_builder', ['inline_block_usage']);
-    entity_test_create_bundle('bundle_with_extra_fields');
+    EntityTestHelper::createBundle('bundle_with_extra_fields');
     $this->installEntitySchema('entity_test');
     $this->entity = EntityTest::create();
     $this->entity->save();
@@ -77,12 +83,14 @@ class InlineBlockUsageTest extends KernelTestBase {
     $this->inlineBlockUsage->addUsage('1', $this->entity);
     $this->assertEmpty($this->inlineBlockUsage->getUnused());
     // Add an invalid usage.
-    $this->database->merge('inline_block_usage')
-      ->keys([
+    $this->database->upsert('inline_block_usage')
+      ->key(['block_content_id'])
+      ->fields([
         'block_content_id' => 2,
         'layout_entity_id' => NULL,
         'layout_entity_type' => NULL,
-      ])->execute();
+      ])
+      ->execute();
     $this->assertCount(1, $this->inlineBlockUsage->getUnused());
   }
 

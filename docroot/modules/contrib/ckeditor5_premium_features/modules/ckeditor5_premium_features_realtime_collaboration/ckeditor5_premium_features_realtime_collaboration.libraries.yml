@@ -1,0 +1,64 @@
+admin.revision-history:
+  css:
+    theme:
+      css/revision-history.admin.css: { }
+
+admin.track-changes:
+  css:
+    theme:
+      css/track-changes.admin.css: { }
+
+admin.comments:
+  css:
+    theme:
+      css/comments.admin.css: { }
+  dependencies:
+    - ckeditor5_premium_features_realtime_collaboration/admin.comments-archive
+
+admin.comments-archive:
+  css:
+    theme:
+      css/comments-archive.admin.css: { }
+
+real-time-collaboration:
+  version: 20260525
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/realtimeAdapter.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features/cloud-services
+    - ckeditor5_premium_features/collaboration-integration-base
+
+realtime-revision-history:
+  version: 20251230
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  css:
+    theme:
+      ../../css/revision-history.css: { }
+  js:
+    js/build/realtimeRevisionHistoryAdapter.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features_realtime_collaboration/real-time-collaboration
+    - ckeditor5_premium_features_realtime_collaboration/revision-history
+
+realtime-comments:
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features_realtime_collaboration/real-time-collaboration
+    - ckeditor5_premium_features_realtime_collaboration/comments
+    - core/ckeditor5.list
+
+realtime-track-changes:
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features_realtime_collaboration/realtime-comments
+    - ckeditor5_premium_features_realtime_collaboration/track-changes
+    - core/ckeditor5.list

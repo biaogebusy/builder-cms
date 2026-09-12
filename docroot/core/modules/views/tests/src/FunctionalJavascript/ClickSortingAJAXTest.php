@@ -8,12 +8,14 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the click sorting AJAX functionality of Views exposed forms.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ClickSortingAJAXTest extends WebDriverTestBase {
 
   use ContentTypeCreationTrait;
@@ -29,6 +31,11 @@ class ClickSortingAJAXTest extends WebDriverTestBase {
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * The views to use for testing.
+   *
+   * @var string[]
+   */
   public static $testViews = ['test_content_ajax'];
 
   /**

@@ -1,0 +1,13 @@
+field.widget.settings.chosen_select:
+  type: field.widget.settings.options_select
+  label: 'Chosen widget settings'
+  mapping:
+    chosen_placeholder:
+      type: label
+      label: 'Placeholder'
+    no_results_text:
+      type: label
+      label: 'No results text'
+    search_contains:
+      type: integer
+      label: 'Search contains override'

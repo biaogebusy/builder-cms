@@ -1,0 +1,5 @@
+
+services:
+  Drupal\dynamic_entity_reference_entity_test\Hook\DynamicEntityReferenceEntityTestHooks:
+    class: Drupal\dynamic_entity_reference_entity_test\Hook\DynamicEntityReferenceEntityTestHooks
+    autowire: true

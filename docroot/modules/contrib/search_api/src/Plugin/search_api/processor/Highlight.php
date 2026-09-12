@@ -403,7 +403,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       }
 
       if ($this->getDataTypeHelper()->isTextType($field->getType())) {
-        $fields_by_datasource[$field->getDatasourceId()][$path] = $field_id;
+        $fields_by_datasource[(string) $field->getDatasourceId()][$path] = $field_id;
       }
     }
 

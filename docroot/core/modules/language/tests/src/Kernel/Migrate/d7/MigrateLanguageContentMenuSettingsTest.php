@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\language\Kernel\Migrate\d7;
 
-use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of i18n_menu settings.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateLanguageContentMenuSettingsTest extends MigrateDrupal7TestBase {
 
   /**

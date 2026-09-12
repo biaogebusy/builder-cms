@@ -1,5 +1,6 @@
 parameters:
   media.resource_fetcher_timeout: 5
+  media.skip_procedural_hook_scan: true
 
 services:
   _defaults:
@@ -26,3 +27,4 @@ services:
   media.config_subscriber:
     class: Drupal\media\EventSubscriber\MediaConfigSubscriber
     arguments: ['@router.builder', '@cache_tags.invalidator', '@entity_type.manager']
+  Drupal\media\EventSubscriber\DefaultContentSubscriber: ~

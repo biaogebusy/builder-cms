@@ -4,9 +4,12 @@
  * Template for a Blazy layout.
  */
 #}
+{% set IS_SEMANTIC = settings.semantic_layout %}
 {% set wrapper_classes = [
     'b-layout-wrapper',
     settings.ete ? 'b-layout-wrapper--ete',
+    IS_SEMANTIC ? 'b-semantic',
+    IS_SEMANTIC ? 'b-layout-wrapper--' ~ settings.id|clean_class,
    ]
 %}
 {%
@@ -24,26 +27,36 @@
    ]
 %}
 {% set MAIN_TAG = settings.wrapper|default('div') %}
+{% set BG_REGION %}
+  {% block blazy_layout_bg %}
+    {% if settings.background %}
+      {% set REGSETS = settings.regions.bg %}
+      {% set CUSTOM_CLASSES = REGSETS.settings.classes %}
+      {% set IS_EMPTY = REGSETS.settings.empty %}
+      {%
+        set bg_classes = common_classes | merge([
+          'region--bg',
+          IS_EMPTY ? 'region--empty',
+          CUSTOM_CLASSES is not empty ? CUSTOM_CLASSES|join(' '),
+        ])
+      %}
+      <div{{ region_attributes.bg.addClass(bg_classes) }}>
+        {% if in_preview and IS_EMPTY %}
+          <p class="blazy__warning">{% trans %}Any backgrounds require Blazy or builtin Image/Media with Use CSS Background, or just Background color.{% endtrans %}</p>
+        {% endif %}
+        {{ content.bg }}
+      </div>
+    {% endif %}
+  {% endblock %}
+{% endset %}
 {% if content %}
   <div{{ wrapper_attributes.addClass(wrapper_classes) }}>
+    {% if IS_SEMANTIC %}
+      {{ BG_REGION }}
+    {% endif %}
     <{{ MAIN_TAG }}{{ attributes.addClass(classes) }}>
-      {% if settings.background %}
-        {% set REGSETS = settings.regions.bg %}
-        {% set CUSTOM_CLASSES = REGSETS.settings.classes %}
-        {% set IS_EMPTY = REGSETS.settings.empty %}
-        {%
-          set bg_classes = common_classes | merge([
-            'region--bg',
-            IS_EMPTY ? 'region--empty',
-            CUSTOM_CLASSES is not empty ? CUSTOM_CLASSES|join(' '),
-          ])
-        %}
-        <div{{ region_attributes.bg.addClass(bg_classes) }}>
-          {% if in_preview and IS_EMPTY %}
-            <p class="blazy__warning">{% trans %}Any backgrounds require Blazy or builtin Image/Media with Use CSS Background, or just Background color.{% endtrans %}</p>
-          {% endif %}
-          {{ content.bg }}
-        </div>
+      {% if not IS_SEMANTIC %}
+        {{ BG_REGION }}
       {% endif %}
       {% for region in regions %}
         {% set REGSETS = settings.regions[region] %}

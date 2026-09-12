@@ -3,6 +3,8 @@
 block.block.*:
   type: config_entity
   label: 'Block'
+  constraints:
+    FullyValidatable: ~
   mapping:
     id:
       type: machine_name
@@ -12,18 +14,31 @@ block.block.*:
       # @see https://www.drupal.org/project/drupal/issues/2043527
       constraints:
         Regex:
-          pattern: '/^[a-z0-9_.]+$/'
+          pattern: '/^(?!\.)[a-z0-9_.]+$/'
           message: "The %value machine name is not valid."
     theme:
       type: string
       label: 'Theme'
+      constraints:
+        NotBlank: []
+        ExtensionName: []
+        ExtensionExists:
+          type: theme
     region:
       type: string
       label: 'Region'
+      constraints:
+        Sequentially:
+          constraints:
+            - NotBlank: []
+            - Callback:
+                callback: ['\Drupal\block\Entity\Block', validateRegion]
     weight:
       type: weight
       label: 'Weight'
     provider:
+      # @todo Deprecate this from config schema and remove it from the `config_export` definition in https://www.drupal.org/project/drupal/issues/3426278
+      nullable: true
       type: string
       label: 'Provider'
     plugin:

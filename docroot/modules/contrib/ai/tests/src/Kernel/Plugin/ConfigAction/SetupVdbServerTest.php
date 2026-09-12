@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai\Kernel\Plugin\ConfigAction;
 
+use Drupal\ai\AiVdbProviderPluginManager;
 use Drupal\ai\Plugin\ConfigAction\SetupVdbServer;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Server;
@@ -26,7 +27,6 @@ class SetupVdbServerTest extends KernelTestBase {
     'key',
     'search_api',
     'system',
-    'test_ai_vdb_provider_mysql',
     'user',
   ];
 
@@ -38,6 +38,20 @@ class SetupVdbServerTest extends KernelTestBase {
   private SetupVdbServer $setupVdbServer;
 
   /**
+   * The AI Vdb plugin manager.
+   *
+   * @var \Drupal\ai\AiVdbProviderPluginManager
+   */
+  private AiVdbProviderPluginManager $aiVdbPluginManager;
+
+  /**
+   * The flag to install test_mysql vdb provider module conditionally.
+   *
+   * @var bool
+   */
+  protected bool $installTestMysqlProvider = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -45,10 +59,14 @@ class SetupVdbServerTest extends KernelTestBase {
 
     $this->installEntitySchema('user');
     $this->installEntitySchema('search_api_server');
-    $this->installConfig(['ai', 'ai_search', 'ai_test', 'search_api', 'test_ai_vdb_provider_mysql']);
-
+    $this->installConfig(['ai', 'ai_search', 'ai_test', 'search_api']);
+    if ($this->installTestMysqlProvider) {
+      $this->enableModules(['test_ai_vdb_provider_mysql']);
+      $this->installConfig(['test_ai_vdb_provider_mysql']);
+    }
     // Create the config action plugin using the container.
     $plugin_manager = $this->container->get('plugin.manager.config_action');
+    $this->aiVdbPluginManager = $this->container->get('ai.vdb_provider');
     $this->setupVdbServer = $plugin_manager->createInstance('setupVdbServerWithDefaults');
   }
 
@@ -170,6 +188,10 @@ class SetupVdbServerTest extends KernelTestBase {
    * It may be skipped if dependencies are not available.
    */
   public function testApplySuccessfulConfiguration(): void {
+    // Now let's install another Vdb provider that is properly setup.
+    $this->installTestMysqlProvider = TRUE;
+    $this->setUp();
+    $this->aiVdbPluginManager->clearCachedDefinitions();
     // Check if we have any AI providers available.
     $plugin_manager = $this->container->get('ai.provider');
     $providers = $plugin_manager->getProvidersForOperationType('embeddings', FALSE);
@@ -179,8 +201,7 @@ class SetupVdbServerTest extends KernelTestBase {
     }
 
     // Check if we have any VDB providers available.
-    $vdb_provider_manager = $this->container->get('ai.vdb_provider');
-    $vdb_providers = $vdb_provider_manager->getProviders(FALSE);
+    $vdb_providers = $this->aiVdbPluginManager->getProviders(FALSE);
 
     if (empty($vdb_providers)) {
       $this->markTestSkipped('No VDB providers available.');
@@ -188,15 +209,15 @@ class SetupVdbServerTest extends KernelTestBase {
 
     // Get the first available provider and VDB provider.
     $first_provider = array_key_first($providers);
-    $first_vdb = array_key_first($vdb_providers);
+    $first_vdb = $this->aiVdbPluginManager->defaultIfNone();
 
     // Set up configuration with available providers.
     $config = $this->config('ai.settings');
+    $this->assertEquals('test_mysql', $config->get('default_vdb_provider'));
     $config->set('default_providers.embeddings', [
       'provider_id' => $first_provider,
       'model_id' => 'test_model',
     ]);
-    $config->set('default_vdb_provider', $first_vdb);
     $config->save();
 
     $value = [

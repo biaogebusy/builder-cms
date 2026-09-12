@@ -19,6 +19,9 @@ class ImportPolicyTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'menu_ui',
+    'entity_share_test',
     'entity_share_entity_test',
     'jsonapi_extras',
     'entity_share_client_import_policies_test',

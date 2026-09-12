@@ -2,6 +2,12 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldWidget;
 
+use Drupal\commerce\Context;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Entity\OrderItemInterface;
+use Drupal\commerce_order\Form\OrderFormBase;
+use Drupal\commerce_price\Price;
+use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -10,12 +16,6 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\commerce\Context;
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_order\Entity\OrderItemInterface;
-use Drupal\commerce_order\Form\OrderForm;
-use Drupal\commerce_price\Price;
-use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -222,7 +222,7 @@ class UnitPriceWidget extends WidgetBase implements ContainerFactoryPluginInterf
     }
 
     $form_object = $form_state->getFormObject();
-    if ($form_object instanceof OrderForm) {
+    if ($form_object instanceof OrderFormBase) {
       return $form_object->getEntity();
     }
     return NULL;

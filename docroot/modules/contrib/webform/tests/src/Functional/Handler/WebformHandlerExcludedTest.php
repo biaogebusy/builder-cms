@@ -29,7 +29,7 @@ class WebformHandlerExcludedTest extends WebformBrowserTestBase {
   /**
    * Test excluded handlers.
    */
-  public function testExcludeHandlers() {
+  public function testExcludeHandlers(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

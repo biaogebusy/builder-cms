@@ -9,13 +9,15 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\diff\VisualDiffThemeNegotiator;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests theme negotiator.
- *
- * @coversDefaultClass \Drupal\diff\VisualDiffThemeNegotiator
- * @group diff
  */
+#[Group('diff')]
+#[CoversClass(VisualDiffThemeNegotiator::class)]
 class VisualDiffThemeNegotiatorTest extends UnitTestCase {
 
   /**
@@ -43,7 +45,7 @@ class VisualDiffThemeNegotiatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::determineActiveTheme
+   * Test determining the active theme.
    */
   public function testDetermineActiveTheme(): void {
     $config = $this->prophesize(ImmutableConfig::class);
@@ -66,12 +68,8 @@ class VisualDiffThemeNegotiatorTest extends UnitTestCase {
    *   The configuration value of the element taken from the form values.
    * @param bool $expected
    *   The expected result.
-   *
-   * @covers ::applies
-   * @covers ::isDiffRoute
-   *
-   * @dataProvider providerTestApplies
    */
+  #[DataProvider('providerTestApplies')]
   public function testApplies($filter_parameter, $route_name, $config_value, $expected): void {
     $route_match = $this->prophesize(RouteMatchInterface::class);
     $route_match->getParameter('filter')->willReturn($filter_parameter);
@@ -98,7 +96,7 @@ class VisualDiffThemeNegotiatorTest extends UnitTestCase {
   /**
    * Provides test data to ::testApplies().
    */
-  public function providerTestApplies(): array {
+  public static function providerTestApplies(): array {
     $data = [];
     $data[] = [
       'unexpected_filter_parameter',

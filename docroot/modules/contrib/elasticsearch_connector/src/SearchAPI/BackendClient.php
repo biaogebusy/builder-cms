@@ -7,8 +7,10 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Utility\Error;
 use Drupal\elasticsearch_connector\Analyser\AnalyserInterface;
 use Drupal\elasticsearch_connector\Analyser\AnalyserManager;
+use Drupal\elasticsearch_connector\Event\AlterSearchQueryParamsEvent;
 use Drupal\elasticsearch_connector\Event\AlterSettingsEvent;
 use Drupal\elasticsearch_connector\Event\IndexCreatedEvent;
+use Drupal\elasticsearch_connector\Event\IndexPreCreateEvent;
 use Drupal\elasticsearch_connector\SearchAPI\Query\QueryParamBuilder;
 use Drupal\elasticsearch_connector\SearchAPI\Query\QueryResultParser;
 use Drupal\search_api\Entity\Index;
@@ -72,7 +74,7 @@ class BackendClient implements BackendClientInterface {
    * @param \Elastic\Elasticsearch\Client $client
    *   The ElasticSearch client.
    * @param \Drupal\elasticsearch_connector\Analyser\AnalyserManager $analyserManager
-   *   Analyser manager.
+   *   Analyzer manager.
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    * @param array $settings
@@ -159,7 +161,7 @@ class BackendClient implements BackendClientInterface {
     ];
     try {
       // Check index exists.
-      if (!$this->client->indices()->exists($params)) {
+      if (!$this->client->indices()->exists($params)->asBool()) {
         $this->logger->warning('Index "%index" does not exist.', ["%index" => $indexId]);
         return $resultSet;
       }
@@ -176,6 +178,11 @@ class BackendClient implements BackendClientInterface {
       // When set to true the search response will always track the number of
       // hits that match the query accurately.
       $params['track_total_hits'] = TRUE;
+
+      // Allow the search query parameters to be altered before we send them.
+      $event = new AlterSearchQueryParamsEvent($params, $query);
+      $this->eventDispatcher->dispatch($event);
+      $params = $event->getParams();
 
       // Do search.
       $response = $this->client->search($params);
@@ -216,9 +223,13 @@ class BackendClient implements BackendClientInterface {
     }
 
     try {
-      $this->client->indices()->create([
-        'index' => $indexId,
-      ]);
+      $params = ['index' => $indexId];
+
+      $preCreateEvent = new IndexPreCreateEvent($params, $index, $index->getServerInstance()->getBackendConfig());
+      $this->eventDispatcher->dispatch($preCreateEvent);
+      $params = $preCreateEvent->getParams();
+      $this->client->indices()->create($params);
+
       $this->updateSettings($index);
       $this->updateFieldMapping($index);
       $event = new IndexCreatedEvent($index);
@@ -325,15 +336,15 @@ class BackendClient implements BackendClientInterface {
   public function updateSettings(IndexInterface $index_param): void {
     $indexId = $this->getIndexId($index_param);
     $params = $this->fieldParamsBuilder->mapFieldParams($indexId, $index_param);
-    $analysers = array_reduce($params['body']['properties'], function (array $carry, array $field_definition) {
-      if (isset($field_definition['analyser'])) {
-        $carry[$field_definition['analyser']] = $field_definition['analyser_settings'] ?? [];
+    $analyzers = array_reduce($params['body']['properties'], function (array $carry, array $field_definition) {
+      if (isset($field_definition['analyzer'])) {
+        $carry[$field_definition['analyzer']] = $field_definition['analyzer_settings'] ?? [];
       }
       return $carry;
     }, []);
     $settings = [];
-    foreach ($analysers as $analyser_id => $configuration) {
-      $analyser = $this->analyserManager->createInstance($analyser_id, $configuration);
+    foreach ($analyzers as $analyzer_id => $configuration) {
+      $analyser = $this->analyserManager->createInstance($analyzer_id, $configuration);
       assert($analyser instanceof AnalyserInterface);
       $settings = NestedArray::mergeDeep($settings, $analyser->getSettings());
     }
@@ -349,14 +360,15 @@ class BackendClient implements BackendClientInterface {
       return;
     }
     try {
+      $this->client->indices()->close(['index' => $indexId]);
       $this->client->indices()->putSettings([
         'index' => $indexId,
-        'reopen' => TRUE,
         'body' => $settings,
       ]);
+      $this->client->indices()->open(['index' => $indexId]);
     }
     catch (ElasticSearchException | TransportException $e) {
-      throw new SearchApiException(sprintf('An error occurred updating settings for index %s.', $indexId), 0, $e);
+      throw new SearchApiException(sprintf('An error of type %s occurred updating settings for index %s, with message %s.', \get_class($e), $indexId, $e->getMessage()), 0, $e);
     }
   }
 
@@ -407,6 +419,53 @@ class BackendClient implements BackendClientInterface {
     // If we get here, then we haven't found any changes that would require a
     // rebuild, so return FALSE.
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRawIndexMappings(IndexInterface $index): array {
+    $indexId = $this->getIndexId($index);
+    try {
+      return $this->client->indices()->getMapping(['index' => $indexId])
+        ->asArray();
+    }
+    catch (ElasticSearchException | TransportException $e) {
+      throw new SearchApiException(sprintf('An error occurred getting index %s mappings.', $indexId), 0, $e);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRawIndexSettings(IndexInterface $index): array {
+    $indexId = $this->getIndexId($index);
+    try {
+      return $this->client->indices()->getSettings(['index' => $indexId])
+        ->asArray();
+    }
+    catch (ElasticSearchException | TransportException $e) {
+      throw new SearchApiException(sprintf('An error occurred getting index %s settings.', $indexId), 0, $e);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function runIndexAnalyzer(IndexInterface $index, string $analyzerId, string $text): array {
+    $indexId = $this->getIndexId($index);
+    try {
+      return $this->client->indices()->analyze([
+        'index' => $indexId,
+        'body' => [
+          'analyzer' => $analyzerId,
+          'text' => $text,
+        ],
+      ])->asArray();
+    }
+    catch (ElasticSearchException | TransportException $e) {
+      throw new SearchApiException(sprintf('An error occurred analyzing text "%s" using index %s and analyzer %s.', $text, $indexId, $analyzerId), 0, $e);
+    }
   }
 
 }

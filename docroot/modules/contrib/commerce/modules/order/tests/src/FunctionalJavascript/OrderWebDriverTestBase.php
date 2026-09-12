@@ -26,6 +26,7 @@ abstract class OrderWebDriverTestBase extends CommerceWebDriverTestBase {
     'commerce_order',
     'commerce_order_test',
     'inline_entity_form',
+    'commerce_payment',
   ];
 
   /**

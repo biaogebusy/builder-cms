@@ -1,0 +1,4 @@
+page_manager_page:
+  class: Drupal\page_manager\Plugin\Menu\PageManagerMenuLink
+  form_class: Drupal\page_manager\Plugin\Menu\Form\PageManagerMenuLinkForm
+  deriver: \Drupal\page_manager\Plugin\Derivative\PageManagerMenuLink

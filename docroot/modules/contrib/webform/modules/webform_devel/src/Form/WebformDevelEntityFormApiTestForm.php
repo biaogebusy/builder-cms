@@ -84,7 +84,7 @@ class WebformDevelEntityFormApiTestForm extends WebformDevelEntityFormApiBaseFor
       $values['actions']
     );
     $build = ['#markup' => 'Submitted values are:<pre>' . WebformYaml::encode($values) . '</pre>'];
-    $this->messenger()->addWarning($this->renderer->renderPlain($build));
+    $this->messenger()->addWarning($this->renderer->renderInIsolation($build));
   }
 
   /* ************************************************************************ */

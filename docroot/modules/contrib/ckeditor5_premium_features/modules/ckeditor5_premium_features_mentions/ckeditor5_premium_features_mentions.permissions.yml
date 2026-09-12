@@ -1,0 +1,7 @@
+mention users:
+  title: 'Permission to mention users.'
+  description: 'Permission to mention privileged users.'
+
+to be mentioned:
+  title: 'Permission to be mentioned.'
+  description: 'Permission to be mentioned by privileged users.'

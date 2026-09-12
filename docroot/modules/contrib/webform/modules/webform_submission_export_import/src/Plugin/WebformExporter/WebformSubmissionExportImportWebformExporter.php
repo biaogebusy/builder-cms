@@ -86,7 +86,7 @@ class WebformSubmissionExportImportWebformExporter extends WebformExporterBase {
    */
   public function writeHeader() {
     $header = $this->getImporter()->exportHeader();
-    fputcsv($this->fileHandle, $header);
+    fputcsv($this->fileHandle, $header, escape: '\\');
   }
 
   /**
@@ -94,7 +94,7 @@ class WebformSubmissionExportImportWebformExporter extends WebformExporterBase {
    */
   public function writeSubmission(WebformSubmissionInterface $webform_submission) {
     $record = $this->getImporter()->exportSubmission($webform_submission, $this->configuration);
-    fputcsv($this->fileHandle, $record);
+    fputcsv($this->fileHandle, $record, escape: '\\');
   }
 
   /**

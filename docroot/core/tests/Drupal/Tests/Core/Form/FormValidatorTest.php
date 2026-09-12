@@ -6,15 +6,21 @@ namespace Drupal\Tests\Core\Form;
 
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormValidator;
+use Drupal\Core\Utility\CallableResolver;
 use Drupal\Tests\UnitTestCase;
+use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\MockObject\Stub;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\TestTools\Random;
 
 /**
- * @coversDefaultClass \Drupal\Core\Form\FormValidator
- * @group Form
+ * Tests Drupal\Core\Form\FormValidator.
  */
+#[CoversClass(FormValidator::class)]
+#[Group('Form')]
 class FormValidatorTest extends UnitTestCase {
 
   /**
@@ -39,6 +45,11 @@ class FormValidatorTest extends UnitTestCase {
   protected $formErrorHandler;
 
   /**
+   * The callable resolver.
+   */
+  protected CallableResolver | Stub $callableResolver;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -48,16 +59,24 @@ class FormValidatorTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
     $this->formErrorHandler = $this->createMock('Drupal\Core\Form\FormErrorHandlerInterface');
+    $this->callableResolver = $this->createStub(CallableResolver::class);
   }
 
   /**
    * Tests the 'validation_complete' $form_state flag.
    *
-   * @covers ::validateForm
-   * @covers ::finalizeValidation
+   * @legacy-covers ::validateForm
+   * @legacy-covers ::finalizeValidation
    */
   public function testValidationComplete(): void {
-    $form_validator = new FormValidator(new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler);
+    $form_validator = new FormValidator(
+      new RequestStack(),
+      $this->getStringTranslationStub(),
+      $this->csrfToken,
+      $this->logger,
+      $this->formErrorHandler,
+      $this->callableResolver,
+    );
 
     $form = [];
     $form_state = new FormState();
@@ -69,11 +88,18 @@ class FormValidatorTest extends UnitTestCase {
   /**
    * Tests the 'must_validate' $form_state flag.
    *
-   * @covers ::validateForm
+   * @legacy-covers ::validateForm
    */
   public function testPreventDuplicateValidation(): void {
     $form_validator = $this->getMockBuilder('Drupal\Core\Form\FormValidator')
-      ->setConstructorArgs([new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler])
+      ->setConstructorArgs([
+        new RequestStack(),
+        $this->getStringTranslationStub(),
+        $this->csrfToken,
+        $this->logger,
+        $this->formErrorHandler,
+        $this->callableResolver,
+      ])
       ->onlyMethods(['doValidateForm'])
       ->getMock();
     $form_validator->expects($this->never())
@@ -89,11 +115,18 @@ class FormValidatorTest extends UnitTestCase {
   /**
    * Tests the 'must_validate' $form_state flag.
    *
-   * @covers ::validateForm
+   * @legacy-covers ::validateForm
    */
   public function testMustValidate(): void {
     $form_validator = $this->getMockBuilder('Drupal\Core\Form\FormValidator')
-      ->setConstructorArgs([new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler])
+      ->setConstructorArgs([
+        new RequestStack(),
+        $this->getStringTranslationStub(),
+        $this->csrfToken,
+        $this->logger,
+        $this->formErrorHandler,
+        $this->callableResolver,
+      ])
       ->onlyMethods(['doValidateForm'])
       ->getMock();
     $form_validator->expects($this->once())
@@ -109,7 +142,9 @@ class FormValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validateForm
+   * Tests validate invalid form token.
+   *
+   * @legacy-covers ::validateForm
    */
   public function testValidateInvalidFormToken(): void {
     $request_stack = new RequestStack();
@@ -120,7 +155,14 @@ class FormValidatorTest extends UnitTestCase {
       ->willReturn(FALSE);
 
     $form_validator = $this->getMockBuilder('Drupal\Core\Form\FormValidator')
-      ->setConstructorArgs([$request_stack, $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler])
+      ->setConstructorArgs([
+        $request_stack,
+        $this->getStringTranslationStub(),
+        $this->csrfToken,
+        $this->logger,
+        $this->formErrorHandler,
+        $this->callableResolver,
+      ])
       ->onlyMethods(['doValidateForm'])
       ->getMock();
     $form_validator->expects($this->never())
@@ -139,7 +181,9 @@ class FormValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validateForm
+   * Tests validate valid form token.
+   *
+   * @legacy-covers ::validateForm
    */
   public function testValidateValidFormToken(): void {
     $request_stack = new RequestStack();
@@ -148,7 +192,14 @@ class FormValidatorTest extends UnitTestCase {
       ->willReturn(TRUE);
 
     $form_validator = $this->getMockBuilder('Drupal\Core\Form\FormValidator')
-      ->setConstructorArgs([$request_stack, $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler])
+      ->setConstructorArgs([
+        $request_stack,
+        $this->getStringTranslationStub(),
+        $this->csrfToken,
+        $this->logger,
+        $this->formErrorHandler,
+        $this->callableResolver,
+      ])
       ->onlyMethods(['doValidateForm'])
       ->getMock();
     $form_validator->expects($this->once())
@@ -166,12 +217,11 @@ class FormValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::handleErrorsWithLimitedValidation
-   *
-   * @dataProvider providerTestHandleErrorsWithLimitedValidation
+   * Tests handle errors with limited validation.
    */
+  #[DataProvider('providerTestHandleErrorsWithLimitedValidation')]
   public function testHandleErrorsWithLimitedValidation($sections, $triggering_element, $values, $expected): void {
-    $form_validator = new FormValidator(new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler);
+    $form_validator = new FormValidator(new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler, $this->callableResolver);
 
     $triggering_element['#limit_validation_errors'] = $sections;
     $form = [];
@@ -183,7 +233,7 @@ class FormValidatorTest extends UnitTestCase {
     $this->assertSame($expected, $form_state->getValues());
   }
 
-  public static function providerTestHandleErrorsWithLimitedValidation() {
+  public static function providerTestHandleErrorsWithLimitedValidation(): array {
     return [
       // Test with a non-existent section.
       [
@@ -261,20 +311,27 @@ class FormValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::executeValidateHandlers
+   * Tests execute validate handlers.
    */
   public function testExecuteValidateHandlers(): void {
-    $form_validator = new FormValidator(new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler);
+    $form_validator = new FormValidator(new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler, $this->callableResolver);
 
     $mock = $this->getMockBuilder(FormValidatorTestMockInterface::class)
       ->onlyMethods(['validate_handler', 'hash_validate', 'element_validate'])
       ->getMock();
     $mock->expects($this->once())
       ->method('validate_handler')
-      ->with($this->isType('array'), $this->isInstanceOf('Drupal\Core\Form\FormStateInterface'));
+      ->with($this->isArray(), $this->isInstanceOf('Drupal\Core\Form\FormStateInterface'));
     $mock->expects($this->once())
       ->method('hash_validate')
-      ->with($this->isType('array'), $this->isInstanceOf('Drupal\Core\Form\FormStateInterface'));
+      ->with($this->isArray(), $this->isInstanceOf('Drupal\Core\Form\FormStateInterface'));
+
+    $this->callableResolver->method('getCallableFromDefinition')
+      ->willReturn(
+        [$mock, 'validate_handler'],
+        [$mock, 'hash_validate'],
+        [$mock, 'element_validate'],
+      );
 
     $form = [];
     $form_state = new FormState();
@@ -290,13 +347,21 @@ class FormValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::doValidateForm
+   * Tests required error message.
    *
-   * @dataProvider providerTestRequiredErrorMessage
+   * @legacy-covers ::doValidateForm
    */
+  #[DataProvider('providerTestRequiredErrorMessage')]
   public function testRequiredErrorMessage($element, $expected_message): void {
     $form_validator = $this->getMockBuilder('Drupal\Core\Form\FormValidator')
-      ->setConstructorArgs([new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler])
+      ->setConstructorArgs([
+        new RequestStack(),
+        $this->getStringTranslationStub(),
+        $this->csrfToken,
+        $this->logger,
+        $this->formErrorHandler,
+        $this->callableResolver,
+      ])
       ->onlyMethods(['executeValidateHandlers'])
       ->getMock();
     $form_validator->expects($this->once())
@@ -315,11 +380,11 @@ class FormValidatorTest extends UnitTestCase {
       ->getMock();
     $form_state->expects($this->once())
       ->method('setError')
-      ->with($this->isType('array'), $expected_message);
+      ->with($this->isArray(), $expected_message);
     $form_validator->validateForm('test_form_id', $form, $form_state);
   }
 
-  public static function providerTestRequiredErrorMessage() {
+  public static function providerTestRequiredErrorMessage(): array {
     return [
       [
         // Use the default message with a title.
@@ -340,11 +405,20 @@ class FormValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::doValidateForm
+   * Tests element validate.
+   *
+   * @legacy-covers ::doValidateForm
    */
   public function testElementValidate(): void {
     $form_validator = $this->getMockBuilder('Drupal\Core\Form\FormValidator')
-      ->setConstructorArgs([new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler])
+      ->setConstructorArgs([
+        new RequestStack(),
+        $this->getStringTranslationStub(),
+        $this->csrfToken,
+        $this->logger,
+        $this->formErrorHandler,
+        $this->callableResolver,
+      ])
       ->onlyMethods(['executeValidateHandlers'])
       ->getMock();
     $form_validator->expects($this->once())
@@ -354,7 +428,10 @@ class FormValidatorTest extends UnitTestCase {
       ->getMock();
     $mock->expects($this->once())
       ->method('element_validate')
-      ->with($this->isType('array'), $this->isInstanceOf('Drupal\Core\Form\FormStateInterface'), NULL);
+      ->with($this->isArray(), $this->isInstanceOf('Drupal\Core\Form\FormStateInterface'), NULL);
+
+    $this->callableResolver->method('getCallableFromDefinition')
+      ->willReturn([$mock, 'element_validate']);
 
     $form = [];
     $form['test'] = [
@@ -368,17 +445,16 @@ class FormValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::performRequiredValidation
-   *
-   * @dataProvider providerTestPerformRequiredValidation
+   * Tests perform required validation.
    */
+  #[DataProvider('providerTestPerformRequiredValidation')]
   public function testPerformRequiredValidation($element, $expected_message, $call_watchdog): void {
-    $form_validator = new FormValidator(new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler);
+    $form_validator = new FormValidator(new RequestStack(), $this->getStringTranslationStub(), $this->csrfToken, $this->logger, $this->formErrorHandler, $this->callableResolver);
 
     if ($call_watchdog) {
       $this->logger->expects($this->once())
         ->method('error')
-        ->with($this->isType('string'), $this->isType('array'));
+        ->with($this->isString(), $this->isArray());
     }
 
     $form = [];
@@ -393,11 +469,11 @@ class FormValidatorTest extends UnitTestCase {
       ->getMock();
     $form_state->expects($this->once())
       ->method('setError')
-      ->with($this->isType('array'), $expected_message);
+      ->with($this->isArray(), $expected_message);
     $form_validator->validateForm('test_form_id', $form, $form_state);
   }
 
-  public static function providerTestPerformRequiredValidation() {
+  public static function providerTestPerformRequiredValidation(): array {
     return [
       [
         [

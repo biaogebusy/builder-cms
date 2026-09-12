@@ -3,17 +3,10 @@
 namespace Drupal\pathauto\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\pathauto\AliasCleanerInterface;
-use Drupal\pathauto\AliasStorageHelperInterface;
-use Drupal\pathauto\AliasTypeManager;
 use Drupal\pathauto\PathautoGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

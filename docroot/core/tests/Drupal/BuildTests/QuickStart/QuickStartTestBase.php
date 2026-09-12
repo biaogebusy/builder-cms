@@ -35,9 +35,9 @@ abstract class QuickStartTestBase extends BuildTestBase {
    *   (optional) A working directory relative to the workspace, within which to
    *   execute the command. Defaults to the workspace directory.
    */
-  public function installQuickStart($profile, $working_dir = NULL) {
+  public function installQuickStart($profile, $working_dir = NULL): void {
     $php_finder = new PhpExecutableFinder();
-    $install_process = $this->executeCommand($php_finder->find() . ' ./core/scripts/drupal install ' . $profile, $working_dir);
+    $install_process = $this->executeCommand($php_finder->find() . ' ./vendor/bin/dr install ' . $profile, $working_dir);
     $this->assertCommandOutputContains('Username:');
     preg_match('/Username: (.+)\vPassword: (.+)/', $install_process->getOutput(), $matches);
     $this->assertNotEmpty($this->adminUsername = $matches[1]);
@@ -55,7 +55,7 @@ abstract class QuickStartTestBase extends BuildTestBase {
    *   (optional) A working directory within which to login. Defaults to the
    *   workspace directory.
    */
-  public function formLogin($username, $password, $working_dir = NULL) {
+  public function formLogin($username, $password, $working_dir = NULL): void {
     $this->visit('/user/login', $working_dir);
     $assert = $this->getMink()->assertSession();
     $assert->statusCodeEquals(200);

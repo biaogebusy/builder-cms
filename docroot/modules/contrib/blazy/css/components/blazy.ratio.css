@@ -2,9 +2,8 @@
  * @file
  * The CSS and class names below are based on Slick media for easy migration.
  *
- * @see https://caniuse.com/?search=aspect-ratio
- * @todo https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio
- * @todo https://developer.mozilla.org/en-US/docs/Web/CSS/@media/aspect-ratio
+ * This serves for cross-browser compatibility (BC) with regular padding hack.
+ * For modern implementation, see blazy.ratio-modern.css.
  */
 
 /**
@@ -27,6 +26,7 @@
   transition: padding-bottom 0.2s;
 }
 
+/* To get percentage from 16:9, do: 9/16 x 100 = 56.25% */
 /* 1:1 ratio */
 .media--ratio--11 {
   padding-bottom: 100%;
@@ -47,7 +47,22 @@
   padding-bottom: 62.5%;
 }
 
+/* 9:16 ratio */
+.media--ratio--916 {
+  padding-bottom: 177.78%;
+}
+
 /* 16:9 ratio */
 .media--ratio--169 {
   padding-bottom: 56.25%;
+}
+
+/* 16:10 ratio */
+.media--ratio--1610 {
+  padding-bottom: 62.5%;
+}
+
+/* 21:9 ratio */
+.media--ratio--219 {
+  padding-bottom: 42.86%;
 }

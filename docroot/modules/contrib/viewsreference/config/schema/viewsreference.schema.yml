@@ -9,6 +9,21 @@ field.formatter.settings.viewsreference_formatter:
     plugin_types:
       type: viewsreference.plugin_types
 
+field.formatter.settings.viewsreference_lazy_formatter:
+  type: mapping
+  label: 'Lazy formatter settings'
+  mapping:
+    plugin_types:
+      type: viewsreference.plugin_types
+
+field.formatter.settings.viewsreference_label_formatter:
+  type: mapping
+  label: 'Label formatter settings'
+  mapping:
+    link:
+      type: boolean
+      label: 'Link label to the referenced view'
+
 field.storage_settings.viewsreference:
   type: mapping
   label: 'Viewsreference field storage settings'

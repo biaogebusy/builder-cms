@@ -14,12 +14,14 @@ use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\filter\EntityReference;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\filter\EntityReference handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FilterEntityReferenceTest extends ViewsKernelTestBase {
 
   use ContentTypeCreationTrait;
@@ -36,13 +38,10 @@ class FilterEntityReferenceTest extends ViewsKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'node',
-    'user',
     'field',
     'text',
     'filter',
-    'views',
     'views_test_entity_reference',
   ];
 

@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share\EntityShareUtility;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
@@ -13,17 +15,15 @@ use Drupal\entity_share_client\RuntimeImportContext;
  * Update changed time.
  *
  * Because, by example, it could have been altered with relationship saved.
- *
- * @ImportProcessor(
- *   id = "changed_time",
- *   label = @Translation("Changed time"),
- *   description = @Translation("Set the changed time to changed time from remote data."),
- *   stages = {
- *     "process_entity" = 100,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'changed_time',
+  label: new TranslatableMarkup('Changed time'),
+  description: new TranslatableMarkup('Set the changed time to changed time from remote data.'),
+  stages: [
+    'process_entity' => 100,
+  ],
+)]
 class ChangedTime extends ImportProcessorPluginBase {
 
   /**

@@ -1,0 +1,17 @@
+ckeditor5_plugin_pack_fullscreen__fullscreen:
+  ckeditor5:
+    plugins:
+      - fullscreen.Fullscreen
+      - fullscreenAdapter.FullscreenAdapter
+    config:
+      fullscreen:
+        menuBar:
+          isVisible: false
+  drupal:
+    label: Fullscreen
+    library: ckeditor5_plugin_pack_fullscreen/ckeditor5_plugin_pack_fullscreen__fullscreen
+    admin_library: ckeditor5_plugin_pack_fullscreen/admin.fullscreen
+    elements: false
+    toolbar_items:
+      fullscreen:
+        label: Fullscreen

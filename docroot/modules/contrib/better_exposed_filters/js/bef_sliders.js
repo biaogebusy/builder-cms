@@ -10,12 +10,27 @@
     attach: function (context, settings) {
       if (drupalSettings.better_exposed_filters.slider) {
         $.each(drupalSettings.better_exposed_filters.slider_options, function (i, sliderOptions) {
+          let tooltips;
           let slider;
           const data_selector = 'edit-' + sliderOptions.dataSelector;
           const direction = $('html[dir="rtl"]').length > 0 ? 'rtl' : 'ltr';
 
           // Collect all possible input fields for this filter.
           var $inputs = $(once('slider-filter', "input[data-drupal-selector=" + data_selector + "], input[data-drupal-selector=" + data_selector + "-max], input[data-drupal-selector=" + data_selector + "-min]", context));
+
+          // Set up tooltips.
+          if ($inputs.length) {
+            tooltips = false;
+            if (sliderOptions.tooltips) {
+              const tooltipValuePrefix = sliderOptions.tooltips_value_prefix ?? '';
+              const tooltipValueSuffix = sliderOptions.tooltips_value_suffix ?? '';
+              tooltips = {
+                to: function (value) {
+                  return tooltipValuePrefix + ' ' + Math.trunc(Number(value)) + ' ' + tooltipValueSuffix;
+                }
+              };
+            }
+          }
 
           // This is a single-value filter.
           if ($inputs.length === 1) {
@@ -57,7 +72,8 @@
                 from: function (value) {
                   return Math.trunc(Number(value));
                 }
-              }
+              },
+              tooltips: tooltips
             });
             // This fires every time the slider values are changed, either by a
             // user or by calling API methods. Additionally, it fires
@@ -124,7 +140,8 @@
                 from: function (value) {
                   return Math.trunc(Number(value));
                 }
-              }
+              },
+              tooltips: tooltips
             });
             // Update the textfields as the sliders are moved.
             slider.noUiSlider.on('update', function (values) {
@@ -139,7 +156,25 @@
               $(slider).parents('form').find('[data-bef-auto-submit-click]').click();
             });
 
-            $min.after(slider);
+            const placement = sliderOptions.placement_location;
+            const $minFieldWrapper = $min.parent('.form-item');
+            const $maxFieldWrapper = $max.parent('.form-item');
+            if (placement === 'start') {
+              if ($minFieldWrapper.length) {
+                $minFieldWrapper.before(slider);
+              }
+            }
+            else if (placement === 'end') {
+              $maxFieldWrapper.after(slider);
+            }
+            else {
+              if ($minFieldWrapper.length) {
+                $minFieldWrapper.after(slider);
+              }
+              else {
+                $maxFieldWrapper.after(slider);
+              }
+            }
 
             // Update the slider when the fields are updated.
             $min.blur(function () {

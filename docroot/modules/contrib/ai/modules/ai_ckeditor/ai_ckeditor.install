@@ -6,6 +6,86 @@
  */
 
 /**
+ * Implements hook_requirements().
+ */
+function ai_ckeditor_requirements($phase): array {
+  if ($phase !== 'runtime') {
+    return [];
+  }
+
+  $module_path = \Drupal::service('extension.path.resolver')->getPath('module', 'ai_ckeditor');
+  $assets = [
+    'js/build/aickeditor.js',
+    'js/build/ai_balloon_menu.js',
+  ];
+
+  $missing = [];
+  foreach ($assets as $asset) {
+    if (!file_exists($module_path . '/' . $asset)) {
+      $missing[] = $asset;
+    }
+  }
+
+  if (empty($missing)) {
+    return [
+      'ai_ckeditor_assets' => [
+        'title' => t('AI CKEditor assets'),
+        'value' => t('Built assets are present.'),
+        'severity' => REQUIREMENT_OK,
+      ],
+    ];
+  }
+
+  return [
+    'ai_ckeditor_assets' => [
+      'title' => t('AI CKEditor assets'),
+      'value' => t('Built assets are missing.'),
+      'description' => t('The AI CKEditor plugin assets are not built, so the editor toolbar buttons will not load. Run <code>npm ci</code> and <code>npm run build</code> in <code>modules/ai_ckeditor</code> inside the AI module to generate them. See <code>docs/modules/ai_ckeditor/index.md</code> for details. Missing files: @files', [
+        '@files' => implode(', ', $missing),
+      ]),
+      'severity' => REQUIREMENT_WARNING,
+    ],
+  ];
+}
+
+/**
+ * Implements hook_module_preuninstall().
+ */
+function ai_ckeditor_module_preuninstall(string $module): void {
+  if ($module !== 'ai_ckeditor') {
+    return;
+  }
+  // Toolbar item IDs registered by this module in ai_ckeditor.ckeditor5.yml.
+  $toolbar_items = ['aickeditor', 'ai_balloon_menu'];
+  /** @var \Drupal\editor\EditorInterface[] $editors */
+  $editors = \Drupal::entityTypeManager()->getStorage('editor')->loadMultiple();
+  foreach ($editors as $editor) {
+    if ($editor->getEditor() != 'ckeditor5') {
+      continue;
+    }
+    $settings = $editor->getSettings();
+    $items = $settings['toolbar']['items'] ?? [];
+
+    if (empty($items)) {
+      continue;
+    }
+
+    $filtered = array_values(array_diff($items, $toolbar_items));
+    if ($filtered === $items) {
+      continue;
+    }
+    $settings['toolbar']['items'] = $filtered;
+
+    // Remove plugin configuration provided by this module.
+    if (isset($settings['plugins']['ai_ckeditor_ai'])) {
+      unset($settings['plugins']['ai_ckeditor_ai']);
+    }
+    $editor->setSettings($settings);
+    $editor->save();
+  }
+}
+
+/**
  * Add modify prompt configuration and enable the plugin in text formats.
  */
 function ai_ckeditor_update_10001() {

@@ -25,7 +25,7 @@ class Hidden extends TextBase {
     // Include only the access-view-related base properties.
     $access_properties = $this->defineDefaultBaseProperties();
     $access_properties = array_filter($access_properties, function ($access_default, $access_key) {
-      return strpos($access_key, 'access_') === 0;
+      return str_starts_with($access_key, 'access_');
     }, ARRAY_FILTER_USE_BOTH);
 
     return [

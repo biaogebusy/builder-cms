@@ -194,7 +194,7 @@ abstract class WebformDevelEntityFormApiBaseForm extends EntityForm {
    */
   protected function isPropertyTranslatable($property) {
     $property = str_replace('#', '', $property);
-    if (strpos($property, '__') !== FALSE) {
+    if (str_contains($property, '__')) {
       [, $child_property] = explode('__', $property);
       return isset($this->translatableProperties[$child_property]);
     }
@@ -212,7 +212,7 @@ abstract class WebformDevelEntityFormApiBaseForm extends EntityForm {
    *   If used and set to TRUE, var_export() will return the variable
    *   representation instead of outputting it.
    *
-   * @return string
+   * @return string|null
    *   Returns the variable representation when the return parameter is used and
    *   evaluates to TRUE. Otherwise, this function will return NULL.
    */

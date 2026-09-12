@@ -1,4 +1,6 @@
 services:
+  _defaults:
+    autowire: true
   plugin.manager.advancedqueue_backend:
     class: Drupal\advancedqueue\BackendManager
     parent: default_plugin_manager
@@ -9,4 +11,8 @@ services:
 
   advancedqueue.processor:
     class: Drupal\advancedqueue\Processor
-    arguments: ['@event_dispatcher', '@datetime.time', '@plugin.manager.advancedqueue_job_type', '@logger.channel.cron']
+    arguments: ['@event_dispatcher', '@datetime.time', '@plugin.manager.advancedqueue_job_type', '@logger.factory']
+  Drupal\advancedqueue\ProcessorInterface: '@advancedqueue.processor'
+
+  Drupal\advancedqueue\Hook\AdvancedqueueHooks: ~
+  Drupal\advancedqueue\Hook\AdvancedqueueViewsHooks: ~

@@ -5,19 +5,15 @@
  * The Media Library Form Element module file.
  */
 
-use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElementBase;
-use Drupal\Core\Template\Attribute;
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\media_library_form_element\Hook\MediaLibraryFormElementHooks;
 
 /**
  * Implements hook_theme().
  */
+#[LegacyHook]
 function media_library_form_element_theme($existing, $type, $theme, $path) {
-  return [
-    'media_library_element' => [
-      'render element' => 'element',
-    ],
-  ];
+  return \Drupal::service(MediaLibraryFormElementHooks::class)->theme($existing, $type, $theme, $path);
 }
 
 /**
@@ -31,41 +27,5 @@ function media_library_form_element_theme($existing, $type, $theme, $path) {
  *     Properties used: #attributes.
  */
 function template_preprocess_media_library_element(&$variables) {
-  $element = $variables['element'];
-  Element::setAttributes($element, ['id']);
-  RenderElementBase::setAttributes($element);
-  $variables['attributes'] = $element['#attributes'] ?? [];
-  $variables['prefix'] = $element['#field_prefix'] ?? NULL;
-  $variables['suffix'] = $element['#field_suffix'] ?? NULL;
-  $variables['title_display'] = $element['#title_display'] ?? NULL;
-  // $variables['children'] = $element['#children'];
-  $variables['required'] = !empty($element['#required']) ? $element['#required'] : NULL;
-
-  if (isset($element['#title']) && $element['#title'] !== '') {
-    $variables['legend']['title'] = ['#markup' => $element['#title']];
-  }
-
-  $variables['legend']['attributes'] = new Attribute();
-  // Add 'visually-hidden' class to legend span.
-  if ($variables['title_display'] == 'invisible') {
-    $variables['legend_span']['attributes'] = new Attribute(['class' => ['visually-hidden']]);
-  }
-  else {
-    $variables['legend_span']['attributes'] = new Attribute();
-  }
-
-  if (!empty($element['#description'])) {
-    $description_id = $element['#attributes']['id'] . '--description';
-    $description_attributes['id'] = $description_id;
-    $variables['description']['attributes'] = new Attribute($description_attributes);
-    $variables['description']['content'] = $element['#description'];
-
-    // Add the description's id to the fieldset aria attributes.
-    $variables['attributes']['aria-describedby'] = $description_id;
-  }
-
-  $variables['content'] = $element;
-
-  // Suppress error messages.
-  $variables['errors'] = NULL;
+  return \Drupal::service(MediaLibraryFormElementHooks::class)->preprocessMediaLibraryFormElement($variables);
 }

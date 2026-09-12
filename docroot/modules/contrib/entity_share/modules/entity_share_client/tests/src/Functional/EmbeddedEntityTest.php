@@ -21,6 +21,22 @@ class EmbeddedEntityTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'file',
+    'image',
+    'media',
+    'field',
+    'text',
+    'menu_ui',
+    'entity_share_test',
+    'jsonapi_extras',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'node';
 
   /**
@@ -34,9 +50,7 @@ class EmbeddedEntityTest extends EntityShareClientFunctionalTestBase {
   protected static $entityLangcode = 'en';
 
   /**
-   * An array of data to generate physical files.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $filesData = [
     'file_document' => [

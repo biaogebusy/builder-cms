@@ -34,7 +34,7 @@ phpcs:
 variables:
   OPT_IN_TEST_NEXT_MAJOR: '1'
   OPT_IN_TEST_NEXT_MINOR: '1'
-  _CSPELL_WORDS: 'Unblockmanager,batigolix,Doesborg,fabianderijk,Rijk'
+  _CSPELL_WORDS: 'Unblockmanager,batigolix,Doesborg,fabianderijk,Rijk, allowedlist'
 #   SKIP_ESLINT: '1'
 #   OPT_IN_TEST_NEXT_MAJOR: '1'
 #   _CURL_TEMPLATES_REF: 'main'

@@ -34,9 +34,9 @@ class WebformTwigExtension extends AbstractExtension {
    */
   public function getFunctions() {
     return [
-      new TwigFunction('webform_html_editor_check_markup', [$this, 'webformHtmlEditorCheckMarkup']),
-      new TwigFunction('webform_debug', [$this, 'webformDebug']),
-      new TwigFunction('webform_token', [$this, 'webformToken']),
+      new TwigFunction('webform_html_editor_check_markup', $this->webformHtmlEditorCheckMarkup(...)),
+      new TwigFunction('webform_debug', $this->webformDebug(...)),
+      new TwigFunction('webform_token', $this->webformToken(...)),
     ];
   }
 
@@ -106,7 +106,7 @@ class WebformTwigExtension extends AbstractExtension {
    *
    * @see \Drupal\Core\Utility\Token::replace
    */
-  public function webformToken($token, EntityInterface $entity = NULL, array $data = [], array $options = NULL) {
+  public function webformToken($token, ?EntityInterface $entity = NULL, array $data = [], ?array $options = NULL) {
     $options = $options ?: [];
 
     // Allow the webform_token function to be tested during validation without
@@ -142,7 +142,14 @@ class WebformTwigExtension extends AbstractExtension {
       return '';
     }
 
-    return (WebformHtmlHelper::containsHtml($value)) ? ['#markup' => $value, '#allowed_tags' => WebformXss::getAdminTagList()] : $value;
+    if (WebformHtmlHelper::containsHtml($value)) {
+      return [
+        '#markup' => $value,
+        '#allowed_tags' => WebformXss::getAdminTagList(),
+      ];
+    }
+
+    return $value;
   }
 
   /* ************************************************************************ */
@@ -258,7 +265,7 @@ class WebformTwigExtension extends AbstractExtension {
   public static function renderTwigTemplate(WebformSubmissionInterface $webform_submission, $template, array $options = [], array $context = []) {
     try {
       $build = static::buildTwigTemplate($webform_submission, $template, $options, $context);
-      return \Drupal::service('renderer')->renderPlain($build);
+      return \Drupal::service('renderer')->renderInIsolation($build);
     }
     catch (\Exception $exception) {
       if ($webform_submission->getWebform()->access('update')) {
@@ -301,8 +308,8 @@ class WebformTwigExtension extends AbstractExtension {
     // If the template does NOT use the webform_token() function, but contains
     // simple tokens, convert the simple tokens to use
     // the webform_token() function.
-    if (strpos($template, 'webform_token(') === FALSE
-      && strpos($template, '[webform') !== FALSE) {
+    if (!str_contains($template, 'webform_token(')
+      && str_contains($template, '[webform')) {
       $template = preg_replace('#([^"\']|^)(\[[^]]+\])([^"\']|$)#', '\1{{ webform_token(\'\2\', webform_submission) }}\3', $template);
     }
 

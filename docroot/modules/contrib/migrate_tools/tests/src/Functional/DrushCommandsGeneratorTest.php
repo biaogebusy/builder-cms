@@ -75,6 +75,8 @@ EOD;
     $this->assertStringNotContainsString('5/5', $this->getErrorOutput());
     $vocabulary = \Drupal::entityTypeManager()->getStorage('taxonomy_vocabulary')->load('genre');
     $this->assertEquals('Genre', $vocabulary->label());
+    // Flush cache so recently added vocabularies actually appear.
+    drupal_flush_all_caches();
     $this->assertEquals(4, \Drupal::entityTypeManager()->getStorage('taxonomy_vocabulary')->getQuery()->accessCheck(TRUE)->count()->execute());
 
     // Remove one vocab and replace with another.

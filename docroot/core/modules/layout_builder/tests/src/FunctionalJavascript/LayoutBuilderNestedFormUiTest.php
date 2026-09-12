@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests placing blocks containing forms in theLayout Builder UI.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderNestedFormUiTest extends WebDriverTestBase {
 
   /**
@@ -134,7 +136,7 @@ class LayoutBuilderNestedFormUiTest extends WebDriverTestBase {
    * @param string $expected_save_message
    *   The message that should be displayed after successful layout save.
    */
-  protected function addFormBlock($label, $path, $expected_save_message) {
+  protected function addFormBlock($label, $path, $expected_save_message): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

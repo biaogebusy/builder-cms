@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\config_translation\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate multilingual site variables.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateSystemSiteTranslationTest extends MigrateDrupal7TestBase {
 
   /**

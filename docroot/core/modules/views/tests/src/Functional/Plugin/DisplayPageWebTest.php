@@ -7,12 +7,14 @@ namespace Drupal\Tests\views\Functional\Plugin;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the views page display plugin.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class DisplayPageWebTest extends ViewTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
@@ -22,7 +24,12 @@ class DisplayPageWebTest extends ViewTestBase {
    *
    * @var array
    */
-  public static $testViews = ['test_page_display', 'test_page_display_arguments', 'test_page_display_menu', 'test_page_display_path'];
+  public static $testViews = [
+    'test_page_display',
+    'test_page_display_arguments',
+    'test_page_display_menu',
+    'test_page_display_path',
+  ];
 
   /**
    * {@inheritdoc}

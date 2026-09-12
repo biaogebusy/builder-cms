@@ -6,11 +6,15 @@ use Drupal\node\Entity\Node;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\Tests\feeds\Kernel\FeedsKernelTestBase;
 use Drupal\Tests\paragraphs\FunctionalJavascript\ParagraphsTestBaseTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * @coversDefaultClass \Drupal\paragraphs\Feeds\Target\Paragraphs
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsTest extends FeedsKernelTestBase {
 
   use ParagraphsTestBaseTrait;

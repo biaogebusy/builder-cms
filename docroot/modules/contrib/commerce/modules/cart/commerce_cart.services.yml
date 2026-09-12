@@ -8,6 +8,7 @@ services:
 
   commerce_cart.cron:
     class: Drupal\commerce_cart\Cron
+  Drupal\commerce_cart\Cron: '@commerce_cart.cron'
 
   commerce_cart.cart_session:
     class: Drupal\commerce_cart\CartSession
@@ -47,3 +48,12 @@ services:
 
   commerce_cart.lazy_builders:
     class: Drupal\commerce_cart\CartLazyBuilders
+
+  Drupal\commerce_cart\Hook\CommerceCartHooks:
+    class: Drupal\commerce_cart\Hook\CommerceCartHooks
+
+  Drupal\commerce_cart\Hook\CommerceCartViewsHooks:
+    class: Drupal\commerce_cart\Hook\CommerceCartViewsHooks
+
+  Drupal\commerce_cart\Hook\CommerceCartThemeHooks:
+    class: Drupal\commerce_cart\Hook\CommerceCartThemeHooks

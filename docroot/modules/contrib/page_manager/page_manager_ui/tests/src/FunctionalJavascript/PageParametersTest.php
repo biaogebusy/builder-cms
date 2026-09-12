@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\page_manager_ui\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\page_manager\Traits\WebDriverFormSubmitTrait;
 
 /**
  * Tests the page parameters capabilities.
@@ -11,6 +11,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  * @group page_manager_ui
  */
 class PageParametersTest extends WebDriverTestBase {
+
+  use WebDriverFormSubmitTrait;
 
   /**
    * {@inheritdoc}
@@ -105,7 +107,7 @@ class PageParametersTest extends WebDriverTestBase {
 
     // Finish the wizard.
     $this->submitForm([], 'Finish');
-    $this->assertSession()->responseContains(new FormattableMarkup('The page %label has been added.', ['%label' => 'Foo']));
+    $this->assertSession()->pageTextContains('The page Foo has been added.');
 
     // Check that the node's title is visible at the page.
     $this->drupalGet('admin/foo/' . $node->id());

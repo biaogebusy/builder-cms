@@ -10,12 +10,15 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\system\Hook\SystemHooks;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests operations dealing with directories.
- *
- * @group File
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class DirectoryTest extends FileTestBase {
 
   /**
@@ -106,7 +109,8 @@ class DirectoryTest extends FileTestBase {
     // Remove .htaccess file again to test that it is re-created by a cron run.
     @$file_system->unlink($default_scheme . '://.htaccess');
     $this->assertFileDoesNotExist($default_scheme . '://.htaccess');
-    system_cron();
+    $systemCron = new SystemHooks();
+    $systemCron->cron();
     $this->assertFileExists($default_scheme . '://.htaccess');
 
     // Verify contents of .htaccess file.

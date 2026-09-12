@@ -7,13 +7,16 @@ namespace Drupal\Tests\ai\FunctionalJavascript;
 use Drupal\ai\AiProviderInterface;
 use Drupal\Tests\ai\FunctionalJavascriptTests\BaseClassFunctionalJavascriptTests;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the AI Provider Configuration form element.
  *
  * @group ai
  * @group 3580935
+ * @group 3586636
  */
+#[RunTestsInSeparateProcesses]
 class AiProviderConfigurationElementTest extends BaseClassFunctionalJavascriptTests {
 
   /**
@@ -22,6 +25,7 @@ class AiProviderConfigurationElementTest extends BaseClassFunctionalJavascriptTe
   protected static $modules = [
     'ai',
     'ai_test',
+    'file',
     'user',
     'system',
   ];
@@ -520,6 +524,151 @@ class AiProviderConfigurationElementTest extends BaseClassFunctionalJavascriptTe
 
       $this->takeScreenshot('4_config_container_checked');
     }
+  }
+
+  /**
+   * Tests that a provider with no configuration options collapses the wrapper.
+   *
+   * Regression test for https://www.drupal.org/i/3586636: selecting a
+   * provider/model whose getAvailableConfiguration() returns an empty schema
+   * (the ai_test EchoProvider has no 'configuration' block for 'rerank' in
+   * api_defaults.yml) must not render an empty "Configuration" details box.
+   */
+  public function testProviderWithNoConfigurationCollapsesWrapper(): void {
+    $this->drupalLogin($this->aiAdmin);
+    $this->drupalGet('admin/config/ai/test-form-elements', ['query' => ['operation_type' => 'rerank']]);
+    $this->takeScreenshot('1_form_loaded_rerank');
+
+    $page = $this->getSession()->getPage();
+    $assert = $this->assertSession();
+
+    $assert->waitForElement('css', '#edit-provider_config-config');
+
+    $select = $page->find('css', 'select[data-drupal-selector="edit-provider-config-provider-model"]');
+    $this->assertNotNull($select, 'Provider/model select should be present.');
+
+    // Pick the first real (non-empty, non-Default) provider/model option.
+    $option_value = NULL;
+    foreach ($select->findAll('css', 'option') as $option) {
+      $value = $option->getValue();
+      if (!empty($value) && $value !== AiProviderInterface::DEFAULT_MODEL_VALUE) {
+        $option_value = $value;
+        break;
+      }
+    }
+    $this->assertNotNull($option_value, 'A selectable provider/model option should be available for the rerank operation type.');
+
+    $select->setValue($option_value);
+    $assert->assertWaitOnAjaxRequest();
+    $this->takeScreenshot('2_provider_with_no_configuration_selected');
+
+    $config_wrapper = $assert->waitForElement('css', '#edit-provider_config-config');
+    $this->assertNotNull($config_wrapper, 'Configuration wrapper should still exist.');
+
+    $this->assertNotEquals(
+      'details',
+      $config_wrapper->getTagName(),
+      'Configuration wrapper should be collapsed to a plain container, not a details element, when the provider has no configuration options.'
+    );
+    $this->assertEmpty(
+      $config_wrapper->findAll('css', 'summary'),
+      'Collapsed configuration wrapper should not have a details summary/title.'
+    );
+    $this->assertEmpty(
+      $config_wrapper->findAll('css', 'input, select, textarea'),
+      'Collapsed configuration wrapper should not contain any configuration fields.'
+    );
+  }
+
+  /**
+   * Tests the wrapper is collapsed on initial load with no selection/default.
+   *
+   * Regression test for the gap noted in
+   * https://www.drupal.org/i/3586636#comment (no provider/model selected, and
+   * no site-wide default provider configured for the operation type):
+   * loadConfigurationFields() was never invoked in that case, so the
+   * "Configuration" details box rendered empty on the very first page load.
+   *
+   * Also verifies the collapsed wrapper's AJAX #id survives, i.e. selecting a
+   * real provider/model afterwards still successfully rebuilds it as a
+   * details element with fields (rather than the AJAX replace silently
+   * failing because the wrapper lost its HTML id when collapsed).
+   */
+  public function testNoDefaultProviderCollapsesWrapperOnInitialLoad(): void {
+    $this->drupalLogin($this->aiAdmin);
+
+    // Deliberately do not configure a default provider for 'chat', and load
+    // the form fresh so nothing is selected either.
+    $this->drupalGet('admin/config/ai/test-form-elements');
+    $this->takeScreenshot('1_form_loaded_no_selection_no_default');
+
+    $page = $this->getSession()->getPage();
+    $assert = $this->assertSession();
+
+    $select = $page->find('css', 'select[data-drupal-selector="edit-provider-config-provider-model"]');
+    $this->assertNotNull($select, 'Provider/model select should be present.');
+    $this->assertEmpty($select->getValue(), 'No provider/model should be selected on initial load.');
+
+    $config_wrapper = $assert->waitForElement('css', '#edit-provider_config-config');
+    $this->assertNotNull($config_wrapper, 'Configuration wrapper should still exist.');
+
+    $this->assertNotEquals(
+      'details',
+      $config_wrapper->getTagName(),
+      'Configuration wrapper should be collapsed to a plain container, not a details element, when nothing is selected and there is no default provider.'
+    );
+    $this->assertEmpty(
+      $config_wrapper->findAll('css', 'summary'),
+      'Collapsed configuration wrapper should not have a details summary/title.'
+    );
+    $this->assertEmpty(
+      $config_wrapper->findAll('css', 'input, select, textarea'),
+      'Collapsed configuration wrapper should not contain any configuration fields.'
+    );
+
+    // Now select a real provider/model (chat has configuration options) and
+    // confirm the AJAX rebuild still works against the collapsed wrapper.
+    $option_value = NULL;
+    foreach ($select->findAll('css', 'option') as $option) {
+      $value = $option->getValue();
+      if (!empty($value) && $value !== AiProviderInterface::DEFAULT_MODEL_VALUE) {
+        $option_value = $value;
+        break;
+      }
+    }
+    $this->assertNotNull($option_value, 'A selectable provider/model option should be available for the chat operation type.');
+
+    $select->setValue($option_value);
+    $assert->assertWaitOnAjaxRequest();
+    $this->takeScreenshot('2_provider_with_configuration_selected');
+
+    $config_wrapper = $assert->waitForElement('css', '#edit-provider_config-config');
+    $this->assertNotNull(
+      $config_wrapper,
+      'Configuration wrapper should still be found by its id after selecting a provider, proving the collapsed wrapper did not lose its AJAX #id.'
+    );
+    $this->assertEquals(
+      'details',
+      $config_wrapper->getTagName(),
+      'Configuration wrapper should become a details element again once a provider with configuration options is selected.'
+    );
+    $this->assertNotEmpty(
+      $config_wrapper->findAll('css', 'input, select, textarea'),
+      'Configuration fields should be present once a provider with configuration options is selected.'
+    );
+
+    // Switching back to the empty option should collapse it again.
+    $select->setValue('');
+    $assert->assertWaitOnAjaxRequest();
+    $this->takeScreenshot('3_reselected_empty_option');
+
+    $config_wrapper = $assert->waitForElement('css', '#edit-provider_config-config');
+    $this->assertNotNull($config_wrapper, 'Configuration wrapper should still exist after re-selecting the empty option.');
+    $this->assertNotEquals(
+      'details',
+      $config_wrapper->getTagName(),
+      'Configuration wrapper should collapse back to a plain container when re-selecting the empty option.'
+    );
   }
 
   /**

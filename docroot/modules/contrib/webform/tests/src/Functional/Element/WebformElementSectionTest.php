@@ -19,13 +19,19 @@ class WebformElementSectionTest extends WebformElementBrowserTestBase {
   /**
    * Test element section.
    */
-  public function testSection() {
+  public function testSection(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_section');
 
     // Check section element.
-    $assert_session->responseContains('<section data-drupal-selector="edit-webform-section" aria-describedby="edit-webform-section--description" id="edit-webform-section" class="required webform-element-help-container--title webform-element-help-container--title-after js-form-item form-item js-form-wrapper form-wrapper webform-section" required="required" aria-required="true">');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<section data-drupal-selector="edit-webform-section" aria-describedby="edit-webform-section--description" id="edit-webform-section" class="required webform-element-help-container--title webform-element-help-container--title-after js-form-item form-item js-form-wrapper form-wrapper webform-section" required="required" aria-required="true">');
+    }
+    else {
+      $assert_session->responseContains('<section data-drupal-selector="edit-webform-section" aria-describedby="edit-webform-section--description" id="edit-webform-section" class="required webform-element-help-container--title webform-element-help-container--title-after js-form-item form-item js-form-wrapper form-wrapper webform-section" required="required">');
+    }
+
     $assert_session->responseContains('<h2 class="webform-section-title js-form-required form-required">webform_section<span class="webform-element-help js-webform-element-help" role="tooltip" tabindex="0" aria-label="webform_section" data-webform-help="&lt;div class=&quot;webform-element-help--title&quot;&gt;webform_section&lt;/div&gt;&lt;div class=&quot;webform-element-help--content&quot;&gt;This is help text.&lt;/div&gt;"><span aria-hidden="true">?</span></span>');
     $assert_session->responseContains('<div class="description"><div id="edit-webform-section--description" class="webform-element-description">This is a description.</div>');
     $assert_session->responseContains('<div id="edit-webform-section--more" class="js-webform-element-more webform-element-more">');

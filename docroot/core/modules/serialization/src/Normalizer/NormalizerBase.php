@@ -29,14 +29,7 @@ abstract class NormalizerBase implements SerializerAwareInterface, CacheableNorm
     if (!is_object($data) || !$this->checkFormat($format)) {
       return FALSE;
     }
-
-    if (property_exists($this, 'supportedInterfaceOrClass')) {
-      @trigger_error('Defining ' . static::class . '::supportedInterfaceOrClass property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-      $supported = (array) $this->supportedInterfaceOrClass;
-    }
-    else {
-      $supported = array_keys($this->getSupportedTypes($format));
-    }
+    $supported = array_keys($this->getSupportedTypes($format));
 
     return (bool) array_filter($supported, function ($name) use ($data) {
       return $data instanceof $name;
@@ -56,13 +49,7 @@ abstract class NormalizerBase implements SerializerAwareInterface, CacheableNorm
       return FALSE;
     }
 
-    if (property_exists($this, 'supportedInterfaceOrClass')) {
-      @trigger_error('Defining ' . static::class . '::supportedInterfaceOrClass property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-      $supported = (array) $this->supportedInterfaceOrClass;
-    }
-    else {
-      $supported = array_keys($this->getSupportedTypes($format));
-    }
+    $supported = array_keys($this->getSupportedTypes($format));
 
     $subclass_check = function ($name) use ($type) {
       return (class_exists($name) || interface_exists($name)) && is_subclass_of($type, $name, TRUE);
@@ -82,7 +69,9 @@ abstract class NormalizerBase implements SerializerAwareInterface, CacheableNorm
    *   specified this will return TRUE.
    */
   protected function checkFormat($format = NULL) {
-    if (!isset($format) || !isset($this->format)) {
+    // The format 'json_schema' is special-cased as it requires explicit
+    // support, as opposed to a permissive default-case value normalization.
+    if (!isset($format) || (!isset($this->format) && $format !== 'json_schema')) {
       return TRUE;
     }
 
@@ -94,22 +83,13 @@ abstract class NormalizerBase implements SerializerAwareInterface, CacheableNorm
    *
    * @param array $context
    *   Context options for the normalizer.
-   * @param $data
+   * @param mixed $data
    *   The data that might have cacheability information.
    */
   protected function addCacheableDependency(array $context, $data) {
     if ($data instanceof CacheableDependencyInterface && isset($context[static::SERIALIZATION_CONTEXT_CACHEABILITY])) {
       $context[static::SERIALIZATION_CONTEXT_CACHEABILITY]->addCacheableDependency($data);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasCacheableSupportsMethod(): bool {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-
-    return FALSE;
   }
 
   /**

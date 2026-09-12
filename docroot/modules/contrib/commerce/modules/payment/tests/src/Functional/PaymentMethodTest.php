@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_payment\Functional;
 
+use Drupal\commerce_payment\PaymentMethodStorageInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\commerce_payment\Entity\PaymentMethod;
@@ -27,13 +28,6 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
    * @var string
    */
   protected $collectionUrl;
-
-  /**
-   * Payment method entity storage.
-   *
-   * @var \Drupal\commerce_payment\PaymentMethodStorageInterface
-   */
-  public $paymentMethodStorage;
 
   /**
    * An on-site payment gateway.
@@ -73,8 +67,6 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
       'label' => 'Example',
       'plugin' => 'example_onsite',
     ]);
-    $this->paymentMethodStorage = $this->container->get('entity_type.manager')
-      ->getStorage('commerce_payment_method');
   }
 
   /**
@@ -328,7 +320,9 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
       'expiration' => ['month' => '01', 'year' => date("Y") + 1],
     ];
     $this->paymentGateway->getPlugin()->createPaymentMethod($payment_method, $details);
-    $payment_method = $this->paymentMethodStorage->loadUnchanged($payment_method->id());
+    $payment_method_storage = $this->container->get('entity_type.manager')->getStorage('commerce_payment_method');
+    assert($payment_method_storage instanceof PaymentMethodStorageInterface);
+    $payment_method = $payment_method_storage->loadUnchanged($payment_method->id());
     // The first payment method should be set as default.
     $this->assertTrue($payment_method->isDefault());
     $this->drupalGet($this->collectionUrl);
@@ -352,8 +346,8 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
     $this->assertSession()->addressEquals($this->collectionUrl);
     $this->assertSession()->pageTextContains(t('The @label payment method has been marked as default.', ['@label' => $payment_method2->label()]));
     // Test the updated payment methods.
-    $payment_method = $this->paymentMethodStorage->loadUnchanged($payment_method->id());
-    $payment_method2 = $this->paymentMethodStorage->loadUnchanged($payment_method2->id());
+    $payment_method = $payment_method_storage->loadUnchanged($payment_method->id());
+    $payment_method2 = $payment_method_storage->loadUnchanged($payment_method2->id());
     $this->assertTrue($payment_method2->isDefault());
     $this->assertFalse($payment_method->isDefault());
   }

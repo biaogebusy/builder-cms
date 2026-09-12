@@ -5,7 +5,7 @@ namespace Drupal\webform\Element;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\webform\Entity\Webform as WebformEntity;
 use Drupal\webform\Entity\WebformSubmission;
 use Drupal\webform\WebformInterface;
@@ -15,7 +15,7 @@ use Drupal\webform\WebformInterface;
  *
  * @RenderElement("webform")
  */
-class Webform extends RenderElement {
+class Webform extends RenderElementBase {
 
   /**
    * Webform element default properties.

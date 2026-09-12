@@ -268,6 +268,7 @@ class SubscribersTest extends MessageSubscribeTestBase {
    */
   public function testHooks() {
     $this->enableModules(['message_subscribe_test']);
+    $this->messageSubscribers = $this->container->get('message_subscribe.subscribers');
 
     $message = Message::create([
       'template' => $this->template->id(),

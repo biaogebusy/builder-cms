@@ -20,6 +20,12 @@ class BookStructureImporterTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'book',
+    'field',
+    'options',
+    'menu_ui',
+    'entity_share_test',
     'json_api_book',
   ];
 

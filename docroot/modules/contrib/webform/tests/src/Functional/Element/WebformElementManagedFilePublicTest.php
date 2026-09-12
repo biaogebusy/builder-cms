@@ -40,7 +40,7 @@ class WebformElementManagedFilePublicTest extends WebformElementBrowserTestBase 
   /**
    * Test public upload protection.
    */
-  public function testPublicUpload() {
+  public function testPublicUpload(): void {
     $assert_session = $this->assertSession();
 
     // Check status report private file system warning.

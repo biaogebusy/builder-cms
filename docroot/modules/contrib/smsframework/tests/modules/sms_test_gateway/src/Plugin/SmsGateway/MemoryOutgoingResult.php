@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_test_gateway\Plugin\SmsGateway;
 
@@ -18,9 +18,6 @@ use Drupal\sms\Message\SmsMessageResultInterface;
  */
 final class MemoryOutgoingResult extends Memory {
 
-  /**
-   * {@inheritdoc}
-   */
   public function send(SmsMessageInterface $sms_message): SmsMessageResultInterface {
     $result = parent::send($sms_message);
 
@@ -28,12 +25,12 @@ final class MemoryOutgoingResult extends Memory {
     if ($delete_reports > 0) {
       $reports = $result->getReports();
 
-      if (!count($reports)) {
+      if (!\count($reports)) {
         throw new \Exception('There are no reports to delete.');
       }
 
       // Slice off the first {$delete_reports}x reports.
-      $reports = array_slice($reports, $delete_reports);
+      $reports = \array_slice($reports, $delete_reports);
 
       $result->setReports($reports);
       return $result;

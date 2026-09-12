@@ -139,4 +139,55 @@ interface BackendClientInterface {
    */
   public function search(QueryInterface $query);
 
+  /**
+   * Get an index's mappings from the Elasticsearch server.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index to get the mappings from.
+   *
+   * @return array
+   *   Returns an array of mappings for the index, as defined by the
+   *   Elasticsearch server.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Throws a Search API exception if we cannot get the index's mappings.
+   */
+  public function getRawIndexMappings(IndexInterface $index): array;
+
+  /**
+   * Get an index's settings from the server.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index to get the settings from.
+   *
+   * @return array
+   *   Returns an array of settings for the index, as defined by the
+   *   Elasticsearch server.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Throws a Search API exception if we cannot get the index's settings.
+   */
+  public function getRawIndexSettings(IndexInterface $index): array;
+
+  /**
+   * Run an analyzer defined for an index on some text, returning the tokens.
+   *
+   * Warning: Generating excessive amount of tokens may cause a node to run out
+   * of memory (i.e.: cause Denial of Service on your Elasticsearch server)!
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index that the analyzer is defined on.
+   * @param string $analyzerId
+   *   The name of the analyzer to run.
+   * @param string $text
+   *   The text to run the analyzer on.
+   *
+   * @return array
+   *   An array of tokens as parsed by Elasticsearch.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Throws a Search API exception if the analyzer cannot be run.
+   */
+  public function runIndexAnalyzer(IndexInterface $index, string $analyzerId, string $text): array;
+
 }

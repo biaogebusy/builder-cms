@@ -106,6 +106,13 @@ final class Summarize extends AiCKEditorPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function getNoSelectedTextMessage(): TranslatableMarkup {
+    return $this->t('You must select some text before you can summarize it.');
+  }
+
+  /**
    * Generate text callback.
    *
    * @param array $form

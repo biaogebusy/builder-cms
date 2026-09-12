@@ -8,12 +8,15 @@ use Drupal\Component\Gettext\PoItem;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests LocaleLookup.
- *
- * @group locale
  */
+#[Group('locale')]
+#[RunTestsInSeparateProcesses]
 class LocaleLocaleLookupTest extends BrowserTestBase {
 
   use WaitTerminateTestTrait;
@@ -75,9 +78,8 @@ class LocaleLocaleLookupTest extends BrowserTestBase {
 
   /**
    * Tests old plural style @count[number] fix.
-   *
-   * @dataProvider providerTestFixOldPluralStyle
    */
+  #[DataProvider('providerTestFixOldPluralStyle')]
   public function testFixOldPluralStyle($translation_value, $expected): void {
     $string_storage = \Drupal::service('locale.storage');
     $string = $string_storage->findString(['source' => 'Member for', 'context' => '']);

@@ -6,14 +6,16 @@ namespace Drupal\Tests\file\FunctionalJavascript;
 
 use Drupal\Component\Utility\Bytes;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\Tests\TestFileCreationTrait;
 use Drupal\Tests\file\Functional\FileFieldCreationTrait;
+use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests uploading a file that exceeds the maximum file size.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class MaximumFileSizeExceededUploadTest extends WebDriverTestBase {
 
   use FileFieldCreationTrait;
@@ -46,10 +48,10 @@ class MaximumFileSizeExceededUploadTest extends WebDriverTestBase {
   /**
    * The original value of the 'display_errors' PHP configuration option.
    *
+   * @var string
+   *
    * @todo Remove this when issue #2905597 is fixed.
    * @see https://www.drupal.org/node/2905597
-   *
-   * @var string
    */
   protected $originalDisplayErrorsValue;
 

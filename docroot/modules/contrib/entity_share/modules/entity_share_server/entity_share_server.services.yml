@@ -4,3 +4,4 @@ services:
     arguments:
       - '@entity_type.manager'
       - '@jsonapi.resource_type.repository'
+      - '@entity_field.manager'

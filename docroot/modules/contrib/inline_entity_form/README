@@ -5,7 +5,7 @@ Existing entities can also be referenced.
 
 Supports commerce_product_reference, commerce_line_item_reference and entityreference fields.
 Requires integration code to be provided for each entity type that can be referenced.
-Supports the commerce_product (including Commerce AutoSKU integraton),
+Supports the commerce_product (including Commerce AutoSKU integration),
 commerce_line_item, node, taxonomy_term entity types out of the box.
 
 Getting started

@@ -1,0 +1,15 @@
+# ddev contrib module local development files
+/.ddev
+/vendor
+/web
+/.editorconfig
+/.vscode
+/recipes
+/.gitattributes
+/phpcs.xml.dist
+/phpstan-baseline.neon
+# some sql dump file
+*.sql
+*.sql.gz
+*.tgz
+*.tar.gz

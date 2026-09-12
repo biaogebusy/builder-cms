@@ -1,43 +1,77 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Call to an undefined method Drupal\\Core\\Database\\Query\\ExtendableInterface\:\:orderByHeader\(\)\.$#'
+			rawMessage: 'Call to an undefined method Drupal\Core\Database\Query\ExtendableInterface::orderByHeader().'
 			identifier: method.notFound
 			count: 1
 			path: modules/redirect_404/src/SqlRedirectNotFoundStorage.php
 
 		-
-			message: '#^Call to method getPath\(\) of internal class Drupal\\Core\\Extension\\ExtensionList from outside its root namespace Drupal\.$#'
+			rawMessage: 'Call to method getPath() of internal class Drupal\Core\Extension\ExtensionList from outside its root namespace Drupal.'
 			identifier: method.internalClass
 			count: 1
 			path: redirect.install
 
 		-
-			message: '#^Access to an undefined property Drupal\\path_alias\\PathAliasInterface\:\:\$original\.$#'
+			rawMessage: Access to an undefined property Drupal\path_alias\PathAliasInterface::$original.
 			identifier: property.notFound
 			count: 1
 			path: redirect.module
 
 		-
-			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemListInterface\<Drupal\\Core\\Field\\FieldItemInterface\>\:\:\$options\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Entity/Redirect.php
-
-		-
-			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			rawMessage: '\Drupal calls should be avoided in classes, use dependency injection instead'
 			identifier: globalDrupalDependencyInjection.useDependencyInjection
 			count: 1
 			path: src/EventSubscriber/RedirectRequestSubscriber.php
 
 		-
-			message: '#^Access to an undefined property Drupal\\link\\LinkItemInterface\:\:\$url\.$#'
+			rawMessage: '''
+				Call to deprecated method setCacheKey() of class Drupal\path_alias\AliasManager:
+				in drupal:11.3.0 and is removed from drupal:13.0.0. There
+				  is no replacement.
+			'''
+			identifier: method.deprecated
+			count: 1
+			path: src/EventSubscriber/RouteNormalizerRequestSubscriber.php
+
+		-
+			rawMessage: Access to an undefined property Drupal\link\LinkItemInterface::$url.
 			identifier: property.notFound
 			count: 1
 			path: src/Plugin/Validation/Constraint/SourceLinkTypeConstraint.php
 
 		-
-			message: '#^Call to an undefined method Symfony\\Component\\BrowserKit\\AbstractBrowser\:\:getClient\(\)\.$#'
+			rawMessage: '''
+				Class Drupal\redirect\Plugin\migrate\source\PathRedirect extends deprecated class Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase:
+				in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+				replacement.
+			'''
+			identifier: class.extendsDeprecatedClass
+			count: 1
+			path: src/Plugin/migrate/source/PathRedirect.php
+
+		-
+			rawMessage: '''
+				Call to method variableGet() of deprecated class Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase:
+				in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+				replacement.
+			'''
+			identifier: method.deprecatedClass
+			count: 1
+			path: src/Plugin/migrate/source/d7/PathRedirect.php
+
+		-
+			rawMessage: '''
+				Class Drupal\redirect\Plugin\migrate\source\d7\PathRedirect extends deprecated class Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase:
+				in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+				replacement.
+			'''
+			identifier: class.extendsDeprecatedClass
+			count: 1
+			path: src/Plugin/migrate/source/d7/PathRedirect.php
+
+		-
+			rawMessage: 'Call to an undefined method Symfony\Component\BrowserKit\AbstractBrowser<object, object>::getClient().'
 			identifier: method.notFound
 			count: 1
 			path: tests/src/Functional/GlobalRedirectTest.php

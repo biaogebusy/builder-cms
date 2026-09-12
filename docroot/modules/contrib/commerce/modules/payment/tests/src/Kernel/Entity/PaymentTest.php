@@ -108,6 +108,8 @@ class PaymentTest extends OrderKernelTestBase {
    * @covers ::isCompleted
    * @covers ::getCompletedTime
    * @covers ::setCompletedTime
+   * @covers ::getCreatedTime
+   * @covers ::setCreatedTime
    */
   public function testPayment() {
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
@@ -169,6 +171,9 @@ class PaymentTest extends OrderKernelTestBase {
     $payment->setCompletedTime(635879700);
     $this->assertEquals(635879700, $payment->getCompletedTime());
     $this->assertTrue($payment->isCompleted());
+
+    $payment->setCreatedTime(635879700);
+    $this->assertEquals(635879700, $payment->getCreatedTime());
   }
 
   /**

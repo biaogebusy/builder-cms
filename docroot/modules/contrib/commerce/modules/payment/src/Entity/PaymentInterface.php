@@ -4,11 +4,12 @@ namespace Drupal\commerce_payment\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\commerce_price\Price;
+use Drupal\Core\Entity\EntityChangedInterface;
 
 /**
  * Defines the interface for payments.
  */
-interface PaymentInterface extends ContentEntityInterface, EntityWithPaymentGatewayInterface {
+interface PaymentInterface extends ContentEntityInterface, EntityWithPaymentGatewayInterface, EntityChangedInterface {
 
   /**
    * Gets the payment type.
@@ -64,8 +65,8 @@ interface PaymentInterface extends ContentEntityInterface, EntityWithPaymentGate
   /**
    * Gets the payment remote ID.
    *
-   * @return string
-   *   The payment remote ID.
+   * @return string|null
+   *   The payment remote ID, NULL if not set.
    */
   public function getRemoteId();
 
@@ -268,5 +269,23 @@ interface PaymentInterface extends ContentEntityInterface, EntityWithPaymentGate
    * @return $this
    */
   public function setCompletedTime($timestamp);
+
+  /**
+   * Gets the payment creation timestamp.
+   *
+   * @return int|null
+   *   The payment creation timestamp, NULL if not set.
+   */
+  public function getCreatedTime(): ?int;
+
+  /**
+   * Sets the payment creation timestamp.
+   *
+   * @param int $timestamp
+   *   The payment creation timestamp.
+   *
+   * @return $this
+   */
+  public function setCreatedTime(int $timestamp): static;
 
 }

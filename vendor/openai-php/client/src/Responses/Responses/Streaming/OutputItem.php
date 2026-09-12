@@ -10,6 +10,7 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Responses\Concerns\HasMetaInformation;
 use OpenAI\Responses\Meta\MetaInformation;
 use OpenAI\Responses\Responses\Output\OutputCodeInterpreterToolCall;
+use OpenAI\Responses\Responses\Output\OutputCompaction;
 use OpenAI\Responses\Responses\Output\OutputComputerToolCall;
 use OpenAI\Responses\Responses\Output\OutputFileSearchToolCall;
 use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
@@ -19,6 +20,8 @@ use OpenAI\Responses\Responses\Output\OutputMcpCall;
 use OpenAI\Responses\Responses\Output\OutputMcpListTools;
 use OpenAI\Responses\Responses\Output\OutputMessage;
 use OpenAI\Responses\Responses\Output\OutputReasoning;
+use OpenAI\Responses\Responses\Output\OutputToolSearchCall;
+use OpenAI\Responses\Responses\Output\OutputToolSearchOutput;
 use OpenAI\Responses\Responses\Output\OutputWebSearchToolCall;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
@@ -34,8 +37,11 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type OutputMcpApprovalRequestType from OutputMcpApprovalRequest
  * @phpstan-import-type OutputMcpCallType from OutputMcpCall
  * @phpstan-import-type OutputCodeInterpreterToolCallType from OutputCodeInterpreterToolCall
+ * @phpstan-import-type OutputCompactionType from OutputCompaction
+ * @phpstan-import-type OutputToolSearchCallType from OutputToolSearchCall
+ * @phpstan-import-type OutputToolSearchOutputType from OutputToolSearchOutput
  *
- * @phpstan-type OutputItemType array{type: string, output_index: int, item: OutputCodeInterpreterToolCallType|OutputComputerToolCallType|OutputFileSearchToolCallType|OutputFunctionToolCallType|OutputMessageType|OutputReasoningType|OutputWebSearchToolCallType|OutputMcpListToolsType|OutputMcpApprovalRequestType|OutputMcpCallType|OutputImageGenerationToolCallType}
+ * @phpstan-type OutputItemType array{type: string, output_index: int, sequence_number: int, item: OutputCodeInterpreterToolCallType|OutputComputerToolCallType|OutputFileSearchToolCallType|OutputFunctionToolCallType|OutputMessageType|OutputReasoningType|OutputWebSearchToolCallType|OutputMcpListToolsType|OutputMcpApprovalRequestType|OutputMcpCallType|OutputImageGenerationToolCallType|OutputCompactionType|OutputToolSearchCallType|OutputToolSearchOutputType}
  *
  * @implements ResponseContract<OutputItemType>
  */
@@ -52,7 +58,8 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
     private function __construct(
         public readonly string $type,
         public readonly int $outputIndex,
-        public readonly OutputMessage|OutputCodeInterpreterToolCall|OutputFileSearchToolCall|OutputFunctionToolCall|OutputWebSearchToolCall|OutputComputerToolCall|OutputReasoning|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall $item,
+        public readonly int $sequenceNumber,
+        public readonly OutputMessage|OutputCodeInterpreterToolCall|OutputFileSearchToolCall|OutputFunctionToolCall|OutputWebSearchToolCall|OutputComputerToolCall|OutputReasoning|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCompaction|OutputToolSearchCall|OutputToolSearchOutput $item,
         private readonly MetaInformation $meta,
     ) {}
 
@@ -73,11 +80,15 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
             'mcp_approval_request' => OutputMcpApprovalRequest::from($attributes['item']),
             'mcp_call' => OutputMcpCall::from($attributes['item']),
             'code_interpreter_call' => OutputCodeInterpreterToolCall::from($attributes['item']),
+            'compaction' => OutputCompaction::from($attributes['item']),
+            'tool_search_call' => OutputToolSearchCall::from($attributes['item']),
+            'tool_search_output' => OutputToolSearchOutput::from($attributes['item']),
         };
 
         return new self(
             type: $attributes['type'],
             outputIndex: $attributes['output_index'],
+            sequenceNumber: $attributes['sequence_number'],
             item: $item,
             meta: $meta,
         );
@@ -91,6 +102,7 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
         return [
             'type' => $this->type,
             'output_index' => $this->outputIndex,
+            'sequence_number' => $this->sequenceNumber,
             'item' => $this->item->toArray(),
         ];
     }

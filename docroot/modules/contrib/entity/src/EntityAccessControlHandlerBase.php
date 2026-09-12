@@ -9,6 +9,8 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\user\EntityOwnerInterface;
 
 /**
+ * Base class for entity access control.
+ *
  * @internal
  */
 class EntityAccessControlHandlerBase extends CoreEntityAccessControlHandler {

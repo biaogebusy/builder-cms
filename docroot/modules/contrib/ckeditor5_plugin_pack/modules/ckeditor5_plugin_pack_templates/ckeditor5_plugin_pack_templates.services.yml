@@ -1,0 +1,5 @@
+services:
+  ckeditor5_plugin_pack_templates.route_subscriber:
+    class: Drupal\ckeditor5_plugin_pack_templates\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

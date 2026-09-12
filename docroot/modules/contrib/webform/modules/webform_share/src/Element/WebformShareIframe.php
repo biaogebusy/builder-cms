@@ -2,17 +2,17 @@
 
 namespace Drupal\webform_share\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
 use Drupal\webform\Plugin\WebformSourceEntity\QueryStringWebformSourceEntity;
 
 /**
- * Provides a render element that createa an iframe to share a webform.
+ * Provides a render element that create an iframe to share a webform.
  *
  * @RenderElement("webform_share_iframe")
  */
-class WebformShareIframe extends RenderElement implements TrustedCallbackInterface {
+class WebformShareIframe extends RenderElementBase implements TrustedCallbackInterface {
 
   /**
    * The JavaScript iframe library.

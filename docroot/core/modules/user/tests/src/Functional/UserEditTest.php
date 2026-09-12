@@ -6,12 +6,14 @@ namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user edit page.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserEditTest extends BrowserTestBase {
 
   /**
@@ -28,7 +30,8 @@ class UserEditTest extends BrowserTestBase {
     $user2 = $this->drupalCreateUser([]);
     $this->drupalLogin($user1);
 
-    // Test that error message appears when attempting to use a non-unique user name.
+    // Test that error message appears when attempting to use a non-unique user
+    // name.
     $edit['name'] = $user2->getAccountName();
     $this->drupalGet("user/" . $user1->id() . "/edit");
     $this->submitForm($edit, 'Save');
@@ -257,6 +260,46 @@ class UserEditTest extends BrowserTestBase {
     $this->drupalLogin($user);
     $this->drupalGet("user/" . $user->id() . "/edit");
     $this->assertFalse($this->getSession()->getPage()->hasField('mail'));
+  }
+
+  /**
+   * Tests that an admin cannot edit their own account status.
+   */
+  public function testAdminSelfBlocking(): void {
+    // Create an admin user with permission to manage other users.
+    $admin = $this->drupalCreateUser(['administer users']);
+    $user = $this->drupalCreateUser();
+
+    // Log in as the admin and attempt to edit their own profile.
+    $this->drupalLogin($admin);
+    $this->drupalGet("user/" . $admin->id() . "/edit");
+
+    // Ensure the status field is not rendered.
+    $this->assertSession()->fieldNotExists('edit-status-0');
+    $this->assertSession()->fieldNotExists('edit-status-1');
+
+    // Test editing another user to ensure the status field is rendered.
+    $this->drupalGet("user/" . $user->id() . "/edit");
+    $this->assertSession()->fieldExists('edit-status-0');
+    $this->assertSession()->fieldEnabled('edit-status-0');
+    $this->assertSession()->fieldEnabled('edit-status-1');
+  }
+
+  /**
+   * Tests constraint violations are triggered on the user account form.
+   */
+  public function testRolesValidation(): void {
+    $admin_user = $this->drupalCreateUser(['administer users']);
+    $this->drupalLogin($admin_user);
+    $this->drupalGet("user/" . $admin_user->id() . "/edit");
+    $this->submitForm([], 'Save');
+    $this->assertSession()->pageTextContains('The changes have been saved.');
+    \Drupal::keyvalue('user_form_test')->set('user_form_test_constraint_roles_edit', TRUE);
+    \Drupal::service('module_installer')->install(['entity_test', 'user_form_test']);
+    $this->drupalGet("user/" . $admin_user->id() . "/edit");
+    $this->submitForm([], 'Save');
+    $this->assertSession()->pageTextContains('Widget constraint has failed.');
+    $this->assertSession()->pageTextNotContains('The changes have been saved.');
   }
 
 }

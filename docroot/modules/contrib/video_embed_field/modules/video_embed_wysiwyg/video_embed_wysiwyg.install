@@ -6,13 +6,35 @@
  */
 
 use Drupal\Core\Database\Database;
+use Drupal\video_embed_field\Plugin\Field\FieldFormatter\Video;
 
 /**
- * Add title_format setting to video embed settings.
+ * Add a new setting to video embed settings.
  */
-function video_embed_wysiwyg_update_10001(&$sandbox) {
+function _video_embed_wysiwyg_process_settings_finish(array &$sandbox, $message, $message_no_update) {
+  // Finish up.
+  if ($sandbox['#finished'] >= 1) {
+    $variables = [
+      '@count' => $sandbox['updated_records'],
+      '@tables' => count($sandbox['processed_tables']),
+    ];
+
+    \Drupal::logger('video_embed_wysiwyg')->notice($message, $variables);
+
+    if ($sandbox['updated_records'] > 0) {
+      return \Drupal::translation()->translate($message, $variables);
+    }
+    else {
+      return \Drupal::translation()->translate($message_no_update);
+    }
+  }
+}
+
+/**
+ * Add a new setting to video embed settings.
+ */
+function _video_embed_wysiwyg_process_settings(array &$sandbox, $callback) {
   $database = Database::getConnection();
-  $processed_tables = [];
 
   // Initialize sandbox if this is the first run.
   if (!isset($sandbox['progress'])) {
@@ -20,6 +42,7 @@ function video_embed_wysiwyg_update_10001(&$sandbox) {
     $sandbox['tables'] = [];
     $sandbox['current_table'] = 0;
     $sandbox['updated_records'] = 0;
+    $sandbox['processed_tables'] = [];
 
     // Find all node, paragraph, and block_content text field tables.
     $field_configs = \Drupal::entityTypeManager()->getStorage('field_config')->loadMultiple();
@@ -89,38 +112,10 @@ function video_embed_wysiwyg_update_10001(&$sandbox) {
         foreach ($matches[0] as $json_match) {
           \Drupal::logger('video_embed_wysiwyg')->notice('Found video embed JSON: @json', ['@json' => substr($json_match, 0, 200) . '...']);
 
-          // Add title_format to the settings object if it doesn't exist.
+          // Add the new setting to the settings object if it doesn't exist.
           $updated_json = preg_replace_callback(
-            '/"settings":\{([^}]*)\}/',
-            function ($settings_match) {
-              $settings = $settings_match[1];
-
-              // Check if title_format already exists.
-              if (!preg_match('/"title_format"/', $settings)) {
-                // Add title_format setting.
-                $title_format = '"title_format":"@provider | @title"';
-                $title_fallback = '"title_fallback":true';
-
-                // If settings is empty, just add the title_format.
-                if (trim($settings) === '') {
-                  $updated_settings = $title_format . ',' . $title_fallback;
-                }
-                else {
-                  // Add title_format at the end.
-                  $updated_settings = $settings . ',' . $title_format . ',' . $title_fallback;
-                }
-
-                \Drupal::logger('video_embed_wysiwyg')->notice('Added title_format and title_fallback to settings: @old -> @new', [
-                  '@old' => $settings,
-                  '@new' => $updated_settings,
-                ]);
-
-                return '"settings":{' . $updated_settings . '}';
-              }
-
-              // No changes needed.
-              return $settings_match[0];
-            },
+            '/"settings":\{([^}]*)}/',
+            $callback,
             $json_match
           );
 
@@ -163,7 +158,7 @@ function video_embed_wysiwyg_update_10001(&$sandbox) {
     ]);
 
     if ($updated_in_table > 0) {
-      $processed_tables[] = $table_name;
+      $sandbox['processed_tables'][] = $table_name;
     }
 
     $sandbox['current_table']++;
@@ -171,22 +166,89 @@ function video_embed_wysiwyg_update_10001(&$sandbox) {
 
   // Calculate progress.
   $sandbox['#finished'] = ($sandbox['total_tables'] == 0) ? 1 : $sandbox['current_table'] / $sandbox['total_tables'];
+}
 
-  // Finish up.
-  if ($sandbox['#finished'] >= 1) {
-    $message = 'Video embed title_format setting added. Updated @count records across @tables tables.';
-    $variables = [
-      '@count' => $sandbox['updated_records'],
-      '@tables' => count($processed_tables),
-    ];
+/**
+ * Add title_format setting to video embed settings.
+ */
+function video_embed_wysiwyg_update_10001(&$sandbox) {
+  // Callback that adds title_format to the settings object if it doesn't exist.
+  $title_format_callback = function ($settings_match) {
+    $settings = $settings_match[1];
 
-    \Drupal::logger('video_embed_wysiwyg')->notice($message, $variables);
+    // Check if title_format already exists.
+    if (!preg_match('/"title_format"/', $settings)) {
+      // Add title_format setting.
+      $title_format = '"title_format":"@provider | @title"';
+      $title_fallback = '"title_fallback":true';
 
-    if ($sandbox['updated_records'] > 0) {
-      return \Drupal::translation()->translate($message, $variables);
+      // If settings is empty, just add the title_format.
+      if (trim($settings) === '') {
+        $updated_settings = $title_format . ',' . $title_fallback;
+      }
+      else {
+        // Add title_format at the end.
+        $updated_settings = $settings . ',' . $title_format . ',' . $title_fallback;
+      }
+
+      \Drupal::logger('video_embed_wysiwyg')->notice('Added title_format and title_fallback to settings: @old -> @new', [
+        '@old' => $settings,
+        '@new' => $updated_settings,
+      ]);
+
+      return '"settings":{' . $updated_settings . '}';
     }
-    else {
-      return \Drupal::translation()->translate('No video embed records required title_format updates.');
+
+    // No changes needed.
+    return $settings_match[0];
+  };
+
+  _video_embed_wysiwyg_process_settings($sandbox, $title_format_callback);
+
+  $message = 'Video embed title_format setting added. Updated @count records across @tables tables.';
+  $message_no_update = 'No video embed records required title_format updates.';
+
+  return _video_embed_wysiwyg_process_settings_finish($sandbox, $message, $message_no_update);
+}
+
+/**
+ * Add loading setting to video embed settings.
+ */
+function video_embed_wysiwyg_update_10002(&$sandbox) {
+  // Callback that adds loading to the settings object if it doesn't exist.
+  $loading_callback = function ($settings_match) {
+    $settings = $settings_match[1];
+
+    // Check if loading already exists.
+    if (!preg_match('/"loading"/', $settings)) {
+      // Add loading setting.
+      $loading = '"loading":"' . Video::defaultSettings()['loading'] . '"';
+
+      // If settings is empty, just add the loading setting.
+      if (trim($settings) === '') {
+        $updated_settings = $loading;
+      }
+      else {
+        // Add loading at the end.
+        $updated_settings = $settings . ',' . $loading;
+      }
+
+      \Drupal::logger('video_embed_wysiwyg')->notice('Added loading to settings: @old -> @new', [
+        '@old' => $settings,
+        '@new' => $updated_settings,
+      ]);
+
+      return '"settings":{' . $updated_settings . '}';
     }
-  }
+
+    // No changes needed.
+    return $settings_match[0];
+  };
+
+  _video_embed_wysiwyg_process_settings($sandbox, $loading_callback);
+
+  $message = 'Video embed loading setting added. Updated @count records across @tables tables.';
+  $message_no_update = 'No video embed records required loading setting updates.';
+
+  return _video_embed_wysiwyg_process_settings_finish($sandbox, $message, $message_no_update);
 }

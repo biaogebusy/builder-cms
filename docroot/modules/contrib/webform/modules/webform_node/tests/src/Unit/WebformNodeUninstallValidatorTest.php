@@ -29,7 +29,7 @@ class WebformNodeUninstallValidatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidateNotWebformNode() {
+  public function testValidateNotWebformNode(): void {
     $this->webformNodeUninstallValidator->expects($this->never())
       ->method('hasWebformNodes');
 
@@ -42,7 +42,7 @@ class WebformNodeUninstallValidatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidateEntityQueryWithoutResults() {
+  public function testValidateEntityQueryWithoutResults(): void {
     $this->webformNodeUninstallValidator->expects($this->once())
       ->method('hasWebformNodes')
       ->willReturn(FALSE);
@@ -56,7 +56,7 @@ class WebformNodeUninstallValidatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidateEntityQueryWithResults() {
+  public function testValidateEntityQueryWithResults(): void {
     $this->webformNodeUninstallValidator->expects($this->once())
       ->method('hasWebformNodes')
       ->willReturn(TRUE);

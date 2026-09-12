@@ -26,16 +26,16 @@ class MenuItemExtrasViewModeSelectorSelect extends WidgetBase implements Contain
   /**
    * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  private $entityTypeManager;
+  protected $entityTypeManager;
 
   /**
    * The entity display repository.
    *
    * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
    */
-  private $entityDisplayRepository;
+  protected $entityDisplayRepository;
 
   /**
    * Constructs an MenuItemExtrasViewModeSelectorSelect object.

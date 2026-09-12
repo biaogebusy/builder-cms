@@ -1,0 +1,15 @@
+name: CKEditor 5 Full-screen Mode (legacy)
+type: module
+description: "Provides a plugin to maximize the editor window."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^9.4 || ^10 || ^11
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/project/ckeditor5_premium_features/issues/3533521
+dependencies:
+  - drupal:editor
+  - ckeditor5:ckeditor5
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

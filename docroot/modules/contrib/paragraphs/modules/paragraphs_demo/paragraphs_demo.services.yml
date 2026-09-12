@@ -1,0 +1,5 @@
+
+services:
+  Drupal\paragraphs_demo\Hook\ParagraphsDemoHooks:
+    class: Drupal\paragraphs_demo\Hook\ParagraphsDemoHooks
+    autowire: true

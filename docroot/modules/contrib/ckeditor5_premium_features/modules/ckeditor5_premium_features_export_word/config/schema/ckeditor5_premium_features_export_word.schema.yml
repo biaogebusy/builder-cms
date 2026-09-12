@@ -1,0 +1,245 @@
+# Plugin Drupal\ckeditor5_premium_features_export_word\Plugin\CKEditor5Plugin\ExportWord
+ckeditor5.plugin.ckeditor5_premium_features_export_word__export_word:
+  type: mapping
+  label: 'Export to Word'
+  mapping:
+    converter_url:
+      type: string
+      label: 'Converter URL'
+    env:
+      type: string
+      label: 'Environment ID'
+    access_key:
+      type: string
+      label: 'Access key'
+    override_global:
+      type: integer
+      label: 'Override global settings'
+    converter_options:
+      type: mapping
+      label: 'Converter options'
+      mapping:
+        custom_css:
+          type: string
+          label: 'Custom css'
+        format:
+          type: string
+          label: 'Page format'
+        margin_top:
+          label: 'Margin top'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        margin_bottom:
+          label: 'Margin bottom'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        margin_left:
+          label: 'Margin left'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        margin_right:
+          label: 'Margin right'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        page_orientation:
+          type: string
+          label: 'Page orientation'
+        header:
+          type: sequence
+          label: 'Header'
+          sequence:
+            type: mapping
+            mapping:
+              html:
+                type: string
+                label: 'HTML'
+              css:
+                type: string
+                label: 'CSS'
+              type:
+                type: string
+                label: 'Type'
+        footer:
+          type: sequence
+          label: 'Footer'
+          sequence:
+            type: mapping
+            mapping:
+              html:
+                type: string
+                label: 'HTML'
+              css:
+                type: string
+                label: 'CSS'
+              type:
+                type: string
+                label: 'Type'
+        watermark:
+          type: mapping
+          label: 'Watermark'
+          mapping:
+            image_url:
+              type: string
+              label: 'Image URL'
+            image:
+              type: sequence
+              label: 'Image'
+              sequence:
+                type: integer
+                label: 'File ID'
+            width:
+              type: string
+              label: 'Width'
+            height:
+              type: string
+              label: 'Height'
+            washout:
+              type: boolean
+              label: 'Washout'
+    base64_converter:
+      type: mapping
+      label: 'Converter options'
+      mapping:
+        convert_images_to_base64:
+          type: integer
+          label: 'Base64 converter enabled'
+        images_to_base64_files_type:
+          type: string
+          label: 'Base64 converter files type'
+
+ckeditor5_premium_features_export_word.settings:
+  type: config_object
+  label: 'CKEditor 5 Premium Features - Export to Word'
+  mapping:
+    converter_url:
+      type: string
+      label: 'Converter URL'
+    converter_options:
+      type: mapping
+      label: 'Converter options'
+      mapping:
+        custom_css:
+          type: string
+          label: 'Custom css'
+        format:
+          type: string
+          label: 'Page format'
+        margin_top:
+          label: 'Margin top'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        margin_bottom:
+          label: 'Margin bottom'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        margin_left:
+          label: 'Margin left'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        margin_right:
+          label: 'Margin right'
+          type: mapping
+          mapping:
+            value:
+              type: string
+              label: 'Value'
+            units:
+              type: string
+              label: 'Units'
+        page_orientation:
+          type: string
+          label: 'Page orientation'
+        header:
+          type: sequence
+          label: 'Header'
+          sequence:
+            type: mapping
+            mapping:
+              html:
+                type: string
+                label: 'HTML'
+              css:
+                type: string
+                label: 'CSS'
+              type:
+                type: string
+                label: 'Type'
+        footer:
+          type: sequence
+          label: 'Footer'
+          sequence:
+            type: mapping
+            mapping:
+              html:
+                type: string
+                label: 'HTML'
+              css:
+                type: string
+                label: 'CSS'
+              type:
+                type: string
+                label: 'Type'
+        watermark:
+          type: mapping
+          label: 'Watermark'
+          mapping:
+            image_url:
+              type: string
+              label: 'Image URL'
+            image:
+              type: sequence
+              label: 'Image'
+              sequence:
+                type: integer
+                label: 'File ID'
+            width:
+              type: string
+              label: 'Width'
+            height:
+              type: string
+              label: 'Height'
+            washout:
+              type: boolean
+              label: 'Washout'

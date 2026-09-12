@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_product;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Link;
@@ -40,13 +41,18 @@ class ProductListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $cacheability = func_num_args() > 1 ? func_get_arg(1) : NULL;
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     $variations_url = new Url('entity.commerce_product_variation.collection', [
       'commerce_product' => $entity->id(),
     ]);
-    if ($variations_url->access()) {
+    $access = $variations_url->access(NULL, TRUE);
+    if ($cacheability instanceof CacheableMetadata) {
+      $cacheability->addCacheableDependency($access);
+    }
+    if ($access->isAllowed()) {
       $operations['variations'] = [
         'title' => $this->t('Variations'),
         'weight' => 20,

@@ -2,12 +2,17 @@
 
 namespace Drupal\Tests\paragraphs\Functional\WidgetStable;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the field group on node.
  *
  * @group paragraphs
  * @requires module field_group
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsFieldGroupTest extends ParagraphsTestBase {
 
   /**

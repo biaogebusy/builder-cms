@@ -17,7 +17,7 @@
   Drupal.behaviors.checkoutPaneOverview = {
     attach: (context) => {
       $(
-        once('checkout-pane-overview', 'table#checkout-pane-overview', context),
+        once('checkout-pane-overview', 'table#checkout-pane-overview', context)
       ).each((index, element) => {
         Drupal.checkoutPaneOverview.attach(element);
       });
@@ -51,7 +51,7 @@
       const regionRow = $rowElement.prevAll('tr.region-message').get(0);
       const regionName = regionRow.className.replace(
         /([^ ]+[ ]+)*region-([^ ]+)-message([ ]+[^ ]+)*/,
-        '$2',
+        '$2'
       );
       const regionField = $rowElement.find('select.pane-step');
 

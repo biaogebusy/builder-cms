@@ -28,7 +28,7 @@ class WebformStatesManagerTest extends WebformBrowserTestBase {
   /**
    * Tests states to text.
    */
-  public function testStatesToText() {
+  public function testStatesToText(): void {
     $assert_session = $this->assertSession();
 
     // Check converting #states to human readable text.

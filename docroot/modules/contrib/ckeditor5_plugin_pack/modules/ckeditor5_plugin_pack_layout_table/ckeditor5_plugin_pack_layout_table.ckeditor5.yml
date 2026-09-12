@@ -1,0 +1,45 @@
+ckeditor5_plugin_pack_layout_table__layout_table:
+  ckeditor5:
+    plugins:
+      - table.Table
+      - table.TableLayout
+      - table.TableToolbar
+  drupal:
+    label: Layout Table
+    elements:
+      - <table>
+      - <colgroup>
+      - <col>
+      - <tr>
+      - <td>
+      - <th>
+      - <thead>
+      - <tbody>
+      - <tfoot>
+    library: core/ckeditor5.table
+    admin_library: ckeditor5_plugin_pack_layout_table/admin.layout_table
+    toolbar_items:
+      insertTableLayout:
+        label: Layout Table
+      tableType:
+        label: Table Type
+      insertTable:
+        label: table
+
+ckeditor5_plugin_pack_layout_table__table_properties:
+  ckeditor5:
+    plugins:
+      - table.TableProperties
+      - table.TableCellProperties
+  drupal:
+    label: Table Properties
+    class: Drupal\ckeditor5_plugin_pack_layout_table\Plugin\CKEditor5Plugin\LayoutTable
+    elements:
+      - <table style>
+      - <col style>
+      - <td rowspan colspan style>
+      - <th rowspan colspan style>
+    conditions:
+      plugins:
+        - ckeditor5_arbitraryHtmlSupport
+        - ckeditor5_plugin_pack_layout_table__layout_table

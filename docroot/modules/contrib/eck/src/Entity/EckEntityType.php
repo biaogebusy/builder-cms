@@ -4,8 +4,8 @@ namespace Drupal\eck\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\eck\EckEntityTypeInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\eck\EckEntityTypeInterface;
 
 /**
  * Defines the ECK Entity Type config entities.
@@ -22,6 +22,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  *     }
  *   },
  *   admin_permission = "administer eck entities",
+ *   config_prefix = "eck_entity_type",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label"
@@ -38,7 +39,9 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  *     "changed",
  *     "uid",
  *     "title",
- *     "status"
+ *     "description",
+ *     "status",
+ *     "standalone_url"
  *   }
  * )
  *
@@ -47,6 +50,13 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 class EckEntityType extends ConfigEntityBase implements EckEntityTypeInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The description of the entity type.
+   *
+   * @var string|null
+   */
+  protected $description;
 
   /**
    * If this entity type has an "Author" base field.
@@ -84,14 +94,21 @@ class EckEntityType extends ConfigEntityBase implements EckEntityTypeInterface {
   protected $status;
 
   /**
+   * If this entity type is allowed to be viewed at /{entity_type}/{id}.
+   *
+   * @var bool
+   */
+  protected $standalone_url;
+
+  /**
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
     // Entity ids are limited to 32 characters, but since eck adds '_type' to
     // the id of it's bundle storage, that id would be too long. we therefore
     // limit the id to 27 characters.
-    if (\strlen($this->id()) > ECK_ENTITY_ID_MAX_LENGTH) {
-      throw new \RuntimeException("Entity id has more than " . ECK_ENTITY_ID_MAX_LENGTH . " characters.");
+    if (\strlen($this->id()) > self::ECK_ENTITY_ID_MAX_LENGTH) {
+      throw new \RuntimeException("Entity id has more than " . self::ECK_ENTITY_ID_MAX_LENGTH . " characters.");
     }
 
     parent::preSave($storage);
@@ -210,6 +227,13 @@ class EckEntityType extends ConfigEntityBase implements EckEntityTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDescription() {
+    return $this->description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasAuthorField() {
     return isset($this->uid) && $this->uid;
   }
@@ -240,6 +264,13 @@ class EckEntityType extends ConfigEntityBase implements EckEntityTypeInterface {
    */
   public function hasStatusField() {
     return isset($this->status) && $this->status;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasStandaloneUrl() {
+    return !isset($this->standalone_url) || $this->standalone_url;
   }
 
 }

@@ -13,12 +13,11 @@ use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for any views plugin types.
  *
- * Via the @Plugin definition the plugin may specify a theme function or
+ * Via the plugin definition the plugin may specify a theme function or
  * template to be used for the plugin. It also can auto-register the theme
  * implementation for that file or function.
  * - theme: the theme implementation to use in the plugin. This must be the
@@ -79,9 +78,9 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    *
    * For display plugins this is empty.
    *
-   * @todo find a better description
-   *
    * @var \Drupal\views\Plugin\views\display\DisplayPluginBase
+   *
+   * @todo find a better description
    */
   public $displayHandler;
 
@@ -125,13 +124,6 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->definition = $plugin_definition + $configuration;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
@@ -269,9 +261,9 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     // Some form elements belong in a fieldset for presentation, but can't
-    // be moved into one because of the $form_state->getValues() hierarchy. Those
-    // elements can add a #fieldset => 'fieldset_name' property, and they'll
-    // be moved to their fieldset during pre_render.
+    // be moved into one because of the $form_state->getValues() hierarchy.
+    // Those elements can add a #fieldset => 'fieldset_name' property, and
+    // they'll be moved to their fieldset during pre_render.
     $form['#pre_render'][] = [static::class, 'preRenderAddFieldsetMarkup'];
   }
 
@@ -348,12 +340,13 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    *
    * The resulting string will be sanitized with Xss::filterAdmin.
    *
-   * @param $text
+   * @param string $text
    *   Unsanitized string with possible tokens.
-   * @param $tokens
+   * @param array $tokens
    *   Array of token => replacement_value items.
    *
    * @return string
+   *   The sanitized string with tokens replaced.
    */
   protected function viewsTokenReplace($text, $tokens) {
     if (!strlen($text)) {
@@ -418,8 +411,8 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
       ];
 
       // Currently you cannot attach assets to tokens with
-      // Renderer::renderInIsolation(). This may be unnecessarily limiting. Consider
-      // using Renderer::executeInRenderContext() instead.
+      // Renderer::renderInIsolation(). This may be unnecessarily limiting.
+      // Consider using Renderer::executeInRenderContext() instead.
       // @todo https://www.drupal.org/node/2566621
       return (string) $this->getRenderer()->renderInIsolation($build);
     }
@@ -434,7 +427,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
   public function getAvailableGlobalTokens($prepared = FALSE, array $types = []) {
     $info = \Drupal::token()->getInfo();
     // Site and view tokens should always be available.
-    $types += ['site', 'view'];
+    $types = array_merge($types, ['site', 'view']);
     $available = array_intersect_key($info['tokens'], array_flip($types));
 
     // Construct the token string for each token.
@@ -581,6 +574,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
       // translate it again.
       // @see Drupal\Core\Language::filterLanguages().
       if (!$name instanceof TranslatableMarkup) {
+        // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
         $name = $this->t($name);
       }
       $list[PluginBase::VIEWS_QUERY_LANGUAGE_SITE_DEFAULT] = $name;
@@ -658,6 +652,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    * Returns the render API renderer.
    *
    * @return \Drupal\Core\Render\RendererInterface
+   *   The renderer service.
    */
   protected function getRenderer() {
     if (!isset($this->renderer)) {

@@ -10,7 +10,7 @@ interface BlazyStyleVanillaInterface {
   /**
    * Returns the blazy manager.
    *
-   * @todo remove after tests at 3.x.
+   * @todo deprecate and remove after tests at 3.x.
    */
   public function blazyManager();
 

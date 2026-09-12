@@ -55,18 +55,20 @@ class ToolsLibrary extends FormElementBase {
    *   The form element.
    */
   public static function processToolsLibrary(array &$element, FormStateInterface $form_state, array &$complete_form) {
-    $default_value = $element['#default_value'];
-    if (is_array($element['#default_value'])) {
-      $default_value = array_filter($element['#default_value']);
-      if (!array_is_list($default_value)) {
-        $default_value = array_keys($default_value);
-      }
-      $default_value = implode(',', $default_value);
-    }
+    // Build from the element's current value rather than #default_value, so
+    // that an Ajax rebuild reflects the tools the user just added or removed
+    // instead of the values the form was originally built with.
+    $tool_ids = static::processToolsIds($element['#value'] ?? $element['#default_value'] ?? []);
+    $default_value = implode(',', $tool_ids);
     $array_parents = $element['#array_parents'];
     $hidden_id = implode('-', $array_parents) . '-ids';
     $element['tools'] = [
       '#type' => 'hidden',
+      // The hidden field holds the value of the element itself, so it has to
+      // submit under the element's own name. Without explicit #parents it would
+      // submit under its own key instead, and ::valueCallback() would never
+      // see the selection unless the host form named the element 'tools'.
+      '#parents' => $element['#parents'],
       '#attributes' => [
         'data-ai-tools-library-form-element-value' => $hidden_id,
       ],
@@ -82,16 +84,19 @@ class ToolsLibrary extends FormElementBase {
     $selected_group = '_all';
     $state = AiToolsLibraryState::create('ai_tools_library.opener.form_element', $allowed_group_ids, $selected_group, $opener_parameters);
     $selected_tools = [];
-    if (!empty(trim($default_value))) {
-      foreach (explode(',', $default_value) as $tool) {
-        $selected_tools[$tool] = [
-          '#theme' => 'ai_tools_library_item',
-          '#title' => $allowed_plugins[$tool]['name'],
-          '#description' => $allowed_plugins[$tool]['description'],
-          '#tool_id' => $tool,
-          '#widget_id' => $hidden_id,
-        ];
-      }
+    foreach ($tool_ids as $tool) {
+      // A selected tool has no definition when the module providing it has been
+      // uninstalled, or when an invalid id was persisted by an older version
+      // of this element. Keep rendering such entries, so that they stay
+      // visible and removable, instead of warning about undefined array keys.
+      $definition = $allowed_plugins[$tool] ?? NULL;
+      $selected_tools[$tool] = [
+        '#theme' => 'ai_tools_library_item',
+        '#title' => $definition['name'] ?? $tool,
+        '#description' => $definition['description'] ?? t('This tool is not available.'),
+        '#tool_id' => $tool,
+        '#widget_id' => $hidden_id,
+      ];
     }
     if (empty($selected_tools)) {
       $selected_tools = [
@@ -219,32 +224,43 @@ class ToolsLibrary extends FormElementBase {
    * {@inheritdoc}
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    if (empty($input)) {
-      $tools = $element['#default_value'] ?? [];
-    }
-    else {
-      $tools = static::processToolsIds($input);
+    // $input is FALSE when the element was not part of the submission, and NULL
+    // when the form was submitted without the element's input at all. Anything
+    // else is a submitted value, including the empty string, which means that
+    // every tool was removed. Only fall back to #default_value in the former
+    // cases: treating an empty submission as "no input" would restore the
+    // default and make the last remaining tool impossible to delete.
+    if ($input === FALSE || $input === NULL) {
+      return static::processToolsIds($element['#default_value'] ?? []);
     }
 
-    return $tools;
+    return static::processToolsIds($input);
   }
 
   /**
    * Processes tools IDs.
    *
-   * @param array|string $ids
-   *   Processes tools IDs as they are returned from the tools library. Array
-   *   of IDs or a comma-delimited string is supported.
+   * @param mixed $ids
+   *   Processes tools IDs as they are returned from the tools library. A
+   *   comma-delimited string, a list of IDs, or a map of ID => enabled (the
+   *   shape used to store the selection in configuration) is supported.
    *
    * @return string[]
-   *   Array of tools ids.
+   *   List of tools ids.
    */
   public static function processToolsIds($ids) {
     if (!is_array($ids)) {
-      $ids = array_filter(explode(',', $ids));
+      $ids = explode(',', (string) $ids);
     }
+    // Normalize a map of ID => enabled into a list of the enabled IDs. This has
+    // to happen before empty values are filtered out below, because filtering a
+    // list first would turn it into a non-list and its keys into the IDs.
+    if ($ids && !array_is_list($ids)) {
+      $ids = array_keys(array_filter($ids));
+    }
+    $ids = array_map(static fn ($id) => trim((string) $id), $ids);
 
-    return $ids;
+    return array_values(array_filter($ids, static fn (string $id) => $id !== ''));
   }
 
 }

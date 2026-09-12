@@ -12,7 +12,8 @@ ai_translate.translate_content:
     _controller: '\Drupal\ai_translate\Controller\AiTranslateController::translate'
     _title: 'AI powered Translation'
   requirements:
-    _permission: 'create ai content translation'
+    _csrf_token: 'TRUE'
+    _custom_access: '\Drupal\ai_translate\Controller\AiTranslateController::checkAccess'
 
 ai_translate.translate_interface:
   path: '/admin/ai-translate/interface-translate-callback'

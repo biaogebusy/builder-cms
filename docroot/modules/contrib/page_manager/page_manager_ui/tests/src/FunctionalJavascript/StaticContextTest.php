@@ -2,7 +2,9 @@
 
 namespace Drupal\Tests\page_manager_ui\Functional;
 
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\page_manager\Traits\WebDriverFormSubmitTrait;
 
 /**
  * Tests static context for pages.
@@ -10,6 +12,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  * @group page_manager_ui
  */
 class StaticContextTest extends WebDriverTestBase {
+
+  use WebDriverFormSubmitTrait;
 
   /**
    * {@inheritdoc}
@@ -28,6 +32,12 @@ class StaticContextTest extends WebDriverTestBase {
     parent::setUp();
 
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
+    EntityViewDisplay::load('node.article.default')
+      ->setComponent('body', [
+        'type' => 'text_default',
+        'label' => 'hidden',
+      ])
+      ->save();
     $this->drupalLogin($this->drupalCreateUser(['administer pages', 'create article content']));
 
     $this->drupalPlaceBlock('page_title_block');
@@ -173,6 +183,10 @@ class StaticContextTest extends WebDriverTestBase {
     $this->toggleDropbutton('Delete', 2);
     $this->assertNotEmpty($this->assertSession()->waitForElement('css', '.ui-dialog-title')->getText());
     $this->getSession()->getPage()->find('css', '.ui-dialog-buttonset')->pressButton('Delete');
+    // Let the delete dialog finish before saving, otherwise the variant is
+    // saved with the block still in place.
+    $this->assertSession()->waitForElementRemoved('css', '.ui-dialog');
+    $this->waitForPage();
     $this->submitForm([], 'Update and save');
 
     // Make sure only the second static context's node is rendered on the page.
@@ -187,6 +201,8 @@ class StaticContextTest extends WebDriverTestBase {
     $this->toggleDropbutton('Delete', 1);
     $this->assertNotEmpty($this->assertSession()->waitForElement('css', '.ui-dialog-title')->getText());
     $this->getSession()->getPage()->find('css', '.ui-dialog-buttonset')->pressButton('Delete');
+    $this->assertSession()->waitForElementRemoved('css', '.ui-dialog');
+    $this->waitForPage();
     $this->assertSession()->pageTextContains("The static context Static Node edited has been removed.");
     // Reload the page to clear the message.
     $this->drupalGet($this->getUrl());

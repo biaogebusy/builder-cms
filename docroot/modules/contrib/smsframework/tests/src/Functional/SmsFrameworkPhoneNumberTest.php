@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -14,14 +14,8 @@ use Drupal\sms\Message\SmsMessageInterface;
  */
 final class SmsFrameworkPhoneNumberTest extends SmsFrameworkBrowserTestBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = ['entity_test'];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $test_gateway = $this->createMemoryGateway(['skip_queue' => TRUE]);
@@ -38,7 +32,7 @@ final class SmsFrameworkPhoneNumberTest extends SmsFrameworkBrowserTestBase {
 
     $phone_numbers = ['+123123123', '+456456456', '+789789789'];
     for ($quantity = 1; $quantity < 3; $quantity++) {
-      $test_entity = $this->createEntityWithPhoneNumber($phone_number_settings, array_slice($phone_numbers, 0, $quantity));
+      $test_entity = $this->createEntityWithPhoneNumber($phone_number_settings, \array_slice($phone_numbers, 0, $quantity));
 
       static::assertEquals($quantity, $this->countVerificationCodes($test_entity), 'There is ' . $quantity . ' verification code.');
 

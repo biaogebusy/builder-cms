@@ -8,10 +8,12 @@
  * module_handler_test_multiple_child module.
  */
 
+declare(strict_types=1);
+
 /**
  * Implements hook_install().
  */
-function module_handler_test_multiple_child_install() {
+function module_handler_test_multiple_child_install(): void {
   // Set weight of module.
   module_set_weight('module_handler_test_multiple_child', 1);
 }

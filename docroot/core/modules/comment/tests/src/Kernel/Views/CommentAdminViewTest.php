@@ -12,12 +12,14 @@ use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment admin view filters.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentAdminViewTest extends ViewsKernelTestBase {
 
   /**
@@ -37,11 +39,9 @@ class CommentAdminViewTest extends ViewsKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'user',
     'comment',
     'entity_test',
     'language',
-    'locale',
   ];
 
   /**
@@ -151,7 +151,7 @@ class CommentAdminViewTest extends ViewsKernelTestBase {
    * @param string $display_id
    *   The display ID.
    */
-  protected function doTestFilters($display_id) {
+  protected function doTestFilters($display_id): void {
     $comment = $this->comments[0];
     $comment_anonymous = $this->comments[1];
     /** @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */

@@ -20,6 +20,8 @@ use Drupal\Core\TypedData\TypedData;
  * may want to override MapDataDefinition::getPropertyDefinitions() to define
  * it.
  *
+ * @implements \IteratorAggregate<string, \Drupal\Core\TypedData\TypedDataInterface>
+ *
  * @ingroup typed_data
  */
 #[DataType(
@@ -144,7 +146,7 @@ class Map extends TypedData implements \IteratorAggregate, ComplexDataInterface 
    *
    * @param string $property_name
    *   The name of the property to be written.
-   * @param $value
+   * @param mixed $value
    *   The value to set.
    */
   protected function writePropertyValue($property_name, $value) {
@@ -182,10 +184,12 @@ class Map extends TypedData implements \IteratorAggregate, ComplexDataInterface 
   }
 
   /**
-   * {@inheritdoc}
+   * Retrieves the iterator for the object.
+   *
+   * @return \ArrayIterator<string, \Drupal\Core\TypedData\TypedDataInterface>
+   *   The iterator.
    */
-  #[\ReturnTypeWillChange]
-  public function getIterator() {
+  public function getIterator(): \ArrayIterator {
     return new \ArrayIterator($this->getProperties());
   }
 
@@ -222,7 +226,7 @@ class Map extends TypedData implements \IteratorAggregate, ComplexDataInterface 
   /**
    * {@inheritdoc}
    *
-   * @param $property_name
+   * @param string $property_name
    *   The name of the property.
    * @param bool $notify
    *   (optional) Whether to forward the notification to the parent. Defaults to

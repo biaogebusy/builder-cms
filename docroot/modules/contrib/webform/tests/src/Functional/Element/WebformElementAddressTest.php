@@ -29,7 +29,7 @@ class WebformElementAddressTest extends WebformElementBrowserTestBase {
   /**
    * Tests address element.
    */
-  public function testAddress() {
+  public function testAddress(): void {
     $this->drupalLogin($this->rootUser);
 
     $assert_session = $this->assertSession();
@@ -52,51 +52,78 @@ class WebformElementAddressTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<div class="description"><div id="edit-address-advanced--wrapper--description" data-drupal-field-elements="description" class="webform-element-description">This is a description</div>');
 
     /* ********************************************************************** */
+    // Validation.
+    /* ********************************************************************** */
+
+    // Check single address validation.
+    $edit = [
+      'address[postal_code]' => 'not-valid',
+    ];
+    $this->postSubmission($webform, $edit);
+    $assert_session->responseContains('Zip code field is not in the right format.');
+
+    // Check multiple addresses validation.
+    $edit = [
+      'address_multiple[items][0][_item_][postal_code]' => 'not-valid',
+    ];
+    $this->postSubmission($webform, $edit);
+    $assert_session->responseContains('Zip code field is not in the right format.');
+
+    /* ********************************************************************** */
     // Processing.
     /* ********************************************************************** */
 
     // Check submitted value.
     $sid = $this->postSubmission($webform);
-    $assert_session->responseContains("address:
-  country_code: US
-  langcode: en
-  given_name: John
-  family_name: Smith
-  organization: 'Google Inc.'
-  address_line1: '1098 Alta Ave'
-  address_line2: ''
-  locality: 'Mountain View'
-  administrative_area: CA
-  postal_code: '94043'
-  additional_name: null
-  sorting_code: null
-  dependent_locality: null
-address_advanced:
-  country_code: US
-  langcode: en
-  address_line1: '1098 Alta Ave'
-  address_line2: ''
-  locality: 'Mountain View'
-  administrative_area: CA
-  postal_code: '94043'
-  given_name: null
-  additional_name: null
-  family_name: null
-  organization: null
-  sorting_code: null
-  dependent_locality: null
-address_none: null
-address_multiple:
-  - country_code: US
-    langcode: en
-    given_name: John
-    family_name: Smith
-    organization: 'Google Inc.'
-    address_line1: '1098 Alta Ave'
-    address_line2: ''
-    locality: 'Mountain View'
-    administrative_area: CA
-    postal_code: '94043'");
+    $submission = $this->loadSubmission($sid);
+    $data = $submission->getData();
+    $this->assertEquals([
+      'additional_name' => '',
+      'address_line1' => '1098 Alta Ave',
+      'address_line2' => '',
+      'address_line3' => '',
+      'administrative_area' => 'CA',
+      'country_code' => 'US',
+      'dependent_locality' => '',
+      'family_name' => 'Smith',
+      'given_name' => 'John',
+      'langcode' => 'en',
+      'locality' => 'Mountain View',
+      'organization' => 'Google Inc.',
+      'postal_code' => '94043',
+      'sorting_code' => '',
+    ], $data['address']);
+    $this->assertEquals([
+      'additional_name' => '',
+      'address_line1' => '1098 Alta Ave',
+      'address_line2' => '',
+      'address_line3' => '',
+      'administrative_area' => 'CA',
+      'country_code' => 'US',
+      'dependent_locality' => '',
+      'family_name' => '',
+      'given_name' => '',
+      'langcode' => 'en',
+      'locality' => 'Mountain View',
+      'organization' => '',
+      'postal_code' => '94043',
+      'sorting_code' => '',
+    ], $data['address_advanced']);
+    $this->assertEquals([
+      [
+        'address_line1' => '1098 Alta Ave',
+        'address_line2' => '',
+        'address_line3' => '',
+        'administrative_area' => 'CA',
+        'country_code' => 'US',
+        'family_name' => 'Smith',
+        'given_name' => 'John',
+        'langcode' => 'en',
+        'locality' => 'Mountain View',
+        'organization' => 'Google Inc.',
+        'postal_code' => '94043',
+      ],
+    ], $data['address_multiple']);
 
     // Check text formatting.
     $this->drupalGet("/admin/structure/webform/manage/test_element_address/submission/$sid/text");
@@ -145,12 +172,15 @@ address_multiple:
     // Check composite elements against address schema.
     $composite_elements = $element['#webform_composite_elements'];
     $diff_composite_elements = array_diff_key($composite_elements, $schema['columns']);
-    $this->debug($diff_composite_elements);
     $this->assertEmpty($diff_composite_elements);
 
     // Check composite elements maxlength against address schema.
     foreach ($schema['columns'] as $column_name => $column) {
-      $this->assertEquals($composite_elements[$column_name]['#maxlength'], $column['length']);
+      // @todo Add support for address_line3.
+      if ($column_name === 'address_line3') {
+        continue;
+      }
+      $this->assertEquals($composite_elements[$column_name]['#maxlength'], $column['length'], $column_name . ' does not match');
     }
   }
 

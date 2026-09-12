@@ -57,6 +57,7 @@ services:
       - '@language_manager'
       - '@entity_share_client.state_information'
       - '@module_handler'
+      - '@entity_field.manager'
 
   entity_share_client.entity_reference_helper:
     class: Drupal\entity_share_client\Service\EntityReferenceHelper

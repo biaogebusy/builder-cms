@@ -30,7 +30,7 @@ class TempstoreAccess implements CoreAccessInterface {
   }
 
   /**
-   * Retreive the tempstore factory.
+   * Retrieve the tempstore factory.
    */
   protected function getTempstore() {
     return $this->tempstore;
@@ -40,10 +40,14 @@ class TempstoreAccess implements CoreAccessInterface {
    * Access method to find if user has access to a particular tempstore.
    *
    * @param \Symfony\Component\Routing\Route $route
+   *   The route.
    * @param \Drupal\Core\Routing\RouteMatchInterface $match
+   *   The route match.
    * @param \Drupal\Core\Session\AccountInterface $account
+   *   The account.
    *
    * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden
+   *   The access result.
    */
   public function access(Route $route, RouteMatchInterface $match, AccountInterface $account) {
     $tempstore_id = $match->getParameter('tempstore_id') ? $match->getParameter('tempstore_id') : $route->getDefault('tempstore_id');

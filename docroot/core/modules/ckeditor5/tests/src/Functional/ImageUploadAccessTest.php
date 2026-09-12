@@ -6,13 +6,16 @@ namespace Drupal\Tests\ckeditor5\Functional;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\File\FileExists;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test image upload access.
  *
- * @group ckeditor5
  * @internal
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class ImageUploadAccessTest extends ImageUploadTest {
 
   /**
@@ -37,10 +40,10 @@ class ImageUploadAccessTest extends ImageUploadTest {
       'status' => TRUE,
       'scheme' => 'public',
       'directory' => 'inline-images',
-      'max_size' => '',
+      'max_size' => NULL,
       'max_dimensions' => [
-        'width' => 0,
-        'height' => 0,
+        'width' => NULL,
+        'height' => NULL,
       ],
     ])->save();
     $response = $this->uploadRequest($url, $test_image, 'test.jpg');

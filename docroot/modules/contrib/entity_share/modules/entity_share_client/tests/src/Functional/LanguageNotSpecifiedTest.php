@@ -18,6 +18,18 @@ class LanguageNotSpecifiedTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+    'jsonapi_extras',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'node';
 
   /**

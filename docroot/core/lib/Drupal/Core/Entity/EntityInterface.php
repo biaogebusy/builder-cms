@@ -110,13 +110,13 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    *   "version-history" = "/node/{node}/revisions"
    * }
    * @endcode
-   * or specified in a callback function set like:
+   * or specified in a callback function set like (deprecated):
    * @code
    * uri_callback = "comment_uri",
    * @endcode
    * If the path is not set in the links array, the uri_callback function is
-   * used for setting the path. If this does not exist and the link relationship
-   * type is canonical, the path is set using the default template:
+   * used for setting the path (deprecated). If this does not exist and the link
+   * relationship type is canonical, the path is set using the default template:
    * entity/entityType/id.
    *
    * @param string $rel
@@ -239,6 +239,7 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    * over all translations if needed. This is different from its counterpart in
    * the Field API, FieldItemListInterface::preSave(), which is fired on all
    * field translations automatically.
+   *
    * @todo Adjust existing implementations and the documentation according to
    *   https://www.drupal.org/node/2577609 to have a consistent API.
    *
@@ -443,5 +444,31 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    *   The configuration target identifier.
    */
   public function getConfigTarget();
+
+  /**
+   * Returns the original unchanged entity.
+   *
+   * If the entity being saved was not the default revision then the original
+   * entity is that specific revision to allow for reliable comparisons.
+   *
+   * This is only available while an entity is being saved.
+   *
+   * @return static|null
+   *   The original entity.
+   */
+  public function getOriginal(): ?static;
+
+  /**
+   * Sets the original unchanged entity.
+   *
+   * This method may be used as a performance optimization when unchanged entity
+   * is already available.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface|null $original
+   *   The unchanged entity.
+   *
+   * @return $this
+   */
+  public function setOriginal(?EntityInterface $original): static;
 
 }

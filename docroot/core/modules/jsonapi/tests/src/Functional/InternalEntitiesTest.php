@@ -11,14 +11,16 @@ use Drupal\entity_test\Entity\EntityTestNoLabel;
 use Drupal\entity_test\Entity\EntityTestWithBundle;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Makes assertions about the JSON:API behavior for internal entities.
  *
- * @group jsonapi
- *
  * @internal
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class InternalEntitiesTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -112,7 +114,7 @@ class InternalEntitiesTest extends BrowserTestBase {
       'related' => "/jsonapi/entity_test_no_label/entity_test_no_label/{$this->internalEntity->uuid()}/field_internal",
     ];
     $this->drupalLogin($this->testUser);
-    foreach ($paths as $type => $path) {
+    foreach ($paths as $path) {
       $this->drupalGet($path, ['Accept' => 'application/vnd.api+json']);
       $this->assertSame(404, $this->getSession()->getStatusCode());
     }

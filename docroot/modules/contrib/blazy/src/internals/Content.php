@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\blazy\internals;
+namespace Drupal\blazy\Internals;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityInterface;
@@ -13,6 +13,30 @@ use Drupal\Core\Entity\EntityInterface;
  *   blazy-related code in Blazy module.
  */
 class Content extends Multimedia {
+
+  /**
+   * Provides common content settings.
+   *
+   * @param array $settings
+   *   The settings being modified.
+   */
+  public static function contently(array &$settings): void {
+    $blazies = self::getBlazies($settings);
+
+    // Disable all lazy stuffs since we got a brick here.
+    // @todo recheck any misses, and refine overlaps.
+    $settings['media_switch'] = $settings['ratio'] = '';
+    $blazies->set('is.unlazy', TRUE)
+      ->set('lazy.html', FALSE)
+      ->set('media.type', '')
+      ->set('placeholder', [])
+      ->set('switch', '')
+      ->set('use.bg', FALSE)
+      ->set('use.blur', FALSE)
+      ->set('use.content', TRUE)
+      ->set('use.loader', FALSE)
+      ->set('use.player', FALSE);
+  }
 
   /**
    * Returns a message if access to view the entity is denied.
@@ -84,12 +108,12 @@ class Content extends Multimedia {
    */
   public static function toContent(
     array &$data,
-    $unset = FALSE,
+    bool $unset = FALSE,
     array $keys = ['content', 'box', 'slide'],
   ): array {
     $result = [];
     foreach ($keys as $key) {
-      $value = $data[$key] ?? $data["#$key"] ?? [];
+      $value = $data[$key] ?? $data['#' . $key] ?? [];
       if ($value) {
         $result = $value;
         break;

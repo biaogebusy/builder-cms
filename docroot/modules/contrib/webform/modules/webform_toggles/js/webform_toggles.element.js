@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   // @see https://github.com/simontabor/jquery-toggles
   Drupal.webform = Drupal.webform || {};
   Drupal.webform.toggles = Drupal.webform.toggles || {};

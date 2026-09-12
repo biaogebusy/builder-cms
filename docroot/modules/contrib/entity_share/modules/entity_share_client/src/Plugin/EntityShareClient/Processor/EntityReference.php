@@ -4,9 +4,11 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share\EntityShareUtility;
 use Drupal\entity_share_client\Event\RelationshipFieldValueEvent;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
@@ -16,17 +18,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Handle entity reference.
- *
- * @ImportProcessor(
- *   id = "entity_reference",
- *   label = @Translation("Entity reference"),
- *   description = @Translation("Handle entity reference fields."),
- *   stages = {
- *     "process_entity" = 10,
- *   },
- *   locked = true,
- * )
  */
+#[ImportProcessor(
+  id: 'entity_reference',
+  label: new TranslatableMarkup('Entity reference'),
+  description: new TranslatableMarkup('Handle entity reference fields.'),
+  stages: [
+    'process_entity' => 30,
+  ],
+  locked: TRUE,
+)]
 class EntityReference extends ImportProcessorReferencePluginBase implements PluginFormInterface {
 
   /**

@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_user\EventSubscriber;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\sms\Event\SmsEvents;
 use Drupal\sms\Event\SmsMessageEvent;
 use Drupal\sms_user\AccountRegistrationInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Event subscriber responding to SMS Framework events.

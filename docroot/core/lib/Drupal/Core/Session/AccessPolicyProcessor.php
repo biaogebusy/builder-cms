@@ -2,9 +2,11 @@
 
 namespace Drupal\Core\Session;
 
+use Drupal\Core\Cache\CacheOptionalInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\VariationCacheInterface;
+use Drupal\Core\Utility\FiberResumeType;
 
 /**
  * Processes access policies into permissions for an account.
@@ -38,6 +40,46 @@ class AccessPolicyProcessor implements AccessPolicyProcessorInterface {
    * {@inheritdoc}
    */
   public function processAccessPolicies(AccountInterface $account, string $scope = AccessPolicyInterface::SCOPE_DRUPAL): CalculatedPermissionsInterface {
+    // No Fiber isolation is needed when not in a Fiber, or when the requested
+    // account is the current user (no account switch will occur in
+    // doProcessAccessPolicies, so there is nothing to isolate).
+    if (!\Fiber::getCurrent() || $account->id() === $this->currentUser->id()) {
+      return $this->doProcessAccessPolicies($account, $scope);
+    }
+
+    // If running in a fiber and processing a different account, prevent the
+    // account switch from escaping to outside the fiber by resuming the fiber
+    // if it was suspended.
+    $fiber = new \Fiber([$this, 'doProcessAccessPolicies']);
+    $fiber->start($account, $scope);
+    while (!$fiber->isTerminated()) {
+      if ($fiber->isSuspended()) {
+        $resume_type = $fiber->resume();
+        if (!$fiber->isTerminated() && $resume_type !== FiberResumeType::Immediate) {
+          usleep(500);
+        }
+      }
+    }
+
+    return $fiber->getReturn();
+  }
+
+  /**
+   * Processes the access policies for an account within a given scope.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account for which to calculate the permissions.
+   * @param string $scope
+   *   The scope to calculate the permissions.
+   *
+   * @return \Drupal\Core\Session\CalculatedPermissionsInterface
+   *   The access policies' permissions within the given scope.
+   *
+   * @throws \Drupal\Core\Session\AccessPolicyScopeException
+   *   Thrown if an access policy returns permissions for a scope other than the
+   *   one passed in.
+   */
+  protected function doProcessAccessPolicies(AccountInterface $account, string $scope): CalculatedPermissionsInterface {
     $persistent_cache_contexts = $this->getPersistentCacheContexts($scope);
     $initial_cacheability = (new CacheableMetadata())->addCacheContexts($persistent_cache_contexts);
     $cache_keys = ['access_policies', $scope];
@@ -82,7 +124,7 @@ class AccessPolicyProcessor implements AccessPolicyProcessorInterface {
       }
 
       // Retrieve the permissions from the persistent cache if available.
-      if ($cache = $this->variationCache->get($cache_keys, $initial_cacheability)) {
+      if ($this->needsPersistentCache() && $cache = $this->variationCache->get($cache_keys, $initial_cacheability)) {
         $calculated_permissions = $cache->data;
         $cacheability = CacheableMetadata::createFromObject($calculated_permissions);
 
@@ -134,7 +176,9 @@ class AccessPolicyProcessor implements AccessPolicyProcessorInterface {
       // we had stored a CalculatedPermissions object, we would no longer be
       // able to ask for its cache contexts.
       $cacheability = CacheableMetadata::createFromObject($calculated_permissions);
-      $this->variationCache->set($cache_keys, $calculated_permissions, $cacheability, $initial_cacheability);
+      if ($this->needsPersistentCache()) {
+        $this->variationCache->set($cache_keys, $calculated_permissions, $cacheability, $initial_cacheability);
+      }
 
       // Then convert the calculated permissions to an immutable value object
       // and store it in the static cache so that we don't have to do the same
@@ -198,6 +242,22 @@ class AccessPolicyProcessor implements AccessPolicyProcessorInterface {
   protected function validateScope(string $scope, CalculatedPermissionsInterface $calculated_permissions): bool {
     $actual_scopes = $calculated_permissions->getScopes();
     return empty($actual_scopes) || $actual_scopes === [$scope];
+  }
+
+  /**
+   * Returns whether the persistent cache is necessary.
+   *
+   * @return bool
+   *   TRUE if cache should be used (at least one policy requires cache), FALSE
+   *   if not.
+   */
+  protected function needsPersistentCache(): bool {
+    foreach ($this->accessPolicies as $access_policy) {
+      if (!$access_policy instanceof CacheOptionalInterface) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
 }

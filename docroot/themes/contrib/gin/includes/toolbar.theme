@@ -133,17 +133,3 @@ function gin_preprocess_toolbar__gin__secondary(&$variables) {
     }
   }
 }
-
-/**
- * Navigation alter().
- */
-function gin_preprocess_navigation(&$variables) {
-  // Get theme configs.
-  /** @var \Drupal\gin\GinSettings $settings */
-  $settings = \Drupal::classResolver(GinSettings::class);
-  $logo_default = $settings->getDefault('logo.use_default');
-  $variables['icon_path'] = !$logo_default ? $settings->getDefault('logo.path') : '';
-  $variables['toolbar_variant'] = $settings->get('classic_toolbar');
-  $variables['core_navigation'] = _gin_module_is_active('navigation');
-  $variables['is_backend'] = TRUE;
-}

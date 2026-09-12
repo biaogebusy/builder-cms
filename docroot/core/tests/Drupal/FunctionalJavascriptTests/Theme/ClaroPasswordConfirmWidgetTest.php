@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\FunctionalJavascriptTests\Theme;
 
 use Drupal\Tests\user\FunctionalJavascript\PasswordConfirmWidgetTest;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the password confirm widget with Claro theme.
- *
- * @group claro
  */
+#[Group('claro')]
+#[RunTestsInSeparateProcesses]
 class ClaroPasswordConfirmWidgetTest extends PasswordConfirmWidgetTest {
 
   /**

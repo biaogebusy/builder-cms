@@ -23,7 +23,7 @@ class FieldWidgetDisplayManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/EntityBrowser/FieldWidgetDisplay', $namespaces, $module_handler, 'Drupal\entity_browser\FieldWidgetDisplayInterface', 'Drupal\entity_browser\Annotation\EntityBrowserFieldWidgetDisplay');
+    parent::__construct('Plugin/EntityBrowser/FieldWidgetDisplay', $namespaces, $module_handler, 'Drupal\entity_browser\FieldWidgetDisplayInterface', 'Drupal\entity_browser\Attribute\EntityBrowserFieldWidgetDisplay', 'Drupal\entity_browser\Annotation\EntityBrowserFieldWidgetDisplay');
 
     $this->alterInfo('entity_browser_field_widget_display_info');
     $this->setCacheBackend($cache_backend, 'entity_browser_field_widget_display_plugins');

@@ -5,7 +5,7 @@ namespace Drupal\Tests\eck\Functional;
 use Drupal\Core\Url;
 
 /**
- * Class ConfigImportTest.
+ * Tests the import of configuration for the ECK module.
  *
  * @group eck
  */
@@ -63,6 +63,7 @@ class ConfigImportTest extends FunctionalTestBase {
     $entityTypeConfiguration = [
       'id' => 'test_entity',
       'label' => 'Test entity',
+      'description' => 'Test description',
       'langcode' => $defaultLanguage->getId(),
       'dependencies' => [],
       'uuid' => '30df59bd-7b03-4cf7-bb35-d42fc49f0651',
@@ -71,6 +72,7 @@ class ConfigImportTest extends FunctionalTestBase {
       'created' => TRUE,
       'changed' => TRUE,
       'title' => TRUE,
+      'standalone_url' => TRUE,
     ];
     $sync->write($entityTypeConfigName, $entityTypeConfiguration);
 

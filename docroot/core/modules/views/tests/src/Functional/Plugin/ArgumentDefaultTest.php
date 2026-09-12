@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Drupal\Tests\views\Functional\Plugin;
 
 use Drupal\Core\Url;
+use Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
 use Drupal\views_test_data\Plugin\views\argument_default\ArgumentDefaultTest as ArgumentDefaultTestPlugin;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests pluggable argument_default for views.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ArgumentDefaultTest extends ViewTestBase {
 
   /**
@@ -30,6 +33,7 @@ class ArgumentDefaultTest extends ViewTestBase {
     'test_argument_default_current_user',
     'test_argument_default_node',
     'test_argument_default_query_param',
+    'test_argument_default_date',
     'test_argument_default_node_with_page',
   ];
 
@@ -127,11 +131,46 @@ class ArgumentDefaultTest extends ViewTestBase {
 
     $this->assertEquals($random, $view->argument['null']->getDefaultArgument(), 'Fixed argument should be used by default.');
 
-    // Make sure that a normal argument provided is used
+    // Make sure that a normal argument provided is used.
     $random_string = $this->randomMachineName();
     $view->executeDisplay('default', [$random_string]);
 
     $this->assertEquals($random_string, $view->args[0], 'Provided argument should be used.');
+  }
+
+  /**
+   * Tests current date default argument.
+   *
+   * @see \Drupal\views\Plugin\views\argument_default\Date
+   */
+  public function testArgumentDefaultDate(): void {
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = \Drupal::service('date.formatter');
+    $request_time = \Drupal::requestStack()->getCurrentRequest()->server->get('REQUEST_TIME');
+
+    $view = Views::getView('test_argument_default_date');
+    $view->setDisplay();
+    $view->initHandlers();
+
+    $expected = $date_formatter->format($request_time, 'custom', 'Y-m-d');
+    $this->assertEquals($expected, $view->argument['null']->getDefaultArgument(), 'Current date argument should be used by default.');
+
+    // Update the View to use the Ym format argument.
+    $view = Views::getView('test_argument_default_date');
+    $view->setDisplay();
+    $view->displayHandlers->get('default')->overrideOption('arguments', [
+      'null' => [
+        'id' => 'year_month',
+        'table' => 'node_field_data',
+        'field' => 'created_year_month',
+        'plugin_id' => 'date_year_month',
+        'default_argument_type' => 'date',
+      ],
+    ]);
+    $view->initHandlers();
+
+    $expected = $date_formatter->format($request_time, 'custom', 'Ym');
+    $this->assertEquals($expected, $view->argument['null']->getDefaultArgument(), 'Current date argument should be used by default.');
   }
 
   /**
@@ -220,6 +259,54 @@ class ArgumentDefaultTest extends ViewTestBase {
     $this->drupalPlaceBlock("views_block:test_argument_default_node_with_page-block_1", ['id' => 'view_block_id']);
     $this->drupalGet('node/' . $node->id());
     $this->assertSession()->linkByHrefExists('/test-argument-default/' . $node->id());
+  }
+
+  /**
+   * Tests the cacheability of the date argument default.
+   */
+  public function testArgumentDefaultCacheability(): void {
+    // Create page for testing.
+    $view = Views::getView('test_argument_default_date');
+    $view->setDisplay();
+    $view->newDisplay('page', 'Page', 'page_1');
+    $view->displayHandlers->get('page_1')->overrideOption('path', 'path-page-1');
+    $view->displayHandlers->get('page_1')->overrideOption('cache', [
+      'type' => 'time',
+      'options' => [
+        // To eliminate UNCACHEABLE from the page as is.
+        'results_lifespan' => '10000',
+      ],
+    ]);
+    $view->save();
+
+    $this->container->get('module_installer')->uninstall(['page_cache']);
+
+    // Check that the page is not cached with date argument default.
+    $this->drupalGet('path-page-1');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertEquals('UNCACHEABLE (poor cacheability)', $this->getSession()->getResponseHeader(DynamicPageCacheSubscriber::HEADER));
+    // Double check.
+    $this->drupalGet('path-page-1');
+    $this->assertEquals('UNCACHEABLE (poor cacheability)', $this->getSession()->getResponseHeader(DynamicPageCacheSubscriber::HEADER));
+
+    // Change the argument to some cached option.
+    $view = Views::getView('test_argument_default_date');
+    $view->setDisplay();
+    $view->displayHandlers->get('page_1')->overrideOption('arguments', [
+      'null' => [
+        'id' => 'null',
+        'table' => 'views',
+        'field' => 'null',
+      ],
+    ]);
+    $view->save();
+
+    // Check that the page is cached without date argument default.
+    $this->drupalGet('path-page-1');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertEquals('MISS', $this->getSession()->getResponseHeader(DynamicPageCacheSubscriber::HEADER));
+    $this->drupalGet('path-page-1');
+    $this->assertEquals('HIT', $this->getSession()->getResponseHeader(DynamicPageCacheSubscriber::HEADER));
   }
 
 }

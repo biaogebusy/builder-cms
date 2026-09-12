@@ -1,3 +1,4 @@
+langcode: en
 dependencies: []
 charts_default_settings:
   library: ''

@@ -76,7 +76,7 @@ class ThemeHandler implements ThemeHandlerInterface {
           // file system any call to ::getTheme() will result in an exception
           // and an error being logged. Ignoring the problem here allows the
           // theme system to fix itself while updating.
-          if (isset($list[$theme])) {
+          if (isset($list[$theme]) && $list[$theme] instanceof Theme) {
             $this->addTheme($list[$theme]);
           }
         }
@@ -88,12 +88,7 @@ class ThemeHandler implements ThemeHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  public function addTheme(Extension $theme) {
-    // Register the namespaces of installed themes.
-    // @todo Implement proper theme registration
-    // https://www.drupal.org/project/drupal/issues/2941757
-    \Drupal::service('class_loader')->addPsr4('Drupal\\' . $theme->getName() . '\\', $this->root . '/' . $theme->getPath() . '/src');
-
+  public function addTheme(Theme $theme) {
     if (!empty($theme->info['libraries'])) {
       foreach ($theme->info['libraries'] as $library => $name) {
         $theme->libraries[$library] = $name;

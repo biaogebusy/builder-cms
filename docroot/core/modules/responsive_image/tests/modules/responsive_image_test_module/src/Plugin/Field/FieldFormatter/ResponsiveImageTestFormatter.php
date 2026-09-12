@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\responsive_image_test_module\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\Attribute\FieldFormatter;
@@ -24,10 +26,10 @@ class ResponsiveImageTestFormatter extends ResponsiveImageFormatter {
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $elements = parent::viewElements($items, $langcode);
-    // Unset #item_attributes to test that the theme function can handle that.
+    // Unset #attributes to test that the theme function can handle that.
     foreach ($elements as &$element) {
-      if (isset($element['#item_attributes'])) {
-        unset($element['#item_attributes']);
+      if (isset($element['#attributes'])) {
+        unset($element['#attributes']);
       }
     }
     return $elements;

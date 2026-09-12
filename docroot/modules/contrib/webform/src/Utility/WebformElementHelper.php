@@ -29,12 +29,16 @@ class WebformElementHelper {
     // Properties that will cause unpredictable rendering.
     '#weight' => '#weight',
     // Callbacks are blocked to prevent unwanted code executions.
+    // @phpstan-ignore-next-line
     '#access_callback' => '#access_callback',
     '#ajax' => '#ajax',
     '#after_build' => '#after_build',
     '#element_validate' => '#element_validate',
+    // @phpstan-ignore-next-line
     '#lazy_builder' => '#lazy_builder',
+    // @phpstan-ignore-next-line
     '#post_render' => '#post_render',
+    // @phpstan-ignore-next-line
     '#pre_render' => '#pre_render',
     '#process' => '#process',
     '#submit' => '#submit',
@@ -42,13 +46,15 @@ class WebformElementHelper {
     '#value_callback' => '#value_callback',
     // Element specific callbacks.
     '#file_value_callbacks' => '#file_value_callbacks',
+    // @phpstan-ignore-next-line
     '#date_date_callbacks' => '#date_date_callbacks',
+    // @phpstan-ignore-next-line
     '#date_time_callbacks' => '#date_time_callbacks',
     '#captcha_validate' => '#captcha_validate',
   ];
 
   /**
-   * Allowed (whitelist) element properties.
+   * Allowed element properties.
    *
    * @var array
    */
@@ -513,13 +519,13 @@ class WebformElementHelper {
     if (isset(self::$allowedProperties[$property])) {
       return FALSE;
     }
-    elseif (strpos($property, '__') !== FALSE && preg_match(self::$allowedSubPropertiesRegExp, $property)) {
+    elseif (str_contains($property, '__') && preg_match(self::$allowedSubPropertiesRegExp, $property)) {
       return FALSE;
     }
     elseif (isset(self::$ignoredProperties[$property])) {
       return TRUE;
     }
-    elseif (strpos($property, '__') !== FALSE && preg_match(self::$ignoredSubPropertiesRegExp, $property)) {
+    elseif (str_contains($property, '__') && preg_match(self::$ignoredSubPropertiesRegExp, $property)) {
       return TRUE;
     }
     elseif (preg_match('/_(validates?|callbacks?)$/', $property)) {
@@ -715,7 +721,7 @@ class WebformElementHelper {
    */
   public static function convertToString($element) {
     if (is_array($element)) {
-      return (string) \Drupal::service('renderer')->renderPlain($element);
+      return (string) \Drupal::service('renderer')->renderInIsolation($element);
     }
     else {
       return (string) $element;

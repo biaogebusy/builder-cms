@@ -6,7 +6,7 @@ package: 'Web services'
 dependencies:
   - entity_share:entity_share_client
 
-# Information added by Drupal.org packaging script on 2025-08-13
-version: '4.0.0-alpha1'
+# Information added by Drupal.org packaging script on 2025-12-03
+version: '4.0.0-alpha2'
 project: 'entity_share'
-datestamp: 1755088824
+datestamp: 1764766397

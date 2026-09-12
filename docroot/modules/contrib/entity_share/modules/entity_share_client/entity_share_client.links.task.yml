@@ -10,3 +10,13 @@ entity_share_client.entity_import_statuses:
   title: 'Import statuses'
   route_name: entity.entity_import_status.collection
   parent_id: entity_share_client.admin_content_page
+
+entity_share_client.entity.import_config.collection:
+  route_name: entity.import_config.collection
+  title: Import config
+  base_route: entity.import_config.collection
+
+entity_share_client.entity.remote.collection:
+  route_name: entity.remote.collection
+  title: Remote sites
+  base_route: entity.import_config.collection

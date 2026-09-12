@@ -230,7 +230,7 @@
    --gin-color-text-light: #9e9fa0;
 
   // Buttons
-  --gin-shadow-button: rgba(#111, .9);
+  --gin-shadow-button: #00000000;
   --gin-color-button-text: #111;
 
   // Focus
@@ -256,7 +256,7 @@
 
   // Layers
   --gin-bg-app: #{$colorDarkAppBackground};
-  --gin-bg-layer: #2A2A2D;
+  --gin-bg-layer: #{$colorDarkLayerBackground};
   --gin-bg-layer2: #3B3B3F;
   --gin-bg-layer3: #47474c;
   --gin-bg-layer4: #19191b;

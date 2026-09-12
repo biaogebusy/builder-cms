@@ -7,12 +7,14 @@ namespace Drupal\KernelTests\Core\StringTranslation;
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the TranslatableMarkup class.
- *
- * @group StringTranslation
  */
+#[Group('StringTranslation')]
+#[RunTestsInSeparateProcesses]
 class TranslationStringTest extends KernelTestBase {
 
   /**
@@ -54,7 +56,7 @@ class TranslationStringTest extends KernelTestBase {
   /**
    * Reboots the kernel to set custom translations in Settings.
    */
-  protected function rebootAndPrepareSettings() {
+  protected function rebootAndPrepareSettings(): void {
     // Reboot the container so that different services are injected and the new
     // settings are picked.
     $kernel = $this->container->get('kernel');

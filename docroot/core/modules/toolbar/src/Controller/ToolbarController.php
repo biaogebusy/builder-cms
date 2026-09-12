@@ -20,22 +20,19 @@ class ToolbarController extends ControllerBase implements TrustedCallbackInterfa
   /**
    * Constructs a ToolbarController object.
    *
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
   public function __construct(
     protected ?TimeInterface $time = NULL,
   ) {
-    if ($this->time === NULL) {
-      @trigger_error('Calling ' . __METHOD__ . ' without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3112298', E_USER_DEPRECATED);
-      $this->time = \Drupal::service('datetime.time');
-    }
   }
 
   /**
    * Returns an AJAX response to render the toolbar subtrees.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The AJAX response containing the rendered toolbar subtrees.
    */
   public function subtreesAjax() {
     [$subtrees] = toolbar_get_rendered_subtrees();
@@ -102,7 +99,9 @@ class ToolbarController extends ControllerBase implements TrustedCallbackInterfa
   }
 
   /**
-   * #pre_render callback for toolbar_get_rendered_subtrees().
+   * Render API callback: Prepares the subtrees.
+   *
+   * This function is assigned as a #pre_render callback.
    *
    * @internal
    */

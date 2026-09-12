@@ -1,0 +1,43 @@
+{#
+/**
+ * @file
+ *
+ * Render the last order payment, within the "Billing information" card.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the wrapper.
+ * - payment: The rendered payment fields.
+ *   Use 'payment' to print them all, or print a subset such as
+ *   'payment.amount'. Use the following code to exclude the
+ *   printing of a given field:
+ *   @code
+ *   {{ payment|without('amount') }}
+ *   @endcode
+ * - payment_entity: The payment entity.
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="payment-information">
+  {{ payment.payment_gateway }}
+  {{ payment.payment_method }}
+  <div class="field">
+    <div class="field-label field--label-inline">
+      <div class="field__label">{{ 'Last payment'|t }}</div>
+      <div class="field__item">
+        {{ payment_entity.getAmount|commerce_price_format }}
+        {% if payment_entity.getChangedTime %}
+          (<span class="commerce-help-text" title="{{ payment_entity.getChangedTime|format_date('short') }}">{{ payment_entity.getState.getLabel }}</span>)
+        {% else %}
+          ({{ payment_entity.getState.getLabel }})
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="field">
+    <div class="field-label field--label-inline">
+      <div class="field__label">{{ 'Balance'|t }}</div>
+      <div class="field__item">{{ payment_entity.getOrder.getBalance|commerce_price_format }}</div>
+    </div>
+  </div>
+</div>

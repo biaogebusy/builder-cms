@@ -196,6 +196,134 @@ class Helper
     }
 
     /**
+     * Split process_command into argv with quote support.
+     * Allows quoted Windows paths such as "C:\Program Files\tool.exe".
+     *
+     * On Unix, escape rules follow POSIX shlex: outside quotes, '\' escapes the
+     * next char; inside double quotes, '\' only escapes '"', '\', '$' and '`';
+     * backslash-newline is a line continuation (both removed) outside single
+     * quotes; inside single quotes, all characters are literal.
+     *
+     * On Windows, '\' is a path separator and is treated as a literal (except
+     * '\"' inside double quotes), so unquoted paths like C:\tools\cred.exe keep
+     * their backslashes.
+     *
+     * @param string    $command
+     * @param bool|null $windows defaults to the current platform
+     *
+     * @return array
+     */
+    public static function splitProcessCommand($command, $windows = null)
+    {
+        if ($windows === null) {
+            $windows = DIRECTORY_SEPARATOR === '\\';
+        }
+        $input = trim((string) $command);
+        if ($input === '') {
+            throw new \RuntimeException('process_command is empty');
+        }
+
+        $args = [];
+        $current = '';
+        $inSingle = false;
+        $inDouble = false;
+        // Tracks that a token has started even if it is empty, so quoted empty
+        // arguments like `tool "" arg` keep their empty argv element.
+        $hasToken = false;
+        $len = strlen($input);
+
+        for ($i = 0; $i < $len; $i++) {
+            $c = $input[$i];
+            if ($inSingle) {
+                if ($c === "'") {
+                    $inSingle = false;
+                } else {
+                    $current .= $c;
+                }
+                continue;
+            }
+            if ($inDouble) {
+                if ($c === '"') {
+                    $inDouble = false;
+                    continue;
+                }
+                if ($c === '\\' && $i + 1 < $len) {
+                    $next = $input[$i + 1];
+                    if ($windows) {
+                        // On Windows only \" is an escape inside double quotes.
+                        if ($next === '"') {
+                            $current .= $next;
+                            $i++;
+                            continue;
+                        }
+                    } elseif ($next === "\n") {
+                        // Backslash-newline is a line continuation: both removed.
+                        $i++;
+                        continue;
+                    } elseif ($next === '"' || $next === '\\' || $next === '$' || $next === '`') {
+                        $current .= $next;
+                        $i++;
+                        continue;
+                    }
+                }
+                $current .= $c;
+                continue;
+            }
+            if ($c === '\\') {
+                if ($windows) {
+                    // Path separator — keep literal.
+                    $hasToken = true;
+                    $current .= $c;
+                    continue;
+                }
+                if ($i + 1 >= $len) {
+                    throw new \RuntimeException('invalid process_command: trailing backslash');
+                }
+                if ($input[$i + 1] === "\n") {
+                    // Backslash-newline is a line continuation: both removed.
+                    $i++;
+                    continue;
+                }
+                $hasToken = true;
+                $current .= $input[++$i];
+                continue;
+            }
+            if ($c === "'") {
+                $inSingle = true;
+                $hasToken = true;
+                continue;
+            }
+            if ($c === '"') {
+                $inDouble = true;
+                $hasToken = true;
+                continue;
+            }
+            if (ctype_space($c)) {
+                if ($hasToken) {
+                    $args[] = $current;
+                    $current = '';
+                    $hasToken = false;
+                }
+                continue;
+            }
+            $hasToken = true;
+            $current .= $c;
+        }
+
+        if ($inSingle || $inDouble) {
+            throw new \RuntimeException('invalid process_command: unclosed quote');
+        }
+        if ($hasToken) {
+            $args[] = $current;
+        }
+        if (empty($args) || $args[0] === '') {
+            throw new \RuntimeException('process_command is empty');
+        }
+
+        return $args;
+    }
+
+    /**
      * @param mixed ...$parameters
      *
      * @codeCoverageIgnore

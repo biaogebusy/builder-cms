@@ -6,12 +6,13 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\Media\BlazyFile;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Media\File;
+use Drupal\blazy\Media\Uri;
+use Drupal\blazy\Media\Url;
 use Drupal\blazy\Utility\Arrays;
 use Drupal\blazy\Utility\Sanitize;
-use Drupal\blazy\internals\Internals;
 
 /**
  * Provides lightbox utilities.
@@ -19,11 +20,20 @@ use Drupal\blazy\internals\Internals;
  * @internal
  *   This is an internal part of the Blazy system and should only be used by
  *   blazy-related code in Blazy module.
+ *
+ * @todo make it an instance class without being a service at D11-12 for Hook.
  */
 class Lightbox {
 
   /**
    * Provides lightbox libraries.
+   *
+   * @param array $load
+   *   The library to load.
+   * @param array $attach
+   *   The modified settings.
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
    */
   public static function attach(array &$load, array &$attach, $blazies): void {
     if ($name = $blazies->get('lightbox.name')) {
@@ -48,18 +58,18 @@ class Lightbox {
    *   The element being modified.
    */
   public static function build(array &$element): void {
-    $manager    = Internals::service('blazy.manager');
+    /** @var array $settings */
     $settings   = &$element['#settings'];
-    $blazies    = $settings['blazies'];
+    $blazies    = Internals::getBlazies($settings);
     $switch     = $blazies->get('switch') ?: $blazies->get('lightbox.name');
     $switch_css = str_replace('_', '-', $switch);
     $item       = $blazies->get('image.item');
     $uri        = $blazies->get('image.uri');
-    $valid      = $blazies->get('image.valid') ?: Blazy::isValidUri($uri);
+    $valid      = $blazies->get('image.valid') ?: Uri::isValid($uri);
     $_box_style = $settings['box_style'] ?? NULL;
     $box_style  = $blazies->get('box.style');
     $box_url    = $blazies->get('box.url');
-    $box_url    = $url = $box_url ?: Blazy::url($uri, $box_style);
+    $box_url    = $url = $box_url ?: Url::fromUri($uri, $box_style);
     $colorbox   = $blazies->get('colorbox');
     $gallery_id = $blazies->get('lightbox.gallery_id');
     $box_id     = $blazies->is('gallery') ? $gallery_id : NULL;
@@ -79,6 +89,7 @@ class Lightbox {
       || $blazies->use('content');
 
     // Provide relevant URL since it is a lightbox.
+    /** @var array $attrs */
     $attrs = &$element['#url_attributes'];
     $attrs['class'][] = sprintf($multimedia ? $format2 : $format1, $switch_css);
     $attrs['data-' . $switch_css . '-trigger'] = TRUE;
@@ -129,7 +140,7 @@ class Lightbox {
       if ($embed = $blazies->get('media.embed_url')) {
         // Force autoplay for media URL on lightboxes, saving another click.
         // BC for non-oembed such as Video Embed Field without Media migration.
-        $oembed_url = Blazy::autoplay($embed, !$_trusted);
+        $oembed_url = Internals::autoplay($embed, !$_trusted);
 
         // Point HREF to the original site ethically.
         if ($input = $blazies->get('media.input_url')) {
@@ -172,7 +183,7 @@ class Lightbox {
             'box_style' => $_box_style,
             'uri' => $uri,
           ];
-          $_resimage = self::responsiveImage($element, $options, $manager);
+          $_resimage = self::responsiveImage($element, $options);
           $check = $check ?: $url;
         }
 
@@ -240,13 +251,67 @@ class Lightbox {
       $json,
       $attrs,
       $options,
-      $settings,
-      $manager
+      $settings
     );
   }
 
   /**
+   * Checks for lightboxes.
+   *
+   * @todo move it out for DI at D11.
+   */
+  public static function check(array &$settings): void {
+    $blazies = Internals::getBlazies($settings);
+    $switch  = $blazies->get('switch', $settings['media_switch'] ?? NULL);
+
+    /** @var \Drupal\blazy\BlazyManagerInterface $manager */
+    $manager = Internals::blazy();
+
+    // Bail out early if not so configured.
+    if (!$switch || !$manager) {
+      return;
+    }
+
+    $lightboxes = $blazies->get('lightbox.plugins', $manager->getLightboxes());
+    $lightbox   = in_array($switch, $lightboxes) ? $switch : FALSE;
+    $optionset  = empty($settings[$switch]) ? $switch : $settings[$switch];
+
+    // Lightbox is unique, safe to reserve top level key:
+    if ($lightbox) {
+      // Required by sub-modules for easy attachments.
+      $settings[$switch] = $optionset;
+
+      // Allows lightboxes to provide its own optionsets, e.g.: ElevateZoomPlus.
+      // With an optionset: `elevetazoomplus:responsive`.
+      // Without an optionset: `colorbox:colorbox`, etc.
+      $blazies->set($switch, $optionset)
+        ->set('lightbox.name', $lightbox)
+        ->set('lightbox.optionset', $optionset);
+    }
+
+    // Richbox is local video inside lightboxes by supported lightboxes.
+    $colorbox   = $blazies->get('colorbox');
+    $flybox     = $blazies->get('flybox');
+    $mfp        = $blazies->get('mfp');
+    $encodedbox = $colorbox || $flybox || $mfp;
+    $encodedbox = $blazies->is('encodedbox') || $encodedbox;
+    $_richbox   = $blazies->is('richbox') ?: ($settings['_richbox'] ?? FALSE);
+    $richbox    = $encodedbox || $_richbox;
+
+    // (Non-)lightboxes: media player, link to content, image rendered, etc.
+    $blazies->set('switch', $switch)
+      ->set('libs.media', $switch == 'media')
+      ->set('is.lightbox', !empty($lightbox))
+      ->set('is.encodedbox', !empty($encodedbox))
+      ->set('is.richbox', !empty($richbox))
+      ->set('was.lightbox', TRUE);
+  }
+
+  /**
    * Attaches Colorbox if so configured.
+   *
+   * @param array $load
+   *   The library to load.
    */
   private static function attachColorbox(array &$load): void {
     if ($service = Internals::service('colorbox.attachment')) {
@@ -261,6 +326,17 @@ class Lightbox {
 
   /**
    * Provides html content for lightboxes.
+   *
+   * @param array $element
+   *   The element being modified.
+   * @param array $json
+   *   The json being modified.
+   * @param array $attrs
+   *   The elemeattrsnt being modified.
+   * @param array $options
+   *   The contextual options.
+   * @param array $settings
+   *   The contextual settings.
    */
   private static function content(
     array &$element,
@@ -268,7 +344,6 @@ class Lightbox {
     array &$attrs,
     array $options,
     array $settings,
-    $manager,
   ): void {
     [
       'box_url' => $box_url,
@@ -280,7 +355,7 @@ class Lightbox {
       '_resimage' => $_resimage,
     ] = $options;
 
-    $blazies = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $provider = $json['provider'] ?? NULL;
 
     // Do not output NULL dimensions.
@@ -344,7 +419,7 @@ class Lightbox {
 
       if ($style) {
         $hattrs['style'] = $style;
-        $hattrs['class'][] = 'media--ratio';
+        $hattrs['class'][] = 'media--ratio media--ratio--fluid';
       }
 
       if ($token = $blazies->get('media.token')) {
@@ -372,8 +447,11 @@ class Lightbox {
 
       // Responsive image is unwrapped. Local videos wrapped.
       $content = $_resimage ? $box_html : $html;
-      $content = $manager->renderInIsolation($content);
-      $content = is_object($content) ? $content->__toString() : $content;
+
+      if ($manager = Internals::blazy()) {
+        $content = $manager->renderInIsolation($content);
+        $content = is_object($content) ? $content->__toString() : $content;
+      }
 
       // @todo merge with BlazyDefault::TAGS when mixed contents supported.
       // Lightbox Responsive|Picture image will be broken when filtered out.
@@ -387,9 +465,9 @@ class Lightbox {
       ];
 
       $content = Sanitize::unstrip($content, $unstrips);
-      // @todo remove $content = preg_replace('/\s\s+/', ' ', $content);
+      // @todo deprecate and remove $content = preg_replace('/\s\s+/', ' ', $content);
       $content = preg_replace('/\s+/', ' ', $content);
-      $is_picture = Blazy::has($content, '<picture');
+      $is_picture = Internals::has($content, '<picture');
 
       $json['encoded'] = FALSE;
       if ($blazies->use('encodedbox') && $blazies->is('encodedbox')) {
@@ -409,7 +487,7 @@ class Lightbox {
 
     // Provides captions if so configured.
     if (!empty($settings['box_caption'])) {
-      $element['#captions']['lightbox'] = self::getCaptions($settings, $item, $manager);
+      $element['#captions']['lightbox'] = self::getCaptions($settings, $item);
     }
 
     // Do not show icon for local video file unless supported.
@@ -434,7 +512,7 @@ class Lightbox {
       $attrs['class'][] = 'litebox--html';
     }
 
-    if ($blazies->is('bg')) {
+    if ($blazies->use('bg')) {
       $attrs['class'][] = 'litebox--bg';
     }
 
@@ -445,7 +523,12 @@ class Lightbox {
   /**
    * Provides responsive image for lightboxes.
    */
-  private static function responsiveImage(array &$element, array $options, $manager): bool {
+  private static function responsiveImage(array &$element, array $options): bool {
+    $manager = Internals::blazy();
+    if (!$manager) {
+      return FALSE;
+    }
+
     [
       'blazies' => $blazies,
       'box_style' => $box_style,
@@ -487,14 +570,16 @@ class Lightbox {
    *   The settings to work with.
    * @param object $item
    *   The \Drupal\image\Plugin\Field\FieldType\ImageItem item or \stdClass.
-   * @param object $manager
-   *   The \Drupal\blazy\BlazyManager service.
    *
    * @return array
    *   The renderable array of caption, or empty array.
    */
-  private static function getCaptions(array $settings, $item, $manager): array {
-    $blazies = $settings['blazies'];
+  private static function getCaptions(array $settings, $item): array {
+    $manager = Internals::blazy();
+    if (!$manager) {
+      return [];
+    }
+    $blazies = Internals::getBlazies($settings);
     $title   = $blazies->get('image.raw.title');
     $alt     = $blazies->get('image.raw.alt');
     $delta   = $blazies->get('delta', 0);
@@ -506,7 +591,7 @@ class Lightbox {
     $caption = '';
 
     // @todo re-check this if any issues, might be a fake stdClass image item.
-    // @todo remove all ImageItem references for blazies as object at 3.x.
+    // @todo deprecate and remove all ImageItem references for blazies as object at 3.x.
     if ($item) {
       $file = $item->entity ?? $file;
       if (!$object) {
@@ -548,7 +633,7 @@ class Lightbox {
           $options = ['clear' => TRUE];
           $params  = [$object->getEntityTypeId() => $manager->getTranslatedEntity($object)];
 
-          if (BlazyFile::isFile($file) && $file != $object) {
+          if (File::isValid($file) && $file != $object) {
             $params += ['file' => $manager->getTranslatedEntity($file)];
           }
           if ($node && $node != $object) {
@@ -558,7 +643,7 @@ class Lightbox {
           $caption = \Drupal::token()->replace($custom, $params, $options);
 
           // Checks for multi-value text fields, and maps its delta to image.
-          if (Blazy::has($caption, ", <p>")) {
+          if (Internals::has($caption, ", <p>")) {
             $caption = str_replace(", <p>", '| <p>', $caption);
             $captions = explode("|", $caption);
             $caption = $captions[$delta] ?? '';

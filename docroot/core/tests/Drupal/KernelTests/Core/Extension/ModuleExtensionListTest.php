@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Extension;
 
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Extension\ModuleExtensionList
- * @group Extension
+ * Tests Drupal\Core\Extension\ModuleExtensionList.
  */
+#[CoversClass(ModuleExtensionList::class)]
+#[Group('Extension')]
+#[RunTestsInSeparateProcesses]
 class ModuleExtensionListTest extends KernelTestBase {
 
   /**
-   * @covers ::getList
+   * Tests get list.
    */
   public function testGetList(): void {
     \Drupal::configFactory()->getEditable('core.extension')
@@ -22,7 +28,7 @@ class ModuleExtensionListTest extends KernelTestBase {
       ->save();
 
     // The installation profile is provided by a container parameter.
-    // Saving the configuration doesn't automatically trigger invalidation
+    // Saving the configuration doesn't automatically trigger invalidation.
     $this->container->get('kernel')->rebuildContainer();
 
     /** @var \Drupal\Core\Extension\ModuleExtensionList $module_extension_list */

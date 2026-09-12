@@ -11,7 +11,6 @@ use Drupal\Core\Menu\MenuParentFormSelectorInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\views\Attribute\ViewsWizard;
 use Drupal\views\Plugin\views\wizard\WizardPluginBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @todo Replace numbers with constants.
@@ -76,27 +75,8 @@ class Node extends WizardPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.bundle.info'),
-      $container->get('entity_display.repository'),
-      $container->get('entity_field.manager'),
-      $container->get('menu.parent_form_selector')
-    );
-  }
-
-  /**
-   * Overrides Drupal\views\Plugin\views\wizard\WizardPluginBase::getAvailableSorts().
-   *
-   * @return array
-   *   An array whose keys are the available sort options and whose
-   *   corresponding values are human readable labels.
-   */
   public function getAvailableSorts() {
-    // You can't execute functions in properties, so override the method
+    // You can't execute functions in properties, so override the method.
     return [
       'node_field_data-title:ASC' => $this->t('Title'),
     ];
@@ -238,9 +218,7 @@ class Node extends WizardPluginBase {
   }
 
   /**
-   * Overrides Drupal\views\Plugin\views\wizard\WizardPluginBase::buildFilters().
-   *
-   * Add some options for filter by taxonomy terms.
+   * {@inheritdoc}
    */
   protected function buildFilters(&$form, FormStateInterface $form_state) {
     parent::buildFilters($form, $form_state);
@@ -277,17 +255,13 @@ class Node extends WizardPluginBase {
     $tag_fields = [];
     foreach ($bundles as $bundle) {
       $display = $this->entityDisplayRepository->getFormDisplay($this->entityTypeId, $bundle);
-      $taxonomy_fields = array_filter($this->entityFieldManager->getFieldDefinitions($this->entityTypeId, $bundle), function (FieldDefinitionInterface $field_definition) {
-        return $field_definition->getType() == 'entity_reference' && $field_definition->getSetting('target_type') == 'taxonomy_term';
-      });
-      foreach ($taxonomy_fields as $field_name => $field) {
-        $widget = $display->getComponent($field_name);
-        // We define "tag-like" taxonomy fields as ones that use the
-        // "Autocomplete (Tags style)" widget.
-        if (!empty($widget) && $widget['type'] == 'entity_reference_autocomplete_tags') {
-          $tag_fields[$field_name] = $field;
+      $tag_fields += array_filter($this->entityFieldManager->getFieldDefinitions($this->entityTypeId, $bundle), function (FieldDefinitionInterface $field_definition) use ($display) {
+        if ($field_definition->getType() == 'entity_reference' && $field_definition->getSetting('target_type') == 'taxonomy_term') {
+          $widget = $display->getComponent($field_definition->getName());
+          return isset($widget['type']) && $widget['type'] == 'entity_reference_autocomplete_tags';
         }
-      }
+        return FALSE;
+      });
     }
     if (!empty($tag_fields)) {
       // If there is more than one "tag-like" taxonomy field available to

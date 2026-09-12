@@ -1,4 +1,6 @@
-#Installation using Composer (recommended)
+# Installation
+
+## Using Composer
 
 If you use Composer to manage dependencies, edit your site's "composer.json"
 file as follows.

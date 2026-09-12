@@ -1,0 +1,94 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.revision-viewer-container-data,
+.revision-history-container-data {
+  display: none;
+}
+
+.editor-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  position: relative;
+  width: 100%;
+}
+
+.ck-editor__main .ck-content:not(.ck-comment__input *) {
+  word-break: break-word;
+}
+
+.revision-history-container-data > .editor-container > .ck-editor {
+  min-width: max(50%, calc(100% - 340px));
+  max-width: calc(100% - 260px);
+  width: 75%;
+}
+
+.revision-viewer-sidebar {
+  border-left: 1px solid var(--ck-color-toolbar-border);
+  width: 25%;
+  min-width: min(50%, 260px);
+  max-width: 340px;
+}
+
+.revision-history-container-data {
+  border: 1px solid var(--ck-color-toolbar-border);
+}
+
+.revision-history-container-data .ck.ck-editor__main>.ck-editor__editable:not(.ck-focused),
+.revision-history-container-data .ck.ck-toolbar {
+  border: none;
+}
+
+.revision-history-container-data .ck.ck-editor__main {
+  border-top: 1px solid var(--ck-color-toolbar-border);
+}
+
+/* revision sidebar header */
+.revision-history-container-data * {
+  --header-height: calc(var(--ck-ui-component-min-height) + var(--ck-spacing-small) * 2 + 2px)!important;
+}
+
+/* revision sidebar scrollable */
+.revision-history-container-data .ck.ck-revision-history-sidebar {
+  position: relative;
+  height: 100%;
+}
+.revision-history-container-data .ck.ck-revision-history-sidebar .ck-revision-history-sidebar__timeline {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - var(--header-height));
+  max-height: inherit;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.revision-history-active .filter-wrapper {
+  display: none;
+}
+
+/* Gin theme */
+.gin--dark-mode .ck {
+  --ck-revision-history-revision-border-color: var(--gin-color-primary);
+  --ck-revision-history-revision-box-shadow: var(--gin-shadow-l1);
+  --ck-color-editable-blur-selection: var(--gin-color-primary-light-hover);
+
+  .ck.ck-button.ck-revision-history-ui__back-to-editing {
+    background: var(--gin-color-primary);
+    color: var(--gin-color-button-text);
+  }
+  .ck.ck-button.ck-revision-history-ui__back-to-editing:hover:not(.ck-disabled) {
+    background: var(--gin-color-primary-hover);
+  }
+  .ck.ck-revision-history-sidebar__revision-wrapper .ck-revision-history-sidebar__revision.ck-revision-history-sidebar__revision_selected {
+    background: var(--gin-color-primary);
+    color: var(--gin-color-button-text);
+  }
+}
+
+
+/*--gin-color-primary-light-hover*/

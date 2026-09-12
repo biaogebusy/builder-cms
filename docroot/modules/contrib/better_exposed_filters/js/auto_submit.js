@@ -42,17 +42,30 @@
    */
   Drupal.behaviors.betterExposedFiltersAutoSubmit = {
     attach: function (context, settings) {
-      // When exposed as a block, the form #attributes are moved from the form
-      // to the block element, thus the second selector.
-      // @see \Drupal\block\BlockViewBuilder::preRender
-      const selectors = 'form[data-bef-auto-submit-full-form], [data-bef-auto-submit-full-form] form, [data-bef-auto-submit]';
 
-      $(selectors, context).addBack(selectors).find('input:text:not(.hasDatepicker), textarea').each(function () {
+      let selectors = '';
+      if (drupalSettings.better_exposed_filters && drupalSettings.better_exposed_filters.auto_submit_sort_only) {
+        selectors = 'form[data-bef-auto-submit-sort-only] .form-item-sort-order';
+      }
+      else {
+        // When exposed as a block, the form #attributes are moved from the form
+        // to the block element, thus the second selector.
+        // @see \Drupal\block\BlockViewBuilder::preRender
+        selectors = 'form[data-bef-auto-submit-full-form], [data-bef-auto-submit-full-form] form, [data-bef-auto-submit]';
+      }
+
+      $(selectors, context).addBack(selectors).find('input:text:not(.hasDatepicker), textarea, select, input:radio, input:checkbox').each(function () {
         const $el = $(this);
-        const $valueLength = $el.val().length * 2;
-
-        $el[0].setSelectionRange($valueLength, $valueLength);
-        setFocus($el, $valueLength);
+        const $tagName = $el[0].tagName;
+        if ($tagName === 'SELECT') {
+          setFocus($el);
+        }
+        else if (['radio', 'checkbox'].includes($el.attr('type'))) {
+          setFocus($el);
+        }
+        else {
+          setFocus($el);
+        }
       });
 
       function setFocus($el) {
@@ -60,10 +73,34 @@
 
           entries.forEach(entry => {
             if (entry.isIntersecting) {
-              const $lastTriggeredSelector = $(settings.bef_autosubmit_target).attr('data-drupal-selector');
-              if ($el.attr('data-drupal-selector') && $el.attr('data-drupal-selector') === $lastTriggeredSelector) {
-                $el.focus();
+              // Get the stored selector and cursor position from settings.
+              const lastTriggeredSelector = settings.bef_autosubmit_triggered_selector;
+              const lastCursorPosition = settings.bef_autosubmit_cursor_position;
+              const currentSelector = $el.attr('data-drupal-selector');
+
+              if (lastTriggeredSelector && currentSelector) {
+                // Extract the base selector without the hash suffix
+                const lastTriggeredBase = lastTriggeredSelector.replace(/-[a-z0-9]{11}$/, '');
+                const currentBase = currentSelector.replace(/-[a-z0-9]{11}$/, '');
+
+                // Match if the base selectors are the same, or if current element is within
+                // the same fieldset as the triggered element
+                if (currentBase === lastTriggeredBase ||
+                    currentSelector.startsWith(lastTriggeredBase + '-')) {
+                  $el.focus();
+                  // Restore cursor position for text inputs.
+                  if ($el.is(':text, textarea') && typeof lastCursorPosition === 'number') {
+                    try {
+                      $el[0].setSelectionRange(lastCursorPosition, lastCursorPosition);
+                    }
+                    catch (e) {
+                      // Some input types don't support setSelectionRange.
+                    }
+                  }
+                }
               }
+              // Disconnect observer after processing.
+              observer.disconnect();
             }
           });
         });
@@ -141,11 +178,19 @@
           9, // Tab.
           13, // Enter.
           27,  // Esc.
+          32, // Space.
         ];
 
         // Triggering element.
         const $target = $(e.target);
-        const $submit = $target.closest('form').find('[data-bef-auto-submit-click]');
+        const $form = e.target.form ? $(e.target.form) : $target.closest('form');
+        const $submit = $form.find('[data-bef-auto-submit-click]').first();
+        const mediaQuery = $target.closest('form').data('bef-auto-submit-media-query');
+
+        // Don't submit when the document doesn't match the media query string.
+        if (mediaQuery && !matchMedia(mediaQuery).matches) {
+          return true;
+        }
 
         // Don't submit on changes to excluded elements,submit elements, or select2 autocomplete.
         if ($target.is('[data-bef-auto-submit-exclude], :submit, .select2-search__field, .chosen-search-input')) {
@@ -178,7 +223,17 @@
           }
         }
 
-        settings.bef_autosubmit_target = $target;
+        // Store the selector string (not the element) so it persists after AJAX refresh.
+        settings.bef_autosubmit_triggered_selector = $target.attr('data-drupal-selector');
+        // Store cursor position for text inputs to restore after AJAX.
+        if ($target.is(':text, textarea')) {
+          try {
+            settings.bef_autosubmit_cursor_position = $target[0].selectionStart;
+          }
+          catch (e) {
+            settings.bef_autosubmit_cursor_position = $target.val().length;
+          }
+        }
       }
     },
   };

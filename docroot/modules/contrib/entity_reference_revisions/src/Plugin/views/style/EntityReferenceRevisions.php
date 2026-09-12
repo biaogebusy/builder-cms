@@ -4,6 +4,8 @@ namespace Drupal\entity_reference_revisions\Plugin\views\style;
 
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsStyle;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 
 /**
@@ -20,6 +22,14 @@ use Drupal\views\Plugin\views\style\StylePluginBase;
  *   display_types = {"entity_reference_revisions"}
  * )
  */
+#[ViewsStyle(
+  id: 'entity_reference_revisions',
+  title: new TranslatableMarkup('Entity Reference Revisions list'),
+  help: new TranslatableMarkup('Returns results as a PHP array of labels and rendered rows.'),
+  theme: 'views_view_unformatted',
+  display_types: ['entity_reference_revisions'],
+  register_theme: FALSE,
+)]
 class EntityReferenceRevisions extends StylePluginBase {
 
   /**

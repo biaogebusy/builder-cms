@@ -22,8 +22,14 @@ class ParagraphTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'menu_ui',
+    'field',
+    'paragraphs',
+    'text',
     'jsonapi_extras',
     'paragraphs_test',
+    'entity_share_test',
   ];
 
   /**

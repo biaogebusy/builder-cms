@@ -45,7 +45,7 @@ class CurrentStore implements CurrentStoreInterface {
    */
   public function getStore() {
     $request = $this->requestStack->getCurrentRequest();
-    if (!$request || !$this->stores->contains($request)) {
+    if (!$request || !$this->stores->offsetExists($request)) {
       $store = $this->chainResolver->resolve();
       if (!$request) {
         return $store;

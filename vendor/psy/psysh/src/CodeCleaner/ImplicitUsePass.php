@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -180,6 +180,7 @@ class ImplicitUsePass extends CodeCleanerPass
                     $seen[$shortNameLower] = true;
 
                     if ($this->shouldAddImplicitUseInContext($shortName, $shortNameLower, $aliases)) {
+                        // @phan-suppress-next-line PhanTypeArraySuspiciousNullable - shortNameMap is initialized in beforeTraverse
                         $uses[$shortName] = $this->shortNameMap[$shortNameLower];
                     }
                 }
@@ -266,11 +267,11 @@ class ImplicitUsePass extends CodeCleanerPass
     {
         $this->shortNameMap = [];
 
-        $allClasses = \array_merge(
-            \get_declared_classes(),
-            \get_declared_interfaces(),
-            \get_declared_traits()
-        );
+        $allClasses = [
+            ...\get_declared_classes(),
+            ...\get_declared_interfaces(),
+            ...\get_declared_traits(),
+        ];
 
         // First pass: collect all matching classes
         $candidatesByShortName = [];
@@ -341,9 +342,7 @@ class ImplicitUsePass extends CodeCleanerPass
      */
     private function normalizeNamespaces(array $namespaces): array
     {
-        return \array_map(function ($namespace) {
-            return \trim($namespace, '\\').'\\';
-        }, $namespaces);
+        return \array_map(fn ($namespace) => \trim($namespace, '\\').'\\', $namespaces);
     }
 
     /**

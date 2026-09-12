@@ -7,12 +7,14 @@ namespace Drupal\Tests\taxonomy\Functional;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\taxonomy\TermInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests managing taxonomy parents through the user interface.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermParentsTest extends BrowserTestBase {
 
   /**
@@ -195,7 +197,7 @@ class TermParentsTest extends BrowserTestBase {
    * @return \Drupal\taxonomy\TermInterface[]
    *   A list of terms created for testing.
    */
-  protected function doTestEditingSingleParent() {
+  protected function doTestEditingSingleParent(): array {
     $terms = [];
 
     // Create two terms without any parents.
@@ -260,22 +262,30 @@ class TermParentsTest extends BrowserTestBase {
     $term_3 = $this->createTerm('Test term 3');
 
     // Add term form with one parent.
-    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", ['query' => ['parent' => $term_1->id()]]);
+    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", [
+      'query' => ['parent' => $term_1->id()],
+    ]);
     $this->assertParentOption('Test term 1', TRUE);
     $this->assertParentOption('Test term 2', FALSE);
     $this->assertParentOption('Test term 3', FALSE);
     // Add term form with two parents.
-    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", ['query' => ['parent[0]' => $term_1->id(), 'parent[1]' => $term_2->id()]]);
+    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", [
+      'query' => ['parent[0]' => $term_1->id(), 'parent[1]' => $term_2->id()],
+    ]);
     $this->assertParentOption('Test term 1', TRUE);
     $this->assertParentOption('Test term 2', TRUE);
     $this->assertParentOption('Test term 3', FALSE);
     // Add term form with no parents.
-    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", ['query' => ['parent' => '']]);
+    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", [
+      'query' => ['parent' => ''],
+    ]);
     $this->assertParentOption('Test term 1', FALSE);
     $this->assertParentOption('Test term 2', FALSE);
     $this->assertParentOption('Test term 3', FALSE);
     // Add term form with invalid parent.
-    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", ['query' => ['parent' => -1]]);
+    $this->drupalGet("/admin/structure/taxonomy/manage/{$this->vocabularyId}/add", [
+      'query' => ['parent' => -1],
+    ]);
     $this->assertParentOption('Test term 1', FALSE);
     $this->assertParentOption('Test term 2', FALSE);
     $this->assertParentOption('Test term 3', FALSE);
@@ -285,7 +295,12 @@ class TermParentsTest extends BrowserTestBase {
     $this->assertParentOption('Test term 2', TRUE);
     $this->assertParentOption('Test term 3', FALSE);
     // Edit term form with two parents.
-    $this->drupalGet($term_1->toUrl('edit-form'), ['query' => ['parent[0]' => $term_2->id(), 'parent[1]' => $term_3->id()]]);
+    $this->drupalGet($term_1->toUrl('edit-form'), [
+      'query' => [
+        'parent[0]' => $term_2->id(),
+        'parent[1]' => $term_3->id(),
+      ],
+    ]);
     $this->assertParentOption('Test term 2', TRUE);
     $this->assertParentOption('Test term 3', TRUE);
     // Edit term form with no parents.
@@ -302,7 +317,7 @@ class TermParentsTest extends BrowserTestBase {
    * Creates a term, saves it and returns it.
    *
    * @param string $name
-   *   The name of the term to create
+   *   The name of the term to create.
    * @param int[] $parent_ids
    *   (optional) A list of parent term IDs.
    *

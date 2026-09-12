@@ -155,7 +155,7 @@ class WebformResultsCustomForm extends FormBase {
     // Get available columns as option.
     $columns_options = [];
     foreach ($available_columns as $column_name => $column) {
-      $title = (strpos($column_name, 'element__') === 0) ? ['data' => ['#markup' => '<b>' . $column['title'] . '</b>']] : $column['title'];
+      $title = str_starts_with($column_name, 'element__') ? ['data' => ['#markup' => '<b>' . $column['title'] . '</b>']] : $column['title'];
       $key = (isset($column['key'])) ? str_replace('webform_', '', $column['key']) : $column['name'];
       $columns_options[$column_name] = ['title' => $title, 'key' => $key];
     }

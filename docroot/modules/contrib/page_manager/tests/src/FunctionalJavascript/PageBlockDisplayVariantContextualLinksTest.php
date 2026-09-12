@@ -4,8 +4,11 @@ namespace Drupal\Tests\page_manager\FunctionalJavascript;
 
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+use Drupal\Tests\page_manager\Traits\WebDriverFormSubmitTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
@@ -15,6 +18,7 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
  */
 class PageBlockDisplayVariantContextualLinksTest extends WebDriverTestBase {
 
+  use WebDriverFormSubmitTrait;
   use ContextualLinkClickTrait;
   use UserCreationTrait;
 
@@ -46,7 +50,41 @@ class PageBlockDisplayVariantContextualLinksTest extends WebDriverTestBase {
     parent::setUp();
 
     BlockContentType::create(['id' => 'test_block_type', 'label' => 'test_block_type'])->save();
-    block_content_add_body_field('test_block_type');
+    // Newer core versions no longer guarantee the shared block body storage
+    // exists before tests create a custom block type.
+    if (!FieldStorageConfig::loadByName('block_content', 'body')) {
+      FieldStorageConfig::create([
+        'field_name' => 'body',
+        'entity_type' => 'block_content',
+        'type' => 'text_with_summary',
+      ])->save();
+    }
+    // The bundle-specific field config and displays should only be created
+    // once, even if the shared storage was already provided elsewhere.
+    if (!FieldConfig::loadByName('block_content', 'test_block_type', 'body')) {
+      FieldConfig::create([
+        'field_storage' => FieldStorageConfig::loadByName('block_content', 'body'),
+        'bundle' => 'test_block_type',
+        'label' => 'Body',
+        'settings' => [
+          'display_summary' => FALSE,
+          'allowed_formats' => [],
+        ],
+      ])->save();
+
+      $display_repository = $this->container->get('entity_display.repository');
+      $display_repository->getFormDisplay('block_content', 'test_block_type')
+        ->setComponent('body', [
+          'type' => 'text_textarea_with_summary',
+        ])
+        ->save();
+      $display_repository->getViewDisplay('block_content', 'test_block_type')
+        ->setComponent('body', [
+          'label' => 'hidden',
+          'type' => 'text_default',
+        ])
+        ->save();
+    }
     $this->contentBlock = BlockContent::create([
       'type' => 'test_block_type',
       'uuid' => '86ed355c-2ce2-4835-8e6e-baeb8227d724',
@@ -93,6 +131,7 @@ class PageBlockDisplayVariantContextualLinksTest extends WebDriverTestBase {
 
     // Check that the contextual link destination is valid.
     $session->getPage()->pressButton('Save');
+    $this->waitForPage();
     $assert_session->pageTextContains('Test block content has been updated.');
     $this->assertEquals($page_url, $session->getCurrentUrl());
 
@@ -101,6 +140,7 @@ class PageBlockDisplayVariantContextualLinksTest extends WebDriverTestBase {
 
     // Check that the contextual link destination is valid.
     $session->getPage()->pressButton('Save');
+    $this->waitForPage();
     $assert_session->pageTextContains("The view Who's online block has been saved.");
     $this->assertEquals($page_url, $session->getCurrentUrl());
   }

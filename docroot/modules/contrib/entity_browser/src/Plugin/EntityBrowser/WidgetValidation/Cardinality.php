@@ -2,6 +2,8 @@
 
 namespace Drupal\entity_browser\Plugin\EntityBrowser\WidgetValidation;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserWidgetValidation;
 use Drupal\entity_browser\Element\EntityBrowserElement;
 use Drupal\entity_browser\WidgetValidationBase;
 use Symfony\Component\Validator\ConstraintViolation;
@@ -9,12 +11,11 @@ use Symfony\Component\Validator\ConstraintViolationList;
 
 /**
  * Validates that the widget returns the appropriate number of elements.
- *
- * @EntityBrowserWidgetValidation(
- *   id = "cardinality",
- *   label = @Translation("Cardinality validator")
- * )
  */
+#[EntityBrowserWidgetValidation(
+  id: 'cardinality',
+  label: new TranslatableMarkup('Cardinality validator'),
+)]
 class Cardinality extends WidgetValidationBase {
 
   /**

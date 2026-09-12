@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\system\ModuleAdminLinksHelper;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ModuleAdminLinksHelper.
- *
- * @coversDefaultClass \Drupal\system\ModuleAdminLinksHelper
- * @group system
  */
+#[CoversClass(ModuleAdminLinksHelper::class)]
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class ModuleAdminLinksHelperTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -41,7 +45,7 @@ class ModuleAdminLinksHelperTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getModuleAdminLinks
+   * Tests get module admin links.
    */
   public function testGetModuleAdminLinks(): void {
     // Rebuild the menu links.

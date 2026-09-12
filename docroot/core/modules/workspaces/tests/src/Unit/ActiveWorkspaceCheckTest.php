@@ -9,15 +9,18 @@ use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Tests\UnitTestCase;
 use Drupal\workspaces\Access\ActiveWorkspaceCheck;
 use Drupal\workspaces\WorkspaceManagerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\workspaces\Access\ActiveWorkspaceCheck
- *
- * @group workspaces
- * @group Access
+ * Tests Drupal\workspaces\Access\ActiveWorkspaceCheck.
  */
+#[CoversClass(ActiveWorkspaceCheck::class)]
+#[Group('workspaces')]
+#[Group('Access')]
 class ActiveWorkspaceCheckTest extends UnitTestCase {
 
   /**
@@ -45,6 +48,7 @@ class ActiveWorkspaceCheckTest extends UnitTestCase {
    * Provides data for the testAccess method.
    *
    * @return array
+   *   An array of test data.
    */
   public static function providerTestAccess() {
     return [
@@ -58,9 +62,9 @@ class ActiveWorkspaceCheckTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::access
-   * @dataProvider providerTestAccess
+   * Tests access.
    */
+  #[DataProvider('providerTestAccess')]
   public function testAccess($requirements, $has_active_workspace, $access, array $contexts = []): void {
     $route = new Route('', [], $requirements);
 

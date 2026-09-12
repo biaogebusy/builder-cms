@@ -5,18 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\system\Install\Requirements\SystemRequirements;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\RequirementsPageTrait;
 use Drupal\TestTools\Extension\InfoWriterTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the update script access and functionality.
- *
- * @group Update
- * @group #slow
  */
+#[Group('Update')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class UpdateScriptTest extends BrowserTestBase {
   use InfoWriterTrait;
   use RequirementsPageTrait;
@@ -64,6 +69,9 @@ class UpdateScriptTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    if ($this->name() === 'testMissingExtension') {
+      $this->markTestSkipped('Skipped due to major version-specific logic. See https://www.drupal.org/project/drupal/issues/3359322');
+    }
     parent::setUp();
     $this->updateUrl = Url::fromRoute('system.db_update');
     $this->statusReportUrl = Url::fromRoute('system.status');
@@ -146,7 +154,7 @@ class UpdateScriptTest extends BrowserTestBase {
     // First, run this test with pending updates to make sure they can be run
     // successfully.
     $this->drupalLogin($this->updateUser);
-    $update_script_test_config->set('requirement_type', REQUIREMENT_WARNING)->save();
+    $update_script_test_config->set('requirement_type', RequirementSeverity::Warning->value)->save();
     /** @var \Drupal\Core\Update\UpdateHookRegistry $update_registry */
     $update_registry = \Drupal::service('update.update_hook_registry');
     $update_registry->setInstalledVersion('update_script_test', $update_registry->getInstalledVersion('update_script_test') - 1);
@@ -174,7 +182,7 @@ class UpdateScriptTest extends BrowserTestBase {
     // If there is a requirements error, it should be displayed even after
     // clicking the link to proceed (since the problem that triggered the error
     // has not been fixed).
-    $update_script_test_config->set('requirement_type', REQUIREMENT_ERROR)->save();
+    $update_script_test_config->set('requirement_type', RequirementSeverity::Error->value)->save();
     $this->drupalGet($this->updateUrl, ['external' => TRUE]);
     $this->assertSession()->pageTextContains('This is a requirements error provided by the update_script_test module.');
     $this->clickLink('try again');
@@ -182,7 +190,7 @@ class UpdateScriptTest extends BrowserTestBase {
 
     // Ensure that changes to a module's requirements that would cause errors
     // are displayed correctly.
-    $update_script_test_config->set('requirement_type', REQUIREMENT_OK)->save();
+    $update_script_test_config->set('requirement_type', RequirementSeverity::OK->value)->save();
     \Drupal::state()->set('update_script_test.system_info_alter', ['dependencies' => ['a_module_that_does_not_exist']]);
     $this->drupalGet($this->updateUrl, ['external' => TRUE]);
     $this->assertSession()->responseContains('a_module_that_does_not_exist (Missing)');
@@ -228,9 +236,8 @@ class UpdateScriptTest extends BrowserTestBase {
    *   The values to the info.yml that are not compatible with core.
    * @param string $expected_error
    *   The expected error.
-   *
-   * @dataProvider providerExtensionCompatibilityChange
    */
+  #[DataProvider('providerExtensionCompatibilityChange')]
   public function testExtensionCompatibilityChange(array $correct_info, array $breaking_info, string $expected_error): void {
     $extension_type = $correct_info['type'];
     $this->drupalLogin(
@@ -280,7 +287,7 @@ class UpdateScriptTest extends BrowserTestBase {
   }
 
   /**
-   * Date provider for testExtensionCompatibilityChange().
+   * Data provider for testExtensionCompatibilityChange().
    */
   public static function providerExtensionCompatibilityChange() {
     $incompatible_module_message = "The following module is installed, but it is incompatible with Drupal " . \Drupal::VERSION . ":";
@@ -346,11 +353,9 @@ class UpdateScriptTest extends BrowserTestBase {
    * @param array $contrib
    *   An array keyed by 'module' and 'theme' where each sub array contains
    *   a list of extension machine names.
-   *
-   * @dataProvider providerMissingExtension
    */
+  #[DataProvider('providerMissingExtension')]
   public function testMissingExtension(array $core, array $contrib): void {
-    $this->markTestSkipped('Skipped due to major version-specific logic. See https://www.drupal.org/project/drupal/issues/3359322');
     $this->drupalLogin(
       $this->drupalCreateUser(
         [
@@ -378,10 +383,10 @@ class UpdateScriptTest extends BrowserTestBase {
       $error_url = 'https://www.drupal.org/node/3223395#s-recommendations-for-deprecated-modules';
       $extension_base_info += ['package' => 'Core'];
       if ($type === 'module') {
-        $removed_core_list = \DRUPAL_CORE_REMOVED_MODULE_LIST;
+        $removed_core_list = SystemRequirements::DRUPAL_CORE_REMOVED_MODULE_LIST;
       }
       else {
-        $removed_core_list = \DRUPAL_CORE_REMOVED_THEME_LIST;
+        $removed_core_list = SystemRequirements::DRUPAL_CORE_REMOVED_THEME_LIST;
       }
 
       foreach ($extensions as $extension) {
@@ -536,7 +541,8 @@ class UpdateScriptTest extends BrowserTestBase {
     // But verify that we warn the admin about this situation.
     $this->assertSession()->elementTextEquals('xpath', '//div[@aria-label="Warning message"]', 'Warning message Module update_test_0 has an entry in the system.schema key/value storage, but is not installed. More information about this error.');
 
-    // Finally, try with both kinds of orphans and make sure we get both warnings.
+    // Finally, try with both kinds of orphans and make sure we get both
+    // warnings.
     \Drupal::service('update.update_hook_registry')->setInstalledVersion('my_already_removed_module', 8000);
     $this->drupalGet($this->updateUrl, ['external' => TRUE]);
     $this->updateRequirementsProblem();
@@ -793,7 +799,8 @@ class UpdateScriptTest extends BrowserTestBase {
     ]);
     $this->drupalLogin($admin_user);
 
-    // Visit status report page and ensure, that link to update.php has no path prefix set.
+    // Visit status report page and ensure, that link to update.php has no path
+    // prefix set.
     $this->drupalGet('en/admin/reports/status', ['external' => TRUE]);
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->linkByHrefExists('/update.php');
@@ -809,8 +816,9 @@ class UpdateScriptTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('Updates were attempted.');
     $this->assertSession()->linkExists('logged');
     $this->assertSession()->linkExists('Administration pages');
+    $this->assertSession()->linkExists('Status report');
     $this->assertSession()->elementNotExists('xpath', '//main//a[contains(@href, "update.php")]');
-    $this->clickLink('Administration pages');
+    $this->clickLink('Status report');
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -845,7 +853,7 @@ class UpdateScriptTest extends BrowserTestBase {
   /**
    * Helper function to run updates via the browser.
    */
-  protected function runUpdates($maintenance_mode) {
+  protected function runUpdates($maintenance_mode): void {
     /** @var \Drupal\Core\Update\UpdateHookRegistry $update_registry */
     $update_registry = \Drupal::service('update.update_hook_registry');
     $schema_version = $update_registry->getInstalledVersion('update_script_test');
@@ -974,7 +982,7 @@ class UpdateScriptTest extends BrowserTestBase {
    * @internal
    */
   protected function assertInstalledExtensionsConfig(string $extension_type, array $extension_machine_names): void {
-    $extension_config = $this->container->get('config.factory')->getEditable('core.extension');
+    $extension_config = $this->container->get('config.factory')->get('core.extension');
     foreach ($extension_machine_names as $extension_machine_name) {
       $this->assertSame(0, $extension_config->get("$extension_type.$extension_machine_name"));
     }
@@ -990,18 +998,16 @@ class UpdateScriptTest extends BrowserTestBase {
    * @param array $extension_machine_names
    *   An array of  the extension machine names.
    *
-   * @throws \Behat\Mink\Exception\ResponseTextException
-   *
    * @internal
    */
   protected function assertUpdateWithNoErrors(array $unexpected_error_texts, string $extension_type, array $extension_machine_names): void {
     $assert_session = $this->assertSession();
     foreach ($unexpected_error_texts as $unexpected_error_text) {
-      $this->assertSession()->pageTextNotContains($unexpected_error_text);
+      $assert_session->pageTextNotContains($unexpected_error_text);
     }
     $this->drupalGet($this->updateUrl, ['external' => TRUE]);
     foreach ($unexpected_error_texts as $unexpected_error_text) {
-      $this->assertSession()->pageTextNotContains($unexpected_error_text);
+      $assert_session->pageTextNotContains($unexpected_error_text);
     }
     $this->updateRequirementsProblem();
     $this->clickLink('Continue');
@@ -1021,26 +1027,23 @@ class UpdateScriptTest extends BrowserTestBase {
    * @param array $test_error_urls
    *   The URLs in the error texts.
    *
-   * @throws \Behat\Mink\Exception\ExpectationException
-   * @throws \Behat\Mink\Exception\ResponseTextException
-   *
    * @internal
    */
   protected function assertErrorOnUpdates(array $expected_error_texts, string $extension_type, array $extension_machine_names, array $test_error_urls): void {
     $assert_session = $this->assertSession();
     foreach ($expected_error_texts as $expected_error_text) {
-      $this->assertSession()->pageTextContains($expected_error_text);
+      $assert_session->pageTextContains($expected_error_text);
     }
     foreach ($test_error_urls as $test_error_url) {
-      $this->assertSession()->linkByHrefExists($test_error_url);
+      $assert_session->linkByHrefExists($test_error_url);
     }
 
     // Reload the update page to ensure the extension with the breaking values
     // has not been uninstalled or otherwise affected.
-    for ($reload = 0; $reload <= 1; $reload++) {
+    for ($i = 0; $i < 2; $i++) {
       $this->drupalGet($this->updateUrl, ['external' => TRUE]);
       foreach ($expected_error_texts as $expected_error_text) {
-        $this->assertSession()->pageTextContains($expected_error_text);
+        $assert_session->pageTextContains($expected_error_text);
       }
       $assert_session->linkNotExists('Continue');
     }

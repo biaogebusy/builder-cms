@@ -6,13 +6,16 @@ namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI of field handlers.
  *
- * @group views_ui
  * @see \Drupal\views\Plugin\views\field\FieldPluginBase
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class FieldUITest extends UITestBase {
 
   /**
@@ -63,8 +66,8 @@ class FieldUITest extends UITestBase {
     $this->assertSession()->elementNotExists('xpath', '//details[@id="edit-options-more"]');
 
     // Ensure that dialog titles are not escaped.
-    $edit_groupby_url = 'admin/structure/views/nojs/handler/test_view/default/field/name';
-    $this->assertSession()->linkByHrefNotExists($edit_groupby_url, 0, 'No aggregation link found.');
+    $edit_group_by_url = 'admin/structure/views/nojs/handler/test_view/default/field/name';
+    $this->assertSession()->linkByHrefNotExists($edit_group_by_url, 0, 'No aggregation link found.');
 
     // Enable aggregation on the view.
     $edit = [
@@ -73,7 +76,7 @@ class FieldUITest extends UITestBase {
     $this->drupalGet('/admin/structure/views/nojs/display/test_view/default/group_by');
     $this->submitForm($edit, 'Apply');
 
-    $this->assertSession()->linkByHrefExists($edit_groupby_url, 0, 'Aggregation link found.');
+    $this->assertSession()->linkByHrefExists($edit_group_by_url, 0, 'Aggregation link found.');
 
     $edit_handler_url = '/admin/structure/views/ajax/handler-group/test_view/default/field/name';
     $this->drupalGet($edit_handler_url);

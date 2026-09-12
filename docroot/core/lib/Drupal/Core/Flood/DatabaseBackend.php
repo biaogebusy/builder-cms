@@ -18,37 +18,21 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
   const TABLE_NAME = 'flood';
 
   /**
-   * The database connection used to store flood event information.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
    * Construct the DatabaseBackend.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection which will be used to store the flood event
    *   information.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack used to retrieve the current request.
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(Connection $connection, RequestStack $request_stack, protected ?TimeInterface $time = NULL) {
-    $this->connection = $connection;
-    $this->requestStack = $request_stack;
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
+  public function __construct(
+    protected Connection $connection,
+    protected RequestStack $requestStack,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -180,9 +164,9 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
     // If another process has already created the table, attempting to create
     // it will throw an exception. In this case just catch the exception and do
     // nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;
@@ -195,7 +179,7 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
    * yet the query failed, then the flood is stale and the exception needs to
    * propagate.
    *
-   * @param $e
+   * @param \Exception $e
    *   The exception.
    *
    * @throws \Exception

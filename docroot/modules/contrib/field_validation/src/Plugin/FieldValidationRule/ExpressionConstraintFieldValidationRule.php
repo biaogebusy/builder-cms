@@ -53,6 +53,7 @@ class ExpressionConstraintFieldValidationRule extends ConstraintFieldValidationR
     $form['expression'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Expression'),
+      '#description' => $this->t('An expression-language string evaluated against the field value. Anyone who can edit this rule can run arbitrary expression-language code, so only trusted roles should have access to configure it.'),
       '#default_value' => $this->configuration['expression'],
       '#required' => TRUE,
     ];

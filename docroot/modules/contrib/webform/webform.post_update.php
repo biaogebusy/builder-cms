@@ -28,7 +28,7 @@ function webform_post_update_deprecate_jquery_ui_datepicker() {
   foreach ($config_factory->listAll('webform.webform.') as $webform_config_name) {
     $webform_config = $config_factory->get($webform_config_name);
     $elements = $webform_config->get('elements');
-    if (strpos($elements, 'datepicker') !== FALSE) {
+    if (str_contains($elements, 'datepicker')) {
       // Enable the webform_jqueryui_datepicker.module.
       \Drupal::service('module_installer')
         ->install(['webform_jqueryui_datepicker']);
@@ -46,7 +46,7 @@ function webform_post_update_deprecate_location_places() {
   foreach ($config_factory->listAll('webform.webform.') as $webform_config_name) {
     $webform_config = $config_factory->get($webform_config_name);
     $elements = $webform_config->get('elements');
-    if (strpos($elements, 'webform_location_places') !== FALSE) {
+    if (str_contains($elements, 'webform_location_places')) {
       $install_webform_location_places = TRUE;
       break;
     }

@@ -6,12 +6,14 @@ namespace Drupal\Tests\media\FunctionalJavascript;
 
 use Drupal\media\Entity\Media;
 use Drupal\media\Plugin\media\Source\File;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the file media source.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaSourceFileTest extends MediaSourceTestBase {
 
   /**
@@ -23,8 +25,6 @@ class MediaSourceFileTest extends MediaSourceTestBase {
    * Tests the file media source.
    */
   public function testMediaFileSource(): void {
-    // Skipped due to frequent random test failures.
-    $this->markTestSkipped();
     $media_type_id = 'test_media_file_type';
     $source_field_id = 'field_media_file';
     $provided_fields = [

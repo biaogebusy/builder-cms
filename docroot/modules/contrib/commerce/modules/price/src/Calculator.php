@@ -234,7 +234,7 @@ final class Calculator {
    *   The trimmed number.
    */
   public static function trim(string $number) : string {
-    if (strpos($number, '.') != FALSE) {
+    if (str_contains($number, '.')) {
       // The number is decimal, strip trailing zeroes.
       // If no digits remain after the decimal point, strip it as well.
       $number = rtrim($number, '0');

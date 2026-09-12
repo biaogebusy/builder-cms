@@ -1,0 +1,91 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ck-content .table table {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/*
+ This is a fix of a bug with multiple instances of the editor added when users is changing fields order.
+ Works for RTC.
+ */
+.ck-editor-sidebar-wrapper .form-item .ck.ck-editor:nth-child(n+3) {
+  display: none;
+}
+
+.ck-presence-list-container .ck.ck-presence-list:nth-child(n+3) {
+  display: none;
+}
+/*
+ End of:
+ This is a fix of a bug with multiple instances of the editor added when users is changing fields order.
+ Works for RTC.
+ */
+
+.ck-content .ck-suggestion-marker-formatBlock {
+  box-shadow: -0.2em 0 0 0 var(--ck-color-base-background), -0.4em 0 0 0 var(--ck-color-suggestion-marker-format-border)!important;
+}
+
+.ck-content .ck-suggestion-marker-formatBlock.ck-suggestion-marker--active {
+  box-shadow: -0.2em 0 0 0 var(--ck-color-base-background),-0.4em 0 0 0 var(--ck-color-suggestion-marker-format-border-active)!important;
+}
+
+.ck-comments-archive-dropdown .ck-editor__main > :is(.ck-editor__editable, .ck-source-editing-area) {
+  min-height: unset;
+}
+
+.ck.ck-user__img {
+  box-sizing: border-box;
+}
+
+.ck-editor-instance .ck-editor .ck-sticky-panel__content {
+  border:0!important;
+}
+
+.ck-editor-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  position: relative;
+}
+
+.ck-editor-container .ck-editor-instance {
+  width: 100%;
+  height: auto;
+}
+
+.ck-editor-container .ck-editor-instance .ck-content{
+  word-break: break-word;
+  overflow-y: auto;
+}
+
+.ck-editor-container .ck-editor-instance .ck-editor,
+.ck-editor-container .ck-editor-instance .ck-editor .ck-editor__main,
+.ck-editor-container .ck-editor-instance .ck-editor .ck-editor__main .ck-content {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.ck-comment__input .ck-editor__main > :is(.ck-editor__editable, .ck-source-editing-area) {
+  max-height: none;
+}
+
+.gin--dark-mode .ck {
+  --ck-color-comment-background: var(--gin-bg-input);
+  --ck-color-base-text: var(--gin-color-text);
+
+  --ck-color-comment-marker: #B59937;
+  --ck-color-comment-marker-active: #D4B240;
+
+  .ck-ai-assistant-ui_theme {
+    --ck-color-button-default-hover-background: var(--gin-color-primary-light);
+    --ck-ai-toolbar-button-hover-color: var(--gin-color-primary);
+    &.ck-disabled {
+      --ck-ai-toolbar-button-hover-color: var(--ck-color-text);
+    }
+  }
+}

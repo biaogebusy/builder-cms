@@ -5,9 +5,9 @@ namespace Drupal\blazy\Views;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Render\Markup;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Theme\BlazyViews;
 use Drupal\blazy\Utility\Sanitize;
-use Drupal\blazy\internals\Internals;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -73,7 +73,7 @@ abstract class BlazyStyleVanilla extends StylePluginBase implements BlazyStyleVa
    *
    * @var \Drupal\blazy\BlazyManagerInterface
    *
-   * @todo remove at/by 3.x, no longer in use.
+   * @todo deprecate and remove at/by 3.x, no longer in use.
    */
   protected $blazyManager;
 
@@ -106,7 +106,7 @@ abstract class BlazyStyleVanilla extends StylePluginBase implements BlazyStyleVa
     // inheritance, sub-modules deviate:
     $instance->manager = $instance->formatter = $container->get('blazy.formatter');
 
-    // @todo remove for consistent call against sub-modules shared methods:
+    // @todo deprecate and remove for consistent call against sub-modules shared methods:
     $instance->blazyManager = $instance->manager;
 
     return $instance;
@@ -179,7 +179,7 @@ abstract class BlazyStyleVanilla extends StylePluginBase implements BlazyStyleVa
 
     // Prepare needed settings to work with.
     $settings = BlazyViews::settings($view, $options, $data);
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $is_grid  = !empty($settings['style']) && !empty($settings['grid']);
 
     $settings['caption'] = empty($settings['caption'])
@@ -229,16 +229,16 @@ abstract class BlazyStyleVanilla extends StylePluginBase implements BlazyStyleVa
     // if (empty($settings['vanilla']) && isset($build['items'][0])) {
     // $this->manager()->isBlazy($settings, $build['items'][0]);
     // }
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     if ($data = $this->getFirstImage($rows[0] ?? NULL)) {
       $blazies->set('first.data', $data);
 
       // @todo recheck $this->manager->preSettings($settings);
       if ($subsets = $this->manager->toHashtag($data)) {
-        if ($blazy = $subsets['blazies']) {
-          $field = $blazy->get('field', []);
+        $blazy = Internals::getBlazies($subsets);
+        if ($field = $blazy->get('field', [])) {
           $field['count'] = $blazy->get('count');
-          $blazies->set('view.formatter', $field);
+          $blazies->set('view.formatter', $field, TRUE);
         }
       }
     }

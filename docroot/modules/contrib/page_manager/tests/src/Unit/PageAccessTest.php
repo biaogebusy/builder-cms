@@ -74,6 +74,23 @@ class PageAccessTest extends UnitTestCase {
   }
 
   /**
+   * Mocks the language an entity under test reports.
+   *
+   * ::getId() must be stubbed. EntityAccessControlHandler keys its static
+   * access cache by language code, and PHP 8.5 deprecates using NULL as an
+   * array offset, so a mock without that stub makes the test emit a
+   * deprecation.
+   *
+   * @return \Drupal\Core\Language\LanguageInterface
+   *   The mocked language.
+   */
+  protected function prophesizeLanguage() {
+    $language = $this->prophesize(LanguageInterface::class);
+    $language->getId()->willReturn(LanguageInterface::LANGCODE_NOT_SPECIFIED);
+    return $language->reveal();
+  }
+
+  /**
    * @covers ::checkAccess
    */
   public function testAccessView() {
@@ -83,12 +100,13 @@ class PageAccessTest extends UnitTestCase {
     $page->getAccessConditions()->willReturn([]);
     $page->getAccessLogic()->willReturn('and');
     $page->status()->willReturn(TRUE);
-    $page->language()->willReturn($this->prophesize(LanguageInterface::class)->reveal());
+    $page->language()->willReturn($this->prophesizeLanguage());
 
     $page->uuid()->willReturn('some-uuid');
     $page->getEntityTypeId()->shouldBeCalled();
 
     $account = $this->prophesize(AccountInterface::class);
+    $account->id()->willReturn(2);
 
     $this->assertTrue($this->pageAccess->access($page->reveal(), 'view', $account->reveal()));
   }
@@ -102,12 +120,13 @@ class PageAccessTest extends UnitTestCase {
     $page->getCacheTags()->willReturn(['page:1']);
     $page->getCacheContexts()->willReturn([]);
     $page->getCacheMaxAge()->willReturn(0);
-    $page->language()->willReturn($this->prophesize(LanguageInterface::class)->reveal());
+    $page->language()->willReturn($this->prophesizeLanguage());
 
     $page->uuid()->willReturn('some-uuid');
     $page->getEntityTypeId()->shouldBeCalled();
 
     $account = $this->prophesize(AccountInterface::class);
+    $account->id()->willReturn(2);
 
     $this->assertFalse($this->pageAccess->access($page->reveal(), 'view', $account->reveal()));
   }
@@ -122,7 +141,7 @@ class PageAccessTest extends UnitTestCase {
 
     $page = $this->prophesize(PageInterface::class);
     $page->isNew()->willReturn($is_new);
-    $page->language()->willReturn($this->prophesize(LanguageInterface::class)->reveal());
+    $page->language()->willReturn($this->prophesizeLanguage());
 
     $page->uuid()->willReturn('some-uuid');
     $page->getEntityTypeId()->shouldBeCalled();
@@ -138,8 +157,8 @@ class PageAccessTest extends UnitTestCase {
     }
 
     $account = $this->prophesize(AccountInterface::class);
+    $account->id()->willReturn(2)->shouldBeCalled();
     $account->hasPermission('test permission')->willReturn(TRUE);
-    $account->id()->shouldBeCalled();
 
     $this->assertSame($expected, $this->pageAccess->access($page->reveal(), 'delete', $account->reveal()));
   }

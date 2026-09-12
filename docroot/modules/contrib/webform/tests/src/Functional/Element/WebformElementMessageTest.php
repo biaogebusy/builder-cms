@@ -28,7 +28,7 @@ class WebformElementMessageTest extends WebformElementBrowserTestBase {
   /**
    * Tests message element.
    */
-  public function testMessage() {
+  public function testMessage(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_message');
@@ -43,7 +43,12 @@ class WebformElementMessageTest extends WebformElementBrowserTestBase {
     // Check close message with slide effect.
     $assert_session->responseContains('<div data-drupal-selector="edit-message-close-slide" class="webform-message js-webform-message webform-message--close js-webform-message--close js-form-wrapper form-wrapper" data-message-close-effect="slide" id="edit-message-close-slide">');
     $assert_session->responseContains('<div role="contentinfo" aria-label="Information message">');
-    $assert_session->responseContains('<a href="#close" aria-label="close" class="js-webform-message__link webform-message__link">×</a>This is message that can be <b>closed using slide effect</b>.');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<a href="#close" aria-label="close" class="js-webform-message__link webform-message__link">×</a>This is message that can be <b>closed using slide effect</b>.');
+    }
+    else {
+      $assert_session->responseContains('<a href="#close" class="js-webform-message__link webform-message__link" aria-label="close">×</a>This is message that can be <b>closed using slide effect</b>.');
+    }
 
     // Set user and state storage.
     $elements = [

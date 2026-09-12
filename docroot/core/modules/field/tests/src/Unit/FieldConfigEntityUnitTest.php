@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\field\Unit;
 
-use Drupal\Core\Entity\EntityType;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityType;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\field\Entity\FieldConfig
- * @group field
+ * Tests Drupal\field\Entity\FieldConfig.
  */
+#[CoversClass(FieldConfig::class)]
+#[Group('field')]
 class FieldConfigEntityUnitTest extends UnitTestCase {
 
   /**
@@ -111,7 +114,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::calculateDependencies
+   * Tests calculate dependencies.
    */
   public function testCalculateDependencies(): void {
     // Mock the interfaces necessary to create a dependency on a bundle entity.
@@ -130,7 +133,11 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
     $this->fieldTypePluginManager->expects($this->any())
       ->method('getDefinition')
       ->with('test_field')
-      ->willReturn(['provider' => 'test_module', 'config_dependencies' => ['module' => ['test_module2']], 'class' => '\Drupal\Tests\field\Unit\DependencyFieldItem']);
+      ->willReturn([
+        'provider' => 'test_module',
+        'config_dependencies' => ['module' => ['test_module2']],
+        'class' => '\Drupal\Tests\field\Unit\DependencyFieldItem',
+      ]);
 
     $this->fieldStorage->expects($this->once())
       ->method('getConfigDependencyName')
@@ -178,7 +185,11 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
     $this->fieldTypePluginManager->expects($this->any())
       ->method('getDefinition')
       ->with('test_field')
-      ->willReturn(['provider' => 'test_module', 'config_dependencies' => ['module' => ['test_module2']], 'class' => '\Drupal\Tests\field\Unit\DependencyFieldItem']);
+      ->willReturn([
+        'provider' => 'test_module',
+        'config_dependencies' => ['module' => ['test_module2']],
+        'class' => '\Drupal\Tests\field\Unit\DependencyFieldItem',
+      ]);
 
     $field = new FieldConfig([
       'field_name' => $this->fieldStorage->getName(),
@@ -192,7 +203,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::onDependencyRemoval
+   * Tests on dependency removal.
    */
   public function testOnDependencyRemoval(): void {
     $this->fieldTypePluginManager->expects($this->any())
@@ -221,7 +232,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::toArray
+   * Tests to array.
    */
   public function testToArray(): void {
     $field = new FieldConfig([
@@ -266,7 +277,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getType
+   * Tests get type.
    */
   public function testGetType(): void {
     // Ensure that FieldConfig::getType() is not delegated to
@@ -295,10 +306,16 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
  */
 class DependencyFieldItem {
 
+  /**
+   * Gets the dependencies for this field item.
+   */
   public static function calculateDependencies(FieldDefinitionInterface $definition) {
     return ['module' => ['test_module3']];
   }
 
+  /**
+   * Informs the entity that entities it depends on will be deleted.
+   */
   public static function onDependencyRemoval($field_config, $dependencies) {
   }
 

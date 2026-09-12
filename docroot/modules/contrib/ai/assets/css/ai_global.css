@@ -243,6 +243,14 @@ select.ai-select--wide {
   background-image: url('../icons/trash.svg');
 }
 
+.ai-icon--thumbs-up {
+  background-image: url('../icons/thumbs-up.svg');
+}
+
+.ai-icon--thumbs-down {
+  background-image: url('../icons/thumbs-down.svg');
+}
+
 /* ==========================================================================
    Pills
    ========================================================================== */

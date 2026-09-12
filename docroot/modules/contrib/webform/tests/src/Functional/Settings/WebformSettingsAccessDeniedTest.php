@@ -41,7 +41,7 @@ class WebformSettingsAccessDeniedTest extends WebformBrowserTestBase {
   /**
    * Tests webform access denied setting.
    */
-  public function testWebformAccessDenied() {
+  public function testWebformAccessDenied(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_form_access_denied');
@@ -136,7 +136,7 @@ class WebformSettingsAccessDeniedTest extends WebformBrowserTestBase {
   /**
    * Tests webform submission access denied setting.
    */
-  public function testWebformSubmissionAccessDenied() {
+  public function testWebformSubmissionAccessDenied(): void {
     $assert_session = $this->assertSession();
 
     // Create a webform submission.

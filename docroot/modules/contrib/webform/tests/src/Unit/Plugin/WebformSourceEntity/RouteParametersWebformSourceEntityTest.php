@@ -38,7 +38,7 @@ class RouteParametersWebformSourceEntityTest extends UnitTestCase {
    *
    * @dataProvider providerGetCurrentSourceEntity
    */
-  public function testGetCurrentSourceEntity(array $route_parameters, array $ignored_types, $expect_source_entity, $assert_message = '') {
+  public function testGetCurrentSourceEntity(array $route_parameters, array $ignored_types, $expect_source_entity, $assert_message = ''): void {
     $route_match = $this->createMock(RouteMatchInterface::class);
 
     $source_entity = $this->createMock(EntityInterface::class);
@@ -76,7 +76,7 @@ class RouteParametersWebformSourceEntityTest extends UnitTestCase {
    *
    * @see testGetCurrentSourceEntity()
    */
-  public function providerGetCurrentSourceEntity() {
+  public static function providerGetCurrentSourceEntity() {
     $tests[] = [[], [], FALSE, 'Empty parameters'];
     $tests[] = [['source_entity' => 1], [], TRUE, 'Just source entity in the parameters'];
     $tests[] = [['source_entity' => 1], ['source_entity'], FALSE, 'Source entity in the parameters but forced to ignore'];

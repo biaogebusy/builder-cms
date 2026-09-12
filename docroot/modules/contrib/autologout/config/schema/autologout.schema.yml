@@ -57,7 +57,7 @@ autologout.settings:
       label: 'JS timer load'
     use_alt_logout_method:
       type: boolean
-      label: 'Use alternate logout methode'
+      label: 'Use alternate logout method'
     use_watchdog:
       type: boolean
       label: 'Use watchdog'
@@ -73,9 +73,16 @@ autologout.settings:
     no_button:
       type: label
       label: 'No button text'
+    # cspell:ignore whitelisted
     whitelisted_ip_addresses:
       type: string
-      label: 'Whitelisted IP addresses'
+      label: 'Allow listed IP addresses'
+    cookie_secure:
+      type: boolean
+      label: 'Cookie Secure'
+    cookie_httponly:
+      type: boolean
+      label: 'Cookie httpOnly'
 
 autologout.role.*:
   type: config_object

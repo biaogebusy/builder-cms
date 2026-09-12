@@ -2,10 +2,10 @@
 
 namespace Drupal\block_content;
 
-use Drupal\block_content\Access\DependentAccessInterface;
 use Drupal\block_content\Event\BlockContentGetDependencyEvent;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Access\DependentAccessInterface;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityHandlerInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -61,10 +61,15 @@ class BlockContentAccessControlHandler extends EntityAccessControlHandler implem
     $access = AccessResult::allowedIfHasPermissions($account, ['administer block content']);
     if (!$access->isAllowed()) {
       $access = match ($operation) {
-        // Allow view and update access to user with the 'edit any (type) block
-        // content' permission or the 'administer block content' permission.
+        // Allow view access if the block is published, or the user has either
+        // "access block library" or "view unpublished block content"
+        // permissions.
         'view' => AccessResult::allowedIf($entity->isPublished())
-          ->orIf(AccessResult::allowedIfHasPermission($account, 'access block library')),
+          ->orIf(AccessResult::allowedIfHasPermissions($account, [
+            'access block library',
+            'view unpublished block content',
+          ], 'OR'))
+          ->addCacheableDependency($entity),
         'update' => AccessResult::allowedIfHasPermission($account, 'edit any ' . $bundle . ' block content'),
         'delete' => AccessResult::allowedIfHasPermission($account, 'delete any ' . $bundle . ' block content'),
         // Revisions.
@@ -107,10 +112,8 @@ class BlockContentAccessControlHandler extends EntityAccessControlHandler implem
   protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL) {
     return AccessResult::allowedIfHasPermissions($account, [
       'create ' . $entity_bundle . ' block content',
-      'access block library',
-    ])->orIf(AccessResult::allowedIfHasPermissions($account, [
       'administer block content',
-    ]));
+    ], 'OR');
   }
 
 }

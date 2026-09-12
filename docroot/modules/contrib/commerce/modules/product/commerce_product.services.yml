@@ -39,3 +39,15 @@ services:
   commerce_product.variation_attribute_mapper:
     class: Drupal\commerce_product\ProductVariationAttributeMapper
   Drupal\commerce_product\ProductVariationAttributeMapperInterface: '@commerce_product.variation_attribute_mapper'
+
+  Drupal\commerce_product\Hook\CommerceProductHooks:
+    class: Drupal\commerce_product\Hook\CommerceProductHooks
+
+  Drupal\commerce_product\Hook\CommerceProductThemeHooks:
+    class: Drupal\commerce_product\Hook\CommerceProductThemeHooks
+
+  Drupal\commerce_product\Hook\CommerceProductTokensHooks:
+    class: Drupal\commerce_product\Hook\CommerceProductTokensHooks
+
+  Drupal\commerce_product\Hook\CommerceProductViewsHooks:
+    class: Drupal\commerce_product\Hook\CommerceProductViewsHooks

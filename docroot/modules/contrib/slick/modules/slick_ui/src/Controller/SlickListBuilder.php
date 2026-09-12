@@ -119,7 +119,7 @@ class SlickListBuilder extends SlickListBuilderBase {
     $settings['grid_small'] = 1;
     $settings['style'] = 'column';
 
-    $header = '<br><hr><h2>' . $this->t('Available skins') . '</h2>';
+    $header = '<br><hr><h2 id="slick-skins">' . $this->t('Available skins') . '</h2>';
     $header .= '<p>' . $this->t('Some skin works best with a specific Optionset, and vice versa. Use matching names if found. Else happy adventure!') . '</p>';
     $build['skins_header']['#markup'] = $header;
     $build['skins_header']['#weight'] = 20;

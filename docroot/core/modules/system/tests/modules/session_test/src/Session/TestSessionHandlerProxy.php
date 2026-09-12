@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\session_test\Session;
 
 /**
  * Provides a test session handler proxy.
  */
-class TestSessionHandlerProxy implements \SessionHandlerInterface {
+class TestSessionHandlerProxy implements \SessionHandlerInterface, \SessionUpdateTimestampHandlerInterface {
 
   /**
    * The decorated session handler.
    *
-   * @var \SessionHandlerInterface
+   * @var \SessionHandlerInterface&\SessionUpdateTimestampHandlerInterface
    */
   protected $sessionHandler;
 
@@ -29,7 +31,7 @@ class TestSessionHandlerProxy implements \SessionHandlerInterface {
    * @param mixed $optional_argument
    *   (optional) An optional argument.
    */
-  public function __construct(\SessionHandlerInterface $session_handler, $optional_argument = NULL) {
+  public function __construct(\SessionHandlerInterface&\SessionUpdateTimestampHandlerInterface $session_handler, $optional_argument = NULL) {
     $this->sessionHandler = $session_handler;
     $this->optionalArgument = $optional_argument;
   }
@@ -37,8 +39,7 @@ class TestSessionHandlerProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function open($save_path, $name) {
+  public function open($save_path, $name): bool {
     $trace = \Drupal::service('session_test.session_handler_proxy_trace');
     $trace[] = ['BEGIN', $this->optionalArgument, __FUNCTION__];
     $result = $this->sessionHandler->open($save_path, $name);
@@ -49,8 +50,7 @@ class TestSessionHandlerProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function close() {
+  public function close(): bool {
     $trace = \Drupal::service('session_test.session_handler_proxy_trace');
     $trace[] = ['BEGIN', $this->optionalArgument, __FUNCTION__];
     $result = $this->sessionHandler->close();
@@ -61,8 +61,7 @@ class TestSessionHandlerProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function read($session_id) {
+  public function read($session_id): string|FALSE {
     $trace = \Drupal::service('session_test.session_handler_proxy_trace');
     $trace[] = ['BEGIN', $this->optionalArgument, __FUNCTION__, $session_id];
     $result = $this->sessionHandler->read($session_id);
@@ -73,8 +72,7 @@ class TestSessionHandlerProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function write($session_id, $session_data) {
+  public function write($session_id, $session_data): bool {
     $trace = \Drupal::service('session_test.session_handler_proxy_trace');
     $trace[] = ['BEGIN', $this->optionalArgument, __FUNCTION__, $session_id];
     $result = $this->sessionHandler->write($session_id, $session_data);
@@ -85,17 +83,37 @@ class TestSessionHandlerProxy implements \SessionHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function destroy($session_id) {
+  public function destroy($session_id): bool {
     return $this->sessionHandler->destroy($session_id);
   }
 
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function gc($max_lifetime) {
+  public function gc($max_lifetime): int|FALSE {
     return $this->sessionHandler->gc($max_lifetime);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateId($session_id): bool {
+    $trace = \Drupal::service('session_test.session_handler_proxy_trace');
+    $trace[] = ['BEGIN', $this->optionalArgument, __FUNCTION__, $session_id];
+    $result = $this->sessionHandler->validateId($session_id);
+    $trace[] = ['END', $this->optionalArgument, __FUNCTION__, $session_id];
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateTimestamp($session_id, $session_data): bool {
+    $trace = \Drupal::service('session_test.session_handler_proxy_trace');
+    $trace[] = ['BEGIN', $this->optionalArgument, __FUNCTION__, $session_id];
+    $result = $this->sessionHandler->updateTimestamp($session_id, $session_data);
+    $trace[] = ['END', $this->optionalArgument, __FUNCTION__, $session_id];
+    return $result;
   }
 
 }

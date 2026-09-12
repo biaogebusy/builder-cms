@@ -14,6 +14,8 @@ use Symfony\Component\Routing\Route;
  */
 class RouteProcessorCsrf implements OutboundRouteProcessorInterface, TrustedCallbackInterface {
 
+  use RoutePathGenerationTrait;
+
   /**
    * Constructs a RouteProcessorCsrf object.
    *
@@ -27,6 +29,7 @@ class RouteProcessorCsrf implements OutboundRouteProcessorInterface, TrustedCall
     protected ?RequestStack $requestStack = NULL,
   ) {
     if ($requestStack === NULL) {
+      @trigger_error('Calling ' . __CLASS__ . ' constructor without the $requestStack argument is deprecated in drupal:11.2.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/project/drupal/issues/3485174', E_USER_DEPRECATED);
       $this->requestStack = \Drupal::service('request_stack');
     }
   }
@@ -36,15 +39,14 @@ class RouteProcessorCsrf implements OutboundRouteProcessorInterface, TrustedCall
    */
   public function processOutbound($route_name, Route $route, array &$parameters, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     if ($route->hasRequirement('_csrf_token')) {
-      $path = ltrim($route->getPath(), '/');
-      // Replace the path parameters with values from the parameters array.
-      foreach ($parameters as $param => $value) {
-        $path = str_replace("{{$param}}", $value, $path);
-      }
+      $path = $this->generateRoutePath($route, $parameters);
       // Adding this to the parameters means it will get merged into the query
       // string when the route is compiled.
       if (!$bubbleable_metadata || $this->requestStack->getCurrentRequest()->getRequestFormat() !== 'html') {
         $parameters['token'] = $this->csrfToken->get($path);
+        // Tokens are per session; the response carrying the URL must vary by
+        // session so it isn't cached across users sharing other contexts.
+        $bubbleable_metadata?->addCacheContexts(['session']);
       }
       else {
         // Generate a placeholder and a render array to replace it.
@@ -62,7 +64,9 @@ class RouteProcessorCsrf implements OutboundRouteProcessorInterface, TrustedCall
   }
 
   /**
-   * #lazy_builder callback; gets a CSRF token for the given path.
+   * Render API callback: Adds a CSRF token for the given path to the markup.
+   *
+   * This function is assigned as a #lazy_builder callback.
    *
    * @param string $path
    *   The path to get a CSRF token for.

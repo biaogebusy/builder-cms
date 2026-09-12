@@ -7,12 +7,14 @@ namespace Drupal\Tests\views_ui\Functional;
 use Drupal\Core\Url;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests enabling, disabling, and reverting default views via the listing page.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class DefaultViewsTest extends UITestBase {
 
   /**
@@ -92,11 +94,12 @@ class DefaultViewsTest extends UITestBase {
     // $this->assertSession()->linkExists('Revert');
     // $this->assertSession()->linkByHrefExists($revert_href);
     // $this->drupalGet($revert_href);
-    // $this->submitForm(array(), 'Revert');
+    // $this->submitForm([], 'Revert');
     // $this->drupalGet('glossary');
     // $this->assertSession()->pageTextNotContains($new_title);
 
-    // Duplicate the view and check that the normal schema of duplicated views is used.
+    // Duplicate the view and check that the normal schema of duplicated views
+    // is used.
     $this->drupalGet('admin/structure/views');
     $this->clickViewsOperationLink('Duplicate', '/glossary');
     $edit = [
@@ -211,15 +214,15 @@ class DefaultViewsTest extends UITestBase {
    * various views listing pages, and they might have tokens in them. So we
    * need special code to find the correct one to click.
    *
-   * @param $label
+   * @param string $label
    *   Text between the anchor tags of the desired link.
-   * @param $unique_href_part
+   * @param string $unique_href_part
    *   A unique string that is expected to occur within the href of the desired
    *   link. For example, if the link URL is expected to look like
    *   "admin/structure/views/view/glossary/*", then "/glossary/" could be
    *   passed as the expected unique string.
    */
-  public function clickViewsOperationLink($label, $unique_href_part) {
+  public function clickViewsOperationLink($label, $unique_href_part): void {
     $this->assertSession()->elementExists('xpath', "//a[normalize-space(text())='$label' and contains(@href, '$unique_href_part')]")->click();
   }
 

@@ -1,0 +1,4 @@
+fpa.settings:
+  title: 'Manage fast permissions administration settings'
+  route_name: fpa.settings
+  parent: user.admin_index

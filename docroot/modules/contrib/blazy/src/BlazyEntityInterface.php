@@ -13,6 +13,8 @@ namespace Drupal\blazy;
  *
  * @see Drupal\blazy\Field\BlazyEntityReferenceBase
  * @see Drupal\blazy\Plugin\Field\FieldFormatter\BlazyMediaFormatterBase
+ *
+ * @todo add return and parameter types at 4.x.
  */
 interface BlazyEntityInterface {
 
@@ -29,8 +31,18 @@ interface BlazyEntityInterface {
    *
    * @return \Drupal\blazy\BlazyManagerInterface
    *   The blazy manager.
+   *
+   * @todo deprecate and remove for $manager before or at 4.x.
    */
   public function blazyManager();
+
+  /**
+   * Returns the blazy manager service.
+   *
+   * @return \Drupal\blazy\BlazyManagerInterface
+   *   The blazy manager.
+   */
+  public function manager(): BlazyManagerInterface;
 
   /**
    * Returns the blazy media.

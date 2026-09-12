@@ -3,12 +3,12 @@
 namespace Drupal\Tests\devel\Functional;
 
 use Drupal\Core\Url;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests devel menu links.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelMenuLinksTest extends DevelBrowserTestBase {
 
   /**

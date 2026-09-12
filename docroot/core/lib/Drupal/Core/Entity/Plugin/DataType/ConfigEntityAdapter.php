@@ -67,10 +67,12 @@ class ConfigEntityAdapter extends EntityAdapter {
   }
 
   /**
-   * {@inheritdoc}
+   * Retrieves the iterator for the object.
+   *
+   * @return \ArrayIterator<string, mixed>
+   *   The iterator.
    */
-  #[\ReturnTypeWillChange]
-  public function getIterator() {
+  public function getIterator(): \ArrayIterator {
     if (isset($this->entity)) {
       return $this->getConfigTypedData()->getIterator();
     }

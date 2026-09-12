@@ -5,7 +5,11 @@
  * Documentation related to JSON:API.
  */
 
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\jsonapi\JsonApiFilter;
 
 /**
  * @defgroup jsonapi_architecture JSON:API Architecture
@@ -27,7 +31,7 @@ use Drupal\Core\Access\AccessResult;
  * reconciled with the specification, the module will always choose the
  * implementation most faithful to the specification.
  *
- * @see http://jsonapi.org/
+ * @see https://jsonapi.org/
  *
  * @section resources Resources
  * Every unit of data in the specification is a "resource". The specification
@@ -197,7 +201,7 @@ use Drupal\Core\Access\AccessResult;
  * versions *will* remain backwards-compatible as only additions may be
  * released.
  *
- * @see http://jsonapi.org/faq/#what-is-the-meaning-of-json-apis-version
+ * @see https://jsonapi.org/faq/#what-is-the-meaning-of-json-apis-version
  *
  * Tests: subclasses of base test classes may contain BC breaks between minor
  * releases, to allow minor releases to A) comply better with the JSON:API spec,
@@ -260,22 +264,22 @@ use Drupal\Core\Access\AccessResult;
  *     viewable.
  *   - AccessResult::neutral() if the implementation has no opinion.
  *   The supported subsets for which an access result may be returned are:
- *   - JSONAPI_FILTER_AMONG_ALL: all entities of the given type.
- *   - JSONAPI_FILTER_AMONG_PUBLISHED: all published entities of the given type.
- *   - JSONAPI_FILTER_AMONG_ENABLED: all enabled entities of the given type.
- *   - JSONAPI_FILTER_AMONG_OWN: all entities of the given type owned by the
+ *   - JsonApiFilter::AMONG_ALL: all entities of the given type.
+ *   - JsonApiFilter::AMONG_PUBLISHED: all published entities of the given type.
+ *   - JsonApiFilter::AMONG_ENABLED: all enabled entities of the given type.
+ *   - JsonApiFilter::AMONG_OWN: all entities of the given type owned by the
  *     user for whom access is being checked.
  *   See the documentation of the above constants for more information about
  *   each subset.
  *
  * @see hook_jsonapi_ENTITY_TYPE_filter_access()
  */
-function hook_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTypeInterface $entity_type, \Drupal\Core\Session\AccountInterface $account) {
+function hook_jsonapi_entity_filter_access(EntityTypeInterface $entity_type, AccountInterface $account) {
   // For every entity type that has an admin permission, allow access to filter
   // by all entities of that type to users with that permission.
   if ($admin_permission = $entity_type->getAdminPermission()) {
     return ([
-      JSONAPI_FILTER_AMONG_ALL => AccessResult::allowedIfHasPermission($account, $admin_permission),
+      JsonApiFilter::AMONG_ALL => AccessResult::allowedIfHasPermission($account, $admin_permission),
     ]);
   }
 }
@@ -300,11 +304,14 @@ function hook_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTypeInterfa
  *
  * @see hook_jsonapi_entity_filter_access()
  */
-function hook_jsonapi_ENTITY_TYPE_filter_access(\Drupal\Core\Entity\EntityTypeInterface $entity_type, \Drupal\Core\Session\AccountInterface $account) {
+function hook_jsonapi_ENTITY_TYPE_filter_access(EntityTypeInterface $entity_type, AccountInterface $account): array {
   return ([
-    JSONAPI_FILTER_AMONG_ALL => AccessResult::allowedIfHasPermission($account, 'administer llamas'),
-    JSONAPI_FILTER_AMONG_PUBLISHED => AccessResult::allowedIfHasPermission($account, 'view all published llamas'),
-    JSONAPI_FILTER_AMONG_OWN => AccessResult::allowedIfHasPermissions($account, ['view own published llamas', 'view own unpublished llamas'], 'AND'),
+    JsonApiFilter::AMONG_ALL => AccessResult::allowedIfHasPermission($account, 'administer llamas'),
+    JsonApiFilter::AMONG_PUBLISHED => AccessResult::allowedIfHasPermission($account, 'view all published llamas'),
+    JsonApiFilter::AMONG_OWN => AccessResult::allowedIfHasPermissions($account, [
+      'view own published llamas',
+      'view own unpublished llamas',
+    ], 'AND'),
   ]);
 }
 
@@ -338,7 +345,7 @@ function hook_jsonapi_ENTITY_TYPE_filter_access(\Drupal\Core\Entity\EntityTypeIn
  * @return \Drupal\Core\Access\AccessResultInterface
  *   The access result.
  */
-function hook_jsonapi_entity_field_filter_access(\Drupal\Core\Field\FieldDefinitionInterface $field_definition, \Drupal\Core\Session\AccountInterface $account) {
+function hook_jsonapi_entity_field_filter_access(FieldDefinitionInterface $field_definition, AccountInterface $account) {
   if ($field_definition->getTargetEntityTypeId() === 'node' && $field_definition->getName() === 'field_sensitive_data') {
     $has_sufficient_access = FALSE;
     foreach (['administer nodes', 'view all sensitive field data'] as $permission) {

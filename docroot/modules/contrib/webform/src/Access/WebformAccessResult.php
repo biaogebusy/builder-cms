@@ -25,7 +25,7 @@ class WebformAccessResult {
    *   If $condition is TRUE, isAllowed() will be TRUE, otherwise isNeutral()
    *   will be TRUE.
    */
-  public static function allowedIf($condition, EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
+  public static function allowedIf($condition, ?EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
     return $condition ? static::allowed($webform_entity, $cache_per_user) : static::neutral($webform_entity, $cache_per_user);
   }
 
@@ -40,7 +40,7 @@ class WebformAccessResult {
    * @return \Drupal\Core\Access\AccessResultAllowed
    *   isAllowed() will be TRUE.
    */
-  public static function allowed(EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
+  public static function allowed(?EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
     return static::addDependencies(AccessResult::allowed(), $webform_entity, $cache_per_user);
   }
 
@@ -55,7 +55,7 @@ class WebformAccessResult {
    * @return \Drupal\Core\Access\AccessResultForbidden
    *   isNeutral() will be TRUE.
    */
-  public static function neutral(EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
+  public static function neutral(?EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
     return static::addDependencies(AccessResult::neutral(), $webform_entity, $cache_per_user);
   }
 
@@ -70,7 +70,7 @@ class WebformAccessResult {
    * @return \Drupal\Core\Access\AccessResultForbidden
    *   isForbidden() will be TRUE.
    */
-  public static function forbidden(EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
+  public static function forbidden(?EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
     return static::addDependencies(AccessResult::forbidden(), $webform_entity, $cache_per_user);
   }
 
@@ -87,7 +87,7 @@ class WebformAccessResult {
    * @return \Drupal\Core\Access\AccessResult
    *   The access result with dependencies.
    */
-  public static function addDependencies(AccessResult $access_result, EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
+  public static function addDependencies(AccessResult $access_result, ?EntityInterface $webform_entity = NULL, $cache_per_user = FALSE) {
     $access_result->cachePerPermissions();
 
     if ($cache_per_user) {

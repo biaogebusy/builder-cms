@@ -1,0 +1,11 @@
+name: 'Content lock timeout test'
+type: module
+description: 'Provides test classes.'
+package: Testing
+dependencies:
+  - content_lock:content_lock_timeout
+
+# Information added by Drupal.org packaging script on 2026-06-23
+version: '3.0.0'
+project: 'content_lock'
+datestamp: 1782214657

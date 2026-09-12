@@ -1,0 +1,55 @@
+site_name: "Ace Editor"
+repo_url: https://git.drupalcode.org/project/ace_editor
+repo_name: drupal/ace_editor
+edit_uri: /-/edit/2.0.x/docs/
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      primary: indigo
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: indigo
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: indigo
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.sections
+
+nav:
+  - Introduction: "index.md"
+  - User Documentation:
+      - Installation and Setup: "1-users/0-installation.md"
+      - Using the Code Editor: "1-users/1-using-the-editor.md"
+      - Displaying Code (Formatter): "1-users/2-formatter.md"
+      - Embedding Snippets (Filter): "1-users/3-filter.md"
+  - Administrator Documentation:
+      - Configuration: "2-admins/0-configuration.md"
+      - Themes and Syntaxes: "2-admins/1-themes-and-syntaxes.md"
+      - Permissions: "2-admins/2-permissions.md"
+  - Developer Documentation:
+      - Architecture: "3-developers/0-architecture.md"
+      - Library Detection: "3-developers/1-library-detection.md"
+  - Frequently Asked Questions: "faq.md"
+
+plugins:
+  - search
+  - privacy:
+      enabled: !ENV [CI, false]
+
+markdown_extensions:
+  - pymdownx.extra

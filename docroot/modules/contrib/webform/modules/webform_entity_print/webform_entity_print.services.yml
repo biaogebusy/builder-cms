@@ -8,3 +8,11 @@ services:
     arguments: ['@current_route_match']
     tags:
       - { name: event_subscriber }
+
+  Drupal\webform_entity_print\Hook\WebformEntityPrintHooks:
+    class: Drupal\webform_entity_print\Hook\WebformEntityPrintHooks
+    autowire: true
+
+  Drupal\webform_entity_print\Hook\WebformEntityPrintWebformHooks:
+    class: Drupal\webform_entity_print\Hook\WebformEntityPrintWebformHooks
+    autowire: true

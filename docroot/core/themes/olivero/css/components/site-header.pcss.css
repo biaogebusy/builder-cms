@@ -9,7 +9,7 @@
   position: relative;
   /**
    * Ensure mobile site header is always above other elements including
-   * contextual links, and Tour.
+   * contextual links.
    */
   z-index: 101;
 
@@ -77,13 +77,13 @@ html.js body:not(.is-always-mobile-nav) .site-header__inner {
 
 .site-header__fixable.is-expanded .site-header__inner {
   @media (--nav) {
-    box-shadow: -36px 1px 36px rgba(0, 0, 0, 0.08); /* LTR */
+    box-shadow: -36px 1px 36px rgb(0, 0, 0, 0.08); /* LTR */
   }
 }
 
 [dir="rtl"] .site-header__fixable.is-expanded .site-header__inner {
   @media (--nav) {
-    box-shadow: 36px 1px 36px rgba(0, 0, 0, 0.08);
+    box-shadow: 36px 1px 36px rgb(0, 0, 0, 0.08);
   }
 }
 

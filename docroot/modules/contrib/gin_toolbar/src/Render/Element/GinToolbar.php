@@ -35,6 +35,9 @@ class GinToolbar implements TrustedCallbackInterface {
    * @see toolbar_prerender_toolbar_administration_tray()
    */
   public static function preRenderTray(array $build) {
+    if (!_gin_toolbar_module_is_active('toolbar')) {
+      return $build;
+    }
     $menu_tree = \Drupal::service('toolbar.menu_tree');
     $activeTrail = \Drupal::service('gin_toolbar.active_trail')
       ->getActiveTrailIds('admin');

@@ -24,7 +24,7 @@ class WebformAttachmentTest extends WebformBrowserTestBase {
   /**
    * Tests webform attachment.
    */
-  public function testWebformAttachment() {
+  public function testWebformAttachment(): void {
     global $base_url;
 
     $assert_session = $this->assertSession();
@@ -144,14 +144,14 @@ class WebformAttachmentTest extends WebformBrowserTestBase {
     // Check that both attachments are displayed on the results page.
     $this->drupalGet('/admin/structure/webform/manage/test_attachment_url/results/submissions');
     $assert_session->responseContains('<td><a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_url/MAINTAINERS.txt">MAINTAINERS.txt</a></td>');
-    $assert_session->responseContains('<td><a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_path/durpalicon.png">durpalicon.png</a></td>');
+    $assert_session->responseContains('<td><a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_path/drupalicon.png">drupalicon.png</a></td>');
     $assert_session->responseContains('<td><a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_url_download/MAINTAINERS.txt">Download</a></td>');
 
     // Check that only the download attachment is displayed on
     // the submission page.
     $this->drupalGet("/admin/structure/webform/manage/test_attachment_url/submission/$sid");
     $assert_session->responseNotContains('<a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_url/MAINTAINERS.txt">MAINTAINERS.txt</a>');
-    $assert_session->responseNotContains('<a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_path/durpalicon.png">durpalicon.png</a>');
+    $assert_session->responseNotContains('<a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_path/drupalicon.png">drupalicon.png</a>');
     $assert_session->responseContains('<a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_url_download/MAINTAINERS.txt">Download</a>');
 
     $assert_session->responseNotContains('<a href="' . $base_url . '/webform/' . $webform_id . '/submissions/' . $sid . '/attachment/webform_attachment_url/MAINTAINERS.txt">MAINTAINERS.txt</a>');

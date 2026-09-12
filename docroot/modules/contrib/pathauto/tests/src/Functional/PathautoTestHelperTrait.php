@@ -77,12 +77,7 @@ trait PathautoTestHelperTrait {
     $bubbleable_metadata = new BubbleableMetadata();
     $tokens = \Drupal::token()->generate($type, [$token => $token], [$type => $object], [], $bubbleable_metadata);
     $tokens += [$token => ''];
-    $this->assertSame($tokens[$token], $expected, t("Token value for [@type:@token] was '@actual', expected value '@expected'.", [
-      '@type' => $type,
-      '@token' => $token,
-      '@actual' => $tokens[$token],
-      '@expected' => $expected,
-    ]));
+    $this->assertSame($tokens[$token], $expected, sprintf("Token value for [%s:%s] was '%s', expected value '%s'.", $type, $token, $tokens[$token], $expected));
   }
 
   /**
@@ -145,8 +140,7 @@ trait PathautoTestHelperTrait {
     if ($entity_type_manager->hasDefinition('path_alias')) {
       $entity_type_manager->getStorage('path_alias')->resetCache();
     }
-    $this->assertEquals($expected_alias, \Drupal::service('path_alias.manager')->getAliasByPath($source, $langcode), t("Alias for %source with language '@language' is correct.",
-      ['%source' => $source, '@language' => $langcode]));
+    $this->assertEquals($expected_alias, \Drupal::service('path_alias.manager')->getAliasByPath($source, $langcode), sprintf("Alias for %s with language '%s' is correct.", $source, $langcode));
   }
 
   /**
@@ -154,7 +148,7 @@ trait PathautoTestHelperTrait {
    */
   public function assertAliasExists($conditions) {
     $path = $this->loadPathAliasByConditions($conditions);
-    $this->assertNotEmpty($path, t('Alias with conditions @conditions found.', ['@conditions' => var_export($conditions, TRUE)]));
+    $this->assertNotEmpty($path, sprintf('Alias with conditions %s found.', var_export($conditions, TRUE)));
     return $path;
   }
 
@@ -163,7 +157,7 @@ trait PathautoTestHelperTrait {
    */
   public function assertNoAliasExists($conditions) {
     $alias = $this->loadPathAliasByConditions($conditions);
-    $this->assertEmpty($alias, t('Alias with conditions @conditions not found.', ['@conditions' => var_export($conditions, TRUE)]));
+    $this->assertEmpty($alias, sprintf('Alias with conditions %s not found.', var_export($conditions, TRUE)));
   }
 
   /**
@@ -177,7 +171,7 @@ trait PathautoTestHelperTrait {
     }
     $entities = $storage->loadMultiple($query->execute());
 
-    return $this->assertCount(1, $entities);
+    $this->assertCount(1, $entities);
   }
 
   /**

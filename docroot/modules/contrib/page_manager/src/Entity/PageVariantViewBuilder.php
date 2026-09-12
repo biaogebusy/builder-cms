@@ -43,7 +43,7 @@ class PageVariantViewBuilder implements EntityViewBuilderInterface {
   /**
    * {@inheritdoc}
    */
-  public function resetCache(array $entities = NULL) {
+  public function resetCache(?array $entities = NULL) {
     // Intentionally empty.
   }
 
@@ -51,7 +51,9 @@ class PageVariantViewBuilder implements EntityViewBuilderInterface {
    * {@inheritdoc}
    */
   public function getCacheTags() {
-    // Intentionally empty.
+    // Page variants are rendered through their page, which supplies the cache
+    // tags, so the view builder has none of its own.
+    return [];
   }
 
   /**

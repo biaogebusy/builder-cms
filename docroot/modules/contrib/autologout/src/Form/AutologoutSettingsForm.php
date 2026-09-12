@@ -13,6 +13,8 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\user\UserData;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+// cspell:ignore whitelisted
+
 /**
  * Provides settings for autologout module.
  */
@@ -261,7 +263,7 @@ class AutologoutSettingsForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Disable buttons'),
       '#default_value' => $config->get('disable_buttons'),
-      '#description' => $this->t('Disable Yes/No buttons for automatic logout popout.'),
+      '#description' => $this->t('Disable Yes/No buttons for the automatic logout dialog.'),
     ];
 
     $form['yes_button'] = [
@@ -289,13 +291,13 @@ class AutologoutSettingsForm extends ConfigFormBase {
 
     $form['enforce_admin'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Enforce auto logout on admin pages'),
+      '#title' => $this->t('Enable Automated Logout on admin pages'),
       '#default_value' => $config->get('enforce_admin'),
-      '#description' => $this->t('If checked, then users will be automatically logged out when administering the site.'),
+      '#description' => $this->t('By default, Automated Logout keeps the session alive on administration pages like /admin/config/people. Enable this to apply Automated Logout there as well. Editing pages like node/add and node/*/edit, will also be affected if the "Use the administration theme when editing or creating content" setting is checked under /admin/appearance.'),
     ];
     $form['whitelisted_ip_addresses'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('Whitelisted ip addresses'),
+      '#title' => $this->t('Allow listed ip addresses'),
       '#default_value' => $config->get('whitelisted_ip_addresses'),
       '#size' => 40,
       '#description' => $this->t('Users from these IP addresses will not be logged out.'),
@@ -308,6 +310,12 @@ class AutologoutSettingsForm extends ConfigFormBase {
         '#description' => $this->t('Change the display of the dynamic timer. Available replacement values are: %day%, %month%, %year%, %dow%, %moy%, %years%, %ydays%, %days%, %hours%, %mins%, and %secs%.'),
       ];
     }
+    $form['cookie_secure'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Cookie Secure'),
+      '#default_value' => $config->get('cookie_secure') ?: FALSE,
+      '#description' => $this->t("Specifies whether or not the cookie should only be transmitted over a secure HTTPS connection. The cookie will only be set if a secure connection exists."),
+    ];
 
     $form['role_container'] = [
       '#type' => 'container',
@@ -455,7 +463,7 @@ class AutologoutSettingsForm extends ConfigFormBase {
       if (!empty($ip_address) && !filter_var(trim($ip_address), FILTER_VALIDATE_IP)) {
         $form_state->setErrorByName(
           'whitelisted_ip_addresses',
-          $this->t('Whitlelisted IP address list should contain only valid IP addresses, one per row')
+          $this->t('Allow listed IP address list should contain only valid IP addresses, one per row')
         );
       }
     }
@@ -496,6 +504,8 @@ class AutologoutSettingsForm extends ConfigFormBase {
       ->set('whitelisted_ip_addresses', $values['whitelisted_ip_addresses'])
       ->set('use_alt_logout_method', $values['use_alt_logout_method'])
       ->set('use_watchdog', $values['use_watchdog'])
+      ->set('cookie_secure', $values['cookie_secure'])
+      ->set('cookie_httponly', FALSE)
       ->save();
 
     if (!empty($values['table'])) {

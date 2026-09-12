@@ -8,18 +8,22 @@ use Drupal\Core\Controller\ControllerResolver;
 use Drupal\Core\DependencyInjection\ClassResolver;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\Core\Utility\CallableResolver;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\Core\Controller\ControllerResolver
- * @group Controller
+ * Tests Drupal\Core\Controller\ControllerResolver.
  */
+#[CoversClass(ControllerResolver::class)]
+#[Group('Controller')]
 class ControllerResolverTest extends UnitTestCase {
 
   /**
@@ -50,14 +54,9 @@ class ControllerResolverTest extends UnitTestCase {
 
   /**
    * Tests createController().
-   *
-   * @dataProvider providerTestCreateController
-   * @group legacy
    */
-  public function testCreateController($controller, $class, $output, ?string $deprecation = NULL): void {
-    if ($deprecation) {
-      $this->expectDeprecation($deprecation);
-    }
+  #[DataProvider('providerTestCreateController')]
+  public function testCreateController($controller, $class, $output): void {
     $this->container->set('some_service', new MockController());
     $result = $this->controllerResolver->getControllerFromDefinition($controller);
     $this->assertCallableController($result, $class, $output);
@@ -66,20 +65,25 @@ class ControllerResolverTest extends UnitTestCase {
   /**
    * Provides test data for testCreateController().
    */
-  public static function providerTestCreateController() {
+  public static function providerTestCreateController(): array {
     return [
       // Tests class::method.
-      ['Drupal\Tests\Core\Controller\MockController::getResult', 'Drupal\Tests\Core\Controller\MockController', 'This is a regular controller.'],
-      // Tests service:method.
-      ['some_service:getResult', 'Drupal\Tests\Core\Controller\MockController', 'This is a regular controller.'],
-      // Tests a class with injection.
-      ['Drupal\Tests\Core\Controller\MockContainerInjection::getResult', 'Drupal\Tests\Core\Controller\MockContainerInjection', 'This used injection.'],
-      // Tests a ContainerAware class.
       [
-        'Drupal\Tests\Core\Controller\MockContainerAware::getResult',
-        'Drupal\Tests\Core\Controller\MockContainerAware',
-        'This is container aware.',
-        'Implementing \Symfony\Component\DependencyInjection\ContainerAwareInterface is deprecated in drupal:10.3.0 and it will be removed in drupal:11.0.0. Implement \Drupal\Core\DependencyInjection\ContainerInjectionInterface and use dependency injection instead. See https://www.drupal.org/node/3428661',
+        'Drupal\Tests\Core\Controller\MockController::getResult',
+        'Drupal\Tests\Core\Controller\MockController',
+        'This is a regular controller.',
+      ],
+      // Tests service:method.
+      [
+        'some_service:getResult',
+        'Drupal\Tests\Core\Controller\MockController',
+        'This is a regular controller.',
+      ],
+      // Tests a class with injection.
+      [
+        'Drupal\Tests\Core\Controller\MockContainerInjection::getResult',
+        'Drupal\Tests\Core\Controller\MockContainerInjection',
+        'This used injection.',
       ],
     ];
   }
@@ -102,14 +106,9 @@ class ControllerResolverTest extends UnitTestCase {
 
   /**
    * Tests getController().
-   *
-   * @dataProvider providerTestGetController
-   * @group legacy
    */
+  #[DataProvider('providerTestGetController')]
   public function testGetController($attributes, $class, $output = NULL): void {
-    if ($class) {
-      $this->expectDeprecation('Implementing \Symfony\Component\DependencyInjection\ContainerAwareInterface is deprecated in drupal:10.3.0 and it will be removed in drupal:11.0.0. Implement \Drupal\Core\DependencyInjection\ContainerInjectionInterface and use dependency injection instead. See https://www.drupal.org/node/3428661');
-    }
     $request = new Request([], [], $attributes);
     $result = $this->controllerResolver->getController($request);
     if ($class) {
@@ -123,10 +122,14 @@ class ControllerResolverTest extends UnitTestCase {
   /**
    * Provides test data for testGetController().
    */
-  public static function providerTestGetController() {
+  public static function providerTestGetController(): array {
     return [
       // Tests passing a controller via the request.
-      [['_controller' => 'Drupal\Tests\Core\Controller\MockContainerAware::getResult'], 'Drupal\Tests\Core\Controller\MockContainerAware', 'This is container aware.'],
+      [
+        [RouteObjectInterface::CONTROLLER_NAME => MockContainerInjection::class . '::getResult'],
+        MockContainerInjection::class,
+        'This used injection.',
+      ],
       // Tests a request with no controller specified.
       [[], FALSE],
     ];
@@ -134,9 +137,8 @@ class ControllerResolverTest extends UnitTestCase {
 
   /**
    * Tests getControllerFromDefinition().
-   *
-   * @dataProvider providerTestGetControllerFromDefinition
    */
+  #[DataProvider('providerTestGetControllerFromDefinition')]
   public function testGetControllerFromDefinition($definition, $output): void {
     $this->container->set('invoke_service', new MockInvokeController());
     $controller = $this->controllerResolver->getControllerFromDefinition($definition);
@@ -146,7 +148,7 @@ class ControllerResolverTest extends UnitTestCase {
   /**
    * Provides test data for testGetControllerFromDefinition().
    */
-  public static function providerTestGetControllerFromDefinition() {
+  public static function providerTestGetControllerFromDefinition(): array {
     return [
       // Tests a method on an object.
       [[new MockController(), 'getResult'], 'This is a regular controller.'],
@@ -193,37 +195,53 @@ class ControllerResolverTest extends UnitTestCase {
 
 }
 
+/**
+ * Mock for the controller.
+ */
 class MockController {
 
-  public function getResult() {
+  public function getResult(): string {
     return 'This is a regular controller.';
   }
 
-  public function getControllerWithRequestAndRouteMatch(RouteMatchInterface $route_match, Request $request) {
+  public function getControllerWithRequestAndRouteMatch(RouteMatchInterface $route_match, Request $request): string {
     return 'this is another example controller';
   }
 
 }
+
+/**
+ * Mock for the PSR-7 controller.
+ */
 class MockControllerPsr7 {
 
-  public function getResult() {
+  public function getResult(): array {
     return ['#markup' => 'This is a regular controller'];
   }
 
-  public function getControllerWithRequestAndRouteMatch(RouteMatchInterface $route_match, ServerRequestInterface $request) {
+  public function getControllerWithRequestAndRouteMatch(RouteMatchInterface $route_match, ServerRequestInterface $request): array {
     return ['#markup' => 'this is another example controller'];
   }
 
 }
 
+/**
+ * Mock for the injected service.
+ */
 class MockContainerInjection implements ContainerInjectionInterface {
+
+  /**
+   * The test value saved during construction.
+   *
+   * @var string
+   */
   protected $result;
 
   public function __construct($result) {
     $this->result = $result;
   }
 
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static('This used injection.');
   }
 
@@ -232,31 +250,13 @@ class MockContainerInjection implements ContainerInjectionInterface {
   }
 
 }
-class MockContainerAware implements ContainerAwareInterface {
 
-  /**
-   * The service container.
-   */
-  protected ContainerInterface $container;
-
-  /**
-   * Sets the service container.
-   */
-  public function setContainer(?ContainerInterface $container): void {
-    $this->container = $container;
-  }
-
-  public function getResult() {
-    if (empty($this->container)) {
-      throw new \Exception('Container was not injected.');
-    }
-    return 'This is container aware.';
-  }
-
-}
+/**
+ * Test class used for testing the Controller resolver class.
+ */
 class MockInvokeController {
 
-  public function __invoke() {
+  public function __invoke(): string {
     return 'This used __invoke().';
   }
 

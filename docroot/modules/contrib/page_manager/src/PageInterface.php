@@ -44,6 +44,30 @@ interface PageInterface extends ConfigEntityInterface, EntityWithPluginCollectio
   public function usesAdminTheme();
 
   /**
+   * Gets the menu type.
+   *
+   * @return string
+   *   The menu type.
+   */
+  public function getMenuType();
+
+  /**
+   * Gets the menu settings.
+   *
+   * @return array
+   *   The menu settings.
+   */
+  public function getMenuSettings();
+
+  /**
+   * Gets the menu type plugin.
+   *
+   * @return \Drupal\page_manager\Plugin\PageManagerMenuInterface
+   *   The menu type plugin.
+   */
+  public function getMenu();
+
+  /**
    * Adds a variant to this page.
    *
    * @param \Drupal\page_manager\PageVariantInterface $variant

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\DatabaseExceptionWrapper;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests delete and truncate queries.
@@ -16,9 +18,9 @@ use Drupal\Core\Database\DatabaseExceptionWrapper;
  * The TRUNCATE tests are not extensive either, because the behavior of
  * TRUNCATE queries is not consistent across database engines. We only test
  * that a TRUNCATE query actually deletes all rows from the target table.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class DeleteTruncateTest extends DatabaseTestBase {
 
   /**
@@ -96,9 +98,9 @@ class DeleteTruncateTest extends DatabaseTestBase {
     $num_records_after = $this->connection->select('test')->countQuery()->execute()->fetchField();
     $this->assertEquals(0, $num_records_after);
 
-    // Close the transaction, and check that there are still no records in the
+    // Commit the transaction, and check that there are still no records in the
     // table.
-    $transaction = NULL;
+    $transaction->commitOrRelease();
     $this->assertFalse($this->connection->inTransaction());
     $num_records_after = $this->connection->select('test')->countQuery()->execute()->fetchField();
     $this->assertEquals(0, $num_records_after);

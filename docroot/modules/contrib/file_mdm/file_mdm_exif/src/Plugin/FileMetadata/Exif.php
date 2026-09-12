@@ -42,6 +42,14 @@ class Exif extends FileMetadataPluginBase {
    */
   protected PelJpeg|PelTiff|false $pelFile;
 
+  /**
+   * @param array<mixed> $configuration
+   *   The plugin configuration.
+   * @param string $plugin_id
+   *   The plugin id.
+   * @param array<mixed> $plugin_definition
+   *   The plugin definition.
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->mimeTypeGuesser = $container->get('file.mime_type.guesser');
@@ -49,7 +57,7 @@ class Exif extends FileMetadataPluginBase {
     return $instance;
   }
 
-  public function getSupportedKeys(array $options = NULL): array {
+  public function getSupportedKeys(?array $options = NULL): array {
     return $this->tagMapper->getSupportedKeys($options);
   }
 

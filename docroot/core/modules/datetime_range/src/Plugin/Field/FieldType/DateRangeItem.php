@@ -17,11 +17,11 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
  */
 #[FieldType(
   id: "daterange",
-  label: new TranslatableMarkup("Date range"),
+  label: new TranslatableMarkup("Datetime range"),
   description: [
-    new TranslatableMarkup("Ideal for storing durations that consist of start and end dates (and times)"),
-    new TranslatableMarkup("Choose between setting both date and time, or date only, for each duration"),
-    new TranslatableMarkup("The system automatically validates that the end date (and time) is later than the start, and both fields are completed"),
+    new TranslatableMarkup("A start and end, each using the Datetime format"),
+    new TranslatableMarkup("Choose either date and time, date only, or all day"),
+    new TranslatableMarkup("Example: 2001-01-15T07:28:08 to 2001-03-15T11:24:15"),
   ],
   category: "date_time",
   default_widget: "daterange_default",
@@ -128,10 +128,10 @@ class DateRangeItem extends DateTimeItem {
   public function onChange($property_name, $notify = TRUE) {
     // Enforce that the computed date is recalculated.
     if ($property_name == 'value') {
-      $this->start_date = NULL;
+      $this->set('start_date', NULL);
     }
     elseif ($property_name == 'end_value') {
-      $this->end_date = NULL;
+      $this->set('end_date', NULL);
     }
     parent::onChange($property_name, $notify);
   }

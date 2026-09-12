@@ -1,3 +1,6 @@
+parameters:
+  update.skip_procedural_hook_scan: true
+
 services:
   _defaults:
     autoconfigure: true
@@ -21,9 +24,9 @@ services:
   update.root:
     class: Drupal\update\UpdateRoot
     arguments: ['@kernel', '@request_stack']
+    deprecated: The "%service_id%" service is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119
   logger.channel.update:
     parent: logger.channel_base
     arguments: [ 'update' ]
-  update.route_subscriber:
-    class: Drupal\update\Routing\UpdateRouteSubscriber
-    arguments: ['@settings']
+  Drupal\update\MailHandler:
+    autowire: true

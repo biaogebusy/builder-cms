@@ -29,73 +29,68 @@ class ImageFieldBuilder extends FieldDiffBuilderBase {
     $fileManager = $this->entityTypeManager->getStorage('file');
     // Every item from $field_items is of type FieldItemInterface.
     foreach ($field_items as $field_key => $field_item) {
-      if (!$field_item->isEmpty()) {
-        $item_data = [];
-        $values = $field_item->getValue();
+      if ($field_item->isEmpty()) {
+        continue;
+      }
+      $item_data = [];
+      $values = $field_item->getValue();
+      if (!isset($values['target_id'])) {
+        continue;
+      }
 
-        // Compare file names.
-        if (isset($values['target_id'])) {
-          /** @var \Drupal\file\Entity\File|null $image */
+      // Compare file names.
+      /** @var \Drupal\file\Entity\File|null $image */
+      $image = $fileManager->load($values['target_id']);
+      $item_data[] = (string) $this->t('Image: @image', [
+        '@image' => $image?->getFilename() ?? 'deleted',
+      ]);
+
+      // Compare Alt fields.
+      if ($this->configuration['compare_alt_field'] && isset($values['alt'])) {
+        $item_data[] = (string) $this->t('Alt: @alt', [
+          '@alt' => $values['alt'],
+        ]);
+      }
+
+      // Compare Title fields.
+      if ($this->configuration['compare_title_field'] && !empty($values['title'])) {
+        $item_data[] = (string) $this->t('Title: @title', [
+          '@title' => $values['title'],
+        ]);
+      }
+
+      // Compare file id.
+      if ($this->configuration['show_id']) {
+        $item_data[] = (string) $this->t('File ID: @fid', [
+          '@fid' => $values['target_id'],
+        ]);
+      }
+
+      // Attach thumbnail image data.
+      if ($this->configuration['show_thumbnail']) {
+        $storage = $this->entityTypeManager->getStorage('entity_form_display');
+        $display = $storage->load($field_items->getFieldDefinition()->getTargetEntityTypeId() . '.' . $field_items->getEntity()->bundle() . '.default');
+        $image_field = $display?->getComponent($field_item->getFieldDefinition()->getName());
+        if ($image_field) {
           $image = $fileManager->load($values['target_id']);
-          $item_data[] = (string) $this->t('Image: @image', [
-            '@image' => $image?->getFilename() ?? 'deleted',
-          ]);
-        }
-
-        // Compare Alt fields.
-        if ($this->configuration['compare_alt_field']) {
-          if (isset($values['alt'])) {
-            $item_data[] = (string) $this->t('Alt: @alt', [
-              '@alt' => $values['alt'],
-            ]);
+          if ($image instanceof FileInterface) {
+            $thumbnail = [
+              '#theme' => 'image_style',
+              '#uri' => $image->getFileUri(),
+              '#style_name' => $image_field['settings']['preview_image_style'],
+            ];
           }
         }
+      }
 
-        // Compare Title fields.
-        if ($this->configuration['compare_title_field']) {
-          if (!empty($values['title'])) {
-            $item_data[] = (string) $this->t('Title: @title', [
-              '@title' => $values['title'],
-            ]);
-          }
-        }
-
-        // Compare file id.
-        if ($this->configuration['show_id']) {
-          if (isset($values['target_id'])) {
-            $item_data[] = (string) $this->t('File ID: @fid', [
-              '@fid' => $values['target_id'],
-            ]);
-          }
-        }
-
-        // EXPERIMENTAL: Attach thumbnail image data.
-        if ($this->configuration['show_thumbnail']) {
-          if (isset($values['target_id'])) {
-            $storage = $this->entityTypeManager->getStorage('entity_form_display');
-            $display = $storage->load($field_items->getFieldDefinition()->getTargetEntityTypeId() . '.' . $field_items->getEntity()->bundle() . '.default');
-            if ($image_field = $display->getComponent($field_item->getFieldDefinition()->getName())) {
-              $image = $fileManager->load($values['target_id']);
-              if ($image instanceof FileInterface) {
-                $thumbnail = [
-                  '#theme' => 'image_style',
-                  '#uri' => $image->getFileUri(),
-                  '#style_name' => $image_field['settings']['preview_image_style'],
-                ];
-              }
-            }
-          }
-        }
-
-        $separator = $this->configuration['property_separator'] == 'nl' ? "\n" : $this->configuration['property_separator'];
-        $properties = \implode($separator, $item_data);
-        if (isset($thumbnail)) {
-          $result[$field_key]['#thumbnail'] = $thumbnail;
-          $result[$field_key]['data'] = $properties;
-        }
-        else {
-          $result[$field_key] = $properties;
-        }
+      $separator = $this->configuration['property_separator'] == 'nl' ? "\n" : $this->configuration['property_separator'];
+      $properties = \implode($separator, $item_data);
+      if (isset($thumbnail)) {
+        $result[$field_key]['#thumbnail'] = $thumbnail;
+        $result[$field_key]['data'] = $properties;
+      }
+      else {
+        $result[$field_key] = $properties;
       }
     }
 

@@ -22,7 +22,7 @@ class WebformElementIgnoredPropertiesTest extends WebformElementBrowserTestBase 
   /**
    * Test element ignored properties.
    */
-  public function testIgnoredProperties() {
+  public function testIgnoredProperties(): void {
     $webform_ignored_properties = Webform::load('test_element_ignored_properties');
     $elements = $webform_ignored_properties->getElementsInitialized();
     $this->assertArrayHasKey('textfield', $elements);

@@ -46,7 +46,7 @@ trait DynamicEntityReferenceFormatterTrait {
     // the 'loaded' flag.
     foreach ($entities_items as $items) {
       foreach ($items as $item) {
-        if (isset($target_entities[$item->target_type]) && isset($target_entities[$item->target_type][$item->target_id])) {
+        if ($item->target_type !== NULL && $item->target_id !== NULL && isset($target_entities[$item->target_type]) && isset($target_entities[$item->target_type][$item->target_id])) {
           $item->entity = $target_entities[$item->target_type][$item->target_id];
           $item->_loaded = TRUE;
         }

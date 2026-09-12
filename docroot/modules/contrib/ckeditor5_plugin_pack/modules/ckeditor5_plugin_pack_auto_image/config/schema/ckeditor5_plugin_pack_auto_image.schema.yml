@@ -1,0 +1,7 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_auto_image__auto_image:
+  type: mapping
+  label: 'Auto Image'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'

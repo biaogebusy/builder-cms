@@ -2,15 +2,14 @@
 
 namespace Drupal\commerce_payment\PluginForm;
 
+use Drupal\commerce\AjaxFormTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_store\CurrentStoreInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PaymentMethodFormBase extends PaymentGatewayFormBase implements ContainerInjectionInterface {
+
+  use AjaxFormTrait;
 
   /**
    * The current store.
@@ -41,34 +40,23 @@ class PaymentMethodFormBase extends PaymentGatewayFormBase implements ContainerI
   protected $logger;
 
   /**
-   * Constructs a new PaymentMethodFormBase.
+   * The route admin context to determine whether a route is an admin one.
    *
-   * @param \Drupal\commerce_store\CurrentStoreInterface $current_store
-   *   The current store.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce\InlineFormManager $inline_form_manager
-   *   The inline form manager.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   The logger.
+   * @var \Drupal\Core\Routing\AdminContext
    */
-  public function __construct(CurrentStoreInterface $current_store, EntityTypeManagerInterface $entity_type_manager, InlineFormManager $inline_form_manager, LoggerInterface $logger) {
-    $this->currentStore = $current_store;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->inlineFormManager = $inline_form_manager;
-    $this->logger = $logger;
-  }
+  protected $adminContext;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('commerce_store.current_store'),
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_inline_form'),
-      $container->get('logger.channel.commerce_payment')
-    );
+    $instance = new static();
+    $instance->currentStore = $container->get('commerce_store.current_store');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->inlineFormManager = $container->get('plugin.manager.commerce_inline_form');
+    $instance->logger = $container->get('logger.channel.commerce_payment');
+    $instance->adminContext = $container->get('router.admin_context');
+    return $instance;
   }
 
   /**
@@ -96,6 +84,7 @@ class PaymentMethodFormBase extends PaymentGatewayFormBase implements ContainerI
         'profile_scope' => 'billing',
         'available_countries' => $store ? $store->getBillingCountries() : [],
         'address_book_uid' => $payment_method->getOwnerId(),
+        'admin' => $this->adminContext->isAdminRoute(),
       ], $billing_profile);
 
       $form['billing_information'] = [
@@ -103,6 +92,15 @@ class PaymentMethodFormBase extends PaymentGatewayFormBase implements ContainerI
         '#inline_form' => $inline_form,
       ];
       $form['billing_information'] = $inline_form->buildInlineForm($form['billing_information'], $form_state);
+
+      // Ensure the entire payment method form is refreshed when the selected
+      // address changes.
+      if (isset($form['billing_information']['select_address'])) {
+        $form['billing_information']['select_address']['#ajax'] = [
+          'callback' => [get_class($this), 'ajaxRefreshForm'],
+          'element' => $form['#parents'],
+        ];
+      }
     }
 
     return $form;

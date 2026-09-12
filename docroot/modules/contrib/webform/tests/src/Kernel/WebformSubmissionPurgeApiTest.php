@@ -44,7 +44,7 @@ class WebformSubmissionPurgeApiTest extends KernelTestBase {
   /**
    * Tests webform handler prePurge and postPurge methods and associated hooks.
    */
-  public function testPurgeApis() {
+  public function testPurgeApis(): void {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = Webform::create([
       'id' => $this->randomMachineName(),
@@ -61,7 +61,7 @@ class WebformSubmissionPurgeApiTest extends KernelTestBase {
       ]);
       $webform_submission->in_draft = FALSE;
       // 15 days ago.
-      $webform_submission->setCreatedTime(time() - (15 * 86400));
+      $webform_submission->setCompletedTime(time() - (15 * 86400));
       $webform_submission->save();
       $submission_ids[$webform_submission->id()] = $webform_submission->id();
     }

@@ -10,16 +10,18 @@ variables:
   _PHPUNIT_CONCURRENT: 1
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_NEXT_MAJOR: 1
+  _AUTORUN_NEXT_MAJOR: 'push-and-mr'
   _CSPELL_IGNORE_PATHS: 'README.md'
+  _PHPUNIT_EXTRA: '--suppress-deprecations'
 
 phpcs:
   allow_failure: false
 
 phpstan:
-  allow_failure: false
+  allow_failure: true
 
 phpstan (next major):
-  allow_failure: true
+  allow_failure: false
 
 phpstan (next minor):
   allow_failure: true

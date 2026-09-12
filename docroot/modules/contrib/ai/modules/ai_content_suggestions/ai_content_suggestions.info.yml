@@ -9,7 +9,7 @@ configure: ai_content_suggestions.settings
 dependencies:
   - ai:ai
 
-# Information added by Drupal.org packaging script on 2026-06-03
-version: '1.4.1'
+# Information added by Drupal.org packaging script on 2026-09-02
+version: '1.4.8'
 project: 'ai'
-datestamp: 1780493209
+datestamp: 1788353620

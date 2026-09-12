@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Drupal\Tests\Composer\Plugin\Scaffold\Functional;
 
 use Composer\Util\Filesystem;
-use Drupal\Tests\Composer\Plugin\Scaffold\Fixtures;
+use Drupal\Tests\Composer\Plugin\ExecTrait;
 use Drupal\Tests\Composer\Plugin\Scaffold\AssertUtilsTrait;
-use Drupal\Tests\Composer\Plugin\Scaffold\ExecTrait;
-use Drupal\Tests\PhpUnitCompatibilityTrait;
+use Drupal\Tests\Composer\Plugin\Scaffold\Fixtures;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -17,13 +17,11 @@ use PHPUnit\Framework\TestCase;
  * The purpose of this test file is to run a scaffold operation and
  * confirm that the files that were scaffolded are added to the
  * repository's .gitignore file.
- *
- * @group Scaffold
  */
+#[Group('Scaffold')]
 class ManageGitIgnoreTest extends TestCase {
   use ExecTrait;
   use AssertUtilsTrait;
-  use PhpUnitCompatibilityTrait;
 
   /**
    * The root of this project.
@@ -124,10 +122,10 @@ class ManageGitIgnoreTest extends TestCase {
 /.gitattributes
 /.ht.router.php
 /autoload.php
+/autoload_runtime.php
 /index.php
 /robots.txt
 /update.php
-/web.config
 EOT;
     // At this point we should have a .gitignore file, because although we did
     // not explicitly ask for .gitignore tracking, the vendor directory is not
@@ -242,7 +240,6 @@ Scaffolding files for fixtures/drupal-assets-fixture:
   - Copy [web-root]/index.php from assets/index.php
   - Skip [web-root]/robots.txt: overridden in fixtures/drupal-composer-drupal-project
   - Copy [web-root]/update.php from assets/update.php
-  - Copy [web-root]/web.config from assets/web.config
 Scaffolding files for fixtures/scaffold-override-fixture:
   - Copy [web-root]/sites/default/default.settings.php from assets/override-settings.php
 Scaffolding files for fixtures/drupal-composer-drupal-project:

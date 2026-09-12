@@ -3,7 +3,7 @@
 namespace Drupal\webform\Utility;
 
 use Drupal\Component\Serialization\SerializationInterface;
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Symfony\Component\Yaml\Dumper;
 use Symfony\Component\Yaml\Yaml as SymfonyYaml;
 
@@ -87,7 +87,7 @@ class WebformYaml implements SerializationInterface {
    * Tidy export YAML includes tweaking array layout and multiline strings.
    *
    * @param string $yaml
-   *   The output generated from \Drupal\Core\Serialization\Yaml::encode.
+   *   The output generated from \Drupal\Component\Serialization\Yaml::encode.
    *
    * @return string
    *   The encoded data.

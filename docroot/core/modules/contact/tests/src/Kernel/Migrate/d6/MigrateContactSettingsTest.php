@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\contact\Kernel\Migrate\d6;
 
-use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade variables to contact.settings.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MigrateContactSettingsTest extends MigrateDrupal6TestBase {
 
   use SchemaCheckTestTrait;
@@ -27,6 +31,13 @@ class MigrateContactSettingsTest extends MigrateDrupal6TestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->executeMigrations(['contact_category', 'd6_contact_settings']);
+  }
+
+  /**
+   * Gets the path to the fixture file.
+   */
+  protected function getFixtureFilePath():string {
+    return __DIR__ . '/../../../../fixtures/drupal6.php';
   }
 
   /**

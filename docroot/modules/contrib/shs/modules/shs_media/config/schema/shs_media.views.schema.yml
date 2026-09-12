@@ -1,0 +1,12 @@
+# Schema for the views plugins of the SHS Media module.
+
+views.filter.shs_media_taxonomy_index_tid_depth:
+  type: views.filter.taxonomy_index_tid
+  label: 'SHS Media taxonomy term ID with depth'
+  mapping:
+    depth:
+      type: integer
+      label: 'Depth'
+    reference_field:
+      type: string
+      label: 'Reference field'

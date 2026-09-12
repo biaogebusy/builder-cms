@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Database;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests cloning Select queries.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class SelectCloneTest extends DatabaseTestBase {
 
   /**
@@ -35,7 +38,7 @@ class SelectCloneTest extends DatabaseTestBase {
     $clone_result = $clone->countQuery()->execute()->fetchField();
     $query_result = $query->countQuery()->execute()->fetchField();
 
-    // Make sure the cloned query has not been modified
+    // Make sure the cloned query has not been modified.
     $this->assertEquals(3, $clone_result, 'The cloned query returns the expected number of rows');
     $this->assertEquals(2, $query_result, 'The query returns the expected number of rows');
   }

@@ -1,0 +1,12 @@
+/**
+ * @file
+ * Styles for image style admin UI.
+ */
+
+.image-anchor td:not(:hover) {
+  background-color: var(--admin-color-bg-surface);
+}
+
+.image-anchor td:hover > div {
+  background-color: transparent;
+}

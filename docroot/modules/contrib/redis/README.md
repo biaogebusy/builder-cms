@@ -98,6 +98,61 @@ You can see Drupal specific info via the built-in Redis report in Drupal under
 - Keys per cache bin
 - Render cache entries with most variations
 
+### Drush report
+
+As of 2.0.0-alpha2, there is also a `redis:report` drush command, which
+provides similar but also additional information. It is significantly slower on
+large installations, but less likely to run into memory limits or timeouts.
+
+There is also a `redis:tag-usage` that will list items using a given cache tag
+and whether it is invalidated.
+
+It additionally provides the following information:
+- Per-bin statistics are extended with total size, number of expired and
+  invalidated cache items.
+- Invalidated cache tags include the number of cache items that use them
+  and an impact column, that the number of invalidations multiplied by usages
+
+### Suggestions on identifying and improving performance
+
+This focuses on the additional information visible only in the drush report.
+
+- It's best to run the report after a site has been running regularly for some
+  time, when caches ar warm and invalidations have been happening.
+- The more memory that redis can use, the better. However, it is very likely
+  that no matter how large it is, it will fill up and setting up eviction is
+  necessary. See eviction chapter.
+- Consider the read/write ratio, a high percentage of writes indicates many
+  caches being replaced/evicted.
+- Generic hit rates are not necessarily a good indicator of cache performance.
+  Specifically misses on cache tags are expected and not an issue, and general
+  redis reporting tools will not make this distinction.
+- If cache bins have a large amount of expired items, ensure that a ttl offset
+  is set, to guide redis as to which items are safe to evict first.
+  See [Expiration of cache items](#expiration-of-cache-items).
+- If that is set, review whether caches have very short TTL set on them. Note
+  that by default, page caches have no expiration and specifically do not
+  respect the "Browser and proxy cache maximum age" setting.
+- If a large amount of items are invalidated, use the cache tag report to review
+  that in more depth.
+- For render cache items with many variations, avoid high frequency cache
+  contexts such as user or url. Various blocks such as local tasks, actions and
+  help can be restricted to authenticated user to avoid rendering them for
+  visitors.
+- For cache tag invalidations, focus on those with a high impact with many
+  invalidations and usages. Cache tags with no usages can safely be ignored.
+- To avoid using `node_list` and similar list cache tags, use more specific
+  bundle cache tags such as `node_list:<bundle>` in code or [in views](https://www.drupal.org/project/views_custom_cache_tag).
+- Reduce invalidations for example by avoiding unnecessary entity saves, only
+  save entities when there are changes in synchronizations, imports and similar
+  cases.
+- To review where a certain cache tag is used, use
+  `drush redis:tag-usage node_list --bins=page`, start with the page bin to
+  easily identify affecte pages, narrow down with other bins if necessary.
+- To identify where and why certain invalidations happen, use for example
+  [the past module](http://drupal.org/project/past) or similar custom code to
+  log invalidations with a backtrace.
+
 ## Redis clients
 
 This package provides support for three different Redis clients.
@@ -271,19 +326,14 @@ need to be more permanently.
 
 See [Eviction policy](#eviction-policy) for more information.
 
-By default, the default TTL will always be used over the expiration set for the
-item. The specific expiration is instead stored and verified when reading
-the cache item.
+A specific expiration is always stored on the cache item and respected exactly.
 
-This is done to respect the expectation that expired cache items can still be
-returned when explicitly requested.
+Additionally, a TTL is set on the cache item with an offset of, by
+default, 3600s. This is done to respect the expectation that expired cache items
+can still be returned when explicitly requested. Having an actual TTL with an
+offset set allows Redis to evict those keys within a reasonable timeframe.
 
-It is possible to set a TTL offset as a compromise between supporting the
-ability to return expired items for a certain amount of time but also guide
-Redis to clear item items that have been expired.
-
-Using this setting, Redis will get the real TTL for a key and
-might evict keys by TTL according to its configuration.
+The specific offset can be customized:
 
     // Expired items can still be explicitly requested for up to
     // one hour.
@@ -293,10 +343,11 @@ might evict keys by TTL according to its configuration.
     // to fetch expired items. This is not recommended.
     $settings['redis_ttl_offset'] = 0;
 
-Note: This behavior is off by default for BC, a default offset might be set in a
-future release.
+    // Disable this feature and always use the permanent TTL (previous default
+    // behavior in 8.x-1.x).
+    $settings['redis_ttl_offset'] = NULL;
 
-The default TTL can be customized for specific bins.
+The default "permanent" TTL can be customized for specific bins.
 
     // Set max TTL for cached pages to 3 days.
     $settings['redis_perm_ttl_page'] = '3 days';
@@ -314,10 +365,29 @@ Setting a lower TTL may allow Redis to free up old cache entries. Note however
 that Drupal will by default use most cache entries indefinitely and setting TTL
 too low may negatively affect performance and should be tested carefully. It is
 recommended to only consider this for large cache bins such as page, dynamic_page_cache and render.
-And instead rely on setting redis_ttl_offset and relying on an appropriate
+And instead rely on adjusting redis_ttl_offset and relying on an appropriate
 [eviction policy](#eviction-policy). Using volatile-lfu or similar will likely
 result in Redis making better informed decisions on which items to remove than
 a very short TTL.
+
+### Permanent bins
+
+For bins with a fixed, small amount of non-expiring items, it is possible
+to skip a TTL and treat them as permanent entries as well. This is done by
+default for bins that are considered permanent. It is possible to either
+change these bins or set any bin TTL explicitly to -1 to enable this behavior.
+
+This must only be enabled for bins that are guaranteed to fit within the
+configured memory.
+
+    // Disable TTL for default bin and make items non-volatile.
+    $settings['redis_perm_ttl_default'] = -1;
+
+    // Default permanent bins.
+    $settings['redis_permanent_bins'] = ['container', 'bootstrap', 'config', 'discovery'];
+
+Non-volatile items will never be evicted when using a volatile-* eviction
+policy, see [Eviction policy](#eviction-policy) for more information.
 
 ### Cache optimizations
 
@@ -327,10 +397,11 @@ with the expected behavior of cache backends or have other tradeoffs.
 Treat invalidateAll() the same as deleteAll() to avoid two different checks for
 each bin.
 
-    $settings['redis_invalidate_all_as_delete'] = TRUE;
+    $settings['redis_invalidate_all_as_delete'] = FALSE;
 
 Core has deprecated invalidateAll() in
-https://www.drupal.org/project/drupal/issues/3498947. This setting will be
+https://www.drupal.org/project/drupal/issues/3498947. As of Redis 2.0.0, this
+is now enabled by default. This setting will be
 removed in the future when Drupal 12.0 is required.
 
 ### Using igbinary serialization
@@ -340,14 +411,16 @@ a considerable optimization in terms of unserialization speed and size of serial
 
 To use, first require https://www.drupal.org/project/igbinary with composer.
 
-It is possible to use the serialization API with enabling the module by
+It is possible to use the serialization API without enabling the module by
 requiring the necessary services directly.
 
     // Directly load the igbinary services without enabling the module.
     $settings['container_yamls'][] = 'modules/contrib/igbinary/igbinary.services.yml';
 
-Then redefine the cache.backend.redis service to use igbinary, by placing the
-following in a project specific services.yml, such as sites/default/services.yml.
+Then redefine the `cache.backend.redis` service to use igbinary, by placing the
+following in a project specific services.yml. This file must be added after
+`redis.services.yml` in `$settings['container_yamls']` to be able to override
+the definition.
 
     # Override the default redis cache backend to use igbinary serialization.
     cache.backend.redis:

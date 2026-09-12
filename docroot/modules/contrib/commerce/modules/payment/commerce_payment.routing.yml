@@ -19,6 +19,20 @@ entity.commerce_payment.add_form:
     _entity_create_any_access: 'commerce_payment'
     _commerce_payment_create_access: 'TRUE'
 
+commerce_payment.order.merchant_return:
+  path: '/admin/commerce/orders/{commerce_order}/payment-gateways/{commerce_payment_gateway}/merchant-return'
+  defaults:
+    _controller: '\Drupal\commerce_payment\Controller\OrderPaymentController::merchantReturn'
+  options:
+    parameters:
+      commerce_order:
+        type: 'entity:commerce_order'
+      commerce_payment_gateway:
+        type: 'entity:commerce_payment_gateway'
+  requirements:
+    _entity_create_any_access: 'commerce_payment'
+    _commerce_payment_create_access: 'TRUE'
+
 entity.commerce_payment.operation_form:
   path: '/admin/commerce/orders/{commerce_order}/payments/{commerce_payment}/operation/{operation}'
   defaults:
@@ -79,7 +93,7 @@ entity.commerce_payment_method.set_default:
       commerce_payment_method:
         type: entity:commerce_payment_method
   requirements:
-    _custom_access: '\Drupal\commerce_payment\Access\PaymentMethodAccessCheck::checkAccess'
+    _entity_access: 'commerce_payment_method.update'
     _csrf_token: 'TRUE'
 
 commerce_payment.checkout.return:

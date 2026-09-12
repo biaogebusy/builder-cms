@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel\Migrate;
 
@@ -20,9 +20,6 @@ final class MigrateD7SmsPhoneNumberTest extends MigrateDrupal7TestBase {
 
   use MigratePhoneNumberTestTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms',
     'telephone',
@@ -30,9 +27,6 @@ final class MigrateD7SmsPhoneNumberTest extends MigrateDrupal7TestBase {
     'filter',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->loadFixture(__DIR__ . '/../../../fixtures/migrate/drupal7.php');
@@ -43,7 +37,7 @@ final class MigrateD7SmsPhoneNumberTest extends MigrateDrupal7TestBase {
    */
   public function testMigrationRequirements(): void {
     // @todo Work out a better fix https://www.drupal.org/project/smsframework/issues/2951758
-    if (method_exists($this, 'expectException')) {
+    if (\method_exists($this, 'expectException')) {
       $this->expectException(RequirementsException::class);
       $this->expectExceptionMessageMatches('/Missing migrations (d7_user|phone_number_settings), (d7_user|phone_number_settings)/');
     }
@@ -83,9 +77,6 @@ final class MigrateD7SmsPhoneNumberTest extends MigrateDrupal7TestBase {
     return __DIR__ . '/../../../fixtures/migrate/sms_user_drupal7.php';
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected function confirmationMessageFixturePath(): string {
     return __DIR__ . '/../../../fixtures/migrate/sms_confirmation_message_d7.php';
   }

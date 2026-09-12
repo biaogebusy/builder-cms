@@ -129,17 +129,23 @@ class TextToImageMediaFieldWidgetProcessingTest extends KernelTestBase {
    *
    * @param string $worker_type
    *   The worker type plugin ID.
+   * @param string $id
+   *   The automator config entity ID.
+   * @param string $rule
+   *   The field rule plugin ID. Defaults to image generation; pass a
+   *   nonexistent rule ID to simulate a misconfigured automator that would
+   *   fatally error if it were ever processed.
    *
    * @return \Drupal\ai_automators\Entity\AiAutomator
    *   The created automator config entity.
    */
-  protected function createAutomatorConfig(string $worker_type) {
+  protected function createAutomatorConfig(string $worker_type, string $id = 'node.article.field_image.default', string $rule = 'llm_media_image_generation') {
     $automator = \Drupal::entityTypeManager()
       ->getStorage('ai_automator')
       ->create([
-        'id' => 'node.article.field_image.default',
+        'id' => $id,
         'label' => 'Image Generation',
-        'rule' => 'llm_media_image_generation',
+        'rule' => $rule,
         'input_mode' => 'base',
         'weight' => 100,
         'worker_type' => $worker_type,
@@ -152,7 +158,7 @@ class TextToImageMediaFieldWidgetProcessingTest extends KernelTestBase {
         'token' => '',
         'plugin_config' => [
           'automator_enabled' => 1,
-          'automator_rule' => 'llm_media_image_generation',
+          'automator_rule' => $rule,
           'automator_mode' => 'base',
           'automator_base_field' => 'body',
           'automator_prompt' => '{{ context }}',
@@ -229,6 +235,62 @@ class TextToImageMediaFieldWidgetProcessingTest extends KernelTestBase {
     $media_id = $result->get('field_image')->target_id;
     $this->assertNotEmpty($media_id);
     $this->assertMediaImageCreated($media_id);
+  }
+
+  /**
+   * Tests that saveEntity() isolates a single automator by ID.
+   *
+   * Regression test for the case where two AI automators are configured on
+   * the same field (e.g. duplicating an automator config with a different ID
+   * suffix — not exposed by the default UI, but possible). Without passing
+   * $specificAutomatorId, saveEntity() processes every automator configured
+   * for the field, so clicking one Field Widget Action button could run a
+   * second, unrelated (and here, misconfigured) automator too.
+   *
+   * The second automator is deliberately given a nonexistent rule ID so it
+   * would fatally error if it were ever invoked: AiFieldRules::findRule()
+   * returns NULL for an unknown ID, and the caller immediately calls a
+   * method on that NULL. Successfully generating an image while passing
+   * only the first automator's ID proves the second automator was never
+   * touched.
+   */
+  public function testSaveEntityFiltersBySpecificAutomatorId(): void {
+    $automatorA = $this->createAutomatorConfig('field_widget_actions', 'node.article.field_image.default');
+    $this->createAutomatorConfig('field_widget_actions', 'node.article.field_image.broken', 'nonexistent_rule_xyz');
+
+    $node = $this->createTestNode();
+    $node->save();
+    $this->assertTrue($node->get('field_image')->isEmpty());
+
+    /** @var \Drupal\ai_automators\AiAutomatorEntityModifier $entity_modifier */
+    $entity_modifier = \Drupal::service('ai_automator.entity_modifier');
+    // Passing the specific automator ID must isolate automator A and never
+    // invoke the broken automator B, even though both target field_image.
+    $result = $entity_modifier->saveEntity($node, FALSE, 'field_image', FALSE, $automatorA->id());
+
+    $this->assertNotNull($result);
+    $this->assertFalse($result->get('field_image')->isEmpty(), 'The image field should have a value after processing the specifically targeted automator.');
+
+    $media_id = $result->get('field_image')->target_id;
+    $this->assertNotEmpty($media_id);
+    $this->assertMediaImageCreated($media_id);
+  }
+
+  /**
+   * Tests that saveEntity() returns NULL for an unmatched automator ID.
+   *
+   * The automator ID does not match any automator configured for the field.
+   */
+  public function testSaveEntityReturnsNullForUnmatchedAutomatorId(): void {
+    $this->createAutomatorConfig('field_widget_actions');
+    $node = $this->createTestNode();
+    $node->save();
+
+    /** @var \Drupal\ai_automators\AiAutomatorEntityModifier $entity_modifier */
+    $entity_modifier = \Drupal::service('ai_automator.entity_modifier');
+    $result = $entity_modifier->saveEntity($node, FALSE, 'field_image', FALSE, 'node.article.field_image.does_not_exist');
+
+    $this->assertNull($result);
   }
 
   /**

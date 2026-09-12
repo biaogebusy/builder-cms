@@ -720,12 +720,14 @@ class PullForm extends FormBase {
       'language' => $this->t('Language'),
       'changed' => $this->getHeader($this->t('Remote entity changed date'), 'changed', $sort_context),
       'status' => $this->t('Status'),
+      'source' => $this->t('Source'),
       'policy' => $this->t('Policy'),
     ];
 
+    $channel_base_url = strtok($this->channelsInfos[$selected_channel]['url'], '?');
     $entities_options = [];
     try {
-      $entities_options = $this->formHelper->buildEntitiesOptions($json['data'], $selected_remote, $selected_channel);
+      $entities_options = $this->formHelper->buildEntitiesOptions($json['data'], $selected_remote, $selected_channel, $channel_base_url);
     }
     catch (ResourceTypeNotFoundException $exception) {
       $this->displayError($exception->getMessage());

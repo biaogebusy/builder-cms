@@ -33,6 +33,8 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
  *     "form" = {
  *       "add" = "Drupal\commerce_promotion\Form\CouponForm",
  *       "edit" = "Drupal\commerce_promotion\Form\CouponForm",
+ *       "enable" = "Drupal\commerce_promotion\Form\CouponEnableForm",
+ *       "disable" = "Drupal\commerce_promotion\Form\CouponDisableForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
  *     },
  *    "local_task_provider" = {
@@ -56,6 +58,8 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
  *   links = {
  *     "add-form" = "/promotion/{commerce_promotion}/coupons/add",
  *     "edit-form" = "/promotion/{commerce_promotion}/coupons/{commerce_promotion_coupon}/edit",
+ *     "enable-form" = "/promotion/{commerce_promotion}/coupons/{commerce_promotion_coupon}/enable",
+ *     "disable-form" = "/promotion/{commerce_promotion}/coupons/{commerce_promotion_coupon}/disable",
  *     "delete-form" = "/promotion/{commerce_promotion}/coupons/{commerce_promotion_coupon}/delete",
  *     "collection" = "/promotion/{commerce_promotion}/coupons",
  *   },
@@ -288,6 +292,8 @@ class Coupon extends CommerceContentEntityBase implements CouponInterface {
    * {@inheritdoc}
    */
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+
     // Delete the related usage.
     /** @var \Drupal\commerce_promotion\PromotionUsageInterface $usage */
     $usage = \Drupal::service('commerce_promotion.usage');

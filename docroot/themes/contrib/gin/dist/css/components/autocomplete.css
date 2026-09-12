@@ -69,13 +69,7 @@ div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-
   border-block-start: 2px solid var(--gin-color-primary);
   width: 14px;
   height: 14px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .form-autocomplete.is-autocompleting + .claro-autocomplete__message::after,
-  div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open::after {
-    animation: gin-throbber 1s linear infinite;
-  }
+  animation: gin-throbber 1s linear infinite;
 }
 
 div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open::after {

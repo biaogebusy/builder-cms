@@ -16,6 +16,8 @@ use Drupal\Component\Utility\Html;
  */
 trait CKEditor5TestTrait {
 
+  use CKEditor5ValidationTestTrait;
+
   /**
    * Gets CKEditor 5 instance data as a PHP DOMDocument.
    *
@@ -49,7 +51,7 @@ JS;
   /**
    * Waits for CKEditor to initialize.
    */
-  protected function waitForEditor() {
+  protected function waitForEditor(): void {
     $assert_session = $this->assertSession();
     $this->assertNotEmpty($assert_session->waitForElement('css', '.ck-editor'));
   }
@@ -60,7 +62,7 @@ JS;
    * @param string $name
    *   The name of the button, such as `drupallink`, `source`, etc.
    */
-  protected function pressEditorButton($name) {
+  protected function pressEditorButton($name): void {
     $this->getEditorButton($name)->click();
   }
 
@@ -85,7 +87,7 @@ JS;
    * @param string $name
    *   The name of the button, such as `drupallink`, `source`, etc.
    */
-  protected function assertEditorButtonDisabled($name) {
+  protected function assertEditorButtonDisabled($name): void {
     $button = $this->getEditorButton($name);
     $this->assertTrue($button->hasAttribute('aria-disabled'));
     $this->assertTrue($button->hasClass('ck-disabled'));
@@ -97,7 +99,7 @@ JS;
    * @param string $name
    *   The name of the button, such as `drupallink`, `source`, etc.
    */
-  protected function assertEditorButtonEnabled($name) {
+  protected function assertEditorButtonEnabled($name): void {
     $button = $this->getEditorButton($name);
     $this->assertFalse($button->hasAttribute('aria-disabled'));
     $this->assertFalse($button->hasClass('ck-disabled'));
@@ -113,10 +115,17 @@ JS;
    *   The asserted balloon.
    */
   protected function assertVisibleBalloon(string $balloon_content_selector): NodeElement {
-    $this->assertSession()->elementExists('css', '.ck-balloon-panel_visible');
+    $this->assertSession()->elementExists('css', '.ck-balloon-panel.ck-balloon-panel_with-arrow:not(.ck-tooltip).ck-balloon-panel_visible');
     $selector = ".ck-balloon-panel_visible .ck-balloon-rotator__content > .ck$balloon_content_selector";
     $this->assertSession()->elementExists('css', $selector);
     return $this->getSession()->getPage()->find('css', $selector);
+  }
+
+  /**
+   * Asserts that the active balloon is closed.
+   */
+  protected function assertBalloonClosed(): void {
+    $this->assertSession()->waitForElement('css', '.ck-balloon-panel.ck-balloon-panel_with-arrow:not(.ck-tooltip):not(.ck-balloon-panel_visible)');
   }
 
   /**

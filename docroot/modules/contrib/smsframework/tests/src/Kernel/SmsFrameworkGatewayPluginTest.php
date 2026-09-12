@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
-use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsMessage;
 
 /**
  * Tests SMS Framework gateway plugins.
@@ -14,17 +14,11 @@ use Drupal\sms\Direction;
  */
 final class SmsFrameworkGatewayPluginTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test', 'sms_test_gateway', 'field', 'telephone',
     'dynamic_entity_reference',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('sms');

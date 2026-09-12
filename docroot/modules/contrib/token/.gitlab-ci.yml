@@ -63,6 +63,15 @@ cspell:
   # Require spellcheck to pass.
   allow_failure: false
 
+phpstan (previous major):
+  rules:
+    # We are only interested in PHPStan on the current version.
+    - when: never
+
+phpstan (next minor):
+  rules:
+    # We are only interested in PHPStan on the current version.
+    - when: never
 
 ###################################################################################
 #

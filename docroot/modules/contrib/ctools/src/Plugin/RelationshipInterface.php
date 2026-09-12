@@ -14,6 +14,7 @@ interface RelationshipInterface extends ContextAwarePluginInterface, DerivativeI
    * Generates a context based on this plugin's configuration.
    *
    * @return \Drupal\Core\Plugin\Context\ContextInterface
+   *   The context.
    */
   public function getRelationship();
 
@@ -21,6 +22,7 @@ interface RelationshipInterface extends ContextAwarePluginInterface, DerivativeI
    * The name of the property used to get this relationship.
    *
    * @return string
+   *   The name.
    */
   public function getName();
 

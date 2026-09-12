@@ -80,7 +80,7 @@ class WebformEntitySettingsAccessForm extends WebformEntitySettingsBaseForm {
 
     $webform->setAccessRules($access);
 
-    parent::save($form, $form_state);
+    return parent::save($form, $form_state);
   }
 
 }

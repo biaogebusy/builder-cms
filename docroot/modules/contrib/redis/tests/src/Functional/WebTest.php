@@ -10,12 +10,16 @@ use Drupal\cron_queue_test\Plugin\QueueWorker\CronQueueTestException;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests complex processes like installing modules with redis backends.
  *
  * @group redis
  */
+#[Group('redis')]
+#[RunTestsInSeparateProcesses]
 class WebTest extends BrowserTestBase {
 
   use FieldUiTestTrait;

@@ -8,12 +8,12 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\file_mdm\FileMetadataManagerInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Settings form test.
- *
- * @group image_effects
  */
+#[Group('image_effects')]
 class SettingsFormTest extends BrowserTestBase {
 
   protected static $modules = [

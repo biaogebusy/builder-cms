@@ -3,3 +3,7 @@ services:
     class: Drupal\module_filter\Routing\RouteSubscriber
     tags:
       - { name: event_subscriber }
+
+  Drupal\module_filter\Hook\ModuleFilterHooks:
+    class: Drupal\module_filter\Hook\ModuleFilterHooks
+    autowire: true

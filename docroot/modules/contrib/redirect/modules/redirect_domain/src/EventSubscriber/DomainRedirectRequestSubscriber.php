@@ -43,7 +43,7 @@ class DomainRedirectRequestSubscriber implements EventSubscriberInterface {
   protected $redirectConfig;
 
   /**
-   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber object.
+   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.

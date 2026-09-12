@@ -34,6 +34,7 @@ class TypeManager extends DefaultPluginManager {
     'axis' => ChartInterface::DUAL_AXIS,
     'axis_inverted' => FALSE,
     'stacking' => FALSE,
+    'coordinate' => FALSE,
     'class' => Type::class,
   ];
 

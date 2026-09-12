@@ -27,11 +27,11 @@
   padding-inline-end: var(--dropbutton--height);
   border-radius: var(--dropbutton--border-radius);
 
-  @nest .dropbutton-single & {
+  .dropbutton-single & {
     padding-inline-end: 0;
   }
 
-  @nest .dropbutton-wrapper.open & {
+  .dropbutton-wrapper.open & {
     border-radius: var(--dropbutton--border-radius) var(--dropbutton--border-radius) 0 0;
   }
 }
@@ -66,6 +66,10 @@
     outline-offset: -2px;
   }
 
+  &:dir(rtl) {
+    border-radius: var(--dropbutton--border-radius) 0 0 var(--dropbutton--border-radius);
+  }
+
   &::before {
     display: block;
     width: var(--sp0-5);
@@ -74,14 +78,12 @@
     transform: translateY(-25%) rotate(45deg);
     border-right: solid 2px var(--dropbutton--outline-color);
     border-bottom: solid 2px var(--dropbutton--outline-color);
-
-    @nest .dropbutton-wrapper.open & {
-      transform: translateY(25%) rotate(225deg);
-    }
   }
 
-  &:dir(rtl) {
-    border-radius: var(--dropbutton--border-radius) 0 0 var(--dropbutton--border-radius);
+  .dropbutton-wrapper.open & {
+    &::before {
+      transform: translateY(25%) rotate(225deg);
+    }
   }
 }
 
@@ -119,7 +121,7 @@
   }
 
   /* Special rules if there is only one action. */
-  @nest .dropbutton-single & {
+  .dropbutton-single & {
     &:first-child {
       border-right: solid 1px transparent; /* LTR */
       border-radius: var(--dropbutton--border-radius);
@@ -151,7 +153,7 @@
     color: var(--dropbutton--text-hover-color);
   }
 
-  @nest .dropbutton-wrapper.open & {
+  .dropbutton-wrapper.open & {
     visibility: visible;
   }
 }

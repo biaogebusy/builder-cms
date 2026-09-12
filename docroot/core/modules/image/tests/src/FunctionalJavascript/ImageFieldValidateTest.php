@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\image\FunctionalJavascript;
 
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validation functions such as min/max dimensions.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageFieldValidateTest extends ImageFieldTestBase {
 
   /**

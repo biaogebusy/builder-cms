@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the listing of content blocks.
  *
  * Tests the fallback block content list when Views is disabled.
  *
- * @group block_content
  * @see \Drupal\block\BlockContentListBuilder
  * @see \Drupal\block_content\Tests\BlockContentListViewsTest
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentListTest extends BlockContentTestBase {
 
   /**
@@ -180,12 +183,11 @@ class BlockContentListTest extends BlockContentTestBase {
     // Create test block for other user tests.
     $test_block = $this->createBlockContent($label);
 
-    $link_text = t('Add content block');
     // Test as a user with view only permissions.
     $this->drupalLogin($this->baseUser1);
     $this->drupalGet('admin/content/block');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->linkNotExists($link_text);
+    $this->assertSession()->linkNotExists('Add content block');
     $this->assertSession()->linkByHrefNotExists('admin/content/block/' . $test_block->id());
     $this->assertSession()->linkByHrefNotExists('admin/content/block/' . $test_block->id() . '/delete');
 
@@ -195,7 +197,7 @@ class BlockContentListTest extends BlockContentTestBase {
     $this->drupalLogin($this->baseUser2);
     $this->drupalGet('admin/content/block');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->linkExists($link_text);
+    $this->assertSession()->linkExists('Add content block');
     $this->assertSession()->linkByHrefExists('admin/content/block/' . $test_block->id());
     $this->assertSession()->linkByHrefExists('admin/content/block/' . $test_block->id() . '/delete');
   }

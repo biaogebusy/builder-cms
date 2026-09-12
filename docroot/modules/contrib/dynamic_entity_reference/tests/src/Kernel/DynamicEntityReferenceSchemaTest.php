@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -15,6 +18,8 @@ use Drupal\Tests\SchemaCheckTestTrait;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceSchemaTest extends EntityKernelTestBase {
 
   use SchemaCheckTestTrait;

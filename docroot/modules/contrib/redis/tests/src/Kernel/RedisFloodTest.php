@@ -5,12 +5,16 @@ namespace Drupal\Tests\redis\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\redis\Flood\FloodFactory;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Redis flood backend.
  *
  * @group redis
  */
+#[Group('redis')]
+#[RunTestsInSeparateProcesses]
 class RedisFloodTest extends KernelTestBase {
 
   use RedisTestInterfaceTrait;

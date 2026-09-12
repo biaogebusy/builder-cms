@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_suggestions\Plugin\AiContentSuggestions;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai_content_suggestions\AiContentSuggestionsPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -26,66 +23,32 @@ final class Tone extends AiContentSuggestionsPluginBase {
   /**
    * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManager
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
-
-  /**
-   * The ai provider plugin manager.
-   *
-   * @var \Drupal\ai\AiProviderPluginManager
-   */
-  protected $providerManager;
 
   /**
    * Configuration object for this plugin.
    *
    * @var \Drupal\Core\Config\Config
    */
-  private $toneConfig;
+  protected $toneConfig;
 
   /**
    * The Default prompt for this functionality.
    *
    * @var string
    */
-  private string $defaultPrompt = 'Change the tone of the following text to be {{ tone }} using the same language as the following text:';
+  protected string $defaultPrompt = 'Change the tone of the following text to be {{ tone }} using the same language as the following text:';
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ai.provider'),
-      $container->get('config.factory'),
-      $container->get('entity_type.manager')
-    );
-  }
-
-  /**
-   * Configuration object for this plugin.
-   *
-   * @var \Drupal\Core\Config\Config
-   */
-  private $promptConfig;
-
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    protected AiProviderPluginManager $providerPluginManager,
-    ConfigFactoryInterface $configFactory,
-    EntityTypeManager $entityTypeManager,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $providerPluginManager, $configFactory);
-    $this->config = $configFactory->get('ai_content_suggestions.settings');
-    $this->providerManager = $providerPluginManager;
-    $this->entityTypeManager = $entityTypeManager;
-    $this->toneConfig = $configFactory->getEditable('ai_content_suggestions.tone');
-    $this->promptConfig = $configFactory->getEditable('ai_content_suggestions.prompts');
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->toneConfig = $instance->configFactory->getEditable('ai_content_suggestions.tone');
+    return $instance;
   }
 
   /**

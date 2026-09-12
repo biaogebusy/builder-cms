@@ -41,11 +41,23 @@ abstract class EntityBase implements EntityInterface {
   protected $enforceIsNew;
 
   /**
-   * A typed data object wrapping this entity.
+   * A weak reference to the typed data object wrapping this entity.
    *
-   * @var \Drupal\Core\TypedData\ComplexDataInterface
+   * @var \WeakReference
    */
   protected $typedData;
+
+  /**
+   * The original unchanged entity.
+   *
+   * This property will be set and used during the saving process.
+   *
+   * This is named originalEntity to not clash with the deprecated magic
+   * property "original".
+   *
+   * @var static|null
+   */
+  protected ?EntityInterface $originalEntity = NULL;
 
   /**
    * Constructs an Entity object.
@@ -68,6 +80,7 @@ abstract class EntityBase implements EntityInterface {
    * Gets the entity type manager.
    *
    * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
    */
   protected function entityTypeManager() {
     return \Drupal::entityTypeManager();
@@ -77,6 +90,7 @@ abstract class EntityBase implements EntityInterface {
    * Gets the entity type bundle info service.
    *
    * @return \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   *   The entity type bundle info service.
    */
   protected function entityTypeBundleInfo() {
     return \Drupal::service('entity_type.bundle.info');
@@ -86,6 +100,7 @@ abstract class EntityBase implements EntityInterface {
    * Gets the language manager.
    *
    * @return \Drupal\Core\Language\LanguageManagerInterface
+   *   The language manager service.
    */
   protected function languageManager() {
     return \Drupal::languageManager();
@@ -95,6 +110,7 @@ abstract class EntityBase implements EntityInterface {
    * Gets the UUID generator.
    *
    * @return \Drupal\Component\Uuid\UuidInterface
+   *   The UUID service.
    */
   protected function uuidGenerator() {
     return \Drupal::service('uuid');
@@ -185,7 +201,7 @@ abstract class EntityBase implements EntityInterface {
       }
     }
 
-    if (isset($link_templates[$rel])) {
+    if ($rel !== NULL && isset($link_templates[$rel])) {
       $route_parameters = $this->urlRouteParameters($rel);
       $route_name = "entity.{$this->entityTypeId}." . str_replace(['-', 'drupal:'], ['_', ''], $rel);
       $uri = new Url($route_name, $route_parameters);
@@ -198,6 +214,7 @@ abstract class EntityBase implements EntityInterface {
       if (isset($bundles[$bundle]['uri_callback'])) {
         $uri_callback = $bundles[$bundle]['uri_callback'];
       }
+      // @phpstan-ignore method.deprecated
       elseif ($entity_uri_callback = $this->getEntityType()->getUriCallback()) {
         $uri_callback = $entity_uri_callback;
       }
@@ -305,10 +322,10 @@ abstract class EntityBase implements EntityInterface {
       try {
         $this->toUrl($link_relation_type)->toString(TRUE)->getGeneratedUrl();
       }
-      catch (RouteNotFoundException $e) {
+      catch (RouteNotFoundException) {
         return FALSE;
       }
-      catch (MissingMandatoryParametersException $e) {
+      catch (MissingMandatoryParametersException) {
         return FALSE;
       }
       return TRUE;
@@ -377,6 +394,12 @@ abstract class EntityBase implements EntityInterface {
     if ($entity_type->hasKey('uuid')) {
       $duplicate->{$entity_type->getKey('uuid')} = $this->uuidGenerator()->generate();
     }
+
+    // Modules might need to add or change the data initially held by the new
+    // entity object, for instance to fill-in default values.
+    \Drupal::moduleHandler()->invokeAll($this->getEntityTypeId() . '_duplicate', [$duplicate, $this]);
+    \Drupal::moduleHandler()->invokeAll('entity_duplicate', [$duplicate, $this]);
+
     return $duplicate;
   }
 
@@ -395,7 +418,7 @@ abstract class EntityBase implements EntityInterface {
     if ($this->getEntityType()->getBundleOf()) {
       // Throw an exception if the bundle ID is longer than 32 characters.
       if (mb_strlen($this->id()) > EntityTypeInterface::BUNDLE_MAX_LENGTH) {
-        throw new ConfigEntityIdLengthException("Attempt to create a bundle with an ID longer than " . EntityTypeInterface::BUNDLE_MAX_LENGTH . " characters: $this->id().");
+        throw new ConfigEntityIdLengthException("Attempt to create a bundle with an ID longer than " . EntityTypeInterface::BUNDLE_MAX_LENGTH . " characters: " . $this->id() . ".");
       }
     }
   }
@@ -461,7 +484,10 @@ abstract class EntityBase implements EntityInterface {
   protected function getListCacheTagsToInvalidate() {
     $tags = $this->getEntityType()->getListCacheTags();
     if ($this->getEntityType()->hasKey('bundle')) {
-      $tags[] = $this->getEntityTypeId() . '_list:' . $this->bundle();
+      $tags = Cache::mergeTags(
+        $tags,
+        $this->getEntityType()->getBundleListCacheTags($this->bundle())
+      );
     }
     return $tags;
   }
@@ -600,12 +626,19 @@ abstract class EntityBase implements EntityInterface {
   /**
    * {@inheritdoc}
    */
+  #[\NoDiscard]
   public function getTypedData() {
-    if (!isset($this->typedData)) {
-      $class = $this->getTypedDataClass();
-      $this->typedData = $class::createFromEntity($this);
+    if ($this->typedData instanceof \WeakReference) {
+      $return = $this->typedData->get();
+      if ($return !== NULL) {
+        return $return;
+      }
     }
-    return $this->typedData;
+
+    $class = $this->getTypedDataClass();
+    $return = $class::createFromEntity($this);
+    $this->typedData = \WeakReference::create($return);
+    return $return;
   }
 
   /**
@@ -637,7 +670,7 @@ abstract class EntityBase implements EntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $this->typedData = NULL;
     return $this->traitSleep();
   }
@@ -663,6 +696,67 @@ abstract class EntityBase implements EntityInterface {
     // For content entities, use the UUID for the config target identifier.
     // This ensures that references to the target can be deployed reliably.
     return $this->uuid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOriginal(): ?static {
+    return $this->originalEntity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOriginal(?EntityInterface $original): static {
+    $this->originalEntity = $original;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __get($name) {
+    if ($name == 'original') {
+      @trigger_error("Getting the original property is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Entity\EntityInterface::getOriginal() instead. See https://www.drupal.org/node/3295826", E_USER_DEPRECATED);
+      return $this->getOriginal();
+    }
+    return $this->$name ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __set($name, $value) {
+    if ($name == 'original') {
+      @trigger_error("Setting the original property is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Entity\EntityInterface::setOriginal() instead. See https://www.drupal.org/node/3295826", E_USER_DEPRECATED);
+      $this->setOriginal($value);
+      return;
+    }
+    $this->$name = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __isset($name) {
+    if ($name == 'original') {
+      @trigger_error("Checking for the original property is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Entity\EntityInterface::getOriginal() instead. See https://www.drupal.org/node/3295826", E_USER_DEPRECATED);
+      return $this->getOriginal();
+    }
+    return isset($this->$name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __unset($name) {
+    if ($name == 'original') {
+      @trigger_error("Unsetting the original property is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Entity\EntityInterface::setOriginal() instead. See https://www.drupal.org/node/3295826", E_USER_DEPRECATED);
+      $this->setOriginal(NULL);
+      return;
+    }
+    unset($this->$name);
   }
 
 }

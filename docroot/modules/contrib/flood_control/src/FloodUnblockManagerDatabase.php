@@ -89,6 +89,20 @@ class FloodUnblockManagerDatabase extends FloodUnblockManagerBase {
   }
 
   /**
+   * Checks if the 'flood' table exists.
+   *
+   * @return bool
+   *   TRUE if the table exists, FALSE otherwise.
+   */
+  private function floodTableExists() {
+    if (!$this->database->schema()->tableExists('flood')) {
+      $this->logger->warning('The flood table does not exist.');
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function canFilter() {
@@ -99,6 +113,11 @@ class FloodUnblockManagerDatabase extends FloodUnblockManagerBase {
    * {@inheritdoc}
    */
   public function floodUnblockClearEvent($fid) {
+    if (!$this->floodTableExists()) {
+      $this->messenger->addMessage($this->t('The flood table does not exist.'), 'error');
+      return;
+    }
+
     $txn = $this->database->startTransaction('flood_unblock_clear');
     try {
       $query = $this->database->delete('flood')
@@ -121,13 +140,20 @@ class FloodUnblockManagerDatabase extends FloodUnblockManagerBase {
   /**
    * {@inheritdoc}
    */
-  public function getEntries($limit = 50, $identifier = '', $header = []) {
+  public function getEntries($limit = 50, $identifier = '', $event = '', $header = []) {
+    if (!$this->floodTableExists()) {
+      return [];
+    }
+
     $query = $this->database->select('flood', 'f')
       ->extend('Drupal\Core\Database\Query\TableSortExtender')
       ->orderByHeader($header);
     $query->fields('f');
     if ($identifier) {
       $query->condition('identifier', "%" . $this->database->escapeLike($identifier) . "%", 'LIKE');
+    }
+    if ($event) {
+      $query->condition('event', "%" . $this->database->escapeLike($event) . "%", 'LIKE');
     }
     $pager = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender')
       ->limit($limit);
@@ -144,6 +170,10 @@ class FloodUnblockManagerDatabase extends FloodUnblockManagerBase {
    * {@inheritdoc}
    */
   public function getEventIds($event, $identifier = NULL) {
+    if (!$this->floodTableExists()) {
+      return [];
+    }
+
     $event_ids = [];
     $query = $this->database->select('flood', 'f');
     $query->condition('event', $event);

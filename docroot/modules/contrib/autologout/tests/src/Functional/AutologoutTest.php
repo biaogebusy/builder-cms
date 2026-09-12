@@ -57,6 +57,30 @@ class AutologoutTest extends BrowserTestBase {
   public $userData;
 
   /**
+   * Parses a URL with token query string into path and query components.
+   *
+   * This is needed because drupalGet() double-encodes query strings when
+   * passed as part of the URL string.
+   *
+   * @param string $url
+   *   The URL string with query parameters (e.g., '/path?token=abc').
+   *
+   * @return array
+   *   Array with 'path' and 'query' keys.
+   */
+  protected function parseUrlWithToken(string $url): array {
+    $parsed = parse_url($url);
+    $query = [];
+    if (!empty($parsed['query'])) {
+      parse_str($parsed['query'], $query);
+    }
+    return [
+      'path' => $parsed['path'] ?? $url,
+      'query' => $query,
+    ];
+  }
+
+  /**
    * Performs any pre-requisite tasks that need to happen.
    */
   public function setUp(): void {
@@ -114,15 +138,24 @@ class AutologoutTest extends BrowserTestBase {
    * Tests a user is logged out with the alternate logout method.
    */
   public function testAutologoutAlternateLogoutMethod() {
-    // Test that alternate logout works as expected.
-    $this->drupalGet('autologout_alt_logout');
+    // Visit a page to get URLs with CSRF tokens from drupalSettings.
+    $this->drupalGet('node');
+    $this->assertSession()->statusCodeEquals(200);
+    $settings = $this->getDrupalSettings();
+
+    // Get URL with valid CSRF token from drupalSettings and parse it.
+    $altLogoutParts = $this->parseUrlWithToken($settings['autologout']['alt_logout_url']);
+
+    // Test that alternate logout works as expected with CSRF token.
+    $this->drupalGet($altLogoutParts['path'], ['query' => $altLogoutParts['query']]);
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains(
       $this->t('You have been logged out due to inactivity.')
     );
 
     // Check further logout requests result in access denied.
-    $this->drupalGet('autologout_alt_logout');
+    // Note: User is logged out so should get 403.
+    $this->drupalGet($altLogoutParts['path'], ['query' => $altLogoutParts['query']]);
     $this->assertSession()->statusCodeEquals(403);
   }
 
@@ -304,7 +337,7 @@ class AutologoutTest extends BrowserTestBase {
     $autologoutSettings->set('no_dialog', TRUE)->save();
     $this->drupalGet('node');
 
-    // Test that the JS no dialog varible is updated.
+    // Test that the JS no dialog variable is updated.
     $jsSettings = $this->getDrupalSettings();
     $this->assertEquals(TRUE, $jsSettings['autologout']['no_dialog']);
 
@@ -317,6 +350,49 @@ class AutologoutTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains(
       $this->t('You have been logged out due to inactivity.')
     );
+  }
+
+  /**
+   * Tests warning block displays correct message.
+   */
+  public function testAutologoutWarningBlock(): void {
+    $this->drupalLogin($this->privilegedUser);
+
+    // Place/enable the autologout warning block.
+    $this->drupalPlaceBlock('autologout_warning_block');
+
+    // Visit front page and check the correct message is displayed.
+    $this->drupalGet('/node');
+
+    $this->assertSession()->pageTextContains(
+      $this->t('You will be logged out in 10 sec if this page is not refreshed before then.')
+    );
+
+    // Update autologout settings to enforce the logout on admin pages.
+    $this->configFactory = \Drupal::service('config.factory');
+    $this->configFactory->getEditable('autologout.settings')
+      ->set('enforce_admin', TRUE)
+      ->save();
+
+    // Visit admin page and verify the correct message is displayed.
+    $this->drupalGet('/admin/config/people/autologout');
+
+    $this->assertSession()->pageTextContains(
+      $this->t('You will be logged out in 10 sec if this page is not refreshed before then.')
+    );
+
+    // Update autologout settings to avoid the logout on admin pages.
+    $this->configFactory->getEditable('autologout.settings')
+      ->set('enforce_admin', FALSE)
+      ->save();
+
+    // Visit the admin page and verify the correct message is displayed.
+    $this->drupalGet('/admin/config/people/autologout');
+
+    $this->assertSession()->pageTextContains(
+      $this->t('Autologout does not apply on the current page, you will be kept logged in whilst this page remains open.')
+    );
+
   }
 
 }

@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Styles for local actions.
+ */
+
+.local-actions {
+  margin-block: var(--admin-space-s) var(--admin-space-2xs);
+  margin-inline: 0 calc(var(--admin-space-2xs) * -1);
+  padding: 0;
+  list-style: none;
+  font-size: 0; /* Chrome fix. */
+}
+
+.local-actions__item {
+  display: inline-block;
+  margin-block: 0 var(--admin-space-xs);
+  margin-inline: var(--admin-space-2xs);
+
+  &:first-child {
+    margin-inline-start: 0;
+  }
+
+  &:last-child {
+    margin-inline-end: 0;
+  }
+}

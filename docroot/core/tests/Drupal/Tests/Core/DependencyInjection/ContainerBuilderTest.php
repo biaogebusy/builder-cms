@@ -5,18 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\Core\DependencyInjection;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\Core\DependencyInjection\Fixture\BarClass;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Symfony\Component\DependencyInjection\Definition;
 
 /**
- * @coversDefaultClass \Drupal\Core\DependencyInjection\ContainerBuilder
- * @group DependencyInjection
+ * Tests Drupal\Core\DependencyInjection\ContainerBuilder.
  */
+#[CoversClass(ContainerBuilder::class)]
+#[Group('DependencyInjection')]
 class ContainerBuilderTest extends UnitTestCase {
 
   /**
-   * @covers ::get
+   * Tests get.
    */
   public function testGet(): void {
     $container = new ContainerBuilder();
@@ -27,7 +32,7 @@ class ContainerBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setParameter
+   * Tests set parameter exception.
    */
   public function testSetParameterException(): void {
     $container = new ContainerBuilder();
@@ -37,7 +42,7 @@ class ContainerBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::register
+   * Tests register.
    */
   public function testRegister(): void {
     $container = new ContainerBuilder();
@@ -46,7 +51,7 @@ class ContainerBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setDefinition
+   * Tests set definition.
    */
   public function testSetDefinition(): void {
     // Test a service with public set to true.
@@ -64,7 +69,7 @@ class ContainerBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setAlias
+   * Tests set alias.
    */
   public function testSetAlias(): void {
     $container = new ContainerBuilder();
@@ -87,10 +92,9 @@ class ContainerBuilderTest extends UnitTestCase {
    *
    * This test runs in a separate process to ensure the aliased class does not
    * affect any other tests.
-   *
-   * @runInSeparateProcess
-   * @preserveGlobalState disabled
    */
+  #[PreserveGlobalState(FALSE)]
+  #[RunInSeparateProcess]
   public function testConstructor(): void {
     class_alias(TestInterface::class, 'Symfony\Component\Config\Resource\ResourceInterface');
     $container = new ContainerBuilder();

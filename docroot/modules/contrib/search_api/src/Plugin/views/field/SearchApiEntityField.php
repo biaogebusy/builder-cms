@@ -2,17 +2,18 @@
 
 namespace Drupal\search_api\Plugin\views\field;
 
-use Drupal\views\Attribute\ViewsField;
 use Drupal\Core\Form\FormHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Plugin\views\EntityFieldRenderer;
 use Drupal\search_api\Utility\Utility;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\field\EntityField;
 use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
+use Drupal\views\Plugin\ViewsHandlerManager;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
-use Drupal\views\Views;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Displays entity field data.
@@ -43,12 +44,54 @@ class SearchApiEntityField extends EntityField {
   protected $fallbackHandler;
 
   /**
+   * The field plugin manager.
+   *
+   * @var \Drupal\views\Plugin\ViewsHandlerManager
+   */
+  protected ViewsHandlerManager $fieldPluginManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    $plugin->setFieldPluginManager($container->get('plugin.manager.views.field'));
+
+    return $plugin;
+  }
+
+  /**
+   * Retrieves the Views field plugin manager.
+   *
+   * @return \Drupal\views\Plugin\ViewsHandlerManager
+   *   The Views field plugin manager.
+   */
+  public function getFieldPluginManager(): ViewsHandlerManager {
+    return $this->fieldPluginManager ?? \Drupal::getContainer()->get('plugin.manager.views.field');
+  }
+
+  /**
+   * Sets the Views field plugin manager.
+   *
+   * @param \Drupal\views\Plugin\ViewsHandlerManager $field_plugin_manager
+   *   The new Views field plugin manager.
+   *
+   * @return $this
+   */
+  public function setFieldPluginManager(ViewsHandlerManager $field_plugin_manager): static {
+    $this->fieldPluginManager = $field_plugin_manager;
+    return $this;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     // Prepare our fallback handler.
     $fallback_handler_id = $this->definition['fallback_handler'] ?? 'search_api';
-    $this->fallbackHandler = Views::handlerManager('field')
+    $this->fallbackHandler = \Drupal::getContainer()
+      ->get('plugin.manager.views.field')
       ->getHandler($options, $fallback_handler_id);
     $options += ['fallback_options' => []];
     $fallback_options = $options['fallback_options'] + $options;
@@ -303,11 +346,11 @@ class SearchApiEntityField extends EntityField {
 
     $parent_path = $this->getParentPath();
     $combined_parent_path = $this->createCombinedPropertyPath($this->getDatasourceId(), $parent_path);
-    if (empty($values->_relationship_objects[$combined_parent_path])) {
+    if (empty($values->_relationship_objects["$combined_parent_path"])) {
       return [];
     }
     $build = [];
-    foreach (array_keys($values->_relationship_objects[$combined_parent_path]) as $i) {
+    foreach (array_keys($values->_relationship_objects["$combined_parent_path"]) as $i) {
       $this->valueIndex = $i;
       $build[] = parent::getItems($values);
     }

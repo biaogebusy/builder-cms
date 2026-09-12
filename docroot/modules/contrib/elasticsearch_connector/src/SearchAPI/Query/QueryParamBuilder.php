@@ -2,6 +2,7 @@
 
 namespace Drupal\elasticsearch_connector\SearchAPI\Query;
 
+use Drupal\elasticsearch_connector\Event\AlterSearchQueryFiltersEvent;
 use Drupal\elasticsearch_connector\Event\QueryParamsEvent;
 use Drupal\elasticsearch_connector\SearchAPI\MoreLikeThisParamBuilder;
 use Drupal\search_api\IndexInterface;
@@ -67,7 +68,7 @@ class QueryParamBuilder {
    *   The query.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The index ID.
-   * @param array $settings
+   * @param array{prefix?: string, suffix?: string, fuzziness?: string} $settings
    *   The query settings.
    *
    * @return array
@@ -102,7 +103,12 @@ class QueryParamBuilder {
     $index_fields = $this->getIndexFields($index);
 
     // Filters.
-    $filters = $this->filterBuilder->buildFilters($query->getConditionGroup(), $index_fields);
+    $filters = $this->filterBuilder->buildFilters($query->getConditionGroup(), $index_fields, $settings);
+
+    // Alter a search query's filters before a search query is built.
+    $event = new AlterSearchQueryFiltersEvent($indexId, $filters);
+    $this->eventDispatcher->dispatch($event);
+    $filters = $event->getParams();
 
     // Build the query.
     $searchParams = $this->searchParamBuilder->buildSearchParams($query, $index_fields, $settings);
@@ -111,25 +117,18 @@ class QueryParamBuilder {
       $body['query']['bool']['filter'] = $filters["filters"];
     }
     elseif (!empty($searchParams)) {
-      if (empty($body['query'])) {
-        $body['query'] = [];
-      }
+      $body['query'] = [];
       $body['query'] += $searchParams;
     }
     elseif (!empty($filters["filters"])) {
       $body['query']['bool']['filter'] = $filters["filters"];
     }
 
-    // @todo Handle fields on filter query.
-    if (isset($body['fields']) && empty($body['fields'])) {
-      unset($body['fields']);
-    }
-
     if (!empty($filters["post_filters"])) {
       $body['post_filter']['bool']['must'] = $filters["post_filters"];
     }
 
-    if (isset($body['post_filter']) && empty($body['post_filter'])) {
+    if (empty($body['post_filter'])) {
       unset($body['post_filter']);
     }
 
@@ -170,12 +169,25 @@ class QueryParamBuilder {
       $body['highlight'] = $query->getOption('highlight');
     }
 
+    // Type-specific boosting via function_score.
+    $type_boost_functions = $query->getOption('elasticsearch_connector_type_boost_functions', []);
+    if (!empty($type_boost_functions) && !empty($body['query'])) {
+      $base_query = $body['query'];
+      $body['query'] = [
+        'function_score' => [
+          'query' => $base_query,
+          'functions' => $type_boost_functions,
+        ],
+      ];
+    }
+
     $params['body'] = $body;
+
     // Preserve the options for further manipulation if necessary.
     $query->setOption('ElasticSearchParams', $params);
 
     // Allow modification of search params via an event.
-    $event = new QueryParamsEvent($indexId, $params);
+    $event = new QueryParamsEvent($indexId, $params, $query);
     $this->eventDispatcher->dispatch($event);
     $params = $event->getParams();
 

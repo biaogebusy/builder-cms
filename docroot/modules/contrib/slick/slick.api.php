@@ -207,7 +207,7 @@
  *     // The first is for Views rows output, the last field formatters.
  *     // Use Devel dpm($row) to figure out what it contains, assumptions:
  *     $item = $row['rendered']['#item'] ?? $row['#item'] ?? NULL;
- *     $uri = \Drupal\blazy\Blazy::uri($item);
+ *     $uri = \Drupal\blazy\BlazyApi::uri($item);
  *
  *     // If working with Media, defer to blazy.oembed below, ignore URI.
  *     // If working with text or vanilla, pass it to `content`, ignore URI.
@@ -592,7 +592,7 @@ function hook_slick_overridable_options_info_alter(&$options) {
  *
  * @param \Drupal\slick\Entity\Slick $slick
  *   The Slick object being modified.
- * @param array $settings
+ * @param array<string, mixed> $settings
  *   The contextual settings related to UI and HTML layout settings.
  *
  * @see \Drupal\slick\SlickManager::preRenderSlick()
@@ -637,7 +637,7 @@ function hook_slick_optionset_alter(Slick &$slick, array $settings) {
  *
  * @param array $options
  *   The modified options related to JavaScript options.
- * @param array $settings
+ * @param array<string, mixed> $settings
  *   The contextual settings related to UI and HTML layout settings.
  * @param \Drupal\slick\Entity\Slick $slick
  *   The Slick object being modified.

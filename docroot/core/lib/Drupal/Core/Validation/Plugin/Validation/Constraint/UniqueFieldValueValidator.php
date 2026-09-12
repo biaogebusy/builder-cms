@@ -38,7 +38,7 @@ class UniqueFieldValueValidator extends ConstraintValidator implements Container
   /**
    * {@inheritdoc}
    */
-  public function validate($items, Constraint $constraint) {
+  public function validate($items, Constraint $constraint): void {
     if (!$items->first()) {
       return;
     }
@@ -124,7 +124,9 @@ class UniqueFieldValueValidator extends ConstraintValidator implements Container
   }
 
   /**
-   * Perform a case-insensitive array intersection, but keep original capitalization.
+   * Performs a case-insensitive array intersection.
+   *
+   * This retains the capitalization of the original string.
    *
    * @param array $orig_values
    *   The original values to be returned.
@@ -132,7 +134,8 @@ class UniqueFieldValueValidator extends ConstraintValidator implements Container
    *   The values to intersect $orig_values with.
    *
    * @return array
-   *   Elements of $orig_values contained in $comp_values when ignoring capitalization.
+   *   Elements of $orig_values contained in $comp_values when ignoring
+   *   capitalization.
    */
   private function caseInsensitiveArrayIntersect(array $orig_values, array $comp_values): array {
     $lowercase_comp_values = array_map('strtolower', $comp_values);
@@ -155,7 +158,7 @@ class UniqueFieldValueValidator extends ConstraintValidator implements Container
   private function extractDuplicates(array $item_values): array {
     $value_frequency = array_count_values($item_values);
 
-    // Filter out item values which are not duplicates while preserving deltas
+    // Filter out item values which are not duplicates while preserving deltas.
     $duplicate_values = array_intersect($item_values, array_keys(array_filter(
       $value_frequency, function ($value) {
         return $value > 1;

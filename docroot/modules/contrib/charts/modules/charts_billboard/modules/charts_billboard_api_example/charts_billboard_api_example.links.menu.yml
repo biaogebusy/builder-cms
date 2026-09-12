@@ -1,0 +1,5 @@
+charts_billboard_api_example.display:
+  title: 'Billboard.js API Example'
+  description: 'Charts API demonstrations rendered with Billboard.js.'
+  parent: charts_api_example.display
+  route_name: charts_billboard_api_example.display

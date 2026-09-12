@@ -4,10 +4,10 @@ namespace Drupal\entity_browser;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\ConfigException;
-use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\PluginBase;
 use Drupal\entity_browser\Events\Events;
 use Drupal\entity_browser\Events\SelectionDoneEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -119,7 +119,17 @@ abstract class SelectionDisplayBase extends PluginBase implements SelectionDispl
   /**
    * {@inheritdoc}
    */
-  public function validate(array &$form, FormStateInterface $form_state) {}
+  public function validate(array &$form, FormStateInterface $form_state) {
+    $entity_browser = $form_state->get('entity_browser');
+    $cardinality = $entity_browser['validators']['cardinality']['cardinality'] ?? 0;
+    $entities_count = !empty($entity_browser['selected_entities'])
+        ? count($entity_browser['selected_entities'])
+        : 0;
+    if ($cardinality > 0 && $entities_count > $cardinality) {
+      $message = $this->formatPlural($cardinality, 'You can only select one item.', 'You can only select up to @number items.', ['@number' => $cardinality]);
+      $form_state->setError($form['selection_display'], $message);
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -130,7 +140,7 @@ abstract class SelectionDisplayBase extends PluginBase implements SelectionDispl
    * {@inheritdoc}
    */
   public function checkPreselectionSupport() {
-    @trigger_error('checkPreselectionSupport method is deprecated. Use supportsPreselection instead.', E_USER_DEPRECATED);
+    @trigger_error('SelectionDisplayBase::checkPreselectionSupport() is deprecated in entity_browser:8.x-2.5 and is removed from entity_browser:3.0.0. Use SelectionDisplayBase::supportsPreselection() instead. See https://www.drupal.org/project/entity_browser/issues/2807873', E_USER_DEPRECATED);
     if (!$this->getPluginDefinition()['acceptPreselection']) {
       throw new ConfigException('Used entity browser selection display does not support preselection.');
     }

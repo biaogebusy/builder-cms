@@ -43,6 +43,8 @@ class EntityBrowserController extends ControllerBase {
     }
 
     // Use edit form class if it exists, otherwise use default form class.
+    $operation = NULL;
+    $form_state = NULL;
     $entity_type = $entity->getEntityType();
     if ($entity_type->getFormClass('edit')) {
       $operation = 'edit';
@@ -71,10 +73,27 @@ class EntityBrowserController extends ControllerBase {
 
     // Return a response, depending on whether it's successfully submitted.
     if ($operation && $form_state && !$form_state->isExecuted()) {
-      // Return the form as a modal dialog.
+      // Inject any messages set during the form build (notably validation
+      // errors on a rebuild) so they are visible inside the modal — dialog
+      // markup does not run through the html template that normally renders
+      // the messenger queue, so we render the messages directly here rather
+      // than relying on the placeholder used by '#type' => 'status_messages'.
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+      if ($messages = $this->messenger()->deleteAll()) {
+        $form['status_messages'] = [
+          '#theme' => 'status_messages',
+          '#message_list' => $messages,
+          '#status_headings' => [
+            'status' => $this->t('Status message'),
+            'error' => $this->t('Error message'),
+            'warning' => $this->t('Warning message'),
+          ],
+          '#weight' => -1000,
+        ];
+        $form['#sorted'] = FALSE;
+      }
       $title = $this->t('Edit @entity', ['@entity' => $entity->label()]);
-      $response = (new AjaxResponse())->addCommand(new OpenDialogCommand('#' . $entity->getEntityTypeId() . '-' . $entity->id() . '-edit-dialog', $title, $form, ['modal' => TRUE, 'width' => '92%', 'dialogClass' => 'entity-browser-modal']));
+      $response = (new AjaxResponse())->addCommand(new OpenDialogCommand('#' . $entity->getEntityTypeId() . '-' . $entity->id() . '-edit-dialog', $title, $form, ['modal' => TRUE, 'width' => '92%', 'classes' => ['ui-dialog' => 'entity-browser-modal']]));
       return $response;
     }
     else {

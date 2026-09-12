@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
@@ -117,6 +118,101 @@ class PromotionCompatibilityTest extends OrderKernelTestBase {
 
     $this->container->get('commerce_order.order_refresh')->refresh($this->order);
     $this->assertEquals(1, count($this->order->collectAdjustments()));
+  }
+
+  /**
+   * Tests the promotion compatibility with sequence.
+   *
+   * @dataProvider promotionDataParameters
+   */
+  public function testCompatibilityWithSequence(
+    array $compatibilities,
+    Price $expected_order_total,
+    bool $enforce_weight_ordering = FALSE,
+  ) {
+    $this->config('commerce_promotion.settings')
+      ->set('enforce_weight_ordering', $enforce_weight_ordering)
+      ->save();
+
+    // Create promotions and coupons.
+    $coupon_promotion = Promotion::create([
+      'name' => $this->randomString(),
+      'order_types' => [$this->order->bundle()],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'offer' => [
+        'target_plugin_id' => 'order_fixed_amount_off',
+        'target_plugin_configuration' => [
+          'amount' => [
+            'number' => '3.00',
+            'currency_code' => 'USD',
+          ],
+        ],
+      ],
+      'weight' => 1,
+    ]);
+    $coupon_promotion->setCompatibility($compatibilities[0] ?? PromotionInterface::COMPATIBLE_ANY);
+    $coupon_promotion->save();
+    $promotion = Promotion::create([
+      'name' => $this->randomString(),
+      'order_types' => [$this->order->bundle()],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'offer' => [
+        'target_plugin_id' => 'order_fixed_amount_off',
+        'target_plugin_configuration' => [
+          'amount' => [
+            'number' => '2.00',
+            'currency_code' => 'USD',
+          ],
+        ],
+      ],
+    ]);
+    $promotion->setCompatibility($compatibilities[1] ?? PromotionInterface::COMPATIBLE_ANY);
+    $promotion->save();
+    $coupon = Coupon::create([
+      'code' => 'SAVE_3_USD',
+      'promotion_id' => $coupon_promotion->id(),
+      'status' => TRUE,
+    ]);
+    $coupon->save();
+    $this->order->get('coupons')->appendItem($coupon);
+    $this->order->save();
+    $this->assertTrue($this->order->getTotalPrice()->equals(new Price('12.00', 'USD')));
+    $this->container->get('commerce_order.order_refresh')->refresh($this->order);
+    $this->order->recalculateTotalPrice();
+    $this->assertTrue($this->order->getTotalPrice()->equals($expected_order_total));
+  }
+
+  /**
+   * Data provider for ::testCompatibilityWithSequence.
+   *
+   * @return \Generator
+   *   The test data.
+   */
+  public static function promotionDataParameters(): \Generator {
+    // The coupon is applied first (current behavior even if the parent
+    // promotion has a higher weight.
+    yield [
+      [NULL, PromotionInterface::COMPATIBLE_NONE],
+      new Price('9.00', 'USD'),
+    ];
+    // The coupon-less promotion applies first due to the weight and isn't
+    // compatible with others, so only this one should apply.
+    yield [
+      [NULL, PromotionInterface::COMPATIBLE_NONE],
+      new Price('10.00', 'USD'),
+      TRUE,
+    ];
+    yield [
+      [PromotionInterface::COMPATIBLE_NONE, NULL],
+      new Price('9.00', 'USD'),
+    ];
+    yield [
+      [PromotionInterface::COMPATIBLE_NONE, NULL],
+      new Price('10.00', 'USD'),
+      TRUE,
+    ];
   }
 
 }

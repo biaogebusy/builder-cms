@@ -4,7 +4,7 @@ namespace Drupal\ai_automators;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 
@@ -34,7 +34,7 @@ class AiAutomatorStatusField {
   /**
    * The entity type manager.
    */
-  protected EntityTypeManager $entityType;
+  protected EntityTypeManagerInterface $entityType;
 
   /**
    * The field manager.
@@ -44,12 +44,12 @@ class AiAutomatorStatusField {
   /**
    * Constructs a new AiAutomatorStatusField object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type definition.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $fieldManager
    *   The field manager.
    */
-  public function __construct(EntityTypeManager $entityTypeManager, EntityFieldManagerInterface $fieldManager) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $fieldManager) {
     $this->entityType = $entityTypeManager;
     $this->fieldManager = $fieldManager;
   }

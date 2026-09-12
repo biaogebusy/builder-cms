@@ -39,6 +39,13 @@ class C3Test extends UnitTestCase {
   protected $plugin;
 
   /**
+   * The chart type manager.
+   *
+   * @var \Drupal\Core\Form\FormBuilderInterface
+   */
+  protected $formBuilder;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -54,6 +61,9 @@ class C3Test extends UnitTestCase {
 
     $this->elementInfo = $this->createMock('Drupal\Core\Render\ElementInfoManagerInterface');
     $container->set('element_info', $this->elementInfo);
+
+    $this->formBuilder = $this->createMock('Drupal\Core\Form\FormBuilderInterface');
+    $container->set('form_builder', $this->formBuilder);
 
     \Drupal::setContainer($container);
 
@@ -95,6 +105,7 @@ class C3Test extends UnitTestCase {
         'provider' => 'charts_c3',
       ],
       $this->elementInfo,
+      $this->formBuilder,
       $this->moduleHandler,
     );
 

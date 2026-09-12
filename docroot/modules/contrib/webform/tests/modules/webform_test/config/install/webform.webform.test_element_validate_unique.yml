@@ -49,6 +49,11 @@ elements: |
     '#title': unique_error_html
     '#unique': true
     '#unique_error': 'unique_error <em>error message</em>.'
+  unique_textfield_false:
+    '#type': textfield
+    '#title': unique_textfield_false
+    '#unique': false
+    '#unique_error': 'unique_textfield_false error message.'
   unique_multiple:
     '#type': checkboxes
     '#title': unique_multiple

@@ -12,7 +12,7 @@ class PluralTranslatableMarkup extends TranslatableMarkup {
   /**
    * The item count to display.
    *
-   * @var int
+   * @var numeric
    */
   protected $count;
 
@@ -29,7 +29,7 @@ class PluralTranslatableMarkup extends TranslatableMarkup {
    * Parses values passed into this class through the format_plural() function
    * in Drupal and handles an optional context for the string.
    *
-   * @param int $count
+   * @param numeric $count
    *   The item count to display.
    * @param string $singular
    *   The string for the singular case. Make sure it is clear this is singular,
@@ -66,7 +66,7 @@ class PluralTranslatableMarkup extends TranslatableMarkup {
    * to the __construct() method, this method is designed to be invoked with
    * a string already translated (such as with configuration translation).
    *
-   * @param int $count
+   * @param numeric $count
    *   The item count to display.
    * @param string $translated_string
    *   The already translated string.
@@ -123,6 +123,9 @@ class PluralTranslatableMarkup extends TranslatableMarkup {
    * Gets the plural index through the gettext formula.
    *
    * @return int
+   *   The numeric index of the plural variant to use for this language and
+   *   count combination. Defaults to -1 when the language was not found or does
+   *   not have a plural formula.
    */
   protected function getPluralIndex() {
     // We have to test both if the function and the service exist since in
@@ -140,7 +143,7 @@ class PluralTranslatableMarkup extends TranslatableMarkup {
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     return array_merge(parent::__sleep(), ['count']);
   }
 

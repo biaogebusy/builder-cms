@@ -74,7 +74,6 @@ abstract class MTimeProtectedFileStorageBase extends PhpStorageTestBase {
    * mtime too.
    *
    * We need to delay over 1 second for mtime test.
-   * @medium
    */
   public function testSecurity(): void {
     $php = new $this->storageClass($this->settings);

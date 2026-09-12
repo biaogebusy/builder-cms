@@ -7,12 +7,14 @@ namespace Drupal\KernelTests\Core\Plugin\Condition;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests a condition that requires two users.
- *
- * @group condition_test
  */
+#[Group('condition_test')]
+#[RunTestsInSeparateProcesses]
 class ConditionTestDualUserTest extends KernelTestBase {
 
   /**
@@ -57,7 +59,7 @@ class ConditionTestDualUserTest extends KernelTestBase {
   /**
    * Tests with both contexts mapped to the same user.
    */
-  protected function doTestIdenticalUser() {
+  protected function doTestIdenticalUser(): void {
     /** @var \Drupal\Core\Condition\ConditionPluginBase $condition */
     $condition = \Drupal::service('plugin.manager.condition')
       ->createInstance('condition_test_dual_user')
@@ -74,7 +76,7 @@ class ConditionTestDualUserTest extends KernelTestBase {
   /**
    * Tests with each context mapped to different users.
    */
-  protected function doTestDifferentUser() {
+  protected function doTestDifferentUser(): void {
     /** @var \Drupal\Core\Condition\ConditionPluginBase $condition */
     $condition = \Drupal::service('plugin.manager.condition')
       ->createInstance('condition_test_dual_user')

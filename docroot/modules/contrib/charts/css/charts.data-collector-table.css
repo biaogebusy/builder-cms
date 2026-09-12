@@ -1,0 +1,5 @@
+.data-collector-table__viewport {
+  overflow-x: auto;
+  width: 0;
+  min-width: 100%;
+}

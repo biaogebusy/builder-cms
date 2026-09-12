@@ -406,6 +406,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
       '#description': 'This is a description for the ''entity_autocomplete'' element.'
       '#description_display': tooltip
     webform_entity_checkboxes:
@@ -416,6 +417,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
       '#options':
         1: Administrator
         0: Anonymous
@@ -429,6 +431,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
       '#options':
         1: Administrator
         0: Anonymous
@@ -441,6 +444,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
       '#options':
         1: Administrator
         0: Anonymous

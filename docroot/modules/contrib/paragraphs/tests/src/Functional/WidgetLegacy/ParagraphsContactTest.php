@@ -3,12 +3,16 @@
 namespace Drupal\Tests\paragraphs\Functional\WidgetLegacy;
 
 use Drupal\contact\Entity\ContactForm;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests paragraphs with contact forms.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsContactTest extends ParagraphsTestBase {
 
   /**

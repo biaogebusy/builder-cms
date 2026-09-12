@@ -1,0 +1,28 @@
+ckeditor5.plugin.ckeditor5_premium_features_email_editing__email_editing:
+  type: mapping
+  label: 'CKEditor 5 Email Editing plugin settings'
+  mapping:
+    enable_configuration_helper:
+      type: boolean
+      label: 'Enable Email Configuration Helper'
+    suppress_all:
+      type: boolean
+      label: 'Suppress all email editing logs'
+    suppress_html_element:
+      type: boolean
+      label: 'Suppress unsupported HTML element logs'
+    enable_export_inline_styles:
+      type: boolean
+      label: 'Enable Export Inline Styles'
+    form_element:
+      type: string
+      label: 'Form element'
+    stylesheets:
+      type: string
+      label: 'Stylesheets'
+    inline_css:
+      type: string
+      label: 'Inline CSS'
+    strip_classes:
+      type: boolean
+      label: 'Strip classes'

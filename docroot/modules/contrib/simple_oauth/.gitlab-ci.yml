@@ -34,3 +34,6 @@ variables:
   # Broaden test coverage.
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_NEXT_MAJOR: 1
+
+phpstan:
+  allow_failure: false

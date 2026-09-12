@@ -1,0 +1,6 @@
+services:
+  charts_google.hooks:
+    class: Drupal\charts_google\Hook\ChartsGoogleHooks
+    arguments: ['@config.factory']
+    tags:
+      - { name: hook }

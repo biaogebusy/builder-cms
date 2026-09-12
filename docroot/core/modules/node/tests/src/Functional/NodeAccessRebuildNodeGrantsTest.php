@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\node\Entity\NodeType;
+use Drupal\Tests\node\Traits\NodeAccessTrait;
+use Drupal\node\NodeAccessRebuild;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests node access rebuild functions with multiple node access modules.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeAccessRebuildNodeGrantsTest extends NodeTestBase {
+
+  use NodeAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -42,7 +48,7 @@ class NodeAccessRebuildNodeGrantsTest extends NodeTestBase {
       'administer site configuration',
       'access administration pages',
       'access site reports',
-      'administer nodes',
+      'rebuild node access permissions',
     ]);
     $this->drupalLogin($this->adminUser);
 
@@ -55,11 +61,11 @@ class NodeAccessRebuildNodeGrantsTest extends NodeTestBase {
   public function testNodeAccessRebuildNodeGrants(): void {
     \Drupal::service('module_installer')->install(['node_access_test']);
     \Drupal::state()->set('node_access_test.private', TRUE);
-    node_access_test_add_field(NodeType::load('page'));
+    $this->addPrivateField(NodeType::load('page'));
     $this->resetAll();
 
-    // Create 30 nodes so that _node_access_rebuild_batch_operation() has to run
-    // more than once.
+    // Create 30 nodes so that \Drupal\node\NodeAccessRebuild::batchOperation()
+    // has to run more than once.
     for ($i = 0; $i < 30; $i++) {
       $nodes[] = $this->drupalCreateNode([
         'uid' => $this->webUser->id(),
@@ -84,6 +90,7 @@ class NodeAccessRebuildNodeGrantsTest extends NodeTestBase {
     $this->clickLink('Rebuild permissions');
     $this->submitForm([], 'Rebuild permissions');
     $this->assertSession()->pageTextContains('The content access permissions have been rebuilt.');
+    \Drupal::service('node.view_all_nodes_memory_cache')->deleteAll();
 
     // Test if the rebuild by user that cannot bypass node access and does not
     // have access to the nodes has been successful.
@@ -97,7 +104,7 @@ class NodeAccessRebuildNodeGrantsTest extends NodeTestBase {
 
     // Test an anonymous node access rebuild from code.
     $this->drupalLogout();
-    node_access_rebuild();
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
     foreach ($nodes as $node) {
       $this->assertTrue($grant_storage->access($node, 'view', $this->webUser)->isAllowed(), 'After rebuilding node access the grant storage returns allowed for the node author.');
       $this->assertFalse($grant_storage->access($node, 'view', $this->adminUser)->isForbidden(), 'After rebuilding node access the grant storage returns forbidden for the admin user.');

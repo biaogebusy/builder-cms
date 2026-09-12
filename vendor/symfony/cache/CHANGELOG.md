@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+7.4
+---
+
+ * Bump ext-relay to 0.12 minimum
+
 7.3
 ---
 

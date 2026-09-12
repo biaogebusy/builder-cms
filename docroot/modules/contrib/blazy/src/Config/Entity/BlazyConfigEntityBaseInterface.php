@@ -8,10 +8,6 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
  * Provides a common config entity for Slick, Splide, ElevateZoomPLus, etc.
  *
  * This will allow ElevateZoomPLus to support both Slick and Splide.
- *
- * @internal
- *   This is an internal part of the Blazy system and should only be used by
- *   blazy-related code in Blazy module, or its sub-modules.
  */
 interface BlazyConfigEntityBaseInterface extends ConfigEntityInterface {
 

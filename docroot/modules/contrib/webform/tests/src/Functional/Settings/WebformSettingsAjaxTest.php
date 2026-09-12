@@ -25,7 +25,7 @@ class WebformSettingsAjaxTest extends WebformBrowserTestBase {
   /**
    * Test webform submission form Ajax setting.
    */
-  public function testAjax() {
+  public function testAjax(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('contact');

@@ -46,7 +46,7 @@ class PageAddWizard extends PageWizardBase {
     }
 
     // Hide any optional steps that aren't selected.
-    $optional_steps = ['access', 'contexts', 'selection'];
+    $optional_steps = ['access', 'contexts', 'menu', 'selection'];
     foreach ($optional_steps as $step_name) {
       if (empty($cached_values['wizard_options'][$step_name])) {
         unset($operations[$step_name]);

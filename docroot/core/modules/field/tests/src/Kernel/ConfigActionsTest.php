@@ -9,17 +9,24 @@ use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group field
+ * Tests Config Actions.
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class ConfigActionsTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['entity_test', 'field'];
+  protected static $modules = ['entity_test', 'field', 'user'];
 
+  /**
+   * The configuration manager.
+   */
   private readonly ConfigActionManager $configActionManager;
 
   /**
@@ -28,6 +35,8 @@ class ConfigActionsTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_with_bundle');
     EntityTestBundle::create([
       'id' => 'test',
       'label' => $this->randomString(),
@@ -36,6 +45,9 @@ class ConfigActionsTest extends KernelTestBase {
     $this->configActionManager = $this->container->get('plugin.manager.config_action');
   }
 
+  /**
+   * Tests the application of configuration actions on field settings.
+   */
   public function testConfigActions(): void {
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'test',

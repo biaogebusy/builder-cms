@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Drupal\diff;
 
 use Drupal\Component\Diff\Diff;
-use Drupal\Component\Utility\Xss;
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 
 /**
@@ -20,7 +17,6 @@ class DiffEntityComparison {
 
   protected ImmutableConfig $pluginsConfig;
   protected array $fieldTypeDefinitions;
-  protected ?ModerationInformationInterface $moderationInformation = NULL;
 
   /**
    * Constructs a DiffEntityComparison object.
@@ -155,8 +151,8 @@ class DiffEntityComparison {
    *   Array of rows usable with #type => 'table' returned by the core diff
    *   formatter when format a diff.
    */
-  public function getRows($a, $b, bool $show_header = FALSE, ?array &$line_stats = NULL): array {
-    if (!isset($line_stats)) {
+  public function getRows($a, $b, bool $show_header = FALSE, array &$line_stats = []): array {
+    if ($line_stats === []) {
       $line_stats = [
         'counter' => ['x' => 0, 'y' => 0],
         'offset' => ['x' => 0, 'y' => 0],
@@ -198,114 +194,6 @@ class DiffEntityComparison {
       $diff['#data']['#count_right'] = 0;
       $diff['#data']['#right'] = [];
     }
-  }
-
-  /**
-   * Gets the revision description of the revision.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $revision
-   *   The current revision.
-   * @param \Drupal\Core\Entity\ContentEntityInterface $previous_revision
-   *   (optional) The previous revision. Defaults to NULL.
-   *
-   * @return string
-   *   The revision log message.
-   */
-  public function getRevisionDescription(ContentEntityInterface $revision, ?ContentEntityInterface $previous_revision = NULL): string {
-    $revision_summary = '';
-    // Check if the revision has a revision log message.
-    if ($revision instanceof RevisionLogInterface) {
-      $revision_log_message = $revision->getRevisionLogMessage();
-      if ($revision_log_message !== NULL) {
-        $revision_summary = Xss::filter($revision_log_message);
-      }
-    }
-
-    // @todo Autogenerate summary again.
-    // @see https://www.drupal.org/project/diff/issues/2880936
-    // Add workflow/content moderation state information.
-    if ($state = $this->getModerationState($revision)) {
-      $revision_summary .= " ($state)";
-    }
-
-    return $revision_summary;
-  }
-
-  /**
-   * Creates an log message based on the changes of entity fields.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $revision
-   *   The current revision.
-   *
-   * @return array
-   *   Array of the revision fields with their value and label.
-   */
-  protected function summary(ContentEntityInterface $revision): array {
-    $result = [];
-    $entity_type_id = $revision->getEntityTypeId();
-    // Loop through entity fields and transform every FieldItemList object
-    // into an array of strings according to field type specific settings.
-    /** @var \Drupal\Core\Field\FieldItemListInterface $field_items */
-    foreach ($revision as $field_items) {
-      $show_delta = FALSE;
-      // Create a plugin instance for the field definition.
-      $plugin = $this->diffBuilderManager->createInstanceForFieldDefinition($field_items->getFieldDefinition());
-      if ($plugin && $this->diffBuilderManager->showDiff($field_items->getFieldDefinition()->getFieldStorageDefinition())) {
-        // Create the array with the fields of the entity. Recursive if the
-        // field contains entities.
-        if ($plugin instanceof FieldReferenceInterface) {
-          foreach ($plugin->getEntitiesToDiff($field_items) as $entity_key => $reference_entity) {
-            foreach ($this->summary($reference_entity) as $key => $build) {
-              if ($field_items->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() != 1) {
-                $show_delta = TRUE;
-              }
-              $result[$key] = $build;
-              $delta = $show_delta ? '<sub>' . ($entity_key + 1) . '</sub> ' : ' - ';
-              $result[$key]['label'] = $field_items->getFieldDefinition()->getLabel() . $delta . $result[$key]['label'];
-            }
-          }
-        }
-        else {
-          // Create a unique flat key.
-          $key = $revision->id() . ':' . $entity_type_id . '.' . $field_items->getName();
-
-          $result[$key]['value'] = $field_items->getValue();
-          $result[$key]['label'] = $field_items->getFieldDefinition()->getLabel();
-        }
-      }
-    }
-
-    return $result;
-  }
-
-  /**
-   * Gets the revision's content moderation state, if available.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity revision.
-   *
-   * @return string|bool
-   *   Returns the label of the moderation state, if available, otherwise FALSE.
-   */
-  protected function getModerationState(ContentEntityInterface $entity): string|bool {
-    if ($this->moderationInformation instanceof ModerationInformationInterface && $this->moderationInformation->isModeratedEntity($entity)) {
-      if ($state = $entity->moderation_state->value) {
-        $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
-        return $workflow->getTypePlugin()->getState($state)->label();
-      }
-    }
-
-    return FALSE;
-  }
-
-  /**
-   * Sets the content moderation service if available.
-   *
-   * @param \Drupal\content_moderation\ModerationInformationInterface $moderation_information
-   *   The moderation information service.
-   */
-  public function setModerationInformation(ModerationInformationInterface $moderation_information): void {
-    $this->moderationInformation = $moderation_information;
   }
 
 }

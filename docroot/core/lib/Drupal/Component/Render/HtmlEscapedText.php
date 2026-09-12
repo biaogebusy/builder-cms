@@ -24,7 +24,7 @@ class HtmlEscapedText implements MarkupInterface, \Countable {
   /**
    * Constructs an HtmlEscapedText object.
    *
-   * @param $string
+   * @param string $string
    *   The string to escape. This value will be cast to a string.
    */
   public function __construct($string) {
@@ -41,16 +41,14 @@ class HtmlEscapedText implements MarkupInterface, \Countable {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function count() {
+  public function count(): int {
     return mb_strlen($this->string);
   }
 
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function jsonSerialize() {
+  public function jsonSerialize(): string {
     return $this->__toString();
   }
 

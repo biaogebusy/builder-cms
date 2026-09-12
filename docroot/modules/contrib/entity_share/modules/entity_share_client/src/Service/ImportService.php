@@ -379,8 +379,6 @@ class ImportService implements ImportServiceInterface {
     // Get field mappings.
     $this->runtimeImportContext->setFieldMappings($this->remoteManager->getfieldMappings($remote));
 
-    $this->runtimeImportContext->setImportService($this);
-
     return TRUE;
   }
 
@@ -484,7 +482,10 @@ class ImportService implements ImportServiceInterface {
       if ($existing_entity->language()->isLocked()) {
         // The existing entity was in an untranslatable language like "und",
         // so we convert it to the new language.
-        $existing_entity->set('langcode', $data_langcode);
+        $language_field_name = $existing_entity->getEntityType()->getKey('langcode');
+        if ($language_field_name) {
+          $existing_entity->set($language_field_name, $data_langcode);
+        }
       }
 
       $has_translation = $existing_entity->hasTranslation($data_langcode);

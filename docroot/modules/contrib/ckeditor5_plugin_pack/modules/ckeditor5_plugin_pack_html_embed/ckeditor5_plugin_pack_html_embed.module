@@ -1,0 +1,46 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+
+/**
+ * Implements hook_library_info_build().
+ */
+function ckeditor5_plugin_pack_html_embed_library_info_build(): array {
+  return ckeditor5_plugin_pack_library_loader(['html-embed']);
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function ckeditor5_plugin_pack_html_embed_library_info_alter(&$libraries, $extension): void {
+  if ($extension === 'ckeditor5_plugin_pack_html_embed') {
+    if (isset($libraries['dompurify']) && !ckeditor5_plugin_pack_html_embed_is_library_installed()) {
+      unset($libraries['dompurify']);
+      $key = array_search('ckeditor5_plugin_pack_html_embed/dompurify', $libraries["editor.html_embed"]["dependencies"]);
+      if ($key !== FALSE) {
+        unset($libraries["editor.html_embed"]["dependencies"][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_install().
+ */
+function ckeditor5_plugin_pack_html_embed_install($is_syncing): void {
+  ckeditor5_plugin_pack_display_trial_info_message();
+}
+
+/**
+ * Checks if the DOMPurify library is installed.
+ *
+ * @return bool
+ *   TRUE if the library is installed, FALSE otherwise.
+ */
+function ckeditor5_plugin_pack_html_embed_is_library_installed(): bool {
+  return file_exists(DRUPAL_ROOT . '/libraries/dompurify/dist/purify.min.js');
+}

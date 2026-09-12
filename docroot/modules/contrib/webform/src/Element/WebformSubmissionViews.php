@@ -54,8 +54,8 @@ class WebformSubmissionViews extends WebformMultiple {
       '#type' => 'container',
       '#title' => t('View / Name / Title'),
       '#help' => '<b>' . t('View') . ':</b> ' . t('A webform submission embed display. The selected view should also include contextual filters. {webform_id}/{source_entity_type}/{source_entity_id}/{account_id}/{in_draft}') .
-        '<hr/>' . '<b>' . t('Name') . ':</b> ' . t('The name to be displayed in the URL when there are multiple submission views available.') .
-        '<hr/>' . '<b>' . t('Options') . ':</b> ' . t('The title to be display in the dropdown menu when there are multiple submission views available.'),
+      '<hr/><b>' . t('Name') . ':</b> ' . t('The name to be displayed in the URL when there are multiple submission views available.') .
+      '<hr/><b>' . t('Options') . ':</b> ' . t('The title to be display in the dropdown menu when there are multiple submission views available.'),
       'view' => [
         '#type' => 'select',
         '#title' => t('View'),
@@ -137,8 +137,8 @@ class WebformSubmissionViews extends WebformMultiple {
         '#help' =>
           t('Display the selected view on the below paths') .
           '<hr/><b>' . t('Submissions') . ':</b><br/>/node/{node}/webform/results/submissions' .
-          '<hr/>' . '<b>' . t('User drafts') . ':</b><br/>/node/{node}/webform/drafts' .
-          '<hr/>' . '<b>' . t('User submissions') . ':</b><br/>/node/{node}/webform/submissions',
+          '<hr/><b>' . t('User drafts') . ':</b><br/>/node/{node}/webform/drafts' .
+          '<hr/><b>' . t('User submissions') . ':</b><br/>/node/{node}/webform/submissions',
         // phpcs:enable
         '#options' => $node_route_options,
         '#element_validate' => [['\Drupal\webform\Utility\WebformElementHelper', 'filterValues']],

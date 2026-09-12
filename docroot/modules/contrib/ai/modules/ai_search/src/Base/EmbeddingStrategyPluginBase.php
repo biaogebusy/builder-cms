@@ -3,7 +3,7 @@
 namespace Drupal\ai_search\Base;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -79,7 +79,7 @@ abstract class EmbeddingStrategyPluginBase implements EmbeddingStrategyInterface
    *   The html to markdown converter.
    * @param \Drupal\ai\Utility\TextChunker $textChunker
    *   The text chunker.
-   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleExtensionList $extensionList
    *   The module extension list.
@@ -96,7 +96,7 @@ abstract class EmbeddingStrategyPluginBase implements EmbeddingStrategyInterface
     protected AiProviderPluginManager $aiProviderManager,
     protected HtmlConverter $converter,
     protected TextChunker $textChunker,
-    protected EntityTypeManager $entityTypeManager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected ModuleExtensionList $extensionList,
     protected ConfigFactoryInterface $configFactory,
     protected LoggerChannelFactoryInterface $loggerChannelFactory,

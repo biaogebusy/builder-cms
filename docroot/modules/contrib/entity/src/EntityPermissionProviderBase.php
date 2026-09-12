@@ -11,6 +11,8 @@ use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * Base class for entity permissions.
+ *
  * @internal
  */
 class EntityPermissionProviderBase implements EntityPermissionProviderInterface, EntityHandlerInterface {

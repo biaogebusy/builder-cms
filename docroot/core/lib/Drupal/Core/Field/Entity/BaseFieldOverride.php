@@ -2,6 +2,10 @@
 
 namespace Drupal\Core\Field\Entity;
 
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Field\BaseFieldOverrideAccessControlHandler;
+use Drupal\Core\Field\BaseFieldOverrideStorage;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldConfigBase;
@@ -11,38 +15,45 @@ use Drupal\Core\Field\FieldException;
  * Defines the base field override entity.
  *
  * Allows base fields to be overridden on the bundle level.
- *
- * @ConfigEntityType(
- *   id = "base_field_override",
- *   label = @Translation("Base field override"),
- *   handlers = {
- *     "storage" = "Drupal\Core\Field\BaseFieldOverrideStorage",
- *     "access" = "Drupal\Core\Field\BaseFieldOverrideAccessControlHandler",
- *   },
- *   config_prefix = "base_field_override",
- *   entity_keys = {
- *     "id" = "id",
- *     "label" = "label"
- *   },
- *   config_export = {
- *     "id",
- *     "field_name",
- *     "entity_type",
- *     "bundle",
- *     "label",
- *     "description",
- *     "required",
- *     "translatable",
- *     "default_value",
- *     "default_value_callback",
- *     "settings",
- *     "field_type",
- *   },
- *   constraints = {
- *     "ImmutableProperties" = {"id", "entity_type", "bundle", "field_name", "field_type"},
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'base_field_override',
+  label: new TranslatableMarkup('Base field override'),
+  config_prefix: 'base_field_override',
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'label',
+  ],
+  handlers: [
+    'storage' => BaseFieldOverrideStorage::class,
+    'access' => BaseFieldOverrideAccessControlHandler::class,
+  ],
+  constraints: [
+    'ImmutableProperties' => [
+      'properties' => [
+        'id',
+        'entity_type',
+        'bundle',
+        'field_name',
+        'field_type',
+      ],
+    ],
+  ],
+  config_export: [
+    'id',
+    'field_name',
+    'entity_type',
+    'bundle',
+    'label',
+    'description',
+    'required',
+    'translatable',
+    'default_value',
+    'default_value_callback',
+    'settings',
+    'field_type',
+  ],
+)]
 class BaseFieldOverride extends FieldConfigBase {
 
   /**
@@ -51,11 +62,6 @@ class BaseFieldOverride extends FieldConfigBase {
    * @var \Drupal\Core\Field\BaseFieldDefinition
    */
   protected $baseFieldDefinition;
-
-  /**
-   * The original override.
-   */
-  public BaseFieldOverride $original;
 
   /**
    * Creates a base field override object.
@@ -173,6 +179,7 @@ class BaseFieldOverride extends FieldConfigBase {
    * Gets the base field definition.
    *
    * @return \Drupal\Core\Field\BaseFieldDefinition
+   *   An associative array of the base field definition.
    */
   protected function getBaseFieldDefinition() {
     if (!isset($this->baseFieldDefinition)) {
@@ -208,13 +215,13 @@ class BaseFieldOverride extends FieldConfigBase {
     }
     else {
       // Some updates are always disallowed.
-      if ($this->entity_type != $this->original->entity_type) {
-        throw new FieldException("Cannot change the entity_type of an existing base field bundle override (entity type:{$this->entity_type}, bundle:{$this->original->bundle}, field name: {$this->field_name})");
+      if ($this->entity_type != $this->getOriginal()->entity_type) {
+        throw new FieldException("Cannot change the entity_type of an existing base field bundle override (entity type:{$this->entity_type}, bundle:{$this->getOriginal()->bundle}, field name: {$this->field_name})");
       }
-      if ($this->bundle != $this->original->bundle) {
-        throw new FieldException("Cannot change the bundle of an existing base field bundle override (entity type:{$this->entity_type}, bundle:{$this->original->bundle}, field name: {$this->field_name})");
+      if ($this->bundle != $this->getOriginal()->bundle) {
+        throw new FieldException("Cannot change the bundle of an existing base field bundle override (entity type:{$this->entity_type}, bundle:{$this->getOriginal()->bundle}, field name: {$this->field_name})");
       }
-      $previous_definition = $this->original;
+      $previous_definition = $this->getOriginal();
     }
     // Notify the entity storage.
     $this->entityTypeManager()->getStorage($this->getTargetEntityTypeId())->onFieldDefinitionUpdate($this, $previous_definition);
@@ -259,7 +266,7 @@ class BaseFieldOverride extends FieldConfigBase {
   /**
    * Implements the magic __sleep() method.
    */
-  public function __sleep() {
+  public function __sleep(): array {
     // Only serialize necessary properties, excluding those that can be
     // recalculated.
     unset($this->baseFieldDefinition);

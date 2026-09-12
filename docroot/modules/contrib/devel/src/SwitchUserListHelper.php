@@ -22,19 +22,9 @@ class SwitchUserListHelper {
   use StringTranslationTrait;
 
   /**
-   * The Current User object.
-   */
-  protected AccountInterface $currentUser;
-
-  /**
    * The user storage.
    */
   protected UserStorageInterface $userStorage;
-
-  /**
-   * The redirect destination service.
-   */
-  protected RedirectDestinationInterface $redirectDestination;
 
   /**
    * The role storage.
@@ -44,24 +34,22 @@ class SwitchUserListHelper {
   /**
    * Constructs a new SwitchUserListHelper service.
    *
-   * @param \Drupal\Core\Session\AccountInterface $current_user
+   * @param \Drupal\Core\Session\AccountInterface $currentUser
    *   Current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination
+   * @param \Drupal\Core\Routing\RedirectDestinationInterface $redirectDestination
    *   The redirect destination service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager.
    */
   public function __construct(
-    AccountInterface $current_user,
+    protected AccountInterface $currentUser,
     EntityTypeManagerInterface $entity_type_manager,
-    RedirectDestinationInterface $redirect_destination,
+    protected RedirectDestinationInterface $redirectDestination,
     TranslationInterface $string_translation,
   ) {
-    $this->currentUser = $current_user;
     $this->userStorage = $entity_type_manager->getStorage('user');
-    $this->redirectDestination = $redirect_destination;
     $this->stringTranslation = $string_translation;
     $this->roleStorage = $entity_type_manager->getStorage('user_role');
   }

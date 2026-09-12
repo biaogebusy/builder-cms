@@ -5,23 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\rest\resource\UserRegistrationResource;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Tests User Registration REST resource.
- *
- * @coversDefaultClass \Drupal\user\Plugin\rest\resource\UserRegistrationResource
- * @group user
  */
+#[CoversClass(UserRegistrationResource::class)]
+#[Group('user')]
 class UserRegistrationResourceTest extends UnitTestCase {
 
   const ERROR_MESSAGE = "Unprocessable Entity: validation failed.\nproperty_path: message\nproperty_path_2: message_2\n";
@@ -138,26 +138,6 @@ class UserRegistrationResourceTest extends UnitTestCase {
     $this->expectException(AccessDeniedHttpException::class);
 
     $this->testClass->post($entity->reveal());
-  }
-
-  /**
-   * Tests the deprecation messages.
-   *
-   * @covers ::__construct
-   *
-   * @group legacy
-   */
-  public function testDeprecations(): void {
-    $this->expectDeprecation('Calling Drupal\user\Plugin\rest\resource\UserRegistrationResource::__construct() without the $password_generator argument is deprecated in drupal:10.3.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3405799');
-    $this->expectException(BadRequestHttpException::class);
-
-    $container = new ContainerBuilder();
-    $password_generator = $this->prophesize(PasswordGeneratorInterface::class);
-    $container->set('password_generator', $password_generator->reveal());
-    \Drupal::setContainer($container);
-
-    $this->testClass = new UserRegistrationResource([], 'plugin_id', '', [], $this->logger, $this->userSettings->reveal(), $this->currentUser->reveal());
-    $this->testClass->post(NULL);
   }
 
 }

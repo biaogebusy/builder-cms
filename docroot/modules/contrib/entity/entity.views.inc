@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Views hooks.
+ */
+
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 

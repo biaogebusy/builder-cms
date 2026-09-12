@@ -7,7 +7,7 @@ name: Umami Badge
 # Status can be: "experimental", "stable", "deprecated", "obsolete".
 status: experimental
 
-# Schema for the props. We support www.json-schema.org. Learn more about the
+# Schema for the props. We support https://json-schema.org/. Learn more about the
 # syntax there.
 props:
   # Props are always an object with keys. Each key is a variable in your
@@ -27,6 +27,12 @@ props:
         - timer
         - serves
         - difficulty
+      meta:enum:
+        knife: Knife
+        timer: Timer
+        serves: Serves
+        difficulty: Difficulty
+      x-translation-context: Umami recipes icon names
 slots:
   label:
     type: string

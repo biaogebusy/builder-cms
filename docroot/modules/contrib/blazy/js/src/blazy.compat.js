@@ -38,7 +38,7 @@
 
     clearCompat: function (el) {
       var me = this;
-      var old = $.isBg(el) && (me.isBlazy() || $.ie);
+      var old = $.isBg(el) && (me.isBlazy() || $.ie(el));
 
       // Only animate when the image is fully loaded, else nonsense.
       me.pad(el, animate, old ? 50 : 0);

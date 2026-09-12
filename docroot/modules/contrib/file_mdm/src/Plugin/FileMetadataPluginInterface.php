@@ -16,7 +16,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
   /**
    * Gets default configuration for this plugin.
    *
-   * @return array
+   * @return array<mixed>
    *   An associative array with the default configuration.
    */
   public static function defaultConfiguration(): array;
@@ -84,14 +84,14 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
   /**
    * Returns a list of metadata keys supported by the plugin.
    *
-   * @param array $options
+   * @param array<mixed>|null $options
    *   (optional) Allows specifying additional options to control the list of
-   *   metadata keys returned.
+   *   metadata keys returned. If NULL, no additional options are applied.
    *
-   * @return array
-   *   A simple array of metadata keys supported.
+   * @return list<mixed>
+   *   A list of metadata keys supported.
    */
-  public function getSupportedKeys(array $options = NULL): array;
+  public function getSupportedKeys(?array $options = NULL): array;
 
   /**
    * Checks if file metadata has been already loaded.
@@ -192,7 +192,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    *
    * Uses the 'file_mdm' cache bin.
    *
-   * @param array $tags
+   * @param list<string> $tags
    *   (optional) An array of cache tags to save to cache.
    *
    * @return bool

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorageException;
 
 /**
@@ -9,6 +11,8 @@ use Drupal\Core\Entity\Sql\SqlContentEntityStorageException;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class PluginsTest extends EntityBrowserWebDriverTestBase {
 
   /**
@@ -218,6 +222,7 @@ class PluginsTest extends EntityBrowserWebDriverTestBase {
     $standalone_configuration = [
       'entity_browser_id' => 'test_entity_browser_file',
       'path' => 'test',
+      'use_admin_theme' => TRUE,
     ];
     $this->getEntityBrowser('test_entity_browser_file', 'standalone', 'single', 'no_display', $standalone_configuration);
 

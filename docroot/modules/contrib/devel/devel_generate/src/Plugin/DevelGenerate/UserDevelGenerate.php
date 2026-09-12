@@ -176,7 +176,7 @@ class UserDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
    */
   public function validateDrushParams(array $args, array $options = []): array {
     return [
-      'num' => array_shift($args),
+      'num' => $args['num'],
       'time_range' => 0,
       'roles' => self::csvToArray($options['roles']),
       'kill' => $options['kill'],

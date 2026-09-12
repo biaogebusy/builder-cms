@@ -1,22 +1,22 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsGateway;
 use Drupal\sms\Entity\SmsGatewayInterface;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Entity\SmsMessageInterface as SmsMessageEntityInterface;
+use Drupal\sms\Entity\SmsMessageInterface;
+use Drupal\sms\Event\SmsEvents;
+use Drupal\sms\Exception\RecipientRouteException;
 use Drupal\sms\Exception\SmsDirectionException;
 use Drupal\sms\Exception\SmsException;
-use Drupal\sms\Exception\RecipientRouteException;
 use Drupal\sms\Message\SmsMessage as StandardSmsMessage;
 use Drupal\sms\Message\SmsMessageInterface as StandardSmsMessageInterface;
-use Drupal\sms\Entity\SmsMessage;
-use Drupal\sms\Entity\SmsMessageInterface;
-use Drupal\sms\Entity\SmsGateway;
-use Drupal\sms\Direction;
-use Drupal\sms\Event\SmsEvents;
 use Drupal\sms\Message\SmsMessageResultInterface;
 use Drupal\sms\Provider\SmsProviderInterface;
 
@@ -28,9 +28,6 @@ use Drupal\sms\Provider\SmsProviderInterface;
  */
 final class SmsFrameworkProviderTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test', 'sms_test_gateway', 'field', 'telephone',
     'dynamic_entity_reference',
@@ -64,9 +61,6 @@ final class SmsFrameworkProviderTest extends SmsFrameworkKernelBase {
    */
   private SmsGatewayInterface $incomingGateway;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -133,7 +127,7 @@ final class SmsFrameworkProviderTest extends SmsFrameworkKernelBase {
 
     $sms_messages = $this->smsProvider->incoming($sms_message);
 
-    static::assertEquals($message, sms_test_gateway_get_incoming()['message'], 'Message was received.');
+    static::assertEquals($message, \sms_test_gateway_get_incoming()['message'], 'Message was received.');
     static::assertCount(1, $sms_messages, 'Return value contains 1 item.');
     static::assertTrue($sms_messages[0] instanceof StandardSmsMessageInterface, 'Return value is a SMS message.');
     static::assertTrue($sms_messages[0]->getResult() instanceof SmsMessageResultInterface);
@@ -292,7 +286,7 @@ final class SmsFrameworkProviderTest extends SmsFrameworkKernelBase {
       ->loadByProperties(['direction' => Direction::INCOMING]);
     static::assertCount(1, $sms_messages, 'There is one SMS message in the incoming queue.');
 
-    $sms_message_loaded = reset($sms_messages);
+    $sms_message_loaded = \reset($sms_messages);
     static::assertEquals(Direction::INCOMING, $sms_message_loaded->getDirection());
   }
 
@@ -316,7 +310,7 @@ final class SmsFrameworkProviderTest extends SmsFrameworkKernelBase {
       ->loadByProperties(['direction' => Direction::OUTGOING]);
     static::assertCount(1, $sms_messages, 'There is one SMS message in the outgoing queue.');
 
-    $sms_message_loaded = reset($sms_messages);
+    $sms_message_loaded = \reset($sms_messages);
     static::assertEquals(Direction::OUTGOING, $sms_message_loaded->getDirection());
   }
 

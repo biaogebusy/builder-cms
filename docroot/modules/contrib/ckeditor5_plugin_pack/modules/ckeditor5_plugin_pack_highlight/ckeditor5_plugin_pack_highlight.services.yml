@@ -1,0 +1,4 @@
+services:
+  ckeditor5_plugin_pack_highlight.css_file_creator:
+    class: Drupal\ckeditor5_plugin_pack_highlight\Service\HighlightCssFileCreator
+    arguments: ['@file_system']

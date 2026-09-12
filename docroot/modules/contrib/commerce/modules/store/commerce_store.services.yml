@@ -30,3 +30,9 @@ services:
     class: Drupal\commerce_store\Cache\Context\StoreCacheContext
     tags:
       - { name: cache.context}
+
+  Drupal\commerce_store\Hook\CommerceStoreHooks:
+    class: Drupal\commerce_store\Hook\CommerceStoreHooks
+
+  Drupal\commerce_store\Hook\CommerceStoreThemeHooks:
+    class: Drupal\commerce_store\Hook\CommerceStoreThemeHooks

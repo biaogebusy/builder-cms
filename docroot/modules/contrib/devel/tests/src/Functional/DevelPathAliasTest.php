@@ -3,12 +3,12 @@
 namespace Drupal\Tests\devel\Functional;
 
 use Drupal\path_alias\Entity\PathAlias;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the path alias devel page.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelPathAliasTest extends DevelBrowserTestBase {
 
   /**

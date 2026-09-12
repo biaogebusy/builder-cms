@@ -1,0 +1,103 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+declare(strict_types = 1);
+
+use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
+use Drupal\ckeditor5_premium_features\Utility\LibraryDefinitionItem;
+use Drupal\ckeditor5_premium_features_ai\Element\TextFormat;
+
+/**
+ * Implements hook_library_info_build().
+ */
+function ckeditor5_premium_features_ai_library_info_build(): array {
+  /** @var \Drupal\ckeditor5_premium_features\Config\SettingsConfigHandlerInterface $config_handler */
+  $config_handler = \Drupal::service('ckeditor5_premium_features.config_handler.settings');
+
+  $libraries = [
+    'ai',
+    'comments',
+    'track-changes'
+  ];
+
+  $definitions = [];
+
+  foreach ($libraries as $library) {
+    $definition = new LibraryDefinitionItem($library, $config_handler->getDllLocation());
+    $definition->addRemoteJs($definition->id());
+
+    $definitions[$definition->id()] = $definition->getDefinition();
+  }
+
+  return $definitions;
+}
+
+/**
+ * Implements hook_ckeditor5_plugin_info_alter().
+ */
+function ckeditor5_premium_features_ai_ckeditor5_plugin_info_alter(array &$plugin_definitions): void {
+  $versionChecker = \Drupal::service('ckeditor5_premium_features.core_library_version_checker');
+  if (!isset($plugin_definitions['ckeditor5_premium_features_ai__ai'])) {
+    return;
+  }
+  $changed = FALSE;
+  $plugin = $plugin_definitions['ckeditor5_premium_features_ai__ai'];
+  $definition = $plugin->toArray();
+
+  if ($versionChecker->isLibraryVersionHigherOrEqual('47.5.0')) {
+    $definition['ckeditor5']['plugins'][] = 'ai.AITranslate';
+    $changed = TRUE;
+  }
+  if ($versionChecker->getCurrentVersion() === 'nightly') {
+    $definition['ckeditor5']['plugins'][] = 'trackChanges.TrackChanges';
+    $changed = TRUE;
+  }
+  if ($changed) {
+    $pluginDefinition = new CKEditor5PluginDefinition($definition);
+    $plugin_definitions['ckeditor5_premium_features_ai__ai'] = $pluginDefinition;
+  }
+}
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function ckeditor5_premium_features_ai_element_info_alter(array &$info): void {
+  if (isset($info['text_format'])) {
+    $info['text_format']['#process'][] = [TextFormat::class, 'process'];
+  }
+}
+
+/**
+ * Implements hook_editor_js_settings_alter().
+ */
+function ckeditor5_premium_features_ai_editor_js_settings_alter(array &$settings): void {
+  if (isset($settings['editor'])) {
+    foreach ($settings['editor']['formats'] as $id => $format) {
+      if (isset($format['editor']) && $format['editor'] === 'ckeditor5') {
+        $editorSettings = $settings["editor"]["formats"][$id]["editorSettings"];
+        if (isset($editorSettings["config"]["removePlugins"])
+        && in_array('AIQuickActions', $editorSettings["config"]["removePlugins"])) {
+          $key = array_search('aiQuickActions', $editorSettings["toolbar"]["items"]);
+          if ($key !== FALSE) {
+            unset($editorSettings["toolbar"]["items"][$key]);
+            $editorSettings["toolbar"]["items"] = array_values($editorSettings["toolbar"]["items"]);
+            $settings["editor"]["formats"][$id]["editorSettings"]["toolbar"]["items"] = $editorSettings["toolbar"]["items"];
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function ckeditor5_premium_features_ai_uninstall($is_syncing): void {
+  if (!$is_syncing) {
+    ckeditor5_premium_features_remove_ckeditor_plugins(['toggleAi', 'aiQuickActions'], ['ckeditor5_premium_features_ai__ai']);
+  }
+}

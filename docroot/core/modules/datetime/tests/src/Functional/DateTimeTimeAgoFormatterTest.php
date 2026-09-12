@@ -9,12 +9,14 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of DateTimeTimeAgoFormatter field formatter.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class DateTimeTimeAgoFormatterTest extends BrowserTestBase {
 
   /**
@@ -105,7 +107,7 @@ class DateTimeTimeAgoFormatterTest extends BrowserTestBase {
    * Tests the formatter settings.
    */
   public function testSettings(): void {
-    $this->drupalGet('entity_test/structure/entity_test/display');
+    $this->drupalGet('entity_test/structure/entity_test/display/default');
 
     $edit = [
       'fields[field_datetime][region]' => 'content',

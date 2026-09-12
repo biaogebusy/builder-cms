@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Kernel\Migrate\d6;
 
-use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade date formats to core.date_format.*.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateDateFormatTest extends MigrateDrupal6TestBase {
 
   /**

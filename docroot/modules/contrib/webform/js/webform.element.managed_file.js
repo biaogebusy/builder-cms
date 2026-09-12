@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   /**
    * Track file uploads and display confirm dialog when an file upload is in progress.
    *

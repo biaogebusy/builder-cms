@@ -47,15 +47,13 @@ interface TableMappingInterface {
   /**
    * Gets a list of names for entity fields stored in the specified table.
    *
-   * The return list is contains the entity field names, not database field
-   * (i.e. column) names. To get the mapping of specific entity field to
-   * database columns use ::getColumnNames().
-   *
    * @param string $table_name
    *   The name of the table to return the field names for.
    *
    * @return string[]
-   *   An array of field names for the given table.
+   *   A list of field names for the given table. Note these are entity field
+   *   names, not database field (i.e. column) names. To get the mapping of a
+   *   specific entity field to database columns, use ::getColumnNames().
    */
   public function getFieldNames($table_name);
 
@@ -90,6 +88,7 @@ interface TableMappingInterface {
    * Gets the list of columns that can not be used as field type columns.
    *
    * @return array
+   *   A list of column names prohibited from being used as a field type column.
    */
   public function getReservedColumns();
 
@@ -102,8 +101,8 @@ interface TableMappingInterface {
    *   The name of the property.
    *
    * @return string
-   *   A string containing a generated column name for a field data table that is
-   *   unique among all other fields.
+   *   A string containing a generated column name for a field data table that
+   *   is unique among all other fields.
    */
   public function getFieldColumnName(FieldStorageDefinitionInterface $storage_definition, $property_name);
 

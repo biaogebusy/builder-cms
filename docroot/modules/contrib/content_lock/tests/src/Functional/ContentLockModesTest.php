@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\content_lock\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Content lock modes tests.
  *
  * @group content_lock
  */
+#[RunTestsInSeparateProcesses]
 class ContentLockModesTest extends ContentLockTestBase {
 
   /**
@@ -28,7 +31,7 @@ class ContentLockModesTest extends ContentLockTestBase {
   /**
    * Test simultaneous edit on test entity.
    */
-  public function testEnabledForSelectedFormModes() {
+  public function testEnabledForSelectedFormModes(): void {
     $this->drupalLogin($this->admin);
     $edit = [
       'entity_test_mul_changed[bundles][*]' => 1,
@@ -44,12 +47,12 @@ class ContentLockModesTest extends ContentLockTestBase {
     // Create lock on default form.
     $this->drupalGet($this->entity->toUrl('edit-form'));
     $this->assertSession()->pageTextContains('This content is now locked against simultaneous editing');
-    $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), 'default', 'entity_test_mul_changed'));
+    $this->assertNotFalse($lockService->fetchLock($this->entity, 'default'));
 
     // Enter compact form mode without creating lock.
     $this->drupalGet($this->entity->toUrl('compact'));
     $this->assertSession()->pageTextNotContains('This content is now locked against simultaneous editing');
-    $this->assertFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), 'compact', 'entity_test_mul_changed'));
+    $this->assertFalse($lockService->fetchLock($this->entity, 'compact'));
 
     $this->drupalLogin($this->user2);
     $this->drupalGet($this->entity->toUrl('edit-form'));
@@ -61,7 +64,7 @@ class ContentLockModesTest extends ContentLockTestBase {
     // Enter compact form mode without creating lock.
     $this->drupalGet($this->entity->toUrl('compact'));
     $this->assertSession()->pageTextNotContains('This content is now locked against simultaneous editing');
-    $this->assertFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), 'compact', 'entity_test_mul_changed'));
+    $this->assertFalse($lockService->fetchLock($this->entity, 'compact'));
     // Fields are open.
     $input = $this->assertSession()->elementExists('css', 'input#edit-field-test-text-0-value');
     $this->assertFalse($input->hasAttribute('disabled'));
@@ -87,12 +90,12 @@ class ContentLockModesTest extends ContentLockTestBase {
     // Enter default form mode without creating lock.
     $this->drupalGet($this->entity->toUrl('edit-form'));
     $this->assertSession()->pageTextNotContains('This content is now locked against simultaneous editing');
-    $this->assertFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), 'default', 'entity_test_mul_changed'));
+    $this->assertFalse($lockService->fetchLock($this->entity, 'default'));
 
     // Create lock on compact form.
     $this->drupalGet($this->entity->toUrl('compact'));
     $this->assertSession()->pageTextContains('This content is now locked against simultaneous editing');
-    $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), 'compact', 'entity_test_mul_changed'));
+    $this->assertNotFalse($lockService->fetchLock($this->entity, 'compact'));
 
     $this->drupalLogin($this->user2);
     $this->drupalGet($this->entity->toUrl('edit-form'));
@@ -104,7 +107,7 @@ class ContentLockModesTest extends ContentLockTestBase {
     // Enter compact and it's blocked.
     $this->drupalGet($this->entity->toUrl('compact'));
     $this->assertSession()->pageTextContains('This content is being edited by the user');
-    $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), 'compact', 'entity_test_mul_changed'));
+    $this->assertNotFalse($lockService->fetchLock($this->entity, 'compact'));
     // Fields are disabled.
     $input = $this->assertSession()->elementExists('css', 'input#edit-field-test-text-0-value');
     $this->assertTrue($input->hasAttribute('disabled'));
@@ -127,11 +130,11 @@ class ContentLockModesTest extends ContentLockTestBase {
     // Enter default form mode and create lock.
     $this->drupalGet($this->entity->toUrl('edit-form'));
     $this->assertSession()->pageTextContains('This content is now locked against simultaneous editing');
-    $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), NULL, 'entity_test_mul_changed'));
+    $this->assertNotFalse($lockService->fetchLock($this->entity));
 
     $this->drupalGet($this->entity->toUrl('compact'));
     $this->assertSession()->pageTextContains('This content is now locked by you against simultaneous editing');
-    $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), NULL, 'entity_test_mul_changed'));
+    $this->assertNotFalse($lockService->fetchLock($this->entity));
 
     // Login as user 2. Shouldn't be able to edit forms.
     $this->drupalLogin($this->user2);

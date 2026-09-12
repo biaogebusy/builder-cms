@@ -10,11 +10,19 @@ use Drupal\slick_ui\Form\SlickSettingsForm;
 
 /**
  * Tests the Slick UI settings form.
- *
- * @coversDefaultClass \Drupal\slick_ui\Form\SlickSettingsForm
- *
- * @group slick
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class SlickSettingsFormTest extends KernelTestBase {
 
   use SlickKernelTrait;
@@ -36,6 +44,7 @@ class SlickSettingsFormTest extends KernelTestBase {
     'file',
     'image',
     'media',
+    'user',
     'blazy',
     'slick',
     'slick_ui',
@@ -43,13 +52,23 @@ class SlickSettingsFormTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @covers ::__construct
    */
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installConfig(static::$modules);
+    $this->installSchema('file', ['file_usage']);
+    $this->installEntitySchema('file');
+    $this->installEntitySchema('media');
+    $this->installEntitySchema('user');
+
+    $this->installConfig('image');
+    $this->installConfig('media');
+    $this->installConfig('system');
+
+    $this->installConfig([
+      'blazy',
+      'slick',
+    ]);
 
     $this->slickManager = $this->container->get('slick.manager');
 
@@ -58,11 +77,6 @@ class SlickSettingsFormTest extends KernelTestBase {
 
   /**
    * Tests for \Drupal\slick_ui\Form\SlickSettingsForm.
-   *
-   * @covers ::getFormId
-   * @covers ::getEditableConfigNames
-   * @covers ::buildForm
-   * @covers ::submitForm
    */
   public function testSlickSettingsForm() {
     // Emulate a form state of a submitted form.

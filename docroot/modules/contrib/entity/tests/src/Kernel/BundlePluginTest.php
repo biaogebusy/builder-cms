@@ -26,11 +26,15 @@ class BundlePluginTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    // Install the modules properly. Putting them into static::$modules doesn't trigger the install
-    // hooks, like hook_modules_installed, so entity_modules_installed is not triggered().
+    // Install the modules properly. Putting them into static::$modules doesn't
+    // trigger the install hooks, like hook_modules_installed, so
+    // entity_modules_installed is not triggered().
     /** @var \Drupal\Core\Extension\ModuleInstallerInterface $module_installer */
     $module_installer = $this->container->get('module_installer');
-    $module_installer->install(['entity_module_bundle_plugin_test', 'entity_module_bundle_plugin_examples_test']);
+    $module_installer->install([
+      'entity_module_bundle_plugin_test',
+      'entity_module_bundle_plugin_examples_test',
+    ]);
   }
 
   /**
@@ -126,15 +130,16 @@ class BundlePluginTest extends KernelTestBase {
 
     $second_entity->delete();
 
-    // The first entity is defined by entity_module_bundle_plugin_test, so it should be possible
-    // to uninstall the module providing the second bundle plugin.
+    // The first entity is defined by entity_module_bundle_plugin_test, so it
+    // should be possible to uninstall the module providing the second bundle
+    // plugin.
     $violations = $module_installer->validateUninstall(['entity_module_bundle_plugin_examples_test']);
     $this->assertEmpty($violations);
 
     $module_installer->uninstall(['entity_module_bundle_plugin_examples_test']);
 
-    // The first entity is provided by entity_module_bundle_plugin_test which we cannot uninstall,
-    // until all the entities are deleted.
+    // The first entity is provided by entity_module_bundle_plugin_test which
+    // we cannot uninstall, until all the entities are deleted.
     $violations = $module_installer->validateUninstall(['entity_module_bundle_plugin_test']);
     $this->assertNotEmpty($violations);
 

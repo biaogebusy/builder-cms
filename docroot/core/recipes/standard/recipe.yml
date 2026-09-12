@@ -3,15 +3,8 @@ description: 'Provides a standard site with commonly used features pre-configure
 type: 'Site'
 recipes:
   - basic_block_type
-  - basic_shortcuts
-  - article_comment
-  - article_tags
-  - feedback_contact_form
-  - article_content_type
-  - page_content_type
   - basic_html_format_editor
   - full_html_format_editor
-  - content_search
   - core_recommended_performance
   - core_recommended_maintenance
   - core_recommended_admin_theme
@@ -24,17 +17,15 @@ recipes:
 install:
   - image
   - help
-  - history
   - config
   - contextual
   - menu_link_content
   - datetime
   - menu_ui
   - options
-  - toolbar
+  - navigation
   - field_ui
   - views_ui
-  - shortcut
 config:
   # This recipe is intended to set up a full site from scratch, fulfilling certain
   # expectations. It's not really designed to be a building block. Therefore, treat
@@ -43,12 +34,14 @@ config:
   import:
     claro:
       - block.block.claro_help
-    help:
-      - search.page.help_search
-      - block.block.claro_help_search
     image:
       - image.style.large
       - image.style.thumbnail
+    navigation:
+      - navigation.block_layout
+      - navigation.settings
+      - system.menu.content
+      - system.menu.navigation-user-links
     node:
       - views.view.archive
       - views.view.content
@@ -57,12 +50,8 @@ config:
       - views.view.glossary
     olivero:
       - block.block.olivero_help
-      - block.block.olivero_search_form_narrow
-      - block.block.olivero_search_form_wide
-      - block.block.olivero_syndicate
     user:
       - core.entity_view_mode.user.compact
-      - search.page.user_search
       - views.view.user_admin_people
       - views.view.who_s_new
       - views.view.who_s_online
@@ -84,11 +73,10 @@ config:
         - 'access content overview'
         - 'access contextual links'
         - 'access files overview'
-        - 'access toolbar'
+        - 'access navigation'
         - 'administer url aliases'
         - 'create terms in tags'
         - 'create url aliases'
-        - 'edit own comments'
         - 'edit terms in tags'
         - 'delete own files'
         - 'revert all revisions'
@@ -102,5 +90,5 @@ config:
     user.settings:
       simpleConfigUpdate:
         verify_mail: true
-        register: visitors_admin_approval
+        register: admin_only
         cancel_method: user_cancel_block

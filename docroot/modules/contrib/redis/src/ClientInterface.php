@@ -37,6 +37,7 @@ namespace Drupal\redis;
  * @method watch(string $key)
  * @method unwatch(string $key)
  * @method discard(string $key)
+ * @method rawCommand(... $args)
  */
 interface ClientInterface {
 

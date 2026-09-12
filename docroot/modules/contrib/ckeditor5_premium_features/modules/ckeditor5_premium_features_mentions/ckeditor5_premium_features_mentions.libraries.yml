@@ -1,0 +1,10 @@
+mention-integration:
+  version: 20250314
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/mentionsIntegration.js: { minified: true }
+  dependencies:
+    - ckeditor5_premium_features_mentions/mention

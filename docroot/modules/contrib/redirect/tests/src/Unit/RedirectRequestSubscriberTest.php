@@ -38,10 +38,9 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
 
     $url = $this->createMock('Drupal\Core\Url');
 
-    $url->expects($this->once())
-      ->method('setAbsolute')
-      ->with(TRUE)
-      ->willReturn($url);
+    // setAbsolute() must not be called - redirects use relative URLs.
+    $url->expects($this->never())
+      ->method('setAbsolute');
 
     $url->expects($this->once())
       ->method('getOption')
@@ -74,10 +73,9 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
 
     $url = $this->createMock('Drupal\Core\Url');
 
-    $url->expects($this->once())
-      ->method('setAbsolute')
-      ->with(TRUE)
-      ->willReturn($url);
+    // setAbsolute() must not be called - redirects use relative URLs.
+    $url->expects($this->never())
+      ->method('setAbsolute');
 
     // No query retaining, so getOption should not be called.
     $url->expects($this->never())

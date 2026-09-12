@@ -32,7 +32,7 @@ class DiffBuilderManager extends DefaultPluginManager {
 
   protected ImmutableConfig $config;
   protected ImmutableConfig $pluginsConfig;
-  protected array $pluginDefinitions;
+  protected array $pluginDefinitions = [];
 
   /**
    * Constructs a DiffBuilderManager object.
@@ -212,7 +212,7 @@ class DiffBuilderManager extends DefaultPluginManager {
    *   The initialized plugins array sort by field type.
    */
   public function getPluginDefinitions(): array {
-    if (!isset($this->pluginDefinitions)) {
+    if ($this->pluginDefinitions === []) {
       // Get the definition of all the FieldDiffBuilder plugins.
       foreach ($this->getDefinitions() as $plugin_definition) {
         if (isset($plugin_definition['field_types'])) {
@@ -235,7 +235,8 @@ class DiffBuilderManager extends DefaultPluginManager {
    * Clear the pluginDefinitions local property array.
    */
   public function clearCachedDefinitions(): void {
-    unset($this->pluginDefinitions);
+    parent::clearCachedDefinitions();
+    $this->pluginDefinitions = [];
   }
 
 }

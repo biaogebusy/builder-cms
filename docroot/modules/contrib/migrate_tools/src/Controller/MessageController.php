@@ -79,7 +79,7 @@ class MessageController extends ControllerBase {
     foreach ($source_id_field_names as $source_id_field_name) {
       $header[] = [
         'data' => $source_id_field_name,
-        'field' => 'sourceId' . $column_number++,
+        'field' => 'sourceid' . $column_number++,
         'class' => [RESPONSIVE_PRIORITY_MEDIUM],
       ];
     }
@@ -94,7 +94,7 @@ class MessageController extends ControllerBase {
     ];
     $header[] = [
       'data' => $this->t('Destination ID'),
-      'field' => 'destId',
+      'field' => 'destid',
     ];
     $header[] = [
       'data' => $this->t('Status'),
@@ -124,21 +124,21 @@ class MessageController extends ControllerBase {
       $column_number = 1;
       $data = [];
       foreach ($source_id_field_names as $source_id_field_name) {
-        $column_name = 'sourceId' . $column_number++;
+        $column_name = 'sourceid' . $column_number++;
         $data[$column_name] = $message_row->$column_name;
       }
       $data['level'] = $level_mapping[$message_row->level] ?: $message_row->level;
       $data['message'] = $message_row->message;
       $column_number = 1;
       foreach ($migration_plugin->getDestinationPlugin()->getIds() as $dest_id_field_name => $dest_id_schema) {
-        $column_name = 'destId' . $column_number++;
-        $data['destId']['data'][] = $message_row->$column_name;
-        $data['destId']['#destination_fields'][$dest_id_field_name] =
-        $data['destId']['#destination_fields'][$column_name] = $message_row->$column_name;
+        $column_name = 'destid' . $column_number++;
+        $data['destid']['data'][] = $message_row->$column_name;
+        $data['destid']['#destination_fields'][$dest_id_field_name] =
+        $data['destid']['#destination_fields'][$column_name] = $message_row->$column_name;
       }
-      $destid = array_filter($data['destId']['data']);
-      $data['destId']['data'] = [
-        '#markup' => $destid ? implode(MigrateTools::DEFAULT_ID_LIST_DELIMITER, $data['destId']['data']) : '',
+      $destid = array_filter($data['destid']['data']);
+      $data['destid']['data'] = [
+        '#markup' => $destid ? implode(MigrateTools::DEFAULT_ID_LIST_DELIMITER, $data['destid']['data']) : '',
       ];
 
       $data['status'] = $status_mapping[$message_row->source_row_status];

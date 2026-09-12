@@ -3,15 +3,13 @@
 namespace Drupal\views_add_button;
 
 use Drupal\Core\Entity\ContentEntityType;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Url;
 
 /**
- * Class ViewsAddButtonUtilities
+ * Class ViewsAddButtonUtilities.
  *
- * NOTE: this file is now deprecated in favor of \Drupal\views_add_button\ViewsAddButtonService,
+ * NOTE: this file is now deprecated in favor of
+ * \Drupal\views_add_button\ViewsAddButtonService,
  * and will be removed soon.
  *
  * @package Drupal\views_add_button

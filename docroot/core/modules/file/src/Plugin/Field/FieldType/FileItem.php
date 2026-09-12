@@ -26,8 +26,9 @@ use Drupal\file\Validation\FileValidatorSettingsTrait;
   id: "file",
   label: new TranslatableMarkup("File"),
   description: [
-    new TranslatableMarkup("For uploading files"),
-    new TranslatableMarkup("Can be configured with options such as allowed file extensions and maximum upload size"),
+    new TranslatableMarkup("Downloadable files"),
+    new TranslatableMarkup("Configure allowed file extensions, maximum upload size, and storage location"),
+    new TranslatableMarkup("Examples: document (pdf, txt), audio (mp3), video (avi, mov), downloadable image (jpeg, png, webp, gif), etc."),
   ],
   category: "file_upload",
   default_widget: "file_generic",
@@ -233,8 +234,8 @@ class FileItem extends EntityReferenceItem {
    * Form API callback.
    *
    * Removes slashes from the beginning and end of the destination value and
-   * ensures that the file directory path is not included at the beginning of the
-   * value.
+   * ensures that the file directory path is not included at the beginning of
+   * the value.
    *
    * This function is assigned as an #element_validate callback in
    * fieldSettingsForm().
@@ -253,7 +254,8 @@ class FileItem extends EntityReferenceItem {
    *
    * This doubles as a convenience clean-up function and a validation routine.
    * Commas are allowed by the end-user, but ultimately the value will be stored
-   * as a space-separated list for compatibility with file_validate_extensions().
+   * as a space-separated list for compatibility with the 'FileExtension'
+   * constraint.
    */
   public static function validateExtensions($element, FormStateInterface $form_state) {
     if (!empty($element['#value'])) {
@@ -272,7 +274,10 @@ class FileItem extends EntityReferenceItem {
       if (!in_array('txt', $extension_array, TRUE) && !\Drupal::config('system.file')->get('allow_insecure_uploads')) {
         foreach ($extension_array as $extension) {
           if (preg_match(FileSystemInterface::INSECURE_EXTENSION_REGEX, 'test.' . $extension)) {
-            $form_state->setError($element, new TranslatableMarkup('Add %txt_extension to the list of allowed extensions to securely upload files with a %extension extension. The %txt_extension extension will then be added automatically.', ['%extension' => $extension, '%txt_extension' => 'txt']));
+            $form_state->setError($element, new TranslatableMarkup('Add %txt_extension to the list of allowed extensions to securely upload files with a %extension extension. The %txt_extension extension will then be added automatically.', [
+              '%extension' => $extension,
+              '%txt_extension' => 'txt',
+            ]));
 
             break;
           }
@@ -362,8 +367,15 @@ class FileItem extends EntityReferenceItem {
     // Ensure directory ends with a slash.
     $dirname .= str_ends_with($dirname, '/') ? '' : '/';
 
+    // Determine which extension to use when generating.
+    $extension = 'txt';
+    if (!empty($settings['file_extensions'])) {
+      $extensions = explode(' ', $settings['file_extensions']);
+      $extension = array_rand(array_flip($extensions), 1);
+    }
+
     // Generate a file entity.
-    $destination = $dirname . $random->name(10) . '.txt';
+    $destination = $dirname . $random->name(10, TRUE) . '.' . $extension;
     $data = $random->paragraphs(3);
     /** @var \Drupal\file\FileRepositoryInterface $file_repository */
     $file_repository = \Drupal::service('file.repository');

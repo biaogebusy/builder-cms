@@ -16,7 +16,7 @@
       once(
         'commerce-payment-redirect',
         '.payment-redirect-form',
-        context,
+        context
       ).forEach((form) => {
         form.submit();
       });

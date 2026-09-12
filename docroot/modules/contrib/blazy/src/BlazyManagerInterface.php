@@ -19,7 +19,7 @@ interface BlazyManagerInterface extends BlazyManagerBaseInterface {
    * @return array
    *   The alterable and renderable array of enforced content, or theme_blazy().
    *
-   * @todo remove/ unify ImageItem, or fake one, as plain array at 3.x.
+   * @todo deprecate and remove/ unify ImageItem, or fake one, as plain array at 3.x.
    */
   public function getBlazy(array $build): array;
 

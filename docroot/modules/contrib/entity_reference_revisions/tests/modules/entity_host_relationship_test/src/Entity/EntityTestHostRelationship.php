@@ -2,10 +2,11 @@
 
 namespace Drupal\entity_host_relationship_test\Entity;
 
+use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_test\Entity\EntityTestMulRev;
 
 /**
@@ -31,6 +32,24 @@ use Drupal\entity_test\Entity\EntityTestMulRev;
  *   }
  * )
  */
+#[ContentEntityType(
+  id: 'entity_host_relationship_test',
+  label: new TranslatableMarkup('Test entity host'),
+  entity_keys: [
+    'id' => 'id',
+    'uuid' => 'uuid',
+    'revision' => 'revision_id',
+    'bundle' => 'type',
+    'label' => 'name',
+    'langcode' => 'langcode',
+  ],
+  admin_permission: 'administer entity_test host',
+  base_table: 'entity_test_host',
+  data_table: 'entity_test_host_field_data',
+  revision_table: 'entity_test_host_revision',
+  revision_data_table: 'entity_test_host_field_revision',
+  translatable: TRUE
+)]
 class EntityTestHostRelationship extends EntityTestMulRev implements RevisionableInterface {
 
   /**

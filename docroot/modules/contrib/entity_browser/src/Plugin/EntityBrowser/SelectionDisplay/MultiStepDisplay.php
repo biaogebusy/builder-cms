@@ -7,20 +7,21 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserSelectionDisplay;
 use Drupal\entity_browser\SelectionDisplayBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Show current selection and delivers selected entities.
- *
- * @EntityBrowserSelectionDisplay(
- *   id = "multi_step_display",
- *   label = @Translation("Multi step selection display"),
- *   description = @Translation("Shows the current selection display, allowing to mix elements selected through different widgets in several steps."),
- *   acceptPreselection = TRUE,
- *   js_commands = TRUE
- * )
  */
+#[EntityBrowserSelectionDisplay(
+  id: 'multi_step_display',
+  label: new TranslatableMarkup('Multi step selection display'),
+  description: new TranslatableMarkup('Shows the current selection display, allowing to mix elements selected through different widgets in several steps.'),
+  acceptPreselection: TRUE,
+  js_commands: TRUE,
+)]
 class MultiStepDisplay extends SelectionDisplayBase {
 
   /**
@@ -64,6 +65,7 @@ class MultiStepDisplay extends SelectionDisplayBase {
 
     $selected_entities = $form_state->get(['entity_browser', 'selected_entities']);
 
+    $original_form['#attributes']['class'][] = 'entity-browser-form--multi-step-display';
     $form = [];
     $form['#attached']['library'][] = 'entity_browser/multi_step_display';
     $form['selected'] = [

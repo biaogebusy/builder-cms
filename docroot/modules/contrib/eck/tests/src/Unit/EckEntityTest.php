@@ -21,7 +21,7 @@ class EckEntityTest extends UnitTestBase {
    * @return array
    *   The test data.
    */
-  public function baseFieldDefinitionTestDataProvider() {
+  public static function baseFieldDefinitionTestDataProvider() {
     return [
       'default' => [
         'config' => [],
@@ -80,14 +80,14 @@ class EckEntityTest extends UnitTestBase {
    *
    * @param array $config
    *   The configuration.
-   * @param array $expectedBaseFieldDefinitionIds
+   * @param array $expectedFieldIds
    *   The expected base field definition ids.
    *
    * @dataProvider baseFieldDefinitionTestDataProvider
    *
    * @throws \ReflectionException
    */
-  public function testBaseFieldDefinitions(array $config, array $expectedBaseFieldDefinitionIds) {
+  public function testBaseFieldDefinitions(array $config, array $expectedFieldIds) {
     $configs = [
       'eck.eck_entity_type.eck_entity_type' => $config,
     ];
@@ -99,7 +99,7 @@ class EckEntityTest extends UnitTestBase {
 
     $definition = $annotationReader->getClassAnnotation(new \ReflectionClass(EckEntityType::class), ConfigEntityType::class);
 
-    $this->assertArrayKeysEqual($expectedBaseFieldDefinitionIds, EckEntity::baseFieldDefinitions($definition->get()));
+    $this->assertArrayKeysEqual($expectedFieldIds, EckEntity::baseFieldDefinitions($definition->get()));
   }
 
 }

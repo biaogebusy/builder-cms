@@ -3,6 +3,8 @@
 namespace Drupal\entity_reference_revisions\Plugin\views\row;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsRow;
 use Drupal\views\Plugin\views\row\Fields;
 
 /**
@@ -19,6 +21,14 @@ use Drupal\views\Plugin\views\row\Fields;
  *   display_types = {"entity_reference"}
  * )
  */
+#[ViewsRow(
+  id: 'entity_reference_revisions',
+  title: new TranslatableMarkup('Entity Reference inline fields'),
+  help: new TranslatableMarkup('Displays the fields with an optional template.'),
+  display_types: ['entity_reference'],
+  theme: 'views_view_fields',
+  register_theme: FALSE,
+)]
 class EntityReferenceRevisions extends Fields {
 
   /**

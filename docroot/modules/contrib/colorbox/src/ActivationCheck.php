@@ -36,7 +36,7 @@ class ActivationCheck implements ActivationCheckInterface {
    * {@inheritdoc}
    */
   public function isActive() {
-    return $this->request->get('colorbox') !== 'no';
+    return $this->request->query->get('colorbox') !== 'no';
   }
 
 }

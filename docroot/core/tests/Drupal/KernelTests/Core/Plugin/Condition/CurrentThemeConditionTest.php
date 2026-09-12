@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Plugin\Condition;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the CurrentThemeCondition plugin.
- *
- * @group Condition
  */
+#[Group('Condition')]
+#[RunTestsInSeparateProcesses]
 class CurrentThemeConditionTest extends KernelTestBase {
 
   /**
@@ -33,8 +34,8 @@ class CurrentThemeConditionTest extends KernelTestBase {
     $condition_negated = $manager->createInstance('current_theme');
     $condition_negated->setConfiguration(['theme' => 'test_theme', 'negate' => TRUE]);
 
-    $this->assertEquals(new FormattableMarkup('The current theme is @theme', ['@theme' => 'test_theme']), $condition->summary());
-    $this->assertEquals(new FormattableMarkup('The current theme is not @theme', ['@theme' => 'test_theme']), $condition_negated->summary());
+    $this->assertEquals('The current theme is test_theme', $condition->summary());
+    $this->assertEquals('The current theme is not test_theme', $condition_negated->summary());
 
     // The expected theme has not been set up yet.
     $this->assertFalse($condition->execute());

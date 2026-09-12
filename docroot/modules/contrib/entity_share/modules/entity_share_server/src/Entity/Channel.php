@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_server\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Url;
 use Drupal\entity_share\EntityShareInterface;
 
 /**
@@ -202,6 +204,52 @@ class Channel extends ConfigEntityBase implements ChannelInterface {
     }
 
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getJsonApiUrl(): Url {
+    $channel_entity_type = $this->get('channel_entity_type');
+    $channel_bundle = $this->get('channel_bundle');
+    $channel_langcode = $this->get('channel_langcode');
+    $route_name = \sprintf('jsonapi.%s--%s.collection', $channel_entity_type, $channel_bundle);
+
+    $languages = \Drupal::service('language_manager')->getLanguages(LanguageInterface::STATE_ALL);
+
+    $channel_manipulator = \Drupal::service('entity_share_server.channel_manipulator');
+
+    $url = Url::fromRoute($route_name)
+        ->setOption('language', $languages[$channel_langcode])
+        ->setOption('absolute', TRUE)
+        ->setOption('query', $channel_manipulator->getQuery($this));
+
+    return $url;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getJsonApiChangedTimestampsUrl(): Url {
+    $channel_entity_type = $this->get('channel_entity_type');
+    $channel_bundle = $this->get('channel_bundle');
+
+    $url = $this->getJsonApiUrl();
+
+    $url_changed = clone $url;
+
+    $query = $url_changed->getOption('query');
+    $query = ($query !== NULL) ? $query : [];
+    $url_changed->setOption(
+      'query',
+      $query + [
+        'fields' => [
+          $channel_entity_type . '--' . $channel_bundle => 'changed',
+        ],
+      ]
+    );
+
+    return $url_changed;
   }
 
 }

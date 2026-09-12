@@ -6,18 +6,15 @@ namespace Drupal\KernelTests\Core\KeyValueStore;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the key-value database storage.
- *
- * @group KeyValueStore
  */
+#[Group('KeyValueStore')]
+#[RunTestsInSeparateProcesses]
 class DatabaseStorageExpirableTest extends StorageTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * {@inheritdoc}
@@ -30,7 +27,7 @@ class DatabaseStorageExpirableTest extends StorageTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
 
     $parameter[KeyValueFactory::DEFAULT_SETTING] = 'keyvalue.expirable.database';
@@ -82,10 +79,13 @@ class DatabaseStorageExpirableTest extends StorageTestBase {
 
     // Not using assertSame(), since the order is not defined for getAll().
     $this->assertEquals($values, $stores[0]->getAll());
+    // Not using assertEquals(), since the keys are not sorted.
+    $this->assertEqualsCanonicalizing(array_keys($values), $stores[0]->getAllKeys());
 
     // Verify that all items in the other collection are different.
     $result = $stores[1]->getAll();
     $this->assertEquals(['foo' => $this->objects[5]], $result);
+    $this->assertEquals(['foo'], $stores[1]->getAllKeys());
 
     // Verify that multiple items can be deleted.
     $stores[0]->deleteMultiple(array_keys($values));
@@ -145,11 +145,12 @@ class DatabaseStorageExpirableTest extends StorageTestBase {
       -3 * $day
     );
     $stores[0]->setWithExpireIfNotExists('yesterday', "you'd forgiven me", -1 * $day);
-    $stores[0]->setWithExpire('still', "'til we say we're sorry", 2 * $day);
+    $stores[0]->setWithExpire('still', "'til we say we care", 2 * $day);
 
     // Ensure only non-expired items are retrieved.
     $all = $stores[0]->getAll();
     $this->assertCount(2, $all);
+    $this->assertCount(2, $stores[0]->getAllKeys());
     foreach (['troubles', 'still'] as $key) {
       $this->assertArrayHasKey($key, $all);
     }

@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\Tests\system\Kernel\System;
+
+use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
+/**
+ * Confirm that the default mobile meta tags appear as expected.
+ */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
+class DefaultMobileMetaTagsTest extends KernelTestBase {
+
+  /**
+   * Array of default meta tags to insert into the page.
+   *
+   * @var array
+   */
+  protected $defaultMetaTags;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['system'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+    $this->defaultMetaTags = [
+      'viewport' => '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+    ];
+  }
+
+  /**
+   * Verifies that the default mobile meta tags are added.
+   */
+  public function testDefaultMetaTagsExist(): void {
+    $this->drupalGet('');
+    foreach ($this->defaultMetaTags as $metatag) {
+      $this->assertSession()->responseContains($metatag);
+    }
+  }
+
+  /**
+   * Verifies that the default mobile meta tags can be removed.
+   */
+  public function testRemovingDefaultMetaTags(): void {
+    \Drupal::service('module_installer')->install(['system_module_test']);
+    $this->drupalGet('');
+    foreach ($this->defaultMetaTags as $metatag) {
+      $this->assertSession()->responseNotContains($metatag);
+    }
+  }
+
+}

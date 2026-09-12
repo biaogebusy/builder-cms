@@ -1,0 +1,2 @@
+permission_callbacks:
+  - \Drupal\ckeditor5_premium_features_realtime_collaboration\RealtimeCollaborationPermissions::permissions

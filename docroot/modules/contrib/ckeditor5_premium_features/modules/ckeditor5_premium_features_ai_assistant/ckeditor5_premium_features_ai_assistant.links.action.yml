@@ -1,0 +1,5 @@
+entity.ckeditor5_ai_command_group.add_form:
+  route_name: 'entity.ckeditor5_ai_command_group.add_form'
+  title: 'Add CKEditor 5 AI Commands Group'
+  appears_on:
+    - entity.ckeditor5_ai_command_group.collection

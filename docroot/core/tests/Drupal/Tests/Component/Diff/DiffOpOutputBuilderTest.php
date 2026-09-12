@@ -6,17 +6,20 @@ namespace Drupal\Tests\Component\Diff;
 
 use Drupal\Component\Diff\DiffOpOutputBuilder;
 use Drupal\Component\Diff\Engine\DiffOpAdd;
-use Drupal\Component\Diff\Engine\DiffOpCopy;
 use Drupal\Component\Diff\Engine\DiffOpChange;
+use Drupal\Component\Diff\Engine\DiffOpCopy;
 use Drupal\Component\Diff\Engine\DiffOpDelete;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use SebastianBergmann\Diff\Differ;
 
 /**
- * @coversDefaultClass \Drupal\Component\Diff\DiffOpOutputBuilder
- *
- * @group Diff
+ * Tests Drupal\Component\Diff\DiffOpOutputBuilder.
  */
+#[CoversClass(DiffOpOutputBuilder::class)]
+#[Group('Diff')]
 class DiffOpOutputBuilderTest extends TestCase {
 
   /**
@@ -85,15 +88,32 @@ class DiffOpOutputBuilderTest extends TestCase {
         ['a', 'bb', 'd', 'ee'],
         ['a', 'b', 'c', 'd', 'e'],
       ],
+      // Differ prepends a line end warning when source and target use
+      // different end of line markings. It is skipped, the lines are a change.
+      'line end warning' => [
+        [new DiffOpChange(["foo\r\n"], ["foo\n"])],
+        ["foo\r\n"],
+        ["foo\n"],
+      ],
+      'line end warning, multiple lines' => [
+        [new DiffOpChange(["line1\r\n", "line2\r\n"], ["line1\n", "line2\n"])],
+        ["line1\r\n", "line2\r\n"],
+        ["line1\n", "line2\n"],
+      ],
+      // No warning is raised when both sides use the same end of line
+      // markings.
+      'consistent line ends' => [
+        [new DiffOpCopy(["foo\r\n"])],
+        ["foo\r\n"],
+        ["foo\r\n"],
+      ],
     ];
   }
 
   /**
    * Tests whether op classes returned match expectations.
-   *
-   * @covers ::toOpsArray
-   * @dataProvider provideTestDiff
    */
+  #[DataProvider('provideTestDiff')]
   public function testToOpsArray(array $expected, array $from, array $to): void {
     $diffOpBuilder = new DiffOpOutputBuilder();
     $differ = new Differ($diffOpBuilder);
@@ -102,9 +122,9 @@ class DiffOpOutputBuilderTest extends TestCase {
   }
 
   /**
-   * @covers ::getDiff
-   * @dataProvider provideTestDiff
+   * Tests get diff.
    */
+  #[DataProvider('provideTestDiff')]
   public function testGetDiff(array $expected, array $from, array $to): void {
     $differ = new Differ(new DiffOpOutputBuilder());
     $diff = $differ->diff($from, $to);
@@ -114,7 +134,7 @@ class DiffOpOutputBuilderTest extends TestCase {
   /**
    * Tests that two files can be successfully diffed.
    *
-   * @covers ::toOpsArray
+   * @legacy-covers ::toOpsArray
    */
   public function testDiffInfiniteLoop(): void {
     $from = explode("\n", file_get_contents(__DIR__ . '/Engine/fixtures/file1.txt'));
@@ -126,7 +146,10 @@ class DiffOpOutputBuilderTest extends TestCase {
     $this->assertCount(4, $diffOps);
     $this->assertEquals($diffOps[0], new DiffOpAdd(['    - image.style.max_325x325']));
     $this->assertEquals($diffOps[1], new DiffOpCopy(['    - image.style.max_650x650']));
-    $this->assertEquals($diffOps[2], new DiffOpChange(['    - image.style.max_325x325'], ['_core:', '  default_config_hash: random_hash_string_here']));
+    $this->assertEquals($diffOps[2], new DiffOpChange(
+      ['    - image.style.max_325x325'],
+      ['_core:', '  default_config_hash: random_hash_string_here'],
+    ));
     $this->assertEquals($diffOps[3], new DiffOpCopy(['fallback_image_style: max_325x325', '']));
   }
 

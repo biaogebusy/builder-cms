@@ -36,6 +36,7 @@ interface ThemeManagerInterface {
    *   The route match.
    *
    * @return \Drupal\Core\Theme\ActiveTheme
+   *   The active theme object.
    */
   public function getActiveTheme(?RouteMatchInterface $route_match = NULL);
 
@@ -43,6 +44,7 @@ interface ThemeManagerInterface {
    * Determines whether there is an active theme.
    *
    * @return bool
+   *   TRUE if there is an active theme, FALSE otherwise.
    */
   public function hasActiveTheme();
 
@@ -68,6 +70,42 @@ interface ThemeManagerInterface {
    * @return $this
    */
   public function setActiveTheme(ActiveTheme $active_theme);
+
+  /**
+   * Invokes a hook in a particular theme.
+   *
+   * @param string $theme_key
+   *   The name of the theme (without the .theme extension).
+   * @param string $hook
+   *   The name of the hook to invoke.
+   * @param array $args
+   *   Arguments to pass to the hook implementation.
+   *
+   * @return mixed
+   *   The return value of the hook implementation.
+   */
+  public function invoke(string $theme_key, string $hook, array $args = []);
+
+  /**
+   * Executes a callback for each implementation of a hook for a theme.
+   *
+   * It will detect the currently active theme and invoke the given hook for
+   * the active theme and all of its base themes in reverse order.
+   *
+   * The callback is passed two arguments, a closure which executes a hook
+   * implementation and the machine name of the current theme.
+   * Note that this is executed for just a single theme and its base themes.
+   *
+   * @param string $hook
+   *   The name of the hook to invoke.
+   * @param callable(callable, string): mixed $callback
+   *   A callable that invokes a hook implementation. Such that
+   *   $callback is callable(callable, string): mixed.
+   *   Arguments:
+   *    - Closure to a hook implementation.
+   *    - Implementation theme machine name.
+   */
+  public function invokeAllWith(string $hook, callable $callback): void;
 
   /**
    * Passes alterable variables to specific $theme_TYPE_alter() implementations.
@@ -137,7 +175,7 @@ interface ThemeManagerInterface {
    * @param string|array $type
    *   A string describing the type of the alterable $data.
    * @param mixed $data
-   *   The variable that will be passed to $theme_TYPE_alter() implementations
+   *   The variable that will be passed to $theme_TYPE_alter() implementations.
    * @param mixed $context1
    *   (optional) An additional variable that is passed by reference.
    * @param mixed $context2
@@ -146,5 +184,16 @@ interface ThemeManagerInterface {
    * @see ::alter
    */
   public function alterForTheme(ActiveTheme $theme, $type, &$data, &$context1 = NULL, &$context2 = NULL);
+
+  /**
+   * Returns the theme engine if it exists.
+   *
+   * @param string $name
+   *   The name of the theme engine.
+   *
+   * @return \Drupal\Core\Theme\ThemeEngineInterface|null
+   *   The theme engine or NULL.
+   */
+  public function getThemeEngine(string $name): ?ThemeEngineInterface;
 
 }

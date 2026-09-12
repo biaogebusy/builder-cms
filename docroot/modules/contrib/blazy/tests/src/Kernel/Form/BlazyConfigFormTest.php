@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Kernel\Form;
 
 use Drupal\Core\Form\FormInterface;
@@ -10,11 +12,19 @@ use Drupal\blazy_ui\Form\BlazyConfigForm;
 
 /**
  * Tests the Blazy UI settings form.
- *
- * @coversDefaultClass \Drupal\blazy_ui\Form\BlazyConfigForm
- *
- * @group blazy
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class BlazyConfigFormTest extends KernelTestBase {
 
   /**
@@ -37,9 +47,9 @@ class BlazyConfigFormTest extends KernelTestBase {
   protected $blazySettingsForm;
 
   /**
-   * Modules to enable.
+   * {@inheritdoc}
    *
-   * @var array
+   * @var array<string>
    */
   protected static $modules = [
     'system',
@@ -52,13 +62,13 @@ class BlazyConfigFormTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @covers ::__construct
    */
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installConfig(static::$modules);
+    $this->installConfig([
+      'blazy',
+    ]);
 
     $this->blazyManager = $this->container->get('blazy.manager');
 
@@ -67,11 +77,6 @@ class BlazyConfigFormTest extends KernelTestBase {
 
   /**
    * Tests for \Drupal\blazy_ui\Form\BlazyConfigForm.
-   *
-   * @covers ::getFormId
-   * @covers ::getEditableConfigNames
-   * @covers ::buildForm
-   * @covers ::submitForm
    */
   public function testBlazyConfigForm() {
     $nojs = BlazyDefault::nojs();

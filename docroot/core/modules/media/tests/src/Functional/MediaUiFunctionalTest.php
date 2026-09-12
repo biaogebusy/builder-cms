@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensures that media UI works correctly.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaUiFunctionalTest extends MediaFunctionalTestBase {
 
   use FieldUiTestTrait;
@@ -193,7 +195,7 @@ class MediaUiFunctionalTest extends MediaFunctionalTestBase {
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
     $this->createMediaType('image', ['id' => 'image', 'new_revision' => TRUE]);
     $this->fieldUIAddNewField('/admin/structure/types/manage/page', 'foo_field', 'Foo field', 'field_ui:entity_reference:media', [], ['settings[handler_settings][target_bundles][image]' => TRUE]);
-    $this->drupalGet('/admin/structure/types/manage/page/display');
+    $this->drupalGet('/admin/structure/types/manage/page/display/default');
     $assert_session->fieldValueEquals('fields[field_foo_field][type]', 'entity_reference_entity_view');
   }
 

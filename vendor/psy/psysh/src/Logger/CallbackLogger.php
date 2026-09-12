@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -18,14 +18,14 @@ namespace Psy\Logger;
  */
 class CallbackLogger
 {
-    private $callback;
+    private \Closure $callback;
 
     /**
      * @param callable $callback Callback to invoke with (string $kind, string $data)
      */
     public function __construct(callable $callback)
     {
-        $this->callback = $callback;
+        $this->callback = \Closure::fromCallable($callback);
     }
 
     /**

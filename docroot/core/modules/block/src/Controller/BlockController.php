@@ -6,6 +6,8 @@ use Drupal\Component\Utility\Html;
 use Drupal\block\BlockInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\Core\Url;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -13,21 +15,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class BlockController extends ControllerBase {
 
-  /**
-   * The theme handler.
-   *
-   * @var \Drupal\Core\Extension\ThemeHandlerInterface
-   */
-  protected $themeHandler;
-
-  /**
-   * Constructs a new BlockController instance.
-   *
-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
-   *   The theme handler.
-   */
-  public function __construct(ThemeHandlerInterface $theme_handler) {
-    $this->themeHandler = $theme_handler;
+  public function __construct(
+    protected readonly ThemeHandlerInterface $themeHandler,
+    protected readonly ThemeManagerInterface $themeManager,
+  ) {
   }
 
   /**
@@ -80,7 +71,7 @@ class BlockController extends ControllerBase {
     ];
 
     // Show descriptions in each visible page region, nothing else.
-    $visible_regions = $this->getVisibleRegionNames($theme);
+    $visible_regions = $this->themeHandler->getTheme($theme)->listVisibleRegions();
     foreach (array_keys($visible_regions) as $region) {
       $page[$region]['block_description'] = [
         '#type' => 'inline_template',
@@ -89,6 +80,20 @@ class BlockController extends ControllerBase {
       ];
     }
 
+    $themeIsDefault = $this->config('system.theme')->get('default') == $this->themeManager->getActiveTheme()->getName();
+    $page['#attached']['page_top']['backlink'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Exit block region demonstration'),
+      '#url' => $themeIsDefault ? Url::fromRoute('block.admin_display') : Url::fromRoute('block.admin_display_theme', ['theme' => $theme]),
+      '#options' => [
+        'attributes' => [
+          'class' => [
+            'block-demo-backlink',
+          ],
+        ],
+      ],
+      '#weight' => -10,
+    ];
     return $page;
   }
 
@@ -100,9 +105,15 @@ class BlockController extends ControllerBase {
    *
    * @return array
    *   An array of human-readable region names keyed by machine name.
+   *
+   * @deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Use
+   *   $this->themeHandler->getTheme()->listVisibleRegions() instead.
+   *
+   * @see https://www.drupal.org/node/3015925
    */
   protected function getVisibleRegionNames($theme) {
-    return system_region_list($theme, REGIONS_VISIBLE);
+    @trigger_error(__CLASS__ . '::getVisibleRegionNames() is deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Use $this->themeHandler->getTheme()->listVisibleRegions() instead. See https://www.drupal.org/node/3015925', E_USER_DEPRECATED);
+    return $this->themeHandler->getTheme($theme)->listVisibleRegions();
   }
 
 }

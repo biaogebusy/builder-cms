@@ -137,7 +137,7 @@ class WebformMessageManager implements WebformMessageManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function setWebformSubmission(WebformSubmissionInterface $webform_submission = NULL) {
+  public function setWebformSubmission(?WebformSubmissionInterface $webform_submission = NULL) {
     $this->webformSubmission = $webform_submission;
     if ($webform_submission) {
       $this->webform = $webform_submission->getWebform();
@@ -148,14 +148,14 @@ class WebformMessageManager implements WebformMessageManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function setWebform(WebformInterface $webform = NULL) {
+  public function setWebform(?WebformInterface $webform = NULL) {
     $this->webform = $webform;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setSourceEntity(EntityInterface $entity = NULL) {
+  public function setSourceEntity(?EntityInterface $entity = NULL) {
     $this->sourceEntity = $entity;
   }
 
@@ -181,7 +181,7 @@ class WebformMessageManager implements WebformMessageManagerInterface {
    */
   public function display($key, $type = 'status') {
     if ($build = $this->build($key)) {
-      $this->messenger->addMessage($this->renderer->renderPlain($build), $type);
+      $this->messenger->addMessage($this->renderer->renderInIsolation($build), $type);
     }
   }
 
@@ -190,7 +190,7 @@ class WebformMessageManager implements WebformMessageManagerInterface {
    */
   public function render($key) {
     $build = $this->build($key);
-    return ($build) ? $this->renderer->renderPlain($build) : NULL;
+    return ($build) ? $this->renderer->renderInIsolation($build) : NULL;
   }
 
   /**
@@ -208,7 +208,7 @@ class WebformMessageManager implements WebformMessageManagerInterface {
 
       // Set max-age to 0 if settings message contains any [token] values.
       $setting_message = $this->getSetting($key);
-      if ($setting_message && strpos($setting_message, '[') !== FALSE) {
+      if ($setting_message && str_contains($setting_message, '[')) {
         $message['#cache']['max-age'] = 0;
       }
 

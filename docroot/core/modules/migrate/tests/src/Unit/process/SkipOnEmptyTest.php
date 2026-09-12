@@ -6,17 +6,18 @@ namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\migrate\process\SkipOnEmpty;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the skip on empty process plugin.
- *
- * @group migrate
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\process\SkipOnEmpty
  */
+#[CoversClass(SkipOnEmpty::class)]
+#[Group('migrate')]
 class SkipOnEmptyTest extends MigrateProcessTestCase {
 
   /**
-   * @covers ::process
+   * Tests process skips on empty.
    */
   public function testProcessSkipsOnEmpty(): void {
     $configuration['method'] = 'process';
@@ -27,7 +28,7 @@ class SkipOnEmptyTest extends MigrateProcessTestCase {
   }
 
   /**
-   * @covers ::process
+   * Tests process bypasses on non empty.
    */
   public function testProcessBypassesOnNonEmpty(): void {
     $configuration['method'] = 'process';
@@ -39,7 +40,7 @@ class SkipOnEmptyTest extends MigrateProcessTestCase {
   }
 
   /**
-   * @covers ::row
+   * Tests row skips on empty.
    */
   public function testRowSkipsOnEmpty(): void {
     $configuration['method'] = 'row';
@@ -49,7 +50,7 @@ class SkipOnEmptyTest extends MigrateProcessTestCase {
   }
 
   /**
-   * @covers ::row
+   * Tests row bypasses on non empty.
    */
   public function testRowBypassesOnNonEmpty(): void {
     $configuration['method'] = 'row';
@@ -60,8 +61,6 @@ class SkipOnEmptyTest extends MigrateProcessTestCase {
 
   /**
    * Tests that a skip row exception without a message is raised.
-   *
-   * @covers ::row
    */
   public function testRowSkipWithoutMessage(): void {
     $configuration = [
@@ -74,8 +73,6 @@ class SkipOnEmptyTest extends MigrateProcessTestCase {
 
   /**
    * Tests that a skip row exception with a message is raised.
-   *
-   * @covers ::row
    */
   public function testRowSkipWithMessage(): void {
     $configuration = [
@@ -89,7 +86,7 @@ class SkipOnEmptyTest extends MigrateProcessTestCase {
   }
 
   /**
-   * Tests repeated execution of a process plugin can reset the pipeline stoppage correctly.
+   * Tests repeated execution of a process plugin resets the pipeline stoppage.
    */
   public function testMultipleTransforms(): void {
     $configuration['method'] = 'process';

@@ -6,6 +6,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\field\Plugin\migrate\source\d7\FieldInstance;
 use Drupal\field\Plugin\migrate\source\d7\FieldInstancePerFormDisplay;
 use Drupal\migrate\Exception\RequirementsException;
+use Drupal\migrate\Plugin\MigratePluginManagerInterface;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
@@ -14,6 +15,28 @@ use Drupal\migrate\Row;
  * Helper for migration hooks in inline_entity_form.module.
  */
 class MigrationHelper {
+
+  /**
+   * The plugin manager for migration source plugins.
+   *
+   * @var \Drupal\migrate\Plugin\MigrationInterface|null
+   */
+  protected ?MigratePluginManagerInterface $sourcePluginManager;
+
+  /**
+   * Constructs a MigrationHelper object.
+   *
+   * @param \Drupal\migrate\Plugin\MigrationInterface|null $sourcePluginManager
+   *   The plugin manager for migration source plugins.
+   */
+  public function __construct(?MigratePluginManagerInterface $sourcePluginManager = NULL) {
+    if ($sourcePluginManager === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $sourcePluginManager argument is deprecated in inline_entity_form:3.0.0 and it will be required in inline_entity_form:4.0.0. See https://www.drupal.org/node/3417929', E_USER_DEPRECATED);
+      // @phpstan-ignore-next-line
+      $sourcePluginManager = \Drupal::service('plugin.manager.migrate.source');
+    }
+    $this->sourcePluginManager = $sourcePluginManager;
+  }
 
   /**
    * Alters the field migrations for the inline_entity_form widget.
@@ -25,8 +48,6 @@ class MigrationHelper {
    */
   public function alterPlugins(array &$migrations) {
     foreach ($migrations as &$migration) {
-      /** @var \Drupal\migrate\Plugin\MigrateSourcePluginManager $source_plugin_manager */
-      $source_plugin_manager = \Drupal::service('plugin.manager.migrate.source');
       $source = NULL;
       if (!empty($migration['migration_group'])) {
         // Integrate shared group configuration into the migration, in order to
@@ -34,7 +55,7 @@ class MigrationHelper {
         $this->getMigrationWithSharedConfiguration($migration);
       }
       if (isset($migration['source']['plugin'])) {
-        $source = $source_plugin_manager->getDefinition($migration['source']['plugin']);
+        $source = $this->sourcePluginManager->getDefinition($migration['source']['plugin']);
       }
       if (isset($source['class'])) {
         // Field instance.
@@ -165,8 +186,8 @@ class MigrationHelper {
             $merged_values = array_replace_recursive($group_value, $migration_value);
             $migration[$key] = $merged_values;
           }
-          // Where the group provides a value the migration doesn't,
-          // use the group value.
+          // Where the group provides a value the migration doesn't, use the
+          // group value.
           elseif (is_null($migration_value)) {
             $migration[$key] = $group_value;
           }

@@ -65,9 +65,20 @@ class SearchApiViewsHooks {
    * Also, for each entity type encountered in any table, a table with
    * field/relationship handlers for all of that entity type's properties is
    * created. Those tables will use the key "search_api_entity_ENTITY".
+   *
+   * On errors, we call this function a second time so we have a chance to get
+   * correct data after all. To avoid infinite loops, we use a local variable to
+   * tell whether we are inside such a nested call.
+   *
+   * @param bool $nestedCall
+   *   Whether this is a nested call.
+   *
+   * @throws \Exception
+   *   Thrown if an internal error occurred in Typed Data handling twice in a
+   *   row.
    */
   #[Hook('views_data')]
-  public function viewsData(): array {
+  public function viewsData(bool $nestedCall = FALSE): array {
     $data = [];
 
     try {
@@ -147,10 +158,20 @@ class SearchApiViewsHooks {
         }
       }
       catch (\Exception $e) {
+        // If this was a nested call, don't catch the exception.
+        if ($nestedCall) {
+          throw $e;
+        }
         $args = [
           '%index' => $index->label(),
         ];
         Error::logException($this->logger, $e, '%type while computing Views data for index %index: @message in %function (line %line of %file).', $args);
+
+        // Try again, depending on the specific error encountered this might now
+        // work. In case this is an issue of timing, we wait a moment before
+        // proceeding.
+        sleep(2);
+        return $this->viewsData(TRUE);
       }
     }
 

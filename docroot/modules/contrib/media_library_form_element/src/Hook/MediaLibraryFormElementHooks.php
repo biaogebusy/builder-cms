@@ -1,0 +1,78 @@
+<?php
+
+namespace Drupal\media_library_form_element\Hook;
+
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Element\RenderElementBase;
+use Drupal\Core\Template\Attribute;
+
+/**
+ * Hook implementations for media_library_form_element.
+ */
+class MediaLibraryFormElementHooks {
+
+  /**
+   * Implements hook_theme().
+   */
+  #[Hook('theme')]
+  public static function theme($existing, $type, $theme, $path) {
+    return [
+      'media_library_element' => [
+        'render element' => 'element',
+        'initial preprocess' => MediaLibraryFormElementHooks::class . ':preprocessMediaLibraryFormElement',
+      ],
+    ];
+  }
+
+  /**
+   * Prepares variables for media_library_element templates.
+   *
+   * Default template: media-library-element.html.twig.
+   *
+   * @param array $variables
+   *   An associative array containing:
+   *   - element: An associative array containing the properties of the element.
+   *     Properties used: #attributes.
+   */
+  public static function preprocessMediaLibraryFormElement(&$variables) {
+    $element = $variables['element'];
+    Element::setAttributes($element, ['id']);
+    RenderElementBase::setAttributes($element);
+    $variables['attributes'] = $element['#attributes'] ?? [];
+    $variables['prefix'] = $element['#field_prefix'] ?? NULL;
+    $variables['suffix'] = $element['#field_suffix'] ?? NULL;
+    $variables['title_display'] = $element['#title_display'] ?? NULL;
+    // $variables['children'] = $element['#children'];
+    $variables['required'] = !empty($element['#required']) ? $element['#required'] : NULL;
+
+    if (isset($element['#title']) && $element['#title'] !== '') {
+      $variables['legend']['title'] = ['#markup' => $element['#title']];
+    }
+
+    $variables['legend']['attributes'] = new Attribute();
+    // Add 'visually-hidden' class to legend span.
+    if ($variables['title_display'] == 'invisible') {
+      $variables['legend_span']['attributes'] = new Attribute(['class' => ['visually-hidden']]);
+    }
+    else {
+      $variables['legend_span']['attributes'] = new Attribute();
+    }
+
+    if (!empty($element['#description'])) {
+      $description_id = $element['#attributes']['id'] . '--description';
+      $description_attributes['id'] = $description_id;
+      $variables['description']['attributes'] = new Attribute($description_attributes);
+      $variables['description']['content'] = $element['#description'];
+
+      // Add the description's id to the fieldset aria attributes.
+      $variables['attributes']['aria-describedby'] = $description_id;
+    }
+
+    $variables['content'] = $element;
+
+    // Suppress error messages.
+    $variables['errors'] = NULL;
+  }
+
+}

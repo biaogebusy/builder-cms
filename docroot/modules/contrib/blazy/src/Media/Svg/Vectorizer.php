@@ -320,7 +320,7 @@ class Vectorizer implements VectorizerInterface {
    *
    * @param \DOMDocument $svg
    *   The SVG DOMDocument.
-   * @param array $rgba
+   * @param array{red:int, green:int, blue:int, alpha: int} $rgba
    *   Color array, [red: int, green: int, blue: int, alpha: int].
    * @param int $x
    *   The X coordinate.
@@ -348,10 +348,10 @@ class Vectorizer implements VectorizerInterface {
     }
 
     $rect = $svg->createElement('rect');
-    $rect->setAttribute("x", $x);
-    $rect->setAttribute("y", $y);
-    $rect->setAttribute("width", $rectWidth);
-    $rect->setAttribute("height", $rectHeight);
+    $rect->setAttribute("x", (string) $x);
+    $rect->setAttribute("y", (string) $y);
+    $rect->setAttribute("width", (string) $rectWidth);
+    $rect->setAttribute("height", (string) $rectHeight);
 
     if ($this->isColor($rgba) == 'white') {
       // fill="rgba(124,240,10,0.5)".
@@ -373,7 +373,8 @@ class Vectorizer implements VectorizerInterface {
 
     // @todo recheck.
     if ($alpha > 0) {
-      $rect->setAttribute("fill-opacity", (128 - $alpha) / 128);
+      $alpha = (128 - $alpha) / 128;
+      $rect->setAttribute("fill-opacity", (string) $alpha);
     }
     $svg->documentElement->appendChild($rect);
   }

@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\block\Kernel\Migrate\d7;
 
 use Drupal\block\Entity\Block;
+use Drupal\block\Hook\BlockHooks;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of blocks to configuration entities.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class MigrateBlockTest extends MigrateDrupal7TestBase {
 
   /**
@@ -20,15 +23,9 @@ class MigrateBlockTest extends MigrateDrupal7TestBase {
    */
   protected static $modules = [
     'block',
-    'views',
-    'comment',
-    'menu_ui',
     'block_content',
-    'node',
     'text',
-    'filter',
     'path_alias',
-    'user',
   ];
 
   /**
@@ -55,10 +52,12 @@ class MigrateBlockTest extends MigrateDrupal7TestBase {
       'd7_user_role',
       'block_content_type',
       'block_content_body_field',
+      'block_content_body_field_storage',
       'd7_custom_block',
       'd7_block',
     ]);
-    block_rebuild();
+    $blockRebuild = \Drupal::service(BlockHooks::class);
+    $blockRebuild->rebuild();
   }
 
   /**

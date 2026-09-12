@@ -13,8 +13,9 @@
   Drupal.AjaxCommands.prototype.select_entities = function (ajax, response, status) {
     var uuid = drupalSettings.entity_browser.modal.uuid;
 
+    // 'entities-selected' is a jQuery event, keep jQuery to trigger it.
     $(':input[data-uuid="' + uuid + '"]').trigger('entities-selected', [uuid, response.entities])
-      .removeClass('entity-browser-processed').unbind('entities-selected');
+      .removeClass('entity-browser-processed').off('entities-selected');
   };
 
   /**
@@ -22,14 +23,14 @@
    */
   Drupal.behaviors.entityBrowserModal = {
     attach: function (context) {
-      // Object.prototype.entries() isn't available in D9/IE11.
       for (var modalId in drupalSettings.entity_browser.modal) {
-        var instance = drupalSettings.entity_browser.modal[modalId]
-        var $button = $(':input[data-uuid="' + instance.uuid + '"]', context);
+        var instance = drupalSettings.entity_browser.modal[modalId];
+        // The uuid is unique, so there is only one button.
+        var button = context.querySelector('[data-uuid="' + instance.uuid + '"]');
 
-        if ($button.length !== 0 && !$button.hasClass('entity-browser-processed')) {
+        if (button && !button.classList.contains('entity-browser-processed')) {
           for (var jsCallbackKey in instance.js_callbacks) {
-            var callback = drupalSettings.entity_browser.modal[modalId].js_callbacks[jsCallbackKey];
+            var callback = instance.js_callbacks[jsCallbackKey];
             // Get the callback.
             callback = callback.split('.');
             var fn = window;
@@ -39,14 +40,15 @@
             }
 
             if (typeof fn === 'function') {
-              $button.bind('entities-selected', fn);
+              // 'entities-selected' is a jQuery event, bind it with jQuery.
+              $(button).on('entities-selected', fn);
             }
           }
           if (instance.auto_open) {
-            $button.focus();
-            $button.click();
+            button.focus();
+            button.click();
           }
-          $button.addClass('entity-browser-processed');
+          button.classList.add('entity-browser-processed');
         }
       }
     }
@@ -57,33 +59,24 @@
    */
   Drupal.behaviors.fluidModal = {
     attach: function (context) {
-      var $window = $(window);
-
       // Be sure to run only once per window document.
-      if (once('fluid-modal', 'body').length) {
+      if (once('fluid-modal', 'body').length === 0) {
         return;
       }
 
       // Recalculate dialog size on window resize.
-      $window.resize(function (event) {
+      window.addEventListener('resize', function () {
         Drupal.entityBrowserModal.fluidDialog();
       });
 
-      // Catch dialog if opened within a viewport smaller than the dialog width
-      // and recalculate size of all open dialogs.
-      $(document).on('dialogopen', '.ui-dialog', function (event, ui) {
+      // Resize open dialogs and lock the body scroll when a dialog opens.
+      // Core resizes dialogs on dialog:aftercreate too.
+      window.addEventListener('dialog:aftercreate', function () {
         Drupal.entityBrowserModal.fluidDialog();
+        document.body.style.overflow = 'hidden';
       });
-
-      // Disable scrolling of the whole browser window to not interfere with the
-      // iframe scrollbar.
-      $window.on({
-        'dialog:aftercreate': function (event, dialog, $element, settings) {
-          $('body').css({overflow: 'hidden'});
-        },
-        'dialog:beforeclose': function (event, dialog, $element) {
-          $('body').css({overflow: 'inherit'});
-        }
+      window.addEventListener('dialog:beforeclose', function () {
+        document.body.style.overflow = 'inherit';
       });
     }
   };
@@ -94,11 +87,10 @@
   Drupal.behaviors.entityBrowserAddThrobber = {
     attach: function (context) {
       if (context === document) {
-        $(window).on({
-          'dialog:aftercreate': function (event, dialog, $element, settings) {
-            if ($element.find('iframe.entity-browser-modal-iframe').length) {
-              $element.append(Drupal.theme('ajaxProgressThrobber'));
-            }
+        window.addEventListener('dialog:aftercreate', function (event) {
+          var element = event.target;
+          if (element.querySelector('iframe.entity-browser-modal-iframe')) {
+            element.insertAdjacentHTML('beforeend', Drupal.theme('ajaxProgressThrobber'));
           }
         });
       }
@@ -110,6 +102,7 @@
    */
   Drupal.entityBrowserModal.fluidDialog = function () {
 
+    // These are jQuery UI dialog widgets, so this stays on jQuery.
     var $visible = $('.ui-dialog:visible');
     // For each open dialog.
     $visible.each(function () {
@@ -117,9 +110,8 @@
       var dialog = $this.find('.ui-dialog-content').data('ui-dialog');
       // If fluid option == true.
       if (dialog && dialog.options.fluid) {
-        var wWidth = $(window).width();
         // Check window width against dialog width.
-        if (dialog.options.maxWidth && (wWidth > parseInt(dialog.options.maxWidth) + 50)) {
+        if (dialog.options.maxWidth && (window.innerWidth > parseInt(dialog.options.maxWidth) + 50)) {
           dialog.option('width', dialog.options.maxWidth);
         }
         else {
@@ -127,19 +119,21 @@
           dialog.option('width', '92%');
         }
 
-        var vHeight = $(window).height();
         // Check window width against dialog width.
-        if (dialog.options.maxHeight && vHeight > (parseInt(dialog.options.maxHeight) + 50)) {
+        if (dialog.options.maxHeight && window.innerHeight > (parseInt(dialog.options.maxHeight) + 50)) {
           dialog.option('height', dialog.options.maxHeight);
         }
         else {
           // If no maxHeight is defined, make it responsive.
-          dialog.option('height', .92 * vHeight);
+          dialog.option('height', .92 * window.innerHeight);
 
           // Because there is no iframe height 100% in HTML 5, we have to set
           // the height of the iframe as well.
           var contentHeight = $this.find('.ui-dialog-content').height();
-          $this.find('iframe').css('height', contentHeight);
+          var iframe = $this.find('iframe').get(0);
+          if (iframe) {
+            iframe.style.height = contentHeight + 'px';
+          }
         }
 
         // Reposition dialog.
@@ -152,9 +146,14 @@
      */
     Drupal.behaviors.closeModalOnEscapeKeyPress = {
       attach: function (context) {
-        $(document).on('keydown', function (event) {
-          if (event.key == 'Escape') {
-            $(document).find('.entity-browser-modal-iframe').parents('.ui-dialog').eq(0).find('.ui-dialog-titlebar-close').click();
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            var iframe = document.querySelector('.entity-browser-modal-iframe');
+            var dialog = iframe ? iframe.closest('.ui-dialog') : null;
+            var closeButton = dialog ? dialog.querySelector('.ui-dialog-titlebar-close') : null;
+            if (closeButton) {
+              closeButton.click();
+            }
           }
         });
       }

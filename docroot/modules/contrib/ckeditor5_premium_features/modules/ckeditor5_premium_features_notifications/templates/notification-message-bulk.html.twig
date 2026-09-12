@@ -1,0 +1,13 @@
+<div class="message-outer-wrapper">
+  <div class="message-inner-wrapper">
+    {% if title is defined and title is not empty %}
+      <div class="title">
+        <h2>{{ title|render }}</h2>
+      </div>
+    {% endif %}
+
+    <div class="message-items-wrapper">
+      {{ items|render }}
+    </div>
+  </div>
+</div>

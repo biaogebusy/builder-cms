@@ -545,26 +545,7 @@ ten scale, and would you
 Forms and configuration can be translated into multiple languages using
 Drupal's [configuration translation system](https://www.drupal.org/docs/8/core/modules/config-translation.
 
-## Add-ons
-
-<table class="views-view-grid" width="100%">
-  <tr>
-    <td width="50%"><div class="note">
-    <a href="https://www.drupal.org/files/webform-8.x.5.x-features--addons.png">
-    <img src="https://www.drupal.org/files/webform-8.x.5.x-features--addons.png" alt="Add-ons" /><br/>
-    <strong>Add-ons</strong>
-    </a>
-    </div></td>
-    <td width="50%"><div class="note">
-    <a href="https://www.drupal.org/files/webform-8.x.5.x-features--addons-webform-analysis.png">
-    <img src="https://www.drupal.org/files/webform-8.x.5.x-features--addons-webform-analysis.png" alt="Analysis" /><br/>
-    <strong>Analysis</strong>
-    </a>
-    </div></td>
-  </tr>
-</table>
-
-There are [dozens of add-ons available](https://www.drupal.org/node/2837065)
+There are [dozens of add-ons available](https://www.drupal.org/project/webform/ecosystem)
 that extend and/or provide additional functionality to the Webform module
 and Drupal's Form API.
 

@@ -148,6 +148,7 @@ abstract class ExtensionList {
    * Returns the extension discovery.
    *
    * @return \Drupal\Core\Extension\ExtensionDiscovery
+   *   The extension discovery.
    */
   protected function getExtensionDiscovery() {
     return new ExtensionDiscovery($this->root);
@@ -172,14 +173,11 @@ abstract class ExtensionList {
     try {
       $this->state->delete($this->getPathNamesCacheId());
     }
-    catch (DatabaseExceptionWrapper $e) {
+    catch (DatabaseExceptionWrapper) {
       // Ignore exceptions caused by a non existing {key_value} table in the
       // early installer.
     }
 
-    // @todo In the long run it would be great to add the reset, but the early
-    //   installer fails due to that. https://www.drupal.org/node/2719315 could
-    //   help to resolve with that.
     return $this;
   }
 
@@ -269,10 +267,19 @@ abstract class ExtensionList {
   /**
    * Returns all available extensions.
    *
+   * @param bool $skip_cache
+   *   Whether to skip the extension list cache.
+   *
    * @return \Drupal\Core\Extension\Extension[]
    *   Processed extension objects, keyed by machine name.
    */
-  public function getList() {
+  public function getList(bool $skip_cache = FALSE) {
+    if ($skip_cache) {
+      // Although we're skipping the persistent cache, populate the extensions
+      // class property so that any subsequent calls use the latest information.
+      $this->extensions = $this->doList();
+      return $this->extensions;
+    }
     if ($this->extensions !== NULL) {
       return $this->extensions;
     }
@@ -313,15 +320,29 @@ abstract class ExtensionList {
     $extensions = $this->doScanExtensions();
 
     // Read info files for each extension.
-    foreach ($extensions as $extension) {
+    foreach ($extensions as $name => $extension) {
       $extension->info = $this->createExtensionInfo($extension);
-
+      $extension = $this->subClassExtension($extension);
+      $extensions[$name] = $extension;
       // Invoke hook_system_info_alter() to give installed modules a chance to
       // modify the data in the .info.yml files if necessary.
       $this->moduleHandler->alter('system_info', $extension->info, $extension, $this->type);
     }
 
     return $extensions;
+  }
+
+  /**
+   * Allows subclasses to convert the extension into a specific subclass.
+   *
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   The extension.
+   *
+   * @return \Drupal\Core\Extension\Extension
+   *   Either the unchanged Extension object or a subclass of Extension.
+   */
+  protected function subClassExtension(Extension $extension): Extension {
+    return $extension;
   }
 
   /**
@@ -411,6 +432,8 @@ abstract class ExtensionList {
    * Returns a list of extension file paths keyed by machine name.
    *
    * @return string[]
+   *   An associative array of extension file paths, keyed by the extension
+   *   machine name.
    */
   public function getPathNames() {
     if ($this->pathNames === NULL) {

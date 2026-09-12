@@ -13,7 +13,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\PermissionHandlerInterface;
 use Drupal\views\Attribute\ViewsAccess;
 use Drupal\views\Plugin\views\access\AccessPluginBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -65,7 +65,14 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
    * @param \Drupal\Core\Extension\ModuleExtensionList|\Drupal\Core\Extension\ModuleHandlerInterface $module_extension_list
    *   The module extension list.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PermissionHandlerInterface $permission_handler, ModuleExtensionList|ModuleHandlerInterface $module_extension_list) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    PermissionHandlerInterface $permission_handler,
+    #[Autowire(service: 'extension.list.module')]
+    ModuleExtensionList|ModuleHandlerInterface $module_extension_list,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->permissionHandler = $permission_handler;
     if ($module_extension_list instanceof ModuleHandlerInterface) {
@@ -73,19 +80,6 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
       $module_extension_list = \Drupal::service('extension.list.module');
     }
     $this->moduleExtensionList = $module_extension_list;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('user.permissions'),
-      $container->get('extension.list.module'),
-    );
   }
 
   /**
@@ -102,15 +96,21 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
     $route->setRequirement('_permission', $this->options['perm']);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function summaryTitle() {
     $permissions = $this->permissionHandler->getPermissions();
     if (isset($permissions[$this->options['perm']])) {
       return $permissions[$this->options['perm']]['title'];
     }
-
+    // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
     return $this->t($this->options['perm']);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['perm'] = ['default' => 'access content'];
@@ -118,9 +118,12 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
     return $options;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
-    // Get list of permissions
+    // Get list of permissions.
     $perms = [];
     $permissions = $this->permissionHandler->getPermissions();
     foreach ($permissions as $perm => $perm_item) {

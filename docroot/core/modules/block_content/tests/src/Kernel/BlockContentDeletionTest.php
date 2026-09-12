@@ -9,12 +9,14 @@ use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that deleting a block clears the cached definitions.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentDeletionTest extends KernelTestBase {
 
   use BlockCreationTrait;
@@ -22,7 +24,7 @@ class BlockContentDeletionTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'block_content', 'system', 'user'];
+  protected static $modules = ['block', 'block_content', 'field', 'system', 'text', 'user'];
 
   /**
    * {@inheritdoc}
@@ -31,6 +33,7 @@ class BlockContentDeletionTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('block_content');
+    $this->installConfig(['block_content']);
     $this->container->get('theme_installer')->install(['stark']);
   }
 
@@ -41,8 +44,8 @@ class BlockContentDeletionTest extends KernelTestBase {
     // Create a block content type.
     $block_content_type = BlockContentType::create([
       'id' => 'spiffy',
-      'label' => 'Mucho spiffy',
-      'description' => "Provides a block type that increases your site's spiffiness by upto 11%",
+      'label' => 'Very spiffy',
+      'description' => "Provides a block type that increases your site's spiffy rating by upto 11%",
     ]);
     $block_content_type->save();
     // And a block content entity.

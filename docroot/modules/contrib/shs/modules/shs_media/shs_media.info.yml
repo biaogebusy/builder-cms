@@ -1,0 +1,13 @@
+name: 'Simple hierarchical select: Media'
+type: module
+description: 'Integrates Simple hierarchical select with Media entities views.'
+dependencies:
+  - drupal:media
+  - shs:shs
+core_version_requirement: ^10.5 || ^11.1
+package: User interface
+
+# Information added by Drupal.org packaging script on 2026-08-21
+version: '2.0.7'
+project: 'shs'
+datestamp: 1787321376

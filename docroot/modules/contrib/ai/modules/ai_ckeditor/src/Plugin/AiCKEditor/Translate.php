@@ -172,8 +172,21 @@ final class Translate extends AiCKEditorPluginBase {
   /**
    * {@inheritdoc}
    */
+  protected function getNoSelectedTextMessage(): TranslatableMarkup {
+    return $this->t('You must select some text before you can translate it.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildCkEditorModalForm(array $form, FormStateInterface $form_state, array $settings = []) {
-    $form = parent::buildCkEditorModalForm($form, $form_state);
+    $form = parent::buildCkEditorModalForm($form, $form_state, $settings);
+
+    // If no text was selected, don't append plugin-specific fields.
+    $storage = $form_state->getStorage();
+    if (empty($storage['selected_text'])) {
+      return $form;
+    }
 
     $autocreate = $this->configuration['autocreate'] && $this->configuration['language_source'] == 'tax';
 

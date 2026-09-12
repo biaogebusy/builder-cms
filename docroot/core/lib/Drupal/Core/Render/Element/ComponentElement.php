@@ -2,16 +2,19 @@
 
 namespace Drupal\Core\Render\Element;
 
-use Drupal\Core\Render\Attribute\RenderElement;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Component\Exception\InvalidComponentDataException;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Security\DoTrustedCallbackTrait;
-use Drupal\Core\Render\Component\Exception\InvalidComponentDataException;
+use Drupal\Core\Template\Attribute;
 
 /**
  * Provides a Single-Directory Component render element.
  *
  * Properties:
  * - #component: The machine name of the component.
+ * - #variant: (optional) The variant to be used for the component.
  * - #props: an associative array where the keys are the names of the
  *   component props, and the values are the prop values.
  * - #slots: an associative array where the keys are the slot names, and the
@@ -31,9 +34,16 @@ use Drupal\Core\Render\Component\Exception\InvalidComponentDataException;
  * @endcode
  *
  * @see \Drupal\Core\Render\Element\Textarea
+ *
+ * Implements FormElementInterface so that ElementInfoManager recognizes this
+ * as a form element (sets #input and #value_callback), enabling it to
+ * participate in form processing without inheriting the additional static
+ * methods from FormElementBase that are not applicable to components.
+ *
+ * @see \Drupal\Core\Form\FormBuilder::handleInputElement()
  */
-#[RenderElement('component')]
-class ComponentElement extends RenderElementBase {
+#[FormElement('component')]
+class ComponentElement extends RenderElementBase implements FormElementInterface {
 
   use DoTrustedCallbackTrait;
 
@@ -49,7 +59,13 @@ class ComponentElement extends RenderElementBase {
    * @throws \Drupal\Core\Render\Component\Exception\InvalidComponentDataException
    */
   public function preRenderComponent(array $element): array {
+    $this->mergeElementAttributesToPropAttributes($element);
+
     $props = $element['#props'];
+    if (isset($element["#variant"]) && !isset($props['variant'])) {
+      $props['variant'] = $element["#variant"];
+    }
+
     $props_alter_callbacks = $element['#propsAlter'];
     // This callback can be used to prepare the context. For instance to replace
     // tokens in the props.
@@ -62,6 +78,21 @@ class ComponentElement extends RenderElementBase {
       ),
       $props
     );
+
+    // Handle children as slots.
+    $children = Element::children($element, TRUE);
+    foreach ($children as $key) {
+      $element['#slots'][$key] = $element[$key];
+      unset($element[$key]);
+    }
+
+    // This component is a form component.
+    // @see \Drupal\Core\Form\FormBuilder::handleInputElement().
+    if (!empty($element['#name'])) {
+      $props['form_state']['value']['name'] = $element['#name'];
+      $props['form_state']['value']['required'] = $element['#required'] ?? FALSE;
+    }
+
     $inline_template = $this->generateComponentTemplate(
       $element['#component'],
       $element['#slots'],
@@ -73,6 +104,7 @@ class ComponentElement extends RenderElementBase {
       '#template' => $inline_template,
       '#context' => $props,
     ];
+
     return $element;
   }
 
@@ -135,6 +167,46 @@ class ComponentElement extends RenderElementBase {
   }
 
   /**
+   * Merge element attributes with props attributes.
+   *
+   * #attributes property is an universal property of the Render API, used by
+   * many Drupal mechanisms from Core and Contrib, so we need to inject the
+   * values in template.
+   *
+   * @param array $element
+   *   The render element.
+   */
+  private function mergeElementAttributesToPropAttributes(array &$element): void {
+    // Prepare #props attributes to be both mergeable and renderable.
+    $prop_attributes = $element['#props']['attributes'] ?? [];
+    $prop_attributes = is_array($prop_attributes) ? new Attribute($prop_attributes) : $prop_attributes;
+
+    if (!isset($element['#attributes'])) {
+      $element['#props']['attributes'] = $prop_attributes;
+      return;
+    }
+
+    // If attributes value is an array, convert it to an Attribute object as
+    // \Drupal\Core\Template\Attribute::merge() expects an Attribute object.
+    $element_attributes = is_array($element['#attributes']) ? new Attribute($element['#attributes']) : $element['#attributes'];
+
+    // Merge ['#attributes'] with the ['#props']['attributes']. So that #props
+    // attributes take precedence.
+    $element['#props']['attributes'] = $element_attributes->merge($prop_attributes);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Returns NULL to let the Form API fall back to #default_value or #value.
+   * Components delegate actual value rendering to the Twig template via the
+   * form_state prop, so no server-side value transformation is needed here.
+   */
+  public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
+    return NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getInfo(): array {
@@ -143,6 +215,7 @@ class ComponentElement extends RenderElementBase {
         [$this, 'preRenderComponent'],
       ],
       '#component' => '',
+      '#variant' => '',
       '#props' => [],
       '#slots' => [],
       '#propsAlter' => [],

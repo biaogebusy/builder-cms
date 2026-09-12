@@ -7,13 +7,18 @@ namespace Drupal\Tests\devel_php\Functional;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\devel_php\Form\ExecutePHP;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests execute code.
- *
- * @group devel_php
  */
+#[RunTestsInSeparateProcesses]
+#[CoversClass(ExecutePHP::class)]
+#[Group('devel_php')]
 class ExecuteCodeTest extends BrowserTestBase {
 
   use StringTranslationTrait;
@@ -47,15 +52,12 @@ class ExecuteCodeTest extends BrowserTestBase {
     // Ensure dump output is parseable by tests assertion methods.
     $this->config('devel.settings')
       ->set('devel_dumper', 'default')
-      ->save(TRUE);
+      ->save();
 
     $user = $this->drupalCreateUser([
       'access devel information',
       'execute php code',
     ]);
-    if (!($user instanceof UserInterface)) {
-      $this->fail('Impossible to create the tests user.');
-    }
 
     $this->user = $user;
   }

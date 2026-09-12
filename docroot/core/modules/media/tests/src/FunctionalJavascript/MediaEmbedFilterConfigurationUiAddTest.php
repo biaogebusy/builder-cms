@@ -4,17 +4,27 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\media\FunctionalJavascript;
 
+use Drupal\media\Hook\MediaHooks;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
- * @covers ::media_filter_format_edit_form_validate
- * @group media
- * @group #slow
+ * Tests Media Embed Filter Configuration Ui Add.
  */
+#[Group('media')]
+#[Group('#slow')]
+#[CoversMethod(MediaHooks::class, 'formatEditFormValidate')]
+#[RunTestsInSeparateProcesses]
 class MediaEmbedFilterConfigurationUiAddTest extends MediaEmbedFilterTestBase {
 
   /**
-   * @covers ::media_form_filter_format_add_form_alter
-   * @dataProvider providerTestValidations
+   * Tests validation when adding.
+   *
+   * @legacy-covers \Drupal\media\Hook\MediaHooks::formFilterFormatAddFormAlter
    */
+  #[DataProvider('providerTestValidations')]
   public function testValidationWhenAdding($filter_html_status, $filter_align_status, $filter_caption_status, $filter_html_image_secure_status, $media_embed, $allowed_html, $expected_error_message): void {
     $this->drupalGet('admin/config/content/formats/add');
 

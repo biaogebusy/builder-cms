@@ -21,15 +21,17 @@
   /**
    * A wrapper for core/once with some BC.
    *
+   * Descriptions after OR is core/once signature.
+   *
    * @param {Function|string} cb
-   *   The executed function, or string for regular core/once.
-   * @param {string} id
-   *   The id of the once call.
-   * @param {NodeList|Array.<Element>|Element|string} selector
-   *   A NodeList, array of elements, single Element, or a string.
-   * @param {Document|Element|null} ctx
-   *   An element to use as context for querySelectorAll, or empty.
-   * @param {Object|undefined} scope
+   *   The executed function, OR string as ID.
+   * @param {string|NodeList|Array.<Element>|Element|undefined} id
+   *   The id of the once call, OR element(s), string as selector.
+   * @param {string|NodeList|Array.<Element>|Element|Document|undefined} selector
+   *   The selector, NodeList, element(s), OR Document context.
+   * @param {Document|Element|undefined} ctx
+   *   An element to use as context for querySelectorAll.
+   * @param {Function|undefined} scope
    *   A value to use as `this` when executing cb, default to `undefined`.
    *
    * @return {Array.<Element>}

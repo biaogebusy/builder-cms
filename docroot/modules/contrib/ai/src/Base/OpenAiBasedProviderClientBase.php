@@ -87,6 +87,22 @@ abstract class OpenAiBasedProviderClientBase extends AiProviderClientBase implem
   protected array $rateLimitHeaders = [];
 
   /**
+   * The image mime types the image endpoints may return, with file extension.
+   */
+  protected const ALLOWED_IMAGE_MIME_TYPES = [
+    'image/png' => 'png',
+    'image/jpeg' => 'jpeg',
+    'image/webp' => 'webp',
+  ];
+
+  /**
+   * The audio mime types the audio endpoints may return, with file extension.
+   */
+  protected const ALLOWED_AUDIO_MIME_TYPES = [
+    'audio/mpeg' => 'mp3',
+  ];
+
+  /**
    * {@inheritdoc}
    */
   public function isUsable(?string $operation_type = NULL, array $capabilities = []): bool {
@@ -352,9 +368,11 @@ abstract class OpenAiBasedProviderClientBase extends AiProviderClientBase implem
           }
         }
 
-        // Create the final message from accumulated data.
-        $message = $stream->reconstructChatOutput()->getNormalized();
-        $chat_output = new ChatOutput($message, $response, []);
+        // Create the final message from accumulated data, carrying over the
+        // token usage collected while consuming the stream.
+        $reconstructed = $stream->reconstructChatOutput();
+        $message = $reconstructed->getNormalized();
+        $chat_output = new ChatOutput($message, $response, [], $reconstructed->getTokenUsage());
       }
       else {
         $initialResponse = $this->client->chat()->create($payload);
@@ -451,21 +469,17 @@ abstract class OpenAiBasedProviderClientBase extends AiProviderClientBase implem
 
     foreach ($response['data'] as $data) {
       if (isset($data['b64_json'])) {
-        $images[] = new ImageFile(base64_decode($data['b64_json']), 'image/png', 'generated.png');
-      }
-      elseif (isset($data['url']) && !empty($data['url'])) {
-        try {
-          $image_content = file_get_contents($data['url']);
-          if ($image_content !== FALSE) {
-            $images[] = new ImageFile($image_content, 'image/png', 'generated.png');
-          }
+        $image_content = base64_decode($data['b64_json'], TRUE);
+        if ($image_content === FALSE) {
+          throw new AiResponseErrorException('Failed to decode base64 image data from the API response.');
         }
-        catch (\Throwable $e) {
-          $this->loggerFactory->get('ai')->error('Failed to fetch image from URL @url: @message', [
-            '@url' => $data['url'],
-            '@message' => $e->getMessage(),
-          ]);
+        // Determine the mime type from the actual binary data, so that only
+        // real images can end up in the output.
+        $mime_type = $this->detectMimeType($image_content, static::ALLOWED_IMAGE_MIME_TYPES);
+        if ($mime_type === NULL) {
+          throw new AiResponseErrorException('The API returned an image with an unsupported mime type.');
         }
+        $images[] = new ImageFile(base64_decode($image_content), 'image/png', 'generated.png');
       }
     }
 
@@ -497,6 +511,12 @@ abstract class OpenAiBasedProviderClientBase extends AiProviderClientBase implem
     catch (\Throwable $e) {
       $this->handleApiThrowable($e);
       throw $e;
+    }
+    // Determine the mime type from the actual binary data, so that only
+    // real audio files can end up in the output.
+    $mime_type = $this->detectMimeType($response, static::ALLOWED_AUDIO_MIME_TYPES);
+    if ($mime_type === NULL) {
+      throw new AiResponseErrorException('The API returned an audio file with an unsupported mime type.');
     }
     $output = new AudioFile($response, 'audio/mpeg', 'speech.mp3');
     return new TextToSpeechOutput([$output], $response, []);
@@ -664,6 +684,31 @@ abstract class OpenAiBasedProviderClientBase extends AiProviderClientBase implem
     }
     return $dto;
 
+  }
+
+  /**
+   * Detects the mime type of binary data and validates it.
+   *
+   * @param string $binary
+   *   The binary data to check.
+   * @param array|string $allowed
+   *   Either an array of accepted mime types keyed by mime type, or a
+   *   primary mime type such as "image" or "audio" that the detected mime
+   *   type has to belong to.
+   *
+   * @return string|null
+   *   The detected mime type, or NULL if it is not allowed.
+   */
+  protected function detectMimeType(string $binary, array|string $allowed): ?string {
+    $finfo = new \finfo(FILEINFO_MIME_TYPE);
+    $mime_type = $finfo->buffer($binary);
+    if (!is_string($mime_type)) {
+      return NULL;
+    }
+    if (is_array($allowed)) {
+      return isset($allowed[$mime_type]) ? $mime_type : NULL;
+    }
+    return str_starts_with($mime_type, $allowed . '/') ? $mime_type : NULL;
   }
 
   /**

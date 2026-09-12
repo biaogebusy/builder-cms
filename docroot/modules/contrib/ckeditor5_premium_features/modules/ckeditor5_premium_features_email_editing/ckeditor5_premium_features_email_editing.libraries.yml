@@ -1,0 +1,12 @@
+email-editing:
+  version: 20260310
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/exportInlineStylesAdapter.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features_email_editing/email
+    - ckeditor5_premium_features_email_editing/export-inline-styles

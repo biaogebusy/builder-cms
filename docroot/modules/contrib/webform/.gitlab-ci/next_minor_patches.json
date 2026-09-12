@@ -1,0 +1,7 @@
+{
+  "patches": {
+    "drupal/hal": {
+      "#3585446: Update FieldNormalizer::normalize method signature": "https://www.drupal.org/files/issues/2026-04-20/3585446-5.patch"
+    }
+  }
+}

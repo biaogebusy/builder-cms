@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\admin_toolbar_tools\Plugin\Menu;
 
 use Drupal\Core\Menu\MenuLinkDefault;

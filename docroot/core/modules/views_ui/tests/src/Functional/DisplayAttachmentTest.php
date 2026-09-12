@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI for the attachment display plugin.
  *
- * @group views_ui
  * @see \Drupal\views\Plugin\views\display\Attachment
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class DisplayAttachmentTest extends UITestBase {
 
   /**

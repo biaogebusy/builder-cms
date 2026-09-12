@@ -1,0 +1,6 @@
+realtime-comment-notifications:
+  js:
+    js/build/realtimeCommentNotifications.js: { minified: true }
+  dependencies:
+    - ckeditor5_premium_features_realtime_collaboration/real-time-collaboration
+    - ckeditor5_premium_features_realtime_collaboration/comments

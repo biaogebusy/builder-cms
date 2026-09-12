@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\content_translation\Kernel\Migrate\d6;
 
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\taxonomy\TermInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test migration of translated taxonomy terms.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyTermTranslationTest extends MigrateDrupal6TestBase {
 
   /**
@@ -22,7 +24,6 @@ class MigrateTaxonomyTermTranslationTest extends MigrateDrupal6TestBase {
     'content_translation',
     'language',
     'menu_ui',
-    'node',
     'taxonomy',
   ];
 
@@ -125,13 +126,76 @@ class MigrateTaxonomyTermTranslationTest extends MigrateDrupal6TestBase {
    * Tests the Drupal 6 i18n taxonomy term to Drupal 8 migration.
    */
   public function testTranslatedTaxonomyTerms(): void {
-    $this->assertEntity(1, 'zu', 'zu - term 1 of vocabulary 1', 'vocabulary_1_i_0_', 'zu - description of term 1 of vocabulary 1', NULL, 0, []);
-    $this->assertEntity(2, 'fr', 'fr - term 2 of vocabulary 2', 'vocabulary_2_i_1_', 'fr - description of term 2 of vocabulary 2', NULL, 3, []);
-    $this->assertEntity(3, 'fr', 'fr - term 3 of vocabulary 2', 'vocabulary_2_i_1_', 'fr - description of term 3 of vocabulary 2', NULL, 4, ['2']);
-    $this->assertEntity(4, 'en', 'term 4 of vocabulary 3', 'vocabulary_3_i_2_', 'description of term 4 of vocabulary 3', NULL, 6, []);
-    $this->assertEntity(5, 'en', 'term 5 of vocabulary 3', 'vocabulary_3_i_2_', 'description of term 5 of vocabulary 3', NULL, 7, ['4']);
-    $this->assertEntity(6, 'en', 'term 6 of vocabulary 3', 'vocabulary_3_i_2_', 'description of term 6 of vocabulary 3', NULL, 8, ['4', '5']);
-    $this->assertEntity(7, 'fr', 'fr - term 2 of vocabulary 1', 'vocabulary_1_i_0_', 'fr - desc of term 2 vocab 1', NULL, 0, []);
+    $this->assertEntity(
+     1,
+     'zu',
+     'zu - term 1 of vocabulary 1',
+     'vocabulary_1_i_0_',
+     'zu - description of term 1 of vocabulary 1',
+     NULL,
+     0,
+     []
+    );
+    $this->assertEntity(
+     2,
+     'fr',
+     'fr - term 2 of vocabulary 2',
+     'vocabulary_2_i_1_',
+     'fr - description of term 2 of vocabulary 2',
+     NULL,
+     3,
+     []
+    );
+    $this->assertEntity(
+     3,
+     'fr',
+     'fr - term 3 of vocabulary 2',
+     'vocabulary_2_i_1_',
+     'fr - description of term 3 of vocabulary 2',
+     NULL,
+     4,
+     ['2']
+    );
+    $this->assertEntity(
+     4,
+     'en',
+     'term 4 of vocabulary 3',
+     'vocabulary_3_i_2_',
+     'description of term 4 of vocabulary 3',
+     NULL,
+     6,
+     []
+    );
+    $this->assertEntity(
+     5,
+     'en',
+     'term 5 of vocabulary 3',
+     'vocabulary_3_i_2_',
+     'description of term 5 of vocabulary 3',
+     NULL,
+     7,
+     ['4']
+    );
+    $this->assertEntity(
+     6,
+     'en',
+     'term 6 of vocabulary 3',
+     'vocabulary_3_i_2_',
+     'description of term 6 of vocabulary 3',
+     NULL,
+     8,
+     ['4', '5']
+    );
+    $this->assertEntity(
+     7,
+     'fr',
+     'fr - term 2 of vocabulary 1',
+     'vocabulary_1_i_0_',
+     'fr - desc of term 2 vocab 1',
+     NULL,
+     0,
+     []
+    );
   }
 
 }

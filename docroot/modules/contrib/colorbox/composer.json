@@ -30,11 +30,11 @@
     {
       "type": "package",
       "package": {
-        "name": "jackmoore/colorbox",
-        "version": "1.6.4",
+        "name": "turbojettechnologies/colorbox",
+        "version": "1.7.0",
         "type": "drupal-library",
         "dist": {
-          "url": "https://github.com/jackmoore/colorbox/archive/1.6.4.zip",
+          "url": "https://github.com/TurbojetTechnologies/colorbox/archive/1.7.0.zip",
           "type": "zip"
         }
       }
@@ -44,7 +44,7 @@
     "drupal/core": "^10 || ^11"
   },
   "suggest": {
-    "jackmoore/colorbox": "The Colorbox library is required to use the drupal/colorbox module."
+    "turbojettechnologies/colorbox": "The Colorbox library is required to use the drupal/colorbox module."
   },
   "extra": {
     "drush": {

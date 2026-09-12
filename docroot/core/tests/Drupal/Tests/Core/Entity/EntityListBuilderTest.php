@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Entity;
 
+use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Routing\RedirectDestinationInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\entity_test\EntityTestListBuilder;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\EntityListBuilder
- * @group Entity
+ * Tests Drupal\Core\Entity\EntityListBuilder.
  */
+#[CoversClass(EntityListBuilder::class)]
+#[Group('Entity')]
 class EntityListBuilderTest extends UnitTestCase {
 
   /**
@@ -93,7 +99,7 @@ class EntityListBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getOperations
+   * Tests get operations.
    */
   public function testGetOperations(): void {
     $operation_name = $this->randomMachineName();
@@ -104,7 +110,7 @@ class EntityListBuilderTest extends UnitTestCase {
     ];
     $this->moduleHandler->expects($this->once())
       ->method('invokeAll')
-      ->with('entity_operation', [$this->role])
+      ->with('entity_operation', [$this->role, new CacheableMetadata()])
       ->willReturn($operations);
     $this->moduleHandler->expects($this->once())
       ->method('alter')
@@ -133,6 +139,8 @@ class EntityListBuilderTest extends UnitTestCase {
 
     $operations = $list->getOperations($this->role);
     $this->assertIsArray($operations);
+    $this->assertArrayHasKey('view', $operations);
+    $this->assertIsArray($operations['view']);
     $this->assertArrayHasKey('edit', $operations);
     $this->assertIsArray($operations['edit']);
     $this->assertArrayHasKey('title', $operations['edit']);
@@ -142,10 +150,85 @@ class EntityListBuilderTest extends UnitTestCase {
     $this->assertArrayHasKey($operation_name, $operations);
     $this->assertIsArray($operations[$operation_name]);
     $this->assertArrayHasKey('title', $operations[$operation_name]);
+
+    // Ensure the operations are in the correct relative order.
+    uasort($operations, SortArray::sortByWeightElement(...));
+    $this->assertSame([$operation_name, 'edit', 'delete', 'view'], array_keys($operations));
+  }
+
+  /**
+   * Ensures entity operations handle entities without labels.
+   */
+  public function testGetOperationsWithNullLabel(): void {
+    $this->moduleHandler->expects($this->once())
+      ->method('invokeAll')
+      ->with('entity_operation', [$this->role, new CacheableMetadata()])
+      ->willReturn([]);
+    $this->moduleHandler->expects($this->once())
+      ->method('alter')
+      ->with('entity_operation');
+
+    $this->container->set('module_handler', $this->moduleHandler);
+
+    $this->role->expects($this->any())
+      ->method('access')
+      ->willReturn(AccessResult::allowed());
+    $this->role->expects($this->any())
+      ->method('hasLinkTemplate')
+      ->willReturn(TRUE);
+    $this->role->expects($this->any())
+      ->method('toUrl')
+      ->willReturnCallback(static fn(): Url => Url::fromRoute('entity.user_role.collection'));
+    $this->role->expects($this->any())
+      ->method('label')
+      ->willReturn(NULL);
+    $this->role->expects($this->any())
+      ->method('bundle')
+      ->willReturn('role');
+    $this->role->expects($this->any())
+      ->method('id')
+      ->willReturn('role_id');
+
+    $this->redirectDestination->expects($this->atLeastOnce())
+      ->method('getAsArray')
+      ->willReturn(['destination' => '/foo/bar']);
+
+    $this->translationManager->method('translateString')
+      ->willReturnCallback(static function (TranslatableMarkup $string): string {
+        return $string->getUntranslatedString();
+      });
+
+    $list = new EntityListBuilder($this->entityType, $this->roleStorage);
+    $list->setStringTranslation($this->translationManager);
+    $list->setRedirectDestination($this->redirectDestination);
+
+    $operations = $list->getOperations($this->role);
+
+    $this->assertIsArray($operations);
+    $this->assertArrayHasKey('edit', $operations);
+    $edit_label = $operations['edit']['url']->getOption('attributes')['aria-label'];
+    $this->assertInstanceOf(TranslatableMarkup::class, $edit_label);
+    $this->assertSame('', $edit_label->getArguments()['@entity_label']);
+    $this->assertSame('Edit role role_id', (string) $edit_label);
+
+    $this->assertArrayHasKey('delete', $operations);
+    $delete_label = $operations['delete']['url']->getOption('attributes')['aria-label'];
+    $this->assertInstanceOf(TranslatableMarkup::class, $delete_label);
+    $this->assertSame('', $delete_label->getArguments()['@entity_label']);
+    $this->assertSame('Delete role role_id', (string) $delete_label);
+
+    $this->assertArrayHasKey('view', $operations);
+    $view_label = $operations['view']['url']->getOption('attributes')['aria-label'];
+    $this->assertInstanceOf(TranslatableMarkup::class, $view_label);
+    $this->assertSame('', $view_label->getArguments()['@entity_label']);
+    $this->assertSame('View role role_id', (string) $view_label);
   }
 
 }
 
+/**
+ * Stub class for testing EntityListBuilder.
+ */
 class TestEntityListBuilder extends EntityTestListBuilder {
 
   public function buildOperations(EntityInterface $entity) {

@@ -65,6 +65,7 @@ module.exports = {
     'components/settings_tray_edit': ['./styles/components/settings_tray_edit.scss'],
     'components/settings': ['./styles/components/settings.scss'],
     'components/sidebar': ['./styles/components/sidebar.scss'],
+    'components/status': ['./styles/components/status.scss'],
     'components/tableselect': ['./styles/components/tableselect.scss'],
     'components/tabs': ['./styles/components/tabs.scss'],
     'components/term_reference_tree': ['./styles/components/term_reference_tree.scss'],

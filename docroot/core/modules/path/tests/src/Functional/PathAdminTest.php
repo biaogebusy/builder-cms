@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\path\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the Path admin UI.
- *
- * @group path
  */
+#[Group('path')]
+#[RunTestsInSeparateProcesses]
 class PathAdminTest extends PathTestBase {
 
   /**

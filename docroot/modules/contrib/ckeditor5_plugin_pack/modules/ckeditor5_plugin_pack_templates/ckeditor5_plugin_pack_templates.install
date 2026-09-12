@@ -1,0 +1,31 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+declare(strict_types = 1);
+
+/**
+ * Implements hook_requirements().
+ */
+function ckeditor5_plugin_pack_templates_requirements($phase): array {
+  $requirements = [];
+
+  if (($phase === 'install')) {
+    // phpcs:ignore
+    if (\Drupal::moduleHandler()->moduleExists('ckeditor5_premium_features_productivity_pack') || defined('COLLABORATION_INSTALLING')) {
+      $requirements[] = [
+        'description' => t('You cannot install CKEditor 5 Templates and CKEditor 5 Productivity pack modules at the same time.'),
+        'severity' => ckeditor5_plugin_pack_get_error_severity(),
+      ];
+    }
+    else {
+      // phpcs:ignore
+      define('COLLABORATION_INSTALLING', TRUE);
+    }
+  }
+
+  return $requirements;
+}

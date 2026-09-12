@@ -1,3 +1,28 @@
+Search API 1.41 (2026-06-08):
+-----------------------------
+- ci: #3594097 Fixed failing pipelines.
+- ci: #3592865 Fixed failing pipelines.
+- fix: #3490247 Fixed error in Bulk Operations views when results include
+  translated entities.
+- ci: #3575070 Fixed failing pipelines.
+- fix: #3556955 Fixed bug in exception handling in PHP 8.3 due to change in
+  error message.
+- fix: #3327645 Fixed view being recalculated with wrong data from cache.
+- feat: #3122003 Added options to control the number of displayed values in
+  Views fields.
+- chore: #3562994 Adapted to the deprecation of hook_requirements().
+- fix: #3558624 Fixed compatibility with PHP 8.5.
+- chore: #3556850 Moved tests from src/Tests/ to tests/src.
+- fix: #3558388 Fixed saving of “Format plural” settings in numeric Views
+  fields.
+- ci: #3560524 Updated ignored deprecations with the latest from Core.
+- fix: #2896419 Fixed broken Views data definitions if an exception occurs
+  inside search_api_views_data().
+- ci: #3553016 Fixed pipelines for Drupal 10 and Drupal 11.3.x
+- docs: #3549072 Improved documentation and discoverability of task events.
+- feat: #3547199 Added option to add the "Custom value" token property to a
+  specific datasource.
+
 Search API 1.40 (2025-11-01):
 -----------------------------
 - [#2891393] fix: Fixed wrong base language used for transliteration on

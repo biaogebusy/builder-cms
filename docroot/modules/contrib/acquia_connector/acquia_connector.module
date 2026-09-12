@@ -5,6 +5,7 @@
  * Acquia Connector module.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyModuleImplementsAlter;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 
@@ -138,7 +139,7 @@ function acquia_connector_cron() {
   $auth_service->cronRefresh();
 }
 
-#[Drupal\Core\Attribute\LegacyModuleImplementsAlter]
+#[LegacyModuleImplementsAlter]
 /**
  * Implements hook_module_implements_alter().
  */

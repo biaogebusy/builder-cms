@@ -2,9 +2,6 @@
 
 namespace Drupal\Tests\commerce_payment\Functional;
 
-use Drupal\Core\Url;
-use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
-use Drupal\commerce_order\Entity\OrderItemType;
 use Drupal\commerce_payment\Entity\Payment;
 use Drupal\commerce_price\Price;
 
@@ -13,7 +10,7 @@ use Drupal\commerce_price\Price;
  *
  * @group commerce
  */
-class ManualPaymentAdminTest extends CommerceBrowserTestBase {
+class ManualPaymentAdminTest extends PaymentAdminTestBase {
 
   /**
    * A manual payment gateway.
@@ -23,20 +20,6 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
   protected $paymentGateway;
 
   /**
-   * The base admin payment uri.
-   *
-   * @var string
-   */
-  protected $paymentUri;
-
-  /**
-   * The admin's order.
-   *
-   * @var \Drupal\commerce_order\Entity\OrderInterface
-   */
-  protected $order;
-
-  /**
    * {@inheritdoc}
    */
   protected static $modules = [
@@ -44,17 +27,6 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
     'commerce_product',
     'commerce_payment',
   ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getAdministratorPermissions() {
-    return array_merge([
-      'administer commerce_order',
-      'administer commerce_payment_gateway',
-      'administer commerce_payment',
-    ], parent::getAdministratorPermissions());
-  }
 
   /**
    * {@inheritdoc}
@@ -75,37 +47,6 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
       ],
     ]);
     $this->paymentGateway->save();
-
-    // An order item type that doesn't need a purchasable entity, for simplicity.
-    OrderItemType::create([
-      'id' => 'test',
-      'label' => 'Test',
-      'orderType' => 'default',
-    ])->save();
-
-    $order_item = $this->createEntity('commerce_order_item', [
-      'type' => 'test',
-      'quantity' => 1,
-      'unit_price' => new Price('10', 'USD'),
-    ]);
-
-    $this->order = $this->createEntity('commerce_order', [
-      'uid' => $this->loggedInUser->id(),
-      'type' => 'default',
-      'state' => 'draft',
-      'order_items' => [$order_item],
-      'store_id' => $this->store,
-    ]);
-
-    $this->paymentUri = Url::fromRoute(
-      'entity.commerce_payment.collection',
-      [
-        'commerce_order' => $this->order->id(),
-      ],
-      [
-        'absolute' => TRUE,
-      ],
-    )->toString();
   }
 
   /**
@@ -113,9 +54,9 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
    */
   public function testPaymentCreation() {
     $this->drupalGet($this->paymentUri . '/add');
+    $this->pageContainsOrderDetails();
     $this->assertSession()->pageTextContains('Cash on delivery');
-    $this->getSession()->getPage()->pressButton('Continue');
-    $this->submitForm(['payment[amount][number]' => '100'], 'Add payment');
+    $this->submitForm(['amount[number]' => '100'], 'Add payment');
     $this->assertSession()->addressEquals($this->paymentUri);
     $this->assertSession()->pageTextContains('Pending');
 
@@ -128,8 +69,7 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
 
     $this->drupalGet($this->paymentUri . '/add');
     $this->assertSession()->pageTextContains('Cash on delivery');
-    $this->getSession()->getPage()->pressButton('Continue');
-    $this->submitForm(['payment[amount][number]' => '100', 'payment[received]' => TRUE], 'Add payment');
+    $this->submitForm(['amount[number]' => '100', 'payment_received' => TRUE], 'Add payment');
     $this->assertSession()->addressEquals($this->paymentUri);
     $this->assertSession()->elementContains('css', 'table tbody tr:nth-child(1) td:nth-child(2)', 'Completed');
 
@@ -154,6 +94,7 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
     $this->paymentGateway->getPlugin()->createPayment($payment);
 
     $this->drupalGet($this->paymentUri . '/' . $payment->id() . '/operation/receive');
+    $this->pageContainsOrderDetails();
     $this->submitForm(['payment[amount][number]' => '10'], 'Receive');
     $this->assertSession()->addressEquals($this->paymentUri);
     $this->assertSession()->pageTextNotContains('Pending');
@@ -176,6 +117,7 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
     $this->paymentGateway->getPlugin()->createPayment($payment, TRUE);
 
     $this->drupalGet($this->paymentUri . '/' . $payment->id() . '/operation/refund');
+    $this->pageContainsOrderDetails();
     $this->submitForm(['payment[amount][number]' => '10'], 'Refund');
     $this->assertSession()->addressEquals($this->paymentUri);
     $this->assertSession()->elementNotContains('css', 'table tbody tr td:nth-child(2)', 'Completed');
@@ -198,6 +140,7 @@ class ManualPaymentAdminTest extends CommerceBrowserTestBase {
     $this->paymentGateway->getPlugin()->createPayment($payment);
 
     $this->drupalGet($this->paymentUri . '/' . $payment->id() . '/operation/void');
+    $this->pageContainsOrderDetails(FALSE);
     $this->assertSession()->pageTextContains('Are you sure you want to void the 10 USD payment?');
     $this->getSession()->getPage()->pressButton('Void');
     $this->assertSession()->addressEquals($this->paymentUri);

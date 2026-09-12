@@ -2,28 +2,26 @@
 
 namespace Drupal\Tests\devel_generate\Functional;
 
-use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\devel_generate\Traits\DevelGenerateSetupTrait;
-use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\comment\Entity\Comment;
-use Drupal\devel_generate\Drush\Commands\DevelGenerateCommands;
 use Drupal\media\Entity\Media;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\node\Entity\Node;
 use Drupal\system\Entity\Menu;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\devel_generate\Traits\DevelGenerateSetupTrait;
+use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Drush\TestTraits\DrushTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for the Devel Generate drush commands.
  *
  * Note: Drush must be in the Composer project.
- *
- * @coversDefaultClass \Drupal\devel_generate\Drush\Commands\DevelGenerateCommands
- * @group devel_generate
  */
+#[Group('devel_generate')]
 class DevelGenerateCommandsTest extends BrowserTestBase {
 
   use DrushTestTrait;
@@ -65,7 +63,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
    */
   public function testDrushGenerateUsers(): void {
     // Make sure users get created, and with correct roles.
-    $this->drush(DevelGenerateCommands::USERS, ['55'], [
+    $this->drush('devel-generate:users', ['55'], [
       'kill' => NULL,
       'roles' => 'administrator',
     ]);
@@ -78,7 +76,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
    */
   public function testDrushGenerateTerms(): void {
     // Make sure terms get created, and with correct vocab.
-    $this->drush(DevelGenerateCommands::TERMS, ['55'], [
+    $this->drush('devel-generate:terms', ['55'], [
       'kill' => NULL,
       'bundles' => $this->vocabulary->id(),
     ]);
@@ -86,7 +84,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $this->assertEquals($this->vocabulary->id(), $term->bundle());
 
     // Make sure terms get created, with proper language.
-    $this->drush(DevelGenerateCommands::TERMS, ['10'], [
+    $this->drush('devel-generate:terms', ['10'], [
       'kill' => NULL,
       'bundles' => $this->vocabulary->id(),
       'languages' => 'fr',
@@ -95,7 +93,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $this->assertEquals('fr', $term->language()->getId());
 
     // Make sure terms gets created, with proper translation.
-    $this->drush(DevelGenerateCommands::TERMS, ['10'], [
+    $this->drush('devel-generate:terms', ['10'], [
       'kill' => NULL,
       'bundles' => $this->vocabulary->id(),
       'languages' => 'fr',
@@ -111,7 +109,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
    */
   public function testDrushGenerateVocabs(): void {
     // Make sure vocabs get created.
-    $this->drush(DevelGenerateCommands::VOCABS, ['5'], ['kill' => NULL]);
+    $this->drush('devel-generate:vocabs', ['5'], ['kill' => NULL]);
     $vocabs = Vocabulary::loadMultiple();
     $this->assertGreaterThan(4, count($vocabs));
     $vocab = array_pop($vocabs);
@@ -125,10 +123,10 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $generatedMenu = NULL;
 
     // Make sure menus, and with correct properties.
-    $this->drush(DevelGenerateCommands::MENUS, ['1', '5'], ['kill' => NULL]);
+    $this->drush('devel-generate:menus', ['1', '5'], ['kill' => NULL]);
     $menus = Menu::loadMultiple();
     foreach ($menus as $menu) {
-      if (str_contains($menu->id(), 'devel-')) {
+      if (str_contains((string) $menu->id(), 'devel-')) {
         // We have a menu that we created.
         $generatedMenu = $menu;
         break;
@@ -147,7 +145,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
    */
   public function testDrushGenerateContent(): void {
     // Generate content using the minimum parameters.
-    $this->drush(DevelGenerateCommands::CONTENT, ['21']);
+    $this->drush('devel-generate:content', ['21']);
     $node = Node::load(21);
     $this->assertNotEmpty($node);
 
@@ -155,7 +153,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     // comment status 'open' and therefore the ability to receive a comment.
     // However, generating 30 articles will give the likelihood of test failure
     // (i.e. no article gets a comment) as 2/3 ^ 30 = 0.00052% or 1 in 191751.
-    $this->drush(DevelGenerateCommands::CONTENT, ['30', '9'], [
+    $this->drush('devel-generate:content', ['30', '9'], [
       'kill' => NULL,
       'bundles' => 'article',
     ]);
@@ -163,14 +161,14 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $this->assertNotEmpty($comment);
 
     // Generate content with a higher number that triggers batch running.
-    $this->drush(DevelGenerateCommands::CONTENT, ['55'], ['kill' => NULL]);
+    $this->drush('devel-generate:content', ['55'], ['kill' => NULL]);
     $nodes = \Drupal::entityQuery('node')->accessCheck(FALSE)->execute();
     $this->assertCount(55, $nodes);
     $messages = $this->getErrorOutput();
     $this->assertStringContainsStringIgnoringCase('Finished 55 elements created successfully.', $messages, 'devel-generate-content batch ending message not found');
 
     // Generate specified language. Verify base field is populated.
-    $this->drush(DevelGenerateCommands::CONTENT, ['10'], [
+    $this->drush('devel-generate:content', ['10'], [
       'kill' => NULL,
       'languages' => 'fr',
       'base-fields' => 'phish',
@@ -181,7 +179,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $this->assertNotEmpty($node->get('phish')->getString());
 
     // Generate content with translations.
-    $this->drush(DevelGenerateCommands::CONTENT, ['18'], [
+    $this->drush('devel-generate:content', ['18'], [
       'kill' => NULL,
       'languages' => 'fr',
       'translations' => 'de',
@@ -205,8 +203,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     // Generate just page content with option --add-type-label.
     // Note: Use the -v verbose option to get the ending message shown when not
     // generating enough to trigger batch mode.
-    // @todo Remove -v when the messages are shown for both run types.
-    $this->drush(DevelGenerateCommands::CONTENT . ' -v', ['9'], [
+    $this->drush('devel-generate:content', ['9'], [
       'kill' => NULL,
       'bundles' => 'page',
       'add-type-label' => NULL,
@@ -221,10 +218,10 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $this->assertStringContainsStringIgnoringCase('Created 9 nodes', $messages, 'batch end message not found');
     // Load the final node and verify that the title starts with the label.
     $node = Node::load(end($nodes));
-    $this->assertEquals('Basic Page - ', substr($node->title->value, 0, 13));
+    $this->assertEquals('Basic Page - ', substr((string) $node->title->value, 0, 13));
 
     // Generate articles with a specified users.
-    $this->drush(DevelGenerateCommands::CONTENT . ' -v', ['10'], [
+    $this->drush('devel-generate:content', ['10'], [
       'kill' => NULL,
       'bundles' => 'article',
       'authors' => '2',
@@ -244,7 +241,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     // distinct role.
     $userA = $this->drupalCreateUser(['access content']);
     $roleA = $userA->getRoles()[1];
-    $this->drush(DevelGenerateCommands::CONTENT . ' -v', ['8'], [
+    $this->drush('devel-generate:content', ['8'], [
       'kill' => NULL,
       'bundles' => 'page',
       'roles' => $roleA,
@@ -262,7 +259,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     // Repeat the above using two roles and two users.
     $userB = $this->drupalCreateUser(['create page content']);
     $roleB = $userB->getRoles()[1];
-    $this->drush(DevelGenerateCommands::CONTENT . ' -v', ['20'], [
+    $this->drush('devel-generate:content', ['20'], [
       'kill' => NULL,
       'bundles' => 'page',
       'roles' => sprintf('%s, %s', $roleA, $roleB),
@@ -293,7 +290,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $media_type1 = $this->createMediaType('image');
     $media_type2 = $this->createMediaType('audio_file');
     // Make sure media items gets created with batch process.
-    $this->drush(DevelGenerateCommands::MEDIA, ['53'], [
+    $this->drush('devel-generate:media', ['53'], [
       'kill' => NULL,
       'base-fields' => 'phish',
     ]);
@@ -308,7 +305,7 @@ class DevelGenerateCommandsTest extends BrowserTestBase {
     $this->assertNotEmpty($media->get('phish')->getString());
 
     // Test also with a non-batch process. We're testing also --kill here.
-    $this->drush(DevelGenerateCommands::MEDIA, ['7'], [
+    $this->drush('devel-generate:media', ['7'], [
       'media-types' => $media_type1->id() . ',' . $media_type2->id(),
       'kill' => NULL,
     ]);

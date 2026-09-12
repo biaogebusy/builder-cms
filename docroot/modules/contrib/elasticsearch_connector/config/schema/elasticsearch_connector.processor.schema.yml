@@ -1,3 +1,26 @@
+plugin.plugin_configuration.search_api_processor.elasticsearch_type_boost:
+  type: search_api.default_processor_configuration
+  label: 'Type-specific boosting processor configuration for Elasticsearch'
+  mapping:
+    boosts:
+      type: sequence
+      label: 'Boost settings'
+      orderby: key
+      sequence:
+        type: mapping
+        label: 'Datasource boost settings'
+        mapping:
+          datasource_boost:
+            type: float
+            label: 'Base boost for the datasource'
+          bundle_boosts:
+            type: sequence
+            label: 'Bundle-specific boosts'
+            orderby: key
+            sequence:
+              type: float
+              label: 'The boost value for this bundle'
+
 plugin.plugin_configuration.search_api_processor.elasticsearch_highlight:
   type: search_api.default_processor_configuration
   label: 'Elasticsearch Highlight processor configuration'

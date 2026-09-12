@@ -6,12 +6,14 @@ namespace Drupal\Tests\node\Kernel;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the admin listing fallback when views is not enabled.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeListBuilderTest extends KernelTestBase {
 
   /**
@@ -38,7 +40,14 @@ class NodeListBuilderTest extends KernelTestBase {
     $build = $list_builder->render();
     $this->container->get('renderer')->renderRoot($build);
 
-    $this->assertEqualsCanonicalizing(['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'url.query_args.pagers:0', 'user.node_grants:view', 'user.permissions'], $build['#cache']['contexts']);
+    $this->assertEqualsCanonicalizing([
+      'languages:' . LanguageInterface::TYPE_INTERFACE,
+      'theme',
+      'url.query_args.pagers:0',
+      'user.node_grants:view',
+      'user.permissions',
+    ],
+    $build['#cache']['contexts']);
   }
 
 }

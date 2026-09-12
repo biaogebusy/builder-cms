@@ -83,10 +83,13 @@
       }
     },
 
-    showSidebar: () => {
-      const chooseStorage = window.innerWidth < breakpoint ? storageMobile : storageDesktop;
+    showSidebar: (width = window.innerWidth) => {
+      const chooseStorage = width < breakpoint ? storageMobile : storageDesktop;
       const hideLabel = Drupal.t('Hide sidebar panel');
       const sidebarTrigger = document.querySelector('.meta-sidebar__trigger');
+      if (sidebarTrigger === null) {
+        return;
+      }
 
       sidebarTrigger.querySelector('span').innerHTML = hideLabel;
       sidebarTrigger.setAttribute('title', hideLabel);
@@ -113,10 +116,13 @@
       }
     },
 
-    collapseSidebar: () => {
-      const chooseStorage = window.innerWidth < breakpoint ? storageMobile : storageDesktop;
+    collapseSidebar: (width = window.innerWidth) => {
+      const chooseStorage = width < breakpoint ? storageMobile : storageDesktop;
       const showLabel = Drupal.t('Show sidebar panel');
       const sidebarTrigger = document.querySelector('.meta-sidebar__trigger');
+      if (sidebarTrigger === null) {
+        return;
+      }
 
       sidebarTrigger.querySelector('span').innerHTML = showLabel;
       sidebarTrigger.setAttribute('title', showLabel);
@@ -137,13 +143,13 @@
 
       // If small viewport, always collapse sidebar.
       if (windowSize.width < breakpoint) {
-        Drupal.ginSidebar.collapseSidebar();
+        Drupal.ginSidebar.collapseSidebar(windowSize.width);
       } else {
         // If large viewport, show sidebar if it was open before.
         if (localStorage.getItem(storageDesktop) === 'true') {
-          Drupal.ginSidebar.showSidebar();
+          Drupal.ginSidebar.showSidebar(windowSize.width);
         } else {
-          Drupal.ginSidebar.collapseSidebar();
+          Drupal.ginSidebar.collapseSidebar(windowSize.width);
         }
       }
     },

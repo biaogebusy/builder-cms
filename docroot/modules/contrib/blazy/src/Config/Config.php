@@ -7,7 +7,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Yaml;
 
@@ -129,7 +129,7 @@ class Config implements ConfigInterface {
   public function config($key = NULL, $group = 'blazy.settings') {
     $config  = $this->configFactory->get($group);
     $configs = $config->get();
-    unset($configs['_core']);
+    // @todo recheck unset($configs['_core']);
     return empty($key) ? $configs : $config->get($key);
   }
 

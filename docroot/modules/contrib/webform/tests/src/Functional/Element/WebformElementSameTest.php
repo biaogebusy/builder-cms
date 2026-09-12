@@ -22,7 +22,7 @@ class WebformElementSameTest extends WebformElementBrowserTestBase {
   /**
    * Test same element.
    */
-  public function testSame() {
+  public function testSame(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_same');

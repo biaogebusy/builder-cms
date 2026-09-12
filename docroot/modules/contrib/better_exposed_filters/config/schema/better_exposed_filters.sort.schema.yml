@@ -16,6 +16,9 @@ better_exposed_filters_sort_widget:
         combine_rewrite:
           type: text
           label: 'Rewrite combined sort options'
+        combine_param:
+          type: label
+          label: 'Query parameter to use for combined sorts'
         reset:
           type: boolean
           label: 'Include reset sort option'

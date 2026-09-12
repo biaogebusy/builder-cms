@@ -5,12 +5,16 @@ namespace Drupal\Tests\paragraphs\Functional\WidgetStable;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\node\Entity\Node;
 use Drupal\paragraphs\Entity\Paragraph;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the drag and drop mode of paragraphs.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsDragAndDropModeTest extends ParagraphsTestBase {
 
   /**

@@ -2,235 +2,14 @@
 
 /**
  * @file
- * Handles updates of Drupal core and contributed projects.
- *
- * The module checks for available updates of Drupal core and any installed
- * contributed modules and themes. It warns site administrators if newer
- * releases are available via the system status report (admin/reports/status),
- * the module and theme pages, and optionally via email.
  */
 
 use Drupal\Core\File\Exception\FileException;
-use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\update\Hook\UpdateThemeHooks;
 use Drupal\update\UpdateFetcherInterface;
 use Drupal\update\UpdateManagerInterface;
-
-/**
- * Implements hook_help().
- */
-function update_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.update':
-      $output = '';
-      $output .= '<h2>' . t('About') . '</h2>';
-      $output .= '<p>' . t('The Update Manager module periodically checks for new versions of your site\'s software (including contributed modules and themes), and alerts administrators to available updates. The Update Manager system is also used by some other modules to manage updates and downloads; for example, the Interface Translation module uses the Update Manager to download translations from the localization server. Note that whenever the Update Manager system is used, anonymous usage statistics are sent to Drupal.org. If desired, you may uninstall the Update Manager module from the <a href=":modules">Extend page</a>; if you do so, functionality that depends on the Update Manager system will not work. For more information, see the <a href=":update">online documentation for the Update Manager module</a>.', [':update' => 'https://www.drupal.org/documentation/modules/update', ':modules' => Url::fromRoute('system.modules_list')->toString()]) . '</p>';
-      // Only explain the Update manager if it has not been uninstalled.
-      if (_update_manager_access()) {
-        $output .= '<p>' . t('The Update Manager also allows administrators to add and update modules and themes through the administration interface.') . '</p>';
-      }
-      $output .= '<h2>' . t('Uses') . '</h2>';
-      $output .= '<dl>';
-      $output .= '<dt>' . t('Checking for available updates') . '</dt>';
-      $output .= '<dd>' . t('The <a href=":update-report">Available updates report</a> displays core, contributed modules, and themes for which there are new releases available for download. On the report page, you can also check manually for updates. You can configure the frequency of update checks, which are performed during cron runs, and whether notifications are sent on the <a href=":update-settings">Update Manager settings page</a>.', [':update-report' => Url::fromRoute('update.status')->toString(), ':update-settings' => Url::fromRoute('update.settings')->toString()]) . '</dd>';
-      // Only explain the Update manager if it has not been uninstalled.
-      if (_update_manager_access()) {
-        $output .= '<dt>' . t('Performing updates through the Update page') . '</dt>';
-        $output .= '<dd>' . t('The Update Manager module allows administrators to perform updates directly from the <a href=":update-page">Update page</a>. It lists all available updates, and you can confirm whether you want to download them. If you don\'t have sufficient access rights to your web server, you could be prompted for your FTP/SSH password. Afterwards the files are transferred into your site installation, overwriting your old files. Direct links to the Update page are also displayed on the <a href=":modules_page">Extend page</a> and the <a href=":themes_page">Appearance page</a>.', [':modules_page' => Url::fromRoute('system.modules_list')->toString(), ':themes_page' => Url::fromRoute('system.themes_page')->toString(), ':update-page' => Url::fromRoute('update.report_update')->toString()]) . '</dd>';
-      }
-      $output .= '</dl>';
-      return $output;
-
-    case 'update.status':
-      return '<p>' . t('Here you can find information about available updates for your installed modules and themes. Note that each module or theme is part of a "project", which may or may not have the same name, and might include multiple modules or themes within it.') . '</p>';
-
-    case 'system.modules_list':
-      return '<p>' . t('Regularly review <a href=":updates">available updates</a> and update as required to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time you update software.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
-
-  }
-}
-
-/**
- * Implements hook_page_top().
- */
-function update_page_top() {
-  /** @var \Drupal\Core\Routing\AdminContext $admin_context */
-  $admin_context = \Drupal::service('router.admin_context');
-  $route_match = \Drupal::routeMatch();
-  if ($admin_context->isAdminRoute($route_match->getRouteObject()) && \Drupal::currentUser()->hasPermission('view update notifications')) {
-    $route_name = \Drupal::routeMatch()->getRouteName();
-    switch ($route_name) {
-      // These pages don't need additional nagging.
-      case 'update.theme_update':
-      case 'system.theme_install':
-      case 'update.module_update':
-      case 'update.status':
-      case 'update.report_update':
-      case 'update.settings':
-      case 'system.status':
-      case 'update.confirmation_page':
-      case 'system.batch_page.html':
-        return;
-
-      // If we are on the appearance or modules list, display a detailed report
-      // of the update status.
-      case 'system.themes_page':
-      case 'system.modules_list':
-        $verbose = TRUE;
-        break;
-
-    }
-    \Drupal::moduleHandler()->loadInclude('update', 'install');
-    $status = update_requirements('runtime');
-    foreach (['core', 'contrib'] as $report_type) {
-      $type = 'update_' . $report_type;
-      // hook_requirements() supports render arrays therefore we need to render
-      // them before using
-      // \Drupal\Core\Messenger\MessengerInterface::addStatus().
-      if (isset($status[$type]['description']) && is_array($status[$type]['description'])) {
-        $status[$type]['description'] = \Drupal::service('renderer')->renderInIsolation($status[$type]['description']);
-      }
-      if (!empty($verbose)) {
-        if (isset($status[$type]['severity'])) {
-          if ($status[$type]['severity'] == REQUIREMENT_ERROR) {
-            \Drupal::messenger()->addError($status[$type]['description']);
-          }
-          elseif ($status[$type]['severity'] == REQUIREMENT_WARNING) {
-            \Drupal::messenger()->addWarning($status[$type]['description']);
-          }
-        }
-      }
-      // Otherwise, if we're on *any* admin page and there's a security
-      // update missing, print an error message about it.
-      else {
-        if (isset($status[$type])
-            && isset($status[$type]['reason'])
-            && $status[$type]['reason'] === UpdateManagerInterface::NOT_SECURE) {
-          \Drupal::messenger()->addError($status[$type]['description']);
-        }
-      }
-    }
-  }
-}
-
-/**
- * Resolves if the current user can access updater menu items.
- *
- * It both enforces the 'administer software updates' permission and the global
- * kill switch for the authorize.php script.
- *
- * @return bool
- *   TRUE if the current user can access the updater menu items; FALSE
- *   otherwise.
- */
-function _update_manager_access() {
-  return Settings::get('allow_authorize_operations', TRUE) && \Drupal::currentUser()->hasPermission('administer software updates');
-}
-
-/**
- * Implements hook_theme().
- */
-function update_theme() {
-  return [
-    'update_last_check' => [
-      'variables' => ['last' => 0],
-    ],
-    'update_report' => [
-      'variables' => ['data' => NULL],
-      'file' => 'update.report.inc',
-    ],
-    'update_project_status' => [
-      'variables' => ['project' => []],
-      'file' => 'update.report.inc',
-    ],
-    // We are using template instead of '#type' => 'table' here to keep markup
-    // out of preprocess and allow for easier changes to markup.
-    'update_version' => [
-      'variables' => ['version' => NULL, 'title' => NULL, 'attributes' => []],
-      'file' => 'update.report.inc',
-    ],
-    'update_fetch_error_message' => [
-      'file' => 'update.report.inc',
-      'render element' => 'element',
-      'variables' => ['error_message' => []],
-    ],
-  ];
-}
-
-/**
- * Implements hook_cron().
- */
-function update_cron() {
-  $update_config = \Drupal::config('update.settings');
-  $frequency = $update_config->get('check.interval_days');
-  $interval = 60 * 60 * 24 * $frequency;
-  $last_check = \Drupal::state()->get('update.last_check', 0);
-  $request_time = \Drupal::time()->getRequestTime();
-  if (($request_time - $last_check) > $interval) {
-    // If the configured update interval has elapsed, we want to invalidate
-    // the data for all projects, attempt to re-fetch, and trigger any
-    // configured notifications about the new status.
-    update_refresh();
-    update_fetch_data();
-  }
-  else {
-    // Otherwise, see if any individual projects are now stale or still
-    // missing data, and if so, try to fetch the data.
-    update_get_available(TRUE);
-  }
-  $last_email_notice = \Drupal::state()->get('update.last_email_notification', 0);
-  if (($request_time - $last_email_notice) > $interval) {
-    // If configured time between notifications elapsed, send email about
-    // updates possibly available.
-    \Drupal::moduleHandler()->loadInclude('update', 'inc', 'update.fetch');
-    _update_cron_notify();
-  }
-
-  // Clear garbage from disk.
-  update_clear_update_disk_cache();
-}
-
-/**
- * Implements hook_themes_installed().
- *
- * If themes are installed, we invalidate the information of available updates.
- */
-function update_themes_installed($themes) {
-  // Clear all update module data.
-  update_storage_clear();
-}
-
-/**
- * Implements hook_themes_uninstalled().
- *
- * If themes are uninstalled, we invalidate the information of available updates.
- */
-function update_themes_uninstalled($themes) {
-  // Clear all update module data.
-  update_storage_clear();
-}
-
-/**
- * Implements hook_modules_installed().
- *
- * If modules are installed, we invalidate the information of available updates.
- */
-function update_modules_installed($modules) {
-  // Clear all update module data.
-  update_storage_clear();
-}
-
-/**
- * Implements hook_modules_uninstalled().
- *
- * If modules are uninstalled, we invalidate the information of available updates.
- */
-function update_modules_uninstalled($modules) {
-  // Clear all update module data.
-  update_storage_clear();
-}
 
 /**
  * Returns a warning message when there is no data about available updates.
@@ -254,7 +33,7 @@ function _update_no_data() {
  * logic in update_calculate_project_data() will be wrong and produce confusing,
  * bogus results.
  *
- * @param $refresh
+ * @param bool $refresh
  *   (optional) Boolean to indicate if this method should refresh automatically
  *   if there's no data. Defaults to FALSE.
  *
@@ -320,7 +99,7 @@ function update_get_available($refresh = FALSE) {
  * We only create a new fetch task if there's no task already in the queue for
  * this particular project (based on 'update_fetch_task' key-value collection).
  *
- * @param $project
+ * @param array $project
  *   Associative array of information about a project as created by
  *   \Drupal\update\UpdateManager::getProjects(), including keys such as 'name'
  *   (short name), and the 'info' array with data from a .info.yml file for the
@@ -328,14 +107,14 @@ function update_get_available($refresh = FALSE) {
  *
  * @see \Drupal\update\UpdateFetcher::createFetchTask()
  */
-function update_create_fetch_task($project) {
+function update_create_fetch_task($project): void {
   \Drupal::service('update.processor')->createFetchTask($project);
 }
 
 /**
  * Refreshes the release data after loading the necessary include file.
  */
-function update_refresh() {
+function update_refresh(): void {
   \Drupal::service('update.manager')->refreshUpdateData();
 }
 
@@ -344,21 +123,21 @@ function update_refresh() {
  *
  * @see \Drupal\update\UpdateProcessor::fetchData()
  */
-function update_fetch_data() {
+function update_fetch_data(): void {
   \Drupal::service('update.processor')->fetchData();
 }
 
 /**
  * Batch callback: Performs actions when all fetch tasks have been completed.
  *
- * @param $success
+ * @param bool $success
  *   TRUE if the batch operation was successful; FALSE if there were errors.
- * @param $results
+ * @param array $results
  *   An associative array of results from the batch operation, including the key
  *   'updated' which holds the total number of projects we fetched available
  *   update data for.
  */
-function update_fetch_data_finished($success, $results) {
+function update_fetch_data_finished($success, $results): void {
   if ($success) {
     if (!empty($results)) {
       if (!empty($results['updated'])) {
@@ -375,54 +154,29 @@ function update_fetch_data_finished($success, $results) {
 }
 
 /**
- * Implements hook_mail().
- *
- * Constructs the email notification message when the site is out of date.
- *
- * @see \Drupal\Core\Mail\MailManagerInterface::mail()
- * @see _update_cron_notify()
- * @see _update_message_text()
- * @see \Drupal\update\UpdateManagerInterface
- */
-function update_mail($key, &$message, $params) {
-  $langcode = $message['langcode'];
-  $language = \Drupal::languageManager()->getLanguage($langcode);
-  $message['subject'] .= t('New release(s) available for @site_name', ['@site_name' => \Drupal::config('system.site')->get('name')], ['langcode' => $langcode]);
-  foreach ($params as $msg_type => $msg_reason) {
-    $message['body'][] = _update_message_text($msg_type, $msg_reason, $langcode);
-  }
-  $message['body'][] = t('See the available updates page for more information:', [], ['langcode' => $langcode]) . "\n" . Url::fromRoute('update.status', [], ['absolute' => TRUE, 'language' => $language])->toString();
-  if (_update_manager_access()) {
-    $message['body'][] = t('You can automatically download your missing updates using the Update manager:', [], ['langcode' => $langcode]) . "\n" . Url::fromRoute('update.report_update', [], ['absolute' => TRUE, 'language' => $language])->toString();
-  }
-  $settings_url = Url::fromRoute('update.settings', [], ['absolute' => TRUE])->toString();
-  if (\Drupal::config('update.settings')->get('notification.threshold') == 'all') {
-    $message['body'][] = t('Your site is currently configured to send these emails when any updates are available. To get notified only for security updates, @url.', ['@url' => $settings_url]);
-  }
-  else {
-    $message['body'][] = t('Your site is currently configured to send these emails only when security updates are available. To get notified for any available updates, @url.', ['@url' => $settings_url]);
-  }
-}
-
-/**
  * Returns the appropriate message text when site is out of date or not secure.
  *
  * These error messages are shared by both update_requirements() for the
  * site-wide status report at admin/reports/status and in the body of the
  * notification email messages generated by update_cron().
  *
- * @param $msg_type
+ * @param string $msg_type
  *   String to indicate what kind of message to generate. Can be either 'core'
  *   or 'contrib'.
- * @param $msg_reason
+ * @param int $msg_reason
  *   Integer constant specifying why message is generated.
- * @param $langcode
+ * @param string $langcode
  *   (optional) A language code to use. Defaults to NULL.
+ * @param bool $is_email
+ *   (optional) Controls if this function is used for generating mail. If TRUE,
+ *   URLs will be absolute and will be included without access checks. If FALSE,
+ *   links will be relative and will only be included if the current user can
+ *   access them. Defaults to FALSE.
  *
  * @return \Drupal\Core\StringTranslation\TranslatableMarkup
  *   The properly translated error message for the given key.
  */
-function _update_message_text($msg_type, $msg_reason, $langcode = NULL) {
+function _update_message_text($msg_type, $msg_reason, $langcode = NULL, bool $is_email = FALSE) {
   $text = '';
   switch ($msg_reason) {
     case UpdateManagerInterface::NOT_SECURE:
@@ -465,11 +219,25 @@ function _update_message_text($msg_type, $msg_reason, $langcode = NULL) {
     case UpdateFetcherInterface::NOT_CHECKED:
     case UpdateFetcherInterface::NOT_FETCHED:
     case UpdateFetcherInterface::FETCH_PENDING:
+      $url = Url::fromRoute('update.status', [], [
+        'absolute' => $is_email,
+        'language' => $langcode,
+      ]);
       if ($msg_type == 'core') {
-        $text = t('There was a problem checking <a href=":update-report">available updates</a> for Drupal.', [':update-report' => Url::fromRoute('update.status')->toString()], ['langcode' => $langcode]);
+        if ($url->access() || $is_email) {
+          return t('There was a problem checking <a href=":update-report">available updates</a> for Drupal.', [
+            ':update-report' => $url->toString(),
+          ], ['langcode' => $langcode]);
+        }
+        return t('There was a problem checking available updates for Drupal.', [], ['langcode' => $langcode]);
       }
       else {
-        $text = t('There was a problem checking <a href=":update-report">available updates</a> for your modules or themes.', [':update-report' => Url::fromRoute('update.status')->toString()], ['langcode' => $langcode]);
+        if ($url->access() || $is_email) {
+          return t('There was a problem checking <a href=":update-report">available updates</a> for your modules or themes.', [
+            ':update-report' => $url->toString(),
+          ], ['langcode' => $langcode]);
+        }
+        return t('There was a problem checking available updates for Drupal.', [], ['langcode' => $langcode]);
       }
       break;
   }
@@ -501,92 +269,99 @@ function _update_project_status_sort($a, $b) {
  * provides a "Check manually" link that refreshes the available update and
  * redirects back to the same page.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - last: The timestamp when the site last checked for available updates.
  *
- * @see theme_update_report()
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *  template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_update_last_check(&$variables) {
-  $variables['time'] = \Drupal::service('date.formatter')->formatTimeDiffSince($variables['last']);
-  $variables['link'] = Link::fromTextAndUrl(t('Check manually'), Url::fromRoute('update.manual_status', [], ['query' => \Drupal::destination()->getAsArray()]))->toString();
+function template_preprocess_update_last_check(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(UpdateThemeHooks::class)->preprocessUpdateLastCheck($variables);
 }
 
 /**
- * Implements hook_verify_update_archive().
+ * Prepares variables for project status report templates.
  *
- * First, we ensure that the archive isn't a copy of Drupal core, which the
- * update manager does not yet support. See https://www.drupal.org/node/606592.
+ * Default template: update-report.html.twig.
  *
- * Then, we make sure that at least one module included in the archive file has
- * an .info.yml file which claims that the code is compatible with the current
- * version of Drupal core.
+ * @param array $variables
+ *   An associative array containing:
+ *   - data: An array of data about each project's status.
  *
- * @see \Drupal\Core\Extension\ExtensionDiscovery
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function update_verify_update_archive($project, $archive_file, $directory) {
-  $errors = [];
+function template_preprocess_update_report(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(UpdateThemeHooks::class)->preprocessUpdateReport($variables);
+}
 
-  // Make sure this isn't a tarball of Drupal core.
-  if (
-    file_exists("$directory/$project/index.php")
-    && file_exists("$directory/$project/core/install.php")
-    && file_exists("$directory/$project/core/includes/bootstrap.inc")
-    && file_exists("$directory/$project/core/modules/node/node.module")
-    && file_exists("$directory/$project/core/modules/system/system.module")
-  ) {
-    return [
-      'no-core' => t('Automatic updating of Drupal core is not supported. See the <a href=":update-guide">Updating Drupal guide</a> for information on how to update Drupal core manually.', [':update-guide' => 'https://www.drupal.org/docs/updating-drupal']),
-    ];
-  }
+/**
+ * Prepares variables for update version templates.
+ *
+ * Default template: update-version.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - version: An array of information about the release version.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_update_version(array &$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(UpdateThemeHooks::class)->preprocessUpdateVersion($variables);
+}
 
-  // Parse all the .info.yml files and make sure at least one is compatible with
-  // this version of Drupal core. If one is compatible, then the project as a
-  // whole is considered compatible (since, for example, the project may ship
-  // with some out-of-date modules that are not necessary for its overall
-  // functionality).
-  $compatible_project = FALSE;
-  $incompatible = [];
-  /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-  $file_system = \Drupal::service('file_system');
-  $files = $file_system->scanDirectory("$directory/$project", '/.*\.info.yml$/', ['key' => 'name', 'min_depth' => 0]);
-  foreach ($files as $file) {
-    // Get the .info.yml file for the module or theme this file belongs to.
-    $info = \Drupal::service('info_parser')->parse($file->uri);
+/**
+ * Prepares variables for update project status templates.
+ *
+ * Default template: update-project-status.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - project: An array of information about the project.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_update_project_status(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(UpdateThemeHooks::class)->preprocessUpdateProjectStatus($variables);
+}
 
-    // If the module or theme is incompatible with Drupal core, set an error.
-    if ($info['core_incompatible']) {
-      $incompatible[] = !empty($info['name']) ? $info['name'] : t('Unknown');
-    }
-    else {
-      $compatible_project = TRUE;
-      break;
-    }
-  }
-
-  if (empty($files)) {
-    $errors[] = t('%archive_file does not contain any .info.yml files.', ['%archive_file' => $file_system->basename($archive_file)]);
-  }
-  elseif (!$compatible_project) {
-    $errors[] = \Drupal::translation()->formatPlural(
-      count($incompatible),
-      '%archive_file contains a version of %names that is not compatible with Drupal @version.',
-      '%archive_file contains versions of modules or themes that are not compatible with Drupal @version: %names',
-      [
-        '@version' => \Drupal::VERSION,
-        '%archive_file' => $file_system->basename($archive_file),
-        '%names' => implode(', ', $incompatible),
-      ]
-    );
-  }
-
-  return $errors;
+/**
+ * Prepares variables for update fetch error message templates.
+ *
+ * Default template: update-fetch-error-message.html.twig.
+ *
+ * @param array $variables
+ *   An associative array of template variables.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_update_fetch_error_message(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(UpdateThemeHooks::class)->preprocessUpdateFetchErrorMessage($variables);
 }
 
 /**
  * Invalidates stored data relating to update status.
  */
-function update_storage_clear() {
+function update_storage_clear(): void {
   \Drupal::keyValueExpirable('update')->deleteAll();
   \Drupal::keyValueExpirable('update_available_release')->deleteAll();
 }
@@ -596,8 +371,15 @@ function update_storage_clear() {
  *
  * @return string
  *   An eight character string uniquely identifying this Drupal installation.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3522119
  */
 function _update_manager_unique_identifier() {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+
   static $id;
   if (!isset($id)) {
     $id = substr(hash('sha256', Settings::getHashSalt()), 0, 8);
@@ -608,15 +390,22 @@ function _update_manager_unique_identifier() {
 /**
  * Returns the directory where update archive files should be extracted.
  *
- * @param $create
+ * @param bool $create
  *   (optional) Whether to attempt to create the directory if it does not
  *   already exist. Defaults to TRUE.
  *
  * @return string
  *   The full path to the temporary directory where update file archives should
  *   be extracted.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3522119
  */
 function _update_manager_extract_directory($create = TRUE) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+
   static $directory;
   if (!isset($directory)) {
     $directory = 'temporary://update-extraction-' . _update_manager_unique_identifier();
@@ -630,15 +419,22 @@ function _update_manager_extract_directory($create = TRUE) {
 /**
  * Returns the directory where update archive files should be cached.
  *
- * @param $create
+ * @param bool $create
  *   (optional) Whether to attempt to create the directory if it does not
  *   already exist. Defaults to TRUE.
  *
  * @return string
  *   The full path to the temporary directory where update file archives should
  *   be cached.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3522119
  */
 function _update_manager_cache_directory($create = TRUE) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+
   static $directory;
   if (!isset($directory)) {
     $directory = 'temporary://update-cache-' . _update_manager_unique_identifier();
@@ -651,8 +447,15 @@ function _update_manager_cache_directory($create = TRUE) {
 
 /**
  * Clears the temporary files and directories based on file age from disk.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3522119
  */
-function update_clear_update_disk_cache() {
+function update_clear_update_disk_cache(): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+
   // List of update module cache directories. Do not create the directories if
   // they do not exist.
   $directories = [
@@ -663,7 +466,11 @@ function update_clear_update_disk_cache() {
   // Search for files and directories in base folder only without recursion.
   foreach ($directories as $directory) {
     if (is_dir($directory)) {
-      \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
+      \Drupal::service('file_system')
+        ->scanDirectory($directory, '/.*/', [
+          'callback' => 'update_delete_file_if_stale',
+          'recurse' => FALSE,
+        ]);
     }
   }
 }
@@ -683,13 +490,20 @@ function update_clear_update_disk_cache() {
  * left alone by tar and correctly set to the time the archive file was
  * unpacked.
  *
- * @param $path
+ * @param string $path
  *   A string containing a file path or (streamwrapper) URI.
  *
  * @return bool
  *   TRUE if the file is stale and deleted successfully, FALSE otherwise.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3522119
  */
 function update_delete_file_if_stale($path) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+
   if (file_exists($path)) {
     $filectime = filectime($path);
     $max_age = \Drupal::config('system.file')->get('temporary_maximum_age');
@@ -699,7 +513,7 @@ function update_delete_file_if_stale($path) {
         \Drupal::service('file_system')->deleteRecursive($path);
         return TRUE;
       }
-      catch (FileException $e) {
+      catch (FileException) {
         // Ignore failed deletes.
       }
     }

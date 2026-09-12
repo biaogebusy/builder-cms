@@ -50,6 +50,18 @@ blazy.settings:
     use_oembed:
       type: boolean
       label: 'Use oEmbed'
+    privacy_consent:
+      type: boolean
+      label: 'Use Privacy-Enhanced YouTube domain'
+    ratio_modern:
+      type: boolean
+      label: 'Use modern CSS aspect-ratio'
+    use_custom_css:
+      type: boolean
+      label: 'Allow custom inline CSS'
+    css_scope:
+      type: string
+      label: 'CSS selector scope'
     max_region_count:
       type: integer
       label: 'Max region count'

@@ -9,14 +9,16 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cSpell:ignore downlander
-
 /**
  * Tests the Manage Display page of a fieldable entity type.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class ManageFieldsTest extends BrowserTestBase {
 
   use FieldUiTestTrait;
@@ -87,9 +89,8 @@ class ManageFieldsTest extends BrowserTestBase {
     // Check that the summary element for the string field type exists and has
     // the correct text (which comes from the FieldItemBase class).
     $element = $assert_session->elementExists('css', '#highlander');
-    $summary = $assert_session->elementExists('css', '.field-settings-summary-cell > ul > li', $element);
-    $field_label = $this->container->get('plugin.manager.field.field_type')->getDefinitions()['string']['label'];
-    $this->assertEquals($field_label, $summary->getText());
+    $field_label = (string) $this->container->get('plugin.manager.field.field_type')->getDefinitions()['string']['label'];
+    $assert_session->elementExists('css', '.field-settings-summary-cell .field-type-label:contains("' . $field_label . '")', $element);
 
     // Add an entity reference field, and check that its summary is custom.
     /** @var \Drupal\field\FieldStorageConfigInterface $storage */
@@ -139,10 +140,7 @@ class ManageFieldsTest extends BrowserTestBase {
 
     // Make sure field descriptions appear, both 1 line and multiple lines.
     $this->drupalGet('/admin/structure/types/manage/' . $type->id() . '/fields/add-field');
-    $edit = [
-      'new_storage_type' => 'field_test_descriptions',
-    ];
-    $this->submitForm($edit, 'Continue');
+    $this->clickLink('Fields for testing descriptions.');
     $this->assertSession()->pageTextContains('This one-line field description is important for testing');
     $this->assertSession()->pageTextContains('This multiple line description needs to use an array');
     $this->assertSession()->pageTextContains('This second line contains important information');
@@ -153,15 +151,15 @@ class ManageFieldsTest extends BrowserTestBase {
     $this->assertNull(FieldStorageConfig::loadByName('node', "field_test_field"));
 
     $this->drupalGet('/admin/structure/types/manage/' . $type->id() . '/fields/add-field');
-    $edit = [
-      'new_storage_type' => 'test_field',
-    ];
-    $this->submitForm($edit, 'Continue');
+    $this->clickLink('Test field');
+    $this->submitForm([], 'Continue');
     $edit = [
       'label' => 'Test field',
       'field_name' => 'test_field',
     ];
     $this->submitForm($edit, 'Continue');
+    // Test Breadcrumbs.
+    $this->getSession()->getPage()->findLink('Test field');
     $this->assertSession()->statusMessageNotContains('Saved');
 
     // Change the storage form values.
@@ -174,10 +172,8 @@ class ManageFieldsTest extends BrowserTestBase {
 
     // Try creating a field with the same machine name.
     $this->drupalGet('/admin/structure/types/manage/' . $type->id() . '/fields/add-field');
-    $edit = [
-      'new_storage_type' => 'test_field',
-    ];
-    $this->submitForm($edit, 'Continue');
+    $this->clickLink('Test field');
+    $this->submitForm([], 'Continue');
     $edit = [
       'label' => 'Test field',
       'field_name' => 'test_field',
@@ -189,7 +185,7 @@ class ManageFieldsTest extends BrowserTestBase {
     // Assert that the field is created with the new settings.
     $this->submitForm([], 'Update settings');
     $this->assertSession()->statusMessageNotContains('Saved');
-    $this->submitForm([], 'Save settings');
+    $this->submitForm([], 'Save');
     $this->assertSession()->statusMessageContains('Saved');
 
     $this->assertEquals(1, FieldStorageConfig::loadByName('node', 'field_test_field')->getCardinality());
@@ -210,10 +206,8 @@ class ManageFieldsTest extends BrowserTestBase {
     // Start adding a field as user 1, stop prior to saving, but keep the URL.
     $this->drupalLogin($user1);
     $this->drupalGet($bundle_path . '/fields/add-field');
-    $edit = [
-      'new_storage_type' => 'test_field',
-    ];
-    $this->submitForm($edit, 'Continue');
+    $this->clickLink('Test field');
+    $this->submitForm([], 'Continue');
     $edit = [
       'label' => 'Test field',
       'field_name' => 'test_field',
@@ -228,10 +222,8 @@ class ManageFieldsTest extends BrowserTestBase {
     // Actually add a field as user 2.
     $this->drupalLogin($user2);
     $this->drupalGet($bundle_path . '/fields/add-field');
-    $edit = [
-      'new_storage_type' => 'test_field',
-    ];
-    $this->submitForm($edit, 'Continue');
+    $this->clickLink('Test field');
+    $this->submitForm([], 'Continue');
     $edit = [
       'label' => 'Test field',
       'field_name' => 'test_field',
@@ -242,7 +234,7 @@ class ManageFieldsTest extends BrowserTestBase {
     // the field is saved.
     $this->assertEquals(1, $allowed_no_of_values);
     $this->submitForm(['field_storage[subform][cardinality_number]' => 2], 'Update settings');
-    $this->submitForm([], 'Save settings');
+    $this->submitForm([], 'Save');
     $this->assertSession()->pageTextContains("Saved Test field configuration.");
     $this->drupalLogout();
 
@@ -252,7 +244,7 @@ class ManageFieldsTest extends BrowserTestBase {
     // Assert that the user can go on with configuring a field with a machine
     // that is already taken.
     $this->assertSession()->pageTextNotContains('error');
-    $this->submitForm([], 'Save settings');
+    $this->submitForm([], 'Save');
     // An error is thrown only after the final 'Save'.
     $this->assertSession()->statusMessageContains("An error occurred while saving the field: 'field_storage_config' entity with ID 'node.field_test_field' already exists.");
   }
@@ -269,10 +261,8 @@ class ManageFieldsTest extends BrowserTestBase {
     // Start adding a field but stop prior to saving.
     $this->drupalLogin($user);
     $this->drupalGet($bundle_path . '/fields/add-field');
-    $edit = [
-      'new_storage_type' => 'test_field',
-    ];
-    $this->submitForm($edit, 'Continue');
+    $this->clickLink('Test field');
+    $this->submitForm([], 'Continue');
     $edit = [
       'label' => 'Test field',
       'field_name' => 'test_field',
@@ -325,25 +315,8 @@ class ManageFieldsTest extends BrowserTestBase {
 
   /**
    * Tests hook_form_field_storage_config_form_edit_alter().
-   *
-   * @group legacy
    */
-  public function testFieldStorageFormAlter(): void {
-    $this->container->get('module_installer')->install(['field_ui_test_deprecated']);
-    $this->rebuildContainer();
-
-    $node_type = $this->drupalCreateContentType();
-    $bundle = $node_type->id();
-    $this->expectDeprecation('The deprecated alter hook hook_form_field_storage_config_edit_form_alter() is implemented in these functions: field_ui_test_deprecated_form_field_storage_config_edit_form_alter. Use hook_form_field_config_edit_form_alter() instead. See https://www.drupal.org/node/3386675.');
-    $this->drupalGet("/admin/structure/types/manage/$bundle/fields/node.$bundle.body");
-    $this->assertSession()->elementTextContains('css', '#edit-field-storage', 'Greetings from the field_storage_config_edit_form() alter.');
-  }
-
-  /**
-   * Tests hook_form_field_storage_config_form_edit_alter().
-   *
-   * @group legacy
-   */
+  #[IgnoreDeprecations]
   public function testFieldTypeCardinalityAlter(): void {
     $node_type = $this->drupalCreateContentType();
     $bundle = $node_type->id();
@@ -390,7 +363,7 @@ class ManageFieldsTest extends BrowserTestBase {
     $node_type = $this->drupalCreateContentType();
     $this->drupalLogin($user);
     $this->drupalGet('/admin/structure/types/manage/' . $node_type->id() . '/fields/add-field');
-    $field_type = $this->assertSession()->elementExists('xpath', '//label[text()="Test field"]');
+    $field_type = $this->assertSession()->elementExists('xpath', '//span[text()="Test field"]');
     $description_container = $field_type->getParent()->find('css', '.field-option__description');
     $this->assertNotNull($description_container);
     $this->assertEquals('', $description_container->getText());

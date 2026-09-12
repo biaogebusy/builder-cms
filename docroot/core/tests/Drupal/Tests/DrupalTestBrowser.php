@@ -17,7 +17,7 @@ use Symfony\Component\BrowserKit\Response;
  *
  * This code is heavily based on the following projects:
  * - https://github.com/FriendsOfPHP/Goutte
- * - https://github.com/minkphp/MinkGoutteDriver
+ * - https://github.com/minkphp/MinkGoutteDriver.
  */
 class DrupalTestBrowser extends AbstractBrowser {
 
@@ -36,7 +36,7 @@ class DrupalTestBrowser extends AbstractBrowser {
    *
    * @return $this
    */
-  public function setClient(ClientInterface $client) {
+  public function setClient(ClientInterface $client): static {
     $this->client = $client;
 
     if ($this->getServerParameter('HTTP_HOST', NULL) !== NULL || $base_uri = $client->getConfig('base_uri') === NULL) {
@@ -94,7 +94,7 @@ class DrupalTestBrowser extends AbstractBrowser {
       if (str_starts_with($key, 'http-')) {
         $headers[substr($key, 5)] = $val;
       }
-      // CONTENT_* are not prefixed with HTTP_
+      // "CONTENT_*" are not prefixed with "HTTP_".
       elseif (isset($content_headers[$key])) {
         $headers[$key] = $val;
       }
@@ -134,7 +134,7 @@ class DrupalTestBrowser extends AbstractBrowser {
     $method = $request->getMethod();
     $uri = $request->getUri();
 
-    // Let BrowserKit handle redirects
+    // Let BrowserKit handle redirects.
     try {
       $response = $this->getClient()->request($method, $uri, $request_options);
     }
@@ -210,7 +210,7 @@ class DrupalTestBrowser extends AbstractBrowser {
    * @param string $array_name
    *   Internal parameter used by recursive calls.
    */
-  public function addPostFields(array $formParams, array &$multipart, $array_name = '') {
+  public function addPostFields(array $formParams, array &$multipart, $array_name = ''): void {
     foreach ($formParams as $name => $value) {
       if (!empty($array_name)) {
         $name = $array_name . '[' . $name . ']';
@@ -237,7 +237,7 @@ class DrupalTestBrowser extends AbstractBrowser {
    * @return \Symfony\Component\BrowserKit\Response
    *   A BrowserKit Response instance.
    */
-  protected function createResponse(ResponseInterface $response) {
+  protected function createResponse(ResponseInterface $response): Response {
     return new Response((string) $response->getBody(), $response->getStatusCode(), $response->getHeaders());
   }
 

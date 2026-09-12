@@ -7,6 +7,9 @@ use Drupal\entity\QueryAccess\ConditionGroup;
 use Drupal\entity\QueryAccess\QueryAccessEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * Query access subscriber.
+ */
 class QueryAccessSubscriber implements EventSubscriberInterface {
 
   /**
@@ -94,10 +97,12 @@ class QueryAccessSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function onEventOnlyQueryAccess(QueryAccessEvent $event) {
+    // @phpstan-ignore-next-line Test subscriber intentionally reads global state.
     if (\Drupal::state()->get('test_event_only_query_access')) {
       $conditions = $event->getConditions();
       $conditions->addCondition('type', 'foo');
 
+      // @phpstan-ignore-next-line Test subscriber intentionally reads global state.
       $cacheability = \Drupal::state()->get('event_only_query_access_cacheability');
       if ($cacheability instanceof CacheableDependencyInterface) {
         $conditions->addCacheableDependency($cacheability);

@@ -22,7 +22,7 @@ class WebformSettingsAssetsTest extends WebformBrowserTestBase {
   /**
    * Tests webform assets.
    */
-  public function testAssets() {
+  public function testAssets(): void {
     $assert_session = $this->assertSession();
 
     $webform_assets = Webform::load('test_form_assets');
@@ -46,22 +46,34 @@ class WebformSettingsAssetsTest extends WebformBrowserTestBase {
     $assert_session->responseNotContains('href="' . base_path() . 'webform/css/test_form_assets/custom.css?');
     $assert_session->responseNotContains('src="' . base_path() . 'webform/javascript/test_form_assets/custom.js?');
 
+    // Check that global CSS/JS is not found.
+    $this->drupalGet('/webform/assets/global.js');
+    $assert_session->statusCodeEquals(404);
+    $this->drupalGet('/webform/assets/global.css');
+    $assert_session->statusCodeEquals(404);
+
     // Add global CSS and JS on all webforms.
-    \Drupal::configFactory()->getEditable('webform.settings')
-      ->set('assets.css', '/**/')
-      ->set('assets.javascript', '/**/')
-      ->save();
+    $this->drupalLogin($this->rootUser);
+    $this->drupalGet('/admin/structure/webform/config/libraries');
+    $edit = [
+      'assets[css]' => '/**/',
+      'assets[javascript]' => '/**/',
+    ];
+    $this->submitForm($edit, 'Save configuration');
+    $this->drupalLogout();
 
-    // Check has global CSS (href) and JavaScript (src).
+    // Check that global CSS/JS is found.
+    $this->drupalGet('/webform/assets/global.js');
+    $assert_session->statusCodeEquals(200);
+    $this->drupalGet('/webform/assets/global.css');
+    $assert_session->statusCodeEquals(200);
+
+    // Check that global CSS/JS is added to the webform libraries.
     $this->drupalGet('/webform/test_form_assets');
-    $assert_session->responseContains('href="' . base_path() . 'webform/css/test_form_assets/custom.css?');
-    $assert_session->responseContains('src="' . base_path() . 'webform/javascript/test_form_assets/custom.js?');
-
-    // Check that 200 status is returned to pages without any CSS or JS.
-    $this->drupalGet('/webform/javascript/contact/custom.js');
-    $assert_session->statusCodeEquals(200);
-    $this->drupalGet('/webform/css/contact/custom.css');
-    $assert_session->statusCodeEquals(200);
+    $assert_session->responseContains('href="' . base_path() . 'webform/assets/global.css?');
+    $assert_session->responseContains('src="' . base_path() . 'webform/assets/global.js?');
+    $assert_session->responseNotContains('href="' . base_path() . 'webform/css/test_form_assets/custom.css?');
+    $assert_session->responseNotContains('src="' . base_path() . 'webform/javascript/test_form_assets/custom.js?');
   }
 
 }

@@ -12,7 +12,7 @@ use Drupal\Tests\UnitTestCase;
 class ConditionTest extends UnitTestCase {
 
   /**
-   * ::covers __construct.
+   * @covers ::__construct
    */
   public function testInvalidOperator() {
     $this->expectException(\InvalidArgumentException::class);
@@ -21,10 +21,10 @@ class ConditionTest extends UnitTestCase {
   }
 
   /**
-   * ::covers getField
-   * ::covers getValue
-   * ::covers getOperator
-   * ::covers __toString.
+   * @covers ::getField
+   * @covers ::getValue
+   * @covers ::getOperator
+   * @covers ::__toString
    */
   public function testGetters() {
     $condition = new Condition('uid', '2');

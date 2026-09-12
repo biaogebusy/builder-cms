@@ -125,6 +125,7 @@ class AdminCommentForm extends AreaPluginBase {
     if ($entity) {
       $form = $this->formBuilder->getForm(LogCommentForm::class, $source_entity_type, $source_entity_id, $log_template_id);
       $form['log_comment']['comment']['#description'] = $this->t('Your comment will only be visible to users who have access to the activity log.');
+      $form['#attached']['library'][] = 'commerce_log/admin_comment_form';
       return $form;
     }
     return [];

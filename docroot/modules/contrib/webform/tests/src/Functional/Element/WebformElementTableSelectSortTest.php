@@ -21,7 +21,7 @@ class WebformElementTableSelectSortTest extends WebformElementBrowserTestBase {
   /**
    * Tests table select and sort elements.
    */
-  public function testTableSelectSort() {
+  public function testTableSelectSort(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_table_select_sort');

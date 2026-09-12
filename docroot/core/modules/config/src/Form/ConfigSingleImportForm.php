@@ -5,28 +5,19 @@ namespace Drupal\config\Form;
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\config\StorageReplaceDataWrapper;
 use Drupal\Core\Batch\BatchBuilder;
-use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Config\ConfigImporterException;
-use Drupal\Core\Config\ConfigManagerInterface;
+use Drupal\Core\Config\ConfigImporterFactory;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\Importer\ConfigImporterBatch;
 use Drupal\Core\Config\StorageComparer;
 use Drupal\Core\Config\StorageInterface;
-use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleExtensionList;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Extension\ModuleInstallerInterface;
-use Drupal\Core\Extension\ThemeExtensionList;
-use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides a form for importing a single configuration file.
@@ -34,90 +25,6 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @internal
  */
 class ConfigSingleImportForm extends ConfirmFormBase {
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The config storage.
-   *
-   * @var \Drupal\Core\Config\StorageInterface
-   */
-  protected $configStorage;
-
-  /**
-   * The renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
-   * The configuration manager.
-   *
-   * @var \Drupal\Core\Config\ConfigManagerInterface
-   */
-  protected $configManager;
-
-  /**
-   * The database lock object.
-   *
-   * @var \Drupal\Core\Lock\LockBackendInterface
-   */
-  protected $lock;
-
-  /**
-   * The typed config manager.
-   *
-   * @var \Drupal\Core\Config\TypedConfigManagerInterface
-   */
-  protected $typedConfigManager;
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The theme handler.
-   *
-   * @var \Drupal\Core\Extension\ThemeHandlerInterface
-   */
-  protected $themeHandler;
-
-  /**
-   * The module extension list.
-   *
-   * @var \Drupal\Core\Extension\ModuleExtensionList
-   */
-  protected $moduleExtensionList;
-
-  /**
-   * The theme extension list.
-   *
-   * @var \Drupal\Core\Extension\ThemeExtensionList
-   */
-  protected $themeExtensionList;
-
-  /**
-   * The module installer.
-   *
-   * @var \Drupal\Core\Extension\ModuleInstallerInterface
-   */
-  protected $moduleInstaller;
 
   /**
    * If the config exists, this is that object. Otherwise, FALSE.
@@ -136,50 +43,21 @@ class ConfigSingleImportForm extends ConfirmFormBase {
   /**
    * Constructs a new ConfigSingleImportForm.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Config\StorageInterface $config_storage
+   * @param \Drupal\Core\Config\StorageInterface $configStorage
    *   The config storage.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer service.
-   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
-   *   The event dispatcher used to notify subscribers of config import events.
-   * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
-   *   The configuration manager.
-   * @param \Drupal\Core\Lock\LockBackendInterface $lock
-   *   The lock backend to ensure multiple imports do not occur at the same time.
-   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config
-   *   The typed configuration manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Drupal\Core\Extension\ModuleInstallerInterface $module_installer
-   *   The module installer.
-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
-   *   The theme handler.
-   * @param \Drupal\Core\Extension\ModuleExtensionList $extension_list_module
-   *   The module extension list.
-   * @param \Drupal\Core\Extension\ThemeExtensionList $extension_list_theme
-   *   The theme extension list.
+   * @param \Drupal\Core\Config\ConfigImporterFactory $configImporterFactory
+   *   The config importer factory.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, StorageInterface $config_storage, RendererInterface $renderer, EventDispatcherInterface $event_dispatcher, ConfigManagerInterface $config_manager, LockBackendInterface $lock, TypedConfigManagerInterface $typed_config, ModuleHandlerInterface $module_handler, ModuleInstallerInterface $module_installer, ThemeHandlerInterface $theme_handler, ModuleExtensionList $extension_list_module, ?ThemeExtensionList $extension_list_theme = NULL) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->configStorage = $config_storage;
-    $this->renderer = $renderer;
-
-    // Services necessary for \Drupal\Core\Config\ConfigImporter.
-    $this->eventDispatcher = $event_dispatcher;
-    $this->configManager = $config_manager;
-    $this->lock = $lock;
-    $this->typedConfigManager = $typed_config;
-    $this->moduleHandler = $module_handler;
-    $this->moduleInstaller = $module_installer;
-    $this->themeHandler = $theme_handler;
-    $this->moduleExtensionList = $extension_list_module;
-    if ($extension_list_theme === NULL) {
-      @trigger_error('Calling ' . __METHOD__ . ' without the $extension_list_theme argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3284397', E_USER_DEPRECATED);
-      $extension_list_theme = \Drupal::service('extension.list.theme');
-    }
-    $this->themeExtensionList = $extension_list_theme;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected StorageInterface $configStorage,
+    protected RendererInterface $renderer,
+    protected ConfigImporterFactory $configImporterFactory,
+  ) {
   }
 
   /**
@@ -190,15 +68,7 @@ class ConfigSingleImportForm extends ConfirmFormBase {
       $container->get('entity_type.manager'),
       $container->get('config.storage'),
       $container->get('renderer'),
-      $container->get('event_dispatcher'),
-      $container->get('config.manager'),
-      $container->get('lock.persistent'),
-      $container->get('config.typed'),
-      $container->get('module_handler'),
-      $container->get('module_installer'),
-      $container->get('theme_handler'),
-      $container->get('extension.list.module'),
-      $container->get('extension.list.theme')
+      $container->get(ConfigImporterFactory::class),
     );
   }
 
@@ -337,7 +207,10 @@ class ConfigSingleImportForm extends ConfirmFormBase {
       $entity_storage = $this->entityTypeManager->getStorage($form_state->getValue('config_type'));
       // If an entity ID was not specified, set an error.
       if (!isset($data[$id_key])) {
-        $form_state->setErrorByName('import', $this->t('Missing ID key "@id_key" for this @entity_type import.', ['@id_key' => $id_key, '@entity_type' => $definition->getLabel()]));
+        $form_state->setErrorByName('import', $this->t('Missing ID key "@id_key" for this @entity_type import.', [
+          '@id_key' => $id_key,
+          '@entity_type' => $definition->getLabel(),
+        ]));
         return;
       }
 
@@ -376,25 +249,13 @@ class ConfigSingleImportForm extends ConfirmFormBase {
         $form_state->setErrorByName('import', $this->t('There are no changes to import.'));
       }
       else {
-        $config_importer = new ConfigImporter(
-          $storage_comparer,
-          $this->eventDispatcher,
-          $this->configManager,
-          $this->lock,
-          $this->typedConfigManager,
-          $this->moduleHandler,
-          $this->moduleInstaller,
-          $this->themeHandler,
-          $this->getStringTranslation(),
-          $this->moduleExtensionList,
-          $this->themeExtensionList
-        );
+        $config_importer = $this->configImporterFactory->get($storage_comparer);
 
         try {
           $config_importer->validate();
           $form_state->set('config_importer', $config_importer);
         }
-        catch (ConfigImporterException $e) {
+        catch (ConfigImporterException) {
           // There are validation errors.
           $item_list = [
             '#theme' => 'item_list',
@@ -440,7 +301,7 @@ class ConfigSingleImportForm extends ConfirmFormBase {
         }
         batch_set($batch_builder->toArray());
       }
-      catch (ConfigImporterException $e) {
+      catch (ConfigImporterException) {
         // There are validation errors.
         $this->messenger()->addError($this->t('The configuration import failed for the following reasons:'));
         foreach ($config_importer->getErrors() as $message) {

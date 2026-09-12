@@ -2,13 +2,18 @@
 
 namespace Drupal\Tests\paragraphs\Functional\WidgetLegacy;
 
+use Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface;
 use Drupal\paragraphs\Entity\Paragraph;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the configuration of paragraphs.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsAdministrationTest extends ParagraphsTestBase {
 
   /**
@@ -145,8 +150,11 @@ class ParagraphsAdministrationTest extends ParagraphsTestBase {
     $this->drupalGet('admin/structure/paragraphs_type');
     $this->assertSession()->pageTextContains('There are no Paragraphs types yet.');
     $this->drupalGet('admin/structure/types/manage/paragraphs/fields/add-field');
-    $this->getSession()->getPage()->fillField('new_storage_type', 'field_ui:entity_reference_revisions:paragraph');
-    if ($this->coreVersion('10.3')) {
+    if ($this->coreVersion('11.2')) {
+      $this->clickLink('Create structured content.');
+    }
+    else {
+      $this->getSession()->getPage()->fillField('new_storage_type', 'field_ui:entity_reference_revisions:paragraph');
       $this->getSession()->getPage()->pressButton('Continue');
     }
     $edit = [
@@ -457,12 +465,15 @@ class ParagraphsAdministrationTest extends ParagraphsTestBase {
       'settings[handler_settings][target_bundles][article]' => TRUE,
       'required' => TRUE,
     ]);
+    // In 11.4, inconsistent behavior in
+    // \Drupal\Core\Entity\Sql\SqlContentEntityStorage::loadFromDedicatedTables()
+    // requires a full cache flush to have field storage definitions in sync.
+    drupal_flush_all_caches();
     $node = $this->drupalGetNodeByTitle('Nested twins');
 
     // Create a node with a reference in a Paragraph.
     $this->drupalGet('node/add/article');
     $this->submitForm([], 'field_paragraphs_node_test_add_more');
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
     $edit = [
       'field_paragraphs[0][subform][field_entity_reference][0][target_id]' => $node->label() . ' (' . $node->id() . ')',
       'title[0][value]' => 'choke test',

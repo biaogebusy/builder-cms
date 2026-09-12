@@ -12,12 +12,14 @@ use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user picture functionality.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserPictureTest extends BrowserTestBase {
 
   use TestFileCreationTrait {
@@ -167,7 +169,6 @@ class UserPictureTest extends BrowserTestBase {
 
     // Load actual user data from database.
     $user_storage = $this->container->get('entity_type.manager')->getStorage('user');
-    $user_storage->resetCache([$this->webUser->id()]);
     $account = $user_storage->load($this->webUser->id());
     return File::load($account->user_picture->target_id);
   }

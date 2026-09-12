@@ -12,8 +12,8 @@ use Drupal\Core\Render\HtmlResponse;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drush\Config\ConfigLocator;
 use Drush\Drupal\DrushLoggerServiceProvider;
-use Drush\Drupal\Migrate\MigrateRunnerServiceProvider;
 use Drush\Drush;
+use Drush\Event\ConsoleDefinitionsEvent;
 use Drush\Runtime\LegacyServiceFinder;
 use Drush\Runtime\LegacyServiceInstantiator;
 use Drush\Runtime\ServiceManager;
@@ -86,7 +86,7 @@ class DrupalBoot8 extends DrupalBoot
 
     public function bootstrapDrupalSiteValidate(BootstrapManager $manager): bool
     {
-        parent::bootstrapDrupalSiteValidate($manager);
+        // parent::bootstrapDrupalSiteValidate($manager);
 
         // Normalize URI.
         $uri = rtrim($this->uri, '/') . '/';
@@ -104,15 +104,13 @@ class DrupalBoot8 extends DrupalBoot
             'SCRIPT_FILENAME' => getcwd() . '/index.php',
             'SCRIPT_NAME' => isset($parsed_url['path']) ? $parsed_url['path'] . 'index.php' : '/index.php',
         ] + $_SERVER;
-        // To do: split into Drupal 9 and Drupal 10 bootstrap
-        if (method_exists(Request::class, 'create')) {
-            // Drupal 9
-            $request = Request::create($uri, 'GET', [], [], [], $server);
-        } else {
-            // Drupal 10
-            $request = Request::createFromGlobals();
-        }
+        $request = Request::create($uri, 'GET', [], [], [], $server);
         $request->overrideGlobals();
+
+        // Remove HTTP_ACCEPT, as things such as the Symfony var-dumper will
+        // incorrectly sniff that we're in a browser request.
+        unset($_SERVER['HTTP_ACCEPT']);
+
         $this->setRequest($request);
         return true;
     }
@@ -182,9 +180,6 @@ class DrupalBoot8 extends DrupalBoot
     {
         // Coax \Drupal\Core\DrupalKernel::discoverServiceProviders to add our logger.
         $GLOBALS['conf']['container_service_providers'][] = DrushLoggerServiceProvider::class;
-        // Implement a hook in behalf of 'system' module until #2952291 lands.
-        // @see https://www.drupal.org/project/drupal/issues/2952291
-        $GLOBALS['conf']['container_service_providers'][] = MigrateRunnerServiceProvider::class;
 
         // Default to the standard kernel.
         $kernel = Kernels::DRUPAL;
@@ -202,7 +197,7 @@ class DrupalBoot8 extends DrupalBoot
         // Disable automated cron if the module is enabled.
         $GLOBALS['config']['automated_cron.settings']['interval'] = 0;
 
-        parent::bootstrapDrupalConfiguration($manager);
+        // parent::bootstrapDrupalConfiguration($manager);
     }
 
     public function bootstrapDrupalFull(BootstrapManager $manager): void
@@ -217,12 +212,17 @@ class DrupalBoot8 extends DrupalBoot
         // Directly add the Drupal core bootstrapped commands.
         Drush::getApplication()->addCommands($this->serviceManager->instantiateDrupalCoreBootstrappedCommands());
 
+        $this->addBootstrapListeners();
+
         $this->addDrupalModuleDrushCommands($manager);
 
         // Set a default account to make sure the correct timezone is set
         $this->kernel->getContainer()->get('current_user')->setAccount(new AnonymousUserSession());
     }
 
+    /**
+     * Adds module supplied commands, as well as Symfony Console commands that require bootstrap.
+     */
     public function addDrupalModuleDrushCommands(BootstrapManager $manager): void
     {
         $application = Drush::getApplication();
@@ -251,7 +251,10 @@ class DrupalBoot8 extends DrupalBoot
             $commandsInThisModule = $this->serviceManager->discoverModuleCommands([$path], "\\Drupal\\" . $moduleId . "\\Drush");
             // TODO: Maybe $bootstrapCommandClasses could use a better name.
             // These are commandhandlers that have static create factory methods.
-            $bootstrapCommandClasses = array_merge($bootstrapCommandClasses, $commandsInThisModule);
+            // array_unique() prevents classes already found pre-bootstrap by
+            // ServiceManager::discoverPsr4Commands() from being instantiated a
+            // second time when their namespace is a Composer PSR-4 prefix.
+            $bootstrapCommandClasses = array_unique(array_merge($bootstrapCommandClasses, $commandsInThisModule));
             // TODO: Support PSR-4 command info alterers, like bootstrapCommandClasses?
             $commandInfoAlterersInThisModule = $this->serviceManager->discoverModuleCommandInfoAlterers([$path], "\\Drupal\\" . $moduleId . "\\Drush");
             $commandInfoAlterers = array_merge($commandInfoAlterers, $commandInfoAlterersInThisModule);
@@ -266,6 +269,8 @@ class DrupalBoot8 extends DrupalBoot
         // Robo::register to add any commands, as that is the point where the
         // alteration will happen.
         foreach ($commandInfoAlterers as $altererHandler) {
+            // @todo This is in Drush14 but is giving an error here.
+            // $altererHandler = $this->serviceManager->commandFromInvokable($altererHandler);
             $commandFactory->addCommandInfoAlterer($altererHandler);
             $this->logger->debug(dt('Commands are potentially altered in !class.', ['!class' => get_class($altererHandler)]));
         }
@@ -292,9 +297,11 @@ class DrupalBoot8 extends DrupalBoot
         $commandHandlers = $this->serviceManager->instantiateServices($bootstrapCommandClasses, $drushContainer, $container);
 
         // Inflect and register all command handlers
-        foreach ($commandHandlers as $commandHandler) {
-            Robo::register($application, $commandHandler);
-        }
+        $commandHandlers = $this->serviceManager->commandFromInvokable($commandHandlers);
+        Robo::register($application, $commandHandlers);
+
+        // Dispatch our custom event. It also fires earlier in \Drush\Application::configureAndRegisterCommands.
+        Drush::getContainer()->get('eventDispatcher')->dispatch(new ConsoleDefinitionsEvent(Drush::getApplication()), ConsoleDefinitionsEvent::class);
     }
 
     /**
@@ -324,5 +331,18 @@ class DrupalBoot8 extends DrupalBoot
     public function bootstrapDrupalSite(BootstrapManager $manager)
     {
         $this->bootstrapDoDrupalSite($manager);
+    }
+
+    // Add the Listeners that require bootstrap.
+    public function addBootstrapListeners(): void
+    {
+        $listenersInThisModule = [];
+        $moduleHandler = \Drupal::moduleHandler();
+        foreach ($moduleHandler->getModuleList() as $moduleId => $extension) {
+            $path = DRUPAL_ROOT . '/' . $extension->getPath() . '/src/Drush';
+            $listenersInThisModule = array_merge($listenersInThisModule, $this->serviceManager->discoverListeners([$path], "\Drupal\\$moduleId\Drush"));
+        }
+        $classes = $this->serviceManager->bootstrapListenerClasses();
+        $this->serviceManager->addListeners(array_merge($listenersInThisModule, $classes), Drush::getContainer(), \Drupal::getContainer());
     }
 }

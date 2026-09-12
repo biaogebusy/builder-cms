@@ -6,7 +6,6 @@ use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Url;
 use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines an area plugin to display a node/add link.
@@ -44,18 +43,6 @@ class ListingEmpty extends AreaPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('access_manager')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function render($empty = FALSE) {
     $account = \Drupal::currentUser();
     if (!$empty || !empty($this->options['empty'])) {
@@ -63,11 +50,11 @@ class ListingEmpty extends AreaPluginBase {
         '#theme' => 'links',
         '#links' => [
           [
-            'url' => Url::fromRoute('node.add_page'),
+            'url' => Url::fromRoute('entity.node.add_page'),
             'title' => $this->t('Add content'),
           ],
         ],
-        '#access' => $this->accessManager->checkNamedRoute('node.add_page', [], $account),
+        '#access' => $this->accessManager->checkNamedRoute('entity.node.add_page', [], $account),
       ];
       return $element;
     }

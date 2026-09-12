@@ -1,0 +1,16 @@
+ckeditor5_premium_features_realtime_collaboration.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/realtime'
+  defaults:
+    _title: 'Realtime Collaboration'
+    _form: 'Drupal\ckeditor5_premium_features_realtime_collaboration\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+ckeditor5_premium_features_realtime_collaboration.flush_session:
+  path: '/ckeditor5-premium-features-realtime-collaboration/flush-session/{documentId}'
+  defaults:
+    _title: 'Flush Collaborative Session'
+    _controller: '\Drupal\ckeditor5_premium_features_realtime_collaboration\Controller\FlushCollaborativeSessionController::flush'
+  methods: [DELETE]
+  requirements:
+    _custom_access: '\Drupal\ckeditor5_premium_features_realtime_collaboration\Controller\FlushCollaborativeSessionController::access'

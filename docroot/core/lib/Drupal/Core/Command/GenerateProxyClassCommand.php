@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Provides a console command to generate proxy classes.
  *
  * @see lazy_services
- * @see core/scripts/generate-proxy.sh
+ * @see core/scripts/generate-proxy-class.php
  */
 class GenerateProxyClassCommand extends Command {
 
@@ -38,7 +38,7 @@ class GenerateProxyClassCommand extends Command {
   /**
    * {@inheritdoc}
    */
-  protected function configure() {
+  protected function configure(): void {
     $this->setName('generate-proxy-class')
       ->setDefinition([
         new InputArgument('class_name', InputArgument::REQUIRED, 'The class to be proxied'),
@@ -78,7 +78,11 @@ class GenerateProxyClassCommand extends Command {
  */
 {{ proxy_class_string }}
 EOF;
-      $file_string = str_replace(['{{ proxy_class_name }}', '{{ proxy_class_string }}'], [$proxy_class_name, $proxy_class_string], $file_string);
+      $file_string = str_replace(
+        ['{{ proxy_class_name }}', '{{ proxy_class_string }}'],
+        [$proxy_class_name, $proxy_class_string],
+        $file_string
+      );
 
       mkdir(dirname($proxy_filename), 0775, TRUE);
       file_put_contents($proxy_filename, $file_string);

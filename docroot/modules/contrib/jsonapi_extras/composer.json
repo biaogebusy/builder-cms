@@ -24,5 +24,8 @@
     "require": {
         "php": ">=8.1",
         "e0ipso/shaper": "^1"
+    },
+    "require-dev": {
+        "drupal/schemata": "dev-1.x"
     }
 }

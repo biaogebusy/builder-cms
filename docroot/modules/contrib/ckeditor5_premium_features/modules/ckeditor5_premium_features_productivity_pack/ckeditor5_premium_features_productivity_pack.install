@@ -1,0 +1,26 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function ckeditor5_premium_features_productivity_pack_requirements($phase): array {
+  $requirements = [];
+
+  if (($phase === 'install')) {
+    $libraryDiscovery = \Drupal::service('library.discovery');
+    $lib = $libraryDiscovery->getLibraryByName('core', 'ckeditor5');
+    if (version_compare($lib['version'], '37.1.0') < 0) {
+      $requirements[] = [
+        'description' => t('The Productivity Pack features were introduced in CKEditor 5 v37.1.0. Please update Drupal Core at least to version 10.1, as it meets the Productivity Pack requirements.'),
+        'severity' => ckeditor5_premium_features_get_error_severity(),
+      ];
+    }
+  }
+
+  return $requirements;
+}

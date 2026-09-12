@@ -23,13 +23,13 @@ class SpecialAttributesRouteSubscriber extends RouteSubscriberBase {
       RouteObjectInterface::ROUTE_OBJECT,
       RouteObjectInterface::ROUTE_NAME,
       '_content',
-      '_controller',
+      RouteObjectInterface::CONTROLLER_NAME,
       '_form',
     ];
     foreach ($collection->all() as $name => $route) {
       if ($not_allowed_variables = array_intersect($route->compile()->getVariables(), $special_variables)) {
         $reserved = implode(', ', $not_allowed_variables);
-        trigger_error(sprintf('Route %s uses reserved variable names: %s', $name, $reserved), E_USER_WARNING);
+        throw new \InvalidArgumentException(sprintf('Route %s uses reserved variable names: %s', $name, $reserved));
       }
     }
   }

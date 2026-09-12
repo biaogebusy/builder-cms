@@ -4,6 +4,8 @@ namespace Drupal\Tests\entity_reference_revisions\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the entity_reference_revisions diff plugin.
@@ -12,6 +14,8 @@ use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
  *
  * @dependencies diff
  */
+#[RunTestsInSeparateProcesses]
+#[Group('entity_reference_revisions')]
 class EntityReferenceRevisionsDiffTest extends BrowserTestBase {
 
   use FieldUiTestTrait;

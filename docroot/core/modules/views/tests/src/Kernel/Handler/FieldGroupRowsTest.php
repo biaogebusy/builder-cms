@@ -7,19 +7,21 @@ namespace Drupal\Tests\views\Kernel\Handler;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Render\RenderContext;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
-use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the "Display all values in the same row" setting.
  *
  * @see \Drupal\views\Plugin\views\field\EntityField
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldGroupRowsTest extends ViewsKernelTestBase {
 
   /**
@@ -30,7 +32,6 @@ class FieldGroupRowsTest extends ViewsKernelTestBase {
     'filter',
     'node',
     'text',
-    'user',
   ];
 
   /**

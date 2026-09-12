@@ -7,12 +7,14 @@ namespace Drupal\KernelTests\Core\Field;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\entity_test_update\Entity\EntityTestUpdate;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests map base fields.
- *
- * @group Field
  */
+#[Group('Field')]
+#[RunTestsInSeparateProcesses]
 class MapBaseFieldTest extends EntityKernelTestBase {
 
   /**
@@ -47,7 +49,7 @@ class MapBaseFieldTest extends EntityKernelTestBase {
    */
   public function testUninstallMapItemBaseField(): void {
     $definitions['data_map'] = BaseFieldDefinition::create('map')
-      ->setLabel(t('Data'))
+      ->setLabel('Data')
       ->setRequired(TRUE);
 
     $this->state->set('entity_test_update.additional_base_field_definitions', $definitions);

@@ -28,7 +28,7 @@ class WebformCompositePluginTest extends WebformBrowserTestBase {
   /**
    * Test composite plugin.
    */
-  public function testPlugin() {
+  public function testPlugin(): void {
     $assert_session = $this->assertSession();
 
     /* Display */

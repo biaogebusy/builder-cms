@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce\Functional;
 
+use Drupal\Core\Field\FieldPurger;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
 
@@ -51,7 +52,13 @@ class UninstallTest extends BrowserTestBase {
     $this->container->get('module_installer')->uninstall($modules);
     $this->rebuildContainer();
     // Purge field data in order to remove the commerce_remote_id field.
-    field_purge_batch(50);
+    if (\Drupal::hasService(FieldPurger::class)) {
+      \Drupal::service(FieldPurger::class)->purgeBatch(50);
+    }
+    else {
+      // @phpstan-ignore function.deprecated
+      field_purge_batch(50);
+    }
     // Uninstall the base module.
     $this->container->get('module_installer')->uninstall(['commerce']);
     $this->rebuildContainer();

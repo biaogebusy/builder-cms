@@ -1,0 +1,34 @@
+name: Input Test
+recipes:
+  # Depend on another recipe in order to prove that we can collect input
+  # from dependent recipes as well.
+  - create_node_type
+input:
+  owner:
+    data_type: string
+    description: 'The name of the site owner.'
+    constraints:
+      Regex:
+        pattern: '/hack/i'
+        match: false
+        message: "I don't think you should be owning sites."
+    form:
+      '#type': textfield
+      '#title': "Site owner's name"
+    default:
+      source: value
+      value: 'Dries Buytaert'
+  break_stuff:
+    data_type: boolean
+    description: 'Should mischief be allowed on this site? Not recommended.'
+    form:
+      '#type': checkbox
+      '#title': 'Allow mischief'
+    default:
+      source: value
+      value: false
+config:
+  actions:
+    system.site:
+      simpleConfigUpdate:
+        name: "${owner}'s Turf"

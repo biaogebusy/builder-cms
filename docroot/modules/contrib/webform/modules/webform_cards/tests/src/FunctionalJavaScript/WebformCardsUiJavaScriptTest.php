@@ -28,7 +28,7 @@ class WebformCardsUiJavaScriptTest extends WebformWebDriverTestBase {
   /**
    * Test webform cards UI.
    */
-  public function testUi() {
+  public function testUi(): void {
     $this->placeBlocks();
 
     $this->drupalLogin($this->rootUser);

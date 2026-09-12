@@ -79,7 +79,7 @@ class MenuLinkManager implements MenuLinkManagerInterface {
    *
    * @param array $definition
    *   The definition to be processed and modified by reference.
-   * @param $plugin_id
+   * @param string $plugin_id
    *   The ID of the plugin this definition is being used for.
    */
   protected function processDefinition(array &$definition, $plugin_id) {
@@ -94,6 +94,7 @@ class MenuLinkManager implements MenuLinkManagerInterface {
    * Gets the plugin discovery.
    *
    * @return \Drupal\Component\Plugin\Discovery\DiscoveryInterface
+   *   The discovery service.
    */
   protected function getDiscovery() {
     if (!isset($this->discovery)) {
@@ -109,6 +110,7 @@ class MenuLinkManager implements MenuLinkManagerInterface {
    * Gets the plugin factory.
    *
    * @return \Drupal\Component\Plugin\Factory\FactoryInterface
+   *   The plugin factory.
    */
   protected function getFactory() {
     if (!isset($this->factory)) {

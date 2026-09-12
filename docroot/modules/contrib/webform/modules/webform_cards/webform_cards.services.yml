@@ -7,3 +7,7 @@ services:
     arguments: ['@module_handler']
     tags:
       - { name: event_subscriber }
+
+  Drupal\webform_cards\Hook\WebformCardsHooks:
+    class: Drupal\webform_cards\Hook\WebformCardsHooks
+    autowire: true

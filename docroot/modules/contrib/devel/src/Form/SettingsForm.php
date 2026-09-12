@@ -108,7 +108,7 @@ class SettingsForm extends ConfigFormBase {
           $this->t('Demonstrate the current error handler(s):') . ' ' .
           Link::fromTextAndUrl('notice', $current_url->setOption('query', ['demo' => 'notice']))->toString() . ', ' .
           Link::fromTextAndUrl('notice+warning', $current_url->setOption('query', ['demo' => 'warning']))->toString() . ', ' .
-          Link::fromTextAndUrl('notice+warning+error', $current_url->setOption('query', ['demo' => 'error']))->toString() . ' (' .
+          Link::fromTextAndUrl('error', $current_url->setOption('query', ['demo' => 'error']))->toString() . ' (' .
           $this->t('The presentation of the @error is determined by PHP.', ['@error' => 'error']) . ')',
         ],
       ],
@@ -186,6 +186,8 @@ class SettingsForm extends ConfigFormBase {
    *
    * @param string $severity
    *   The severity level for which demonstrate the error handler capabilities.
+   *
+   * @throws \ErrorException
    */
   protected function demonstrateErrorHandlers(string $severity): void {
     switch ($severity) {
@@ -199,9 +201,7 @@ class SettingsForm extends ConfigFormBase {
         break;
 
       case 'error':
-        trigger_error('This is an example notice', E_USER_NOTICE);
-        trigger_error('This is an example warning', E_USER_WARNING);
-        trigger_error('This is an example error', E_USER_ERROR);
+        throw new \ErrorException('This is an example error');
     }
   }
 

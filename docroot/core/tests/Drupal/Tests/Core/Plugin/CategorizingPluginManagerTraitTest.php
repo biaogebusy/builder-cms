@@ -11,12 +11,16 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\CategorizingPluginManagerTrait;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\CategorizingPluginManagerTrait
- * @group Plugin
- * @runTestsInSeparateProcesses
+ * Tests Drupal\Core\Plugin\CategorizingPluginManagerTrait.
  */
+#[CoversClass(CategorizingPluginManagerTrait::class)]
+#[Group('Plugin')]
+#[RunTestsInSeparateProcesses]
 class CategorizingPluginManagerTraitTest extends UnitTestCase {
 
   /**
@@ -50,7 +54,7 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCategories
+   * Tests get categories.
    */
   public function testGetCategories(): void {
     $this->assertSame([
@@ -60,7 +64,7 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getSortedDefinitions
+   * Tests get sorted definitions.
    */
   public function testGetSortedDefinitions(): void {
     $sorted = $this->pluginManager->getSortedDefinitions();
@@ -68,7 +72,7 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getGroupedDefinitions
+   * Tests get grouped definitions.
    */
   public function testGetGroupedDefinitions(): void {
     $grouped = $this->pluginManager->getGroupedDefinitions();
@@ -78,7 +82,7 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::processDefinitionCategory
+   * Tests process definition category.
    */
   public function testProcessDefinitionCategory(): void {
     // Existing category.
@@ -134,7 +138,7 @@ class CategorizingPluginManager extends DefaultPluginManager implements Categori
    *
    * Provides some test definitions to the trait.
    */
-  public function getDefinitions() {
+  public function getDefinitions(): array {
     return [
       'cucumber' => [
         'label' => 'cucumber',
@@ -154,7 +158,7 @@ class CategorizingPluginManager extends DefaultPluginManager implements Categori
   /**
    * {@inheritdoc}
    */
-  public function processDefinition(&$definition, $plugin_id) {
+  public function processDefinition(&$definition, $plugin_id): void {
     parent::processDefinition($definition, $plugin_id);
     $this->processDefinitionCategory($definition);
   }

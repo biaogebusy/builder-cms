@@ -1,5 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
-/* cspell:ignore drupalelementstyleediting splitbutton imagestyle componentfactory buttonview */
+/* cspell:ignore buttonview componentfactory drupalelementstyle */
+/* cspell:ignore drupalelementstylecommand drupalelementstyleui */
+/* cspell:ignore drupalelementstyleediting imagestyle splitbutton */
 import { Plugin } from 'ckeditor5/src/core';
 import { Collection, toMap } from 'ckeditor5/src/utils';
 import { utils } from '@ckeditor/ckeditor5-image/src/imagestyle/utils';
@@ -501,7 +503,7 @@ export default class DrupalElementStyleUi extends Plugin {
       // If style is selected, use the label of the selected style as the
       // default label of the splitbutton.
       dropdownButtonView.bind('label').to(command, 'value', (commandValue) => {
-        if (commandValue && commandValue[group]) {
+        if (commandValue?.[group]) {
           // eslint-disable-next-line no-restricted-syntax
           for (const style of definedStyles) {
             if (style.name === commandValue[group]) {

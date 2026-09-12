@@ -1,0 +1,11 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_html_embed__html_embed:
+  type: mapping
+  label: HTML embed
+  mapping:
+    previews:
+      type: boolean
+      label: 'Show previews'
+    use_purifier:
+      type: boolean
+      label: 'Use DOMPurify to sanitize HTML'
+

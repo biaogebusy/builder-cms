@@ -32,14 +32,10 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
   /**
    * Constructs a MemoryBackend object.
    *
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(protected ?TimeInterface $time = NULL) {
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
+  public function __construct(protected TimeInterface $time) {
   }
 
   /**
@@ -193,6 +189,7 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
    * {@inheritdoc}
    */
   public function invalidateAll() {
+    @trigger_error("CacheBackendInterface::invalidateAll() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use CacheBackendInterface::deleteAll() or cache tag invalidation instead. See https://www.drupal.org/node/3500622", E_USER_DEPRECATED);
     foreach ($this->cache as $cid => $item) {
       $this->cache[$cid]->expire = $this->time->getRequestTime() - 1;
     }
@@ -202,6 +199,10 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
    * {@inheritdoc}
    */
   public function garbageCollection() {
+    $requestTime = $this->time->getRequestTime();
+    $this->cache = array_filter($this->cache, function ($item) use ($requestTime) {
+      return $item->expire == Cache::PERMANENT || $item->expire >= $requestTime;
+    });
   }
 
   /**
@@ -212,19 +213,9 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
   }
 
   /**
-   * Wrapper method for REQUEST_TIME constant.
-   *
-   * @return int
-   */
-  protected function getRequestTime() {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 will be removed in drupal:11.0.0. Use the datetime.time service instead. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-    return $this->time->getRequestTime();
-  }
-
-  /**
    * Prevents data stored in memory backends from being serialized.
    */
-  public function __sleep() {
+  public function __sleep(): array {
     return ['time'];
   }
 

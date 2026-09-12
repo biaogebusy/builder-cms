@@ -65,8 +65,8 @@ html.js .js-webform-visually-hidden[style*="display: none"] {
 /**
  * Issue #2731991: Setting required on radios marks all options required.
  */
-.form-checkboxes .form-required:after,
-.form-radios .form-required:after {
+.form-checkboxes .form-required::after,
+.form-radios .form-required::after {
   display: none;
 }
 
@@ -93,7 +93,7 @@ html.js .js-webform-visually-hidden[style*="display: none"] {
   margin: 0.4em 0.5em 0.4em 0; /* LTR */
 }
 
-[dir=rtl] .form-composite.webform-fieldset--title-inline legend {
+[dir="rtl"] .form-composite.webform-fieldset--title-inline legend {
   float: right; /* RTL */
   margin-right: 0; /* RTL */
   margin-left: 0.5em; /* RTL */
@@ -136,7 +136,7 @@ html.js .js-webform-visually-hidden[style*="display: none"] {
 .webform-readonly input[type="time"],
 .webform-readonly input[type="url"],
 .webform-readonly textarea {
-  color: #6B6B6B;
+  color: #6b6b6b;
   border-color: #bbb;
   background: #ededed;
 }

@@ -14,7 +14,6 @@ use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
-use Symfony\Component\Routing\Route;
 
 /**
  * Resolves page titles for controllers based on various criteria.
@@ -66,12 +65,29 @@ class TitleResolver extends ControllerTitleResolver {
   }
 
   /**
-   * {@inheritdoc}
+   * Returns a static or dynamic title for the route.
+   *
+   * If the returned title can contain HTML that should not be escaped it should
+   * return a render array, for example:
+   * @code
+   * ['#markup' => 'title', '#allowed_tags' => ['em']]
+   * @endcode
+   * If the method returns a string and it is not marked safe then it will be
+   * auto-escaped.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request object passed to the title callback.
+   *
+   * @return array|string|\Stringable|null
+   *   The title for the route.
+   *   The title for the route. NULL should be returned if the method can
+   *   determine that the title will evaluate to an empty string.
    */
-  public function getTitle(Request $request, Route $route) {
+  public function getAlternateTitle(Request $request) {
     $url = Url::fromUri("internal:" . $request->getRequestUri());
     $alternative_title_field = $this->config->get(EasyBreadcrumbConstants::ALTERNATIVE_TITLE_FIELD);
-    // If an alternative title field is set, load the entity if present and use that field.
+    // If an alternative title field is set, load the entity if present and
+    // use that field.
     if ($alternative_title_field) {
       $entity = NULL;
       try {
@@ -99,6 +115,7 @@ class TitleResolver extends ControllerTitleResolver {
       }
     }
 
-    return parent::getTitle($request, $route);
+    return '';
   }
+
 }

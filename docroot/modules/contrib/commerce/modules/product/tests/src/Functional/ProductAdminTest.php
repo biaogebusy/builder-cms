@@ -468,7 +468,7 @@ class ProductAdminTest extends ProductBrowserTestBase {
     // Fill all needed fields except the image.
     $page = $this->getSession()->getPage();
     $page->fillField('title[0][value]', $title);
-    $page->fillField('stores[target_id][value][' . $store_id . ']', $store_id);
+    $page->checkField('stores[target_id][value][' . $store_id . ']');
     $page->fillField('variations[entity][sku][0][value]', $sku);
     $page->fillField('variations[entity][price][0][number]', '99.99');
     // Upload the image.
@@ -540,7 +540,7 @@ class ProductAdminTest extends ProductBrowserTestBase {
     $sku = strtolower($this->randomMachineName());
     $page = $this->getSession()->getPage();
     $page->fillField('title[0][value]', $title);
-    $page->fillField('stores[target_id][value][' . $store_id . ']', $store_id);
+    $page->checkField('stores[target_id][value][' . $store_id . ']');
     $page->fillField('variations[entity][sku][0][value]', $sku);
     $page->fillField('variations[entity][price][0][number]', '99.99');
     $this->submitForm([], 'Save and add variations');

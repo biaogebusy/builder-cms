@@ -10,7 +10,7 @@ dependencies:
   - ai:ai
   - field_validation:field_validation (>=3.0.0-beta3)
 
-# Information added by Drupal.org packaging script on 2026-06-03
-version: '1.4.1'
+# Information added by Drupal.org packaging script on 2026-09-02
+version: '1.4.8'
 project: 'ai'
-datestamp: 1780493209
+datestamp: 1788353620

@@ -2,11 +2,12 @@
 
 namespace Drupal\blazy;
 
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Media\Thumbnail;
-use Drupal\blazy\Utility\Check;
-use Drupal\blazy\Utility\CheckItem;
-use Drupal\blazy\Utility\Path;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Check;
+use Drupal\blazy\Internals\CheckItem;
+use Drupal\blazy\Internals\Path;
+use Drupal\blazy\Theme\Attributes;
 
 /**
  * Provides common shared methods across Blazy ecosystem to DRY.
@@ -17,8 +18,10 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    * {@inheritdoc}
    */
   public function attach(array $attach = []): array {
-    $load    = $this->libraries->attach($attach);
-    $blazies = $attach['blazies'];
+    $load = $this->libraries->attach($attach);
+
+    // Might be loaded anywhere without proper initialization.
+    $blazies = $this->verifySafely($attach);
 
     Internals::count($blazies);
     $this->attachments($load, $attach, $blazies);
@@ -37,7 +40,18 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    * {@inheritdoc}
    */
   public function containerAttributes(array &$attributes, array $settings): void {
-    Blazy::containerAttributes($attributes, $settings);
+    Attributes::container($attributes, $settings);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlazies(
+    array &$settings,
+    bool $merge = FALSE,
+    string $key = 'blazies',
+  ): BlazySettings {
+    return Internals::getBlazies($settings, $merge, $key);
   }
 
   /**
@@ -60,8 +74,8 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    * {@inheritdoc}
    */
   public function imageStyles(array &$settings, $multiple = FALSE, array $styles = []): void {
-    $blazies = $settings['blazies'];
-    $styles  = $styles ?: BlazyDefault::imageStyles();
+    $blazies = $this->getBlazies($settings);
+    $styles = $styles ?: BlazyDefault::imageStyles();
 
     foreach ($styles as $key) {
       if (!$blazies->get($key . '.style') || $multiple) {
@@ -124,7 +138,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    * {@inheritdoc}
    */
   public function preBlazy(array &$build, $item = NULL): BlazySettings {
-    $this->hashtag($build);
+    // @todo deprecate and remove $this->hashtag($build);.
     $settings = &$build['#settings'];
 
     $this->verifySafely($settings);
@@ -132,7 +146,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
     // Prevents double checks.
     // BlazySettings is a self containing object, initialized at container level
     // and must be renewed at item level to get correct delta, see #3278525.
-    $blazies = $settings['blazies']->reset($settings);
+    $blazies = $this->getBlazies($settings)->reset($settings);
     $delta   = $blazies->get('delta', $build['#delta'] ?? 0);
     $style   = $settings['image_style'] ?? NULL;
 
@@ -159,7 +173,8 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
 
     // Update with blazy processed settings: unstyled extensions, SVG, etc.
     if ($blazysets = $this->toHashtag($item_build)) {
-      $build['#settings']['blazies']->merge($blazysets['blazies']->storage());
+      $blazies = $this->getBlazies($blazysets);
+      $build['#settings']['blazies']->merge($blazies->storage());
     }
   }
 
@@ -174,6 +189,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    * {@inheritdoc}
    */
   public function preSettings(array &$settings): void {
+    /** @var \Drupal\blazy\BlazySettings $blazies */
     $blazies = $this->verifySafely($settings);
     $ui = $this->config();
     $iframe_domain = $this->config('iframe_domain', 'media.settings');
@@ -198,17 +214,18 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
       ->set('language.current', $language)
       ->set('libs.animate', $fx)
       ->set('libs.blur', $is_blur)
+      ->set('libs.ratio__modern', !empty($ui['ratio_modern']))
       ->set('lightbox.plugins', $lightboxes)
       ->set('ui', $ui)
       ->set('use.blur', $is_blur)
       ->set('use.data_b', TRUE)
       ->set('use.theme_blazy', $use_blazy)
       ->set('use.theme_thumbnail', $use_blazy)
-      ->set('version.blazy', Blazy::version('blazy'));
+      ->set('version.blazy', Internals::version('blazy'));
 
     if ($namespace && $namespace != 'blazy') {
       if ($this->moduleExists($namespace)) {
-        $blazies->set('version.' . $namespace, Blazy::version($namespace));
+        $blazies->set('version.' . $namespace, Internals::version($namespace));
       }
     }
 
@@ -217,8 +234,10 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
       $blazies->set('route_name', $route_name);
 
       // @todo figure out more admin pages with AJAX where Blazy may sit.
-      if (strpos($route_name, 'layout_builder.') !== FALSE) {
-        $blazies->set('use.ajax', TRUE);
+      if (!is_null($route_name)) {
+        if (strpos($route_name, 'layout_builder.') !== FALSE) {
+          $blazies->set('use.ajax', TRUE);
+        }
       }
     }
 
@@ -242,7 +261,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
   }
 
   /**
-   * Overrides data massaged by [blazy|slick|splide, etc.]_settings_alter().
+   * {@inheritdoc}
    */
   public function postSettingsAlter(array &$settings, $entity = NULL): void {
     Check::settingsAlter($settings, $entity);
@@ -283,7 +302,47 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
   }
 
   /**
-   * Provides data to be consumed by Blazy::preSettings().
+   * {@inheritdoc}
+   */
+  public function filterCleanup($module = 'blazy'): void {
+    $config_storage = $this->service('config.storage');
+    if (!$config_storage) {
+      return;
+    }
+
+    $filter = "filters.{$module}_filter";
+
+    // Removes unclean [module]_filter references, see #3257390.
+    foreach ($config_storage->listAll('filter.format') as $config_name) {
+      $config = $this->configFactory()->getEditable($config_name);
+
+      if ($config->get($filter) && $dependencies = $config->get('dependencies')) {
+        if ($existings = $dependencies['module'] ?? []) {
+          $modules = array_diff($existings, [$module]);
+          $config->set('dependencies.module', $modules);
+        }
+        $config->clear($filter)->save(TRUE);
+      }
+    }
+
+    // Just to be safe and sure, reset filter_formats cache, etc.
+    // @todo re-check if core deprecated this function at or by D10.
+    $reset = 'drupal_static_reset';
+    /* @phpstan-ignore-next-line */
+    if (is_callable($reset)) {
+      $reset('filter_formats');
+    }
+
+    $this->getStorage('filter_format')->resetCache();
+
+    // Clear plugin manager caches.
+    if ($cache_clearer = $this->service('plugin.cache_clearer')) {
+      $cache_clearer->clearCachedDefinitions();
+    }
+  }
+
+  /**
+   * Provides data to be consumed by ::preSettings().
    *
    * Such as to provide lazy attribute and class for Slick or Splide, etc.
    */
@@ -292,7 +351,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
   }
 
   /**
-   * Overrides data massaged by Blazy::postSettings().
+   * Overrides data massaged by ::postSettings().
    */
   protected function postSettingsData(array &$settings): void {
     // Do nothing, let extenders override data at ease as needed.

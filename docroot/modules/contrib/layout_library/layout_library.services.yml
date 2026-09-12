@@ -4,3 +4,7 @@ services:
     arguments: ['@layout_builder.tempstore_repository']
     tags:
       - { name: event_subscriber }
+
+  Drupal\layout_library\Hook\LayoutLibraryHooks:
+    class: Drupal\layout_library\Hook\LayoutLibraryHooks
+    autowire: true

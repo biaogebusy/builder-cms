@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\commerce_product\Functional;
 
+use Drupal\Core\Url;
+
 /**
  * Tests the product variation field display injection.
  *
@@ -104,7 +106,9 @@ class ProductVariationFieldInjectionTest extends ProductBrowserTestBase {
     // correctly in a hook, but unless you trigger the submit it doesn't seem
     // to clear. This save should invalidate the commerce_product_variation_view
     // tag to display product variation correctly.
-    $this->drupalGet('admin/commerce/config/product-variation-types/default/edit/display');
+    $this->drupalGet(Url::fromRoute('entity.entity_view_display.commerce_product_variation.default', [
+      'commerce_product_variation_type' => 'default',
+    ]));
     $this->submitForm([], 'Save');
 
     $this->drupalGet($this->product->toUrl());
@@ -147,7 +151,9 @@ class ProductVariationFieldInjectionTest extends ProductBrowserTestBase {
     // correctly in a hook, but unless you trigger the submit it doesn't seem
     // to clear. This save should invalidate the commerce_product_variation_view
     // tag to display product variation correctly.
-    $this->drupalGet('admin/commerce/config/product-variation-types/default/edit/display');
+    $this->drupalGet(Url::fromRoute('entity.entity_view_display.commerce_product_variation.default', [
+      'commerce_product_variation_type' => 'default',
+    ]));
     $this->submitForm([], 'Save');
 
     $this->drupalGet($this->product->toUrl());

@@ -6,15 +6,17 @@ namespace Drupal\Tests\path\Functional;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
+use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
-use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Confirm that paths work with translated nodes.
- *
- * @group path
  */
+#[Group('path')]
+#[RunTestsInSeparateProcesses]
 class PathLanguageTest extends PathTestBase {
 
   use ContentTranslationTestTrait;
@@ -116,7 +118,6 @@ class PathLanguageTest extends PathTestBase {
     $languages = $this->container->get('language_manager')->getLanguages();
 
     // Ensure the node was created.
-    $node_storage->resetCache([$english_node->id()]);
     $english_node = $node_storage->load($english_node->id());
     $english_node_french_translation = $english_node->getTranslation('fr');
     $this->assertTrue($english_node->hasTranslation('fr'), 'Node found in database.');
@@ -197,6 +198,22 @@ class PathLanguageTest extends PathTestBase {
     $this->drupalGet($english_alias);
     $this->assertPathAliasExists('/' . $english_alias, 'en', NULL, 'English alias is not deleted when French translation is removed.');
     $this->assertSession()->pageTextContains($english_node->body->value);
+
+    // Replace the English alias with a language-neutral one.
+    $en_alias_entity = $this->loadPathAliasByConditions(['alias' => '/' . $english_alias]);
+    $en_alias_entity->delete();
+
+    $und_alias = $this->randomMachineName();
+    $this->createPathAlias('/node/' . $english_node->id(), '/' . $und_alias);
+
+    $this->assertPathAliasExists('/' . $und_alias, LanguageInterface::LANGCODE_NOT_SPECIFIED);
+    $this->drupalGet($und_alias);
+    $this->assertSession()->pageTextContains($english_node->body->value);
+
+    // Delete the default translation (English) of the node and check that the
+    // language-neutral alias was deleted as well.
+    $english_node->delete();
+    $this->assertPathAliasNotExists('/' . $und_alias, LanguageInterface::LANGCODE_NOT_SPECIFIED, NULL, 'Language-neutral alias is removed when the default translation is deleted.');
   }
 
 }

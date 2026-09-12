@@ -81,3 +81,10 @@ commerce_checkout.commerce_checkout_pane.payment_process:
     capture:
       type: boolean
       label: 'Transaction mode'
+
+field.formatter.settings.commerce_payment_method_profile:
+  type: mapping
+  mapping:
+    view_mode:
+      type: string
+      label: 'View mode'

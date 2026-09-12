@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\views_ui\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript filtering on the Views listing page.
  *
  * @see core/modules/views_ui/js/views_ui.listing.js
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class ViewsListingTest extends WebDriverTestBase {
 
   /**
@@ -138,8 +141,9 @@ class ViewsListingTest extends WebDriverTestBase {
    *   The elements.
    *
    * @return array
+   *   The filtered array.
    */
-  protected function filterVisibleElements($elements) {
+  protected function filterVisibleElements($elements): array {
     $elements = array_filter($elements, function ($element) {
       return $element->isVisible();
     });

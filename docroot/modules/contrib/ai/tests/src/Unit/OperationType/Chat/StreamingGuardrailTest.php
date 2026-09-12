@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai\Unit\OperationType\Chat;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\Tests\ai\Mock\MockIterator;
-use Drupal\Tests\ai\Mock\MockStreamedChatIterator;
+use Drupal\ai_test\Mock\MockIterator;
+use Drupal\ai_test\Mock\MockStreamedChatIterator;
 use Drupal\ai\Guardrail\Result\PassResult;
 use Drupal\ai\Guardrail\Result\RewriteOutputResult;
 use Drupal\ai\Guardrail\Result\StopResult;
@@ -31,7 +31,7 @@ class StreamingGuardrailTest extends UnitTestCase {
    * @param int $expected_filter_calls
    *   How many times the hostname filter is expected to be called.
    *
-   * @return \Drupal\Tests\ai\Mock\MockStreamedChatIterator
+   * @return \Drupal\ai_test\Mock\MockStreamedChatIterator
    *   The iterator wired up with mocked services.
    */
   private function buildIterator(array $chunks, int $expected_filter_calls = -1): MockStreamedChatIterator {
@@ -58,7 +58,7 @@ class StreamingGuardrailTest extends UnitTestCase {
   /**
    * Collects all non-empty text chunks yielded by an iterator.
    *
-   * @param \Drupal\Tests\ai\Mock\MockStreamedChatIterator $iterator
+   * @param \Drupal\ai_test\Mock\MockStreamedChatIterator $iterator
    *   The iterator to consume.
    *
    * @return string[]

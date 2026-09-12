@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\filter\Entity\FilterFormat;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensures that data added to nodes by other modules appears in RSS feeds.
@@ -12,9 +14,9 @@ use Drupal\filter\Entity\FilterFormat;
  * Create a node, enable the node_test module to ensure that extra data is
  * added to the node's renderable array, then verify that the data appears on
  * the site-wide RSS feed at rss.xml.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeRSSContentTest extends NodeTestBase {
 
   /**
@@ -96,18 +98,18 @@ class NodeRSSContentTest extends NodeTestBase {
     $file_url_generator = \Drupal::service('file_url_generator');
     $this->drupalCreateNode($defaults + [
       'body' => [
-        'value' => '<p><a href="' . $file_url_generator->generateString('public://root-relative') . '">Root-relative URL</a></p>',
+        'value' => '<p><a href="' . $file_url_generator->generate('public://root-relative')->toString() . '">Root-relative URL</a></p>',
         'format' => 'full_html',
       ],
     ]);
-    $protocol_relative_url = substr($file_url_generator->generateAbsoluteString('public://protocol-relative'), strlen(\Drupal::request()->getScheme() . ':'));
+    $protocol_relative_url = substr($file_url_generator->generate('public://protocol-relative')->setAbsolute()->toString(), strlen(\Drupal::request()->getScheme() . ':'));
     $this->drupalCreateNode($defaults + [
       'body' => [
         'value' => '<p><a href="' . $protocol_relative_url . '">Protocol-relative URL</a></p>',
         'format' => 'full_html',
       ],
     ]);
-    $absolute_url = $file_url_generator->generateAbsoluteString('public://absolute');
+    $absolute_url = $file_url_generator->generate('public://absolute')->setAbsolute()->toString();
     $this->drupalCreateNode($defaults + [
       'body' => [
         'value' => '<p><a href="' . $absolute_url . '">Absolute URL</a></p>',
@@ -117,7 +119,7 @@ class NodeRSSContentTest extends NodeTestBase {
 
     $this->drupalGet('rss.xml');
     // Verify that root-relative URL is transformed to absolute.
-    $this->assertSession()->responseContains($file_url_generator->generateAbsoluteString('public://root-relative'));
+    $this->assertSession()->responseContains($file_url_generator->generate('public://root-relative')->setAbsolute()->toString());
     // Verify that protocol-relative URL is left untouched.
     $this->assertSession()->responseContains($protocol_relative_url);
     // Verify that absolute URL is left untouched.

@@ -1,0 +1,7 @@
+ckeditor5_premium_features_version_override.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/version-override'
+  defaults:
+    _title: 'CKEditor 5 Version Override - Settings'
+    _form: 'Drupal\ckeditor5_premium_features_version_override\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'

@@ -8,7 +8,7 @@ dependencies:
 lifecycle: deprecated
 lifecycle_link: 'https://www.drupal.org/project/admin_toolbar/issues/3463291'
 
-# Information added by Drupal.org packaging script on 2025-07-29
-version: '3.6.2'
+# Information added by Drupal.org packaging script on 2025-12-30
+version: '3.6.3'
 project: 'admin_toolbar'
-datestamp: 1753826108
+datestamp: 1767127271

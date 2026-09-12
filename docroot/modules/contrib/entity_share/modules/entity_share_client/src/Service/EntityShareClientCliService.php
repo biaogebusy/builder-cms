@@ -46,7 +46,7 @@ final class EntityShareClientCliService {
   }
 
   /**
-   * Handle the pull interaction.
+   * Handles the pull interaction for a channel.
    *
    * @param string $remote_id
    *   The remote website id to import from.
@@ -59,7 +59,7 @@ final class EntityShareClientCliService {
    * @param callable $translate
    *   The translation function akin to t().
    */
-  public function ioPull($remote_id, $channel_id, $import_config_id, $input_output, callable $translate) {
+  public function ioPullChannel($remote_id, $channel_id, $import_config_id, $input_output, callable $translate) {
     Timer::start('io-pull');
     $import_context = new ImportContext($remote_id, $channel_id, $import_config_id);
     $this->importService->importChannel($import_context);
@@ -68,6 +68,37 @@ final class EntityShareClientCliService {
       \drush_backend_batch_process();
       Timer::stop('io-pull');
       $input_output->success($translate('Channel successfully pulled. Execution time @time ms.', [
+        '@time' => Timer::read('io-pull'),
+      ]));
+    }
+  }
+
+  /**
+   * Handles the pull interaction for a list of entity UUIDs from a channel.
+   *
+   * @param string $remote_id
+   *   The remote website id to import from.
+   * @param string $channel_id
+   *   The remote channel id to import.
+   * @param string $import_config_id
+   *   The import config id to import with.
+   * @param array $entity_uuids
+   *   An array of entity UUIDs. These must be for entities that are in the
+   *   given channel.
+   * @param \Symfony\Component\Console\Style\StyleInterface|\ConfigSplitDrush8Io $input_output
+   *   The $io interface of the cli tool calling.
+   * @param callable $translate
+   *   The translation function akin to t().
+   */
+  public function ioPullEntity(string $remote_id, string $channel_id, string $import_config_id, array $entity_uuids, $input_output, callable $translate) {
+    Timer::start('io-pull');
+    $import_context = new ImportContext($remote_id, $channel_id, $import_config_id);
+    $this->importService->importEntities($import_context, $entity_uuids);
+    $batch =& batch_get();
+    if ($batch) {
+      drush_backend_batch_process();
+      Timer::stop('io-pull');
+      $input_output->success($translate('Entities successfully pulled. Execution time @time ms.', [
         '@time' => Timer::read('io-pull'),
       ]));
     }

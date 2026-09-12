@@ -48,6 +48,6 @@
     "docs": "https://www.drupal.org/docs/contributed-modules/charts"
   },
   "require": {
-    "drupal/core": "^10.3 || ^11"
+    "drupal/core": "^10.3 || ^11 || ^12"
   }
 }

@@ -4,12 +4,16 @@ namespace Drupal\Tests\paragraphs\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\paragraphs\Entity\ParagraphsType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ParagraphsType entity hasEnabledBehaviorPlugin functionality.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsTypeHasEnabledBehaviorPluginTest extends KernelTestBase {
 
 
@@ -21,6 +25,7 @@ class ParagraphsTypeHasEnabledBehaviorPluginTest extends KernelTestBase {
   protected static $modules = [
     'paragraphs',
     'user',
+    'entity_reference_revisions',
     'paragraphs_test',
     'file',
   ];

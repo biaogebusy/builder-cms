@@ -99,7 +99,9 @@ class LanguageTest extends TokenKernelTestBase {
       $this->container->get('config.factory'),
       $this->container->get('module_handler'),
       $this->container->get('language.config_factory_override'),
-      $this->container->get('request_stack')
+      $this->container->get('request_stack'),
+      $this->container->get('cache.bootstrap')
+
     );
     $this->container->set('language_manager', $this->languageManager);
 

@@ -1,0 +1,4 @@
+services:
+  footable.footable:
+    class: Drupal\footable\FooTable
+    arguments: ['@entity_type.manager', '@config.factory']

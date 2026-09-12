@@ -33,7 +33,7 @@ services:
     arguments: ['@entity.repository']
   ctools.serializable.tempstore.factory:
     class: Drupal\ctools\SerializableTempstoreFactory
-    arguments: ['@keyvalue.expirable', '@lock', '@request_stack', '%tempstore.expire%', '@current_user']
+    arguments: ['@keyvalue.expirable', '@lock', '@request_stack', '@current_user', '%tempstore.expire%']
     deprecated: The "%service_id%" service is deprecated. You should use the core shared tempstore factory service instead.
     tags:
       - { name: backend_overridable }

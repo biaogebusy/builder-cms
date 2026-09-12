@@ -1,9 +1,13 @@
 parameters:
   route_normalizer_enabled: true
 services:
+  redirect.prefix_list:
+    class: Drupal\redirect\RedirectPrefixList
+    arguments: ['@cache.data', '@entity_type.manager']
+  Drupal\redirect\RedirectPrefixList: '@redirect.prefix_list'
   redirect.repository:
     class: Drupal\redirect\RedirectRepository
-    arguments: ['@entity_type.manager', '@database', '@config.factory', '@request_stack']
+    arguments: ['@entity_type.manager', '@database', '@config.factory', '@request_stack', '@redirect.prefix_list']
     tags:
       - { name: backend_overridable }
   Drupal\redirect\RedirectRepository: '@redirect.repository'

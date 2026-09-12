@@ -1,5 +1,5 @@
-const { execSync } = require('child_process');
-const { URL } = require('url');
+const { execSync } = require('node:child_process');
+const { URL } = require('node:url');
 const { commandAsWebserver } = require('../globals');
 
 /**
@@ -25,7 +25,7 @@ exports.command = function drupalInstall(
   const self = this;
 
   // Ensure no session cookie exists anymore; they won't work on this newly installed Drupal site anyway.
-  this.deleteCookies();
+  this.cookies.deleteAll();
 
   try {
     setupFile = setupFile ? `--setup-file "${setupFile}"` : '';
@@ -33,7 +33,7 @@ exports.command = function drupalInstall(
     const langcodeOption = langcode ? `--langcode "${langcode}"` : '';
     const dbOption =
       process.env.DRUPAL_TEST_DB_URL.length > 0
-        ? `--db-url ${process.env.DRUPAL_TEST_DB_URL}`
+        ? `--db-url "${process.env.DRUPAL_TEST_DB_URL}"`
         : '';
     const install = execSync(
       commandAsWebserver(
@@ -49,7 +49,6 @@ exports.command = function drupalInstall(
       // Colons need to be URL encoded to be valid.
       value: encodeURIComponent(installData.user_agent),
       path: url.pathname,
-      domain: url.host,
     });
     // Set the HTTP_USER_AGENT environment variable to detect the test
     // environment in the command line.

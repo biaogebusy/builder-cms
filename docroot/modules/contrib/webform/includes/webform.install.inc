@@ -5,9 +5,9 @@
  * Webform install helper functions.
  */
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\system\Entity\Action;
 use Drupal\webform\Element\WebformHtmlEditor;
 use Drupal\webform\Entity\Webform;
@@ -237,7 +237,7 @@ function _webform_update_webform_handler_settings() {
   $definitions = $handler_manager->getDefinitions();
   $default_handler_settings = [];
   foreach ($definitions as $plugin_id => $definition) {
-    if (strpos($definition['provider'], 'webform_test_') === 0 || in_array($definition['provider'], ['webform', 'webform_scheduled_email'])) {
+    if (str_starts_with($definition['provider'], 'webform_test_') || in_array($definition['provider'], ['webform', 'webform_scheduled_email'])) {
       $default_handler_settings[$plugin_id] = $handler_manager->createInstance($plugin_id)->defaultConfiguration();
     }
   }
@@ -398,7 +398,7 @@ function _webform_update_string_replace($search, $replace) {
   // Update 'webform.settings' configuration.
   $settings_config = \Drupal::configFactory()->getEditable('webform.settings');
   $yaml = Yaml::encode($settings_config->getRawData());
-  if (strpos($yaml, $search) !== FALSE) {
+  if (str_contains($yaml, $search)) {
     $yaml = str_replace($search, $replace, $yaml);
     $settings_config->setData(Yaml::decode($yaml));
     $settings_config->save();
@@ -408,7 +408,7 @@ function _webform_update_string_replace($search, $replace) {
   foreach ($config_factory->listAll('webform.webform.') as $webform_config_name) {
     $webform_config = $config_factory->getEditable($webform_config_name);
     $yaml = Yaml::encode($webform_config->getRawData());
-    if (strpos($yaml, $search) !== FALSE) {
+    if (str_contains($yaml, $search)) {
       $yaml = str_replace($search, $replace, $yaml);
       $webform_config->setData(Yaml::decode($yaml));
       $webform_config->save();
@@ -467,8 +467,11 @@ function _webform_update_elements_clear_properties_recursive(array &$element, ar
 /**
  * Update the Webform module's default hidden text format and editor.
  *
- * Determines if the CKEditor 5 or 4 module installed and imports the
+ * Determines if the CKEditor 5 module installed and imports the
  * appropriate configuration file.
+ *
+ * The below approach and code can be updated to support ckeditor6 when it
+ * is available and required.
  */
 function _webform_update_html_editor() {
   // Make sure the Webform module is installed, since we do call this function
@@ -492,9 +495,6 @@ function _webform_update_html_editor() {
   $current_version = \Drupal::config($ckeditor_file_name)->get('editor') ?: NULL;
   if (\Drupal::moduleHandler()->moduleExists('ckeditor5')) {
     $ckeditor_version = 'ckeditor5';
-  }
-  elseif (\Drupal::moduleHandler()->moduleExists('ckeditor')) {
-    $ckeditor_version = 'ckeditor';
   }
   else {
     $ckeditor_version = NULL;

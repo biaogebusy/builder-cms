@@ -102,18 +102,21 @@ html:not(.js) [data-b-blur] {
 
 /* Aspect ratio element: IMG, IFRAME, DIV.
 The best things we can do to minimize layout/ reflows with dynamic DOM:
-absolute position and fixed dimensions. */
+absolute position and fixed dimensions.
+Blur image maybe laoded without a .media container, seen at IO/SLick Browser.
+*/
+img.b-blur,
 .media--ratio .media__element,
-.media--ratio svg,
-.media--fx .b-blur {
+.media--ratio svg {
   position: absolute;
   z-index: 0;
-  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   min-height: 1px;
   /** Temp fix, also to fix the VIDEO element to max width, not only IMG. */
   object-fit: cover;
+  inset: 0;
 }
 
 .media--ratio audio.media__element {
@@ -159,13 +162,14 @@ absolute position and fixed dimensions. */
   min-width: 100% !important; /* csslint allow: known-properties, important */
 }
 
-/** @todo re-check various use-cases. */
+/** @todo re-check various use-cases.
+@fixme bad for broken SoundCloud as a lightbox.
 .b-html.b-loaded > img {
   position: absolute;
   z-index: -1;
   visibility: hidden;
   opacity: 0;
-}
+} */
 
 .blazy .grid__content,
 .blazy .region__content {
@@ -187,6 +191,12 @@ absolute position and fixed dimensions. */
 }
 
 /* Olivero surprises when blazy grid item is acting as a layout region. */
-.blazy > .grid {
+.blazy > .grid,
+.blazy .box,
+.blazy .slide {
+  /* Schedule loads to reduce initial render cost dramatically for large media.
+  Best paired with contain-intrinsic-size as required.
+  content-visibility is bad for admin form, clipping descriptions.
+  content-visibility: auto; */
   margin-block-end: 0;
 }

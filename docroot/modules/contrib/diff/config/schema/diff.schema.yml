@@ -7,7 +7,7 @@ diff.settings:
       label: "General Settings"
       mapping:
         radio_behavior:
-          type: label
+          type: string
           label: "Radio button behaviour"
         context_lines_leading:
           type: integer

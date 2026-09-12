@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_order\Plugin\views\area;
 
+use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Attribute\ViewsArea;
@@ -21,40 +22,19 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class OrderTotal extends AreaPluginBase {
 
   /**
-   * The order storage.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $orderStorage;
-
-  /**
-   * Constructs a new OrderTotal instance.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
-  }
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    return $instance;
   }
 
   /**
@@ -71,20 +51,35 @@ class OrderTotal extends AreaPluginBase {
    */
   public function render($empty = FALSE) {
     if (!$empty || !empty($this->options['empty'])) {
+      /** @var \Drupal\commerce_order\OrderStorageInterface $order_storage */
+      $order_storage = $this->entityTypeManager->getStorage('commerce_order');
       foreach ($this->view->argument as $name => $argument) {
-        // First look for an order_id argument.
         if (!$argument instanceof NumericArgument) {
           continue;
         }
-        if (!in_array($argument->getField(), [
-          'commerce_order.order_id',
-          'commerce_order_item.order_id',
-          'commerce_payment.order_id',
-        ])) {
-          continue;
+        $field_name_parts = explode('.', $argument->getField());
+        $order_id = NULL;
+
+        // The field is an order item ID, or list of order item IDs, so get the
+        // order ID from it.
+        if (!empty($field_name_parts[1]) && $field_name_parts[1] == 'order_item_id') {
+          $order_item_storage = $this->entityTypeManager->getStorage('commerce_order_item');
+          $order_item_ids = preg_split('/[+, ]+/', $argument->getValue(), -1, PREG_SPLIT_NO_EMPTY);
+          $order_item = $order_item_storage->load(reset($order_item_ids));
+          if ($order_item instanceof OrderItemInterface) {
+            $order_id = $order_item->getOrderId();
+          }
         }
+
+        // The field is an order ID.
+        elseif (!empty($field_name_parts[1]) && $field_name_parts[1] == 'order_id') {
+          $order_id = $argument->getValue();
+        }
+
+        // If the order ID was found, make sure the order can be loaded, i.e.
+        // it's a valid order ID and that the person has permission to view it.
         /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
-        if ($order = $this->orderStorage->load($argument->getValue())) {
+        if ($order_id && $order = $order_storage->load($order_id)) {
           $order_total = $order->get('total_price')->view([
             'label' => 'hidden',
             'type' => 'commerce_order_total_summary',
@@ -96,6 +91,7 @@ class OrderTotal extends AreaPluginBase {
         }
       }
     }
+
     return [];
   }
 

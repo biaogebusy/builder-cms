@@ -5,7 +5,7 @@ package: Testing
 dependencies:
   - advancedqueue:advancedqueue
 
-# Information added by Drupal.org packaging script on 2025-08-27
-version: '8.x-1.5'
+# Information added by Drupal.org packaging script on 2026-09-07
+version: '8.x-1.7'
 project: 'advancedqueue'
-datestamp: 1756290012
+datestamp: 1788798535

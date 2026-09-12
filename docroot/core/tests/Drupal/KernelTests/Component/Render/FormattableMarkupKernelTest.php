@@ -7,12 +7,15 @@ namespace Drupal\KernelTests\Component\Render;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Provides a test covering integration of FormattableMarkup with other systems.
- *
- * @group Render
  */
+#[Group('Render')]
+#[RunTestsInSeparateProcesses]
 class FormattableMarkupKernelTest extends KernelTestBase {
 
   /**
@@ -41,68 +44,71 @@ class FormattableMarkupKernelTest extends KernelTestBase {
 
   /**
    * Tests URL ":placeholders" in \Drupal\Component\Render\FormattableMarkup.
-   *
-   * @dataProvider providerTestFormattableMarkupUri
    */
+  #[DataProvider('providerTestFormattableMarkupUri')]
   public function testFormattableMarkupUri($string, $uri, $options, $expected): void {
     $args = self::getFormattableMarkupUriArgs($uri, $options);
     $this->assertSame($expected, (string) new FormattableMarkup($string, $args));
   }
 
   /**
+   * Provides data for testFormattableMarkupUri().
+   *
    * @return array
+   *   Data provider for testFormattableMarkupUri().
    */
-  public static function providerTestFormattableMarkupUri() {
+  public static function providerTestFormattableMarkupUri(): array {
     $data = [];
     $data['routed-url'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       'route:system.admin',
       [],
-      'Hey giraffe <a href="/admin">MUUUH</a>',
+      'Hey giraffe <a href="/admin">example</a>',
     ];
     $data['routed-with-query'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       'route:system.admin',
       ['query' => ['bar' => 'baz#']],
-      'Hey giraffe <a href="/admin?bar=baz%23">MUUUH</a>',
+      'Hey giraffe <a href="/admin?bar=baz%23">example</a>',
     ];
     $data['routed-with-fragment'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       'route:system.admin',
       ['fragment' => 'bar&lt;'],
-      'Hey giraffe <a href="/admin#bar&amp;lt;">MUUUH</a>',
+      'Hey giraffe <a href="/admin#bar&amp;lt;">example</a>',
     ];
     $data['unrouted-url'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       'base://foo',
       [],
-      'Hey giraffe <a href="/foo">MUUUH</a>',
+      'Hey giraffe <a href="/foo">example</a>',
     ];
     $data['unrouted-with-query'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       'base://foo',
       ['query' => ['bar' => 'baz#']],
-      'Hey giraffe <a href="/foo?bar=baz%23">MUUUH</a>',
+      'Hey giraffe <a href="/foo?bar=baz%23">example</a>',
     ];
     $data['unrouted-with-fragment'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       'base://foo',
       ['fragment' => 'bar&lt;'],
-      'Hey giraffe <a href="/foo#bar&amp;lt;">MUUUH</a>',
+      'Hey giraffe <a href="/foo#bar&amp;lt;">example</a>',
     ];
     $data['mailto-protocol'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       'mailto:test@example.com',
       [],
-      'Hey giraffe <a href="mailto:test@example.com">MUUUH</a>',
+      'Hey giraffe <a href="mailto:test@example.com">example</a>',
     ];
 
     return $data;
   }
 
   /**
-   * @dataProvider providerTestFormattableMarkupUriWithException
-   */
+ * Tests formattable markup uri with exception uri.
+ */
+  #[DataProvider('providerTestFormattableMarkupUriWithException')]
   public function testFormattableMarkupUriWithExceptionUri($string, $uri): void {
     // Should throw an \InvalidArgumentException, due to Uri::toString().
     $this->expectException(\InvalidArgumentException::class);
@@ -112,24 +118,27 @@ class FormattableMarkupKernelTest extends KernelTestBase {
   }
 
   /**
+   * Provides data for testFormattableMarkupUriWithExceptionUri().
+   *
    * @return array
+   *   Data provider for testFormattableMarkupUriWithExceptionUri().
    */
-  public static function providerTestFormattableMarkupUriWithException() {
+  public static function providerTestFormattableMarkupUriWithException(): array {
     $data = [];
     $data['js-protocol'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       "javascript:alert('xss')",
     ];
     $data['js-with-fromCharCode'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       "javascript:alert(String.fromCharCode(88,83,83))",
     ];
     $data['non-url-with-colon'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       "llamas: they are not URLs",
     ];
     $data['non-url-with-html'] = [
-      'Hey giraffe <a href=":url">MUUUH</a>',
+      'Hey giraffe <a href=":url">example</a>',
       '<span>not a url</span>',
     ];
 

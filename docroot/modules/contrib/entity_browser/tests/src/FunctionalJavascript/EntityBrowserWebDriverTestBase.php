@@ -251,7 +251,7 @@ abstract class EntityBrowserWebDriverTestBase extends WebDriverTestBase {
   }
 
   /**
-   * Checks that a specific radio input element does not exist on the current page.
+   * Checks that a specific radio input element does not exist on the page.
    *
    * @param string $value
    *   The string value of the radio element.
@@ -285,7 +285,7 @@ abstract class EntityBrowserWebDriverTestBase extends WebDriverTestBase {
   }
 
   /**
-   * Checks that a specific checkbox input element does not exist on the current page.
+   * Checks that a specific checkbox input element does not exist on the page.
    *
    * @param string $value
    *   The string value of the radio element.

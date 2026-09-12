@@ -30,12 +30,12 @@ interface ImportConfigManipulatorInterface {
    * @param string $processor_id
    *   The ID of the processor plugin to return.
    *
+   * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface
+   *   The processor plugin with the given ID.
+   *
    * @throws \Exception
    *   Thrown if the specified processor isn't enabled for this import config,
    *   or couldn't be loaded.
-   *
-   * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface
-   *   The processor plugin with the given ID.
    */
   public function getImportProcessor(ImportConfigInterface $import_config, $processor_id);
 

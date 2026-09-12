@@ -6,12 +6,14 @@ namespace Drupal\Tests\node\FunctionalJavascript;
 
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript prevention of navigation away from node previews.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodePreviewLinkTest extends WebDriverTestBase {
 
   /**

@@ -1,0 +1,22 @@
+_meta:
+  version: '1.0'
+  entity_type: workspace
+  uuid: 93f5b0b4-ada9-4bcd-a11d-f7329e9afe21
+  depends:
+    384c4c10-cc41-4d7e-a1cc-85d1cdc9e87d: workspace
+default:
+  id:
+    -
+      value: inner_test
+  uid:
+    -
+      target_id: 1
+  label:
+    -
+      value: 'Inner Test'
+  parent:
+    -
+      target_id: test_workspace
+  provider:
+    -
+      value: default

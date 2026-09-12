@@ -15,7 +15,7 @@ use PHPUnit\Framework\Constraint\IsNull;
 use PHPUnit\Framework\Constraint\LogicalNot;
 use WebDriver\Exception;
 
-// cspell:ignore interactable
+// cspell:ignore interactable xmlhttprequest
 
 /**
  * Defines a class with methods for asserting presence of elements during tests.
@@ -85,7 +85,7 @@ JS;
     window.drupalCumulativeXhrCount,
     window.performance
       .getEntries()
-      .filter(entry => entry.initiatorType === 'xmlhttprequest')
+      .filter(({initiatorType}) => initiatorType === 'xmlhttprequest' || initiatorType === 'fetch')
       .length,
     window.performance.timeOrigin
   ];
@@ -100,9 +100,9 @@ JS);
       $current_page_ajax_response_count = 0;
     }
 
-    // Detect unnecessary AJAX request waits and inform the test author.
+    // Detect unnecessary AJAX request waits.
     if ($drupal_ajax_request_count === $current_page_ajax_response_count) {
-      @trigger_error(sprintf('%s called unnecessarily in a test is deprecated in drupal:10.2.0 and will throw an exception in drupal:11.0.0. See https://www.drupal.org/node/3401201', __METHOD__), E_USER_DEPRECATED);
+      throw new \RuntimeException('There are no AJAX requests to wait for.');
     }
 
     // Detect untracked AJAX requests. This will alert if the detection is
@@ -164,7 +164,7 @@ JS);
    *
    * @see \Behat\Mink\Element\ElementInterface::findAll()
    */
-  public function waitForElementRemoved($selector, $locator, $timeout = 10000) {
+  public function waitForElementRemoved($selector, $locator, $timeout = 10000): bool {
     return (bool) $this->waitForHelper($timeout, function (Element $page) use ($selector, $locator) {
       return !$page->find($selector, $locator);
     });
@@ -207,7 +207,7 @@ JS);
    * @return bool
    *   TRUE if found, FALSE if not found.
    */
-  public function waitForText($text, $timeout = 10000) {
+  public function waitForText($text, $timeout = 10000): bool {
     return (bool) $this->waitForHelper($timeout, function (Element $page) use ($text) {
       $actual = preg_replace('/\s+/u', ' ', $page->getText());
       $regex = '/' . preg_quote($text, '/') . '/ui';
@@ -304,8 +304,8 @@ JS);
    * Tests that a node, or its specific corner, is visible in the viewport.
    *
    * Note: Always set the viewport size. This can be done in your test with
-   * \Behat\Mink\Session->resizeWindow(). Drupal CI JavaScript tests by default
-   * use a viewport of 1024x768px.
+   * \Behat\Mink\Session->resizeWindow(). JavaScript tests in the default CI
+   * environment use a viewport of 1024x768px.
    *
    * @param string $selector_type
    *   The element selector type (css, xpath).
@@ -323,7 +323,7 @@ JS);
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    *   When the element is not visible in the viewport.
    */
-  public function assertVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is not visible in the viewport.') {
+  public function assertVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is not visible in the viewport.'): void {
     $node = $this->session->getPage()->find($selector_type, $selector);
     if ($node === NULL) {
       if (is_array($selector)) {
@@ -367,7 +367,7 @@ JS);
    *
    * @see \Drupal\FunctionalJavascriptTests\JSWebAssert::assertVisibleInViewport()
    */
-  public function assertNotVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is visible in the viewport.') {
+  public function assertNotVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is visible in the viewport.'): void {
     $node = $this->session->getPage()->find($selector_type, $selector);
     if ($node === NULL) {
       if (is_array($selector)) {
@@ -398,7 +398,7 @@ JS);
    * @throws \Behat\Mink\Exception\UnsupportedDriverActionException
    *   When an invalid corner specification is given.
    */
-  private function checkNodeVisibilityInViewport(NodeElement $node, $corner = FALSE) {
+  private function checkNodeVisibilityInViewport(NodeElement $node, $corner = FALSE): bool {
     $xpath = $node->getXpath();
 
     // Build the JavaScript to test if the complete element or a specific corner
@@ -503,7 +503,7 @@ JS;
    * @param string $raw
    *   Raw (HTML) string to look for.
    */
-  public function assertNoEscaped($raw) {
+  public function assertNoEscaped($raw): void {
     $this->responseNotContains($this->escapeHtml($raw));
   }
 
@@ -515,7 +515,7 @@ JS;
    * @param string $raw
    *   Raw (HTML) string to look for.
    */
-  public function assertEscaped($raw) {
+  public function assertEscaped($raw): void {
     $this->responseContains($this->escapeHtml($raw));
   }
 
@@ -528,7 +528,7 @@ JS;
    * quotes respectively therefore we can not escape them when testing for
    * escaped HTML.
    *
-   * @param $raw
+   * @param string $raw
    *   The raw string to escape.
    *
    * @return string
@@ -555,7 +555,7 @@ JS;
    * @throws \Behat\Mink\Exception\ElementHtmlException
    *   When an element still exists on the page.
    */
-  public function assertNoElementAfterWait($selector_type, $selector, $timeout = 10000, $message = 'Element exists on the page.') {
+  public function assertNoElementAfterWait($selector_type, $selector, $timeout = 10000, $message = 'Element exists on the page.'): void {
     $start = microtime(TRUE);
     $end = $start + ($timeout / 1000);
     $page = $this->session->getPage();

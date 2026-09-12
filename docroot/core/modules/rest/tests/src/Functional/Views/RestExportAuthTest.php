@@ -6,12 +6,14 @@ namespace Drupal\Tests\rest\Functional\Views;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests authentication for REST display.
- *
- * @group rest
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class RestExportAuthTest extends ViewTestBase {
 
   /**

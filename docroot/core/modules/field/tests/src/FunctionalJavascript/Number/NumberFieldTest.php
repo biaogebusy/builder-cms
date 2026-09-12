@@ -8,12 +8,14 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the numeric field widget.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class NumberFieldTest extends WebDriverTestBase {
 
   /**
@@ -127,7 +129,7 @@ class NumberFieldTest extends WebDriverTestBase {
     $node->save();
 
     // Go to manage display page.
-    $this->drupalGet("admin/structure/types/manage/$type/display");
+    $this->drupalGet("admin/structure/types/manage/$type/display/default");
 
     // Configure number_decimal formatter for the 'float' field type.
     $thousand_separator = $thousand_separators[array_rand($thousand_separators)];
@@ -162,7 +164,7 @@ class NumberFieldTest extends WebDriverTestBase {
         'type' => 'number_integer',
       ])
       ->save();
-    $this->drupalGet("admin/structure/types/manage/$type/display");
+    $this->drupalGet("admin/structure/types/manage/$type/display/default");
 
     $thousand_separator = $thousand_separators[array_rand($thousand_separators)];
 

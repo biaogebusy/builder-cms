@@ -57,9 +57,10 @@ class HostnameFilter {
    * @var array<string, string[]>
    */
   protected array $urlAttributes = [
-    'a' => ['href', 'ping'],
+    'a' => ['href', 'ping', 'xlink:href'],
     'area' => ['href', 'ping'],
     'img' => ['src', 'srcset', 'data-src', 'data-srcset'],
+    'image' => ['href', 'xlink:href'],
     'source' => ['src', 'srcset', 'data-src', 'data-srcset'],
     'video' => ['src', 'data-src', 'poster'],
     'audio' => ['src', 'data-src'],
@@ -67,7 +68,7 @@ class HostnameFilter {
     'iframe' => ['src', 'data-src'],
     'embed' => ['src', 'data-src'],
     'object' => ['data'],
-    'link' => ['href'],
+    'link' => ['href', 'imagesrcset'],
     'script' => ['src', 'data-src'],
     'form' => ['action'],
     'button' => ['formaction'],
@@ -82,7 +83,7 @@ class HostnameFilter {
    *
    * @var string[]
    */
-  protected array $multiUrlAttributes = ['srcset', 'data-srcset', 'ping'];
+  protected array $multiUrlAttributes = ['srcset', 'data-srcset', 'ping', 'imagesrcset'];
 
   /**
    * Constructs a HostnameFilter object.
@@ -317,6 +318,28 @@ class HostnameFilter {
    *   The filtered text with disallowed URLs removed.
    */
   protected function filterUrlsInPlainText(string $input): string {
+    // Dangerous (hostless) scheme URIs such as javascript: and data: have no
+    // host to match against the allowlist, so the host-based pattern below
+    // cannot catch them. Strip them here. The scheme may be obfuscated with
+    // HTML entities or ASCII whitespace (e.g. "java&#9;script:"), so decode and
+    // normalize each candidate the way a browser does before deciding, and act
+    // only on a known denylist so prose like "Note:" is left untouched.
+    $dangerousSchemes = ['javascript', 'data', 'vbscript'];
+    $schemePattern = '/[a-z](?:[a-z0-9+.\-]|&#[0-9a-fx]+;|[ \t\r\n])*:[^\s"\'<>]+/i';
+    $input = preg_replace_callback($schemePattern, function ($matches) use ($dangerousSchemes) {
+      $decoded = html_entity_decode($matches[0], ENT_QUOTES | ENT_HTML5);
+      $decoded = (string) preg_replace('/[\x09\x0A\x0D]/', '', $decoded);
+      $scheme = strtolower((string) parse_url($decoded, PHP_URL_SCHEME));
+      if (in_array($scheme, $dangerousSchemes, TRUE)) {
+        $this->loggerFactory->get('ai')->warning(
+          'Removed disallowed URL: @url',
+          ['@url' => $matches[0]]
+        );
+        return '';
+      }
+      return $matches[0];
+    }, $input);
+
     // Regex to match URLs like:
     // https://example.com/path
     // http://example.com
@@ -367,6 +390,25 @@ class HostnameFilter {
       }
       foreach ($attrsToRemove as $attrName) {
         $node->removeAttribute($attrName);
+      }
+
+      // Meta refresh redirects encode the destination as "<delay>;url=<url>"
+      // in the content attribute, which is not a plain URL. Extract and check
+      // the destination so it cannot redirect to a disallowed host.
+      if ($tag === 'meta'
+        && strtolower($node->getAttribute('http-equiv')) === 'refresh'
+        && $node->hasAttribute('content')) {
+        $content = $node->getAttribute('content');
+        if (preg_match('/url\s*=\s*(.+)$/i', $content, $refreshMatches)) {
+          $refreshUrl = trim($refreshMatches[1], " \t\n\r\0\x0B\"'");
+          if (!$this->isUrlAllowed($refreshUrl)) {
+            $this->loggerFactory->get('ai')->warning(
+              'Removed disallowed AI output meta refresh URL: @url',
+              ['@url' => $refreshUrl]
+            );
+            $node->removeAttribute('content');
+          }
+        }
       }
 
       if (isset($this->urlAttributes[$tag])) {
@@ -553,6 +595,40 @@ class HostnameFilter {
       return $matches[0];
     }, $markdown);
 
+    // Markdown auto links (<scheme:...>) and reference-style link definitions
+    // ([label]: url) are not covered by the inline patterns above, yet a
+    // consumer's Markdown renderer compiles both forms to real links. Their
+    // URLs must be checked against the allowlist too, otherwise disallowed
+    // schemes and hosts can be smuggled through these syntaxes.
+    $autolinkPattern = '/<([a-z][a-z0-9+.-]*:[^\s<>]*)>/i';
+    $markdown = preg_replace_callback($autolinkPattern, function ($matches) {
+      if (!$this->isUrlAllowed($matches[1])) {
+        $this->loggerFactory->get('ai')->warning(
+          'Removed disallowed Markdown autolink with URL: @url',
+          ['@url' => $matches[1]]
+        );
+        return '';
+      }
+      return $matches[0];
+    }, $markdown);
+
+    $referenceDefinitionPattern = '/^[ ]{0,3}\[[^\]]+\]:\s*(\S+).*$/m';
+    $markdown = preg_replace_callback($referenceDefinitionPattern, function ($matches) {
+      // CommonMark allows the destination to be wrapped in angle brackets
+      // ("[ref]: <url>"). Strip them before the host check, otherwise
+      // parse_url() cannot detect the host behind the leading "<" and the
+      // disallowed URL is let through.
+      $url = trim($matches[1], '<>');
+      if (!$this->isUrlAllowed($url)) {
+        $this->loggerFactory->get('ai')->warning(
+          'Removed disallowed Markdown reference link with URL: @url',
+          ['@url' => $url]
+        );
+        return '';
+      }
+      return $matches[0];
+    }, $markdown);
+
     return $markdown;
   }
 
@@ -566,7 +642,20 @@ class HostnameFilter {
    *   TRUE if allowed, FALSE otherwise.
    */
   protected function isUrlAllowed(string $url): bool {
-    $trimmedUrl = trim($url);
+    // Decode HTML character references first, so a scheme obfuscated with
+    // numeric or named entities (e.g. "java&#9;script:", "java&#x9;script:" or
+    // "java&Tab;script:") is resolved to its real form before the scheme check.
+    // Markdown/HTML renderers decode these, so without this step the entity
+    // breaks the scheme regex, parse_url() finds no host, and the dangerous URL
+    // is let through. Mirrors the decoding done in ::filterUrlsInPlainText().
+    $url = html_entity_decode($url, ENT_QUOTES | ENT_HTML5);
+
+    // Normalize the URL the way browsers do before they detect the scheme:
+    // ASCII tab, line feed and carriage return are removed from anywhere in
+    // the URL (per the WHATWG URL spec), and leading/trailing C0 control
+    // characters and spaces are trimmed. This prevents obfuscating a dangerous
+    // scheme with whitespace or control characters, e.g. "java<TAB>script:".
+    $trimmedUrl = trim((string) preg_replace('/[\x09\x0A\x0D]/', '', $url), "\x00..\x20");
 
     // Deny empty URLs.
     if ($trimmedUrl === '') {

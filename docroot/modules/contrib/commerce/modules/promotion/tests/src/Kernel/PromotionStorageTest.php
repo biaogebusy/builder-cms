@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_promotion\PromotionStorageInterface;
+use Drupal\commerce_promotion\PromotionUsageInterface;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
@@ -18,13 +21,6 @@ use Drupal\commerce_promotion\Entity\Promotion;
 class PromotionStorageTest extends OrderKernelTestBase {
 
   /**
-   * The promotion storage.
-   *
-   * @var \Drupal\commerce_promotion\PromotionStorageInterface
-   */
-  protected $promotionStorage;
-
-  /**
    * Modules to enable.
    *
    * @var array
@@ -38,7 +34,7 @@ class PromotionStorageTest extends OrderKernelTestBase {
    *
    * @var \Drupal\commerce_order\Entity\OrderInterface
    */
-  protected $order;
+  protected OrderInterface $order;
 
   /**
    * The test order type.
@@ -52,7 +48,7 @@ class PromotionStorageTest extends OrderKernelTestBase {
    *
    * @var \Drupal\commerce_promotion\PromotionUsageInterface
    */
-  protected $usage;
+  protected PromotionUsageInterface $usage;
 
   /**
    * {@inheritdoc}
@@ -65,9 +61,7 @@ class PromotionStorageTest extends OrderKernelTestBase {
     $this->installConfig(['commerce_promotion']);
     $this->installSchema('commerce_promotion', ['commerce_promotion_usage']);
 
-    $this->promotionStorage = $this->container->get('entity_type.manager')->getStorage('commerce_promotion');
     $this->usage = $this->container->get('commerce_promotion.usage');
-
     $this->orderType = OrderType::load('default');
     $order_item = OrderItem::create([
       'type' => 'default',
@@ -212,26 +206,28 @@ class PromotionStorageTest extends OrderKernelTestBase {
     ]);
     $this->assertEquals(SAVED_NEW, $promotion8->save());
 
+    $promotion_storage = $this->entityTypeManager->getStorage('commerce_promotion');
+    assert($promotion_storage instanceof PromotionStorageInterface);
     // Confirm that the promotions were filtered by date and status,
     // and sorted by weight.
-    $promotions = $this->promotionStorage->loadAvailable($this->order);
+    $promotions = $promotion_storage->loadAvailable($this->order);
     $this->assertCount(4, $promotions);
     $this->assertEquals([
       $promotion5->id(), $promotion1->id(), $promotion2->id(), $promotion7->id(),
     ], array_keys($promotions));
 
     // Test filtering by offer ID.
-    $promotions = $this->promotionStorage->loadAvailable($this->order, ['order_fixed_amount_off', 'order_percentage_off']);
+    $promotions = $promotion_storage->loadAvailable($this->order, ['order_fixed_amount_off', 'order_percentage_off']);
     $this->assertCount(3, $promotions);
     $this->assertEquals([
       $promotion5->id(), $promotion1->id(), $promotion2->id(),
     ], array_keys($promotions));
 
-    $promotions = $this->promotionStorage->loadAvailable($this->order, ['order_fixed_amount_off']);
+    $promotions = $promotion_storage->loadAvailable($this->order, ['order_fixed_amount_off']);
     $this->assertCount(1, $promotions);
     $this->assertEquals([$promotion1->id()], array_keys($promotions));
 
-    $promotions = $this->promotionStorage->loadAvailable($this->order, ['order_percentage_off']);
+    $promotions = $promotion_storage->loadAvailable($this->order, ['order_percentage_off']);
     $this->assertCount(2, $promotions);
     $this->assertEquals([$promotion5->id(), $promotion2->id()], array_keys($promotions));
   }
@@ -277,7 +273,9 @@ class PromotionStorageTest extends OrderKernelTestBase {
     ]);
     $promotion3->save();
 
-    $promotions = $this->promotionStorage->loadAvailable($this->order);
+    $promotion_storage = $this->entityTypeManager->getStorage('commerce_promotion');
+    assert($promotion_storage instanceof PromotionStorageInterface);
+    $promotions = $promotion_storage->loadAvailable($this->order);
     $this->assertEquals(2, count($promotions));
   }
 

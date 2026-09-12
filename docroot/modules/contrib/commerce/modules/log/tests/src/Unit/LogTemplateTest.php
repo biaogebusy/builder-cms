@@ -41,28 +41,28 @@ class LogTemplateTest extends UnitTestCase {
   /**
    * @covers ::getId
    */
-  public function testGetId() {
+  public function testGetId(): void {
     $this->assertEquals($this->definition['id'], $this->logTemplate->getId());
   }
 
   /**
    * @covers ::getLabel
    */
-  public function testGetLabel() {
+  public function testGetLabel(): void {
     $this->assertEquals($this->definition['label'], $this->logTemplate->getLabel());
   }
 
   /**
-   * @covers ::getGroup
+   * @covers ::getCategory
    */
-  public function getCategory() {
+  public function testGetCategory(): void {
     $this->assertEquals($this->definition['category'], $this->logTemplate->getCategory());
   }
 
   /**
    * @covers ::getTemplate
    */
-  public function getTemplate() {
+  public function testGetTemplate(): void {
     $this->assertEquals($this->definition['template'], $this->logTemplate->getTemplate());
   }
 

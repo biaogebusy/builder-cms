@@ -4,12 +4,14 @@ namespace Drupal\Core\Entity;
 
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\Exception\InvalidLinkTemplateException;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery;
+use Drupal\Core\Entity\Attribute\EntityType;
+use Drupal\Core\Plugin\Discovery\AttributeDiscoveryWithAnnotations;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -67,7 +69,7 @@ class EntityTypeManager extends DefaultPluginManager implements EntityTypeManage
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations,
+   *   keyed by the corresponding namespace to look for plugin implementations.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache
@@ -78,23 +80,19 @@ class EntityTypeManager extends DefaultPluginManager implements EntityTypeManage
    *   The class resolver.
    * @param \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $entity_last_installed_schema_repository
    *   The entity last installed schema repository.
-   * @param \Symfony\Component\DependencyInjection\ContainerInterface|null $container
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    *   The service container.
    */
-  public function __construct(\Traversable $namespaces, ModuleHandlerInterface $module_handler, CacheBackendInterface $cache, TranslationInterface $string_translation, ClassResolverInterface $class_resolver, EntityLastInstalledSchemaRepositoryInterface $entity_last_installed_schema_repository, protected ?ContainerInterface $container = NULL) {
-    parent::__construct('Entity', $namespaces, $module_handler, 'Drupal\Core\Entity\EntityInterface');
+  public function __construct(\Traversable $namespaces, ModuleHandlerInterface $module_handler, CacheBackendInterface $cache, TranslationInterface $string_translation, ClassResolverInterface $class_resolver, EntityLastInstalledSchemaRepositoryInterface $entity_last_installed_schema_repository, protected ContainerInterface $container) {
+    parent::__construct('Entity', $namespaces, $module_handler, EntityInterface::class);
 
     $this->setCacheBackend($cache, 'entity_type', ['entity_types']);
     $this->alterInfo('entity_type');
 
-    $this->discovery = new AnnotatedClassDiscovery('Entity', $namespaces, 'Drupal\Core\Entity\Annotation\EntityType');
+    $this->discovery = new AttributeDiscoveryWithAnnotations($this->subdir, $this->namespaces, EntityType::class, 'Drupal\Core\Entity\Annotation\EntityType');
     $this->stringTranslation = $string_translation;
     $this->classResolver = $class_resolver;
     $this->entityLastInstalledSchemaRepository = $entity_last_installed_schema_repository;
-    if ($this->container === NULL) {
-      @trigger_error('Calling ' . __METHOD__ . ' without the $container argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3419963', E_USER_DEPRECATED);
-      $this->container = \Drupal::getContainer();
-    }
   }
 
   /**
@@ -117,11 +115,39 @@ class EntityTypeManager extends DefaultPluginManager implements EntityTypeManage
    */
   protected function findDefinitions() {
     $definitions = $this->getDiscovery()->getDefinitions();
+    $bundle_class_bundle_info = [];
+    $definitions = array_filter($definitions, function (EntityTypeInterface $definition, string $id) use (&$bundle_class_bundle_info) {
+      // Derivatives are bundle class definitions and not actual entity types.
+      if (str_contains($id, PluginBase::DERIVATIVE_SEPARATOR)) {
+        $bundle_info = $definition->get('entity_type_bundle_info');
+        if ($bundle_info !== NULL) {
+          // Normalize the class string.
+          $this->processDefinition($definition, $id);
+          [$entity_type_id, $bundle] = explode(PluginBase::DERIVATIVE_SEPARATOR, $id);
+          $bundle_class_bundle_info[$entity_type_id][$bundle] = [
+            'class' => $definition->getClass(),
+            'label' => $definition->getLabel(),
+            'translatable' => $bundle_info[$bundle]['translatable'],
+          ];
+        }
+        return FALSE;
+      }
+
+      return TRUE;
+    }, ARRAY_FILTER_USE_BOTH);
     $this->moduleHandler->invokeAllWith('entity_type_build', function (callable $hook, string $module) use (&$definitions) {
       $hook($definitions);
     });
     foreach ($definitions as $plugin_id => $definition) {
       $this->processDefinition($definition, $plugin_id);
+    }
+    foreach ($bundle_class_bundle_info as $entity_type_id => $bundle_data) {
+      if (!isset($definitions[$entity_type_id])) {
+        continue;
+      }
+      $entity_type_bundle_info = $definitions[$entity_type_id]->get('entity_type_bundle_info') ?? [];
+      $entity_type_bundle_info += $bundle_data;
+      $definitions[$entity_type_id]->set('entity_type_bundle_info', $entity_type_bundle_info);
     }
     $this->alterDefinitions($definitions);
 
@@ -132,6 +158,9 @@ class EntityTypeManager extends DefaultPluginManager implements EntityTypeManage
    * {@inheritdoc}
    */
   public function getDefinition($entity_type_id, $exception_on_invalid = TRUE) {
+    if (str_contains($entity_type_id, PluginBase::DERIVATIVE_SEPARATOR)) {
+      throw new \LogicException('Bundle entity types are not supported directly.');
+    }
     if (($entity_type = parent::getDefinition($entity_type_id, FALSE)) && class_exists($entity_type->getClass())) {
       return $entity_type;
     }
@@ -215,6 +244,9 @@ class EntityTypeManager extends DefaultPluginManager implements EntityTypeManage
     }
 
     $form_object = $this->classResolver->getInstanceFromDefinition($class);
+    if (!$form_object instanceof EntityFormInterface) {
+      throw new InvalidPluginDefinitionException($entity_type_id, sprintf('The "%s" form handler of the "%s" entity type specifies a class "%s" that does not extend "%s".', $operation, $entity_type_id, $class, EntityFormInterface::class));
+    }
 
     return $form_object
       ->setStringTranslation($this->stringTranslation)
@@ -290,20 +322,6 @@ class EntityTypeManager extends DefaultPluginManager implements EntityTypeManage
     }
 
     return $handler;
-  }
-
-  /**
-   * Sets the service container.
-   *
-   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0.
-   *    Instead, you should pass the container as an argument in the
-   *    __construct() method.
-   *
-   * @see https://www.drupal.org/node/3419963
-   */
-  public function setContainer(?ContainerInterface $container): void {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Instead, you should pass the container as an argument in the __construct() method. See https://www.drupal.org/node/3419963', E_USER_DEPRECATED);
-    $this->container = $container;
   }
 
 }

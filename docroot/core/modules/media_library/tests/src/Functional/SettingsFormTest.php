@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\media_library\Functional;
 
+use Drupal\media_library\Form\SettingsForm;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Media Library settings form.
- *
- * @coversDefaultClass \Drupal\media_library\Form\SettingsForm
- * @group media_library
  */
+#[CoversClass(SettingsForm::class)]
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class SettingsFormTest extends BrowserTestBase {
 
   /**

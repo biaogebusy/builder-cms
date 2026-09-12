@@ -6,101 +6,42 @@ namespace Drupal\Tests\Core\ParamConverter;
 
 use Drupal\Core\ParamConverter\ParamConverterManager;
 use Drupal\Core\ParamConverter\ParamNotConvertedException;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @coversDefaultClass \Drupal\Core\ParamConverter\ParamConverterManager
- * @group ParamConverter
+ * Tests Drupal\Core\ParamConverter\ParamConverterManager.
  */
+#[CoversClass(ParamConverterManager::class)]
+#[Group('ParamConverter')]
 class ParamConverterManagerTest extends UnitTestCase {
 
   /**
-   * @var \Drupal\Core\ParamConverter\ParamConverterManager
-   */
-  protected $manager;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->manager = new ParamConverterManager();
-  }
-
-  /**
    * Tests \Drupal\Core\ParamConverter\ParamConverterManager::getConverter().
-   *
-   * @dataProvider providerTestGetConverter
-   *
-   * @covers ::getConverter
    */
+  #[DataProvider('providerTestGetConverter')]
   public function testGetConverter($name, $class): void {
     $converter = $this->getMockBuilder('Drupal\Core\ParamConverter\ParamConverterInterface')
       ->setMockClassName($class)
       ->getMock();
 
-    $this->manager->addConverter($converter, $name);
-
-    $this->assertInstanceOf($class, $this->manager->getConverter($name));
-    // Assert that a second call to getConverter() does not use the container.
-    $this->assertInstanceOf($class, $this->manager->getConverter($name));
+    $manager = new ParamConverterManager(new ServiceLocator([$name => fn() => $converter]));
+    $this->assertInstanceOf($class, $manager->getConverter($name));
   }
 
   /**
    * Tests \Drupal\Core\ParamConverter\ParamConverterManager::getConverter().
-   *
-   * @covers ::getConverter
    */
   public function testGetConverterException(): void {
     $this->expectException(\InvalidArgumentException::class);
-    $this->manager->getConverter('undefined.converter');
-  }
-
-  /**
-   * Provide data for parameter converter manager tests.
-   *
-   * @return array
-   *   An array of arrays, each containing the input parameters for
-   *   providerTestResolvers::testAddConverter().
-   *
-   * @see ParamConverterManagerTest::testAddConverter()
-   */
-  public function providerTestAddConverter() {
-    $converters[0]['unsorted'] = [
-      ['name' => 'strawberry'],
-      ['name' => 'raspberry'],
-      ['name' => 'pear'],
-      ['name' => 'peach'],
-      ['name' => 'pineapple'],
-      ['name' => 'banana'],
-      ['name' => 'apple'],
-    ];
-
-    $converters[0]['sorted'] = [
-      'strawberry', 'raspberry', 'pear', 'peach',
-      'pineapple', 'banana', 'apple',
-    ];
-
-    $converters[1]['unsorted'] = [
-      ['name' => 'giraffe'],
-      ['name' => 'zebra'],
-      ['name' => 'eagle'],
-      ['name' => 'ape'],
-      ['name' => 'cat'],
-      ['name' => 'puppy'],
-      ['name' => 'llama'],
-    ];
-
-    $converters[1]['sorted'] = [
-      'giraffe', 'zebra', 'eagle', 'ape',
-      'cat', 'puppy', 'llama',
-    ];
-
-    return $converters;
+    $manager = new ParamConverterManager(new ServiceLocator([]));
+    $manager->getConverter('undefined.converter');
   }
 
   /**
@@ -112,7 +53,7 @@ class ParamConverterManagerTest extends UnitTestCase {
    *
    * @see ParamConverterManagerTest::testGetConverter()
    */
-  public static function providerTestGetConverter() {
+  public static function providerTestGetConverter(): array {
     return [
       ['ape', 'ApeConverterClass'],
       ['cat', 'CatConverterClass'],
@@ -125,17 +66,16 @@ class ParamConverterManagerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setRouteParameterConverters
-   *
-   * @dataProvider providerTestSetRouteParameterConverters
+   * Tests set route parameter converters.
    */
+  #[DataProvider('providerTestSetRouteParameterConverters')]
   public function testSetRouteParameterConverters($path, $parameters = NULL, $expected = NULL): void {
     $converter = $this->createMock('Drupal\Core\ParamConverter\ParamConverterInterface');
     $converter->expects($this->any())
       ->method('applies')
       ->with($this->anything(), 'id', $this->anything())
       ->willReturn(TRUE);
-    $this->manager->addConverter($converter, 'applied');
+    $manager = new ParamConverterManager(new ServiceLocator(['applied' => fn() => $converter]));
 
     $route = new Route($path);
     if ($parameters) {
@@ -144,7 +84,7 @@ class ParamConverterManagerTest extends UnitTestCase {
     $collection = new RouteCollection();
     $collection->add('test_route', $route);
 
-    $this->manager->setRouteParameterConverters($collection);
+    $manager->setRouteParameterConverters($collection);
     foreach ($collection as $route) {
       $result = $route->getOption('parameters');
       if ($expected) {
@@ -159,7 +99,7 @@ class ParamConverterManagerTest extends UnitTestCase {
   /**
    * Provides data for testSetRouteParameterConverters().
    */
-  public static function providerTestSetRouteParameterConverters() {
+  public static function providerTestSetRouteParameterConverters(): array {
     return [
       ['/test'],
       ['/test/{id}', ['id' => []], 'applied'],
@@ -168,7 +108,7 @@ class ParamConverterManagerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::convert
+   * Tests convert.
    */
   public function testConvert(): void {
     $route = new Route('/test/{id}/{literal}/{null}');
@@ -195,17 +135,61 @@ class ParamConverterManagerTest extends UnitTestCase {
     $converter = $this->createMock('Drupal\Core\ParamConverter\ParamConverterInterface');
     $converter->expects($this->any())
       ->method('convert')
-      ->with(1, $this->isType('array'), 'id', $this->isType('array'))
+      ->with(1, $this->isArray(), 'id', $this->isArray())
       ->willReturn('something_better!');
-    $this->manager->addConverter($converter, 'test_convert');
 
-    $result = $this->manager->convert($defaults);
+    $manager = new ParamConverterManager(new ServiceLocator(['test_convert' => fn() => $converter]));
+    $result = $manager->convert($defaults);
 
     $this->assertEquals($expected, $result);
   }
 
   /**
-   * @covers ::convert
+   * Tests that converters are lazily instantiated.
+   */
+  public function testLazyInstantiation(): void {
+    $route = new Route('/test/{id}');
+
+    $converter = $this->createMock('Drupal\Core\ParamConverter\ParamConverterInterface');
+    $converter->expects($this->exactly(2))
+      ->method('convert')
+      ->with(1, $this->isArray(), 'id', $this->isArray())
+      ->willReturn('converted_value');
+
+    $instantiated = FALSE;
+    $manager = new ParamConverterManager(new ServiceLocator([
+      'converter1' => fn() => $converter,
+      'converter2' => function () use (&$instantiated, $converter) {
+        $instantiated = TRUE;
+        return $converter;
+      },
+    ]));
+
+    $defaults = [
+      RouteObjectInterface::ROUTE_OBJECT => $route,
+      'id' => 1,
+    ];
+
+    $route->setOption('parameters', [
+      'id' => [
+        'converter' => 'converter1',
+      ],
+    ]);
+    $result = $manager->convert($defaults);
+    $this->assertEquals('converted_value', $result['id']);
+    $this->assertFalse($instantiated);
+
+    $route->setOption('parameters', [
+      'id' => [
+        'converter' => 'converter2',
+      ],
+    ]);
+    $manager->convert($defaults);
+    $this->assertTrue($instantiated);
+  }
+
+  /**
+   * Tests convert no converting.
    */
   public function testConvertNoConverting(): void {
     $route = new Route('/test');
@@ -216,12 +200,13 @@ class ParamConverterManagerTest extends UnitTestCase {
 
     $expected = $defaults;
 
-    $result = $this->manager->convert($defaults);
+    $manager = new ParamConverterManager(new ServiceLocator([]));
+    $result = $manager->convert($defaults);
     $this->assertEquals($expected, $result);
   }
 
   /**
-   * @covers ::convert
+   * Tests convert missing param.
    */
   public function testConvertMissingParam(): void {
     $route = new Route('/test/{id}');
@@ -241,13 +226,14 @@ class ParamConverterManagerTest extends UnitTestCase {
     $converter = $this->createMock('Drupal\Core\ParamConverter\ParamConverterInterface');
     $converter->expects($this->any())
       ->method('convert')
-      ->with(1, $this->isType('array'), 'id', $this->isType('array'))
+      ->with(1, $this->isArray(), 'id', $this->isArray())
       ->willReturn(NULL);
-    $this->manager->addConverter($converter, 'test_convert');
+
+    $manager = new ParamConverterManager(new ServiceLocator(['test_convert' => fn() => $converter]));
 
     $this->expectException(ParamNotConvertedException::class);
     $this->expectExceptionMessage('The "id" parameter was not converted for the path "/test/{id}" (route name: "test_route")');
-    $this->manager->convert($defaults);
+    $manager->convert($defaults);
   }
 
 }

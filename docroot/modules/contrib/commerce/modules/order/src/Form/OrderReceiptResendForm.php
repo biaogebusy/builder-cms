@@ -30,10 +30,17 @@ class OrderReceiptResendForm extends ContentEntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getDescription() {
     return $this->t('Are you sure you want to resend the receipt for %label?', [
       '%label' => $this->entity->label(),
     ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getQuestion() {
+    return $this->t('Resend receipt');
   }
 
   /**

@@ -43,36 +43,44 @@
       // Keep buttons in sync.
       if (actionButtons.length > 0) {
         const formId = form.getAttribute('id');
-        once('ginSyncActionButtons', actionButtons).forEach((el) => {
+        once('ginSyncActionButtons-' + formId, actionButtons).forEach((el) => {
           const formElement = el.dataset.drupalSelector;
-          const buttonId = el.id;
+          const buttonDrupalDataSelector = el.getAttribute('data-drupal-selector');
           const buttonSelector = newParent.querySelector(`[data-drupal-selector="gin-sticky-${formElement}"]`);
 
           if (buttonSelector) {
+            // Remove old event listener first.
+            buttonSelector.removeEventListener('click', this.actionButtonEventListener)
+
             // Update form id.
             buttonSelector.setAttribute('form', formId);
-            buttonSelector.setAttribute('data-gin-sticky-form-selector', buttonId);
+            buttonSelector.setAttribute('data-gin-sticky-form-selector', buttonDrupalDataSelector);
 
             // Trigger original button from within the form.
-            buttonSelector.addEventListener('click', (e) => {
-              const button = document.querySelector(`#${formId} [data-drupal-selector="${buttonId}"]`);
-              if (button === null) {
-                return;
-              }
-              e.preventDefault();
-              // Additionally trigger mouse down event in case of AJAX.
-              once.filter('drupal-ajax', button).length && button.dispatchEvent(new Event('mousedown'));
-              button.click();
-            });
+            buttonSelector.addEventListener('click', this.actionButtonEventListener);
           }
         });
       }
     },
 
+    actionButtonEventListener: function (e) {
+      const stickyButton = e.currentTarget;
+      const buttonDrupalDataSelector = stickyButton.getAttribute('data-gin-sticky-form-selector');
+      const formId = stickyButton.getAttribute('form');
+      const button = document.querySelector(`#${formId} [data-drupal-selector="${buttonDrupalDataSelector}"]`);
+      if (button === null) {
+        return;
+      }
+      e.preventDefault();
+      // Additionally trigger mouse down event in case of AJAX.
+      once.filter('drupal-ajax', button).length && button.dispatchEvent(new Event('mousedown'));
+      button.click();
+    },
+
     moveFocus: function (newParent, form) {
       once('ginMoveFocusToStickyBar', '[gin-move-focus-to-sticky-bar]', form).forEach(el => el.addEventListener('focus', e => {
         e.preventDefault();
-        const focusableElements = ['button, input, select, textarea'];
+        const focusableElements = ['button, input, select, textarea, .action-link'];
 
         // Moves focus to first item.
         newParent.querySelector(focusableElements).focus();
@@ -113,12 +121,18 @@
 
     showMoreActions: function () {
       const trigger = document.querySelector('.gin-more-actions__trigger');
+      if (trigger === null) {
+        return;
+      }
       trigger.setAttribute('aria-expanded', 'true');
       trigger.classList.add('is-active');
     },
 
     hideMoreActions: function () {
       const trigger = document.querySelector('.gin-more-actions__trigger');
+      if (trigger === null) {
+        return;
+      }
       trigger.setAttribute('aria-expanded', 'false');
       trigger.classList.remove('is-active');
       document.removeEventListener('click', this.closeMoreActionsOnClickOutside);
@@ -126,6 +140,9 @@
 
     closeMoreActionsOnClickOutside: function (e) {
       const trigger = document.querySelector('.gin-more-actions__trigger');
+      if (trigger === null) {
+        return;
+      }
 
       if (trigger.getAttribute('aria-expanded') === "false") return;
 

@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_order;
 
+use Drupal\commerce_order\Entity\OrderTypeInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\commerce\Context;
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_order\Entity\OrderType;
 use Drupal\commerce_price\Calculator;
 use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
 
@@ -15,34 +15,6 @@ use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
  * Default implementation for order refresh.
  */
 class OrderRefresh implements OrderRefreshInterface {
-
-  /**
-   * The order type storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $orderTypeStorage;
-
-  /**
-   * The chain price resolver.
-   *
-   * @var \Drupal\commerce_price\Resolver\ChainPriceResolverInterface
-   */
-  protected $chainPriceResolver;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
-   * The time.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
 
   /**
    * The order preprocessors.
@@ -61,20 +33,21 @@ class OrderRefresh implements OrderRefreshInterface {
   /**
    * Constructs a new OrderRefresh object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\commerce_price\Resolver\ChainPriceResolverInterface $chain_price_resolver
+   * @param \Drupal\commerce_price\Resolver\ChainPriceResolverInterface $chainPriceResolver
    *   The chain price resolver.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
+   * @param \Drupal\Core\Session\AccountInterface $currentUser
    *   The current user.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ChainPriceResolverInterface $chain_price_resolver, AccountInterface $current_user, TimeInterface $time) {
-    $this->orderTypeStorage = $entity_type_manager->getStorage('commerce_order_type');
-    $this->chainPriceResolver = $chain_price_resolver;
-    $this->currentUser = $current_user;
-    $this->time = $time;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected ChainPriceResolverInterface $chainPriceResolver,
+    protected AccountInterface $currentUser,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -99,9 +72,9 @@ class OrderRefresh implements OrderRefreshInterface {
       return FALSE;
     }
     /** @var \Drupal\commerce_order\Entity\OrderTypeInterface $order_type */
-    $order_type = $this->orderTypeStorage->load($order->bundle());
+    $order_type = $this->entityTypeManager->getStorage('commerce_order_type')->load($order->bundle());
     // Ensure the order is only refreshed for its customer, when configured so.
-    if ($order_type->getRefreshMode() == OrderType::REFRESH_CUSTOMER) {
+    if ($order_type->getRefreshMode() == OrderTypeInterface::REFRESH_CUSTOMER) {
       if (!$this->currentUser->isAuthenticated() && !$order->access('update')) {
         return FALSE;
       }
@@ -136,7 +109,7 @@ class OrderRefresh implements OrderRefreshInterface {
       return TRUE;
     }
     /** @var \Drupal\commerce_order\Entity\OrderTypeInterface $order_type */
-    $order_type = $this->orderTypeStorage->load($order->bundle());
+    $order_type = $this->entityTypeManager->getStorage('commerce_order_type')->load($order->bundle());
     $refreshed_ago = $current_time - $order_time;
     if ($refreshed_ago >= $order_type->getRefreshFrequency()) {
       return TRUE;

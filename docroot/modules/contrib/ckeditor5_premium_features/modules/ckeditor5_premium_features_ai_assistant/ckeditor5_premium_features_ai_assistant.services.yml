@@ -1,0 +1,9 @@
+services:
+  plugin.manager.ckeditor5_ai_provider:
+    class: Drupal\ckeditor5_premium_features_ai_assistant\CKEditor5AiProviderPluginManager
+    parent: default_plugin_manager
+  ckeditor5_premium_features_ai_assistant.ai_assistant_helper:
+    class: Drupal\ckeditor5_premium_features_ai_assistant\Utility\AiAssistantHelper
+    arguments:
+      - '@config.factory'
+      - '@plugin.manager.ckeditor5_ai_provider'

@@ -8,6 +8,6 @@
     "issues": "https://www.drupal.org/project/issues/search/views_add_button"
   },
   "require": {
-    "drupal/token": "~1.5"
+    "drupal/token": "^1.15"
   }
 }

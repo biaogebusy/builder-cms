@@ -33,7 +33,7 @@ a.button.button-webform-table-setting {
   margin: 0 0 1em 0;
 }
 
-a.button.button-webform-table-setting:before {
+a.button.button-webform-table-setting::before {
   content: "☷";
   font-size: 1.2em;
 }

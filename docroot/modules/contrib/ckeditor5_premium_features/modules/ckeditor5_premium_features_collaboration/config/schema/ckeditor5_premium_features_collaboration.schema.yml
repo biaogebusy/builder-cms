@@ -1,0 +1,36 @@
+ckeditor5.plugin.ckeditor5_premium_features_collaboration.settings:
+  type: config_object
+  label: 'CKEditor 5 Collaboration settings'
+  mapping:
+    sidebar:
+      type: string
+      label: 'Annotation sidebar'
+    add_revision_on_submit:
+      type: boolean
+      label: 'Add revisions on form submit'
+    revisions_quantity_limitation:
+      type: boolean
+      label: 'Quantity limitation'
+    revisions_quantity_limit:
+      type: integer
+      label: 'Maximum revision per node'
+    revisions_time_limitation:
+      type: boolean
+      label: 'Time limitation'
+    revisions_time_limit:
+      type: integer
+      label: 'Day limit for revisions'
+ckeditor5.plugin.ckeditor5_premium_features_collaboration__comments:
+  type: mapping
+  label: 'Comments'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+ckeditor5.plugin.ckeditor5_premium_features_collaboration__track_changes:
+  type: mapping
+  label: 'Track changes'
+  mapping:
+    default_state:
+      type: boolean
+      label: 'Enable on editor init'

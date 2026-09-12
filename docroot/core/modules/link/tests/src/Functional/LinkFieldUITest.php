@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\link\Functional;
 
-use Drupal\Core\Url;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Url;
 use Drupal\link\LinkItemInterface;
+use Drupal\link\LinkTitleVisibility;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests link field UI functionality.
- *
- * @group link
  */
+#[Group('link')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class LinkFieldUITest extends BrowserTestBase {
 
   use FieldUiTestTrait;
@@ -82,7 +86,7 @@ class LinkFieldUITest extends BrowserTestBase {
   /**
    * Provides test data for ::testFieldUI().
    */
-  protected function providerTestFieldUI() {
+  protected function providerTestFieldUI(): \Generator {
     // There are many combinations of field settings: where the description
     // should show: variation on internal, external, both; cardinality (where
     // the fieldset is hidden or used); and link text shown (required or
@@ -90,8 +94,8 @@ class LinkFieldUITest extends BrowserTestBase {
     // text.
     $cardinalities = [1, 2];
     $title_settings = [
-      DRUPAL_DISABLED,
-      DRUPAL_OPTIONAL,
+      LinkTitleVisibility::Disabled->value,
+      LinkTitleVisibility::Optional->value,
     ];
     $link_types = [
       LinkItemInterface::LINK_EXTERNAL => 'https://example.com',
@@ -149,7 +153,7 @@ class LinkFieldUITest extends BrowserTestBase {
    * @param string $default_uri
    *   The default URI value.
    */
-  public function runFieldUIItem($cardinality, $link_type, $title, $label, $field_name, $default_uri) {
+  public function runFieldUIItem($cardinality, $link_type, $title, $label, $field_name, $default_uri): void {
     $this->drupalLogin($this->adminUser);
     $type_path = 'admin/structure/types/manage/' . $this->contentType->id();
 
@@ -172,7 +176,7 @@ class LinkFieldUITest extends BrowserTestBase {
     // Load the formatter page to check that the settings summary does not
     // generate warnings.
     // @todo Mess with the formatter settings a bit here.
-    $this->drupalGet("$type_path/display");
+    $this->drupalGet("$type_path/display/default");
     $this->assertSession()->pageTextContains('Link text trimmed to 80 characters');
 
     // Make the fields visible in the form display.
@@ -243,7 +247,7 @@ class LinkFieldUITest extends BrowserTestBase {
   /**
    * Returns the raw HTML for the given field.
    *
-   * @param $field_name
+   * @param string $field_name
    *   The name of the field for which to return the HTML.
    *
    * @return string

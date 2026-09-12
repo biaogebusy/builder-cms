@@ -8,12 +8,16 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the entity_reference_revisions NeedsSaveInterface.
  *
  * @group entity_reference_revisions
  */
+#[RunTestsInSeparateProcesses]
+#[Group('entity_reference_revisions')]
 class EntityReferenceRevisionsSaveTest extends KernelTestBase {
 
   /**
@@ -27,6 +31,7 @@ class EntityReferenceRevisionsSaveTest extends KernelTestBase {
     'system',
     'field',
     'entity_reference_revisions',
+    'entity_test',
     'entity_composite_relationship_test',
   );
 
@@ -42,7 +47,6 @@ class EntityReferenceRevisionsSaveTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('entity_test_composite');
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
   }
 
@@ -173,6 +177,10 @@ class EntityReferenceRevisionsSaveTest extends KernelTestBase {
     ]);
     $validate = $node->validate();
     $this->assertEmpty($validate);
+
+    $referenced_entities = $node->get('composite_reference')->referencedEntities();
+    $this->assertSame($entity_test, $referenced_entities[0]);
+
     $node->save();
 
     // Test that the fields on node are properly set.
@@ -195,6 +203,9 @@ class EntityReferenceRevisionsSaveTest extends KernelTestBase {
     // Check the fields have been updated.
     static::assertEquals($node_after->composite_reference[0]->target_id, $second_entity_test->id());
     static::assertEquals($node_after->composite_reference[0]->target_revision_id, $second_entity_test->getRevisionId());
+
+    $referenced_entities = $node_after->get('composite_reference')->referencedEntities();
+    $this->assertSame($second_entity_test, $referenced_entities[0]);
   }
 
   /**

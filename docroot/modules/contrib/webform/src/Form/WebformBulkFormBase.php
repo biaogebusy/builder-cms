@@ -112,11 +112,11 @@ abstract class WebformBulkFormBase extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $action = $form_state->getValue('action');
     if (empty($action)) {
-      $form_state->setErrorByName(NULL, $this->t('No operation selected.'));
+      $form_state->setErrorByName('', $this->t('No operation selected.'));
     }
     $entity_ids = array_filter($form_state->getValue('items'));
     if (empty($entity_ids)) {
-      $form_state->setErrorByName(NULL, $this->t('No items selected.'));
+      $form_state->setErrorByName('', $this->t('No items selected.'));
     }
   }
 

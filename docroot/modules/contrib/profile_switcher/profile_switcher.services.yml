@@ -1,4 +1,0 @@
-services:
-  profile_switcher.profile_switcher:
-    class: Drupal\profile_switcher\ProfileSwitcher
-    arguments: ['@config.factory', '@keyvalue', '@state']

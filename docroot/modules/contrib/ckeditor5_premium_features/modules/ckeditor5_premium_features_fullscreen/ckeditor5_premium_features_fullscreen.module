@@ -1,0 +1,17 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+declare(strict_types = 1);
+
+/**
+ * Implements hook_uninstall().
+ */
+function ckeditor5_premium_features_fullscreen_uninstall($is_syncing): void {
+  if (!$is_syncing) {
+    ckeditor5_premium_features_remove_ckeditor_plugins(['fullScreen']);
+  }
+}

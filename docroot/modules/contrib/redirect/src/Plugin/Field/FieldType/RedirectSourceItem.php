@@ -3,9 +3,11 @@
 namespace Drupal\redirect\Plugin\Field\FieldType;
 
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\MapDataDefinition;
 use Drupal\Core\Url;
@@ -25,6 +27,14 @@ use Drupal\Core\Url;
  * @property string|null $path
  * @property array|null $query
  */
+#[FieldType(
+  id: 'redirect_source',
+  label: new TranslatableMarkup('Redirect source'),
+  description: new TranslatableMarkup('Stores a redirect source'),
+  default_widget: 'redirect_source',
+  default_formatter: 'redirect_source',
+  no_ui: TRUE,
+)]
 class RedirectSourceItem extends FieldItemBase {
 
   /**

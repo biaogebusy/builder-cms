@@ -2,6 +2,7 @@
 
 namespace Drupal\shortcut;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 
@@ -16,22 +17,24 @@ class ShortcutSetListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['name'] = t('Name');
+    $header['name'] = $this->t('Name');
     return $header + parent::buildHeader();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     if (isset($operations['edit'])) {
-      $operations['edit']['title'] = t('Edit shortcut set');
+      $operations['edit']['title'] = $this->t('Edit shortcut set');
     }
 
     $operations['list'] = [
-      'title' => t('List links'),
+      'title' => $this->t('List links'),
       'url' => $entity->toUrl('customize-form'),
     ];
     return $operations;

@@ -39,7 +39,7 @@ class TextField extends TextBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     if (!array_key_exists('#maxlength', $element)) {
       $element['#maxlength'] = 255;
     }

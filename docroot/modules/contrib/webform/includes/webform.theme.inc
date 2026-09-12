@@ -5,10 +5,12 @@
  * Theme hooks, preprocessor, and suggestions.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform\Hook\WebformThemeHooks;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Render\Element;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\Template\Attribute;
 use Drupal\file\Entity\File;
 use Drupal\webform\Element\WebformSelectOther;
@@ -24,213 +26,17 @@ use Drupal\webform\Utility\WebformElementHelper;
 /**
  * Implements hook_theme().
  */
+#[LegacyHook]
 function webform_theme() {
-  $info = [
-    'webform_help' => [
-      'variables' => ['info' => []],
-    ],
-    'webform_help_video_youtube' => [
-      'variables' => ['youtube_id' => NULL, 'autoplay' => TRUE],
-    ],
-    'webform_help_support' => [
-      'variables' => [
-        'account' => [],
-        'membership' => [],
-        'contribution' => [],
-      ],
-    ],
-    'webform' => [
-      'render element' => 'element',
-    ],
-    'webform_actions' => [
-      'render element' => 'element',
-    ],
-    'webform_access_denied' => [
-      'variables' => ['message' => '', 'attributes' => [], 'webform' => NULL],
-    ],
-
-    'webform_handler_action_summary' => [
-      'variables' => ['settings' => NULL, 'handler' => NULL],
-    ],
-    'webform_handler_debug_summary' => [
-      'variables' => ['settings' => NULL, 'handler' => NULL],
-    ],
-    'webform_handler_email_summary' => [
-      'variables' => ['settings' => NULL, 'handler' => NULL],
-    ],
-    'webform_handler_remote_post_summary' => [
-      'variables' => ['settings' => NULL, 'handler' => NULL],
-    ],
-    'webform_handler_settings_summary' => [
-      'variables' => ['settings' => NULL, 'handler' => NULL],
-    ],
-
-    'webform_variant_override_summary' => [
-      'variables' => ['settings' => NULL, 'variant' => NULL],
-    ],
-
-    'webform_confirmation' => [
-      'variables' => ['webform' => NULL, 'source_entity' => NULL, 'webform_submission' => NULL],
-    ],
-
-    'webform_required' => [
-      'variables' => ['label' => NULL],
-    ],
-
-    'webform_submission' => [
-      'render element' => 'elements',
-    ],
-
-    'webform_submission_form' => [
-      'render element' => 'form',
-    ],
-
-    'webform_submission_navigation' => [
-      'variables' => ['webform_submission' => NULL],
-    ],
-    'webform_submission_information' => [
-      'variables' => ['webform_submission' => NULL, 'source_entity' => NULL, 'open' => TRUE],
-    ],
-    'webform_submission_data' => [
-      'render element' => 'elements',
-    ],
-
-    'webform_element_base_html' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => []],
-    ],
-    'webform_element_base_text' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => []],
-    ],
-
-    'webform_container_base_html' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => []],
-    ],
-    'webform_container_base_text' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => []],
-    ],
-
-    'webform_element_help' => [
-      'variables' => ['help' => NULL, 'help_title' => '', 'attributes' => []],
-    ],
-
-    'webform_element_more' => [
-      'variables' => ['more' => NULL, 'more_title' => '', 'attributes' => []],
-    ],
-
-    'webform_element_managed_file' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => [], 'file' => NULL],
-    ],
-    'webform_element_audio_file' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => [], 'file' => NULL],
-    ],
-    'webform_element_document_file' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => [], 'file' => NULL],
-    ],
-    'webform_element_image_file' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => [], 'file' => NULL, 'style_name' => NULL, 'format' => NULL],
-    ],
-    'webform_element_video_file' => [
-      'variables' => ['element' => [], 'value' => NULL, 'webform_submission' => NULL, 'options' => [], 'file' => NULL],
-    ],
-
-    'webform_email_html' => [
-      'variables' => ['subject' => '', 'body' => '', 'webform_submission' => NULL, 'handler' => NULL],
-    ],
-    'webform_email_message_html' => [
-      'variables' => ['message' => '', 'webform_submission' => NULL, 'handler' => NULL],
-    ],
-    'webform_email_message_text' => [
-      'variables' => ['message' => '', 'webform_submission' => NULL, 'handler' => NULL],
-    ],
-
-    'webform_html_editor_markup' => [
-      'variables' => ['markup' => NULL, 'allowed_tags' => []],
-    ],
-    'webform_horizontal_rule' => [
-      'render element' => 'element',
-    ],
-    'webform_message' => [
-      'render element' => 'element',
-    ],
-    'webform_section' => [
-      'render element' => 'element',
-    ],
-
-    'webform_composite_address' => [
-      'render element' => 'element',
-    ],
-    'webform_composite_contact' => [
-      'render element' => 'element',
-    ],
-    'webform_composite_location' => [
-      'render element' => 'element',
-    ],
-    'webform_composite_link' => [
-      'render element' => 'element',
-    ],
-    'webform_composite_name' => [
-      'render element' => 'element',
-    ],
-    'webform_composite_telephone' => [
-      'render element' => 'element',
-    ],
-
-    'webform_codemirror' => [
-      'variables' => ['code' => NULL, 'type' => 'text'],
-    ],
-
-    'webform_progress' => [
-      'variables' => [
-        'webform' => NULL,
-        'webform_submission' => NULL,
-        'current_page' => NULL,
-        'operation' => NULL,
-        'pages' => [],
-      ],
-    ],
-
-    'webform_progress_bar' => [
-      'variables' => [
-        'webform' => NULL,
-        'webform_submission' => NULL,
-        'current_page' => NULL,
-        'operation' => NULL,
-        'max_pages' => 10,
-        'pages' => [],
-      ],
-    ],
-
-    'webform_progress_tracker' => [
-      'variables' => [
-        'webform' => NULL,
-        'webform_submission' => NULL,
-        'current_page' => NULL,
-        'operation' => NULL,
-        'max_pages' => 10,
-        'pages' => [],
-      ],
-    ],
-  ];
-
-  // Since any rendering of a webform is going to require 'webform.theme.inc'
-  // we are going to just add it to every template.
-  foreach ($info as &$template) {
-    $template['file'] = 'includes/webform.theme.template.inc';
-  }
-
-  return $info;
+  return \Drupal::service(WebformThemeHooks::class)->theme();
 }
 
 /**
  * Implements hook_theme_registry_alter().
  */
+#[LegacyHook]
 function webform_theme_registry_alter(&$theme_registry) {
-  // Allow attributes to be defined for status messages so that #states
-  // can be added to messages.
-  // @see \Drupal\webform\Element\WebformMessage
-  if (!isset($theme_registry['status_messages']['variables']['attributes'])) {
-    $theme_registry['status_messages']['variables']['attributes'] = [];
-  }
+  \Drupal::service(WebformThemeHooks::class)->themeRegistryAlter($theme_registry);
 }
 
 /* ************************************************************************** */
@@ -457,9 +263,12 @@ function webform_preprocess_fieldset(&$variables) {
   if (isset($element['#title_display']) && $element['#title_display'] === 'none') {
     $variables['legend'] = ['attributes' => new Attribute(['style' => 'display:none'])];
   }
+  elseif (isset($element['#title_attributes'])
+    && $variables['legend']['attributes'] instanceof Attribute) {
+    $variables['legend']['attributes']->merge(new Attribute($element['#title_attributes']));
+  }
 
   // Add .js-webform-form-type-* class to be used JavaScript and #states API.
-  // @see js/webform.element.location.geocomplete.js
   // @see js/webform.states.js
   if (isset($element['#type'])) {
     $variables['attributes']['class'][] = 'js-webform-type-' . Html::getClass($element['#type']);
@@ -511,6 +320,8 @@ function webform_preprocess_form_element(&$variables) {
     return;
   }
 
+  $element = &$variables['element'];
+
   // Setup description, help, and more.
   _webform_preprocess_element($variables, ['label', '#title']);
 
@@ -518,7 +329,6 @@ function webform_preprocess_form_element(&$variables) {
   // #more which is placed in the #description.
   // @see template_preprocess_form_element()
   if (isset($variables['description'])) {
-    $element = &$variables['element'];
     $variables['description_display'] = $element['#description_display'];
   }
 
@@ -560,6 +370,13 @@ function webform_preprocess_form_element(&$variables) {
       }
       $variables['description']['attributes']->addClass('description');
     }
+  }
+
+  // Add .js-webform-form-type-* class to be used JavaScript and #states API.
+  // @see js/webform.states.js
+  if (isset($element['#type'])) {
+    $variables['attributes']['class'][] = 'js-webform-type-' . Html::getClass($element['#type']);
+    $variables['attributes']['class'][] = 'webform-type-' . Html::getClass($element['#type']);
   }
 }
 
@@ -645,7 +462,16 @@ function webform_preprocess_file_managed_file(&$variables) {
   $element['upload']['#attributes']['class'][] = 'webform-file-button-input';
 
   // Attach library.
-  $element['#attached']['library'][] = 'webform/webform.element.file.button';
+  $element['upload']['#attached']['library'][] = 'webform/webform.element.file.button';
+
+  // Remove #errors to prevent 'aria-invalid' from being added to the
+  // remove file checkbox which is valid.
+  // @see \Drupal\Core\Render\Element\RenderElementBase::setAttributes
+  foreach (Element::children($element) as $child_key) {
+    if (NestedArray::getValue($element, [$child_key, 'selected', '#type']) === 'checkbox') {
+      unset($element[$child_key]['selected']['#errors']);
+    }
+  }
 }
 
 /**
@@ -654,26 +480,43 @@ function webform_preprocess_file_managed_file(&$variables) {
  * @see \Drupal\webform\Plugin\WebformElement\WebformManagedFileBase::prepare
  */
 function webform_preprocess_file_upload_help(&$variables) {
+  // Retrieve upload validators from file upload element variables.
   $upload_validators = $variables['upload_validators'];
 
-  if (isset($upload_validators['webform_file_limit']) && $upload_validators['webform_file_limit'][0]) {
-    $variables['descriptions'][] = t('@size limit per form.', ['@size' => format_size($upload_validators['webform_file_limit'][0])]);
+  // Exit early if no 'webform_file_limit' is set.
+  if (!isset($upload_validators['webform_file_limit'])) {
+    return;
   }
 
-  // Issue #3136578: Comma-separate the list of allowed file extensions.
-  // @see https://www.drupal.org/project/drupal/issues/3136578
-  if (isset($upload_validators['webform_file_validate_extensions'])) {
-    foreach ($variables['descriptions'] as $index => $description) {
-      if ($description instanceof TranslatableMarkup
-        && $description->getUntranslatedString() === 'Allowed types: @extensions.') {
-        $arguments = $description->getArguments();
-        if (is_string($arguments['@extensions']) && strpos($arguments['@extensions'], ',') === FALSE) {
-          $arguments['@extensions'] = preg_replace('/ +/', ', ', $arguments['@extensions']);
-          $variables['descriptions'][$index] = new TranslatableMarkup($description->getUntranslatedString(), $arguments);
-        }
-      }
-    }
-  }
+  // Get the webform's overall file size limit and the individual file element's limit.
+  $webform_file_limit = $upload_validators['webform_file_limit'];
+  $element_file_limit = (isset($upload_validators['FileSizeLimit']))
+    ? $upload_validators['FileSizeLimit']['fileLimit']
+    : 0;
+
+  // Prepare translated arguments for the file size descriptions.
+  $t_args = [
+    // Overall size limit for all files.
+    '@webform_file_limit' => ByteSizeMarkup::create($webform_file_limit),
+    // Size limit for individual files.
+    '@element_file_limit' => ByteSizeMarkup::create($element_file_limit),
+  ];
+
+  // Determine the appropriate description based on file size limits.
+  $file_limit_description = ($element_file_limit < $webform_file_limit)
+    // If individual file limit is smaller than the overall limit, include both in the message.
+    ? t('@element_file_limit limit per file. The accumulated size of all files in this form cannot exceed @webform_file_limit.', $t_args)
+    // Otherwise, only mention the overall file size limit.
+    : t('The accumulated size of all files in this form cannot exceed @webform_file_limit.', $t_args);
+
+  // Remove any existing descriptions that match the outdated '@size limit.' message.
+  $descriptions = array_filter(
+    $variables['descriptions'],
+    fn($description) => $description->getUntranslatedString() !== '@size limit.'
+  );
+
+  // Add the updated file limit description to the list of descriptions.
+  $variables['descriptions'] = [...$descriptions, $file_limit_description];
 }
 
 /**
@@ -687,7 +530,7 @@ function webform_preprocess_file_link(&$variables) {
   $file = ($file instanceof File) ? $file : File::load($file->fid);
 
   // Remove link to temporary anonymous private file uploads.
-  if ($file->isTemporary() && $file->getOwner() && $file->getOwner()->isAnonymous() && strpos($file->getFileUri(), 'private://webform/') === 0) {
+  if ($file->isTemporary() && $file->getOwner() && $file->getOwner()->isAnonymous() && str_starts_with($file->getFileUri(), 'private://webform/')) {
     $variables['link'] = $file->getFilename();
   }
 
@@ -695,7 +538,7 @@ function webform_preprocess_file_link(&$variables) {
   if (empty($variables['file_size'])
     && $file->getSize()
     && \Drupal::service('webform.theme_manager')->isActiveTheme('claro')) {
-    $variables['file_size'] = format_size($file->getSize(), \Drupal::languageManager()->getCurrentLanguage()->getId());
+    $variables['file_size'] = ByteSizeMarkup::create($file->getSize(), \Drupal::languageManager()->getCurrentLanguage()->getId());
   }
 }
 
@@ -729,7 +572,7 @@ function _webform_preprocess_options(array &$variables) {
   $variables['attributes']['class'][] = Html::getClass('js-webform-' . $element['#type']);
 
   if (!empty($element['#options_display'])) {
-    if (strpos($element['#options_display'], 'buttons_') === 0) {
+    if (str_starts_with($element['#options_display'], 'buttons_')) {
       $variables['attributes']['class'][] = 'webform-options-display-buttons';
     }
     $variables['attributes']['class'][] = Html::getClass('webform-options-display-' . $element['#options_display']);
@@ -999,7 +842,7 @@ function _webform_theme_suggestions(array $variables, $hook) {
   elseif ($hook === 'webform_submission_form' && isset($variables['form']) && isset($variables['form']['#webform_id'])) {
     $suggestions[] = $hook . '__' . $variables['form']['#webform_id'];
   }
-  elseif (strpos($hook, 'webform_element_base_') === 0 || strpos($hook, 'webform_container_base_') === 0) {
+  elseif (str_starts_with($hook, 'webform_element_base_') || str_starts_with($hook, 'webform_container_base_')) {
     $element = $variables['element'];
 
     if (!empty($element['#type'])) {
@@ -1059,7 +902,7 @@ function _webform_devel_hook_theme_suggestions_generate() {
     if ($hook === 'webform') {
       $suggestion = TRUE;
     }
-    elseif (strpos($hook, 'webform_element_base_') === 0 || strpos($hook, 'webform_container_base_') === 0) {
+    elseif (str_starts_with($hook, 'webform_element_base_') || str_starts_with($hook, 'webform_container_base_')) {
       $suggestion = TRUE;
     }
     elseif (isset($info['variables'])
@@ -1091,127 +934,145 @@ function webform_theme_suggestions_$hook(array \$variables) {
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebform($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_confirmation(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_confirmation');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformConfirmation($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_preview(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_preview');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformPreview($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_submission(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_submission');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformSubmission($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_submission_form(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_submission_form');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformSubmissionForm($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_submission_navigation(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_submission_navigation');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformSubmissionNavigation($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_submission_information(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_submission_information');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformSubmissionInformation($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_submission_data(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_submission_data');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformSubmissionData($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_element_base_html(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_element_base_html');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformElementBaseHtml($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_element_base_text(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_element_base_text');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformElementBaseText($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_container_base_html(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_container_base_html');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformContainerBaseHtml($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_container_base_text(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_container_base_text');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformContainerBaseText($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_email_html(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_email_html');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformEmailHtml($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_email_message_html(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_email_message_html');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformEmailMessageHtml($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_email_message_text(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_email_message_text');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformEmailMessageText($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_progress(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_progress');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformProgress($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_progress_bar(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_progress_bar');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformProgressBar($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_webform_progress_tracker(array $variables) {
-  return _webform_theme_suggestions($variables, 'webform_progress_tracker');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsWebformProgressTracker($variables);
 }
 
 /* ************************************************************************** */
@@ -1237,7 +1098,7 @@ function _webform_theme_suggestions_options(array $variables, $type) {
 
   $element = $variables['element'];
   $suggestions = [];
-  if (!empty($element['#options_display']) && strpos($element['#options_display'], 'buttons') === 0) {
+  if (!empty($element['#options_display']) && str_starts_with($element['#options_display'], 'buttons')) {
     $suggestions[] = $type . '__webform_' . $element['#options_display'];
   }
   return $suggestions;
@@ -1246,38 +1107,23 @@ function _webform_theme_suggestions_options(array $variables, $type) {
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_radios(array $variables) {
-  return _webform_theme_suggestions_options($variables, 'radios');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsRadios($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_checkboxes(array $variables) {
-  return _webform_theme_suggestions_options($variables, 'checkboxes');
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsCheckboxes($variables);
 }
 
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+#[LegacyHook]
 function webform_theme_suggestions_form_element(array $variables) {
-  if (!WebformElementHelper::isWebformElement($variables['element'])) {
-    return [];
-  }
-  $element = $variables['element'];
-
-  $suggestions = [];
-
-  // Add webform type suggestion.
-  if (isset($element['#type'])) {
-    $suggestions[] = 'form_element__webform_' . $element['#type'];
-  }
-
-  // Add radio/checkbox displayed as a button suggestion.
-  // @sse webform_process_options()
-  if (!empty($element['#option_display']) && $element['#option_display'] === 'button') {
-    $suggestions[] = 'form_element__webform_' . $element['#type'] . '_' . $element['#option_display'];
-  }
-
-  return $suggestions;
+  return \Drupal::service(WebformThemeHooks::class)->themeSuggestionsFormElement($variables);
 }

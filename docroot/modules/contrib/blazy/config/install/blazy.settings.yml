@@ -1,4 +1,6 @@
 admin_css: true
+use_custom_css: false
+css_scope: ''
 nojs:
   lazy: '0'
   classlist: '0'
@@ -18,6 +20,8 @@ unstyled_extensions: ''
 use_encodedbox: false
 use_oembed: false
 max_region_count: 0
+privacy_consent: false
+ratio_modern: false
 extras: {}
 blazy:
   loadInvisible: false

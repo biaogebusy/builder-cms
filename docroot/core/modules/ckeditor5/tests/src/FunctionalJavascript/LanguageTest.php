@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore คำพูดบล็อก sourceediting
-
 /**
  * Tests for CKEditor 5 UI translations.
  *
- * @group ckeditor5
  * @internal
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class LanguageTest extends CKEditor5TestBase {
 
   /**
@@ -33,9 +36,8 @@ class LanguageTest extends CKEditor5TestBase {
    *   The CKEditor 5 plugin to enable.
    * @param string $toolbar_item_translation
    *   The expected translation for CKEditor 5 plugin toolbar button.
-   *
-   * @dataProvider provider
    */
+  #[DataProvider('provider')]
   public function test(string $langcode, string $toolbar_item_name, string $toolbar_item_translation): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
@@ -51,8 +53,8 @@ class LanguageTest extends CKEditor5TestBase {
       $this->triggerKeyUp('.ckeditor5-toolbar-item-sourceEditing', 'ArrowDown');
       $assert_session->assertWaitOnAjaxRequest();
 
-      // The Source Editing plugin settings form should now be present and should
-      // have no allowed tags configured.
+      // The Source Editing plugin settings form should now be present and
+      // should have no allowed tags configured.
       $page->clickLink('Source editing');
       $this->assertNotNull($assert_session->waitForElementVisible('css', '[data-drupal-selector="edit-editor-settings-plugins-ckeditor5-sourceediting-allowed-tags"]'));
 
@@ -81,6 +83,8 @@ JS;
    * Data provider for ensuring CKEditor 5 UI translations are loaded.
    *
    * @return string[][]
+   *   An array of language code, CKEditor 5 plugin name, and expected
+   *   translation.
    */
   public static function provider(): array {
     return [

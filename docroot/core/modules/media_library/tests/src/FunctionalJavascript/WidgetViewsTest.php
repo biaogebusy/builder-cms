@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the views in the media library widget.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class WidgetViewsTest extends MediaLibraryTestBase {
 
   /**

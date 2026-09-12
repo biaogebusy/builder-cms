@@ -3,8 +3,9 @@
 namespace Drupal\blazy\Plugin\Field\FieldFormatter;
 
 use Drupal\blazy\Field\BlazyField;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Internals\Field;
 use Drupal\blazy\Traits\PluginScopesTrait;
-use Drupal\blazy\internals\Internals;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -67,7 +68,7 @@ trait BlazyFormatterTrait {
   /**
    * Returns the blazy formatter manager.
    *
-   * @todo remove at 3.x, hardly called outside the formatters, except tests.
+   * @todo deprecate and remove at 3.x, hardly called outside the formatters, except tests.
    */
   public function formatter() {
     return $this->formatter;
@@ -76,7 +77,7 @@ trait BlazyFormatterTrait {
   /**
    * Returns the blazy manager.
    *
-   * @todo remove at 3.x, hardly called outside the formatters, except tests.
+   * @todo deprecate and remove at 3.x, hardly called outside the formatters, except tests.
    */
   public function blazyManager() {
     return $this->blazyManager;
@@ -85,7 +86,7 @@ trait BlazyFormatterTrait {
   /**
    * Returns any blazy-related manager.
    *
-   * @todo remove at 3.x, hardly called outside the formatters, except tests.
+   * @todo deprecate and remove at 3.x, hardly called outside the formatters, except tests.
    */
   public function manager() {
     return $this->manager;
@@ -94,7 +95,7 @@ trait BlazyFormatterTrait {
   /**
    * Returns the blazy entity manager.
    *
-   * @todo remove at 3.x, hardly called outside the formatters, except tests.
+   * @todo deprecate and remove at 3.x, hardly called outside the formatters, except tests.
    */
   public function blazyEntity() {
     return $this->blazyEntity;
@@ -103,7 +104,7 @@ trait BlazyFormatterTrait {
   /**
    * Returns the blazy oembed manager.
    *
-   * @todo remove at 3.x, hardly called outside the formatters, except tests.
+   * @todo deprecate and remove at 3.x, hardly called outside the formatters, except tests.
    */
   public function blazyOembed() {
     return $this->blazyOembed;
@@ -127,8 +128,9 @@ trait BlazyFormatterTrait {
    * Builds the settings.
    */
   public function buildSettings() {
+    /** @var array $settings */
     $settings = array_merge($this->getCommonFieldDefinition(), $this->getSettings());
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $multiple = $this->isMultiple();
     $is_grid  = !empty($settings['style']) && !empty($settings['grid']);
 
@@ -162,7 +164,7 @@ trait BlazyFormatterTrait {
     $scopes = method_exists($this, 'getPluginScopes')
       ? $this->getPluginScopes() : [];
 
-    // @todo remove `$scopes +` at Blazy 3.x, leaving only settings + blazies.
+    // @todo deprecate and remove `$scopes +` at Blazy 3.x, leaving only settings + blazies.
     $definitions = $scopes + $commons;
     $definitions['scopes'] = $this->toPluginScopes($scopes + $commons);
     return $definitions;
@@ -180,7 +182,7 @@ trait BlazyFormatterTrait {
     if ($type == 'entity') {
       $instance->blazyEntity = $instance->blazyEntity ?? $container->get('blazy.entity');
       $instance->blazyOembed = $instance->blazyOembed ?? $instance->blazyEntity->oembed();
-      $instance->blazyMedia  = $instance->blazyMedia ?? $instance->blazyOembed->blazyMedia();
+      $instance->blazyMedia = $instance->blazyMedia ?? $instance->blazyOembed->blazyMedia();
     }
 
     return $instance;
@@ -204,7 +206,7 @@ trait BlazyFormatterTrait {
       'formatter'     => array_filter($this->getSettings()),
     ];
 
-    return BlazyField::settings($settings, $field, $data);
+    return Field::settings($settings, $field, $data);
   }
 
   /**
@@ -219,7 +221,7 @@ trait BlazyFormatterTrait {
    * Returns Views delta_limit option.
    */
   protected function getViewLimit(array $settings): int {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     return Internals::getViewLimit($blazies);
   }
 

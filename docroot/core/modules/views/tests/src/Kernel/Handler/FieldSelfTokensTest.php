@@ -9,12 +9,14 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests token escaping in the EntityField handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldSelfTokensTest extends ViewsKernelTestBase {
 
   /**
@@ -54,6 +56,7 @@ class FieldSelfTokensTest extends ViewsKernelTestBase {
     $view->initHandlers();
     $this->executeView($view);
     $row = $view->result[0];
+    $view->row_index = 0;
     $title_field = $view->field['title'];
     $title_field->options['alter']['text'] = '<p>{{ title__value }}</p>';
     $title_field->options['alter']['alter_text'] = TRUE;

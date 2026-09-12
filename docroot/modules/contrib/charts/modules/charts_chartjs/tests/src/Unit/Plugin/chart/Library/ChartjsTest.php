@@ -32,6 +32,13 @@ class ChartjsTest extends UnitTestCase {
   protected $plugin;
 
   /**
+   * The chart type manager.
+   *
+   * @var \Drupal\Core\Form\FormBuilderInterface
+   */
+  protected $formBuilder;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -44,6 +51,9 @@ class ChartjsTest extends UnitTestCase {
 
     $this->moduleHandler = $this->createMock('Drupal\Core\Extension\ModuleHandlerInterface');
     $container->set('module_handler', $this->moduleHandler);
+
+    $this->formBuilder = $this->createMock('Drupal\Core\Form\FormBuilderInterface');
+    $container->set('form_builder', $this->formBuilder);
 
     \Drupal::setContainer($container);
 

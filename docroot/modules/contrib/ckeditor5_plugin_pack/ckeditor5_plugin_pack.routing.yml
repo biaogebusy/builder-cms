@@ -1,0 +1,7 @@
+ckeditor5_plugin_pack.settings:
+  path: '/admin/config/ckeditor5-plugin-pack'
+  defaults:
+    _form: '\Drupal\ckeditor5_plugin_pack\Form\SettingsForm'
+    _title: 'CKEditor 5 Plugin Pack settings'
+  requirements:
+    _permission: 'administer site configuration'

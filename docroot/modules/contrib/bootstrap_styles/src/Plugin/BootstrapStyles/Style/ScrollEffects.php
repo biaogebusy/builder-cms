@@ -148,7 +148,7 @@ class ScrollEffects extends StylePluginBase {
       }
     }
 
-    if (isset($library_type) && $library_type === 'external') {
+    if (isset($library_type) && $library_type === 'external' && $storage['scroll_effects']['class']) {
       $build['#attached']['library'][] = 'bootstrap_styles/plugin.scroll_effects.build';
     }
 

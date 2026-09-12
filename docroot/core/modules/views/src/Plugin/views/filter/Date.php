@@ -13,6 +13,9 @@ use Drupal\views\Attribute\ViewsFilter;
 #[ViewsFilter("date")]
 class Date extends NumericFilter {
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
 
@@ -32,7 +35,10 @@ class Date extends NumericFilter {
         '#title' => $this->t('Value type'),
         '#options' => [
           'date' => $this->t('A date in any machine readable format. CCYY-MM-DD HH:MM:SS is preferred.'),
-          'offset' => $this->t('An offset from the current time such as "@example1" or "@example2"', ['@example1' => '+1 day', '@example2' => '-2 hours -30 minutes']),
+          'offset' => $this->t('An offset from the current time such as "@example1" or "@example2"', [
+            '@example1' => '+1 day',
+            '@example2' => '-2 hours -30 minutes',
+          ]),
         ],
         '#default_value' => !empty($this->value['type']) ? $this->value['type'] : 'date',
       ];
@@ -40,6 +46,9 @@ class Date extends NumericFilter {
     parent::valueForm($form, $form_state);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {
     parent::validateOptionsForm($form, $form_state);
 
@@ -48,9 +57,18 @@ class Date extends NumericFilter {
       return;
     }
 
-    $this->validateValidTime($form['value'], $form_state, $form_state->getValue(['options', 'operator']), $form_state->getValue(['options', 'value']));
+    $this->validateValidTime($form['value'],
+      $form_state,
+      $form_state->getValue([
+        'options',
+        'operator',
+      ]),
+      $form_state->getValue(['options', 'value']));
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function validateExposed(&$form, FormStateInterface $form_state) {
     if (empty($this->options['exposed'])) {
       return;
@@ -116,6 +134,9 @@ class Date extends NumericFilter {
     return $actual == $expected;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function acceptExposedInput($input) {
     if (empty($this->options['exposed'])) {
       return TRUE;
@@ -151,6 +172,13 @@ class Date extends NumericFilter {
       // When the operator is either <, <=, =, !=, >=, > or regular_expression
       // the input contains only one value.
       if ($this->value['value'] == '') {
+        // If the filter was not submitted but has a default offset value,
+        // apply it so backends receive a resolved date.
+        if (!empty($this->options['value']['value']) && $this->options['value']['type'] === 'offset') {
+          $this->value['value'] = $this->options['value']['value'];
+          $this->value['type'] = 'offset';
+          return TRUE;
+        }
         return FALSE;
       }
     }
@@ -158,6 +186,14 @@ class Date extends NumericFilter {
       // When the operator is either between or not between the input contains
       // two values.
       if ($this->value['min'] == '' || $this->value['max'] == '') {
+        // If the filter was not submitted but has default offset values,
+        // apply them so backends receive resolved dates.
+        if ((!empty($this->options['value']['min']) || !empty($this->options['value']['max'])) && $this->options['value']['type'] === 'offset') {
+          $this->value['min'] = $this->options['value']['min'];
+          $this->value['max'] = $this->options['value']['max'];
+          $this->value['type'] = 'offset';
+          return TRUE;
+        }
         return FALSE;
       }
     }
@@ -165,6 +201,9 @@ class Date extends NumericFilter {
     return $rc;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opBetween($field) {
     $a = intval(strtotime($this->value['min'], 0));
     $b = intval(strtotime($this->value['max'], 0));
@@ -175,20 +214,24 @@ class Date extends NumericFilter {
       // Keep sign.
       $b = '***CURRENT_TIME***' . sprintf('%+d', $b);
     }
-    // This is safe because we are manually scrubbing the values.
-    // It is necessary to do it this way because $a and $b are formulas when using an offset.
+    // This is safe because we are manually scrubbing the values. It is
+    // necessary to do it this way because $a and $b are formulas when using an
+    // offset.
     $operator = strtoupper($this->operator);
     $this->query->addWhereExpression($this->options['group'], "$field $operator $a AND $b");
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opSimple($field) {
     $value = intval(strtotime($this->value['value'], 0));
     if (!empty($this->value['type']) && $this->value['type'] == 'offset') {
       // Keep sign.
       $value = '***CURRENT_TIME***' . sprintf('%+d', $value);
     }
-    // This is safe because we are manually scrubbing the value.
-    // It is necessary to do it this way because $value is a formula when using an offset.
+    // This is safe because we are manually scrubbing the value. It is necessary
+    // to do it this way because $value is a formula when using an offset.
     $this->query->addWhereExpression($this->options['group'], "$field $this->operator $value");
   }
 

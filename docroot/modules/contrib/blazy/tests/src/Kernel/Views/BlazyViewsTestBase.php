@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Kernel\Views;
 
 use Drupal\Tests\blazy\Traits\BlazyKernelTestTrait;
@@ -25,6 +27,8 @@ abstract class BlazyViewsTestBase extends ViewsKernelTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @var array<string>
    */
   protected static $modules = [
     'system',

@@ -3,17 +3,18 @@
 namespace Drupal\entity_browser\Plugin\views\argument_default;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsArgumentDefault;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * The entity browser widget context argument default handler.
- *
- * @ViewsArgumentDefault(
- *   id = "entity_browser_widget_context",
- *   title = @Translation("Entity Browser Context")
- * )
  */
+#[ViewsArgumentDefault(
+  id: 'entity_browser_widget_context',
+  title: new TranslatableMarkup('Entity Browser Context'),
+)]
 class EntityBrowserWidgetContext extends ArgumentDefaultPluginBase {
 
   /**

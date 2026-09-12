@@ -21,6 +21,11 @@ class MetatagTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'field',
+    'metatag',
+    'menu_ui',
+    'entity_share_test',
     'jsonapi_extras',
   ];
 

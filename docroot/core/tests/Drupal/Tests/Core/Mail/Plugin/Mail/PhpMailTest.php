@@ -7,14 +7,17 @@ namespace Drupal\Tests\Core\Mail\Plugin\Mail;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Mail\Plugin\Mail\PhpMail;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\ServerBag;
 
 /**
- * @coversDefaultClass \Drupal\Core\Mail\Plugin\Mail\PhpMail
- * @group Mail
+ * Tests Drupal\Core\Mail\Plugin\Mail\PhpMail.
  */
+#[CoversClass(PhpMail::class)]
+#[Group('Mail')]
 class PhpMailTest extends UnitTestCase {
 
   /**
@@ -106,8 +109,6 @@ class PhpMailTest extends UnitTestCase {
 
   /**
    * Tests sending a mail using a From address with a comma in it.
-   *
-   * @covers ::mail
    */
   public function testMail(): void {
     // Setup a mail message.
@@ -125,7 +126,7 @@ class PhpMailTest extends UnitTestCase {
       'body' => '',
       'headers' => [
         'MIME-Version' => '1.0',
-        'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+        'Content-Type' => 'text/plain; charset=utf-8; format=flowed; delsp=yes',
         'Content-Transfer-Encoding' => '8Bit',
         'X-Mailer' => 'Drupal',
         'From' => '"Foo, Bar, and Baz" <from@example.org>',
@@ -143,7 +144,7 @@ class PhpMailTest extends UnitTestCase {
     $line_end = "\r\n";
 
     $expected_headers = "MIME-Version: 1.0$line_end";
-    $expected_headers .= "Content-Type: text/plain; charset=UTF-8; format=flowed; delsp=yes$line_end";
+    $expected_headers .= "Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes$line_end";
     $expected_headers .= "Content-Transfer-Encoding: 8Bit$line_end";
     $expected_headers .= "X-Mailer: Drupal$line_end";
     $expected_headers .= "From: \"Foo, Bar, and Baz\" <from@example.org>$line_end";

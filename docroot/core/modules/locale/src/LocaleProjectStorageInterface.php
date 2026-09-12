@@ -4,6 +4,11 @@ namespace Drupal\locale;
 
 /**
  * Defines the locale project storage interface.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ * \Drupal\locale\LocaleProjectRepository instead.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
 interface LocaleProjectStorageInterface {
 
@@ -98,5 +103,28 @@ interface LocaleProjectStorageInterface {
    *   The number of saved items.
    */
   public function countProjects();
+
+  /**
+   * Get array of projects which are available for interface translation.
+   *
+   * This project data contains all projects which will be checked for available
+   * interface translations.
+   *
+   * For full functionality this function depends on the Update Status module.
+   * When the Update Status module is enabled the project data will contain the
+   * most recent module status; both in enabled status as in version. When the
+   * Update Status module is disabled this function will return the last known
+   * module state. The status will only be updated once the Update Status module
+   * is enabled.
+   *
+   * @param array $project_names
+   *   Array of names of the projects to get.
+   *
+   * @return array
+   *   Array of project data for translation update.
+   *
+   * @see locale_translation_build_projects()
+   */
+  public function getProjects(array $project_names = []): array;
 
 }

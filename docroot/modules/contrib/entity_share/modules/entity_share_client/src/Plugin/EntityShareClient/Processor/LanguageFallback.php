@@ -4,26 +4,26 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Language fallback processor.
- *
- * @ImportProcessor(
- *   id = "language_fallback",
- *   label = @Translation("Language fallback"),
- *   description = @Translation("Allow to set the language of the imported entity."),
- *   stages = {
- *     "prepare_entity_data" = 0,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'language_fallback',
+  label: new TranslatableMarkup('Language fallback'),
+  description: new TranslatableMarkup('Allow to set the language of the imported entity.'),
+  stages: [
+    'prepare_entity_data' => 0,
+  ],
+)]
 class LanguageFallback extends ImportProcessorPluginBase implements PluginFormInterface {
 
   /**

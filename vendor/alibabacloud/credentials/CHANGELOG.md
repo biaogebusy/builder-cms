@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.2.5 - 2026-08-18
+
+- Fix ECS RAM Role: fall back to IMDSv1 when IMDSv2 token succeeds but later metadata requests fail.
+- Fix: treat backslash-newline as POSIX line continuation when splitting process_command.
+
 ## 1.2.0 - 2024-10-17
 
 - Refactor all credentials providers.

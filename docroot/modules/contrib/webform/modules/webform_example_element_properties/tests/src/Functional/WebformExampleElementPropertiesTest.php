@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\webform_example_element_properties\Functiona;
+namespace Drupal\Tests\webform_example_element_properties\Functional;
 
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
 
@@ -25,7 +25,7 @@ class WebformExampleElementPropertiesTest extends WebformBrowserTestBase {
   /**
    * Tests element custom properties.
    */
-  public function testCustomProperties() {
+  public function testCustomProperties(): void {
     $assert_session = $this->assertSession();
 
     // Create and login admin user.
@@ -54,7 +54,13 @@ class WebformExampleElementPropertiesTest extends WebformBrowserTestBase {
 
     // Check that name input does not contain custom data.
     $this->drupalGet('/webform/contact');
-    $assert_session->responseContains('<input data-drupal-selector="edit-name" type="text" id="edit-name" name="name" value="' . htmlentities($admin_user->label()) . '" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<input data-drupal-selector="edit-name" type="text" id="edit-name" name="name" value="' . htmlentities($admin_user->label()) . '" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    }
+    else {
+      $assert_session->responseContains('<input data-drupal-selector="edit-name" type="text" id="edit-name" name="name" value="' . htmlentities($admin_user->label()) . '" size="60" maxlength="255" class="form-text required" required="required" />');
+    }
 
     // Submit empty custom property and data.
     $this->drupalGet('/admin/structure/webform/manage/contact/element/name/edit');
@@ -86,7 +92,12 @@ class WebformExampleElementPropertiesTest extends WebformBrowserTestBase {
 
     // Check that name input does contain custom data.
     $this->drupalGet('/webform/contact');
-    $assert_session->responseContains('<input data-custom="custom-data" data-drupal-selector="edit-name" type="text" id="edit-name" name="name" value="' . htmlentities($admin_user->label()) . '" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<input data-custom="custom-data" data-drupal-selector="edit-name" type="text" id="edit-name" name="name" value="' . htmlentities($admin_user->label()) . '" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    }
+    else {
+      $assert_session->responseContains('<input data-custom="custom-data" data-drupal-selector="edit-name" type="text" id="edit-name" name="name" value="' . htmlentities($admin_user->label()) . '" size="60" maxlength="255" class="form-text required" required="required" />');
+    }
   }
 
 }

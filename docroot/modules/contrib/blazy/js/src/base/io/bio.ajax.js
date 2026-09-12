@@ -6,53 +6,100 @@
  * Required to fix for what Native lazy doesn't support Blur, Video, BG.
  * Similar to core responsive_image/ajax fix, only different approach.
  *
- * @todo remove once bio.js plays nice for media, VIS, blocks, or if core/once
- * fixes this type of issue when min D9.2.
+ * @todo remove once bio.js plays nice for media, VIS, blocks.
  */
 
-(function ($, Drupal, _doc) {
+(function ($, jq, Drupal, drupalSettings, _doc) {
 
   'use strict';
 
-  var D_BLAZY = Drupal.blazy || {};
-  var D_AJAX = Drupal.Ajax || {};
-  var PROTO = D_AJAX.prototype;
-  var REV_TIMER;
+  var VARS = {
+    id: 'b-ajax',
+    selector: 'body',
+    eventName: 'ajaxSuccess',
+    revRAF: null
+  };
 
-  if (!PROTO) {
-    return;
-  }
+  /**
+   * Process DOM revalidations with newly added AJAX contents.
+   */
+  function process() {
+    var me = this;
 
-  // Overrides Drupal.Ajax.prototype.success to re-observe new AJAX contents.
-  PROTO.success = (function (D_AJAX) {
-    return function (response, status) {
-      var me = D_BLAZY.init;
-      var opts;
+    var revalidate = function (_, response, ajax) {
 
-      clearTimeout(REV_TIMER);
+      if (!$.wwoBigPipeDone() || !response) {
+        return;
+      }
 
-      // DOM ready fix. Be sure Views "Use field template" is disabled.
-      REV_TIMER = setTimeout(function () {
-        if (response && response.length) {
-          $.once.unload = true;
+      // Clear any pending timer.
+      if (VARS.revRAF) {
+        cancelAnimationFrame(VARS.revRAF);
+        VARS.revRAF = null;
+      }
 
-          if (me) {
-            opts = D_BLAZY.options;
-            var el = $.find(_doc, $.selector(opts, true));
-            if (el) {
-              // See blazy.load.js.
-              $.once.removeSafely('b-root', 'body', _doc);
+      // DOM ready fix.
+      VARS.revRAF = requestAnimationFrame(function () {
+        Promise.resolve().then(function () {
+          var bio = me.init;
 
-              Drupal.attachBehaviors(_doc.body);
-            }
+          // 1. Ensure we have Bio loaded.
+          if (!bio) {
+            return;
           }
 
-          $.trigger('blazy:ajaxSuccess', [me, response, status]);
-        }
-      }, 100);
+          var opts = me.options;
+          var el = $.find(_doc, $.selector(opts, true));
 
-      return D_AJAX.apply(this, arguments);
+          // See blazy.load.js.
+          // 2. Ensure we have lazy elements after AJAX.
+          if (el) {
+            var context = _doc.body;
+            var prev = $.once.unload;
+            $.once.unload = true;
+
+            $.once.remove('b-root', 'body', _doc);
+
+            Drupal.attachBehaviors(context, drupalSettings);
+
+            $.trigger('blazy:ajaxSuccess', [me, response, ajax]);
+
+            // Reset flag.
+            $.once.unload = prev;
+          }
+
+        });
+      });
+
     };
-  })(PROTO.success);
 
-})(dBlazy, Drupal, this.document);
+    // jQuery owned document, cannot use dBlazy. Keep it alive.
+    jq(_doc).on(VARS.eventName, revalidate);
+  }
+
+  /**
+   * Attaches blazy AJAX behavior to body.
+   *
+   * Seperated from blazy.load.js, since blazy.load.js can be disabled, and
+   * removed to use blazy.compat.js instead that is when No Javascript option is
+   * enabled, but JS is still required beyond iframe or img tags such as by
+   * background, local video or audio, or third party HTML lazyloadings.
+   *
+   * @type {Drupal~behavior}
+   */
+  Drupal.behaviors.blazyAjax = {
+    attach: function () {
+
+      var me = Drupal.blazy;
+
+      $.once(process.bind(me), VARS.id, VARS.selector, _doc);
+
+    },
+    detach: function (context, _, trigger) {
+      if (trigger === 'unload') {
+        $.once.removeSafely(VARS.id, VARS.selector, _doc);
+      }
+    }
+  };
+
+})(dBlazy, jQuery, Drupal, drupalSettings, this.document);

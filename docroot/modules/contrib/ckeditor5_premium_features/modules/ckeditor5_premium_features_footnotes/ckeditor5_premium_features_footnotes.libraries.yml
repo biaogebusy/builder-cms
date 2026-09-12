@@ -1,0 +1,13 @@
+admin.footnotes:
+  version: 20251127
+  css:
+    theme:
+      css/footnotes.admin.css: { }
+
+footnotes_integration:
+  version: 20260108
+  css:
+    theme:
+      css/footnotes.css: { }
+  dependencies:
+    - ckeditor5_premium_features_footnotes/footnotes

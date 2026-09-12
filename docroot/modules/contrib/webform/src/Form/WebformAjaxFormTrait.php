@@ -163,9 +163,8 @@ trait WebformAjaxFormTrait {
     $form['#form_wrapper_id'] = $wrapper_id;
 
     $form += ['#prefix' => '', '#suffix' => ''];
-    $form['#prefix'] .= '<span id="' . $wrapper_id . '-content"></span>';
-    $form['#prefix'] .= '<div' . $wrapper_attributes . '>';
-    $form['#suffix'] = '</div>' . $form['#suffix'];
+    $form['#prefix'] .= '<div id="' . $wrapper_id . '-content" tabindex="-1"><div' . $wrapper_attributes . '>';
+    $form['#suffix'] = '</div></div>' . $form['#suffix'];
 
     // Add Ajax library which contains 'Scroll to top' Ajax command and
     // Ajax callback for confirmation back to link.
@@ -364,7 +363,7 @@ trait WebformAjaxFormTrait {
     // Always check the ?destination which is used by the off-canvas/system tray.
     if ($this->getRequest()->get('destination')) {
       $destination = $this->getRedirectDestination()->get();
-      return (strpos($destination, $destination) === 0) ? $destination : base_path() . $destination;
+      return str_starts_with($destination, $destination) ? $destination : base_path() . $destination;
     }
 
     // ISSUE:

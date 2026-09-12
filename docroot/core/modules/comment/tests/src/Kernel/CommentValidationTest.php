@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\comment\Kernel;
 
+use Drupal\comment\AnonymousContact;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
@@ -12,12 +13,14 @@ use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment validation constraints.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentValidationTest extends EntityKernelTestBase {
   use CommentTestTrait;
   use EntityReferenceFieldCreationTrait;
@@ -142,7 +145,7 @@ class CommentValidationTest extends EntityKernelTestBase {
     $comment->set('thread', NULL);
 
     // Force anonymous users to enter contact details.
-    $field->setSetting('anonymous', CommentInterface::ANONYMOUS_MUST_CONTACT);
+    $field->setSetting('anonymous', AnonymousContact::Required->value);
     $field->save();
     // Reset the node entity.
     \Drupal::entityTypeManager()->getStorage('node')->resetCache([$node->id()]);

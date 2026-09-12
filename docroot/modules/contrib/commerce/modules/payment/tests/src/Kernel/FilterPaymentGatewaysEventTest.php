@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_payment\Kernel;
 
+use Drupal\commerce_payment\PaymentGatewayStorageInterface;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
@@ -14,13 +15,6 @@ use Drupal\profile\Entity\Profile;
  * @group commerce
  */
 class FilterPaymentGatewaysEventTest extends OrderKernelTestBase {
-
-  /**
-   * The payment gateway storage.
-   *
-   * @var \Drupal\commerce_payment\PaymentGatewayStorageInterface
-   */
-  protected $storage;
 
   /**
    * Modules to enable.
@@ -40,8 +34,6 @@ class FilterPaymentGatewaysEventTest extends OrderKernelTestBase {
     parent::setUp();
 
     $this->installConfig('commerce_payment');
-
-    $this->storage = $this->container->get('entity_type.manager')->getStorage('commerce_payment_gateway');
   }
 
   /**
@@ -82,7 +74,9 @@ class FilterPaymentGatewaysEventTest extends OrderKernelTestBase {
     ]);
     $order->save();
 
-    $available_payment_gateways = $this->storage->loadMultipleForOrder($order);
+    $payment_gateway_storage = $this->entityTypeManager->getStorage('commerce_payment_gateway');
+    assert($payment_gateway_storage instanceof PaymentGatewayStorageInterface);
+    $available_payment_gateways = $payment_gateway_storage->loadMultipleForOrder($order);
     $this->assertEquals(2, count($available_payment_gateways));
     $payment_gateway = array_shift($available_payment_gateways);
     $this->assertEquals($payment_gateway_example->label(), $payment_gateway->label());
@@ -91,7 +85,7 @@ class FilterPaymentGatewaysEventTest extends OrderKernelTestBase {
 
     $order->setData('excluded_gateways', [$payment_gateway_filtered->id()]);
 
-    $available_payment_gateways = $this->storage->loadMultipleForOrder($order);
+    $available_payment_gateways = $payment_gateway_storage->loadMultipleForOrder($order);
     $this->assertEquals(1, count($available_payment_gateways));
     $payment_gateway = array_shift($available_payment_gateways);
     $this->assertEquals($payment_gateway_example->label(), $payment_gateway->label());
@@ -147,7 +141,9 @@ class FilterPaymentGatewaysEventTest extends OrderKernelTestBase {
     ]);
     $order->save();
 
-    $available_payment_gateways = $this->storage->loadMultipleForOrder($order);
+    $payment_gateway_storage = $this->entityTypeManager->getStorage('commerce_payment_gateway');
+    assert($payment_gateway_storage instanceof PaymentGatewayStorageInterface);
+    $available_payment_gateways = $payment_gateway_storage->loadMultipleForOrder($order);
     $this->assertEquals(2, count($available_payment_gateways));
     $payment_gateway = array_shift($available_payment_gateways);
     $this->assertEquals($payment_gateway_supported->label(), $payment_gateway->label());
@@ -156,7 +152,7 @@ class FilterPaymentGatewaysEventTest extends OrderKernelTestBase {
 
     $order->setTotalPaid($order->getTotalPrice());
 
-    $available_payment_gateways = $this->storage->loadMultipleForOrder($order);
+    $available_payment_gateways = $payment_gateway_storage->loadMultipleForOrder($order);
     $this->assertEquals(1, count($available_payment_gateways));
     $payment_gateway = array_shift($available_payment_gateways);
     $this->assertEquals($payment_gateway_supported->label(), $payment_gateway->label());

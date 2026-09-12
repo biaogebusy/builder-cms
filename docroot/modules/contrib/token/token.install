@@ -26,7 +26,7 @@ function token_requirements($phase = 'runtime') {
 
         $requirements['token-' . $problem_key] = [
           'title' => $problem['label'],
-          'value' => \Drupal::service('renderer')->renderPlain($build),
+          'value' => \Drupal::service('renderer')->renderInIsolation($build),
           'severity' => $problem['severity'],
         ];
       }

@@ -2,9 +2,6 @@
 
 namespace Drupal\Tests\commerce_payment\Functional;
 
-use Drupal\Core\Url;
-use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
-use Drupal\commerce_order\Entity\OrderItemType;
 use Drupal\commerce_payment\Entity\Payment;
 use Drupal\commerce_price\Price;
 
@@ -13,7 +10,7 @@ use Drupal\commerce_price\Price;
  *
  * @group commerce
  */
-class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
+class DefaultPaymentAdminTest extends PaymentAdminTestBase {
 
   /**
    * An on-site payment gateway.
@@ -30,20 +27,6 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
   protected $paymentMethod;
 
   /**
-   * The base admin payment uri.
-   *
-   * @var string
-   */
-  protected $paymentUri;
-
-  /**
-   * The admin's order.
-   *
-   * @var \Drupal\commerce_order\Entity\OrderInterface
-   */
-  protected $order;
-
-  /**
    * {@inheritdoc}
    */
   protected static $modules = [
@@ -52,17 +35,6 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
     'commerce_payment',
     'commerce_payment_example',
   ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getAdministratorPermissions() {
-    return array_merge([
-      'administer commerce_order',
-      'administer commerce_payment_gateway',
-      'administer commerce_payment',
-    ], parent::getAdministratorPermissions());
-  }
 
   /**
    * {@inheritdoc}
@@ -102,37 +74,6 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
       'expiration' => ['month' => '01', 'year' => date('Y') + 1],
     ];
     $this->paymentGateway->getPlugin()->createPaymentMethod($this->paymentMethod, $details);
-
-    // An order item type that doesn't need a purchasable entity, for simplicity.
-    OrderItemType::create([
-      'id' => 'test',
-      'label' => 'Test',
-      'orderType' => 'default',
-    ])->save();
-
-    $order_item = $this->createEntity('commerce_order_item', [
-      'type' => 'test',
-      'quantity' => 1,
-      'unit_price' => new Price('10', 'USD'),
-    ]);
-
-    $this->order = $this->createEntity('commerce_order', [
-      'uid' => $this->loggedInUser->id(),
-      'type' => 'default',
-      'state' => 'draft',
-      'order_items' => [$order_item],
-      'store_id' => $this->store,
-    ]);
-
-    $this->paymentUri = Url::fromRoute(
-      'entity.commerce_payment.collection',
-      [
-        'commerce_order' => $this->order->id(),
-      ],
-      [
-        'absolute' => TRUE,
-      ],
-    )->toString();
   }
 
   /**
@@ -153,6 +94,26 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
     $this->drupalGet($this->paymentUri);
     $this->assertSession()->pageTextContains('$10.00');
     $this->assertSession()->pageTextContains($this->paymentGateway->label());
+    $this->assertSession()->pageTextContains('Order balance $10.00');
+
+    // Test that order balance is updated when new items is added/removed.
+    /** @var \Drupal\commerce_order\Entity\OrderItem $new_item */
+    $new_item = $this->createEntity('commerce_order_item', [
+      'type' => 'test',
+      'quantity' => 1,
+      'unit_price' => new Price('15', 'USD'),
+    ]);
+    $new_item->save();
+    $this->order->addItem($new_item);
+    $this->order->save();
+    $this->drupalGet($this->paymentUri);
+    $this->assertSession()->pageTextContains('Order balance $25.00');
+
+    // Remove item and check the balance again.
+    $this->order->removeItem($new_item);
+    $this->order->save();
+    $this->drupalGet($this->paymentUri);
+    $this->assertSession()->pageTextContains('Order balance $10.00');
 
     // Confirm that the payment is visible even if the gateway was deleted.
     $this->paymentGateway->delete();
@@ -168,11 +129,11 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
     $this->drupalGet($this->paymentUri);
     $this->getSession()->getPage()->clickLink('Add payment');
     $this->assertSession()->addressEquals($this->paymentUri . '/add');
+    $this->pageContainsOrderDetails();
     $this->assertSession()->pageTextContains('Visa ending in 1111');
     $this->assertSession()->checkboxChecked('payment_option');
 
-    $this->getSession()->getPage()->pressButton('Continue');
-    $this->submitForm(['payment[amount][number]' => '100'], 'Add payment');
+    $this->submitForm(['amount[number]' => '100'], 'Add payment');
     $this->assertSession()->addressEquals($this->paymentUri);
     $this->assertSession()->elementContains('css', 'table tbody tr td:nth-child(2)', 'Completed');
 
@@ -199,6 +160,68 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
   }
 
   /**
+   * Tests creating a partial payment.
+   */
+  public function testPartialPaymentCreation() {
+    $this->drupalGet($this->paymentUri);
+    $this->getSession()->getPage()->clickLink('Add payment');
+    $this->assertSession()->addressEquals($this->paymentUri . '/add');
+
+    // Confirm that table with order items is shown.
+    foreach ($this->order->getItems() as $order_item) {
+      $this->assertSession()->elementTextContains(
+        'css',
+        'table[data-drupal-selector="edit-order-summary-order-items"]',
+        $order_item->label(),
+      );
+    }
+    $this->assertSession()->pageTextContains('Subtotal $10.00');
+    $this->assertSession()->pageTextContains('Total $10.00');
+    $this->assertSession()->pageTextContains('Order balance $10.00');
+    $this->assertSession()->fieldValueEquals('amount[number]', number_format($this->order->getBalance()->getNumber(), 2));
+
+    // Partially pay for the order
+    $this->submitForm(['amount[number]' => '6.75'], 'Add payment');
+    $this->assertSession()->addressEquals($this->paymentUri);
+    $this->assertSession()->elementContains('css', 'table tbody tr td:nth-child(2)', 'Completed');
+    $this->assertSession()->pageTextContains('Total paid $6.75');
+    $this->assertSession()->pageTextContains('Order balance $3.25');
+
+    // Add payment for the rest order balance.
+    $this->order = $this->reloadEntity($this->order);
+    $this->drupalGet($this->paymentUri . '/add');
+    $this->assertSession()->pageTextContains('Subtotal $10.00');
+    $this->assertSession()->pageTextContains('Total $10.00');
+    $this->assertSession()->pageTextContains('Total paid $6.75');
+    $this->assertSession()->pageTextContains('Order balance $3.25');
+    $this->assertSession()->fieldValueEquals('amount[number]', number_format($this->order->getBalance()->getNumber(), 2));
+
+    // Confirm that order is fully paid.
+    $this->submitForm([], 'Add payment');
+    $this->assertSession()->addressEquals($this->paymentUri);
+    $this->assertSession()->pageTextContains('Total paid $10.00');
+    $this->assertSession()->pageTextContains('Order balance $0.00');
+
+    // Confirm that both payments presented in the table.
+    /** @var \Drupal\commerce_payment\Entity\PaymentInterface[] $payments */
+    $payments = $this->container->get('entity_type.manager')
+      ->getStorage('commerce_payment')
+      ->loadByProperties(['order_id' => $this->order->id()]);
+    $payments = array_reverse($payments);
+    $payment_rows = $this->xpath('//table/tbody/tr');
+    $this->assertCount(2, $payment_rows);
+    foreach ($payment_rows as $delta => $payment_row) {
+      $row_text = $payment_row->getText();
+      $payment = $payments[$delta];
+
+      $this->assertStringContainsString($payment->get('amount')->formatted, $row_text);
+      $this->assertStringContainsString(sprintf('Refunded: %s', $payment->get('refunded_amount')->formatted), $row_text);
+      $this->assertStringContainsString(sprintf('AVS response: [%s] %s', $payment->getAvsResponseCode(), $payment->getAvsResponseCodeLabel()), $row_text);
+      $this->assertStringContainsString('Completed', $row_text);
+    }
+  }
+
+  /**
    * Tests capturing a payment after creation.
    */
   public function testPaymentCapture() {
@@ -213,6 +236,7 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
     $this->drupalGet($this->paymentUri);
     $this->assertSession()->pageTextContains('Authorization');
     $this->drupalGet($this->paymentUri . '/' . $payment->id() . '/operation/capture');
+    $this->pageContainsOrderDetails();
     $this->submitForm(['payment[amount][number]' => '10'], 'Capture');
 
     \Drupal::entityTypeManager()->getStorage('commerce_payment')->resetCache([$payment->id()]);
@@ -243,6 +267,7 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
     $this->assertSession()->elementContains('css', 'table tbody tr td:nth-child(2)', 'Completed');
 
     $this->drupalGet($this->paymentUri . '/' . $payment->id() . '/operation/refund');
+    $this->pageContainsOrderDetails();
     $this->submitForm(['payment[amount][number]' => '10'], 'Refund');
     $this->assertSession()->addressEquals($this->paymentUri);
     $this->assertSession()->elementNotContains('css', 'table tbody tr td:nth-child(2)', 'Completed');
@@ -270,6 +295,7 @@ class DefaultPaymentAdminTest extends CommerceBrowserTestBase {
     $this->assertSession()->pageTextContains('Authorization');
 
     $this->drupalGet($this->paymentUri . '/' . $payment->id() . '/operation/void');
+    $this->pageContainsOrderDetails(FALSE);
     $this->assertSession()->pageTextContains('Are you sure you want to void the 10 USD payment?');
     $this->getSession()->getPage()->pressButton('Void');
     $this->assertSession()->addressEquals($this->paymentUri);

@@ -8,14 +8,16 @@ use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user data service field handler.
  *
- * @group user
- *
  * @see \Drupal\user\Plugin\views\field\UserData
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserDataTest extends ViewsKernelTestBase {
 
   /**

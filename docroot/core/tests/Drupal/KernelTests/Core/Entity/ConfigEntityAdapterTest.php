@@ -10,16 +10,18 @@ use Drupal\Core\TypedData\Plugin\DataType\BooleanData;
 use Drupal\Core\TypedData\Plugin\DataType\IntegerData;
 use Drupal\Core\TypedData\Plugin\DataType\StringData;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity adapter for configuration entities.
  *
  * @see \Drupal\Core\Entity\Plugin\DataType\ConfigEntityAdapter
- *
- * @group Entity
- *
- * @coversDefaultClass \Drupal\Core\Entity\Plugin\DataType\ConfigEntityAdapter
  */
+#[CoversClass(ConfigEntityAdapter::class)]
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class ConfigEntityAdapterTest extends KernelTestBase {
 
   /**
@@ -42,7 +44,7 @@ class ConfigEntityAdapterTest extends KernelTestBase {
     $this->installConfig(static::$modules);
 
     // ConfigTest::create doesn't work with the following exception:
-    // "Multiple entity types found for Drupal\config_test\Entity\ConfigTest."
+    // "Multiple entity types found for Drupal\config_test\Entity\ConfigTest".
     $this->entity = \Drupal::entityTypeManager()->getStorage('config_test')->create([
       'id' => 'system',
       'label' => 'foobar',
@@ -51,7 +53,9 @@ class ConfigEntityAdapterTest extends KernelTestBase {
   }
 
   /**
-   * @covers \Drupal\Core\Entity\Plugin\DataType\Deriver\EntityDeriver::getDerivativeDefinitions
+   * Tests entity deriver.
+   *
+   * @legacy-covers \Drupal\Core\Entity\Plugin\DataType\Deriver\EntityDeriver::getDerivativeDefinitions
    */
   public function testEntityDeriver(): void {
     $definition = \Drupal::typedDataManager()->getDefinition('entity:config_test');
@@ -59,7 +63,7 @@ class ConfigEntityAdapterTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate.
    */
   public function testValidate(): void {
     $adapter = ConfigEntityAdapter::createFromEntity($this->entity);
@@ -68,22 +72,19 @@ class ConfigEntityAdapterTest extends KernelTestBase {
     $this->entity = \Drupal::entityTypeManager()->getStorage('config_test')->create([
       'id' => 'system',
       'label' => 'foobar',
-      // Set weight to be a string which should not validate.
-      'weight' => 'very heavy',
+      // Set style to be an array which should not validate.
+      'style' => [],
     ]);
     $adapter = ConfigEntityAdapter::createFromEntity($this->entity);
     $violations = $adapter->validate();
-    $this->assertCount(2, $violations);
+    $this->assertCount(1, $violations);
     $violation = $violations->get(0);
-    $this->assertEquals('This value should be a valid number.', $violation->getMessage());
-    $this->assertEquals('weight', $violation->getPropertyPath());
-    $violation = $violations->get(1);
     $this->assertEquals('This value should be of the correct primitive type.', $violation->getMessage());
-    $this->assertEquals('weight', $violation->getPropertyPath());
+    $this->assertEquals('style', $violation->getPropertyPath());
   }
 
   /**
-   * @covers ::getProperties
+   * Tests get properties.
    */
   public function testGetProperties(): void {
     $expected_properties = [
@@ -109,7 +110,7 @@ class ConfigEntityAdapterTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getValue
+   * Tests get value.
    */
   public function testGetValue(): void {
     $adapter = ConfigEntityAdapter::createFromEntity($this->entity);
@@ -119,7 +120,7 @@ class ConfigEntityAdapterTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::set
+   * Tests set.
    */
   public function testSet(): void {
     $adapter = ConfigEntityAdapter::createFromEntity($this->entity);
@@ -135,7 +136,7 @@ class ConfigEntityAdapterTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getString
+   * Tests get string.
    */
   public function testGetString(): void {
     $adapter = ConfigEntityAdapter::createFromEntity($this->entity);
@@ -143,7 +144,7 @@ class ConfigEntityAdapterTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::applyDefaultValue
+   * Tests apply default value.
    */
   public function testApplyDefaultValue(): void {
     $this->expectException(\BadMethodCallException::class);
@@ -153,7 +154,7 @@ class ConfigEntityAdapterTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getIterator
+   * Tests get iterator.
    */
   public function testGetIterator(): void {
     $adapter = ConfigEntityAdapter::createFromEntity($this->entity);

@@ -2,6 +2,7 @@
 
 namespace Drupal\acquia_connector\Services;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -55,6 +56,13 @@ final class AcquiaTelemetryService {
   protected $logger;
 
   /**
+   * Drupal Time Service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructs a telemetry object.
    *
    * @param \Drupal\Core\Extension\ModuleExtensionList $module_list
@@ -65,12 +73,15 @@ final class AcquiaTelemetryService {
    *   The state service.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger
    *   The logger factory.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(ModuleExtensionList $module_list, ConfigFactoryInterface $config_factory, StateInterface $state, LoggerChannelFactoryInterface $logger) {
+  public function __construct(ModuleExtensionList $module_list, ConfigFactoryInterface $config_factory, StateInterface $state, LoggerChannelFactoryInterface $logger, TimeInterface $time) {
     $this->moduleList = $module_list;
     $this->configFactory = $config_factory;
     $this->state = $state;
     $this->logger = $logger;
+    $this->time = $time;
   }
 
   /**
@@ -88,6 +99,7 @@ final class AcquiaTelemetryService {
    */
   public function sendTelemetry(string $event_type, array $event_properties = []): void {
     $telemetry_data = $this->getTelemetryData($event_type, $event_properties);
+
     // Convert the pretty name for events to machine name.
     $event_type_machine = preg_replace('@[^a-z0-9-]+@', '_', strtolower($event_type));
     if ($this->shouldSendTelemetryData($event_type_machine, $telemetry_data)) {
@@ -99,6 +111,7 @@ final class AcquiaTelemetryService {
         ]);
 
         $this->state->set("acquia_connector.telemetry.$event_type_machine.hash", $this->getHash($telemetry_data));
+        $this->state->set("acquia_connector.telemetry.$event_type.timestamp", $this->time->getCurrentTime());
       }
       catch (\Exception $e) {
         if ($this->state->get('acquia_connector.telemetry.loud')) {
@@ -151,8 +164,9 @@ final class AcquiaTelemetryService {
         continue;
       }
 
-      // Remove all custom modules from reporting.
-      if (strpos($all_paths[$name], '/custom/') !== FALSE) {
+      // Remove all custom modules from reporting, except Acquia Connector.
+      // As in CI Acquia Connector is a custom module, we need to report it.
+      if ($name != 'acquia_connector' && strpos($all_paths[$name], '/custom/') !== FALSE) {
         continue;
       }
       // Track profiles located in core or contrib folders.
@@ -194,6 +208,7 @@ final class AcquiaTelemetryService {
    */
   private function getTelemetryData(string $type, array $properties): array {
     $modules = $this->getExtensionInfo();
+
     $default_properties = [
       'extensions' => $modules['contrib'],
       'profiles' => $modules['profile'],
@@ -254,6 +269,12 @@ final class AcquiaTelemetryService {
 
     // Only send telemetry data if we're in a production environment.
     if (!$this->isAcquiaProdEnv()) {
+      return FALSE;
+    }
+
+    // Only send telemetry data if data is not sent within the last 24 hours.
+    $sendTimestamp = $this->state->get("acquia_connector.telemetry.$event_type.timestamp", 0);
+    if (($this->time->getCurrentTime() - $sendTimestamp) < 86400) {
       return FALSE;
     }
 

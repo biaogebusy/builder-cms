@@ -5,19 +5,22 @@ declare(strict_types=1);
 namespace Drupal\Tests\search\Functional;
 
 use Behat\Mink\Exception\ResponseTextException;
-use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\comment\CommentingStatus;
+use Drupal\comment\CommentPreviewMode;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
 use Drupal\user\RoleInterface;
-use Drupal\filter\Entity\FilterFormat;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests integration searching comments.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchCommentTest extends BrowserTestBase {
 
   use CommentTestTrait;
@@ -26,7 +29,7 @@ class SearchCommentTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['filter', 'node', 'comment', 'search'];
+  protected static $modules = ['filter', 'node', 'comment', 'search', 'search_node'];
 
   /**
    * {@inheritdoc}
@@ -116,7 +119,7 @@ class SearchCommentTest extends BrowserTestBase {
 
     // Make preview optional.
     $field = FieldConfig::loadByName('node', 'article', 'comment');
-    $field->setSetting('preview', DRUPAL_OPTIONAL);
+    $field->setSetting('preview', CommentPreviewMode::Optional->value);
     $field->save();
 
     // Allow anonymous users to search content.
@@ -168,7 +171,6 @@ class SearchCommentTest extends BrowserTestBase {
     ];
     $this->drupalGet('search/node');
     $this->submitForm($edit, 'Search');
-    $node_storage->resetCache([$node->id()]);
     $node2 = $node_storage->load($node->id());
     $this->assertSession()->pageTextContains($node2->label());
     $this->assertSession()->pageTextContains($edit_comment['subject[0][value]']);
@@ -224,7 +226,7 @@ class SearchCommentTest extends BrowserTestBase {
 
     // Hide comments.
     $this->drupalLogin($this->adminUser);
-    $node->set('comment', CommentItemInterface::HIDDEN);
+    $node->set('comment', CommentingStatus::Hidden->value);
     $node->save();
 
     // Invoke search index update.
@@ -249,7 +251,7 @@ class SearchCommentTest extends BrowserTestBase {
     // Create a node.
     // Make preview optional.
     $field = FieldConfig::loadByName('node', 'article', 'comment');
-    $field->setSetting('preview', DRUPAL_OPTIONAL);
+    $field->setSetting('preview', CommentPreviewMode::Optional->value);
     $field->save();
     $this->node = $this->drupalCreateNode(['type' => 'article']);
 
@@ -302,7 +304,7 @@ class SearchCommentTest extends BrowserTestBase {
   /**
    * Set permissions for role.
    */
-  public function setRolePermissions($rid, $access_comments = FALSE, $search_content = TRUE) {
+  public function setRolePermissions($rid, $access_comments = FALSE, $search_content = TRUE): void {
     $permissions = [
       'access comments' => $access_comments,
       'search content' => $search_content,
@@ -336,7 +338,7 @@ class SearchCommentTest extends BrowserTestBase {
         $this->assertSession()->pageTextContains('Your search yielded no results.');
       }
     }
-    catch (ResponseTextException $exception) {
+    catch (ResponseTextException) {
       $this->fail($message);
     }
   }

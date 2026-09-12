@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\plugin_test\Plugin\plugin_test\mock_block;
 
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
@@ -15,6 +17,9 @@ class MockUserNameBlock extends PluginBase implements ContextAwarePluginInterfac
 
   use ContextAwarePluginTrait;
 
+  /**
+   * Returns the title of the block.
+   */
   public function getTitle() {
     $user = $this->getContextValue('user');
     return $user->label();

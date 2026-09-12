@@ -9,12 +9,16 @@ use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\Tests\paragraphs\FunctionalJavascript\ParagraphsTestBaseTrait;
 use Drupal\Tests\paragraphs\Traits\ParagraphsCoreVersionUiTestTrait;
 use Drupal\Tests\paragraphs\Traits\ParagraphsLastEntityQueryTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Paragraphs, Paragraphs Library and Content Moderation integration.
  *
  * @group paragraphs_library
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs_library')]
 class ParagraphsContentModerationTest extends WebDriverTestBase {
 
   use ParagraphsTestBaseTrait, FieldUiTestTrait, ParagraphsLastEntityQueryTrait, ParagraphsCoreVersionUiTestTrait;

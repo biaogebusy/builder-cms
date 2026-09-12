@@ -28,24 +28,24 @@
           Drupal.ginStickyFormActions?.hideMoreActions()) : (Drupal.ginSidebar.showSidebar(), 
           Drupal.ginStickyFormActions?.hideMoreActions());
         },
-        showSidebar: () => {
-          const chooseStorage = window.innerWidth < 1024 ? "Drupal.gin.sidebarExpanded.mobile" : storageDesktop, hideLabel = Drupal.t("Hide sidebar panel"), sidebarTrigger = document.querySelector(".meta-sidebar__trigger");
-          sidebarTrigger.querySelector("span").innerHTML = hideLabel, sidebarTrigger.setAttribute("title", hideLabel), 
-          sidebarTrigger.nextSibling && (sidebarTrigger.nextSibling.innerHTML = hideLabel), 
+        showSidebar: function() {
+          const chooseStorage = (arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : window.innerWidth) < 1024 ? "Drupal.gin.sidebarExpanded.mobile" : storageDesktop, hideLabel = Drupal.t("Hide sidebar panel"), sidebarTrigger = document.querySelector(".meta-sidebar__trigger");
+          null !== sidebarTrigger && (sidebarTrigger.querySelector("span").innerHTML = hideLabel, 
+          sidebarTrigger.setAttribute("title", hideLabel), sidebarTrigger.nextSibling && (sidebarTrigger.nextSibling.innerHTML = hideLabel), 
           sidebarTrigger.setAttribute("aria-expanded", "true"), sidebarTrigger.classList.add("is-active"), 
           document.body.setAttribute("data-meta-sidebar", "open"), localStorage.setItem(chooseStorage, "true"), 
-          window.innerWidth < 1280 && (Drupal.ginCoreNavigation?.collapseToolbar(), "vertical" === toolbarVariant ? Drupal.ginToolbar.collapseToolbar() : "new" === toolbarVariant && Drupal.behaviors.ginNavigation?.collapseSidebar());
+          window.innerWidth < 1280 && (Drupal.ginCoreNavigation?.collapseToolbar(), "vertical" === toolbarVariant ? Drupal.ginToolbar.collapseToolbar() : "new" === toolbarVariant && Drupal.behaviors.ginNavigation?.collapseSidebar()));
         },
-        collapseSidebar: () => {
-          const chooseStorage = window.innerWidth < 1024 ? "Drupal.gin.sidebarExpanded.mobile" : storageDesktop, showLabel = Drupal.t("Show sidebar panel"), sidebarTrigger = document.querySelector(".meta-sidebar__trigger");
-          sidebarTrigger.querySelector("span").innerHTML = showLabel, sidebarTrigger.setAttribute("title", showLabel), 
-          sidebarTrigger.nextSibling && (sidebarTrigger.nextSibling.innerHTML = showLabel), 
+        collapseSidebar: function() {
+          const chooseStorage = (arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : window.innerWidth) < 1024 ? "Drupal.gin.sidebarExpanded.mobile" : storageDesktop, showLabel = Drupal.t("Show sidebar panel"), sidebarTrigger = document.querySelector(".meta-sidebar__trigger");
+          null !== sidebarTrigger && (sidebarTrigger.querySelector("span").innerHTML = showLabel, 
+          sidebarTrigger.setAttribute("title", showLabel), sidebarTrigger.nextSibling && (sidebarTrigger.nextSibling.innerHTML = showLabel), 
           sidebarTrigger.setAttribute("aria-expanded", "false"), sidebarTrigger.classList.remove("is-active"), 
-          document.body.setAttribute("data-meta-sidebar", "closed"), localStorage.setItem(chooseStorage, "false");
+          document.body.setAttribute("data-meta-sidebar", "closed"), localStorage.setItem(chooseStorage, "false"));
         },
         handleResize: function() {
           let windowSize = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : window;
-          Drupal.ginSidebar.removeInlineStyles(), windowSize.width < 1024 ? Drupal.ginSidebar.collapseSidebar() : "true" === localStorage.getItem(storageDesktop) ? Drupal.ginSidebar.showSidebar() : Drupal.ginSidebar.collapseSidebar();
+          Drupal.ginSidebar.removeInlineStyles(), windowSize.width < 1024 ? Drupal.ginSidebar.collapseSidebar(windowSize.width) : "true" === localStorage.getItem(storageDesktop) ? Drupal.ginSidebar.showSidebar(windowSize.width) : Drupal.ginSidebar.collapseSidebar(windowSize.width);
         },
         removeInlineStyles: () => {
           const elementToRemove = document.querySelector(".gin-sidebar-inline-styles");

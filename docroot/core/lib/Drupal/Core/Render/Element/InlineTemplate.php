@@ -30,10 +30,9 @@ class InlineTemplate extends RenderElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#pre_render' => [
-        [$class, 'preRenderInlineTemplate'],
+        [static::class, 'preRenderInlineTemplate'],
       ],
       '#template' => '',
       '#context' => [],
@@ -47,6 +46,7 @@ class InlineTemplate extends RenderElementBase {
    *   The element.
    *
    * @return array
+   *   The modified element with the rendered #markup in it.
    */
   public static function preRenderInlineTemplate($element) {
     /** @var \Drupal\Core\Template\TwigEnvironment $environment */

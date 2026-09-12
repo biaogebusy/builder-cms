@@ -14,11 +14,8 @@ class DbCommandBase extends Command {
 
   /**
    * {@inheritdoc}
-   *
-   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
-   * @return void
    */
-  protected function configure() {
+  protected function configure(): void {
     $this->addOption('database', NULL, InputOption::VALUE_OPTIONAL, 'The database connection name to use.', 'default')
       ->addOption('database-url', 'db-url', InputOption::VALUE_OPTIONAL, 'A database url to parse and use as the database connection.')
       ->addOption('prefix', NULL, InputOption::VALUE_OPTIONAL, 'Override or set the table prefix used in the database connection.');
@@ -31,6 +28,7 @@ class DbCommandBase extends Command {
    *   Input object.
    *
    * @return \Drupal\Core\Database\Connection
+   *   The database connection.
    */
   protected function getDatabaseConnection(InputInterface $input) {
     // Load connection from a URL.
@@ -40,7 +38,7 @@ class DbCommandBase extends Command {
       if (Database::getConnectionInfo('db-tools')) {
         throw new \RuntimeException('Database "db-tools" is already defined. Cannot define database provided.');
       }
-      $info = Database::convertDbUrlToConnectionInfo($input->getOption('database-url'), \Drupal::root());
+      $info = Database::convertDbUrlToConnectionInfo($input->getOption('database-url'));
       Database::addConnectionInfo('db-tools', 'default', $info);
       $key = 'db-tools';
     }

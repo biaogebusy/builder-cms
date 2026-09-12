@@ -5,12 +5,16 @@ namespace Drupal\Tests\paragraphs_library\FunctionalJavascript;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\entity_browser\FunctionalJavascript\EntityBrowserWebDriverTestBase;
 use Drupal\Tests\paragraphs\FunctionalJavascript\ParagraphsTestBaseTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity browser integration with paragraphs.
  *
  * @group paragraphs_library
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs_library')]
 class ParagraphsLibraryItemEntityBrowserTest extends EntityBrowserWebDriverTestBase {
 
   use ParagraphsTestBaseTrait;

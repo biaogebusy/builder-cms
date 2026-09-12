@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests devel error handler.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelErrorHandlerTest extends DevelBrowserTestBase {
 
   /**

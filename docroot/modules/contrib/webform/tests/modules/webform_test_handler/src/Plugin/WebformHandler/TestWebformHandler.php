@@ -161,7 +161,7 @@ class TestWebformHandler extends WebformHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function access(WebformSubmissionInterface $webform_submission, $operation, AccountInterface $account = NULL) {
+  public function access(WebformSubmissionInterface $webform_submission, $operation, ?AccountInterface $account = NULL) {
     $this->displayMessage(__FUNCTION__ . 'Submission');
     $value = $webform_submission->getElementData('element');
     if ($value === 'submission_access_denied') {
@@ -205,7 +205,7 @@ class TestWebformHandler extends WebformHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function accessElement(array &$element, $operation, AccountInterface $account = NULL) {
+  public function accessElement(array &$element, $operation, ?AccountInterface $account = NULL) {
     $this->displayMessage(__FUNCTION__);
 
     $webform_submission = $this->getWebformSubmission();

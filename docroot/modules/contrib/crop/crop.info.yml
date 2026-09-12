@@ -8,7 +8,7 @@ dependencies:
   - drupal:user
 configure: crop.overview_types
 
-# Information added by Drupal.org packaging script on 2025-11-14
-version: '8.x-2.5'
+# Information added by Drupal.org packaging script on 2026-03-09
+version: '8.x-2.6'
 project: 'crop'
-datestamp: 1763154896
+datestamp: 1773071546

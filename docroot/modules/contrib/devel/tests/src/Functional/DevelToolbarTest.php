@@ -3,12 +3,12 @@
 namespace Drupal\Tests\devel\Functional;
 
 use Drupal\Core\Menu\MenuTreeParameters;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests devel toolbar module functionality.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelToolbarTest extends DevelBrowserTestBase {
 
   /**

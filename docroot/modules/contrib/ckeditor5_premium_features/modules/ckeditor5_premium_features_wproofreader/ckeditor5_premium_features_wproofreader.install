@@ -1,0 +1,47 @@
+<?php
+
+use Drupal\user\Entity\Role;
+
+/**
+ * Implements hook_uninstall().
+ */
+function ckeditor5_premium_features_wproofreader_uninstall($is_syncing): void {
+  if (!$is_syncing) {
+    ckeditor5_premium_features_remove_ckeditor_plugins(['wproofreader']);
+  }
+}
+
+/**
+ * Grant new WProofreader permissions to authenticated users if module is already enabled.
+ */
+function ckeditor5_premium_features_wproofreader_update_9001() {
+  $roles = Role::loadMultiple();
+  // Grant new permissions to all authenticated users, so on sites with already installed WProofreader there won't be
+  // unexpected loss of functionality. For new installations everything will be to set up by admin.
+  if (isset($roles['authenticated'])) {
+    /** @var Role $role */
+    $role = $roles['authenticated'];
+    $role->grantPermission('ckeditor5 wproofreader user dictionary');
+    $role->grantPermission('ckeditor5 wproofreader user language');
+    $role->grantPermission('ckeditor5 wproofreader user general settings');
+    $role->grantPermission('ckeditor5 wproofreader user ignore settings');
+    $role->grantPermission('ckeditor5 wproofreader toggle proofreading');
+    $role->save();
+  }
+}
+
+/**
+ * Grant new WProofreader permissions to authenticated users if module is already enabled.
+ */
+function ckeditor5_premium_features_wproofreader_update_9002() {
+  $roles = Role::loadMultiple();
+  // Grant new permissions to all authenticated users, so on sites with already installed WProofreader there won't be
+  // unexpected loss of functionality. For new installations everything will be to set up by admin.
+  if (isset($roles['authenticated'])) {
+    /** @var Role $role */
+    $role = $roles['authenticated'];
+    $role->grantPermission('ckeditor5 wproofreader add word');
+    $role->grantPermission('ckeditor5 wproofreader ignore all');
+    $role->save();
+  }
+}

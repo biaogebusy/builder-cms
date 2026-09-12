@@ -24,6 +24,13 @@ trait UpdatePathTestTrait {
   protected $checkFailedUpdates = TRUE;
 
   /**
+   * Fail the test if there are entity field definition updates needed.
+   *
+   * @var bool
+   */
+  protected $checkEntityFieldDefinitionUpdates = TRUE;
+
+  /**
    * Helper function to run pending database updates.
    *
    * @param string|null $update_url
@@ -91,12 +98,7 @@ trait UpdatePathTestTrait {
       $modules_installed = FALSE;
       // Modules that are in configuration but not the module handler have been
       // installed.
-      /** @var \Drupal\Core\Extension\ModuleExtensionList $module_list */
-      $module_list = $this->container->get('extension.list.module');
-      foreach (array_keys(array_diff_key($config_module_list, $module_handler_list)) as $module) {
-        $module_handler->addModule($module, $module_list->getPath($module));
-        $modules_installed = TRUE;
-      }
+      $modules_installed = !empty(array_diff_key($config_module_list, $module_handler_list));
       $modules_uninstalled = FALSE;
       $module_handler_list = $module_handler->getModuleList();
       // Modules that are in the module handler but not configuration have been
@@ -145,17 +147,19 @@ trait UpdatePathTestTrait {
       }
 
       // Ensure that the update hooks updated all entity schema.
-      $needs_updates = \Drupal::entityDefinitionUpdateManager()->needsUpdates();
-      if ($needs_updates) {
-        foreach (\Drupal::entityDefinitionUpdateManager()->getChangeSummary() as $entity_type_id => $summary) {
-          $entity_type_label = \Drupal::entityTypeManager()->getDefinition($entity_type_id)->getLabel();
-          foreach ($summary as $message) {
-            $this->fail("$entity_type_label: $message");
+      if ($this->checkEntityFieldDefinitionUpdates) {
+        $needs_updates = \Drupal::entityDefinitionUpdateManager()->needsUpdates();
+        if ($needs_updates) {
+          foreach (\Drupal::entityDefinitionUpdateManager()->getChangeSummary() as $entity_type_id => $summary) {
+            $entity_type_label = \Drupal::entityTypeManager()->getDefinition($entity_type_id)->getLabel();
+            foreach ($summary as $message) {
+              $this->fail("$entity_type_label: $message");
+            }
           }
+          // The above calls to `fail()` should prevent this from ever being
+          // called, but it is here in case something goes really wrong.
+          $this->assertFalse($needs_updates, 'After all updates ran, entity schema is up to date.');
         }
-        // The above calls to `fail()` should prevent this from ever being
-        // called, but it is here in case something goes really wrong.
-        $this->assertFalse($needs_updates, 'After all updates ran, entity schema is up to date.');
       }
     }
   }

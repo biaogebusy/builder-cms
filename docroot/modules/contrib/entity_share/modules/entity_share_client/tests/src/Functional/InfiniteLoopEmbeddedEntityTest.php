@@ -17,6 +17,19 @@ class InfiniteLoopEmbeddedEntityTest extends InfiniteLoopTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'field',
+    'text',
+    'menu_ui',
+    'entity_share_test',
+    'jsonapi_extras',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->entityTypeManager->getStorage('jsonapi_resource_config')->create([

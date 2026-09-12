@@ -186,7 +186,6 @@ class ChartsConfigFormTest extends UnitTestCase {
     // Make method accessible for testing.
     $reflection = new \ReflectionClass(ChartsConfigForm::class);
     $method = $reflection->getMethod('getEditableConfigNames');
-    $method->setAccessible(TRUE);
     $result = $method->invoke($this->form);
 
     $this->assertEquals(['charts.settings'], $result);

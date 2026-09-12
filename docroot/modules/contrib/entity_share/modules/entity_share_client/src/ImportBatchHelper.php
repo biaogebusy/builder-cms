@@ -17,7 +17,7 @@ use Drupal\entity_share\EntityShareUtility;
 class ImportBatchHelper {
 
   /**
-   * Batch operation.
+   * Implements callback_batch_operation().
    *
    * @param \Drupal\entity_share_client\ImportContext $import_context
    *   The import context.
@@ -60,7 +60,7 @@ class ImportBatchHelper {
   }
 
   /**
-   * Batch finish callback.
+   * Implements callback_batch_finished().
    *
    * @param bool $success
    *   A boolean indicating whether the batch has completed successfully.

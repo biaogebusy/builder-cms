@@ -2,16 +2,17 @@
 
 namespace Drupal\better_exposed_filters\Plugin\better_exposed_filters\pager;
 
+use Drupal\better_exposed_filters\Attribute\PagerWidget;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Radio Buttons pager widget implementation.
- *
- * @BetterExposedFiltersPagerWidget(
- *   id = "bef",
- *   label = @Translation("Radio Buttons"),
- * )
  */
+#[PagerWidget(
+  id: 'bef',
+  title: new TranslatableMarkup('Radio Buttons'),
+)]
 class RadioButtons extends PagerWidgetBase {
 
   /**

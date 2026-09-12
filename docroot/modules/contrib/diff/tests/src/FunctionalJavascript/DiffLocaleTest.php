@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\diff\FunctionalJavascript;
 
-use Drupal\Tests\diff\Functional\CoreVersionUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test diff functionality with localization and translation.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffLocaleTest extends DiffTestBase {
-
-  use CoreVersionUiTestTrait;
 
   /**
    * Modules to enable.
@@ -156,14 +155,14 @@ class DiffLocaleTest extends DiffTestBase {
     // Compare first two revisions.
     $this->drupalGet('node/' . $node->id() . '/revisions/view/' . $revision1 . '/' . $revision2 . '/split_fields');
     $diffs = $this->getSession()->getPage()->findAll('xpath', '//span[@class="diffchange"]');
-    $this->assertEquals($diffs[0]->getText(), 'english_revision_0');
-    $this->assertEquals($diffs[1]->getText(), 'english_revision_1');
+    $this->assertEquals('english_revision_0', $diffs[0]->getText());
+    $this->assertEquals('english_revision_1', $diffs[1]->getText());
 
     // Check next difference.
     $this->clickLink('Next change');
     $diffs = $this->getSession()->getPage()->findAll('xpath', '//span[@class="diffchange"]');
-    $this->assertEquals($diffs[0]->getText(), 'english_revision_1');
-    $this->assertEquals($diffs[1]->getText(), 'english_revision_2');
+    $this->assertEquals('english_revision_1', $diffs[0]->getText());
+    $this->assertEquals('english_revision_2', $diffs[1]->getText());
 
     // There shouldn't be other differences in the current language.
     $this->assertSession()->linkNotExists('Next change');
@@ -171,8 +170,8 @@ class DiffLocaleTest extends DiffTestBase {
     // Attempt to visit with a valid revision but for the wrong language.
     $this->drupalGet('node/' . $node->id() . '/revisions/view/' . $revision5 . '/' . $revision1 . '/split_fields');
     $diffs = $this->getSession()->getPage()->findAll('xpath', '//span[@class="diffchange"]');
-    $this->assertEquals($diffs[0]->getText(), 'english_revision_2');
-    $this->assertEquals($diffs[1]->getText(), 'english_revision_0');
+    $this->assertEquals('english_revision_2', $diffs[0]->getText());
+    $this->assertEquals('english_revision_0', $diffs[1]->getText());
   }
 
   /**
@@ -209,14 +208,14 @@ class DiffLocaleTest extends DiffTestBase {
     // Compare the first two revisions.
     $this->drupalGet('node/' . $node->id() . '/revisions/view/' . $revision1 . '/' . $revision2 . '/split_fields');
     $diffs = $this->getSession()->getPage()->findAll('xpath', '//span[@class="diffchange"]');
-    $this->assertEquals($diffs[0]->getText(), 'undefined_language_revision_0');
-    $this->assertEquals($diffs[1]->getText(), 'undefined_language_revision_1');
+    $this->assertEquals('undefined_language_revision_0', $diffs[0]->getText());
+    $this->assertEquals('undefined_language_revision_1', $diffs[1]->getText());
 
     // Compare the next two revisions.
     $this->clickLink('Next change');
     $diffs = $this->getSession()->getPage()->findAll('xpath', '//span[@class="diffchange"]');
-    $this->assertEquals($diffs[0]->getText(), 'undefined_language_revision_1');
-    $this->assertEquals($diffs[1]->getText(), 'undefined_language_revision_2');
+    $this->assertEquals('undefined_language_revision_1', $diffs[0]->getText());
+    $this->assertEquals('undefined_language_revision_2', $diffs[1]->getText());
   }
 
 }

@@ -1,0 +1,74 @@
+@startuml
+
+' This is the PlantUML (https://plantuml.com/) source used to generate the UML
+' diagram of the implementation hierarchy of the precondition system (hierarchy.png). Said
+' diagram can be regenerated from this source at https://plantuml-editor.kkeisuke.com/ or with
+' the PhpStorm plugin at https://plugins.jetbrains.com/plugin/7017-plantuml-integration.
+' Optimize it with ImageOptim: https://imageoptim.com/.
+
+!include ../resources/settings.puml
+
+hide circle
+
+skinparam RoundCorner 15
+skinparam LineType polyline
+
+class BeginnerPreconditions {
+    CommonPreconditions
+    NoUnsupportedLinksExist
+    StagingDirDoesNotExist
+}
+BeginnerPreconditions *-- CommonPreconditions
+BeginnerPreconditions *-- NoUnsupportedLinksExist
+
+class StagerPreconditions {
+    CommonPreconditions
+    StagingDirIsReady
+}
+StagerPreconditions *-- CommonPreconditions
+StagerPreconditions *-- StagingDirIsReady
+
+class CommitterPreconditions {
+    CommonPreconditions
+    NoUnsupportedLinksExist
+    StagingDirIsReady
+}
+CommitterPreconditions *-- CommonPreconditions
+CommitterPreconditions *-- NoUnsupportedLinksExist
+CommitterPreconditions *-- StagingDirIsReady
+
+class CleanerPreconditions {
+    CommonPreconditions
+    StagingDirIsReady
+}
+CleanerPreconditions *-- CommonPreconditions
+CleanerPreconditions *-- StagingDirIsReady
+
+class CommonPreconditions {
+    ActiveAndStagingDirsAreDifferent
+    ActiveDirIsReady
+    ComposerIsAvailable
+    HostSupportsRunningProcesses
+    NoNestingOnWindows
+    RsyncIsAvailable
+}
+CommonPreconditions *- ActiveDirIsReady
+
+class ActiveDirIsReady {
+    ActiveDirExists
+    ActiveDirIsWritable
+}
+
+class StagingDirIsReady {
+    StagingDirExists
+    StagingDirIsWritable
+}
+
+class NoUnsupportedLinksExist {
+    NoAbsoluteSymlinksExist
+    NoHardLinksExist
+    NoLinksExistOnWindows
+    NoSymlinksPointOutsideTheCodebase
+}
+
+@enduml

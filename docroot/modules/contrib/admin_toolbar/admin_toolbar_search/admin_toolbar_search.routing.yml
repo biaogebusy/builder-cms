@@ -1,14 +1,22 @@
+# Routes for the Admin Toolbar Search module.
+
+# Route called with AJAX for loading Admin Toolbar Tools extra links for search.
 admin_toolbar.search:
   path: '/admin/admin-toolbar-search'
   defaults:
+    # Controller returning a JSON response with the search links from service
+    # class 'SearchLinks'.
     _controller: '\Drupal\admin_toolbar_search\Controller\AdminToolbarSearchController::search'
   requirements:
+    # Require module's permission to access the search links AJAX endpoint.
     _permission: 'use admin toolbar search'
 
+# Route for the Admin Toolbar Search settings form.
 admin_toolbar_search.settings:
   path: '/admin/config/user-interface/admin-toolbar-search'
   defaults:
     _title: 'Admin Toolbar Search settings'
     _form: 'Drupal\admin_toolbar_search\Form\AdminToolbarSearchSettingsForm'
   requirements:
+    # No specific permission to access config form. Use site config permission.
     _permission: 'administer site configuration'

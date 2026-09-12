@@ -85,9 +85,9 @@ final class TranslationGenerator extends AiApiExplorerPluginBase {
    */
   public function getResponse(array &$form, FormStateInterface $form_state): array {
     try {
-      $provider = $this->aiProviderHelper->generateAiProviderFromFormSubmit($form, $form_state, 'translate_text', 'translate_text');
+      $provider = $this->aiProviderHelper->generateAiProviderFromFormSubmit($form, $form_state, 'translate_text', 'tt');
       $text = $form_state->getValue('text');
-      $sourceLanguage = $form_state->getValue('source_language') ?? NULL;
+      $sourceLanguage = $form_state->getValue('source_language');
       $targetLang = $form_state->getValue('target_language');
       $model = $form_state->getValue('tt_ai_model');
 
@@ -132,7 +132,8 @@ final class TranslationGenerator extends AiApiExplorerPluginBase {
       }
 
       $input = new TranslateTextInput($text, $sourceLanguage, $targetLang);
-      $translation = $provider->translateText($input, $model, ['ai_api_explorer'])->getNormalized();
+      $translationOutput = $provider->translateText($input, $model, ['ai_api_explorer']);
+      $translation = $translationOutput->getNormalized();
 
       if (!empty($translation) && is_string($translation)) {
         $form['right']['response']['#context']['ai_response']['response'] = [
@@ -154,7 +155,13 @@ final class TranslationGenerator extends AiApiExplorerPluginBase {
           'message' => [
             '#type' => 'html_tag',
             '#tag' => 'div',
-            '#value' => $this->t('The provider did not generate a valid translation. Please check your input and try again.'),
+            '#value'
+            => $this->t('The provider did not generate a valid translation. Please check your input and try again.')
+            . (
+              $translationOutput->getMetadata()
+                ? '<br />' . ((string) $translationOutput->getMetadata())
+                : ''
+            ),
             '#attributes' => [
               'class' => ['ai-text-response', 'ai-error-message'],
             ],

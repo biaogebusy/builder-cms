@@ -2,6 +2,7 @@
 
 namespace Drupal\redirect\Plugin\migrate\process\d7;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -11,6 +12,7 @@ use Drupal\migrate\Row;
  *   id = "d7_redirect_source_query"
  * )
  */
+#[MigrateProcess(id: 'd7_redirect_source_query')]
 class RedirectSourceQuery extends ProcessPluginBase {
 
   /**

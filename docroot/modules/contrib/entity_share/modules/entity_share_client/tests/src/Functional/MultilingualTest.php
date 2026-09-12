@@ -18,6 +18,17 @@ use Drupal\user\UserInterface;
 class MultilingualTest extends EntityShareClientFunctionalTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+  ];
+
+  /**
    * The state information service.
    *
    * @var \Drupal\entity_share_client\Service\StateInformationInterface

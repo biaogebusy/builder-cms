@@ -11,6 +11,9 @@ use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\RequestHandler;
 use Drupal\rest\ResourceResponse;
 use Drupal\rest\RestResourceConfigInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Prophecy\Argument;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
@@ -19,10 +22,10 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Test REST RequestHandler controller logic.
- *
- * @group rest
- * @coversDefaultClass \Drupal\rest\RequestHandler
  */
+#[CoversClass(RequestHandler::class)]
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class RequestHandlerTest extends KernelTestBase {
 
   /**
@@ -55,11 +58,18 @@ class RequestHandlerTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::handle
+   * Tests handle.
    */
   public function testHandle(): void {
     $request = new Request([], [], [], [], [], ['CONTENT_TYPE' => 'application/json'], Json::encode(['this is an array']));
-    $route_match = new RouteMatch('test', (new Route('/rest/test', ['_rest_resource_config' => 'rest_plugin', 'example' => ''], ['_format' => 'json']))->setMethods(['GET']));
+    $route_match = new RouteMatch(
+      'test',
+      (new Route(
+        '/rest/test',
+        ['_rest_resource_config' => 'rest_plugin', 'example' => ''],
+        ['_format' => 'json']
+      ))->setMethods(['GET'])
+    );
 
     $resource = $this->prophesize(StubRequestHandlerResourcePlugin::class);
     $resource->get('', $request)
@@ -88,7 +98,16 @@ class RequestHandlerTest extends KernelTestBase {
     $this->assertEquals($response, $handler_response);
 
     // We will call the patch method this time.
-    $route_match = new RouteMatch('test', (new Route('/rest/test', ['_rest_resource_config' => 'rest_plugin', 'example_original' => ''], ['_content_type_format' => 'json']))->setMethods(['PATCH']));
+    $route_match = new RouteMatch(
+      'test',
+      (new Route(
+        '/rest/test',
+        [
+          '_rest_resource_config' => 'rest_plugin',
+          'example_original' => '',
+        ],
+        ['_content_type_format' => 'json']
+      ))->setMethods(['PATCH']));
     $request->setMethod('PATCH');
     $response = new ResourceResponse([]);
     $resource->patch(['this is an array'], $request)
@@ -105,12 +124,24 @@ class RequestHandlerTest extends KernelTestBase {
  */
 class StubRequestHandlerResourcePlugin extends ResourceBase {
 
+  /**
+   * Handles a GET request.
+   */
   public function get($example = NULL, ?Request $request = NULL) {}
 
+  /**
+   * Handles a POST request.
+   */
   public function post() {}
 
+  /**
+   * Handles a PATCH request.
+   */
   public function patch($data, Request $request) {}
 
+  /**
+   * Handles a DELETE request.
+   */
   public function delete() {}
 
 }

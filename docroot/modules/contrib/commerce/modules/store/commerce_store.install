@@ -184,6 +184,7 @@ function commerce_store_update_8208() {
         'display_label' => TRUE,
       ],
     ])
+    ->setDefaultValue(TRUE)
     ->setDisplayConfigurable('form', TRUE);
 
   $entity_definition_update = \Drupal::entityDefinitionUpdateManager();
@@ -208,4 +209,20 @@ function commerce_store_update_8209() {
   $handlers['form']['disable'] = StoreStatusForm::class;
   $entity_type->set('handlers', $handlers);
   $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Fix the mismatch field definition error with the Store status field.
+ */
+function commerce_store_update_8210(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $storage_definition = $definition_update_manager->getFieldStorageDefinition('status', 'commerce_store');
+  if ($storage_definition) {
+    $storage_definition = $storage_definition->setDefaultValue(TRUE);
+    $definition_update_manager->updateFieldStorageDefinition($storage_definition);
+  }
+  $content_translation_status_field = $definition_update_manager->getFieldStorageDefinition('content_translation_status', 'commerce_store');
+  if ($content_translation_status_field) {
+    $definition_update_manager->uninstallFieldStorageDefinition($content_translation_status_field);
+  }
 }

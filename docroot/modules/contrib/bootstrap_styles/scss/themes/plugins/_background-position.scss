@@ -18,7 +18,7 @@ $bg-pos-toggle-size: 15px;
     }
 
     input {
-      @include sr-only;
+      @include visually-hidden;
 
       &:checked + label,
       &:checked + label:hover {

@@ -1,0 +1,5 @@
+
+services:
+  Drupal\paragraphs_library\Hook\ParagraphsLibraryHooks:
+    class: Drupal\paragraphs_library\Hook\ParagraphsLibraryHooks
+    autowire: true

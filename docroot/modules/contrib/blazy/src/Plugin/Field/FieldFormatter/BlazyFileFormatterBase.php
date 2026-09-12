@@ -9,9 +9,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\Field\BlazyDependenciesTrait;
 use Drupal\blazy\Field\BlazyElementTrait;
-use Drupal\blazy\Media\BlazyImage;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Media\Image;
 use Drupal\blazy\Utility\Sanitize;
-use Drupal\blazy\internals\Internals;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldFormatter\FileFormatterBase;
 use Drupal\image\Plugin\Field\FieldType\ImageItem;
@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\blazy\Plugin\Field\FieldFormatter\BlazyFormatter.
  * @see \Drupal\blazy\Plugin\Field\FieldFormatter\BlazyFileFormatter.
  *
- * @todo remove no longer in use: ImageFactory at blazy:3.x.
+ * @todo deprecate and remove no longer in use: ImageFactory at blazy:3.x.
  */
 abstract class BlazyFileFormatterBase extends FileFormatterBase {
 
@@ -134,6 +134,8 @@ abstract class BlazyFileFormatterBase extends FileFormatterBase {
     $definition = $this->getScopedFormElements();
 
     $definition['_views'] = isset($form['field_api_classes']);
+    $definition['field_api_classes'] = $form['field_api_classes']['#default_value'] ?? FALSE;
+
     $this->admin()->buildSettingsForm($element, $definition);
 
     return $element;
@@ -171,8 +173,9 @@ abstract class BlazyFileFormatterBase extends FileFormatterBase {
    * Returns the Blazy elements, also for sub-modules to re-use.
    */
   protected function getElements(array $build, $files): \Generator {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $limit    = $this->getViewLimit($settings);
     $by_delta = $settings['by_delta'] ?? -1;
     $total    = $blazies->total();
@@ -215,11 +218,11 @@ abstract class BlazyFileFormatterBase extends FileFormatterBase {
 
     // Extracts ImageItem data early to help new SVG with its attributes.
     $image = ['uri' => $uri];
-    if ($item instanceof ImageItem && $values = BlazyImage::toArray($item)) {
+    if ($item instanceof ImageItem && $values = Image::toArray($item)) {
       foreach ($values as $key => $value) {
         $image[$key] = $value;
       }
-      // @todo remove this pingpong at 3.x:
+      // @todo deprecate and remove this pingpong at 3.x:
       $image['item'] = $item;
     }
 
@@ -249,7 +252,8 @@ abstract class BlazyFileFormatterBase extends FileFormatterBase {
     $captions = $this->getCaptions($data);
 
     // Provides the relevant elements based on the configuration.
-    return $this->toElement($sets['blazies'], $data, $captions);
+    $blazies = Internals::getBlazies($sets);
+    return $this->toElement($blazies, $data, $captions);
   }
 
   /**
@@ -263,7 +267,7 @@ abstract class BlazyFileFormatterBase extends FileFormatterBase {
 
     // At most cases, unless file entity is installed, the parent is the entity.
     $entity    = $data['#parent'] ?? NULL;
-    $blazies   = $settings['blazies'];
+    $blazies   = Internals::getBlazies($settings);
     $options   = $settings['caption'] ?? [];
     $options   = array_filter($options);
     $display   = empty($settings['svg_hide_caption']);

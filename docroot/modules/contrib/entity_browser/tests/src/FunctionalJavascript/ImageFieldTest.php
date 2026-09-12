@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_browser\Element\EntityBrowserElement;
 use Drupal\field\Entity\FieldConfig;
@@ -15,6 +17,8 @@ use Drupal\Tests\TestFileCreationTrait;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class ImageFieldTest extends EntityBrowserWebDriverTestBase {
 
   use TestFileCreationTrait;

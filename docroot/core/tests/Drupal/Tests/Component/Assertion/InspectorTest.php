@@ -4,44 +4,28 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Component\Assertion;
 
-use PHPUnit\Framework\TestCase;
 use Drupal\Component\Assertion\Inspector;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \Drupal\Component\Assertion\Inspector
- * @group Assertion
+ * Tests Drupal\Component\Assertion\Inspector.
  */
+#[CoversClass(Inspector::class)]
+#[Group('Assertion')]
 class InspectorTest extends TestCase {
-
-  use ExpectDeprecationTrait;
-
-  /**
-   * Tests asserting argument is an array or traversable object.
-   *
-   * @covers ::assertTraversable
-   *
-   * @group legacy
-   */
-  public function testAssertTraversable(): void {
-    $this->expectDeprecation('Drupal\Component\Assertion\Inspector::assertTraversable() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use is_iterable() instead. See https://www.drupal.org/node/3422775');
-    $this->assertTrue(Inspector::assertTraversable([]));
-    $this->assertTrue(Inspector::assertTraversable(new \ArrayObject()));
-    $this->assertFalse(Inspector::assertTraversable(new \stdClass()));
-    $this->assertFalse(Inspector::assertTraversable('foo'));
-  }
 
   /**
    * Tests asserting all members are strings.
-   *
-   * @covers ::assertAllStrings
-   * @dataProvider providerTestAssertAllStrings
    */
+  #[DataProvider('providerTestAssertAllStrings')]
   public function testAssertAllStrings($input, $expected): void {
     $this->assertSame($expected, Inspector::assertAllStrings($input));
   }
 
-  public static function providerTestAssertAllStrings() {
+  public static function providerTestAssertAllStrings(): array {
     $data = [
       'empty-array' => [[], TRUE],
       'array-with-strings' => [['foo', 'bar'], TRUE],
@@ -69,8 +53,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all members are strings or objects with __toString().
-   *
-   * @covers ::assertAllStringable
    */
   public function testAssertAllStringable(): void {
     $this->assertTrue(Inspector::assertAllStringable([]));
@@ -81,8 +63,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all members are arrays.
-   *
-   * @covers ::assertAllArrays
    */
   public function testAssertAllArrays(): void {
     $this->assertTrue(Inspector::assertAllArrays([]));
@@ -92,8 +72,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting array is 0-indexed - the strict definition of array.
-   *
-   * @covers ::assertStrictArray
    */
   public function testAssertStrictArray(): void {
     $this->assertTrue(Inspector::assertStrictArray([]));
@@ -103,8 +81,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all members are strict arrays.
-   *
-   * @covers ::assertAllStrictArrays
    */
   public function testAssertAllStrictArrays(): void {
     $this->assertTrue(Inspector::assertAllStrictArrays([]));
@@ -114,8 +90,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all members have specified keys.
-   *
-   * @covers ::assertAllHaveKey
    */
   public function testAssertAllHaveKey(): void {
     $this->assertTrue(Inspector::assertAllHaveKey([]));
@@ -127,8 +101,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all members are integers.
-   *
-   * @covers ::assertAllIntegers
    */
   public function testAssertAllIntegers(): void {
     $this->assertTrue(Inspector::assertAllIntegers([]));
@@ -139,8 +111,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all members are floating point variables.
-   *
-   * @covers ::assertAllFloat
    */
   public function testAssertAllFloat(): void {
     $this->assertTrue(Inspector::assertAllFloat([]));
@@ -153,7 +123,7 @@ class InspectorTest extends TestCase {
   /**
    * Tests asserting all members are callable.
    *
-   * @covers ::assertAllCallable
+   * @legacy-covers ::assertAllCallable
    */
   public function testAllCallable(): void {
     $this->assertTrue(Inspector::assertAllCallable([
@@ -179,7 +149,7 @@ class InspectorTest extends TestCase {
   /**
    * Tests asserting all members are !empty().
    *
-   * @covers ::assertAllNotEmpty
+   * @legacy-covers ::assertAllNotEmpty
    */
   public function testAllNotEmpty(): void {
     $this->assertTrue(Inspector::assertAllNotEmpty([1, 'two']));
@@ -188,8 +158,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all arguments are numbers or strings castable to numbers.
-   *
-   * @covers ::assertAllNumeric
    */
   public function testAssertAllNumeric(): void {
     $this->assertTrue(Inspector::assertAllNumeric([1, '2', 3.14]));
@@ -198,8 +166,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting strstr() or stristr() match.
-   *
-   * @covers ::assertAllMatch
    */
   public function testAssertAllMatch(): void {
     $this->assertTrue(Inspector::assertAllMatch('f', ['fee', 'fi', 'fo']));
@@ -212,8 +178,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting regular expression match.
-   *
-   * @covers ::assertAllRegularExpressionMatch
    */
   public function testAssertAllRegularExpressionMatch(): void {
     $this->assertTrue(Inspector::assertAllRegularExpressionMatch('/f/i', ['fee', 'fi', 'fo']));
@@ -226,8 +190,6 @@ class InspectorTest extends TestCase {
 
   /**
    * Tests asserting all members are objects.
-   *
-   * @covers ::assertAllObjects
    */
   public function testAssertAllObjects(): void {
     $this->assertTrue(Inspector::assertAllObjects([new \ArrayObject(), new \ArrayObject()]));
@@ -242,14 +204,14 @@ class InspectorTest extends TestCase {
   /**
    * Defines a test method referenced by ::testAllCallable().
    */
-  public function callMe() {
+  public function callMe(): bool {
     return TRUE;
   }
 
   /**
    * Defines a test method referenced by ::testAllCallable().
    */
-  public static function callMeStatic() {
+  public static function callMeStatic(): bool {
     return TRUE;
   }
 

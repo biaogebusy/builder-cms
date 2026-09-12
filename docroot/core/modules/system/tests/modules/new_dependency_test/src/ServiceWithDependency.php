@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\new_dependency_test;
 
 /**
@@ -36,7 +38,7 @@ class ServiceWithDependency {
     if (isset($this->service)) {
       return $this->service->greet() . ' World';
     }
-    return 'Sorry, no service.';
+    return 'No service.';
   }
 
 }

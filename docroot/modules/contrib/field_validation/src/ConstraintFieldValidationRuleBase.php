@@ -24,7 +24,7 @@ abstract class ConstraintFieldValidationRuleBase extends ConfigurableFieldValida
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-	$validateModes = [
+    $validateModes = [
       'default' => "Default",
       'direct' => "Direct",
     ];
@@ -57,7 +57,16 @@ abstract class ConstraintFieldValidationRuleBase extends ConfigurableFieldValida
   public function getConstraintOptions(): array {
     $constraintOptions = $this->configuration;
     unset($constraintOptions['validate_mode']);
-    $constraintOptions = array_filter($constraintOptions);
+    // Only drop options that were never set (NULL) or left as an empty
+    // string. A plain array_filter() would also strip explicit boolean
+    // FALSE values (e.g. the Regex rule's "match" option), silently
+    // discarding a deliberate configuration choice.
+    $constraintOptions = array_filter(
+      $constraintOptions,
+      function ($value) {
+        return $value !== NULL && $value !== '';
+      }
+    );
     return $constraintOptions;
   }
 
@@ -85,13 +94,13 @@ abstract class ConstraintFieldValidationRuleBase extends ConfigurableFieldValida
    *
    * @return string
    */
-  public abstract function getConstraintName(): string;
+  abstract public function getConstraintName(): string;
 
   /**
    * Check if it is a property constraint.
    *
    * @return bool
    */
-  public abstract function isPropertyConstraint(): bool;
+  abstract public function isPropertyConstraint(): bool;
 
 }

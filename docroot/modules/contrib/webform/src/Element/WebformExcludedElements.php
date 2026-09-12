@@ -7,6 +7,7 @@ use Drupal\user\Entity\Role;
 use Drupal\webform\Entity\Webform as WebformEntity;
 use Drupal\webform\Plugin\WebformElement\WebformActions as WebformActionsWebformElement;
 use Drupal\webform\Utility\WebformArrayHelper;
+use Drupal\webform\Utility\WebformElementHelper;
 use Drupal\webform\WebformInterface;
 
 /**
@@ -92,7 +93,7 @@ class WebformExcludedElements extends WebformExcludedBase {
       }
 
       $options[$key] = [
-        'title' => $form_element['#admin_title'] ?: $form_element['#title'] ?: $key,
+        'title' => WebformElementHelper::getAdminTitle($form_element) ?: $key,
         'key' => $key,
         'type' => $form_element['#type'] ?? '',
         'private' => empty($form_element['#private']) ? t('No') : t('Yes'),

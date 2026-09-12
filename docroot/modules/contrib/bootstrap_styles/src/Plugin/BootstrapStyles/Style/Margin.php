@@ -216,9 +216,18 @@ class Margin extends StylePluginBase {
       $classes[] = $storage['margin']['class'];
     }
 
+    $attach_margin_library = FALSE;
+
+    if (isset($storage['margin']['class']) && $storage['margin']['class'] !== '_none') {
+      $attach_margin_library = TRUE;
+    }
+
     for ($i = 0; $i < 4; $i++) {
       if (isset($storage['margin_' . $directions[$i]]['class'])) {
         $classes[] = $storage['margin_' . $directions[$i]]['class'];
+        if ($storage['margin_' . $directions[$i]]['class'] !== '_none') {
+          $attach_margin_library = TRUE;
+        }
       }
     }
 
@@ -226,7 +235,9 @@ class Margin extends StylePluginBase {
     $build = $this->addClassesToBuild($build, $classes, $theme_wrapper);
 
     // Attach bs-classes to the build.
-    $build['#attached']['library'][] = 'bootstrap_styles/plugin.margin.build';
+    if ($attach_margin_library) {
+      $build['#attached']['library'][] = 'bootstrap_styles/plugin.margin.build';
+    }
 
     return $build;
   }

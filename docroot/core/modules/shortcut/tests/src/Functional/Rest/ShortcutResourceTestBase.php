@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\shortcut\Functional\Rest;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\shortcut\Entity\Shortcut;
 use Drupal\shortcut\Entity\ShortcutSet;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 
 /**
- * ResourceTestBase for Shortcut entity.
+ * Resource test base for Shortcut entity.
  */
 abstract class ShortcutResourceTestBase extends EntityResourceTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -56,7 +60,7 @@ abstract class ShortcutResourceTestBase extends EntityResourceTestBase {
     // Create shortcut.
     $shortcut = Shortcut::create([
       'shortcut_set' => 'default',
-      'title' => t('Comments'),
+      'title' => $this->t('Comments'),
       'weight' => -20,
       'link' => [
         'uri' => 'internal:/admin/content/comment',
@@ -74,6 +78,11 @@ abstract class ShortcutResourceTestBase extends EntityResourceTestBase {
    * {@inheritdoc}
    */
   protected function getExpectedNormalizedEntity() {
+    $uri = 'internal:/admin/content/comment';
+    $uri_options = [
+      'fragment' => 'new',
+    ];
+    $url = Url::fromUri($uri, $uri_options);
     return [
       'uuid' => [
         [
@@ -99,11 +108,10 @@ abstract class ShortcutResourceTestBase extends EntityResourceTestBase {
       ],
       'link' => [
         [
-          'uri' => 'internal:/admin/content/comment',
+          'uri' => $uri,
+          'resolvable_uri' => $url->toString(),
           'title' => NULL,
-          'options' => [
-            'fragment' => 'new',
-          ],
+          'options' => $uri_options,
         ],
       ],
       'weight' => [

@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests event info pages and links.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelEventInfoTest extends DevelBrowserTestBase {
 
   /**

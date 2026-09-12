@@ -4,20 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Entity;
 
-use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Entity\Form\RevisionRevertForm;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\entity_test\Entity\EntityTestRev;
 use Drupal\entity_test\Entity\EntityTestRevPub;
 use Drupal\entity_test_revlog\Entity\EntityTestWithRevisionLog;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests reverting a revision with revision revert form.
- *
- * @group Entity
- * @group #slow
- * @coversDefaultClass \Drupal\Core\Entity\Form\RevisionRevertForm
  */
+#[CoversClass(RevisionRevertForm::class)]
+#[Group('Entity')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class RevisionRevertFormTest extends BrowserTestBase {
 
   /**
@@ -101,14 +105,14 @@ class RevisionRevertFormTest extends BrowserTestBase {
   protected static function providerPageTitle(): array {
     return [
       ['entity_test_rev', 'Are you sure you want to revert the revision?'],
-      ['entity_test_revlog', 'Are you sure you want to revert to the revision from Sun, 01/11/2009 - 16:00?'],
+      ['entity_test_revlog', 'Are you sure you want to revert to the revision from Sun, 11 Jan 2009 - 16:00?'],
     ];
   }
 
   /**
    * Test cannot revert latest default revision.
    *
-   * @covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
+   * @legacy-covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
    */
   protected function testAccessRevertLatestDefault(): void {
     /** @var \Drupal\entity_test\Entity\EntityTestRev $entity */
@@ -127,7 +131,7 @@ class RevisionRevertFormTest extends BrowserTestBase {
   /**
    * Ensures that forward revisions can be reverted.
    *
-   * @covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
+   * @legacy-covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
    */
   protected function testAccessRevertLatestForwardRevision(): void {
     /** @var \Drupal\entity_test\Entity\EntityTestRev $entity */
@@ -151,7 +155,7 @@ class RevisionRevertFormTest extends BrowserTestBase {
   /**
    * Test can revert non-latest revision.
    *
-   * @covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
+   * @legacy-covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
    */
   protected function testAccessRevertNonLatest(): void {
     /** @var \Drupal\entity_test\Entity\EntityTestRev $entity */
@@ -188,11 +192,9 @@ class RevisionRevertFormTest extends BrowserTestBase {
    *   Expected messenger message.
    * @param string $expectedDestination
    *   Expected destination after deletion.
-   *
-   * @covers ::submitForm
-   * @dataProvider providerSubmitForm
    */
-  public function testSubmitForm(array $permissions, string $entityTypeId, string $entityLabel, string $expectedLog, string $expectedMessage, string $expectedDestination): void {
+  #[DataProvider('providerSubmitForm')]
+  public function testSubmitForm(array $permissions, string $entityTypeId, string $entityLabel, array $expectedLog, string $expectedMessage, string $expectedDestination): void {
     if (count($permissions) > 0) {
       $this->drupalLogin($this->createUser($permissions));
     }
@@ -231,7 +233,10 @@ class RevisionRevertFormTest extends BrowserTestBase {
 
     // Logger log.
     $logs = $this->getLogs($entity->getEntityType()->getProvider());
-    $this->assertEquals([0 => $expectedLog], $logs);
+    $this->assertCount(1, $logs);
+    $this->assertEquals('@type: reverted %title revision %revision.', $logs[0]->message);
+    $this->assertEquals($expectedLog, unserialize($logs[0]->variables));
+
     // Messenger message.
     $this->assertSession()->pageTextContains($expectedMessage);
   }
@@ -246,7 +251,11 @@ class RevisionRevertFormTest extends BrowserTestBase {
       ['view test entity'],
       'entity_test_rev',
       'view, revert',
-      'entity_test_rev: reverted <em class="placeholder">view, revert</em> revision <em class="placeholder">1</em>.',
+      [
+        '@type' => 'entity_test_rev',
+        '%title' => 'view, revert',
+        '%revision' => '1',
+      ],
       'Entity Test Bundle view, revert has been reverted.',
       '/entity_test_rev/manage/1',
     ];
@@ -255,7 +264,11 @@ class RevisionRevertFormTest extends BrowserTestBase {
       ['view test entity'],
       'entity_test_rev',
       'view, view all revisions, revert',
-      'entity_test_rev: reverted <em class="placeholder">view, view all revisions, revert</em> revision <em class="placeholder">1</em>.',
+      [
+        '@type' => 'entity_test_rev',
+        '%title' => 'view, view all revisions, revert',
+        '%revision' => '1',
+      ],
       'Entity Test Bundle view, view all revisions, revert has been reverted.',
       '/entity_test_rev/1/revisions',
     ];
@@ -264,8 +277,12 @@ class RevisionRevertFormTest extends BrowserTestBase {
       [],
       'entity_test_revlog',
       'view, revert',
-      'entity_test_revlog: reverted <em class="placeholder">view, revert</em> revision <em class="placeholder">1</em>.',
-      'Test entity - revisions log view, revert has been reverted to the revision from Sun, 01/11/2009 - 16:00.',
+      [
+        '@type' => 'entity_test_revlog',
+        '%title' => 'view, revert',
+        '%revision' => '1',
+      ],
+      'Test entity - revisions log view, revert has been reverted to the revision from Sun, 11 Jan 2009 - 16:00.',
       '/entity_test_revlog/manage/1',
     ];
 
@@ -273,8 +290,12 @@ class RevisionRevertFormTest extends BrowserTestBase {
       [],
       'entity_test_revlog',
       'view, view all revisions, revert',
-      'entity_test_revlog: reverted <em class="placeholder">view, view all revisions, revert</em> revision <em class="placeholder">1</em>.',
-      'Test entity - revisions log view, view all revisions, revert has been reverted to the revision from Sun, 01/11/2009 - 16:00.',
+      [
+        '@type' => 'entity_test_revlog',
+        '%title' => 'view, view all revisions, revert',
+        '%revision' => '1',
+      ],
+      'Test entity - revisions log view, view all revisions, revert has been reverted to the revision from Sun, 11 Jan 2009 - 16:00.',
       '/entity_test_revlog/1/revisions',
     ];
 
@@ -283,8 +304,6 @@ class RevisionRevertFormTest extends BrowserTestBase {
 
   /**
    * Tests the revert process.
-   *
-   * @covers ::prepareRevision
    */
   protected function testPrepareRevision(): void {
     $user = $this->createUser();
@@ -331,7 +350,7 @@ class RevisionRevertFormTest extends BrowserTestBase {
     /** @var \Drupal\entity_test_revlog\Entity\EntityTestWithRevisionLog $latestRevision */
     $latestRevision = $storage->loadUnchanged($entity->id());
     $this->assertEquals($count + 1, $this->countRevisions($entity->getEntityTypeId()));
-    $this->assertEquals('Copy of the revision from <em class="placeholder">Sun, 01/11/2009 - 17:00</em>.', $latestRevision->getRevisionLogMessage());
+    $this->assertEquals('Copy of the revision from <em class="placeholder">Sun, 11 Jan 2009 - 17:00</em>.', $latestRevision->getRevisionLogMessage());
     $this->assertGreaterThan($revisionCreationTime, $latestRevision->getRevisionCreationTime());
     $this->assertEquals($user->id(), $latestRevision->getRevisionUserId());
     $this->assertTrue($latestRevision->isDefaultRevision());
@@ -347,10 +366,11 @@ class RevisionRevertFormTest extends BrowserTestBase {
    *   Watchdog entries.
    */
   protected function getLogs(string $channel): array {
-    $logs = \Drupal::database()->query("SELECT * FROM {watchdog} WHERE type = :type", [':type' => $channel])->fetchAll();
-    return array_map(function (object $log) {
-      return (string) new FormattableMarkup($log->message, unserialize($log->variables));
-    }, $logs);
+    return \Drupal::database()->select('watchdog')
+      ->fields('watchdog')
+      ->condition('type', $channel)
+      ->execute()
+      ->fetchAll();
   }
 
   /**

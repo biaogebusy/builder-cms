@@ -2,11 +2,11 @@
 
 namespace Drupal\webform\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\Plugin\WebformSourceEntityManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

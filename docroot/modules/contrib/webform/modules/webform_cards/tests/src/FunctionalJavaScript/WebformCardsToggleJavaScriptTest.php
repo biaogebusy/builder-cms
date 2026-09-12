@@ -21,7 +21,7 @@ class WebformCardsToggleJavaScriptTest extends WebformWebDriverTestBase {
   /**
    * Test webform cards toggle show/hide all.
    */
-  public function testToggle() {
+  public function testToggle(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();

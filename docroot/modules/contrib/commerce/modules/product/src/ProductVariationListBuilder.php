@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_product;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -288,14 +289,25 @@ class ProductVariationListBuilder extends EntityListBuilder implements FormInter
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
-    if ($entity->access('create') && $entity->hasLinkTemplate('duplicate-form')) {
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $cacheability = func_num_args() > 1 ? func_get_arg(1) : NULL;
+    $operations = parent::getDefaultOperations($entity, $cacheability);
+
+    $access = $entity->access('create', NULL, TRUE);
+    if ($cacheability instanceof CacheableMetadata) {
+      $cacheability->addCacheableDependency($access);
+    }
+    if ($access->isAllowed() && $entity->hasLinkTemplate('duplicate-form')) {
       $operations['duplicate'] = [
         'title' => $this->t('Duplicate'),
         'weight' => 20,
         'url' => $this->ensureDestination($entity->toUrl('duplicate-form')),
       ];
+    }
+
+    $destination = $this->getRedirectDestination()->get();
+    foreach ($operations as $key => $operation) {
+      $operations[$key]['query']['destination'] = $destination;
     }
 
     return $operations;

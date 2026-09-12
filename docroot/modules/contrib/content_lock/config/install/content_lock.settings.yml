@@ -1,5 +1,5 @@
-verbose: 1
+verbose: true
 types: {}
 types_translation_lock: {}
-types_js_lock: {}
 form_op_lock: {}
+timeout: 1800

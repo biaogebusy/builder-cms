@@ -4,15 +4,15 @@ ul.paragraphs-add-dialog-list {
   list-style-type: none;
 
   .button.button--small {
+    margin: 0;
+    padding-top: calc(.5rem - 1px);
+    padding-bottom: calc(.5rem - 1px);
+    padding-left: 40px;
+    text-align: left;
+    border-radius: 3px;
     background-repeat: no-repeat;
     background-position: 10px;
     background-size: auto calc(100% - 10px);
-    margin: 0;
-    padding-left: 40px;
-    padding-top: calc(.5rem - 1px);
-    padding-bottom: calc(.5rem - 1px);
-    text-align: left;
-    border-radius: 3px;
   }
 }
 

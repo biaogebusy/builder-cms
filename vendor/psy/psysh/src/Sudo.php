@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -54,7 +54,7 @@ class Sudo
      *
      * @param object $object
      * @param string $method  method name
-     * @param mixed  $args...
+     * @param mixed  ...$args
      *
      * @return mixed
      */
@@ -115,7 +115,7 @@ class Sudo
      *
      * @param string|object $class   class name or instance
      * @param string        $method  method name
-     * @param mixed         $args...
+     * @param mixed         ...$args
      *
      * @return mixed
      */
@@ -162,7 +162,7 @@ class Sudo
      * Construct an instance of a class, bypassing private constructors.
      *
      * @param string $class   class name
-     * @param mixed  $args...
+     * @param mixed  ...$args
      */
     public static function newInstance(string $class, ...$args)
     {
@@ -170,10 +170,12 @@ class Sudo
         $instance = $refl->newInstanceWithoutConstructor();
 
         $constructor = $refl->getConstructor();
-        if (\PHP_VERSION_ID < 80100) {
-            $constructor->setAccessible(true);
+        if ($constructor !== null) {
+            if (\PHP_VERSION_ID < 80100) {
+                $constructor->setAccessible(true);
+            }
+            $constructor->invokeArgs($instance, $args);
         }
-        $constructor->invokeArgs($instance, $args);
 
         return $instance;
     }

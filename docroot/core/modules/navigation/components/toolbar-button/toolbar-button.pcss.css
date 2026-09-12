@@ -6,304 +6,285 @@
 
 @import "../../css/base/media-queries.pcss.css";
 
-:root {
+[data-drupal-admin-styles] {
   --toolbar-button-outline-offset: 0;
+  --toolbar-button-bg: transparent;
+  --toolbar-button-color: var(--admin-toolbar-color-gray-800);
+  /* Hover styles. */
+  --toolbar-button-hover-bg: var(--admin-toolbar-color-gray-050);
+  --toolbar-button-hover-color: var(--admin-toolbar-color-gray-990);
+  /* Focus variables. */
+  --toolbar-button-focus-color: var(--admin-toolbar-color-blue-700);
+  /* Current variables */
+  --toolbar-button-current-bg: var(--admin-toolbar-color-gray-050);
+  --toolbar-button-current-color: var(--admin-toolbar-color-blue-700);
+  /* Active child variables. */
+  --toolbar-button-has-active-child-bg: var(--admin-toolbar-color-gray-050);
+  --toolbar-button-has-active-child-color: var(--admin-toolbar-color-gray-950);
+  /* Icon */
+  --toolbar-button-icon-size: var(--admin-toolbar-space-20);
 }
 
-.toolbar-button {
-  z-index: 1;
-  align-items: center;
-  padding-inline: var(--admin-toolbar-space-16);
-  padding-block: var(--admin-toolbar-space-10);
-  min-height: var(--admin-toolbar-space-40);
-  cursor: pointer;
-  text-align: start;
-  text-decoration: none;
-  word-break: break-word;
-  color: var(--admin-toolbar-color-gray-800);
-  border: 0;
-  border-radius: var(--admin-toolbar-space-8);
-  background-color: transparent;
-  font-size: var(--admin-toolbar-font-size-info-sm);
-  font-variation-settings: "wght" 700;
-  line-height: var(--admin-toolbar-line-height-info-sm);
-  gap: calc(0.5 * var(--admin-toolbar-rem));
-
-  &:has(+ .toolbar-popover__wrapper .is-active) {
-    color: var(--admin-toolbar-color-gray-950);
-    background-color: var(--admin-toolbar-color-gray-050);
-  }
-
-  &:hover {
-    z-index: 20;
-    color: var(--admin-toolbar-color-gray-990);
-    outline: 2px solid var(--admin-toolbar-color-blue-200);
-    outline-offset: var(--toolbar-button-outline-offset);
-    background-color: var(--admin-toolbar-color-gray-050);
-  }
-
-  &:focus {
-    z-index: 10;
-    color: var(--admin-toolbar-color-blue-700);
-    outline: 2px solid var(--admin-toolbar-color-focus);
-    outline-offset: var(--toolbar-button-outline-offset);
-  }
-
-  &.current {
-    color: var(--admin-toolbar-color-blue-700);
-    background-color: var(--admin-toolbar-color-gray-050);
-  }
-}
-
-/* Dark color modifier for submenus title */
-.toolbar-button--dark {
-  color: var(--admin-toolbar-color-gray-990);
-}
-
-.toolbar-button--large {
-  padding: var(--admin-toolbar-space-8) var(--admin-toolbar-space-16);
-  font-size: var(--admin-toolbar-font-size-info-lg);
-  line-height: var(--admin-toolbar-line-height-info-lg);
-}
-
-.toolbar-button--non-interactive {
-  &:hover,
-  &:focus,
-  &:hover:focus {
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) {
+  .toolbar-button {
     z-index: 1;
-    cursor: auto;
-    color: var(--admin-toolbar-color-gray-800);
-    outline: 0;
-    background-color: transparent;
-  }
-}
-
-.toolbar-button--small-offset {
-  --toolbar-button-outline-offset: calc(-1 * var(--admin-toolbar-space-4));
-}
-
-/* Class starts with `toolbar-button--icon`  */
-[class*="toolbar-button--icon"] {
-  padding-inline: var(--admin-toolbar-space-10);
-
-  &::before {
-    display: flex;
-    flex-shrink: 0;
+    flex-grow: 0;
     align-items: center;
-    justify-content: center;
-    content: attr(data-icon-text);
-    color: currentColor;
-    background-image: linear-gradient(currentColor, currentColor 50%, transparent 50%);
-    background-position-y: calc(100% - (100% * var(--icon, 0)));
-    background-size: 100% 200%;
-    font-size: calc(0.75 * var(--admin-toolbar-rem));
-    inline-size: var(--admin-toolbar-space-20);
-    block-size: var(--admin-toolbar-space-20);
-    mask-repeat: no-repeat;
-    mask-position: center center;
-    mask-size: 100% auto;
-    -webkit-mask-image: var(--icon);
-    mask-image: var(--icon);
-  }
+    min-height: var(--admin-toolbar-space-40);
+    cursor: pointer;
+    text-align: start;
+    text-decoration: none;
+    overflow-wrap: break-word;
+    color: var(--toolbar-button-color);
+    border: 0;
+    border-radius: var(--admin-toolbar-space-8);
+    background-color: var(--toolbar-button-bg);
+    font-size: var(--admin-toolbar-font-size-info-sm);
+    line-height: var(--admin-toolbar-line-height-info-sm);
+    padding-inline: var(--admin-toolbar-space-16);
+    padding-block: var(--admin-toolbar-space-10);
+    font-variation-settings: "wght" 700;
+    gap: calc(0.5 * var(--admin-toolbar-rem));
 
-  &:hover::before {
-    background-color: linear-gradient(var(--admin-toolbar-color-blue-600), var(--admin-toolbar-color-blue-600) 50%, transparent 50%);
-  }
+    &:has(+ .toolbar-popover__wrapper .is-active) {
+      color: var(--toolbar-button-has-active-child-color);
+      background-color: var(--toolbar-button-has-active-child-bg);
 
-  @media (--forced-colors) {
-    &::before,
-    &:hover::before {
-      background: canvastext;
+      @media (forced-colors: active) {
+        position: relative;
+
+        &::before {
+          position: absolute;
+          inset-block-start: 0;
+          inset-inline-end: calc(100% + 5px);
+          width: 0;
+          height: 100%;
+          content: "";
+          border-inline-start: solid 4px canvasText;
+        }
+      }
     }
 
-    &a {
-      &::before,
-      &:hover::before {
-        background: linktext;
+    .top-bar__actions & {
+      border: solid 1px transparent; /* For forced colors. */
+    }
+
+    &[class*="toolbar-button--icon"]:has(+ .ajax-progress--throbber),
+    &[class*="toolbar-button--icon"]:has(+ .ajax-progress-throbber) {
+      .toolbar-button__icon {
+        fill: transparent;
+        background-image: url(../../assets/icons/throbber.svg);
+      }
+
+      & + .ajax-progress--throbber,
+      & + .ajax-progress-throbber {
+        display: none;
+      }
+    }
+
+    &:hover {
+      z-index: 20;
+      color: var(--toolbar-button-hover-color);
+      outline: 2px solid var(--admin-toolbar-color-blue-200);
+      outline-offset: var(--toolbar-button-outline-offset);
+      background-color: var(--toolbar-button-hover-bg);
+    }
+
+    &:focus {
+      z-index: 10;
+      color: var(--toolbar-button-focus-color);
+      outline: 2px solid var(--admin-toolbar-color-focus);
+      outline-offset: var(--toolbar-button-outline-offset);
+    }
+
+    &.current {
+      color: var(--toolbar-button-current-color);
+      background-color: var(--toolbar-button-current-bg);
+
+      @media (forced-colors: active) {
+        position: relative;
+
+        &::before {
+          position: absolute;
+          inset-block-start: 0;
+          inset-inline-end: calc(100% + 5px);
+          width: 0;
+          height: 100%;
+          content: "";
+          border-inline-start: solid 4px canvasText;
+        }
       }
     }
   }
-}
 
-.toolbar-button--weight--400 {
-  font-variation-settings: "wght" 400;
-}
+  /* Dark color modifier for submenus title */
+  .toolbar-button--dark {
+    color: var(--admin-toolbar-color-gray-990);
+  }
 
-/* Set 0 specificity */
-:where(.toolbar-button) {
-  display: flex;
-  flex-grow: 1;
-}
+  .toolbar-button--large {
+    padding: var(--admin-toolbar-space-8) var(--admin-toolbar-space-16);
+    font-size: var(--admin-toolbar-font-size-info-lg);
+    line-height: var(--admin-toolbar-line-height-info-lg);
+  }
 
-[class*="toolbar-button--expand"] {
-  &::after {
+  .toolbar-button--non-interactive {
+    &:hover,
+    &:focus,
+    &:hover:focus {
+      z-index: 1;
+      cursor: auto;
+      color: var(--toolbar-button-color);
+      outline: 0;
+      background-color: var(--toolbar-button-bg);
+    }
+  }
+
+  .toolbar-button--small-offset {
+    --toolbar-button-outline-offset: calc(-1 * var(--admin-toolbar-space-4));
+  }
+
+  /* Class starts with `toolbar-button--icon`  */
+  [class*="toolbar-button--icon"] {
+    padding-inline: var(--admin-toolbar-space-10);
+  }
+
+  [class*="toolbar-button--icon"]:not(:has(.toolbar-button__icon)) {
+    &::before {
+      flex-shrink: 0;
+      content: attr(data-icon-text) / "";
+      text-align: center;
+      color: currentColor;
+      font-size: calc(0.75 * var(--admin-toolbar-rem));
+      inline-size: var(--toolbar-button-icon-size);
+    }
+  }
+
+  .toolbar-button--primary {
+    --toolbar-button-color: var(--admin-toolbar-color-white);
+    --toolbar-button-bg: var(--admin-toolbar-color-blue-450);
+    --toolbar-button-hover-color: var(--admin-toolbar-color-white);
+    --toolbar-button-hover-bg: var(--admin-toolbar-color-blue-600);
+    --toolbar-button-focus-color: var(--admin-toolbar-color-white);
+  }
+
+  .toolbar-button--weight--400 {
+    font-variation-settings: "wght" 400;
+  }
+
+  /* Set 0 specificity */
+  :where(.toolbar-button) {
+    display: flex;
+    flex-grow: 1;
+  }
+
+  .toolbar-button--expand--down {
+    &[aria-expanded="true"] {
+      &:focus,
+      &:hover {
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+    }
+  }
+
+  [dir="ltr"] & .toolbar-button--icon--announcements-feed-announcement .toolbar-button__icon {
+    scale: -1 1;
+  }
+
+  .toolbar-button--collapsible {
+    & .toolbar-button__chevron {
+      display: none;
+    }
+
+    & .toolbar-button__label {
+      position: absolute;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      width: 1px;
+      height: 1px;
+      white-space: nowrap;
+      clip-path: inset(50%);
+      opacity: 0;
+    }
+
+    [data-admin-toolbar="expanded"] & {
+      & .toolbar-button__chevron {
+        display: block;
+      }
+
+      & .toolbar-button__label {
+        position: relative;
+        clip: revert;
+        width: auto;
+        height: auto;
+        white-space: wrap;
+        clip-path: none;
+        opacity: 1;
+      }
+    }
+
+    [data-admin-toolbar-animating] & {
+      & .toolbar-button__label {
+        display: none;
+      }
+    }
+  }
+
+  .toolbar-button__chevron {
     flex-shrink: 0;
     margin-inline-start: auto;
-    content: "";
-    transition: transform var(--admin-toolbar-transition);
-    background-color: currentColor;
+    transition: rotate var(--admin-toolbar-transition);
+    fill: currentColor;
     block-size: var(--admin-toolbar-space-16);
     inline-size: var(--admin-toolbar-space-16);
-    mask-size: var(--admin-toolbar-space-16);
-    mask-repeat: no-repeat;
-    mask-position: center center;
-    mask-image: url(./assets/chevron.svg);
 
     :where([dir="rtl"]) & {
-      transform: rotate(180deg);
+      rotate: 180deg;
     }
 
-    @media (--forced-colors) {
-      background: canvastext;
+    .toolbar-button--expand--down & {
+      rotate: 90deg;
     }
-  }
-}
 
-.toolbar-button--expand--down {
-  &::after {
-    transform: rotate(90deg);
-
-    @media (--forced-colors) {
-      background: canvastext;
+    .toolbar-button--expand--down[aria-expanded="true"] & {
+      rotate: -90deg;
     }
   }
 
-  &[aria-expanded="true"] {
-    &::after {
-      transform: rotate(-90deg);
-    }
-    &:focus,
-    &:hover {
-      border-bottom-right-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-  }
-}
+  .toolbar-button__icon {
+    --icon-color: currentColor;
 
-.toolbar-button--icon--announcements-feed-announcement {
-  --icon: url(./assets/announcement.svg);
-  &::before {
-    transform: scaleX(-1);
-  }
+    fill: var(--icon-color);
+    flex-shrink: 0;
+    inline-size: var(--toolbar-button-icon-size);
+    block-size: var(--toolbar-button-icon-size);
 
-  [dir="rtl"] & {
-    &::before {
-      transform: scaleX(1);
-    }
-  }
-}
+    @media (forced-colors: active) {
+      --icon-color: canvasText;
 
-.toolbar-button--icon--back {
-  --icon: url(./assets/arrow-left.svg);
-}
+      &,
+      path {
+        &[fill]:not([fill="none"]) {
+          fill: var(--icon-color);
+        }
 
-.toolbar-button--icon--burger {
-  --icon: url(./assets/burger.svg);
-}
-
-.toolbar-button--icon--cross {
-  --icon: url(./assets/cross.svg);
-}
-
-.toolbar-button--icon--entity-user-collection {
-  --icon: url(./assets/people.svg);
-}
-
-.toolbar-button--icon--help {
-  --icon: url(./assets/help.svg);
-}
-
-.toolbar-button--icon--navigation-blocks {
-  --icon: url(./assets/blocks.svg);
-}
-
-.toolbar-button--icon--navigation-content {
-  --icon: url(./assets/content.svg);
-}
-
-.toolbar-button--icon--navigation-create {
-  --icon: url(./assets/create.svg);
-}
-
-.toolbar-button--icon--navigation-files {
-  --icon: url(./assets/files.svg);
-}
-
-.toolbar-button--icon--navigation-media {
-  --icon: url(./assets/media.svg);
-}
-
-.toolbar-button--icon--pencil {
-  --icon: url(./assets/pencil.svg);
-}
-
-.toolbar-button--icon--preview {
-  --icon: url(./assets/eye.svg);
-}
-
-.toolbar-button--icon--shortcuts {
-  --icon: url(./assets/shortcuts.svg);
-}
-
-.toolbar-button--icon--system-admin-config {
-  --icon: url(./assets/config.svg);
-}
-
-.toolbar-button--icon--system-admin-reports {
-  --icon: url(./assets/reports.svg);
-}
-
-.toolbar-button--icon--system-admin-structure {
-  --icon: url(./assets/structure.svg);
-}
-
-.toolbar-button--icon--system-modules-list {
-  --icon: url(./assets/extend.svg);
-}
-
-.toolbar-button--icon--system-themes-page {
-  --icon: url(./assets/appearance.svg);
-}
-
-.toolbar-button--icon--user {
-  --icon: url(./assets/user.svg);
-}
-
-.toolbar-button--collapsible {
-  &::after {
-    display: none;
-  }
-
-  & .toolbar-button__label {
-    position: absolute;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    width: 1px;
-    height: 1px;
-    white-space: nowrap;
-    clip-path: inset(50%);
-    opacity: 0;
-  }
-
-  [data-admin-toolbar="expanded"] & {
-    &::after {
-      display: block;
-    }
-
-    & .toolbar-button__label {
-      position: relative;
-      clip: revert;
-      width: auto;
-      height: auto;
-      white-space: wrap;
-      clip-path: none;
-      opacity: 1;
+        &[stroke]:not([stroke="none"]) {
+          stroke: var(--icon-color);
+        }
+      }
     }
   }
 
-  [data-admin-toolbar-animating] & {
-    & .toolbar-button__label {
-      display: none;
+  button.toolbar-button .toolbar-button__icon {
+    @media (forced-colors: active) {
+      --icon-color: buttonText;
+    }
+  }
+
+  a.toolbar-button .toolbar-button__icon {
+    @media (forced-colors: active) {
+      --icon-color: linkText;
     }
   }
 }

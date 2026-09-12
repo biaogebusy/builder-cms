@@ -15,7 +15,7 @@ class WebformSubmissionGenerateTest extends WebformBrowserTestBase {
   /**
    * Tests webform submission entity.
    */
-  public function testWebformSubmissionGenerate() {
+  public function testWebformSubmissionGenerate(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

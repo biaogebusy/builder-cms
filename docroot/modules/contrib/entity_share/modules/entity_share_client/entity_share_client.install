@@ -142,15 +142,15 @@ function entity_share_client_update_8305() {
  * Creates the new entity import status view.
  */
 function entity_share_client_update_8306() {
-  // Only create if the import status view doesn't exist and views is enabled.
+  // Only create if the view doesn't exist and views is enabled.
   if (\Drupal::moduleHandler()->moduleExists('views') && !\Drupal::service('entity_type.manager')->getStorage('view')->load('entity_share_client_entity_import_status')) {
-    $config_path = \Drupal::service('extension.list.module')->getPath('entity_share_client') . '/config/install/views.view.entity_share_client_entity_import_status.yml';
+    $config_path = \Drupal::service('extension.list.module')->getPath('entity_share_client') . '/config/optional/views.view.entity_share_client_entity_import_status.yml';
     $data = Yaml::parseFile($config_path);
     \Drupal::configFactory()->getEditable('views.view.entity_share_client_entity_import_status')->setData($data)->save(TRUE);
     $message = 'The new import status view has been created.';
   }
   else {
-    $message = 'Not creating a import status since it already exists.';
+    $message = 'Not creating a import status view since it already exists.';
   }
   return $message;
 }
@@ -169,4 +169,44 @@ function entity_share_client_update_8401() {
     $remote->set('login_path', 'user/login');
     $remote->save();
   }
+}
+
+/**
+ * Ensure access to the entity import status view is restricted.
+ */
+function entity_share_client_update_8402() {
+  if (\Drupal::moduleHandler()->moduleExists('views') && \Drupal::service('entity_type.manager')->getStorage('view')->load('entity_share_client_entity_import_status')) {
+    /** @var \Drupal\views\ViewEntityInterface $view */
+    $view = \Drupal::service('entity_type.manager')->getStorage('view')
+      ->load('entity_share_client_entity_import_status');
+
+    $changed = FALSE;
+    $displays = $view->get('display');
+
+    foreach ($displays as &$display) {
+      if (isset($display['display_options']['access']['type'])
+        && $display['display_options']['access']['type'] == 'none'
+      ) {
+        $display['display_options']['access'] = [
+          'type' => 'perm',
+          'options' => [
+            'perm' => 'entity_share_client_pull_content',
+          ],
+        ];
+        $changed = TRUE;
+      }
+    }
+
+    $message = 'The import status view has already access control.';
+    if ($changed) {
+      $view->set('display', $displays);
+      $view->save();
+      $message = 'The import status view has been updated.';
+    }
+  }
+  else {
+    $message = 'Not updating the import status view since it does not exist.';
+  }
+
+  return $message;
 }

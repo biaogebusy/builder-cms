@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_order_test\Form;
 
+use Drupal\commerce\InlineFormManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\commerce\InlineFormManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -73,7 +73,7 @@ class CustomerProfileTestForm extends FormBase implements TrustedCallbackInterfa
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $profile = NULL, $admin = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $profile = NULL, $admin = NULL, $save = NULL) {
     if (!$profile) {
       $profile_storage = $this->entityTypeManager->getStorage('profile');
       /** @var \Drupal\profile\Entity\ProfileInterface $profile */
@@ -96,6 +96,7 @@ class CustomerProfileTestForm extends FormBase implements TrustedCallbackInterfa
       '#parents' => ['profile'],
       '#inline_form' => $inline_form,
     ];
+    $form_state->set(['use_save_button', 'billing'], $save);
     $form['profile'] = $inline_form->buildInlineForm($form['profile'], $form_state);
 
     $form['submit'] = [

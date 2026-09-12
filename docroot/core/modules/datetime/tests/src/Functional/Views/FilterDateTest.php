@@ -7,16 +7,18 @@ namespace Drupal\Tests\datetime\Functional\Views;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Views filters for datetime fields.
- *
- * @group datetime
  */
+#[Group('datetime')]
+#[RunTestsInSeparateProcesses]
 class FilterDateTest extends ViewTestBase {
 
   /**
@@ -219,7 +221,7 @@ class FilterDateTest extends ViewTestBase {
   public function testExposedFilterWithPager(): void {
     // Expose the empty and not empty operators in a grouped filter.
     $this->drupalGet('admin/structure/views/nojs/handler/test_filter_datetime/default/filter/' . $this->fieldName . '_value');
-    $this->submitForm([], t('Expose filter'));
+    $this->submitForm([], 'Expose filter');
 
     $edit = [];
     $edit['options[operator]'] = '>';
@@ -234,7 +236,7 @@ class FilterDateTest extends ViewTestBase {
     $this->submitForm(['path' => $path], 'Apply');
     $this->drupalGet('admin/structure/views/nojs/display/test_filter_datetime/default/pager_options');
     $this->submitForm(['pager_options[items_per_page]' => 2], 'Apply');
-    $this->submitForm([], t('Save'));
+    $this->submitForm([], 'Save');
 
     // Assert the page without filters.
     $this->drupalGet($path);

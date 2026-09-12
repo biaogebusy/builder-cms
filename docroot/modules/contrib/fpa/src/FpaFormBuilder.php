@@ -66,6 +66,13 @@ class FpaFormBuilder {
    */
   public static function buildFpaPage() {
     $form = \Drupal::service('form_builder')->getForm('\Drupal\user\Form\UserPermissionsForm');
+    // Unset the core permission form's "Hide descriptions" link.
+    if (isset($form['system_compact_link'])) {
+      unset($form['system_compact_link']);
+    }
+    if (isset($form['filters'])) {
+      unset($form['filters']);
+    }
 
     $render = static::buildTable($form);
     $render['#attached']['library'][] = 'fpa/fpa.permissions';
@@ -340,6 +347,8 @@ class FpaFormBuilder {
           0 => $permission_system_name,
           // Readable description.
           1 => (string) $form['permissions'][$key]['description']['#context']['title'],
+          // Permission machine name.
+          2 => $key,
         ];
 
         // Mark current row with current module.
@@ -459,6 +468,7 @@ class FpaFormBuilder {
    */
   protected static function buildTableWrapper(array $permissions_table, array $modules, array $user_roles, array $actions_output) {
     $renderer = \Drupal::service('renderer');
+    $config = \Drupal::config('fpa.settings')->get('disabled_sections');
 
     // @todo Find out if there is a sf way to do this.
     $same_page = FALSE;
@@ -555,6 +565,7 @@ class FpaFormBuilder {
     // Left section contains module list and form submission button.
     $left_section = [
       '#type' => 'container',
+      '#access' => empty($config) || !in_array('modules', $config),
       '#attributes' => [
         'class' => [
           'fpa-left-section',
@@ -774,6 +785,7 @@ class FpaFormBuilder {
       '#description_display' => TRUE,
       '#size' => 5,
       '#options' => $options,
+      '#access' => empty($config) || !in_array('roles', $config),
       '#attributes' => [
         'multiple' => 'multiple',
         // Keep browser from populating this from 'cached' input.
@@ -808,6 +820,7 @@ class FpaFormBuilder {
         FPA_ATTR_CHECKED => t('Checked'),
         FPA_ATTR_NOT_CHECKED => t('Not Checked'),
       ],
+      '#access' => empty($config) || !in_array('status', $config),
       '#attributes' => [],
       '#title_display' => 'before',
       '#id' => 'permissions_checkboxes',
@@ -862,6 +875,8 @@ class FpaFormBuilder {
     $table_wrapper['buttons'] = $actions_output;
 
     $right_section['table_wrapper'] = $table_wrapper;
+
+    $render['hide_container_bottom'] = $hide_container;
 
     return $render;
   }

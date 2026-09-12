@@ -7,6 +7,16 @@ general:
   dependencies:
     - core/drupal
     - core/jquery
+    - core/once
+
+reset_ajax:
+  js:
+    js/bef_reset_ajax.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
 auto_submit:
   js:
     js/auto_submit.js: {}
@@ -14,6 +24,7 @@ auto_submit:
     - core/drupal
     - core/once
     - core/drupal.debounce
+
 select_all_none:
   js:
     js/bef_select_all_none.js: {}
@@ -30,6 +41,7 @@ sliders:
     - core/drupalSettings
     - core/jquery
     - core/once
+    - better_exposed_filters/nouislider
 
 datepickers:
   js:
@@ -39,6 +51,20 @@ datepickers:
     - core/drupalSettings
     - core/jquery
 
+soft_limit:
+  js:
+    js/bef_soft_limit.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupalSettings
+    - core/jquery
+
+scrollable:
+  css:
+    theme:
+      css/bef_scrollable.css: {}
+
 links_use_ajax:
   js:
     js/bef_links_use_ajax.js: {}
@@ -46,41 +72,9 @@ links_use_ajax:
     - core/drupal
     - core/once
 
-nouislider_internal:
+nouislider:
   js:
     /libraries/nouislider/nouislider.min.js: { minified: true }
   css:
     component:
       /libraries/nouislider/nouislider.min.css: { minified: true }
-
-nouislider_internal_npm:
-  js:
-    /libraries/nouislider/dist/nouislider.min.js: { minified: true }
-  css:
-    component:
-      /libraries/nouislider/dist/nouislider.min.css: { minified: true }
-
-nouislider_external:
-  remote: https://refreshless.com/nouislider/
-  version: 15.5.1
-  license:
-    name: MIT
-    url: https://github.com/leongersen/noUiSlider/blob/master/LICENSE.md
-    gpl-compatible: true
-  js:
-    https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.5.1/nouislider.min.js:
-      type: external
-      minified: true
-      attributes:
-        crossorigin: anonymous
-        integrity: "sha512-T5Bneq9hePRO8JR0S/0lQ7gdW+ceLThvC80UjwkMRz+8q+4DARVZ4dqKoyENC7FcYresjfJ6ubaOgIE35irf4w=="
-        referrerpolicy: no-referrer
-  css:
-    component:
-      https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.5.1/nouislider.min.css:
-        type: external
-        minified: true
-        attributes:
-          crossorigin: anonymous
-          integrity: "sha512-qveKnGrvOChbSzAdtSs8p69eoLegyh+1hwOMbmpCViIwj7rn4oJjdmMvWOuyQlTOZgTlZA0N2PXA7iA8/2TUYA=="
-          referrerpolicy: no-referrer

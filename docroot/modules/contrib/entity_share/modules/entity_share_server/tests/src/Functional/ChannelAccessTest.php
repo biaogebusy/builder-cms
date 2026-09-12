@@ -17,6 +17,17 @@ use Drupal\user\UserInterface;
 class ChannelAccessTest extends EntityShareServerFunctionalTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'menu_ui',
+    'language',
+    'content_translation',
+    'node',
+    'entity_share_test',
+  ];
+
+  /**
    * A test user with access to the channel list.
    *
    * @var \Drupal\user\UserInterface

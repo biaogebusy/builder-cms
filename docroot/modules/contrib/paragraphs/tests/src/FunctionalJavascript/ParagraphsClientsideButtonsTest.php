@@ -7,12 +7,16 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\Tests\paragraphs\Traits\ParagraphsCoreVersionUiTestTrait;
 use Drupal\Tests\paragraphs\Traits\ParagraphsLastEntityQueryTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test paragraphs user interface.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsClientsideButtonsTest extends WebDriverTestBase {
 
   use LoginAdminTrait;
@@ -77,7 +81,6 @@ class ParagraphsClientsideButtonsTest extends WebDriverTestBase {
         'default_paragraph_type' => '_none',
         'features' => [
           'duplicate' => 'duplicate',
-          'duplicate' => 'duplicate',
           'collapse_edit_all' => 'collapse_edit_all',
           'add_above' => 'add_above',
         ],
@@ -89,19 +92,8 @@ class ParagraphsClientsideButtonsTest extends WebDriverTestBase {
     // Add a Paragraph type.
     $this->addParagraphsType('text');
     // Add a text field to the text_paragraph type.
-    $this->drupalGet('admin/structure/paragraphs_type/text/fields/add-field');
-    $page->selectFieldOption('new_storage_type', 'plain_text');
-    $this->assertSession()->waitForElementVisible('css', '#string');
-    if ($this->coreVersion('10.3')) {
-      $page->pressButton('Continue');
-    }
-    $page->selectFieldOption('group_field_options_wrapper', 'string');
-    $page->fillField('label', 'Text');
-    $this->assertSession()->waitForElementVisible('css', '#edit-name-machine-name-suffix .link');
-    $page->pressButton('Edit');
-    $page->fillField('field_name', 'text');
-    $page->pressButton('Continue');
-    $page->pressButton('Save settings');
+    $this->addFieldtoParagraphType('text', 'field_text', 'string');
+
     // Add a paragraphed test.
     $this->drupalGet('node/add/paragraphed_test');
     // Add 3 paragraphs.

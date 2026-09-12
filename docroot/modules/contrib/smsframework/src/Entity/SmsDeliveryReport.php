@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Entity;
 
@@ -10,8 +10,8 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Exception\SmsStorageException;
-use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Message\SmsDeliveryReportInterface as StdDeliveryReportInterface;
+use Drupal\sms\Message\SmsMessageReportStatus;
 
 /**
  * Defines the SMS message delivery report entity.
@@ -175,50 +175,50 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
     $fields = parent::baseFieldDefinitions($entity_type);
 
     $fields['message_id'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Message ID'))
-      ->setDescription(t('The message ID assigned to the message.'))
+      ->setLabel(\t('Message ID'))
+      ->setDescription(\t('The message ID assigned to the message.'))
       ->setReadOnly(TRUE)
       ->setDefaultValue('');
 
     $fields['recipient'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Recipient number'))
-      ->setDescription(t('The phone number of the recipient of the message.'))
+      ->setLabel(\t('Recipient number'))
+      ->setDescription(\t('The phone number of the recipient of the message.'))
       ->setReadOnly(TRUE)
       ->setDefaultValue('')
       ->setRequired(TRUE);
 
     $fields['status'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Delivery status'))
-      ->setDescription(t('A status code from \Drupal\sms\Message\SmsMessageReportStatus.'))
+      ->setLabel(\t('Delivery status'))
+      ->setDescription(\t('A status code from \Drupal\sms\Message\SmsMessageReportStatus.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE)
       ->setRevisionable(TRUE);
 
     $fields['status_message'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Status message'))
-      ->setDescription(t('The status message as provided by the gateway API.'))
+      ->setLabel(\t('Status message'))
+      ->setDescription(\t('The status message as provided by the gateway API.'))
       ->setReadOnly(TRUE)
       ->setDefaultValue('')
       ->setRequired(FALSE)
       ->setRevisionable(TRUE);
 
     $fields['status_time'] = BaseFieldDefinition::create('timestamp')
-      ->setLabel(t('Status time'))
-      ->setDescription(t('The time for the current delivery report status.'))
+      ->setLabel(\t('Status time'))
+      ->setDescription(\t('The time for the current delivery report status.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE)
       ->setRevisionable(TRUE);
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
-      ->setLabel(t('Changed'))
-      ->setDescription(t('The time the entity was last updated.'))
+      ->setLabel(\t('Changed'))
+      ->setDescription(\t('The time the entity was last updated.'))
       ->setTranslatable(TRUE)
       ->setRevisionable(TRUE);
 
     $fields['sms_message'] = BaseFieldDefinition::create('entity_reference')
       ->setSetting('target_type', 'sms')
-      ->setLabel(t('SMS Message'))
-      ->setDescription(t('The parent SMS message.'))
+      ->setLabel(\t('SMS Message'))
+      ->setDescription(\t('The parent SMS message.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 
@@ -245,7 +245,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
       ->range(0, 1)
       ->execute();
     if ($revision_ids) {
-      return $storage->loadRevision(key($revision_ids));
+      return $storage->loadRevision(\key($revision_ids));
     }
     return NULL;
   }

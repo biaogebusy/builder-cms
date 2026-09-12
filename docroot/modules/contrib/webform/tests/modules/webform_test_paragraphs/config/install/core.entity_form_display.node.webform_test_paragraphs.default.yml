@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.webform_test_paragraphs.body
     - field.field.node.webform_test_paragraphs.field_webform_test_node_value
     - field.field.node.webform_test_paragraphs.field_webform_test_paragraphs
     - field.field.node.webform_test_paragraphs.field_webform_test_value
@@ -15,16 +14,6 @@ targetEntityType: node
 bundle: webform_test_paragraphs
 mode: default
 content:
-  body:
-    type: text_textarea_with_summary
-    weight: 121
-    region: content
-    settings:
-      rows: 9
-      summary_rows: 3
-      placeholder: ''
-      show_summary: false
-    third_party_settings: {  }
   created:
     type: datetime_timestamp
     weight: 10

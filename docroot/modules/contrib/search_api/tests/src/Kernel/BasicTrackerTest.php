@@ -60,13 +60,6 @@ class BasicTrackerTest extends KernelTestBase {
     $this->installSchema('search_api', ['search_api_item']);
     $this->installConfig('search_api');
 
-    // Do not use a batch for tracking the initial items after creating an
-    // index when running the tests via the GUI. Otherwise, it seems Drupal's
-    // Batch API gets confused and the test fails.
-    if (!Utility::isRunningInCli()) {
-      \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
-    }
-
     $this->index = Index::create([
       'id' => 'index',
       'tracker_settings' => [

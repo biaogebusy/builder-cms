@@ -4,21 +4,26 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\node\Kernel\Views;
 
-use Drupal\node\Entity\NodeType;
+use Drupal\filter\FilterFormatRepositoryInterface;
+use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the node row plugin.
  *
- * @group node
  * @see \Drupal\node\Plugin\views\row\NodeRow
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class RowPluginTest extends ViewsKernelTestBase {
 
+  use ContentTypeCreationTrait;
   use NodeCreationTrait;
   use UserCreationTrait;
 
@@ -38,7 +43,6 @@ class RowPluginTest extends ViewsKernelTestBase {
     'node',
     'node_test_views',
     'text',
-    'user',
   ];
 
   /**
@@ -62,12 +66,17 @@ class RowPluginTest extends ViewsKernelTestBase {
 
     \Drupal::currentUser()->setAccount($this->createUser(['access content']));
 
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
     ]);
-    $node_type->save();
-    node_add_body_field($node_type);
+
+    $display = \Drupal::service('entity_display.repository')
+      ->getViewDisplay('node', 'article', 'teaser');
+    $display_options = $display->getComponent('body');
+    $display_options['settings']['trim_length'] = 25;
+    $display->setComponent('body', $display_options)
+      ->save();
 
     // Create two nodes.
     for ($i = 0; $i < 2; $i++) {
@@ -77,8 +86,7 @@ class RowPluginTest extends ViewsKernelTestBase {
           'body' => [
             [
               'value' => $this->randomMachineName(42),
-              'format' => filter_default_format(),
-              'summary' => $this->randomMachineName(),
+              'format' => $this->container->get(FilterFormatRepositoryInterface::class)->getDefaultFormat()->id(),
             ],
           ],
         ]
@@ -102,7 +110,6 @@ class RowPluginTest extends ViewsKernelTestBase {
     $output = $view->preview();
     $output = (string) $renderer->renderRoot($output);
     foreach ($this->nodes as $node) {
-      $this->assertStringNotContainsString($node->body->summary, $output, 'Make sure the teaser appears in the output of the view.');
       $this->assertStringContainsString($node->body->value, $output, 'Make sure the full text appears in the output of the view.');
     }
 
@@ -111,8 +118,8 @@ class RowPluginTest extends ViewsKernelTestBase {
     $output = $view->preview();
     $output = (string) $renderer->renderRoot($output);
     foreach ($this->nodes as $node) {
-      $this->assertStringContainsString($node->body->summary, $output, 'Make sure the teaser appears in the output of the view.');
-      $this->assertStringNotContainsString($node->body->value, $output);
+      // Using 22 because <p> is being included.
+      $this->assertStringNotContainsString(substr($node->body->value, 22), $output);
     }
   }
 

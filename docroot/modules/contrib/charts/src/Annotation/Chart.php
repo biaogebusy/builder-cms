@@ -32,4 +32,11 @@ class Chart extends Plugin {
    */
   public $types = [];
 
+  /**
+   * The route name of the library's API example page, if it provides one.
+   *
+   * @var string|null
+   */
+  public $example_route;
+
 }

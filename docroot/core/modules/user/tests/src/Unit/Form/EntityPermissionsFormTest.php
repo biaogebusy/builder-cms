@@ -17,14 +17,18 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\user\Form\EntityPermissionsForm;
 use Drupal\user\PermissionHandlerInterface;
 use Drupal\user\RoleStorageInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use Symfony\Component\Routing\Route;
 
 /**
  * Tests the permissions administration form for a bundle.
- *
- * @coversDefaultClass \Drupal\user\Form\EntityPermissionsForm
- * @group user
  */
+#[CoversClass(EntityPermissionsForm::class)]
+#[Group('user')]
+#[IgnoreDeprecations]
 class EntityPermissionsFormTest extends UnitTestCase {
 
   /**
@@ -39,10 +43,10 @@ class EntityPermissionsFormTest extends UnitTestCase {
    * @param bool $found
    *   TRUE if there is a permission to be managed by the form.
    *
-   * @dataProvider providerTestPermissionsByProvider
-   * @covers \Drupal\user\Form\EntityPermissionsForm::access
-   * @covers \Drupal\user\Form\EntityPermissionsForm::permissionsByProvider
+   * @legacy-covers \Drupal\user\Form\EntityPermissionsForm::access
+   * @legacy-covers \Drupal\user\Form\EntityPermissionsForm::permissionsByProvider
    */
+  #[DataProvider('providerTestPermissionsByProvider')]
   public function testPermissionsByProvider(string $dependency_name, bool $found): void {
 
     // Mock the constructor parameters.
@@ -93,12 +97,14 @@ class EntityPermissionsFormTest extends UnitTestCase {
 
     $access_actual = $bundle_form->access($route, $route_match, $bundle);
     $this->assertEquals($found ? AccessResult::allowed() : AccessResult::neutral(), $access_actual);
+    $this->expectUserDeprecationMessage('Drupal\user\Form\EntityPermissionsForm::access() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. Use a permissions check on the route definition instead. See https://www.drupal.org/node/3384745');
   }
 
   /**
    * Provides data for the testPermissionsByProvider method.
    *
    * @return array
+   *   An array of test data.
    */
   public static function providerTestPermissionsByProvider() {
     return [

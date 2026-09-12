@@ -25,7 +25,7 @@ class WebformOptionsCustomTest extends WebformBrowserTestBase {
   /**
    * Test options custom.
    */
-  public function testOptionsCustom() {
+  public function testOptionsCustom(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_options_custom_html');

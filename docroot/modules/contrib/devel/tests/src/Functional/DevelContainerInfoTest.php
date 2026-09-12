@@ -4,12 +4,12 @@ namespace Drupal\Tests\devel\Functional;
 
 use Drupal\Core\Url;
 use Drupal\devel\Routing\RouteSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests container info pages and links.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelContainerInfoTest extends DevelBrowserTestBase {
 
   use DevelWebAssertHelper;

@@ -1,0 +1,18 @@
+ai_command:
+  type: mapping
+  mapping:
+    uuid:
+      type: string
+      label: 'Uuid'
+    command_id:
+      type: string
+      label: 'Command id'
+    label:
+      type: string
+      label: 'Label'
+    prompt:
+      type: prompt
+      label: 'Prompt'
+    weight:
+      type: integer
+      label: 'Wight'

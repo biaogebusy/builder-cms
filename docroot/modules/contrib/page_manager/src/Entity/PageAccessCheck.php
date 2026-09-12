@@ -59,7 +59,7 @@ class PageAccessCheck implements AccessInterface {
         $page = $this->entityTypeManager->getStorage('page')->load($pageId);
       }
       catch (\Exception $e) {
-        // Could not load the entity, we fall back to the default behaviour.
+        // Could not load the entity, we fall back to the default behavior.
       }
     }
 

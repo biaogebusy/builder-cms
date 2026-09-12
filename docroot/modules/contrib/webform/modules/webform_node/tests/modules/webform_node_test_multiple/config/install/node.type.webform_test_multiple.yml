@@ -4,7 +4,7 @@ dependencies: {  }
 name: webform_test_multiple
 type: webform_test_multiple
 description: ''
-help: ''
+help: null
 new_revision: true
 preview_mode: 1
 display_submitted: true

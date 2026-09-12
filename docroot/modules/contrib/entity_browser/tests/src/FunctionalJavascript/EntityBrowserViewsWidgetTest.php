@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\file\Entity\File;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_browser\Element\EntityBrowserElement;
@@ -14,6 +16,8 @@ use Drupal\field\Entity\FieldStorageConfig;
  * @group entity_browser
  * @see \Drupal\entity_browser\Plugin\EntityBrowser\Widget\View
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityBrowserViewsWidgetTest extends EntityBrowserWebDriverTestBase {
 
   /**

@@ -24,7 +24,7 @@ class WebformHandlerActionTest extends WebformBrowserTestBase {
   /**
    * Test action handler.
    */
-  public function testActionHandler() {
+  public function testActionHandler(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

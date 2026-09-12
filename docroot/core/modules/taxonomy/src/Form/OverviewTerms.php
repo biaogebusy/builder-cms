@@ -3,14 +3,17 @@
 namespace Drupal\taxonomy\Form;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\EntityListBuilderInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
+use Drupal\taxonomy\TermStorageInterface;
 use Drupal\taxonomy\VocabularyInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,79 +22,32 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @internal
  */
-class OverviewTerms extends FormBase {
-
-  /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
+class OverviewTerms extends EntityForm implements WorkspaceSafeFormInterface {
 
   /**
    * The term storage handler.
-   *
-   * @var \Drupal\taxonomy\TermStorageInterface
    */
-  protected $storageController;
+  protected TermStorageInterface $storageController;
 
   /**
    * The term list builder.
-   *
-   * @var \Drupal\Core\Entity\EntityListBuilderInterface
    */
-  protected $termListBuilder;
-
-  /**
-   * The renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The entity repository.
-   *
-   * @var \Drupal\Core\Entity\EntityRepositoryInterface
-   */
-  protected $entityRepository;
-
-  /**
-   * The pager manager.
-   *
-   * @var \Drupal\Core\Pager\PagerManagerInterface
-   */
-  protected $pagerManager;
+  protected EntityListBuilderInterface $termListBuilder;
 
   /**
    * Constructs an OverviewTerms object.
-   *
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager service.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
-   *   The entity repository.
-   * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
-   *   The pager manager.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, EntityRepositoryInterface $entity_repository, PagerManagerInterface $pager_manager) {
-    $this->moduleHandler = $module_handler;
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(
+    ModuleHandlerInterface $module_handler,
+    EntityTypeManagerInterface $entity_type_manager,
+    private readonly RendererInterface $renderer,
+    private readonly EntityRepositoryInterface $entityRepository,
+    private readonly PagerManagerInterface $pagerManager,
+  ) {
+    $this->setModuleHandler($module_handler);
+    $this->setEntityTypeManager($entity_type_manager);
     $this->storageController = $entity_type_manager->getStorage('taxonomy_term');
     $this->termListBuilder = $entity_type_manager->getListBuilder('taxonomy_term');
-    $this->renderer = $renderer;
-    $this->entityRepository = $entity_repository;
-    $this->pagerManager = $pager_manager;
   }
 
   /**
@@ -357,7 +313,7 @@ class OverviewTerms extends FormBase {
       ];
       $form['terms'][$key]['status'] = [
         '#type' => 'item',
-        '#markup' => ($term->isPublished()) ? t('Published') : t('Unpublished'),
+        '#markup' => ($term->isPublished()) ? $this->t('Published') : $this->t('Unpublished'),
       ];
 
       // Add a special class for terms with pending revision so we can highlight
@@ -539,12 +495,14 @@ class OverviewTerms extends FormBase {
     foreach ($form_state->getValue('terms') as $tid => $values) {
       if (isset($form['terms'][$tid]['#term'])) {
         $term = $form['terms'][$tid]['#term'];
-        // Give terms at the root level a weight in sequence with terms on previous pages.
+        // Give terms at the root level a weight in sequence with terms on
+        // previous pages.
         if ($values['term']['parent'] == 0 && $term->getWeight() != $weight) {
           $term->setWeight($weight);
           $changed_terms[$term->id()] = $term;
         }
-        // Terms not at the root level can safely start from 0 because they're all on this page.
+        // Terms not at the root level can safely start from 0 because they're
+        // all on this page.
         elseif ($values['term']['parent'] > 0) {
           $level_weights[$values['term']['parent']] = isset($level_weights[$values['term']['parent']]) ? $level_weights[$values['term']['parent']] + 1 : 0;
           if ($level_weights[$values['term']['parent']] != $term->getWeight()) {

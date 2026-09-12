@@ -32,7 +32,7 @@ class WebformEntityPrintCssAlterSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     return [
       PrintEvents::CSS_ALTER => 'alterCss',
     ];

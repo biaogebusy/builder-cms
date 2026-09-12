@@ -1,3 +1,6 @@
+# Menu links for the Admin Toolbar Search module.
+
+# Add Admin Toolbar Search settings page to the configuration menu.
 admin_toolbar_search.settings:
   title: 'Admin Toolbar Search'
   description: 'Configure the Admin Toolbar Search module.'

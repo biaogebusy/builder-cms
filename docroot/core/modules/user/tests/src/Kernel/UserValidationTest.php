@@ -11,12 +11,15 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Verify that user validity checks behave as designed.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserValidationTest extends KernelTestBase {
 
   /**
@@ -38,9 +41,8 @@ class UserValidationTest extends KernelTestBase {
 
   /**
    * Tests user name validation.
-   *
-   * @group legacy
    */
+  #[IgnoreDeprecations]
   public function testUsernames(): void {
     // cSpell:disable
     $test_cases = [
@@ -68,7 +70,7 @@ class UserValidationTest extends KernelTestBase {
       'foo' . chr(13) . 'bar'  => ['Invalid username containing chr(13)', 'assertNotNull'],
       str_repeat('x', UserInterface::USERNAME_MAX_LENGTH + 1) => ['Invalid excessively long username', 'assertNotNull'],
     ];
-    $this->expectDeprecation('user_validate_name() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\user\UserNameValidator::validateName() instead. See https://www.drupal.org/node/3431205');
+    $this->expectUserDeprecationMessage('user_validate_name() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\user\UserNameValidator::validateName() instead. See https://www.drupal.org/node/3431205');
     // cSpell:enable
     foreach ($test_cases as $name => $test_case) {
       [$description, $test] = $test_case;

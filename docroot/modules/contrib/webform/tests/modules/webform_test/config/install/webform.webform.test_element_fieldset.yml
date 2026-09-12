@@ -38,6 +38,12 @@ elements: |
     '#title': fieldset_title_none
     '#description': 'This is a description.'
     '#title_display': none
+  fieldset_title_attributes:
+    '#type': fieldset
+    '#title': fieldset_title_attributes
+    '#title_attributes':
+      class:
+        - custom-class
   fieldset_description_before:
     '#type': fieldset
     '#title': fieldset_description_before

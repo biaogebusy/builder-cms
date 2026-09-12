@@ -79,7 +79,7 @@ abstract class WebformVariantFormBase extends FormBase {
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   * @param \Drupal\webform\WebformInterface $webform
+   * @param \Drupal\webform\WebformInterface|null $webform
    *   The webform.
    * @param string $webform_variant
    *   The webform variant ID.
@@ -91,10 +91,12 @@ abstract class WebformVariantFormBase extends FormBase {
    *   Throws not found exception if the number of variant instances for this
    *   webform exceeds the variant's cardinality.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $webform_variant = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $webform_variant = NULL) {
     $this->webform = $webform;
     try {
-      $this->webformVariant = $this->prepareWebformVariant($webform_variant);
+      if (method_exists($this, 'prepareWebformVariant')) {
+        $this->webformVariant = $this->prepareWebformVariant($webform_variant);
+      }
     }
     catch (PluginNotFoundException $e) {
       throw new NotFoundHttpException("Invalid variant id: '$webform_variant'.");

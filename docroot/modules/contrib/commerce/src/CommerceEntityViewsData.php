@@ -494,6 +494,20 @@ class CommerceEntityViewsData extends EntityViewsData {
       $field_name = $field->getName();
       $field_storage = $field->getFieldStorageDefinition();
 
+      // The field may be declared in code (e.g. by an enabled module) before
+      // its storage schema has actually been installed, such as mid-way
+      // through a module install. In that transient state
+      // DefaultTableMapping::getFieldTableName() would throw
+      // SqlContentEntityStorageException; skip the reverse relationship for
+      // this field instead of fatally erroring the Views data build, which
+      // is reached from unrelated cache rebuilds (e.g. block plugin
+      // discovery) and so can crash pages that have nothing to do with the
+      // field being installed.
+      // @see https://www.drupal.org/project/commerce/issues/3157342
+      if (!$this->tableMapping->getAllFieldTableNames($field_name)) {
+        continue;
+      }
+
       $args = [
         '@label' => $target_entity_type->getSingularLabel(),
         '@entity' => $this->entityType->getLabel(),

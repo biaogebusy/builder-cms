@@ -57,7 +57,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
    *   The Event to process.
    */
   public function onSave(ConfigCrudEvent $event) {
-    $container = \Drupal::getContainer();
+    $container = $this->drupalKernel->getContainer();
     // It is problematic to rebuild the container during the installation.
     $should_process = $container->getParameter('kernel.environment') !== 'install'
       && (!$container->hasParameter('jsonapi_extras.base_path_override_disabled') || !$container->getParameter('jsonapi_extras.base_path_override_disabled'))

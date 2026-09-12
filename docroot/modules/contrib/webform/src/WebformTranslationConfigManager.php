@@ -2,7 +2,8 @@
 
 namespace Drupal\webform;
 
-use Drupal\block\Entity\Block;
+use Drupal\Component\Serialization\Yaml;
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\TypedConfigManagerInterface;
@@ -10,9 +11,9 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\block\Entity\Block;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\webform\Element\WebformHtmlEditor;
 use Drupal\webform\Entity\Webform;
@@ -93,7 +94,7 @@ class WebformTranslationConfigManager implements WebformTranslationConfigManager
    * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
    *   The typed config manager.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, FormBuilderInterface $form_builder, WebformElementManagerInterface $element_manager, WebformTranslationManagerInterface $translation_manager, TypedConfigManagerInterface $typed_config_manager = NULL) {
+  public function __construct(ModuleHandlerInterface $module_handler, FormBuilderInterface $form_builder, WebformElementManagerInterface $element_manager, WebformTranslationManagerInterface $translation_manager, ?TypedConfigManagerInterface $typed_config_manager = NULL) {
     $this->formBuilder = $form_builder;
     $this->moduleHandler = $module_handler;
     $this->elementManager = $element_manager;
@@ -110,22 +111,22 @@ class WebformTranslationConfigManager implements WebformTranslationConfigManager
       if ($config_name === 'webform.settings') {
         $this->alterConfigSettingsForm($config_name, $config_element);
       }
-      elseif (strpos($config_name, 'block.block.') === 0) {
+      elseif (str_starts_with($config_name, 'block.block.')) {
         $this->alterConfigBlockForm($config_name, $config_element);
       }
-      elseif (strpos($config_name, 'field.field.') === 0) {
+      elseif (str_starts_with($config_name, 'field.field.')) {
         $this->alterConfigFieldForm($config_name, $config_element);
       }
-      elseif (strpos($config_name, 'webform.webform_options.') === 0) {
+      elseif (str_starts_with($config_name, 'webform.webform_options.')) {
         $this->alterConfigOptionsForm($config_name, $config_element);
       }
-      elseif (strpos($config_name, 'webform_options_custom.webform_options_custom.') === 0) {
+      elseif (str_starts_with($config_name, 'webform_options_custom.webform_options_custom.')) {
         $this->alterConfigOptionsCustomForm($config_name, $config_element);
       }
-      elseif (strpos($config_name, 'webform_image_select.webform_image_select_images.') === 0) {
+      elseif (str_starts_with($config_name, 'webform_image_select.webform_image_select_images.')) {
         $this->alterConfigImageSelectForm($config_name, $config_element);
       }
-      elseif (strpos($config_name, 'webform.webform.') === 0) {
+      elseif (str_starts_with($config_name, 'webform.webform.')) {
         $this->alterConfigWebformForm($config_name, $config_element, $form, $form_state);
       }
     }
@@ -920,6 +921,7 @@ class WebformTranslationConfigManager implements WebformTranslationConfigManager
   protected function alterTextareaElement(array &$element, $mode = 'yaml') {
     // Source.
     $source_value = trim((string) $element['source']['#markup']);
+    $source_value = Html::decodeEntities($source_value);
     $source_value = preg_replace('#^<span lang="[^"]+">(.*)</span>#ims', '\1', $source_value);
 
     // Translation.

@@ -24,7 +24,7 @@ class WebformSettingsRemoteAddrTest extends WebformBrowserTestBase {
   /**
    * Tests webform disable remote IP address.
    */
-  public function testRemoteAddr() {
+  public function testRemoteAddr(): void {
     $this->drupalLogin($this->rootUser);
 
     // Get submission values and data.

@@ -9,18 +9,23 @@ use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldItemList;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Field\Entity\BaseFieldOverride
- * @group Field
+ * Tests Drupal\Core\Field\Entity\BaseFieldOverride.
  */
+#[CoversClass(BaseFieldOverride::class)]
+#[Group('Field')]
+#[RunTestsInSeparateProcesses]
 class BaseFieldOverrideTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'user',
     'entity_test',
   ];
@@ -34,10 +39,9 @@ class BaseFieldOverrideTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getClass
-   *
-   * @dataProvider getClassTestCases
+   * Tests get class.
    */
+  #[DataProvider('getClassTestCases')]
   public function testGetClass($field_type, $base_field_class, $expected_override_class): void {
     $base_field = BaseFieldDefinition::create($field_type)
       ->setName('Test Field')
@@ -52,7 +56,7 @@ class BaseFieldOverrideTest extends KernelTestBase {
   /**
    * Test cases for ::testGetClass.
    */
-  public static function getClassTestCases() {
+  public static function getClassTestCases(): array {
     return [
       'String (default class)' => [
         'string',
@@ -85,17 +89,19 @@ class BaseFieldOverrideTest extends KernelTestBase {
   /**
    * Tests that some properties are inherited from the BaseFieldDefinition.
    *
-   * @covers ::isReadOnly
-   * @covers ::isComputed
-   * @covers ::isInternal
-   * @covers ::getUniqueIdentifier
+   * @legacy-covers ::isReadOnly
+   * @legacy-covers ::isComputed
+   * @legacy-covers ::isInternal
+   * @legacy-covers ::getUniqueIdentifier
    */
   public function testInheritedProperties(): void {
     $base_field = BaseFieldDefinition::create('string')
       ->setName('Test Field')
       ->setTargetEntityTypeId('entity_test')
       ->setReadOnly(TRUE)
-      /** Ensure that the internal property is inherited from the base field and not the parent class. @see FieldConfigBase::isInternal */
+      // Ensure that the internal property is inherited from the base field and
+      // not the parent class.
+      // @see FieldConfigBase::isInternal
       ->setInternal(TRUE)
       ->setComputed(FALSE);
 
@@ -120,7 +126,7 @@ class BaseFieldOverrideTest extends KernelTestBase {
    * @return int
    *   A primitive default value.
    */
-  public static function defaultValueCallbackPrimitive() {
+  public static function defaultValueCallbackPrimitive(): int {
     return 99;
   }
 

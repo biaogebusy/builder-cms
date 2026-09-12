@@ -10,6 +10,9 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\user\UserDataInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+include_once __DIR__ . '/../gin.theme';
+_gin_include_theme_includes();
+
 /**
  * Service to handle overridden user settings.
  */
@@ -363,21 +366,25 @@ class GinSettings implements ContainerInjectionInterface {
     ];
 
     // Sticky action toggle.
-    $form['sticky_action_buttons'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable sticky action buttons') . $beta_label . $new_label,
-      '#description' => $this->t('Displays all actions of the form in the sticky header.'),
-      '#default_value' => $account ? $this->get('sticky_action_buttons', $account) : $this->getDefault('sticky_action_buttons'),
-    ];
+    if (!_gin_module_is_active('navigation')) {
+      $form['sticky_action_buttons'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable sticky action buttons') . $beta_label . $new_label,
+        '#description' => $this->t('Displays all actions of the form in the sticky header.'),
+        '#default_value' => $account ? $this->get('sticky_action_buttons', $account) : $this->getDefault('sticky_action_buttons'),
+      ];
+    }
 
     // Show secondary toolbar in Frontend.
-    if (!$account) {
-      $form['secondary_toolbar_frontend'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Show Secondary Toolbar in Frontend'),
-        '#description' => $this->t('Show the secondary toolbar in the Frontend (when logged in to Drupal).'),
-        '#default_value' => $this->getDefault('secondary_toolbar_frontend'),
-      ];
+    if (!_gin_module_is_active('navigation')) {
+      if (!$account) {
+        $form['secondary_toolbar_frontend'] = [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Show Secondary Toolbar in Frontend'),
+          '#description' => $this->t('Show the secondary toolbar in the Frontend (when logged in to Drupal).'),
+          '#default_value' => $this->getDefault('secondary_toolbar_frontend'),
+        ];
+      }
     }
 
     // Layout density setting.

@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_attachment_test\Hook\WebformAttachmentTestHooks:
+    class: Drupal\webform_attachment_test\Hook\WebformAttachmentTestHooks
+    autowire: true

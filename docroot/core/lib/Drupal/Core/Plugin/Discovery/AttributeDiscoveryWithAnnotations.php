@@ -63,8 +63,6 @@ class AttributeDiscoveryWithAnnotations extends AttributeClassDiscovery {
   public function getDefinitions() {
     // Clear the annotation loaders of any previous annotation classes.
     AnnotationRegistry::reset();
-    // Register the namespaces of classes that can be used for annotations.
-    AnnotationRegistry::registerLoader('class_exists');
 
     $definitions = parent::getDefinitions();
 
@@ -77,6 +75,12 @@ class AttributeDiscoveryWithAnnotations extends AttributeClassDiscovery {
    * {@inheritdoc}
    */
   protected function parseClass(string $class, \SplFileInfo $fileinfo): array {
+    // Parse using attributes first.
+    $definition = parent::parseClass($class, $fileinfo);
+    if (isset($definition['id'])) {
+      return $definition;
+    }
+
     // The filename is already known, so there is no need to find the
     // file. However, StaticReflectionParser needs a finder, so use a
     // mock version.
@@ -84,21 +88,18 @@ class AttributeDiscoveryWithAnnotations extends AttributeClassDiscovery {
     $parser = new StaticReflectionParser($class, $finder, TRUE);
 
     $reflection_class = $parser->getReflectionClass();
-    // @todo Handle deprecating definitions discovery via annotations in
-    // https://www.drupal.org/project/drupal/issues/3265945.
     /** @var \Drupal\Component\Annotation\AnnotationInterface $annotation */
     if ($annotation = $this->getAnnotationReader()->getClassAnnotation($reflection_class, $this->pluginDefinitionAnnotationName)) {
       $this->prepareAnnotationDefinition($annotation, $class);
-      return ['id' => $annotation->getId(), 'content' => $annotation->get()];
+
+      $id = $annotation->getId();
+      $shortened_annotation_name = '@' . substr($this->pluginDefinitionAnnotationName, strrpos($this->pluginDefinitionAnnotationName, '\\') + 1);
+      // phpcs:ignore
+      @trigger_error(sprintf('Using %s annotation for plugin with ID %s is deprecated and is removed from drupal:13.0.0. Use a %s attribute instead. See https://www.drupal.org/node/3395575', $shortened_annotation_name, $id, $this->pluginDefinitionAttributeName), E_USER_DEPRECATED);
+
+      return ['id' => $id, 'content' => $annotation->get()];
     }
 
-    // Annotations use static reflection and are able to analyze a class that
-    // extends classes or uses traits that do not exist. Attribute discovery
-    // will trigger a fatal error with such classes, so only call it if the
-    // class has a class attribute.
-    if ($reflection_class->hasClassAttribute($this->pluginDefinitionAttributeName)) {
-      return parent::parseClass($class, $fileinfo);
-    }
     return ['id' => NULL, 'content' => NULL];
   }
 
@@ -116,7 +117,7 @@ class AttributeDiscoveryWithAnnotations extends AttributeClassDiscovery {
    * @see \Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery::prepareAnnotationDefinition()
    * @see \Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery::prepareAnnotationDefinition()
    */
-  private function prepareAnnotationDefinition(AnnotationInterface $annotation, string $class): void {
+  protected function prepareAnnotationDefinition(AnnotationInterface $annotation, string $class): void {
     $annotation->setClass($class);
     if (!$annotation->getProvider()) {
       $annotation->setProvider($this->getProviderFromNamespace($class));
@@ -135,7 +136,7 @@ class AttributeDiscoveryWithAnnotations extends AttributeClassDiscovery {
    * @see \Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery::getAnnotationReader()
    * @see \Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery::getAnnotationReader()
    */
-  private function getAnnotationReader() : SimpleAnnotationReader {
+  protected function getAnnotationReader() : SimpleAnnotationReader {
     if (!isset($this->annotationReader)) {
       $this->annotationReader = new SimpleAnnotationReader();
 

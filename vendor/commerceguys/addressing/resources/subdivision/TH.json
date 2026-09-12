@@ -26,10 +26,6 @@
 			"name": "Khon Kaen",
 			"local_name": "ขอนแก่น"
 		},
-		"38": {
-			"name": "Bueng Kan",
-			"local_name": "จังหวัด บึงกาฬ"
-		},
 		"22": {
 			"name": "Chanthaburi",
 			"local_name": "จันทบุรี"
@@ -51,7 +47,7 @@
 			"local_name": "ชัยภูมิ"
 		},
 		"86": {
-			"name": "Chumpon",
+			"name": "Chumphon",
 			"local_name": "ชุมพร"
 		},
 		"57": {
@@ -110,6 +106,10 @@
 			"name": "Nan",
 			"local_name": "น่าน"
 		},
+		"38": {
+			"name": "Bueng Kan",
+			"local_name": "บึงกาฬ"
+		},
 		"31": {
 			"name": "Buri Ram",
 			"local_name": "บุรีรัมย์"
@@ -143,7 +143,7 @@
 			"local_name": "พังงา"
 		},
 		"93": {
-			"name": "Phattalung",
+			"name": "Phatthalung",
 			"local_name": "พัทลุง"
 		},
 		"66": {
@@ -267,7 +267,7 @@
 			"local_name": "สุโขทัย"
 		},
 		"72": {
-			"name": "Suphanburi",
+			"name": "Suphan Buri",
 			"local_name": "สุพรรณบุรี"
 		},
 		"84": {

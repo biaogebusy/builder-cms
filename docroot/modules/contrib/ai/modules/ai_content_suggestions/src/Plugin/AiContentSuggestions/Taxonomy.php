@@ -7,12 +7,10 @@ namespace Drupal\ai_content_suggestions\Plugin\AiContentSuggestions;
 use Drupal\ai\Entity\AiPrompt;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai_content_suggestions\AiContentSuggestionsPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -29,41 +27,27 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 final class Taxonomy extends AiContentSuggestionsPluginBase {
 
   /**
-   * Configuration object for this plugin.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Config\Config
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  private $promptConfig;
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('ai.provider'),
-      $container->get('config.factory'),
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    AiProviderPluginManager $providerPluginManager,
-    ConfigFactoryInterface $configFactory,
-    protected EntityTypeManagerInterface $entityTypeManager,
-    protected EntityFieldManagerInterface $entityFieldManager,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $providerPluginManager, $configFactory);
-    $this->promptConfig = $configFactory->getEditable('ai_content_suggestions.prompts');
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->entityFieldManager = $container->get('entity_field.manager');
+    return $instance;
   }
 
   /**

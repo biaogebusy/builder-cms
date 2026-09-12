@@ -6,11 +6,13 @@ use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use Drupal\node\NodeGrantsHelper;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\search_api\Kernel\ResultsTrait;
 use Drupal\user\Entity\Role;
@@ -327,7 +329,13 @@ class ContentAccessTest extends ProcessorTestBase {
     }
 
     // Verify that the anonymous user has exactly that grant.
-    $grants = node_access_grants('view', new AnonymousUserSession());
+    $account = new AnonymousUserSession();
+    $grants = DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4.0',
+      fn () => \Drupal::service(NodeGrantsHelper::class)->nodeAccessGrants('view', $account),
+      fn () => node_access_grants('view', $account),
+    );
     $this->assertEquals(['all' => [0]], $grants);
   }
 

@@ -6,7 +6,12 @@ use Drupal\Core\DrupalKernelInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Gets the root path used by the Update Manager to install or update projects.
+ * Gets the root path used by the legacy Update Manager.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3522119
  */
 class UpdateRoot {
 
@@ -32,7 +37,7 @@ class UpdateRoot {
   protected $updateRoot;
 
   /**
-   * Constructs an UpdateRootFactory instance.
+   * Constructs an UpdateRoot instance.
    *
    * @param \Drupal\Core\DrupalKernelInterface $drupal_kernel
    *   The Drupal kernel.
@@ -40,6 +45,7 @@ class UpdateRoot {
    *   The request stack.
    */
   public function __construct(DrupalKernelInterface $drupal_kernel, RequestStack $request_stack) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
     $this->drupalKernel = $drupal_kernel;
     $this->requestStack = $request_stack;
   }
@@ -61,6 +67,7 @@ class UpdateRoot {
    * specific subdirectories of this root path.
    *
    * @return string
+   *   The root path for project installation or update.
    */
   public function __toString(): string {
     // Return the $updateRoot when it is set.

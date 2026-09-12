@@ -209,4 +209,36 @@ class MenuItemExtrasRenderTest extends BrowserTestBase {
     }
   }
 
+  /**
+   * Test region-specific menu theme suggestions use the block region.
+   */
+  public function testRegionSpecificMenuThemeSuggestion() {
+    $variables = [
+      'content' => [
+        '#theme' => 'menu__' . $this->menu->id(),
+        '#menu_name' => $this->menu->id(),
+        '#attributes' => [],
+      ],
+      'elements' => [
+        '#id' => $this->block->id(),
+      ],
+    ];
+
+    menu_item_extras_preprocess_block($variables);
+
+    $this->assertSame('header', $variables['content']['#menu_item_extras_region']);
+    $this->assertSame('header', $variables['content']['#attributes']['data-region']);
+
+    $suggestions = menu_item_extras_theme_suggestions_menu([
+      'menu_name' => $this->menu->id(),
+      'menu_item_extras_region' => $variables['content']['#menu_item_extras_region'],
+      'attributes' => [
+        'data-region' => 'footer',
+      ],
+    ]);
+
+    $this->assertContains('menu__extras__testmenu__header', $suggestions);
+    $this->assertNotContains('menu__extras__testmenu__footer', $suggestions);
+  }
+
 }

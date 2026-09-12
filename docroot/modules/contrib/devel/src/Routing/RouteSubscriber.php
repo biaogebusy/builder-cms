@@ -20,27 +20,17 @@ use Symfony\Component\Routing\RouteCollection;
 class RouteSubscriber extends RouteSubscriberBase {
 
   /**
-   * The entity type manager service.
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The router service.
-   */
-  protected RouteProviderInterface $routeProvider;
-
-  /**
    * Constructs a new RouteSubscriber object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Routing\RouteProviderInterface $router_provider
+   * @param \Drupal\Core\Routing\RouteProviderInterface $routeProvider
    *   The router service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_manager, RouteProviderInterface $router_provider) {
-    $this->entityTypeManager = $entity_manager;
-    $this->routeProvider = $router_provider;
-  }
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected RouteProviderInterface $routeProvider,
+  ) {}
 
   /**
    * {@inheritdoc}

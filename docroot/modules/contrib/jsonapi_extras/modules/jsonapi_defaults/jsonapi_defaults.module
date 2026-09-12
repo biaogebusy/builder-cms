@@ -149,7 +149,7 @@ function _jsonapi_defaults_convert_raw_value($raw_value) {
   $value = [];
   $raw_value = (!is_string($raw_value)) ? '' : $raw_value;
   foreach (preg_split('/\r\n|[\r\n]/', $raw_value) as $param) {
-    if (strpos($param ?? '', '=') !== FALSE) {
+    if (strpos($param ?: '', '=') !== FALSE) {
       $a = explode('=', $param);
       $key = $a[0];
       $val = $a[1];

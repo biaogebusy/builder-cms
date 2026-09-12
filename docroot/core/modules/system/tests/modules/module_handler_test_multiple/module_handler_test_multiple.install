@@ -2,13 +2,15 @@
 
 /**
  * @file
- * Install, update and uninstall functions for the module_handler_test_multiple module.
+ * Install functions for the module_handler_test_multiple module.
  */
+
+declare(strict_types=1);
 
 /**
  * Implements hook_install().
  */
-function module_handler_test_multiple_install() {
+function module_handler_test_multiple_install(): void {
   // Set weight of module.
   module_set_weight('module_handler_test_multiple', 1);
 }

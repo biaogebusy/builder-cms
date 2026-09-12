@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Components;
 
 use Drupal\Core\Render\Component\Exception\IncompatibleComponentSchema;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests invalid render options for components.
- *
- * @group sdc
  */
+#[Group('sdc')]
+#[RunTestsInSeparateProcesses]
 class ComponentInvalidReplacementTest extends ComponentKernelTestBase {
 
   /**

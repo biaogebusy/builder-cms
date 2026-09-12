@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\admin_toolbar_tools\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -22,6 +24,7 @@ class AdminToolbarToolsToolbarControllerTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'admin_toolbar',
     'admin_toolbar_tools',
     // Required to test link '/admin/flush/views' to flush views cache.
     'views',

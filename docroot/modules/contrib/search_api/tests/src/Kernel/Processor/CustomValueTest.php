@@ -53,6 +53,22 @@ class CustomValueTest extends ProcessorTestBase {
     $field->setConfiguration(['value' => '[node:type] [comment:author]']);
     $this->index->addField($field);
 
+    $field = new Field($this->index, 'custom_value_only_nodes');
+    $field->setType('string');
+    $field->setDatasourceId('entity:node');
+    $field->setPropertyPath('search_api_custom_value');
+    $field->setLabel('Node type');
+    $field->setConfiguration(['value' => '[node:type] [comment:author]']);
+    $this->index->addField($field);
+
+    $field = new Field($this->index, 'custom_value_only_comments');
+    $field->setType('string');
+    $field->setDatasourceId('entity:comment');
+    $field->setPropertyPath('search_api_custom_value');
+    $field->setLabel('Comment author');
+    $field->setConfiguration(['value' => '[node:type] [comment:author]']);
+    $this->index->addField($field);
+
     $field = new Field($this->index, 'custom_value_fixed');
     $field->setType('string');
     $field->setPropertyPath('custom_value');
@@ -102,11 +118,13 @@ class CustomValueTest extends ProcessorTestBase {
     $this->assertEquals($expected, $fields['custom_value_nodes']->getValues());
     $this->assertEquals([], $fields['custom_value_comments']->getValues());
     $this->assertEquals($expected, $fields['custom_value_both']->getValues());
+    $this->assertEquals($expected, $fields['custom_value_only_nodes']->getValues());
     $this->assertEquals(['Value without tokens'], $fields['custom_value_fixed']->getValues());
+    $this->assertArrayNotHasKey('custom_value_only_comments', $fields);
 
     // Test field value on comment.
     $comment = $this->entities['comment'];
-    $id = Utility::createCombinedId('entity:node', $comment->id() . ':en');
+    $id = Utility::createCombinedId('entity:comment', $comment->id() . ':en');
     $item = \Drupal::getContainer()
       ->get('search_api.fields_helper')
       ->createItemFromObject($this->index, $comment->getTypedData(), $id);
@@ -117,7 +135,9 @@ class CustomValueTest extends ProcessorTestBase {
     $this->assertEquals([], $fields['custom_value_nodes']->getValues());
     $this->assertEquals($expected, $fields['custom_value_comments']->getValues());
     $this->assertEquals($expected, $fields['custom_value_both']->getValues());
+    $this->assertEquals($expected, $fields['custom_value_only_comments']->getValues());
     $this->assertEquals(['Value without tokens'], $fields['custom_value_fixed']->getValues());
+    $this->assertArrayNotHasKey('custom_value_only_nodes', $fields);
   }
 
 }

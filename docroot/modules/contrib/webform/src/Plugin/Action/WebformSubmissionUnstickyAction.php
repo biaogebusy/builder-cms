@@ -27,7 +27,7 @@ class WebformSubmissionUnstickyAction extends ActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     /** @var \Drupal\webform\WebformSubmissionInterface $object */
     $result = $object->sticky->access('edit', $account, TRUE)
       ->andIf($object->access('update', $account, TRUE));

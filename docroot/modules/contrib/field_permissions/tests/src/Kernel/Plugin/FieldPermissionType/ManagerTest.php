@@ -101,7 +101,7 @@ class ManagerTest extends KernelTestBase {
   /**
    * Tests FieldPermissionTypeInterface::appliesToField().
    *
-   * @covers \Drupal\field_permissions\Plugin\FieldPermissionTypeInterface::appliesToField
+   * @covers \Drupal\field_permissions\Plugin\FieldPermissionType\Base::appliesToField
    */
   public function testAppliesToField(): void {
     $state = $this->container->get('state');

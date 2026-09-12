@@ -6,7 +6,9 @@ namespace Drupal\devel_php\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\devel\DevelDumperManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * Defines a form that allows privileged users to execute arbitrary PHP code.
@@ -16,26 +18,27 @@ class ExecutePHP extends FormBase {
   /**
    * Number of rows for the textarea.
    */
-  public const ROWS_NUMBER = 20;
+  public const int ROWS_NUMBER = 20;
 
   /**
    * The devel dumper manager service.
    *
    * @var \Drupal\devel\DevelDumperManagerInterface
    */
-  protected $develDumper;
+  protected DevelDumperManagerInterface $develDumper;
 
   /**
    * The session service.
    *
    * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
    */
-  protected $session;
+  protected SessionInterface $session;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
+    /** @var static $instance */
     $instance = parent::create($container);
     $instance->develDumper = $container->get('devel.dumper');
     $instance->session = $container->get('session');
@@ -94,14 +97,15 @@ class ExecutePHP extends FormBase {
   /**
    * {@inheritdoc}
    *
-   * @SuppressWarnings(PHPMD.EvalExpression)
+   * @SuppressWarnings("PHPMD.EvalExpression")
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $code = $form_state->getValue('code');
 
     try {
       \ob_start();
-      // phpcs:ignore
+      // phpcs:disable
+      // @phpstan-ignore-next-line
       print eval($code);
       // phpcs:enable
       $this->develDumper->message(\ob_get_clean());

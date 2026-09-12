@@ -3,7 +3,7 @@
 namespace Drupal\webform\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\webform\Utility\WebformFormHelper;
 
 /**
@@ -11,7 +11,7 @@ use Drupal\webform\Utility\WebformFormHelper;
  *
  * @FormElement("webform_table_row")
  */
-class WebformTableRow extends RenderElement {
+class WebformTableRow extends RenderElementBase {
 
   /**
    * {@inheritdoc}

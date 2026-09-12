@@ -6,10 +6,14 @@ namespace Drupal\Tests\block_content\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Block Content Type Xml Basic Auth.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class BlockContentTypeXmlBasicAuthTest extends BlockContentTypeResourceTestBase {
 
   use BasicAuthResourceTestTrait;
@@ -33,7 +37,7 @@ class BlockContentTypeXmlBasicAuthTest extends BlockContentTypeResourceTestBase 
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

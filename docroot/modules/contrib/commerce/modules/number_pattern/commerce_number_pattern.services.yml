@@ -1,5 +1,13 @@
 services:
+  _defaults:
+    autowire: true
   plugin.manager.commerce_number_pattern:
     class: Drupal\commerce_number_pattern\NumberPatternManager
     parent: default_plugin_manager
   Drupal\commerce_number_pattern\NumberPatternManager: '@plugin.manager.commerce_number_pattern'
+
+  Drupal\commerce_number_pattern\Hook\CommerceNumberPatternHooks:
+    class: Drupal\commerce_number_pattern\Hook\CommerceNumberPatternHooks
+
+  Drupal\commerce_number_pattern\Hook\CommerceNumberPatternTokenHooks:
+    class: Drupal\commerce_number_pattern\Hook\CommerceNumberPatternTokenHooks

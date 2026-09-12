@@ -1,0 +1,75 @@
+@startuml
+
+' This is the PlantUML (https://plantuml.com/) source used to generate the UML
+' detail view diagram of the precondition system (detail.png). Said diagram can
+' be regenerated from this source at https://plantuml-editor.kkeisuke.com/ or with
+' the PhpStorm plugin at https://plugins.jetbrains.com/plugin/7017-plantuml-integration.
+' Optimize it with ImageOptim: https://imageoptim.com/.
+
+!include ../resources/settings.puml
+
+namespace Exception {
+
+    class PreconditionException <<RuntimeException>> {
+        PreconditionInterface $precondition
+        +getPrecondition() : PreconditionInterface
+    }
+
+}
+
+namespace Precondition {
+
+    interface PreconditionInterface {
+        +getName()
+        +getDescription()
+        +getStatusMessage()
+        +isFulfilled() : bool
+        +assertIsFulfilled() : void
+        +getLeaves() : PreconditionInterface[]
+    }
+
+    abstract class AbstractPrecondition implements PreconditionInterface {
+        +final getStatusMessage()
+        +final isFulfilled() : void
+        +final getLeaves() : [self]
+        {abstract} #getFulfilledStatusMessage()
+    }
+
+    class ConcretePrecondition extends AbstractPrecondition {
+        +getName()
+        +getDescription()
+        +assertIsFulfilled() : void
+        #getFulfilledStatusMessage()
+    }
+
+    abstract AbstractPreconditionsTree implements PreconditionInterface {
+        -PreconditionInterface[] $children
+        +__construct(...$children)
+        +getStatusMessage()
+        +isFulfilled() : bool
+        +assertIsFulfilled() : void
+        +getLeaves() : PreconditionInterface[]
+        {abstract} #getFulfilledStatusMessage()
+    }
+
+    class ConcretePreconditionsTree extends AbstractPreconditionsTree {
+        +__construct(...$children)
+        +getName()
+        +getDescription()
+        #getFulfilledStatusMessage()
+    }
+
+}
+
+Exception.PreconditionException *-down- "1   " Precondition.PreconditionInterface
+Precondition.PreconditionInterface *-up- "0..*  " Precondition.PreconditionInterface : "children "
+
+' These help center PreconditionInterface better.
+class Precondition.LeftAligner
+hide LeftAligner
+class Precondition.RightAligner
+hide RightAligner
+Precondition.PreconditionInterface -left- Precondition.LeftAligner
+Precondition.PreconditionInterface -right- Precondition.RightAligner
+
+@enduml

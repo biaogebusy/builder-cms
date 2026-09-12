@@ -1,0 +1,18 @@
+{#
+/**
+ * @file
+ * Default theme implementation for order item title field formatter.
+ *
+ * Available variables:
+ * - label: The order item label.
+ * - sku: The product variation SKU (if the order item references a variation).
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="commerce-order-item-title">
+  <div class="commerce-order-item-title__label">{{ label }}</div>
+  {% if sku %}
+    <div class="commerce-order-item-title__sku commerce-text--muted">SKU: {{ sku }}</div>
+  {% endif %}
+</div>

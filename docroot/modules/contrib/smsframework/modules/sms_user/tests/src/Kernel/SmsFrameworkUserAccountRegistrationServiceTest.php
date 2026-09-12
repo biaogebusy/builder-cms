@@ -1,19 +1,19 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms_user\Kernel;
 
-use Drupal\Tests\sms\Kernel\SmsFrameworkKernelBase;
 use Drupal\Core\Test\AssertMailTrait;
-use Drupal\sms\Entity\SmsMessage;
-use Drupal\user\Entity\User;
-use Drupal\user\UserInterface;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\sms\Direction;
 use Drupal\sms\Entity\PhoneNumberSettings;
 use Drupal\sms\Entity\SmsGatewayInterface;
-use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsMessage;
+use Drupal\Tests\sms\Kernel\SmsFrameworkKernelBase;
+use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  * Tests account registration.
@@ -25,9 +25,6 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
 
   use AssertMailTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'system',
     'sms',
@@ -74,9 +71,6 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
    */
   protected $phoneNumberSettings;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installSchema('system', ['sequences']);
@@ -96,7 +90,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
 
     $this->phoneField = FieldStorageConfig::create([
       'entity_type' => 'user',
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => \mb_strtolower($this->randomMachineName()),
       'type' => 'telephone',
     ]);
     $this->phoneField->save();
@@ -235,7 +229,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $message = "E " . $email . "\nU " . $username;
     $this->sendIncomingMessage($sender_number, $message);
 
-    $user = user_load_by_name($username);
+    $user = \user_load_by_name($username);
     static::assertTrue($user instanceof UserInterface, 'User was created');
     static::assertEquals($username, $user->getAccountName());
     static::assertEquals($email, $user->getEmail());
@@ -303,7 +297,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $message = "$password $username $password2";
     $this->sendIncomingMessage('+123123123', $message);
 
-    static::assertFalse(user_load_by_name($username) instanceof UserInterface, 'User was not created');
+    static::assertFalse(\user_load_by_name($username) instanceof UserInterface, 'User was not created');
   }
 
   /**
@@ -553,7 +547,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
    */
   protected function getLastUser(): ?UserInterface {
     $users = User::loadMultiple();
-    return $users ? end($users) : NULL;
+    return $users ? \end($users) : NULL;
   }
 
   /**

@@ -1,16 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Flood\FloodInterface;
-use Drupal\Core\Messenger\MessengerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\sms\Provider\PhoneNumberVerificationInterface;
+use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\sms\Provider\PhoneNumberVerificationInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form to accept a verification code.

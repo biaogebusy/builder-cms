@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Plugin\Validation\Constraint\CompositeConstraintBase;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Entity Validation API.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityValidationTest extends EntityKernelTestBase {
 
   /**
@@ -20,21 +27,29 @@ class EntityValidationTest extends EntityKernelTestBase {
   protected static $modules = ['filter', 'text', 'language'];
 
   /**
+   * The name of the entity.
+   *
    * @var string
    */
   protected $entityName;
 
   /**
+   * The user for the entity.
+   *
    * @var \Drupal\user\Entity\User
    */
   protected $entityUser;
 
   /**
+   * Text for the test field on the entity.
+   *
    * @var string
    */
   protected $entityFieldText;
 
   /**
+   * An array of plugin managers with clearable cached definitions.
+   *
    * @var array
    */
   protected array $cachedDiscoveries;
@@ -73,7 +88,7 @@ class EntityValidationTest extends EntityKernelTestBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The created test entity.
    */
-  protected function createTestEntity($entity_type) {
+  protected function createTestEntity($entity_type): EntityInterface {
     $this->entityName = $this->randomMachineName();
     $this->entityUser = $this->createUser();
 
@@ -102,11 +117,7 @@ class EntityValidationTest extends EntityKernelTestBase {
 
     // Use the protected property on the cache_clearer first to check whether
     // the constraint manager is added there.
-
-    // Ensure that the proxy class is initialized, which has the necessary
-    // method calls attached.
-    \Drupal::service('plugin.cache_clearer');
-    $plugin_cache_clearer = \Drupal::service('drupal.proxy_original_service.plugin.cache_clearer');
+    $plugin_cache_clearer = \Drupal::service('plugin.cache_clearer');
     $get_cached_discoveries = function () {
       return $this->cachedDiscoveries;
     };
@@ -118,8 +129,23 @@ class EntityValidationTest extends EntityKernelTestBase {
     }
     $this->assertContains('Drupal\Core\Validation\ConstraintManager', $cached_discovery_classes);
 
+    // Add an extra 'changed' field to all entity types. Use a unique name to
+    // avoid conflicting with the 'changed_test' field used by some test entity
+    // types.
+    foreach (EntityTestHelper::getEntityTypes() as $entity_type) {
+      \Drupal::state()->set("$entity_type.additional_base_field_definitions", [
+        'changed_no_test' => BaseFieldDefinition::create('changed')
+          ->setLabel(new TranslatableMarkup('Changed'))
+          ->setDescription(new TranslatableMarkup('The time that the entity was last edited.'))
+          ->setTranslatable(TRUE),
+      ]);
+    }
+    $entity_field_manager = \Drupal::service('entity_field.manager');
+    assert($entity_field_manager instanceof EntityFieldManagerInterface);
+    $entity_field_manager->clearCachedFieldDefinitions();
+
     // All entity variations have to have the same results.
-    foreach (entity_test_entity_types() as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes() as $entity_type) {
       $this->checkValidation($entity_type);
     }
   }
@@ -129,8 +155,10 @@ class EntityValidationTest extends EntityKernelTestBase {
    *
    * @param string $entity_type
    *   The entity type to run the tests with.
+   *
+   * @see \Drupal\KernelTests\Core\Entity\EntityValidationTest::testValidation()
    */
-  protected function checkValidation($entity_type) {
+  protected function checkValidation($entity_type): void {
     $entity = $this->createTestEntity($entity_type);
     $violations = $entity->validate();
     $this->assertEquals(0, $violations->count(), 'Validation passes.');
@@ -145,8 +173,9 @@ class EntityValidationTest extends EntityKernelTestBase {
     $test_entity = clone $entity;
     $test_entity->uuid->value = $this->randomString(129);
     $violations = $test_entity->validate();
-    $this->assertEquals(1, $violations->count(), 'Validation failed.');
-    $this->assertEquals('UUID: may not be longer than 128 characters.', $violations[0]->getMessage());
+    $this->assertEquals(2, $violations->count(), 'Validation failed.');
+    $this->assertEquals('This is not a valid UUID.', $violations[0]->getMessage());
+    $this->assertEquals('UUID: may not be longer than 128 characters.', $violations[1]->getMessage());
 
     $test_entity = clone $entity;
     $langcode_key = $this->entityTypeManager->getDefinition($entity_type)->getKey('langcode');
@@ -192,6 +221,31 @@ class EntityValidationTest extends EntityKernelTestBase {
     $this->assertEquals($test_entity, $violation->getRoot()->getValue(), 'Violation root is entity.');
     $this->assertEquals('field_test_text.0.format', $violation->getPropertyPath(), 'Violation property path is correct.');
     $this->assertEquals($test_entity->field_test_text->format, $violation->getInvalidValue(), 'Violation contains invalid value.');
+
+    // Invalid 'created' timestamp.
+    $test_entity = clone $entity;
+    $test_entity->set('created', -2147483649);
+    $violations = $test_entity->validate();
+    $this->assertEquals(1, $violations->count(), 'Validation failed for invalid created timestamp.');
+    $this->assertEquals('This value should be between "-2147483648" and "2147483648".', html_entity_decode(strip_tags((string) $violations[0]->getMessage())));
+
+    // Valid 'created' timestamp.
+    $test_entity->set('created', 1234567890);
+    $violations = $test_entity->validate();
+    $this->assertEquals(0, $violations->count(), 'Valid created timestamp passed validation.');
+
+    // Invalid 'changed' timestamp. Use the 'changed_no_test' field created
+    // specifically for this test.
+    $test_entity = clone $entity;
+    $test_entity->set('changed_no_test', -2147483649);
+    $violations = $test_entity->validate();
+    $this->assertEquals(1, $violations->count(), 'Validation failed for invalid changed timestamp.');
+    $this->assertEquals('This value should be between "-2147483648" and "2147483648".', html_entity_decode(strip_tags((string) $violations[0]->getMessage())));
+
+    // Valid 'changed' timestamp.
+    $test_entity->set('changed_no_test', 1234567890);
+    $violations = $test_entity->validate();
+    $this->assertEquals(0, $violations->count(), 'Valid changed timestamp passed validation.');
   }
 
   /**

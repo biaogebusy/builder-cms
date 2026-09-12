@@ -8,7 +8,7 @@ dependencies:
   - drupal:layout_builder
   - media_library_form_element:media_library_form_element
 
-# Information added by Drupal.org packaging script on 2024-09-16
-version: '1.2.1'
+# Information added by Drupal.org packaging script on 2026-01-18
+version: '1.2.3'
 project: 'bootstrap_styles'
-datestamp: 1726504419
+datestamp: 1768758182

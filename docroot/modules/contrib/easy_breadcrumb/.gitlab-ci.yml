@@ -97,3 +97,20 @@ include:
 #                          .,(((((((((((((((((((((((((.
 #
 ###################################################################################
+#
+# Linting jobs are passing so any issue that breaks them should fix them.
+#
+cspell:
+  allow_failure: false
+phpcs:
+  allow_failure: false
+phpstan:
+  allow_failure: false
+eslint:
+  allow_failure: false
+####################################################################################
+#
+#  PHPUnit jobs are passing so any issue that breaks them should fix them.
+#
+phpunit:
+  allow_failure: false

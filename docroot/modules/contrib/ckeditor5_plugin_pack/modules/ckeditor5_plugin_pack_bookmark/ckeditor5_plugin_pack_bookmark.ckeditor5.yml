@@ -1,0 +1,14 @@
+ckeditor5_plugin_pack_bookmark__bookmark:
+  ckeditor5:
+    plugins:
+      - bookmark.Bookmark
+  drupal:
+    label: Bookmark
+    elements:
+      - <a>
+      - <a id>
+    library: ckeditor5_plugin_pack_bookmark/bookmark
+    admin_library: ckeditor5_plugin_pack_bookmark/admin.bookmark
+    toolbar_items:
+      bookmark:
+        label: Bookmark

@@ -2,37 +2,9 @@ name: 'Entity Share Test'
 description: 'Provides config to test Entity Share.'
 type: module
 package: 'Testing'
-dependencies:
-  - block_field:block_field
-  - drupal:block_content
-  - drupal:comment
-  - drupal:content_translation
-  - drupal:datetime
-  - drupal:datetime_range
-  - drupal:field
-  - drupal:file
-  - drupal:image
-  - drupal:language
-  - drupal:link
-  - drupal:media
-  - drupal:menu_ui
-  - drupal:metatag
-  - drupal:node
-  - drupal:options
-  - drupal:path
-  - drupal:system
-  - drupal:taxonomy
-  - drupal:telephone
-  - drupal:text
-  - drupal:user
-  - dynamic_entity_reference:dynamic_entity_reference
-  - entity_reference_revisions:entity_reference_revisions
-  - field_group:field_group
-  - paragraphs:paragraphs
-  - paragraphs:paragraphs_test
 
 config_devel:
-  install:
+  optional:
     - block_content.type.es_test
     - comment.type.es_test
     - core.base_field_override.comment.es_test.changed
@@ -161,7 +133,7 @@ config_devel:
     - paragraphs.paragraphs_type.es_test
     - taxonomy.vocabulary.es_test
 
-# Information added by Drupal.org packaging script on 2025-08-13
-version: '4.0.0-alpha1'
+# Information added by Drupal.org packaging script on 2025-12-03
+version: '4.0.0-alpha2'
 project: 'entity_share'
-datestamp: 1755088824
+datestamp: 1764766397

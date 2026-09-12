@@ -1,0 +1,8 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_indent_block__indent_block:
+  type: mapping
+  label: 'Indent Block'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+

@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\config_test\TestInstallStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\TypedConfigManager;
@@ -13,6 +16,8 @@ use Drupal\Tests\SchemaCheckTestTrait;
  *
  * @group config
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceTestViewsTest extends KernelTestBase {
 
   use SchemaCheckTestTrait;

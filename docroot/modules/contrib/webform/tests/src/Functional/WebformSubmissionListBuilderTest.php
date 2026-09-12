@@ -28,7 +28,7 @@ class WebformSubmissionListBuilderTest extends WebformBrowserTestBase {
   /**
    * Tests results.
    */
-  public function testResults() {
+  public function testResults(): void {
     $assert_session = $this->assertSession();
 
     $own_submission_user = $this->drupalCreateUser([
@@ -66,7 +66,11 @@ class WebformSubmissionListBuilderTest extends WebformBrowserTestBase {
     $this->drupalGet('/admin/structure/webform/manage/' . $webform->id() . '/results/submissions');
 
     // Check state options with totals.
-    $assert_session->responseContains('<select data-drupal-selector="edit-state" id="edit-state" name="state" class="form-select"><option value="" selected="selected">All [4]</option><option value="starred">Starred [1]</option><option value="unstarred">Unstarred [3]</option><option value="locked">Locked [1]</option><option value="unlocked">Unlocked [3]</option></select>');
+    $assert_session->optionExists('State', 'All [4]');
+    $assert_session->optionExists('State', 'Starred [1]');
+    $assert_session->optionExists('State', 'Unstarred [3]');
+    $assert_session->optionExists('State', 'Locked [1]');
+    $assert_session->optionExists('State', 'Unlocked [3]');
 
     // Check results with no filtering.
     $assert_session->linkByHrefExists($submissions[0]->toUrl()->toString());
@@ -101,7 +105,9 @@ class WebformSubmissionListBuilderTest extends WebformBrowserTestBase {
     $edit = ['state' => 'starred'];
     $this->submitForm($edit, 'Filter');
     $assert_session->addressEquals('admin/structure/webform/manage/' . $webform->id() . '/results/submissions?state=starred');
-    $assert_session->responseContains('<option value="starred" selected="selected">Starred [1]</option>');
+    $starredOption = $assert_session->optionExists('state', 'Starred [1]');
+    $this->assertEquals('starred', $starredOption->getValue());
+    $this->assertTrue($starredOption->isSelected());
     $assert_session->responseNotContains($submissions[0]->getElementData('first_name'));
     $assert_session->responseContains($submissions[1]->getElementData('first_name'));
     $assert_session->responseNotContains($submissions[2]->getElementData('first_name'));
@@ -112,7 +118,9 @@ class WebformSubmissionListBuilderTest extends WebformBrowserTestBase {
     $edit = ['state' => 'locked'];
     $this->submitForm($edit, 'Filter');
     $assert_session->addressEquals('admin/structure/webform/manage/' . $webform->id() . '/results/submissions?state=locked');
-    $assert_session->responseContains('<option value="locked" selected="selected">Locked [1]</option>');
+    $lockedOption = $assert_session->optionExists('state', 'Locked [1]');
+    $this->assertEquals('locked', $lockedOption->getValue());
+    $this->assertTrue($lockedOption->isSelected());
     $assert_session->responseNotContains($submissions[0]->getElementData('first_name'));
     $assert_session->responseNotContains($submissions[1]->getElementData('first_name'));
     $assert_session->responseContains($submissions[2]->getElementData('first_name'));

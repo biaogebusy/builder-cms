@@ -94,6 +94,7 @@ abstract class OffCanvasTestBase extends WebDriverTestBase {
    * Gets the off-canvas dialog element.
    *
    * @return \Behat\Mink\Element\NodeElement|null
+   *   The off-canvas dialog element.
    */
   protected function getOffCanvasDialog() {
     $off_canvas_dialog = $this->getSession()->getPage()->find('css', '.ui-dialog[aria-describedby="drupal-off-canvas"]');
@@ -108,7 +109,7 @@ abstract class OffCanvasTestBase extends WebDriverTestBase {
    *   Theme names to test.
    */
   protected static function getTestThemes() {
-    return ['claro', 'olivero', 'stable9', 'stark'];
+    return ['claro', 'olivero', 'stark'];
   }
 
   /**

@@ -1,0 +1,39 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+/**
+ * @file
+ * Contains CKEditor 5 Premium Features Import Word module install functions.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function ckeditor5_premium_features_import_word_requirements($phase): array {
+  $requirements = [];
+
+  /** @var \Drupal\Core\Asset\LibraryDiscoveryInterface $libraryDiscovery */
+  $libraryDiscovery = \Drupal::service('library.discovery');
+  $library = $libraryDiscovery->getLibraryByName('core', 'ckeditor5');
+
+  if (empty($library) || version_compare('35.2.1', $library['version']) > 0) {
+    $requirements[] = [
+      'title' => t('CKEditor 5 Import from Word'),
+      'description' => t('CKEditor 5 Import from Word module requires Ckeditor5 version higher or equal to 35.2.1'),
+      'severity' => ckeditor5_premium_features_get_error_severity(),
+    ];
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_install().
+ */
+function ckeditor5_premium_features_import_word_install(): void {
+  ckeditor5_premium_features_display_dependency_general_info_message();
+}

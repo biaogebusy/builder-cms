@@ -14,13 +14,6 @@ use Drupal\user\Entity\Role;
 class PluginSelectTest extends CommerceWebDriverTestBase {
 
   /**
-   * The entity_test storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $entityTestStorage;
-
-  /**
    * Modules to enable.
    *
    * @var array
@@ -38,7 +31,7 @@ class PluginSelectTest extends CommerceWebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getAdministratorPermissions() {
+  protected function getAdministratorPermissions(): array {
     return array_merge([
       'administer entity_test content',
     ], parent::getAdministratorPermissions());
@@ -51,7 +44,6 @@ class PluginSelectTest extends CommerceWebDriverTestBase {
     parent::setUp();
 
     Role::create(['id' => 'test_role', 'label' => $this->randomString()])->save();
-    $this->entityTestStorage = $this->container->get('entity_type.manager')->getStorage('entity_test');
   }
 
   /**
@@ -100,10 +92,9 @@ class PluginSelectTest extends CommerceWebDriverTestBase {
     ], 'Save');
     $this->assertSession()->pageTextContains('entity_test 1 has been updated.');
 
-    $this->entityTestStorage->resetCache([$entity->id()]);
-    $entity = $this->entityTestStorage->load($entity->id());
-    $this->assertEquals('paypal', $entity->test_plugin->target_plugin_id);
-    $this->assertEquals([], $entity->test_plugin->target_plugin_configuration);
+    $entity = $this->reloadEntity($entity);
+    $this->assertEquals('paypal', $entity->get('test_plugin')->target_plugin_id);
+    $this->assertEquals([], $entity->get('test_plugin')->target_plugin_configuration);
   }
 
   /**
@@ -122,11 +113,10 @@ class PluginSelectTest extends CommerceWebDriverTestBase {
     ], 'Save');
     $this->assertSession()->pageTextContains('entity_test 1 has been updated.');
 
-    $this->entityTestStorage->resetCache([$entity->id()]);
-    $entity = $this->entityTestStorage->load($entity->id());
+    $entity = $this->reloadEntity($entity);
     $this->assertEquals([
       'mail' => 'test@example.com',
-    ], $entity->test_plugin->target_plugin_configuration);
+    ], $entity->get('test_plugin')->target_plugin_configuration);
 
     // Select the other condition.
     $this->drupalGet($entity->toUrl('edit-form'));
@@ -139,8 +129,7 @@ class PluginSelectTest extends CommerceWebDriverTestBase {
     ], 'Save');
     $this->assertSession()->pageTextContains('entity_test 1 has been updated.');
 
-    $this->entityTestStorage->resetCache([$entity->id()]);
-    $entity = $this->entityTestStorage->load($entity->id());
+    $entity = $this->reloadEntity($entity);
     $this->assertEquals([
       'operator' => '<',
       'amount' => [
@@ -148,7 +137,7 @@ class PluginSelectTest extends CommerceWebDriverTestBase {
         'currency_code' => 'USD',
       ],
       'type' => 'total',
-    ], $entity->test_plugin->target_plugin_configuration);
+    ], $entity->get('test_plugin')->target_plugin_configuration);
   }
 
   /**

@@ -7,15 +7,18 @@ namespace Drupal\Tests\workspaces\FunctionalJavascript;
 use Drupal\Tests\layout_builder\FunctionalJavascript\InlineBlockTestBase;
 use Drupal\Tests\system\Traits\OffCanvasTestTrait;
 use Drupal\Tests\workspaces\Functional\WorkspaceTestUtilities;
+use Drupal\user\UserInterface;
 use Drupal\workspaces\Entity\Workspace;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for layout editing in workspaces.
- *
- * @group layout_builder
- * @group workspaces
- * @group #slow
  */
+#[Group('layout_builder')]
+#[Group('workspaces')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class WorkspacesLayoutBuilderIntegrationTest extends InlineBlockTestBase {
 
   use OffCanvasTestTrait;
@@ -27,11 +30,17 @@ class WorkspacesLayoutBuilderIntegrationTest extends InlineBlockTestBase {
   protected $defaultTheme = 'starterkit_theme';
 
   /**
+   * The default user that is getting logged in during setup.
+   */
+  protected UserInterface $defaultUser;
+
+  /**
    * {@inheritdoc}
    */
   protected static $modules = [
     'field_ui',
     'workspaces',
+    'workspaces_ui',
   ];
 
   /**
@@ -39,7 +48,7 @@ class WorkspacesLayoutBuilderIntegrationTest extends InlineBlockTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->drupalLogin($this->drupalCreateUser([
+    $this->defaultUser = $this->drupalCreateUser([
       'access contextual links',
       'configure any layout',
       'administer node display',
@@ -52,8 +61,10 @@ class WorkspacesLayoutBuilderIntegrationTest extends InlineBlockTestBase {
       'administer site configuration',
       'administer nodes',
       'bypass node access',
-    ]));
+    ]);
+    $this->drupalLogin($this->defaultUser);
     $this->setupWorkspaceSwitcherBlock();
+    Workspace::create(['id' => 'stage', 'label' => 'Stage'])->save();
 
     // Enable layout builder.
     $this->drupalGet(static::FIELD_UI_PREFIX . '/display/default');
@@ -177,6 +188,65 @@ class WorkspacesLayoutBuilderIntegrationTest extends InlineBlockTestBase {
     $this->drupalGet('node/1');
     $assert_session->pageTextNotContains('The DEFAULT block body');
     $assert_session->pageTextNotContains($workspace_block_content);
+  }
+
+  /**
+   * Tests workspace specific layout tempstore data.
+   *
+   * @legacy-covers \Drupal\workspaces\WorkspacesLayoutTempstoreRepository::getKey
+   */
+  public function testWorkspacesLayoutTempstore(): void {
+    $assert_session = $this->assertSession();
+    $this->drupalGet('node/1');
+    $assert_session->pageTextContains('The DEFAULT block body');
+
+    $second_user = $this->drupalCreateUser([
+      'access contextual links',
+      'configure any layout',
+      'administer node display',
+      'administer node fields',
+      'create and edit custom blocks',
+      'administer blocks',
+      'administer content types',
+      'administer workspaces',
+      'view any workspace',
+      'administer site configuration',
+      'administer nodes',
+      'bypass node access',
+    ]);
+
+    $stage = Workspace::load('stage');
+    $this->switchToWorkspace($stage);
+
+    // Confirm the block can be edited.
+    $this->drupalGet('node/1/layout');
+    $workspace_block_body = 'The WS block body';
+    $this->configureInlineBlock('The DEFAULT block body', $workspace_block_body);
+
+    // Switch to another user and check the layout edit page in the live
+    // workspace and verify that the changes are not visible there. Switching
+    // the user automatically switches the workspace to Live.
+    $this->drupalLogin($second_user);
+    $this->drupalGet('node/1/layout');
+    $assert_session->pageTextNotContains($workspace_block_body);
+    $assert_session->pageTextContains('The DEFAULT block body');
+    $live_block_body = 'Live edit block body';
+    $this->configureInlineBlock('The DEFAULT block body', $live_block_body);
+    $assert_session->pageTextContains($live_block_body);
+    $assert_session->pageTextNotContains('The DEFAULT block body');
+    $this->drupalGet('node/1');
+    $assert_session->pageTextNotContains($live_block_body);
+    $assert_session->pageTextContains('The DEFAULT block body');
+
+    $this->drupalLogin($this->defaultUser);
+    $this->switchToWorkspace($stage);
+    $this->drupalGet('node/1/layout');
+    $assert_session->pageTextContains($workspace_block_body);
+    $assert_session->pageTextNotContains($live_block_body);
+    $assert_session->pageTextNotContains('The DEFAULT block body');
+    $this->drupalGet('node/1');
+    $assert_session->pageTextNotContains($workspace_block_body);
+    $assert_session->pageTextContains('The DEFAULT block body');
   }
 
 }

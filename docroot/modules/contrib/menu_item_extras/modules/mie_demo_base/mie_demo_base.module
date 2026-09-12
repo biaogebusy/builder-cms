@@ -43,7 +43,7 @@ function mie_demo_base_preprocess_menu(&$variables) {
 /**
  * Implements hook_preprocess().
  */
-function mie_demo_base_preprocess(&$variables, $hook, &$info) {
+function mie_demo_base_preprocess(&$variables, $hook, $info) {
   $module_path = \Drupal::service('extension.list.module')->getPath('mie_demo_base');
 
   if ($hook == 'menu') {
@@ -63,11 +63,11 @@ function mie_demo_base_preprocess(&$variables, $hook, &$info) {
       $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--' . $sanitized_view_mode;
 
       if (isset($variables['elements']['#menu_level']) && $variables['elements']['#menu_level'] === 0) {
-        $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--' . 'menu-level-' . $variables['elements']['#menu_level'] . '--' . $sanitized_view_mode;
+        $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--menu-level-' . $variables['elements']['#menu_level'] . '--' . $sanitized_view_mode;
       }
 
       if ($sanitized_view_mode === 'banner' && isset($variables['elements']['#menu_level']) && $variables['elements']['#menu_level'] === 1) {
-        $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--' . 'menu-level-' . $variables['elements']['#menu_level'] . '--' . $sanitized_view_mode;
+        $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--menu-level-' . $variables['elements']['#menu_level'] . '--' . $sanitized_view_mode;
       }
     }
   }

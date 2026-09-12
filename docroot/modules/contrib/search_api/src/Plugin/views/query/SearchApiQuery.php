@@ -429,8 +429,28 @@ class SearchApiQuery extends QueryPluginBase {
       '#title' => $this->t('Query Tags'),
       '#description' => $this->t('If set, these tags will be appended to the query and can be used to identify the query in a module. This can be helpful for altering queries.'),
       '#default_value' => implode(', ', $this->options['query_tags']),
-      '#element_validate' => ['views_element_validate_tags'],
+      '#element_validate' => [[static::class, 'elementValidateTags']],
     ];
+  }
+
+  /**
+   * Validation callback for query tags.
+   *
+   * @param array $element
+   *   The form element to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @see \Drupal\views\Plugin\views\query\Sql::elementValidateTags()
+   */
+  public static function elementValidateTags(array &$element, FormStateInterface $form_state): void {
+    $values = array_map('trim', explode(',', $element['#value']));
+    foreach ($values as $value) {
+      if (preg_match("/[^a-z_]/", $value)) {
+        $form_state->setError($element, t('The query tags may only contain lower-case alphabetical characters and underscores.'));
+        return;
+      }
+    }
   }
 
   /**
@@ -709,11 +729,12 @@ class SearchApiQuery extends QueryPluginBase {
     foreach ($results as $result) {
       $values = [];
       $values['_item'] = $result;
+      $values['search_api_has_fields_from_server'] = FALSE;
       try {
         $object = $result->getOriginalObject(FALSE);
         if ($object) {
           $values['_object'] = $object;
-          $values['_relationship_objects'][NULL] = [$object];
+          $values['_relationship_objects'][''] = [$object];
           if ($object instanceof EntityAdapter) {
             $values['_entity'] = $object->getEntity();
           }
@@ -747,6 +768,7 @@ class SearchApiQuery extends QueryPluginBase {
           // it doesn't really matter.
         }
         $values[$path] = $field->getValues();
+        $values['search_api_has_fields_from_server'] = TRUE;
       }
 
       $values['index'] = $count++;
@@ -771,6 +793,25 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
+   * Gets all the involved entities of the view.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface[]
+   */
+  protected function getAllEntities(): array {
+    $entities = [];
+
+    /** @var \Drupal\search_api\Plugin\views\ResultRow $row */
+    foreach ($this->view->result as $row) {
+      $entity_adapter = $row->_object ?? NULL;
+      if ($entity_adapter instanceof EntityAdapter) {
+        $entities[] = $entity_adapter->getEntity();
+      }
+    }
+
+    return $entities;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getCacheTags() {
@@ -782,6 +823,10 @@ class SearchApiQuery extends QueryPluginBase {
       // invalidated if any items on the index are indexed or deleted.
       $tags[] = 'search_api_list:' . $this->getIndex()->id();
       $tags = Cache::mergeTags($query->getCacheTags(), $tags);
+    }
+
+    foreach ($this->getAllEntities() as $entity) {
+      $tags = Cache::mergeTags($entity->getCacheTags(), $tags);
     }
 
     return $tags;
@@ -796,6 +841,10 @@ class SearchApiQuery extends QueryPluginBase {
     $query = $this->getSearchApiQuery();
     if ($query instanceof CacheableDependencyInterface) {
       $max_age = Cache::mergeMaxAges($query->getCacheMaxAge(), $max_age);
+    }
+
+    foreach ($this->getAllEntities() as $entity) {
+      $max_age = Cache::mergeMaxAges($max_age, $entity->getCacheMaxAge());
     }
 
     return $max_age;

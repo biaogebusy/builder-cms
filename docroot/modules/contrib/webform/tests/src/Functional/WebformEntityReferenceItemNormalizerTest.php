@@ -21,7 +21,7 @@ class WebformEntityReferenceItemNormalizerTest extends WebformBrowserTestBase {
   /**
    * Tests the normalization of a node with a webform entity reference.
    */
-  public function testWebformEntityReferenceItemNormalization() {
+  public function testWebformEntityReferenceItemNormalization(): void {
     // Create node.
     $node = $this->drupalCreateNode(['type' => 'webform']);
     $webform_field = 'webform';

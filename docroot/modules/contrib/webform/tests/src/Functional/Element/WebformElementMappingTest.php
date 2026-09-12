@@ -19,7 +19,7 @@ class WebformElementMappingTest extends WebformElementBrowserTestBase {
   /**
    * Test mapping element.
    */
-  public function testMappingElement() {
+  public function testMappingElement(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_mapping');
@@ -27,7 +27,9 @@ class WebformElementMappingTest extends WebformElementBrowserTestBase {
     // Check default element.
     $assert_session->responseContains('<th>Source &rarr;</th>');
     $assert_session->responseContains('<th>Destination</th>');
-    $assert_session->responseContains('<select data-drupal-selector="edit-webform-mapping-one" id="edit-webform-mapping-one" name="webform_mapping[one]" class="form-select"><option value="" selected="selected">- Select -</option><option value="four">Four</option><option value="five">Five</option><option value="six">Six</option></select>');
+    $this->assertEquals('four', $assert_session->optionExists('webform_mapping[one]', 'Four')->getValue());
+    $this->assertEquals('five', $assert_session->optionExists('webform_mapping[one]', 'Five')->getValue());
+    $this->assertEquals('six', $assert_session->optionExists('webform_mapping[one]', 'Six')->getValue());
 
     // Check source description.
     $assert_session->responseContains('<td>One &rarr;<div class="description js-form-wrapper form-wrapper" data-drupal-selector="edit-table-one-source-data-description" id="edit-table-one-source-data-description">This is a description. This is a <a href="https://google.com">link</a></div>');
@@ -38,7 +40,9 @@ class WebformElementMappingTest extends WebformElementBrowserTestBase {
     // Check custom element.
     $assert_session->responseContains('<th>{Custom source} &raquo;</th>');
     $assert_session->responseContains('<th>{Destination source}</th>');
-    $assert_session->responseContains('<select data-drupal-selector="edit-webform-mapping-one" id="edit-webform-mapping-one" name="webform_mapping[one]" class="form-select"><option value="" selected="selected">- Select -</option><option value="four">Four</option><option value="five">Five</option><option value="six">Six</option></select>');
+    $this->assertEquals('four', $assert_session->optionExists('webform_mapping[one]', 'Four')->getValue());
+    $this->assertEquals('five', $assert_session->optionExists('webform_mapping[one]', 'Five')->getValue());
+    $this->assertEquals('six', $assert_session->optionExists('webform_mapping[one]', 'Six')->getValue());
 
     // Check custom select other element type.
     $assert_session->responseContains('<input data-drupal-selector="edit-webform-mapping-select-other-one-other" type="text" id="edit-webform-mapping-select-other-one-other" name="webform_mapping_select_other[one][other]" value="" size="60" maxlength="255" placeholder="Enter other…" class="form-text" />');

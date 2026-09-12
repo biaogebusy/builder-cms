@@ -26,7 +26,7 @@ class DeleteParamBuilder {
    *
    * @param string $indexId
    *   The index ID.
-   * @param \Drupal\search_api\Item\ItemInterface[] $item_ids
+   * @param string[] $item_ids
    *   The items.
    *
    * @return array

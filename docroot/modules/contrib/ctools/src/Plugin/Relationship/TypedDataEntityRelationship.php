@@ -6,6 +6,8 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 
 /**
+ * Custom relationship.
+ *
  * @Relationship(
  *   id = "typed_data_entity_relationship",
  *   deriver = "\Drupal\ctools\Plugin\Deriver\TypedDataEntityRelationshipDeriver"

@@ -9,7 +9,6 @@
   /**
    * @typedef {class} Drupal.Charts.Contents
    */
-
   Drupal.Charts.Contents = class {
     constructor() {
       const chartsElements = document.querySelectorAll('[data-chart]');
@@ -48,5 +47,30 @@
       }
       return {};
     }
+  };
+
+  /**
+   * Accessible accordion behavior for chart data tables.
+   */
+  Drupal.behaviors.chartsAccordion = {
+    attach(context) {
+      const triggers = context.querySelectorAll('.charts-accordion-trigger');
+      triggers.forEach((trigger) => {
+        // Prevent multiple event listeners.
+        if (trigger.dataset.chartsBound) return;
+        trigger.dataset.chartsBound = true;
+
+        trigger.addEventListener('click', function () {
+          const isExpanded = this.getAttribute('aria-expanded') === 'true';
+          const contentId = this.getAttribute('aria-controls');
+          const content = document.getElementById(contentId);
+
+          if (content) {
+            this.setAttribute('aria-expanded', !isExpanded);
+            content.style.display = isExpanded ? 'none' : 'block';
+          }
+        });
+      });
+    },
   };
 })(Drupal);

@@ -20,6 +20,7 @@ class AiSearchSetupMySqlTest extends BrowserTestBase {
     'test_ai_provider_mysql',
     'test_ai_vdb_provider_mysql',
     'node',
+    'file',
     'taxonomy',
     'user',
     'system',

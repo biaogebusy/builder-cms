@@ -44,7 +44,7 @@ abstract class Base extends PluginBase implements FieldPermissionTypeInterface, 
    * @param \Drupal\field_permissions\FieldPermissionsServiceInterface|null $field_permissions_service
    *   Field permissions service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FieldStorageConfigInterface $field_storage, FieldPermissionsServiceInterface $field_permissions_service = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, FieldStorageConfigInterface $field_storage, ?FieldPermissionsServiceInterface $field_permissions_service = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->fieldStorage = $field_storage;
     if ($field_permissions_service === NULL) {
@@ -60,7 +60,7 @@ abstract class Base extends PluginBase implements FieldPermissionTypeInterface, 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, FieldStorageConfigInterface $field_storage = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?FieldStorageConfigInterface $field_storage = NULL) {
     return new static(
       $configuration,
       $plugin_id,

@@ -8,16 +8,17 @@ use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiJSTestTrait;
-use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore onewidgetfield
 /**
  * Tests the Field UI "Manage display" and "Manage form display" screens.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class ManageDisplayTest extends WebDriverTestBase {
 
-  use FieldUiTestTrait;
   use FieldUiJSTestTrait;
 
   /**
@@ -37,16 +38,22 @@ class ManageDisplayTest extends WebDriverTestBase {
   protected $defaultTheme = 'stark';
 
   /**
+   * The content type.
+   *
    * @var string
    */
   protected $type;
 
   /**
+   * The entity type manager.
+   *
    * @var \Drupal\Core\Entity\entityTypeManagerInterface
    */
   protected $entityTypeManager;
 
   /**
+   * The display storage.
+   *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $displayStorage;
@@ -57,6 +64,7 @@ class ManageDisplayTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->drupalPlaceBlock('system_breadcrumb_block');
+    $this->drupalPlaceBlock('local_actions_block');
 
     // Create a test user.
     $admin_user = $this->drupalCreateUser([
@@ -85,7 +93,7 @@ class ManageDisplayTest extends WebDriverTestBase {
    */
   public function testFormatterUI(): void {
     $manage_fields = 'admin/structure/types/manage/' . $this->type;
-    $manage_display = $manage_fields . '/display';
+    $manage_display = $manage_fields . '/display/default';
 
     // Create a field, and a node with some data for the field.
     $this->fieldUIAddNewFieldJS($manage_fields, 'test', 'Test field');
@@ -178,10 +186,32 @@ class ManageDisplayTest extends WebDriverTestBase {
     $field_test_settings->click();
     $assert_session->assertExpectedAjaxRequest(1);
 
-    // Assert that the field added in
-    // field_test_field_formatter_third_party_settings_form() is present.
-    $field_third_party = $page->findField('fields[field_test][settings_edit_form][third_party_settings][field_third_party_test][field_test_field_formatter_third_party_settings_form]');
+    // Assert that the field added by the hook
+    // FieldThirdPartyTestHooks::fieldFormatterThirdPartySettingsForm(). is
+    // present. Use an exact match.
+    $field_third_party = $page->find(
+      'named_exact',
+      [
+        'field',
+        'fields[field_test][settings_edit_form][third_party_settings][field_third_party_test][field_test_field_formatter_third_party_settings_form]',
+      ]);
     $this->assertNotEmpty($field_third_party, 'The field added in hook_field_formatter_third_party_settings_form() is present on the settings form.');
+    $this->assertEquals($field_third_party->getAttribute('type'), 'text');
+
+    // Assert that the additional field added in the hook
+    // FieldThirdPartyTestHooks::fieldFormatterThirdPartySettingsFormAdditionalImplementation().
+    // is also present. Use an exact match.
+    // field_formatter_third_party_settings_form
+    // FieldThirdPartyTestHooks::fieldFormatterThirdPartySettingsFormAdditionalImplementation().
+    // is also present. Use exact match.
+    $field_third_party_additional = $page->find(
+      'named_exact',
+      [
+        'field',
+        'fields[field_test][settings_edit_form][third_party_settings][field_third_party_test][second_field_formatter_third_party_settings_form]',
+      ]);
+    $this->assertNotEmpty($field_third_party_additional, 'The second field added in hook_field_formatter_third_party_settings_form() is present on the settings form.');
+    $this->assertEquals($field_third_party_additional->getAttribute('type'), 'number');
 
     // Change the value and submit the form to save the third party settings.
     $field_third_party->setValue('foo');
@@ -325,10 +355,28 @@ class ManageDisplayTest extends WebDriverTestBase {
     $field_test_settings->click();
     $assert_session->assertExpectedAjaxRequest(1);
 
-    // Assert that the field added in
-    // field_test_field_widget_third_party_settings_form() is present.
-    $field_third_party_test = $page->findField('fields[field_test][settings_edit_form][third_party_settings][field_third_party_test][field_test_widget_third_party_settings_form]');
+    // Assert that the field added in the hook
+    // FieldThirdPartyTestHooks::fieldWidgetThirdPartySettingsForm().
+    // is present. Use an exact match.
+    $field_third_party_test = $page->find('named_exact',
+      [
+        'field',
+        'fields[field_test][settings_edit_form][third_party_settings][field_third_party_test][field_test_widget_third_party_settings_form]',
+      ]);
     $this->assertNotEmpty($field_third_party_test, 'The field added in hook_field_widget_third_party_settings_form() is present on the settings form.');
+    $this->assertEquals($field_third_party_test->getAttribute('type'), 'text');
+
+    // Assert that the additional field added in the hook
+    // FieldThirdPartyTestHooks::fieldWidgetThirdPartySettingsFormAdditionalImplementation().
+    // is also present.
+    $field_third_party_test_additional = $page->find('named_exact',
+      [
+        'field',
+        'fields[field_test][settings_edit_form][third_party_settings][field_third_party_test][second_field_widget_third_party_settings_form]',
+      ]);
+    $this->assertNotEmpty($field_third_party_test_additional, 'The second field added in hook_field_widget_third_party_settings_form() is present on the settings form.');
+    $this->assertEquals($field_third_party_test_additional->getAttribute('type'), 'number');
+
     $field_third_party_test->setValue('foo');
     $page->findButton('Update')->click();
     $assert_session->assertWaitOnAjaxRequest();
@@ -355,7 +403,9 @@ class ManageDisplayTest extends WebDriverTestBase {
     $field_test_drag_handle = $page->find('css', '#field-test .tabledrag-handle');
     $field_region = $page->findField('fields[field_test][region]');
     $weight_toggle = $page->find('css', '.tabledrag-toggle-weight');
-    $target = $page->find('css', '.region-hidden-message');
+    // The promote field is hidden by default, dragging field_test to it will
+    // hide field_test.
+    $target = $page->find('css', '#promote');
 
     // Checks if the select elements contain the specified options.
     $this->assertFieldSelectOptions($field_test_type, [
@@ -432,7 +482,7 @@ class ManageDisplayTest extends WebDriverTestBase {
     $manage_fields = 'admin/structure/types/manage/' . $this->type;
 
     $this->fieldUIAddNewFieldJS($manage_fields, 'test', 'Test field');
-    $manage_display = 'admin/structure/types/manage/' . $this->type . '/display';
+    $manage_display = 'admin/structure/types/manage/' . $this->type . '/display/default';
     $manage_form = 'admin/structure/types/manage/' . $this->type . '/form-display';
 
     // Form display, change widget type.

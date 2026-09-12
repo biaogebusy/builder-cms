@@ -7,13 +7,16 @@ namespace Drupal\Tests\field\Functional\Views;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI of the field handler.
  *
- * @group field
  * @see \Drupal\field\Plugin\views\field\Field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldUITest extends FieldTestBase {
 
   /**

@@ -12,12 +12,17 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\editor\EditorInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Language
- * @group ckeditor5
+ * Tests Drupal\ckeditor5\Plugin\CKEditor5Plugin\Language.
+ *
  * @internal
  */
+#[CoversClass(Language::class)]
+#[Group('ckeditor5')]
 class LanguagePluginTest extends UnitTestCase {
 
   /**
@@ -102,7 +107,7 @@ class LanguagePluginTest extends UnitTestCase {
    * @return array
    *   The expected output of the dynamic plugin configuration.
    */
-  protected static function buildExpectedDynamicConfig(array $language_list) {
+  protected static function buildExpectedDynamicConfig(array $language_list): array {
     $expected_language_config = [];
     foreach ($language_list as $language_code => $language_list_item) {
       $item = [
@@ -119,9 +124,9 @@ class LanguagePluginTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDynamicPluginConfig
-   * @dataProvider providerGetDynamicPluginConfig
+   * Tests get dynamic plugin config.
    */
+  #[DataProvider('providerGetDynamicPluginConfig')]
   public function testGetDynamicPluginConfig(array $configuration, array $expected_dynamic_config): void {
     $route_provider = $this->prophesize(RouteProviderInterface::class);
     $language_manager = $this->prophesize(LanguageManagerInterface::class);

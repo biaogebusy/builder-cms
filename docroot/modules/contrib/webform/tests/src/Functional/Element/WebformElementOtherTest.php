@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
-use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -22,7 +21,7 @@ class WebformElementOtherTest extends WebformElementBrowserTestBase {
   /**
    * Tests options with other elements.
    */
-  public function testBuildingOtherElements() {
+  public function testBuildingOtherElements(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_other');
@@ -36,12 +35,18 @@ class WebformElementOtherTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<span class="fieldset-legend">Select other basic</span>');
     $assert_session->responseContains('<select data-drupal-selector="edit-select-other-basic-select" id="edit-select-other-basic-select" name="select_other_basic[select]" class="form-select">');
     $assert_session->responseContains('<input data-drupal-selector="edit-select-other-basic-other" type="text" id="edit-select-other-basic-other" name="select_other_basic[other]" value="Four" size="60" maxlength="255" placeholder="Enter other…" class="form-text" />');
-    $assert_session->responseContains('<option value="_other_" selected="selected">Other…</option>');
+    $assert_session->responseMatches('#<option value="_other_"\s+selected="selected">Other…</option>#');
 
     // Check advanced select_other w/ custom label.
     $assert_session->responseContains('<span class="fieldset-legend js-form-required form-required">Select other advanced</span>');
-    $assert_session->responseContains('<select data-webform-required-error="This is a custom required error message." data-drupal-selector="edit-select-other-advanced-select" id="edit-select-other-advanced-select" name="select_other_advanced[select]" class="form-select required" required="required" aria-required="true">');
-    $assert_session->responseContains('<option value="_other_" selected="selected">Is there another option you wish to enter?</option>');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<select data-webform-required-error="This is a custom required error message." data-drupal-selector="edit-select-other-advanced-select" id="edit-select-other-advanced-select" name="select_other_advanced[select]" class="form-select required" required="required" aria-required="true">');
+    }
+    else {
+      $assert_session->responseContains('<select data-webform-required-error="This is a custom required error message." data-drupal-selector="edit-select-other-advanced-select" id="edit-select-other-advanced-select" name="select_other_advanced[select]" class="form-select required" required="required">');
+    }
+
+    $assert_session->responseMatches('#<option value="_other_"\s+selected="selected">Is there another option you wish to enter\?</option>#');
     $assert_session->responseContains('<label for="edit-select-other-advanced-other">Other</label>');
     $assert_session->responseContains('<input data-webform-required-error="This is a custom required error message." data-counter-type="character" data-counter-minimum="4" data-counter-maximum="10" class="js-webform-counter webform-counter form-text" minlength="4" data-drupal-selector="edit-select-other-advanced-other" aria-describedby="edit-select-other-advanced-other--description" type="text" id="edit-select-other-advanced-other" name="select_other_advanced[other]" value="Four" size="20" maxlength="10" placeholder="What is this other option" />');
     $assert_session->responseContains('<div id="edit-select-other-advanced-other--description" class="webform-element-description">Other select description</div>');
@@ -95,12 +100,7 @@ class WebformElementOtherTest extends WebformElementBrowserTestBase {
     /* ********************************************************************** */
 
     // Check form_item wrapper type.
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<div class="js-webform-select-other webform-select-other js-form-item form-item form-type-webform-select-other js-form-type-webform-select-other form-item-wrapper-other-form-element js-form-item-wrapper-other-form-element" id="edit-wrapper-other-form-element">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-webform-select-other webform-select-other js-form-item form-item js-form-type-webform-select-other form-item-wrapper-other-form-element js-form-item-wrapper-other-form-element" id="edit-wrapper-other-form-element">'),
-    );
+    $assert_session->responseContains('<div class="js-webform-select-other webform-select-other js-webform-type-webform-select-other webform-type-webform-select-other js-form-item form-item form-type-webform-select-other js-form-type-webform-select-other form-item-wrapper-other-form-element js-form-item-wrapper-other-form-element" id="edit-wrapper-other-form-element">');
     // Check container wrapper type.
     $assert_session->responseContains('<div data-drupal-selector="edit-wrapper-other-container" class="js-webform-select-other webform-select-other webform-select-other--wrapper fieldgroup form-composite js-form-wrapper form-wrapper" id="edit-wrapper-other-container">');
   }
@@ -108,7 +108,7 @@ class WebformElementOtherTest extends WebformElementBrowserTestBase {
   /**
    * Tests value processing for other elements.
    */
-  public function testProcessingOtherElements() {
+  public function testProcessingOtherElements(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_other');
@@ -119,12 +119,14 @@ class WebformElementOtherTest extends WebformElementBrowserTestBase {
 
     $this->postSubmission($webform);
     $assert_session->responseContains("select_other_basic: Four
+select_other_conditional: ''
 select_other_advanced: Four
 select_other_multiple:
   - One
   - Two
   - Four
 select_other_zero: '0'
+computed_select_other_conditional_value: ''
 checkboxes_other_basic:
   - One
   - Two
@@ -165,6 +167,14 @@ wrapper_other_container: ''");
     ];
     $this->submitForm($edit, 'Submit');
     $assert_session->responseNotContains('Select other basic field is required.');
+
+    // Check that select other computed token value is correct when element is conditionally visible.
+    $this->drupalGet('/webform/test_element_other');
+    $edit = [
+      'select_other_conditional[select]' => 'Two',
+    ];
+    $this->submitForm($edit, 'Submit');
+    $assert_session->responseContains('computed_select_other_conditional_value: Two');
 
     // Check select other required validation.
     $this->drupalGet('/webform/test_element_other');

@@ -12,7 +12,6 @@ use Drupal\Core\Render\Element;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\HandlerBase;
-use Drupal\views\Views;
 
 /**
  * @defgroup views_argument_handlers Views argument handlers
@@ -55,12 +54,30 @@ use Drupal\views\Views;
  */
 abstract class ArgumentPluginBase extends HandlerBase implements CacheableDependencyInterface {
 
+  /**
+   * The validator to use.
+   *
+   * @var string|null
+   */
   public $validator = NULL;
+
+  /**
+   * The name of the argument.
+   *
+   * @var string|null
+   */
   public $argument = NULL;
+
+  /**
+   * The value for the argument.
+   *
+   * @var mixed
+   */
   public $value = NULL;
 
   /**
-   * The table to use for the name, should it not be in the same table as the argument.
+   * The table to use for the name, if it is not the same table as the argument.
+   *
    * @var string
    */
   // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
@@ -145,6 +162,9 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     }
   }
 
+  /**
+   * Checks if the argument has an exception.
+   */
   public function isException($arg = NULL) {
     if (!isset($arg)) {
       $arg = $this->argument ?? NULL;
@@ -152,6 +172,9 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     return !empty($this->options['exception']['value']) && $this->options['exception']['value'] === $arg;
   }
 
+  /**
+   * Returns the title of the exception for the argument.
+   */
   public function exceptionTitle() {
     // If title overriding is off for the exception, return the normal title.
     if (empty($this->options['exception']['title_enable'])) {
@@ -164,6 +187,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
    * Determine if the argument needs a style plugin.
    *
    * @return bool
+   *   TRUE if the argument needs a style plugin, FALSE otherwise.
    */
   public function needsStylePlugin() {
     $info = $this->defaultActions($this->options['default_action']);
@@ -171,6 +195,9 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     return !empty($info['style plugin']) || !empty($validate_info['style plugin']);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
 
@@ -215,6 +242,9 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     return $callbacks;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
@@ -359,7 +389,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
       ],
     ];
 
-    $plugins = Views::pluginManager('argument_validator')->getDefinitions();
+    $plugins = \Drupal::service('plugin.manager.views.argument_validator')->getDefinitions();
     foreach ($plugins as $id => $info) {
       if (!empty($info['no_ui'])) {
         continue;
@@ -390,8 +420,8 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
               '#prefix' => '<div id="edit-options-validate-options-' . $sanitized_id . '-wrapper">',
               '#suffix' => '</div>',
               '#type' => 'item',
-              // Even if the plugin has no options add the key to the form_state.
-              // trick it into checking input to make #process run.
+              // Even if the plugin has no options add the key to the
+              // form_state. trick it into checking input to make #process run.
               '#input' => TRUE,
               '#states' => [
                 'visible' => [
@@ -464,6 +494,9 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     return $output;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {
     $option_values = &$form_state->getValue('options');
     if (empty($option_values)) {
@@ -477,7 +510,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
       $plugin->validateOptionsForm($form['argument_default'][$default_id], $form_state, $option_values['argument_default'][$default_id]);
     }
 
-    // Summary plugin
+    // Summary plugin.
     $summary_id = $option_values['summary']['format'];
     $plugin = $this->getPlugin('style', $summary_id);
     if ($plugin) {
@@ -494,6 +527,9 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
 
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {
     $option_values = &$form_state->getValue('options');
     if (empty($option_values)) {
@@ -506,17 +542,19 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     if ($plugin) {
       $options = &$option_values['argument_default'][$default_id];
       $plugin->submitOptionsForm($form['argument_default'][$default_id], $form_state, $options);
-      // Copy the now submitted options to their final resting place so they get saved.
+      // Copy the now submitted options to their final resting place so they get
+      // saved.
       $option_values['default_argument_options'] = $options;
     }
 
-    // Summary plugin
+    // Summary plugin.
     $summary_id = $option_values['summary']['format'];
     $plugin = $this->getPlugin('style', $summary_id);
     if ($plugin) {
       $options = &$option_values['summary']['options'][$summary_id];
       $plugin->submitOptionsForm($form['summary']['options'][$summary_id], $form_state, $options);
-      // Copy the now submitted options to their final resting place so they get saved.
+      // Copy the now submitted options to their final resting place so they get
+      // saved.
       $option_values['summary_options'] = $options;
     }
 
@@ -537,7 +575,8 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     if ($plugin) {
       $options = &$option_values['validate']['options'][$sanitized_id];
       $plugin->submitOptionsForm($form['validate']['options'][$sanitized_id], $form_state, $options);
-      // Copy the now submitted options to their final resting place so they get saved.
+      // Copy the now submitted options to their final resting place so they get
+      // saved.
       $option_values['validate_options'] = $options;
     }
 
@@ -611,7 +650,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
    * This is used when the default action provides a default argument.
    */
   public function defaultArgumentForm(&$form, FormStateInterface $form_state) {
-    $plugins = Views::pluginManager('argument_default')->getDefinitions();
+    $plugins = \Drupal::service('plugin.manager.views.argument_default')->getDefinitions();
     $options = [];
 
     $form['default_argument_type'] = [
@@ -670,7 +709,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
    * This is used when the default action displays a summary.
    */
   public function defaultSummaryForm(&$form, FormStateInterface $form_state) {
-    $style_plugins = Views::pluginManager('style')->getDefinitions();
+    $style_plugins = \Drupal::service('plugin.manager.views.style')->getDefinitions();
     $summary_plugins = [];
     $format_options = [];
     foreach ($style_plugins as $key => $plugin) {
@@ -882,7 +921,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
 
     // Change the display style to the summary style for this
     // argument.
-    $this->view->style_plugin = Views::pluginManager("style")->createInstance($this->options['summary']['format']);
+    $this->view->style_plugin = \Drupal::service('plugin.manager.views.style')->createInstance($this->options['summary']['format']);
     $this->view->style_plugin->init($this->view, $this->displayHandler, $this->options['summary_options']);
 
     // Clear out the normal primary field and whatever else may have
@@ -960,10 +999,16 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
    * code that goes into summaryQuery()
    */
   public function summaryBasics($count_field = TRUE) {
-    // Add the number of nodes counter
+    // Add the number of nodes counter.
     $distinct = ($this->view->display_handler->getOption('distinct') && empty($this->query->no_distinct));
 
-    $count_alias = $this->query->addField($this->view->storage->get('base_table'), $this->view->storage->get('base_field'), 'num_records', ['count' => TRUE, 'distinct' => $distinct]);
+    $count_alias = $this->query->addField($this->view->storage->get('base_table'),
+      $this->view->storage->get('base_field'),
+      'num_records',
+      [
+        'count' => TRUE,
+        'distinct' => $distinct,
+      ]);
     $this->query->addGroupBy($this->name_alias);
 
     if ($count_field) {
@@ -978,7 +1023,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
    *
    * The base variant of this is usually adequate.
    *
-   * @param $order
+   * @param string $order
    *   The order selected in the UI.
    * @param string|null $by
    *   (optional) This parameter sets the direction for which to order.
@@ -994,7 +1039,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
    * This will be called once per row of a summary, and used as part of
    * $view->getUrl().
    *
-   * @param $data
+   * @param array $data
    *   The query results for the row.
    */
   public function summaryArgument($data) {
@@ -1004,7 +1049,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
   /**
    * Provides the name to use for the summary, defaults to the name field.
    *
-   * @param $data
+   * @param array $data
    *   The query results for the row.
    */
   public function summaryName($data) {
@@ -1095,7 +1140,8 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
   /**
    * Set the input for this argument.
    *
-   * @return TRUE if it successfully validates; FALSE if it does not.
+   * @return true
+   *   if it successfully validates; FALSE if it does not.
    */
   public function setArgument($arg) {
     $this->argument = $arg;
@@ -1172,12 +1218,13 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
       $options = $this->options[$options_name] ?? [];
     }
 
-    $plugin = Views::pluginManager($type)->createInstance($name);
+    $plugin = \Drupal::service('views.plugin_managers')->get($type)->createInstance($name);
     if ($plugin) {
       $plugin->init($this->view, $this->displayHandler, $options);
 
       if ($type !== 'style') {
-        // It's an argument_default/argument_validate plugin, so set the argument.
+        // It's an argument_default/argument_validate plugin, so set the
+        // argument.
         $plugin->setArgument($this);
       }
       return $plugin;

@@ -29,7 +29,7 @@ class QueueWorkerManager extends DefaultPluginManager implements QueueWorkerMana
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/QueueWorker', $namespaces, $module_handler, 'Drupal\Core\Queue\QueueWorkerInterface', QueueWorker::class, 'Drupal\Core\Annotation\QueueWorker');
+    parent::__construct('Plugin/QueueWorker', $namespaces, $module_handler, QueueWorkerInterface::class, QueueWorker::class, 'Drupal\Core\Annotation\QueueWorker');
 
     $this->setCacheBackend($cache_backend, 'queue_plugins');
     $this->alterInfo('queue_info');
@@ -58,6 +58,7 @@ class QueueWorkerManager extends DefaultPluginManager implements QueueWorkerMana
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Queue\QueueWorkerInterface
+   *   A fully configured plugin instance.
    */
   public function createInstance($plugin_id, array $configuration = []) {
     return parent::createInstance($plugin_id, $configuration);

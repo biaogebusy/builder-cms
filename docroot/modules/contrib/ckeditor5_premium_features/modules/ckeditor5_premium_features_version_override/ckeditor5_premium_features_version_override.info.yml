@@ -1,0 +1,13 @@
+name: CKEditor 5 Version Override (Advanced)
+type: module
+description: "It gives the ability to override the CKEditor 5 version to a newer one than is available in Drupal core. Override is available only for specific supported versions."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^10.3 || ^11
+lifecycle: experimental
+dependencies:
+  - ckeditor5_premium_features:ckeditor5_premium_features
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

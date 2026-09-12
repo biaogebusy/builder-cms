@@ -11,12 +11,14 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Drupal\Tests\EntityViewTrait;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests setting up default images both to the field and field storage.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageFieldDefaultImagesTest extends ImageFieldTestBase {
 
   use TestFileCreationTrait {
@@ -53,8 +55,18 @@ class ImageFieldDefaultImagesTest extends ImageFieldTestBase {
       $file->save();
     }
     $default_images = [];
-    foreach (['field_storage', 'field', 'field2', 'field_storage_new', 'field_new', 'field_storage_private', 'field_private'] as $image_target) {
+    foreach ([
+      'field_storage',
+      'field',
+      'field2',
+      'field_storage_new',
+      'field_new',
+      'field_storage_private',
+      'field_private',
+    ] as $image_target) {
       $file = File::create((array) array_pop($files));
+      // Setting owner as current user so private images are accessible.
+      $file->setOwner($this->adminUser);
       $file->save();
       $default_images[$image_target] = $file;
     }

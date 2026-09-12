@@ -8,6 +8,7 @@ use Drupal\ctools\Wizard\EntityFormWizardBase;
 use Drupal\page_manager_ui\Access\PageManagerPluginAccess;
 use Drupal\page_manager_ui\Form\PageAccessForm;
 use Drupal\page_manager_ui\Form\PageGeneralForm;
+use Drupal\page_manager_ui\Form\PageMenuForm;
 use Drupal\page_manager_ui\Form\PageParametersForm;
 
 /**
@@ -77,6 +78,10 @@ class PageWizardBase extends EntityFormWizardBase {
     $operations['access'] = [
       'title' => $this->t('Page access'),
       'form' => PageAccessForm::class,
+    ];
+    $operations['menu'] = [
+      'title' => $this->t('Menu Information'),
+      'form' => PageMenuForm::class,
     ];
 
     return $operations;

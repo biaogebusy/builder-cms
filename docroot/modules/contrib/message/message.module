@@ -6,10 +6,12 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\message\Entity\MessageTemplate;
 use Drupal\message\MessagePurgeInterface;
+use Drupal\user\Entity\User;
 
 /**
  * Implements hook_help().
@@ -118,20 +120,17 @@ function message_entity_delete(EntityInterface $entity) {
   // messages if the entity being deleted is the last one referenced by the
   // message.
   if ($check_mids) {
-    $queue_set = [];
-    $count = 0;
-    $num_mids = count($check_mids);
+    $to_check = [];
     foreach ($check_mids as $id => $field_names) {
       // If it already qualified for deletion based on one field, there's no
       // need to check multi-valued fields.
       if (!in_array($id, $deletable_mids)) {
-        $queue_set[$id] = $field_names;
+        $to_check[$id] = $field_names;
       }
-      if ($queue_set && ($count % MessagePurgeInterface::MESSAGE_DELETE_SIZE == 0 || $count == $num_mids)) {
-        \Drupal::queue('message_check_delete')->createItem($queue_set);
-        $queue_set = [];
-      }
-      $count++;
+    }
+    // Preserve keys: MessageCheckAndDeleteWorker uses them as message IDs.
+    foreach (array_chunk($to_check, MessagePurgeInterface::MESSAGE_DELETE_SIZE, TRUE) as $queue_set) {
+      \Drupal::queue('message_check_delete')->createItem($queue_set);
     }
   }
 
@@ -227,10 +226,14 @@ function template_preprocess_message(array &$variables) {
 
   /** @var \Drupal\message\MessageInterface $message */
   $message = $variables['message'];
-  $variables['date'] = \Drupal::service('renderer')->render($variables['elements']['created']);
-  unset($variables['elements']['created']);
-  $variables['author_name'] = \Drupal::service('renderer')->render($variables['elements']['uid']);
-  unset($variables['elements']['uid']);
+  if (isset($variables['elements']['created']) && is_array($variables['elements']['created'])) {
+    $variables['date'] = \Drupal::service('renderer')->render($variables['elements']['created']);
+    unset($variables['elements']['created']);
+  }
+  if (isset($variables['elements']['uid']) && is_array($variables['elements']['uid'])) {
+    $variables['author_name'] = \Drupal::service('renderer')->render($variables['elements']['uid']);
+    unset($variables['elements']['uid']);
+  }
 
   // The 'page' variable is set to TRUE in two occasions:
   // - The view mode is 'full' and we are on the 'message.view' route.
@@ -261,4 +264,64 @@ function message_theme_suggestions_message(array $variables) {
   $suggestions[] = 'message__' . $message->id() . '__' . $sanitized_view_mode;
 
   return $suggestions;
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function message_views_data_alter(&$data) {
+  $data['message']['get_text'] = [
+    'title' => t('Message text'),
+    'help' => t('Get the message text'),
+    'field' => [
+      // ID of the area handler plugin to use.
+      'id' => 'get_text',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function message_token_info() {
+  // @todo Remove this token in Message 2.0.
+  $message['author'] = [
+    'name' => t("Author (deprecated)"),
+    'type' => 'user',
+  ];
+
+  return [
+    'tokens' => ['message' => $message],
+  ];
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function message_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
+  $token_service = \Drupal::token();
+
+  $replacements = [];
+
+  if ($type == 'message' && !empty($data['message'])) {
+    /** @var \Drupal\message\Entity\Message $message */
+    $message = $data['message'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        // @todo BC token. Remove in Message 2.0.
+        case 'author':
+          $account = $message->getOwner() ? $message->getOwner() : User::load(0);
+          $replacements[$original] = $account->label();
+          @trigger_error('The "message:author" token is deprecated. Please use "message:uid:entity" offered by Token module in its place.');
+          break;
+      }
+    }
+
+    if ($author_tokens = $token_service->findWithPrefix($tokens, 'author')) {
+      $replacements += $token_service->generate('user', $author_tokens, ['user' => $message->getOwner()], $options, $bubbleable_metadata);
+    }
+  }
+
+  return $replacements;
 }

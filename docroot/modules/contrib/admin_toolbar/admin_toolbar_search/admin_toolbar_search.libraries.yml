@@ -1,15 +1,21 @@
-search:
+# Libraries for the Admin Toolbar Search module.
+
+# The main library that provides the search functionality and styling.
+admin_toolbar_search:
   css:
     theme:
-      css/admin.toolbar_search.css: {}
+      # Styles for the search tab, field, and autocomplete dropdown.
+      css/admin_toolbar_search.css: {}
   js:
+    # JavaScript to handle the autocomplete search functionality of menu links.
     js/admin_toolbar_search.js: {}
   dependencies:
-    - admin_toolbar/toolbar.tree
+    # Based on the JQuery autocomplete functionality used in core.
     - core/drupal.autocomplete
 
-search.keyboard_shortcut:
+# A separate library to handle keyboard shortcuts for the search field.
+admin_toolbar_search.keyboard_shortcut:
   js:
     js/admin_toolbar_search.keyboard_shortcut.js: {}
   dependencies:
-    - admin_toolbar_search/search
+    - admin_toolbar_search/admin_toolbar_search

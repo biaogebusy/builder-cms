@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
+use Drupal\commerce_product\ProductVariationStorageInterface;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
@@ -15,13 +16,6 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
  * @group commerce
  */
 class ProductVariationStorageTest extends CommerceKernelTestBase {
-
-  /**
-   * The product variation storage.
-   *
-   * @var \Drupal\commerce_product\ProductVariationStorageInterface
-   */
-  protected $variationStorage;
 
   /**
    * Modules to enable.
@@ -42,8 +36,6 @@ class ProductVariationStorageTest extends CommerceKernelTestBase {
     $this->installEntitySchema('commerce_product_variation');
     $this->installEntitySchema('commerce_product');
     $this->installConfig(['commerce_product']);
-
-    $this->variationStorage = $this->container->get('entity_type.manager')->getStorage('commerce_product_variation');
 
     $user = $this->createUser(['administer commerce_product']);
     $this->container->get('current_user')->setAccount($user);
@@ -66,10 +58,12 @@ class ProductVariationStorageTest extends CommerceKernelTestBase {
     ]);
     $product->save();
 
-    $result = $this->variationStorage->loadBySku('FAKE');
+    $variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    assert($variation_storage instanceof ProductVariationStorageInterface);
+    $result = $variation_storage->loadBySku('FAKE');
     $this->assertNull($result);
 
-    $result = $this->variationStorage->loadBySku($sku);
+    $result = $variation_storage->loadBySku($sku);
     $this->assertEquals($result->id(), $variation->id());
   }
 
@@ -94,7 +88,9 @@ class ProductVariationStorageTest extends CommerceKernelTestBase {
       'variations' => $variations,
     ]);
     $product->save();
-    $variationsFiltered = $this->variationStorage->loadEnabled($product);
+    $variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    assert($variation_storage instanceof ProductVariationStorageInterface);
+    $variationsFiltered = $variation_storage->loadEnabled($product);
     $this->assertEquals(3, count($variationsFiltered), 'for the admin user, 3 out of 3 variations are enabled');
 
     $product = Product::create([
@@ -104,7 +100,7 @@ class ProductVariationStorageTest extends CommerceKernelTestBase {
     $product->save();
     $user = $this->createUser(['view commerce_product']);
     $this->container->get('current_user')->setAccount($user);
-    $variationsFiltered = $this->variationStorage->loadEnabled($product);
+    $variationsFiltered = $variation_storage->loadEnabled($product);
     $this->assertEquals(2, count($variationsFiltered), 'for a normal user, 2 out of 3 variations are enabled');
     $this->assertEquals(reset($variations)->getSku(), reset($variationsFiltered)->getSku(), 'The sort order of the variations remains the same');
   }
@@ -136,8 +132,10 @@ class ProductVariationStorageTest extends CommerceKernelTestBase {
     ]);
     // Push the request to the request stack so `current_route_match` works.
     $this->container->get('request_stack')->push($request);
+    $variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    assert($variation_storage instanceof ProductVariationStorageInterface);
     $this->assertNotEquals($request->query->get('v'), $product->getDefaultVariation()->id());
-    $context_variation = $this->variationStorage->loadFromContext($product);
+    $context_variation = $variation_storage->loadFromContext($product);
     $this->assertEquals($request->query->get('v'), $context_variation->id());
 
     // Invalid variation ID returns default variation.
@@ -149,7 +147,7 @@ class ProductVariationStorageTest extends CommerceKernelTestBase {
     // Push the request to the request stack so `current_route_match` works.
     $this->container->get('request_stack')->push($request);
     $this->assertNotEquals($request->query->get('v'), $product->getDefaultVariation()->id());
-    $context_variation = $this->variationStorage->loadFromContext($product);
+    $context_variation = $variation_storage->loadFromContext($product);
     $this->assertEquals($product->getDefaultVariation()->id(), $context_variation->id());
   }
 

@@ -36,6 +36,7 @@ class LogTemplateManager extends DefaultPluginManager implements LogTemplateMana
     'label' => '',
     'template' => '',
     'category' => '',
+    'can_disable' => TRUE,
     'class' => LogTemplate::class,
   ];
 

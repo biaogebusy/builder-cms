@@ -30,17 +30,16 @@ class ViewsAddButtonTaxonomy extends PluginBase implements ViewsAddButtonInterfa
   /**
    * Check for access to the appropriate "add" route.
    *
-   * @param string $entity_type
    *   Entity id as a machine name.
+   *
    * @param string $bundle
    *   The bundle string.
-   * @param string $context
-   *   Entity context string
+   *   Entity context string.
    *
    * @return bool
    *   Whether we have access.
    */
-  public static function checkAccess($entity_type, $bundle, $context) {
+  public static function checkAccess(string $entity_type, string $bundle) {
     if ($bundle) {
       $accessManager = \Drupal::service('access_manager');
       return $accessManager->checkNamedRoute('entity.taxonomy_term.add_form', ['taxonomy_vocabulary' => $bundle], \Drupal::currentUser());
@@ -50,24 +49,21 @@ class ViewsAddButtonTaxonomy extends PluginBase implements ViewsAddButtonInterfa
   /**
    * Generate the add button URL.
    *
-   * @param string $entity_type
    *   Entity type ID.
+   *
    * @param string $bundle
    *   Bundle ID.
    * @param array $options
    *   Array of options to be passed to the Url object.
-   * @param string $context
    *   Module-specific context string.
    *
    * @return \Drupal\Core\Url
    *   Url object which is used to construct the add button link
    */
-  public static function generateUrl($entity_type, $bundle, array $options, $context = '') {
+  public static function generateUrl(string $entity_type, $bundle, array $options) {
 
     // Create URL from the data above.
-    $url = Url::fromRoute('entity.taxonomy_term.add_form', ['taxonomy_vocabulary' => $bundle], $options);
-
-    return $url;
+    return Url::fromRoute('entity.taxonomy_term.add_form', ['taxonomy_vocabulary' => $bundle], $options);
   }
 
 }

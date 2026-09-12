@@ -18,6 +18,9 @@ variables:
   # Convenient, and we have no secrets.
   _SHOW_ENVIRONMENT_VARIABLES: 1
 
+composer:
+  before_script:
+    - composer config --global --auth github-oauth.github.com $GITHUB_TOKEN
 phpcs:
   allow_failure: false
 eslint:

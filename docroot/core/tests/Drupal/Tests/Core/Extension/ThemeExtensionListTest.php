@@ -16,12 +16,17 @@ use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
 use Drupal\Core\Lock\NullLockBackend;
 use Drupal\Core\State\State;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\Core\Extension\ThemeExtensionList
- * @group Extension
+ * Tests Drupal\Core\Extension\ThemeExtensionList.
  */
+#[CoversClass(ThemeExtensionList::class)]
+#[Group('Extension')]
 class ThemeExtensionListTest extends UnitTestCase {
 
   /**
@@ -33,7 +38,7 @@ class ThemeExtensionListTest extends UnitTestCase {
       ->scan('theme')
       ->willReturn([
         'test_subtheme'  => new Extension($this->root, 'theme', 'core/modules/system/tests/themes/test_subtheme/test_subtheme.info.yml', 'test_subtheme.info.yml'),
-        'test_basetheme' => new Extension($this->root, 'theme', 'core/modules/system/tests/themes/test_basetheme/test_basetheme.info.yml', 'test_basetheme.info.yml'),
+        'test_base_theme' => new Extension($this->root, 'theme', 'core/modules/system/tests/themes/test_base_theme/test_base_theme.info.yml', 'test_base_theme.info.yml'),
       ]);
     $extension_discovery
       ->scan('theme_engine')
@@ -45,7 +50,7 @@ class ThemeExtensionListTest extends UnitTestCase {
     $argument_condition = function ($path) {
       return in_array($path, [
         'core/modules/system/tests/themes/test_subtheme/test_subtheme.info.yml',
-        'core/modules/system/tests/themes/test_basetheme/test_basetheme.info.yml',
+        'core/modules/system/tests/themes/test_base_theme/test_base_theme.info.yml',
         'core/themes/engines/twig/twig.info.yml',
       ], TRUE);
     };
@@ -88,21 +93,21 @@ class ThemeExtensionListTest extends UnitTestCase {
     $theme_data = $theme_list->reset()->getList();
     $this->assertCount(2, $theme_data);
 
-    $info_basetheme = $theme_data['test_basetheme'];
+    $info_base_theme = $theme_data['test_base_theme'];
     $info_subtheme = $theme_data['test_subtheme'];
 
     // Ensure some basic properties.
-    $this->assertInstanceOf('Drupal\Core\Extension\Extension', $info_basetheme);
-    $this->assertEquals('test_basetheme', $info_basetheme->getName());
+    $this->assertInstanceOf('Drupal\Core\Extension\Extension', $info_base_theme);
+    $this->assertEquals('test_base_theme', $info_base_theme->getName());
     $this->assertInstanceOf('Drupal\Core\Extension\Extension', $info_subtheme);
     $this->assertEquals('test_subtheme', $info_subtheme->getName());
 
     // Test the parent/child-theme properties.
-    $info_subtheme->info['base theme'] = 'test_basetheme';
-    $info_basetheme->sub_themes = ['test_subtheme'];
+    $info_subtheme->info['base theme'] = 'test_base_theme';
+    $info_base_theme->sub_themes = ['test_subtheme'];
 
-    $this->assertEquals('core/themes/engines/twig/twig.engine', $info_basetheme->owner);
-    $this->assertEquals('twig', $info_basetheme->prefix);
+    $this->assertEquals('core/themes/engines/twig/twig.engine', $info_base_theme->owner);
+    $this->assertEquals('twig', $info_base_theme->prefix);
     $this->assertEquals('core/themes/engines/twig/twig.engine', $info_subtheme->owner);
     $this->assertEquals('twig', $info_subtheme->prefix);
   }
@@ -116,11 +121,9 @@ class ThemeExtensionListTest extends UnitTestCase {
    *   The theme name to find all its base themes.
    * @param array $expected
    *   The expected base themes.
-   *
-   * @dataProvider providerTestDoGetBaseThemes
-   *
-   * @group legacy
    */
+  #[DataProvider('providerTestDoGetBaseThemes')]
+  #[IgnoreDeprecations]
   public function testGetBaseThemes(array $themes, $theme, array $expected): void {
     // Mocks and stubs.
     $module_handler = $this->prophesize(ModuleHandlerInterface::class);
@@ -129,7 +132,7 @@ class ThemeExtensionListTest extends UnitTestCase {
     $theme_engine_list = $this->prophesize(ThemeEngineExtensionList::class);
     $theme_listing = new ThemeExtensionList($this->root, 'theme', new NullBackend('test'), new InfoParser($this->root), $module_handler->reveal(), $state, $config_factory, $theme_engine_list->reveal(), 'test');
 
-    $this->expectDeprecation("\Drupal\Core\Extension\ThemeExtensionList::getBaseThemes() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no direct replacement. See https://www.drupal.org/node/3413187");
+    $this->expectUserDeprecationMessage("\Drupal\Core\Extension\ThemeExtensionList::getBaseThemes() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no direct replacement. See https://www.drupal.org/node/3413187");
     $base_themes = $theme_listing->getBaseThemes($themes, $theme);
 
     $this->assertEquals($expected, $base_themes);
@@ -144,9 +147,8 @@ class ThemeExtensionListTest extends UnitTestCase {
    *   The theme name to find all its base themes.
    * @param array $expected
    *   The expected base themes.
-   *
-   * @dataProvider providerTestDoGetBaseThemes
    */
+  #[DataProvider('providerTestDoGetBaseThemes')]
   public function testDoGetBaseThemes(array $themes, $theme, array $expected): void {
     // Mocks and stubs.
     $module_handler = $this->prophesize(ModuleHandlerInterface::class);
@@ -167,7 +169,7 @@ class ThemeExtensionListTest extends UnitTestCase {
    * @return array
    *   An array of theme test data.
    */
-  public static function providerTestDoGetBaseThemes() {
+  public static function providerTestDoGetBaseThemes(): array {
     $data = [];
 
     // Tests a theme without any base theme.
@@ -259,7 +261,7 @@ trait SettableDiscoveryExtensionListTrait {
    * @param \Drupal\Core\Extension\ExtensionDiscovery $discovery
    *   The extension discovery.
    */
-  public function setExtensionDiscovery(ExtensionDiscovery $discovery) {
+  public function setExtensionDiscovery(ExtensionDiscovery $discovery): void {
     $this->extensionDiscovery = $discovery;
   }
 

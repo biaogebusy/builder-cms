@@ -1,5 +1,6 @@
 parameters:
   jsonapi.base_path: /jsonapi
+  jsonapi.skip_procedural_hook_scan: true
 
 services:
   _defaults:
@@ -46,7 +47,11 @@ services:
       - { name: jsonapi_normalizer }
   serializer.normalizer.resource_object.jsonapi:
     class: Drupal\jsonapi\Normalizer\ResourceObjectNormalizer
-    arguments: ['@jsonapi.normalization_cacher']
+    arguments:
+      - '@jsonapi.normalization_cacher'
+      - '@event_dispatcher'
+      - '@entity_field.manager'
+      - '@entity_type.manager'
     tags:
       - { name: jsonapi_normalizer }
   jsonapi.normalization_cacher:
@@ -78,6 +83,7 @@ services:
     class: Drupal\jsonapi\Normalizer\RelationshipNormalizer
     tags:
       - { name: jsonapi_normalizer }
+    arguments: ['@jsonapi.resource_type.repository']
   serializer.encoder.jsonapi:
     class: Drupal\jsonapi\Encoder\JsonEncoder
     tags:
@@ -196,16 +202,11 @@ services:
       - '@jsonapi.serializer'
       - '@datetime.time'
       - '@current_user'
+      - '@event_dispatcher'
   Drupal\jsonapi\Controller\EntityResource: '@jsonapi.entity_resource'
   jsonapi.file_upload:
     class: Drupal\jsonapi\Controller\FileUpload
-    arguments:
-      - '@current_user'
-      - '@entity_field.manager'
-      - '@file.upload_handler'
-      - '@http_kernel'
-      - '@file.input_stream_file_writer'
-      - '@file_system'
+    autowire: true
   Drupal\jsonapi\Controller\FileUpload: '@jsonapi.file_upload'
 
   # Event subscribers.
@@ -214,11 +215,6 @@ services:
   jsonapi.resource_response.subscriber:
     class: Drupal\jsonapi\EventSubscriber\ResourceResponseSubscriber
     arguments: ['@jsonapi.serializer']
-  jsonapi.resource_response_validator.subscriber:
-    class: Drupal\jsonapi\EventSubscriber\ResourceResponseValidator
-    arguments: ['@logger.channel.jsonapi', '@module_handler', '%app.root%']
-    calls:
-      - [setValidator, []]
   jsonapi.maintenance_mode_subscriber:
     class: Drupal\jsonapi\EventSubscriber\JsonapiMaintenanceModeSubscriber
     arguments: ['@maintenance_mode', '@config.factory']

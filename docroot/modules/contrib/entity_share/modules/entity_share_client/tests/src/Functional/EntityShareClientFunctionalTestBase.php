@@ -62,7 +62,6 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
     'entity_share_client',
     'entity_share_client_remote_manager_test',
     'entity_share_server',
-    'entity_share_test',
     'jsonapi_extras',
   ];
 
@@ -240,6 +239,13 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    * @var string
    */
   protected $loginPath = 'user/login';
+
+  /**
+   * An array of files data here.
+   * 
+   * @var array
+   */
+  protected static $filesData = [];
 
   /**
    * {@inheritdoc}
@@ -531,6 +537,11 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
 
             $entity = $entity_storage->create($prepared_entity_data);
             $entity->save();
+            // Uncomment the following in development to check that the entity
+            // has a field for every key in the prepared data.
+            // foreach (array_keys($prepared_entity_data) as $field_name) {
+            //   $this->assertTrue($entity->hasField($field_name), "Missing field {$field_name} on entity type {$entity->getEntityTypeId()}.");
+            // }
           }
 
           $this->entities[$entity_type_id][$entity_uuid] = $entity;

@@ -1,8 +1,17 @@
 <?php
 
 /**
+ * @file
+ * Hook implementations for the pathauto_custom_punctuation_test.module.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\pathauto_custom_punctuation_test\Hook\PathautoCustomPunctuationTestHooks;
+
+/**
  * Implements hook_pathauto_punctuation_chars_alter().
  */
+#[LegacyHook]
 function pathauto_custom_punctuation_test_pathauto_punctuation_chars_alter(array &$punctuation) {
-  $punctuation['copyright'] = ['value' => '©', 'name' => t('Copyright symbol')];
+  \Drupal::service(PathautoCustomPunctuationTestHooks::class)->pathautoPunctuationCharsAlter($punctuation);
 }

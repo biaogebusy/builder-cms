@@ -29,8 +29,8 @@ interface CommentManagerInterface {
    *   An array of comment field map definitions, keyed by field name. Each
    *   value is an array with two entries:
    *   - type: The field type.
-   *   - bundles: The bundles in which the field appears, as an array with entity
-   *     types as keys and the array of bundle names as values.
+   *   - bundles: The bundles in which the field appears, as an array with
+   *     entity types as keys and the array of bundle names as values.
    */
   public function getFields($entity_type_id);
 
@@ -60,7 +60,7 @@ interface CommentManagerInterface {
   public function forbiddenMessage(EntityInterface $entity, $field_name);
 
   /**
-   * Returns the number of new comments available on a given entity for a user.
+   * Returns the number of new comments on a given entity for the current user.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to which the comments are attached to.
@@ -71,7 +71,13 @@ interface CommentManagerInterface {
    *   entity.
    *
    * @return int|false
-   *   The number of new comments or FALSE if the user is not authenticated.
+   *   The number of new comments or FALSE if the user is not authenticated or
+   *   if the History module is not installed.
+   *
+   * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use
+   *   \Drupal\history\HistoryManager::getCountNewComments instead.
+   *
+   * @see https://www.drupal.org/node/3551729
    */
   public function getCountNewComments(EntityInterface $entity, $field_name = NULL, $timestamp = 0);
 

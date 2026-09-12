@@ -1,0 +1,38 @@
+{
+    "name": "drupal-charts-chartjs-libraries",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Manages Chart.js libraries for the Drupal Charts module.",
+    "scripts": {
+      "libraries:copy": "rimraf ../../../../../libraries/chart.js ../../../../../libraries/chartjs-adapter-date-fns ../../../../../libraries/chartjs-plugin-datalabels ../../../../../libraries/chartjs-plugin-annotation && copy-files-from-to"
+    },
+    "dependencies": {
+      "chart.js": "^4.4.0",
+      "chartjs-adapter-date-fns": "^3.0.0",
+      "chartjs-plugin-datalabels": "^2.2.0",
+      "chartjs-plugin-annotation": "^3.1.0"
+    },
+    "devDependencies": {
+      "copy-files-from-to": "^3.9.0",
+      "rimraf": "^5.0.7"
+    },
+    "copyFiles": [
+      {
+        "from": "../../../../../../node_modules/chart.js/dist/chart.umd.js",
+        "to": "../../../../../libraries/chart.js/dist/chart.umd.js"
+      },
+      {
+        "from": "../../../../../../node_modules/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.js",
+        "to": "../../../../../libraries/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.js"
+      },
+      {
+        "from": "../../../../../../node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.js",
+        "to": "../../../../../libraries/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.js"
+      },
+      {
+        "from": "../../../../../../node_modules/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.js",
+        "to": "../../../../../libraries/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.js"
+      }
+    ]
+  }
+  

@@ -84,6 +84,11 @@ class ViewsCacheabilityMetadataExportTest extends KernelTestBase {
     $this->entityTypeManager = $this->container->get('entity_type.manager');
     $this->viewExecutableFactory = $this->container->get('views.executable');
     $this->state = $this->container->get('state');
+
+    // Re-save the test view to ensure it has the correct cache metadata set.
+    $this->entityTypeManager->getStorage('view')
+      ->load(self::TEST_VIEW_ID)
+      ->save();
   }
 
   /**
@@ -116,6 +121,9 @@ class ViewsCacheabilityMetadataExportTest extends KernelTestBase {
         // configuration changes the cached results should be invalidated.
         // @see \Drupal\search_api\Query\Query::getCacheTags()
         'config:search_api.index.test_node_index',
+        // The cache should also be invalidated if any items get indexed or
+        // deleted.
+        'search_api_list:test_node_index',
       ],
       // By default the result is permanently cached.
       'max-age' => -1,
@@ -144,7 +152,6 @@ class ViewsCacheabilityMetadataExportTest extends KernelTestBase {
       $expected_view_metadata[$display_id]['tags'][] = 'search_api:test_tag';
       [$plugin_id] = explode('_', $display_id, 2);
       $expected_view_metadata[$display_id]['tags'][] = "search_api:test_views_$plugin_id:search_api_test_node_view__$display_id";
-      $expected_view_metadata[$display_id]['tags'][] = 'search_api_list:test_node_index';
       $expected_view_metadata[$display_id]['max-age'] = 100;
     }
 

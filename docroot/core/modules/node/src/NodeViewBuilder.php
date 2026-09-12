@@ -6,11 +6,16 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Render\Element\Link;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+
+// cspell:ignore readmore
 
 /**
  * View builder handler for nodes.
  */
 class NodeViewBuilder extends EntityViewBuilder implements TrustedCallbackInterface {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -45,7 +50,7 @@ class NodeViewBuilder extends EntityViewBuilder implements TrustedCallbackInterf
       if ($display->getComponent('langcode')) {
         $build[$id]['langcode'] = [
           '#type' => 'item',
-          '#title' => t('Language'),
+          '#title' => $this->t('Language'),
           '#markup' => $entity->language()->getName(),
           '#prefix' => '<div id="field-language-display">',
           '#suffix' => '</div>',
@@ -69,7 +74,9 @@ class NodeViewBuilder extends EntityViewBuilder implements TrustedCallbackInterf
   }
 
   /**
-   * #lazy_builder callback; builds a node's links.
+   * Render API callback: Builds a node's links.
+   *
+   * This function is assigned as a #lazy_builder callback.
    *
    * @param string $node_entity_id
    *   The node entity ID.
@@ -79,7 +86,7 @@ class NodeViewBuilder extends EntityViewBuilder implements TrustedCallbackInterf
    *   The language in which the node entity is being viewed.
    * @param bool $is_in_preview
    *   Whether the node is currently being previewed.
-   * @param $revision_id
+   * @param int|string $revision_id
    *   (optional) The identifier of the node revision to be loaded. If none
    *   is provided, the default revision will be loaded.
    *

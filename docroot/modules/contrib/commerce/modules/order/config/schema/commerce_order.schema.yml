@@ -114,6 +114,9 @@ commerce_order.commerce_order_type.*:
     workflow:
       type: string
       label: 'Workflow'
+    showOrderEditLinks:
+      type: boolean
+      label: 'Show edit links'
     numberPattern:
       type: string
       label: 'Number pattern'
@@ -179,6 +182,9 @@ field.widget.settings.commerce_order_items:
     allow_duplicate:
       type: boolean
       label: 'Allow duplicate'
+    draggable:
+      type: boolean
+      label: 'Draggable table'
 
 profile.type.*.third_party.commerce_order:
   type: mapping
@@ -194,6 +200,9 @@ field.formatter.settings.commerce_order_item_table:
     view:
       type: string
       label: 'Order item table view'
+    show_add_items_link:
+      type: boolean
+      label: 'Show link to add items'
 
 field.formatter.settings.commerce_order_reference_label_user:
   type: mapping
@@ -206,3 +215,30 @@ field.formatter.settings.commerce_order_reference_label_user:
 action.configuration.commerce_order_unlock:
   type: action_configuration_default
   label: 'Unlock'
+
+field.formatter.settings.commerce_billing_information:
+  type: mapping
+  mapping:
+    profile_view_mode:
+      type: string
+      label: 'Billing profile view mode'
+
+field.formatter.settings.commerce_quantity:
+  type: mapping
+  label: 'Commerce quantity display format settings'
+  mapping:
+    thousand_separator:
+      type: string
+      label: 'Thousand marker'
+    decimal_separator:
+      type: string
+      label: 'Decimal marker'
+    scale:
+      type: integer
+      label: 'Scale'
+    prefix_suffix:
+      type: boolean
+      label: 'Display prefix and suffix.'
+    strip_trailing_zeroes:
+      type: boolean
+      label: 'Strip trailing zeroes'

@@ -108,24 +108,42 @@ EOT;
             $parameters['socket'] = $dbSpec['pdo']['unix_socket'];
         }
 
-        if (!empty($dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CA])) {
-            $parameters['ssl-ca'] = $dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CA];
+        // Use updated constants
+        $attribs = [
+            'ssl_ca' => (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA),
+            'ssl_capath' => (defined('Pdo\Mysql::ATTR_SSL_CAPATH') ? Pdo\Mysql::ATTR_SSL_CAPATH : PDO::MYSQL_ATTR_SSL_CAPATH),
+            'ssl_cert' => (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CERT : PDO::MYSQL_ATTR_SSL_CERT),
+            'ssl_cipher' => (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CIPHER : PDO::MYSQL_ATTR_SSL_CIPHER),
+            'ssl_key' => (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_KEY : PDO::MYSQL_ATTR_SSL_KEY),
+        ];
+        if (defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')) {
+            $attribs['ssl_verify_server_cert'] = Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT;
+        } elseif (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+            $attribs['ssl_verify_server_cert'] = PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
         }
 
-        if (!empty($dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CAPATH])) {
-            $parameters['ssl-capath'] = $dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CAPATH];
+        if (!empty($dbSpec['pdo'][$attribs['ssl_ca']])) {
+            $parameters['ssl-ca'] = $dbSpec['pdo'][$attribs['ssl_ca']];
         }
 
-        if (!empty($dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CERT])) {
-            $parameters['ssl-cert'] = $dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CERT];
+        if (!empty($dbSpec['pdo'][$attribs['ssl_capath']])) {
+            $parameters['ssl-capath'] = $dbSpec['pdo'][$attribs['ssl_capath']];
         }
 
-        if (!empty($dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CIPHER])) {
-            $parameters['ssl-cipher'] = $dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_CIPHER];
+        if (!empty($dbSpec['pdo'][$attribs['ssl_cert']])) {
+            $parameters['ssl-cert'] = $dbSpec['pdo'][$attribs['ssl_cert']];
         }
 
-        if (!empty($dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_KEY])) {
-            $parameters['ssl-key'] = $dbSpec['pdo'][PDO::MYSQL_ATTR_SSL_KEY];
+        if (!empty($dbSpec['pdo'][$attribs['ssl_cipher']])) {
+            $parameters['ssl-cipher'] = $dbSpec['pdo'][$attribs['ssl_cipher']];
+        }
+
+        if (!empty($dbSpec['pdo'][$attribs['ssl_key']])) {
+            $parameters['ssl-key'] = $dbSpec['pdo'][$attribs['ssl_key']];
+        }
+
+        if (isset($attribs['ssl_verify_server_cert']) && isset($dbSpec['pdo'][$attribs['ssl_verify_server_cert']])) {
+            $parameters['ssl-verify-server-cert'] = (bool) $dbSpec['pdo'][$attribs['ssl_verify_server_cert']];
         }
 
         return $this->paramsToOptions($parameters);

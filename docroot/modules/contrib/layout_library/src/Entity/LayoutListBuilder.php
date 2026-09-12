@@ -2,6 +2,7 @@
 
 namespace Drupal\layout_library\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -105,7 +106,7 @@ class LayoutListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
+  protected function getDefaultOperations(EntityInterface $entity, ?CacheableMetadata $cacheability = NULL) {
     /** @var \Drupal\layout_library\Entity\Layout $entity */
     $operations = [];
     if ($this->currentUser->hasPermission('administer ' . $entity->getTargetEntityType() . ' display')) {
@@ -115,7 +116,7 @@ class LayoutListBuilder extends EntityListBuilder {
         'url' => $this->getLayoutBuilderUrl($entity),
       ];
     }
-    return $operations + parent::getDefaultOperations($entity);
+    return $operations + parent::getDefaultOperations($entity, $cacheability);
   }
 
   /**

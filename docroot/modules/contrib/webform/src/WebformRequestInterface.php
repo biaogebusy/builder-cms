@@ -111,7 +111,7 @@ interface WebformRequestInterface {
    * @return \Drupal\Core\Url
    *   The URL for a form/submission and source entity.
    */
-  public function getUrl(EntityInterface $webform_entity, EntityInterface $source_entity = NULL, $route_name, array $route_options = []);
+  public function getUrl(EntityInterface $webform_entity, ?EntityInterface $source_entity, $route_name, array $route_options = []);
 
   /**
    * Get the route name for a form/submission and source entity.
@@ -127,7 +127,7 @@ interface WebformRequestInterface {
    *   A route name prefixed with 'entity.{entity_type_id}'
    *   or just 'entity'.
    */
-  public function getRouteName(EntityInterface $webform_entity, EntityInterface $source_entity = NULL, $route_name);
+  public function getRouteName(EntityInterface $webform_entity, ?EntityInterface $source_entity, $route_name);
 
   /**
    * Get the route parameters for a form/submission and source entity.
@@ -140,7 +140,7 @@ interface WebformRequestInterface {
    * @return array
    *   An array of route parameters.
    */
-  public function getRouteParameters(EntityInterface $webform_entity, EntityInterface $source_entity = NULL);
+  public function getRouteParameters(EntityInterface $webform_entity, ?EntityInterface $source_entity = NULL);
 
   /**
    * Get the base route name for a form/submission and source entity.
@@ -154,7 +154,7 @@ interface WebformRequestInterface {
    *   If the source entity has a webform attached, 'entity.{entity_type_id}'
    *   or just 'entity'.
    */
-  public function getBaseRouteName(EntityInterface $webform_entity, EntityInterface $source_entity = NULL);
+  public function getBaseRouteName(EntityInterface $webform_entity, ?EntityInterface $source_entity = NULL);
 
   /**
    * Check if a source entity has dedicate webform routes.
@@ -165,7 +165,7 @@ interface WebformRequestInterface {
    * @return bool
    *   TRUE if a source entity has dedicate webform routes.
    */
-  public function hasSourceEntityWebformRoutes(EntityInterface $source_entity = NULL);
+  public function hasSourceEntityWebformRoutes(?EntityInterface $source_entity = NULL);
 
   /**
    * Check if a source entity is attached to a webform.
@@ -178,6 +178,6 @@ interface WebformRequestInterface {
    * @return bool
    *   TRUE if a webform is attached to a webform submission source entity.
    */
-  public function isValidSourceEntity(EntityInterface $webform_entity, EntityInterface $source_entity = NULL);
+  public function isValidSourceEntity(EntityInterface $webform_entity, ?EntityInterface $source_entity = NULL);
 
 }

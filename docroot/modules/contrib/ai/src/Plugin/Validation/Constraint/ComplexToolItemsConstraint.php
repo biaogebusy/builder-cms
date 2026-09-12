@@ -3,13 +3,13 @@
 namespace Drupal\ai\Plugin\Validation\Constraint;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Validation\Attribute\Constraint as ConstraintAttribute;
-use Symfony\Component\Validator\Constraint;
+use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 
 /**
  * Custom constraint to add lists of items in tool calling.
  */
-#[ConstraintAttribute(
+#[Constraint(
   id: 'ComplexToolItems',
   label: new TranslatableMarkup('Tool Items', [], ['context' => 'Validation']),
   // We might need to add some types there.
@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Constraint;
     'map',
   ],
 )]
-class ComplexToolItemsConstraint extends Constraint {
+class ComplexToolItemsConstraint extends SymfonyConstraint {
 
   /**
    * The object value that must be used.

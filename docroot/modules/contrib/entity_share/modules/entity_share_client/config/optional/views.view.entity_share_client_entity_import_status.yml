@@ -3,6 +3,7 @@ status: true
 dependencies:
   module:
     - entity_share_client
+    - user
 id: entity_share_client_entity_import_status
 label: entity_share_client_entity_import_status
 module: views
@@ -801,8 +802,9 @@ display:
           sort_asc_label: Asc
           sort_desc_label: Desc
       access:
-        type: none
-        options: {  }
+        type: perm
+        options:
+          perm: entity_share_client_pull_content
       cache:
         type: tag
         options: {  }
@@ -912,9 +914,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -956,9 +955,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             placeholder: ''
             reduce: 0
           is_grouped: false
@@ -1001,9 +997,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1045,9 +1038,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1089,9 +1079,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1133,9 +1120,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             placeholder: ''
           is_grouped: false
           group_info:
@@ -1181,9 +1165,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             min_placeholder: ''
             max_placeholder: ''
             placeholder: ''
@@ -1227,9 +1208,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1272,6 +1250,7 @@ display:
         - url.query_args
         - 'url.query_args:sort_by'
         - 'url.query_args:sort_order'
+        - user.permissions
       tags: {  }
   page_1:
     id: page_1
@@ -1279,10 +1258,7 @@ display:
     display_plugin: page
     position: 1
     display_options:
-      display_extenders:
-        localgov_page_header_display_extender:
-          lede: ''
-          tokenize: false
+      display_extenders: {  }
       path: admin/content/entity_share/import_status
     cache_metadata:
       max-age: -1
@@ -1293,4 +1269,5 @@ display:
         - url.query_args
         - 'url.query_args:sort_by'
         - 'url.query_args:sort_order'
+        - user.permissions
       tags: {  }

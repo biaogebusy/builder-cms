@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.node_type_b.body
     - node.type.node_type_b
   module:
     - text

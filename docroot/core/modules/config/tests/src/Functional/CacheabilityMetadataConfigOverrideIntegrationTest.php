@@ -6,12 +6,14 @@ namespace Drupal\Tests\config\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests if configuration overrides correctly affect cacheability metadata.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class CacheabilityMetadataConfigOverrideIntegrationTest extends BrowserTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;

@@ -97,10 +97,3 @@ summary .webform-element-help {
   border-color: #999;
   background: #999;
 }
-
-/**
- * Tweak Algolia places.
- */
-input.ap-input {
-  font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
-}

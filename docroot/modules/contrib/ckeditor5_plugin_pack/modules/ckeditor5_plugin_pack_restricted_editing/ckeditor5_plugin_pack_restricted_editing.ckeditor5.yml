@@ -1,0 +1,14 @@
+ckeditor5_plugin_pack_restricted_editing__restricted_editing:
+  ckeditor5:
+    plugins:
+      - restrictedEditing.RestrictedEditingMode
+      - restrictedEditing.StandardEditingMode
+  drupal:
+    label: Restricted editing
+    elements: false
+    class: Drupal\ckeditor5_plugin_pack_restricted_editing\Plugin\CKEditor5Plugin\RestrictedEditing
+    library: ckeditor5_plugin_pack_restricted_editing/restricted-editing
+    admin_library: ckeditor5_plugin_pack_restricted_editing/admin.restricted_editing
+    toolbar_items:
+      restrictedEditing:
+        label: Restricted editing

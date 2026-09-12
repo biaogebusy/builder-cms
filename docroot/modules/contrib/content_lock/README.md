@@ -24,7 +24,7 @@ locked whenever a user starts editing it. The lock will be automatically
 released when the user submits the form or navigates away from the edit page.
 
 Content locks that have been "forgotten" can be automatically released after a
-configurable time span using the bundled content_lock_timeout sub module.
+configurable time span using the bundled content_lock_timeout submodule.
 
  * For a full description of the module visit:
    https://www.drupal.org/project/content_lock
@@ -79,7 +79,8 @@ For extending or altering the string texts it is advised to use the
  * Joseph Zhao (pandaski) - https://www.drupal.org/u/pandaski
  * Volker Killesreiter (volkerk) - https://www.drupal.org/u/volkerk
  * Alex Pott (alexpott) - https://www.drupal.org/u/alexpott
- * Mark Burdett(mfb) - https://www.drupal.org/u/mfb
+ * Mark Burdett (mfb) - https://www.drupal.org/u/mfb
+ * Viktor Holovachek (astonvictor) - https://www.drupal.org/u/astonvictor
 
 Supporting organizations:
 

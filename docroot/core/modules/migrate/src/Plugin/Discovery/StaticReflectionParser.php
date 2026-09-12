@@ -8,9 +8,10 @@ use Drupal\Component\Annotation\Doctrine\StaticReflectionParser as BaseStaticRef
  * Allows getting the reflection parser for the parent class.
  *
  * @internal
- *   This is a temporary solution to the fact that migration source plugins have
- *   more than one provider. This functionality will be moved to core in
- *   https://www.drupal.org/node/2786355.
+ *   This provides backwards compatibility for migration source plugins
+ *   using annotations and having more than one provider. This functionality
+ *   will be deprecated with plugin discovery by annotations in
+ *   https://www.drupal.org/project/drupal/issues/3522409.
  */
 class StaticReflectionParser extends BaseStaticReflectionParser {
 
@@ -19,7 +20,7 @@ class StaticReflectionParser extends BaseStaticReflectionParser {
    *
    * @param \Drupal\Component\Annotation\Doctrine\StaticReflectionParser $parser
    *   The current static parser.
-   * @param $finder
+   * @param \Doctrine\Common\Reflection\ClassFinderInterface $finder
    *   The class finder. Must implement
    *   \Drupal\Component\ClassFinder\ClassFinderInterface, but can do so
    *   implicitly (i.e., implements the interface's methods but not the actual

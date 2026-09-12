@@ -5,13 +5,10 @@
  * Functions for form and batch generation and processing.
  */
 
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Batch\BatchStorageInterface;
-use Drupal\Core\Database\IntegrityConstraintViolationException;
-use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElementBase;
-use Drupal\Core\Template\Attribute;
+use Drupal\Core\Form\FormPreprocess;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\CallableResolver;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -23,20 +20,21 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  * the #options property to an associative array in which the keys are group
  * labels, and the values are associative arrays in the normal #options format.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #title, #value, #options, #description, #extra,
  *     #multiple, #required, #name, #attributes, #size, #sort_options,
  *     #sort_start.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_select(&$variables) {
-  $element = $variables['element'];
-  Element::setAttributes($element, ['id', 'name', 'size']);
-  RenderElementBase::setAttributes($element, ['form-select']);
-
-  $variables['attributes'] = $element['#attributes'];
-  $variables['options'] = form_select_options($element);
+function template_preprocess_select(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessSelect($variables);
 }
 
 /**
@@ -68,7 +66,7 @@ function template_preprocess_select(&$variables) {
  *     or 'optgroup'.
  *   - value: A string that contains the value attribute for the option.
  */
-function form_select_options($element, $choices = NULL) {
+function form_select_options($element, $choices = NULL): array {
   if (!isset($choices)) {
     if (empty($element['#options'])) {
       return [];
@@ -85,8 +83,8 @@ function form_select_options($element, $choices = NULL) {
     unset($choices['#sort_start']);
   }
 
-  // array_key_exists() accommodates the rare event where $element['#value'] is NULL.
-  // isset() fails in this situation.
+  // array_key_exists() accommodates the rare event where $element['#value'] is
+  // NULL. isset() fails in this situation.
   $value_valid = \array_key_exists('#value', $element);
   $value_is_array = $value_valid && is_array($element['#value']);
   // Check if the element is multiple select and no value has been selected.
@@ -153,9 +151,9 @@ function form_select_options($element, $choices = NULL) {
  * As usual with functions that can return [] or FALSE, do not
  * forget to use === and !== if needed.
  *
- * @param $element
+ * @param array $element
  *   The select element to search.
- * @param $key
+ * @param string $key
  *   The key to look for.
  *
  * @return array|bool
@@ -190,48 +188,15 @@ function form_get_options($element, $key) {
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #attributes, #children, #description, #id, #title,
  *     #value.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_fieldset(&$variables) {
-  $element = $variables['element'];
-  Element::setAttributes($element, ['id']);
-  RenderElementBase::setAttributes($element);
-  $variables['attributes'] = $element['#attributes'] ?? [];
-  $variables['prefix'] = $element['#field_prefix'] ?? NULL;
-  $variables['suffix'] = $element['#field_suffix'] ?? NULL;
-  $variables['title_display'] = $element['#title_display'] ?? NULL;
-  $variables['children'] = $element['#children'];
-  $variables['required'] = !empty($element['#required']) ? $element['#required'] : NULL;
-
-  if (isset($element['#title']) && $element['#title'] !== '') {
-    $variables['legend']['title'] = ['#markup' => $element['#title']];
-  }
-
-  $variables['legend']['attributes'] = new Attribute();
-  // Add 'visually-hidden' class to legend span.
-  if ($variables['title_display'] == 'invisible') {
-    $variables['legend_span']['attributes'] = new Attribute(['class' => ['visually-hidden']]);
-  }
-  else {
-    $variables['legend_span']['attributes'] = new Attribute();
-  }
-
-  if (!empty($element['#description'])) {
-    $description_id = $element['#attributes']['id'] . '--description';
-    $description_attributes['id'] = $description_id;
-    $variables['description_display'] = $element['#description_display'];
-    if ($element['#description_display'] === 'invisible') {
-      $description_attributes['class'][] = 'visually-hidden';
-    }
-    $description_attributes['data-drupal-field-elements'] = 'description';
-    $variables['description']['attributes'] = new Attribute($description_attributes);
-    $variables['description']['content'] = $element['#description'];
-
-    // Add the description's id to the fieldset aria attributes.
-    $variables['attributes']['aria-describedby'] = $description_id;
-  }
-
-  // Suppress error messages.
-  $variables['errors'] = NULL;
+function template_preprocess_fieldset(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessFieldset($variables);
 }
 
 /**
@@ -244,31 +209,15 @@ function template_preprocess_fieldset(&$variables) {
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #attributes, #children, #description, #required,
  *     #summary_attributes, #title, #value.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_details(&$variables) {
-  $element = $variables['element'];
-  $variables['attributes'] = $element['#attributes'];
-  $variables['summary_attributes'] = new Attribute($element['#summary_attributes']);
-  if (!empty($element['#title'])) {
-    $variables['summary_attributes']['role'] = 'button';
-    if (!empty($element['#attributes']['id'])) {
-      $variables['summary_attributes']['aria-controls'] = $element['#attributes']['id'];
-    }
-    $variables['summary_attributes']['aria-expanded'] = !empty($element['#attributes']['open']) ? 'true' : 'false';
-  }
-  $variables['title'] = (!empty($element['#title'])) ? $element['#title'] : '';
-  // If the element title is a string, wrap it a render array so that markup
-  // will not be escaped (but XSS-filtered).
-  if (is_string($variables['title']) && $variables['title'] !== '') {
-    $variables['title'] = ['#markup' => $variables['title']];
-  }
-  $variables['description'] = (!empty($element['#description'])) ? $element['#description'] : '';
-  $variables['children'] = (isset($element['#children'])) ? $element['#children'] : '';
-  $variables['value'] = (isset($element['#value'])) ? $element['#value'] : '';
-  $variables['required'] = !empty($element['#required']) ? $element['#required'] : NULL;
-
-  // Suppress error messages.
-  $variables['errors'] = NULL;
+function template_preprocess_details(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessDetails($variables);
 }
 
 /**
@@ -281,17 +230,15 @@ function template_preprocess_details(&$variables) {
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #title, #value, #options, #description, #required,
  *     #attributes, #children.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_radios(&$variables) {
-  $element = $variables['element'];
-  $variables['attributes'] = [];
-  if (isset($element['#id'])) {
-    $variables['attributes']['id'] = $element['#id'];
-  }
-  if (isset($element['#attributes']['title'])) {
-    $variables['attributes']['title'] = $element['#attributes']['title'];
-  }
-  $variables['children'] = $element['#children'];
+function template_preprocess_radios(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessRadios($variables);
 }
 
 /**
@@ -303,17 +250,15 @@ function template_preprocess_radios(&$variables) {
  *   An associative array containing:
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #children, #attributes.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_checkboxes(&$variables) {
-  $element = $variables['element'];
-  $variables['attributes'] = [];
-  if (isset($element['#id'])) {
-    $variables['attributes']['id'] = $element['#id'];
-  }
-  if (isset($element['#attributes']['title'])) {
-    $variables['attributes']['title'] = $element['#attributes']['title'];
-  }
-  $variables['children'] = $element['#children'];
+function template_preprocess_checkboxes(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessCheckboxes($variables);
 }
 
 /**
@@ -325,10 +270,15 @@ function template_preprocess_checkboxes(&$variables) {
  *   An associative array containing:
  *   - element: An associative array containing the properties and children of
  *     the details element. Properties used: #children.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_vertical_tabs(&$variables) {
-  $element = $variables['element'];
-  $variables['children'] = (!empty($element['#children'])) ? $element['#children'] : '';
+function template_preprocess_vertical_tabs(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessVerticalTabs($variables);
 }
 
 /**
@@ -340,14 +290,15 @@ function template_preprocess_vertical_tabs(&$variables) {
  *   An associative array containing:
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #attributes.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_input(&$variables) {
-  $element = $variables['element'];
-  // Remove name attribute if empty, for W3C compliance.
-  if (isset($variables['attributes']['name']) && empty((string) $variables['attributes']['name'])) {
-    unset($variables['attributes']['name']);
-  }
-  $variables['children'] = $element['#children'];
+function template_preprocess_input(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessInput($variables);
 }
 
 /**
@@ -355,22 +306,19 @@ function template_preprocess_input(&$variables) {
  *
  * Default template: form.html.twig.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - element: An associative array containing the properties of the element.
- *     Properties used: #action, #method, #attributes, #children
+ *     Properties used: #action, #method, #attributes, #children.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_form(&$variables) {
-  $element = $variables['element'];
-  if (isset($element['#action'])) {
-    $element['#attributes']['action'] = UrlHelper::stripDangerousProtocols($element['#action']);
-  }
-  Element::setAttributes($element, ['method', 'id']);
-  if (empty($element['#attributes']['accept-charset'])) {
-    $element['#attributes']['accept-charset'] = "UTF-8";
-  }
-  $variables['attributes'] = $element['#attributes'];
-  $variables['children'] = $element['#children'];
+function template_preprocess_form(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessForm($variables);
 }
 
 /**
@@ -383,17 +331,15 @@ function template_preprocess_form(&$variables) {
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #title, #value, #description, #rows, #cols, #maxlength,
  *     #placeholder, #required, #attributes, #resizable.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_textarea(&$variables) {
-  $element = $variables['element'];
-  $attributes = ['id', 'name', 'rows', 'cols', 'maxlength', 'placeholder'];
-  Element::setAttributes($element, $attributes);
-  RenderElementBase::setAttributes($element, ['form-textarea']);
-  $variables['wrapper_attributes'] = new Attribute();
-  $variables['attributes'] = new Attribute($element['#attributes']);
-  $variables['value'] = $element['#value'];
-  $variables['resizable'] = !empty($element['#resizable']) ? $element['#resizable'] : NULL;
-  $variables['required'] = !empty($element['#required']) ? $element['#required'] : NULL;
+function template_preprocess_textarea(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessTextarea($variables);
 }
 
 /**
@@ -438,74 +384,15 @@ function template_preprocess_textarea(&$variables) {
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #title, #title_display, #description, #id, #required,
  *     #children, #type, #name, #label_for.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_form_element(&$variables) {
-  $element = &$variables['element'];
-
-  // This function is invoked as theme wrapper, but the rendered form element
-  // may not necessarily have been processed by
-  // \Drupal::formBuilder()->doBuildForm().
-  $element += [
-    '#title_display' => 'before',
-    '#wrapper_attributes' => [],
-    '#label_attributes' => [],
-    '#label_for' => NULL,
-  ];
-  $variables['attributes'] = $element['#wrapper_attributes'];
-
-  // Add element #id for #type 'item'.
-  if (isset($element['#markup']) && !empty($element['#id'])) {
-    $variables['attributes']['id'] = $element['#id'];
-  }
-
-  // Pass elements #type and #name to template.
-  if (!empty($element['#type'])) {
-    $variables['type'] = $element['#type'];
-  }
-  if (!empty($element['#name'])) {
-    $variables['name'] = $element['#name'];
-  }
-
-  // Pass elements disabled status to template.
-  $variables['disabled'] = !empty($element['#attributes']['disabled']) ? $element['#attributes']['disabled'] : NULL;
-
-  // Suppress error messages.
-  $variables['errors'] = NULL;
-
-  // If #title is not set, we don't display any label.
-  if (!isset($element['#title'])) {
-    $element['#title_display'] = 'none';
-  }
-
-  $variables['title_display'] = $element['#title_display'];
-
-  $variables['prefix'] = $element['#field_prefix'] ?? NULL;
-  $variables['suffix'] = $element['#field_suffix'] ?? NULL;
-
-  $variables['description'] = NULL;
-  if (!empty($element['#description'])) {
-    $variables['description_display'] = $element['#description_display'];
-    $description_attributes = [];
-    if (!empty($element['#id'])) {
-      $description_attributes['id'] = $element['#id'] . '--description';
-    }
-    $variables['description']['attributes'] = new Attribute($description_attributes);
-    $variables['description']['content'] = $element['#description'];
-  }
-
-  // Add label_display and label variables to template.
-  $variables['label_display'] = $element['#title_display'];
-  $variables['label'] = ['#theme' => 'form_element_label'];
-  $variables['label'] += array_intersect_key($element, array_flip(['#id', '#required', '#title', '#title_display']));
-  $variables['label']['#attributes'] = $element['#label_attributes'];
-  if (!empty($element['#label_for'])) {
-    $variables['label']['#for'] = $element['#label_for'];
-    if (!empty($element['#id'])) {
-      $variables['label']['#id'] = $element['#id'] . '--label';
-    }
-  }
-
-  $variables['children'] = $element['#children'];
+function template_preprocess_form_element(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessFormElement($variables);
 }
 
 /**
@@ -531,33 +418,15 @@ function template_preprocess_form_element(&$variables) {
  *   An associative array containing:
  *   - element: An associative array containing the properties of the element.
  *     Properties used: #required, #title, #id, #value, #description, #for.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
-function template_preprocess_form_element_label(&$variables) {
-  $element = $variables['element'];
-  // If title and required marker are both empty, output no label.
-  if (isset($element['#title']) && $element['#title'] !== '') {
-    $variables['title'] = ['#markup' => $element['#title']];
-  }
-
-  // Pass elements title_display to template.
-  $variables['title_display'] = $element['#title_display'];
-
-  // A #for property of a dedicated #type 'label' element as precedence.
-  if (!empty($element['#for'])) {
-    $variables['attributes']['for'] = $element['#for'];
-    // A custom #id allows the referenced form input element to refer back to
-    // the label element; e.g., in the 'aria-labelledby' attribute.
-    if (!empty($element['#id'])) {
-      $variables['attributes']['id'] = $element['#id'];
-    }
-  }
-  // Otherwise, point to the #id of the form input element.
-  elseif (!empty($element['#id'])) {
-    $variables['attributes']['for'] = $element['#id'];
-  }
-
-  // Pass elements required to template.
-  $variables['required'] = !empty($element['#required']) ? $element['#required'] : NULL;
+function template_preprocess_form_element_label(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FormPreprocess::class)->preprocessFormElementLabel($variables);
 }
 
 /**
@@ -671,9 +540,9 @@ function template_preprocess_form_element_label(&$variables) {
  *   \Drupal::messenger()->addMessage($message);
  *   // Providing data for the redirected page is done through the session.
  *   foreach ($results as $result) {
- *     $items[] = t('Loaded node %title.', ['%title' => $result)];
+ *     $items[] = t('Loaded node %title.', ['%title' => $result]);
  *   }
- *   $session = \Drupal::getRequest()->getSession();
+ *   $session = \Drupal::request()->getSession();
  *   $session->set('my_batch_results', $items);
  * }
  * @endcode
@@ -694,7 +563,7 @@ function template_preprocess_form_element_label(&$variables) {
  * 'finished' callback. Batch sets are processed sequentially, with the progress
  * bar starting afresh for each new set.
  *
- * @param $batch_definition
+ * @param array $batch_definition
  *   An associative array defining the batch, with the following elements (all
  *   are optional except as noted):
  *   - operations: (required) Array of operations to be performed, where each
@@ -703,7 +572,7 @@ function template_preprocess_form_element_label(&$variables) {
  *     Example:
  *     @code
  *     [
- *       ['callback_batch_operation_1', [$arg1)],
+ *       ['callback_batch_operation_1', [$arg1]],
  *       ['callback_batch_operation_2', [$arg2_1, $arg2_2]],
  *     ]
  *     @endcode
@@ -712,8 +581,10 @@ function template_preprocess_form_element_label(&$variables) {
  *   - init_message: Message displayed while the processing is initialized.
  *     Defaults to t('Initializing.').
  *   - progress_message: Message displayed while processing the batch. Available
- *     placeholders are @current, @remaining, @total, @percentage, @estimate and
- *     @elapsed. Defaults to t('Completed @current of @total.').
+ *     placeholders are "@current", "@remaining", "@total", "@percentage",
+ *     phpcs:ignore Drupal.Commenting.FunctionComment.ParamCommentFullStop
+ *     "@estimate" and "@elapsed". Defaults to "t('Completed @current of
+ *     @total.')".
  *   - error_message: Message displayed if an error occurred while processing
  *     the batch. Defaults to t('An error has occurred.').
  *   - finished: Name of an implementation of callback_batch_finished(). This is
@@ -742,7 +613,7 @@ function template_preprocess_form_element_label(&$variables) {
  *       \Drupal\Core\Queue\BatchMemory. Defaults to Batch if progressive is
  *       TRUE, or to BatchMemory if progressive is FALSE.
  */
-function batch_set($batch_definition) {
+function batch_set($batch_definition): void {
   if ($batch_definition) {
     $batch =& batch_get();
 
@@ -799,12 +670,12 @@ function batch_set($batch_definition) {
  * inserted a new set, additional sets will be inserted after the last inserted
  * set.
  *
- * @param &$batch
+ * @param array &$batch
  *   The batch array.
- * @param $batch_set
+ * @param array $batch_set
  *   The batch set.
  */
-function _batch_append_set(&$batch, $batch_set) {
+function _batch_append_set(&$batch, $batch_set): void {
   $append_after_index = $batch['current_set'];
   $reached_current_set = FALSE;
   foreach ($batch['sets'] as $index => $set) {
@@ -871,7 +742,7 @@ function _batch_append_set(&$batch, $batch_set) {
  * @param \Drupal\Core\Url|null $url
  *   (optional) URL of the batch processing page. Should only be used for
  *   separate scripts like update.php.
- * @param $redirect_callback
+ * @param string|null $redirect_callback
  *   (optional) Specify a function to be called to redirect to the progressive
  *   processing page.
  *
@@ -882,7 +753,7 @@ function batch_process($redirect = NULL, ?Url $url = NULL, $redirect_callback = 
   $batch =& batch_get();
 
   if (isset($batch)) {
-    // Add process information
+    // Add process information.
     $process_info = [
       'current_set' => 0,
       'progressive' => TRUE,
@@ -901,24 +772,7 @@ function batch_process($redirect = NULL, ?Url $url = NULL, $redirect_callback = 
 
     // Assign an id to progressive batches. Non-progressive batches skip
     // database storage completely.
-    try {
-      $batch['id'] = $batch['progressive'] ? \Drupal::service(BatchStorageInterface::class)->getId() : 'non-progressive';
-    }
-    catch (IntegrityConstraintViolationException $e) {
-      // @todo this is here to support the update path to deprecate
-      // Connection::nextId(). Remove in Drupal 11.
-      $connection = \Drupal::database();
-      $max_bid = (int) $connection->query('SELECT MAX([bid]) FROM {batch}')->fetchField();
-      $batch['id'] = $max_bid + 1;
-      $connection->insert('batch')
-        ->fields([
-          'bid' => $batch['id'],
-          'timestamp' => \Drupal::time()->getRequestTime(),
-          'token' => '',
-          'batch' => NULL,
-        ])
-        ->execute();
-    }
+    $batch['id'] = $batch['progressive'] ? \Drupal::service(BatchStorageInterface::class)->getId() : 'non-progressive';
 
     // Move operations to a job queue. Non-progressive batches will use a
     // memory-based queue.
@@ -952,7 +806,8 @@ function batch_process($redirect = NULL, ?Url $url = NULL, $redirect_callback = 
       // Store the batch.
       \Drupal::service(BatchStorageInterface::class)->create($batch);
 
-      // Set the batch number in the session to guarantee that it will stay alive.
+      // Set the batch number in the session to guarantee that it will stay
+      // alive.
       $session = \Drupal::request()->getSession();
       $batches = $session->get('batches', []);
       $batches[$batch['id']] = TRUE;
@@ -963,8 +818,10 @@ function batch_process($redirect = NULL, ?Url $url = NULL, $redirect_callback = 
       $query_options['op'] = 'start';
       $query_options['id'] = $batch['id'];
       $batch_url->setOption('query', $query_options);
-      if (($function = $batch['redirect_callback']) && function_exists($function)) {
-        $function($batch_url->toString(), ['query' => $query_options]);
+      if (($callback = $batch['redirect_callback'])) {
+        $callable_resolver = \Drupal::service(CallableResolver::class);
+        $callable = $callable_resolver->getCallableFromDefinition($callback);
+        $callable($batch_url->toString(), ['query' => $query_options]);
       }
       else {
         return new RedirectResponse($batch_url->setAbsolute()->toString(TRUE)->getGeneratedUrl());
@@ -1001,12 +858,12 @@ function &batch_get() {
  * be used. The name and class of the queue are added by reference to the
  * batch set.
  *
- * @param $batch
+ * @param array $batch
  *   The batch array.
- * @param $set_id
+ * @param string $set_id
  *   The id of the set to process.
  */
-function _batch_populate_queue(&$batch, $set_id) {
+function _batch_populate_queue(&$batch, $set_id): void {
   $batch_set = &$batch['sets'][$set_id];
 
   if (isset($batch_set['operations'])) {
@@ -1030,7 +887,7 @@ function _batch_populate_queue(&$batch, $set_id) {
 /**
  * Returns a queue object for a batch set.
  *
- * @param $batch_set
+ * @param string[][] $batch_set
  *   The batch set.
  *
  * @return \Drupal\Core\Queue\QueueInterface|null

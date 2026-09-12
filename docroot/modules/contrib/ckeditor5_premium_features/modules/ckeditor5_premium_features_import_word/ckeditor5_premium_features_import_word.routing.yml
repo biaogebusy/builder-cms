@@ -1,0 +1,28 @@
+ckeditor5_premium_features_import_word.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/import-word'
+  defaults:
+    _title: 'Import from Word'
+    _form: 'Drupal\ckeditor5_premium_features_import_word\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+ckeditor5_premium_features_import_word:
+  path: '/ckeditor5-premium-features/import-word/upload-media/{editor}'
+  defaults:
+    _controller: '\Drupal\ckeditor5_premium_features_import_word\Controller\CKEditor5ImportWordMediaUploaderController::upload'
+  methods: [POST]
+  requirements:
+    _custom_access: '\Drupal\ckeditor5_premium_features_import_word\Controller\CKEditor5ImportWordMediaUploaderController::access'
+  options:
+    parameters:
+      editor:
+        type: entity:editor
+
+ckeditor5_premium_features_import_word.endpoint.jwt_token:
+  path: '/ckeditor5-premium-features/token/import-word'
+  defaults:
+    _controller: '\Drupal\ckeditor5_premium_features_import_word\Controller\EndpointController::jwtToken'
+  requirements:
+    _permission: 'use ckeditor5 access token'
+  options:
+    no_cache: 'TRUE'

@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   // @see https://github.com/Choices-js/Choices
   Drupal.webform = Drupal.webform || {};
   Drupal.webform.choices = Drupal.webform.choices || {};
@@ -19,7 +16,7 @@
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformChoices = {
-    attach: function (context) {
+    attach(context) {
       if (!window.Choices) {
         return;
       }
@@ -63,6 +60,11 @@
           }
           if ($select.data('limit')) {
             options.maxItemCount = $select.data('limit');
+          }
+
+          // Allow custom options.
+          if ($select.attr('data-options')) {
+            options = $.extend(true, options, JSON.parse($select.attr('data-options')));
           }
 
           var choices = new Choices(this, options);

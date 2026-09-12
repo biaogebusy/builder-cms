@@ -45,4 +45,14 @@ trait BetterExposedFiltersTrait {
     $view->storage->save();
   }
 
+  /**
+   * Helper function to turn ajax on for a bef_test view.
+   */
+  protected function turnAjaxOn(): void {
+    // Enable AJAX on the test view.
+    \Drupal::configFactory()->getEditable('views.view.bef_test')
+      ->set('display.default.display_options.use_ajax', TRUE)
+      ->save();
+  }
+
 }

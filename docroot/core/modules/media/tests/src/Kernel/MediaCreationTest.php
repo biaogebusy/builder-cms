@@ -10,12 +10,14 @@ use Drupal\media\MediaInterface;
 use Drupal\media\MediaTypeInterface;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests creation of media types and media items.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaCreationTest extends MediaKernelTestBase {
 
   /**
@@ -54,7 +56,7 @@ class MediaCreationTest extends MediaKernelTestBase {
       'id' => 'role1',
       'label' => 'role1',
     ]);
-    $role->grantPermission('view media')->trustData()->save();
+    $role->grantPermission('view media')->save();
     $user2->addRole($role->id());
     $this->assertFalse($test_media_type->access('view label', $user1));
     $this->assertTrue($test_media_type->access('view label', $user2));

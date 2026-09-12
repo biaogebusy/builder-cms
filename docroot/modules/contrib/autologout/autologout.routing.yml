@@ -12,6 +12,7 @@ autologout.alt_logout:
     _controller: '\Drupal\autologout\Controller\AutologoutController::altLogout'
   requirements:
     _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
 
 autologout.ajax_logout:
   path: '/autologout_ajax_logout'
@@ -21,6 +22,7 @@ autologout.ajax_logout:
     _theme: ajax_base_page
   requirements:
     _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
 
 autologout.ajax_set_last:
   path: '/autologout_ajax_set_last'
@@ -30,6 +32,7 @@ autologout.ajax_set_last:
     _theme: ajax_base_page
   requirements:
     _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
 
 autologout.ajax_get_time_left:
   path: '/autologout_ajax_get_time_left'
@@ -39,3 +42,4 @@ autologout.ajax_get_time_left:
     _theme: ajax_base_page
   requirements:
     _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'

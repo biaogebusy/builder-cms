@@ -10,30 +10,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class FloodFactory {
 
-  /**
-   * @var \Drupal\redis\ClientInterface
-   */
-  protected $clientFactory;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * Construct the PhpRedis flood backend factory.
-   *
-   * @param \Drupal\redis\ClientFactory $client_factory
-   *   The database connection which will be used to store the flood event
-   *   information.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack used to retrieve the current request.
-   */
-  public function __construct(ClientFactory $client_factory, RequestStack $request_stack) {
-    $this->clientFactory = $client_factory;
-    $this->requestStack = $request_stack;
+  public function __construct(protected ClientFactory $clientFactory, protected RequestStack $requestStack) {
   }
 
   /**

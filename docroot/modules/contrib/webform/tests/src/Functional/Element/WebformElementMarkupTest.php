@@ -26,7 +26,7 @@ class WebformElementMarkupTest extends WebformElementBrowserTestBase {
   /**
    * Test markup element.
    */
-  public function testMarkup() {
+  public function testMarkup(): void {
     $assert_session = $this->assertSession();
 
     // Check markup display on form.

@@ -77,7 +77,7 @@ class TokenUserTest extends TokenTestBase {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
     $user_tokens = [
-      'picture' => $renderer->renderPlain($picture),
+      'picture' => $renderer->renderInIsolation($picture),
       'picture:fid' => $this->account->user_picture->target_id,
       'picture:size-raw' => 125,
       'ip-address' => NULL,

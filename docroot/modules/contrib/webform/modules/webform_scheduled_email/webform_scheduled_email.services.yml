@@ -2,3 +2,11 @@ services:
   webform_scheduled_email.manager:
     class: Drupal\webform_scheduled_email\WebformScheduledEmailManager
     arguments: ['@datetime.time', '@database', '@language_manager', '@config.factory', '@logger.factory', '@entity_type.manager', '@webform.token_manager', '@webform.entity_reference_manager']
+
+  Drupal\webform_scheduled_email\Hook\WebformScheduledEmailHooks:
+    class: Drupal\webform_scheduled_email\Hook\WebformScheduledEmailHooks
+    autowire: true
+
+  Drupal\webform_scheduled_email\Hook\WebformScheduledEmailDrushHooks:
+    class: Drupal\webform_scheduled_email\Hook\WebformScheduledEmailDrushHooks
+    autowire: true

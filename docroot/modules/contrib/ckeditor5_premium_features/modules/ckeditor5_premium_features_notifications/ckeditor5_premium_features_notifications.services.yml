@@ -1,0 +1,98 @@
+services:
+  ckeditor5_premium_features_notifications.notification_sender:
+    class: Drupal\ckeditor5_premium_features_notifications\Utility\NotificationSender
+    arguments:
+      - '@database'
+      - '@ckeditor5_premium_features_notifications.notification_settings'
+      - '@plugin.manager.notification_sender'
+      - '@plugin.manager.notification_message_factory'
+
+  plugin.manager.notification_message_factory:
+    class: Drupal\ckeditor5_premium_features_notifications\Plugin\Notification\NotificationMessageFactoryPluginManager
+    arguments: ['@module_handler', '@cache.discovery']
+
+  plugin.manager.notification_sender:
+    class: Drupal\ckeditor5_premium_features_notifications\Plugin\Notification\NotificationSenderPluginManager
+    arguments: ['@module_handler', '@cache.discovery']
+
+  ckeditor5_premium_features_notifications.event.subscriber.suggestion_status:
+    class: '\Drupal\ckeditor5_premium_features_notifications\EventSubscriber\NotificationSuggestionSubscriber'
+    arguments:
+      - '@ckeditor5_premium_features_notifications.notification_sender'
+      - '@current_user'
+      - '@state'
+    tags:
+      - { name: 'event_subscriber' }
+
+  ckeditor5_premium_features_notifications.event.subscriber.comment_added:
+    class: '\Drupal\ckeditor5_premium_features_notifications\EventSubscriber\NotificationCommentSubscriber'
+    arguments:
+      - '@ckeditor5_premium_features_notifications.notification_sender'
+      - '@ckeditor5_premium_features.collaborators'
+      - '@current_user'
+      - '@state'
+    tags:
+      - { name: 'event_subscriber' }
+
+  ckeditor5_premium_features_notifications.event.subscriber.document_update:
+    class: '\Drupal\ckeditor5_premium_features_notifications\EventSubscriber\NotificationDocumentUpdateSubscriber'
+    arguments:
+      - '@ckeditor5_premium_features_notifications.notification_sender'
+      - '@ckeditor5_premium_features.collaborators'
+      - '@current_user'
+      - '@ckeditor5_premium_features_notifications.diff'
+      - '@ckeditor5_premium_features_notifications.notification_settings'
+      - '@ckeditor5_premium_features.core_library_version_checker'
+      - '@plugin.manager.filter'
+    tags:
+      - { name: 'event_subscriber' }
+
+  ckeditor5_premium_features_notifications.event.subscriber.document_mention:
+    class: '\Drupal\ckeditor5_premium_features_notifications\EventSubscriber\NotificationDocumentMentionSubscriber'
+    arguments:
+      - '@ckeditor5_premium_features_notifications.notification_sender'
+      - '@ckeditor5_premium_features.collaborators'
+      - '@current_user'
+      - '@ckeditor5_premium_features_notifications.diff'
+      - '@ckeditor5_premium_features_notifications.notification_settings'
+      - '@plugin.manager.filter'
+      - '@ckeditor5_premium_features.mention_integrator'
+    tags:
+      - { name: 'event_subscriber' }
+
+  ckeditor5_premium_features_notifications.notification_settings:
+    class: Drupal\ckeditor5_premium_features_notifications\Utility\NotificationSettings
+    arguments:
+      - '@config.factory'
+      - '@plugin.manager.notification_message_factory'
+
+  ckeditor5_premium_features_notifications.bulk_message_sender:
+    class: Drupal\ckeditor5_premium_features_notifications\Utility\BulkMessageSender
+    arguments:
+      - '@entity_type.manager'
+      - '@plugin.manager.mail'
+      - '@renderer'
+      - '@ckeditor5_premium_features_notifications.notification_settings'
+      - '@ckeditor5_premium_features_notifications.bulk_message_body_handler_manager'
+
+  ckeditor5_premium_features_notifications.notification_context_helper:
+    class: Drupal\ckeditor5_premium_features_notifications\Utility\NotificationContextHelper
+    arguments:
+      - '@ckeditor5_premium_features.html_helper'
+      - '@ckeditor5_premium_features.core_library_version_checker'
+
+  ckeditor5_premium_features_notifications.diff:
+    class: Drupal\ckeditor5_premium_features\Diff\Ckeditor5Diff
+    arguments:
+      - '@ckeditor5_premium_features_notifications.notification_context_helper'
+
+  ckeditor5_premium_features_notifications.bulk_message_body_handler_manager:
+    class: Drupal\ckeditor5_premium_features_notifications\Utility\BulkMessageBodyHandlerManager
+    tags:
+      - { name: service_collector, tag: bulk_message_body_handler, call: addHandler }
+
+  ckeditor5_premium_features_notifications.default_bulk_message_body_handler:
+    class: Drupal\ckeditor5_premium_features_notifications\Utility\DefaultBulkMessageBodyHandler
+    tags:
+      - { name: bulk_message_body_handler, priority: 100 }
+

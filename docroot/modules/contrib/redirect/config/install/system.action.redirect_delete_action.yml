@@ -1,9 +1,6 @@
 langcode: en
 status: true
 dependencies:
-  enforced:
-    module:
-      - redirect
   module:
     - redirect
 id: redirect_delete_action

@@ -139,7 +139,8 @@ ul.blazy.b-nativegrid {
 
   /* For some reason, unlike video, etc., iframe refuses to show when static. */
   .is-b-nativegrid:not(.b-layout) .grid iframe {
-    position: absolute;
+    /* This conflicts with playing state
+    position: absolute; */
     height: 100%;
   }
 

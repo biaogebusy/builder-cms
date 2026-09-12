@@ -45,6 +45,9 @@ class ChartDataCollectorTable extends FormElementBase {
       // Allows to toggle on/off drupal tabledrag functionality.
       '#table_drag' => TRUE,
       '#default_colors' => [],
+      // Optional per-series chart type override options, as [type_id => label].
+      // When empty (the default), no per-series type control is rendered.
+      '#series_type_options' => [],
       '#process' => [
         [$class, 'processDataCollectorTable'],
       ],
@@ -125,6 +128,8 @@ class ChartDataCollectorTable extends FormElementBase {
       '#attributes' => [
         'class' => ['data-collector-table'],
       ],
+      '#prefix' => '<div class="data-collector-table__viewport">',
+      '#suffix' => '</div>',
     ];
 
     $table_drag = $element['#table_drag'];
@@ -150,6 +155,7 @@ class ChartDataCollectorTable extends FormElementBase {
     else {
       $element['data_collector_table'] = &$table;
     }
+    $element['#attached']['library'][] = 'charts/data_collector_table';
 
     $rows = count($element_state['data_collector_table']);
 
@@ -160,6 +166,8 @@ class ChartDataCollectorTable extends FormElementBase {
     // The first column need to be for colors.
     $is_first_column = $element_state['table_categories_identifier'] === self::FIRST_COLUMN;
     $first_row_key = NULL;
+    $row_keys = array_keys($element_state['data_collector_table']);
+    $last_row_key = end($row_keys);
     foreach ($element_state['data_collector_table'] as $i => $row) {
       $first_row_key = $first_row_key ?? $i;
       $table_first_row = $i === $first_row_key;
@@ -213,6 +221,22 @@ class ChartDataCollectorTable extends FormElementBase {
             '#maxlength' => 7,
             '#default_value' => $column['color'],
           ];
+
+          // Optional per-series chart type override, shown beside the color.
+          // An empty value means "inherit the chart's base type".
+          if (!empty($element['#series_type_options'])) {
+            $row_form[$j]['chart_type'] = [
+              '#type' => 'select',
+              '#title' => t('Series type'),
+              '#title_display' => 'invisible',
+              '#options' => $element['#series_type_options'],
+              '#empty_option' => t('- Chart default -'),
+              '#default_value' => is_array($column) ? ($column['chart_type'] ?? '') : '',
+              '#attributes' => [
+                'class' => ['data-collector-table--series-type'],
+              ],
+            ];
+          }
         }
       }
 
@@ -251,10 +275,32 @@ class ChartDataCollectorTable extends FormElementBase {
         }
       }
 
-      // Row delete button.
-      $row_form['delete'] = self::buildOperationButton('delete', 'row', $id_prefix, $wrapper_id, $i, [], [
+      // Row operations: move up, delete, move down.
+      $row_form['operations'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['data-collector-table--row-operations'],
+          'style' => 'display:flex; flex-direction:row; justify-content:center; gap:2px;',
+        ],
+        '#wrapper_attributes' => [
+          'class' => ['data-collector-table--row-operations-cell'],
+        ],
+      ];
+      $is_first_data_row = ($i === $first_row_key);
+      $is_last_data_row = ($i === $last_row_key);
+      if (!$is_first_data_row) {
+        $row_form['operations']['move_up'] = self::buildOperationButton('move_up', 'row', $id_prefix, $wrapper_id, $i, [], [
+          'class' => ['data-collector-table--row--move-up'],
+        ]);
+      }
+      $row_form['operations']['delete'] = self::buildOperationButton('delete', 'row', $id_prefix, $wrapper_id, $i, [], [
         'class' => ['data-collector-table--row--delete'],
       ]);
+      if (!$is_last_data_row) {
+        $row_form['operations']['move_down'] = self::buildOperationButton('move_down', 'row', $id_prefix, $wrapper_id, $i, [], [
+          'class' => ['data-collector-table--row--move-down'],
+        ]);
+      }
     }
 
     $colspan = 1;
@@ -271,17 +317,39 @@ class ChartDataCollectorTable extends FormElementBase {
 
     // Building the column delete button.
     $table['_delete_column_buttons'] = [
+      '#weight' => 100,
       '#attributes' => ['class' => ['data-collector-table--column-deletes-row']],
     ];
     // Using first row to get the count of columns.
     $first_row = current($element_state['data_collector_table']);
     // Using array filter to exclude weight key when grabbing the row columns.
     $columns = self::excludeWeightColumnFromRow($first_row);
-    $max_column = max(array_keys($first_row));
+    $min_column = min($columns);
+    $max_column = max($columns);
     foreach ($columns as $column) {
-      $table['_delete_column_buttons'][$column] = self::buildOperationButton('delete', 'column', $id_prefix, $wrapper_id, $column, [], [
+      $table['_delete_column_buttons'][$column] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['data-collector-table--column-operations'],
+          'style' => 'display:flex; justify-content:space-between; gap:2px;',
+        ],
+        '#wrapper_attributes' => [
+          'class' => ['data-collector-table--column--delete'],
+        ],
+      ];
+      if ($column !== $min_column) {
+        $table['_delete_column_buttons'][$column]['move_left'] = self::buildOperationButton('move_left', 'column', $id_prefix, $wrapper_id, $column, [], [
+          'class' => ['data-collector-table--column--move-left'],
+        ]);
+      }
+      $table['_delete_column_buttons'][$column]['delete'] = self::buildOperationButton('delete', 'column', $id_prefix, $wrapper_id, $column, [], [
         'class' => ['data-collector-table--column--delete'],
       ]);
+      if ($column !== $max_column) {
+        $table['_delete_column_buttons'][$column]['move_right'] = self::buildOperationButton('move_right', 'column', $id_prefix, $wrapper_id, $column, [], [
+          'class' => ['data-collector-table--column--move-right'],
+        ]);
+      }
       if ($column === $max_column) {
         $table['_delete_column_buttons'][$column]['#wrapper_attributes']['colspan'] = $colspan;
       }
@@ -293,6 +361,7 @@ class ChartDataCollectorTable extends FormElementBase {
 
     // Footer operations.
     $table['_operations'] = [
+      '#weight' => 101,
       '#attributes' => ['class' => ['data-collector-table--operations-row']],
     ];
     $table['_operations']['wrapper'] = [
@@ -369,6 +438,25 @@ class ChartDataCollectorTable extends FormElementBase {
     $parents = $element['#parents'];
     $value = $form_state->getValue($parents);
 
+    // Sort the values by weight if table drag is enabled.
+    if (!empty($element['#table_drag']) && is_array($value['data_collector_table'])) {
+      uasort($value['data_collector_table'], [
+        '\Drupal\Component\Utility\SortArray',
+        'sortByWeightProperty',
+      ]);
+      // Re-index the numeric keys to preserve the new weight order natively.
+      $sorted_table = [];
+      foreach ($value['data_collector_table'] as $k => $v) {
+        if (is_numeric($k)) {
+          $sorted_table[] = $v;
+        }
+        else {
+          $sorted_table[$k] = $v;
+        }
+      }
+      $value['data_collector_table'] = $sorted_table;
+    }
+
     // Remove empty rows and unneeded keys.
     $i = 0;
     foreach ($value['data_collector_table'] as $row_key => $row) {
@@ -412,7 +500,7 @@ class ChartDataCollectorTable extends FormElementBase {
       $length = -2;
     }
     else {
-      $length = $operation === 'add' ? -4 : -3;
+      $length = -4;
     }
     $element_parents = array_slice($triggering_element['#array_parents'], 0, $length);
     return NestedArray::getValue($form, $element_parents);
@@ -425,17 +513,16 @@ class ChartDataCollectorTable extends FormElementBase {
     $triggering_element = $form_state->getTriggeringElement();
     $operation_on = $triggering_element['#operation_on'];
     $operation = $triggering_element['#operation'];
-    $length = $operation === 'add' ? -4 : -3;
+    $length = -4;
     $element_parents = array_slice($triggering_element['#parents'], 0, $length);
     if (!$element_parents) {
-      $length = $operation == 'add' ? -4 : -3;
       $element_parents = array_slice($triggering_element['#array_parents'], 0, $length);
     }
     $element_state = self::getElementState($element_parents, $form_state);
     $index = $triggering_element['#' . $operation_on . '_index'] ?? NULL;
 
     if ($operation_on === 'row') {
-      $element_state = self::tableRowOperation($element_state, $form_state, $operation, $index);
+      $element_state = self::tableRowOperation($element_state, $form_state, $operation, $element_parents, $index);
     }
     else {
       $element_state = self::tableColumnOperation($element_state, $form_state, $operation, $element_parents, $index);
@@ -473,7 +560,7 @@ class ChartDataCollectorTable extends FormElementBase {
       $user_inputs = $form_state->getUserInput();
       $series = NestedArray::getValue($user_inputs, $element_parents);
       $separator = $series['import']['csv_separator'];
-      while ($row = fgetcsv($handle, 0, $separator)) {
+      while ($row = fgetcsv($handle, 0, $separator, '"', '\\')) {
         foreach ($row as $column_value) {
           $element_state['data_collector_table'][$rows_count][] = [
             'data' => self::convertEncoding($column_value, $encoding),
@@ -486,6 +573,14 @@ class ChartDataCollectorTable extends FormElementBase {
       \Drupal::messenger()->addMessage(t('Successfully imported @file', [
         '@file' => $file_upload->getClientOriginalName(),
       ]));
+
+      // A CSV import rebuilds the table from scratch and therefore only carries
+      // the imported cell data. Copy the previously configured series colors
+      // back onto the freshly imported table so that uploading new data does
+      // not reset the colors to the default/random ones.
+      $identifier = $series['table_categories_identifier'] ?? self::FIRST_COLUMN;
+      $existing_table = $series['data_collector_table'] ?? [];
+      self::retainExistingColors($element_state['data_collector_table'], $existing_table, $identifier);
 
       // Updating form state storage.
       self::setElementState($element_parents, $form_state, $element_state);
@@ -552,16 +647,32 @@ class ChartDataCollectorTable extends FormElementBase {
       $submit['#wrapper_attributes'] = $wrapper_attributes;
     }
 
-    $value = [];
-    $value['add']['row'] = t('Add row');
-    $value['add']['column'] = t('Add column');
-    $value['delete']['row'] = t('Delete row');
-    $value['delete']['column'] = t('Delete column');
+    $display_values = [
+      'add' => ['row' => t('Add row'), 'column' => t('Add column')],
+      'delete' => ['row' => t('Delete row'), 'column' => t('Delete column')],
+      'move_left' => ['column' => '←'],
+      'move_right' => ['column' => '→'],
+      'move_up' => ['row' => '↑'],
+      'move_down' => ['row' => '↓'],
+    ];
+
+    $aria_labels = [
+      'add' => ['row' => t('Add row'), 'column' => t('Add column')],
+      'delete' => ['row' => t('Delete row'), 'column' => t('Delete column')],
+      'move_left' => ['column' => t('Move column left')],
+      'move_right' => ['column' => t('Move column right')],
+      'move_up' => ['row' => t('Move row up')],
+      'move_down' => ['row' => t('Move row down')],
+    ];
 
     $submit += [
       '#type' => 'submit',
       '#name' => $name,
-      '#value' => $value[$operation][$on],
+      '#value' => $display_values[$operation][$on],
+      '#attributes' => array_merge($attributes, [
+        'aria-label' => $aria_labels[$operation][$on],
+        'title' => $aria_labels[$operation][$on],
+      ]),
       '#limit_validation_errors' => [],
       '#submit' => [[get_called_class(), 'tableOperationSubmit']],
       '#operation' => $operation,
@@ -629,18 +740,46 @@ class ChartDataCollectorTable extends FormElementBase {
    *   The form state.
    * @param string $op
    *   The operation.
+   * @param array $element_parents
+   *   The element parents.
    * @param null|int $index
    *   The row index.
    *
    * @return array
    *   The updated element state storage.
    */
-  private static function tableRowOperation(array $element_state, FormStateInterface $form_state, $op, $index = NULL) {
-    if ($op === 'delete') {
+  private static function tableRowOperation(array $element_state, FormStateInterface $form_state, $op, array $element_parents, $index = NULL) {
+    if ($op === 'move_up' || $op === 'move_down') {
+      $keys = array_keys($element_state['data_collector_table']);
+      $pos = array_search($index, $keys);
+      $target_pos = $op === 'move_up' ? $pos - 1 : $pos + 1;
+
+      if (isset($keys[$target_pos])) {
+        $target_index = $keys[$target_pos];
+        self::swapRows($element_state['data_collector_table'], $index, $target_index);
+
+        $user_input = $form_state->getUserInput();
+        $values = NestedArray::getValue($user_input, $element_parents);
+        if (isset($values['data_collector_table'])) {
+          self::swapRows($values['data_collector_table'], $index, $target_index);
+          NestedArray::setValue($user_input, $element_parents, $values);
+          $form_state->setUserInput($user_input);
+        }
+      }
+    }
+    elseif ($op === 'delete') {
       // When only one row left we just empty it's columns.
       if (count($element_state['data_collector_table']) === 1) {
         $row = $element_state['data_collector_table'][$index];
-        $element_state['data_collector_table'][$index][] = self::emptyRowColumns($row);
+        $element_state['data_collector_table'][$index] = self::emptyRowColumns($row);
+
+        $user_input = $form_state->getUserInput();
+        $values = NestedArray::getValue($user_input, $element_parents);
+        if (isset($values['data_collector_table'][$index])) {
+          unset($values['data_collector_table'][$index]);
+          NestedArray::setValue($user_input, $element_parents, $values);
+          $form_state->setUserInput($user_input);
+        }
         return $element_state;
       }
       unset($element_state['data_collector_table'][$index]);
@@ -671,27 +810,44 @@ class ChartDataCollectorTable extends FormElementBase {
    *   The updated element state storage.
    */
   private static function tableColumnOperation(array $element_state, FormStateInterface $form_state, $op, array $element_parents, $index = NULL) {
-    if ($op === 'delete') {
+    if ($op === 'move_left' || $op === 'move_right') {
+      $target_index = $op === 'move_left' ? $index - 1 : $index + 1;
+      self::swapColumns($element_state['data_collector_table'], $index, $target_index);
+
+      $user_input = $form_state->getUserInput();
+      $values = NestedArray::getValue($user_input, $element_parents);
+      if (isset($values['data_collector_table'])) {
+        self::swapColumns($values['data_collector_table'], $index, $target_index);
+        NestedArray::setValue($user_input, $element_parents, $values);
+        $form_state->setUserInput($user_input);
+      }
+    }
+    elseif ($op === 'delete') {
+      $user_input = $form_state->getUserInput();
+      $values = NestedArray::getValue($user_input, $element_parents);
+
       foreach ($element_state['data_collector_table'] as $row_key => $columns) {
         $row = $element_state['data_collector_table'][$row_key];
         if (count(self::excludeWeightColumnFromRow($row)) === 1) {
           $element_state['data_collector_table'][$row_key][$index]['data'] = '';
+          if (isset($values['data_collector_table'][$row_key][$index])) {
+            unset($values['data_collector_table'][$row_key][$index]);
+          }
         }
         else {
           array_splice($element_state['data_collector_table'][$row_key], $index, 1);
 
           // Making sure that the user input is updated as well.
-          $user_input = $form_state->getUserInput();
-          $values = NestedArray::getValue($form_state->getUserInput(), $element_parents);
           if (!empty($values['data_collector_table'][$row_key][$index])) {
             array_splice($values['data_collector_table'][$row_key], $index, 1);
           }
-          NestedArray::setValue($user_input, $element_parents, $values);
-          $form_state->setUserInput($user_input);
         }
       }
+
+      NestedArray::setValue($user_input, $element_parents, $values);
+      $form_state->setUserInput($user_input);
     }
-    else {
+    elseif ($op === 'add') {
       foreach ($element_state['data_collector_table'] as $row_key => $columns) {
         $element_state['data_collector_table'][$row_key][]['data'] = '';
       }
@@ -848,6 +1004,7 @@ class ChartDataCollectorTable extends FormElementBase {
         $name_key = key($row);
         $series[$i]['name'] = $row[$name_key]['data'] ?? [];
         $series[$i]['color'] = $row[$name_key]['color'] ?? '';
+        $series[$i]['chart_type'] = $row[$name_key]['chart_type'] ?? '';
         // Removing the name from a data array.
         unset($row[$name_key]);
         foreach ($row as $column) {
@@ -895,6 +1052,7 @@ class ChartDataCollectorTable extends FormElementBase {
           // This is the first column that holds the data names and colors.
           $series[$j]['name'] = $column['data'] ?? $column;
           $series[$j]['color'] = $column['color'] ?? self::randomColor();
+          $series[$j]['chart_type'] = $column['chart_type'] ?? '';
           $j++;
           continue;
         }
@@ -931,7 +1089,7 @@ class ChartDataCollectorTable extends FormElementBase {
    */
   private static function castValueToNumeric(string|int|float $value): float|int|null|array {
     if (is_numeric($value)) {
-      return is_int($value) ? (integer) $value : (float) $value;
+      return is_int($value) ? $value : (float) $value;
     }
 
     // When a value is empty string, or it's not comma separated string let
@@ -946,6 +1104,116 @@ class ChartDataCollectorTable extends FormElementBase {
       'floatval',
       array_map('trim', explode(',', $value))
     );
+  }
+
+  /**
+   * Retains manually configured series colors after a CSV import.
+   *
+   * A CSV import rebuilds the data collector table from scratch, so the newly
+   * imported table only contains cell "data" and loses any colors the user had
+   * previously set. This copies the colors from the pre-import table onto the
+   * matching cells of the freshly imported table so they are not reset to the
+   * default/random colors when the element is re-rendered.
+   *
+   * A series' color lives on a single cell: on the first row (one per column)
+   * when categories are identified by the first column, and on the first column
+   * (one per row) when categories are identified by the first row. The color of
+   * a cell is therefore always copied from the cell at the same coordinates in
+   * the pre-import table, which keeps the mapping correct for both orientations
+   * and for tables whose dimensions changed during the import.
+   *
+   * @param array $new_table
+   *   The freshly imported table. Passed by reference and updated in place.
+   * @param array $existing_table
+   *   The pre-import table holding the previously configured colors.
+   * @param string $identifier
+   *   The categories identifier: self::FIRST_COLUMN or self::FIRST_ROW.
+   */
+  public static function retainExistingColors(array &$new_table, array $existing_table, string $identifier) {
+    if (!$new_table || !$existing_table) {
+      return;
+    }
+
+    $is_first_column = $identifier === self::FIRST_COLUMN;
+    $first_row_key = array_key_first($new_table);
+
+    foreach ($new_table as $i => $row) {
+      $first_col_key = NULL;
+      foreach ($row as $j => $column) {
+        if ($j === 'weight') {
+          continue;
+        }
+        $first_col_key = $first_col_key ?? $j;
+
+        // The top-left cell never holds a color.
+        if ($i === $first_row_key && $j === $first_col_key) {
+          continue;
+        }
+
+        // Only the series cells carry a color. This mirrors the rule used when
+        // the color inputs are rendered: the first row for "first column"
+        // tables, and the first column for "first row" tables.
+        $is_color_cell = $is_first_column
+          ? ($i === $first_row_key)
+          : ($j === $first_col_key);
+        if (!$is_color_cell) {
+          continue;
+        }
+
+        // Copy the color from the matching cell of the pre-import table when it
+        // had one. Otherwise leave the cell untouched so the render logic can
+        // fall back to the default/random color.
+        $existing_color = $existing_table[$i][$j]['color'] ?? NULL;
+        if (!empty($existing_color)) {
+          if (!is_array($new_table[$i][$j])) {
+            $new_table[$i][$j] = ['data' => $new_table[$i][$j]];
+          }
+          $new_table[$i][$j]['color'] = $existing_color;
+        }
+      }
+    }
+  }
+
+  /**
+   * Swaps two rows in the table data, including weights.
+   *
+   * @param array $table
+   *   The table data.
+   * @param int|string $index1
+   *   The first index.
+   * @param int|string $index2
+   *   The second index.
+   */
+  public static function swapRows(array &$table, $index1, $index2) {
+    if (isset($table[$index1]) && isset($table[$index2])) {
+      $temp = $table[$index1];
+      $table[$index1] = $table[$index2];
+      $table[$index2] = $temp;
+
+      $temp_w = $table[$index1]['weight'] ?? NULL;
+      $table[$index1]['weight'] = $table[$index2]['weight'] ?? NULL;
+      $table[$index2]['weight'] = $temp_w;
+    }
+  }
+
+  /**
+   * Swaps two columns in the table data across all rows.
+   *
+   * @param array $table
+   *   The table data.
+   * @param int|string $index1
+   *   The first index.
+   * @param int|string $index2
+   *   The second index.
+   */
+  public static function swapColumns(array &$table, $index1, $index2) {
+    foreach ($table as &$row) {
+      if (isset($row[$index1]) && isset($row[$index2])) {
+        $temp = $row[$index1];
+        $row[$index1] = $row[$index2];
+        $row[$index2] = $temp;
+      }
+    }
   }
 
 }

@@ -5,16 +5,21 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\RowCountException;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Database\StatementInterface;
+use Drupal\Core\Database\StatementPrefetchIterator;
 use Drupal\Tests\system\Functional\Database\FakeRecord;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Database system's various fetch capabilities.
  *
  * We get timeout errors if we try to run too many tests at once.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class FetchTest extends DatabaseTestBase {
 
   /**
@@ -34,11 +39,33 @@ class FetchTest extends DatabaseTestBase {
   }
 
   /**
+   * Confirms that we can fetch a single column value.
+   */
+  public function testQueryFetchColumn(): void {
+    $statement = $this->connection
+      ->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25]);
+    $statement->setFetchMode(FetchAs::Column, 0);
+    $this->assertSame('John', $statement->fetch());
+  }
+
+  /**
+   * Confirms that an out of range index throws an error.
+   */
+  public function testQueryFetchColumnOutOfRange(): void {
+    $this->expectException(\ValueError::class);
+    $this->expectExceptionMessage('Invalid column index');
+    $statement = $this->connection
+      ->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25]);
+    $statement->setFetchMode(FetchAs::Column, 200);
+    $statement->fetch();
+  }
+
+  /**
    * Confirms that we can fetch a record to an object explicitly.
    */
   public function testQueryFetchObject(): void {
     $records = [];
-    $result = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25], ['fetch' => \PDO::FETCH_OBJ]);
+    $result = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25], ['fetch' => FetchAs::Object]);
     foreach ($result as $record) {
       $records[] = $record;
       $this->assertIsObject($record);
@@ -53,7 +80,7 @@ class FetchTest extends DatabaseTestBase {
    */
   public function testQueryFetchArray(): void {
     $records = [];
-    $result = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25], ['fetch' => \PDO::FETCH_ASSOC]);
+    $result = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25], ['fetch' => FetchAs::Associative]);
     foreach ($result as $record) {
       $records[] = $record;
       $this->assertIsArray($record);
@@ -118,35 +145,11 @@ class FetchTest extends DatabaseTestBase {
   }
 
   /**
-   * Confirms that we can fetch a record into a new instance of a custom class.
-   *
-   * The name of the class is determined from a value of the first column.
-   *
-   * @see \Drupal\Tests\system\Functional\Database\FakeRecord
-   *
-   * @group legacy
-   */
-  public function testQueryFetchClasstype(): void {
-    $this->expectDeprecation('Fetch mode FETCH_CLASS | FETCH_CLASSTYPE is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use supported modes only. See https://www.drupal.org/node/3377999');
-    $records = [];
-    $result = $this->connection->query('SELECT [classname], [name], [job] FROM {test_classtype} WHERE [age] = :age', [':age' => 26], ['fetch' => \PDO::FETCH_CLASS | \PDO::FETCH_CLASSTYPE]);
-    foreach ($result as $record) {
-      $records[] = $record;
-      $this->assertInstanceOf(FakeRecord::class, $record);
-      $this->assertSame('Kay', $record->name);
-      $this->assertSame('Web Developer', $record->job);
-      $this->assertFalse(isset($record->classname), 'Classname field not found, as intended.');
-    }
-
-    $this->assertCount(1, $records, 'There is only one record.');
-  }
-
-  /**
    * Confirms that we can fetch a record into an indexed array explicitly.
    */
   public function testQueryFetchNum(): void {
     $records = [];
-    $result = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25], ['fetch' => \PDO::FETCH_NUM]);
+    $result = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25], ['fetch' => FetchAs::List]);
     foreach ($result as $record) {
       $records[] = $record;
       $this->assertIsArray($record);
@@ -158,37 +161,48 @@ class FetchTest extends DatabaseTestBase {
   }
 
   /**
-   * Confirms that we can fetch a record into a doubly-keyed array explicitly.
-   *
-   * @group legacy
-   */
-  public function testQueryFetchBoth(): void {
-    $this->expectDeprecation('Fetch mode FETCH_BOTH is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use supported modes only. See https://www.drupal.org/node/3377999');
-    $records = [];
-    $result = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25], ['fetch' => \PDO::FETCH_BOTH]);
-    foreach ($result as $record) {
-      $records[] = $record;
-      $this->assertIsArray($record);
-      $this->assertArrayHasKey(0, $record);
-      $this->assertSame('John', $record[0]);
-      $this->assertArrayHasKey('name', $record);
-      $this->assertSame('John', $record['name']);
-    }
-
-    $this->assertCount(1, $records, 'There is only one record.');
-  }
-
-  /**
    * Confirms that we can fetch all records into an array explicitly.
    */
   public function testQueryFetchAllColumn(): void {
     $query = $this->connection->select('test');
     $query->addField('test', 'name');
     $query->orderBy('name');
-    $query_result = $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+    $query_result = $query->execute()->fetchAll(FetchAs::Column);
 
     $expected_result = ['George', 'John', 'Paul', 'Ringo'];
     $this->assertEquals($expected_result, $query_result, 'Returned the correct result.');
+  }
+
+  /**
+   * Confirms that we can fetch all records as class instances explicitly.
+   */
+  public function testQueryFetchAllAsClassInstances(): void {
+    $query = $this->connection->select(table: 'test', options: ['fetch' => FakeRecord::class]);
+    $query->addField('test', 'name');
+    $query->orderBy('name');
+    $query_result = $query->execute()->fetchAll();
+
+    $this->assertContainsOnlyInstancesOf(FakeRecord::class, $query_result);
+    $names = array_map(fn(FakeRecord $record) => $record->name, $query_result);
+    $expected_names = ['George', 'John', 'Paul', 'Ringo'];
+    $this->assertEquals($expected_names, $names);
+  }
+
+  /**
+   * Confirms that we can fetch class instances by setting fetch mode.
+   */
+  public function testQueryFetchAllAsFetchModeClassInstances(): void {
+    $query = $this->connection->query('SELECT [name] FROM {test} ORDER BY [name]');
+    $query->setFetchMode(FetchAs::ClassObject, FakeRecord::class, [
+      // Test custom constructor arguments.
+      'fakeArg' => 10,
+    ]);
+
+    $query_result = $query->fetchAll();
+
+    $arrayed = array_map(fn (FakeRecord $record) => \get_object_vars($record), $query_result);
+    $this->assertEquals(['George', 'John', 'Paul', 'Ringo'], array_column($arrayed, 'name'));
+    $this->assertEquals([10, 10, 10, 10], array_column($arrayed, 'fakeArg'));
   }
 
   /**
@@ -204,6 +218,62 @@ class FetchTest extends DatabaseTestBase {
     foreach ($result as $record) {
       $this->assertSame($column[$i++], $record->name, 'Column matches direct access.');
     }
+  }
+
+  /**
+   * Tests ::fetchCol() for edge values returned.
+   */
+  public function testQueryFetchColEdgeCases(): void {
+    $this->connection->insert('test_null')
+      ->fields([
+        'name' => 'Foo',
+        'age' => 0,
+      ])
+      ->execute();
+
+    $this->connection->insert('test_null')
+      ->fields([
+        'name' => 'Bar',
+        'age' => NULL,
+      ])
+      ->execute();
+
+    $this->connection->insert('test_null')
+      ->fields([
+        'name' => 'Qux',
+        'age' => (int) FALSE,
+      ])
+      ->execute();
+
+    $statement = $this->connection->select('test_null')
+      ->fields('test_null', ['age'])
+      ->orderBy('id')
+      ->execute();
+
+    $this->assertSame(['0', NULL, '0'], $statement->fetchCol());
+
+    // Additional fetch returns FALSE since the result set is finished.
+    $this->assertFalse($statement->fetchField());
+  }
+
+  /**
+   * Confirms that an out of range index in fetchCol() throws an error.
+   */
+  public function testQueryFetchColIndexOutOfRange(): void {
+    $this->expectException(\ValueError::class);
+    $this->expectExceptionMessage('Invalid column index');
+    $this->connection
+      ->query('SELECT [name] FROM {test} WHERE [age] > :age', [':age' => 25])
+      ->fetchCol(200);
+  }
+
+  /**
+   * Confirms empty result set prevails on out of range index in fetchCol().
+   */
+  public function testQueryFetchColIndexOutOfRangeOnEmptyResultSet(): void {
+    $this->assertSame([], $this->connection
+      ->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 255])
+      ->fetchCol(200));
   }
 
   /**
@@ -226,11 +296,11 @@ class FetchTest extends DatabaseTestBase {
     ];
 
     $statement = $this->connection->query('SELECT * FROM {test} WHERE [age] > :age', [':age' => 26]);
-    $result = $statement->fetchAllAssoc('job', \PDO::FETCH_ASSOC);
+    $result = $statement->fetchAllAssoc('job', FetchAs::Associative);
     $this->assertSame($expected_result, $result);
 
     $statement = $this->connection->query('SELECT * FROM {test} WHERE [age] > :age', [':age' => 26]);
-    $result = $statement->fetchAllAssoc('job', \PDO::FETCH_OBJ);
+    $result = $statement->fetchAllAssoc('job', FetchAs::Object);
     $this->assertEquals((object) $expected_result['Singer'], $result['Singer']);
     $this->assertEquals((object) $expected_result['Drummer'], $result['Drummer']);
   }
@@ -276,6 +346,69 @@ class FetchTest extends DatabaseTestBase {
   }
 
   /**
+   * Tests ::fetchField() for edge values returned.
+   */
+  public function testQueryFetchFieldEdgeCases(): void {
+    $this->connection->insert('test_null')
+      ->fields([
+        'name' => 'Foo',
+        'age' => 0,
+      ])
+      ->execute();
+
+    $this->connection->insert('test_null')
+      ->fields([
+        'name' => 'Bar',
+        'age' => NULL,
+      ])
+      ->execute();
+
+    $this->connection->insert('test_null')
+      ->fields([
+        'name' => 'Qux',
+        'age' => (int) FALSE,
+      ])
+      ->execute();
+
+    $statement = $this->connection->select('test_null')
+      ->fields('test_null', ['age'])
+      ->orderBy('id')
+      ->execute();
+
+    // First fetch returns '0' since an existing value is always a string.
+    $this->assertSame('0', $statement->fetchField());
+
+    // Second fetch returns NULL since NULL was inserted.
+    $this->assertNull($statement->fetchField());
+
+    // Third fetch returns '0' since a FALSE bool cast to int was inserted.
+    $this->assertSame('0', $statement->fetchField());
+
+    // Fourth fetch returns FALSE since no row was available.
+    $this->assertFalse($statement->fetchField());
+  }
+
+  /**
+   * Confirms that an out of range index in fetchField() throws an error.
+   */
+  public function testQueryFetchFieldIndexOutOfRange(): void {
+    $this->expectException(\ValueError::class);
+    $this->expectExceptionMessage('Invalid column index');
+    $this->connection
+      ->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25])
+      ->fetchField(200);
+  }
+
+  /**
+   * Confirms empty result set prevails on out of range index in fetchField().
+   */
+  public function testQueryFetchFieldIndexOutOfRangeOnEmptyResultSet(): void {
+    $this->assertFalse($this->connection
+      ->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 255])
+      ->fetchField(200));
+  }
+
+  /**
    * Tests that rowCount() throws exception on SELECT query.
    */
   public function testRowCount(): void {
@@ -284,10 +417,24 @@ class FetchTest extends DatabaseTestBase {
       $result->rowCount();
       $exception = FALSE;
     }
-    catch (RowCountException $e) {
+    catch (RowCountException) {
       $exception = TRUE;
     }
     $this->assertTrue($exception, 'Exception was thrown');
+  }
+
+  /**
+   * Confirms deprecation of StatementPrefetchIterator::fetchColumn().
+   */
+  #[IgnoreDeprecations]
+  public function testLegacyFetchColumn(): void {
+    $statement = $this->connection->query('SELECT [name] FROM {test} WHERE [age] = :age', [':age' => 25]);
+    if (!$statement instanceof StatementPrefetchIterator) {
+      $this->markTestSkipped('This test is for StatementPrefetchIterator statements only.');
+    }
+
+    $this->expectUserDeprecationMessage('Drupal\Core\Database\StatementPrefetchIterator::fetchColumn() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use ::fetchField() instead. See https://www.drupal.org/node/3490312');
+    $statement->fetchColumn();
   }
 
 }

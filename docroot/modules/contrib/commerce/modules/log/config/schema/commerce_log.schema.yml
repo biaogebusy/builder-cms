@@ -1,0 +1,9 @@
+commerce_log.settings:
+  type: config_object
+  label: 'Log settings'
+  mapping:
+    disabled_templates:
+      type: sequence
+      label: 'Disabled templates'
+      sequence:
+        type: string

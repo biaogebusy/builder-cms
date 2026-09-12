@@ -8,20 +8,22 @@ use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Plugin\Plugin\Validation\Constraint\PluginExistsConstraint;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Validator\Exception\MissingOptionsException;
 
 /**
- * @group Plugin
- * @group Validation
- *
- * @coversDefaultClass \Drupal\Core\Plugin\Plugin\Validation\Constraint\PluginExistsConstraint
+ * Tests Drupal\Core\Plugin\Plugin\Validation\Constraint\PluginExistsConstraint.
  */
+#[CoversClass(PluginExistsConstraint::class)]
+#[Group('Plugin')]
+#[Group('Validation')]
 class PluginExistsConstraintTest extends UnitTestCase {
 
   /**
    * Tests missing option.
    *
-   * @covers ::create
+   * @legacy-covers ::create
    */
   public function testMissingOption(): void {
     $this->expectException(MissingOptionsException::class);
@@ -31,22 +33,19 @@ class PluginExistsConstraintTest extends UnitTestCase {
   }
 
   /**
-   * Tests with different option keys.
+   * Tests plugin is created when manager option is set to a valid service ID.
    *
-   * @testWith ["value"]
-   *           ["manager"]
-   *
-   * @covers ::create
-   * @covers ::__construct
+   * @legacy-covers ::create
+   * @legacy-covers ::__construct
    */
-  public function testOption(string $option_key): void {
+  public function testManagerOption(): void {
     $container = $this->createMock(ContainerInterface::class);
     $manager = $this->createMock(PluginManagerInterface::class);
     $container->expects($this->any())
       ->method('get')
       ->with('plugin.manager.mock')
       ->willReturn($manager);
-    $constraint = PluginExistsConstraint::create($container, [$option_key => 'plugin.manager.mock'], 'test_plugin_id', []);
+    $constraint = PluginExistsConstraint::create($container, ['manager' => 'plugin.manager.mock'], 'test_plugin_id', []);
     $this->assertSame($manager, $constraint->pluginManager);
   }
 

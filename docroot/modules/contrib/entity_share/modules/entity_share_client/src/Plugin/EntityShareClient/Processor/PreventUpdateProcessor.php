@@ -4,24 +4,24 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Prevent update depending on policy.
- *
- * @ImportProcessor(
- *   id = "prevent_update_processor",
- *   label = @Translation("Prevent update processor"),
- *   description = @Translation("Prevent update of an already imported entity if the entity import status has the 'Create only' policy."),
- *   stages = {
- *     "is_entity_importable" = -5,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'prevent_update_processor',
+  label: new TranslatableMarkup('Prevent update processor'),
+  description: new TranslatableMarkup('Prevent update of an already imported entity if the entity import status has the \'Create only\' policy.'),
+  stages: [
+    'is_entity_importable' => -5,
+  ],
+)]
 class PreventUpdateProcessor extends ImportProcessorPluginBase {
 
   /**

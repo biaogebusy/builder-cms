@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\block_content\Functional;
 
+use Drupal\Core\Entity\Form\RevisionRevertForm;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Block content revision form test.
- *
- * @group block_content
- * @coversDefaultClass \Drupal\Core\Entity\Form\RevisionRevertForm
  */
+#[CoversClass(RevisionRevertForm::class)]
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentRevisionRevertTest extends BlockContentTestBase {
 
   /**
@@ -70,7 +75,7 @@ class BlockContentRevisionRevertTest extends BlockContentTestBase {
     $revision2 = \Drupal::entityTypeManager()->getStorage('block_content')
       ->loadRevision($nonDefaultRevisionId);
     $this->drupalGet($revision2->toUrl('revision-revert-form'));
-    $this->assertSession()->pageTextContains('Are you sure you want to revert to the revision from Sun, 01/11/2009 - 17:00?');
+    $this->assertSession()->pageTextContains('Are you sure you want to revert to the revision from Sun, 11 Jan 2009 - 17:00?');
     $this->assertSession()->buttonExists('Revert');
     $this->assertSession()->linkExists('Cancel');
     $this->assertTrue($revision2->access('revert', $this->adminUser, FALSE));
@@ -89,7 +94,7 @@ class BlockContentRevisionRevertTest extends BlockContentTestBase {
     $this->assertEquals($count + 1, $countRevisions());
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->addressEquals(sprintf('admin/content/block/%s/revisions', $entity->id()));
-    $this->assertSession()->pageTextContains(sprintf('basic %s has been reverted to the revision from Sun, 01/11/2009 - 17:00.', $entity->label()));
+    $this->assertSession()->pageTextContains(sprintf('basic %s has been reverted to the revision from Sun, 11 Jan 2009 - 17:00.', $entity->label()));
     // Three rows, from the top: the newly reverted revision, the revision from
     // 5pm, and the revision from 4pm.
     $this->assertSession()->elementsCount('css', 'table tbody tr', 3);

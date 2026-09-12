@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -10,9 +12,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the Blazy manager base.
- *
- * @coversDefaultClass \Drupal\blazy\BlazyManagerBase
- * @group blazy
  */
 class BlazyManagerBaseUnitTest extends UnitTestCase {
 
@@ -29,8 +28,7 @@ class BlazyManagerBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::create
-   * @covers ::__construct
+   * Test Blazy manager constructor.
    */
   public function testBlazyManagerCreate() {
     $container = $this->createMock(ContainerInterface::class);
@@ -43,7 +41,7 @@ class BlazyManagerBaseUnitTest extends UnitTestCase {
       ['renderer', $exception, $this->renderer],
       ['language_manager', $exception, $this->languageManager],
     ];
-    // @phpstan-ignore-next-line
+
     $container->expects($this->any())
       ->method('get')
       ->willReturnMap($map);

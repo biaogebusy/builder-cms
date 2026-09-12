@@ -386,7 +386,7 @@ class MediaDevelGenerate extends DevelGenerateBase implements ContainerFactoryPl
     $values['kill'] = $options['kill'];
     $values['feedback'] = $options['feedback'];
     $values['name_length'] = 6;
-    $values['num'] = (int) array_shift($args);
+    $values['num'] = (int) $args['num'];
 
     $values['skip_fields'] = is_null($options['skip-fields']) ? [] : self::csvToArray($options['skip-fields']);
     $values['base_fields'] = is_null($options['base-fields']) ? [] : self::csvToArray($options['base-fields']);

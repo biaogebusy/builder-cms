@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Composite;
 
-use Drupal\file\Entity\File;
 use Drupal\Tests\webform\Functional\Element\WebformElementManagedFileTestBase;
+use Drupal\file\Entity\File;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
 
@@ -24,7 +24,7 @@ class WebformCompositeCustomFileTest extends WebformElementManagedFileTestBase {
   /**
    * Test custom composite element.
    */
-  public function testCustom() {
+  public function testCustom(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_composite_custom_file');

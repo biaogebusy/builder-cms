@@ -2,8 +2,8 @@
 
 namespace Drupal\views_add_button\Controller;
 
-use Drupal\views_add_button\ViewsAddButtonManager;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\views_add_button\ViewsAddButtonManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -16,20 +16,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ViewsAddButtonController extends ControllerBase {
 
   /**
-   * The plugin manager.
-   *
-   * @var \Drupal\views_add_button\ViewsAddButtonManager
-   */
-  protected $ViewsAddButtonManager;
-
-  /**
    * ViewsAddButtonController constructor.
    *
-   * @param \Drupal\views_add_button\ViewsAddButtonManager $plugin_manager
+   * @param \Drupal\views_add_button\ViewsAddButtonManager $viewsAddButtonManager
    *   The plugin manager object.
    */
-  public function __construct(ViewsAddButtonManager $plugin_manager) {
-    $this->ViewsAddButtonManager = $plugin_manager;
+  public function __construct(
+    /**
+     * The plugin manager.
+     */
+    protected ViewsAddButtonManager $viewsAddButtonManager,
+  ) {
   }
 
   /**

@@ -7,6 +7,8 @@ namespace Drupal\Tests\migrate_drupal\Kernel;
 use Drupal\Component\Discovery\YamlDiscovery;
 use Drupal\KernelTests\FileSystemModuleDiscoveryDataProviderTrait;
 use Drupal\migrate_drupal\MigrationConfigurationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that core modules have a migrate_drupal.yml file as needed.
@@ -15,9 +17,9 @@ use Drupal\migrate_drupal\MigrationConfigurationTrait;
  * Because more that one migrate_drupal.yml file may have the same entry the
  * ValidateMigrationStateTest, which validates the file contents, is not able
  * to determine that all the required files exits.
- *
- * @group migrate_drupal
  */
+#[Group('migrate_drupal')]
+#[RunTestsInSeparateProcesses]
 class StateFileExistsTest extends MigrateDrupalTestBase {
 
   use FileSystemModuleDiscoveryDataProviderTrait;
@@ -38,11 +40,10 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
    * @var array
    */
   protected $stateFileRequired = [
+    // @todo Remove ban in https://www.drupal.org/project/drupal/issues/3488827
     'ban',
     'block',
     'block_content',
-    // @todo Remove book in https://www.drupal.org/project/drupal/issues/3376101
-    'book',
     'comment',
     'config_translation',
     'contact',
@@ -52,8 +53,6 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
     'field',
     'file',
     'filter',
-    // @todo Remove forum in https://www.drupal.org/project/drupal/issues/3261653
-    'forum',
     'image',
     'language',
     'link',
@@ -69,15 +68,11 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
     'responsive_image',
     'search',
     'shortcut',
-    // @todo Remove statistics in https://www.drupal.org/project/drupal/issues/3341092
-    'statistics',
     'syslog',
     'system',
     'taxonomy',
     'telephone',
     'text',
-    // @todo Remove tracker in https://www.drupal.org/project/drupal/issues/3261452
-    'tracker',
     'update',
     'user',
   ];
@@ -92,6 +87,9 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
     $modules_enabled = $module_handler->getModuleList();
     $modules_to_enable = array_keys(array_diff_key($all_modules, $modules_enabled));
     $this->enableModules($modules_to_enable);
+    // Note that the kernel has rebuilt the container in enableModules this
+    // $module_handler is no longer the $module_handler instance from above.
+    $module_handler = $this->container->get('module_handler');
 
     // Modules with a migrate_drupal.yml file.
     $has_state_file = (new YamlDiscovery('migrate_drupal', array_map(function ($value) {

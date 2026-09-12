@@ -11,6 +11,8 @@ class SessionConfiguration implements SessionConfigurationInterface {
 
   /**
    * An associative array of session ini settings.
+   *
+   * @var array
    */
   protected $options;
 
@@ -25,12 +27,9 @@ class SessionConfiguration implements SessionConfigurationInterface {
    * @see https://www.php.net/manual/session.security.ini.php
    */
   public function __construct($options = []) {
-    // Provide sensible defaults for sid_length, sid_bits_per_character and
-    // name_suffix.
+    // Provide sensible defaults for name_suffix.
     // @see core/assets/scaffold/files/default.services.yml
     $this->options = $options + [
-      'sid_length' => 48,
-      'sid_bits_per_character' => 6,
       'name_suffix' => '',
     ];
   }
@@ -58,10 +57,6 @@ class SessionConfiguration implements SessionConfigurationInterface {
     // Set the session cookie name.
     $options['name'] = $this->getName($request);
 
-    if (\PHP_VERSION_ID >= 80400) {
-      // See https://wiki.php.net/rfc/deprecations_php_8_4#sessionsid_length_and_sessionsid_bits_per_character
-      unset($options['sid_length'], $options['sid_bits_per_character']);
-    }
     return $options;
   }
 
@@ -120,15 +115,15 @@ class SessionConfiguration implements SessionConfigurationInterface {
    * The Set-Cookie response header and its domain attribute are defined in RFC
    * 2109, RFC 2965 and RFC 6265 each one superseding the previous version.
    *
-   * @see http://tools.ietf.org/html/rfc2109
-   * @see http://tools.ietf.org/html/rfc2965
-   * @see http://tools.ietf.org/html/rfc6265
-   *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request.
    *
    * @return string|null
    *   The session cookie domain, or NULL if the calculated value is invalid.
+   *
+   * @see http://tools.ietf.org/html/rfc2109
+   * @see http://tools.ietf.org/html/rfc2965
+   * @see http://tools.ietf.org/html/rfc6265
    */
   protected function getCookieDomain(Request $request) {
     if (isset($this->options['cookie_domain'])) {

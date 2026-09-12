@@ -4,7 +4,6 @@ namespace Drupal\chosen_test\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\system\Form;
 
 /**
  * Implements a ChosenConfig form.
@@ -32,6 +31,19 @@ class ChosenTestForm extends FormBase {
       '#empty_option' => $this->t('- Select -'),
       '#options' => ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
       '#chosen' => 1,
+    ];
+
+    $form['select_overridden'] = [
+      '#type' => 'select',
+      '#required' => FALSE,
+      '#title' => $this->t('Select overridden'),
+      '#default_value' => '',
+      '#empty_option' => $this->t('- Select -'),
+      '#options' => ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+      '#chosen' => 1,
+      '#chosen_placeholder' => 'Pick an option',
+      '#no_results_text' => 'Nothing matched',
+      '#search_contains' => 1,
     ];
 
     return $form;

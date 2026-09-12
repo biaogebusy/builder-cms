@@ -2,6 +2,7 @@
 
 namespace Drupal\dynamic_entity_reference\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -74,7 +75,7 @@ class DynamicEntityReferenceEntityFormatter extends EntityReferenceEntityFormatt
    */
   public function settingsSummary() {
     $labels = $this->entityTypeRepository->getEntityTypeLabels(TRUE);
-    $options = $labels[(string) t('Content', [], ['context' => 'Entity type group'])];
+    $options = $labels[(string) $this->t('Content', [], ['context' => 'Entity type group'])];
     $entity_type_ids = DynamicEntityReferenceItem::getTargetTypes($this->getFieldSettings());
     $available = [];
     foreach ($this->getSettings() as $key => $value) {
@@ -85,7 +86,7 @@ class DynamicEntityReferenceEntityFormatter extends EntityReferenceEntityFormatt
     if (!empty($available)) {
       return array_map(function ($entity_type_id, $settings) use ($options) {
         $view_mode = $this->entityDisplayRepository->getViewModeOptions($entity_type_id);
-        return t('@entity view mode: @mode', [
+        return $this->t('@entity view mode: @mode', [
           '@entity' => $options[$entity_type_id],
           '@mode' => $view_mode[$settings['view_mode']],
         ]);
@@ -101,7 +102,7 @@ class DynamicEntityReferenceEntityFormatter extends EntityReferenceEntityFormatt
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $labels = $this->entityTypeRepository->getEntityTypeLabels(TRUE);
-    $options = $labels[(string) t('Content', [], ['context' => 'Entity type group'])];
+    $options = $labels[(string) $this->t('Content', [], ['context' => 'Entity type group'])];
     $entity_type_ids = DynamicEntityReferenceItem::getTargetTypes($this->getFieldSettings());
     $elements['view_mode'] = [];
 
@@ -112,7 +113,7 @@ class DynamicEntityReferenceEntityFormatter extends EntityReferenceEntityFormatt
       $elements[$entity_type_id]['view_mode'] = [
         '#type' => 'select',
         '#options' => $this->entityDisplayRepository->getViewModeOptions($entity_type_id),
-        '#title' => t('View mode for %entity', ['%entity' => $options[$entity_type_id]]),
+        '#title' => $this->t('View mode for %entity', ['%entity' => $options[$entity_type_id]]),
         '#default_value' => $this->getSetting($entity_type_id)['view_mode'],
         '#required' => TRUE,
       ];
@@ -142,22 +143,33 @@ class DynamicEntityReferenceEntityFormatter extends EntityReferenceEntityFormatt
         . $entity->getEntityTypeId()
         . $entity->id();
 
-      if (isset(static::$recursiveRenderDepth[$recursive_render_id])) {
-        static::$recursiveRenderDepth[$recursive_render_id]++;
-      }
-      else {
-        static::$recursiveRenderDepth[$recursive_render_id] = 1;
-      }
+      $recursive_legacy = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4', static fn() => NULL, function () use ($recursive_render_id, $entity, $items, $elements) {
+        // @phpstan-ignore-next-line
+        if (isset(static::$recursiveRenderDepth[$recursive_render_id])) {
+          // @phpstan-ignore-next-line
+          static::$recursiveRenderDepth[$recursive_render_id]++;
+        }
+        else {
+          // @phpstan-ignore-next-line
+          static::$recursiveRenderDepth[$recursive_render_id] = 1;
+        }
 
-      // Protect ourselves from recursive rendering.
-      if (static::$recursiveRenderDepth[$recursive_render_id] > static::RECURSIVE_RENDER_LIMIT) {
-        $this->loggerFactory->get('entity')->error('Recursive rendering detected when rendering entity %entity_type: %entity_id, using the %field_name field on the %bundle_name bundle. Aborting rendering.', [
-          '%entity_type' => $entity->getEntityTypeId(),
-          '%entity_id' => $entity->id(),
-          '%field_name' => $items->getName(),
-          '%bundle_name' => $items->getFieldDefinition()->getTargetBundle(),
-        ]);
-        return $elements;
+        // Protect ourselves from recursive rendering.
+        // @phpstan-ignore-next-line
+        if (static::$recursiveRenderDepth[$recursive_render_id] > static::RECURSIVE_RENDER_LIMIT) {
+          $this->loggerFactory->get('entity')
+            ->error('Recursive rendering detected when rendering entity %entity_type: %entity_id, using the %field_name field on the %bundle_name bundle. Aborting rendering.', [
+              '%entity_type' => $entity->getEntityTypeId(),
+              '%entity_id' => $entity->id(),
+              '%field_name' => $items->getName(),
+              '%bundle_name' => $items->getFieldDefinition()->getTargetBundle(),
+            ]);
+          return $elements;
+        }
+        return NULL;
+      });
+      if ($recursive_legacy !== NULL) {
+        return $recursive_legacy;
       }
       $entity_type_id = $entity->getEntityTypeId();
       $view_builder = $this->entityTypeManager->getViewBuilder($entity_type_id);

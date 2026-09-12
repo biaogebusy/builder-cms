@@ -19,7 +19,7 @@ class WebformElementVerticalTabsTest extends WebformElementBrowserTestBase {
   /**
    * Test vertical tabs element.
    */
-  public function testVerticalTabs() {
+  public function testVerticalTabs(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_vertical_tabs');

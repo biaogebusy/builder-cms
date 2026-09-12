@@ -3,14 +3,14 @@
 namespace Drupal\Tests\ai\Unit\OperationType\Chat;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\Tests\ai\Mock\MockIterator;
-use Drupal\Tests\ai\Mock\MockStreamedChatIterator;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\ai\OperationType\Chat\ChatOutput;
 use Drupal\ai\OperationType\Chat\StreamedChatMessage;
 use Drupal\ai\OperationType\Chat\StreamedChatMessageInterface;
 use Drupal\ai\Service\HostnameFilter;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\ai_test\Mock\MockIterator;
+use Drupal\ai_test\Mock\MockStreamedChatIterator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -24,7 +24,7 @@ class StreamedChatMessageIteratorTest extends UnitTestCase {
   /**
    * A MockStreamedChatIterator instance.
    *
-   * @var \Drupal\Tests\ai\Mock\MockStreamedChatIterator
+   * @var \Drupal\ai_test\Mock\MockStreamedChatIterator
    */
   private MockStreamedChatIterator $streamedChatMessage;
 

@@ -206,6 +206,27 @@ class ChartsConfigForm extends ConfigFormBase {
 
     // Save the main settings.
     $config = $this->config('charts.settings');
+    $existing = $config->get('charts_default_settings') ?: [];
+
+    // Build the per-library store, preferring values carried through the form,
+    // then falling back to what is already stored.
+    $library_configs = !empty($settings['library_configs'])
+      ? $settings['library_configs']
+      : ($existing['library_configs'] ?? []);
+
+    // Preserve the previously-saved default library's settings before
+    // switching, so they survive even if the post_update migration hasn't run.
+    $old_library = $existing['library'] ?? '';
+    if ($old_library && !isset($library_configs[$old_library]) && !empty($existing['library_config'])) {
+      $library_configs[$old_library] = $existing['library_config'];
+    }
+
+    // Store the currently submitted library's settings.
+    if (!empty($settings['library']) && array_key_exists('library_config', $settings)) {
+      $library_configs[$settings['library']] = $settings['library_config'];
+    }
+    $settings['library_configs'] = $library_configs;
+
     $config->set('dependencies', $this->calculateDependencies($settings['library'], $settings['type']))
       ->set('charts_default_settings', $settings)
       ->save();

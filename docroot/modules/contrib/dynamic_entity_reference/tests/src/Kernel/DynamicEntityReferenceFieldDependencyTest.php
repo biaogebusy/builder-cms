@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
@@ -11,6 +14,8 @@ use Drupal\KernelTests\KernelTestBase;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceFieldDependencyTest extends KernelTestBase {
 
   /**
@@ -56,7 +61,7 @@ class DynamicEntityReferenceFieldDependencyTest extends KernelTestBase {
     $entityTypeManager = $this->container->get('entity_type.manager');
 
     // Gather the provider ID's of all content entity types.
-    foreach ($entityTypeManager->getDefinitions() as $entity_id => $entity_type) {
+    foreach ($entityTypeManager->getDefinitions() as $entity_type) {
       if ($entity_type instanceof ContentEntityTypeInterface) {
         $provider = $entity_type->getProvider();
         if (!in_array($provider, $this->entityTypeProviders) && $provider !== 'core') {
@@ -98,6 +103,7 @@ class DynamicEntityReferenceFieldDependencyTest extends KernelTestBase {
     // Remove entity_test_provider.
     $module_dependencies = array_diff($module_dependencies, ['dynamic_entity_reference_test_entity_provider']);
 
+    sort($module_dependencies);
     $this->assertEqualsCanonicalizing(['module' => $module_dependencies], $this->fieldStorage->getDependencies());
   }
 

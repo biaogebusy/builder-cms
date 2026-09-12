@@ -7,26 +7,26 @@ namespace Drupal\Tests\migrate\Kernel;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migrating non-Drupal translated content.
  *
  * Ensure it's possible to migrate in translations, even if there's no nid or
  * tnid property on the source.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateExternalTranslatedTest extends MigrateTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'user',
     'language',
     'node',
-    'field',
     'migrate_external_translated_test',
   ];
 

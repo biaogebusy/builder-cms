@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.bef_test.body
     - field.field.node.bef_test.field_bef_boolean
     - field.field.node.bef_test.field_bef_email
     - field.field.node.bef_test.field_bef_integer
@@ -29,7 +28,6 @@ content:
   links:
     weight: 100
 hidden:
-  body: true
   field_bef_boolean: true
   field_bef_email: true
   field_bef_integer: true

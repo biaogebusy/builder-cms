@@ -4,16 +4,21 @@ namespace Drupal\better_exposed_filters\Plugin;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\views\Plugin\views\ViewsHandlerInterface;
 use Drupal\views\ViewExecutable;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 /**
  * Base class for Better exposed filters widget plugins.
  */
-abstract class BetterExposedFiltersWidgetBase extends PluginBase implements BetterExposedFiltersWidgetInterface {
+abstract class BetterExposedFiltersWidgetBase extends PluginBase implements BetterExposedFiltersWidgetInterface, ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
 
@@ -32,9 +37,20 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
   protected ViewsHandlerInterface $handler;
 
   /**
-   * {@inheritdoc}
+   * Constructs a BetterExposedFiltersWidgetBase object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The configuration factory.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected Request $request, protected ConfigFactoryInterface $configFactory) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->configuration = NestedArray::mergeDeep($this->defaultConfiguration(), $configuration);
@@ -43,7 +59,20 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('config.factory'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration(): array {
     return [
       'plugin_id' => $this->pluginId,
     ];
@@ -144,18 +173,20 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
     // Persist state of collapsible field-sets with active elements.
     if (empty($form[$group]['#open'])) {
       // Use raw user input to determine if field-set should be open or closed.
-      $user_input = $form_state->getUserInput()[$element] ?? [0];
-      // Take multiple values into account.
-      if (!is_array($user_input)) {
-        $user_input = [$user_input];
-      }
+      $raw_input = $form_state->getUserInput()[$element] ?? NULL;
 
-      // Check if one or more values are set for our current element.
-      $options = $form[$element]['#options'] ?? [];
-      $default_value = $form[$element]['#default_value'] ?? key($options);
-      $has_values = array_reduce($user_input, function ($carry, $value) use ($form, $element, $default_value) {
-        return $carry || ($value === $default_value ? '' : ($value || $default_value === 0));
-      }, FALSE);
+      // If no user input exists for this element, nothing is selected.
+      $has_values_selected = FALSE;
+      if ($raw_input !== NULL) {
+        $user_input = is_array($raw_input) ? $raw_input : [$raw_input];
+
+        // Check if one or more values are set for our current element.
+        $default_value = $form[$element]['#default_value'] ?? key($form[$element]['#options'] ?? []);
+        $has_values_selected = array_reduce($user_input, function (bool $carry, mixed $value) use ($default_value, $form, $element) {
+          return $carry ||
+            ($form[$element]['#multiple'] ?? FALSE ? ($value === $default_value || isset($form[$element]['#options'][$value])) : !($value === $default_value) && ($value || $default_value === 0));
+        }, FALSE);
+      }
 
       $collapsible_disable_automatic_open = FALSE;
       if (isset($form[$element]['#collapsible_disable_automatic_open'])) {
@@ -164,8 +195,14 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
       elseif (isset($form[$group]['#collapsible_disable_automatic_open'])) {
         $collapsible_disable_automatic_open = $form[$group]['#collapsible_disable_automatic_open'];
       }
-      if ($has_values && !$collapsible_disable_automatic_open) {
+      if ($has_values_selected && !$collapsible_disable_automatic_open) {
         $form[$group]['#open'] = TRUE;
+
+        // Make sure that secondary group is opened if one of the collapsible
+        // fields has user input.
+        if (isset($form['secondary']) && isset($form[$group]['#group']) && 'secondary' === $form[$group]['#group']) {
+          $form['secondary']['#open'] = TRUE;
+        }
       }
     }
   }
@@ -180,8 +217,23 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
    *   Url object.
    */
   protected function getExposedFormActionUrl(FormStateInterface $form_state): Url {
-    $request = \Drupal::request();
-    $url = Url::createFromRequest(clone $request);
+
+    $request = $this->request;
+    if ($this->view->hasUrl()) {
+      $url = $this->view->getUrl();
+    }
+    else {
+      try {
+        $url = Url::createFromRequest(clone $request);
+      }
+      catch (ResourceNotFoundException) {
+        // If the route is not found or a route parameter is not valid,
+        // fallback to the 404-page URL.
+        $uri = $this->configFactory->get('system.site')->get('page.404') ?: $request->getRequestUri();
+        $url = Url::fromUserInput($uri);
+      }
+    }
+
     $url->setAbsolute();
 
     return $url;

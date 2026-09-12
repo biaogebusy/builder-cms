@@ -8,20 +8,20 @@
         "source": "https://drupal.org/project/chosen"
     },
     "require": {
-        "noli42/chosen": "3.0.0"
+        "noli42/chosen": "3.1.4"
     },
     "repositories": {
         "noli42/chosen": {
             "type": "package",
             "package": {
                 "name": "noli42/chosen",
-                "version": "3.0.0",
+                "version": "3.1.4",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "chosen"
                 },
                 "dist": {
-                    "url": "https://github.com/noli42/chosen/releases/download/3.0.0/chosen-assets-v3.0.0.zip",
+                    "url": "https://github.com/noli42/chosen/releases/download/3.1.4/chosen-assets-v3.1.4.zip",
                     "type": "zip"
                 }
             }

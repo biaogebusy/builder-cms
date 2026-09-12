@@ -20,8 +20,18 @@ class ResourceServerFactory implements ResourceServerFactoryInterface {
    * The simple_oauth settings config.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
+   * @deprecated in simple_oauth:6.2.0 and is removed from simple_oauth:7.0.0.
+   *    Use $this->configFactory instead.
+   * @see https://www.drupal.org/node/3577704
    */
   protected ImmutableConfig $config;
+
+  /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The file system service.
@@ -52,9 +62,13 @@ class ResourceServerFactory implements ResourceServerFactoryInterface {
     FileSystemInterface $file_system,
     AccessTokenRepositoryInterface $access_token_repository,
   ) {
-    $this->config = $config_factory->get('simple_oauth.settings');
+    $this->configFactory = $config_factory;
     $this->fileSystem = $file_system;
     $this->accessTokenRepository = $access_token_repository;
+
+    // Set for backwards compatibility, remove in 7.0.0.
+    // @phpstan-ignore-next-line property.deprecated
+    $this->config = $config_factory->get('simple_oauth.settings');
   }
 
   /**
@@ -77,7 +91,8 @@ class ResourceServerFactory implements ResourceServerFactoryInterface {
    *   If public key is not set.
    */
   protected function getPublicKey(): CryptKey {
-    $public_key_path = $this->config->get('public_key');
+    $config = $this->configFactory->get('simple_oauth.settings');
+    $public_key_path = $config->get('public_key');
     $file_path = $this->fileSystem->realpath($public_key_path) ?: $public_key_path;
     $key = file_get_contents($file_path);
 

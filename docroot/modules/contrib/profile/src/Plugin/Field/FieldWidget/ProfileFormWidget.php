@@ -220,16 +220,18 @@ class ProfileFormWidget extends WidgetBase implements ContainerFactoryPluginInte
   public static function attachSubmit(array $form, FormStateInterface $form_state) {
     // Ensure that our save function runs in between ::submitForm which
     // generates the entity and ::save which stores the user.
-    $submitFormIndex = array_search('::submitForm', $form['actions']['submit']['#submit'], TRUE);
-    if ($submitFormIndex !== -1) {
-      $form['actions']['submit']['#submit'] = array_merge(
-        array_slice($form['actions']['submit']['#submit'], 0, $submitFormIndex + 1),
-        [[static::class, 'saveProfiles']],
-        array_slice($form['actions']['submit']['#submit'], $submitFormIndex + 1),
-      );
-    }
-    else {
-      $form['actions']['submit']['#submit'][] = [static::class, 'saveProfiles'];
+    if (isset($form['actions']['submit']['#submit']) && is_array($form['actions']['submit']['#submit'])) {
+      $submitFormIndex = array_search('::submitForm', $form['actions']['submit']['#submit'], TRUE);
+      if ($submitFormIndex !== -1) {
+        $form['actions']['submit']['#submit'] = array_merge(
+          array_slice($form['actions']['submit']['#submit'], 0, $submitFormIndex + 1),
+          [[static::class, 'saveProfiles']],
+          array_slice($form['actions']['submit']['#submit'], $submitFormIndex + 1),
+        );
+      }
+      else {
+        $form['actions']['submit']['#submit'][] = [static::class, 'saveProfiles'];
+      }
     }
     return $form;
   }

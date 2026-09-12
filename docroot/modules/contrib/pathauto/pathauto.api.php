@@ -5,9 +5,9 @@
  * Documentation for pathauto API.
  */
 
-use Drupal\Core\Language\Language;
-
 /**
+ * Provides integration points for modules to integrate with pathauto.
+ *
  * @todo Update for 8.x-1.x
  *
  * It may be helpful to review some examples of integration from
@@ -100,11 +100,21 @@ function hook_pathauto_is_alias_reserved($alias, $source, $langcode) {
  *   - 'module': The module or entity type being aliased.
  *   - 'op': A string with the operation being performed on the object being
  *     aliased. Can be either 'insert', 'update', 'return', or 'bulkupdate'.
- *   - 'source': A string of the source path for the alias (e.g. 'node/1').
- *   - 'data': An array of keyed objects to pass to token_replace().
- *   - 'bundle': The sub-type or bundle of the object being aliased.
- *   - 'language': A string of the language code for the alias (e.g. 'en').
- *     This can be altered by reference.
+ *   - 'source': A string of the source path for the alias
+ *     (e.g. 'node/1').
+ *     @deprecated in pathauto:8.x-1.15 and is removed from
+ *     pathauto:2.0.0. Altering this value is deprecated. Use a
+ *     custom route or the Safe tokens setting instead.
+ *     @see https://www.drupal.org/node/3187945
+ *   - 'data': An array of keyed objects to pass to
+ *     token_replace().
+ *   - 'bundle': The sub-type or bundle of the object being
+ *     aliased.
+ *   - 'language': A string of the language code for the alias
+ *     (e.g. 'en').
+ *     @deprecated in pathauto:8.x-1.15 and is removed from
+ *     pathauto:2.0.0. Altering this value is deprecated.
+ *     @see https://www.drupal.org/node/3187945
  */
 function hook_pathauto_pattern_alter(\Drupal\pathauto\PathautoPatternInterface $pattern, array $context) {
   // Switch out any [node:created:*] tokens with [node:updated:*] on update.
@@ -122,21 +132,28 @@ function hook_pathauto_pattern_alter(\Drupal\pathauto\PathautoPatternInterface $
  *   An associative array of additional options, with the following elements:
  *   - 'module': The module or entity type being aliased.
  *   - 'op': A string with the operation being performed on the object being
- *     aliased. Can be either 'insert', 'update', 'return', or 'bulkupdate'.
- *   - 'source': A string of the source path for the alias (e.g. 'node/1').
- *     This can be altered by reference.
- *   - 'data': An array of keyed objects to pass to token_replace().
+ *     aliased. Can be either 'insert', 'update', 'return', or
+ *     'bulkupdate'.
+ *   - 'source': A string of the source path for the alias
+ *     (e.g. 'node/1').
+ *     @deprecated in pathauto:8.x-1.15 and is removed from
+ *     pathauto:2.0.0. Altering this value is deprecated. Use a
+ *     custom route or the Safe tokens setting instead.
+ *     @see https://www.drupal.org/node/3187945
+ *   - 'data': An array of keyed objects to pass to
+ *     token_replace().
  *   - 'type': The sub-type or bundle of the object being aliased.
- *   - 'language': A string of the language code for the alias (e.g. 'en').
- *     This can be altered by reference.
- *   - 'pattern': A string of the pattern used for aliasing the object.
+ *   - 'language': A string of the language code for the alias
+ *     (e.g. 'en').
+ *     @deprecated in pathauto:8.x-1.15 and is removed from
+ *     pathauto:2.0.0. Altering this value is deprecated.
+ *     @see https://www.drupal.org/node/3187945
+ *   - 'pattern': A string of the pattern used for aliasing the
+ *     object.
  */
 function hook_pathauto_alias_alter(&$alias, array &$context) {
   // Add a suffix so that all aliases get saved as 'content/my-title.html'.
   $alias .= '.html';
-
-  // Force all aliases to be saved as language neutral.
-  $context['language'] = Language::LANGCODE_NOT_SPECIFIED;
 }
 
 /**

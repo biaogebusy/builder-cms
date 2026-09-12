@@ -3,7 +3,7 @@
 namespace Drupal\blazy\Form;
 
 use Drupal\blazy\Theme\Admin;
-use Drupal\blazy\Utility\Path;
+use Drupal\blazy\Internals\Path;
 
 /**
  * A blazy admin Trait to declutter, and focus more on form elements.

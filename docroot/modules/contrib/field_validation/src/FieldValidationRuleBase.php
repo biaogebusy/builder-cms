@@ -392,7 +392,19 @@ abstract class FieldValidationRuleBase extends PluginBase implements FieldValida
     $value = $this->tokenService->replace($value, $token_data);
     // \Drupal::messenger()->addMessage("field_name:" .var_export($field_name,true));
     //$entity_type_id = $entity->getEntityType()->id();
-    $field_type =  $entity->getFieldDefinition($field_name)->getType();
+    $field_definition = $entity->getFieldDefinition($field_name);
+    if ($field_definition === NULL) {
+      // The condition references a field this entity doesn't have - e.g.
+      // the field was deleted after the rule was saved, or the rule set
+      // config was hand-edited/imported with a typo. Fail closed (skip
+      // the rule) instead of fataling on a real form submission.
+      \Drupal::logger('field_validation')->warning('Field validation rule condition references non-existent field %field on entity type %entity_type; skipping the condition.', [
+        '%field' => $field_name,
+        '%entity_type' => $entity->getEntityTypeId(),
+      ]);
+      return FALSE;
+    }
+    $field_type = $field_definition->getType();
     $field_type_manager =  \Drupal::service('plugin.manager.field.field_type');
     $plugin_definition = $field_type_manager->getDefinition($field_type, FALSE);
     //Get main property, default value.

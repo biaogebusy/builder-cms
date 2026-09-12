@@ -60,8 +60,8 @@ class UserCancelForm extends ContentEntityConfirmFormBase {
     $default_method = $this->config('user.settings')->get('cancel_method');
     $own_account = $this->entity->id() == $this->currentUser()->id();
     // Options supplied via user_cancel_methods() can have a custom
-    // #confirm_description property for the confirmation form description.
-    // This text refers to "Your account" so only user it if cancelling own account.
+    // #confirm_description property for the confirmation form description. This
+    // text refers to "Your account" so only user it if cancelling own account.
     if ($own_account && isset($this->cancelMethods[$default_method]['#confirm_description'])) {
       return $this->cancelMethods[$default_method]['#confirm_description'];
     }
@@ -149,8 +149,17 @@ class UserCancelForm extends ContentEntityConfirmFormBase {
       $this->entity->user_cancel_notify = $form_state->getValue('user_cancel_notify');
       $this->entity->save();
       _user_mail_notify('cancel_confirm', $this->entity);
-      $this->messenger()->addStatus($this->t('A confirmation request to cancel your account has been sent to your email address.'));
-      $this->logger('user')->info('Sent account cancellation request to %name %email.', ['%name' => $this->entity->label(), '%email' => '<' . $this->entity->getEmail() . '>']);
+      $this->logger('user')
+        ->info('Sent account cancellation request to %name %email.', [
+          '%name' => $this->entity->label(),
+          '%email' => '<' . $this->entity->getEmail() . '>',
+        ]);
+
+      $cancel_message = $this->t('A confirmation request to cancel your account has been sent to your email address.');
+      if ($this->entity->id() !== $this->currentUser()->id()) {
+        $cancel_message = $this->t("A confirmation request to cancel the account %name has been sent to the user's email address.", ['%name' => $this->entity->label()]);
+      }
+      $this->messenger()->addStatus($cancel_message);
 
       $form_state->setRedirect(
         'entity.user.canonical',

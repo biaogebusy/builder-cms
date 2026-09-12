@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test\Routing;
 
+use Drupal\entity_test\EntityTestHelper;
+use Drupal\entity_test\EntityTestTypesFilter;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -16,7 +20,7 @@ class EntityTestRoutes {
    *   An array of route objects.
    */
   public function routes() {
-    $types = entity_test_entity_types(ENTITY_TEST_TYPES_ROUTING);
+    $types = EntityTestHelper::getEntityTypes(EntityTestTypesFilter::Routing);
 
     $routes = [];
     foreach ($types as $entity_type_id) {

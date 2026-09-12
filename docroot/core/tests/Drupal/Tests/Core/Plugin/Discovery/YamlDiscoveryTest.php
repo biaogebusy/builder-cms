@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
+use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\Discovery\YamlDiscovery
- * @group Plugin
+ * Tests Drupal\Core\Plugin\Discovery\YamlDiscovery.
  */
+#[CoversClass(YamlDiscovery::class)]
+#[Group('Plugin')]
 class YamlDiscoveryTest extends UnitTestCase {
 
   /**
@@ -73,7 +76,7 @@ class YamlDiscoveryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDefinitions
+   * Tests get definitions with translatable definitions.
    */
   public function testGetDefinitionsWithTranslatableDefinitions(): void {
     vfsStream::setup('root');
@@ -96,7 +99,10 @@ EOS;
       ],
     ]);
 
-    $discovery = new YamlDiscovery('test', ['test_1' => vfsStream::url('root/test_1'), 'test_2' => vfsStream::url('root/test_2')]);
+    $discovery = new YamlDiscovery('test', [
+      'test_1' => vfsStream::url('root/test_1'),
+      'test_2' => vfsStream::url('root/test_2'),
+    ]);
     $discovery->addTranslatableProperty('title', 'title_context');
     $definitions = $discovery->getDefinitions();
 

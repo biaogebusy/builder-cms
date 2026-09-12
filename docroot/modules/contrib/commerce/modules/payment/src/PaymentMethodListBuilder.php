@@ -119,7 +119,7 @@ class PaymentMethodListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getOperations(EntityInterface $entity) {
+  public function getOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
     $operations = parent::getOperations($entity);
     if (!$entity->isDefault()) {
       $operations['set_default'] = [

@@ -6,6 +6,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -50,6 +51,7 @@ class InlineEntityFormSimple extends InlineEntityFormBase {
     }
 
     $item = $items->get($delta);
+    assert($item instanceof EntityReferenceItem);
     if ($item->target_id && !$item->entity) {
       $element['warning']['#markup'] = $this->t('Unable to load the referenced entity.');
       return $element;

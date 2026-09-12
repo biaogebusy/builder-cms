@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Kernel\Theme;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Twig\TemplateWrapper;
 
 /**
  * Tests Twig namespaces.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class TwigNamespaceTest extends KernelTestBase {
 
   /**

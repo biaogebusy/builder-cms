@@ -7,12 +7,14 @@ namespace Drupal\Tests\field\Functional\Boolean;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Boolean field formatter settings.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class BooleanFormatterSettingsTest extends BrowserTestBase {
 
   /**
@@ -119,7 +121,7 @@ class BooleanFormatterSettingsTest extends BrowserTestBase {
       ], 'Save settings');
 
       // Open the Manage Display page and trigger the field settings form.
-      $this->drupalGet('admin/structure/types/manage/' . $this->bundle . '/display');
+      $this->drupalGet('admin/structure/types/manage/' . $this->bundle . '/display/default');
       $this->submitForm([], $this->fieldName . '_settings_edit');
 
       // Test that the settings options are present in the correct format.
@@ -129,7 +131,7 @@ class BooleanFormatterSettingsTest extends BrowserTestBase {
       $assert_session->pageTextContains("Field settings ({$values[0]} / {$values[1]})");
 
       // Test that the settings summary are present in the correct format.
-      $this->drupalGet('admin/structure/types/manage/' . $this->bundle . '/display');
+      $this->drupalGet('admin/structure/types/manage/' . $this->bundle . '/display/default');
       $this->assertSession()->elementExists('xpath', "//div[contains(@class, 'field-plugin-summary')]");
       $this->assertSession()->elementTextEquals('xpath', "//div[contains(@class, 'field-plugin-summary')]", "Display: {$values[0]} / {$values[1]}");
     }

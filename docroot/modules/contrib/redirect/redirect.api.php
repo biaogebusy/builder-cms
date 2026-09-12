@@ -25,7 +25,8 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
  *   - Redirect written to the database
  *   - hook_redirect_insert() (all)
  *   - hook_entity_insert() (all)
- * - Updating an existing redirect (calling redirect_save() on an existing redirect):
+ * - Updating an existing redirect (calling redirect_save() on an existing
+ *   redirect):
  *   - hook_redirect_presave() (all)
  *   - Redirect written to the database
  *   - hook_redirect_update() (all)
@@ -35,7 +36,8 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
  *   - Redirect information is read from database.
  *   - hook_entity_load() (all)
  *   - hook_redirect_load() (all)
- * - Deleting a redirect (calling redirect_delete() or redirect_delete_multiple()):
+ * - Deleting a redirect (calling redirect_delete() or
+ *   redirect_delete_multiple()):
  *   - Redirect is loaded (see Loading section above)
  *   - Redirect information is deleted from database
  *   - hook_redirect_delete() (all)

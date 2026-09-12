@@ -6,10 +6,14 @@ namespace Drupal\Tests\language\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Content Language Settings Xml Cookie.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class ContentLanguageSettingsXmlCookieTest extends ContentLanguageSettingsResourceTestBase {
 
   use CookieResourceTestTrait;
@@ -23,7 +27,7 @@ class ContentLanguageSettingsXmlCookieTest extends ContentLanguageSettingsResour
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

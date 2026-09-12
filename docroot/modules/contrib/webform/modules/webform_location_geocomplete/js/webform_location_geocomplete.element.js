@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   // @see https://ubilabs.github.io/geocomplete/
   // @see https://developers.google.com/maps/documentation/javascript/reference?csw=1#MapOptions
   Drupal.webform = Drupal.webform || {};

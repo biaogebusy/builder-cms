@@ -23,19 +23,36 @@ core.entity_view_mode.*.*:
 core.entity_form_mode.*.*:
   type: config_entity
   label: 'Entity form mode settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     id:
       type: string
       label: 'ID'
+      # Form mode IDs can only contain lowercase letters, numbers, and underscores
+      # prefixed by entity type name this form mode is used for and a dot.
+      # @see \Drupal\field_ui\Form\EntityDisplayModeFormBase::form()
+      constraints:
+        Regex:
+          pattern: '/^[a-z0-9_]+\.[a-z0-9_]+$/'
+          message: "The ID %value is not valid."
     label:
       type: required_label
       label: 'Label'
     description:
       type: text
       label: 'Description'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     targetEntityType:
       type: string
       label: 'Target entity type'
+      constraints:
+        PluginExists:
+          manager: entity_type.manager
+          interface: Drupal\Core\Entity\ContentEntityInterface
     cache:
       type: boolean
       label: 'Cache'
@@ -55,7 +72,8 @@ core.entity_view_display.*.*.*:
       type: string
       label: 'Bundle'
       constraints:
-        EntityBundleExists: '%parent.targetEntityType'
+        EntityBundleExists:
+          entityTypeId: '%parent.targetEntityType'
     mode:
       type: string
       label: 'View or form mode machine name'
@@ -122,7 +140,8 @@ core.entity_form_display.*.*.*:
       type: string
       label: 'Bundle'
       constraints:
-        EntityBundleExists: '%parent.targetEntityType'
+        EntityBundleExists:
+          entityTypeId: '%parent.targetEntityType'
     mode:
       type: string
       label: 'View or form mode machine name'
@@ -312,6 +331,15 @@ field.formatter.settings.string:
     link_to_entity:
       type: boolean
       label: 'Link to the entity'
+    link_rel:
+      type: string
+      label: 'Link destination'
+      constraints:
+        Choice:
+          choices:
+            - canonical
+            - edit-form
+      requiredKey: false
 
 field.formatter.settings.language:
   type: field.formatter.settings.string
@@ -441,6 +469,8 @@ block.settings.field_block:*:*:*:
   mapping:
     formatter:
       type: field_formatter
+  constraints:
+    FullyValidatable: ~
 
 block.settings.extra_field_block:*:*:*:
   type: block_settings

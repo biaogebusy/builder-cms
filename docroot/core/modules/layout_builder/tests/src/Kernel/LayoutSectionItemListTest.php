@@ -7,24 +7,19 @@ namespace Drupal\Tests\layout_builder\Kernel;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\entity_test\Entity\EntityTestBaseFieldDisplay;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\Field\LayoutSectionItemList;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field type for Layout Sections.
- *
- * @coversDefaultClass \Drupal\layout_builder\Field\LayoutSectionItemList
- *
- * @group layout_builder
  */
+#[CoversClass(LayoutSectionItemList::class)]
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutSectionItemListTest extends SectionListTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'field',
-    'text',
-  ];
 
   /**
    * {@inheritdoc}
@@ -53,7 +48,7 @@ class LayoutSectionItemListTest extends SectionListTestBase {
   }
 
   /**
-   * @covers ::equals
+   * Tests equals.
    */
   public function testEquals(): void {
     $this->sectionList->getSection(0)->setLayoutSettings(['foo' => 1]);
@@ -66,7 +61,7 @@ class LayoutSectionItemListTest extends SectionListTestBase {
   }
 
   /**
-   * @covers ::equals
+   * Tests equals non section.
    */
   public function testEqualsNonSection(): void {
     $list = $this->prophesize(FieldItemListInterface::class);

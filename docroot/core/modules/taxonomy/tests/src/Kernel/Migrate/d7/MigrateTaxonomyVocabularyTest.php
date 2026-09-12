@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\taxonomy\VocabularyInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate taxonomy vocabularies to taxonomy.vocabulary.*.yml.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyVocabularyTest extends MigrateDrupal7TestBase {
 
   /**
@@ -33,11 +35,11 @@ class MigrateTaxonomyVocabularyTest extends MigrateDrupal7TestBase {
    *
    * @param string $id
    *   Entity ID to load and check.
-   * @param $expected_label
+   * @param string $expected_label
    *   The label the migrated entity should have.
-   * @param $expected_description
+   * @param string $expected_description
    *   The description the migrated entity should have.
-   * @param $expected_weight
+   * @param string $expected_weight
    *   The weight the migrated entity should have.
    *
    * @internal

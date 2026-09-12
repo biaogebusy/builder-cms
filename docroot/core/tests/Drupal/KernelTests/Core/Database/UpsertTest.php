@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Database;
 
+// cspell:ignore Zaphod
+
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Upsert query builder.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class UpsertTest extends DatabaseTestBase {
 
   /**
@@ -122,6 +126,206 @@ class UpsertTest extends DatabaseTestBase {
       'update' => 'Update value 1 updated',
     ]);
     $upsert->execute();
+  }
+
+  /**
+   * Confirms that we can upsert records with composite keys successfully.
+   */
+  public function testCompositeKeyUpsert(): void {
+    $connection = Database::getConnection();
+    $this->installSchema('database_test', ['test_composite_primary']);
+
+    // Add some initial test data.
+    $connection->insert('test_composite_primary')
+      ->fields(['name', 'age', 'job'])
+      ->values([
+        'name' => 'Tiffany',
+        'age' => 31,
+        'job' => 'Presenter',
+      ])
+      ->values([
+        'name' => 'Meredith',
+        'age' => 30,
+        'job' => 'Speaker',
+      ])
+      ->execute();
+
+    $num_records_before = $connection->query('SELECT COUNT(*) FROM {test_composite_primary}')->fetchField();
+
+    $upsert = $connection->upsert('test_composite_primary')
+      ->key(['name', 'age'])
+      // Add a new row directly from ::fields().
+      ->fields([
+        'name' => 'Kate',
+        'age' => 25,
+        'job' => 'Volunteer',
+      ]);
+
+    // Add a new row.
+    $upsert->values([
+      'name' => 'Karen',
+      'age' => 35,
+      'job' => 'Manager',
+    ]);
+
+    // Update an existing row.
+    $upsert->values([
+      'name' => 'Meredith',
+      'age' => 30,
+      // The initial job was 'Speaker'.
+      'job' => 'Organizer',
+    ]);
+
+    // Add a new row by reusing a name but with a different age. This won't
+    // match the composite primary key constraint.
+    $upsert->values([
+      'name' => 'Meredith',
+      'age' => 40,
+      'job' => 'Supervisor',
+    ]);
+
+    $upsert->execute();
+
+    $num_records_after = $connection->query('SELECT COUNT(*) FROM {test_composite_primary}')->fetchField();
+    $this->assertEquals($num_records_before + 3, $num_records_after, 'Rows were inserted and updated properly.');
+
+    $person = $connection->query('SELECT * FROM {test_composite_primary} WHERE [job] = :job', [':job' => 'Volunteer'])->fetch();
+    $this->assertEquals('Volunteer', $person->job, 'Job set correctly.');
+    $this->assertEquals(25, $person->age, 'Age set correctly.');
+    $this->assertEquals('Kate', $person->name, 'Name set correctly.');
+
+    $person = $connection->query('SELECT * FROM {test_composite_primary} WHERE [job] = :job', [':job' => 'Manager'])->fetch();
+    $this->assertEquals('Manager', $person->job, 'Job set correctly.');
+    $this->assertEquals(35, $person->age, 'Age set correctly.');
+    $this->assertEquals('Karen', $person->name, 'Name set correctly.');
+
+    $person = $connection->query('SELECT * FROM {test_composite_primary} WHERE [job] = :job', [':job' => 'Organizer'])->fetch();
+    $this->assertEquals('Organizer', $person->job, 'Job set correctly.');
+    $this->assertEquals(30, $person->age, 'Age set correctly.');
+    $this->assertEquals('Meredith', $person->name, 'Name set correctly.');
+
+    $person = $connection->query('SELECT * FROM {test_composite_primary} WHERE [job] = :job', [':job' => 'Supervisor'])->fetch();
+    $this->assertEquals('Supervisor', $person->job, 'Job set correctly.');
+    $this->assertEquals(40, $person->age, 'Age set correctly.');
+    $this->assertEquals('Meredith', $person->name, 'Name set correctly.');
+  }
+
+  /**
+   * Tests a single-value upsert that has no columns to update.
+   */
+  public function testDegeneratedSingleValueUpsert(): void {
+    $this->assertSame('1', $this->connection->query('SELECT COUNT(*) FROM {test_people}')->fetchField());
+
+    // An upsert that only adds a record.
+    $this->connection->upsert('test_people')
+      ->key('job')
+      ->fields(['job'])
+      ->values(['Plumber'])
+      ->execute();
+
+    $this->assertSame('2', $this->connection->query('SELECT COUNT(*) FROM {test_people}')->fetchField());
+
+    // Do the same upsert, should be a no-op.
+    $this->connection->upsert('test_people')
+      ->key('job')
+      ->fields(['job'])
+      ->values(['Plumber'])
+      ->execute();
+
+    // No records added.
+    $this->assertSame('2', $this->connection->query('SELECT COUNT(*) FROM {test_people}')->fetchField());
+  }
+
+  /**
+   * Tests a multi-value upsert that has no columns to update.
+   */
+  public function testDegeneratedMultiValueUpsert(): void {
+    $this->assertSame('1', $this->connection->query('SELECT COUNT(*) FROM {test_people}')->fetchField());
+
+    // An upsert that only adds a record.
+    $this->connection->upsert('test_people')
+      ->key('job')
+      ->fields(['job'])
+      ->values(['Plumber'])
+      ->execute();
+
+    $this->assertSame('2', $this->connection->query('SELECT COUNT(*) FROM {test_people}')->fetchField());
+
+    // Do a multi-value upsert that should add two more records.
+    $this->connection->upsert('test_people')
+      ->key('job')
+      ->fields(['job'])
+      ->values(['Plumber'])
+      ->values(['Carpenter'])
+      ->values(['GalacticHitchhiker'])
+      ->execute();
+
+    // Two records added, for a total of four.
+    $this->assertSame('4', $this->connection->query('SELECT COUNT(*) FROM {test_people}')->fetchField());
+  }
+
+  /**
+   * Tests an upsert with a composite key and no columns to update.
+   */
+  public function testDegeneratedCompositeKeyUpsert(): void {
+    $this->installSchema('database_test', ['test_composite_primary']);
+
+    // Insert two new rows.
+    $this->connection->insert('test_composite_primary')
+      ->fields([
+        'name' => 'Kate',
+        'age' => 25,
+        'job' => 'Volunteer',
+      ])
+      ->values([
+        'name' => 'Bertie',
+        'age' => 6,
+        'job' => 'Puppet',
+      ])
+      ->execute();
+
+    $this->assertSame('2', $this->connection->query('SELECT COUNT(*) FROM {test_composite_primary}')->fetchField());
+
+    // Performing an upsert with the same composite key should be a no-op.
+    $this->connection->upsert('test_composite_primary')
+      ->key(['name', 'age'])
+      // Add a new row directly from ::fields().
+      ->fields([
+        'name' => 'Kate',
+        'age' => 25,
+      ])
+      ->values([
+        'name' => 'Bertie',
+        'age' => 6,
+      ])
+      ->execute();
+
+    $this->assertSame('2', $this->connection->query('SELECT COUNT(*) FROM {test_composite_primary}')->fetchField());
+
+    // Different composite keys should insert other rows.
+    $this->connection->upsert('test_composite_primary')
+      ->key(['name', 'age'])
+      // Add a new row directly from ::fields().
+      ->fields(['name', 'age'])
+      ->values([
+        'name' => 'Kate',
+        'age' => 25,
+      ])
+      ->values([
+        'name' => 'Arthur',
+        'age' => 30,
+      ])
+      ->values([
+        'name' => 'Bertie',
+        'age' => 6,
+      ])
+      ->values([
+        'name' => 'Zaphod',
+        'age' => 200,
+      ])
+      ->execute();
+
+    $this->assertSame('4', $this->connection->query('SELECT COUNT(*) FROM {test_composite_primary}')->fetchField());
   }
 
   /**

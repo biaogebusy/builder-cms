@@ -18,9 +18,6 @@
   background: none !important;
 }
 
-.form-element.chosen-container-multi {
-}
-
 .form-element.chosen-container-multi .chosen-choices {
   min-width: 160px;
   border: 0 none;

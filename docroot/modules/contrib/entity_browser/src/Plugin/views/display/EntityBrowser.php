@@ -4,6 +4,8 @@ namespace Drupal\entity_browser\Plugin\views\display;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsDisplay;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 
 /**
@@ -14,16 +16,14 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
  * 'Entity Browser' display.
  *
  * @ingroup views_display_plugins
- *
- * @ViewsDisplay(
- *   id = "entity_browser",
- *   title = @Translation("Entity browser"),
- *   help = @Translation("Displays a view as Entity browser widget."),
- *   theme = "views_view",
- *   admin = @Translation("Entity browser"),
- *   entity_browser_display = TRUE
- * )
  */
+#[ViewsDisplay(
+  id: 'entity_browser',
+  title: new TranslatableMarkup('Entity browser'),
+  admin: new TranslatableMarkup('Entity browser'),
+  help: new TranslatableMarkup('Displays a view as Entity browser widget.'),
+  theme: 'views_view',
+)]
 class EntityBrowser extends DisplayPluginBase implements TrustedCallbackInterface {
 
   /**

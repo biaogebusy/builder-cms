@@ -81,34 +81,6 @@ final class AiContentSuggestionsFormAlter implements AiContentSuggestionsFormAlt
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function getPluginResponse(array $form, FormStateInterface $form_state): array {
-    $return = [];
-
-    if ($trigger = $form_state->getTriggeringElement()) {
-      if (isset($trigger['#plugin'])) {
-
-        $plugin_id = $trigger['#plugin'];
-
-        /** @var \Drupal\ai_content_suggestions\AiContentSuggestionsPluginManager $plugin_manager */
-        $plugin_manager = \Drupal::service('plugin.manager.ai_content_suggestions');
-        if ($definition = $plugin_manager->getDefinition($plugin_id)) {
-
-          /** @var \Drupal\ai_content_suggestions\AiContentSuggestionsInterface $plugin */
-          if ($plugin = $plugin_manager->createInstance($plugin_id, $definition)) {
-            $plugin->updateFormWithResponse($form, $form_state);
-
-            $return = $form[$plugin_id]['response'];
-          }
-        }
-      }
-    }
-
-    return $return;
-  }
-
-  /**
    * Get a list of all string and text fields on the current node.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
@@ -122,7 +94,7 @@ final class AiContentSuggestionsFormAlter implements AiContentSuggestionsFormAlt
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function getAllTextFields(ContentEntityInterface $entity, array $form): array {
+  protected function getAllTextFields(ContentEntityInterface $entity, array $form): array {
     $fields = $entity->getFieldDefinitions();
     $options = [];
 
@@ -176,6 +148,30 @@ final class AiContentSuggestionsFormAlter implements AiContentSuggestionsFormAlt
     }
 
     return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getPluginResponse(array $form, FormStateInterface $form_state): array {
+    @trigger_error(__METHOD__ . '() is deprecated in ai_content_suggestions:1.4.0 and is removed from ai_content_suggestions:2.0.0. The method was moved to plugin class. See https://www.drupal.org/node/3591230', E_USER_DEPRECATED);
+    $return = [];
+    if ($trigger = $form_state->getTriggeringElement()) {
+      if (isset($trigger['#plugin'])) {
+        $plugin_id = $trigger['#plugin'];
+        /** @var \Drupal\ai_content_suggestions\AiContentSuggestionsPluginManager $plugin_manager */
+        $plugin_manager = \Drupal::service('plugin.manager.ai_content_suggestions');
+        if ($definition = $plugin_manager->getDefinition($plugin_id)) {
+          /** @var \Drupal\ai_content_suggestions\AiContentSuggestionsInterface $plugin */
+          if ($plugin = $plugin_manager->createInstance($plugin_id, $definition)) {
+            $plugin->updateFormWithResponse($form, $form_state);
+            $return = $form[$plugin_id]['response'];
+          }
+        }
+      }
+    }
+
+    return $return;
   }
 
 }

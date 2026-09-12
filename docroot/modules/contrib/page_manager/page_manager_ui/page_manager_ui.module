@@ -54,6 +54,23 @@ function page_manager_ui_entity_type_alter(array &$entity_types) {
     $entity_types['page']->setLinkTemplate('config-translation-overview', str_replace('manage/{machine_name}/{step}', '{page}', $entity_types['page']->getLinkTemplate('config-translation-overview')));
   }
 
+  // Devel derives entity debug routes from the edit-form link template.
+  // Page entities use wizard parameters there ({machine_name}/{step}) instead
+  // of the entity parameter ({page}), so rewrite Devel's link templates to use
+  // the page entity parameter while preserving Devel's route structure.
+  // @see https://www.drupal.org/project/page_manager/issues/3438993
+  $devel_link_templates = [
+    'devel-load' => '/devel/page/{page}',
+    'devel-definition' => '/devel/definition/page/{page}',
+    'devel-load-with-references' => '/devel/load-with-references/page/{page}',
+    'devel-path-alias' => '/devel/path-alias/page/{page}',
+  ];
+  foreach ($devel_link_templates as $link_template => $path) {
+    if ($entity_types['page']->hasLinkTemplate($link_template)) {
+      $entity_types['page']->setLinkTemplate($link_template, $path);
+    }
+  }
+
   // Change the URL for page variant config translation overview to outside the
   // wizard.
   if ($entity_types['page_variant']->hasLinkTemplate('config-translation-overview')) {
@@ -146,41 +163,4 @@ function page_manager_ui_local_tasks_alter(&$local_tasks) {
   // routes.
   unset($local_tasks['config_translation.local_tasks:entity.page.config_translation_overview']);
   unset($local_tasks['config_translation.local_tasks:entity.page_variant.config_translation_overview']);
-}
-
-/**
- * Implements hook_theme_registry_alter().
- *
- * @todo Refactor/remove if https://www.drupal.org/project/drupal/issues/3005403 lands.
- */
-function page_manager_ui_theme_registry_alter(&$theme_registry) {
-  // Seven removes all block contextual links via a preprocess.
-  // Layout builder variants require contextual links to configure blocks.
-  // @see https://www.drupal.org/project/drupal/issues/2487025
-  if (!empty($theme_registry['block']['preprocess functions'])) {
-    $preprocess_functions = &$theme_registry['block']['preprocess functions'];
-
-    // Remove seven's implementation.
-    if ($index = array_search('seven_preprocess_block', $preprocess_functions)) {
-      unset($preprocess_functions[$index]);
-    }
-  }
-}
-
-/**
- * Implements hook_preprocess_HOOK().
- *
- * @todo Refactor/remove if https://www.drupal.org/project/drupal/issues/3005403 lands.
- */
-function page_manager_ui_preprocess_block(&$variables) {
-  if (Drupal::theme()->getActiveTheme()->getName() === 'seven') {
-    // If active theme is seven and the block has layout_builder contextual
-    // links, do nothing.
-    if (isset($variables['elements']['#contextual_links']['layout_builder_block'])) {
-      return;
-    }
-
-    // Fallback to seven.
-    seven_preprocess_block($variables);
-  }
 }

@@ -23,7 +23,9 @@
   "license": "GPL-2.0-or-later",
   "minimum-stability": "dev",
   "require-dev": {
-    "drupal/config_filter": "^1.8||^2.2",
-    "drush/drush": "^10 || ^11 || ^12"
+    "composer-runtime-api": "^2.0",
+    "drupal/config_filter": "^1.8 || ^2.2",
+    "drupal/potx": "^1.1",
+    "drush/drush": ">=10"
   }
 }

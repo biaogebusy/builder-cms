@@ -2,301 +2,16 @@
 
 /**
  * @file
- * Primarily Drupal hooks and global API functions to manipulate views.
  */
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Database\Query\AlterableInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Url;
-use Drupal\views\Plugin\Derivative\ViewsLocalTask;
-use Drupal\views\ViewEntityInterface;
+use Drupal\field\FieldStorageConfigInterface;
+use Drupal\views\ContextualLinksHelper;
+use Drupal\views\Hook\ViewsThemeHooks;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Entity\View;
 use Drupal\views\Views;
-use Drupal\views\ViewsConfigUpdater;
-
-/**
- * Implements hook_help().
- */
-function views_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.views':
-      $output = '';
-      $output .= '<h2>' . t('About') . '</h2>';
-      $output .= '<p>' . t('The Views module provides a back end to fetch information from content, user accounts, taxonomy terms, and other entities from the database and present it to the user as a grid, HTML list, table, unformatted list, etc. The resulting displays are known generally as <em>views</em>.') . '</p>';
-      $output .= '<p>' . t('For more information, see the <a href=":views">online documentation for the Views module</a>.', [':views' => 'https://www.drupal.org/documentation/modules/views']) . '</p>';
-      $output .= '<p>' . t('In order to create and modify your own views using the administration and configuration user interface, you will need to install either the Views UI module in core or a contributed module that provides a user interface for Views. See the <a href=":views-ui">Views UI module help page</a> for more information.', [':views-ui' => (\Drupal::moduleHandler()->moduleExists('views_ui')) ? Url::fromRoute('help.page', ['name' => 'views_ui'])->toString() : '#']) . '</p>';
-      $output .= '<h2>' . t('Uses') . '</h2>';
-      $output .= '<dl>';
-      $output .= '<dt>' . t('Adding functionality to administrative pages') . '</dt>';
-      $output .= '<dd>' . t('The Views module adds functionality to some core administration pages. For example, <em>admin/content</em> uses Views to filter and sort content. With Views uninstalled, <em>admin/content</em> is more limited.') . '</dd>';
-      $output .= '<dt>' . t('Expanding Views functionality') . '</dt>';
-      $output .= '<dd>' . t('Contributed projects that support the Views module can be found in the <a href=":node">online documentation for Views-related contributed modules</a>.', [':node' => 'https://www.drupal.org/documentation/modules/views/add-ons']) . '</dd>';
-      $output .= '<dt>' . t('Improving table accessibility') . '</dt>';
-      $output .= '<dd>' . t('Views tables include semantic markup to improve accessibility. Data cells are automatically associated with header cells through id and header attributes. To improve the accessibility of your tables you can add descriptive elements within the Views table settings. The <em>caption</em> element can introduce context for a table, making it easier to understand. The <em>summary</em> element can provide an overview of how the data has been organized and how to navigate the table. Both the caption and summary are visible by default and also implemented according to HTML5 guidelines.') . '</dd>';
-      $output .= '<dt>' . t('Working with multilingual views') . '</dt>';
-      $output .= '<dd>' . t('If your site has multiple languages and translated entities, each result row in a view will contain one translation of each involved entity (a view can involve multiple entities if it uses relationships). You can use a filter to restrict your view to one language: without filtering, if an entity has three translations it will add three rows to the results; if you filter by language, at most one result will appear (it could be zero if that particular entity does not have a translation matching your language filter choice). If a view uses relationships, each entity in the relationship needs to be filtered separately. You can filter a view to a fixed language choice, such as English or Spanish, or to the language selected by the page the view is displayed on (the language that is selected for the page by the language detection settings either for Content or User interface).') . '</dd>';
-      $output .= '<dd>' . t('Because each result row contains a specific translation of each entity, field-level filters are also relative to these entity translations. For example, if your view has a filter that specifies that the entity title should contain a particular English word, you will presumably filter out all rows containing Chinese translations, since they will not contain the English word. If your view also has a second filter specifying that the title should contain a particular Chinese word, and if you are using "And" logic for filtering, you will presumably end up with no results in the view, because there are probably not any entity translations containing both the English and Chinese words in the title.') . '</dd>';
-      $output .= '<dd>' . t('Independent of filtering, you can choose the display language (the language used to display the entities and their fields) via a setting on the display. Your language choices are the same as the filter language choices, with an additional choice of "Content language of view row" and "Original language of content in view row", which means to display each entity in the result row using the language that entity has or in which it was originally created. In theory, this would give you the flexibility to filter to French translations, for instance, and then display the results in Spanish. The more usual choices would be to use the same language choices for the display language and each entity filter in the view, or to use the Row language setting for the display.') . '</dd>';
-      $output .= '</dl>';
-      return $output;
-  }
-}
-
-/**
- * Implements hook_views_pre_render().
- */
-function views_views_pre_render($view) {
-  // If using AJAX, send identifying data about this view.
-  if ($view->ajaxEnabled() && empty($view->is_attachment) && empty($view->live_preview)) {
-    $view->element['#attached']['drupalSettings']['views'] = [
-      'ajax_path' => Url::fromRoute('views.ajax')->toString(),
-      'ajaxViews' => [
-        'views_dom_id:' . $view->dom_id => [
-          'view_name' => $view->storage->id(),
-          'view_display_id' => $view->current_display,
-          'view_args' => Html::escape(implode('/', $view->args)),
-          'view_path' => Html::escape(\Drupal::service('path.current')->getPath()),
-          'view_base_path' => $view->getPath(),
-          'view_dom_id' => $view->dom_id,
-          // To fit multiple views on a page, the programmer may have
-          // overridden the display's pager_element.
-          'pager_element' => isset($view->pager) ? $view->pager->getPagerId() : 0,
-        ],
-      ],
-    ];
-    $view->element['#attached']['library'][] = 'views/views.ajax';
-  }
-
-  return $view;
-}
-
-/**
- * Implements hook_theme().
- *
- * Register views theming functions and those that are defined via views plugin
- * definitions.
- */
-function views_theme($existing, $type, $theme, $path) {
-  \Drupal::moduleHandler()->loadInclude('views', 'inc', 'views.theme');
-
-  // Some quasi clever array merging here.
-  $base = [
-    'file' => 'views.theme.inc',
-  ];
-
-  // Our extra version of pager
-  $hooks['views_mini_pager'] = $base + [
-    'variables' => [
-      'tags' => [],
-      'quantity' => 9,
-      'element' => 0,
-      'pagination_heading_level' => 'h4',
-      'parameters' => [],
-    ],
-  ];
-
-  $variables = [
-    // For displays, we pass in a dummy array as the first parameter, since
-    // $view is an object but the core contextual_preprocess() function only
-    // attaches contextual links when the primary theme argument is an array.
-    'display' => [
-      'view_array' => [],
-      'view' => NULL,
-      'rows' => [],
-      'header' => [],
-      'footer' => [],
-      'empty' => [],
-      'exposed' => [],
-      'more' => [],
-      'feed_icons' => [],
-      'pager' => [],
-      'title' => '',
-      'attachment_before' => [],
-      'attachment_after' => [],
-    ],
-    'style' => ['view' => NULL, 'options' => NULL, 'rows' => NULL, 'title' => NULL],
-    'row' => ['view' => NULL, 'options' => NULL, 'row' => NULL, 'field_alias' => NULL],
-    'exposed_form' => ['view' => NULL, 'options' => NULL],
-    'pager' => [
-      'view' => NULL,
-      'options' => NULL,
-      'tags' => [],
-      'quantity' => 9,
-      'element' => 0,
-      'pagination_heading_level' => 'h4',
-      'parameters' => [],
-    ],
-  ];
-
-  // Default view themes
-  $hooks['views_view_field'] = $base + [
-    'variables' => ['view' => NULL, 'field' => NULL, 'row' => NULL],
-  ];
-  $hooks['views_view_grouping'] = $base + [
-    'variables' => ['view' => NULL, 'grouping' => NULL, 'grouping_level' => NULL, 'rows' => NULL, 'title' => NULL],
-  ];
-
-  // Only display, pager, row, and style plugins can provide theme hooks.
-  $plugin_types = [
-    'display',
-    'pager',
-    'row',
-    'style',
-    'exposed_form',
-  ];
-  $plugins = [];
-  foreach ($plugin_types as $plugin_type) {
-    $plugins[$plugin_type] = Views::pluginManager($plugin_type)->getDefinitions();
-  }
-
-  $module_handler = \Drupal::moduleHandler();
-
-  // Register theme functions for all style plugins. It provides a basic auto
-  // implementation of theme functions or template files by using the plugin
-  // definitions (theme, theme_file, module, register_theme). Template files are
-  // assumed to be located in the templates folder.
-  foreach ($plugins as $type => $info) {
-    foreach ($info as $def) {
-      // Not all plugins have theme functions, and they can also explicitly
-      // prevent a theme function from being registered automatically.
-      if (!isset($def['theme']) || empty($def['register_theme'])) {
-        continue;
-      }
-      // For each theme registration, we have a base directory to check for the
-      // templates folder. This will be relative to the root of the given module
-      // folder, so we always need a module definition.
-      // @todo Watchdog or exception?
-      if (!isset($def['provider']) || !$module_handler->moduleExists($def['provider'])) {
-        continue;
-      }
-
-      $hooks[$def['theme']] = [
-        'variables' => $variables[$type],
-      ];
-
-      // We always use the module directory as base dir.
-      $module_dir = \Drupal::service('extension.list.module')->getPath($def['provider']);
-      $hooks[$def['theme']]['path'] = $module_dir;
-
-      // For the views module we ensure views.theme.inc is included.
-      if ($def['provider'] == 'views') {
-        if (!isset($hooks[$def['theme']]['includes'])) {
-          $hooks[$def['theme']]['includes'] = [];
-        }
-        if (!in_array('views.theme.inc', $hooks[$def['theme']]['includes'])) {
-          $hooks[$def['theme']]['includes'][] = $module_dir . '/views.theme.inc';
-        }
-      }
-      // The theme_file definition is always relative to the modules directory.
-      elseif (!empty($def['theme_file'])) {
-        $hooks[$def['theme']]['file'] = $def['theme_file'];
-      }
-
-      // Whenever we have a theme file, we include it directly so we can
-      // auto-detect the theme function.
-      if (isset($def['theme_file'])) {
-        $include = \Drupal::root() . '/' . $module_dir . '/' . $def['theme_file'];
-        if (is_file($include)) {
-          require_once $include;
-        }
-      }
-
-      // By default any templates for a module are located in the /templates
-      // directory of the module's folder. If a module wants to define its own
-      // location it has to set register_theme of the plugin to FALSE and
-      // implement hook_theme() by itself.
-      $hooks[$def['theme']]['path'] .= '/templates';
-      $hooks[$def['theme']]['template'] = Html::cleanCssIdentifier($def['theme']);
-    }
-  }
-
-  $hooks['views_form_views_form'] = $base + [
-    'render element' => 'form',
-  ];
-
-  $hooks['views_exposed_form'] = $base + [
-    'render element' => 'form',
-  ];
-
-  return $hooks;
-}
-
-/**
- * Allows view-based node templates if called from a view.
- *
- * The 'modules/node.views.inc' file is a better place for this, but
- * we haven't got a chance to load that file before Drupal builds the
- * node portion of the theme registry.
- */
-function views_preprocess_node(&$variables) {
-  // The 'view' attribute of the node is added in
-  // \Drupal\views\Plugin\views\row\EntityRow::preRender().
-  if (!empty($variables['node']->view) && $variables['node']->view->storage->id()) {
-    $variables['view'] = $variables['node']->view;
-    // If a node is being rendered in a view, and the view does not have a path,
-    // prevent drupal from accidentally setting the $page variable:
-    if (!empty($variables['view']->current_display)
-        && $variables['page']
-        && $variables['view_mode'] == 'full'
-        && !$variables['view']->display_handler->hasPath()) {
-      $variables['page'] = FALSE;
-    }
-  }
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK_alter().
- */
-function views_theme_suggestions_node_alter(array &$suggestions, array $variables) {
-  $node = $variables['elements']['#node'];
-  if (!empty($node->view) && $node->view->storage->id()) {
-    $suggestions[] = 'node__view__' . $node->view->storage->id();
-    if (!empty($node->view->current_display)) {
-      $suggestions[] = 'node__view__' . $node->view->storage->id() . '__' . $node->view->current_display;
-    }
-  }
-}
-
-/**
- * Allows view-based comment templates if called from a view.
- */
-function views_preprocess_comment(&$variables) {
-  // The view data is added to the comment in
-  // \Drupal\views\Plugin\views\row\EntityRow::preRender().
-  if (!empty($variables['comment']->view) && $variables['comment']->view->storage->id()) {
-    $variables['view'] = $variables['comment']->view;
-  }
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK_alter().
- */
-function views_theme_suggestions_comment_alter(array &$suggestions, array $variables) {
-  $comment = $variables['elements']['#comment'];
-  if (!empty($comment->view) && $comment->view->storage->id()) {
-    $suggestions[] = 'comment__view__' . $comment->view->storage->id();
-    if (!empty($comment->view->current_display)) {
-      $suggestions[] = 'comment__view__' . $comment->view->storage->id() . '__' . $comment->view->current_display;
-    }
-  }
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK_alter().
- */
-function views_theme_suggestions_container_alter(array &$suggestions, array $variables) {
-  if (!empty($variables['element']['#type']) && $variables['element']['#type'] == 'more_link' && !empty($variables['element']['#view']) && $variables['element']['#view'] instanceof ViewExecutable) {
-    $suggestions = array_merge(
-      $suggestions,
-      // Theme suggestions use the reverse order compared to #theme hooks.
-      array_reverse($variables['element']['#view']->buildThemeFunctions('container__more_link'))
-    );
-  }
-}
 
 /**
  * Adds contextual links associated with a view display to a renderable array.
@@ -326,13 +41,13 @@ function views_theme_suggestions_container_alter(array &$suggestions, array $var
  * later on (for example, alter hooks which run later during the same page
  * request).
  *
- * @param $render_element
+ * @param array $render_element
  *   The renderable array to which contextual links will be added. This array
  *   should be suitable for passing in to
  *   \Drupal\Core\Render\RendererInterface::render() and will normally contain a
  *   representation of the view display whose contextual links are being
  *   requested.
- * @param $location
+ * @param string $location
  *   The location in which the calling function intends to render the view and
  *   its contextual links. The core system supports three options for this
  *   parameter:
@@ -360,132 +75,20 @@ function views_theme_suggestions_container_alter(array &$suggestions, array $var
  *       should be shown.
  *     - #view_display_plugin_id: The plugin ID of the display.
  *
- * @see \Drupal\views\Plugin\Block\ViewsBlock::addContextualLinks()
- * @see template_preprocess_views_view()
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   Drupal\views\ContextualLinksHelper::addLinks() instead.
+ *
+ * @see https://www.drupal.org/node/3382344
  */
-function views_add_contextual_links(&$render_element, $location, $display_id, ?array $view_element = NULL) {
-  if (!isset($view_element)) {
-    $view_element = $render_element;
-  }
-  $view_element['#cache_properties'] = ['view_id', 'view_display_show_admin_links', 'view_display_plugin_id'];
-  $view_id = $view_element['#view_id'];
-  $show_admin_links = $view_element['#view_display_show_admin_links'];
-  $display_plugin_id = $view_element['#view_display_plugin_id'];
-
-  // Do not do anything if the view is configured to hide its administrative
-  // links or if the Contextual Links module is not enabled.
-  if (\Drupal::moduleHandler()->moduleExists('contextual') && $show_admin_links) {
-    // Also do not do anything if the display plugin has not defined any
-    // contextual links that are intended to be displayed in the requested
-    // location.
-    $plugin = Views::pluginManager('display')->getDefinition($display_plugin_id);
-    // If contextual_links_locations are not set, provide a sane default. (To
-    // avoid displaying any contextual links at all, a display plugin can still
-    // set 'contextual_links_locations' to, e.g., {""}.)
-
-    if (!isset($plugin['contextual_links_locations'])) {
-      $plugin['contextual_links_locations'] = ['view'];
-    }
-    elseif ($plugin['contextual_links_locations'] == [] || $plugin['contextual_links_locations'] == ['']) {
-      $plugin['contextual_links_locations'] = [];
-    }
-    else {
-      $plugin += ['contextual_links_locations' => ['view']];
-    }
-
-    // On exposed_forms blocks contextual links should always be visible.
-    $plugin['contextual_links_locations'][] = 'exposed_filter';
-    $has_links = !empty($plugin['contextual links']) && !empty($plugin['contextual_links_locations']);
-    if ($has_links && in_array($location, $plugin['contextual_links_locations'])) {
-      foreach ($plugin['contextual links'] as $group => $link) {
-        $args = [];
-        $valid = TRUE;
-        if (!empty($link['route_parameters_names'])) {
-          $view_storage = \Drupal::entityTypeManager()
-            ->getStorage('view')
-            ->load($view_id);
-          foreach ($link['route_parameters_names'] as $parameter_name => $property) {
-            // If the plugin is trying to create an invalid contextual link
-            // (for example, "path/to/{$view->storage->property}", where
-            // $view->storage->{property} does not exist), we cannot construct
-            // the link, so we skip it.
-            if (!property_exists($view_storage, $property)) {
-              $valid = FALSE;
-              break;
-            }
-            else {
-              $args[$parameter_name] = $view_storage->get($property);
-            }
-          }
-        }
-        // If the link was valid, attach information about it to the renderable
-        // array.
-        if ($valid) {
-          $render_element['#views_contextual_links'] = TRUE;
-          $render_element['#contextual_links'][$group] = [
-            'route_parameters' => $args,
-            'metadata' => [
-              'location' => $location,
-              'name' => $view_id,
-              'display_id' => $display_id,
-            ],
-          ];
-          // If we're setting contextual links on a page, for a page view, for a
-          // user that may use contextual links, attach Views' contextual links
-          // JavaScript.
-          $render_element['#cache']['contexts'][] = 'user.permissions';
-        }
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_ENTITY_TYPE_insert() for 'field_config'.
- */
-function views_field_config_insert(EntityInterface $field) {
-  Views::viewsData()->clear();
-}
-
-/**
- * Implements hook_ENTITY_TYPE_update() for 'field_config'.
- */
-function views_field_config_update(EntityInterface $entity) {
-  Views::viewsData()->clear();
-}
-
-/**
- * Implements hook_ENTITY_TYPE_delete() for 'field_config'.
- */
-function views_field_config_delete(EntityInterface $entity) {
-  Views::viewsData()->clear();
-}
-
-/**
- * Implements hook_ENTITY_TYPE_insert().
- */
-function views_base_field_override_insert(EntityInterface $entity) {
-  Views::viewsData()->clear();
-}
-
-/**
- * Implements hook_ENTITY_TYPE_update().
- */
-function views_base_field_override_update(EntityInterface $entity) {
-  Views::viewsData()->clear();
-}
-
-/**
- * Implements hook_ENTITY_TYPE_delete().
- */
-function views_base_field_override_delete(EntityInterface $entity) {
-  Views::viewsData()->clear();
+function views_add_contextual_links(&$render_element, $location, $display_id, ?array $view_element = NULL): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use Drupal\views\ContextualLinksHelper::addLinks() instead. See https://www.drupal.org/node/3382344', E_USER_DEPRECATED);
+  \Drupal::service(ContextualLinksHelper::class)->addLinks($render_element, $location, $display_id, $view_element);
 }
 
 /**
  * Invalidate the views cache, forcing a rebuild on the next grab of table data.
  */
-function views_invalidate_cache() {
+function views_invalidate_cache(): void {
   // Set the menu as needed to be rebuilt.
   \Drupal::service('router.builder')->setRebuildNeeded();
 
@@ -509,15 +112,25 @@ function views_invalidate_cache() {
  * Set the current view that is being built/rendered so that it is
  * easy for other modules or items in drupal_eval to identify
  *
- * @return \Drupal\views\ViewExecutable
+ * @return \Drupal\views\ViewExecutable|null|false
+ *   The current view object, NULL if no view is set yet,
+ *   or FALSE if the view was removed.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is no replacement.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
 function &views_set_current_view($view = NULL) {
-  static $cache = NULL;
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
   if (isset($view)) {
-    $cache = $view;
+    $GLOBALS['_current_view'] = $view;
   }
 
-  return $cache;
+  // @todo remove $GLOBALS['_current_view'] from ViewExecutable when this is
+  // removed. https://www.drupal.org/project/drupal/issues/3572671
+  $GLOBALS['_current_view'] ??= NULL;
+  return $GLOBALS['_current_view'];
 }
 
 /**
@@ -526,17 +139,27 @@ function &views_set_current_view($view = NULL) {
  * Note that this returns a reference, so be careful! You can unintentionally
  * modify the $view object.
  *
- * @return \Drupal\views\ViewExecutable
- *   The current view object.
+ * @return \Drupal\views\ViewExecutable|null|false
+ *   The current view object, NULL if no view is set yet,
+ *    or FALSE if the view was removed.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is no replacement.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
 function &views_get_current_view() {
-  return views_set_current_view();
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
+  // @todo remove $GLOBALS['_current_view'] from ViewExecutable when this is
+  // removed. https://www.drupal.org/project/drupal/issues/3572671
+  $GLOBALS['_current_view'] ??= NULL;
+  return $GLOBALS['_current_view'];
 }
 
 /**
  * Implements hook_hook_info().
  */
-function views_hook_info() {
+function views_hook_info(): array {
   $hooks = [];
 
   $hooks += array_fill_keys([
@@ -584,8 +207,14 @@ function views_hook_info() {
  *
  * @return bool
  *   Returns TRUE if a view is enabled, FALSE otherwise.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   $view->status() instead.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
 function views_view_is_enabled(View $view) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use $view->status() instead. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
   return $view->status();
 }
 
@@ -597,8 +226,14 @@ function views_view_is_enabled(View $view) {
  *
  * @return bool
  *   Returns TRUE if a view is disabled, FALSE otherwise.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   !$view->status() instead.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
 function views_view_is_disabled(View $view) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use !$view->status() instead. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
   return !$view->status();
 }
 
@@ -607,8 +242,14 @@ function views_view_is_disabled(View $view) {
  *
  * @param \Drupal\views\Entity\View $view
  *   The View object to disable.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   $view->enable()->save() instead.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
-function views_enable_view(View $view) {
+function views_enable_view(View $view): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use $view->enable()->save() instead. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
   $view->enable()->save();
 }
 
@@ -617,60 +258,27 @@ function views_enable_view(View $view) {
  *
  * @param \Drupal\views\Entity\View $view
  *   The View object to disable.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   $view->disable()->save() instead.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
-function views_disable_view(View $view) {
+function views_disable_view(View $view): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use $view->disable()->save() instead. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
   $view->disable()->save();
 }
 
 /**
- * Implements hook_form_alter() for the exposed form.
- *
- * Since the exposed form is a GET form, we don't want it to send a wide
- * variety of information.
- */
-function views_form_views_exposed_form_alter(&$form, FormStateInterface $form_state) {
-  $form['form_build_id']['#access'] = FALSE;
-  $form['form_token']['#access'] = FALSE;
-  $form['form_id']['#access'] = FALSE;
-}
-
-/**
- * Implements hook_query_TAG_alter().
- *
- * This is the hook_query_alter() for queries tagged by Views and is used to
- * add in substitutions from hook_views_query_substitutions().
- */
-function views_query_views_alter(AlterableInterface $query) {
-  $substitutions = $query->getMetaData('views_substitutions');
-  $tables = &$query->getTables();
-  $where = &$query->conditions();
-
-  // Replaces substitutions in tables.
-  foreach ($tables as $table_name => $table_metadata) {
-    foreach ($table_metadata['arguments'] as $replacement_key => $value) {
-      if (!is_array($value)) {
-        if (isset($substitutions[$value])) {
-          $tables[$table_name]['arguments'][$replacement_key] = $substitutions[$value];
-        }
-      }
-      else {
-        foreach ($value as $sub_key => $sub_value) {
-          if (isset($substitutions[$sub_value])) {
-            $tables[$table_name]['arguments'][$replacement_key][$sub_key] = $substitutions[$sub_value];
-          }
-        }
-      }
-    }
-  }
-
-  // Replaces substitutions in filter criteria.
-  _views_query_tag_alter_condition($query, $where, $substitutions);
-}
-
-/**
  * Replaces the substitutions recursive foreach condition.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is no replacement.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
-function _views_query_tag_alter_condition(AlterableInterface $query, &$conditions, $substitutions) {
+function _views_query_tag_alter_condition(AlterableInterface $query, &$conditions, $substitutions): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
   foreach ($conditions as $condition_id => &$condition) {
     if (is_numeric($condition_id)) {
       if (is_string($condition['field'])) {
@@ -685,7 +293,7 @@ function _views_query_tag_alter_condition(AlterableInterface $query, &$condition
       if (is_object($condition['value'])) {
         $subquery = $condition['value'];
         $subquery->addMetaData('views_substitutions', $query->getMetaData('views_substitutions'));
-        views_query_views_alter($condition['value']);
+        \Drupal::moduleHandler()->invoke('views', 'query_views_alter', [$condition['value']]);
       }
       elseif (isset($condition['value'])) {
         // We can not use a simple str_replace() here because it always returns
@@ -717,23 +325,25 @@ function _views_query_tag_alter_condition(AlterableInterface $query, &$condition
  * to do that, you will need to do what this function does manually, by
  * loading the view, getting the preview and then getting $view->getTitle().
  *
- * @param $name
+ * @param string $name
  *   The name of the view to embed.
- * @param $display_id
+ * @param string $display_id
  *   The display id to embed. If unsure, use 'default', as it will always be
  *   valid. But things like 'page' or 'block' should work here.
- * @param ...
+ * @param mixed ...$args
  *   Any additional parameters will be passed as arguments.
  *
  * @return array|null
  *   A renderable array containing the view output or NULL if the display ID
  *   of the view to be executed doesn't exist.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   '#type' => 'view' render elements instead.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
-function views_embed_view($name, $display_id = 'default') {
-  $args = func_get_args();
-  // Remove $name and $display_id from the arguments.
-  unset($args[0], $args[1]);
-
+function views_embed_view($name, $display_id = 'default', ...$args) {
+  @trigger_error(__FUNCTION__ . "() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use '#type' => 'view' render elements instead. See https://www.drupal.org/node/3572594", E_USER_DEPRECATED);
   $view = Views::getView($name);
   if (!$view || !$view->access($display_id)) {
     return;
@@ -759,41 +369,32 @@ function views_embed_view($name, $display_id = 'default') {
  *   want to use. A URL will appear in the status bar of your browser. This is
  *   usually at the bottom of the window, in the chrome. Everything after
  *   #views-tab- is the display ID, e.g. page_1.
- * @param ...
+ * @param mixed ...$args
  *   Any additional parameters will be passed as arguments.
  *
  * @return array
  *   An array containing an object for each view item.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   Views::getViewResult($name, $display_id, ...$args) instead.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
-function views_get_view_result($name, $display_id = NULL) {
-  $args = func_get_args();
-  // Remove $name and $display_id from the arguments.
-  unset($args[0], $args[1]);
-
-  $view = Views::getView($name);
-  if (is_object($view)) {
-    if (is_array($args)) {
-      $view->setArguments($args);
-    }
-    if (is_string($display_id)) {
-      $view->setDisplay($display_id);
-    }
-    else {
-      $view->initDisplay();
-    }
-    $view->preExecute();
-    $view->execute();
-    return $view->result;
-  }
-  else {
-    return [];
-  }
+function views_get_view_result($name, $display_id = NULL, ...$args) {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use Views::getViewResult($name, $display_id, ...$args) instead. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
+  return Views::getViewResult($name, $display_id, ...$args);
 }
 
 /**
  * Validation callback for query tags.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There
+ *   is no replacement.
+ *
+ * @see https://www.drupal.org/node/3572594
  */
-function views_element_validate_tags($element, FormStateInterface $form_state) {
+function views_element_validate_tags($element, FormStateInterface $form_state): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. There is no replacement. See https://www.drupal.org/node/3572594', E_USER_DEPRECATED);
   $values = array_map('trim', explode(',', $element['#value']));
   foreach ($values as $value) {
     if (preg_match("/[^a-z_]/", $value)) {
@@ -804,19 +405,412 @@ function views_element_validate_tags($element, FormStateInterface $form_state) {
 }
 
 /**
- * Implements hook_local_tasks_alter().
+ * Determines whether the entity type the field appears in is SQL based.
+ *
+ * @param \Drupal\field\FieldStorageConfigInterface $field_storage
+ *   The field storage definition.
+ *
+ * @return \Drupal\Core\Entity\Sql\SqlContentEntityStorage
+ *   Returns the entity type storage if supported.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use
+ * \Drupal::service('views.field_data_provider')
+ * ->getSqlStorageForField($field_storage); instead.
+ * @see https://www.drupal.org/node/3489502
  */
-function views_local_tasks_alter(&$local_tasks) {
-  $container = \Drupal::getContainer();
-  $local_task = ViewsLocalTask::create($container, 'views_view');
-  $local_task->alterLocalTasks($local_tasks);
+function _views_field_get_entity_type_storage(FieldStorageConfigInterface $field_storage) {
+  @trigger_error('_views_field_get_entity_type_storage() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal::service(\'views.field_data_provider\')->getSqlStorageForField($field_storage). See https://www.drupal.org/node/3489502', E_USER_DEPRECATED);
+  return \Drupal::service('views.field_data_provider')->getSqlStorageForField($field_storage);
 }
 
 /**
- * Implements hook_ENTITY_TYPE_presave().
+ * Default views data implementation for a field.
+ *
+ * @param \Drupal\field\FieldStorageConfigInterface $field_storage
+ *   The field definition.
+ *
+ * @return array
+ *   The default views data for the field.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use
+ * \Drupal::service('views.field_data_provider')
+ * ->defaultFieldImplementation($field_storage); instead.
+ * @see https://www.drupal.org/node/3489502
  */
-function views_view_presave(ViewEntityInterface $view) {
-  /** @var \Drupal\views\ViewsConfigUpdater $config_updater */
-  $config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  $config_updater->updateAll($view);
+function views_field_default_views_data(FieldStorageConfigInterface $field_storage) {
+  @trigger_error('views_field_default_views_data() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal::service(\'views.field_data_provider\')->defaultFieldImplementation($field_storage). See https://www.drupal.org/node/3489502', E_USER_DEPRECATED);
+  return \Drupal::service('views.field_data_provider')->defaultFieldImplementation($field_storage);
+}
+
+/**
+ * Returns the label of a certain field.
+ *
+ * Therefore it looks up in all bundles to find the most used field.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use
+ *   \Drupal::service('entity_field.manager')->getFieldLabels() instead.
+ *
+ * @see https://www.drupal.org/node/3489411
+ */
+function views_entity_field_label($entity_type, $field_name) {
+  @trigger_error("views_entity_field_label() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal::service('entity_field.manager')->getFieldLabels(). See https://www.drupal.org/node/3489411", E_USER_DEPRECATED);
+  return \Drupal::service('entity_field.manager')->getFieldLabels($entity_type, $field_name);
+}
+
+/**
+ * Prepares variables for view templates.
+ *
+ * Default template: views-view.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The ViewExecutable object.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsView($variables);
+}
+
+/**
+ * Prepares variables for views fields templates.
+ *
+ * Default template: views-view-fields.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The view object.
+ *   - options: An array of options. Each option contains:
+ *     - inline: An array that contains the fields that are to be
+ *       displayed inline.
+ *     - default_field_elements: If default field wrapper
+ *       elements are to be provided.
+ *     - hide_empty: Whether the field is to be hidden if empty.
+ *     - element_default_classes: If the default classes are to be added.
+ *     - separator: A string to be placed between inline fields to keep them
+ *       visually distinct.
+ *   - row: An array containing information about the current row.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_fields(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewFields($variables);
+}
+
+/**
+ * Prepares variables for views single grouping templates.
+ *
+ * Default template: views-view-grouping.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The view object.
+ *   - rows: The rows returned from the view.
+ *   - grouping_level: Integer indicating the hierarchical level of the
+ *     grouping.
+ *   - content: The content to be grouped.
+ *   - title: The group heading.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_grouping(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewGrouping($variables);
+}
+
+/**
+ * Prepares variables for views field templates.
+ *
+ * Default template: views-view-field.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - field: The field handler object for the current field.
+ *   - row: Object representing the raw result of the SQL query for the current
+ *     field.
+ *   - view: Instance of the ViewExecutable object for the parent view.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_field(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewField($variables);
+}
+
+/**
+ * Prepares variables for views summary templates.
+ *
+ * The summary prints a single record from a row, with fields.
+ *
+ * Default template: views-view-summary.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: A ViewExecutable object.
+ *   - rows: The raw row data.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_summary(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewSummary($variables);
+}
+
+/**
+ * Prepares variables for unformatted summary view templates.
+ *
+ * Default template: views-view-summary-unformatted.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: A ViewExecutable object.
+ *   - rows: The raw row data.
+ *   - options: An array of options. Each option contains:
+ *     - separator: A string to be placed between inline fields to keep them
+ *       visually distinct.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_summary_unformatted(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewSummaryUnformatted($variables);
+}
+
+/**
+ * Prepares variables for views table templates.
+ *
+ * Default template: views-view-table.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: A ViewExecutable object.
+ *   - rows: The raw row data.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_table(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewTable($variables);
+}
+
+/**
+ * Prepares variables for views grid style templates.
+ *
+ * Default template: views-view-grid.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The view object.
+ *   - rows: An array of row items. Each row is an array of content.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_grid(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewGrid($variables);
+}
+
+/**
+ * Prepares variables for views grid - responsive style templates.
+ *
+ * Default template: views-view-grid-responsive.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The view object.
+ *   - rows: An array of row items. Each row is an array of content.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_grid_responsive(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewGridResponsive($variables);
+}
+
+/**
+ * Prepares variables for views unformatted rows templates.
+ *
+ * Default template: views-view-unformatted.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The view object.
+ *   - rows: An array of row items. Each row is an array of content.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_unformatted(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewUnformatted($variables);
+}
+
+/**
+ * Prepares variables for Views HTML list templates.
+ *
+ * Default template: views-view-list.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: A View object.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_list(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewList($variables);
+}
+
+/**
+ * Prepares variables for RSS feed templates.
+ *
+ * Default template: views-view-rss.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: A ViewExecutable object.
+ *   - rows: The raw row data.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_rss(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewRss($variables);
+}
+
+/**
+ * Prepares variables for views RSS item templates.
+ *
+ * Default template: views-view-row-rss.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - row: The raw results rows.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_row_rss(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewRowRss($variables);
+}
+
+/**
+ * Prepares variables for OPML feed templates.
+ *
+ * Default template: views-view-opml.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: A ViewExecutable object.
+ *   - rows: The raw row data.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_opml(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewOpml($variables);
+}
+
+/**
+ * Prepares variables for views OPML item templates.
+ *
+ * Default template: views-view-row-opml.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - row: The raw results rows.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_view_row_opml(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsViewRowOpml($variables);
+}
+
+/**
+ * Prepares variables for views exposed form templates.
+ *
+ * Default template: views-exposed-form.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_exposed_form(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsExposedForm($variables);
+}
+
+/**
+ * Prepares variables for views mini-pager templates.
+ *
+ * Default template: views-mini-pager.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - tags: Provides link text for the next/previous links.
+ *   - element: The pager's id.
+ *   - pagination_heading_level: An optional heading level for the pager.
+ *   - parameters: Any extra GET parameters that should be retained, such as
+ *     exposed input.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *    template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
+ */
+function template_preprocess_views_mini_pager(&$variables): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(ViewsThemeHooks::class)->preprocessViewsMiniPager($variables);
 }

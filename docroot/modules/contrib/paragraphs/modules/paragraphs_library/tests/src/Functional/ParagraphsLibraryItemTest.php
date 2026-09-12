@@ -9,12 +9,16 @@ use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\Tests\paragraphs\FunctionalJavascript\ParagraphsTestBaseTrait;
 use Drupal\Tests\paragraphs\Traits\ParagraphsCoreVersionUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of the Paragraphs Library.
  *
  * @group paragraphs_library
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs_library')]
 class ParagraphsLibraryItemTest extends BrowserTestBase {
 
   use ParagraphsTestBaseTrait, FieldUiTestTrait, ParagraphsCoreVersionUiTestTrait;
@@ -98,12 +102,15 @@ class ParagraphsLibraryItemTest extends BrowserTestBase {
     $this->assertLibraryItemAccess($library_item_id, 200, 'edit');
     $this->assertLibraryItemAccess($library_item_id, 403, 'delete');
 
-    // Enable granular permissions and make sure a user can not edit the library
-    // item anymore due to missing edit permission for target paragraph type.
+    // Enable granular permissions and ensure that can not edit the paragraph
+    // within the library without the missing edit permission.
     $this->container->get('module_installer')->install(['paragraphs_type_permissions']);
-    $this->assertLibraryItemAccess($library_item_id, 403, 'edit');
+    $this->assertLibraryItemAccess($library_item_id, 200, 'edit');
+    $this->assertSession()->fieldNotExists('paragraphs[0][subform][field_text][0][value]');
     user_role_grant_permissions($role, ['update paragraph content text']);
     $this->assertLibraryItemAccess($library_item_id, 200, 'edit');
+    $this->assertSession()->fieldExists('paragraphs[0][subform][field_text][0][value]');
+
     $this->assertLibraryItemAccess($library_item_id, 403, 'delete');
 
     user_role_revoke_permissions($role, [
@@ -112,10 +119,8 @@ class ParagraphsLibraryItemTest extends BrowserTestBase {
     ]);
     user_role_grant_permissions($role, ['administer paragraphs library']);
     $this->assertLibraryItemAccess($library_item_id, 200, 'edit');
-    // User has no delete access due to missing delete permission for the target
-    // paragraph type.
-    $this->assertLibraryItemAccess($library_item_id, 403, 'delete');
-    user_role_grant_permissions($role, ['delete paragraph content text']);
+    // The user can delete the library item which contains paragraph that they
+    // could not.
     $this->assertLibraryItemAccess($library_item_id, 200, 'delete');
   }
 

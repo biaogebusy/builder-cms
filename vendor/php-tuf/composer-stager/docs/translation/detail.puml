@@ -1,0 +1,103 @@
+@startuml
+
+' This is the PlantUML (https://plantuml.com/) source used to generate the UML
+' detail diagram for the translation system (detail.png). Said diagram can
+' be regenerated from this source at https://plantuml-editor.kkeisuke.com/ or with
+' the PhpStorm plugin at https://plugins.jetbrains.com/plugin/7017-plantuml-integration.
+' Optimize it with ImageOptim: https://imageoptim.com/.
+
+!include ../resources/settings.puml
+
+rectangle {
+
+    class "    Requester    " as Requester {
+        -Translator
+    }
+
+    class Provider <TranslatableAwareTrait> {
+        -TranslatableFactory
+        #t() : TranslatableMessage
+        #p() : TranslationParameters
+        #d() : DomainOptions
+    }
+
+}
+
+rectangle {
+
+    interface TranslatableFactory {
+        -DomainOptions
+        -Translator
+        +createTranslatableMessage()
+        +createTranslationParameters()
+        +createDomainOptions()
+    }
+
+    interface TranslatableMessage {
+        -string $message
+        -TranslationParameters
+        +trans() : string
+        +__toString()
+    }
+
+    interface TranslationParameters {
+        -array $parameters
+        +getAll() : array
+    }
+
+    interface Translator {
+        -DomainOptions
+        -LocaleOptions
+        +trans(): string
+        +getLocale(): string
+    }
+
+    interface DomainOptions {
+        +default(): string
+        +exceptions(): string
+    }
+
+    interface LocaleOptions {
+    }
+
+}
+
+rectangle {
+
+    exception Exception <TranslatableExceptionTrait> {
+        -TranslatableMessage
+        +getMessage() : string
+        +getTranslatableMessage()
+    }
+
+}
+
+' Translatable message creation:
+Provider .left.> Requester
+Requester -right-> Provider
+Provider *--> TranslatableFactory
+TranslatableFactory ..> Provider
+TranslatableFactory -down-> TranslationParameters
+TranslationParameters .up.> TranslatableFactory
+DomainOptions ..up.> TranslatableFactory
+TranslatableFactory *-down-> DomainOptions
+TranslatableFactory <.down. TranslatableMessage
+TranslatableMessage <-up- TranslatableFactory
+TranslationParameters <-right-* TranslatableMessage
+
+' Message translation:
+Requester *-down- Translator
+Translator -down-> TranslatableMessage
+Translator *-down- DomainOptions
+Translator *-down- LocaleOptions
+
+TranslatableMessage .up.> Requester
+
+' Exception-handling:
+Exception *-up-> TranslatableMessage
+
+' Alignment:
+Exception -up[hidden]- DomainOptions
+Exception -up[hidden]- DomainOptions
+
+@enduml

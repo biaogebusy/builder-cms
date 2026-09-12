@@ -1,0 +1,11 @@
+ckeditor5_plugin_pack_link_attributes__link_attributes:
+  ckeditor5:
+    plugins: []
+  drupal:
+    label: Link Attributes
+    class: Drupal\ckeditor5_plugin_pack_link_attributes\Plugin\CKEditor5Plugin\LinkAttributes
+    elements:
+        - <a href target rel title id class download hreflang type data-* aria-*>
+    conditions:
+      plugins:
+        - ckeditor5_link

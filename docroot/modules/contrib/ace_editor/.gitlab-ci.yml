@@ -1,0 +1,136 @@
+################################################################################
+# GitLab CI for the Ace Editor module.
+#
+# Two halves:
+#   1. The standard Drupal CI validation jobs (composer-lint, cspell, eslint,
+#      phpcs, phpstan, phpunit) provided by the drupalci templates.
+#   2. A varbase-e2e BDD browser-test job (Playwright + Cucumber-js) that runs
+#      the `tests/features/**` suite against a freshly installed Drupal
+#      Standard site with the module enabled and the Ace library downloaded.
+#
+# The varbase-e2e suite drives the site entirely through the browser. The first
+# feature (01-01-01-users-login) logs in as the Webmaster and provisions the
+# per-role testing users; the editor / formatter / filter configuration and the
+# demo content are provisioned by tests/fixtures/provision-fixtures.php in the
+# before_script.
+################################################################################
+
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - "/includes/include.drupalci.main.yml"
+      - "/includes/include.drupalci.variables.yml"
+      - "/includes/include.drupalci.workflows.yml"
+
+variables:
+  COMPOSER_FLAGS: "--no-strict-lock"
+  COMPOSER_MEMORY_LIMIT: "-1"
+  # No yarn.lock is committed; Yarn 4 defaults to immutable installs and would
+  # refuse to create one. Allow lockfile creation in CI for every job.
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+  # Pin the Ace library version downloaded for the browser-test job.
+  ACE_BUILDS_VERSION: "v1.43.3"
+
+# = Validate stage (all blocking) =
+composer-lint:
+  allow_failure: false
+cspell:
+  allow_failure: false
+eslint:
+  allow_failure: false
+phpcs:
+  allow_failure: false
+phpstan:
+  allow_failure: false
+phpunit:
+  allow_failure: false
+  variables:
+    _PHPUNIT_EXTRA: ''
+
+# = Reusable before_script fragments (via !reference) =
+.fragments:
+  web_db: &web_db
+    - mkdir -pv $CI_PROJECT_DIR/$_WEB_ROOT/sites/default/files
+    - mkdir -pv $CI_PROJECT_DIR/$_WEB_ROOT/sites/simpletest
+    - chmod -R 777 $CI_PROJECT_DIR/$_WEB_ROOT/sites/default/files
+    - chmod -R 777 $CI_PROJECT_DIR/$_WEB_ROOT/sites/simpletest
+    - rm -rf /var/www/html && ln -s $CI_PROJECT_DIR/$_WEB_ROOT /var/www/html
+    - chown -R www-data:www-data $CI_PROJECT_DIR
+    - service apache2 start
+    - export SIMPLETEST_DB=mysql://$MYSQL_USER:$MYSQL_PASSWORD@database/$MYSQL_DATABASE
+  ace_library: &ace_library
+    # The module no longer ships or composer-requires the Ace JS library, so
+    # download the src-min-noconflict build into the site's libraries/ace.
+    - mkdir -pv $CI_PROJECT_DIR/$_WEB_ROOT/libraries/ace
+    - git clone --depth 1 --branch $ACE_BUILDS_VERSION https://github.com/ajaxorg/ace-builds.git /tmp/ace-builds
+    - cp -a /tmp/ace-builds/src-min-noconflict $CI_PROJECT_DIR/$_WEB_ROOT/libraries/ace/
+  node_playwright: &node_playwright
+    - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    - apt-get install -y nodejs
+    - node --version && npm --version
+    - 'test -f .yarnrc.yml || echo "nodeLinker: node-modules" > .yarnrc.yml'
+    # Back up cucumber.js - varbase-e2e's postinstall can clobber it under yarn 4.
+    - cp cucumber.js .cucumber.js.bak
+    - corepack enable
+    - yarn install
+    - cp .cucumber.js.bak cucumber.js && rm .cucumber.js.bak
+    - ./node_modules/.bin/playwright install --with-deps chromium
+
+# = Automated functional testing - BDD scenarios on the Drupal Standard
+# profile, driven by @vardot/varbase-e2e (Playwright + Cucumber) =
+functional-tests:
+  extends: .testing-job-base
+  needs: [composer]
+  # Override the parent's services - we only need the database. Playwright
+  # bundles its own Chromium, so Selenium and chromedriver are not needed.
+  services:
+    - name: $_CONFIG_DOCKERHUB_ROOT/$_TARGET_DB_TYPE-$_TARGET_DB_VERSION:$_TARGET_DB_IMAGE_TAG
+      alias: database
+  variables:
+    DRUPAL_ADMIN_USERNAME: "webmaster"
+    DRUPAL_ADMIN_PASSWORD: "dD.123123ddd"
+    DRUPAL_TEST_BASE_URL: "http://localhost"
+    LAUNCH_URL: "http://localhost"
+    FORCE_COLOR: "1"
+  artifacts:
+    when: always
+    paths:
+      - tests/reports/
+      - tests/screenshots/
+      - tests/videos/
+    expire_in: 7 days
+    reports:
+      junit: tests/reports/junit.xml
+  before_script:
+    - !reference [.fragments, web_db]
+    - !reference [.fragments, ace_library]
+    # The composer job installs Drush on a best-effort basis: it warns and
+    # exits 0 when GitHub cannot be reached, and this job then dies on a
+    # missing binary with no clue why. Install it here when it is absent.
+    - if [ ! -x "$CI_PROJECT_DIR/vendor/bin/drush" ]; then echo "Drush missing from the composer artifact, installing it."; composer --working-dir="$CI_PROJECT_DIR" require --dev --no-interaction --no-progress drush/drush:^13; fi
+    - test -x "$CI_PROJECT_DIR/vendor/bin/drush" || { echo "Drush could not be installed; the functional suite cannot run."; exit 1; }
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT site:install standard
+        --db-url=$SIMPLETEST_DB --account-name=webmaster --account-pass=dD.123123ddd
+        --site-name="Ace Editor Test" -y
+    # Enable the module (provides the editor, formatter and filter plugins).
+    # Make the tests/modules/ helper discoverable by drush en.
+    - chmod 644 $CI_PROJECT_DIR/$_WEB_ROOT/sites/default/settings.php
+    - echo '$settings["extension_discovery_scan_tests"] = TRUE;' >> $CI_PROJECT_DIR/$_WEB_ROOT/sites/default/settings.php
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT en -y ace_editor ace_editor_test
+    # Provision the editor / filter / formatter config and the demo content the
+    # scenarios assert against.
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT scr $CI_PROJECT_DIR/tests/fixtures/provision-fixtures.php
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT cache:rebuild
+    - !reference [.fragments, node_playwright]
+  script:
+    # cucumber.js loads only `tests/features/**`. Disable varbase-e2e's
+    # auto HTML hook and run `generate-reports` explicitly after cucumber-js so
+    # both HTML and PDF land next to the JSON in `tests/reports/`.
+    - VARBASE_E2E_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.js --tags "not @wip"
+    - node ./node_modules/@vardot/varbase-e2e/bin/generate-reports.js
+        --json tests/reports/cucumber_report.json
+        --out  tests/reports/cucumber_report.html
+        --format all
+        --pdf-out tests/reports/cucumber_report.pdf
+  allow_failure: false

@@ -10,22 +10,16 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Symfony\Component\Routing\Route;
 
+/**
+ * Prevents access to routes if locking is not enabled for an entity type.
+ */
 class ContentLockViewsAccess implements AccessInterface {
 
-  protected ContentLockInterface $content_lock;
-
-  /**
-   * Constructs a ContentLockViewsAccess object.
-   *
-   * @param \Drupal\content_lock\ContentLock\ContentLockInterface $content_lock
-   *   The content lock service.
-   */
-  public function __construct(ContentLockInterface $content_lock) {
-    $this->content_lock = $content_lock;
+  public function __construct(protected ContentLockInterface $contentLock) {
   }
 
   /**
-   * {@inheritdoc}
+   * Prevents access to routes if locking is not enabled for an entity type.
    */
   public function access(Route $route): AccessResultInterface {
     $entity_type_id = $route->getRequirement('_content_lock_enabled_access_checker');
@@ -34,7 +28,7 @@ class ContentLockViewsAccess implements AccessInterface {
       return AccessResult::neutral();
     }
 
-    $result = $this->content_lock->hasLockEnabled($entity_type_id) ?
+    $result = $this->contentLock->hasLockEnabled($entity_type_id) ?
       AccessResult::allowed() :
       AccessResult::forbidden('No content types are enabled for locking');
     return $result->addCacheTags(['config:content_lock.settings']);

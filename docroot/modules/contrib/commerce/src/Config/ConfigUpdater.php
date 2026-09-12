@@ -224,7 +224,7 @@ class ConfigUpdater implements ConfigUpdaterInterface {
    */
   protected function getConfigType($config_name) {
     foreach ($this->typesByPrefix as $prefix => $config_type) {
-      if (strpos($config_name, $prefix) === 0) {
+      if (str_starts_with($config_name, $prefix)) {
         return $config_type;
       }
     }

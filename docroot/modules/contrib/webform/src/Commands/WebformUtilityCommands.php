@@ -3,10 +3,10 @@
 namespace Drupal\webform\Commands;
 
 use Consolidation\AnnotatedCommand\CommandData;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\Site\Settings;
 use Drupal\webform\Utility\WebformYaml;
 use Psr\Log\LogLevel;
@@ -147,7 +147,7 @@ class WebformUtilityCommands extends WebformCommandsBase {
       }
 
       // Tidy elements.
-      if (strpos($file->filename, 'webform.webform.') === 0 && isset($data['elements'])) {
+      if (str_starts_with($file->filename, 'webform.webform.') && isset($data['elements'])) {
         try {
           $elements = WebformYaml::tidy($data['elements']);
           $data['elements'] = $elements;

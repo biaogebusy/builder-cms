@@ -4,16 +4,16 @@ namespace Drupal\Tests\devel\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Messenger\MessengerTrait;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\devel\Twig\Extension\Debug;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests Twig extensions.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelTwigExtensionTest extends KernelTestBase {
 
   use DevelDumperTestTrait;

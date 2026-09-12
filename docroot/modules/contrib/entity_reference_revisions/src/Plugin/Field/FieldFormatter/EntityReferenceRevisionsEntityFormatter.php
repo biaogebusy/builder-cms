@@ -3,11 +3,13 @@
 namespace Drupal\entity_reference_revisions\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,6 +24,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   }
  * )
  */
+#[FieldFormatter(
+  id: 'entity_reference_revisions_entity_view',
+  label: new TranslatableMarkup('Rendered entity'),
+  description: new TranslatableMarkup('Display the referenced entities with a given view mode.'),
+  field_types: ['entity_reference_revisions'],
+)]
 class EntityReferenceRevisionsEntityFormatter extends EntityReferenceRevisionsFormatterBase implements ContainerFactoryPluginInterface {
 
   /**

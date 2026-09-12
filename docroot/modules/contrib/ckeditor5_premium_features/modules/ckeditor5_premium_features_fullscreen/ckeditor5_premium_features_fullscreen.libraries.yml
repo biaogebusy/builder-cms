@@ -1,0 +1,19 @@
+ckeditor5_fullscreen:
+  version: 20241114
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/fullscreen.js: { preprocess: false, minified: true }
+  css:
+    base:
+      css/fullscreen.css: { }
+  dependencies:
+    - core/ckeditor5
+
+admin:
+  version: 20230626
+  css:
+    base:
+      css/fullscreen.admin.css: { }

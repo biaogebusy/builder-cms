@@ -1,0 +1,11 @@
+admin.source-editing-enhanced:
+  css:
+    theme:
+      css/source-editing-enhanced.admin.css: {}
+
+editor.source-editing-enhanced:
+  css:
+    theme:
+      css/source-editing-enhanced.css: {}
+  dependencies:
+    - ckeditor5_premium_features_source_editing_enhanced/source-editing-enhanced

@@ -3,9 +3,10 @@
 namespace Drupal\toolbar_visibility\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\Core\Extension\ThemeHandler;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -20,21 +21,21 @@ class ToolbarVisibilitySettingsForm extends ConfigFormBase {
   /**
    * The theme handler service.
    *
-   * @var \Drupal\Core\Extension\ThemeHandler
+   * @var \Drupal\Core\Extension\ThemeHandlerInterface
    */
   protected $themeHandler;
 
   /**
    * The module handler.
    *
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected $moduleHandler;
 
   /**
    * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManager
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
@@ -43,20 +44,23 @@ class ToolbarVisibilitySettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\Core\Extension\ThemeHandler $theme_handler
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
+   *   The typed configuration manager.
+   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
    *   The theme handler.
-   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
-    ThemeHandler $theme_handler,
-    ModuleHandler $module_handler,
-    EntityTypeManager $entity_type_manager
+    TypedConfigManagerInterface $typed_config_manager,
+    ThemeHandlerInterface $theme_handler,
+    ModuleHandlerInterface $module_handler,
+    EntityTypeManagerInterface $entity_type_manager
   ) {
-    parent::__construct($config_factory);
+    parent::__construct($config_factory, $typed_config_manager);
     $this->themeHandler = $theme_handler;
     $this->moduleHandler = $module_handler;
     $this->entityTypeManager = $entity_type_manager;
@@ -68,6 +72,7 @@ class ToolbarVisibilitySettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('theme_handler'),
       $container->get('module_handler'),
       $container->get('entity_type.manager')

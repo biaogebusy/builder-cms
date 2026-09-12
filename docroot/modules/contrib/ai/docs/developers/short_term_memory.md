@@ -14,4 +14,19 @@ If you are implementing a custom AI solution, that is looping over many threads 
 ### Implementing in code.
 The Short-Term Memory plugins are located in `\Drupal\ai\Plugin\AiShortTermMemory` and implements the `AiShortTermMemoryInterface`. You can create your own by extending the `AiShortTermMemoryPluginBase` class, and implementing the required methods. It is a configurable plugin, so if you are going to have a complex setup where you can pick and choose between different implementations, you should also implement a plugin form and store any configuration in your plugin instance.
 
-What you need to do, is to implement loading an instance of the plugin, and then right before you send off an AI request, you use the `process` method to process the memory, where you give in your history, tools, system prompt and some other details. At the end you can use the `getChatMessages`, `getTools` and `getSystemPrompt` methods to get the processed context to change the AI request with.
+What you need to do, is to implement loading an instance of the plugin, and then right before you send off an AI request, you use the `process` method to process the memory, where you give in your history, tools, system prompt and some other details. At the end you can use the `getChatHistory`, `getTools` and `getSystemPrompt` methods to get the processed context to change the AI request with.
+
+### Slicing a history that contains tool calls
+
+If your plugin shortens a chat history, do not slice it by message count. Providers expose tool calling in the OpenAI shape, where an assistant message carries one or more tool calls and every one of those tool calls has to be answered by a directly following message that references the tool call id. A slice taken by message count can start in the middle of such a round trip and leave a tool result without its tool call, or a tool call without its results - and the providers reject both with an error.
+
+Use `\Drupal\ai\Utility\ChatHistorySlicer` for this. It groups the history into atomic blocks first, where a block is either a complete tool call round trip or any other single message, so a slice can never start or end in the middle of a round trip:
+
+```php
+use Drupal\ai\Utility\ChatHistorySlicer;
+
+// Keep the three most recent blocks of the history.
+$this->setChatHistory(ChatHistorySlicer::sliceLastToolLoops($this->getOriginalChatHistory(), 3));
+```
+
+Use `ChatHistorySlicer::sliceWithSummary()` instead if you replace the older part of the history with a summary message, as the `agent_memory_summarizer` plugin does. The helpers `hasToolCalls()`, `isToolResult()` and `isStandalone()` are also public, so you can reason about single messages in your own logic.

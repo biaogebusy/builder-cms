@@ -6,8 +6,6 @@ dependencies:
     - search_api
   config:
     - core.entity_view_mode.node.search_result
-    - core.entity_view_display.node.article.search_result
-    - core.entity_view_display.node.page.search_result
     - search_api.index.default_index
 label: 'Search content'
 module: views

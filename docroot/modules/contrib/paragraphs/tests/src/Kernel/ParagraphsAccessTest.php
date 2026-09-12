@@ -8,12 +8,17 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @coversDefaultClass \Drupal\paragraphs\ParagraphAccessControlHandler
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsAccessTest extends KernelTestBase {
 
   /**
@@ -21,6 +26,8 @@ class ParagraphsAccessTest extends KernelTestBase {
    */
   protected static $modules = [
     'paragraphs',
+    'user',
+    'entity_reference_revisions',
   ];
 
   /**
@@ -28,6 +35,7 @@ class ParagraphsAccessTest extends KernelTestBase {
    *
    * @dataProvider createAccessTestCases
    */
+  #[DataProvider('createAccessTestCases')]
   public function testCreateAccess($request_format, AccessResult $expected_result) {
 
     $cache_contexts_manager = $this->prophesize(CacheContextsManager::class);

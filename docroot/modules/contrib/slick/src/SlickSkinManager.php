@@ -388,14 +388,17 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
         $libraries['slick.css']['css']['theme'] = ['/' . $path . '/slick/accessible-slick-theme.min.css' => ['weight' => -2]];
 
         $libraries_to_alter = [
-          'slick.load',
+          // The base library is where slick/slick is declared. Initializer
+          // libraries (slick.load, vanilla) depend on slick/base.
           'slick.colorbox',
-          'vanilla',
+          'base',
         ];
 
         foreach ($libraries_to_alter as $library_name) {
-          $key = array_search('slick/slick', $libraries[$library_name]['dependencies']);
-          $libraries[$library_name]['dependencies'][$key] = 'slick/accessible-slick';
+          $key = array_search('slick/slick', $libraries[$library_name]['dependencies'] ?? [], TRUE);
+          if ($key !== FALSE) {
+            $libraries[$library_name]['dependencies'][$key] = 'slick/accessible-slick';
+          }
         }
       }
       else {

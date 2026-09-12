@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\menu_ui\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Reorder menu items.
- *
- * @group menu_ui
  */
+#[Group('menu_ui')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkReorderTest extends BrowserTestBase {
 
   /**

@@ -5,9 +5,10 @@ namespace Drupal\blazy\Field;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Plugin\Field\FieldFormatter\BlazyFormatterEntityTrait;
 use Drupal\blazy\Plugin\Field\FieldFormatter\BlazyFormatterTrait;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Field;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -118,6 +119,13 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Provides any entity contents.
+   *
+   * @param array $build
+   *   The build array being passed.
+   * @param array $entities
+   *   The entities array.
+   * @param string $langcode
+   *   The langcode.
    */
   protected function buildElements(array &$build, array $entities, $langcode): void {
     foreach ($this->getElements($build, $entities, $langcode) as $element) {
@@ -131,14 +139,25 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Generates elements.
+   *
+   * @param array $data
+   *   The data array being passed.
+   * @param array $entities
+   *   The entities array.
+   * @param string $langcode
+   *   The langcode.
+   *
+   * @return \Generator
+   *   The \Generator items.
    */
   private function getElements(array $data, array $entities, $langcode): \Generator {
-    // @todo remove the helper at/ by 3.x post migrations:
+    // @todo deprecate and remove the helper at/ by 3.x post migrations:
     $this->formatter->hashtag($data);
 
     // Do not reference here, else causes duplicates.
+    /** @var array $settings */
     $settings = $data['#settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $limit    = $this->getViewLimit($settings);
     $by_delta = $settings['by_delta'] ?? -1;
     $total    = $blazies->total();
@@ -185,14 +204,27 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Returns available bundles.
+   *
+   * @return array
+   *   The available bundles.
    */
   protected function getAvailableBundles(): array {
     $field = $this->fieldDefinition;
-    return BlazyField::getAvailableBundles($field);
+    return Field::getAvailableBundles($field);
   }
 
   /**
    * Returns the individual element.
+   *
+   * @param array $data
+   *   The data array being passed.
+   * @param object $entity
+   *   The entity.
+   * @param int $delta
+   *   The element delta.
+   *
+   * @return array
+   *   The element array.
    */
   protected function getElement(array $data, $entity, $delta): array {
     $current            = $data;
@@ -216,6 +248,15 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
   /**
    * Returns fields as options. Passing empty array will return them all.
    *
+   * @param array $names
+   *   The field names array being passed.
+   * @param string|null $entity_type
+   *   The entity type.
+   * @param string|null $target_type
+   *   The target type.
+   * @param bool $exclude
+   *   Whether to exclude.
+   *
    * @return array
    *   The available fields as options.
    */
@@ -232,7 +273,10 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Returns plugin scopes to limit the features.
+   *
+   * @return array
+   *   The plugin scopes.
    */
   protected function getPluginScopes(): array {
     $multiple = $this->isMultiple();
@@ -252,7 +296,12 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Modifies plugin settings.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   * @param array $settings
+   *   The settings being modified.
    */
   protected function pluginSettings(&$blazies, array &$settings): void {
     $this->traitPluginSettings($blazies, $settings);
@@ -260,6 +309,12 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Provides detailed elements.
+   *
+   * @param array $build
+   *   The build array being passed.
+   *
+   * @return array
+   *   The element with detailed output.
    */
   protected function withElementDetail(array $build): array {
     return [];
@@ -267,6 +322,12 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Provides vanilla elements.
+   *
+   * @param array $build
+   *   The build array being passed.
+   *
+   * @return array
+   *   The element with vanilla output.
    */
   protected function withElementVanilla(array $build): array {
     if ($element = $this->blazyEntity->view($build)) {
@@ -277,6 +338,12 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Provides item elements.
+   *
+   * @param array $build
+   *   The build array being passed.
+   *
+   * @return array
+   *   The element with detailed or vanilla output.
    */
   private function withElement(array $build): array {
     $settings = &$build['#settings'];
@@ -302,6 +369,11 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Provides overrides for BC.
+   *
+   * @param array $build
+   *   The build array being modified.
+   * @param array $element
+   *   The build array being passed.
    */
   private function withOverride(array &$build, array $element): void {
     foreach (['delta', 'entity', 'settings'] as $key) {
@@ -317,12 +389,12 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
       $this->withElementOverride($build, $element);
     }
     else {
-      $blazies = $settings['blazies'];
+      $blazies = Internals::getBlazies($settings);
       if ($blazies->is('nav')) {
         if (method_exists($this, 'withElementThumbnail')) {
           $this->withElementThumbnail($build, $element);
         }
-        // @todo remove at/ by 3.x only after sub-modules:
+        // @todo deprecate and remove at/ by 3.x only after sub-modules:
         elseif (method_exists($this, 'buildElementThumbnail')) {
           $this->buildElementThumbnail($build, $element, $entity, $delta);
         }
@@ -332,12 +404,20 @@ abstract class BlazyEntityVanillaBase extends EntityReferenceFormatterBase {
 
   /**
    * Returns scoped definitions.
+   *
+   * @param array $form
+   *   The form array being passed.
+   *
+   * @return array
+   *   The form definition.
    */
   protected function getScopedDefinition(array $form): array {
     $definition = $this->getScopedFormElements();
-    $definition['_views'] = isset($form['field_api_classes']);
 
-    // @todo remove after sub-modules.
+    $definition['_views'] = isset($form['field_api_classes']);
+    $definition['field_api_classes'] = $form['field_api_classes']['#default_value'] ?? FALSE;
+
+    // @todo deprecate and remove after sub-modules.
     $definition['view_mode'] = $this->viewMode;
     $definition['plugin_id'] = $this->getPluginId();
     $definition['target_type'] = $this->getFieldSetting('target_type');

@@ -5,62 +5,30 @@ declare(strict_types=1);
 namespace Drupal\devel_php\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\devel_php\Form\ExecutePHP;
 
 /**
  * Provides a block for executing PHP code.
- *
- * @Block(
- *     id = "devel_execute_php",
- *     admin_label = @Translation("Execute PHP Code")
- * )
  */
+#[Block(
+  id: 'devel_execute_php',
+  admin_label: new TranslatableMarkup('Execute PHP Code')
+)]
 class DevelExecutePHP extends BlockBase implements ContainerFactoryPluginInterface {
 
-  /**
-   * The form builder service.
-   *
-   * @var \Drupal\Core\Form\FormBuilderInterface
-   */
-  protected $formBuilder;
-
-  /**
-   * Constructor.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Form\FormBuilderInterface $formBuilder
-   *   The form builder service.
-   */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    FormBuilderInterface $formBuilder,
+    protected FormBuilderInterface $formBuilder,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->formBuilder = $formBuilder;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    // @phpstan-ignore-next-line
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('form_builder')
-    );
   }
 
   /**
@@ -75,7 +43,7 @@ class DevelExecutePHP extends BlockBase implements ContainerFactoryPluginInterfa
    */
   public function build() {
     // @phpstan-ignore-next-line
-    return $this->formBuilder->getForm('Drupal\devel_php\Form\ExecutePHP', FALSE);
+    return $this->formBuilder->getForm(ExecutePHP::class, FALSE);
   }
 
 }

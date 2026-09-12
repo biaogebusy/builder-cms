@@ -1,0 +1,24 @@
+admin.html_embed:
+  version: 20250929
+  css:
+    theme:
+      css/html_embed.admin.css: { }
+
+editor.html_embed:
+  version: 20250929
+  js:
+    js/build/htmlEmbedAdapter.js: { }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_plugin_pack_html_embed/dompurify
+    - ckeditor5_plugin_pack_html_embed/html-embed
+
+dompurify:
+  remote: https://github.com/cure53/DOMPurify
+  version: VERSION
+  license:
+    name: MPL
+    url: https://github.com/cure53/DOMPurify/blob/main/LICENSE
+    gpl-compatible: false
+  js:
+    /libraries/dompurify/dist/purify.min.js: { }

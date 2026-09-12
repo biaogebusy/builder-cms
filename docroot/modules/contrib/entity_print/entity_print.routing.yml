@@ -30,6 +30,22 @@ entity_print.view.debug:
   requirements:
     _custom_access: '\Drupal\entity_print\Controller\EntityPrintController::checkAccess'
 
+entity_print.revision.view:
+  path: 'print/{export_type}/{entity_type}/{entity_id}/{revision_id}'
+  defaults:
+    _controller: '\Drupal\entity_print\Controller\EntityPrintController::viewPrint'
+    _title: 'Entity Print'
+  requirements:
+    _custom_access: '\Drupal\entity_print\Controller\EntityPrintController::checkAccess'
+
+entity_print.revision.view.debug:
+  path: 'print/{export_type}/{entity_type}/{entity_id}/{revision_id}/debug'
+  defaults:
+    _controller: '\Drupal\entity_print\Controller\EntityPrintController::viewPrintDebug'
+    _title: 'Entity Print Debug'
+  requirements:
+    _custom_access: '\Drupal\entity_print\Controller\EntityPrintController::checkAccess'
+
 entity_print.settings:
   path: 'admin/config/content/entityprint'
   defaults:

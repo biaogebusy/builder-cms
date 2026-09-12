@@ -1,14 +1,12 @@
 /**
  * @file
- * Javascript file for the FooTable module.
+ * JavaScript file for the FooTable module.
  */
 
-(function ($) {
-  'use strict';
-
+(($, Drupal, once) => {
   Drupal.behaviors.footable = {
-    attach: function (context) {
+    attach(context) {
       $(once('footable', '.footable', context)).footable();
-    }
+    },
   };
-}(jQuery));
+})(jQuery, Drupal, once);

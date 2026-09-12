@@ -7,30 +7,14 @@
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Config\Entity\ConfigEntityType;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\eck\ArrayDeprecationWrapper;
-use Drupal\eck\Entity\EckEntity;
+use Drupal\eck\EckEntityViewBuilder;
 use Drupal\eck\Entity\EckEntityType;
-use Drupal\field\Plugin\migrate\source\d7\Field;
-use Drupal\field\Plugin\migrate\source\d7\FieldInstance;
-use Drupal\migrate_drupal\Plugin\migrate\FieldMigration;
-
-/**
- * Defines the online documentation url of the ECK module.
- */
-const ECK_DOCUMENTATION_PAGE = 'https://drupal.org/node/1366144';
-
-/**
- * Defines the max length of entity id machine name.
- */
-const ECK_ENTITY_ID_MAX_LENGTH = 27;
 
 /**
  * Implements hook_help().
@@ -39,7 +23,7 @@ function eck_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.eck':
       $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Entity Construction Kit (ECK) builds upon the entity system to create a flexible and extensible data modeling system both with a UI for site builders, and with useful abstractions (classes, plugins, etc) to help developers use entities with ease. For more information, see the <a href="@eck">online documentation for the ECK module</a>.', ['@eck' => ECK_DOCUMENTATION_PAGE]) . '</p>';
+      $output .= '<p>' . t('The Entity Construction Kit (ECK) builds upon the entity system to create a flexible and extensible data modeling system both with a UI for site builders, and with useful abstractions (classes, plugins, etc) to help developers use entities with ease. For more information, see the <a href="@eck">online documentation for the ECK module</a>.', ['@eck' => 'https://drupal.org/node/1366144']) . '</p>';
       break;
 
     default:
@@ -75,7 +59,7 @@ function eck_entity_type_build(array &$entity_types) {
     // Base definitions for the entity type.
     $base_definition = [
       'handlers' => [
-        'view_builder' => 'Drupal\Core\Entity\EntityViewBuilder',
+        'view_builder' => EckEntityViewBuilder::class,
         'form' => [
           'default' => 'Drupal\eck\Form\Entity\EckEntityForm',
           'edit' => 'Drupal\eck\Form\Entity\EckEntityForm',
@@ -85,7 +69,7 @@ function eck_entity_type_build(array &$entity_types) {
         'list_builder' => 'Drupal\eck\Controller\EckEntityListBuilder',
         'access' => 'Drupal\eck\EckEntityAccessControlHandler',
         'views_data' => 'Drupal\views\EntityViewsData',
-        'translation' => 'Drupal\content_translation\ContentTranslationHandler',
+        'translation' => 'Drupal\eck\EckTranslationHandler',
         'route_provider' => [
           'html' => 'Drupal\eck\Entity\EckEntityRouteProvider',
         ],
@@ -93,10 +77,8 @@ function eck_entity_type_build(array &$entity_types) {
       'entity_keys' => [
         'id' => 'id',
         'bundle' => 'type',
-        'label' => 'title',
         'uuid' => 'uuid',
         'langcode' => 'langcode',
-        'published' => 'status',
       ],
       'translatable' => TRUE,
       'provider' => 'eck',
@@ -128,12 +110,12 @@ function eck_entity_type_build(array &$entity_types) {
       // Definitions for the entity type.
       $definition = [
         'id' => $eck_type->id,
-        'label' => t($eck_type->label),
+        'label' => $eck_type->label,
         'bundle_label' => t('@eck_type type', ['@eck_type' => $eck_type->label]),
         'base_table' => $eck_type->id,
         'data_table' => $eck_type->id . '_field_data',
         'links' => [
-          'canonical' => "/{$eck_type->id}/{{$eck_type->id}}",
+          'canonical' => "/{$eck_type->id}/{{$eck_type->id}}/edit",
           'edit-form' => "/{$eck_type->id}/{{$eck_type->id}}/edit",
           'delete-form' => "/{$eck_type->id}/{{$eck_type->id}}/delete",
         ],
@@ -142,9 +124,37 @@ function eck_entity_type_build(array &$entity_types) {
         'permission_granularity' => 'bundle',
         'group' => 'content',
         'group_label' => t('Content'),
+        'collection_permission' => 'access ' . $eck_type->id() . ' entity listing',
       ];
+
+      if ($eck_type->hasStandaloneUrl()) {
+        $definition['links']['canonical'] = "/{$eck_type->id}/{{$eck_type->id}}";
+      }
+
+      if ($eck_type->hasAuthorField()) {
+        $definition['entity_keys']['uid'] = 'uid';
+        $definition['entity_keys']['owner'] = 'uid';
+      }
+
+      if ($eck_type->hasChangedField()) {
+        $definition['entity_keys']['changed'] = 'changed';
+      }
+
+      if ($eck_type->hasCreatedField()) {
+        $definition['entity_keys']['created'] = 'created';
+      }
+
+      if ($eck_type->hasTitleField()) {
+        $definition['entity_keys']['label'] = 'title';
+      }
+
+      if ($eck_type->hasStatusField()) {
+        $definition['entity_keys']['status'] = 'status';
+        $definition['entity_keys']['published'] = 'status';
+      }
+
       // Merge the definitions.
-      $definition = array_merge($definition, $base_definition);
+      $definition = array_merge_recursive($definition, $base_definition);
       // Add the new content entity to the entity types.
       $entity_types[$definition['id']] = new ContentEntityType($definition);
 
@@ -191,9 +201,9 @@ function eck_menu_local_actions_alter(&$local_actions) {
     'weight' => 0,
   ];
 
-  /* @var string $name */
-  /* @var \Drupal\eck\Entity\EckEntity $type */
-  foreach ($eck_types as $name => $type) {
+  /** @var string $name */
+  /** @var \Drupal\eck\Entity\EckEntity $type */
+  foreach ($eck_types as $type) {
     $local_actions['eck.bundle.' . $type->id() . '.add'] = $defaults + [
       'id' => 'eck.bundle.' . $type->id() . '.add',
       'route_name' => 'eck.entity.' . $type->id() . '_type.add',
@@ -224,17 +234,6 @@ function eck_menu_local_actions_alter(&$local_actions) {
         $local_actions['eck.' . $type->id() . '.add']['route_name'] = 'eck.entity.add_page';
       }
     }
-  }
-}
-
-/**
- * Implements hook_entity_view_alter().
- */
-function eck_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
-  if ($entity instanceof EckEntity) {
-    // Generalize the entity-type-specific defaults for easier default theming.
-    $build['#theme'] = 'eck_entity';
-    $build['#eck_entity'] = $entity;
   }
 }
 
@@ -335,34 +334,16 @@ function eck_jsonapi_entity_filter_access(ContentEntityType $entity_type, Accoun
 }
 
 /**
- * Implements hook_migration_plugins_alter().
+ * Implements hook_views_data_alter().
  */
-function eck_migration_plugins_alter(array &$migrations) {
-  foreach ($migrations as $key => &$migration) {
-    // Do not alter a migration that is already configured.
-    if (strstr($key, 'migration_config_deriver:')) {
-      continue;
-    }
-
-    /** @var \Drupal\migrate\Plugin\MigrationPluginManager $migration_plugin_manager */
-    $migration_plugin_manager = \Drupal::service('plugin.manager.migration');
-    $migration_stub = $migration_plugin_manager->createStubMigration($migration);
-    /** @var \Drupal\migrate\Plugin\MigrateSourcePluginManager $source_plugin_manager */
-    $source_plugin_manager = \Drupal::service('plugin.manager.migrate.source');
-    $source = NULL;
-    $configuration = $migration['source'];
-    $source = $source_plugin_manager->createInstance($migration['source']['plugin'], $configuration, $migration_stub);
-    if ($source) {
-      if ((is_a($migration['class'], FieldMigration::class, TRUE))) {
-        // Field storage.
-        if (is_a($source, Field::class)) {
-          $migration['migration_dependencies']['required'][] = 'd7_eck_type';
-        }
-        // Field instance.
-        if (get_class($source) === FieldInstance::class) {
-          $migration['migration_dependencies']['required'][] = 'd7_eck_bundle';
-        }
-      }
-    }
+function eck_views_data_alter(&$data) {
+  foreach (EckEntityType::loadMultiple() as $entity_type) {
+    $data[$entity_type->id()]['label'] = [
+      'field' => [
+        'title' => t('Label'),
+        'help' => t('The label of the %entity_label content.', ['%entity_label' => $entity_type->label()]),
+        'id' => 'eck_entity_label',
+      ],
+    ];
   }
 }

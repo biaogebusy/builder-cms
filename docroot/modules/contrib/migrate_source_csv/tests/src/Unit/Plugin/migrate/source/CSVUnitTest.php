@@ -119,35 +119,6 @@ EOD;
   }
 
   /**
-   * Tests that valid IDs are validated.
-   */
-  public function testValidIds(): void {
-    $configuration = [
-      'path' => $this->standardCharsPath,
-      'ids' => [
-        'asdfASDF_',
-      ],
-    ];
-    $csv = new CSV($configuration, $this->pluginId, $this->pluginDefinition, $this->migration);
-    $this->assertInstanceOf(CSV::class, $csv);
-  }
-
-  /**
-   * Tests invalid IDs are validated.
-   */
-  public function testInvalidIds(): void {
-    $configuration = [
-      'path' => $this->standardCharsPath,
-      'ids' => [
-        'asdfASDF_-',
-      ],
-    ];
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('The id (asdfASDF_-) must only include word characters a-z, A-Z, 0-9, including _ (underscore).');
-    new CSV($configuration, $this->pluginId, $this->pluginDefinition, $this->migration);
-  }
-
-  /**
    * Tests that toString functions as expected.
    *
    * @covers ::__toString

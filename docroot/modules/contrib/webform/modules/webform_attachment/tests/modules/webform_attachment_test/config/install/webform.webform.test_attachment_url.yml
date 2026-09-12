@@ -29,7 +29,7 @@ elements: |
   webform_attachment_path:
     '#type': webform_attachment_url
     '#title': webform_attachment_path
-    '#filename': durpalicon.png
+    '#filename': drupalicon.png
     '#url': ''
   webform_attachment_url_download:
     '#type': webform_attachment_url

@@ -110,6 +110,8 @@
 %Since symfony/http-foundation 7.2: NativeSessionStorage's "sid_bits_per_character" option is deprecated and will be ignored in Symfony 8.0.%
 
 # Drupal 12.
+%expectDeprecation\(\) is deprecated in drupal:11\.4\.0%
+%ExpectDeprecationTrait is deprecated in drupal:11\.4\.0%
 %The "Drupal\\Core\\Database\\Query\\Select::hasAllTags\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
 %The "Drupal\\Core\\Database\\Query\\Select::hasAnyTag\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
 %The "Drupal\\Core\\Database\\Query\\SelectExtender::hasAllTags\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
@@ -117,11 +119,87 @@
 %The "Drupal\\Core\\Entity\\Query\\QueryBase::hasAllTags\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
 %The "Drupal\\Core\\Entity\\Query\\QueryBase::hasAnyTag\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
 %The "Drupal\\workspaces\\WorkspaceManager::setActiveWorkspace\(\)" method will require a new "bool \$persist" argument in the next major version of its interface%
+%The "Drupal\\(?:Core\\(?:Action|Field|Condition)|(?:user|action_test|action_bulk_test|user_batch_action_test)\\Plugin\\Action)\\.*::execute\(\)" method will require a new "object\|null \$object" argument in the next major version of its interface "Drupal\\Core\\Executable\\ExecutableInterface"%
+%The "(?:Drupal\\Core\\Layout\\LayoutPluginManagerInterface|Drupal\\Core\\Block\\BlockManager)::get(?:Sorted|Grouped)Definitions\(\)" method will require a new "string \$label_key" argument in the next major version of its interface "Drupal\\Component\\Plugin\\CategorizingPluginManagerInterface"%
 %.*::getDefaultOperations\(\) will require a new "\Drupal\Core\Cache\CacheableMetadata|null \$cacheability" argument in the next major version of its parent class%
 %.*::getOperations\(\) will require a new "\Drupal\Core\Cache\CacheableMetadata|null \$cacheability" argument in the next major version of its interface%
+%Class "Drupal\\migrate_drupal\\Plugin\\migrate\\source\\DrupalSqlBase" as extended by "Drupal\\(ban|block|block_content|comment|config_translation|contact|content_translation|field|file|filter|image|language|menu_link_content|migrate_drupal|node|path|responsive_image|search|shortcut|system|taxonomy|update|user)\\[^"]+" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Class "Drupal\\migrate_drupal\\Plugin\\migrate\\source\\DrupalSqlBase" as extended by "Drupal\\Tests\\migrate_drupal\\[^"]+" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Migrate source plugin "md_empty" used in migration "(d6_upload_field|user_picture_field)" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Trait "Drupal\\migrate_drupal\\Plugin\\migrate\\source\\I18nQueryTrait" used by "Drupal\\(block_content|menu_link_content|taxonomy)\\[^"]+" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Class "Drupal\\migrate_drupal\\Plugin\\Plugin\\MigrateFieldPluginManager" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566%
+%Drupal\\migrate_drupal\\Plugin\\MigrateFieldPluginManager\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566%
+%The "plugin.manager.migrate.field" service is deprecated in drupal:11.3 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockPluginId is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockRegion is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockTheme is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockVisibility is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\RolesLookup is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\FieldType\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement.%
+%The "plugin.manager.archiver" service is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3556927%
+%Drupal\\Core\\Archiver\\ArchiverManager is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3556927%
+%Drupal\\field\\Plugin\\migrate\\process\\ProcessField\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement.%
+%Drupal\\field\\Plugin\\migrate\\process\\d6\\FieldFormatterSettingsDefaults is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d6\\FieldInstanceWidgetSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d7\\FieldBundle is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldInstanceDefaults is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldInstanceOptionTranslation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldInstanceSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldOptionTranslation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldTypeDefaults is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\file\\Plugin\\migrate\\process\\d6\\FieldFile is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\file\\Plugin\\migrate\\process\\d6\\FileUri is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\filter\\Plugin\\migrate\\process\\FilterID is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\filter\\Plugin\\migrate\\process\\FilterSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\filter\\Plugin\\migrate\\process\\d6\\FilterFormatPermission is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\image\\Plugin\\migrate\\process\\d6\\ImageCacheActions is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\ContentTranslationEnabledSetting is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\LanguageDomains is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\LanguageNegotiation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\LanguageTypes is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\link\\Plugin\\migrate\\process\\FieldLink is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\node\\Plugin\\migrate\\process\\d6\\NodeUpdate7008 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\path\\Plugin\\migrate\\process\\PathSetTranslated is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\responsive_image\\Plugin\\migrate\\process\\ImageStyleMappings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\search\\Plugin\\migrate\\process\\SearchConfigurationRankings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\system\\Plugin\\migrate\\process\\d6\\SystemUpdate7000 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\taxonomy\\Plugin\\migrate\\process\\TargetBundle is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\ConvertTokens is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\ProfileFieldSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\UserUpdate8002 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\d6\\ProfileFieldOptionTranslation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\d6\\UserUpdate7002 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\destination\\EntityBlock::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\comment\\Plugin\\migrate\\destination\\EntityComment::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\migrate\\Plugin\\Derivative\\MigrateEntityComplete\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\migrate\\Plugin\\migrate\\destination\\EntityContentComplete\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\node\\Plugin\\migrate\\destination\\EntityNodeType::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\search\\Plugin\\migrate\\destination\\EntitySearchPage::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\shortcut\\Plugin\\migrate\\destination\\EntityShortcutSet\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\system\\Plugin\\migrate\\destination\\d7\\ThemeSettings\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\user\\Plugin\\migrate\\destination\\EntityUserRole\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%The \$long argument to Drupal\\filter\\Plugin\\Filter\\Filter(Align|AutoP|Caption|Html|HtmlEscape|HtmlImageSecure|Url)::tips\(\) is deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Only short tips are used. See https://www.drupal.org/node/3567879%
 
 # Symfony 7.3.
 %Since symfony/validator 7.3: Passing an array of options to configure the "[^"]+" constraint is deprecated, use named arguments instead.%
+
+# Drupal 13.
+%The "cache.backend.memory" service is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use cache.backend.memory.memory instead. See https://www.drupal.org/node/3546856%
+%The "cache.static" service is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use the cache.memory bin instead. See https://www.drupal.org/node/3546856%
+
+# Symfony 7.4.
+%Since symfony/browser-kit 7.4: Method "Symfony\\Component\\BrowserKit\\AbstractBrowser::useHtml5Parser\(\)" is deprecated. Symfony 8 will unconditionally use the native HTML5 parser.%
+%Since symfony/console 7.4: The "Symfony\\Component\\Console\\Application::add\(\)" method is deprecated and will be removed in Symfony 8.0, use "Symfony\\Component\\Console\\Application::addCommand\(\)" instead.%
+%Since symfony/dependency-injection 7.4: Service id "Drupal\\Core\\ExampleClass" looks like a FQCN but no corresponding class or interface exists.%
+%Since symfony/dom-crawler 7.4: Disabling HTML5 parsing is deprecated. Symfony 8 will unconditionally use the native HTML5 parser.%
+%Since symfony/http-foundation 7.4: Request::get\(\) is deprecated, use properties -.*attributes, query or request directly instead.%
+%Since symfony/validator 7.4: Passing an array of options to configure the "Drupal\\Core\\[^"]+" constraint is deprecated, use named arguments instead.%
+%Since symfony/validator 7.4: Passing an array of options to configure the "Drupal\\Core\\[^"]+" constraint is deprecated, use named arguments instead.%
+%Since symfony/validator 7.4: Support for evaluating options in the base Constraint class is deprecated.%
+%Since symfony/validator 7.4: Support for passing the choices as the first argument to Drupal\\Core\\[^ ]+ is deprecated.%
+%Since symfony/validator 7.4: Support for passing the choices as the first argument to Symfony\\Component\\Validator\\Constraints\\Choice is deprecated.%
 
 # Search API deprecations
 %^The deprecated (alter )?hook hook_search_api_%
@@ -135,6 +213,7 @@
 %^Using @EntityType annotation for plugin with ID search_api_autocomplete_search is deprecated%
 %^Not supporting attribute discovery in Drupal\\search_api_autocomplete\\%
 %^Not supporting attribute discovery in Drupal\\Core\\Plugin\\DefaultPluginManager is deprecated%
+%^\w+(?<!search_api|search_api_db|search_api_db_defaults)_requirements without a #\[LegacyRequirementsHook\] attribute is deprecated%
 
 # Temporary fix since adding the property fails schema validation in older
 # Drupal versions.

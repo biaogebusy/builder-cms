@@ -3,9 +3,63 @@
   "description": "Prevents multiple users from trying to edit a content entity simultaneously to prevent edit conflicts.",
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
+  "keywords": ["Drupal"],
+  "homepage": "https://www.drupal.org/project/content_lock",
+  "authors": [
+    {
+      "name": "Christian Fritsch (chr.fritsch)",
+      "homepage": "https://www.drupal.org/u/chrfritsch",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Daniel Bosen (daniel.bosen)",
+      "homepage": "https://www.drupal.org/u/danielbosen",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Christopher Gervais (ergonlogic)",
+      "homepage": "https://www.drupal.org/u/ergonlogic",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Joseph Zhao (pandaski)",
+      "homepage": "https://www.drupal.org/u/pandaski",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Volker Killesreiter (volkerk)",
+      "homepage": "https://www.drupal.org/u/volkerk",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Alex Pott (alexpott)",
+      "homepage": "https://www.drupal.org/u/alexpott",
+      "role": "Maintainer"
+    },
+    {
+      "name": "mark burdett (mfb)",
+      "homepage": "https://www.drupal.org/u/mfb",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Viktor Holovachek (AstonVictor)",
+      "homepage": "https://www.drupal.org/u/astonvictor",
+      "role": "Maintainer"
+    }
+  ],
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/content_lock",
+    "source": "https://git.drupalcode.org/project/content_lock"
+  },
   "require": {
-    "drupal/core": "^9.0 || ^10.0"
+    "drupal/core": "^10.2 || ^11"
   },
   "require-dev": {
+    "drupal/conflict": "^3.0@ALPHA",
+    "drupal/trash": "^3.0"
+  },
+  "suggest": {
+    "drupal/conflict": "For entity translation level locking"
   }
 }

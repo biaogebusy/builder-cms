@@ -1,2 +1,2 @@
-footable_plugin_type: standalone
-footable_plugin_compression: minified
+plugin_type: standalone
+plugin_compression: minified

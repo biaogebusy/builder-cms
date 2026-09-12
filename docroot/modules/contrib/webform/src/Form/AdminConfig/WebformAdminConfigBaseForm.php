@@ -146,7 +146,7 @@ abstract class WebformAdminConfigBaseForm extends ConfigFormBase {
     $enabled_value = NestedArray::getValue($form_state->getValues(), $enabled_parents);
 
     if (!empty($enabled_value) && empty($actions_value)) {
-      $form_state->setErrorByName(NULL, t('@name field is required.', ['@name' => $element['#title']]));
+      $form_state->setErrorByName('', t('@name field is required.', ['@name' => $element['#title']]));
     }
 
     // Convert actions associative array of values to an indexed array.

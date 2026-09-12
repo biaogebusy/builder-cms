@@ -5,6 +5,8 @@ package: Core
 version: VERSION
 base theme: false
 hidden: true
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/node/3223395#s-stable9
 
 libraries-override:
   block/drupal.block.admin:
@@ -68,10 +70,25 @@ libraries-override:
       component:
         misc/dropbutton/dropbutton.css: css/core/dropbutton/dropbutton.css
 
+  core/drupal.fieldgroup:
+    css:
+      component:
+        misc/components/fieldgroup.module.css: css/core/components/fieldgroup.module.css
+
+  core/drupal.item-list:
+    css:
+      component:
+        misc/components/item-list.module.css: css/core/components/item-list.module.css
+
   core/drupal.progress:
     css:
       component:
         misc/components/progress.module.css: css/core/components/progress.module.css
+
+  core/drupal.textarea-resize:
+    css:
+      component:
+        misc/components/resize.module.css: css/core/components/resize.module.css
 
   core/drupal.tabledrag:
     css:
@@ -84,10 +101,20 @@ libraries-override:
       component:
         misc/components/sticky-header.module.css: css/core/components/sticky-header.module.css
 
+  core/drupal.tablesort:
+    css:
+      component:
+        misc/components/tablesort.module.css: css/core/components/tablesort.module.css
+
   core/drupal.vertical-tabs:
     css:
       component:
         misc/vertical-tabs.css: css/core/vertical-tabs.css
+
+  core/drupal.reset-appearance:
+    css:
+      component:
+        misc/components/reset-appearance.module.css: css/core/components/reset-appearance.module.css
 
   # Load version 3.0.3 of normalize.css for backwards compatibility.
   core/normalize: stable9/normalize
@@ -184,18 +211,25 @@ libraries-override:
       component:
         css/components/upgrade-analysis-report-tables.css: css/migrate_drupal_ui/components/upgrade-analysis-report-tables.css
 
-  node/drupal.node:
+  navigation/admin-reset-styles:
     css:
-      layout:
-        css/node.module.css: css/node/node.module.css
+      base:
+        css/base/admin-reset-styles.css: css/navigation/admin-reset-styles.css
+
+  navigation/body-scroll-lock:
+    css:
+      base:
+        css/components/body-scroll-lock.css: css/navigation/body-scroll-lock.css
+
+  navigation/navigation.layoutBuilder:
+    css:
+      base:
+        css/base/layout-builder.css: css/navigation/layout-builder.css
+
   node/drupal.node.preview:
     css:
       theme:
         css/node.preview.css: css/node/node.preview.css
-  node/form:
-    css:
-      layout:
-        css/node.module.css: css/node/node.module.css
   node/drupal.node.admin:
     css:
       theme:
@@ -220,21 +254,10 @@ libraries-override:
     css:
       component:
         css/components/align.module.css: css/system/components/align.module.css
-        css/components/fieldgroup.module.css: css/system/components/fieldgroup.module.css
         css/components/container-inline.module.css: css/system/components/container-inline.module.css
         css/components/clearfix.module.css: css/system/components/clearfix.module.css
-        css/components/details.module.css: css/system/components/details.module.css
         css/components/hidden.module.css: css/system/components/hidden.module.css
-        css/components/item-list.module.css: css/system/components/item-list.module.css
         css/components/js.module.css: css/system/components/js.module.css
-        css/components/nowrap.module.css: css/system/components/nowrap.module.css
-        css/components/position-container.module.css: css/system/components/position-container.module.css
-        css/components/reset-appearance.module.css: css/system/components/reset-appearance.module.css
-        css/components/resize.module.css: css/system/components/resize.module.css
-        css/components/system-status-counter.css: css/system/components/system-status-counter.css
-        css/components/system-status-report-counters.css: css/system/components/system-status-report-counters.css
-        css/components/system-status-report-general-info.css: css/system/components/system-status-report-general-info.css
-        css/components/tablesort.module.css: css/system/components/tablesort.module.css
   system/admin:
     css:
       theme:
@@ -247,6 +270,13 @@ libraries-override:
     css:
       component:
         css/system.diff.css: css/system/system.diff.css
+
+  system/status.report:
+    css:
+      component:
+        css/components/system-status-counter.css: css/system/components/system-status-counter.css
+        css/components/system-status-report-counters.css: css/system/components/system-status-report-counters.css
+        css/components/system-status-report-general-info.css: css/system/components/system-status-report-general-info.css
 
   taxonomy/drupal.taxonomy:
     css:
@@ -264,11 +294,6 @@ libraries-override:
     css:
       state:
         css/toolbar.menu.css: css/toolbar/toolbar.menu.css
-
-  tour/tour-styling:
-    css:
-      component:
-        css/tour.module.css: css/tour/tour.module.css
 
   update/drupal.update.admin:
     css:
@@ -304,7 +329,7 @@ libraries-override:
     css:
       theme:
         css/field_ui_display_mode_table.css: css/field_ui/field_ui_display_mode_table.css
-
-libraries-extend:
-  tour/tour:
-    - stable9/tour
+  field_ui/drupal.field_ui_display_overview:
+    css:
+      theme:
+        css/field_ui_display_overview_table.css: css/field_ui/field_ui_display_overview_table.css

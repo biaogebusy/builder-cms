@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\entity_browser\Element\EntityBrowserElement;
 use Drupal\Tests\BrowserTestBase;
 
@@ -10,6 +12,8 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class FormElementTest extends BrowserTestBase {
 
   /**
@@ -52,7 +56,7 @@ class FormElementTest extends BrowserTestBase {
    * Tests the Entity browser form element.
    */
   public function testFormElement() {
-    // See \Drupal\entity_browser_test\Form\FormElementTest.
+    // See \Drupal\entity_browser_test\Form\FormElementTestForm.
     $this->drupalGet('/test-element');
     $this->assertSession()->linkExists('Select entities', 0, 'Trigger link found.');
 
@@ -70,7 +74,12 @@ class FormElementTest extends BrowserTestBase {
     $this->assertSession()->responseContains($expected);
 
     $default_entity = $this->nodes[0]->getEntityTypeId() . ':' . $this->nodes[0]->id();
-    $this->drupalGet('/test-element', ['query' => ['default_entity' => $default_entity, 'selection_mode' => EntityBrowserElement::SELECTION_MODE_EDIT]]);
+    $this->drupalGet('/test-element', [
+      'query' => [
+        'default_entity' => $default_entity,
+        'selection_mode' => EntityBrowserElement::SELECTION_MODE_EDIT,
+      ],
+    ]);
     $this->assertSession()->linkExists('Select entities', 0, 'Trigger link found.');
 
     $this->assertSession()->hiddenFieldValueEquals("fancy_entity_browser[entity_ids]", $default_entity);

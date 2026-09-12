@@ -1,0 +1,31 @@
+entity.ckeditor5_template.collection:
+  path: '/admin/config/ckeditor5-templates/content-templates'
+  defaults:
+    _entity_list: 'ckeditor5_template'
+    _title: 'CKEditor5 Content Templates Configuration'
+  requirements:
+    _permission: 'administer ckeditor5 templates'
+
+entity.ckeditor5_template.add_form:
+  path: '/admin/config/ckeditor5-templates/content-templates/add'
+  defaults:
+    _entity_form: 'ckeditor5_template.add'
+    _title: 'Add a CKEditor5 Template'
+  requirements:
+    _permission: 'administer ckeditor5 templates'
+
+entity.ckeditor5_template.edit_form:
+  path: '/admin/config/ckeditor5-templates/content-templates/{ckeditor5_template}'
+  defaults:
+    _entity_form: 'ckeditor5_template.edit'
+    _title: 'Edit a CKEditor5 Template'
+  requirements:
+    _permission: 'administer ckeditor5 templates'
+
+entity.ckeditor5_template.delete_form:
+  path: '/admin/config/ckeditor5-templates/content-templates/{ckeditor5_template}/delete'
+  defaults:
+    _entity_form: 'ckeditor5_template.delete'
+    _title: 'Delete a CKEditor5 Template'
+  requirements:
+    _permission: 'administer ckeditor5 templates'

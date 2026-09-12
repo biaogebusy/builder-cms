@@ -1,0 +1,34 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+declare(strict_types=1);
+
+use Drupal\ckeditor5_premium_features\Utility\LibraryDefinitionItem;
+
+/**
+ * Implements hook_library_info_build().
+ */
+function ckeditor5_premium_features_line_height_library_info_build(): array {
+  /** @var \Drupal\ckeditor5_premium_features\Config\SettingsConfigHandlerInterface $config_handler */
+  $config_handler = \Drupal::service('ckeditor5_premium_features.config_handler.settings');
+
+  $definition = new LibraryDefinitionItem('line-height', $config_handler->getDllLocation());
+  $definition->addRemoteJs($definition->id());
+
+  $definitions[$definition->id()] = $definition->getDefinition();
+
+  return $definitions;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function ckeditor5_premium_features_line_height_uninstall($is_syncing): void {
+  if (!$is_syncing) {
+    ckeditor5_premium_features_remove_ckeditor_plugins(['lineHeight'], ['ckeditor5_premium_features_line_height__line_height']);
+  }
+}

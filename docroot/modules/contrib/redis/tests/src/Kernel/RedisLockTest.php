@@ -7,6 +7,8 @@ use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\KernelTests\Core\Lock\LockTest;
 use Drupal\redis\Lock\RedisLock;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
@@ -17,6 +19,8 @@ use Symfony\Component\DependencyInjection\Reference;
  *
  * @group redis
  */
+#[Group('redis')]
+#[RunTestsInSeparateProcesses]
 class RedisLockTest extends LockTest {
 
   use RedisTestInterfaceTrait;

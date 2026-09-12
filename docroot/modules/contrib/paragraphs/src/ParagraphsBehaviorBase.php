@@ -179,6 +179,9 @@ abstract class ParagraphsBehaviorBase extends PluginBase implements ParagraphsBe
    */
   public function getFieldNameOptions(ParagraphsType $paragraphs_type, $field_type = NULL) {
     $fields = [];
+    if ($paragraphs_type->isNew()) {
+      return [];
+    }
     $field_definitions = $this->entityFieldManager->getFieldDefinitions('paragraph', $paragraphs_type->id());
     foreach ($field_definitions as $name => $definition) {
       if ($field_definitions[$name] instanceof FieldConfigInterface) {

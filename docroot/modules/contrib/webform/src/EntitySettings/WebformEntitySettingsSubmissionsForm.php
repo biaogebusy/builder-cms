@@ -246,7 +246,7 @@ class WebformEntitySettingsSubmissionsForm extends WebformEntitySettingsBaseForm
     // Get available columns as option.
     $columns_options = [];
     foreach ($available_columns as $column_name => $column) {
-      $title = (strpos($column_name, 'element__') === 0) ? ['data' => ['#markup' => '<b>' . $column['title'] . '</b>']] : $column['title'];
+      $title = str_starts_with($column_name, 'element__') ? ['data' => ['#markup' => '<b>' . $column['title'] . '</b>']] : $column['title'];
       $key = (isset($column['key'])) ? str_replace('webform_', '', $column['key']) : $column['name'];
       $columns_options[$column_name] = ['title' => $title, 'key' => $key];
     }
@@ -290,19 +290,19 @@ class WebformEntitySettingsSubmissionsForm extends WebformEntitySettingsBaseForm
       'token_view' => [
         'title' => $this->t('Allow users to view a submission using a secure token'),
         'form_description' => $this->t("If checked users will be able to view a submission using the webform submission's URL appended with the submission's (secure) token.") . ' ' .
-          $this->t("The 'tokenized' URL to view a submission will be available when viewing a submission's information and can be inserted into an email using the [webform_submission:token-view-url] token."),
+        $this->t("The 'tokenized' URL to view a submission will be available when viewing a submission's information and can be inserted into an email using the [webform_submission:token-view-url] token."),
       ],
       'token_update' => [
         'title' => $this->t('Allow users to update a submission using a secure token'),
         'form_description' => $this->t("If checked users will be able to update a submission using the webform's URL appended with the submission's (secure) token.") . ' ' .
-          $this->t("The 'tokenized' URL to update a submission will be available when viewing a submission's information and can be inserted into an email using the [webform_submission:token-update-url] token.") . ' ' .
-          $this->t('Only webforms that are open to new submissions can be updated using the secure token.'),
+        $this->t("The 'tokenized' URL to update a submission will be available when viewing a submission's information and can be inserted into an email using the [webform_submission:token-update-url] token.") . ' ' .
+        $this->t('Only webforms that are open to new submissions can be updated using the secure token.'),
       ],
       'token_delete' => [
         'title' => $this->t('Allow users to delete a submission using a secure token'),
         'form_description' => $this->t("If checked users will be able to delete a submission using the webform's URL appended with the submission's (secure) token.") . ' ' .
-          $this->t("The 'tokenized' URL to delete a submission will be available when viewing a submission's information and can be inserted into an email using the [webform_submission:token-delete-url] token.") . ' ' .
-          $this->t('Only webforms that are open to new submissions can be deleted using the secure token.'),
+        $this->t("The 'tokenized' URL to delete a submission will be available when viewing a submission's information and can be inserted into an email using the [webform_submission:token-delete-url] token.") . ' ' .
+        $this->t('Only webforms that are open to new submissions can be deleted using the secure token.'),
       ],
     ];
     $this->appendBehaviors($form['submission_access'], $behavior_elements, $settings, $default_settings);
@@ -317,8 +317,8 @@ class WebformEntitySettingsSubmissionsForm extends WebformEntitySettingsBaseForm
       '#type' => 'radios',
       '#title' => $this->t('When a user is denied access to a submission'),
       '#description' => $this->t('Select what happens when a user is denied access to a submission.') .
-        '<br/><br/>' .
-        $this->t('Go to <a href=":href">form settings</a> to select what happens when a user is denied access to a webform.', [':href' => Url::fromRoute('entity.webform.settings_form', ['webform' => $webform->id()])->toString()]),
+      '<br/><br/>' .
+      $this->t('Go to <a href=":href">form settings</a> to select what happens when a user is denied access to a webform.', [':href' => Url::fromRoute('entity.webform.settings_form', ['webform' => $webform->id()])->toString()]),
       '#options' => [
         WebformInterface::ACCESS_DENIED_DEFAULT => $this->t('Default (Displays the default access denied page)'),
         WebformInterface::ACCESS_DENIED_PAGE => $this->t('Page (Displays message when access is denied to a submission)'),
@@ -451,7 +451,7 @@ class WebformEntitySettingsSubmissionsForm extends WebformEntitySettingsBaseForm
     $form['submission_limits']['total']['limit_total_unique_info'] = [
       '#type' => 'webform_message',
       '#message_message' => $this->t('Only submission administrators will only be able to create and update the unique submission.') . '<br/><br/>' .
-        $this->t('Webform blocks can be used to place this webform on the desired source entity types.'),
+      $this->t('Webform blocks can be used to place this webform on the desired source entity types.'),
       '#message_type' => 'info',
       '#message_close' => TRUE,
       '#message_storage' => WebformMessage::STORAGE_SESSION,
@@ -844,7 +844,7 @@ class WebformEntitySettingsSubmissionsForm extends WebformEntitySettingsBaseForm
     // Set settings.
     $webform->setSettings($values);
 
-    parent::save($form, $form_state);
+    return parent::save($form, $form_state);
   }
 
 }

@@ -7,16 +7,17 @@ namespace Drupal\Tests\diff\Functional;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Diff module plugins.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffPluginTest extends DiffPluginTestBase {
 
   use CommentTestTrait;
-  use CoreVersionUiTestTrait;
 
   /**
    * {@inheritdoc}
@@ -50,10 +51,10 @@ class DiffPluginTest extends DiffPluginTestBase {
       'bundle' => 'article',
       'label' => $label,
     ])->save();
-    $this->formDisplay->load('node.article.default')
+    $this->loadFormDisplay('node.article.default')
       ->setComponent($field_name, ['type' => $widget_type])
       ->save();
-    $this->viewDisplay->load('node.article.default')
+    $this->loadViewDisplay('node.article.default')
       ->setComponent($field_name)
       ->save();
   }
@@ -69,11 +70,12 @@ class DiffPluginTest extends DiffPluginTestBase {
 
     // Update the article and add a new revision, the "changed" field should be
     // updated which does not have plugins provided by diff.
+    $this->drupalGet($node->toUrl('edit-form'));
     $edit = [
       'revision' => TRUE,
       'body[0][value]' => 'change',
     ];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
 
     // Check the difference between the last two revisions.
     $this->clickLink(\t('Revisions'));
@@ -137,13 +139,14 @@ class DiffPluginTest extends DiffPluginTestBase {
     ]);
 
     // Edit the article and update these fields, creating a new revision.
+    $this->drupalGet($node->toUrl('edit-form'));
     $edit = [
       'test_field[0][value]' => 'first_nicer_applicable',
       'test_field_lighter[0][value]' => 'second_nicer_applicable',
       'test_field_non_applicable[0][value]' => 'nicer_not_applicable',
       'revision' => TRUE,
     ];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
 
     // Check differences between revisions.
     $this->clickLink(\t('Revisions'));
@@ -182,12 +185,13 @@ class DiffPluginTest extends DiffPluginTestBase {
 
     // Create a revision adding a new empty line to the body.
     $node = $this->drupalGetNodeByTitle('test_trim');
+    $this->drupalGet($node->toUrl('edit-form'));
     $edit = [
       'revision' => TRUE,
       'body[0][value]' => '<p>body</p>
 ',
     ];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
 
     // Assert the revision comparison.
     $this->drupalGet('node/' . $node->id() . '/revisions');
@@ -196,9 +200,10 @@ class DiffPluginTest extends DiffPluginTestBase {
     $rows = $this->xpath('//tbody/tr');
     $diff_row = $rows[1]->findAll('xpath', '/td');
     $this->assertCount(3, $rows);
-    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $diff_row[2]->getHtml())), '<p>body</p>');
+    $this->assertEquals('<p>body</p>', \htmlspecialchars_decode(\strip_tags((string) $diff_row[2]->getHtml())));
 
     // Create a new revision and update the body.
+    $this->drupalGet($node->toUrl('edit-form'));
     $edit = [
       'revision' => TRUE,
       'body[0][value]' => '<p>body</p>
@@ -206,7 +211,7 @@ class DiffPluginTest extends DiffPluginTestBase {
 <p>body_new</p>
 ',
     ];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('node/' . $node->id() . '/revisions');
     $this->submitForm([], 'Compare selected revisions');
     $this->assertSession()->pageTextNotContains('No visible changes.');
@@ -216,9 +221,9 @@ class DiffPluginTest extends DiffPluginTestBase {
     // multiple rows show and all of them, including empty lines, display line
     // numbers.
     $this->assertGreaterThan(3, \count($rows));
-    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $rows[1]->findAll('xpath', '/td')[3]->getHtml())), '1');
-    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $rows[2]->findAll('xpath', '/td')[3]->getHtml())), '2');
-    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $rows[3]->findAll('xpath', '/td')[3]->getHtml())), '3');
+    $this->assertEquals('1', \htmlspecialchars_decode(\strip_tags((string) $rows[1]->findAll('xpath', '/td')[3]->getHtml())));
+    $this->assertEquals('2', \htmlspecialchars_decode(\strip_tags((string) $rows[2]->findAll('xpath', '/td')[3]->getHtml())));
+    $this->assertEquals('3', \htmlspecialchars_decode(\strip_tags((string) $rows[3]->findAll('xpath', '/td')[3]->getHtml())));
   }
 
 }

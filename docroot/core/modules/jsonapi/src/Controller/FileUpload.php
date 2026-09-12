@@ -5,7 +5,6 @@ namespace Drupal\jsonapi\Controller;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Core\Access\AccessResultReasonInterface;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -18,12 +17,13 @@ use Drupal\Core\Lock\LockAcquiringException;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\file\Upload\ContentDispositionFilenameParser;
-use Drupal\file\Upload\FileUploadHandler;
+use Drupal\file\Upload\FileUploadHandlerInterface;
 use Drupal\file\Upload\FileUploadLocationTrait;
 use Drupal\file\Upload\FileUploadResult;
 use Drupal\file\Upload\InputStreamFileWriterInterface;
 use Drupal\file\Upload\InputStreamUploadedFile;
 use Drupal\file\Validation\FileValidatorSettingsTrait;
+use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\jsonapi\Entity\EntityValidationTrait;
 use Drupal\jsonapi\JsonApiResource\JsonApiDocumentTopLevel;
 use Drupal\jsonapi\JsonApiResource\Link;
@@ -57,43 +57,18 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  */
 class FileUpload {
 
-  use DeprecatedServicePropertyTrait;
   use EntityValidationTrait;
   use FileUploadLocationTrait;
   use FileValidatorSettingsTrait;
 
-  /**
-   * {@inheritdoc}
-   */
-  protected array $deprecatedProperties = [
-    'fileUploader' => 'jsonapi.file.uploader.field',
-  ];
-
-  /**
-   * Constructs a new FileUpload object.
-   *
-   * @phpstan-ignore-next-line
-   */
   public function __construct(
     protected AccountInterface $currentUser,
     protected EntityFieldManagerInterface $fieldManager,
-    protected FileUploadHandler | TemporaryJsonapiFileFieldUploader $fileUploadHandler,
+    protected FileUploadHandlerInterface $fileUploadHandler,
     protected HttpKernelInterface $httpKernel,
-    protected ?InputStreamFileWriterInterface $inputStreamFileWriter = NULL,
-    protected ?FileSystemInterface $fileSystem = NULL,
+    protected InputStreamFileWriterInterface $inputStreamFileWriter,
+    protected FileSystemInterface $fileSystem,
   ) {
-    if (!$this->fileUploadHandler instanceof FileUploadHandler) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $fileUploadHandler argument being an instance of ' . FileUploadHandler::class . ' is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3445266', E_USER_DEPRECATED);
-      $this->fileUploadHandler = \Drupal::service('file.upload_handler');
-    }
-    if (!$this->inputStreamFileWriter) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $inputStreamFileWriter argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3445266', E_USER_DEPRECATED);
-      $this->inputStreamFileWriter = \Drupal::service('file.input_stream_file_writer');
-    }
-    if (!$this->fileSystem) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $fileSystem argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3445266', E_USER_DEPRECATED);
-      $this->fileSystem = \Drupal::service('file_system');
-    }
   }
 
   /**
@@ -197,6 +172,9 @@ class FileUpload {
 
     $settings = $field_definition->getSettings();
     $validators = $this->getFileUploadValidators($settings);
+    if (\is_a($field_definition->getItemDefinition()->getClass(), ImageItem::class, TRUE) && !array_key_exists('FileIsImage', $validators)) {
+      $validators['FileIsImage'] = [];
+    }
     if (!array_key_exists('FileExtension', $validators) && $settings['file_extensions'] === '') {
       // An empty string means 'all file extensions' but the FileUploadHandler
       // needs the FileExtension entry to be present and empty in order for this
@@ -230,7 +208,7 @@ class FileUpload {
     catch (FileExistsException $e) {
       throw new HttpException(500, $e->getMessage(), $e);
     }
-    catch (FileException $e) {
+    catch (FileException) {
       throw new HttpException(500, 'Temporary file could not be moved to file location');
     }
 

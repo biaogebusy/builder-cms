@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\config_events_test;
 
 use Drupal\Core\Config\ConfigCollectionEvents;
@@ -8,6 +10,9 @@ use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\State\StateInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * Event subscriber for testing configuration events.
+ */
 class EventSubscriber implements EventSubscriberInterface {
 
   /**

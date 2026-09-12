@@ -14,7 +14,7 @@ class DynamicBaseFieldTest extends FunctionalTestBase {
   /**
    * Test the creation, update and deletion of entity base fields.
    */
-  public function testBaseFieldCRUD() {
+  public function testBaseFieldCrud() {
     // Create the entity type.
     $type = $this->createEntityType(['uid', 'created', 'changed', 'status']);
     $bundle = $this->createEntityBundle($type['id']);
@@ -52,7 +52,7 @@ class DynamicBaseFieldTest extends FunctionalTestBase {
     // Remove 'status' field from entity type.
     $edit = ['status' => FALSE];
     $this->drupalGet(Url::fromRoute('entity.eck_entity_type.edit_form', ['eck_entity_type' => $type['id']]));
-    $this->submitForm($edit, t('Update @type', ['@type' => $type['label']]));
+    $this->submitForm($edit, (string) t('Update @type', ['@type' => $type['label']]));
     $this->assertSession()->responseContains((string) t('Entity type %label has been updated.', ['%label' => $type['label']]));
 
     // Check if 'status' field really removed.

@@ -1,0 +1,4 @@
+services:
+  Drupal\chosen_lib\Hook\ChosenLibHooks:
+    class: Drupal\chosen_lib\Hook\ChosenLibHooks
+    autowire: true

@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_order.commerce_order_type.default
+    - core.entity_form_mode.commerce_order.order_details
+  enforced:
+    module:
+      - commerce_order
+id: commerce_order.default.order_details
+targetEntityType: commerce_order
+bundle: default
+mode: order_details
+content:
+  mail:
+    type: email_default
+    weight: 0
+    region: content
+    settings:
+      placeholder: ''
+      size: 60
+    third_party_settings: { }
+hidden:
+  adjustments: true
+  billing_profile: true
+  ip_address: true
+  order_items: true
+  order_number: true
+  state: true
+  store_id: true
+  uid: true

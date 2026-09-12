@@ -29,7 +29,7 @@ class WebformHandlerConditionsTest extends WebformBrowserTestBase {
   /**
    * Tests webform handler plugin conditions.
    */
-  public function testConditions() {
+  public function testConditions(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

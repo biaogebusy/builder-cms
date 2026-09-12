@@ -7,7 +7,6 @@ use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -103,10 +102,34 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
     $data = [];
     // Admin permission.
     $admin_user_mock_args = [5, 'administer green_entity'];
-    $data['admin user, view'] = [$entity_mock_args, 'view', $admin_user_mock_args, TRUE, ['user.permissions']];
-    $data['admin user, update'] = [$entity_mock_args, 'update', $admin_user_mock_args, TRUE, ['user.permissions']];
-    $data['admin user, duplicate'] = [$entity_mock_args, 'duplicate', $admin_user_mock_args, TRUE, ['user.permissions']];
-    $data['admin user, delete'] = [$entity_mock_args, 'delete', $admin_user_mock_args, TRUE, ['user.permissions']];
+    $data['admin user, view'] = [
+      $entity_mock_args,
+      'view',
+      $admin_user_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
+    $data['admin user, update'] = [
+      $entity_mock_args,
+      'update',
+      $admin_user_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
+    $data['admin user, duplicate'] = [
+      $entity_mock_args,
+      'duplicate',
+      $admin_user_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
+    $data['admin user, delete'] = [
+      $entity_mock_args,
+      'delete',
+      $admin_user_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
 
     // View, update, duplicate, delete permissions, entity without an owner.
     $second_entity_mock_args = [];
@@ -114,8 +137,20 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
       $first_user_mock_args = [6, $operation . ' green_entity'];
       $second_user_mock_args = [7, 'access content'];
 
-      $data["first user, $operation, entity without owner"] = [$second_entity_mock_args, $operation, $first_user_mock_args, TRUE, ['user.permissions']];
-      $data["second user, $operation, entity without owner"] = [$second_entity_mock_args, $operation, $second_user_mock_args, FALSE, ['user.permissions']];
+      $data["first user, $operation, entity without owner"] = [
+        $second_entity_mock_args,
+        $operation,
+        $first_user_mock_args,
+        TRUE,
+        ['user.permissions'],
+      ];
+      $data["second user, $operation, entity without owner"] = [
+        $second_entity_mock_args,
+        $operation,
+        $second_user_mock_args,
+        FALSE,
+        ['user.permissions'],
+      ];
     }
 
     // Update, duplicate, and delete permissions.
@@ -125,9 +160,27 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
       $second_user_mock_args = [7, $operation . ' own green_entity'];
       $third_user_mock_args = [8, $operation . ' any green_entity'];
 
-      $data["first user, $operation, entity with owner"] = [$entity_mock_args, $operation, $first_user_mock_args, TRUE, ['user', 'user.permissions']];
-      $data["second user, $operation, entity with owner"] = [$entity_mock_args, $operation, $second_user_mock_args, FALSE, ['user', 'user.permissions']];
-      $data["third user, $operation, entity with owner"] = [$entity_mock_args, $operation, $third_user_mock_args, TRUE, ['user.permissions']];
+      $data["first user, $operation, entity with owner"] = [
+        $entity_mock_args,
+        $operation,
+        $first_user_mock_args,
+        TRUE,
+        ['user', 'user.permissions'],
+      ];
+      $data["second user, $operation, entity with owner"] = [
+        $entity_mock_args,
+        $operation,
+        $second_user_mock_args,
+        FALSE,
+        ['user', 'user.permissions'],
+      ];
+      $data["third user, $operation, entity with owner"] = [
+        $entity_mock_args,
+        $operation,
+        $third_user_mock_args,
+        TRUE,
+        ['user.permissions'],
+      ];
     }
 
     // View permissions.
@@ -141,24 +194,96 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
     $third_entity_mock_args = [14, 'first', FALSE];
 
     // The first user can view the two published entities.
-    $data['first user, view, first entity'] = [$first_entity_mock_args, 'view', $first_user_mock_args, TRUE, ['user.permissions']];
-    $data['first user, view, second entity'] = [$second_entity_mock_args, 'view', $first_user_mock_args, TRUE, ['user.permissions']];
-    $data['first user, view, third entity'] = [$third_entity_mock_args, 'view', $first_user_mock_args, FALSE, ['user']];
+    $data['first user, view, first entity'] = [
+      $first_entity_mock_args,
+      'view',
+      $first_user_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
+    $data['first user, view, second entity'] = [
+      $second_entity_mock_args,
+      'view',
+      $first_user_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
+    $data['first user, view, third entity'] = [
+      $third_entity_mock_args,
+      'view',
+      $first_user_mock_args,
+      FALSE,
+      ['user'],
+    ];
 
     // The second user can only view published entities of bundle "first".
-    $data['second user, view, first entity'] = [$first_entity_mock_args, 'view', $second_user_mock_args, TRUE, ['user.permissions']];
-    $data['second user, view, second entity'] = [$second_entity_mock_args, 'view', $second_user_mock_args, FALSE, ['user.permissions']];
-    $data['second user, view, third entity'] = [$third_entity_mock_args, 'view', $second_user_mock_args, FALSE, ['user']];
+    $data['second user, view, first entity'] = [
+      $first_entity_mock_args,
+      'view',
+      $second_user_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
+    $data['second user, view, second entity'] = [
+      $second_entity_mock_args,
+      'view',
+      $second_user_mock_args,
+      FALSE,
+      ['user.permissions'],
+    ];
+    $data['second user, view, third entity'] = [
+      $third_entity_mock_args,
+      'view',
+      $second_user_mock_args,
+      FALSE,
+      ['user'],
+    ];
 
     // The third user can view their own unpublished entity.
-    $data['third user, view, first entity'] = [$first_entity_mock_args, 'view', $third_user_mock_args, FALSE, ['user.permissions']];
-    $data['third user, view, second entity'] = [$second_entity_mock_args, 'view', $third_user_mock_args, FALSE, ['user.permissions']];
-    $data['third user, view, third entity'] = [$third_entity_mock_args, 'view', $third_user_mock_args, TRUE, ['user', 'user.permissions']];
+    $data['third user, view, first entity'] = [
+      $first_entity_mock_args,
+      'view',
+      $third_user_mock_args,
+      FALSE,
+      ['user.permissions'],
+    ];
+    $data['third user, view, second entity'] = [
+      $second_entity_mock_args,
+      'view',
+      $third_user_mock_args,
+      FALSE,
+      ['user.permissions'],
+    ];
+    $data['third user, view, third entity'] = [
+      $third_entity_mock_args,
+      'view',
+      $third_user_mock_args,
+      TRUE,
+      ['user', 'user.permissions'],
+    ];
 
     // The fourth user can't view anything.
-    $data['fourth user, view, first entity'] = [$first_entity_mock_args, 'view', $fourth_user_mock_args, FALSE, ['user.permissions']];
-    $data['fourth user, view, second entity'] = [$second_entity_mock_args, 'view', $fourth_user_mock_args, FALSE, ['user.permissions']];
-    $data['fourth user, view, third entity'] = [$third_entity_mock_args, 'view', $fourth_user_mock_args, FALSE, ['user', 'user.permissions']];
+    $data['fourth user, view, first entity'] = [
+      $first_entity_mock_args,
+      'view',
+      $fourth_user_mock_args,
+      FALSE,
+      ['user.permissions'],
+    ];
+    $data['fourth user, view, second entity'] = [
+      $second_entity_mock_args,
+      'view',
+      $fourth_user_mock_args,
+      FALSE,
+      ['user.permissions'],
+    ];
+    $data['fourth user, view, third entity'] = [
+      $third_entity_mock_args,
+      'view',
+      $fourth_user_mock_args,
+      FALSE,
+      ['user', 'user.permissions'],
+    ];
 
     return $data;
   }
@@ -174,19 +299,39 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
 
     // User with the admin permission.
     $account_mock_args = ['6', 'administer green_entity'];
-    $data['admin user'] = [NULL, $account_mock_args, TRUE, ['user.permissions']];
+    $data['admin user'] = [
+      NULL,
+      $account_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
 
     // Ordinary user.
     $account_mock_args = ['6', 'create green_entity'];
-    $data['regular user'] = [NULL, $account_mock_args, TRUE, ['user.permissions']];
+    $data['regular user'] = [
+      NULL,
+      $account_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
 
     // Ordinary user, entity with a bundle.
     $account_mock_args = ['6', 'create first_bundle green_entity'];
-    $data['regular user, entity with bundle'] = ['first_bundle', $account_mock_args, TRUE, ['user.permissions']];
+    $data['regular user, entity with bundle'] = [
+      'first_bundle',
+      $account_mock_args,
+      TRUE,
+      ['user.permissions'],
+    ];
 
     // User with no permissions.
     $account_mock_args = ['6', 'access content'];
-    $data['user without permission'] = [NULL, $account_mock_args, FALSE, ['user.permissions']];
+    $data['user without permission'] = [
+      NULL,
+      $account_mock_args,
+      FALSE,
+      ['user.permissions'],
+    ];
 
     return $data;
   }

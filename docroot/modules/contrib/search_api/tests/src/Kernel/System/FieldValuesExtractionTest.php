@@ -204,7 +204,7 @@ class FieldValuesExtractionTest extends KernelTestBase {
     );
 
     $properties = [
-      NULL => [
+      '' => [
         'rendered_item' => 'a',
         // Since there is no field defined on "aggregated_field" for the index,
         // we won't be able to extract it.

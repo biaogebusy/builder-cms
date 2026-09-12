@@ -3,10 +3,13 @@
 namespace Drupal\content_lock\Plugin\Action;
 
 use Drupal\content_lock\ContentLock\ContentLockInterface;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Action\ActionBase;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -18,14 +21,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   deriver = "Drupal\content_lock\Plugin\Action\BreakLockDeriver",
  * )
  */
+#[Action(
+  id: 'entity:break_lock',
+  action_label: new TranslatableMarkup('Break Lock'),
+  deriver: BreakLockDeriver::class,
+)]
 class BreakLock extends ActionBase implements ContainerFactoryPluginInterface {
-
-  /**
-   * Content lock service.
-   *
-   * @var \Drupal\content_lock\ContentLock\ContentLock
-   */
-  protected $lockService;
 
   /**
    * Constructs a BreakLock object.
@@ -36,18 +37,22 @@ class BreakLock extends ActionBase implements ContainerFactoryPluginInterface {
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\content_lock\ContentLock\ContentLockInterface $contentLock
+   * @param \Drupal\content_lock\ContentLock\ContentLockInterface $lockService
    *   Content lock service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ContentLockInterface $contentLock) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    protected ContentLockInterface $lockService,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->lockService = $contentLock;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,
       $plugin_id,
@@ -59,14 +64,14 @@ class BreakLock extends ActionBase implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function execute(ContentEntityInterface $entity = NULL) {
-    $this->lockService->release($entity->id(), $entity->language(), NULL, NULL, $entity->getEntityTypeId());
+  public function execute(?ContentEntityInterface $object = NULL): void {
+    $this->lockService->release($object);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE): AccessResultInterface|bool {
     /** @var \Drupal\Core\Entity\EntityInterface $object */
     return $object->access('update', $account, $return_as_object);
   }

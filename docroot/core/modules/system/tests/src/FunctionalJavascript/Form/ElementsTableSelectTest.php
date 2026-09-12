@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\FunctionalJavascript\Form;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the tableselect form element for expected behavior.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class ElementsTableSelectTest extends WebDriverTestBase {
 
   /**
@@ -51,7 +53,7 @@ class ElementsTableSelectTest extends WebDriverTestBase {
       $this->click($row);
       $this->assertSession()->assertWaitOnAjaxRequest();
       $page->hasCheckedField($row);
-      // Check other rows are not checked
+      // Check other rows are not checked.
       for ($j = 1; $j <= 3; $j++) {
         if ($j == $i) {
           continue;

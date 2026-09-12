@@ -42,8 +42,8 @@ class TokenExpiryTriggerHandler implements TokenExpiryTriggerHandlerInterface {
     // Deleting one batch of expired tokens.
     if (!empty($expired_tokens = $this->collector->collect($token_cron_batch_size))) {
       $this->collector->deleteMultipleTokens($expired_tokens);
-      $this->logger->notice('Deleted @limit expired tokens in cron.', [
-        '@limit' => $token_cron_batch_size,
+      $this->logger->notice('Deleted @num expired tokens in cron.', [
+        '@num' => count($expired_tokens),
       ]);
     }
   }

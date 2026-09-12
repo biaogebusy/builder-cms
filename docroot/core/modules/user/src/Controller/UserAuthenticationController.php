@@ -2,6 +2,7 @@
 
 namespace Drupal\user\Controller;
 
+use Drupal\Core\Access\CsrfRequestHeaderAccessCheck;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -62,6 +63,7 @@ class UserAuthenticationController extends ControllerBase implements ContainerIn
 
   /**
    * The user authentication.
+   *
    * @var \Drupal\user\UserAuthInterface|\Drupal\user\UserAuthenticationInterface
    */
   protected $userAuth;
@@ -218,7 +220,7 @@ class UserAuthenticationController extends ControllerBase implements ContainerIn
         if ($account->get('name')->access('view', $account)) {
           $response_data['current_user']['name'] = $account->getAccountName();
         }
-        $response_data['csrf_token'] = $this->csrfToken->get('rest');
+        $response_data['csrf_token'] = $this->csrfToken->get(CsrfRequestHeaderAccessCheck::TOKEN_KEY);
 
         $logout_route = $this->routeProvider->getRouteByName('user.logout.http');
         // Trim '/' off path to match \Drupal\Core\Access\CsrfAccessCheck.
@@ -236,7 +238,7 @@ class UserAuthenticationController extends ControllerBase implements ContainerIn
     }
     // Always register an IP-based failed login event.
     $this->userFloodControl->register('user.failed_login_ip', $flood_config->get('ip_window'));
-    throw new BadRequestHttpException('Sorry, unrecognized username or password.');
+    throw new BadRequestHttpException('Unrecognized username or password.');
   }
 
   /**
@@ -286,7 +288,10 @@ class UserAuthenticationController extends ControllerBase implements ContainerIn
         throw new BadRequestHttpException('Unable to send email. Contact the site administrator if the problem persists.');
       }
       else {
-        $this->logger->info('Password reset instructions mailed to %name at %email.', ['%name' => $account->getAccountName(), '%email' => $account->getEmail()]);
+        $this->logger->info('Password reset instructions mailed to %name at %email.', [
+          '%name' => $account->getAccountName(),
+          '%email' => $account->getEmail(),
+        ]);
         return new Response();
       }
     }
@@ -309,10 +314,10 @@ class UserAuthenticationController extends ControllerBase implements ContainerIn
    *
    * @deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There
    * is no replacement.
-   * @see https://www.drupal.org/node/3425340
+   * @see https://www.drupal.org/node/3427209
    */
   protected function userIsBlocked($name) {
-    @trigger_error(__METHOD__ . ' is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3425340', E_USER_DEPRECATED);
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3427209', E_USER_DEPRECATED);
     return user_is_blocked($name);
   }
 

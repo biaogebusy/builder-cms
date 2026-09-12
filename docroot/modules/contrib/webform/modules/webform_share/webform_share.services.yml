@@ -19,3 +19,7 @@ services:
     arguments: ['@config.factory']
     tags:
       - { name: theme_negotiator }
+
+  Drupal\webform_share\Hook\WebformShareHooks:
+    class: Drupal\webform_share\Hook\WebformShareHooks
+    autowire: true

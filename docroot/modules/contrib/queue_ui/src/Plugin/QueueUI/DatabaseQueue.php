@@ -4,8 +4,9 @@ namespace Drupal\queue_ui\Plugin\QueueUI;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Queue\DatabaseQueue as CoreDatabaseQueue;
+use Drupal\Core\Queue\DatabaseQueue as QueueBackendClass;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\queue_ui\Attribute\QueueUI;
 use Drupal\queue_ui\QueueUIBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -13,11 +14,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Defines the default Drupal Queue UI backend.
  *
  * @phpstan-consistent-constructor
- * @QueueUI(
- *   id = "database_queue",
- *   class_name = "DatabaseQueue"
- * )
  */
+#[QueueUI(
+  id: 'database_queue',
+  class_name: QueueBackendClass::class,
+)]
 class DatabaseQueue extends QueueUIBase implements ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
@@ -25,7 +26,7 @@ class DatabaseQueue extends QueueUIBase implements ContainerFactoryPluginInterfa
   /**
    * The database table name.
    */
-  public const TABLE_NAME = CoreDatabaseQueue::TABLE_NAME;
+  public const TABLE_NAME = QueueBackendClass::TABLE_NAME;
 
   /**
    * {@inheritdoc}

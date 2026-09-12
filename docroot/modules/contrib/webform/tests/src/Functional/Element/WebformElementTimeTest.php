@@ -19,14 +19,14 @@ class WebformElementTimeTest extends WebformElementBrowserTestBase {
   /**
    * Test time element.
    */
-  public function testTime() {
+  public function testTime(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_time');
 
     // Check time element.
     $assert_session->responseContains('<label for="edit-time-12-hour">time_12_hour</label>');
-    $assert_session->responseContains('<input data-drupal-selector="edit-time-12-hour" data-webform-time-format="g:i A" type="time" id="edit-time-12-hour" name="time_12_hour" value="14:00" size="12" maxlength="12" class="form-time webform-time" />');
+    $assert_session->responseContains('<input data-drupal-selector="edit-time-12-hour" type="time" id="edit-time-12-hour" name="time_12_hour" value="14:00" size="12" maxlength="12" class="form-time webform-time" />');
 
     // Check timepicker elements.
     $assert_session->responseContains('<input data-drupal-selector="edit-time-timepicker" data-webform-time-format="g:i A" type="text" id="edit-time-timepicker" name="time_timepicker" value="2:00 PM" size="12" maxlength="12" class="form-time webform-time" />');

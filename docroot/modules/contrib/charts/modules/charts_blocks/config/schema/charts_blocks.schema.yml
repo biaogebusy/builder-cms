@@ -1,0 +1,64 @@
+block.plugin.charts_block:
+  type: block_settings
+  label: 'Charts block settings'
+  mapping:
+    chart:
+      type: charts.settings
+      label: 'Chart configuration'
+block.settings.charts_canvas_block:
+  type: block_settings
+  label: 'Chart (Canvas) block'
+  mapping:
+    chart_type:
+      type: string
+      label: 'Chart type'
+    chart_library:
+      type: string
+      label: 'Charting library'
+    title:
+      type: label
+      label: 'Title'
+    subtitle:
+      type: label
+      label: 'Subtitle'
+    data_format:
+      type: string
+      label: 'Data format'
+    data:
+      type: text
+      label: 'Data'
+    display:
+      type: mapping
+      label: 'Display'
+      mapping:
+        legend_position:
+          type: string
+          label: 'Legend position'
+        stacking:
+          type: boolean
+          label: 'Enable stacking'
+        accessible_table:
+          type: boolean
+          label: 'Include an accessible data table'
+    xaxis:
+      type: mapping
+      label: 'Horizontal axis'
+      mapping:
+        title:
+          type: label
+          label: 'Title'
+    yaxis:
+      type: mapping
+      label: 'Vertical axis'
+      mapping:
+        title:
+          type: label
+          label: 'Title'
+        min:
+          type: string
+          label: 'Minimum'
+        max:
+          type: string
+          label: 'Maximum'
+  constraints:
+    FullyValidatable: ~

@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\migrate_drupal\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\migrate_drupal\Plugin\migrate\source\d6\VariableTranslation;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the variable source plugin.
- *
- * @covers \Drupal\migrate_drupal\Plugin\migrate\source\d6\VariableTranslation
- *
- * @group migrate_drupal
  */
+#[CoversClass(VariableTranslation::class)]
+#[Group('migrate_drupal')]
+#[RunTestsInSeparateProcesses]
 class VariableTranslationTest extends MigrateSqlSourceTestBase {
 
   /**

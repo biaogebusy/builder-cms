@@ -14,6 +14,31 @@
    */
   Drupal.behaviors.chartsGooglecharts = {
     attach() {
+      // Scan all charts on the page to determine required packages.
+      const requiredPackages = new Set(['corechart']);
+      const chartElements = document.querySelectorAll(
+        '.charts-google[data-chart]',
+      );
+
+      chartElements.forEach((element) => {
+        const contents = new Drupal.Charts.Contents();
+        const chartId = element.id;
+        const dataAttributes = contents.getData(chartId);
+
+        // Add packages based on visualization type
+        switch (dataAttributes.visualization) {
+          case 'TreeMap':
+            requiredPackages.add('treemap');
+            break;
+          case 'Gauge':
+            requiredPackages.add('gauge');
+            break;
+          case 'Table':
+            requiredPackages.add('table');
+            break;
+        }
+      });
+
       // Define a fallback value for globalOptions;
       const globalOptions =
         drupalSettings.charts === undefined
@@ -31,10 +56,10 @@
         'scatter',
         'column',
       ];
-      const packages = ['corechart', 'gauge', 'table'];
+      const packages = Array.from(requiredPackages);
       if (
         useMaterialDesign === 'true' &&
-        materialDesignPackages.indexOf(chartType) !== -1
+        materialDesignPackages.includes(chartType)
       ) {
         if (chartType === 'spline') {
           chartType = 'line';
@@ -74,6 +99,11 @@
         if (element.dataset.hasOwnProperty('chart')) {
           const chartId = element.id;
           const dataAttributes = contents.getData(chartId);
+          Drupal.googleCharts.charts[chartId] = {
+            options: dataAttributes.options,
+            instance: null,
+            dataTable: null,
+          };
           google.charts.setOnLoadCallback(
             Drupal.googleCharts.drawChart(
               chartId,
@@ -193,6 +223,10 @@
       const options = googleChartOptions;
       const googleChartTypeFormatted = chartType;
 
+      if (Drupal.googleCharts.charts[chartId]) {
+        Drupal.googleCharts.charts[chartId].dataTable = data;
+      }
+
       let visualizationNamespace = 'visualization';
       let visualizationClass = chartType;
       // Replace the 'Spline' chart type with 'Line'.
@@ -269,6 +303,17 @@
           chart = new google.visualization.Table(
             document.getElementById(chartId),
           );
+          break;
+
+        case 'TreeMap':
+          chart = new google.visualization.TreeMap(
+            document.getElementById(chartId),
+          );
+          break;
+      }
+
+      if (Drupal.googleCharts.charts[chartId]) {
+        Drupal.googleCharts.charts[chartId].instance = chart;
       }
 
       const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;

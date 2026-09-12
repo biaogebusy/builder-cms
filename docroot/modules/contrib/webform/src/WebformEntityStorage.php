@@ -22,6 +22,13 @@ class WebformEntityStorage extends ConfigEntityStorage implements WebformEntityS
   protected $database;
 
   /**
+   * The state storage service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * The entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -62,6 +69,7 @@ class WebformEntityStorage extends ConfigEntityStorage implements WebformEntityS
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
     $instance = parent::createInstance($container, $entity_type);
     $instance->database = $container->get('database');
+    $instance->state = $container->get('state');
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->fileSystem = $container->get('file_system');
     $instance->cacheBackend = $container->get('cache.default');
@@ -115,6 +123,21 @@ class WebformEntityStorage extends ConfigEntityStorage implements WebformEntityS
         ])
         ->execute();
     }
+
+    // If the webform has CSS/JS assets, store the webform ID
+    // in the 'webform_libraries' state, otherwise remove the webform ID.
+    /** @var \Drupal\webform\WebformInterface $entity */
+    $webform_libraries = $this->state->get('webform_libraries', []);
+    $has_assets = array_filter($entity->getAssets());
+    if ($has_assets && !isset($webform_libraries[$entity->id()])) {
+      $webform_libraries[$entity->id()] = $entity->id();
+      $this->state->set('webform_libraries', $webform_libraries);
+    }
+    elseif (!$has_assets && isset($webform_libraries[$entity->id()])) {
+      unset($webform_libraries[$entity->id()]);
+      $this->state->set('webform_libraries', $webform_libraries);
+    }
+
     return $return;
   }
 
@@ -128,16 +151,21 @@ class WebformEntityStorage extends ConfigEntityStorage implements WebformEntityS
       return;
     }
 
-    // Delete all webform submission log entries.
+    // Collect webform ids.
     $webform_ids = [];
     foreach ($entities as $entity) {
-      $webform_ids[] = $entity->id();
+      $webform_ids[$entity->id()] = $entity->id();
     }
 
     // Delete all webform records used to track next serial.
     $this->database->delete('webform')
       ->condition('webform_id', $webform_ids, 'IN')
       ->execute();
+
+    // Delete all webform IDs in the 'webform_libraries' state.
+    $webform_libraries = $this->state->get('webform_libraries', []);
+    $webform_libraries = array_diff_key($webform_libraries, $webform_ids);
+    $this->state->set('webform_libraries', $webform_libraries);
 
     // Remove the webform specific file directory for all stream wrappers.
     // @see \Drupal\webform\Plugin\WebformElement\WebformManagedFileBase
@@ -362,10 +390,20 @@ class WebformEntityStorage extends ConfigEntityStorage implements WebformEntityS
    */
   public function getTotalNumberOfResults($webform_id = NULL) {
     if ($webform_id) {
-      $query = $this->database->select('webform_submission', 'ws');
-      $query->condition('webform_id', $webform_id);
-      $query->addExpression('COUNT(sid)', 'results');
-      return $query->execute()->fetchField() ?: 0;
+      if (is_array($webform_id)) {
+        $query = $this->database->select('webform_submission', 'ws');
+        $query->fields('ws', ['webform_id']);
+        $query->condition('webform_id', $webform_id, 'IN');
+        $query->addExpression('COUNT(sid)', 'results');
+        $query->groupBy('webform_id');
+        return array_map('intval', $query->execute()->fetchAllKeyed()) + array_fill_keys($webform_id, 0);
+      }
+      else {
+        $query = $this->database->select('webform_submission', 'ws');
+        $query->condition('webform_id', $webform_id);
+        $query->addExpression('COUNT(sid)', 'results');
+        return $query->execute()->fetchField() ?: 0;
+      }
     }
     else {
       $query = $this->database->select('webform_submission', 'ws');

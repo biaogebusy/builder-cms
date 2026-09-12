@@ -22,11 +22,13 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Context\ExecutionContext;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Exception\ConstraintDefinitionException;
+use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Exception\NoSuchMetadataException;
 use Symfony\Component\Validator\Exception\RuntimeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 use Symfony\Component\Validator\Exception\UnsupportedMetadataException;
 use Symfony\Component\Validator\Exception\ValidatorException;
+use Symfony\Component\Validator\GroupSequenceProviderInterface;
 use Symfony\Component\Validator\Mapping\CascadingStrategy;
 use Symfony\Component\Validator\Mapping\ClassMetadataInterface;
 use Symfony\Component\Validator\Mapping\Factory\MetadataFactoryInterface;
@@ -45,28 +47,23 @@ use Symfony\Component\Validator\Util\PropertyPath;
  */
 class RecursiveContextualValidator implements ContextualValidatorInterface
 {
-    private ExecutionContextInterface $context;
     private string $defaultPropertyPath;
     private array $defaultGroups;
-    private MetadataFactoryInterface $metadataFactory;
-    private ConstraintValidatorFactoryInterface $validatorFactory;
-    private array $objectInitializers;
-    private ?ContainerInterface $groupProviderLocator;
 
     /**
      * Creates a validator for the given context.
      *
      * @param ObjectInitializerInterface[] $objectInitializers The object initializers
      */
-    public function __construct(ExecutionContextInterface $context, MetadataFactoryInterface $metadataFactory, ConstraintValidatorFactoryInterface $validatorFactory, array $objectInitializers = [], ?ContainerInterface $groupProviderLocator = null)
-    {
-        $this->context = $context;
+    public function __construct(
+        private ExecutionContextInterface $context,
+        private MetadataFactoryInterface $metadataFactory,
+        private ConstraintValidatorFactoryInterface $validatorFactory,
+        private array $objectInitializers = [],
+        private ?ContainerInterface $groupProviderLocator = null,
+    ) {
         $this->defaultPropertyPath = $context->getPropertyPath();
         $this->defaultGroups = [$context->getGroup() ?: Constraint::DEFAULT_GROUP];
-        $this->metadataFactory = $metadataFactory;
-        $this->validatorFactory = $validatorFactory;
-        $this->objectInitializers = $objectInitializers;
-        $this->groupProviderLocator = $groupProviderLocator;
     }
 
     public function atPath(string $path): static
@@ -266,11 +263,23 @@ class RecursiveContextualValidator implements ContextualValidatorInterface
      */
     protected function normalizeGroups(string|GroupSequence|array $groups): array
     {
-        if (\is_array($groups)) {
-            return $groups;
+        if (!\is_array($groups)) {
+            return [$groups];
         }
 
-        return [$groups];
+        foreach ($groups as $key => $group) {
+            if ($group instanceof GroupSequence) {
+                continue;
+            }
+
+            if (!\is_string($group) && !$group instanceof \Stringable) {
+                throw new InvalidArgumentException(\sprintf('The validation groups must be an array of strings or "%s" instances, but the array contains "%s".', GroupSequence::class, get_debug_type($group)));
+            }
+
+            $groups[$key] = (string) $group;
+        }
+
+        return $groups;
     }
 
     /**
@@ -429,7 +438,7 @@ class RecursiveContextualValidator implements ContextualValidatorInterface
             // Replace the "Default" group by the group sequence defined
             // for the class, if applicable.
             // This is done after checking the cache, so that
-            // spl_object_hash() isn't called for this sequence and
+            // spl_object_id() isn't called for this sequence and
             // "Default" is used instead in the cache. This is useful
             // if the getters below return different group sequences in
             // every call.
@@ -448,7 +457,7 @@ class RecursiveContextualValidator implements ContextualValidatorInterface
                     } else {
                         // The group sequence is dynamically obtained from the validated
                         // object
-                        /** @var \Symfony\Component\Validator\GroupSequenceProviderInterface $object */
+                        /** @var GroupSequenceProviderInterface $object */
                         $group = $object->getGroupSequence();
                     }
                     $defaultOverridden = true;
@@ -487,7 +496,7 @@ class RecursiveContextualValidator implements ContextualValidatorInterface
 
         // If no more groups should be validated for the property nodes,
         // we can safely quit
-        if (0 === \count($groups)) {
+        if (!$groups) {
             return;
         }
 
@@ -597,7 +606,7 @@ class RecursiveContextualValidator implements ContextualValidatorInterface
             $this->validateInGroup($value, $cacheKey, $metadata, $group, $context);
         }
 
-        if (0 === \count($groups)) {
+        if (!$groups) {
             return;
         }
 
@@ -621,7 +630,7 @@ class RecursiveContextualValidator implements ContextualValidatorInterface
         // The $cascadedGroups property is set, if the "Default" group is
         // overridden by a group sequence
         // See validateClassNode()
-        $cascadedGroups = null !== $cascadedGroups && \count($cascadedGroups) > 0 ? $cascadedGroups : $groups;
+        $cascadedGroups = $cascadedGroups ?: $groups;
 
         if ($value instanceof LazyProperty) {
             $value = $value->getPropertyValue();
@@ -763,11 +772,11 @@ class RecursiveContextualValidator implements ContextualValidatorInterface
         if ($this->context instanceof ExecutionContext) {
             $cacheKey = $this->context->generateCacheKey($object);
         } else {
-            $cacheKey = spl_object_hash($object);
+            $cacheKey = spl_object_id($object);
         }
 
         if ($dependsOnPropertyPath) {
-            $cacheKey .= $this->context->getPropertyPath();
+            $cacheKey .= "\0".$this->context->getPropertyPath();
         }
 
         return $cacheKey;

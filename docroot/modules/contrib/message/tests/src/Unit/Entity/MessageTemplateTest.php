@@ -126,6 +126,20 @@ class MessageTemplateTest extends UnitTestCase {
   }
 
   /**
+   * Tests getRawText returns the configured text array.
+   *
+   * @covers ::getRawText
+   */
+  public function testGetRawText() {
+    $text = [
+      ['value' => 'raw one', 'format' => 'plain_text'],
+      ['value' => 'raw two', 'format' => 'filtered_html'],
+    ];
+    $this->messageTemplate->set('text', $text);
+    $this->assertEquals($text, $this->messageTemplate->getRawText());
+  }
+
+  /**
    * Tests the getText method with default language only.
    *
    * @covers ::getText

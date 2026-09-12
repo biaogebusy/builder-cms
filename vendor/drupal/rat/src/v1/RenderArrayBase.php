@@ -214,7 +214,7 @@ abstract class RenderArrayBase implements RenderableInterface {
    *
    * @see \Drupal\Core\Render\HtmlResponseAttachmentsProcessor::processFeed
    */
-  public function attachFeed(string $href, string $title = NULL) {
+  public function attachFeed(string $href, ?string $title = NULL) {
     $this->value['#attached']['feed'][] = [$href, $title];
     return $this;
   }
@@ -242,7 +242,7 @@ abstract class RenderArrayBase implements RenderableInterface {
    * @see \Drupal\Core\Render\HtmlResponseAttachmentsProcessor::processHtmlHeadLink
    * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
    */
-  public function attachHeadLink(string $href, string $rel, string $title = NULL, string $type = NULL, string $hreflang = NULL, bool $shouldAddHeader = FALSE, array $moreAttributes = []) {
+  public function attachHeadLink(string $href, string $rel, ?string $title = NULL, ?string $type = NULL, ?string $hreflang = NULL, bool $shouldAddHeader = FALSE, array $moreAttributes = []) {
     $linkAttributes = [
       'href' => $href,
       'rel' => $rel,
@@ -301,7 +301,10 @@ abstract class RenderArrayBase implements RenderableInterface {
   /**
    * Get build access as AccessResult object including cacheability.
    *
-   * @return \Drupal\Core\Access\AccessResult
+   * The result is AccessResultAllowed OR AccessResultNeutral, depending on
+   * whether the renderer grants access or not.
+   *
+   * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultNeutral
    *   The access result object.
    */
   public function getAccessResult(): AccessResult {

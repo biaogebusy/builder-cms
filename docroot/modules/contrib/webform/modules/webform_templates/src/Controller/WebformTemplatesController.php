@@ -261,7 +261,7 @@ class WebformTemplatesController extends ControllerBase implements ContainerInje
    * @return string
    *   The webform label.
    */
-  public function previewTitle(WebformInterface $webform = NULL) {
+  public function previewTitle(?WebformInterface $webform = NULL) {
     return $this->t('Previewing @title template', ['@title' => $webform->label()]);
   }
 

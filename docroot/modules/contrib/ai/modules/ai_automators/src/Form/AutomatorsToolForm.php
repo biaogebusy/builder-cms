@@ -131,6 +131,7 @@ final class AutomatorsToolForm extends EntityForm {
       // This property will land into core soon, see
       // https://www.drupal.org/project/drupal/issues/3202631. It can stay
       // after this is added to Drupal core.
+      '#description' => $this->t('The administrative description used for this Automator Tool. It might be used by AI, so be descriptive.'),
       '#normalize_newlines' => TRUE,
       // Until that the custom value callback is needed. Should be removed
       // after the issue mentioned above is merged into core and the minimum
@@ -139,13 +140,19 @@ final class AutomatorsToolForm extends EntityForm {
     ];
 
     $workflow = $form_state->getValue('workflow') ?? $this->entity->get('workflow');
+    // A workflow is "confirmed" (a real autocomplete selection) only when
+    // its value contains the '--' separator used by the autocomplete route.
+    $workflowConfirmed = ($workflow && str_contains((string) $workflow, '--')) ? '1' : '0';
 
     $form['workflow'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Workflow'),
       '#default_value' => $workflow,
       '#required' => TRUE,
-      '#description' => $this->t('This is the AI Automator workflow that will be used for this agent.'),
+      '#description' => $this->t('This is the AI Automator workflow that will be used for this agent. <strong>Type at least 3 characters to search</strong>. <br />Workflows are created at <a target="_blank" href=":workflows_url">:workflows_url</a> and require the <a target="_blank" href=":module_url">AI Agents</a> module to be installed.', [
+        ':workflows_url' => '/admin/config/ai/automator_chain_types/add',
+        ':module_url' => 'https://www.drupal.org/project/ai_agents',
+      ]),
       '#ajax' => [
         'callback' => '::getWorkflow',
         'wrapper' => 'field-connections-wrapper',
@@ -158,7 +165,7 @@ final class AutomatorsToolForm extends EntityForm {
       '#type' => 'checkbox',
       '#title' => $this->t('Garbage Collect'),
       '#default_value' => $this->entity->get('remove_entity'),
-      '#description' => $this->t('Remove the entity from the database when the agent has successfully completed the task or a task that was closed for other reasons. <strong>Obviously do not enable this for workflows where this is the end product and end storage.</strong>'),
+      '#description' => $this->t('Remove the entity from the database when the agent has successfully completed the task or a task that was closed for other reasons. <br /><strong>Obviously do not enable this for workflows where this is the end product and end storage.</strong>'),
     ];
 
     $form['status'] = [
@@ -168,17 +175,36 @@ final class AutomatorsToolForm extends EntityForm {
       '#description' => $this->t('The status of the tool. If you disable an enabled tool that is used by an agent, you will run into errors.'),
     ];
 
-    $form['field_connections'] = [
+    // Outer container: serves as the AJAX wrapper and hosts the hidden
+    // 'workflow_confirmed' element that drives the #states visibility below.
+    $form['field_connections_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'field-connections-wrapper'],
+    ];
+
+    // This hidden element is a proper Form API element (not raw HTML), so
+    // Drupal renders it correctly and the states JS can read its value.
+    $form['field_connections_wrapper']['workflow_confirmed'] = [
+      '#type' => 'hidden',
+      '#value' => $workflowConfirmed,
+    ];
+
+    $form['field_connections_wrapper']['field_connections'] = [
       '#type' => 'details',
-      '#title' => $workflow ? $this->t('Field Connection %workflow', [
+      '#title' => $workflowConfirmed === '1' ? $this->t('Field Connection %workflow', [
         '%workflow' => $workflow,
       ]) : $this->t('Choose workflow first'),
-      '#attributes' => [
-        'id' => 'field-connections-wrapper',
-      ],
       '#tree' => TRUE,
-      '#open' => $workflow,
+      '#open' => $workflowConfirmed === '1',
+      '#states' => [
+        'invisible' => [
+          ':input[name="workflow_confirmed"]' => ['value' => '0'],
+        ],
+      ],
     ];
+
+    // PHP reference to keep child assignments concise.
+    $fc = &$form['field_connections_wrapper']['field_connections'];
 
     if ($workflow) {
       $bundleParts = explode('--', $workflow);
@@ -190,13 +216,13 @@ final class AutomatorsToolForm extends EntityForm {
         //
         // If it is a key field, we do not allow it unless its the label.
         if ((empty($field['key']) || $field['key'] === 'label') && !in_array($fieldName, $this->knownOutliers)) {
-          $form['field_connections'][$i] = [
+          $fc[$i] = [
             '#type' => 'container',
           ];
-          $form['field_connections'][$i]['header'] = [
+          $fc[$i]['header'] = [
             '#markup' => '<strong>' . $field['label'] . '</strong>',
           ];
-          $form['field_connections'][$i]['field_name'] = [
+          $fc[$i]['field_name'] = [
             '#type' => 'value',
             '#value' => $field['id'],
           ];
@@ -214,7 +240,7 @@ final class AutomatorsToolForm extends EntityForm {
             $options['output'] = $this->t('Output');
           }
 
-          $form['field_connections'][$i]['agent_process'] = [
+          $fc[$i]['agent_process'] = [
             '#type' => 'select',
             '#title' => $this->t('Agent Process'),
             '#default_value' => $defaultValues[$fieldName]['agent_process'] ?? $initial[$fieldName],
@@ -222,17 +248,17 @@ final class AutomatorsToolForm extends EntityForm {
             '#description' => $this->t('This is the type of field this is for the tool. Note that not all field types can be input or output.'),
           ];
 
-          $form['field_connections'][$i]['tool_field_type'] = [
+          $fc[$i]['tool_field_type'] = [
             '#type' => 'value',
             '#value' => $this->inputFieldsType[$field['type']] ?? $field['type'],
           ];
 
-          $form['field_connections'][$i]['drupal_field_type'] = [
+          $fc[$i]['drupal_field_type'] = [
             '#type' => 'value',
             '#value' => $field['type'],
           ];
 
-          $form['field_connections'][$i]['input_explanation'] = [
+          $fc[$i]['input_explanation'] = [
             '#type' => 'textarea',
             '#title' => $this->t('Input Explanation'),
             '#default_value' => $defaultValues[$fieldName]['input_explanation'] ?? '',
@@ -257,7 +283,7 @@ final class AutomatorsToolForm extends EntityForm {
             '#value_callback' => [Textarea::class, 'valueCallback'],
           ];
 
-          $form['field_connections'][$i]['required'] = [
+          $fc[$i]['required'] = [
             '#type' => 'checkbox',
             '#title' => $this->t('Required'),
             '#default_value' => $defaultValues[$fieldName]['required'] ?? '',
@@ -269,7 +295,7 @@ final class AutomatorsToolForm extends EntityForm {
             ],
           ];
 
-          $form['field_connections'][$i]['output_explanation'] = [
+          $fc[$i]['output_explanation'] = [
             '#type' => 'textarea',
             '#title' => $this->t('Output Explanation'),
             '#default_value' => $defaultValues[$fieldName]['output_explanation'] ?? '',
@@ -294,7 +320,7 @@ final class AutomatorsToolForm extends EntityForm {
             '#value_callback' => [Textarea::class, 'valueCallback'],
           ];
 
-          $form['field_connections'][$i]['default_value'] = [
+          $fc[$i]['default_value'] = [
             '#type' => 'textfield',
             '#title' => $this->t('Default Value'),
             '#default_value' => $defaultValues[$fieldName]['default_value'] ?? '',
@@ -310,7 +336,7 @@ final class AutomatorsToolForm extends EntityForm {
             ],
           ];
 
-          $form['field_connections'][$i]['break'] = [
+          $fc[$i]['break'] = [
             '#markup' => '<br><hr><br>',
           ];
           $i++;
@@ -404,7 +430,7 @@ final class AutomatorsToolForm extends EntityForm {
    *   The form state.
    */
   public function getWorkflow(array $form, FormStateInterface $form_state): array {
-    return $form['field_connections'];
+    return $form['field_connections_wrapper'];
   }
 
   /**

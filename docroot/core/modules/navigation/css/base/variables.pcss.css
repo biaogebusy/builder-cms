@@ -12,7 +12,7 @@ We need it root to calculate the size of the displace in .dialog-off-canvas-main
   /*
    * Color Palette.
    */
-  --admin-toolbar-color-focus: var(--drupal-admin-color-focus, var(--admin-toolbar-color-green-300));
+  --admin-toolbar-color-focus: var(--drupal-admin-color-focus, var(--admin-toolbar-color-green-400));
   --admin-toolbar-size-focus: var(--drupal-admin-size-focus, 2px);
   /* Blue variations. */
   --admin-toolbar-color-blue-070: var(--drupal-admin-color-blue-070, #dbe8ff);
@@ -71,14 +71,14 @@ We need it root to calculate the size of the displace in .dialog-off-canvas-main
   /* White. */
   --admin-toolbar-color-white: var(--drupal-admin-color-white, #fff);
   /* Expanded background color. */
-  --admin-toolbar-color-expanded: rgba(231, 234, 243, 0.5); /* --admin-toolbar-color-gray-050 */
+  --admin-toolbar-color-expanded: rgb(231, 234, 243, 0.5); /* --admin-toolbar-color-gray-050 */
   /* Fonts. */
   --admin-toolbar-font-family: inter, sans-serif;
   /* Shadows. */
-  --admin-toolbar-color-shadow-0: rgba(0, 0, 0, 0);
-  --admin-toolbar-color-shadow-6: rgba(0, 0, 0, 0.06);
-  --admin-toolbar-color-shadow-8: rgba(0, 0, 0, 0.08);
-  --admin-toolbar-color-shadow-15: rgba(0, 0, 0, 0.15);
+  --admin-toolbar-color-shadow-0: rgb(0, 0, 0, 0);
+  --admin-toolbar-color-shadow-6: rgb(0, 0, 0, 0.06);
+  --admin-toolbar-color-shadow-8: rgb(0, 0, 0, 0.08);
+  --admin-toolbar-color-shadow-15: rgb(0, 0, 0, 0.15);
 
   /**
    * Spaces.
@@ -172,7 +172,7 @@ We need it root to calculate the size of the displace in .dialog-off-canvas-main
 }
 
 @media (--admin-toolbar-reduced-motion) {
-  [data-drupal-admin-styles] {
+  [data-admin-toolbar-transitions] {
     --admin-toolbar-transition: 0s linear;
   }
 }

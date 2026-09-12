@@ -75,6 +75,7 @@ class EckEntityForm extends ContentEntityForm {
     }
 
     $form_state->setRedirect('entity.' . $this->entity->getEntityTypeId() . '.canonical', [$this->entity->getEntityTypeId() => $this->entity->id()]);
+    return $saved;
   }
 
 }

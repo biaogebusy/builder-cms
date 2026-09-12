@@ -25,7 +25,10 @@ class ExportForTesting extends ControllerBase {
     }
     // Build a YAML file with the result data.
     $data = [
+      // We need to use Symfony Parse later, so skip phpstan.
+      // @phpstan-ignore-next-line
       'request' => Yaml::parse($result->request->value),
+      // @phpstan-ignore-next-line
       'response' => Yaml::parse($result->response->value),
       'wait' => (int) $result->sleep_time->value,
       'label' => $result->label->value,

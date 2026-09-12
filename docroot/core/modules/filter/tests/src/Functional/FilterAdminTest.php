@@ -7,17 +7,20 @@ namespace Drupal\Tests\filter\Functional;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\filter\Entity\FilterFormat;
+use Drupal\filter\FilterFormatRepositoryInterface;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Thoroughly test the administrative interface of the filter module.
- *
- * @group filter
  */
+#[Group('filter')]
+#[RunTestsInSeparateProcesses]
 class FilterAdminTest extends BrowserTestBase {
 
   /**
@@ -205,8 +208,10 @@ class FilterAdminTest extends BrowserTestBase {
     $full = 'full_html';
     $plain = 'plain_text';
 
+    $format_repository = \Drupal::service(FilterFormatRepositoryInterface::class);
+
     // Check that the fallback format exists and cannot be disabled.
-    $this->assertSame($plain, filter_fallback_format(), 'The fallback format is set to plain text.');
+    $this->assertSame($plain, $format_repository->getFallbackFormatId(), 'The fallback format is set to plain text.');
     $this->drupalGet('admin/config/content/formats');
     $this->assertSession()->responseNotContains('admin/config/content/formats/manage/' . $plain . '/disable');
     $this->drupalGet('admin/config/content/formats/manage/' . $plain . '/disable');
@@ -246,7 +251,7 @@ class FilterAdminTest extends BrowserTestBase {
       }
     }
     // Ensure that the second filter is now before the first filter.
-    $this->assertEquals($filter_format->filters($second_filter)->weight + 1, $filter_format->filters($first_filter)->weight, 'Order confirmed in configuration.');
+    $this->assertEquals($filter_format->filters($second_filter)->weight + 1, $filter_format->filters($first_filter)->weight);
 
     // Add format.
     $edit = [];
@@ -260,7 +265,6 @@ class FilterAdminTest extends BrowserTestBase {
     $this->assertSession()->addressEquals('admin/config/content/formats');
     $this->assertSession()->statusMessageContains("Added text format {$edit['name']}.", 'status');
 
-    filter_formats_reset();
     $format = FilterFormat::load($edit['format']);
     $this->assertNotNull($format, 'Format found in database.');
     $this->drupalGet('admin/config/content/formats/manage/' . $format->id());
@@ -268,7 +272,6 @@ class FilterAdminTest extends BrowserTestBase {
     $this->assertSession()->checkboxChecked('filters[' . $second_filter . '][status]');
     $this->assertSession()->checkboxChecked('filters[' . $first_filter . '][status]');
     /** @var \Drupal\user\Entity\Role $role */
-    \Drupal::entityTypeManager()->getStorage('user_role')->resetCache([RoleInterface::AUTHENTICATED_ID]);
     $role = Role::load(RoleInterface::AUTHENTICATED_ID);
     $this->assertTrue($role->hasPermission($format->getPermissionName()), 'The authenticated role has permission to use the filter.');
 
@@ -277,7 +280,6 @@ class FilterAdminTest extends BrowserTestBase {
     $this->submitForm([], 'Disable');
     $this->assertSession()->addressEquals('admin/config/content/formats');
     $this->assertSession()->statusMessageContains("Disabled text format {$edit['name']}.", 'status');
-    \Drupal::entityTypeManager()->getStorage('user_role')->resetCache([RoleInterface::AUTHENTICATED_ID]);
     $role = Role::load(RoleInterface::AUTHENTICATED_ID);
     $this->assertFalse($role->hasPermission($format->getPermissionName()), 'The filter permission has been removed from the authenticated role');
 
@@ -387,6 +389,7 @@ class FilterAdminTest extends BrowserTestBase {
   /**
    * Tests whether filter tips page is not HTML escaped.
    */
+  #[IgnoreDeprecations]
   public function testFilterTipHtmlEscape(): void {
     $this->drupalLogin($this->adminUser);
     global $base_url;
@@ -414,12 +417,10 @@ class FilterAdminTest extends BrowserTestBase {
    */
   public function testDisabledFormat(): void {
     // Create a node type and add a standard body field.
-    $node_type = NodeType::create([
+    $node_type = $this->drupalCreateContentType([
       'type' => $this->randomMachineName(),
       'name' => $this->randomString(),
     ]);
-    $node_type->save();
-    node_add_body_field($node_type, $this->randomString());
 
     // Create a text format with a filter that returns a static string.
     $format = FilterFormat::create([
@@ -497,12 +498,10 @@ class FilterAdminTest extends BrowserTestBase {
     $filter_test->save();
 
     // Create a node type and add a standard body field.
-    $node_type = NodeType::create([
+    $node_type = $this->drupalCreateContentType([
       'type' => $this->randomMachineName(),
       'name' => $this->randomString(),
     ]);
-    $node_type->save();
-    node_add_body_field($node_type, $this->randomString());
 
     // Create a new node of the new node type.
     $title = $this->randomString();

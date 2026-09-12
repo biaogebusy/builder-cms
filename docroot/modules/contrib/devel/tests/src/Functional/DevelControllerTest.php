@@ -7,12 +7,12 @@ use Drupal\devel_entity_test\Entity\DevelEntityTestCanonical;
 use Drupal\devel_entity_test\Entity\DevelEntityTestEdit;
 use Drupal\devel_entity_test\Entity\DevelEntityTestNoLinks;
 use Drupal\entity_test\Entity\EntityTest;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests Devel controller.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelControllerTest extends DevelBrowserTestBase {
 
   /**

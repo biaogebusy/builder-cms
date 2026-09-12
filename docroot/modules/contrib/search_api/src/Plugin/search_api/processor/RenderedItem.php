@@ -203,7 +203,7 @@ class RenderedItem extends ProcessorPluginBase {
    */
   public function addFieldValues(ItemInterface $item) {
     // Switch to the default theme in case the admin theme (or any other theme)
-    // is enabled.
+    // is active.
     $previous_theme = $this->getThemeSwitcher()->switchToDefault();
 
     // Fields for which some view mode config is missing.

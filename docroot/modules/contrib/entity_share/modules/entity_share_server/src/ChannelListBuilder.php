@@ -83,6 +83,22 @@ class ChannelListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
+  public function getDefaultOperations(EntityInterface $entity) {
+    /** @var \Drupal\entity_share_server\Entity\ChannelInterface $entity */
+    $operations = parent::getDefaultOperations($entity);
+
+    $operations['jsonapi_preview'] = [
+      'title' => t('Show JSON:API'),
+      'weight' => 10,
+      'url' => $entity->getJsonApiUrl(),
+    ];
+
+    return $operations;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildHeader() {
     $header = [];
     $header['label'] = $this->t('Channel');

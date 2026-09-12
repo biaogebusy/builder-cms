@@ -50,7 +50,9 @@ function migrate_tools_schema(): array {
 function migrate_tools_update_10000(): void {
   $schema = migrate_tools_schema();
   foreach ($schema as $tableName => $schemaDefinition) {
-    \Drupal::database()->schema()->createTable($tableName, $schemaDefinition);
+    if (!\Drupal::database()->schema()->tableExists($tableName)) {
+      \Drupal::database()->schema()->createTable($tableName, $schemaDefinition);
+    }
   }
 }
 

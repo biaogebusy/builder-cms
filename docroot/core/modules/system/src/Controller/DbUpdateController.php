@@ -7,6 +7,7 @@ use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Render\BareHtmlPageRendererInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -101,7 +102,17 @@ class DbUpdateController extends ControllerBase {
    * @param \Drupal\Core\Asset\AssetQueryStringInterface $assetQueryString
    *   The asset query string.
    */
-  public function __construct($root, KeyValueExpirableFactoryInterface $key_value_expirable_factory, CacheBackendInterface $cache, StateInterface $state, ModuleHandlerInterface $module_handler, AccountInterface $account, BareHtmlPageRendererInterface $bare_html_page_renderer, UpdateRegistry $post_update_registry, protected ?AssetQueryStringInterface $assetQueryString = NULL) {
+  public function __construct(
+    $root,
+    KeyValueExpirableFactoryInterface $key_value_expirable_factory,
+    CacheBackendInterface $cache,
+    StateInterface $state,
+    ModuleHandlerInterface $module_handler,
+    AccountInterface $account,
+    BareHtmlPageRendererInterface $bare_html_page_renderer,
+    UpdateRegistry $post_update_registry,
+    protected AssetQueryStringInterface $assetQueryString,
+  ) {
     $this->root = $root;
     $this->keyValueExpirableFactory = $key_value_expirable_factory;
     $this->cache = $cache;
@@ -110,11 +121,6 @@ class DbUpdateController extends ControllerBase {
     $this->account = $account;
     $this->bareHtmlPageRenderer = $bare_html_page_renderer;
     $this->postUpdateRegistry = $post_update_registry;
-    if ($this->assetQueryString === NULL) {
-      $this->assetQueryString = \Drupal::service('asset.query_string');
-      @trigger_error('Calling' . __METHOD__ . '() without the $assetQueryString argument is deprecated in drupal:10.2.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/3358337', E_USER_DEPRECATED);
-    }
-
   }
 
   /**
@@ -139,10 +145,10 @@ class DbUpdateController extends ControllerBase {
    *
    * @param string $op
    *   The update operation to perform. Can be any of the below:
-   *    - info
-   *    - selection
-   *    - run
-   *    - results
+   *    - "info".
+   *    - "selection".
+   *    - "run".
+   *    - "results".
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request object.
    *
@@ -161,8 +167,8 @@ class DbUpdateController extends ControllerBase {
 
     $regions = [];
     $requirements = update_check_requirements();
-    $severity = drupal_requirements_severity($requirements);
-    if ($severity == REQUIREMENT_ERROR || ($severity == REQUIREMENT_WARNING && !$request->getSession()->has('update_ignore_warnings'))) {
+    $severity = RequirementSeverity::maxSeverityFromRequirements($requirements);
+    if ($severity === RequirementSeverity::Error || ($severity === RequirementSeverity::Warning && !$request->getSession()->has('update_ignore_warnings'))) {
       $regions['sidebar_first'] = $this->updateTasksList('requirements');
       $output = $this->requirements($severity, $requirements, $request);
     }
@@ -527,7 +533,7 @@ class DbUpdateController extends ControllerBase {
   /**
    * Renders a list of requirement errors or warnings.
    *
-   * @param $severity
+   * @param int $severity
    *   The severity of the message, as per RFC 3164.
    * @param array $requirements
    *   The array of requirement values.
@@ -538,7 +544,7 @@ class DbUpdateController extends ControllerBase {
    *   A render array.
    */
   public function requirements($severity, array $requirements, Request $request) {
-    $options = $severity == REQUIREMENT_WARNING ? ['continue' => 1] : [];
+    $options = $severity === RequirementSeverity::Warning ? ['continue' => 1] : [];
     // @todo Revisit once https://www.drupal.org/node/2548095 is in. Something
     // like Url::fromRoute('system.db_update')->setOptions() should then be
     // possible.
@@ -659,12 +665,13 @@ class DbUpdateController extends ControllerBase {
    * page in update.php). Additionally, if the site was off-line, now that the
    * update process is completed, the site is set back online.
    *
-   * @param $success
+   * @param bool $success
    *   Indicate that the batch API tasks were all completed successfully.
    * @param array $results
    *   An array of all the results that were updated in update_do_one().
    * @param array $operations
-   *   A list of all the operations that had not been completed by the batch API.
+   *   A list of all the operations that had not been completed by the batch
+   *   API.
    */
   public static function batchFinished($success, $results, $operations) {
     // No updates to run, so caches won't get flushed later.  Clear them now.
@@ -698,10 +705,20 @@ class DbUpdateController extends ControllerBase {
       'title' => $this->t('Front page'),
       'url' => Url::fromRoute('<front>')->setOption('base_url', $base_url),
     ];
-    if ($this->account->hasPermission('access administration pages')) {
+
+    $admin_url = Url::fromRoute('system.admin')->setOption('base_url', $base_url);
+    if ($admin_url->access($this->account)) {
       $links['admin-pages'] = [
         'title' => $this->t('Administration pages'),
-        'url' => Url::fromRoute('system.admin')->setOption('base_url', $base_url),
+        'url' => $admin_url,
+      ];
+    }
+
+    $status_report_url = Url::fromRoute('system.status')->setOption('base_url', $base_url);
+    if ($status_report_url->access($this->account)) {
+      $links['status-report'] = [
+        'title' => $this->t('Status report'),
+        'url' => $status_report_url,
       ];
     }
     return $links;

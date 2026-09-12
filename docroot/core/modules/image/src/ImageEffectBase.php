@@ -3,9 +3,10 @@
 namespace Drupal\image;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\Plugin\ConfigurablePluginBase;
+use Drupal\Core\Plugin\RemovableDependentPluginReturn;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Provides a base class for image effects.
@@ -17,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\image\ImageEffectManager
  * @see plugin_api
  */
-abstract class ImageEffectBase extends PluginBase implements ImageEffectInterface, ContainerFactoryPluginInterface {
+abstract class ImageEffectBase extends ConfigurablePluginBase implements ImageEffectInterface, ContainerFactoryPluginInterface {
 
   /**
    * The image effect ID.
@@ -43,23 +44,16 @@ abstract class ImageEffectBase extends PluginBase implements ImageEffectInterfac
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    #[Autowire(service: 'logger.channel.image')]
+    LoggerInterface $logger,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    $this->setConfiguration($configuration);
     $this->logger = $logger;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('logger.factory')->get('image')
-    );
   }
 
   /**
@@ -154,15 +148,17 @@ abstract class ImageEffectBase extends PluginBase implements ImageEffectInterfac
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function calculateDependencies() {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function calculateDependencies() {
-    return [];
+  public function onCollectionDependencyRemoval(array $dependencies): RemovableDependentPluginReturn {
+    // If the module that provides the image effect plugin is uninstalled,
+    // the plugin instance should be removed from the collection.
+    return in_array($this->getPluginDefinition()['provider'], $dependencies['module'] ?? []) ? RemovableDependentPluginReturn::Remove : RemovableDependentPluginReturn::Unchanged;
   }
 
 }

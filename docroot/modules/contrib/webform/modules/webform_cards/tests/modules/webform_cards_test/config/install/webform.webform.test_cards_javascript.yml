@@ -40,7 +40,7 @@ javascript: |
     'use strict';
 
     Drupal.behaviors.webformCardsTestJavaScript = {
-      attach: function (context) {
+      attach(context) {
         var $forms = $(context).is('form.webform-submission-form')
           ? $(context)
           : $('form.webform-submission-form', context);

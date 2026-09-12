@@ -40,34 +40,37 @@
       // Add language filtering.
       selectors = [].concat(
         // Links without any hreflang attributes (most of them).
-        originalSelectors.map((selector) => `${selector}:not([hreflang])`),
-        // Links with hreflang equals to the current language.
         originalSelectors.map(
-          (selector) => `${selector}[hreflang="${path.currentLanguage}"]`,
+          (selector) =>
+            `${selector}:not([data-drupal-language]):not([hreflang])`,
+        ),
+        // Links li with data-drupal-language equals to the current language.
+        originalSelectors.map(
+          (selector) =>
+            `li${selector}[data-drupal-language="${path.currentLanguage}"]`,
+        ),
+        // Links a with hreflang equals to the current language.
+        originalSelectors.map(
+          (selector) => `a${selector}[hreflang="${path.currentLanguage}"]`,
         ),
       );
 
       // Add query string selector for pagers, exposed filters.
       selectors = selectors.map((current) => current + querySelector);
 
-      // Query the DOM.
-      const activeLinks = context.querySelectorAll(selectors.join(','));
-      const il = activeLinks.length;
-      for (let i = 0; i < il; i++) {
-        activeLinks[i].classList.add('is-active');
-        activeLinks[i].setAttribute('aria-current', 'page');
-      }
+      context.querySelectorAll(selectors.join(',')).forEach((activeLink) => {
+        activeLink.classList.add('is-active');
+        activeLink.setAttribute('aria-current', 'page');
+      });
     },
     detach(context, settings, trigger) {
       if (trigger === 'unload') {
-        const activeLinks = context.querySelectorAll(
-          '[data-drupal-link-system-path].is-active',
-        );
-        const il = activeLinks.length;
-        for (let i = 0; i < il; i++) {
-          activeLinks[i].classList.remove('is-active');
-          activeLinks[i].removeAttribute('aria-current');
-        }
+        context
+          .querySelectorAll('[data-drupal-link-system-path].is-active')
+          .forEach((activeLink) => {
+            activeLink.classList.remove('is-active');
+            activeLink.removeAttribute('aria-current');
+          });
       }
     },
   };

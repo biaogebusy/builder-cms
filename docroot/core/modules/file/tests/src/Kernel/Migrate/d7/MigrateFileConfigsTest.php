@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\file\Kernel\Migrate\d7;
 
-use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade variables to file.settings.yml.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateFileConfigsTest extends MigrateDrupal7TestBase {
 
   use SchemaCheckTestTrait;

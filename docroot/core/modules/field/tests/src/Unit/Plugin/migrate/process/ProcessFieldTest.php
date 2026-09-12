@@ -13,37 +13,51 @@ use Drupal\migrate\Row;
 use Drupal\migrate_drupal\Plugin\MigrateFieldInterface;
 use Drupal\migrate_drupal\Plugin\MigrateFieldPluginManagerInterface;
 use Drupal\Tests\migrate\Unit\MigrateTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Prophecy\ObjectProphecy;
 
 /**
  * Tests the ProcessField migrate process plugin.
  *
- * @coversDefaultClass \Drupal\field\Plugin\migrate\process\ProcessField
- * @group field
+ * @phpstan-ignore classConstant.deprecatedClass
  */
+#[CoversClass(ProcessField::class)]
+#[Group('field')]
 class ProcessFieldTest extends MigrateTestCase {
 
   /**
+   * The migrate field manager.
+   *
    * @var \Drupal\migrate_drupal\Plugin\MigrateFieldPluginManagerInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected MigrateFieldPluginManagerInterface|ObjectProphecy $fieldManager;
 
   /**
+   * The migrate field plugin.
+   *
    * @var \Drupal\migrate_drupal\Plugin\MigrateFieldInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected MigrateFieldInterface|ObjectProphecy $fieldPlugin;
 
   /**
+   * The migration executable.
+   *
    * @var \Drupal\migrate\MigrateExecutable|\Prophecy\Prophecy\ObjectProphecy
    */
   protected MigrateExecutable|ObjectProphecy $migrateExecutable;
 
   /**
+   * The migration.
+   *
    * @var \Drupal\migrate\Plugin\MigrationInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected MigrationInterface|ObjectProphecy $migration;
 
   /**
+   * The row object.
+   *
    * @var \Drupal\migrate\Row|\Prophecy\Prophecy\ObjectProphecy
    */
   protected Row|ObjectProphecy $row;
@@ -77,10 +91,8 @@ class ProcessFieldTest extends MigrateTestCase {
    *   The MigrateException message to expect.
    * @param bool $plugin_not_found
    *   Whether the field plugin is not found.
-   *
-   * @covers ::transform
-   * @dataProvider providerTestTransform
    */
+  #[DataProvider('providerTestTransform')]
   public function testTransform($method, $value, $expected_value, $migrate_exception = '', $plugin_not_found = FALSE): void {
     if ($method) {
       $this->fieldPlugin->$method($this->row->reveal())->willReturn($expected_value);

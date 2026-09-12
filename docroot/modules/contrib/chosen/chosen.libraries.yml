@@ -22,6 +22,10 @@ chosen.claro:
   css:
     component:
       css/chosen.claro.css: {}
+chosen.gin:
+  css:
+    component:
+      css/chosen.gin.css: {}
 chosen.bef:
   js:
     js/chosen-bef.js: {}

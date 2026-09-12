@@ -47,7 +47,7 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
  *       "disable" = "Drupal\commerce_promotion\Form\PromotionDisableForm",
  *       "edit" = "Drupal\commerce_promotion\Form\PromotionForm",
  *       "duplicate" = "Drupal\commerce_promotion\Form\PromotionForm",
- *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
+ *       "delete" = "Drupal\commerce_promotion\Form\PromotionDeleteForm"
  *     },
  *     "local_task_provider" = {
  *       "default" = "Drupal\entity\Menu\DefaultEntityLocalTaskProvider",
@@ -684,6 +684,8 @@ class Promotion extends CommerceContentEntityBase implements PromotionInterface 
    * {@inheritdoc}
    */
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+
     // Delete the linked coupons and usage records.
     $coupons = [];
     foreach ($entities as $entity) {

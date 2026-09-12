@@ -2,8 +2,9 @@
 
 namespace Drupal\eck\Entity;
 
+use Drupal\Core\Entity\BundleEntityStorageInterface;
 use Drupal\Core\Entity\ContentEntityBase;
-use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -16,16 +17,10 @@ use Drupal\user\UserInterface;
  *
  * @ingroup eck
  */
-class EckEntity extends ContentEntityBase implements EckEntityInterface, EntityPublishedInterface {
+class EckEntity extends ContentEntityBase implements EckEntityInterface {
 
   use EntityPublishedTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $values, $entity_type, $bundle = FALSE, $translations = []) {
-    parent::__construct($values, $entity_type, $bundle, $translations);
-  }
+  use EntityChangedTrait;
 
   /**
    * {@inheritdoc}
@@ -37,11 +32,48 @@ class EckEntity extends ContentEntityBase implements EckEntityInterface, EntityP
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \UnexpectedValueException
    */
   public static function create(array $values = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
-    $storage = $entity_type_manager->getStorage($values['entity_type']);
-    return $storage->create($values);
+
+    if (isset($values['entity_type'])) {
+      $storage = $entity_type_manager->getStorage($values['entity_type']);
+      return $storage->create($values);
+    }
+
+    if (version_compare(\Drupal::VERSION, '9.3', '>=')) {
+      $entity_type_repository = \Drupal::service('entity_type.repository');
+      $class_name = static::class;
+      $entity_type_id = $entity_type_repository->getEntityTypeFromClass($class_name);
+      $storage = $entity_type_manager->getStorage($entity_type_id);
+
+      // Always explicitly specify the bundle if the entity has a bundle class.
+      if ($storage instanceof BundleEntityStorageInterface && ($bundle = $storage->getBundleFromClass($class_name))) {
+        $values[$storage->getEntityType()->getKey('bundle')] = $bundle;
+      }
+
+      return $storage->create($values);
+    }
+
+    throw new \UnexpectedValueException('ECK does not support calling EckEntity::create() without providing an entity_type in the $values argument.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
+
+    foreach (array_keys($this->getTranslationLanguages()) as $langcode) {
+      $translation = $this->getTranslation($langcode);
+
+      // If no owner has been set explicitly, make the anonymous user the owner.
+      if (!$translation->getOwner()) {
+        $translation->setOwnerId(0);
+      }
+    }
   }
 
   /**
@@ -68,8 +100,39 @@ class EckEntity extends ContentEntityBase implements EckEntityInterface, EntityP
    * {@inheritdoc}
    */
   public function isPublished() {
-    $key = $this->getEntityType()->getKey('published');
-    return (bool) $this->hasField($key) ? $this->get($key)->value : TRUE;
+    $entityType = $this->getEntityType();
+
+    if ($entityType->hasKey('published')) {
+      return $this->get($entityType->getKey('published'))->value;
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPublished() {
+    $entityType = $this->getEntityType();
+
+    if ($entityType->hasKey('published')) {
+      return $this->set($entityType->getKey('published'), TRUE);
+    }
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUnpublished() {
+    $entityType = $this->getEntityType();
+
+    if ($entityType->hasKey('published')) {
+      return $this->set($entityType->getKey('published'), FALSE);
+    }
+
+    return $this;
   }
 
   /**

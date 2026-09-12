@@ -4,12 +4,16 @@ namespace Drupal\Tests\paragraphs_library\Functional;
 
 use Drupal\Core\Url;
 use Drupal\Tests\paragraphs\Functional\WidgetStable\ParagraphsTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests paragraphs library functionality.
  *
  * @group paragraphs_library
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs_library')]
 class ParagraphsLibraryTest extends ParagraphsTestBase {
 
   /**
@@ -218,8 +222,8 @@ class ParagraphsLibraryTest extends ParagraphsTestBase {
 
     $this->assertSession()->pageTextContains('Used');
     $result = $this->cssSelect('.views-field-count');
-    $this->assertEquals(trim($result[1]->getText()), '4', 'Usage info is correctly displayed.');
-    $this->assertSession()->linkNotExists('4');
+    $this->assertEquals(trim($result[1]->getText()), '3', 'Usage info is correctly displayed.');
+    $this->assertSession()->linkNotExists('3');
 
     $this->clickLink('Edit');
     $this->assertSession()->pageTextContains('Modifications on this form will affect all existing usages of this entity.');
@@ -270,7 +274,7 @@ class ParagraphsLibraryTest extends ParagraphsTestBase {
 
     $this->loginAsAdmin(['administer paragraphs library', 'access entity usage statistics']);
     $this->drupalGet('admin/content/paragraphs');
-    $this->assertSession()->linkExists('4', 0, 'Link to usage statistics is available for user with permission.');
+    $this->assertSession()->linkExists('3', 0, 'Link to usage statistics is available for user with permission.');
 
     $element = $this->cssSelect('th.views-field-paragraphs__target-id');
     $this->assertEquals($element[0]->getText(), 'Paragraphs', 'Paragraphs column is available.');

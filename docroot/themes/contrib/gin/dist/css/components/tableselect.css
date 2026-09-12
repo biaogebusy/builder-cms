@@ -63,13 +63,7 @@
 .block-system > .views-form [data-drupal-selector*=edit-header].is-sticky,
 .view-content .views-form [data-drupal-selector*=edit-header].is-sticky {
   z-index: 4;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .block-system > .views-form [data-drupal-selector*=edit-header].is-sticky,
-  .view-content .views-form [data-drupal-selector*=edit-header].is-sticky {
-    animation: fadeInBottom 320ms 1 forwards;
-  }
+  animation: fadeInBottom 320ms 1 forwards;
 }
 
 .block-system > .views-form [data-drupal-selector*=edit-header],

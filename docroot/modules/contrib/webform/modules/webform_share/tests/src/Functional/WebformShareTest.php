@@ -24,7 +24,7 @@ class WebformShareTest extends WebformBrowserTestBase {
   /**
    * Test share.
    */
-  public function testShare() {
+  public function testShare(): void {
     global $base_url;
 
     $assert_session = $this->assertSession();
@@ -152,13 +152,13 @@ class WebformShareTest extends WebformBrowserTestBase {
       '#type' => 'webform_share_script',
       '#webform' => $webform,
     ];
-    $actual_script_tag = $renderer->renderPlain($build);
+    $actual_script_tag = $renderer->renderInIsolation($build);
 
     $src = $base_url . "/webform/contact/share.js";
     $src = preg_replace('#^https?:#', '', $src);
     $expected_script_tag = '<script src="' . $src . '"></script>' . PHP_EOL;
 
-    $this->assertEquals($expected_script_tag, $actual_script_tag);
+    $this->assertEquals($expected_script_tag, (string) $actual_script_tag);
   }
 
 }

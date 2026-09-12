@@ -2,6 +2,9 @@
 
 namespace Drupal\views\Entity;
 
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
@@ -13,37 +16,37 @@ use Drupal\views\ViewEntityInterface;
 
 /**
  * Defines a View configuration entity class.
- *
- * @ConfigEntityType(
- *   id = "view",
- *   label = @Translation("View", context = "View entity type"),
- *   label_collection = @Translation("Views", context = "View entity type"),
- *   label_singular = @Translation("view", context = "View entity type"),
- *   label_plural = @Translation("views", context = "View entity type"),
- *   label_count = @PluralTranslation(
- *     singular = "@count view",
- *     plural = "@count views",
- *     context = "View entity type",
- *   ),
- *   admin_permission = "administer views",
- *   entity_keys = {
- *     "id" = "id",
- *     "label" = "label",
- *     "status" = "status"
- *   },
- *   config_export = {
- *     "id",
- *     "label",
- *     "module",
- *     "description",
- *     "tag",
- *     "base_table",
- *     "base_field",
- *     "display",
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'view',
+  label: new TranslatableMarkup('View', ['context' => 'View entity type']),
+  label_collection: new TranslatableMarkup('Views', ['context' => 'View entity type']),
+  label_singular: new TranslatableMarkup('view', ['context' => 'View entity type']),
+  label_plural: new TranslatableMarkup('views', ['context' => 'View entity type']),
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'label',
+    'status' => 'status',
+  ],
+  admin_permission: 'administer views',
+  label_count: [
+    'singular' => '@count view',
+    'plural' => '@count views',
+  ],
+  config_export: [
+    'id',
+    'label',
+    'module',
+    'description',
+    'tag',
+    'base_table',
+    'base_field',
+    'display',
+  ],
+)]
 class View extends ConfigEntityBase implements ViewEntityInterface {
+
+  use StringTranslationTrait;
 
   /**
    * The name of the base table this view will use.
@@ -139,11 +142,7 @@ class View extends ConfigEntityBase implements ViewEntityInterface {
    * {@inheritdoc}
    */
   public function label() {
-    if (!$label = $this->get('label')) {
-      @trigger_error('Saving a view without an explicit label is deprecated in drupal:10.2.0 and will raise an error in drupal:11.0.0. See https://www.drupal.org/node/3381669', E_USER_DEPRECATED);
-      $label = $this->id();
-    }
-    return $label;
+    return $this->get('label');
   }
 
   /**
@@ -154,10 +153,10 @@ class View extends ConfigEntityBase implements ViewEntityInterface {
       return FALSE;
     }
 
-    $plugin = Views::pluginManager('display')->getDefinition($plugin_id);
+    $plugin = \Drupal::service('plugin.manager.views.display')->getDefinition($plugin_id);
 
     if (empty($plugin)) {
-      $plugin['title'] = t('Broken');
+      $plugin['title'] = $this->t('Broken');
     }
 
     if (empty($id)) {
@@ -205,6 +204,7 @@ class View extends ConfigEntityBase implements ViewEntityInterface {
    *   Which plugin should be used for the new display ID.
    *
    * @return string
+   *   The generated display ID.
    */
   protected function generateDisplayId($plugin_id) {
     // 'default' is singular and is unique, so just go with 'default'
@@ -301,7 +301,7 @@ class View extends ConfigEntityBase implements ViewEntityInterface {
     // Calculating the cacheability metadata is only needed when the view is
     // saved through the UI or API. It should not be done when we are syncing
     // configuration or installing modules.
-    if (!$this->isSyncing() && !$this->hasTrustedData()) {
+    if (!$this->isSyncing()) {
       $this->addCacheMetadata();
     }
   }
@@ -353,7 +353,7 @@ class View extends ConfigEntityBase implements ViewEntityInterface {
     $this->invalidateCaches();
 
     // Rebuild the router if this is a new view, or its status changed.
-    if (!isset($this->original) || ($this->status() != $this->original->status())) {
+    if (!$this->getOriginal() || ($this->status() != $this->getOriginal()->status())) {
       \Drupal::service('router.builder')->setRebuildNeeded();
     }
   }
@@ -462,7 +462,7 @@ class View extends ConfigEntityBase implements ViewEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $keys = parent::__sleep();
     unset($keys[array_search('executable', $keys)]);
     return $keys;
@@ -481,7 +481,7 @@ class View extends ConfigEntityBase implements ViewEntityInterface {
    * {@inheritdoc}
    */
   public function onDependencyRemoval(array $dependencies) {
-    $changed = FALSE;
+    $changed = parent::onDependencyRemoval($dependencies);
 
     // Don't intervene if the views module is removed.
     if (isset($dependencies['module']) && in_array('views', $dependencies['module'])) {

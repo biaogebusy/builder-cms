@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Entity;
 
+use Drupal\Core\Entity\Controller\EntityRevisionViewController;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests revision view page.
- *
- * @group Entity
- * @coversDefaultClass \Drupal\Core\Entity\Controller\EntityRevisionViewController
  */
+#[CoversClass(EntityRevisionViewController::class)]
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class RevisionViewTest extends BrowserTestBase {
 
   /**
@@ -48,10 +53,9 @@ class RevisionViewTest extends BrowserTestBase {
    * @param string $expectedPageTitle
    *   Expected page title.
    *
-   * @covers ::__invoke
-   *
-   * @dataProvider providerRevisionPage
+   * @legacy-covers ::__invoke
    */
+  #[DataProvider('providerRevisionPage')]
   public function testRevisionPage(string $entityTypeId, string $expectedPageTitle): void {
     /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = \Drupal::entityTypeManager()->getStorage($entityTypeId);
@@ -111,7 +115,7 @@ class RevisionViewTest extends BrowserTestBase {
   public static function providerRevisionPage(): array {
     return [
       ['entity_test_rev', 'Revision of revision 1, view revision'],
-      ['entity_test_revlog', 'Revision of revision 1, view revision from Sun, 01/11/2009 - 16:00'],
+      ['entity_test_revlog', 'Revision of revision 1, view revision from Sun, 11 Jan 2009 - 16:00'],
     ];
   }
 

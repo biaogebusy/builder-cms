@@ -1,6 +1,7 @@
 <div {{ '{{ attributes }}' }}>
-  {{ '{# ' }}Keep the outer div whenever possible it is a nice way to ensure the presence of "attributes" {{ '#}' }}
-  {{ '{% ' }}block example_block {{ '%}' }}
-    The contents of the example block
-  {{ '{% ' }}endblock {{ '%}' }}
+  {% if component_slots|length > 0 %}
+    {% for slot in component_slots %}
+  {{ '{% block ' }}{{ slot.name }}{{ ' %}' }}{{ '{% endblock %}' }}
+    {% endfor %}
+  {% endif %}
 </div>

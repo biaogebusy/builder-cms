@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views_ui\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the UI for feed display plugin.
  *
- * @group views_ui
  * @see \Drupal\views\Plugin\views\display\Feed
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class DisplayFeedTest extends UITestBase {
 
   /**
@@ -45,7 +49,7 @@ class DisplayFeedTest extends UITestBase {
    * @param string $view_name
    *   The view name to check against.
    */
-  protected function checkFeedViewUi($view_name) {
+  protected function checkFeedViewUi($view_name): void {
     $this->drupalGet('admin/structure/views');
     // Verify that the page lists the $view_name view.
     // Regression test: ViewListBuilder::getDisplayPaths() did not properly

@@ -6,12 +6,14 @@ namespace Drupal\Tests\block\Functional;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests blocks are being rendered in order by weight.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockRenderOrderTest extends BrowserTestBase {
 
   /**
@@ -44,17 +46,17 @@ class BlockRenderOrderTest extends BrowserTestBase {
     $region = 'header';
     $test_blocks = [
       'stark_powered' => [
-        'weight' => '-3',
+        'weight' => -3,
         'id' => 'stark_powered',
         'label' => 'Test block A',
       ],
       'stark_by' => [
-        'weight' => '3',
+        'weight' => 3,
         'id' => 'stark_by',
         'label' => 'Test block C',
       ],
       'stark_drupal' => [
-        'weight' => '3',
+        'weight' => 3,
         'id' => 'stark_drupal',
         'label' => 'Test block B',
       ],

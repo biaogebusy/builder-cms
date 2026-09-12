@@ -9,8 +9,8 @@ use Drupal\Core\Entity\EntityViewBuilder as CoreEntityViewBuilder;
 /**
  * Provides a entity view builder with contextual links support.
  *
- * @deprecated in favor of \Drupal\Core\Entity\EntityViewBuilder. Use that
- *   instead.
+ * @deprecated in entity:8.x-1.0-beta3 and is removed from entity:2.0.0. Use \Drupal\Core\Entity\EntityViewBuilder instead.
+ * @see https://www.drupal.org/node/2952495
  */
 class EntityViewBuilder extends CoreEntityViewBuilder {
 

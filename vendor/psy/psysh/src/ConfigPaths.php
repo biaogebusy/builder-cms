@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -28,8 +28,8 @@ class ConfigPaths
      *
      * @see self::overrideDirs
      *
-     * @param string[]     $overrides Directory overrides
-     * @param EnvInterface $env
+     * @param string[]          $overrides Directory overrides
+     * @param EnvInterface|null $env
      */
     public function __construct(array $overrides = [], ?EnvInterface $env = null)
     {
@@ -211,6 +211,69 @@ class ConfigPaths
     }
 
     /**
+     * Get the local config root directory (cwd only, no ancestor walking).
+     *
+     * Used for local `.psysh.php` config file detection. Returns the current
+     * working directory, or null if getcwd() fails.
+     */
+    public function localConfigRoot(): ?string
+    {
+        $cwd = \getcwd();
+        if ($cwd === false) {
+            return null;
+        }
+
+        return \strtr($cwd, '\\', '/');
+    }
+
+    /**
+     * Find a project root for trust decisions.
+     *
+     * Walks up ancestors to find the nearest composer.json or composer.lock.
+     * If none found, falls back to the nearest .psysh.php, then to the current
+     * working directory.
+     *
+     * Used for trust decisions on Composer autoload and project-level features.
+     */
+    public function projectRoot(?string $cwd = null): ?string
+    {
+        $cwd = $cwd ?? \getcwd();
+        if ($cwd === false) {
+            return null;
+        }
+
+        $dir = \strtr($cwd, '\\', '/');
+        $root = null;
+        $localConfigRoot = null;
+
+        $current = $dir;
+        $parent = \dirname($current);
+
+        while ($current !== $parent) {
+            if ($root === null && (@\is_file($current.'/composer.json') || @\is_file($current.'/composer.lock'))) {
+                $root = $current;
+            }
+
+            if ($localConfigRoot === null && @\is_file($current.'/.psysh.php')) {
+                $localConfigRoot = $current;
+            }
+
+            $current = $parent;
+            $parent = \dirname($current);
+        }
+
+        if ($root !== null) {
+            return $root;
+        }
+
+        if ($localConfigRoot !== null) {
+            return $localConfigRoot;
+        }
+
+        return $dir;
+    }
+
+    /**
      * Find real data files in config directories.
      *
      * @param string[] $names Config file names
@@ -289,9 +352,7 @@ class ConfigPaths
     private function allDirNames(array $baseDirs): array
     {
         $baseDirs = \array_filter($baseDirs);
-        $dirs = \array_map(function ($dir) {
-            return \strtr($dir, '\\', '/').'/psysh';
-        }, $baseDirs);
+        $dirs = \array_map(fn ($dir) => \strtr($dir, '\\', '/').'/psysh', $baseDirs);
 
         // Add ~/.psysh
         if ($home = $this->getEnv('HOME')) {
@@ -358,7 +419,7 @@ class ConfigPaths
         $relativeTo = $relativeTo ?: \getcwd();
         if ($relativeTo !== false) {
             $relativeTo = \rtrim(\strtr($relativeTo, '\\', '/'), '/').'/';
-            if (\str_starts_with($path, $relativeTo)) {
+            if (\strpos($path, $relativeTo) === 0) {
                 return './'.\substr($path, \strlen($relativeTo));
             }
         }
@@ -367,7 +428,7 @@ class ConfigPaths
         $homeDir = $homeDir ?: (new self())->homeDir();
         if ($homeDir && $homeDir !== '/') {
             $homeDir = \rtrim(\strtr($homeDir, '\\', '/'), '/').'/';
-            if (\str_starts_with($path, $homeDir)) {
+            if (\strpos($path, $homeDir) === 0) {
                 return '~/'.\substr($path, \strlen($homeDir));
             }
         }

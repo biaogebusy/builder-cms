@@ -6,16 +6,28 @@ namespace Drupal\Tests\serialization\Unit\Normalizer;
 
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\Plugin\DataType\BooleanData;
+use Drupal\Core\TypedData\Plugin\DataType\DecimalData;
+use Drupal\Core\TypedData\Plugin\DataType\DurationIso8601;
+use Drupal\Core\TypedData\Plugin\DataType\Email;
+use Drupal\Core\TypedData\Plugin\DataType\FloatData;
 use Drupal\Core\TypedData\Plugin\DataType\IntegerData;
 use Drupal\Core\TypedData\Plugin\DataType\StringData;
-use Drupal\Tests\UnitTestCase;
+use Drupal\Core\TypedData\Plugin\DataType\Uri;
 use Drupal\serialization\Normalizer\PrimitiveDataNormalizer;
+use Drupal\Tests\serialization\Traits\JsonSchemaTestTrait;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\serialization\Normalizer\PrimitiveDataNormalizer
- * @group serialization
+ * Tests Drupal\serialization\Normalizer\PrimitiveDataNormalizer.
  */
+#[CoversClass(PrimitiveDataNormalizer::class)]
+#[Group('serialization')]
 class PrimitiveDataNormalizerTest extends UnitTestCase {
+
+  use JsonSchemaTestTrait;
 
   /**
    * The TypedDataNormalizer instance.
@@ -34,15 +46,15 @@ class PrimitiveDataNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::supportsNormalization
-   * @dataProvider dataProviderPrimitiveData
+   * Tests supports normalization.
    */
+  #[DataProvider('dataProviderPrimitiveData')]
   public function testSupportsNormalization($primitive_data, $expected): void {
     $this->assertTrue($this->normalizer->supportsNormalization($primitive_data));
   }
 
   /**
-   * @covers ::supportsNormalization
+   * Tests supports normalization fail.
    */
   public function testSupportsNormalizationFail(): void {
     // Test that an object not implementing PrimitiveInterface fails.
@@ -50,9 +62,9 @@ class PrimitiveDataNormalizerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::normalize
-   * @dataProvider dataProviderPrimitiveData
+   * Tests normalize.
    */
+  #[DataProvider('dataProviderPrimitiveData')]
   public function testNormalize($primitive_data, $expected): void {
     $this->assertSame($expected, $this->normalizer->normalize($primitive_data));
   }
@@ -100,6 +112,32 @@ class PrimitiveDataNormalizerTest extends UnitTestCase {
     $data['boolean-null'] = [$boolean, NULL];
 
     return $data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function jsonSchemaDataProvider(): array {
+    $email = new Email(DataDefinition::createFromDataType('email'));
+    $email->setValue('test@example.com');
+    $float = new FloatData(DataDefinition::createFromDataType('float'));
+    $float->setValue(9.99);
+    $uri = new Uri(DataDefinition::createFromDataType('uri'));
+    $uri->setValue('https://example.com');
+    $decimal = new DecimalData(DataDefinition::createFromDataType('decimal'));
+    $decimal->setValue('9.99');
+    // TimeSpan normalizes to an integer, however Iso8601 matches a format.
+    $duration = new DurationIso8601(DataDefinition::createFromDataType('duration_iso8601'));
+    $duration->setValue('P1D');
+
+    return [
+      'email' => [$email],
+      'float' => [$float],
+      'uri' => [$uri],
+      'decimal' => [$decimal],
+      'duration' => [$duration],
+      ...array_map(fn ($value) => [$value[0]], static::dataProviderPrimitiveData()),
+    ];
   }
 
 }

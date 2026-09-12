@@ -324,7 +324,6 @@
       const addedCss = [
         `${prefix} .ck.ck-content * {display:revert;background:revert;color:initial;padding:revert;}`,
         `${prefix} .ck.ck-content li {display:list-item}`,
-        `${prefix} .ck.ck-content ol li {list-style-type: decimal}`,
       ];
 
       const prefixedCss = [...addedCss].join('\n');
@@ -429,9 +428,18 @@
           }
 
           // If the textarea is disabled, enable CKEditor's read-only mode.
-          if (element.hasAttribute('disabled')) {
-            editor.enableReadOnlyMode('ckeditor5_disabled');
-          }
+          const readOnlyIfDisabled = () => {
+            if (element.disabled) {
+              editor.enableReadOnlyMode('ckeditor5_disabled');
+            } else {
+              editor.disableReadOnlyMode('ckeditor5_disabled');
+            }
+          };
+          const disabledMutationObserver = new MutationObserver(() => {
+            readOnlyIfDisabled();
+          });
+          disabledMutationObserver.observe(element, { attributes: true });
+          readOnlyIfDisabled();
 
           // Integrate CKEditor 5 viewport offset with Drupal displace.
           // @see \Drupal\Tests\ckeditor5\FunctionalJavascript\CKEditor5ToolbarTest
@@ -599,11 +607,12 @@
      */
     openDialog(url, saveCallback, dialogSettings) {
       // Add a consistent dialog class.
-      const classes = dialogSettings.dialogClass
-        ? dialogSettings.dialogClass.split(' ')
+      dialogSettings.classes = dialogSettings.classes || {};
+      const classes = dialogSettings.classes['ui-dialog']
+        ? dialogSettings.classes['ui-dialog'].split(' ')
         : [];
       classes.push('ui-dialog--narrow');
-      dialogSettings.dialogClass = classes.join(' ');
+      dialogSettings.classes['ui-dialog'] = classes.join(' ');
       dialogSettings.autoResize =
         window.matchMedia('(min-width: 600px)').matches;
       dialogSettings.width = 'auto';
@@ -622,6 +631,30 @@
 
       // Store the save callback to be executed when this dialog is closed.
       Drupal.ckeditor5.saveCallback = saveCallback;
+    },
+  };
+
+  Drupal.behaviors.editorStyleFix = {
+    attach(context) {
+      // CKEditor's DLL injects a style tag that overrides native list
+      // type styling. The following find the style(s) causing the problem
+      // and removes them.
+      // @todo remove this entire behavior when this issue is fixed
+      //  https://github.com/ckeditor/ckeditor5/issues/14613
+      [...document.styleSheets]
+        .filter((sheet) => sheet.ownerNode.hasAttribute('data-cke'))
+        .forEach((sheet) => {
+          [...sheet.cssRules].forEach((rule, ruleIndex) => {
+            if (
+              rule?.selectorText &&
+              (rule.selectorText.includes(' ol') ||
+                rule.selectorText.includes(' ul')) &&
+              !rule.selectorText.includes('type')
+            ) {
+              sheet.cssRules[ruleIndex].style['list-style-type'] = null;
+            }
+          });
+        });
     },
   };
 

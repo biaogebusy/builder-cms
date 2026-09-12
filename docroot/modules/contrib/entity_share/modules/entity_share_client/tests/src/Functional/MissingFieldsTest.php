@@ -20,6 +20,19 @@ class MissingFieldsTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'taxonomy',
+    'field',
+    'text',
+    'menu_ui',
+    'entity_share_test',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'node';
 
   /**

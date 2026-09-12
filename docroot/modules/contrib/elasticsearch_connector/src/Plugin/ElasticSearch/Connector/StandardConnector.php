@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\elasticsearch_connector\Connector\ElasticSearchConnectorInterface;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -22,6 +23,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class StandardConnector extends PluginBase implements ElasticSearchConnectorInterface, ContainerFactoryPluginInterface {
+
+  /**
+   * Drupal's HTTP Client, which might be configured to use a proxy.
+   *
+   * @var \Psr\Http\Client\ClientInterface
+   */
+  protected ClientInterface $httpClient;
 
   /**
    * Constructs a new StandardConnector.
@@ -48,12 +56,14 @@ class StandardConnector extends PluginBase implements ElasticSearchConnectorInte
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
+    $instance = new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
       $container->get('logger.channel.elasticsearch_connector_client')
     );
+    $instance->httpClient = $container->get('http_client');
+    return $instance;
   }
 
   /**
@@ -97,6 +107,7 @@ class StandardConnector extends PluginBase implements ElasticSearchConnectorInte
   public function getClient(): Client {
     // We only support one host.
     $clientBuilder = ClientBuilder::create()
+      ->setHttpClient($this->httpClient)
       ->setHosts([$this->configuration['url']]);
 
     if ($this->configuration['enable_debug_logging']) {

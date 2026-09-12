@@ -5,20 +5,22 @@ declare(strict_types=1);
 namespace Drupal\Tests\link\Kernel;
 
 use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 use Drupal\link\LinkItemInterface;
+use Drupal\Tests\field\Kernel\FieldKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the new entity API for the link field type.
- *
- * @group link
  */
+#[Group('link')]
+#[RunTestsInSeparateProcesses]
 class LinkItemTest extends FieldKernelTestBase {
 
   /**
@@ -89,6 +91,7 @@ class LinkItemTest extends FieldKernelTestBase {
       ],
       'external' => TRUE,
     ], $entity->field_test->first()->getUrl()->getOptions());
+    $this->assertEquals($url, $entity->field_test->resolvable_uri);
     $entity->name->value = $this->randomMachineName();
     $entity->save();
 
@@ -97,6 +100,7 @@ class LinkItemTest extends FieldKernelTestBase {
     $entity = EntityTest::load($id);
     $this->assertInstanceOf(FieldItemListInterface::class, $entity->field_test);
     $this->assertInstanceOf(FieldItemInterface::class, $entity->field_test[0]);
+    $this->assertEquals($url, $entity->field_test->resolvable_uri);
     $this->assertEquals($parsed_url['path'], $entity->field_test->uri);
     $this->assertEquals($parsed_url['path'], $entity->field_test[0]->uri);
     $this->assertEquals($title, $entity->field_test->title);
@@ -121,24 +125,26 @@ class LinkItemTest extends FieldKernelTestBase {
     $new_class = $this->randomMachineName();
     $entity->field_test->uri = $new_url;
     $entity->field_test->title = $new_title;
-    $entity->field_test->first()->get('options')->set('query', NULL);
+    $entity->field_test->first()->get('options')->set('query', []);
     $entity->field_test->first()->get('options')->set('attributes', ['class' => $new_class]);
     $this->assertEquals($new_url, $entity->field_test->uri);
     $this->assertEquals($new_title, $entity->field_test->title);
     $this->assertEquals($new_class, $entity->field_test->options['attributes']['class']);
-    $this->assertNull($entity->field_test->options['query']);
+    $this->assertEmpty($entity->field_test->options['query']);
 
     // Read changed entity and assert changed values.
     $entity->save();
     $entity = EntityTest::load($id);
     $this->assertEquals($new_url, $entity->field_test->uri);
+    $this->assertEquals($entity->field_test->resolvable_uri, $new_url);
     $this->assertEquals($new_title, $entity->field_test->title);
     $this->assertEquals($new_class, $entity->field_test->options['attributes']['class']);
 
-    // Check that if we only set uri the default values for title and options
-    // are also initialized.
+    // Check that if we only set uri the default values for url, title, and
+    // options are also initialized.
     $entity->field_test = ['uri' => 'internal:/node/add'];
     $this->assertEquals('internal:/node/add', $entity->field_test->uri);
+    $this->assertEquals($entity->field_test->resolvable_uri, '/node/add');
     $this->assertNull($entity->field_test->title);
     $this->assertSame([], $entity->field_test->options);
 
@@ -149,6 +155,7 @@ class LinkItemTest extends FieldKernelTestBase {
       'options' => ['query' => NULL],
     ];
     $this->assertEquals('internal:/node/add', $entity->field_test->uri);
+    $this->assertEquals($entity->field_test->resolvable_uri, '/node/add');
     $this->assertNull($entity->field_test->title);
     $this->assertNull($entity->field_test->options['query']);
 
@@ -176,6 +183,38 @@ class LinkItemTest extends FieldKernelTestBase {
     $entity->field_test_external->generateSampleItems();
     $entity->field_test_internal->generateSampleItems();
     $this->entityValidateAndSave($entity);
+
+    // Test setting up computed property also sets up other values.
+    $entity = EntityTest::create();
+    $url = 'https://www.drupal.org?test_param=test_value#top';
+    $parsed_url = UrlHelper::parse($url);
+    $entity->field_test->resolvable_uri = $url;
+    $this->assertEquals($parsed_url['path'], $entity->field_test->uri);
+    $this->assertEquals([
+      'query' => $parsed_url['query'],
+      'fragment' => $parsed_url['fragment'],
+      'external' => TRUE,
+    ], $entity->field_test->first()->getUrl()->getOptions());
+    $entity->name->value = $this->randomMachineName();
+    $entity->save();
+
+    // Verify that the field value is changed.
+    $id = $entity->id();
+    $entity = EntityTest::load($id);
+    $this->assertInstanceOf(FieldItemListInterface::class, $entity->field_test);
+    $this->assertInstanceOf(FieldItemInterface::class, $entity->field_test[0]);
+    $this->assertEquals($url, $entity->field_test->resolvable_uri);
+    $this->assertEquals($entity->field_test->uri, $parsed_url['path']);
+    $this->assertEquals($entity->field_test[0]->uri, $parsed_url['path']);
+    $this->assertEquals($entity->field_test->options['query'], $parsed_url['query']);
+    $this->assertEquals($entity->field_test->options['fragment'], $parsed_url['fragment']);
+
+    // Check that if we only set url the default values for uri, title, and
+    // options are also initialized.
+    $entity->field_test = ['resolvable_uri' => '/node/add'];
+    $this->assertEquals($entity->field_test->uri, 'internal:/node/add');
+    $this->assertEquals($entity->field_test->resolvable_uri, '/node/add');
+    $this->assertNull($entity->field_test->title);
   }
 
 }

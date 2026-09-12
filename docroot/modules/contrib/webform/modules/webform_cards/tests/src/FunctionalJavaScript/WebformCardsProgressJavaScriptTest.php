@@ -22,7 +22,7 @@ class WebformCardsProgressJavaScriptTest extends WebformWebDriverTestBase {
   /**
    * Test webform cards progress.
    */
-  public function testProgress() {
+  public function testProgress(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();
@@ -63,6 +63,7 @@ class WebformCardsProgressJavaScriptTest extends WebformWebDriverTestBase {
 
     // Move to preview.
     $page->pressButton('edit-preview-next');
+    $assert_session->waitForElement('css', '.webform-preview');
 
     // Check that preview is loaded.
     $this->assertCssSelect('.webform-preview');
@@ -108,6 +109,7 @@ class WebformCardsProgressJavaScriptTest extends WebformWebDriverTestBase {
 
     // Check preview URL with ?page=webform_preview.
     $page->pressButton('edit-preview-next');
+    $assert_session->waitForElement('css', '.webform-preview');
     $this->assertQuery('custom_param=1&page=webform_preview');
 
     /* ********************************************************************** */
@@ -199,7 +201,7 @@ class WebformCardsProgressJavaScriptTest extends WebformWebDriverTestBase {
    * @param string $expected_query
    *   The expected query string.
    */
-  protected function assertQuery($expected_query = ''): void {
+  protected function assertQuery(string $expected_query = ''): void {
     $actual_query = parse_url($this->getSession()->getCurrentUrl(), PHP_URL_QUERY) ?: '';
     $this->assertEquals($expected_query, $actual_query);
   }

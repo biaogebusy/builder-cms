@@ -4,7 +4,7 @@
       once(
         'managementLinksToggle',
         '.management-links-toggle',
-        context,
+        context
       ).forEach((toggle) => {
         toggle.addEventListener('click', this.toggleLinks);
       });

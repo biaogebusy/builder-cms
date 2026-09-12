@@ -128,7 +128,10 @@ class NegotiationUrlForm extends ConfigFormBase {
       ];
       $form['domain'][$langcode] = [
         '#type' => 'textfield',
-        '#title' => $this->t('%language (%langcode) domain', ['%language' => $language->getName(), '%langcode' => $language->getId()]),
+        '#title' => $this->t('%language (%langcode) domain', [
+          '%language' => $language->getName(),
+          '%langcode' => $language->getId(),
+        ]),
         '#maxlength' => 128,
         '#default_value' => $domains[$langcode] ?? '',
       ];
@@ -155,8 +158,8 @@ class NegotiationUrlForm extends ConfigFormBase {
       $value = $form_state->getValue(['prefix', $langcode]);
       if ($value === '') {
         if (!($default_langcode == $langcode) && $form_state->getValue('language_negotiation_url_part') == LanguageNegotiationUrl::CONFIG_PATH_PREFIX) {
-          // Throw a form error if the prefix is blank for a non-default language,
-          // although it is required for selected negotiation type.
+          // Throw a form error if the prefix is blank for a non-default
+          // language, although it is required for selected negotiation type.
           $form_state->setErrorByName("prefix][$langcode", $this->t('The prefix may only be left blank for the <a href=":url">selected detection fallback language.</a>', [
             ':url' => Url::fromRoute('language.negotiation_selected')->toString(),
           ]));
@@ -170,7 +173,10 @@ class NegotiationUrlForm extends ConfigFormBase {
       elseif (isset($count[$value]) && $count[$value] > 1) {
         // Throw a form error if there are two languages with the same
         // domain/prefix.
-        $form_state->setErrorByName("prefix][$langcode", $this->t('The prefix for %language, %value, is not unique.', ['%language' => $language->getName(), '%value' => $value]));
+        $form_state->setErrorByName("prefix][$langcode", $this->t('The prefix for %language, %value, is not unique.', [
+          '%language' => $language->getName(),
+          '%value' => $value,
+        ]));
       }
     }
 
@@ -181,7 +187,8 @@ class NegotiationUrlForm extends ConfigFormBase {
 
       if ($value === '') {
         if ($form_state->getValue('language_negotiation_url_part') == LanguageNegotiationUrl::CONFIG_DOMAIN) {
-          // Throw a form error if the domain is blank for a non-default language,
+          // Throw a form error if the domain is blank for a non-default
+          // language,
           // although it is required for selected negotiation type.
           $form_state->setErrorByName("domain][$langcode", $this->t('The domain may not be left blank for %language.', ['%language' => $language->getName()]));
         }
@@ -189,7 +196,10 @@ class NegotiationUrlForm extends ConfigFormBase {
       elseif (isset($count[$value]) && $count[$value] > 1) {
         // Throw a form error if there are two languages with the same
         // domain/domain.
-        $form_state->setErrorByName("domain][$langcode", $this->t('The domain for %language, %value, is not unique.', ['%language' => $language->getName(), '%value' => $value]));
+        $form_state->setErrorByName("domain][$langcode", $this->t('The domain for %language, %value, is not unique.', [
+          '%language' => $language->getName(),
+          '%value' => $value,
+        ]));
       }
     }
 

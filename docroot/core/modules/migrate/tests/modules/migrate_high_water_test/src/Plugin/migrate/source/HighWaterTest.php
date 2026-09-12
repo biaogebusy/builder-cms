@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_high_water_test\Plugin\migrate\source;
 
+use Drupal\migrate\Attribute\MigrateSource;
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
 
 /**
  * Source plugin for migration high water tests.
- *
- * @MigrateSource(
- *   id = "high_water_test"
- * )
  */
+#[MigrateSource('high_water_test')]
 class HighWaterTest extends SqlBase {
 
   /**
@@ -32,9 +32,9 @@ class HighWaterTest extends SqlBase {
    */
   public function fields() {
     $fields = [
-      'id' => $this->t('Id'),
-      'title' => $this->t('Title'),
-      'changed' => $this->t('Changed'),
+      'id' => 'Id',
+      'title' => 'Title',
+      'changed' => 'Changed',
     ];
 
     return $fields;

@@ -10,13 +10,13 @@
     "drupal/entity_browser": "Recommended for an improved user experience when using the Paragraphs library module"
   },
   "require-dev": {
-    "drupal/diff": "1.x-dev",
-    "drupal/replicate": "1.x-dev",
-    "drupal/inline_entity_form": "3.x-dev",
-    "drupal/field_group": "3.x-dev",
-    "drupal/block_field": "1.x-dev",
-    "drupal/entity_browser": "2.x-dev",
-    "drupal/entity_usage": "2.x-dev",
+    "drupal/diff": "^1 || ^2",
+    "drupal/replicate": "^1",
+    "drupal/inline_entity_form": "^3",
+    "drupal/field_group": "^4",
+    "drupal/block_field": "^1",
+    "drupal/entity_browser": "^2",
+    "drupal/entity_usage": "^2 || ^5",
     "drupal/search_api": "^1",
     "drupal/feeds": "^3"
   }

@@ -30,7 +30,7 @@ class WebformHandlerTest extends WebformBrowserTestBase {
   /**
    * Tests webform handler plugin.
    */
-  public function testWebformHandler() {
+  public function testWebformHandler(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -300,7 +300,7 @@ class WebformHandlerTest extends WebformBrowserTestBase {
   /**
    * Tests webform handler element plugin.
    */
-  public function testWebformHandlerElement() {
+  public function testWebformHandlerElement(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

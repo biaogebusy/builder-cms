@@ -8,12 +8,14 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests possible XSS security issues in entity references.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceXSSTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -48,7 +50,15 @@ class EntityReferenceXSSTest extends BrowserTestBase {
       'title' => 'My bundle has markup',
     ]);
 
-    $this->createEntityReferenceField('node', 'article', 'entity_reference_test', 'Entity Reference test', 'node', 'default', ['target_bundles' => [$node_type_one->id(), $node_type_two->id()]]);
+    $this->createEntityReferenceField(
+      'node',
+      'article',
+      'entity_reference_test',
+      'Entity Reference test',
+      'node',
+      'default',
+      ['target_bundles' => [$node_type_one->id(), $node_type_two->id()]],
+    );
 
     EntityFormDisplay::load('node.article.default')
       ->setComponent('entity_reference_test', ['type' => 'options_select'])

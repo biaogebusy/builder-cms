@@ -22,7 +22,7 @@ class WebformLogicHelper {
    * @param bool $increment
    *   TRUE to increment tracking and FALSE to decrement tracking.
    *
-   * @return bool
+   * @return bool|void
    *   FALSE when recursion is detected.
    */
   protected static function trackRecursion($value, $increment = TRUE) {

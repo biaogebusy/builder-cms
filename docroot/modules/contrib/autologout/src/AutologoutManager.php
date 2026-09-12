@@ -3,6 +3,7 @@
 namespace Drupal\autologout;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -12,7 +13,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
-use Drupal\Core\Session\SessionManager;
+use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\user\UserData;
 use Drupal\user\UserDataInterface;
@@ -71,9 +72,9 @@ class AutologoutManager implements AutologoutManagerInterface {
   /**
    * The session.
    *
-   * @var \Drupal\Core\Session\SessionManager
+   * @var \Drupal\Core\Session\SessionManagerInterface
    */
-  protected SessionManager $session;
+  protected SessionManagerInterface $session;
 
   /**
    * Data of the user.
@@ -116,7 +117,7 @@ class AutologoutManager implements AutologoutManagerInterface {
    *   Data of the user.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger
    *   Logger service.
-   * @param \Drupal\Core\Session\SessionManager $sessionManager
+   * @param \Drupal\Core\Session\SessionManagerInterface $sessionManager
    *   The session.
    * @param \Drupal\user\UserData $userData
    *   Data of the user.
@@ -127,7 +128,7 @@ class AutologoutManager implements AutologoutManagerInterface {
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, MessengerInterface $messenger, AccountInterface $current_user, LoggerChannelFactoryInterface $logger, SessionManager $sessionManager, UserData $userData, TimeInterface $time, EntityTypeManagerInterface $entityTypeManager, RequestStack $requestStack) {
+  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, MessengerInterface $messenger, AccountInterface $current_user, LoggerChannelFactoryInterface $logger, SessionManagerInterface $sessionManager, UserData $userData, TimeInterface $time, EntityTypeManagerInterface $entityTypeManager, RequestStack $requestStack) {
     $this->moduleHandler = $module_handler;
     $this->autoLogoutSettings = $config_factory->get('autologout.settings');
     $this->configFactory = $config_factory;
@@ -177,6 +178,7 @@ class AutologoutManager implements AutologoutManagerInterface {
    */
   public function inactivityMessage() {
     $message = Xss::filter($this->autoLogoutSettings->get('inactivity_message'));
+    $message = new FormattableMarkup($message, []);
     $type = $this->autoLogoutSettings->get('inactivity_message_type') ?? 'status';
     if (!empty($message)) {
       $this->messenger->addMessage($this->t('@message', ['@message' => $message]), $type);
@@ -277,8 +279,8 @@ class AutologoutManager implements AutologoutManagerInterface {
         ->load($uid);
     }
 
-    if ($user->id() == 0) {
-      // Anonymous doesn't get logged out.
+    if (!$user || $user->id() == 0) {
+      // Anonymous or non-existent user doesn't get logged out.
       return 0;
     }
     $user_timeout = $this->userData->get('autologout', $user->id(), 'timeout');
@@ -329,8 +331,8 @@ class AutologoutManager implements AutologoutManagerInterface {
         ->load($uid);
     }
 
-    if ($user->id() == 0) {
-      // Anonymous doesn't get logged out.
+    if (!$user || $user->id() == 0) {
+      // Anonymous or non-existent user doesn't get logged out.
       return;
     }
 

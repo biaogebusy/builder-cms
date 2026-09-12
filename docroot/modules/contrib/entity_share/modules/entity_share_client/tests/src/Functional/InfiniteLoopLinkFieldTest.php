@@ -17,6 +17,19 @@ class InfiniteLoopLinkFieldTest extends InfiniteLoopTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'node',
+    'field',
+    'text',
+    'link',
+    'menu_ui',
+    'entity_share_test',
+    'jsonapi_extras',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->entityTypeManager->getStorage('jsonapi_resource_config')->create([

@@ -6,14 +6,16 @@ namespace Drupal\Tests\menu_ui\Functional;
 
 use Drupal\Core\Url;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
-use Drupal\Tests\system\Functional\Cache\PageCacheTagsTestBase;
 use Drupal\system\Entity\Menu;
+use Drupal\Tests\system\Functional\Cache\PageCacheTagsTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Menu and Menu Link entities' cache tags.
- *
- * @group menu_ui
  */
+#[Group('menu_ui')]
+#[RunTestsInSeparateProcesses]
 class MenuCacheTagsTest extends PageCacheTagsTestBase {
 
   /**
@@ -45,8 +47,18 @@ class MenuCacheTagsTest extends PageCacheTagsTestBase {
     /** @var \Drupal\Core\Menu\MenuLinkManagerInterface $menu_link_manager */
     $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
     // Move a link into the new menu.
-    $menu_link = $menu_link_manager->updateDefinition('test_page_test.test_page', ['menu_name' => 'llama', 'parent' => '']);
-    $block = $this->drupalPlaceBlock('system_menu_block:llama', ['label' => 'Llama', 'provider' => 'system', 'region' => 'footer']);
+    $menu_link = $menu_link_manager->updateDefinition(
+      'test_page_test.test_page',
+      [
+        'menu_name' => 'llama',
+        'parent' => '',
+      ],
+    );
+    $this->drupalPlaceBlock('system_menu_block:llama', [
+      'label' => 'Llama',
+      'provider' => 'system',
+      'region' => 'footer',
+    ]);
 
     // Prime the page cache.
     $this->verifyPageCache($url, 'MISS');
@@ -55,9 +67,7 @@ class MenuCacheTagsTest extends PageCacheTagsTestBase {
     $expected_tags = [
       'http_response',
       'rendered',
-      'block_view',
       'config:block_list',
-      'config:block.block.' . $block->id(),
       'config:system.menu.llama',
       // The cache contexts associated with the (in)accessible menu links are
       // bubbled.

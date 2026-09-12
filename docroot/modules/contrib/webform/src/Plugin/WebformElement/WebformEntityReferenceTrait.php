@@ -469,9 +469,13 @@ trait WebformEntityReferenceTrait {
       $target_type = (!empty($user_input['properties']['target_type'])) ? $user_input['properties']['target_type'] : 'node';
       $selection_handler = (!empty($user_input['properties']['selection_handler'])) ? $user_input['properties']['selection_handler'] : 'default:' . $target_type;
       $selection_settings = (!empty($user_input['properties']['selection_settings'])) ? $user_input['properties']['selection_settings'] : [];
-      // If the default selection handler has changed when need to update its
-      // value.
-      if (strpos($selection_handler, 'default:') === 0 && $selection_handler !== "default:$target_type") {
+      // Split comma-delimited view arguments from user input.
+      if (isset($selection_settings['view']['arguments'])) {
+        $selection_settings['view']['arguments'] = preg_split('/\s*,\s*/', $selection_settings['view']['arguments']);
+      }
+      // If the default selection handler has changed we need to
+      // update its value.
+      if (str_starts_with($selection_handler, 'default:') && $selection_handler !== "default:$target_type") {
         $selection_handler = "default:$target_type";
         $selection_settings = [];
         NestedArray::setValue($form_state->getUserInput(), ['properties', 'selection_handler'], $selection_handler);
@@ -524,11 +528,6 @@ trait WebformEntityReferenceTrait {
       }
     }
 
-    // Entity Reference fields are no longer supported to reference Paragraphs.
-    // @see paragraphs_form_field_storage_config_edit_form_alter()
-    $target_type_options = $this->entityTypeRepository->getEntityTypeLabels(TRUE);
-    unset($target_type_options[(string) $this->t('Content')]['paragraph']);
-
     $form['entity_reference'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Entity reference settings'),
@@ -538,7 +537,7 @@ trait WebformEntityReferenceTrait {
     $form['entity_reference']['target_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Type of item to reference'),
-      '#options' => $target_type_options,
+      '#options' => $this->entityTypeRepository->getEntityTypeLabels(TRUE),
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select a target type -'),
       '#default_value' => $target_type,
@@ -547,6 +546,7 @@ trait WebformEntityReferenceTrait {
     $form['entity_reference']['selection_handler'] = [
       '#type' => 'select',
       '#title' => $this->t('Reference method'),
+      '#description' => $this->t('For more advanced use-cases like rendered entities or more complex entity filtering or sorting, you may want to use the "Views: Filter by an entity reference view" reference method.'),
       '#options' => $handlers_options,
       '#required' => TRUE,
       '#default_value' => $selection_handler,
@@ -680,7 +680,7 @@ trait WebformEntityReferenceTrait {
    */
   protected function formatHtmlItems(array &$element, WebformSubmissionInterface $webform_submission, array $options = []) {
     $format = $this->getItemsFormat($element);
-    if (strpos($format, 'checklist:') === 0) {
+    if (str_starts_with($format, 'checklist:')) {
       $this->setOptions($element);
     }
     return parent::formatHtmlItems($element, $webform_submission, $options);
@@ -691,7 +691,7 @@ trait WebformEntityReferenceTrait {
    */
   protected function formatTextItems(array &$element, WebformSubmissionInterface $webform_submission, array $options = []) {
     $format = $this->getItemsFormat($element);
-    if (strpos($format, 'checklist:') === 0) {
+    if (str_starts_with($format, 'checklist:')) {
       $this->setOptions($element);
     }
     return parent::formatTextItems($element, $webform_submission, $options);

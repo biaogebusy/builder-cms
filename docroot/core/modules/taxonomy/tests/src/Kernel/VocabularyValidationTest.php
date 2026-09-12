@@ -6,12 +6,16 @@ namespace Drupal\Tests\taxonomy\Kernel;
 
 use Drupal\KernelTests\Core\Config\ConfigEntityValidationTestBase;
 use Drupal\taxonomy\Entity\Vocabulary;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validation of vocabulary entities.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[Group('config')]
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class VocabularyValidationTest extends ConfigEntityValidationTestBase {
 
   /**

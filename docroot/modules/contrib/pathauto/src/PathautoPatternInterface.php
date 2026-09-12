@@ -13,6 +13,7 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
    * Get the tokenized pattern used during alias generation.
    *
    * @return string
+   *   The tokenized pattern.
    */
   public function getPattern();
 
@@ -20,6 +21,7 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
    * Set the tokenized pattern to use during alias generation.
    *
    * @param string $pattern
+   *   The tokenized pattern.
    *
    * @return $this
    */
@@ -29,11 +31,15 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
    * Gets the type of this pattern.
    *
    * @return string
+   *   The pattern type.
    */
   public function getType();
 
   /**
+   * Gets the alias type plugin instance.
+   *
    * @return \Drupal\pathauto\AliasTypeInterface
+   *   The alias type plugin instance.
    */
   public function getAliasType();
 
@@ -41,6 +47,7 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
    * Gets the weight of this pattern (compared to other patterns of this type).
    *
    * @return int
+   *   The weight of the pattern.
    */
   public function getWeight();
 
@@ -58,6 +65,7 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
    * Returns the contexts of this pattern.
    *
    * @return \Drupal\Core\Plugin\Context\ContextInterface[]
+   *   An array of context objects.
    */
   public function getContexts();
 
@@ -126,6 +134,7 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
    * Gets the selection condition collection.
    *
    * @return \Drupal\Core\Condition\ConditionInterface[]|\Drupal\Core\Condition\ConditionPluginCollection
+   *   The selection condition collection.
    */
   public function getSelectionConditions();
 
@@ -147,6 +156,7 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
    *   The id of the condition.
    *
    * @return \Drupal\Core\Condition\ConditionInterface
+   *   The condition plugin instance.
    */
   public function getSelectionCondition($condition_id);
 
@@ -171,10 +181,11 @@ interface PathautoPatternInterface extends ConfigEntityInterface {
   /**
    * Determines if this pattern can apply a given object.
    *
-   * @param $object
+   * @param object $object
    *   The object used to determine if this plugin can apply.
    *
    * @return bool
+   *   Whether this plugin applies to the given object.
    */
   public function applies($object);
 

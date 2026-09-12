@@ -21,7 +21,7 @@ class WebformCompositeCustomTest extends WebformBrowserTestBase {
   /**
    * Test custom composite element.
    */
-  public function testCustom() {
+  public function testCustom(): void {
     $assert_session = $this->assertSession();
 
     /* Display */

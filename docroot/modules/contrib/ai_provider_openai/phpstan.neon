@@ -18,3 +18,15 @@ parameters:
     - module
     - inc
     - install
+
+  ignoreErrors:
+    # Tests deliberately use @internal OpenAI library interfaces/classes
+    # (TransporterContract, Response) to build a real Client with a mock
+    # transporter — this is the only type-safe way to intercept API calls
+    # without a live API key while satisfying getClient()'s Client return type.
+    - identifier: parameter.internalInterface
+      path: tests/*
+    - identifier: return.internalClass
+      path: tests/*
+    - identifier: classConstant.internalInterface
+      path: tests/*

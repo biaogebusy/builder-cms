@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests layout info pages and links.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelLayoutInfoTest extends DevelBrowserTestBase {
 
   /**

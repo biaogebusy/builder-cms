@@ -20,6 +20,21 @@ class FileTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'content_translation',
+    'node',
+    'file',
+    'media',
+    'image',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+    'jsonapi_extras',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'node';
 
   /**
@@ -33,9 +48,7 @@ class FileTest extends EntityShareClientFunctionalTestBase {
   protected static $entityLangcode = 'en';
 
   /**
-   * An array of data to generate physical files.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $filesData = [
     'public_file' => [

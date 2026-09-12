@@ -13,8 +13,8 @@ interface ContentEntityTypeInterface extends EntityTypeInterface {
    * @return array
    *   An array describing how the Field API can extract revision metadata
    *   information of this entity type:
-   *   - revision_log_message: The name of the property that contains description
-   *     of the changes that were made in the current revision.
+   *   - revision_log_message: The name of the property that contains
+   *     description of the changes that were made in the current revision.
    *   - revision_user: The name of the property that contains the user ID of
    *     the author of the current revision.
    *   - revision_created: The name of the property that contains the timestamp
@@ -28,7 +28,7 @@ interface ContentEntityTypeInterface extends EntityTypeInterface {
    * @param string $key
    *   The name of the entity revision metadata key to return.
    *
-   * @return string|bool
+   * @return string|false
    *   The entity revision metadata key, or FALSE if it does not exist.
    *
    * @see self::getRevisionMetadataKeys()

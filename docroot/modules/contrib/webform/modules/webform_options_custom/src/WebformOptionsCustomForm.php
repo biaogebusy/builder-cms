@@ -64,6 +64,7 @@ class WebformOptionsCustomForm extends EntityForm {
     switch ($this->operation) {
       case 'duplicate':
         $form['#title'] = $this->t("Duplicate '@label' custom options", ['@label' => $webform_options_custom->label()]);
+        $form['#attached']['library'][] = 'webform/webform.admin.machine-name';
         break;
 
       case 'edit':
@@ -439,7 +440,7 @@ class WebformOptionsCustomForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\webform_options_custom\WebformOptionsCustomInterface $webform_options_custom */
     $webform_options_custom = $this->getEntity();
-    $webform_options_custom->save();
+    $status = $webform_options_custom->save();
 
     $context = [
       '@label' => $webform_options_custom->label(),
@@ -452,6 +453,8 @@ class WebformOptionsCustomForm extends EntityForm {
     ]));
 
     $form_state->setRedirect('entity.webform_options_custom.collection');
+
+    return $status;
   }
 
   /**

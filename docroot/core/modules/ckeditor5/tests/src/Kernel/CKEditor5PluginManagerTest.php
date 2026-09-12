@@ -13,23 +13,27 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\editor\Entity\Editor;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\filter\Entity\FilterFormat;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\TestTools\Random;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\FrozenParameterBag;
 use Symfony\Component\Yaml\Yaml;
 
 // cspell:ignore layercake everytextcontainer justheading
-
 /**
  * Tests different ways of enabling CKEditor 5 plugins.
  *
- * @group ckeditor5
  * @internal
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class CKEditor5PluginManagerTest extends KernelTestBase {
 
   use SchemaCheckTestTrait;
@@ -72,6 +76,9 @@ class CKEditor5PluginManagerTest extends KernelTestBase {
     Editor::create([
       'format' => 'basic_html',
       'editor' => 'ckeditor5',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
     ])->save();
     FilterFormat::create(
       Yaml::parseFile('core/profiles/standard/config/install/filter.format.full_html.yml')
@@ -79,6 +86,9 @@ class CKEditor5PluginManagerTest extends KernelTestBase {
     Editor::create([
       'format' => 'full_html',
       'editor' => 'ckeditor5',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
     ])->save();
     $this->manager = $this->container->get('plugin.manager.ckeditor5.plugin');
     $this->typedConfig = $this->container->get('config.typed');
@@ -87,7 +97,7 @@ class CKEditor5PluginManagerTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function enableModules(array $modules) {
+  protected function enableModules(array $modules): void {
     parent::enableModules($modules);
     // Ensure the CKEditor 5 plugin manager instance on the test reflects the
     // status after the module is installed.
@@ -163,14 +173,18 @@ YAML,
     // @see \Drupal\Core\DrupalKernel::guessApplicationRoot()
     $container->getDefinition('module_handler')->setArgument(0, '%app.root%');
 
+    // The key value service is set directly in kernel tests, and set as
+    // synthetic and then can't be reconstructed.
+    $container->set('keyvalue', $this->container->get('keyvalue'));
+
     // To discover per-test case config schema YAML files, work around the
     // static file cache in \Drupal\Core\Extension\ExtensionDiscovery. There is
     // no work-around that allows using both the files on disk and some in vfs.
     // To make matters worse, decorating a service within the test only is not
-    // an option either, because \Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition
-    // is a pure value object, so it uses the global container. Therefore the
-    // only work-around possible is to manipulate the config schema definition
-    // cache.
+    // an option either, because
+    // \Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition is a pure value
+    // object, so it uses the global container. Therefore the only work-around
+    // possible is to manipulate the config schema definition cache.
     // @todo Remove this in https://www.drupal.org/project/drupal/issues/2961541.
     if (isset($additional_files['config']['schema']["$module_name.schema.yml"])) {
       $cache = \Drupal::service('cache.discovery')
@@ -185,9 +199,11 @@ YAML,
   }
 
   /**
-   * @covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::processDefinition
-   * @dataProvider providerTestInvalidPluginDefinitions
+   * Tests invalid plugin definitions.
+   *
+   * @legacy-covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::processDefinition
    */
+  #[DataProvider('providerTestInvalidPluginDefinitions')]
   public function testInvalidPluginDefinitions(string $yaml, ?string $expected_exception = NULL, ?string $expected_message = NULL, ?array $additional_files = []): void {
     if ($expected_exception) {
       $this->expectException($expected_exception);
@@ -1047,9 +1063,8 @@ PHP,
 
   /**
    * Tests detection of invalid CKEditor5PluginElementsSubsetInterface classes.
-   *
-   * @dataProvider providerProvidedElementsInvalidElementSubset
    */
+  #[DataProvider('providerProvidedElementsInvalidElementSubset')]
   public function testProvidedElementsInvalidElementSubset(array $configured_subset, string $expected_exception_message): void {
     $this->enableModules(['ckeditor5_plugin_elements_subset']);
 
@@ -1058,6 +1073,9 @@ PHP,
     $text_editor = Editor::create([
       'format' => 'dummy',
       'editor' => 'ckeditor5',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
       'settings' => [
         'plugins' => [
           $sneaky_plugin_id => ['configured_subset' => $configured_subset],
@@ -1207,7 +1225,10 @@ PHP,
     $settings['toolbar']['items'][] = 'insertTable';
     $editor->setSettings($settings);
     $plugin_ids = array_keys($this->manager->getEnabledDefinitions($editor));
-    $expected_plugins = array_merge($expected_plugins, ['ckeditor5_table', 'ckeditor5_plugin_conditions_test_plugins_condition']);
+    $expected_plugins = array_merge($expected_plugins, [
+      'ckeditor5_table',
+      'ckeditor5_plugin_conditions_test_plugins_condition',
+    ]);
     sort($expected_plugins);
     $this->assertSame(array_values($expected_plugins), $plugin_ids);
     $expected_libraries = array_merge($default_libraries, [
@@ -1279,9 +1300,9 @@ PHP,
    *   The expected allowed tags and attributes as a string, typically used
    *   in the filter_html "Allowed tags" field.
    *
-   * @covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::getProvidedElements
-   * @dataProvider providerTestProvidedElements
+   * @legacy-covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::getProvidedElements
    */
+  #[DataProvider('providerTestProvidedElements')]
   public function testProvidedElements(array $plugins, array $text_editor_settings, array $expected_elements, string $expected_readable_string): void {
     $this->enableModules(['ckeditor5_plugin_elements_test']);
 
@@ -1528,10 +1549,9 @@ PHP,
    * When multiple plugins support a given tag, this method decides which plugin
    * to return based on which provides the broadest attribute support.
    *
-   * @covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::findPluginSupportingElement
-   *
-   * @dataProvider providerTestPluginSupportingElement
+   * @legacy-covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::findPluginSupportingElement
    */
+  #[DataProvider('providerTestPluginSupportingElement')]
   public function testPluginSupportingElement(string $tag, ?string $expected_plugin_id): void {
     $this->enableModules(['ckeditor5_definition_supporting_element']);
     $plugin_id = $this->manager->findPluginSupportingElement($tag);
@@ -1583,7 +1603,9 @@ PHP,
   }
 
   /**
-   * @covers \Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition::validateCKEditor5Aspects
+   * Tests automatic link decorators disallowed.
+   *
+   * @legacy-covers \Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition::validateCKEditor5Aspects
    */
   public function testAutomaticLinkDecoratorsDisallowed(): void {
     $this->expectException(InvalidPluginDefinitionException::class);
@@ -1595,7 +1617,9 @@ PHP,
   }
 
   /**
-   * @covers \Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition::validateCKEditor5Aspects
+   * Tests external link automatic link decorator disallowed.
+   *
+   * @legacy-covers \Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition::validateCKEditor5Aspects
    */
   public function testExternalLinkAutomaticLinkDecoratorDisallowed(): void {
     $this->expectException(InvalidPluginDefinitionException::class);
@@ -1607,16 +1631,23 @@ PHP,
   }
 
   /**
-   * @covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::getDiscovery
-   * @dataProvider providerTestDerivedPluginDefinitions
+   * Tests derived plugin definitions.
+   *
+   * @legacy-covers \Drupal\ckeditor5\Plugin\CKEditor5PluginManager::getDiscovery
    */
-  public function testDerivedPluginDefinitions(string $yaml, ?string $expected_exception = NULL, ?string $expected_message = NULL, array $additional_files = [], ?array $expected_derived_plugin_definitions = NULL): void {
+  #[DataProvider('providerTestDerivedPluginDefinitions')]
+  #[IgnoreDeprecations]
+  public function testDerivedPluginDefinitions(string $yaml, ?string $expected_exception = NULL, ?string $expected_message = NULL, array $additional_files = [], ?array $expected_derived_plugin_definitions = NULL, ?string $expected_deprecation_message = NULL): void {
     if ($expected_exception) {
       $this->expectException($expected_exception);
     }
     if ($expected_message) {
       $this->expectExceptionMessage($expected_message);
     }
+    if ($expected_deprecation_message) {
+      $this->expectUserDeprecationMessage($expected_deprecation_message);
+    }
+
     $container = $this->mockModuleInVfs('ckeditor5_derived_plugin', $yaml, $additional_files);
 
     $actual_definitions = $container->get('plugin.manager.ckeditor5.plugin')->getDefinitions();
@@ -1894,6 +1925,7 @@ PHP,
           ] + $drupal_aspects_defaults,
         ]),
       ],
+      'Using @CKEditor5Plugin annotation for plugin with ID ckeditor5_derived_plugin_foo is deprecated and is removed from drupal:13.0.0. Use a Drupal\ckeditor5\Attribute\CKEditor5Plugin attribute instead. See https://www.drupal.org/node/3395575',
     ];
 
     yield 'VALID: minimal base plugin definition, maximal deriver' => [
@@ -2036,9 +2068,15 @@ PHP,
   }
 
   /**
-   * Tests backwards compatibility of icon names.
+   * Tests deprecation and backwards compatibility of icon names.
    */
-  public function testIconsBackwardsCompatibility(): void {
+  #[IgnoreDeprecations]
+  public function testDeprecatedIcons(): void {
+    $this->expectUserDeprecationMessage('The icon configuration value "objectBlockLeft" in drupalElementStyles group align for CKEditor5 plugin ckeditor5_icon_deprecation_test_plugin is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. Try using "IconObjectLeft" instead. See https://www.drupal.org/node/3528806');
+    $this->expectUserDeprecationMessage('The icon configuration value "objectBlockRight" in drupalElementStyles group align for CKEditor5 plugin ckeditor5_icon_deprecation_test_plugin is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. Try using "IconObjectRight" instead. See https://www.drupal.org/node/3528806');
+    $this->expectUserDeprecationMessage('The icon configuration value "objectLeft" in drupalElementStyles group align for CKEditor5 plugin ckeditor5_icon_deprecation_test_plugin is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. Try using "IconObjectInlineLeft" instead. See https://www.drupal.org/node/3528806');
+    $this->expectUserDeprecationMessage('The icon configuration value "objectRight" in drupalElementStyles group align for CKEditor5 plugin ckeditor5_icon_deprecation_test_plugin is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. Try using "IconObjectInlineRight" instead. See https://www.drupal.org/node/3528806');
+    $this->expectUserDeprecationMessage('The icon configuration value "threeVerticalDots" in drupalElementStyles group threeVerticalDots for CKEditor5 plugin ckeditor5_icon_deprecation_test_plugin is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. Try using "IconThreeVerticalDots" instead. See https://www.drupal.org/node/3528806');
     \Drupal::service('module_installer')->install(['ckeditor5_icon_deprecation_test']);
     $definitions = \Drupal::service('plugin.manager.ckeditor5.plugin')->getDefinitions();
     $config = $definitions['ckeditor5_icon_deprecation_test_plugin']->toArray()['ckeditor5']['config']['drupalElementStyles'];

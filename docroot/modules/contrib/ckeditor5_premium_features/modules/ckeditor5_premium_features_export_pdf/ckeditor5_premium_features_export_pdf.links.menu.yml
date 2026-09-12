@@ -1,0 +1,6 @@
+ckeditor5_premium_features_export_pdf.form.settings:
+  title: Export to PDF
+  route_name: ckeditor5_premium_features_export_pdf.form.settings
+  parent: ckeditor5_premium_features.form.settings
+  description: 'Adjust margins, styles, headers, footers in generated PDF files (and some other options).'
+  weight: 60

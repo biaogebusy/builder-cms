@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_test_gateway\EventSubscriber;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\sms\Event\SmsEvents;
 use Drupal\sms\Event\SmsMessageEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Test event subscriber.
@@ -26,17 +26,17 @@ final class SmsTestGatewayEventSubscriber implements EventSubscriberInterface {
 
     // Save incoming result for later retrieval.
     $key = 'sms_test_gateway_sms_incoming_preprocess';
-    $result = &drupal_static($key);
+    $result = &\drupal_static($key);
 
-    if (!is_null($sms_message->getRecipients()) && !is_null($sms_message->getMessage())) {
+    if (!\is_null($sms_message->getRecipients()) && !\is_null($sms_message->getMessage())) {
       $recipients = $sms_message->getRecipients();
-      $result['number'] = count($recipients) ? reset($recipients) : NULL;
+      $result['number'] = \count($recipients) ? \reset($recipients) : NULL;
       $result['message'] = $sms_message->getMessage();
       \Drupal::state()->set($key, $result);
     }
 
     $key = 'sms_test_gateway.memory.incoming';
-    $incoming_messages = &drupal_static($key, []);
+    $incoming_messages = &\drupal_static($key, []);
     foreach ($event->getMessages() as $message) {
       /** @var \Drupal\sms\Message\SmsMessageInterface $message */
       $incoming_messages[$message->getGateway()->id()][] = $message;

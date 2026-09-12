@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Url;
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\workflows\Entity\Workflow;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API integration test for the "Workflow" config entity type.
- *
- * @group jsonapi
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class WorkflowTest extends ConfigEntityResourceTestBase {
 
   /**
@@ -37,14 +40,14 @@ class WorkflowTest extends ConfigEntityResourceTestBase {
   /**
    * {@inheritdoc}
    *
-   * @var \Drupal\shortcut\ShortcutSetInterface
+   * @var \Drupal\workflows\WorkflowInterface
    */
   protected $entity;
 
   /**
    * {@inheritdoc}
    */
-  protected function setUpAuthorization($method) {
+  protected function setUpAuthorization($method): void {
     $this->grantPermissionsToTestedRole(['administer workflows']);
   }
 
@@ -72,16 +75,16 @@ class WorkflowTest extends ConfigEntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedDocument() {
+  protected function getExpectedDocument(): array {
     $self_url = Url::fromUri('base:/jsonapi/workflow/workflow/' . $this->entity->uuid())->setAbsolute()->toString(TRUE)->getGeneratedUrl();
     return [
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'links' => [
         'self' => ['href' => $self_url],
@@ -126,7 +129,7 @@ class WorkflowTest extends ConfigEntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getPostDocument() {
+  protected function getPostDocument(): array {
     // @todo Update in https://www.drupal.org/node/2300677.
     return [];
   }

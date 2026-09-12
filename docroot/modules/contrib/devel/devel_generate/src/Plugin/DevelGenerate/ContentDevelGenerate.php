@@ -102,12 +102,12 @@ class ContentDevelGenerate extends DevelGenerateBase implements ContainerFactory
   /**
    * The comment manager service.
    */
-  protected ?CommentManagerInterface $commentManager;
+  protected ?CommentManagerInterface $commentManager = NULL;
 
   /**
    * The content translation manager.
    */
-  protected ?ContentTranslationManagerInterface $contentTranslationManager;
+  protected ?ContentTranslationManagerInterface $contentTranslationManager = NULL;
 
   /**
    * The Drush batch flag.
@@ -529,8 +529,8 @@ class ContentDevelGenerate extends DevelGenerateBase implements ContainerFactory
     $values['skip_fields'] = is_null($options['skip-fields']) ? [] : self::csvToArray($options['skip-fields']);
     $values['base_fields'] = is_null($options['base-fields']) ? [] : self::csvToArray($options['base-fields']);
     $values['title_length'] = 6;
-    $values['num'] = (int) trim(array_shift($args));
-    $values['max_comments'] = (int) array_shift($args);
+    $values['num'] = (int) trim($args['num']);
+    $values['max_comments'] = (int) $args['max_comments'];
     // Do not use csvToArray for 'authors' because it removes '0' values.
     $values['authors'] = is_null($options['authors']) ? [] : explode(',', $options['authors']);
     $values['roles'] = self::csvToArray($options['roles']);

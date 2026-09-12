@@ -2,6 +2,9 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldFormatter;
 
+use Drupal\commerce\AjaxFormTrait;
+use Drupal\commerce\EntityHelper;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -9,8 +12,7 @@ use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\commerce\AjaxFormTrait;
-use Drupal\commerce\EntityHelper;
+use Drupal\Core\Url;
 use Drupal\views\ViewEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -48,6 +50,7 @@ class OrderItemTable extends FormatterBase implements ContainerFactoryPluginInte
   public static function defaultSettings() {
     return [
       'view' => 'commerce_order_item_table',
+      'show_add_items_link' => FALSE,
     ] + parent::defaultSettings();
   }
 
@@ -71,6 +74,12 @@ class OrderItemTable extends FormatterBase implements ContainerFactoryPluginInte
       '#required' => TRUE,
       '#default_value' => $default_view,
     ];
+    $elements['show_add_items_link'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show link to add items'),
+      '#default_value' => $this->getSetting('show_add_items_link'),
+      '#description' => $this->t('Whether the "Add order items" link should be shown.'),
+    ];
 
     return $elements;
   }
@@ -83,8 +92,14 @@ class OrderItemTable extends FormatterBase implements ContainerFactoryPluginInte
 
     $view = $this->entityTypeManager->getStorage('view')->load($this->getSetting('view'));
     $summary[] = $this->t('View: @view.', [
-      '@view' => $view->label(),
+      '@view' => $view?->label() ?? 'N/A',
     ]);
+    if ($this->getSetting('show_add_items_link')) {
+      $summary[] = $this->t('The "Add order items" link is shown', []);
+    }
+    else {
+      $summary[] = $this->t('The "Add order items" link is not shown', []);
+    }
 
     return $summary;
   }
@@ -97,12 +112,35 @@ class OrderItemTable extends FormatterBase implements ContainerFactoryPluginInte
     $order = $items->getEntity();
     $elements = [];
     $order_item_ids = array_column($order->get('order_items')->getValue(), 'target_id');
-    $elements[0] = [
+    $elements[] = [
       '#type' => 'view',
       '#name' => $this->getSetting('view'),
       '#arguments' => $order_item_ids ? [implode('+', $order_item_ids)] : NULL,
       '#embed' => TRUE,
     ];
+
+    // Attach link to add new order items.
+    if ($this->getSetting('show_add_items_link')) {
+      $url = Url::fromRoute('commerce_order.entity_form.form_mode', [
+        'commerce_order' => $order->id(),
+        'form_mode' => 'add-items',
+      ]);
+      if ($url->access()) {
+        $attributes = [
+          'class' => ['button', 'button--primary', 'use-ajax'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => Json::encode([
+            'width' => 880,
+          ]),
+        ];
+        $url->setOption('attributes', $attributes);
+        $elements[] = [
+          '#type' => 'link',
+          '#url' => $url,
+          '#title' => $this->t('Add order items'),
+        ];
+      }
+    }
 
     return $elements;
   }

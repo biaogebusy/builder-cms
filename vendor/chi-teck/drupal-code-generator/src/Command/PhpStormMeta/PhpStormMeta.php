@@ -68,6 +68,7 @@ final class PhpStormMeta extends BaseGenerator implements ContainerInjectionInte
     $assets[] = (new FieldDefinitions($service('entity_type.manager'), $service('plugin.manager.field.field_type')))();
     $assets[] = (new Fields($service('entity_type.manager'), $service('entity_field.manager'), $entity_interface))();
     $assets[] = (new FileSystem())();
+    $assets[] = (new Hooks($this->getHelper('hook_info'), $this->getHelper('module_info')))();
     $assets[] = (new Miscellaneous())();
     $assets[] = (new Permissions($this->getHelper('permission_info')))();
     $assets[] = (new Plugins($this->getHelper('service_info')))();
@@ -75,7 +76,7 @@ final class PhpStormMeta extends BaseGenerator implements ContainerInjectionInte
     $assets[] = (new Routes($this->getHelper('route_info')))();
     $assets[] = (new Services($this->getHelper('service_info')))();
     $assets[] = (new Settings())();
-    $assets[] = (new States($service('keyvalue')))();
+    $assets[] = (new States($service('keyvalue'), $service('cron')))();
   }
 
   /**

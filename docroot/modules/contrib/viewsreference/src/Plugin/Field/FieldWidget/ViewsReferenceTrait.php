@@ -56,6 +56,11 @@ trait ViewsReferenceTrait {
         $element['target_id']['#default_value'] = $field_value['target_id'] ?? '';
         break;
 
+      case 'entity_autocomplete':
+        $view_selected_js_state = ['filled' => TRUE];
+        $ajax_event = 'autocompleteclose';
+        break;
+
       default:
         $view_selected_js_state = ['filled' => TRUE];
         $ajax_event = 'viewsreference-select';
@@ -132,6 +137,8 @@ trait ViewsReferenceTrait {
         ],
       ],
     ];
+
+    $this->setDefaultDisplayId($element, $display_id, $form, $form_state);
 
     $field_data = [];
     if (!empty($field_value['data'])) {
@@ -286,13 +293,19 @@ trait ViewsReferenceTrait {
         'display_id',
       ],
     ];
+
+    $display_count = count($element['display_id']['#options'] ?? []);
+    $default_display_id = $element['display_id']['#default_value'] ?? $element['display_id']['#value'] ?? '';
+    if ($display_count >= 2) {
+      $default_display_id = '';
+    }
     $triggering_element_name = end($triggering_element['#parents']);
     if (isset($keys[$triggering_element_name])) {
       $input = &$form_state->getUserInput();
       foreach ($keys[$triggering_element_name] as $key) {
         $parents = array_merge($element['#parents'], [$key]);
-        NestedArray::setValue($input, $parents, '');
-        $element[$key]['#value'] = '';
+        NestedArray::setValue($input, $parents, $default_display_id);
+        $element[$key]['#value'] = $default_display_id;
       }
     }
 
@@ -306,7 +319,44 @@ trait ViewsReferenceTrait {
     $triggering_element = $form_state->getTriggeringElement();
     $parents = $triggering_element['#array_parents'];
     array_pop($parents);
+
     return NestedArray::getValue($form, $parents);
+  }
+
+  /**
+   * Set Default Display if there is only one views display.
+   */
+  protected function setDefaultDisplayId(&$element, &$display_id, &$form, FormStateInterface $form_state) {
+    $field_name = $this->fieldDefinition->getName();
+    $options = $element['display_id']['#options'];
+
+    if (count($options) === 1) {
+      $display_id = array_key_first($options);
+      // Replace the select with a hidden input so there are no required-select
+      // browser validation issues when JS states mark the field required.
+      $element['display_id'] = [
+        '#type' => 'hidden',
+        '#value' => $display_id,
+      ];
+
+      $triggering_element = $form_state->getTriggeringElement();
+      if ($triggering_element && in_array($field_name, $triggering_element['#parents'])) {
+        $keys = [
+          'target_id' => [
+            'display_id',
+          ],
+        ];
+        $triggering_element_name = end($triggering_element['#parents']);
+        if (isset($keys[$triggering_element_name])) {
+          $input = &$form_state->getUserInput();
+          foreach ($keys[$triggering_element_name] as $key) {
+            $parents = $triggering_element['#parents'];
+            $parents[count($parents) - 1] = $key;
+            NestedArray::setValue($input, $parents, $display_id);
+          }
+        }
+      }
+    }
   }
 
   /**

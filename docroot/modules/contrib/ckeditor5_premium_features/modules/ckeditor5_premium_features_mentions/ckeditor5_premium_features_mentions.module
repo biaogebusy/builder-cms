@@ -1,0 +1,48 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+/**
+ * @file
+ * Implements hooks for the CKEditor 5 Premium Features Mentions module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\ckeditor5_premium_features\Utility\LibraryDefinitionItem;
+use Drupal\ckeditor5_premium_features_mentions\Element\MentionsIntegration;
+
+/**
+ * Implements hook_library_info_build().
+ */
+function ckeditor5_premium_features_mentions_library_info_build(): array {
+  /** @var \Drupal\ckeditor5_premium_features\Config\SettingsConfigHandlerInterface $config_handler */
+  $config_handler = \Drupal::service('ckeditor5_premium_features.config_handler.settings');
+
+  $libraries = [
+    'mention',
+  ];
+
+  $definitions = [];
+
+  foreach ($libraries as $library) {
+    $definition = new LibraryDefinitionItem($library, $config_handler->getDllLocation());
+    $definition->addRemoteJs($definition->id());
+
+    $definitions[$definition->id()] = $definition->getDefinition();
+  }
+
+  return $definitions;
+}
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function ckeditor5_premium_features_mentions_element_info_alter(array &$info): void {
+  if (isset($info['text_format'])) {
+    $info['text_format']['#process'][] = [MentionsIntegration::class, 'process'];
+  }
+}

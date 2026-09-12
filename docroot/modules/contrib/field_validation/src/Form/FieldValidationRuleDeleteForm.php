@@ -14,7 +14,7 @@ class FieldValidationRuleDeleteForm extends ConfirmFormBase {
   /**
    * The fieldValidationRuleSet containing the fieldValidationRule to be deleted.
    *
-   * @var \Drupal\field_validation\FieldValidationRuleSetInterface
+   * @var \Drupal\field_validation\FieldValidationRuleSetInterface|null
    */
   protected $fieldValidationRuleSet;
 
@@ -56,7 +56,7 @@ class FieldValidationRuleDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL) {
     $this->fieldValidationRuleSet = $field_validation_rule_set;
     $this->fieldValidationRule = $this->fieldValidationRuleSet->getFieldValidationRule($field_validation_rule);
 

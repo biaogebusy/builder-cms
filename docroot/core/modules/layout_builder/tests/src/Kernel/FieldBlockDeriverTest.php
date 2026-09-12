@@ -6,13 +6,16 @@ namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests field block plugin derivatives.
- *
- * @group layout_builder
- * @group legacy
  */
+#[Group('layout_builder')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class FieldBlockDeriverTest extends EntityKernelTestBase {
 
   /**
@@ -20,7 +23,6 @@ class FieldBlockDeriverTest extends EntityKernelTestBase {
    */
   protected static $modules = [
     'layout_builder',
-    'layout_discovery',
   ];
 
   /**

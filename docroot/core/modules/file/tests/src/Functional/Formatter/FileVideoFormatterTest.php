@@ -6,12 +6,26 @@ namespace Drupal\Tests\file\Functional\Formatter;
 
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\file\Entity\File;
+use Drupal\file\Plugin\Field\FieldFormatter\FileVideoFormatter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\file\Plugin\Field\FieldFormatter\FileVideoFormatter
- * @group file
+ * Tests Drupal\file\Plugin\Field\FieldFormatter\FileVideoFormatter.
  */
+#[CoversClass(FileVideoFormatter::class)]
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileVideoFormatterTest extends FileMediaFormatterTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'image',
+  ];
 
   /**
    * {@inheritdoc}
@@ -19,10 +33,11 @@ class FileVideoFormatterTest extends FileMediaFormatterTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * @covers ::viewElements
+   * Tests render.
    *
-   * @dataProvider dataProvider
+   * @legacy-covers ::viewElements
    */
+  #[DataProvider('dataProvider')]
   public function testRender($tag_count, $formatter_settings): void {
     $field_config = $this->createMediaField('file_video', 'mp4', $formatter_settings);
 
@@ -73,6 +88,7 @@ class FileVideoFormatterTest extends FileMediaFormatterTestBase {
         'autoplay' => TRUE,
         'loop' => TRUE,
         'muted' => TRUE,
+        'playsinline' => TRUE,
         'width' => 800,
         'height' => 600,
       ]
@@ -102,6 +118,7 @@ class FileVideoFormatterTest extends FileMediaFormatterTestBase {
     $assert_session->elementExists('css', "video[autoplay='autoplay'] > source[src='$file_url'][type='video/mp4']");
     $assert_session->elementExists('css', "video[loop='loop'] > source[src='$file_url'][type='video/mp4']");
     $assert_session->elementExists('css', "video[muted='muted'] > source[src='$file_url'][type='video/mp4']");
+    $assert_session->elementExists('css', "video[playsinline='playsinline'] > source[src='$file_url'][type='video/mp4']");
     $assert_session->elementExists('css', "video[width='800'] > source[src='$file_url'][type='video/mp4']");
     $assert_session->elementExists('css', "video[height='600'] > source[src='$file_url'][type='video/mp4']");
 

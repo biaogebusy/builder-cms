@@ -6,6 +6,7 @@ namespace Drupal\Tests\ai\FunctionalJavascript;
 
 use Drupal\Tests\ai\FunctionalJavascriptTests\BaseClassFunctionalJavascriptTests;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests ai_provider_configuration value handling across nesting modes.
@@ -13,6 +14,7 @@ use Drupal\user\UserInterface;
  * @group ai
  * @group 3583705
  */
+#[RunTestsInSeparateProcesses]
 class AiProviderConfigurationElementNestingTest extends BaseClassFunctionalJavascriptTests {
 
   /**
@@ -21,6 +23,7 @@ class AiProviderConfigurationElementNestingTest extends BaseClassFunctionalJavas
   protected static $modules = [
     'ai',
     'ai_test',
+    'file',
     'user',
     'system',
   ];

@@ -15,7 +15,7 @@
  * @throws \Drupal\Core\Entity\EntityStorageException
  *   In case of failures an exception is thrown.
  */
-function bef_test_install() {
+function bef_test_install(): void {
   // Set up an example hierarchical terms in the "Location" vocab.
   $locations = [
     'United States' => [
@@ -84,7 +84,7 @@ function bef_test_install() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  *   In case of failures an exception is thrown.
  */
-function _bef_test_add_term($name, $parent = 0) {
+function _bef_test_add_term(string $name, int $parent = 0): int {
   $term = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->create([
     'vid' => 'bef_test_location',
     'name' => $name,

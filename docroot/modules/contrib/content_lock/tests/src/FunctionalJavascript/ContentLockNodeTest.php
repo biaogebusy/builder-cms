@@ -7,13 +7,17 @@ namespace Drupal\Tests\content_lock\FunctionalJavascript;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\content_lock\Tools\LogoutTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests JS locking for Nodes.
+ * Tests locking for Nodes.
  *
  * @group content_lock
  */
+#[RunTestsInSeparateProcesses]
 class ContentLockNodeTest extends WebDriverTestBase {
+  use LogoutTrait;
 
   /**
    * {@inheritdoc}
@@ -30,9 +34,9 @@ class ContentLockNodeTest extends WebDriverTestBase {
   ];
 
   /**
-   * Test forms on nodes when JS lock is enabled.
+   * Tests forms on nodes when locking is enabled.
    */
-  public function testContentLockNodeWithJsLock() {
+  public function testContentLockNodeWithLock(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -80,7 +84,6 @@ class ContentLockNodeTest extends WebDriverTestBase {
     $this->drupalLogin($admin);
     $this->drupalGet('admin/config/content/content_lock');
     $this->click('#edit-entity-types-node');
-    $this->click('#edit-node-settings-js-lock');
     $page->pressButton('Save configuration');
 
     // Lock the article page.
@@ -90,7 +93,7 @@ class ContentLockNodeTest extends WebDriverTestBase {
     // Verify ckeditor5 field is disabled.
     $this->drupalLogin($user1);
     $this->drupalGet("node/{$article->id()}/edit");
-    $assert_session->pageTextContains("This content is being edited by the user {$admin->getDisplayName()} and is therefore locked to prevent other users changes.");
+    $assert_session->pageTextContains("This content is being edited by the user {$admin->getDisplayName()} and is therefore locked to prevent changes by other users.");
     $textarea = $assert_session->elementExists('css', 'textarea#edit-body-0-value');
     $this->assertTrue($textarea->hasAttribute('disabled'));
   }

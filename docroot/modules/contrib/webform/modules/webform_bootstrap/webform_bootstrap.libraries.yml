@@ -1,5 +1,4 @@
 webform_bootstrap:
-  version: VERSION
   js:
     js/webform_bootstrap.states.js: {}
   css:

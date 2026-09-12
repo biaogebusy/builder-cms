@@ -8,12 +8,14 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseFactory;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the key-value database storage.
- *
- * @group KeyValueStore
  */
+#[Group('KeyValueStore')]
+#[RunTestsInSeparateProcesses]
 class DatabaseStorageTest extends StorageTestBase {
 
   /**
@@ -27,7 +29,7 @@ class DatabaseStorageTest extends StorageTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
 
     $parameter[KeyValueFactory::DEFAULT_SETTING] = 'keyvalue.database';

@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
-use Drupal\file\Entity\File;
 use Drupal\Tests\TestFileCreationTrait;
+use Drupal\file\Entity\File;
 
 /**
  * Base class for testing webform element managed file handling.

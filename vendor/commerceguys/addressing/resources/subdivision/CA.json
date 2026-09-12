@@ -5,8 +5,7 @@
 		"AB": {
 			"code": "AB",
 			"local_code": "AB",
-			"name": "Alberta",
-			"local_name": "Alberta"
+			"name": "Alberta"
 		},
 		"BC": {
 			"code": "BC",
@@ -17,8 +16,7 @@
 		"MB": {
 			"code": "MB",
 			"local_code": "MB",
-			"name": "Manitoba",
-			"local_name": "Manitoba"
+			"name": "Manitoba"
 		},
 		"NB": {
 			"code": "NB",
@@ -47,14 +45,12 @@
 		"NU": {
 			"code": "NU",
 			"local_code": "NU",
-			"name": "Nunavut",
-			"local_name": "Nunavut"
+			"name": "Nunavut"
 		},
 		"ON": {
 			"code": "ON",
 			"local_code": "ON",
-			"name": "Ontario",
-			"local_name": "Ontario"
+			"name": "Ontario"
 		},
 		"PE": {
 			"code": "PE",
@@ -71,14 +67,12 @@
 		"SK": {
 			"code": "SK",
 			"local_code": "SK",
-			"name": "Saskatchewan",
-			"local_name": "Saskatchewan"
+			"name": "Saskatchewan"
 		},
 		"YT": {
 			"code": "YT",
 			"local_code": "YT",
-			"name": "Yukon",
-			"local_name": "Yukon"
+			"name": "Yukon"
 		}
 	}
 }

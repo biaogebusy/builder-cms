@@ -49,7 +49,7 @@ class WebformElementStatesSelectorsTest extends WebformElementBrowserTestBase {
   /**
    * Tests element #states selectors for basic and composite elements.
    */
-  public function testSelectors() {
+  public function testSelectors(): void {
     foreach (['test_example_elements', 'test_example_elements_composite'] as $webform_id) {
       /** @var \Drupal\webform\WebformInterface $webform */
       $webform = Webform::load($webform_id);

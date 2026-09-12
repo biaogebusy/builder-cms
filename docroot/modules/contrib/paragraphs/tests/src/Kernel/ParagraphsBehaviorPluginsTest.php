@@ -5,12 +5,16 @@ namespace Drupal\Tests\paragraphs\Kernel;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\Entity\ParagraphsType;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the behavior plugins API.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsBehaviorPluginsTest extends KernelTestBase {
 
   /**
@@ -35,7 +39,6 @@ class ParagraphsBehaviorPluginsTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('paragraph');
-    $this->installSchema('system', ['sequences']);
     \Drupal::moduleHandler()->loadInclude('paragraphs', 'install');
   }
 

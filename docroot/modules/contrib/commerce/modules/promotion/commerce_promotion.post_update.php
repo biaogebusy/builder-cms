@@ -5,6 +5,7 @@
  * Post update functions for Promotion.
  */
 
+use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\OrderItemPromotionOfferInterface;
@@ -126,6 +127,7 @@ function commerce_promotion_post_update_6(&$sandbox = NULL) {
         $needs_save = TRUE;
       }
     }
+    unset($condition_item);
 
     $offer = $promotion->get('offer')->first()->getValue();
     if ($offer['target_plugin_id'] == 'commerce_promotion_order_percentage_off') {
@@ -519,4 +521,27 @@ function commerce_promotion_post_update_13() {
     'views.view.commerce_promotions',
   ]);
   return implode('<br>', $result->getFailed());
+}
+
+/**
+ * Remove coupon field from the "Order details" form display.
+ */
+function commerce_promotion_post_update_14(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $form_display_storage = $entity_type_manager->getStorage('entity_form_display');
+  $order_types_storage = $entity_type_manager->getStorage('commerce_order_type');
+
+  /** @var \Drupal\commerce_order\Entity\OrderTypeInterface[] $order_types */
+  $order_types = $order_types_storage->loadMultiple();
+  foreach ($order_types as $order_type) {
+    $form_display_id = sprintf('commerce_order.%s.order_details', $order_type->id());
+    $form_display = $form_display_storage->load($form_display_id);
+    if (!($form_display instanceof EntityFormDisplayInterface)) {
+      continue;
+    }
+
+    // Remove coupons field.
+    $form_display->removeComponent('coupons');
+    $form_display->save();
+  }
 }

@@ -14,6 +14,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class PathautoSettingsCacheTag implements EventSubscriberInterface {
 
   /**
+   * The entity field manager.
+   *
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;

@@ -949,6 +949,7 @@ class InlineParagraphsWidget extends WidgetBase {
       $elements['add_more'] = $this->buildAddActions();
     }
 
+    $elements['#inline_paragraphs_widget'] = TRUE;
     $elements['#attached']['library'][] = 'paragraphs/drupal.paragraphs.admin';
 
     return $elements;

@@ -1,0 +1,10 @@
+/**
+ * @file
+ * Styles for BEF scrollable filter containers.
+ */
+
+.bef-scrollable {
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid #000;
+}

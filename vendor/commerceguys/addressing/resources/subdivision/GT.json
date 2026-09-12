@@ -1,0 +1,71 @@
+{
+	"country_code": "GT",
+	"subdivisions": {
+		"16": {
+			"name": "Alta Verapaz"
+		},
+		"15": {
+			"name": "Baja Verapaz"
+		},
+		"04": {
+			"name": "Chimaltenango"
+		},
+		"20": {
+			"name": "Chiquimula"
+		},
+		"02": {
+			"name": "El Progreso"
+		},
+		"05": {
+			"name": "Escuintla"
+		},
+		"01": {
+			"name": "Guatemala"
+		},
+		"13": {
+			"name": "Huehuetenango"
+		},
+		"18": {
+			"name": "Izabal"
+		},
+		"21": {
+			"name": "Jalapa"
+		},
+		"22": {
+			"name": "Jutiapa"
+		},
+		"17": {
+			"name": "Petén"
+		},
+		"09": {
+			"name": "Quetzaltenango"
+		},
+		"14": {
+			"name": "Quiché"
+		},
+		"11": {
+			"name": "Retalhuleu"
+		},
+		"03": {
+			"name": "Sacatepéquez"
+		},
+		"12": {
+			"name": "San Marcos"
+		},
+		"06": {
+			"name": "Santa Rosa"
+		},
+		"07": {
+			"name": "Sololá"
+		},
+		"10": {
+			"name": "Suchitepéquez"
+		},
+		"08": {
+			"name": "Totonicapán"
+		},
+		"19": {
+			"name": "Zacapa"
+		}
+	}
+}

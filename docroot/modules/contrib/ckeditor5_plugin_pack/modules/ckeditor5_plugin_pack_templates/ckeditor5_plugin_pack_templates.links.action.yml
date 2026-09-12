@@ -1,0 +1,5 @@
+entity.ckeditor5_template.add_form:
+  route_name: 'entity.ckeditor5_template.add_form'
+  title: 'Add CKEditor 5 Content Template'
+  appears_on:
+    - entity.ckeditor5_template.collection

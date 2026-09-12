@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel\Migrate;
 
@@ -36,7 +36,7 @@ trait MigratePhoneNumberTestTrait {
     $settings = PhoneNumberSettings::loadMultiple();
     static::assertCount(1, $settings);
     /** @var \Drupal\sms\Entity\PhoneNumberSettingsInterface $setting */
-    $setting = reset($settings);
+    $setting = \reset($settings);
     static::assertEquals(PhoneNumberSettingsPlugin::DEFAULT_VERIFICATION_MESSAGE, $setting->getVerificationMessage());
     static::assertEquals('phone_number', $setting->getFieldName('phone_number'));
     static::assertEquals(TRUE, $setting->getPurgeVerificationPhoneNumber());
@@ -68,7 +68,7 @@ trait MigratePhoneNumberTestTrait {
     $settings = PhoneNumberSettings::loadMultiple();
     static::assertCount(1, $settings);
     /** @var \Drupal\sms\Entity\PhoneNumberSettingsInterface $setting */
-    $setting = reset($settings);
+    $setting = \reset($settings);
     $expected_message = 'This is a custom confirmation message from [site:name]. Confirmation code: [sms-message:verification-code]';
 
     static::assertEquals($expected_message, $setting->getVerificationMessage());
@@ -144,7 +144,7 @@ trait MigratePhoneNumberTestTrait {
    */
   protected function assertVerifiedPhoneNumber(UserInterface $user, $number) {
     $phone_numbers = $this->container->get('sms.phone_number')->getPhoneNumbers($user, TRUE);
-    $phone_number = reset($phone_numbers);
+    $phone_number = \reset($phone_numbers);
     static::assertEquals($number, $phone_number, "Phone number '$number' is verified.");
   }
 
@@ -153,7 +153,7 @@ trait MigratePhoneNumberTestTrait {
    */
   protected function assertUnVerifiedPhoneNumber(UserInterface $user, $number) {
     $phone_numbers = $this->container->get('sms.phone_number')->getPhoneNumbers($user, FALSE);
-    $phone_number = reset($phone_numbers);
+    $phone_number = \reset($phone_numbers);
     static::assertEquals($number, $phone_number, "Phone number '$number' is unverified.");
   }
 
@@ -170,7 +170,7 @@ trait MigratePhoneNumberTestTrait {
    */
   protected function assertVerificationCode($number, $code) {
     $verification = $this->container->get('sms.phone_number.verification')->getPhoneVerificationByPhoneNumber($number, FALSE);
-    $verification = reset($verification);
+    $verification = \reset($verification);
     return static::assertEquals($code, $verification->getCode());
   }
 

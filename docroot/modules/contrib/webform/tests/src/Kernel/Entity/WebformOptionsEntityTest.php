@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\webform\Kernel\Entity;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\webform\Entity\WebformOptions;
 
@@ -24,7 +24,7 @@ class WebformOptionsEntityTest extends KernelTestBase {
   /**
    * Tests some of the methods.
    */
-  public function testWebformOptionsMethods() {
+  public function testWebformOptionsMethods(): void {
     // Create webform options.
     $values = ['id' => 'webform_options_test'];
     /** @var \Drupal\webform\WebformOptionsInterface $webform_options */

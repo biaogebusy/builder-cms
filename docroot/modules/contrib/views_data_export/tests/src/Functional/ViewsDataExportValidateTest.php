@@ -26,7 +26,10 @@ class ViewsDataExportValidateTest extends ViewTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $testViews = ['test_data_export_validate'];
+  public static $testViews = [
+    'test_data_export_validate',
+    'test_data_export_validate_invalid',
+  ];
 
   /**
    * {@inheritdoc}
@@ -100,6 +103,36 @@ class ViewsDataExportValidateTest extends ViewTestBase {
 
     // Finally, the view should save properly.
     $this->assertSession()->pageTextContains('The view test_data_export_validate has been saved.');
+  }
+
+  /**
+   * Test validation fails when export_filesystem uses an invalid scheme.
+   *
+   * @covers \Drupal\views_data_export\Plugin\views\display\DataExport::validate
+   */
+  public function testInvalidExportFilesystemValidate(): void {
+
+    // Load up our intentionally invalid view display.
+    $this->drupalGet('admin/structure/views/view/test_data_export_validate_invalid/edit/invalid_export_filesystem');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->submitForm([], 'Save');
+
+    // It should complain about the export filesystem on save.
+    $this->assertSession()->pageTextContains('has an invalid export filesystem scheme: ');
+
+    // Correct the export filesystem to use a valid scheme.
+    $this->drupalGet('admin/structure/views/nojs/display/test_data_export_validate_invalid/invalid_export_filesystem/path');
+    $this->submitForm([
+      'export_filesystem' => 'public',
+    ], 'Apply');
+
+    // Try saving the view again.
+    $this->drupalGet('admin/structure/views/view/test_data_export_validate_invalid/edit/invalid_export_filesystem');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->submitForm([], 'Save');
+
+    // Now it should not complain about the export filesystem.
+    $this->assertSession()->pageTextNotContains('has an invalid export filesystem scheme: ');
   }
 
 }

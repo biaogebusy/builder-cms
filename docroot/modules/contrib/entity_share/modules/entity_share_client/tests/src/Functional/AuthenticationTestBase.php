@@ -24,7 +24,12 @@ abstract class AuthenticationTestBase extends EntityShareClientFunctionalTestBas
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'file',
+    'field',
+    'menu_ui',
     'key',
+    'entity_share_test',
   ];
 
   /**
@@ -43,9 +48,7 @@ abstract class AuthenticationTestBase extends EntityShareClientFunctionalTestBas
   protected static $entityLangcode = 'en';
 
   /**
-   * An array of data to generate physical files.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $filesData = [
     'private_file' => [

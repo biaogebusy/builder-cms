@@ -4,12 +4,16 @@ namespace Drupal\Tests\paragraphs\Functional\WidgetLegacy;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\paragraphs\Traits\ParagraphsLastEntityQueryTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test paragraphs and content moderation with translations.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsLegacyContentModerationTranslationsTest extends ParagraphsTestBase {
 
   use ParagraphsLastEntityQueryTrait;

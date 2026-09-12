@@ -87,6 +87,11 @@ class SearchApiTagCache extends Tag {
   public function getRowCacheTags(ResultRow $row) {
     $tags = [];
 
+    /** @var \Drupal\search_api\Plugin\views\ResultRow $row */
+    if (!empty($row->search_api_has_fields_from_server)) {
+      $tags[] = 'search_api_list:' . $row->_item->getIndex()->id();
+    }
+
     foreach ($row->_relationship_objects as $objects) {
       /** @var \Drupal\Core\TypedData\ComplexDataInterface $object */
       foreach ($objects as $object) {

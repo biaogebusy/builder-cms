@@ -5,11 +5,14 @@ namespace Drupal\ai\Service;
 use Drupal\ai\AiToolsLibraryState;
 use Drupal\ai\Form\AiToolsLibrarySelectForm;
 use Drupal\Component\Plugin\PluginManagerInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * The Ai Tools library UI Builder service.
@@ -200,6 +203,41 @@ class AiToolsLibraryUiBuilder implements AiToolsLibraryUiBuilderInterface {
    */
   protected function buildAiToolsLibraryView(AiToolsLibraryState $state) {
     return $this->formBuilder->getForm(AiToolsLibrarySelectForm::class, $state);
+  }
+
+  /**
+   * Check access to the tools' library.
+   *
+   * The tools library is supposed to be used within tools selection form
+   * element only. For the proper functioning of the tools selection some state
+   * parameters are required. To prevent undesired behavior, the access to the
+   * route is denied in case the state could not be initialized or user has no
+   * access permissions.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   Run access checks for this account.
+   * @param \Drupal\ai\AiToolsLibraryState|null $state
+   *   (optional) The current state of the tools library, derived from the
+   *   current request.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  public function checkAccess(AccountInterface $account, ?AiToolsLibraryState $state = NULL) {
+    if (!$state) {
+      try {
+        AiToolsLibraryState::fromRequest($this->request);
+      }
+      catch (BadRequestHttpException $e) {
+        return AccessResult::forbidden($e->getMessage());
+      }
+      catch (\InvalidArgumentException $e) {
+        return AccessResult::forbidden($e->getMessage());
+      }
+    }
+    // The user must have access ai tools overview permission to access the
+    // library page.
+    return AccessResult::allowedIfHasPermission($account, 'access ai tools overview');
   }
 
 }

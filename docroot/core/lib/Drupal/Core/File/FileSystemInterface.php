@@ -121,7 +121,7 @@ interface FileSystemInterface {
    * @param string $uri
    *   A URI or pathname.
    * @param resource $context
-   *   Refer to http://php.net/manual/ref.stream.php
+   *   Refer to http://php.net/manual/ref.stream.php.
    *
    * @return bool
    *   Boolean TRUE on success, or FALSE on failure.
@@ -185,6 +185,9 @@ interface FileSystemInterface {
    * @see basename()
    *
    * @ingroup php_wrappers
+   *
+   * @deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use PHP native basename() instead.
+   * @see https://www.drupal.org/node/3530869
    */
   public function basename($uri, $suffix = NULL);
 
@@ -204,7 +207,7 @@ interface FileSystemInterface {
    *   Create directories recursively, defaults to FALSE. Cannot work with a
    *   mode which denies writing or execution to the owner of the process.
    * @param resource $context
-   *   Refer to http://php.net/manual/ref.stream.php
+   *   Refer to http://php.net/manual/ref.stream.php.
    *
    * @return bool
    *   Boolean TRUE on success, or FALSE on failure.
@@ -227,7 +230,7 @@ interface FileSystemInterface {
    * @param string $uri
    *   A URI or pathname.
    * @param resource $context
-   *   Refer to http://php.net/manual/ref.stream.php
+   *   Refer to http://php.net/manual/ref.stream.php.
    *
    * @return bool
    *   Boolean TRUE on success, or FALSE on failure.
@@ -252,7 +255,7 @@ interface FileSystemInterface {
    *   The prefix of the generated temporary filename.
    *   Note: Windows uses only the first three characters of prefix.
    *
-   * @return string|bool
+   * @return string|false
    *   The new temporary filename, or FALSE on failure.
    *
    * @see tempnam()
@@ -266,15 +269,29 @@ interface FileSystemInterface {
    *
    * This is a powerful function that in many ways performs like an advanced
    * version of copy().
-   * - Checks if $source and $destination are valid and readable/writable.
-   * - If file already exists in $destination either the call will error out,
-   *   replace the file or rename the file based on the $fileExists parameter.
-   * - If the $source and $destination are equal, the behavior depends on the
-   *   $fileExists parameter.
+   * - If $source and $destination are valid and readable/writable, then only
+   *   perform the copy operation.
+   * - If $source and $destination are equal then a FileException exception is
+   *   thrown.
+   * - If the $destination file already exists, the behavior depends on the
+   *   $fileExists parameter as follows `FileExists::Error` will error out,
+   *   `FileExists::Replace` will replace the existing file, and
+   *   `FileExists::Rename` will assign a new unique name.
    * - Provides a fallback using realpaths if the move fails using stream
    *   wrappers. This can occur because PHP's copy() function does not properly
-   *   support streams if open_basedir is enabled. See
-   *   https://bugs.php.net/bug.php?id=60456
+   *   support streams if open_basedir is enabled.
+   *
+   * Example:
+   * @code
+   * use Drupal\Core\File\FileExists;
+   * use Drupal\Core\File\FileSystemInterface;
+   * ...
+   * $directory = 'public://example-dir';
+   * $file_system = \Drupal::service('file_system');
+   * $file_system->copy($filepath, $directory . '/' . basename($filepath), FileExists::Replace);
+   * @endcode
+   * In this example, file is copied from $filepath and is replaced at the
+   * destination if exists.
    *
    * @param string $source
    *   A string specifying the filepath or URI of the source file.
@@ -362,6 +379,7 @@ interface FileSystemInterface {
    * @throws \ValueError
    *   Thrown if $fileExists is a legacy int and not a valid value.
    *
+   * @see \Drupal\Core\File\FileSystemInterface::createFilename()
    * @see https://bugs.php.net/bug.php?id=60456
    */
   public function move($source, $destination, /* FileExists */$fileExists = FileExists::Rename);
@@ -441,7 +459,7 @@ interface FileSystemInterface {
    * @param \Drupal\Core\File\FileExists|int $fileExists
    *   Replace behavior when the destination file already exists.
    *
-   * @return string|bool
+   * @return string|false
    *   The destination filepath, or FALSE if the file already exists
    *   and FileExists::Error is specified.
    *

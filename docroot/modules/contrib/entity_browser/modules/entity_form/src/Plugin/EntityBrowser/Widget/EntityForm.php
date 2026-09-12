@@ -9,6 +9,8 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserWidget;
 use Drupal\entity_browser\WidgetBase;
 use Drupal\entity_browser\WidgetValidationManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -17,14 +19,13 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 
 /**
  * Provides entity form widget.
- *
- * @EntityBrowserWidget(
- *   id = "entity_form",
- *   label = @Translation("Entity form"),
- *   description = @Translation("Provides entity form widget."),
- *   auto_select = FALSE
- * )
  */
+#[EntityBrowserWidget(
+  id: 'entity_form',
+  label: new TranslatableMarkup('Entity form'),
+  description: new TranslatableMarkup('Provides entity form widget.'),
+  auto_select: false
+)]
 class EntityForm extends WidgetBase {
 
   /**

@@ -32,7 +32,7 @@ use Drupal\Core\Plugin\PluginBase;
  *   'left_field' => 'field_a',
  *   'operator' => '=',
  * ];
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  * Note that the default join type is a LEFT join when 'type' is not supplied in
  * the join plugin configuration.
@@ -58,7 +58,7 @@ use Drupal\Core\Plugin\PluginBase;
  *     ],
  *   ],
  * ];
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * For this SQL:
@@ -81,7 +81,7 @@ use Drupal\Core\Plugin\PluginBase;
  *     ],
  *   ],
  * ];
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * For this SQL:
@@ -104,7 +104,7 @@ use Drupal\Core\Plugin\PluginBase;
  *     ],
  *   ],
  * ];
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * For this SQL:
@@ -127,7 +127,7 @@ use Drupal\Core\Plugin\PluginBase;
  *     ],
  *   ],
  * ];
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * Here is an example of a more complex join:
@@ -203,9 +203,9 @@ class JoinPluginBase extends PluginBase implements JoinPluginInterface {
    *   - value: Must be set. If an array, operator will be defaulted to IN.
    *   - numeric: If true, the value will not be surrounded in quotes.
    *
-   * @see SelectQueryInterface::addJoin()
-   *
    * @var array
+   *
+   * @see SelectQueryInterface::addJoin()
    */
   public $extra;
 
@@ -306,7 +306,8 @@ class JoinPluginBase extends PluginBase implements JoinPluginInterface {
       $left_field = $this->leftFormula ?: "$left_table[alias].$this->leftField";
     }
     else {
-      // This can be used if left_field is a formula or something. It should be used only *very* rarely.
+      // This can be used if left_field is a formula or something. It should be
+      // used only *very* rarely.
       $left_field = $this->leftField;
       $left_table = NULL;
     }
@@ -397,7 +398,7 @@ class JoinPluginBase extends PluginBase implements JoinPluginInterface {
     }
 
     // Convert a single-valued array of values to the single-value case,
-    // and transform from IN() notation to = notation
+    // and transform from IN() notation to = notation.
     if (is_array($info['value']) && count($info['value']) == 1) {
       $info['value'] = array_shift($info['value']);
     }

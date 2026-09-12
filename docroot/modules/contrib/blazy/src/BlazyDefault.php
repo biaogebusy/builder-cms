@@ -2,7 +2,7 @@
 
 namespace Drupal\blazy;
 
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
 
 /**
  * Defines shared plugin default settings for field formatter and Views style.
@@ -17,7 +17,7 @@ class BlazyDefault {
    *
    * These are related to convention in css/blazy.ratio.css.
    */
-  const RATIO = ['1:1', '3:2', '4:3', '8:5', '16:9'];
+  const RATIO = ['1:1', '3:2', '4:3', '8:5', '9:16', '16:9', '16:10', '21:9'];
 
   /**
    * Defines constant for the supported text tags.
@@ -61,16 +61,47 @@ class BlazyDefault {
   protected static $id = NULL;
 
   /**
+   * The processing check.
+   *
+   * @var bool
+   */
+  protected static bool $processing = FALSE;
+
+  /**
+   * The alteredSettings check.
+   *
+   * @var array|null
+   */
+  protected static ?array $alteredSettings = NULL;
+
+  /**
    * Returns alterable plugin settings to pass the tests.
    *
    * @param array $settings
    *   The settings being modified.
+   *
+   * @todo remove hook_alter out of here in 4.x.
    */
   public static function alterableSettings(array &$settings) {
-    if ($manager = Internals::service('blazy.manager')) {
-      $context = ['class' => get_called_class()];
+    if (self::$processing) {
+      return;
+    }
+
+    if (self::$alteredSettings !== NULL) {
+      $settings = self::$alteredSettings;
+      return;
+    }
+
+    self::$processing = TRUE;
+
+    $context = ['class' => get_called_class()];
+    if ($manager = Internals::blazy()) {
       $manager->moduleHandler()->alter('blazy_base_settings', $settings, $context);
     }
+
+    self::$processing = FALSE;
+
+    self::$alteredSettings = $settings;
   }
 
   /**
@@ -81,6 +112,31 @@ class BlazyDefault {
 
     self::alterableSettings($settings);
     return $settings;
+  }
+
+  /**
+   * Grouping for sanity till all settings converted into BlazySettings.
+   *
+   * It was a pre-release RC7 @todo, partially implemented since 2.7.
+   * The hustle is sub-modules are not aware, yet. Yet better started before 3.
+   * While some configurable settings are intact, blazies are more for grouping
+   * dynamic, non-configurable settings. But it can also store blazy-specific.
+   * Very few are adjusted into blazies for easy calls/overrides/alters.
+   * Please bear with the silly plural `blazies` object, no better ideas.
+   */
+  public static function blazies() {
+    $ui = self::uiSettings();
+    if ($manager = Internals::blazy()) {
+      $ui = $manager->config();
+    }
+    return [
+      'initial' => 0,
+      'is' => [],
+      'lazy' => ['id' => 'blazy', 'attribute' => 'src', 'class' => 'b-lazy'],
+      'libs' => [],
+      'ui' => $ui,
+      'use' => [],
+    ];
   }
 
   /**
@@ -112,6 +168,7 @@ class BlazyDefault {
       'responsive_image_style' => '',
       'use_theme_field'        => FALSE,
       'use_lb'                 => FALSE,
+      'field_api_classes'      => FALSE,
     ] + self::cherrySettings();
   }
 
@@ -296,8 +353,17 @@ class BlazyDefault {
       'nojs'                => [],
       'one_pixel'           => TRUE,
       'visible_class'       => FALSE,
+      'wrapper_class'       => FALSE,
       'noscript'            => FALSE,
       'placeholder'         => '',
+      'privacy_consent'     => FALSE,
+      'ratio_modern'        => FALSE,
+      'lazy_html'           => FALSE,
+      'use_encodedbox'      => FALSE,
+      'use_oembed'          => FALSE,
+      'use_custom_css'      => FALSE,
+      'css_scope'           => '',
+      'max_region_count'    => 0,
       'unstyled_extensions' => '',
     ];
   }
@@ -328,7 +394,7 @@ class BlazyDefault {
    * The first error was identified with BVEF due to being out of sync when
    * given an extra property `entity` as seen at BlazyEntity::build().
    * No issues so far with all these, yet conversions will eliminate any.
-   * Initial effort was via Blazy::toHashtag() checkpoint till full migration.
+   * Initial effort was via ::toHashtag() checkpoint till full migration.
    */
   public static function themeProperties() {
     return [
@@ -401,6 +467,7 @@ class BlazyDefault {
       'media',
       'mfp',
       'ratio',
+      'ratio.modern',
     ]);
     return array_merge($components, array_keys(self::dyComponents()));
   }
@@ -519,7 +586,7 @@ class BlazyDefault {
    * Returns a BlazySettings instance.
    */
   public static function toSettings(array $data = []): BlazySettings {
-    return Internals::settings($data);
+    return new BlazySettings($data);
   }
 
   /**
@@ -564,33 +631,6 @@ class BlazyDefault {
    */
   protected static function values(): array {
     return [];
-  }
-
-  /**
-   * Grouping for sanity till all settings converted into BlazySettings.
-   *
-   * It was a pre-release RC7 @todo, partially implemented since 2.7.
-   * The hustle is sub-modules are not aware, yet. Yet better started before 3.
-   * While some configurable settings are intact, blazies are more for grouping
-   * dynamic, non-configurable settings. But it can also store blazy-specific.
-   * Very few are adjusted into blazies for easy calls/overrides/alters.
-   * Please bear with the silly plural `blazies` object, no better ideas.
-   */
-  private static function blazies() {
-    $ui = self::uiSettings();
-
-    // For convenience when by-passing the provided API.
-    if ($manager = Internals::service('blazy.manager')) {
-      $ui = $manager->config();
-    }
-    return [
-      'initial' => 0,
-      'is' => [],
-      'lazy' => ['id' => 'blazy', 'attribute' => 'src', 'class' => 'b-lazy'],
-      'libs' => [],
-      'ui' => $ui,
-      'use' => [],
-    ];
   }
 
   /**

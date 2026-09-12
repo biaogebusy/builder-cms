@@ -15,6 +15,7 @@ class BlazyAdminFormatter extends BlazyAdminFormatterBase {
   public function buildSettingsForm(array &$form, array $definition): void {
     parent::buildSettingsForm($form, $definition);
 
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes = $this->toScopes($definition);
 
     $this->openingForm($form, $definition);
@@ -42,6 +43,7 @@ class BlazyAdminFormatter extends BlazyAdminFormatterBase {
   public function openingForm(array &$form, array &$definition): void {
     parent::openingForm($form, $definition);
 
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes = $this->toScopes($definition);
     $namespace = static::$namespace;
     $descriptions = $this->formatterDescriptions($scopes);
@@ -77,6 +79,7 @@ class BlazyAdminFormatter extends BlazyAdminFormatterBase {
   public function fieldableForm(array &$form, array $definition): void {
     parent::fieldableForm($form, $definition);
 
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes = $this->toScopes($definition);
     $data = $scopes->get('data', []);
     $base_image = $this->baseForm($definition)['image'] ?? [];
@@ -146,6 +149,7 @@ class BlazyAdminFormatter extends BlazyAdminFormatterBase {
    * {@inheritdoc}
    */
   public function closingForm(array &$form, array $definition): void {
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes = $this->toScopes($definition);
     $descriptions = $this->formatterDescriptions($scopes);
 
@@ -165,33 +169,115 @@ class BlazyAdminFormatter extends BlazyAdminFormatterBase {
 
   /**
    * Returns formatter descriptions.
+   *
+   * @param \Drupal\blazy\BlazySettings $scopes
+   *   The scopes being passed.
+   *
+   * @return array
+   *   The form item descriptions.
    */
   protected function formatterDescriptions($scopes): array {
     $namespace = $scopes->get('namespace', 'blazy');
 
-    $cache = $this->t('Ditch all the logic to cached bare HTML. <ol><li><strong>Permanent</strong>: cached contents will persist (be displayed) till the next cron runs.</li><li><strong>Any number</strong>: expired by the selected expiration time, and fresh contents are fetched till the next cache rebuilt.</li></ol>A working cron job is required to clear stale cache. At any rate, cached contents will be refreshed regardless of the expiration time after the cron hits. <br />Leave it empty to disable caching.<br /><strong>Warning!</strong> Be sure no useless/ sensitive data such as Edit links as they are rendered as is regardless permissions. No permissions are changed, just ugly. Only enable it when all is done, otherwise cached options will be displayed while changing them.');
-    $caption = $this->t('Enable any of the following fields as captions. These fields are treated and wrapped as captions.');
-    $overlay = $this->t('Overlay is displayed over the main stage. Can be plain image, sliders, etc.');
+    $cache = $this->t(
+      'Cache the rendered output as static HTML.
+<ul>
+  <li><strong>Permanent</strong>: cached until the next cron run.</li>
+  <li><strong>Any number</strong>: expires after the selected time.</li>
+</ul>
+
+A working cron job is required to clear stale cache. Cached content is always refreshed on cron, regardless of expiration.
+
+<br>Leave empty to disable caching.
+
+<br><strong>Warning:</strong> Cached output is rendered as-is. Do not enable if it contains sensitive or contextual elements (e.g. edit links). Enable only after configuration is finalized.'
+    );
+
+    $caption = $this->t(
+      'Enable one or more fields to be used as captions.
+Selected fields will be wrapped and styled as captions.'
+    );
+
+    $overlay = $this->t(
+      'Content displayed on top of the main stage, such as images, sliders, or other media.'
+    );
 
     if ($scopes->is('_views')) {
-      $cache .= ' ' . $this->t('Also disable Views cache (<strong>Advanced &gt; Caching</strong>) temporarily _only if trouble to see updated settings.');
-      $overlay .= ' ' . $this->t('Be sure to CHECK "Use field template" under its formatter if using Slick field formatter.');
+      $cache .= ' ' . $this->t(
+        'If updates are not visible, temporarily disable Views caching
+(<strong>Advanced &gt; Caching</strong>).'
+      );
+
+      $overlay .= ' ' . $this->t(
+        'If using Slick field formatter, enable
+<strong>Use field template</strong> in its settings.'
+      );
     }
     else {
-      $caption .= $this->t('Be sure to make them visible at their relevant Manage display if View Mode option is provided.');
+      $caption .= ' ' . $this->t(
+        'Ensure selected fields are visible in the chosen View mode.'
+      );
     }
 
     return [
       'cache' => $cache,
+
       'caption' => $caption,
-      'class' => $this->t('If provided, individual item will have this class, e.g.: to have different background with transparent images. Be sure its formatter is Key or Label. Accepted field types: list text, string (e.g.: node title), term/entity reference label.'),
-      'optionset' => $this->t('Enable the optionset UI module to manage the optionsets.'),
+
+      'class' => $this->t(
+        'Optional CSS class per item.
+Useful for conditional styling (e.g. transparent images).
+
+Field must output a string (Key or Label).
+
+Supported types:
+list text, string, title, term/entity label.'
+      ),
+
+      'optionset' => $this->t(
+        'Enable the Optionset UI module to manage available optionsets.'
+      ),
+
       'overlay' => $overlay,
-      'thumbnail' => $this->t('Leave empty to not use thumbnail/ pager.'),
-      'title' => $this->t('<strong>Supported types</strong>: basic Image title, and fields like a dedicated field Title, Link, etc. If an entity, be sure its formatter is strings like ID or Label. As opposed to <strong>Caption fields</strong>, it will be positioned and wrapped with H2 (overriden by <code>hook_blazy_item_alter() with blazies.item.title_tag</code>) and a dedicated class: <strong>@class</strong>.', [
-        '@class' => $namespace == 'blazy' ? 'blazy__caption--title' : $namespace . '__title',
-      ]),
-      'vanilla' => $this->t('<strong>Check</strong>:<ul><li>To render individual item as is as without extra logic.</li><li>To disable 99% @module features, and most of the mentioned options here, such as layouts, et al.</li><li>When the @module features can not satisfy the need.</li><li>Things may be broken! You are on your own.</li></ul><strong>Uncheck</strong>:<ul><li>To get consistent markups and its advanced features -- relevant for the provided options as @module needs to know what to style/work with.</li></ul>', ['@module' => $namespace]),
+
+      'thumbnail' => $this->t(
+        'Leave empty to disable thumbnails or pagers.'
+      ),
+
+      'title' => $this->t(
+        '<strong>Supported types</strong>:
+Image title or string-based fields (Title, Link, etc.).
+
+For entities, use formatters that output plain strings (ID or Label).
+
+Unlike <strong>Caption fields</strong>, this is rendered as a heading
+(overridable via
+<code>hook_blazy_item_alter()</code> with
+<code>blazies.item.title_tag</code>)
+and wrapped with a dedicated class:
+<strong>@class</strong>.',
+        [
+          '@class' => $namespace === 'blazy'
+            ? 'blazy__caption--title'
+            : $namespace . '__title',
+        ]
+      ),
+
+      'vanilla' => $this->t(
+        '<strong>Enable</strong> to render items without Blazy processing.
+<ul>
+  <li>Outputs raw formatter markup.</li>
+  <li>Disables most @module features (layouts, grids, etc.).</li>
+  <li>Use when custom formatting is required.</li>
+  <li>Issues caused by enabling this option are not supported and
+      considered custom works.</li>
+</ul>
+
+<strong>Disable</strong> to use consistent markup and advanced features.',
+        [
+          '@module' => $namespace,
+        ]
+      ),
     ];
   }
 

@@ -111,6 +111,12 @@ function template_preprocess_bef_checkboxes(array &$variables): void {
   if (!empty($variables['element']['#bef_nested'])) {
     _bef_preprocess_nested_elements($variables);
   }
+
+  // Handle scrollable container.
+  if (!empty($element['#bef_scrollable'])) {
+    $variables['wrapper_attributes']->addClass('bef-scrollable');
+    $variables['wrapper_attributes']->setAttribute('style', 'max-height: ' . (int) $element['#bef_scrollable_height'] . 'px;');
+  }
 }
 
 /**
@@ -138,6 +144,12 @@ function template_preprocess_bef_radios(array &$variables): void {
   // Handle nested radio buttons.
   if (!empty($variables['element']['#bef_nested'])) {
     _bef_preprocess_nested_elements($variables);
+  }
+
+  // Handle scrollable container.
+  if (!empty($element['#bef_scrollable'])) {
+    $variables['wrapper_attributes']->addClass('bef-scrollable');
+    $variables['wrapper_attributes']->setAttribute('style', 'max-height: ' . (int) $element['#bef_scrollable_height'] . 'px;');
   }
 }
 
@@ -215,13 +227,17 @@ function template_preprocess_bef_links(array &$variables): void {
   $name = $element['#name'];
   $multiple = $element['#multiple'] ?? FALSE;
 
-  // Set multiple attribute.
-  if ($multiple) {
-    $variables['attributes']['multiple'] = 'multiple';
-  }
+  // We remove these keys because bef-links renders as a div making these
+  // not needed.
+  $keys_to_remove = ['size', 'name', 'multiple'];
 
-  // Set element name.
-  $variables['attributes']['name'] = $name;
+  foreach ($keys_to_remove as $key) {
+    if (isset($variables['attributes'][$key])) {
+      // Add the attribute as a data-* attribute for easier JS access.
+      $variables['attributes']["data-$key"] = $variables['attributes'][$key];
+    }
+  }
+  $variables['attributes'] = array_diff_key($variables['attributes'], array_flip($keys_to_remove));
 
   // Get the query string arguments from the current request.
   $existing_query = \Drupal::service('request_stack')->getCurrentRequest()->query->all();
@@ -262,6 +278,10 @@ function template_preprocess_bef_links(array &$variables): void {
 
     if ($multiple) {
       $newQuery = $existing_query;
+      // Unset any empty parameters first.
+      if (empty($newQuery[$name])) {
+        unset($newQuery[$name]);
+      }
       if (!isset($newQuery[$name])) {
         $newQuery[$name] = [];
       }
@@ -272,10 +292,10 @@ function template_preprocess_bef_links(array &$variables): void {
         });
       }
       else {
-        $newQuery[$name][] = $optionValue;
-      }
-      if (empty($newQuery[$name])) {
-        unset($newQuery[$name]);
+        if (!isset($newQuery[$name]) || !is_array($newQuery[$name])) {
+          $newQuery[$name] = [];
+        }
+        $newQuery[$name][$optionValue] = $optionValue;
       }
 
       $urlOptions['query'] = $newQuery;
@@ -307,9 +327,10 @@ function template_preprocess_bef_links(array &$variables): void {
     $variables['links'][$optionValue] = [
       '#attributes' => [
         'id' => Html::getUniqueId('edit-' . implode('-', [$name, $optionValue])),
-        'name' => $name . '[' . $optionValue . ']',
+        'data-bef-value' => $optionValue,
         'class' => [
           'bef-link',
+          Html::getUniqueId('edit-' . $name),
         ],
       ],
       '#type' => 'link',
@@ -331,6 +352,12 @@ function template_preprocess_bef_links(array &$variables): void {
   $variables['children'] = Element::children($variables['element']);
   if (!empty($variables['element']['#bef_nested'])) {
     _bef_preprocess_nested_elements($variables);
+  }
+
+  // Handle scrollable container.
+  if (!empty($element['#bef_scrollable'])) {
+    $variables['attributes']['class'][] = 'bef-scrollable';
+    $variables['attributes']['style'] = 'max-height: ' . (int) $element['#bef_scrollable_height'] . 'px;';
   }
 }
 

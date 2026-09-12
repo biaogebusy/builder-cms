@@ -3,7 +3,7 @@
 namespace Drupal\webform\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\webform\WebformSubmissionForm;
 
 /**
@@ -11,7 +11,7 @@ use Drupal\webform\WebformSubmissionForm;
  *
  * @FormElement("webform_variant")
  */
-class WebformVariant extends FormElement {
+class WebformVariant extends FormElementBase {
 
   /**
    * {@inheritdoc}

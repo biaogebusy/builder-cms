@@ -100,8 +100,18 @@ class UncacheableEntityAccessControlHandlerTest extends UnitTestCase {
       $first_user = static::buildMockUser(6, $operation . ' green_entity');
       $second_user = static::buildMockUser(7, 'access content');
 
-      $data[] = [$second_entity->reveal(), $operation, $first_user->reveal(), TRUE];
-      $data[] = [$second_entity->reveal(), $operation, $second_user->reveal(), FALSE];
+      $data[] = [
+        $second_entity->reveal(),
+        $operation,
+        $first_user->reveal(),
+        TRUE,
+      ];
+      $data[] = [
+        $second_entity->reveal(),
+        $operation,
+        $second_user->reveal(),
+        FALSE,
+      ];
     }
 
     // View, update, duplicate, delete permissions.

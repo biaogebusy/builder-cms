@@ -1,0 +1,35 @@
+@startuml
+
+' This is the PlantUML (https://plantuml.com/) source used to generate the UML
+' overview diagram for the translation system (detail.png). Said diagram can
+' be regenerated from this source at https://plantuml-editor.kkeisuke.com/ or with
+' the PhpStorm plugin at https://plugins.jetbrains.com/plugin/7017-plantuml-integration.
+' Optimize it with ImageOptim: https://imageoptim.com/.
+
+!include ../resources/settings.puml
+
+() start
+
+class "   Requester   " as Requester {
+    \nRequests
+    translatables\n
+}
+
+class "   Provider   " as Provider {
+    \nProvides
+    translatables\n
+}
+
+class TranslatableMessage
+
+class Translator
+
+start -right- Requester
+
+Requester -right-> Provider
+Provider .left.> TranslatableMessage
+Requester -right-> Translator
+Translator -right-> TranslatableMessage
+TranslatableMessage "\n translated string              " .left.> Requester
+
+@enduml

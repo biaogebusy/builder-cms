@@ -1,0 +1,20 @@
+ckeditor5_premium_features_export_word__export_word:
+  ckeditor5:
+    plugins:
+      - cloudServices.CloudServices
+      - exportWord.ExportWord
+      - exportAdapters.ExportAdapters
+  drupal:
+    label: Export to Word
+    library: ckeditor5_premium_features_export_word/export-word
+    admin_library: ckeditor5_premium_features_export_word/admin.export_word
+    class: Drupal\ckeditor5_premium_features_export_word\Plugin\CKEditor5Plugin\ExportWord
+    toolbar_items:
+      exportWord:
+        label: Export to Word
+    elements: false
+    conditions:
+      toolbarItem: exportWord
+      plugins:
+        - ckeditor5_premium_features__cloud_services
+        - ckeditor5_premium_features__export_adapter

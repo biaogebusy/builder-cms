@@ -22,7 +22,7 @@ class WebformHandlerEmailTwigTest extends WebformBrowserTestBase {
   /**
    * Test email twig handler.
    */
-  public function testEmailTwigHandler() {
+  public function testEmailTwigHandler(): void {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = Webform::load('test_handler_email_twig');
 
@@ -31,7 +31,7 @@ class WebformHandlerEmailTwigTest extends WebformBrowserTestBase {
 
     // Check sending a basic email via a submission.
     $sent_email = $this->getLastEmail();
-    $this->assertEquals($sent_email['params']['body'], '<p>Submitted values are:</p>
+    $this->assertEquals('<p>Submitted values are:</p>
   <b>First name</b><br />John<br /><br />
 
   <b>Last name</b><br />Smith<br /><br />
@@ -40,7 +40,7 @@ class WebformHandlerEmailTwigTest extends WebformBrowserTestBase {
 
   <b>Subject</b><br />{subject}<br /><br />
 
-  <b>Message</b><br />{message}<br /><br />');
+  <b>Message</b><br />{message}<br /><br />', (string) $sent_email['params']['body']);
 
   }
 

@@ -9,6 +9,7 @@ use Drupal\Core\Asset\AssetResolverInterface;
 use Drupal\Core\Asset\AttachedAssets;
 use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\EnforcedResponseException;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -25,7 +26,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Drupal\Core\Render\HtmlResponse object. Then use its getContent(),
  * getStatusCode(), and/or the headers property to access the result.
  *
- * @see template_preprocess_html()
+ * @see \Drupal\Core\Theme\ThemePreprocess::preprocessHtml()
  * @see \Drupal\Core\Render\AttachmentsResponseProcessorInterface
  * @see \Drupal\Core\Render\BareHtmlPageRenderer
  * @see \Drupal\Core\Render\HtmlResponse
@@ -34,87 +35,28 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorInterface {
 
   /**
-   * The asset resolver service.
-   *
-   * @var \Drupal\Core\Asset\AssetResolverInterface
-   */
-  protected $assetResolver;
-
-  /**
    * A config object for the system performance configuration.
    *
    * @var \Drupal\Core\Config\Config
    */
   protected $config;
 
-  /**
-   * The CSS asset collection renderer service.
-   *
-   * @var \Drupal\Core\Asset\AssetCollectionRendererInterface
-   */
-  protected $cssCollectionRenderer;
-
-  /**
-   * The JS asset collection renderer service.
-   *
-   * @var \Drupal\Core\Asset\AssetCollectionRendererInterface
-   */
-  protected $jsCollectionRenderer;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * Constructs a HtmlResponseAttachmentsProcessor object.
-   *
-   * @param \Drupal\Core\Asset\AssetResolverInterface $asset_resolver
-   *   An asset resolver.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   A config factory for retrieving required config objects.
-   * @param \Drupal\Core\Asset\AssetCollectionRendererInterface $css_collection_renderer
-   *   The CSS asset collection renderer.
-   * @param \Drupal\Core\Asset\AssetCollectionRendererInterface $js_collection_renderer
-   *   The JS asset collection renderer.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler service.
-   * @param \Drupal\Core\Language\LanguageManagerInterface|null $languageManager
-   *   The language manager.
-   */
-  public function __construct(AssetResolverInterface $asset_resolver, ConfigFactoryInterface $config_factory, AssetCollectionRendererInterface $css_collection_renderer, AssetCollectionRendererInterface $js_collection_renderer, RequestStack $request_stack, RendererInterface $renderer, ModuleHandlerInterface $module_handler, protected ?LanguageManagerInterface $languageManager = NULL) {
-    $this->assetResolver = $asset_resolver;
-    $this->config = $config_factory->get('system.performance');
-    $this->cssCollectionRenderer = $css_collection_renderer;
-    $this->jsCollectionRenderer = $js_collection_renderer;
-    $this->requestStack = $request_stack;
-    $this->renderer = $renderer;
-    $this->moduleHandler = $module_handler;
-    if (!isset($languageManager)) {
-      // phpcs:ignore Drupal.Semantics.FunctionTriggerError
-      @trigger_error('Calling ' . __METHOD__ . '() without the $languageManager argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0', E_USER_DEPRECATED);
-      $this->languageManager = \Drupal::languageManager();
+  public function __construct(
+    protected AssetResolverInterface $assetResolver,
+    ConfigFactoryInterface $config_factory,
+    protected AssetCollectionRendererInterface $cssCollectionRenderer,
+    protected AssetCollectionRendererInterface $jsCollectionRenderer,
+    protected RequestStack $requestStack,
+    protected RendererInterface $renderer,
+    protected ModuleHandlerInterface $moduleHandler,
+    protected LanguageManagerInterface $languageManager,
+    protected ?FileUrlGeneratorInterface $fileUrlGenerator = NULL,
+  ) {
+    if (!isset($fileUrlGenerator)) {
+      $this->fileUrlGenerator = \Drupal::service('file_url_generator');
+      @trigger_error('Constructing HtmlResponseAttachmentsProcessor without a file url generator is deprecated in drupal:11.4.0 and the argument will be required in drupal:12.0.0. See https://www.drupal.org/project/drupal/issues/3366561', E_USER_DEPRECATED);
     }
+    $this->config = $config_factory->get('system.performance');
   }
 
   /**
@@ -130,7 +72,7 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
     //
     // @todo Exceptions should not be used for code flow control. However, the
     //   Form API does not integrate with the HTTP Kernel based architecture of
-    //   Drupal 8. In order to resolve this issue properly it is necessary to
+    //   Drupal. In order to resolve this issue properly it is necessary to
     //   completely separate form submission from rendering.
     //   @see https://www.drupal.org/node/2367555
     try {
@@ -146,7 +88,18 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
     // Send a message back if the render array has unsupported #attached types.
     $unsupported_types = array_diff(
       array_keys($attached),
-      ['html_head', 'feed', 'html_head_link', 'http_header', 'library', 'html_response_attachment_placeholders', 'placeholders', 'drupalSettings']
+      [
+        'html_head',
+        'feed',
+        'html_head_link',
+        'http_header',
+        'library',
+        'html_response_attachment_placeholders',
+        'placeholders',
+        'drupalSettings',
+        'page_top',
+        'page_bottom',
+      ]
     );
     if (!empty($unsupported_types)) {
       throw new \LogicException(sprintf('You are not allowed to use %s in #attached.', implode(', ', $unsupported_types)));
@@ -162,7 +115,7 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
       // Take Ajax page state into account, to allow for something like
       // Turbolinks to be implemented without altering core.
       // @see https://github.com/rails/turbolinks/
-      $ajax_page_state = $this->requestStack->getCurrentRequest()->get('ajax_page_state');
+      $ajax_page_state = $this->requestStack->getCurrentRequest()->attributes->get('ajax_page_state');
       $assets->setAlreadyLoadedLibraries(isset($ajax_page_state) ? explode(',', $ajax_page_state['libraries']) : []);
       $variables = $this->processAssetLibraries($assets, $attachment_placeholders);
       // $variables now contains the markup to load the asset libraries. Update
@@ -171,6 +124,25 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
       // list the final, processed attachments.
       $attached['library'] = $assets->getLibraries();
       $attached['drupalSettings'] = $assets->getSettings();
+
+      // Collect fonts from libraries, and if they include fonts to preload, add
+      // them to #attached['html_head_link'].
+      $fonts = $this->assetResolver->getFontAssets($assets, $this->languageManager->getCurrentLanguage());
+      foreach ($fonts as $font) {
+        if ($font['preload']) {
+          $extension = pathinfo($font['data'], PATHINFO_EXTENSION);
+          $attached['html_head_link'][] = [
+            [
+              'href' => $this->fileUrlGenerator->generate($font['data'])->toString(),
+              'rel' => 'preload',
+              'as' => 'font',
+              'type' => 'font/' . $extension,
+              'crossorigin' => 'anonymous',
+            ],
+            FALSE,
+          ];
+        }
+      }
 
       // Since we can only replace content in the HTML head section if there's a
       // placeholder for it, we can safely avoid processing the render array if
@@ -185,9 +157,9 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
           );
           unset($attached['feed']);
         }
-        // 'html_head_link' is a special case of 'html_head' which can be present
-        // as a head element, but also as a Link: HTTP header depending on
-        // settings in the render array. Processing it can add to both the
+        // 'html_head_link' is a special case of 'html_head' which can be
+        // present as a head element, but also as a Link: HTTP header depending
+        // on settings in the render array. Processing it can add to both the
         // 'html_head' and 'http_header' keys of '#attached', so we must address
         // it before 'html_head'.
         if (!empty($attached['html_head_link'])) {
@@ -372,7 +344,7 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
    *   - The header value.
    *   - (optional) Whether to replace a current value with the new one, or add
    *     it to the others. If the value is not replaced, it will be appended,
-   *     resulting in a header like this: 'Header: value1,value2'
+   *     resulting in a header like this: 'Header: value1,value2'.
    */
   protected function setHeaders(HtmlResponse $response, array $headers) {
     foreach ($headers as $values) {

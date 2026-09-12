@@ -60,7 +60,6 @@
     },
 
     isFluid: function (el, cn) {
-      // @todo remove the last at/by 3.x:
       return $.equal(el.parentNode, 'picture') &&
         $.hasAttr(cn, DATA_B_RATIOS);
     },

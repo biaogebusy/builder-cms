@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Query\NoFieldsException;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Insert query builder with default values.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class InsertDefaultsTest extends DatabaseTestBase {
 
   /**
@@ -36,7 +38,7 @@ class InsertDefaultsTest extends DatabaseTestBase {
       // This is only executed if no exception has been thrown.
       $this->fail('Expected exception NoFieldsException has not been thrown.');
     }
-    catch (NoFieldsException $e) {
+    catch (NoFieldsException) {
       // Expected exception; just continue testing.
     }
 

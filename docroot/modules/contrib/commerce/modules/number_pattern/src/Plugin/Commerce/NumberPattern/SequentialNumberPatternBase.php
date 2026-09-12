@@ -158,7 +158,7 @@ abstract class SequentialNumberPatternBase extends NumberPatternBase implements 
     parent::validateConfigurationForm($form, $form_state);
 
     $values = $form_state->getValue($form['#parents']);
-    if (strpos($values['pattern'], '[pattern:number]') === FALSE) {
+    if (!str_contains($values['pattern'], '[pattern:number]')) {
       $form_state->setError($form['pattern'], $this->t('Missing the required token [pattern:number].'));
     }
   }

@@ -25,11 +25,11 @@ class OrderStorage extends CommerceContentEntityStorage implements OrderStorageI
   protected $orderRefresh;
 
   /**
-   * Whether the order refresh should be skipped.
+   * List of order IDs that should not be refreshed.
    *
-   * @var bool
+   * @var int[]
    */
-  protected $skipRefresh = FALSE;
+  protected array $skipRefreshIds = [];
 
   /**
    * List of successfully locked orders.
@@ -73,9 +73,9 @@ class OrderStorage extends CommerceContentEntityStorage implements OrderStorageI
   public function loadUnchanged($id) {
     // This method is used by the entity save process, triggering an order
     // refresh would cause a save-within-a-save.
-    $this->skipRefresh = TRUE;
+    $this->skipRefreshIds[$id] = TRUE;
     $unchanged_order = parent::loadUnchanged($id);
-    $this->skipRefresh = FALSE;
+    unset($this->skipRefreshIds[$id]);
     return $unchanged_order;
   }
 
@@ -150,19 +150,25 @@ class OrderStorage extends CommerceContentEntityStorage implements OrderStorageI
    * {@inheritdoc}
    */
   protected function postLoad(array &$entities) {
-    if (!$this->skipRefresh) {
-      /** @var \Drupal\commerce_order\Entity\OrderInterface[] $entities */
-      foreach ($entities as $entity) {
-        $explicitly_requested = $entity->getRefreshState() == OrderInterface::REFRESH_ON_LOAD;
-        if ($explicitly_requested || $this->orderRefresh->shouldRefresh($entity)) {
-          // Reuse the doPostLoad logic.
-          $entity->setRefreshState(OrderInterface::REFRESH_ON_SAVE);
-          $entity->save();
-        }
+    /** @var \Drupal\commerce_order\Entity\OrderInterface[] $entities */
+    foreach ($entities as $entity) {
+      $id = $entity->id();
+      if (isset($this->skipRefreshIds[$id])) {
+        continue;
+      }
+      $explicitly_requested = $entity->getRefreshState() == OrderInterface::REFRESH_ON_LOAD;
+      if ($explicitly_requested || $this->orderRefresh->shouldRefresh($entity)) {
+        // Note that we are not unsetting the skip refresh flag in a "finally"
+        // block on purpose to prevent recursion.
+        // Supporting more than one automatic refresh on load per order seems
+        // unnecessary.
+        $this->skipRefreshIds[$id] = TRUE;
+        $entity->setRefreshState(OrderInterface::REFRESH_ON_SAVE);
+        $entity->save();
       }
     }
 
-    return parent::postLoad($entities);
+    parent::postLoad($entities);
   }
 
   /**

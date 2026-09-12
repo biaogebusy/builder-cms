@@ -1,0 +1,22 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_install().
+ */
+function ckeditor5_premium_features_mentions_install($is_syncing): void {
+  if ($is_syncing) {
+    return;
+  }
+
+  // Enable the "Use the static permission condition for user query" setting by default on new installations.
+  $config = \Drupal::configFactory()->getEditable('ckeditor5_premium_features_mentions.settings');
+  $config->set('use_static_permission_condition', TRUE);
+  $config->save();
+}

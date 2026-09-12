@@ -2,11 +2,16 @@
 
 namespace Drupal\Tests\paragraphs\Functional\WidgetLegacy;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests paragraphs edit modes.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsEditModesTest extends ParagraphsTestBase {
 
   /**

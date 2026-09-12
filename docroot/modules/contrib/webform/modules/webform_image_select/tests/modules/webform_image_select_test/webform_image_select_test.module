@@ -5,6 +5,8 @@
  * Support module for webform that provides image select element working examples.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_image_select_test\Hook\WebformImageSelectTestHooks;
 use Drupal\webform_image_select\Entity\WebformImageSelectImages;
 
 /**
@@ -19,10 +21,7 @@ function webform_image_select_test_webform_image_select_images_animals_alter(arr
 /**
  * Implements hook_webform_image_select_images_alter().
  */
+#[LegacyHook]
 function webform_image_select_test_webform_image_select_images_alter(array &$images, array &$element, $id) {
-  if ($id === 'animals' && ($bears = WebformImageSelectImages::load('bears'))) {
-    $images += $bears->getImages();
-    // Set the default value to one of the added images.
-    $element['#default_value'] = 'dog_1';
-  }
+  \Drupal::service(WebformImageSelectTestHooks::class)->webformImageSelectImagesAlter($images, $element, $id);
 }

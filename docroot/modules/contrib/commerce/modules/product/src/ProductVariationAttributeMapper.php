@@ -10,13 +10,6 @@ use Drupal\commerce_product\Entity\ProductVariationInterface;
 class ProductVariationAttributeMapper implements ProductVariationAttributeMapperInterface {
 
   /**
-   * The product attribute storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $attributeStorage;
-
-  /**
    * Constructs a new ProductVariationAttributeMapper object.
    *
    * @param \Drupal\commerce_product\ProductAttributeFieldManagerInterface $attributeFieldManager
@@ -28,10 +21,9 @@ class ProductVariationAttributeMapper implements ProductVariationAttributeMapper
    */
   public function __construct(
     protected ProductAttributeFieldManagerInterface $attributeFieldManager,
-    EntityTypeManagerInterface $entityTypeManager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected EntityRepositoryInterface $entityRepository,
   ) {
-    $this->attributeStorage = $entityTypeManager->getStorage('commerce_product_attribute');
   }
 
   /**
@@ -70,10 +62,11 @@ class ProductVariationAttributeMapper implements ProductVariationAttributeMapper
     $field_names = array_column($field_map, 'field_name');
     $attribute_ids = array_column($field_map, 'attribute_id');
     $index = 0;
+    $attribute_storage = $this->entityTypeManager->getStorage('commerce_product_attribute');
     foreach ($field_names as $field_name) {
       $field = $field_definitions[$field_name];
       /** @var \Drupal\commerce_product\Entity\ProductAttributeInterface $attribute */
-      $attribute = $this->attributeStorage->load($attribute_ids[$index]);
+      $attribute = $attribute_storage->load($attribute_ids[$index]);
       if (!$attribute instanceof ProductAttributeInterface) {
         continue;
       }

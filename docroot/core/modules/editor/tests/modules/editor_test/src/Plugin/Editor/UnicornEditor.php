@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\editor_test\Plugin\Editor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\editor\Attribute\Editor;
 use Drupal\editor\Entity\Editor as EditorEntity;
+use Drupal\editor\EditorImageUploadSettings;
 use Drupal\editor\Plugin\EditorBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Defines a Unicorn-powered text editor for Drupal (for testing purposes).
@@ -22,7 +27,17 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
     'textfield',
   ]
 )]
-class UnicornEditor extends EditorBase {
+class UnicornEditor extends EditorBase implements ContainerFactoryPluginInterface {
+
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    #[Autowire(service: EditorImageUploadSettings::class)]
+    protected EditorImageUploadSettings $editorImageUploadSettings,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
@@ -40,18 +55,17 @@ class UnicornEditor extends EditorBase {
       '#type' => 'checkbox',
       '#default_value' => TRUE,
     ];
-    $form_state->loadInclude('editor', 'admin.inc');
-    $form['image_upload'] = editor_image_upload_settings_form($form_state->get('editor'));
+    $form['image_upload'] = $this->editorImageUploadSettings->getForm($form_state->get('editor'));
     $form['image_upload']['#element_validate'][] = [$this, 'validateImageUploadSettings'];
     return $form;
   }
 
   /**
-   * #element_validate handler for "image_upload" in buildConfigurationForm().
+   * Render API callback: Image upload handler for confirmation form.
+   *
+   * This function is assigned as a #element_validate callback.
    *
    * Moves the text editor's image upload settings into $editor->image_upload.
-   *
-   * @see editor_image_upload_settings_form()
    */
   public function validateImageUploadSettings(array $element, FormStateInterface $form_state) {
     $settings = &$form_state->getValue(['editor', 'settings', 'image_upload']);

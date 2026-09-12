@@ -6,7 +6,6 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Processor\ProcessorInterface;
-use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_test\MethodOverrides;
 use Drupal\search_api_test\PluginTestTrait;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -57,13 +56,6 @@ class ConfigOverrideKernelTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('search_api_task');
     $this->installConfig('search_api');
-
-    // Do not use a batch for tracking the initial items after creating an
-    // index when running the tests via the GUI. Otherwise, it seems Drupal's
-    // Batch API gets confused and the test fails.
-    if (!Utility::isRunningInCli()) {
-      \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
-    }
 
     // Set up overrides.
     $GLOBALS['config']['search_api.server.test_server'] = [

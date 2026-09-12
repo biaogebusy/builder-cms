@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\ContentEntityType;
@@ -14,14 +15,18 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Link;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\Error;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Task\IndexTaskManager;
@@ -38,6 +43,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Contains hook implementations for the Search API module.
  */
 class SearchApiHooks {
+
+  use StringTranslationTrait;
 
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
@@ -56,6 +63,81 @@ class SearchApiHooks {
     #[Autowire(service: 'plugin.manager.views.row')]
     protected ?PluginManagerInterface $viewsRowPluginManager = NULL,
   ) {}
+
+  /**
+   * Implements hook_runtime_requirements().
+   */
+  #[Hook('runtime_requirements')]
+  public function runtimeRequirements(): array {
+    [$severity_warning, $severity_error] = DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.2',
+      fn () => [RequirementSeverity::Warning, RequirementSeverity::Error],
+      fn () => [REQUIREMENT_WARNING, REQUIREMENT_ERROR],
+    );
+
+    $requirements = [];
+    $message = $this->checkForSearchModule();
+    if ($message) {
+      $requirements += [
+        'search_api_core_search' => [
+          'title' => t('Search API'),
+          'value' => $message,
+          'severity' => $severity_warning,
+        ],
+      ];
+    }
+
+    /** @var \Drupal\search_api\ServerInterface[] $servers */
+    $servers = Server::loadMultiple();
+    $unavailable_servers = [];
+    foreach ($servers as $server) {
+      if ($server->status() && !$server->isAvailable()) {
+        $unavailable_servers[] = $server->label();
+      }
+    }
+    if (!empty($unavailable_servers)) {
+      $requirements += [
+        'search_api_server_unavailable' => [
+          'title' => t('Search API'),
+          'value' => $this->formatPlural(
+            count($unavailable_servers),
+            'The search server "@servers" is currently not available',
+            'The following search servers are not available: @servers',
+            ['@servers' => implode(', ', $unavailable_servers)]
+          ),
+          'severity' => $severity_error,
+        ],
+      ];
+    }
+
+    $pending_tasks = \Drupal::getContainer()
+      ->get('search_api.task_manager')
+      ->getTasksCount();
+    if ($pending_tasks) {
+      $args['@link'] = '';
+      $url = Url::fromRoute('search_api.execute_tasks');
+      if ($url->access()) {
+        $link = new Link(t('Execute now'), $url);
+        $link = $link->toString();
+        $args['@link'] = $link;
+        $args['@link'] = new FormattableMarkup(' (@link)', $args);
+      }
+
+      $requirements['search_api_pending_tasks'] = [
+        'title' => t('Search API'),
+        'value' => \Drupal::translation()->formatPlural(
+          $pending_tasks,
+          'There is @count pending Search API task. @link',
+          'There are @count pending Search API tasks. @link',
+          $args
+        ),
+        'severity' => $severity_warning,
+      ];
+    }
+
+    return $requirements;
+  }
 
   /**
    * Implements hook_help().

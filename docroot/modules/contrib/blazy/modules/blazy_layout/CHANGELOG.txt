@@ -1,3 +1,17 @@
+Blazy Layout 3.0.x-dev, 2026-01-27
+---------------------------
+- Added "Semantic layout" option for semantic Hero.
+- Fixed for Color reset.
+
+Blazy Layout 3.x-dev, 2026-01-23
+--------------------------------
+- Added Custom CSS textarea to Blazy Layout to fix CLS beyond the provided
+  CSS classes.
+
+Blazy Layout 3.x-dev, 2026-01-21
+--------------------------------
+- Added Hero region.
+
 Blazy Layout 3.x-dev, 2024-10-21
 --------------------------------
 - Remove unwanted block attributes from builtin Media background.

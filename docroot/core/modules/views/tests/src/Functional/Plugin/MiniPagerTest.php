@@ -6,13 +6,16 @@ namespace Drupal\Tests\views\Functional\Plugin;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the mini pager plugin.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\pager\Mini
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class MiniPagerTest extends ViewTestBase {
 
   /**
@@ -84,7 +87,7 @@ class MiniPagerTest extends ViewTestBase {
     $this->assertSession()->pageTextContains($this->nodes[18]->label());
     $this->assertSession()->pageTextContains($this->nodes[19]->label());
 
-    // Test @total value in result summary
+    // Test @total value in result summary.
     $view = Views::getView('test_mini_pager');
     $view->setDisplay('page_4');
     $this->executeView($view);
@@ -163,7 +166,7 @@ class MiniPagerTest extends ViewTestBase {
     $view->display_handler->setOption('pager', $pager);
     $view->save();
 
-    // Stark and Stable9 are handled below.
+    // Stark and test_base_theme are handled below.
     $themes = ['olivero', 'claro', 'starterkit_theme'];
     $this->container->get('theme_installer')->install($themes);
 
@@ -173,8 +176,9 @@ class MiniPagerTest extends ViewTestBase {
       $this->assertEquals('h3', $this->assertSession()->elementExists('css', ".pager .visually-hidden")->getTagName());
     }
 
-    // The core views template and Stable9 use a different class structure than other core themes.
-    $themes = ['stark', 'stable9'];
+    // The core views template and test_base_theme use a different class
+    // structure than other core themes.
+    $themes = ['stark', 'test_base_theme'];
     $this->container->get('theme_installer')->install($themes);
     foreach ($themes as $theme) {
       $this->config('system.theme')->set('default', $theme)->save();

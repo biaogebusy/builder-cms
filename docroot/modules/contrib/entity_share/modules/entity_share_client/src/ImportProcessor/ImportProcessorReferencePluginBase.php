@@ -69,7 +69,7 @@ abstract class ImportProcessorReferencePluginBase extends ImportProcessorPluginB
     // missing/deleted referenced entities.
     if (!isset($referenced_entities_json['errors']) && !is_null($referenced_entities_json['data'])) {
       $this->currentRecursionDepth++;
-      $referenced_entities_ids = $runtime_import_context->getImportService()->importEntityListData($referenced_entities_json['data']);
+      $referenced_entities_ids = $this->importService->importEntityListData($referenced_entities_json['data']);
       $this->currentRecursionDepth--;
     }
 

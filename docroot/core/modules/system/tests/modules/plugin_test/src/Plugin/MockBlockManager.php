@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\plugin_test\Plugin;
 
 use Drupal\Component\Plugin\PluginManagerBase;
@@ -31,12 +33,9 @@ class MockBlockManager extends PluginManagerBase {
     // object.
     $this->discovery = new DerivativeDiscoveryDecorator($this->discovery);
 
-    // The plugin definitions that follow are based on work that is in progress
-    // for the Drupal 8 Blocks and Layouts initiative
-    // (http://groups.drupal.org/node/213563). As stated above, we set
-    // definitions here, because this is for unit testing. Real plugin managers
-    // use a discovery implementation that allows for any module to add new
-    // plugins to the system.
+    // As stated above, we set definitions here, because this is for unit
+    // testing. Real plugin managers use a discovery implementation that allows
+    // for any module to add new plugins to the system.
 
     // A simple plugin: the user login block.
     $this->discovery->setDefinition('user_login', [
@@ -138,6 +137,7 @@ class MockBlockManager extends PluginManagerBase {
    *   Whether the context definition is required.
    *
    * @return \Drupal\Core\Plugin\Context\ContextDefinition
+   *   The context definition object.
    */
   protected function createContextDefinition($data_type, $label, $required = TRUE) {
     // We cast the label to string for testing purposes only, as it may be

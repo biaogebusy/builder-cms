@@ -1,6 +1,7 @@
 {
     "name": "drupal/elasticsearch_connector",
     "description": "Provides a Search API backend for Elasticsearch (a powerful, distributed, RESTful search and analytics engine), using the official Elasticsearch PHP Client.",
+    "type": "drupal-module",
     "require": {
         "php": "^8",
         "drupal/search_api": "^1.23",
@@ -10,6 +11,7 @@
     "require-dev": {
         "drupal/coder": "^8.3",
         "drupal/devel": "^4.0|^5.0",
+        "drupal/facets": "^3",
         "drupal/geofield": "^1",
         "drupal/key": "^1",
         "drush/drush": "^12.0 || ^13",

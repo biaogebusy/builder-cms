@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\search\Functional;
 
-use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\comment\CommentingStatus;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -13,12 +13,14 @@ use Drupal\search\Entity\SearchPage;
 use Drupal\search\SearchIndexInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Indexes content and tests ranking factors.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchRankingTest extends BrowserTestBase {
 
   use CommentTestTrait;
@@ -34,7 +36,7 @@ class SearchRankingTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'search', 'comment'];
+  protected static $modules = ['node', 'search', 'comment', 'search_node'];
 
   /**
    * {@inheritdoc}
@@ -61,6 +63,9 @@ class SearchRankingTest extends BrowserTestBase {
     ]));
   }
 
+  /**
+   * Tests the impact of different ranking factors on search results.
+   */
   public function testRankings(): void {
     // Add a comment field.
     $this->addDefaultCommentField('node', 'page');
@@ -74,7 +79,7 @@ class SearchRankingTest extends BrowserTestBase {
       $settings = [
         'type' => 'page',
         'comment' => [
-          ['status' => CommentItemInterface::HIDDEN],
+          ['status' => CommentingStatus::Hidden->value],
         ],
         'title' => 'Drupal rocks',
         'body' => [['value' => "Drupal's search rocks"]],
@@ -101,7 +106,7 @@ class SearchRankingTest extends BrowserTestBase {
               break;
 
             case 'comments':
-              $settings['comment'][0]['status'] = CommentItemInterface::OPEN;
+              $settings['comment'][0]['status'] = CommentingStatus::Open->value;
               break;
           }
         }
@@ -232,7 +237,12 @@ class SearchRankingTest extends BrowserTestBase {
     foreach ($shuffled_tags as $tag) {
       switch ($tag) {
         case 'a':
-          $settings['body'] = [['value' => Link::fromTextAndUrl('Drupal Rocks', Url::fromRoute('<front>'))->toString(), 'format' => 'full_html']];
+          $settings['body'] = [
+            [
+              'value' => Link::fromTextAndUrl('Drupal Rocks', Url::fromRoute('<front>'))->toString(),
+              'format' => 'full_html',
+            ],
+          ];
           break;
 
         case 'NoTag':

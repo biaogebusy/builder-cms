@@ -5,8 +5,6 @@ js-cookie:
     name: MIT
     url: https://github.com/js-cookie/js-cookie/blob/main/LICENSE
     gpl-compatible: true
-  directory:
-    /libraries/js-cookie
   cdn:
     js:
       https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js: { type: external, minified: true }

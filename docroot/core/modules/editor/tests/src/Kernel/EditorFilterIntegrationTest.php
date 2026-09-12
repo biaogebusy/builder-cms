@@ -7,12 +7,14 @@ namespace Drupal\Tests\editor\Kernel;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests integration with filter module.
- *
- * @group editor
  */
+#[Group('editor')]
+#[RunTestsInSeparateProcesses]
 class EditorFilterIntegrationTest extends KernelTestBase {
 
   /**
@@ -32,7 +34,13 @@ class EditorFilterIntegrationTest extends KernelTestBase {
     $format->save();
 
     // Create a paired editor.
-    Editor::create(['format' => $format->id(), 'editor' => 'unicorn'])->save();
+    Editor::create([
+      'format' => $format->id(),
+      'editor' => 'unicorn',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
+    ])->save();
 
     // Disable the text format.
     $format->disable()->save();

@@ -1,0 +1,11 @@
+name: Commerce Order Views Data Test
+type: module
+description: 'Declares an order base field whose storage is never installed.'
+package: Testing
+dependencies:
+  - commerce:commerce_order
+
+# Information added by Drupal.org packaging script on 2026-09-07
+version: '3.3.9'
+project: 'commerce'
+datestamp: 1788781842

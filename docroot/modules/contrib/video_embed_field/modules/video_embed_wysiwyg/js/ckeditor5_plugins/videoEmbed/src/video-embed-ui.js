@@ -60,6 +60,7 @@ export default class VideoEmbedUi extends Plugin {
         'autoplay',
         'title_format',
         'title_fallback',
+        'loading',
       ].forEach(function (attributeName) {
         if (selectedVideoEmbedElement.hasAttribute(attributeName)) {
           existingValues.settings[attributeName] =
@@ -81,6 +82,7 @@ export default class VideoEmbedUi extends Plugin {
           title_format: newValues.settings.title_format,
           title_fallback: newValues.settings.title_fallback,
           autoplay: newValues.settings.autoplay,
+          loading: newValues.settings.loading,
           // These attributes are useful only for editor preview, but are
           // kept on dataDowncast so that they can be retrieved on later
           // upcast+editingDowncast.

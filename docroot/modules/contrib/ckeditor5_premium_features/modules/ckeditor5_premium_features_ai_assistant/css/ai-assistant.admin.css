@@ -1,0 +1,11 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ckeditor5-toolbar-button-aiAssistant {
+  background-image: url(../icons/ai-assistant.svg);
+}
+.ckeditor5-toolbar-button-aiCommands {
+  background-image: url(../icons/ai-commands.svg);
+}

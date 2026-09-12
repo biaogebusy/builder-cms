@@ -1,0 +1,16 @@
+{#
+/**
+ * @file
+ * Default theme implementation for order item inline operations.
+ *
+ * Available variables:
+ * - links: A list of operation links.
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="commerce-order-item-inline-operations">
+{%- for link in links -%}
+  <span class="commerce-order-item-inline-operations__item">{{ link }}</span>
+{%- endfor -%}
+</div>

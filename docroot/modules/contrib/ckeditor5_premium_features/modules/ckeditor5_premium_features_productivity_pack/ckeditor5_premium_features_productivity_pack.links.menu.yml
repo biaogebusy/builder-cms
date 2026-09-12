@@ -1,0 +1,6 @@
+entity.ckeditor5_template.overview:
+  title: Content Templates
+  route_name: entity.ckeditor5_template.collection
+  parent: ckeditor5_premium_features.form.settings
+  description: 'The template feature allows you to insert predefined content structures into the document'
+  weight: 120

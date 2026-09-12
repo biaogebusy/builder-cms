@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Database\Database;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Installs Drupal in German and checks resulting site.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerTranslationTest extends InstallerTestBase {
 
   /**
@@ -29,10 +32,10 @@ class InstallerTranslationTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpLanguage() {
+  protected function setUpLanguage(): void {
     // Place a custom local translation in the translations directory.
     mkdir($this->root . '/' . $this->siteDirectory . '/files/translations', 0777, TRUE);
-    file_put_contents($this->root . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0.de.po', $this->getPo('de'));
+    file_put_contents($this->root . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '.de.po', $this->getPo('de'));
 
     parent::setUpLanguage();
 
@@ -48,7 +51,7 @@ class InstallerTranslationTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpSettings() {
+  protected function setUpSettings(): void {
     // We are creating a table here to force an error in the installer because
     // it will try and create the drupal_install_test table as this is part of
     // the standard database tests performed by the installer in
@@ -86,7 +89,8 @@ class InstallerTranslationTest extends InstallerTestBase {
 
     // Verify German was configured but not English.
     $this->drupalGet('admin/config/regional/language');
-    $this->assertSession()->pageTextContains('German');
+    // cspell:ignore deutsch
+    $this->assertSession()->pageTextContains('Deutsch');
     $this->assertSession()->pageTextNotContains('English');
 
     // The current container still has the english as current language, rebuild.
@@ -142,7 +146,20 @@ class InstallerTranslationTest extends InstallerTestBase {
     $this->submitForm($edit, 'Add language');
     $override_en = $language_manager->getLanguageConfigOverride('en', 'user.settings');
     $this->assertFalse($override_en->isNew());
+    $this->assertSession()->pageTextContains('English de');
     $this->assertEquals('Anonymous', $override_en->get('anonymous'));
+
+    $english = ConfigurableLanguage::load('en');
+    $this->assertEquals('de', $english->language()->getId(), 'The langcode of the english language is de.');
+
+    // English is guaranteed to be the second language, click the second
+    // language edit link.
+    $this->clickLink('Edit', 1);
+    $this->assertSession()->fieldValueEquals('label', 'English de');
+    $this->submitForm([], 'Save language');
+
+    $english = ConfigurableLanguage::load('en');
+    $this->assertEquals('de', $english->language()->getId(), 'The langcode of the english language is de.');
   }
 
   /**
@@ -164,6 +181,9 @@ msgstr "Save and continue $langcode"
 
 msgid "Anonymous"
 msgstr "Anonymous $langcode"
+
+msgid "English"
+msgstr "English $langcode"
 
 msgid "Resolve all issues below to continue the installation. For help configuring your database server, see the <a href="https://www.drupal.org/docs/installing-drupal">installation handbook</a>, or contact your hosting provider."
 msgstr "Beheben Sie alle Probleme unten, um die Installation fortzusetzen. Informationen zur Konfiguration der Datenbankserver finden Sie in der <a href="https://www.drupal.org/docs/installing-drupal">Installationshandbuch</a>, oder kontaktieren Sie Ihren Hosting-Anbieter."

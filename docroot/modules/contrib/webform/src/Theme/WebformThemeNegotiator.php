@@ -80,7 +80,7 @@ class WebformThemeNegotiator implements ThemeNegotiatorInterface {
       return '';
     }
 
-    if (strpos($route_name, 'webform') === FALSE) {
+    if (!str_contains($route_name, 'webform')) {
       return '';
     }
 
@@ -95,7 +95,7 @@ class WebformThemeNegotiator implements ThemeNegotiatorInterface {
       'entity.webform.confirmation',
       'entity.node.webform.test_form',
     ]);
-    $is_user_submission_route = (strpos($route_name, 'entity.webform.user.') === 0);
+    $is_user_submission_route = str_starts_with($route_name, 'entity.webform.user.');
 
     // If webform route and page is disabled, apply admin theme to
     // the webform routes.

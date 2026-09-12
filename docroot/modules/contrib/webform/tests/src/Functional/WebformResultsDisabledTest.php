@@ -22,7 +22,7 @@ class WebformResultsDisabledTest extends WebformBrowserTestBase {
   /**
    * Tests webform setting including confirmation.
    */
-  public function testSettings() {
+  public function testSettings(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

@@ -51,16 +51,21 @@ class Rss extends RssPluginBase {
    */
   public function buildOptionsForm_summary_options() {
     $options = parent::buildOptionsForm_summary_options();
-    $options['title'] = $this->t('Title only');
-    $options['default'] = $this->t('Use site default RSS settings');
+    $options[$this::TITLE_VIEW_MODE] = $this->t('Title only');
     return $options;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function summaryTitle() {
     $options = $this->buildOptionsForm_summary_options();
     return $options[$this->options['view_mode']];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function preRender($values) {
     $nids = [];
     foreach ($values as $row) {
@@ -71,6 +76,9 @@ class Rss extends RssPluginBase {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function render($row) {
     global $base_url;
 
@@ -80,9 +88,6 @@ class Rss extends RssPluginBase {
     }
 
     $display_mode = $this->options['view_mode'];
-    if ($display_mode == 'default') {
-      $display_mode = \Drupal::config('system.rss')->get('items.view_mode');
-    }
 
     // Load the specified node:
     /** @var \Drupal\node\NodeInterface $node */
@@ -111,11 +116,9 @@ class Rss extends RssPluginBase {
     // The node gets built and modules add to or modify $node->rss_elements
     // and $node->rss_namespaces.
 
-    $build_mode = $display_mode;
-
     $build = \Drupal::entityTypeManager()
       ->getViewBuilder('node')
-      ->view($node, $build_mode);
+      ->view($node, $display_mode);
     // Add rss key to cache to differentiate this from other caches.
     $build['#cache']['keys'][] = 'view_rss';
 
@@ -126,7 +129,7 @@ class Rss extends RssPluginBase {
     }
 
     $item = new \stdClass();
-    if ($display_mode != 'title') {
+    if ($display_mode != $this::TITLE_VIEW_MODE) {
       // We render node contents.
       $item->description = $build;
     }

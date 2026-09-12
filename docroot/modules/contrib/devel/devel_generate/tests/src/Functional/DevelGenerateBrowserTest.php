@@ -2,16 +2,16 @@
 
 namespace Drupal\Tests\devel_generate\Functional;
 
-use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\media\Entity\Media;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the logic to generate data.
- *
- * @group devel_generate
  */
+#[Group('devel_generate')]
 class DevelGenerateBrowserTest extends DevelGenerateBrowserTestBase {
 
   use MediaTypeCreationTrait;
@@ -147,7 +147,7 @@ class DevelGenerateBrowserTest extends DevelGenerateBrowserTestBase {
 
     // Load the final node and verify that the title starts with the label.
     $node = Node::load(end($nodes));
-    $this->assertEquals('Article - ', substr($node->title->value, 0, 10));
+    $this->assertEquals('Article - ', substr((string) $node->title->value, 0, 10));
 
     // Test creating content with specified authors. First create 15 more users
     // making 18 in total, to make the test much stronger.

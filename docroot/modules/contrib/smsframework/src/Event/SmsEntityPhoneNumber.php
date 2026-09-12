@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Event;
 
@@ -77,7 +77,7 @@ class SmsEntityPhoneNumber extends Event {
    *   Return this event for chaining.
    */
   public function addPhoneNumber($phone_number) {
-    if (!in_array($phone_number, $this->phoneNumbers)) {
+    if (!\in_array($phone_number, $this->phoneNumbers)) {
       $this->phoneNumbers[] = $phone_number;
     }
     return $this;

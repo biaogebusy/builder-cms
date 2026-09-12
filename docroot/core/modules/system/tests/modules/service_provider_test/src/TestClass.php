@@ -1,15 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\service_provider_test;
 
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\DestructableInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+/**
+ * Handles kernel events for request and response.
+ */
 class TestClass implements EventSubscriberInterface, DestructableInterface {
+
+  use StringTranslationTrait;
 
   /**
    * The state keyvalue collection.
@@ -32,7 +40,7 @@ class TestClass implements EventSubscriberInterface, DestructableInterface {
    * A simple kernel listener method.
    */
   public function onKernelRequestTest(RequestEvent $event) {
-    \Drupal::messenger()->addStatus(t('The service_provider_test event subscriber fired!'));
+    \Drupal::messenger()->addStatus($this->t('The service_provider_test event subscriber fired!'));
   }
 
   /**

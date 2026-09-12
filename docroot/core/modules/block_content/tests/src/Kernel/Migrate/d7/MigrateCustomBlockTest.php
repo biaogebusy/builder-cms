@@ -7,12 +7,14 @@ namespace Drupal\Tests\block_content\Kernel\Migrate\d7;
 use Drupal\block_content\BlockContentInterface;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of content blocks.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class MigrateCustomBlockTest extends MigrateDrupal7TestBase {
 
   /**
@@ -36,6 +38,7 @@ class MigrateCustomBlockTest extends MigrateDrupal7TestBase {
       'd7_filter_format',
       'block_content_type',
       'block_content_body_field',
+      'block_content_body_field_storage',
       'd7_custom_block',
     ]);
   }

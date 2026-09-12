@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_payment\Kernel;
 
+use Drupal\commerce_payment\PaymentMethodStorageInterface;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_payment\Entity\PaymentMethod;
@@ -28,13 +29,6 @@ class PaymentMethodStorageTest extends OrderKernelTestBase {
    * @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface
    */
   protected $paymentGateway;
-
-  /**
-   * The payment method storage.
-   *
-   * @var \Drupal\commerce_payment\PaymentMethodStorageInterface
-   */
-  protected $storage;
 
   /**
    * A future expiration timestamp.
@@ -79,8 +73,6 @@ class PaymentMethodStorageTest extends OrderKernelTestBase {
     $user = $this->createUser();
     $this->user = $this->reloadEntity($user);
 
-    $this->storage = $this->container->get('entity_type.manager')->getStorage('commerce_payment_method');
-
     // Always 2 years in the future.
     $this->futureExpire = time() + 2 * 365 * 24 * 60 * 60;
   }
@@ -117,8 +109,10 @@ class PaymentMethodStorageTest extends OrderKernelTestBase {
       'uid' => $this->user->id(),
     ]);
     $payment_method_unlimited->save();
+    $storage = $this->entityTypeManager->getStorage('commerce_payment_method');
+    assert($storage instanceof PaymentMethodStorageInterface);
     // Confirm that the expired payment method was not loaded.
-    $reusable_payment_methods = $this->storage->loadReusable($this->user, $this->paymentGateway);
+    $reusable_payment_methods = $storage->loadReusable($this->user, $this->paymentGateway);
     $this->assertEquals([$payment_method_unlimited->id(), $payment_method_active->id()], array_keys($reusable_payment_methods));
 
     // Confirm that anonymous users cannot have reusable payment methods.
@@ -126,8 +120,8 @@ class PaymentMethodStorageTest extends OrderKernelTestBase {
     $payment_method_active->save();
     $payment_method_unlimited->setOwnerId(0);
     $payment_method_unlimited->save();
-    $this->assertEmpty($this->storage->loadReusable(User::getAnonymousUser(), $this->paymentGateway));
-    $this->assertEmpty($this->storage->loadReusable($this->user, $this->paymentGateway));
+    $this->assertEmpty($storage->loadReusable(User::getAnonymousUser(), $this->paymentGateway));
+    $this->assertEmpty($storage->loadReusable($this->user, $this->paymentGateway));
 
     // Changing the gateway from test to live should cause all of the testing
     // payment methods to be ignored.
@@ -135,7 +129,7 @@ class PaymentMethodStorageTest extends OrderKernelTestBase {
     $payment_gateway_configuration['mode'] = 'live';
     $this->paymentGateway->setPluginConfiguration($payment_gateway_configuration);
     $this->paymentGateway->save();
-    $reusable_payment_methods = $this->storage->loadReusable($this->user, $this->paymentGateway);
+    $reusable_payment_methods = $storage->loadReusable($this->user, $this->paymentGateway);
     $this->assertEmpty($reusable_payment_methods);
   }
 
@@ -194,11 +188,13 @@ class PaymentMethodStorageTest extends OrderKernelTestBase {
     $payment_method_us->save();
     $payment_method_us = $this->reloadEntity($payment_method_us);
 
-    $payment_methods = $this->storage->loadReusable($this->user, $this->paymentGateway, ['US']);
+    $storage = $this->entityTypeManager->getStorage('commerce_payment_method');
+    assert($storage instanceof PaymentMethodStorageInterface);
+    $payment_methods = $storage->loadReusable($this->user, $this->paymentGateway, ['US']);
     $this->assertCount(1, $payment_methods);
     $this->assertEquals([$payment_method_us], array_values($payment_methods));
 
-    $payment_methods = $this->storage->loadReusable($this->user, $this->paymentGateway, ['FR']);
+    $payment_methods = $storage->loadReusable($this->user, $this->paymentGateway, ['FR']);
     $this->assertCount(1, $payment_methods);
     $this->assertEquals([$payment_method_fr], array_values($payment_methods));
 
@@ -210,7 +206,7 @@ class PaymentMethodStorageTest extends OrderKernelTestBase {
       'payment_method_types' => ['credit_card'],
     ]);
     // Confirm that no filtering is done.
-    $payment_methods = $this->storage->loadReusable($this->user, $this->paymentGateway, ['FR']);
+    $payment_methods = $storage->loadReusable($this->user, $this->paymentGateway, ['FR']);
     $this->assertCount(2, $payment_methods);
     $this->assertEquals([$payment_method_us, $payment_method_fr], array_values($payment_methods));
   }

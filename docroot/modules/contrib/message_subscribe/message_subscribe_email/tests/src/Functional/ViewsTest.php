@@ -58,6 +58,13 @@ class ViewsTest extends BrowserTestBase {
         }
       }
     }
+
+    // Set the view name explicitly since flags can be created after installs.
+    foreach ($this->messageSubscribers->getFlags() as $flag_name => $flag) {
+      $expected = $flag_name . '_email:default';
+      $flag->setThirdPartySetting('message_subscribe_ui', 'view_name', $expected);
+      $flag->save();
+    }
   }
 
   /**

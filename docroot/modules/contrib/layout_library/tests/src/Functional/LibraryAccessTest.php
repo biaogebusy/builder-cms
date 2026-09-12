@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\layout_library\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -9,6 +12,8 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group layout_library
  */
+#[Group('layout_library')]
+#[RunTestsInSeparateProcesses]
 class LibraryAccessTest extends BrowserTestBase {
 
   /**
@@ -17,14 +22,14 @@ class LibraryAccessTest extends BrowserTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['layout_library'];
 
   /**
    * Stores user created with permission.
+   *
+   * @var \Drupal\user\UserInterface
    */
   protected $layoutAdmin;
 

@@ -9,11 +9,12 @@
   <exclude-pattern>*/node_modules/*</exclude-pattern>
   <!--Exclude third party code.-->
   <exclude-pattern>./assets/vendor/*</exclude-pattern>
-  <!--Exclude the PHPStan baseline from coding standards.-->
+  <!--Exclude the PHPStan baseline and temp dir from coding standards.-->
   <exclude-pattern>./core/.phpstan-baseline.php</exclude-pattern>
   <!-- Exclude third-party code maintained within core that does not follow our standards. -->
   <!-- @todo This rule may be removed when https://www.drupal.org/node/1848264 is resolved. -->
   <exclude-pattern>./core/lib/Drupal/Component/Diff/</exclude-pattern>
+  <exclude-pattern>./core/phpstan-tmp/*</exclude-pattern>
   <exclude-pattern>./core/tests/Drupal/Tests/Component/Annotation/Doctrine/</exclude-pattern>
 
   <!--Exclude test files that are intentionally empty, or intentionally violate coding standards.-->
@@ -21,7 +22,6 @@
 
   <file>.</file>
   <file>../composer</file>
-  <file>scripts/drupal.sh</file>
   <file>scripts/password-hash.sh</file>
   <file>scripts/rebuild_token_calculator.sh</file>
   <file>scripts/run-tests.sh</file>
@@ -30,10 +30,8 @@
   <!-- Only include specific sniffs that pass. This ensures that, if new sniffs are added, HEAD does not fail.-->
 
   <!-- Drupal sniffs -->
-  <rule ref="Drupal.Arrays.Array">
-    <!-- Sniff for these errors: ArrayClosingIndentation, ArrayIndentation, CommaLastItem -->
-    <exclude name="Drupal.Arrays.Array.LongLineDeclaration"/>
-  </rule>
+  <rule ref="Drupal.Arrays.Array"/>
+  <rule ref="Drupal.Arrays.Array.LongLineDeclaration"/>
   <rule ref="Drupal.Classes.ClassCreateInstance"/>
   <rule ref="Drupal.Classes.ClassDeclaration"/>
   <rule ref="Drupal.Classes.ClassFileName"/>
@@ -43,9 +41,7 @@
   <rule ref="Drupal.Classes.UnusedUseStatement"/>
   <rule ref="Drupal.Classes.UseGlobalClass"/>
   <rule ref="Drupal.Classes.UseLeadingBackslash"/>
-  <rule ref="Drupal.Commenting.ClassComment">
-    <exclude name="Drupal.Commenting.ClassComment.Missing"/>
-  </rule>
+  <rule ref="Drupal.Commenting.ClassComment"/>
   <rule ref="Drupal.Commenting.DataTypeNamespace"/>
   <rule ref="Drupal.Commenting.Deprecated"/>
   <rule ref="Drupal.Commenting.DocComment">
@@ -53,50 +49,50 @@
       ContentAfterOpen, SpacingBeforeShort, TagValueIndent, ShortStartSpace,
       SpacingAfter, LongNotCapital, ShortFullStop, TagGroupSpacing, Empty,
       TagsNotGrouped, ParamGroup -->
-    <!-- ParamNotFirst still not decided for PHPUnit-based tests.
-      @see https://www.drupal.org/node/2253915 -->
     <exclude name="Drupal.Commenting.DocComment.LongFullStop"/>
-    <exclude name="Drupal.Commenting.DocComment.MissingShort"/>
-    <exclude name="Drupal.Commenting.DocComment.ParamNotFirst"/>
-    <exclude name="Drupal.Commenting.DocComment.ShortNotCapital"/>
-    <exclude name="Drupal.Commenting.DocComment.SpacingBeforeTags"/>
+  </rule>
+  <rule  ref="Drupal.Commenting.DocComment.MissingShort">
+    <include-pattern>core/*/KernelTests/*</include-pattern>
+    <include-pattern>core/*/Unit/*</include-pattern>
+    <include-pattern>core/*/FunctionalJavascript/*</include-pattern>
   </rule>
   <rule ref="Drupal.Commenting.DocCommentAlignment"/>
   <rule ref="Drupal.Commenting.DocCommentLongArraySyntax"/>
   <rule ref="Drupal.Commenting.DocCommentStar"/>
   <rule ref="Drupal.Commenting.FileComment"/>
-  <rule ref="Drupal.Commenting.FunctionComment">
-    <exclude name="Drupal.Commenting.FunctionComment.InvalidNoReturn"/>
-    <exclude name="Drupal.Commenting.FunctionComment.Missing"/>
-    <exclude name="Drupal.Commenting.FunctionComment.MissingParamType"/>
-    <exclude name="Drupal.Commenting.FunctionComment.MissingReturnComment"/>
-    <exclude name="Drupal.Commenting.FunctionComment.ParamCommentFullStop"/>
-    <exclude name="Drupal.Commenting.FunctionComment.TypeHintMissing"/>
+  <rule ref="Drupal.Commenting.FunctionComment"/>
+  <rule ref="Drupal.Commenting.FunctionComment.Missing">
+    <include-pattern>core/*/src/Plugin/*</include-pattern>
+    <include-pattern>*/Database/*</include-pattern>
+    <include-pattern>*/FunctionalJavascript/*</include-pattern>
+    <include-pattern>*/Kernel/*</include-pattern>
+    <include-pattern>*/KernelTests/*</include-pattern>
+    <include-pattern>*/Functional/*</include-pattern>
+    <include-pattern>*/Unit/*</include-pattern>
+    <include-pattern>core/lib/*</include-pattern>
+    <include-pattern>core/modules/system/tests/modules/HookOrder/*</include-pattern>
   </rule>
+  <rule ref="Drupal.Commenting.FunctionComment.MissingParamType"/>
+  <rule ref="Drupal.Commenting.FunctionComment.MissingReturnComment"/>
   <rule ref="Drupal.Commenting.GenderNeutralComment"/>
   <rule ref="Drupal.Commenting.HookComment"/>
   <rule ref="Drupal.Commenting.InlineComment">
     <!-- Sniff for: NoSpaceBefore, SpacingBefore, WrongStyle -->
-    <exclude name="Drupal.Commenting.InlineComment.DocBlock"/>
     <exclude name="Drupal.Commenting.InlineComment.InvalidEndChar"/>
-    <exclude name="Drupal.Commenting.InlineComment.NotCapital"/>
     <exclude name="Drupal.Commenting.InlineComment.SpacingAfter"/>
   </rule>
   <rule ref="Drupal.Commenting.InlineVariableComment"/>
   <rule ref="Drupal.Commenting.PostStatementComment"/>
   <rule ref="Drupal.Commenting.TodoComment" />
-  <rule ref="Drupal.Commenting.VariableComment">
-    <!-- Sniff for: DuplicateVar, EmptyVar, InlineVariableName, WrongStyle -->
-    <exclude name="Drupal.Commenting.VariableComment.IncorrectVarType"/>
-    <exclude name="Drupal.Commenting.VariableComment.Missing"/>
-    <exclude name="Drupal.Commenting.VariableComment.MissingVar"/>
-    <exclude name="Drupal.Commenting.VariableComment.VarOrder"/>
-  </rule>
+  <rule ref="Drupal.Commenting.VariableComment"/>
   <rule ref="Drupal.ControlStructures.ControlSignature"/>
   <rule ref="Drupal.ControlStructures.ElseIf"/>
   <rule ref="Drupal.ControlStructures.InlineControlStructure"/>
   <rule ref="Drupal.Files.EndFileNewline"/>
   <rule ref="Drupal.Files.FileEncoding"/>
+  <rule ref="Drupal.Files.LineLength">
+    <exclude-pattern>*/tests/*</exclude-pattern>
+  </rule>
   <rule ref="Drupal.Files.TxtFileLineLength"/>
   <rule ref="Drupal.Formatting.MultiLineAssignment"/>
   <rule ref="Drupal.Formatting.MultipleStatementAlignment"/>
@@ -115,15 +111,15 @@
     <exclude name="Drupal.Methods.MethodDeclaration.Underscore"/>
   </rule>
   <rule ref="Drupal.NamingConventions.ValidClassName"/>
+  <rule ref="Drupal.NamingConventions.ValidEnumCase"/>
   <rule ref="Drupal.NamingConventions.ValidGlobal"/>
   <rule ref="Drupal.NamingConventions.ValidVariableName"/>
   <rule ref="Drupal.NamingConventions.ValidVariableName.LowerCamelName"/>
   <rule ref="Drupal.Scope.MethodScope"/>
+  <rule ref="Drupal.Semantics.ConstantName.ConstantStart"/>
   <rule ref="Drupal.Semantics.EmptyInstall"/>
   <rule ref="Drupal.Semantics.FunctionAlias"/>
-  <rule ref="Drupal.Semantics.FunctionT">
-    <exclude name="Drupal.Semantics.FunctionT.NotLiteralString"/>
-  </rule>
+  <rule ref="Drupal.Semantics.FunctionT"/>
   <rule ref="Drupal.Semantics.FunctionTriggerError"/>
   <rule ref="Drupal.Semantics.FunctionWatchdog"/>
   <rule ref="Drupal.Semantics.InstallHooks"/>
@@ -132,7 +128,6 @@
   <rule ref="Drupal.Semantics.RemoteAddress"/>
   <rule ref="Drupal.Semantics.TInHookMenu"/>
   <rule ref="Drupal.Semantics.TInHookSchema"/>
-  <rule ref="Drupal.Strings.UnnecessaryStringConcat"/>
   <rule ref="Drupal.WhiteSpace.CloseBracketSpacing"/>
   <rule ref="Drupal.WhiteSpace.Comma"/>
   <rule ref="Drupal.WhiteSpace.EmptyLines"/>
@@ -146,8 +141,6 @@
 
   <!-- Drupal Practice sniffs -->
   <rule ref="DrupalPractice.CodeAnalysis.VariableAnalysis">
-    <!-- @todo exclude tests -->
-    <exclude-pattern>*/tests/*</exclude-pattern>
     <!-- Do not run this sniff on API files or transliteration data. -->
     <exclude-pattern>*.api.php</exclude-pattern>
     <exclude-pattern>core/lib/Drupal/Component/Transliteration/data/*.php</exclude-pattern>
@@ -166,10 +159,7 @@
   <rule ref="DrupalPractice.Commenting.ExpectedException"/>
   <rule ref="DrupalPractice.General.ExceptionT"/>
   <rule ref="DrupalPractice.InfoFiles.NamespacedDependency"/>
-  <rule ref="DrupalPractice.Objects.GlobalFunction">
-    <include-pattern>*/Plugin/*</include-pattern>
-    <include-pattern>*/ListBuilder/*</include-pattern>
-  </rule>
+  <rule ref="DrupalPractice.Objects.GlobalFunction"/>
 
   <!-- Generic sniffs -->
   <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
@@ -185,6 +175,11 @@
   <rule ref="Generic.PHP.DisallowShortOpenTag"/>
   <rule ref="Generic.PHP.LowerCaseKeyword"/>
   <rule ref="Generic.PHP.UpperCaseConstant"/>
+  <rule ref="Generic.Strings.UnnecessaryStringConcat">
+    <properties>
+      <property name="allowMultiline" value="true"/>
+    </properties>
+  </rule>
   <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
   <rule ref="Generic.WhiteSpace.LanguageConstructSpacing"/>
 
@@ -249,11 +244,14 @@
   <rule ref="PSR2.Namespaces.UseDeclaration"/>
 
   <!-- SlevomatCodingStandard sniffs -->
+  <rule ref="SlevomatCodingStandard.Classes.BackedEnumTypeSpacing"/>
   <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
     <properties>
       <property name="forbiddenAnnotations" type="array">
+        <element value="@encode"/>
         <element value="@inheritDoc"/>
         <element value="@inheritdoc"/>
+        <element value="@returns"/>
       </property>
     </properties>
   </rule>
@@ -261,22 +259,20 @@
     <properties>
        <property name="forbiddenCommentPatterns" type="array">
          <element value="/@inheritDoc/"/>
+         <element value="/(?&lt;!\.)\.\.(?!\.)$/"/>
        </property>
     </properties>
   </rule>
   <rule ref="SlevomatCodingStandard.ControlStructures.RequireNullCoalesceOperator"/>
+  <rule ref="SlevomatCodingStandard.ControlStructures.RequireShortTernaryOperator"/>
+  <rule ref="SlevomatCodingStandard.Exceptions.RequireNonCapturingCatch" />
+  <rule ref="SlevomatCodingStandard.PHP.TypeCast" />
   <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
     <properties>
       <property name="spacesCountAroundEqualsSign" value="0" />
     </properties>
-    <!-- @todo Broaden this in https://www.drupal.org/project/drupal/issues/3400434 -->
-    <!-- <include-pattern>*/tests/*</include-pattern> -->
-    <include-pattern>*/tests/src/*</include-pattern>
-    <include-pattern>./tests/Drupal/*</include-pattern>
-    <include-pattern>./tests/TestSuites/*</include-pattern>
-    <include-pattern>./modules/system/src/Tests/Routing/*</include-pattern>
-    <exclude-pattern>./tests/Drupal/Tests/*/Fixture/*</exclude-pattern>
-    <exclude-pattern>./tests/Drupal/Tests/*/fixtures/*</exclude-pattern>
+    <include-pattern>*/tests/*</include-pattern>
+    <exclude-pattern>*/fixtures/*</exclude-pattern>
   </rule>
   <rule ref="SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue"/>
 

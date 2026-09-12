@@ -23,6 +23,8 @@ class PatternEditForm extends EntityForm {
   protected $manager;
 
   /**
+   * The pathauto pattern entity.
+   *
    * @var \Drupal\pathauto\PathautoPatternInterface
    */
   protected $entity;
@@ -109,7 +111,7 @@ class PatternEditForm extends EntityForm {
       '#suffix' => '</div>',
     ];
 
-    // if there is no type yet, stop here.
+    // If there is no type yet, stop here.
     if ($this->entity->getType()) {
 
       $alias_type = $this->entity->getAliasType();
@@ -120,7 +122,7 @@ class PatternEditForm extends EntityForm {
         '#default_value' => $this->entity->getPattern(),
         '#size' => 65,
         '#maxlength' => 1280,
-        '#element_validate' => ['token_element_validate', 'pathauto_pattern_validate'],
+        '#element_validate' => ['token_element_validate', [static::class, 'validatePattern']],
         '#after_build' => ['token_element_validate'],
         '#token_types' => $alias_type->getTokenTypes(),
         '#min_tokens' => 1,
@@ -220,43 +222,64 @@ class PatternEditForm extends EntityForm {
     $alias_type = $entity->getAliasType();
     if ($alias_type->getDerivativeId() && $this->entityTypeManager->hasDefinition($alias_type->getDerivativeId())) {
       $entity_type = $alias_type->getDerivativeId();
-      // First, remove bundle and language conditions.
+
+      // Find existing conditions by plugin ID so we can update them
+      // in place (preserving their UUID) rather than removing and
+      // re-adding, which would regenerate the UUID on every save.
+      $bundle_condition_id = NULL;
+      $language_condition_id = NULL;
       foreach ($entity->getSelectionConditions() as $condition_id => $condition) {
-        if (in_array($condition->getPluginId(), ['entity_bundle:' . $entity_type, 'language'])) {
-          $entity->removeSelectionCondition($condition_id);
+        if (in_array($condition->getPluginId(), ['entity_bundle:' . $entity_type, 'node_type'])) {
+          $bundle_condition_id = $condition_id;
+        }
+        elseif ($condition->getPluginId() == 'language') {
+          $language_condition_id = $condition_id;
         }
       }
 
       if ($bundles = array_filter((array) $form_state->getValue('bundles'))) {
         $default_weight -= 5;
-        $entity->addSelectionCondition(
-          [
-            'id' => 'entity_bundle:' . $entity_type,
-            'bundles' => $bundles,
-            'negate' => FALSE,
-            'context_mapping' => [
-              $entity_type => $entity_type,
-            ],
-          ]
-        );
+        $bundle_config = [
+          'id' => 'entity_bundle:' . $entity_type,
+          'bundles' => $bundles,
+          'negate' => FALSE,
+          'context_mapping' => [
+            $entity_type => $entity_type,
+          ],
+        ];
+        if ($bundle_condition_id) {
+          $entity->getSelectionCondition($bundle_condition_id)->setConfiguration($bundle_config);
+        }
+        else {
+          $entity->addSelectionCondition($bundle_config);
+        }
+      }
+      elseif ($bundle_condition_id) {
+        $entity->removeSelectionCondition($bundle_condition_id);
       }
 
       if ($languages = array_filter((array) $form_state->getValue('languages'))) {
         $default_weight -= 5;
         $language_mapping = $entity_type . ':' . $this->entityTypeManager->getDefinition($entity_type)->getKey('langcode') . ':language';
-        $entity->addSelectionCondition(
-          [
-            'id' => 'language',
-            'langcodes' => array_combine($languages, $languages),
-            'negate' => FALSE,
-            'context_mapping' => [
-              'language' => $language_mapping,
-            ],
-          ]
-        );
+        $language_config = [
+          'id' => 'language',
+          'langcodes' => array_combine($languages, $languages),
+          'negate' => FALSE,
+          'context_mapping' => [
+            'language' => $language_mapping,
+          ],
+        ];
+        if ($language_condition_id) {
+          $entity->getSelectionCondition($language_condition_id)->setConfiguration($language_config);
+        }
+        else {
+          $entity->addSelectionCondition($language_config);
+        }
         $entity->addRelationship($language_mapping, $this->t('Language'));
       }
-
+      elseif ($language_condition_id) {
+        $entity->removeSelectionCondition($language_condition_id);
+      }
     }
 
     if ($entity->isNew()) {
@@ -270,11 +293,12 @@ class PatternEditForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    parent::save($form, $form_state);
+    $save_result = parent::save($form, $form_state);
     $this->messenger()->addMessage($this->t('Pattern %label saved.', [
       '%label' => $this->entity->label(),
     ]));
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
+    return $save_result;
   }
 
   /**
@@ -290,6 +314,37 @@ class PatternEditForm extends EntityForm {
   public function submitSelectType(array $form, FormStateInterface $form_state) {
     $this->entity = $this->buildEntity($form, $form_state);
     $form_state->setRebuild();
+  }
+
+  /**
+   * Validate the pattern field.
+   *
+   * Ensure it doesn't contain any characters that are invalid in URLs.
+   */
+  public static function validatePattern($element, FormStateInterface $form_state) {
+
+    if (isset($element['#value'])) {
+      $title = empty($element['#title']) ? $element['#parents'][0] : $element['#title'];
+      $invalid_characters = ['#', '?', '&'];
+      $invalid_characters_used = [];
+
+      foreach ($invalid_characters as $invalid_character) {
+        if (strpos($element['#value'], $invalid_character) !== FALSE) {
+          $invalid_characters_used[] = $invalid_character;
+        }
+      }
+
+      if (!empty($invalid_characters_used)) {
+        $form_state->setError($element, t('The %element-title is using the following invalid characters: @invalid-characters.', [
+          '%element-title' => $title,
+          '@invalid-characters' => implode(', ', $invalid_characters_used),
+        ]));
+      }
+
+    }
+
+    return $element;
+
   }
 
 }

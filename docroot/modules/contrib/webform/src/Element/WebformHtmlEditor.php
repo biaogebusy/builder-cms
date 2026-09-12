@@ -4,7 +4,7 @@ namespace Drupal\webform\Element;
 
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\webform\Utility\WebformElementHelper;
@@ -16,7 +16,7 @@ use Drupal\webform\Utility\WebformXss;
  *
  * @FormElement("webform_html_editor")
  */
-class WebformHtmlEditor extends FormElement implements TrustedCallbackInterface {
+class WebformHtmlEditor extends FormElementBase implements TrustedCallbackInterface {
 
   /**
    * Default webform filter format.
@@ -279,21 +279,31 @@ class WebformHtmlEditor extends FormElement implements TrustedCallbackInterface 
    *
    * @param array $element
    *   An associative array containing the properties and children of the
-   *   radios or checkboxes element.
+   *   text format element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    * @param array $complete_form
-   *   The complete webform structure.
+   *   The complete form structure.
    *
    * @return array
    *   The processed element.
+   *
+   * @see \Drupal\filter\Element\TextFormat::processFormat
    */
   public static function processTextFormat($element, FormStateInterface $form_state, &$complete_form) {
     if ($element['format']['format']['#default_value'] !== static::DEFAULT_FILTER_FORMAT) {
+      // Remove the webform default filter format.
       unset(
         $element['format']['format']['#options'][static::DEFAULT_FILTER_FORMAT],
         $element['format']['guidelines'][static::DEFAULT_FILTER_FORMAT]
       );
+
+      // Hide the format select widget if there is now only one available format
+      // and it is the default value.
+      if (count($element['format']['format']['#options']) <= 1
+        && isset($element['format']['format']['#options'][$element['format']['format']['#default_value']])) {
+        $element['format']['format']['#access'] = FALSE;
+      }
     }
     return $element;
   }

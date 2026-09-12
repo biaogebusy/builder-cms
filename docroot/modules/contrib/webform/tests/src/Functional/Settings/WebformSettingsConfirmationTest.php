@@ -42,7 +42,7 @@ class WebformSettingsConfirmationTest extends WebformBrowserTestBase {
   /**
    * Tests webform submission form confirmation.
    */
-  public function testConfirmation() {
+  public function testConfirmation(): void {
     $assert_session = $this->assertSession();
 
     // Login the admin user.

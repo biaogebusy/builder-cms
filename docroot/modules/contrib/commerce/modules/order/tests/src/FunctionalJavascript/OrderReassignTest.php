@@ -101,4 +101,34 @@ class OrderReassignTest extends OrderWebDriverTestBase {
     $this->assertEquals($another_user->id(), $this->order->getCustomerId());
   }
 
+  /**
+   * Tests reassign in the modal.
+   */
+  public function testReassignFromModal(): void {
+    $another_user = $this->createUser();
+
+    // Confirm that "Reassign order" link exists and it opens the modal form.
+    $this->drupalGet($this->order->toUrl());
+    $this->assertSession()->linkExists('Reassign order');
+    $this->getSession()->getPage()->clickLink('Reassign order');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->elementTextContains('css', '.ui-dialog .ui-dialog-title', 'Reassign order');
+
+    // Fill info for new assignment.
+    $this->getSession()->getPage()->fillField('uid', $another_user->getAccountName());
+    $this->assertSession()->waitOnAutocomplete();
+    $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
+    $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->findButton('Reassign order');
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->pressButton('Reassign order');
+
+    // Confirm that order is reassigned.
+    $this->assertSession()->pageTextContains($this->t('The @label has been assigned to customer @customer.', [
+      '@label' => $this->order->label(),
+      '@customer' => $another_user->getAccountName(),
+    ]));
+    $this->order = $this->reloadEntity($this->order);
+    $this->assertEquals($another_user->id(), $this->order->getCustomerId());
+  }
+
 }

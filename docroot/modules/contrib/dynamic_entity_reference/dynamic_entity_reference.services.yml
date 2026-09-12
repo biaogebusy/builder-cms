@@ -2,3 +2,11 @@ services:
   plugin.manager.dynamic_entity_reference_selection:
     class: Drupal\dynamic_entity_reference\SelectionPluginManager
     parent: plugin.manager.entity_reference_selection
+
+  Drupal\dynamic_entity_reference\Hook\DynamicEntityReferenceHooks:
+    class: Drupal\dynamic_entity_reference\Hook\DynamicEntityReferenceHooks
+    autowire: true
+
+  Drupal\dynamic_entity_reference\Hook\DynamicEntityReferenceViewsHooks:
+    class: Drupal\dynamic_entity_reference\Hook\DynamicEntityReferenceViewsHooks
+    autowire: true

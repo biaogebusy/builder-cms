@@ -1,0 +1,4 @@
+ck5_notifications_message:
+  label: 'CKEditor 5 message'
+  description: 'CKEditor 5 default message templates.'
+  class: Drupal\ckeditor5_premium_features_notifications\Plugin\Notification\NotificationMessageFactoryDefault

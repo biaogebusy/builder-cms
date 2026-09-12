@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_bootstrap\Hook\WebformBootstrapHooks:
+    class: Drupal\webform_bootstrap\Hook\WebformBootstrapHooks
+    autowire: true

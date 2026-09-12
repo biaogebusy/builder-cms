@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_order\FunctionalJavascript;
 
+use Drupal\Core\Url;
 use Drupal\profile\Entity\Profile;
 use Drupal\profile\Entity\ProfileType;
 
@@ -212,7 +213,6 @@ class CustomerProfileTest extends OrderWebDriverTestBase {
     // Confirm that selecting "Enter a new address" clears the form.
     $this->getSession()->getPage()->fillField('profile[select_address]', '_new');
     $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->saveHtmlOutput();
     foreach ($this->emptyAddress as $property => $value) {
       $this->assertSession()->fieldValueEquals("profile[address][0][address][$property]", $value);
     }
@@ -988,6 +988,56 @@ class CustomerProfileTest extends OrderWebDriverTestBase {
     $this->getSession()->getPage()->fillField('profile[select_address]', $us_profile->id());
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertRenderedAddress($this->usAddress);
+  }
+
+  /**
+   * Tests the "Save" process for the customer profile inline form.
+   */
+  public function testSaveButton() {
+    $profile = $this->createEntity('profile', [
+      'type' => 'customer',
+      'uid' => $this->adminUser->id(),
+      'address' => $this->usAddress,
+    ]);
+    $this->drupalGet(Url::fromRoute('commerce_order_test.customer_profile_test_form', ['profile' => $profile->id(), 'admin' => TRUE, 'save' => TRUE]));
+    $this->assertSession()->buttonExists('Edit');
+    $this->getSession()->getPage()->pressButton('Edit');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    foreach ($this->usAddress as $field_name => $value) {
+      $this->assertSession()->fieldValueEquals("profile[address][0][address][$field_name]", $value);
+    }
+
+    // Add company and save the profile within the form and confirm it rendered
+    // with all information.
+    $this->getSession()->getPage()->fillField('profile[address][0][address][organization]', 'Organization');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $rendered_address = $this->usAddress;
+    $rendered_address['country_code'] = 'United States';
+    $rendered_address['organization'] = 'Organization';
+    $prefix = 'profile[address][0][address]';
+    foreach ($rendered_address as $property => $value) {
+      $this->assertSession()->fieldNotExists($prefix . '[' . $property . ']');
+      $this->assertSession()->pageTextContains($value);
+    }
+
+    // Try to add and save a new address.
+    $this->getSession()->getPage()->fillField('profile[select_address]', '_new');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    foreach ($this->frenchAddress as $property => $value) {
+      $this->getSession()->getPage()->fillField("profile[address][0][address][$property]", $value);
+      if ($property === 'country_code') {
+        $this->assertSession()->assertWaitOnAjaxRequest();
+      }
+    }
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $rendered_address = $this->frenchAddress;
+    $rendered_address['country_code'] = 'France';
+    foreach ($rendered_address as $property => $value) {
+      $this->assertSession()->fieldNotExists($prefix . '[' . $property . ']');
+      $this->assertSession()->pageTextContains($value);
+    }
   }
 
 }

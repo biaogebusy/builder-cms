@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Drupal\ai\Plugin\Validation\Constraint;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Validation\Attribute\Constraint as ConstraintAttribute;
-use Symfony\Component\Validator\Constraint;
+use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 
 /**
  * Custom constraint to set constants in tool calling.
  */
-#[ConstraintAttribute(
+#[Constraint(
   id: 'FixedValue',
   label: new TranslatableMarkup('Fixed value', [], ['context' => 'Validation']),
 )]
-class FixedValue extends Constraint {
+class FixedValue extends SymfonyConstraint {
 
   /**
    * The fixed value that must be used.

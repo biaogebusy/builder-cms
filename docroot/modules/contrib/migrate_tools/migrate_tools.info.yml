@@ -10,7 +10,7 @@ test_dependencies:
   - migrate_plus:migrate_plus
   - migrate_source_csv:migrate_source_csv (>=8.x-3.0)
 
-# Information added by Drupal.org packaging script on 2025-07-24
-version: '6.1.2'
+# Information added by Drupal.org packaging script on 2026-05-13
+version: '6.1.4'
 project: 'migrate_tools'
-datestamp: 1753365394
+datestamp: 1778689497

@@ -45,7 +45,13 @@ class WebformOptionsController extends ControllerBase {
 
     $matches = [];
     foreach ($webform_options as $webform_option) {
-      $value = new FormattableMarkup('@label (@id)', ['@label' => $webform_option->label(), '@id' => $webform_option->id()]);
+      $value = new FormattableMarkup(
+        '@label (@id)',
+        [
+          '@label' => $webform_option->label(),
+          '@id' => $webform_option->id(),
+        ]
+      );
       $matches[] = ['value' => $value, 'label' => $value];
     }
 

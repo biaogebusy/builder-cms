@@ -7,14 +7,14 @@ charts_billboard:
     - core/drupal
     - core/once
 d3:
-  remote: 'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js'
-  version: 7.8.5
+  remote: 'https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js'
+  version: 7.9.0
   license:
     name: BSD
     url: 'https://en.wikipedia.org/wiki/BSD_licenses'
     gpl-compatible: false
   cdn:
-    /libraries/d3/: https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/
+    /libraries/d3/: https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/
   js:
     /libraries/d3/d3.min.js: { minified: true }
 billboard:
@@ -34,3 +34,12 @@ billboard:
   dependencies:
     - charts_billboard/charts_billboard
     - charts_billboard/d3
+
+color_changer:
+  version: VERSION
+  js:
+    js/color_changer.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - charts_billboard/billboard

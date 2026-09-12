@@ -1,19 +1,26 @@
 # Configuration file for PHPStan static code checking, see https://phpstan.org .
-# PHPStan is triggered on Drupal CI in commit-code-check.sh.
+# The PHPStan check is executed as a job in the CI pipeline.
+
 includes:
   - .phpstan-baseline.php
-  - phar://phpstan.phar/conf/bleedingEdge.neon
 
 parameters:
 
+  tmpDir: phpstan-tmp
+
   level: 1
+
+  checkInternalClassCaseSensitivity: true
 
   fileExtensions:
     - sh
+    - ''
 
   paths:
     - .
     - ../composer
+    - scripts/dr
+    - scripts/drupal
 
   bootstrapFiles:
     # Load aliases.
@@ -26,6 +33,12 @@ parameters:
     - ../*/node_modules/*
     - */tests/fixtures/*.php
     - */tests/fixtures/*.php.gz
+    # Skip the phpstan tmpDir
+    - phpstan-tmp/*
+    # Skip Drupal's own PHPStan rules test fixtures.
+    - tests/PHPStan/fixtures/*
+    # Skip Drupal's own PHPStan vendor directory
+    - tests/PHPStan/vendor/*
     # Skip Drupal 6 & 7 code.
     - scripts/dump-database-d?.sh
     - scripts/generate-d?-content.sh
@@ -37,6 +50,10 @@ parameters:
     - modules/system/tests/modules/plugin_test/src/Plugin/plugin_test/fruit/ExtendingNonInstalledClass.php
     - modules/system/tests/modules/plugin_test/src/Plugin/plugin_test/custom_annotation/UsingNonInstalledTraitClass.php
     - modules/system/tests/modules/plugin_test/src/Plugin/plugin_test/custom_annotation/ExtendingNonInstalledClass.php
+    - modules/system/tests/modules/router_test_directory/src/Controller/TestInvalidController.php
+    - modules/system/tests/modules/router_test_directory/src/Controller/TestMissingDependency.php
+    # Needs to be skipped until PHPStan recognises the existence of Pdo\Sqlite
+    - modules/sqlite/src/Driver/Database/sqlite/SqliteConnection.php
 
   ignoreErrors:
     # new static() is a best practice in Drupal, so we cannot fix that.
@@ -45,3 +62,23 @@ parameters:
     # Ignore common errors for now.
     - "#Drupal calls should be avoided in classes, use dependency injection instead#"
     - "#^Class .* extends @internal class#"
+    - identifier: missingType.iterableValue
+
+rules:
+  - Drupal\PHPStan\Rules\ComponentTestDoesNotExtendCoreTest
+  - Drupal\PHPStan\Rules\TestClassClassMetadata
+  - Drupal\PHPStan\Rules\TestClassMethodMetadata
+  - PHPStan\Rules\Functions\MissingFunctionReturnTypehintRule
+  - PHPStan\Rules\Methods\MissingMethodReturnTypehintRule
+  # The rule below can be removed when we increase level to 2.
+  - PHPStan\Rules\Classes\AccessPrivateConstantThroughStaticRule
+
+services:
+  errorFormatter.multiplex:
+    class: Drupal\PHPStan\ErrorFormatter\MultiplexErrorFormatter
+    arguments:
+      basePath: ::getenv(_ARTIFACTS_DIR)
+      outputs:
+        gitlab: phpstan-gitlab.json
+        junit: phpstan-junit.xml
+        table: null

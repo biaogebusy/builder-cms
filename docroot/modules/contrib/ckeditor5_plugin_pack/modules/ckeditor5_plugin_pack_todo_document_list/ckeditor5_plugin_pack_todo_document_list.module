@@ -1,0 +1,60 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+declare(strict_types=1);
+
+use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
+
+/**
+ * Implements hook_ckeditor5_plugin_info_alter().
+ */
+function ckeditor5_plugin_pack_todo_document_list_ckeditor5_plugin_info_alter(array &$plugin_definitions): void {
+  if (isset($plugin_definitions['ckeditor5_plugin_pack_todo_document_list__todo_document_list']) && !\Drupal::service('ckeditor5_plugin_pack.core_library_version_checker')->isLibraryVersionHigherOrEqual('41.0.0')) {
+    $plugin = $plugin_definitions['ckeditor5_plugin_pack_todo_document_list__todo_document_list'];
+
+    $definition = $plugin->toArray();
+    $definition['ckeditor5']['plugins'] = ['list.TodoDocumentList'];
+
+    $pluginDefinition = new CKEditor5PluginDefinition($definition);
+    $plugin_definitions['ckeditor5_plugin_pack_todo_document_list__todo_document_list'] = $pluginDefinition;
+  }
+}
+
+/**
+ * Implements hook_install().
+ */
+function ckeditor5_plugin_pack_todo_document_list_install($is_syncing): void {
+  ckeditor5_plugin_pack_display_trial_info_message();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function ckeditor5_plugin_pack_todo_document_list_uninstall($is_syncing): void {
+  if (!$is_syncing) {
+    ckeditor5_plugin_pack_remove_ckeditor_plugins(['todoList'], ['ckeditor5_plugin_pack_todo_document_list__todo_document_list']);
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function ckeditor5_plugin_pack_todo_document_list_preprocess_page(&$variables): void {
+  $editors = \Drupal::entityTypeManager()->getStorage('editor')->loadMultiple();
+  foreach ($editors as $editor) {
+    if ($editor->getEditor() !== 'ckeditor5') {
+      continue;
+    }
+
+    $settings = $editor->getSettings();
+    $isAttachOption = isset($settings["plugins"]["ckeditor5_plugin_pack_todo_document_list__todo_document_list"]["attach_default_styles"]);
+    if ($isAttachOption && $settings["plugins"]["ckeditor5_plugin_pack_todo_document_list__todo_document_list"]["attach_default_styles"]) {
+      $variables['#attached']['library'][] = 'ckeditor5_plugin_pack_todo_document_list/style.todo_document_list';
+      return;
+    }
+  }
+}

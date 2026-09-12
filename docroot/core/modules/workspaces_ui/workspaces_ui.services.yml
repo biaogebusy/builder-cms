@@ -1,0 +1,11 @@
+parameters:
+  workspaces_ui.skip_procedural_hook_scan: true
+
+services:
+  _defaults:
+    autoconfigure: true
+
+  workspaces_ui.lazy_builders:
+    class: Drupal\workspaces_ui\WorkspacesUiLazyBuilders
+    arguments: [ '@workspaces.manager', '@plugin.manager.element_info' ]
+  Drupal\workspaces_ui\WorkspacesUiLazyBuilders: '@workspaces_ui.lazy_builders'

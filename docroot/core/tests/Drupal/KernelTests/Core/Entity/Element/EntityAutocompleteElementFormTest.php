@@ -14,12 +14,14 @@ use Drupal\entity_test\Entity\EntityTestStringId;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the EntityAutocomplete Form API element.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements FormInterface {
 
   /**
@@ -105,14 +107,14 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'test_entity_autocomplete';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['single'] = [
       '#type' => 'entity_autocomplete',
       '#target_type' => 'entity_test',
@@ -296,7 +298,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
   public function testInvalidEntityAutocompleteElement(): void {
     $form_builder = $this->container->get('form_builder');
 
-    // Test 'single' with an entity label that doesn't exist
+    // Test 'single' with an entity label that doesn't exist.
     $form_state = (new FormState())
       ->setValues([
         'single' => 'single - non-existent label',

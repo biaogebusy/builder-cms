@@ -1,5 +1,4 @@
 webform_share.admin:
-  version: VERSION
   css:
     theme:
       css/webform_share.admin.css: {}
@@ -10,7 +9,6 @@ webform_share.admin:
     - core/drupal.announce
 
 webform_share.page:
-  version: VERSION
   css:
     theme:
       css/webform_share.page.css: {}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\system_test\Controller;
 
 use Drupal\Core\Cache\CacheableAjaxResponse;
@@ -20,6 +22,7 @@ class PageCacheAcceptHeaderController {
    *   The current request object.
    *
    * @return mixed
+   *   The processed response object.
    */
   public function content(Request $request) {
     if ($request->getRequestFormat() === 'json' && $request->query->get('_wrapper_format') === 'drupal_ajax') {

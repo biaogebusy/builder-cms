@@ -6,12 +6,14 @@ namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Performs tests on the Drupal error and exception handler.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class ErrorHandlerTest extends BrowserTestBase {
 
   /**
@@ -143,7 +145,7 @@ class ErrorHandlerTest extends BrowserTestBase {
       '%type' => 'Exception',
       '@message' => 'This is an exception that occurs during rendering',
       '%function' => PHP_VERSION_ID >= 80400 ?
-      'Drupal\error_test\Controller\ErrorTestController->{closure:Drupal\error_test\Controller\ErrorTestController::triggerRendererException():102}()' :
+      'Drupal\error_test\Controller\ErrorTestController->{closure:Drupal\error_test\Controller\ErrorTestController::triggerRendererException():104}()' :
       'Drupal\error_test\Controller\ErrorTestController->Drupal\error_test\Controller\{closure}()',
       '%line' => 82,
       '%file' => $this->getModulePath('error_test') . '/error_test.module',

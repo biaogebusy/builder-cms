@@ -23,8 +23,8 @@ class TestHttpClientMiddleware {
     // database prefix were stored statically in a file or database variable.
     return function ($handler) {
       return function (RequestInterface $request, array $options) use ($handler) {
-        if ($test_prefix = drupal_valid_test_ua()) {
-          $request = $request->withHeader('User-Agent', drupal_generate_test_ua($test_prefix));
+        if ($user_agent = drupal_generate_test_ua(drupal_valid_test_ua())) {
+          $request = $request->withHeader('User-Agent', $user_agent);
         }
         return $handler($request, $options)
           ->then(function (ResponseInterface $response) {
@@ -46,8 +46,7 @@ class TestHttpClientMiddleware {
                   if (count($parameters) === 3) {
                     if ($parameters[1] === 'User deprecated function') {
                       // Fire the same deprecation message to allow it to be
-                      // collected by
-                      // \Symfony\Bridge\PhpUnit\DeprecationErrorHandler::collectDeprecations().
+                      // collected by PHPUnit.
                       // phpcs:ignore Drupal.Semantics.FunctionTriggerError
                       @trigger_error((string) $parameters[0], E_USER_DEPRECATED);
                     }

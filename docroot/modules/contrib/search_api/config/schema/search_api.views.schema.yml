@@ -141,6 +141,18 @@ views.field.search_api:
     multi_separator:
       type: string
       label: 'Separator for multiple values'
+    delta_limit:
+      type: integer
+      label: 'Field'
+    delta_offset:
+      type: integer
+      label: 'Offset'
+    delta_reversed:
+      type: boolean
+      label: 'Reversed'
+    delta_first_last:
+      type: boolean
+      label: 'First and last only'
 
 views.field.search_api_boolean:
   type: views.field.boolean
@@ -158,6 +170,18 @@ views.field.search_api_boolean:
     multi_separator:
       type: string
       label: 'Separator for multiple values'
+    delta_limit:
+      type: integer
+      label: 'Field'
+    delta_offset:
+      type: integer
+      label: 'Offset'
+    delta_reversed:
+      type: boolean
+      label: 'Reversed'
+    delta_first_last:
+      type: boolean
+      label: 'First and last only'
 
 views.field.search_api_bulk_form:
   type: views.field.bulk_form
@@ -179,6 +203,18 @@ views.field.search_api_date:
     multi_separator:
       type: string
       label: 'Separator for multiple values'
+    delta_limit:
+      type: integer
+      label: 'Field'
+    delta_offset:
+      type: integer
+      label: 'Offset'
+    delta_reversed:
+      type: boolean
+      label: 'Reversed'
+    delta_first_last:
+      type: boolean
+      label: 'First and last only'
 
 views.field.search_api_entity:
   type: views.field.search_api
@@ -233,6 +269,18 @@ views.field.search_api_numeric:
     multi_separator:
       type: string
       label: 'Separator for multiple values'
+    delta_limit:
+      type: integer
+      label: 'Field'
+    delta_offset:
+      type: integer
+      label: 'Offset'
+    delta_reversed:
+      type: boolean
+      label: 'Reversed'
+    delta_first_last:
+      type: boolean
+      label: 'First and last only'
     format_plural_values:
       type: sequence
       label: 'Pluralized strings'

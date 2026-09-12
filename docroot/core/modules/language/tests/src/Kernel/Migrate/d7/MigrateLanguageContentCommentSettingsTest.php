@@ -6,12 +6,14 @@ namespace Drupal\Tests\language\Kernel\Migrate\d7;
 
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of language comment settings.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateLanguageContentCommentSettingsTest extends MigrateDrupal7TestBase {
 
   /**
@@ -21,7 +23,6 @@ class MigrateLanguageContentCommentSettingsTest extends MigrateDrupal7TestBase {
     'comment',
     'content_translation',
     'language',
-    'node',
     'text',
   ];
 

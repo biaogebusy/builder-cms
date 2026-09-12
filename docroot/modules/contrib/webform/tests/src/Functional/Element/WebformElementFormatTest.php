@@ -32,7 +32,7 @@ class WebformElementFormatTest extends WebformElementBrowserTestBase {
   /**
    * Tests element format.
    */
-  public function testFormat() {
+  public function testFormat(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -50,6 +50,12 @@ class WebformElementFormatTest extends WebformElementBrowserTestBase {
 
     // Check (single) elements item formatted as HTML.
     $body = $this->getMessageBody($submission, 'email_html');
+    // Drupal 11 has standardized date formats.
+    // See https://www.drupal.org/node/3467774.
+    $isLessThanDrupal11 = version_compare(\Drupal::VERSION, '11.1', '<');
+    $longDate = $isLessThanDrupal11 ? 'Thursday, June 18, 1942 - 00:00' : 'Thursday, 18 June 1942 - 00:00';
+    $mediumDate = $isLessThanDrupal11 ? 'Thu, 06/18/1942 - 00:00' : 'Thu, 18 Jun 1942 - 00:00';
+    $shortDate = $isLessThanDrupal11 ? '06/18/1942 - 00:00' : '18 Jun 1942 - 00:00';
     $elements = [
       'Checkbox (Value)' => 'Yes',
       'Color (Color swatch)' => '<font color="#ffffcc">█</font> #ffffcc',
@@ -68,9 +74,9 @@ class WebformElementFormatTest extends WebformElementBrowserTestBase {
       'Date (HTML Week)' => '1942-W25',
       'Date (HTML Year)' => '1942',
       'Date (HTML Yearless date)' => '06-18',
-      'Date (Default long date)' => 'Thursday, June 18, 1942 - 00:00',
-      'Date (Default medium date)' => 'Thu, 06/18/1942 - 00:00',
-      'Date (Default short date)' => '06/18/1942 - 00:00',
+      'Date (Default long date)' => $longDate,
+      'Date (Default medium date)' => $mediumDate,
+      'Date (Default short date)' => $shortDate,
       'Time (Value)' => '09:00',
       'Time (Raw value)' => '09:00:00',
       'Radios (Option description)' => 'This is a description',
@@ -84,17 +90,18 @@ class WebformElementFormatTest extends WebformElementBrowserTestBase {
 // phpcs:enable
     ];
     foreach ($elements as $label => $value) {
-      $this->assertStringContainsString('<b>' . $label . '</b><br />' . $value, $body, new FormattableMarkup('Found @label: @value', ['@label' => $label, '@value' => $value]));
+      $this->assertStringContainsString('<b>' . $label . '</b><br />' . $value, $body, "Found $label: $value");
     }
-
+    // cspell:disable
     // Check code format.
+    // @todo Remove once PHP 8.2 is required.
     if (version_compare(phpversion(), '8.1', '>')) {
       $this->assertStringContainsString('<pre class="js-webform-codemirror-runmode webform-codemirror-runmode" data-webform-codemirror-mode="text/x-yaml">message: &#039;Hello World&#039;</pre>', $body);
     }
     else {
       $this->assertStringContainsString('<pre class="js-webform-codemirror-runmode webform-codemirror-runmode" data-webform-codemirror-mode="text/x-yaml">message: \'Hello World\'</pre>', $body);
     }
-
+    // cspell:enable
     // Check elements formatted as text.
     $body = $this->getMessageBody($submission, 'email_text');
     $elements = [
@@ -112,9 +119,9 @@ class WebformElementFormatTest extends WebformElementBrowserTestBase {
       'Date (HTML Week): 1942-W25',
       'Date (HTML Year): 1942',
       'Date (HTML Yearless date): 06-18',
-      'Date (Default long date): Thursday, June 18, 1942 - 00:00',
-      'Date (Default medium date): Thu, 06/18/1942 - 00:00',
-      'Date (Default short date): 06/18/1942 - 00:00',
+      'Date (Default long date): ' . $longDate,
+      'Date (Default medium date): ' . $mediumDate,
+      'Date (Default short date): ' . $shortDate,
       'Time (Value): 09:00',
       'Time (Raw value): 09:00:00',
       'Radios (Option description): This is a description',
@@ -179,6 +186,7 @@ class WebformElementFormatTest extends WebformElementBrowserTestBase {
 
     // Check elements (single) item formatted as HTML.
     $body = $this->getMessageBody($webforms_submission, 'email_html');
+    // cspell:disable
     $elements = [
       'Text field (Comma)' => 'Loremipsum, Oratione, Dixisset',
       'Text field (Semicolon)' => 'Loremipsum; Oratione; Dixisset',
@@ -192,6 +200,7 @@ class WebformElementFormatTest extends WebformElementBrowserTestBase {
       'Checkboxes (Unordered list)' => '<ul><li>One</li><li>Two</li><li>Three</li></ul>',
       'Checkboxes (Checklist (☑/☐))' => '<span style="font-size: 1.4em; line-height: 1em">☑</span> One<br /><span style="font-size: 1.4em; line-height: 1em">☑</span> Two<br /><span style="font-size: 1.4em; line-height: 1em">☑</span> Three<br />',
     ];
+    // cspell:enable
     foreach ($elements as $label => $value) {
       $this->assertStringContainsString('<b>' . $label . '</b><br />' . $value, $body, new FormattableMarkup('Found @label: @value', [
         '@label' => $label,

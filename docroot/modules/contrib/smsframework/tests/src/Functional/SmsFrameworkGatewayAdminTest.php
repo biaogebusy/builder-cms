@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -17,9 +17,6 @@ use Drupal\sms\Plugin\SmsGateway\LogGateway;
  */
 final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = ['block'];
 
   /**
@@ -29,9 +26,6 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
    */
   protected ConfigEntityStorageInterface $smsGatewayStorage;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->smsGatewayStorage = \Drupal::entityTypeManager()->getStorage('sms_gateway');
@@ -59,7 +53,7 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
     // Delete all gateways.
     $this->smsGatewayStorage->delete($this->smsGatewayStorage->loadMultiple());
     $this->drupalGet(Url::fromRoute('sms.gateway.list'));
-    $this->assertSession()->responseContains(t('No gateways found.'));
+    $this->assertSession()->responseContains(\t('No gateways found.'));
   }
 
   /**
@@ -98,7 +92,7 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
 
     $edit = [
       'label' => $this->randomString(),
-      'id' => mb_strtolower($this->randomMachineName()),
+      'id' => \mb_strtolower($this->randomMachineName()),
       'status' => TRUE,
       'plugin_id' => 'memory',
     ];
@@ -109,10 +103,10 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->addressEquals(Url::fromRoute('entity.sms_gateway.edit_form', [
       'sms_gateway' => $edit['id'],
     ]));
-    $this->assertSession()->responseContains(t('Gateway created.'));
+    $this->assertSession()->responseContains(\t('Gateway created.'));
 
     $this->drupalGet(Url::fromRoute('sms.gateway.list'));
-    $this->assertSession()->responseContains('<td>' . t('@label', ['@label' => $edit['label']]) . '</td>', 'New gateway appears on list.');
+    $this->assertSession()->responseContains('<td>' . \t('@label', ['@label' => $edit['label']]) . '</td>', 'New gateway appears on list.');
   }
 
   /**
@@ -191,12 +185,12 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
       'sms_gateway' => $test_gateway->id(),
     ]));
 
-    $this->clickLink(t('Delete'));
+    $this->clickLink(\t('Delete'));
     $delete_url = Url::fromRoute('entity.sms_gateway.delete_form', [
       'sms_gateway' => $test_gateway->id(),
     ]);
-    $this->assertSession()->addressEquals(sprintf('/admin/config/smsframework/gateways/%s/delete', $test_gateway->id()));
-    $this->assertSession()->responseContains(t('Are you sure you want to delete SMS gateway %label?', [
+    $this->assertSession()->addressEquals(\sprintf('/admin/config/smsframework/gateways/%s/delete', $test_gateway->id()));
+    $this->assertSession()->responseContains(\t('Are you sure you want to delete SMS gateway %label?', [
       '%label' => $test_gateway->label(),
     ]));
     $this->drupalGet($delete_url);
@@ -204,10 +198,10 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
 
     $this->assertSession()->addressEquals(Url::fromRoute('sms.gateway.list'));
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->responseContains(t('Gateway %label was deleted.', [
+    $this->assertSession()->responseContains(\t('Gateway %label was deleted.', [
       '%label' => $test_gateway->label(),
     ]));
-    $this->assertSession()->responseNotContains('<td>' . t('@label', ['@label' => $test_gateway->label()]) . '</td>');
+    $this->assertSession()->responseNotContains('<td>' . \t('@label', ['@label' => $test_gateway->label()]) . '</td>');
   }
 
   /**
@@ -248,7 +242,7 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
 
     $this->assertSession()->responseContains('Edit gateway');
     $this->assertSession()->fieldNotExists('incoming_messages[push_path]');
-    $this->assertSession()->responseContains(t('This gateway does not support receiving messages.'));
+    $this->assertSession()->responseContains(\t('This gateway does not support receiving messages.'));
   }
 
 }

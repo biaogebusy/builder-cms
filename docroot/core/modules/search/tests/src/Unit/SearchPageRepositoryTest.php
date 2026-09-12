@@ -9,11 +9,14 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\search\Entity\SearchPage;
 use Drupal\search\SearchPageRepository;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\search\SearchPageRepository
- * @group search
+ * Tests Drupal\search\SearchPageRepository.
  */
+#[CoversClass(SearchPageRepository::class)]
+#[Group('search')]
 class SearchPageRepositoryTest extends UnitTestCase {
 
   /**
@@ -310,6 +313,9 @@ class SearchPageRepositoryTest extends UnitTestCase {
 
 }
 
+/**
+ * Mock for the configured search page entity.
+ */
 class TestSearchPage extends SearchPage {
 
   public function __construct(array $values) {
@@ -318,6 +324,9 @@ class TestSearchPage extends SearchPage {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function label($langcode = NULL) {
     return $this->label;
   }

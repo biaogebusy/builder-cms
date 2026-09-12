@@ -31,7 +31,7 @@ class WebformNodeAccessPermissionsTest extends WebformNodeBrowserTestBase {
    *
    * @see \Drupal\webform\Tests\Access\WebformAccessPermissionTest::testWebformSubmissionAccessPermissions
    */
-  public function testAccessPermissions() {
+  public function testAccessPermissions(): void {
     global $base_path;
 
     $assert_session = $this->assertSession();

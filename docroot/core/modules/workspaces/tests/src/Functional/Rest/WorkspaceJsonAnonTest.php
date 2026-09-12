@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\workspaces\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\AnonResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test workspace entities for unauthenticated JSON requests.
- *
- * @group workspaces
  */
+#[Group('workspaces')]
+#[RunTestsInSeparateProcesses]
 class WorkspaceJsonAnonTest extends WorkspaceResourceTestBase {
 
   use AnonResourceTestTrait;

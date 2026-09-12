@@ -6,12 +6,14 @@ namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\rest\Entity\RestResourceConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests to see if generator header is added.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class ResponseGeneratorTest extends BrowserTestBase {
 
   /**
@@ -48,13 +50,13 @@ class ResponseGeneratorTest extends BrowserTestBase {
     // Check to see if the header is added when viewing an HTML page.
     $this->drupalGet($node->toUrl());
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=UTF-8');
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=utf-8');
     $this->assertSession()->responseHeaderEquals('X-Generator', $expectedGeneratorHeader);
 
     // Check to see if the header is also added for a non-successful response.
     $this->drupalGet('llama');
     $this->assertSession()->statusCodeEquals(404);
-    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=UTF-8');
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=utf-8');
     $this->assertSession()->responseHeaderEquals('X-Generator', $expectedGeneratorHeader);
 
     // Enable cookie-based authentication for the entity:node REST resource.

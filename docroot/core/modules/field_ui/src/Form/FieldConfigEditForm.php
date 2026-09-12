@@ -2,6 +2,12 @@
 
 namespace Drupal\field_ui\Form;
 
+use Drupal\Component\Plugin\PluginManagerInterface;
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\RedirectCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Entity\ContentEntityStorageInterface;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityInterface;
@@ -10,6 +16,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Field\FieldFilteredMarkup;
+use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Render\Element;
@@ -19,6 +26,7 @@ use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Core\Url;
 use Drupal\field\FieldConfigInterface;
+use Drupal\field\FieldStorageConfigInterface;
 use Drupal\field_ui\FieldUI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -39,13 +47,6 @@ class FieldConfigEditForm extends EntityForm {
   protected $entity;
 
   /**
-   * The entity type bundle info service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
    * The name of the entity type.
    *
    * @var string
@@ -60,39 +61,23 @@ class FieldConfigEditForm extends EntityForm {
   protected string $bundle;
 
   /**
-   * Constructs a new FieldConfigDeleteForm object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info service.
-   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typedDataManager
-   *   The type data manger.
-   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface|null $entityDisplayRepository
-   *   The entity display repository.
-   * @param \Drupal\Core\TempStore\PrivateTempStore|null $tempStore
-   *   The private tempstore.
-   * @param \Drupal\Core\Render\ElementInfoManagerInterface|null $elementInfo
-   *   The element info manager.
+   * The field-type plugin manager service.
    */
+  protected PluginManagerInterface $fieldTypePluginManager;
+
   public function __construct(
-    EntityTypeBundleInfoInterface $entity_type_bundle_info,
+    protected EntityTypeBundleInfoInterface $entityTypeBundleInfo,
     protected TypedDataManagerInterface $typedDataManager,
-    protected ?EntityDisplayRepositoryInterface $entityDisplayRepository = NULL,
-    protected ?PrivateTempStore $tempStore = NULL,
-    protected ?ElementInfoManagerInterface $elementInfo = NULL,
+    protected EntityDisplayRepositoryInterface $entityDisplayRepository,
+    protected PrivateTempStore $tempStore,
+    protected ElementInfoManagerInterface $elementInfo,
+    ?PluginManagerInterface $field_type_plugin_manager = NULL,
   ) {
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    if ($this->entityDisplayRepository === NULL) {
-      @trigger_error('Calling FieldConfigEditForm::__construct() without the $entityDisplayRepository argument is deprecated in drupal:10.2.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3383771', E_USER_DEPRECATED);
-      $this->entityDisplayRepository = \Drupal::service('entity_display.repository');
+    if (!$field_type_plugin_manager) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $field_type_plugin_manager argument is deprecated in drupal:11.4.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/node/3566774', E_USER_DEPRECATED);
+      $field_type_plugin_manager = \Drupal::service('plugin.manager.field.field_type');
     }
-    if ($this->tempStore === NULL) {
-      @trigger_error('Calling FieldConfigEditForm::__construct() without the $tempStore argument is deprecated in drupal:10.2.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3383771', E_USER_DEPRECATED);
-      $this->tempStore = \Drupal::service('tempstore.private')->get('field_ui');
-    }
-    if ($this->elementInfo === NULL) {
-      @trigger_error('Calling FieldConfigEditForm::__construct() without the $elementInfo argument is deprecated in drupal:10.2.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3383771', E_USER_DEPRECATED);
-      $this->elementInfo = \Drupal::service('plugin.manager.element_info');
-    }
+    $this->fieldTypePluginManager = $field_type_plugin_manager;
   }
 
   /**
@@ -105,6 +90,7 @@ class FieldConfigEditForm extends EntityForm {
       $container->get('entity_display.repository'),
       $container->get('tempstore.private')->get('field_ui'),
       $container->get('plugin.manager.element_info'),
+      $container->get('plugin.manager.field.field_type'),
     );
   }
 
@@ -123,7 +109,7 @@ class FieldConfigEditForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
-    $form['#entity_builders'][] = 'field_form_field_config_edit_form_entity_builder';
+    $form['#entity_builders']['config_edit_form'] = '::entityFormEntityBuild';
 
     $field_storage = $this->entity->getFieldStorageDefinition();
     $bundles = $this->entityTypeBundleInfo->getBundleInfo($this->entity->getTargetEntityTypeId());
@@ -168,7 +154,7 @@ class FieldConfigEditForm extends EntityForm {
     ];
 
     // Create an arbitrary entity object (used by the 'default value' widget).
-    $ids = (object) [
+    $entity_identifiers = [
       'entity_type' => $this->entity->getTargetEntityTypeId(),
       'bundle' => $this->entity->getTargetBundle(),
       'entity_id' => NULL,
@@ -198,7 +184,12 @@ class FieldConfigEditForm extends EntityForm {
     $subform_state = SubformState::createForSubform($form['field_storage']['subform'], $form, $form_state, $field_storage_form);
     $form['field_storage']['subform'] = $field_storage_form->buildForm($form['field_storage']['subform'], $subform_state, $this->entity);
 
-    $form['#entity'] = _field_create_entity_from_ids($ids);
+    $target_entity_storage = $this->entityTypeManager->getStorage($this->entity->getTargetEntityTypeId());
+    if (!$target_entity_storage instanceof ContentEntityStorageInterface) {
+      return $form;
+    }
+
+    $form['#entity'] = $target_entity_storage->createEntityFromIds($entity_identifiers);
     $items = $this->getTypedData($this->entity, $form['#entity']);
     $item = $items->first() ?: $items->appendItem();
 
@@ -264,6 +255,51 @@ class FieldConfigEditForm extends EntityForm {
   }
 
   /**
+   * Entity form builder for the field config edit form.
+   *
+   * @param string $entity_type_id
+   *   The entity type identifier.
+   * @param \Drupal\field\FieldConfigInterface $entity
+   *   The entity updated with the submitted values.
+   * @param array $form
+   *   The complete form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @see static::form
+   * @see static::copyFormValuesToEntity
+   */
+  public function entityFormEntityBuild(string $entity_type_id, FieldConfigInterface $entity, array &$form, FormStateInterface &$form_state): void {
+    $previous_field_storage = $form_state->getFormObject()->getEntity()->getFieldStorageDefinition();
+    assert($previous_field_storage instanceof FieldStorageConfigInterface);
+
+    // Act on all sub-types of the entity_reference field type.
+    $item_class = EntityReferenceItem::class;
+    $class = $this->fieldTypePluginManager->getPluginClass($entity->getFieldStorageDefinition()->getType());
+    if ($class !== $item_class && !is_subclass_of($class, $item_class)) {
+      return;
+    }
+
+    // Update handler settings when target_type is changed.
+    if ($entity->getFieldStorageDefinition()->getSetting('target_type') !== $previous_field_storage->getSetting('target_type')) {
+      // @see \Drupal\options\Hook\OptionsHooks::fieldStorageConfigUpdate()
+      $entity->setSetting('handler_settings', []);
+      // @see \Drupal\field\Hook\FieldHooks::fieldConfigPresave()
+      $this->moduleHandler->invoke('field', 'field_config_create', [$entity]);
+
+      // Store updated settings in form state so that the form state can be
+      // copied directly to the entity.
+      $form_state->setValue('settings', $entity->getSettings());
+
+      // Unset user input for the settings because they are not valid after the
+      // target type has changed.
+      $user_input = $form_state->getUserInput();
+      unset($user_input['settings']);
+      $form_state->setUserInput($user_input);
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function afterBuild(array $element, FormStateInterface $form_state) {
@@ -309,6 +345,7 @@ class FieldConfigEditForm extends EntityForm {
    *   An element to check.
    *
    * @return bool
+   *   TRUE if the element contains any required elements, FALSE otherwise.
    */
   private function hasAnyRequired(array $element) {
     $has_required = FALSE;
@@ -330,7 +367,31 @@ class FieldConfigEditForm extends EntityForm {
    */
   protected function actions(array $form, FormStateInterface $form_state) {
     $actions = parent::actions($form, $form_state);
-    $actions['submit']['#value'] = $this->t('Save settings');
+    $actions['submit']['#value'] = $this->entity->isNew() ? $this->t('Save') : $this->t('Save settings');
+    $actions['submit']['#ajax'] = [
+      'callback' => '::ajaxSubmit',
+    ];
+    if ($this->entity->isNew()) {
+      $entity_type = $this->entity->getTargetEntityTypeId();
+      $route_parameters = [
+        'field_name' => $this->entity->getName(),
+        'entity_type' => $entity_type,
+      ] + FieldUI::getRouteBundleParameter($this->entityTypeManager->getDefinition($entity_type), $this->entity->getTargetBundle());
+      $actions['back'] = [
+        '#type' => 'link',
+        '#weight' => 1,
+        '#title' => $this->t('Change field type'),
+        '#limit_validation_errors' => [],
+        '#attributes' => [
+          'class' => ['button', 'use-ajax'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => Json::encode([
+            'width' => '1100',
+          ]),
+        ],
+        '#url' => Url::fromRoute("field_ui.field_storage_config_reset_add_$entity_type", $route_parameters),
+      ];
+    }
 
     if (!$this->entity->isNew()) {
       $target_entity_type = $this->entityTypeManager->getDefinition($this->entity->getTargetEntityTypeId());
@@ -339,18 +400,17 @@ class FieldConfigEditForm extends EntityForm {
       ] + FieldUI::getRouteBundleParameter($target_entity_type, $this->entity->getTargetBundle());
       $url = new Url('entity.field_config.' . $target_entity_type->id() . '_field_delete_form', $route_parameters);
 
-      if ($this->getRequest()->query->has('destination')) {
-        $query = $url->getOption('query');
-        $query['destination'] = $this->getRequest()->query->get('destination');
-        $url->setOption('query', $query);
-      }
       $actions['delete'] = [
         '#type' => 'link',
         '#title' => $this->t('Delete'),
         '#url' => $url,
         '#access' => $this->entity->access('delete'),
         '#attributes' => [
-          'class' => ['button', 'button--danger'],
+          'class' => ['button', 'button--danger', 'use-ajax'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => Json::encode([
+            'width' => '1100',
+          ]),
         ],
       ];
     }
@@ -359,10 +419,62 @@ class FieldConfigEditForm extends EntityForm {
   }
 
   /**
+   * Submit form #ajax callback.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An AJAX response that display validation error messages or represents a
+   *   successful submission.
+   *
+   * @see \Drupal\Core\Ajax\AjaxFormHelperTrait
+   */
+  public function ajaxSubmit(array &$form, FormStateInterface $form_state): AjaxResponse {
+    if ($form_state->hasAnyErrors()) {
+      $form['status_messages'] = [
+        '#type' => 'status_messages',
+        '#weight' => -1000,
+      ];
+      $form['#sorted'] = FALSE;
+      $response = new AjaxResponse();
+      $response->addCommand(new ReplaceCommand('#field-combined', $form));
+    }
+    else {
+      $response = $this->successfulAjaxSubmit($form, $form_state);
+    }
+    return $response;
+  }
+
+  /**
+   * Respond to a successful AJAX submission.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An AJAX response.
+   */
+  protected function successfulAjaxSubmit(array $form, FormStateInterface $form_state): AjaxResponse {
+    $response = new AjaxResponse();
+    $response->addCommand(new RedirectCommand(FieldUI::getOverviewRouteInfo($this->entity->getTargetEntityTypeId(), $this->entity->getTargetBundle())->toString()));
+
+    return $response;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
+    // Additional validation to work when JS is disabled.
+    if (!$form_state->getValue('label')) {
+      $form_state->setErrorByName('label', $this->t('Label field is required.'));
+    }
 
     $field_storage_form = $this->entityTypeManager->getFormObject('field_storage_config', $this->operation);
     $field_storage_form->setEntity($this->entity->getFieldStorageDefinition());
@@ -485,6 +597,8 @@ class FieldConfigEditForm extends EntityForm {
    *   The parent entity that the field is attached to.
    *
    * @return \Drupal\Core\TypedData\TypedDataInterface
+   *   The typed data object representing the field configuration and its
+   *   default value.
    */
   private function getTypedData(FieldConfigInterface $field_config, FieldableEntityInterface $parent): TypedDataInterface {
     // Make sure that typed data manager is re-generating the instance. This

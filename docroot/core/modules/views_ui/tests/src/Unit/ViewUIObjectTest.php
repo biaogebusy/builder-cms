@@ -9,12 +9,15 @@ use Drupal\Core\TempStore\Lock;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Entity\View;
 use Drupal\views_ui\ViewUI;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
- * @coversDefaultClass \Drupal\views_ui\ViewUI
- * @group views_ui
+ * Tests Drupal\views_ui\ViewUI.
  */
+#[CoversClass(ViewUI::class)]
+#[Group('views_ui')]
 class ViewUIObjectTest extends UnitTestCase {
 
   /**
@@ -32,14 +35,25 @@ class ViewUIObjectTest extends UnitTestCase {
     foreach ($reflection->getMethods() as $reflection_method) {
       $interface_methods[] = $reflection_method->getName();
 
-      // EntityInterface::isNew() is missing from the list of methods, because it
-      // calls id(), which breaks the ->expect($this->once()) call. Call it later.
-      // EntityInterface::isSyncing() is only called during syncing process.
-      // EntityInterface::isUninstalling() is only called during uninstallation
-      // process. EntityInterface::getConfigDependencyName() and
+      // EntityInterface::isNew() is missing from the list of methods, because
+      // it calls id(), which breaks the ->expect($this->once()) call. Call it
+      // later. EntityInterface::isSyncing() is only called during syncing
+      // process. EntityInterface::isUninstalling() is only called during
+      // uninstallation process. EntityInterface::getConfigDependencyName() and
       // ConfigEntityInterface::calculateDependencies() are only used for
       // dependency management.
-      if (!in_array($reflection_method->getName(), ['isNew', 'isSyncing', 'isUninstalling', 'getConfigDependencyKey', 'getConfigDependencyName', 'calculateDependencies'])) {
+      if (!in_array(
+        $reflection_method->getName(),
+        [
+          'isNew',
+          'isSyncing',
+          'isUninstalling',
+          'getConfigDependencyKey',
+          'getConfigDependencyName',
+          'calculateDependencies',
+          // Deprecated methods that are now no-ops.
+          'trustData',
+        ])) {
         if (count($reflection_method->getParameters()) == 0) {
           $method_args[$reflection_method->getName()] = [];
         }

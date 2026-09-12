@@ -1,31 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test\Entity;
 
+use Drupal\Core\Entity\Attribute\ContentEntityType;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\entity_test\EntityTestForm;
 
 /**
  * Defines the test entity class for testing entity constraint violations.
- *
- * @ContentEntityType(
- *   id = "entity_test_constraint_violation",
- *   label = @Translation("Test entity constraint violation"),
- *   handlers = {
- *     "form" = {
- *       "default" = "Drupal\entity_test\EntityTestForm"
- *     }
- *   },
- *   base_table = "entity_test_constraint_violation",
- *   persistent_cache = FALSE,
- *   entity_keys = {
- *     "id" = "id",
- *     "uuid" = "uuid",
- *     "bundle" = "type",
- *     "label" = "name"
- *   }
- * )
  */
+#[ContentEntityType(
+  id: 'entity_test_constraint_violation',
+  label: new TranslatableMarkup('Test entity constraint violation'),
+  persistent_cache: FALSE,
+  entity_keys: [
+    'id' => 'id',
+    'uuid' => 'uuid',
+    'bundle' => 'type',
+    'label' => 'name',
+  ],
+  handlers: [
+    'form' => [
+      'default' => EntityTestForm::class,
+    ],
+  ],
+  admin_permission: 'administer entity_test content',
+  base_table: 'entity_test_constraint_violation',
+)]
 class EntityTestConstraintViolation extends EntityTest {
 
   /**

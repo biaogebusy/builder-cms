@@ -42,7 +42,7 @@ class CurrentCurrency implements CurrentCurrencyInterface {
    */
   public function getCurrency(): ?CurrencyInterface {
     $request = $this->requestStack->getCurrentRequest();
-    if (!$request || !$this->currencies->contains($request)) {
+    if (!$request || !$this->currencies->offsetExists($request)) {
       $currency = $this->chainResolver->resolve();
       if (!$request) {
         return $currency;

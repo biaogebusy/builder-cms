@@ -63,6 +63,7 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
   }
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close,
 .meta-sidebar__close {
   cursor: pointer;
   background: transparent;
@@ -72,11 +73,13 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close,
   .meta-sidebar__close {
     transition: background var(--gin-transition-fast);
   }
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close::before,
 .meta-sidebar__close::before {
   content: "";
   display: inline-block;
@@ -89,22 +92,29 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
   background-color: var(--gin-icon-color);
 }
 
-.meta-sidebar__close:hover, .meta-sidebar__close:focus {
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close:hover, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close:focus,
+.meta-sidebar__close:hover,
+.meta-sidebar__close:focus {
   background-color: var(--gin-color-primary-light);
 }
 
-.meta-sidebar__close:hover::before, .meta-sidebar__close:focus::before {
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close:hover::before, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close:focus::before,
+.meta-sidebar__close:hover::before,
+.meta-sidebar__close:focus::before {
   background-color: var(--gin-color-primary);
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close.is-active,
 .meta-sidebar__close.is-active {
   background-color: var(--gin-color-primary-light-hover);
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close.is-active::before,
 .meta-sidebar__close.is-active::before {
   background-color: var(--gin-color-primary-active);
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger,
 .meta-sidebar__trigger {
   cursor: pointer;
   background: transparent;
@@ -115,11 +125,13 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger,
   .meta-sidebar__trigger {
     transition: background var(--gin-transition-fast);
   }
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger::before,
 .meta-sidebar__trigger::before {
   display: inline-block;
   width: 100%;
@@ -137,18 +149,28 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
   border-radius: 50%;
 }
 
-.meta-sidebar__trigger:hover, .meta-sidebar__trigger:focus, .meta-sidebar__trigger.is-active, .meta-sidebar__trigger.is-active:hover {
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger:hover, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger:focus, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger.is-active, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger.is-active:hover,
+.meta-sidebar__trigger:hover,
+.meta-sidebar__trigger:focus,
+.meta-sidebar__trigger.is-active,
+.meta-sidebar__trigger.is-active:hover {
   background-color: var(--gin-color-primary-light);
 }
 
-.meta-sidebar__trigger:hover::before, .meta-sidebar__trigger:focus::before, .meta-sidebar__trigger.is-active::before, .meta-sidebar__trigger.is-active:hover::before {
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger:hover::before, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger:focus::before, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger.is-active::before, :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger.is-active:hover::before,
+.meta-sidebar__trigger:hover::before,
+.meta-sidebar__trigger:focus::before,
+.meta-sidebar__trigger.is-active::before,
+.meta-sidebar__trigger.is-active:hover::before {
   background-color: var(--gin-color-primary);
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__trigger.is-active,
 .meta-sidebar__trigger.is-active {
   background-color: var(--gin-bg-item-hover);
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close,
 .meta-sidebar__close {
   z-index: 104;
   position: absolute;
@@ -157,11 +179,13 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
 }
 
 @media (min-width: 64em) {
+  :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close,
   .meta-sidebar__close {
     display: none;
   }
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__close::before,
 .meta-sidebar__close::before {
   -webkit-mask-image: url("../../media/sprite.svg#close-view");
           mask-image: url("../../media/sprite.svg#close-view");
@@ -169,6 +193,7 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
           mask-size: 16px 16px;
 }
 
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__overlay,
 .meta-sidebar__overlay {
   z-index: 102;
   position: fixed;
@@ -181,12 +206,14 @@ body[data-meta-sidebar=closed] .layout-region-node-secondary {
   background: var(--gin-bg-layer2);
 }
 
+body[data-meta-sidebar=open] :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__overlay,
 body[data-meta-sidebar=open] .meta-sidebar__overlay {
   opacity: .9;
   visibility: visible;
 }
 
 @media (min-width: 64em) {
+  :is(#extra-specificity-hack, [data-drupal-admin-styles]) .meta-sidebar__overlay,
   .meta-sidebar__overlay {
     display: none;
   }

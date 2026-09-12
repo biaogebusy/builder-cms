@@ -8,16 +8,18 @@ use Drupal\layout_builder\Routing\LayoutSectionStorageParamConverter;
 use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\layout_builder\Routing\LayoutSectionStorageParamConverter
- *
- * @group layout_builder
+ * Tests Drupal\layout_builder\Routing\LayoutSectionStorageParamConverter.
  */
+#[CoversClass(LayoutSectionStorageParamConverter::class)]
+#[Group('layout_builder')]
 class LayoutSectionStorageParamConverterTest extends UnitTestCase {
 
   /**
-   * @covers ::convert
+   * Tests convert.
    */
   public function testConvert(): void {
     $section_storage_manager = $this->prophesize(SectionStorageManagerInterface::class);
@@ -40,7 +42,7 @@ class LayoutSectionStorageParamConverterTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::convert
+   * Tests convert no type.
    */
   public function testConvertNoType(): void {
     $section_storage_manager = $this->prophesize(SectionStorageManagerInterface::class);
@@ -59,7 +61,7 @@ class LayoutSectionStorageParamConverterTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::convert
+   * Tests convert invalid converter.
    */
   public function testConvertInvalidConverter(): void {
     $section_storage_manager = $this->prophesize(SectionStorageManagerInterface::class);

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\entityqueue\Entity\EntitySubqueue;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
@@ -12,6 +14,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  *
  * @package Drupal\Tests\entity_browser\FunctionalJavascript
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityQueueTest extends WebDriverTestBase {
 
   /**

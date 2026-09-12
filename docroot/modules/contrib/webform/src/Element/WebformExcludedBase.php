@@ -3,7 +3,7 @@
 namespace Drupal\webform\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\webform\Plugin\WebformElement\TableSelect;
 
 /**
@@ -13,7 +13,7 @@ use Drupal\webform\Plugin\WebformElement\TableSelect;
  * selecting excluded webform elements which is used by the
  * EmailWebformHandler and the WebformResultsExportForm webforms.
  */
-abstract class WebformExcludedBase extends FormElement {
+abstract class WebformExcludedBase extends FormElementBase {
 
   /**
    * {@inheritdoc}

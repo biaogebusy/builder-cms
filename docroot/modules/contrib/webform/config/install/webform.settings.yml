@@ -26,6 +26,7 @@ settings:
   default_form_required_label: 'Indicates required field'
   default_form_details_toggle: true
   default_form_file_limit: ''
+  default_form_file_limit_message: 'This form''s file upload quota of %quota has been exceeded. Please remove some files.'
   form_classes: |
     container-inline clearfix
     form--inline clearfix
@@ -337,7 +338,6 @@ libraries:
     - jquery.chosen
 requirements:
   cdn: true
-  bootstrap: true
   clientside_validation: true
   spam: true
 langcode: en

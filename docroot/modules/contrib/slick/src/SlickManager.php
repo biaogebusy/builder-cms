@@ -2,7 +2,6 @@
 
 namespace Drupal\slick;
 
-use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyManagerBase;
 use Drupal\slick\Entity\Slick;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -369,7 +368,7 @@ class SlickManager extends BlazyManagerBase implements SlickManagerInterface {
     $attributes = $this->toHashtag($build, 'attributes');
 
     if ($settings['display'] == 'main') {
-      Blazy::containerAttributes($attributes, $settings);
+      $this->containerAttributes($attributes, $settings);
     }
     return $attributes;
   }
@@ -412,9 +411,8 @@ class SlickManager extends BlazyManagerBase implements SlickManagerInterface {
    * Prepare settings for the known module features, not necessarily users'.
    */
   protected function prepareSettings(array &$element, array &$build): array {
-    $this->hashtag($build);
-    $this->hashtag($build, 'options');
-
+    // @todo remove $this->hashtag($build);.
+    // @todo remove $this->hashtag($build, 'options');.
     $settings = &$build['#settings'];
     $this->verifySafely($settings);
 

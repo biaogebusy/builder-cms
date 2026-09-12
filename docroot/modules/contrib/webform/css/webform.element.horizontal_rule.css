@@ -53,7 +53,8 @@ hr.webform-horizontal-rule--flaired {
   background-color: transparent;
 }
 
-hr.webform-horizontal-rule--flaired:before { /* Not really supposed to work, but does */
+hr.webform-horizontal-rule--flaired::before {
+  /* Not really supposed to work, but does */
   display: block;
   height: 30px;
   margin-top: -31px;
@@ -75,7 +76,7 @@ hr.webform-horizontal-rule--glyph {
   border-top: medium double #666;
 }
 
-hr.webform-horizontal-rule--glyph:after {
+hr.webform-horizontal-rule--glyph::after {
   position: relative;
   top: -0.7em;
   display: inline-block;
@@ -90,7 +91,7 @@ hr.webform-horizontal-rule--glyph:after {
 hr.webform-horizontal-rule--gradient {
   height: 1px;
   border: 0;
-  background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+  background-image: linear-gradient(to right, rgb(0, 0, 0, 0), rgb(0, 0, 0, 0.75), rgb(0, 0, 0, 0));
 }
 
 hr.webform-horizontal-rule--gradient.webform-horizontal-rule--medium {

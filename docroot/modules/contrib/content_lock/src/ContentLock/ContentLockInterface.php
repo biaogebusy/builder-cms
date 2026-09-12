@@ -3,6 +3,7 @@
 namespace Drupal\content_lock\ContentLock;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Class ContentLock.
@@ -17,31 +18,29 @@ interface ContentLockInterface {
   const FORM_OP_MODE_DISABLED = 0;
 
   /**
-   * Form operation mode whitelist.
+   * Form operation mode allowlist.
    */
-  const FORM_OP_MODE_WHITELIST = 1;
+  const FORM_OP_MODE_ALLOWLIST = 1;
 
   /**
-   * Form operation mode blacklist.
+   * Form operation mode denylist.
    */
-  const FORM_OP_MODE_BLACKLIST = 2;
+  const FORM_OP_MODE_DENYLIST = 2;
 
   /**
    * Fetch the lock for an entity.
    *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language code of the entity.
-   * @param string $form_op
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to lock.
+   * @param string|null $form_op
    *   (optional) The entity form operation.
-   * @param string $entity_type
-   *   The entity type.
+   * @param bool $include_stale_locks
+   *   (optional) Whether to include stale locks. Defaults to FALSE.
    *
-   * @return object
+   * @return object|false
    *   The lock for the node. FALSE, if the document is not locked.
    */
-  public function fetchLock($entity_id, $langcode, $form_op = NULL, $entity_type = 'node');
+  public function fetchLock(EntityInterface $entity, ?string $form_op = NULL, bool $include_stale_locks = FALSE): object|false;
 
   /**
    * Tell who has locked node.
@@ -51,45 +50,38 @@ interface ContentLockInterface {
    * @param bool $translation_lock
    *   Defines whether the lock is on translation level or not.
    *
-   * @return string
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup
    *   String with the message.
    */
-  public function displayLockOwner($lock, $translation_lock);
+  public function displayLockOwner(object $lock, bool $translation_lock): string|TranslatableMarkup;
 
   /**
    * Check lock status.
    *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language code of the entity.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param string $form_op
    *   The entity form operation.
    * @param int $uid
    *   The user id.
-   * @param string $entity_type
-   *   The entity type.
    *
    * @return bool
    *   Return TRUE OR FALSE.
    */
-  public function isLockedBy($entity_id, $langcode, $form_op, $uid, $entity_type = 'node');
+  public function isLockedBy(EntityInterface $entity, string $form_op, int $uid): bool;
 
   /**
    * Release a locked entity.
    *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language code of the entity.
-   * @param string $form_op
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   * @param string|null $form_op
    *   (optional) The entity form operation.
-   * @param int $uid
-   *   If set, verify that a lock belongs to this user prior to release.
-   * @param string $entity_type
-   *   The entity type.
+   * @param int|null $uid
+   *   (optional) If set, verify that a lock belongs to this user prior to
+   *   release.
    */
-  public function release($entity_id, $langcode, $form_op = NULL, $uid = NULL, $entity_type = 'node');
+  public function release(EntityInterface $entity, ?string $form_op = NULL, ?int $uid = NULL): void;
 
   /**
    * Release all locks set by a user.
@@ -97,7 +89,15 @@ interface ContentLockInterface {
    * @param int $uid
    *   The user uid.
    */
-  public function releaseAllUserLocks($uid);
+  public function releaseAllUserLocks(int $uid): void;
+
+  /**
+   * Release all expired locks.
+   *
+   * @return int
+   *   The number of lock released.
+   */
+  public function releaseExpiredLocks(): int;
 
   /**
    * Check if locking is verbose.
@@ -105,72 +105,59 @@ interface ContentLockInterface {
    * @return bool
    *   Return true if locking is verbose.
    */
-  public function verbose();
+  public function verbose(): bool;
 
   /**
    * Try to lock a document for editing.
    *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language of the entity.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param string $form_op
    *   The entity form operation.
    * @param int $uid
    *   The user id to lock the node for.
-   * @param string $entity_type
-   *   The entity type.
    * @param bool $quiet
-   *   Suppress any normal user messages.
-   * @param string $destination
-   *   Destination to redirect when break. Defaults to current page.
+   *   (optional) Suppress any normal user messages.
+   * @param string|null $destination
+   *   (optional) Destination to redirect when breaking the lock. Defaults to
+   *   current page.
+   * @param array|null $messages
+   *   (optional) If an empty array is passed in as reference messages will be
+   *   added to display to the user. It is up to the caller to display the
+   *   messages.
    *
    * @return bool
    *   FALSE, if a document has already been locked by someone else.
    */
-  public function locking($entity_id, $langcode, $form_op, $uid, $entity_type = 'node', $quiet = FALSE, $destination = NULL);
+  public function locking(EntityInterface $entity, string $form_op, int $uid, bool $quiet = FALSE, ?string $destination = NULL, ?array &$messages = NULL): bool;
 
   /**
    * Check whether a node is configured to be protected by content_lock.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to check.
-   * @param string $form_op
+   * @param string|null $form_op
    *   (optional) The entity form operation.
    *
    * @return bool
    *   TRUE is entity is lockable
    */
-  public function isLockable(EntityInterface $entity, $form_op = NULL);
-
-  /**
-   * Check if for this entity_type content lock over JS is enabled.
-   *
-   * @param string $entity_type_id
-   *   The entity type id.
-   *
-   * @return bool
-   */
-  public function isJsLock($entity_type_id);
+  public function isLockable(EntityInterface $entity, ?string $form_op = NULL): bool;
 
   /**
    * Builds a button class, link type form element to unlock the content.
    *
-   * @param string $entity_type
-   *   The entity type of the content.
-   * @param int $entity_id
-   *   The entity id of the content.
-   * @param string $langcode
-   *   The translation language code of the entity.
-   * @param string $form_op
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   * @param string|null $form_op
    *   The entity form operation.
-   * @param string $destination
+   * @param string|null $destination
    *   The destination query parameter to build the link with.
    *
    * @return array
    *   The link form element.
    */
-  public function unlockButton($entity_type, $entity_id, $langcode, $form_op, $destination);
+  public function unlockButton(EntityInterface $entity, ?string $form_op, ?string $destination): array;
 
   /**
    * Checks whether the entity type is lockable on translation level.
@@ -182,7 +169,7 @@ interface ContentLockInterface {
    *   TRUE if the entity type should be locked on translation level, FALSE if
    *   it should be locked on entity level.
    */
-  public function isTranslationLockEnabled($entity_type_id);
+  public function isTranslationLockEnabled(string $entity_type_id): bool;
 
   /**
    * Checks whether an entity type is lockable.
@@ -205,6 +192,6 @@ interface ContentLockInterface {
    *   TRUE if the entity type should be locked on translation level, FALSE if
    *   it should be locked on entity level.
    */
-  public function isFormOperationLockEnabled($entity_type_id);
+  public function isFormOperationLockEnabled(string $entity_type_id): bool;
 
 }

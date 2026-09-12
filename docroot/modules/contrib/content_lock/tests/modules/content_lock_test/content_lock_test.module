@@ -2,14 +2,28 @@
 
 /**
  * @file
- * Content lock test - Main functions of the module.
+ * Content lock test: Main functions of the module.
  */
+
+declare(strict_types=1);
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\content_lock_test\Hook\Hooks;
+use Drupal\content_lock_test\Hook\FormAlter;
 
 /**
  * Implements hook_entity_type_alter().
  */
-function content_lock_test_entity_type_alter(&$entity_types) {
-  $entity_types['entity_test_mul_changed']
-    ->setLinkTemplate('compact', '/entity_test_mul_changed/manage/{entity_test_mul_changed}/compact')
-    ->setFormClass('compact', 'Drupal\entity_test\EntityTestForm');
+#[LegacyHook]
+function content_lock_test_entity_type_alter(&$entity_types): void {
+  (new Hooks())->entityTypeAlter($entity_types);
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+#[LegacyHook]
+function content_lock_test_form_alter(&$form, FormStateInterface $form_state, $form_id): void {
+  (new FormAlter(\Drupal::service('content_lock')))->formAlter($form, $form_state, $form_id);
 }

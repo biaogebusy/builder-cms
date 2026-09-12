@@ -51,7 +51,7 @@ accessible-slick:
     base:
       /libraries/accessible-slick/slick/slick.min.css: {}
   dependencies:
-    - core/jquery
+    - slick/jquery-type-polyfill
 
 base:
   version: VERSION

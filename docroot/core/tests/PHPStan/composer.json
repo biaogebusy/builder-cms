@@ -1,0 +1,27 @@
+{
+    "name": "drupal/phpstan-testing",
+    "description": "Tests Drupal core's PHPStan rules",
+    "require-dev": {
+        "phpunit/phpunit": "^11.5.50",
+        "phpstan/phpstan": "2.2.1"
+    },
+    "license": "GPL-2.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "Drupal\\PHPStan\\ErrorFormatter\\": "ErrorFormatter/",
+            "Drupal\\PHPStan\\Rules\\": "Rules/",
+            "Drupal\\BuildTests\\": "../Drupal/BuildTests/",
+            "Drupal\\FunctionalJavascriptTests\\": "../Drupal/FunctionalJavascriptTests",
+            "Drupal\\FunctionalTests\\": "../Drupal/FunctionalTests",
+            "Drupal\\KernelTests\\": "../Drupal/KernelTests/",
+            "Drupal\\Tests\\": "../Drupal/Tests/"
+        }
+    },
+    "autoload-dev": {
+        "files": [
+            "fixtures/test-classes-with-metadata.php",
+            "fixtures/test-methods-with-metadata.php"
+        ]
+    },
+    "require": {}
+}

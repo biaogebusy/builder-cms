@@ -1,0 +1,6 @@
+ckeditor5_premium_features_wproofreader.form.settings:
+  title: WProofreader spelling and grammar checker
+  route_name: ckeditor5_premium_features_wproofreader.form.settings
+  parent: ckeditor5_premium_features.form.settings
+  description: 'CKEditor 5 WProofreader Configuration Form'
+  weight: 150

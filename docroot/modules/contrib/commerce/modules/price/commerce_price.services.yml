@@ -53,3 +53,12 @@ services:
   commerce_price.rounder:
     class: Drupal\commerce_price\Rounder
   Drupal\commerce_price\RounderInterface: '@commerce_price.rounder'
+
+  Drupal\commerce_price\Hook\CommercePriceHooks:
+    class: Drupal\commerce_price\Hook\CommercePriceHooks
+
+  Drupal\commerce_price\Hook\CommercePriceThemeHooks:
+    class: Drupal\commerce_price\Hook\CommercePriceThemeHooks
+
+  Drupal\commerce_price\Hook\CommercePriceViewsHooks:
+    class: Drupal\commerce_price\Hook\CommercePriceViewsHooks

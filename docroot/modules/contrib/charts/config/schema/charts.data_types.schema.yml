@@ -101,6 +101,21 @@ charts_display:
     color_changer:
       type: boolean
       label: 'Enable color changer widget'
+    figure_caption:
+      type: text
+      label: 'Caption'
+    chart_summary:
+      type: text
+      label: 'Accessible summary'
+    accessible_table:
+      type: string
+      label: 'Data table representation'
+    accessible_table_button_text:
+      type: label
+      label: 'Data table button text'
+    accessible_table_button_class:
+      type: string
+      label: 'Data table button class'
 
 charts_xaxis:
   type: mapping
@@ -156,6 +171,9 @@ charts_views_field_entity_grouping_selected_method_colors:
     color:
       type: string
       label: Color
+    property_value:
+      type: string
+      label: 'Property value'
 
 charts_config:
   type: mapping
@@ -195,6 +213,9 @@ charts_config:
                 color_field_name:
                   type: string
                   label: 'Color field name'
+                color_field_property:
+                  type: string
+                  label: 'Color field property'
                 colors:
                   type: sequence
                   label: 'Colors'
@@ -211,6 +232,11 @@ charts_config:
       label: 'Y axis Display'
     library_config:
       type: charts.settings.library_plugin.[%parent.library]
+    library_configs:
+      type: sequence
+      label: 'Per-library settings'
+      sequence:
+        type: charts.settings.library_plugin.[%key]
     library_type_options:
       type: charts.library_plugin.[%parent.library].options.[%parent.type]
 

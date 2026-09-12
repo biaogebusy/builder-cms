@@ -248,9 +248,6 @@ trait BlockPluginTrait {
     $definition = $this->getPluginDefinition();
     $admin_label = $definition['admin_label'];
 
-    // @todo This is basically the same as what is done in
-    //   \Drupal\system\MachineNameController::transliterate(), so it might make
-    //   sense to provide a common service for the two.
     $transliterated = $this->transliteration()->transliterate($admin_label, LanguageInterface::LANGCODE_DEFAULT, '_');
     $transliterated = mb_strtolower($transliterated);
 
@@ -273,6 +270,7 @@ trait BlockPluginTrait {
    * Wraps the transliteration service.
    *
    * @return \Drupal\Component\Transliteration\TransliterationInterface
+   *   The transliteration service.
    */
   protected function transliteration() {
     if (!$this->transliteration) {
@@ -296,6 +294,13 @@ trait BlockPluginTrait {
    */
   public function setInPreview(bool $in_preview): void {
     $this->inPreview = $in_preview;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createPlaceholder(): bool {
+    return FALSE;
   }
 
 }

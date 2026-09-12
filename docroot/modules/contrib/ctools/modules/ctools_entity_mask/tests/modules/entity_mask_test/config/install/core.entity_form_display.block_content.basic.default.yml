@@ -3,7 +3,7 @@ status: true
 dependencies:
   config:
     - block_content.type.basic
-    - field.field.block_content.basic.body
+    - field.field.block_content.basic.field_body
     - field.field.block_content.basic.field_image
     - field.field.block_content.basic.field_link
     - image.style.thumbnail
@@ -16,7 +16,7 @@ targetEntityType: block_content
 bundle: basic
 mode: default
 content:
-  body:
+  field_body:
     type: text_textarea_with_summary
     weight: 1
     settings:

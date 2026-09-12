@@ -108,6 +108,13 @@ final class ReformatHtml extends AiCKEditorPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function getNoSelectedTextMessage(): TranslatableMarkup {
+    return $this->t('You must select some text before you can reformat it.');
+  }
+
+  /**
    * Generate text callback.
    *
    * @param array $form

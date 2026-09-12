@@ -187,7 +187,7 @@ class AiSettingsForm extends ConfigFormBase {
     $form['advanced_settings']['allowed_host_wrapper'] = [
       '#type' => 'details',
       '#title' => $this->t('Generated Content External Link Security'),
-      '#description' => $this->t('Protect against prompt injection attacks that trick AI into sending sensitive data to third-party sites via hidden links or images. Links to your own site and relative paths are always allowed.'),
+      '#description' => $this->t('Protect against prompt injection attacks that trick AI into sending sensitive data to third-party sites via hidden links or images. Relative paths are always allowed; links to your own site are only allowed if its domain is added to the Trusted Domains below.'),
       '#open' => FALSE,
       '#weight' => 20,
     ];

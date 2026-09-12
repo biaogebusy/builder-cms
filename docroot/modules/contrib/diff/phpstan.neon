@@ -2,12 +2,14 @@ includes:
   - phpstan-baseline.neon
 parameters:
   level: 6
-  reportUnmatchedIgnoredErrors: true
+  reportUnmatchedIgnoredErrors: false
   treatPhpDocTypesAsCertain: false
   paths:
     - .
   strictRules:
-    strictCalls: false
+    disallowedLooseComparison: false
+    dynamicCallOnStaticMethod: false
+    strictFunctionCalls: false
   fileExtensions:
     - php
     - module
@@ -18,8 +20,8 @@ parameters:
   ignoreErrors:
     - "#^Unsafe usage of new static#"
     - "#does not call parent constructor#"
-    -
-      identifier: missingType.iterableValue
+    - identifier: missingType.iterableValue
+    - identifier: arrayFilter.strict
   excludePaths:
     # We cant improve this directory as its contains Drupal-generic code.
-    - vendor
+    - vendor (?)

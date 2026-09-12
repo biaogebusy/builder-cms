@@ -6,10 +6,16 @@ namespace Drupal\Tests\contact\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Message Xml Basic Auth.
  */
+#[Group('rest')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MessageXmlBasicAuthTest extends MessageResourceTestBase {
 
   use BasicAuthResourceTestTrait;
@@ -28,7 +34,7 @@ class MessageXmlBasicAuthTest extends MessageResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

@@ -20,7 +20,7 @@ interface BlazyLayoutInterface extends ContainerFactoryPluginInterface {
    * @return string
    *   The region settings value.
    */
-  public function getRegionConfig($name, $key): string;
+  public function getRegionConfig(string $name, string $key): string;
 
   /**
    * Sets the region configurations based on the key.
@@ -33,6 +33,6 @@ interface BlazyLayoutInterface extends ContainerFactoryPluginInterface {
    * @return $this
    *   The region settings value.
    */
-  public function setRegionConfig($name, array $values): self;
+  public function setRegionConfig(string $name, array $values): self;
 
 }

@@ -8,9 +8,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the Slick admin form.
- *
- * @coversDefaultClass \Drupal\slick\Form\SlickAdmin
- * @group slick
  */
 class SlickAdminUnitTest extends UnitTestCase {
 
@@ -46,10 +43,7 @@ class SlickAdminUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::create
-   * @covers ::__construct
-   * @covers ::blazyAdmin
-   * @covers ::manager
+   * Test admin constructor.
    */
   public function testBlazyAdminCreate() {
     $container = $this->createMock(ContainerInterface::class);

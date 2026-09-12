@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Traits;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -26,7 +28,7 @@ trait BlazyManagerUnitTestTrait {
     $this->token              = $this->createMock('\Drupal\Core\Utility\Token');
     $this->libraries          = $this->createMock('\Drupal\blazy\Asset\LibrariesInterface');
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->token->expects($this->any())
       ->method('replace')
       ->willReturnArgument(0);
@@ -43,37 +45,37 @@ trait BlazyManagerUnitTestTrait {
     // Since 2.16.
     $this->blazyManager = $this->createMock('\Drupal\blazy\BlazyManagerInterface');
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())
       ->method('libraries')
       ->willReturn($this->libraries);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())
       ->method('moduleHandler')
       ->willReturn($this->moduleHandler);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())
       ->method('entityTypeManager')
       ->willReturn($this->entityTypeManager);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())
       ->method('renderer')
       ->willReturn($this->renderer);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())
       ->method('configFactory')
       ->willReturn($this->configFactory);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())
       ->method('cache')
       ->willReturn($this->cache);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())
       ->method('languageManager')
       ->willReturn($this->languageManager);
@@ -108,7 +110,7 @@ trait BlazyManagerUnitTestTrait {
     foreach ($dummies as $style) {
       $mock = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityInterface');
 
-      /* @phpstan-ignore-next-line */
+      /** @phpstan-ignore-next-line */
       $mock->expects($this->any())
         ->method('getCacheTags')
         ->willReturn([]);
@@ -119,7 +121,7 @@ trait BlazyManagerUnitTestTrait {
     $ids = array_keys($styles);
     $storage = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityStorageInterface');
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $storage->expects($this->any())
       ->method('loadMultiple')
       ->with($ids)
@@ -127,13 +129,13 @@ trait BlazyManagerUnitTestTrait {
 
     $style = 'large';
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $storage->expects($this->any())
       ->method('load')
       ->with($style)
-      ->will($this->returnValue($styles[$style]));
+      ->willReturn($styles[$style]);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->entityTypeManager->expects($this->any())
       ->method('getStorage')
       ->with('image_style')
@@ -150,12 +152,12 @@ trait BlazyManagerUnitTestTrait {
     foreach (['fallback', 'small', 'medium', 'large'] as $style) {
       $mock = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityInterface');
 
-      /* @phpstan-ignore-next-line */
+      /** @phpstan-ignore-next-line */
       $mock->expects($this->any())
         ->method('getConfigDependencyName')
         ->willReturn('image.style.' . $style);
 
-      /* @phpstan-ignore-next-line */
+      /** @phpstan-ignore-next-line */
       $mock->expects($this->any())
         ->method('getCacheTags')
         ->willReturn([]);
@@ -166,12 +168,12 @@ trait BlazyManagerUnitTestTrait {
     foreach (['blazy_picture_test', 'blazy_responsive_test'] as $style) {
       $mock = $this->createMock('\Drupal\responsive_image\ResponsiveImageStyleInterface');
 
-      /* @phpstan-ignore-next-line */
+      /** @phpstan-ignore-next-line */
       $mock->expects($this->any())
         ->method('getImageStyleIds')
         ->willReturn(array_keys($image_styles));
 
-      /* @phpstan-ignore-next-line */
+      /** @phpstan-ignore-next-line */
       $mock->expects($this->any())
         ->method('getCacheTags')
         ->willReturn([]);
@@ -182,7 +184,7 @@ trait BlazyManagerUnitTestTrait {
     $ids = array_keys($styles);
     $storage = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityStorageInterface');
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $storage->expects($this->any())
       ->method('loadMultiple')
       ->with($ids)
@@ -190,19 +192,19 @@ trait BlazyManagerUnitTestTrait {
 
     $style = 'blazy_picture_test';
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $storage->expects($this->any())
       ->method('load')
       ->with($style)
       ->willReturn($styles[$style]);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->entityTypeManager->expects($this->any())
       ->method('getStorage')
       ->with('responsive_image_style')
       ->willReturn($storage);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $this->entityTypeManager->expects($this->any())
       ->method('getEntityTypeFromClass')
       ->with('Drupal\image\Entity\ImageStyle')

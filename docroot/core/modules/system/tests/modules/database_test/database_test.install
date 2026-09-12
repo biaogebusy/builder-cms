@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the database_test module.
  */
 
+declare(strict_types=1);
+
 /**
  * Implements hook_schema().
  *
@@ -13,7 +15,7 @@
  * Therefore, the schema must actually be declared in a normal module
  * like any other, not directly in the test file.
  */
-function database_test_schema() {
+function database_test_schema(): array {
   $schema['test'] = [
     'description' => 'Basic test table for the database unit tests.',
     'fields' => [
@@ -55,7 +57,7 @@ function database_test_schema() {
   ];
 
   $schema['test_classtype'] = [
-    'description' => 'A duplicate version of the test table, used for fetch_style PDO::FETCH_CLASSTYPE tests.',
+    'description' => 'A duplicate version of the test table, used for obsolete fetch_style PDO::FETCH_CLASSTYPE tests.',
     'fields' => [
       'classname' => [
         'description' => "A custom class name",

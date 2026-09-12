@@ -1,0 +1,5 @@
+services:
+  _defaults:
+    autoconfigure: true
+    autowire: true
+  Drupal\content_lock_test\ReleaseRecorder: ~

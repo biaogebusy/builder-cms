@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\views_ui\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views creation wizard.
  *
  * @see core/modules/views_ui/js/views-admin.js
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class ViewsWizardTest extends WebDriverTestBase {
 
   /**
@@ -92,6 +95,10 @@ class ViewsWizardTest extends WebDriverTestBase {
     $this->assertNotNull($page->findField('show[type]'), 'The "of type" filter is added for nodes when there is at least one node type.');
     $this->assertEquals('fields', $page->findField('page[style][row_plugin]')->getValue(), 'The page display format was not changed from a valid value.');
     $this->assertEquals('fields', $page->findField('block[style][row_plugin]')->getValue(), 'The block display format was not changed from a valid value.');
+
+    $page->selectFieldOption('show[type]', 'page');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSame('page', $page->findField('show[type]')->getValue());
   }
 
 }

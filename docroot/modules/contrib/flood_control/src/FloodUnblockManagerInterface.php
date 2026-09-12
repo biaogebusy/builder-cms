@@ -99,12 +99,14 @@ interface FloodUnblockManagerInterface {
    *   Number of items to fetch.
    * @param string $identifier
    *   IP address or user ID to filter items by.
+   * @param string $event
+   *   Event to filter items by.
    * @param array $header
    *   Table header array used for sorting.
    *
    * @return array
    *   List of items and list of identifiers (ip address / user IDs).
    */
-  public function getEntries($limit, $identifier, $header);
+  public function getEntries($limit, $identifier, $event, $header);
 
 }

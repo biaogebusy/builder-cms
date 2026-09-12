@@ -9,12 +9,14 @@ use Drupal\block_content\Entity\BlockContentType;
 use Drupal\media\Entity\Media;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that Views respects 'ENTITY_TYPE_access' query tags.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class EntityQueryAccessTest extends ViewTestBase {
 
   use MediaTypeCreationTrait;
@@ -49,14 +51,14 @@ class EntityQueryAccessTest extends ViewTestBase {
       // view.
       // @see views_test_access_query_media_access_alter()
       'uuid' => 'hidden-media',
-      'name' => $this->randomString(),
+      'name' => 'Test hidden media title',
       $source_field => $this->randomString(),
     ]);
     $hidden_media->save();
 
     $accessible_media = Media::create([
       'bundle' => $media_type->id(),
-      'name' => $this->randomString(),
+      'name' => 'Test accessible media title',
       $source_field => $this->randomString(),
     ]);
     $accessible_media->save();

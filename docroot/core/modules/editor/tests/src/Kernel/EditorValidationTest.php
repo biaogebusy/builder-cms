@@ -8,12 +8,17 @@ use Drupal\ckeditor5\Plugin\CKEditor5Plugin\Heading;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\Core\Config\ConfigEntityValidationTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
  * Tests validation of editor entities.
- *
- * @group editor
  */
+#[Group('editor')]
+#[Group('config')]
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class EditorValidationTest extends ConfigEntityValidationTestBase {
 
   /**
@@ -47,6 +52,9 @@ class EditorValidationTest extends ConfigEntityValidationTestBase {
     $this->entity = Editor::create([
       'format' => $format->id(),
       'editor' => 'ckeditor5',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
       'settings' => [
         // @see \Drupal\ckeditor5\Plugin\Editor\CKEditor5::getDefaultSettings()
         'toolbar' => [
@@ -128,7 +136,9 @@ class EditorValidationTest extends ConfigEntityValidationTestBase {
   }
 
   /**
-   * `image_upload.status = TRUE` must cause additional keys to be required.
+   * Test validation when dynamically changing image upload settings.
+   *
+   * Additional keys are required when image_upload.status is TRUE.
    */
   public function testImageUploadSettingsAreDynamicallyRequired(): void {
     // When image uploads are disabled, no other key-value pairs are needed.
@@ -199,21 +209,43 @@ class EditorValidationTest extends ConfigEntityValidationTestBase {
   }
 
   /**
-   * @testWith [{"scheme": "public"}, {}]
-   *           [{"scheme": "private"}, {"image_upload.scheme": "The file storage you selected is not a visible, readable and writable stream wrapper. Possible choices: <em class=\"placeholder\">&quot;public&quot;</em>."}]
-   *           [{"directory": null}, {}]
-   *           [{"directory": ""}, {"image_upload.directory": "This value should not be blank."}]
-   *           [{"directory": "inline\nimages"}, {"image_upload.directory": "The image upload directory is not allowed to span multiple lines or contain control characters."}]
-   *           [{"directory": "foo\b\b\binline-images"}, {"image_upload.directory": "The image upload directory is not allowed to span multiple lines or contain control characters."}]
-   *           [{"max_size": null}, {}]
-   *           [{"max_size": "foo"}, {"image_upload.max_size": "This value must be a number of bytes, optionally with a unit such as \"MB\" or \"megabytes\". <em class=\"placeholder\">foo</em> does not represent a number of bytes."}]
-   *           [{"max_size": ""}, {"image_upload.max_size": "This value must be a number of bytes, optionally with a unit such as \"MB\" or \"megabytes\". <em class=\"placeholder\"></em> does not represent a number of bytes."}]
-   *           [{"max_size": "7 exabytes"}, {}]
-   *           [{"max_dimensions": {"width": null, "height": 15}}, {}]
-   *           [{"max_dimensions": {"width": null, "height": null}}, {}]
-   *           [{"max_dimensions": {"width": null, "height": 0}}, {"image_upload.max_dimensions.height": "This value should be between <em class=\"placeholder\">1</em> and <em class=\"placeholder\">99999</em>."}]
-   *           [{"max_dimensions": {"width": 100000, "height": 1}}, {"image_upload.max_dimensions.width": "This value should be between <em class=\"placeholder\">1</em> and <em class=\"placeholder\">99999</em>."}]
+   * Tests image upload settings validation.
    */
+  #[TestWith([["scheme" => "public"], []])]
+  #[TestWith([
+    ["scheme" => "private"],
+    ["image_upload.scheme" => "The file storage you selected is not a visible, readable and writable stream wrapper. Possible choices: <em class=\"placeholder\">&quot;public&quot;</em>."],
+  ])]
+  #[TestWith([["directory" => NULL], []])]
+  #[TestWith([["directory" => ""], ["image_upload.directory" => "This value should not be blank."]])]
+  #[TestWith([
+    ["directory" => "inline\nimages"],
+    ["image_upload.directory" => "The image upload directory is not allowed to span multiple lines or contain control characters."],
+  ])]
+  #[TestWith([
+    ["directory" => "foo\t\t\tinline-images"],
+    ["image_upload.directory" => "The image upload directory is not allowed to span multiple lines or contain control characters."],
+  ])]
+  #[TestWith([["max_size" => NULL], []])]
+  #[TestWith([
+    ["max_size" => "foo"],
+    ["image_upload.max_size" => "This value must be a number of bytes, optionally with a unit such as \"MB\" or \"megabytes\". <em class=\"placeholder\">foo</em> does not represent a number of bytes."],
+  ])]
+  #[TestWith([
+    ["max_size" => ""],
+    ["image_upload.max_size" => "This value must be a number of bytes, optionally with a unit such as \"MB\" or \"megabytes\". <em class=\"placeholder\"></em> does not represent a number of bytes."],
+  ])]
+  #[TestWith([["max_size" => "7 exabytes"], []])]
+  #[TestWith([["max_dimensions" => ["width" => NULL, "height" => 15]], []])]
+  #[TestWith([["max_dimensions" => ["width" => NULL, "height" => NULL]], []])]
+  #[TestWith([
+    ["max_dimensions" => ["width" => NULL, "height" => 0]],
+    ["image_upload.max_dimensions.height" => "This value should be between <em class=\"placeholder\">1</em> and <em class=\"placeholder\">99999</em>."],
+  ])]
+  #[TestWith([
+    ["max_dimensions" => ["width" => 100000, "height" => 1]],
+    ["image_upload.max_dimensions.width" => "This value should be between <em class=\"placeholder\">1</em> and <em class=\"placeholder\">99999</em>."],
+  ])]
   public function testImageUploadSettingsValidation(array $invalid_setting, array $expected_message): void {
     $this->entity->setImageUploadSettings($invalid_setting + [
       'status' => TRUE,

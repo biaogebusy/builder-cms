@@ -49,6 +49,9 @@ entity_browser.browser.display.standalone:
     path:
       type: string
       label: 'Page path'
+    use_admin_theme:
+      type: boolean
+      label: 'Use Admin Theme'
 
 entity_browser.browser.display.iframe:
   type: mapping
@@ -66,6 +69,9 @@ entity_browser.browser.display.iframe:
     auto_open:
       type: boolean
       label: 'Auto open'
+    use_admin_theme:
+      type: boolean
+      label: 'Use Admin Theme'
 
 entity_browser.browser.display.modal:
   type: mapping
@@ -83,6 +89,9 @@ entity_browser.browser.display.modal:
     auto_open:
       type: boolean
       label: 'Auto open'
+    use_admin_theme:
+      type: boolean
+      label: 'Use Admin Theme'
 
 entity_browser.browser.widget.base:
   type: mapping

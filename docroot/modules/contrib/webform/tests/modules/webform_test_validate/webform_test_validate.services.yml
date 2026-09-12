@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_test_validate\Hook\WebformTestValidateHooks:
+    class: Drupal\webform_test_validate\Hook\WebformTestValidateHooks
+    autowire: true

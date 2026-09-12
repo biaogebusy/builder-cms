@@ -385,7 +385,9 @@
           'Add',
         )}</a><ul class="action-list" style="display:none;"></ul></li>`,
       );
-      const $displayButtons = $menu.nextAll('input.add-display').detach();
+      const $displayButtons = $menu
+        .nextAll('input.add-display, button.add-display')
+        .detach();
       $displayButtons
         .appendTo($addDisplayDropdown.find('.action-list'))
         .wrap('<li>')
@@ -1249,7 +1251,6 @@
         context,
       ).forEach((dropdown) => {
         // Closures! :(
-        const $context = $(context);
         const submit = context.querySelector('[id^=edit-submit]');
         const oldValue = submit ? submit.value : '';
 
@@ -1273,8 +1274,10 @@
             } else {
               submit.value = Drupal.t('Apply (this display)');
             }
-            const $dialog = $context.closest('.ui-dialog-content');
-            $dialog.trigger('dialogButtonsChange');
+            if (context !== document) {
+              const dialog = context.closest('.ui-dialog-content');
+              dialog?.dispatchEvent(new CustomEvent('dialogButtonsChange'));
+            }
           })
           .trigger('change');
       });
@@ -1332,8 +1335,7 @@
     attach(context) {
       // Only act on the rearrange filter form.
       if (
-        typeof Drupal.tableDrag === 'undefined' ||
-        typeof Drupal.tableDrag['views-rearrange-filters'] === 'undefined'
+        typeof Drupal?.tableDrag?.['views-rearrange-filters'] === 'undefined'
       ) {
         return;
       }

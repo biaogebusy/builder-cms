@@ -1,4 +1,10 @@
 services:
+  logger.channel.page_manager:
+    parent: logger.channel_base
+    arguments: ['page_manager']
+  plugin.manager.page_manager_menu:
+    class: Drupal\page_manager\Plugin\PageManagerMenuManager
+    parent: default_plugin_manager
   page_manager.current_user_context:
     class: Drupal\page_manager\EventSubscriber\CurrentUserContext
     arguments: ['@context.repository']

@@ -2,6 +2,7 @@
 
 namespace Drupal\elasticsearch_connector\SearchAPI\Query;
 
+use Drupal\elasticsearch_connector\Plugin\search_api\backend\ElasticSearchBackend;
 use Drupal\search_api\Query\Condition;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\SearchApiException;
@@ -33,6 +34,8 @@ class FilterBuilder {
    *   expressed as filters.
    * @param \Drupal\search_api\Item\FieldInterface[] $index_fields
    *   An array of all indexed fields for the index, keyed by field identifier.
+   * @param array{prefix?: string, suffix?: string, fuzziness?: string} $querySettings
+   *   The query settings.
    *
    * @return array
    *   Array of filter parameters to apply to query based on the given Search
@@ -41,7 +44,7 @@ class FilterBuilder {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if an invalid condition occurs.
    */
-  public function buildFilters(ConditionGroupInterface $condition_group, array $index_fields) {
+  public function buildFilters(ConditionGroupInterface $condition_group, array $index_fields, array $querySettings = []) {
 
     $filters = [
       'filters' => [],
@@ -65,19 +68,21 @@ class FilterBuilder {
 
       // Simple filter [field_id, value, operator].
       if ($condition instanceof Condition) {
-        if (!$condition->getField() || !$condition->getValue() || !$condition->getOperator()) {
+        $field_id = (string) $condition->getField();
+        $operator = (string) $condition->getOperator();
+
+        if ($field_id === '' || $operator === '') {
           // @todo When using views the sort field is coming as a filter and
           // messing with this section.
           $this->logger->warning("Invalid condition %condition", ['%condition' => $condition]);
         }
 
-        $field_id = $condition->getField();
         if (!isset($index_fields[$field_id]) && !isset($backend_fields[$field_id])) {
           throw new SearchApiException(sprintf("Invalid field '%s' in search filter", $field_id));
         }
 
         // Check operator.
-        if (!$condition->getOperator()) {
+        if ($operator === '') {
           throw new SearchApiException(sprintf('Unspecified filter operator for field "%s"', $field_id));
         }
 
@@ -87,33 +92,54 @@ class FilterBuilder {
           if ($field->getType() === 'boolean') {
             $condition->setValue((bool) $condition->getValue());
           }
+
+          $index_field_name = $field->getFieldIdentifier();
+          // Use the property path if available.
+          if (!empty($index_field_name)) {
+            // Converting colon notation to Elasticsearch's dot notation.
+            $field_id = str_replace(':', '.', $index_field_name);
+            $condition->setField($field_id);
+          }
+
+          // For text fields in facet filters, append .keyword to use the
+          // keyword subfield for exact matching. Text fields are analyzed
+          // and cannot be used for exact term queries.
+          if ($condition_group->hasTag(sprintf('facet:%s', $field_id)) &&
+              $conjunction == "OR" &&
+              $field->getType() === 'text') {
+            $condition->setField($field_id . '.keyword');
+          }
         }
 
         // Builder filter term.
-        $filter = $this->buildFilterTerm($condition, $index_fields);
+        $filter = $this->buildFilterTerm($condition, $index_fields, $querySettings);
 
         if (!empty($filter)) {
           if ($condition_group->hasTag(sprintf('facet:%s', $field_id))
             && $conjunction == "OR"
           ) {
             $filters["post_filters"][] = $filter;
+
+            // For facets_post_filters, use the field name with .keyword.
+            $facet_filter_field = $condition->getField();
+
             if (isset($filters["facets_post_filters"][$field_id])) {
               $existing_filter = $filters["facets_post_filters"][$field_id];
               $merged_values = array_merge(
-                $existing_filter['terms'][$field_id] ?? [],
+                $existing_filter['terms'][$facet_filter_field] ?? [],
                 (array) $condition->getValue()
               );
 
               $filters["facets_post_filters"][$field_id] = [
                 'terms' => [
-                  $field_id => array_unique($merged_values),
+                  $facet_filter_field => array_unique($merged_values),
                 ],
               ];
             }
             else {
               $filters["facets_post_filters"][$field_id] = [
                 'terms' => [
-                  $field_id => (array) $condition->getValue(),
+                  $facet_filter_field => (array) $condition->getValue(),
                 ],
               ];
             }
@@ -127,7 +153,8 @@ class FilterBuilder {
       elseif ($condition instanceof ConditionGroupInterface) {
         $nested_filters = $this->buildFilters(
           $condition,
-          $index_fields
+          $index_fields,
+          $querySettings
         );
 
         foreach ([
@@ -170,26 +197,34 @@ class FilterBuilder {
    *   The condition.
    * @param \Drupal\search_api\Item\FieldInterface[] $index_fields
    *   An array of all indexed fields for the index, keyed by field identifier.
+   * @param array{prefix?: string, suffix?: string, fuzziness?: string} $querySettings
+   *   The query settings.
    *
    * @return array
    *   The filter term array.
    *
    * @throws \Exception
    */
-  public function buildFilterTerm(Condition $condition, array $index_fields = []) {
-    // Handles "empty", "not empty" operators.
+  public function buildFilterTerm(Condition $condition, array $index_fields = [], array $querySettings = []) {
+    // Handles "empty", "not empty" operators. Note that Views uses "!=" to mean
+    // "not equals"; while Search API uses "<>" to mean "not equals". We cannot
+    // guarantee that
+    // \Drupal\search_api\Plugin\views\query\SearchApiQuery::sanitizeOperator()
+    // has run, and we can't run it ourselves, because it is a protected method,
+    // so match BOTH '<>' and '!=' below.
     if (is_null($condition->getValue())) {
       return match ($condition->getOperator()) {
-        '<>' => ['exists' => ['field' => $condition->getField()]],
+        '<>', '!=' => ['exists' => ['field' => $condition->getField()]],
         '=' => ['bool' => ['must_not' => ['exists' => ['field' => $condition->getField()]]]],
         default => throw new SearchApiException(sprintf('Invalid condition for field %s', $condition->getField())),
       };
     }
 
     // Normal filters.
+    // Once again, we match both '<>', '!=' to mean "not equals", see above.
     $filter = match ($condition->getOperator()) {
       '=' => [
-        'term' => [$condition->getField() => $condition->getValue()],
+        'term' => [$condition->getField() => $this->getStringValueElasticBool($condition->getValue())],
       ],
       'IN' => [
         'terms' => [$condition->getField() => array_values($condition->getValue())],
@@ -197,13 +232,79 @@ class FilterBuilder {
       'NOT IN' => [
         'bool' => ['must_not' => ['terms' => [$condition->getField() => array_values($condition->getValue())]]],
       ],
-      '<>' => [
-        'bool' => ['must_not' => ['term' => [$condition->getField() => $condition->getValue()]]],
+      '<>', '!=' => [
+        'bool' => ['must_not' => ['term' => [$condition->getField() => $this->getStringValueElasticBool($condition->getValue())]]],
+      ],
+      'LIKE' => [
+        'match' => [
+          $condition->getField() => [
+            'query' => $condition->getValue(),
+            'fuzziness' => $this->getQueryFuzziness($querySettings),
+          ],
+        ],
+      ],
+      'NOT LIKE' => [
+        'bool' => [
+          'must_not' => [
+            'match' => [
+              $condition->getField() => [
+                'query' => $condition->getValue(),
+                'fuzziness' => $this->getQueryFuzziness($querySettings),
+              ],
+            ],
+          ],
+        ],
+      ],
+      'EXACT' => [
+        'match_phrase' => [
+          $condition->getField() => ['query' => $condition->getValue()],
+        ],
       ],
       '>', '>=', '<', '<=', 'BETWEEN', 'NOT BETWEEN' => $this->getRangeFilter($condition, $index_fields),
       default => throw new SearchApiException(sprintf('Undefined operator "%s" for field "%s" in filter condition.', $condition->getOperator(), $condition->getField())),
     };
     return $filter;
+  }
+
+  /**
+   * Convert value to string, following Elastic API conventions for booleans.
+   *
+   * @param mixed $input
+   *   The value to convert to a string.
+   *
+   * @return string
+   *   The input value casted to a string. If the input value is a boolean, this
+   *   will return the string 'true' or 'false'.
+   *
+   * @see https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#_boolean_values
+   */
+  protected function getStringValueElasticBool(mixed $input): string {
+    // Convert booleans to 'true' or 'false'.
+    if (\is_bool($input)) {
+      return match ($input) {
+        TRUE => 'true',
+        FALSE => 'false',
+      };
+    }
+
+    // Convert everything else.
+    return (string) $input;
+  }
+
+  /**
+   * Get the current query's default fuzziness.
+   *
+   * @param array{prefix?: string, suffix?: string, fuzziness?: string} $querySettings
+   *   The query settings.
+   *
+   * @return string
+   *   An Elasticsearch fuzziness parameter, to allow for inexact matches.
+   *
+   * @see https://www.elastic.co/docs/reference/elasticsearch/rest-apis/common-options#fuzziness
+   * @see \Drupal\elasticsearch_connector\Plugin\search_api\backend\ElasticSearchBackend
+   */
+  protected function getQueryFuzziness(array $querySettings = []): string {
+    return $querySettings['fuzziness'] ?? ElasticSearchBackend::FUZZINESS_AUTO;
   }
 
   /**
@@ -256,9 +357,12 @@ class FilterBuilder {
     // If all the values are integers, then we can assume that the values are
     // UNIX timestamps, i.e.: epoch_second format.
     // @see https://www.elastic.co/docs/reference/elasticsearch/mapping-reference/mapping-date-format#:~:text=epoch_second
-    $allInt = is_array($value)
-      && (isset($value[0]) && is_int($value[0]))
-      && (isset($value[1]) && is_int($value[1]));
+    $allInt = is_int($value)
+      || (
+        is_array($value)
+        && (isset($value[0]) && is_int($value[0]))
+        && (isset($value[1]) && is_int($value[1]))
+      );
     if ($field_type == "date" && $allInt) {
       $rangeOption["format"] = "epoch_second";
     }

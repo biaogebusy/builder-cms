@@ -2,16 +2,17 @@
 
 namespace Drupal\better_exposed_filters\Plugin\better_exposed_filters\sort;
 
+use Drupal\better_exposed_filters\Attribute\SortWidget;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Default widget implementation.
- *
- * @BetterExposedFiltersSortWidget(
- *   id = "default",
- *   label = @Translation("Default"),
- * )
  */
+#[SortWidget(
+  id: 'default',
+  title: new TranslatableMarkup('Default'),
+)]
 class DefaultWidget extends SortWidgetBase {
 
   /**
@@ -23,6 +24,7 @@ class DefaultWidget extends SortWidgetBase {
     foreach ($this->sortElements as $element) {
       if (!empty($form[$element])) {
         $form[$element]['#type'] = 'select';
+        $form[$element]['#default_value'] = $form[$element]['#default_value'] ?? '';
       }
     }
   }

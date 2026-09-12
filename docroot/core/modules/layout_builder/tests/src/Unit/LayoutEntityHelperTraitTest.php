@@ -11,19 +11,22 @@ use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Prophet;
 
 /**
- * @coversDefaultClass \Drupal\layout_builder\LayoutEntityHelperTrait
- *
- * @group layout_builder
+ * Tests Drupal\layout_builder\LayoutEntityHelperTrait.
  */
+#[CoversTrait(LayoutEntityHelperTrait::class)]
+#[Group('layout_builder')]
 class LayoutEntityHelperTraitTest extends UnitTestCase {
 
   /**
    * Data provider method for tests that need sections with inline blocks.
    */
-  public static function providerSectionsWithInlineComponents() {
+  public static function providerSectionsWithInlineComponents(): array {
     $prophet = new Prophet();
     $components = [];
 
@@ -90,21 +93,19 @@ class LayoutEntityHelperTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getInlineBlockComponents
-   *
-   * @dataProvider providerSectionsWithInlineComponents
+   * Tests get inline block components.
    */
-  public function testGetInlineBlockComponents($sections, $expected_components): void {
+  #[DataProvider('providerSectionsWithInlineComponents')]
+  public function testGetInlineBlockComponents(array $sections, array $expected_components, array $expected_revision_ids): void {
     $test_class = new TestClass();
     $this->assertSame($expected_components, $test_class->getInlineBlockComponents($sections));
   }
 
   /**
-   * @covers ::getInlineBlockRevisionIdsInSections
-   *
-   * @dataProvider providerSectionsWithInlineComponents
+   * Tests get inline block revision ids in sections.
    */
-  public function testGetInlineBlockRevisionIdsInSections($sections, $components, $expected_revision_ids): void {
+  #[DataProvider('providerSectionsWithInlineComponents')]
+  public function testGetInlineBlockRevisionIdsInSections(array $sections, array $components, array $expected_revision_ids): void {
     $test_class = new TestClass();
     $this->assertSame($expected_revision_ids, $test_class->getInlineBlockRevisionIdsInSections($sections));
   }

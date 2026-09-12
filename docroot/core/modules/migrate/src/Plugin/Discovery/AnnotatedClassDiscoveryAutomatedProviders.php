@@ -3,29 +3,23 @@
 namespace Drupal\migrate\Plugin\Discovery;
 
 use Drupal\Component\Annotation\Doctrine\AnnotationRegistry;
-use Drupal\Component\Annotation\AnnotationInterface;
 use Drupal\Component\Annotation\Doctrine\StaticReflectionParser as BaseStaticReflectionParser;
 use Drupal\Component\Annotation\Reflection\MockFileFinder;
 use Drupal\Component\ClassFinder\ClassFinder;
 use Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery;
-use Drupal\migrate\Annotation\MultipleProviderAnnotationInterface;
 
 /**
  * Determines providers based on a class's and its parent's namespaces.
  *
  * @internal
- *   This is a temporary solution to the fact that migration source plugins have
- *   more than one provider. This functionality will be moved to core in
- *   https://www.drupal.org/node/2786355.
+ *   This provides backwards compatibility for migration source plugins
+ *   using annotations and having more than one provider. This functionality
+ *   will be deprecated with plugin discovery by annotations in
+ *   https://www.drupal.org/project/drupal/issues/3522409.
  */
 class AnnotatedClassDiscoveryAutomatedProviders extends AnnotatedClassDiscovery {
 
-  /**
-   * A utility object that can use active autoloaders to find files for classes.
-   *
-   * @var \Drupal\Component\ClassFinder\ClassFinderInterface
-   */
-  protected $finder;
+  use AnnotatedDiscoveryAutomatedProvidersTrait;
 
   /**
    * Constructs an AnnotatedClassDiscoveryAutomatedProviders object.
@@ -51,26 +45,6 @@ class AnnotatedClassDiscoveryAutomatedProviders extends AnnotatedClassDiscovery 
   /**
    * {@inheritdoc}
    */
-  protected function prepareAnnotationDefinition(AnnotationInterface $annotation, $class, ?BaseStaticReflectionParser $parser = NULL) {
-    if (!($annotation instanceof MultipleProviderAnnotationInterface)) {
-      throw new \LogicException('AnnotatedClassDiscoveryAutomatedProviders annotations must implement \Drupal\migrate\Annotation\MultipleProviderAnnotationInterface');
-    }
-    $annotation->setClass($class);
-    $providers = $annotation->getProviders();
-    // Loop through all the parent classes and add their providers (which we
-    // infer by parsing their namespaces) to the $providers array.
-    do {
-      $providers[] = $this->getProviderFromNamespace($parser->getNamespaceName());
-    } while ($parser = StaticReflectionParser::getParentParser($parser, $this->finder));
-    $providers = array_unique(array_filter($providers, function ($provider) {
-      return $provider && $provider !== 'component';
-    }));
-    $annotation->setProviders($providers);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getDefinitions() {
     $definitions = [];
 
@@ -78,8 +52,6 @@ class AnnotatedClassDiscoveryAutomatedProviders extends AnnotatedClassDiscovery 
 
     // Clear the annotation loaders of any previous annotation classes.
     AnnotationRegistry::reset();
-    // Register the namespaces of classes that can be used for annotations.
-    AnnotationRegistry::registerLoader('class_exists');
 
     // Search for classes within all PSR-4 namespace locations.
     foreach ($this->getPluginNamespaces() as $namespace => $dirs) {
@@ -92,8 +64,9 @@ class AnnotatedClassDiscoveryAutomatedProviders extends AnnotatedClassDiscovery 
             if ($fileinfo->getExtension() == 'php') {
               if ($cached = $this->fileCache->get($fileinfo->getPathName())) {
                 if (isset($cached['id'])) {
-                  // Explicitly unserialize this to create a new object instance.
-                  $definitions[$cached['id']] = unserialize($cached['content']);
+                  // Explicitly unserialize this to create a new object
+                  // instance.
+                  $definitions[$cached['id']] = unserialize($cached['content'], ['allowed_classes' => FALSE]);
                 }
                 continue;
               }

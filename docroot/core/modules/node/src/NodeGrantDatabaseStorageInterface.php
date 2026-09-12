@@ -32,18 +32,18 @@ interface NodeGrantDatabaseStorageInterface {
    *   A list of tables that need to be part of the alter.
    * @param string $operation
    *   The operation to be performed on the node. Possible values are:
-   *   - "view"
-   *   - "update"
-   *   - "delete"
-   *   - "create"
+   *   - "view".
+   *   - "update".
+   *   - "delete".
+   *   - "create".
    * @param \Drupal\Core\Session\AccountInterface $account
    *   A user object representing the user for whom the operation is to be
    *   performed.
    * @param string $base_table
    *   The base table of the query.
    *
-   * @return int
-   *   Status of the access check.
+   * @return void
+   *   No return value.
    */
   public function alterQuery($query, array $tables, $operation, AccountInterface $account, $base_table);
 
@@ -67,12 +67,12 @@ interface NodeGrantDatabaseStorageInterface {
    *   is a module-defined id to define grant privileges. each grant_* field
    *   is a boolean value.
    * @param string $realm
-   *   (optional) If provided, read/write grants for that realm only. Defaults to
-   *   NULL.
+   *   (optional) If provided, read/write grants for that realm only. Defaults
+   *   to NULL.
    * @param bool $delete
-   *   (optional) If false, does not delete records. This is only for optimization
-   *   purposes, and assumes the caller has already performed a mass delete of
-   *   some form. Defaults to TRUE.
+   *   (optional) If false, does not delete records. This is only for
+   *   optimization purposes, and assumes the caller has already performed a
+   *   mass delete of some form. Defaults to TRUE.
    */
   public function write(NodeInterface $node, array $grants, $realm = NULL, $delete = TRUE);
 
@@ -83,6 +83,12 @@ interface NodeGrantDatabaseStorageInterface {
 
   /**
    * Creates the default node access grant entry.
+   *
+   * The default node access grant is a special grant added to the node_access
+   * table when no modules implement hook_node_grants. It grants view access
+   * to any published node.
+   *
+   * @see self::access()
    */
   public function writeDefault();
 

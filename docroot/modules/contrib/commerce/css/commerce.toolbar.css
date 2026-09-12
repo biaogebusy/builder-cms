@@ -11,6 +11,7 @@
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-license-collection::before,
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-pricelist-collection::before,
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-shipping-method-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon.toolbar-icon-commerce-shipping-configuration::before,
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-subscription-collection::before,
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-wishlist-collection::before,
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-invoice-collection::before {
@@ -26,47 +27,73 @@
   mask-image: var(--commerce-icon--drupal-cart);
 }
 
+.toolbar-tray .toolbar-icon.toolbar-icon-commerce-configuration::before {
+  --icon: var(--commerce-icon--gear);
+
+  -webkit-mask-image: var(--commerce-icon--gear-fill);
+  mask-image: var(--commerce-icon--gear-fill);
+}
+
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-order-collection::before {
+  --icon: var(--commerce-icon--clipboard-check);
+
   -webkit-mask-image: var(--commerce-icon--clipboard-check-fill);
   mask-image: var(--commerce-icon--clipboard-check-fill);
 }
 
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-product-collection::before {
+  --icon: var(--commerce-icon--box-seam);
+
   -webkit-mask-image: var(--commerce-icon--box-seam-fill);
   mask-image: var(--commerce-icon--box-seam-fill);
 }
 
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-promotion-collection::before {
+  --icon: var(--commerce-icon--bookmark-star);
+
   -webkit-mask-image: var(--commerce-icon--bookmark-star-fill);
   mask-image: var(--commerce-icon--bookmark-star-fill);
 }
 
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-license-collection::before {
+  --icon: var(--commerce-icon--person-vcard);
+
   -webkit-mask-image: var(--commerce-icon--person-vcard-fill);
   mask-image: var(--commerce-icon--person-vcard-fill);
 }
 
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-pricelist-collection::before {
+  --icon: var(--commerce-icon--tags);
+
   -webkit-mask-image: var(--commerce-icon--tags-fill);
   mask-image: var(--commerce-icon--tags-fill);
 }
 
-.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-shipping-method-collection::before {
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-shipping-method-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-commerce-shipping-configuration::before {
+  --icon: var(--commerce-icon--truck-front);
+
   -webkit-mask-image: var(--commerce-icon--truck-front-fill);
   mask-image: var(--commerce-icon--truck-front-fill);
 }
 
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-subscription-collection::before {
+  --icon: var(--commerce-icon--envelope-plus);
+
   -webkit-mask-image: var(--commerce-icon--envelope-plus-fill);
   mask-image: var(--commerce-icon--envelope-plus-fill);
 }
 
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-wishlist-collection::before {
+  --icon: var(--commerce-icon--bag-heart);
+
   -webkit-mask-image: var(--commerce-icon--bag-heart-fill);
   mask-image: var(--commerce-icon--bag-heart-fill);
 }
 
 .toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-invoice-collection::before {
+  --icon: var(--commerce-icon--file-earmark-ruled);
+
   -webkit-mask-image: var(--commerce-icon--file-earmark-ruled-fill);
   mask-image: var(--commerce-icon--file-earmark-ruled-fill);
 }

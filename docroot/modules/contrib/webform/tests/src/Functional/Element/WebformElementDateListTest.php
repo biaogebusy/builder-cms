@@ -22,7 +22,7 @@ class WebformElementDateListTest extends WebformElementBrowserTestBase {
   /**
    * Test datelist element.
    */
-  public function testDateListElement() {
+  public function testDateListElement(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_datelist');
@@ -30,6 +30,7 @@ class WebformElementDateListTest extends WebformElementBrowserTestBase {
     // Check posted submission values.
     $this->postSubmission($webform);
     $assert_session->responseContains("datelist_default: '2009-08-18T16:00:00+1000'
+datelist_date_part_title_display: '2009-08-18T16:00:00+1000'
 datelist_no_abbreviate: '2009-08-18T16:00:00+1000'
 datelist_text_parts: '2009-08-18T16:00:00+1000'
 datelist_datetime: '2009-08-18T16:00:00+1000'
@@ -47,6 +48,10 @@ datelist_custom_composite:
 
     $this->drupalGet('/webform/test_element_datelist');
 
+    // Check date part title display.
+    $assert_session->responseContains('<label for="edit-datelist-default-year" class="visually-hidden">datelist_default: Year</label>');
+    $assert_session->responseContains('<label for="edit-datelist-date-part-title-display-year">datelist_date_part_title_display: Year</label>');
+
     // Check datelist label has not for attributes.
     $assert_session->responseContains('<label>datelist_default</label>');
 
@@ -54,11 +59,29 @@ datelist_custom_composite:
     $assert_session->fieldValueEquals('datelist_default[month]', '8');
 
     // Check '#date_abbreviate': false.
-    $assert_session->responseContains('<select data-drupal-selector="edit-datelist-no-abbreviate-month" title="Month" id="edit-datelist-no-abbreviate-month" name="datelist_no_abbreviate[month]" class="form-select"><option value="">Month</option><option value="1">January</option>');
+    $this->assertEquals('1', $assert_session->optionExists('datelist_no_abbreviate[month]', 'January')->getValue());
+    $this->assertEquals('2', $assert_session->optionExists('datelist_no_abbreviate[month]', 'February')->getValue());
+    $this->assertEquals('3', $assert_session->optionExists('datelist_no_abbreviate[month]', 'March')->getValue());
+    $this->assertEquals('4', $assert_session->optionExists('datelist_no_abbreviate[month]', 'April')->getValue());
+    $this->assertEquals('5', $assert_session->optionExists('datelist_no_abbreviate[month]', 'May')->getValue());
+    $this->assertEquals('6', $assert_session->optionExists('datelist_no_abbreviate[month]', 'June')->getValue());
+    $this->assertEquals('7', $assert_session->optionExists('datelist_no_abbreviate[month]', 'July')->getValue());
+    $augustOption = $assert_session->optionExists('datelist_no_abbreviate[month]', 'August');
+    $this->assertEquals('8', $augustOption->getValue());
+    $this->assertTrue($augustOption->isSelected());
+    $this->assertEquals('9', $assert_session->optionExists('datelist_no_abbreviate[month]', 'September')->getValue());
+    $this->assertEquals('10', $assert_session->optionExists('datelist_no_abbreviate[month]', 'October')->getValue());
+    $this->assertEquals('11', $assert_session->optionExists('datelist_no_abbreviate[month]', 'November')->getValue());
+    $this->assertEquals('12', $assert_session->optionExists('datelist_no_abbreviate[month]', 'December')->getValue());
 
     // Check date year range reverse.
     $this->drupalGet('/webform/test_element_datelist');
-    $assert_session->responseContains('<select data-drupal-selector="edit-datelist-date-year-range-reverse-year" title="Year" id="edit-datelist-date-year-range-reverse-year" name="datelist_date_year_range_reverse[year]" class="form-select"><option value="" selected="selected">Year</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option></select>');
+    $this->assertEquals('2010', $assert_session->optionExists('datelist_date_year_range_reverse[year]', '2010')->getValue());
+    $this->assertEquals('2009', $assert_session->optionExists('datelist_date_year_range_reverse[year]', '2009')->getValue());
+    $this->assertEquals('2008', $assert_session->optionExists('datelist_date_year_range_reverse[year]', '2008')->getValue());
+    $this->assertEquals('2007', $assert_session->optionExists('datelist_date_year_range_reverse[year]', '2007')->getValue());
+    $this->assertEquals('2006', $assert_session->optionExists('datelist_date_year_range_reverse[year]', '2006')->getValue());
+    $this->assertEquals('2005', $assert_session->optionExists('datelist_date_year_range_reverse[year]', '2005')->getValue());
 
     // Check 'datelist' and 'datetime' #default_value.
     $form = $webform->getSubmissionForm();

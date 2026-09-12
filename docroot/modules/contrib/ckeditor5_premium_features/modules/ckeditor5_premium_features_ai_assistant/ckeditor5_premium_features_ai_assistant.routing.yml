@@ -1,0 +1,74 @@
+ckeditor5_premium_features_ai_assistant.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant'
+  defaults:
+    _title: 'AI Assistant Configuration'
+    _form: 'Drupal\ckeditor5_premium_features_ai_assistant\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+entity.ckeditor5_ai_command_group.collection:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant/ckeditor5-ai-command-group'
+  defaults:
+    _entity_list: 'ckeditor5_ai_command_group'
+    _title: 'CKEditor 5 AI Commands Group Configuration'
+  requirements:
+    _permission: 'administer ckeditor5_ai_command_group'
+
+entity.ckeditor5_ai_command_group.add_form:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant/ckeditor5-ai-command-group/add'
+  defaults:
+    _entity_form: 'ckeditor5_ai_command_group.add'
+    _title: 'Add a CKEditor 5 AI Commands Group'
+  requirements:
+    _permission: 'administer ckeditor5_ai_command_group'
+
+entity.ckeditor5_ai_command_group.edit_form:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant/ckeditor5-ai-command-group/{ckeditor5_ai_command_group}'
+  defaults:
+    _entity_form: 'ckeditor5_ai_command_group.edit'
+    _title: 'Edit a CKEditor 5 AI Commands Group'
+  requirements:
+    _permission: 'administer ckeditor5_ai_command_group'
+
+entity.ckeditor5_ai_command_group.delete_form:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant/ckeditor5-ai-command-group/{ckeditor5_ai_command_group}/delete'
+  defaults:
+    _entity_form: 'ckeditor5_ai_command_group.delete'
+    _title: 'Delete a CKEditor 5 AI Commands Group'
+  requirements:
+    _permission: 'administer ckeditor5_ai_command_group'
+
+ckeditor5_ai_command.add_form:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant/ckeditor5-ai-command-group/{ckeditor5_ai_command_group}/ckeditor5-ai-command/add'
+  defaults:
+    _form: '\Drupal\ckeditor5_premium_features_ai_assistant\Form\CKEditor5AiCommandAddForm'
+    _title: 'Add a CKEditor 5 AI Command'
+  requirements:
+    _permission: 'administer ckeditor5_ai_command_group'
+
+ckeditor5_ai_command.delete_form:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant/ckeditor5-ai-command-group/{ckeditor5_ai_command_group}/ckeditor5-ai-command/{uuid}/delete'
+  defaults:
+    _form: '\Drupal\ckeditor5_premium_features_ai_assistant\Form\CKEditor5AiCommandDeleteForm'
+    _title: 'Delete a CKEditor 5 AI Command'
+  requirements:
+    _permission: 'administer ckeditor5_ai_command_group'
+
+ckeditor5_ai_command.edit_form:
+  path: '/admin/config/ckeditor5-premium-features/ai-assistant/ckeditor5-ai-command-group/{ckeditor5_ai_command_group}/ckeditor5-ai-command/{uuid}'
+  defaults:
+    _form: '\Drupal\ckeditor5_premium_features_ai_assistant\Form\CKEditor5AiCommandEditForm'
+    _title: 'Edit a CKEditor 5 AI Command'
+  requirements:
+    _permission: 'administer ckeditor5_ai_command_group'
+
+ckeditor5_premium_features_ai_assistant.ai_assistant_proxy_provider:
+  path: '/ckeditor5-premium-features-ai-assistant/completion'
+  defaults:
+    _title: 'Ai Assistant proxy provider'
+    _controller: '\Drupal\ckeditor5_premium_features_ai_assistant\Controller\AiAssistantProviderProxyController'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+  requirements:
+    _permission: 'access ai assistant provider'

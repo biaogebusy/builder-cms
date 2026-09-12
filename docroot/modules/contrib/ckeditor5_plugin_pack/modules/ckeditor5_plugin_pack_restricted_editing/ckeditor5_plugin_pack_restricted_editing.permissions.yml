@@ -1,0 +1,2 @@
+permission_callbacks:
+  - \Drupal\ckeditor5_plugin_pack_restricted_editing\RestrictedEditingPermissions::permissions

@@ -9,12 +9,14 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensures that the revision create time can be accessed in views.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class RevisionCreateTimestampTest extends ViewsKernelTestBase {
 
   /**
@@ -42,6 +44,9 @@ class RevisionCreateTimestampTest extends ViewsKernelTestBase {
     }
   }
 
+  /**
+   * Tests the revision create timestamp view.
+   */
   public function testRevisionCreateTimestampView(): void {
     $node_type = NodeType::create([
       'type' => 'article',

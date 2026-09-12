@@ -35,7 +35,7 @@ by default use ChainedFastBackend:
 Whether the in-memory cache is used can be configured per bin, the default configuration is to use it for the config,
 discovery and boostrap (those that use ChainedFastBackend by default) and container:
 
-    $settings['redis_relay_memory_bins'] = ['container', 'bootstrap', 'config', 'discovery'];
+    $settings['redis_permanent_bins'] = ['container', 'bootstrap', 'config', 'discovery'];
 
 The default is only used when no configuration is set, if this is customized all bins that should use the in-memory
 cache must be set explicitly.

@@ -32,7 +32,7 @@ variant_settings:
       provider: views
       label_display: visible
       views_label: ''
-      items_per_page: none
+      items_per_page: null
       region: top
       weight: 0
       uuid: 55feb0af-28e4-47c8-9ff5-4fb2b1e4bf24

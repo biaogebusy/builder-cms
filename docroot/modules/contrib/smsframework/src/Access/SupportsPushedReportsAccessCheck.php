@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Access;
 
-use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Checks if gateway supports pushed reports.

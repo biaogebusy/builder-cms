@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\elasticsearch_connector_test\Drush\Commands;
 
 use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drush\Attributes\Command;
 use Drush\Attributes\Usage;
 use Drush\Commands\AutowireTrait;
@@ -81,6 +83,8 @@ final class ElasticsearchConnectorTestCommands extends DrushCommands {
     );
 
     // Copied from \Drupal\Tests\search_api\Functional\ExampleContentTrait::insertExampleContent().
+    // Combined with test 'created' dates from
+    // \Drupal\Tests\elasticsearch_connector\Kernel\ElasticSearchBackendTest::addTestEntity().
     $smiley = json_decode('"\u1F601"');
     $this->addTestEntity(1, [
       'name' => 'foo bar baz foobaz föö smile' . $smiley,
@@ -89,6 +93,7 @@ final class ElasticsearchConnectorTestCommands extends DrushCommands {
       // cspell:disable-next-line
       'keywords' => ['Orange', 'orange', 'örange', 'Orange', $smiley],
       'category' => 'item_category',
+      'created' => \strtotime('2003-07-10T00:00:00Z'),
     ]);
     $this->addTestEntity(2, [
       'name' => 'foo test foobuz',
@@ -96,11 +101,13 @@ final class ElasticsearchConnectorTestCommands extends DrushCommands {
       'type' => 'item',
       'keywords' => ['orange', 'apple', 'grape'],
       'category' => 'item_category',
+      'created' => \strtotime('2008-06-28T00:00:00Z'),
     ]);
     $this->addTestEntity(3, [
       'name' => 'bar',
       'body' => 'test foobar Case',
       'type' => 'item',
+      'created' => \strtotime('2012-06-11T00:00:00Z'),
     ]);
     $this->addTestEntity(4, [
       'name' => 'foo baz',
@@ -109,6 +116,7 @@ final class ElasticsearchConnectorTestCommands extends DrushCommands {
       'keywords' => ['apple', 'strawberry', 'grape'],
       'category' => 'article_category',
       'width' => '1.0',
+      'created' => \strtotime('2016-09-16T00:00:00Z'),
     ]);
     $this->addTestEntity(5, [
       'name' => 'bar baz',
@@ -117,6 +125,7 @@ final class ElasticsearchConnectorTestCommands extends DrushCommands {
       'keywords' => ['orange', 'strawberry', 'grape', 'banana'],
       'category' => 'article_category',
       'width' => '2.0',
+      'created' => \strtotime('2018-04-02T00:00:00Z'),
     ]);
 
     $this->logger()?->success(dt('Test content has been added.'));
@@ -149,10 +158,10 @@ final class ElasticsearchConnectorTestCommands extends DrushCommands {
    * @param array $values
    *   The entity's property values.
    *
-   * @return \Drupal\entity_test\Entity\EntityTestMulRevChanged
+   * @return \Drupal\Core\Entity\EntityInterface
    *   The created entity.
    */
-  protected function addTestEntity($id, array $values): EntityTestMulRevChanged {
+  protected function addTestEntity($id, array $values): EntityInterface {
     $entity_type = 'entity_test_mulrev_changed';
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $values['id'] = $id;

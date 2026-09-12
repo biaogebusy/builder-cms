@@ -8,6 +8,8 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\entity_share_client\Annotation\ImportProcessor as ImportProcessorAnnotation;
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 
 /**
  * Manages import processor plugins.
@@ -28,10 +30,15 @@ class ImportProcessorPluginManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    $subdir = 'Plugin/EntityShareClient/Processor';
-    $plugin_interface = 'Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface';
-    $plugin_definition_annotation_name = 'Drupal\entity_share_client\Annotation\ImportProcessor';
-    parent::__construct($subdir, $namespaces, $module_handler, $plugin_interface, $plugin_definition_annotation_name);
+    parent::__construct(
+      'Plugin/EntityShareClient/Processor',
+      $namespaces,
+      $module_handler,
+      ImportProcessorInterface::class,
+      ImportProcessor::class,
+      ImportProcessorAnnotation::class,
+    );
+
     $this->alterInfo('entity_share_client_import_processor_info');
     $this->setCacheBackend($cache_backend, 'entity_share_client_import_processors');
   }

@@ -96,7 +96,7 @@ class WebformDevelSubmissionApiForm extends FormBase {
     $form['php'] = [
       '#type' => 'details',
       '#title' => $this->t('PHP usage'),
-      '#description' => $this->t('Below is an example of how to programatically validate and submit a webform submission using PHP.'),
+      '#description' => $this->t('Below is an example of how to programmatically validate and submit a webform submission using PHP.'),
     ];
     $form['php']['code'] = [
       '#type' => 'webform_codemirror',

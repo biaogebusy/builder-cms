@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Kernel\Common;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Performs integration tests on \Drupal::service('renderer')->render().
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class FormElementsRenderTest extends KernelTestBase {
 
   /**
@@ -150,9 +151,7 @@ class FormElementsRenderTest extends KernelTestBase {
 
     $xpath = $this->buildXPathQuery($xpath, $xpath_args);
     $element += ['#value' => NULL];
-    $this->assertFieldByXPath($xpath, $element['#value'], new FormattableMarkup('#type @type was properly rendered.', [
-      '@type' => var_export($element['#type'], TRUE),
-    ]));
+    $this->assertFieldByXPath($xpath, $element['#value'], '#type ' . var_export($element['#type'], TRUE) . ' was properly rendered.');
   }
 
 }

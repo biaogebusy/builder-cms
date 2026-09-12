@@ -3,10 +3,9 @@
 namespace Drupal\blazy\Theme;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Utility\Arrays;
-use Drupal\blazy\Utility\Check;
-use Drupal\blazy\internals\Internals;
 
 /**
  * Provides grid utilities.
@@ -14,6 +13,8 @@ use Drupal\blazy\internals\Internals;
  * @internal
  *   This is an internal part of the Blazy system and should only be used by
  *   blazy-related code in Blazy module ecosystem.
+ *
+ * @todo make it an instance class without being a service at D11-12 for Hook.
  */
 class Grid {
 
@@ -30,18 +31,20 @@ class Grid {
    */
   public static function build($items, array $settings): array {
     // Might be called outside the workflow like Slick/ Splide list builders.
+    /** @var \Drupal\blazy\BlazySettings $blazies */
     $blazies = Internals::verify($settings);
 
     // If the workflow is by-passed, by calling this directly, re-check grids.
     // If grid chunks with destroyed un(slick|splide), refresh with libraries.
     $refresh = $blazies->is('grid_refresh');
     if (!$blazies->get('namespace') || $refresh) {
-      Check::grids($settings);
+      self::check($settings);
     }
 
     // Might be called outside Blazy workflows, allows altering settings once.
     $attachments = $attrs = [];
-    if ($manager = Internals::service('blazy.manager')) {
+
+    if ($manager = Internals::blazy()) {
       $manager->moduleHandler()->alter('blazy_settings_grid', $settings);
       $attachments = $refresh ? $manager->attach($settings) : [];
     }
@@ -89,9 +92,14 @@ class Grid {
 
   /**
    * Provides reusable container attributes.
+   *
+   * @param array $attrs
+   *   The attributes being modified.
+   * @param array $settings
+   *   The settings being passed.
    */
   public static function attributes(array &$attrs, array $settings): void {
-    $blazies    = $settings['blazies'];
+    $blazies    = Internals::getBlazies($settings);
     $gallery_id = $blazies->get('lightbox.gallery_id');
     $is_gallery = $blazies->is('gallery');
     $namespace  = $blazies->get('namespace');
@@ -122,10 +130,58 @@ class Grid {
   }
 
   /**
+   * Checks for grids, also supports Slick which requires no `style`.
+   */
+  public static function check(array &$settings): void {
+    $blazies  = Internals::getBlazies($settings);
+    $has_grid = !empty($settings['grid']);
+    $sub_grid = $has_grid && !empty($settings['visible_items']);
+    $style    = $settings['style'] ?? NULL;
+    $style    = $style ?: ($sub_grid ? 'grid' : NULL);
+    $is_grid  = $sub_grid ?: ($style && $has_grid);
+    $is_grid  = $is_grid ?: $settings['_grid'] ?? $blazies->is('grid', $is_grid);
+
+    $blazies->set('is.grid', $is_grid);
+
+    // Bail out early if not so configured.
+    if (!$is_grid) {
+      return;
+    }
+
+    // Babysitter for Slick which requires no Display style.
+    if (!$style) {
+      $settings['style'] = 'grid';
+    }
+
+    if ($style) {
+      foreach (BlazyDefault::grids() as $grid) {
+        if ($style == $grid) {
+          $key = str_replace('.', '__', $style);
+          $blazies->set('libs.' . $key, $grid);
+        }
+      }
+
+      // Formatters, Views style, not Filters.
+      self::toNativeGrid($settings);
+    }
+
+    $blazies->set('was.grid', TRUE);
+  }
+
+  /**
    * Listens to signaled grid item attributes.
    *
    * Can be set via hook_blazy_settings_alter for minor alters, such as adding
    * generic .card, etc. classes without extra legs.
+   *
+   * @param array $attrs
+   *   The attributes being modified.
+   * @param array $content_attrs
+   *   The content attributes being modified.
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   * @param bool $root
+   *   Whether the container/root element.
    */
   public static function checkAttributes(
     array &$attrs,
@@ -151,6 +207,12 @@ class Grid {
 
   /**
    * Initialize Grid at any containers with DIV > DIVs without passing contents.
+   *
+   * @param array $options
+   *   The options being passed.
+   *
+   * @return array
+   *   The attributes and settings.
    */
   public static function initGrid(array $options): array {
     $attrs   = ['class' => []];
@@ -159,7 +221,7 @@ class Grid {
     $gapless = $options['gapless'] ?? TRUE;
     $is_form = $options['is_form'] ?? TRUE;
     $style   = $options['style'] ?? 'nativegrid';
-    $blazies = $options['blazies'] ?? Internals::settings();
+    $blazies = Internals::getBlazies($options);
 
     $blazies->set('count', $count)
       ->set('is.grid', TRUE);
@@ -200,7 +262,8 @@ class Grid {
         Internals::hashtag($item, 'settings', TRUE);
 
         $subsets = $sets;
-        $blazy = $subsets['blazies']->reset($subsets);
+        // @todo recheck $blazy = $subsets['blazies']->reset($subsets);
+        $blazy = Internals::getBlazies($subsets)->reset($subsets);
         $subsets['delta'] = $i;
         $blazy->set('delta', $i);
         $subattrs = [];
@@ -224,13 +287,20 @@ class Grid {
 
   /**
    * Provides grid item attributes, relevant for Native Grid.
+   *
+   * @param array $attrs
+   *   The attributes being modified.
+   * @param array $content_attrs
+   *   The content attributes being modified.
+   * @param array $settings
+   *   The settings being passed.
    */
   public static function itemAttributes(
     array &$attrs,
     array &$content_attrs,
     array $settings,
   ): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $item_class = $blazies->get('grid.item_class', 'grid');
 
     $classes = (array) ($attrs['class'] ?? []);
@@ -249,9 +319,14 @@ class Grid {
 
   /**
    * Convert grid value to attributes.
+   *
+   * @param array $attrs
+   *   The attrs being modified.
+   * @param array $settings
+   *   The settings being passed.
    */
   public static function toItemAttributes(array &$attrs, array $settings): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
 
     // Count may be set as 2 even if it is 100 by sliders for their magic trick.
     // However total, the new preserved count key, may not be set somewhere.
@@ -293,6 +368,14 @@ class Grid {
 
   /**
    * Checks if a grid expects a flexbox layout, not flex masonry.
+   *
+   * @param array $settings
+   *   The settings being passed.
+   * @param string $key
+   *   The key.
+   *
+   * @return bool
+   *   Whether a pair.
    */
   public static function isFlexbox(array $settings, $key = 'grid'): bool {
     return self::isPair($settings, 'flexbox', $key);
@@ -300,6 +383,14 @@ class Grid {
 
   /**
    * Checks if a grid expects a two-dimensional grid.
+   *
+   * @param array $settings
+   *   The settings being passed.
+   * @param string $key
+   *   The key.
+   *
+   * @return bool
+   *   Whether a pair.
    */
   public static function isNativeGrid(array $settings, $key = 'grid'): bool {
     return self::isPair($settings, 'nativegrid', $key);
@@ -307,6 +398,14 @@ class Grid {
 
   /**
    * Checks if a grid uses a native grid, but expecting a masonry.
+   *
+   * @param array $settings
+   *   The settings being passed.
+   * @param string $key
+   *   The key.
+   *
+   * @return bool
+   *   Whether a pair.
    */
   public static function isNativeGridAsMasonry(array $settings, $key = 'grid'): bool {
     return self::isPair($settings, 'nativegrid', $key, TRUE);
@@ -314,6 +413,14 @@ class Grid {
 
   /**
    * Extracts grid like: 4x4 4x3 2x2 2x4 2x2 2x3 2x3 4x2 4x2, or single 4x4.
+   *
+   * @param array $settings
+   *   The settings being passed.
+   * @param string $key
+   *   The key.
+   *
+   * @return array
+   *   The grid dimensions.
    */
   public static function toDimensions(array $settings, $key = 'grid'): array {
     $dimensions = [];
@@ -330,10 +437,10 @@ class Grid {
           $height = 0;
 
           // If multidimensional layout.
-          if (Blazy::has($value, '-')) {
+          if (Internals::has($value, '-')) {
             [$width, $height] = array_pad(array_map('trim', explode("-", $value, 2)), 2, NULL);
           }
-          elseif (Blazy::has($value, 'x')) {
+          elseif (Internals::has($value, 'x')) {
             [$width, $height] = array_pad(array_map('trim', explode("x", $value, 2)), 2, NULL);
           }
 
@@ -347,13 +454,16 @@ class Grid {
 
   /**
    * Passes grid like: 4x4 4x3 2x2 2x4 2x2 2x3 2x3 4x2 4x2 to settings.
+   *
+   * @param array $settings
+   *   The settings being modified.
    */
   public static function toNativeGrid(array &$settings): void {
     if (empty($settings['grid'])) {
       return;
     }
 
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     if (self::isNativeGridAsMasonry($settings)) {
       $blazies->set('libs.nativegrid__masonry', TRUE);
     }
@@ -364,9 +474,14 @@ class Grid {
 
   /**
    * Limit to grid only, so to be usable for plain list.
+   *
+   * @param array $attrs
+   *   The attrs being modified.
+   * @param array $settings
+   *   The settings being passed.
    */
   private static function containerAttributes(array &$attrs, array $settings): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $style   = $settings['style'] ?: 'grid';
     $count   = Internals::count($blazies);
     $format1 = 'b-%s';
@@ -441,13 +556,13 @@ class Grid {
    * @param array|\Generator $items
    *   The grid items, can be plain array or generator.
    * @param array $settings
-   *   The given settings.
+   *   The settings being modified.
    *
    * @return array
    *   The modified array of grid items.
    */
   private static function content($items, array &$settings): array {
-    $blazies    = $settings['blazies'];
+    $blazies    = Internals::getBlazies($settings);
     $is_grid    = $blazies->is('grid');
     $item_class = $is_grid ? 'grid' : 'blazy__item';
     $contents   = [];
@@ -482,9 +597,9 @@ class Grid {
       $sets = Arrays::mergeSettings('blazies', $settings, $sets);
       $wrapper_attrs = Internals::toHashtag($item, 'attributes');
       $content_attrs = Internals::toHashtag($item, 'content_attributes');
-      $image = Internals::toHashtag($item, 'item', NULL);
+      $image = $item['#item'] ?? NULL;
+      $blazy = Internals::getBlazies($sets);
 
-      $blazy = $sets['blazies'];
       $sets['delta'] = $key;
 
       $blazy->set('delta', $key);
@@ -493,7 +608,7 @@ class Grid {
       self::itemAttributes($wrapper_attrs, $content_attrs, $sets);
 
       // Remove known unused array.
-      // @todo remove at/by 3.x refactors to use hashes instead.
+      // @todo deprecate and remove at/by 3.x refactors to use hashes instead.
       unset(
         $item['settings'],
         $item['attributes'],
@@ -530,6 +645,12 @@ class Grid {
 
   /**
    * Returns field label via Field UI, unless use.theme_field takes place.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   *
+   * @return string
+   *   The label.
    */
   private static function label($blazies): string {
     if (!$blazies->use('theme_field')
@@ -541,12 +662,24 @@ class Grid {
 
   /**
    * Checks if a grid has a pair or non-numeric value: 4x2, 50-md, etc.
+   *
+   * @param array $settings
+   *   The settings being passed.
+   * @param string $value
+   *   The value.
+   * @param string $key
+   *   The key.
+   * @param bool $numeric
+   *   Whether a numeric.
+   *
+   * @return bool
+   *   Whether a value containing a pair.
    */
   private static function isPair(
     array $settings,
-    $value,
-    $key = 'grid',
-    $numeric = FALSE,
+    string $value,
+    string $key = 'grid',
+    bool $numeric = FALSE,
   ): bool {
     if ($grid = $settings[$key] ?? NULL) {
       $style = $settings['style'] ?? 'x';
@@ -558,9 +691,12 @@ class Grid {
 
   /**
    * Passes grid like: 4x4, 50-md, etc.
+   *
+   * @param array $settings
+   *   The settings being modified.
    */
   private static function toPair(array &$settings): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $grid = $settings['grid_large'] = $settings['grid'] ?? NULL;
 
     if (!$grid) {
@@ -584,6 +720,12 @@ class Grid {
 
   /**
    * Converts array to array values.
+   *
+   * @param array $array
+   *   The array to convert.
+   *
+   * @return array
+   *   The array values.
    */
   private static function toValues(array $array): array {
     $values = [];

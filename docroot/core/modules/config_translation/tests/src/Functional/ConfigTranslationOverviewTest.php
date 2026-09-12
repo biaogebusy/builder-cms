@@ -10,12 +10,14 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Translate settings and entities to various languages.
- *
- * @group config_translation
  */
+#[Group('config_translation')]
+#[RunTestsInSeparateProcesses]
 class ConfigTranslationOverviewTest extends BrowserTestBase {
 
   /**
@@ -26,7 +28,6 @@ class ConfigTranslationOverviewTest extends BrowserTestBase {
     'config_test',
     'config_translation',
     'config_translation_test',
-    'contact',
     'contextual',
     'entity_test_operation',
     'field_ui',
@@ -63,8 +64,6 @@ class ConfigTranslationOverviewTest extends BrowserTestBase {
       'translate configuration',
       'administer languages',
       'administer site configuration',
-      'administer contact forms',
-      'access site-wide contact form',
       'access contextual links',
       'administer views',
     ];
@@ -89,7 +88,7 @@ class ConfigTranslationOverviewTest extends BrowserTestBase {
     $this->assertSession()->linkByHrefExists('admin/config/people/accounts/translate');
     // Make sure there is only a single operation for each dropbutton, either
     // 'List' or 'Translate'.
-    foreach ($this->cssSelect('ul.dropbutton') as $i => $dropbutton) {
+    foreach ($this->cssSelect('ul.dropbutton') as $dropbutton) {
       $this->assertCount(1, $dropbutton->findAll('xpath', 'li'));
       $this->assertTrue(($dropbutton->getText() === 'Translate') || ($dropbutton->getText() === 'List'));
     }
@@ -115,7 +114,7 @@ class ConfigTranslationOverviewTest extends BrowserTestBase {
 
       // Make sure there is only a single 'Translate' operation for each
       // dropbutton.
-      foreach ($this->cssSelect('ul.dropbutton') as $i => $dropbutton) {
+      foreach ($this->cssSelect('ul.dropbutton') as $dropbutton) {
         $this->assertCount(1, $dropbutton->findAll('xpath', 'li'));
         $this->assertSame('Translate', $dropbutton->getText());
       }
@@ -196,7 +195,7 @@ class ConfigTranslationOverviewTest extends BrowserTestBase {
       'field_storage' => FieldStorageConfig::loadByName('node', 'body'),
       'bundle' => $node_type->id(),
       'label' => 'Body',
-      'settings' => ['display_summary' => FALSE],
+      'settings' => [],
     ]);
     $field->save();
 

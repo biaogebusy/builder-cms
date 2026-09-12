@@ -74,3 +74,10 @@ function acquia_connector_post_update_deprecated_variables() {
   // Flush caches when upgrading from 3.0.x to 4.0.x.
   drupal_flush_all_caches();
 }
+
+/**
+ * Clear service caches after telemetry service definition changes.
+ */
+function acquia_connector_post_update_telemetry_service_cache_clear() {
+  // Service container + caches rebuilt automatically.
+}

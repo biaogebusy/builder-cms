@@ -10,13 +10,16 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensures that media UI works correctly.
- *
- * @group media
- * @group #slow
  */
+#[Group('media')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class MediaUiReferenceWidgetTest extends MediaFunctionalTestBase {
 
   use FieldUiTestTrait;
@@ -87,9 +90,18 @@ class MediaUiReferenceWidgetTest extends MediaFunctionalTestBase {
       'multi-value:single_type:create_list:tags' => [3, [TRUE], TRUE, 'entity_reference_autocomplete_tags'],
 
       // Unlimited value field.
-      'unlimited_value:single_type:create_list' => [FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED, [TRUE], TRUE],
+      'unlimited_value:single_type:create_list' => [
+        FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        [TRUE],
+        TRUE,
+      ],
       // Unlimited value field with the tags widget.
-      'unlimited_value:single_type:create_list:tags' => [FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED, [TRUE], TRUE, 'entity_reference_autocomplete_tags'],
+      'unlimited_value:single_type:create_list:tags' => [
+        FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        [TRUE],
+        TRUE,
+        'entity_reference_autocomplete_tags',
+      ],
     ];
   }
 
@@ -110,9 +122,8 @@ class MediaUiReferenceWidgetTest extends MediaFunctionalTestBase {
    *
    * @see media_field_widget_entity_reference_autocomplete_form_alter()
    * @see media_field_widget_multiple_entity_reference_autocomplete_form_alter()
-   *
-   * @dataProvider providerTestMediaReferenceWidget
    */
+  #[DataProvider('providerTestMediaReferenceWidget')]
   public function testMediaReferenceWidget($cardinality, array $media_type_create_access, $list_access, $widget_id = 'entity_reference_autocomplete'): void {
     $assert_session = $this->assertSession();
 

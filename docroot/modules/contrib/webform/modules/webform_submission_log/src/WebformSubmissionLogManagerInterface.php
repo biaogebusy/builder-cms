@@ -38,7 +38,7 @@ interface WebformSubmissionLogManagerInterface {
    * @return \Drupal\Core\Database\Query\SelectInterface
    *   A webform submission log select query.
    */
-  public function getQuery(EntityInterface $webform_entity = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function getQuery(?EntityInterface $webform_entity = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
   /**
    * Log webform submission logs.
@@ -67,6 +67,6 @@ interface WebformSubmissionLogManagerInterface {
    *   - data: (array) Data associated with this log entry.
    *   - timestamp: (int) Timestamp when the operation was executed.
    */
-  public function loadByEntities(EntityInterface $webform_entity = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []);
+  public function loadByEntities(?EntityInterface $webform_entity = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []);
 
 }

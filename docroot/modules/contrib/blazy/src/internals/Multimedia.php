@@ -1,7 +1,8 @@
 <?php
 
-namespace Drupal\blazy\internals;
+namespace Drupal\blazy\Internals;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\blazy\BlazySettings;
 use Drupal\blazy\Media\Provider\Youtube;
 use Drupal\blazy\Utility\Sanitize;
@@ -14,6 +15,30 @@ use Drupal\blazy\Utility\Sanitize;
  *   blazy-related code in Blazy module.
  */
 class Multimedia extends Settings {
+
+  /**
+   * Provides autoplay URL for lightbox nested iframes to save another click.
+   */
+  public static function autoplay($url, $check = TRUE): string {
+    $func = function ($str, $key) {
+      $format1 = '%s&%s=1';
+      $first = sprintf($format1, $str, $key);
+      $format2 = '%s?%s=1';
+      $last = sprintf($format2, $str, $key);
+
+      return self::has($str, '?') ? $first : $last;
+    };
+
+    // It doesn't cover all providers, but few, no biggies till needed.
+    if (!self::has($url, 'autoplay')
+      || self::has($url, 'autoplay=0')) {
+      $key = self::has($url, 'soundcloud') ? 'auto_play' : 'autoplay';
+      return $func($url, $key);
+    }
+
+    // @todo recheck if any side effect/ double escape to cdn/ valid input.
+    return $check ? UrlHelper::stripDangerousProtocols($url) : $url;
+  }
 
   /**
    * Returns the expected/ corrected input URL.
@@ -50,6 +75,12 @@ class Multimedia extends Settings {
   /**
    * Disables linkable Pinterest, Twitter, etc.
    *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   *
+   * @return bool
+   *   Whether the media content can be linked.
+   *
    * @todo refine or excludes other providers that should not be linked.
    */
   public static function linkable($blazies): bool {
@@ -64,24 +95,64 @@ class Multimedia extends Settings {
   /**
    * Provider sometimes NULL when called by sub-modules, not Blazy.
    *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   * @param string|null $provider
+   *   The provider name.
+   *
+   * @return string|null
+   *   The provider name or NULL.
+   *
    * @fixme somewhere else.
    */
   public static function provider($blazies, $provider = NULL): ?string {
-    if (!$provider && $input = $blazies->get('media.input_url')) {
-      $provider = str_ireplace(['www.', '.com'], '', parse_url($input, PHP_URL_HOST));
+    if (!$provider) {
+      $provider = $blazies->get('media.provider');
+
+      // Anything will do, no problem, no validation is required for CSS class.
+      if (!$provider && $input = $blazies->get('media.input_url')) {
+        // parse_url() may return NULL for PHP_URL_HOST (e.g. schemeless or
+        // malformed URLs). Avoid passing NULL to str_ireplace() (deprecated on
+        // PHP 8.1+). Try a safe fallback for schemeless URLs.
+        $host = parse_url($input, PHP_URL_HOST);
+
+        // Fallback: support schemeless URLs like "example.com/path".
+        if (!$host && is_string($input)) {
+          $host = parse_url('https://' . ltrim($input, '/'), PHP_URL_HOST);
+        }
+
+        // Only run replacements when a valid host string is available.
+        if (is_string($host) && $host !== '') {
+          $provider = str_ireplace(['www.', '.com'], '', $host);
+        }
+      }
     }
     return $provider;
   }
 
   /**
    * Alias for Youtube::fromEmbed().
+   *
+   * @param string|null $input
+   *   The input URL.
+   * @param bool $privacy
+   *   Whether to enforce privacy.
+   *
+   * @return string|null
+   *   The youtube URL.
    */
-  public static function youtube($input): ?string {
-    return Youtube::fromEmbed($input);
+  public static function youtube($input, bool $privacy = FALSE): ?string {
+    return Youtube::fromEmbed($input, $privacy);
   }
 
   /**
    * Checks if it is a video.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   *
+   * @return bool
+   *   Whether the media is video or not.
    */
   public static function isVideo($blazies): bool {
     if ($blazies->get('media.input_url')) {
@@ -93,8 +164,18 @@ class Multimedia extends Settings {
 
   /**
    * Modifies settings to support iframes.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   * @param string|null $src
+   *   The input URL.
+   * @param bool $sanitized
+   *   Whether to sanitized.
+   *
+   * @return \Drupal\blazy\BlazySettings
+   *   The BlazySettings object.
    */
-  public static function toPlayable($blazies, $src = NULL, $sanitized = FALSE): BlazySettings {
+  public static function toPlayable($blazies, $src = NULL, bool $sanitized = FALSE): BlazySettings {
     if ($src) {
       if (!$sanitized) {
         $src = Sanitize::url($src);

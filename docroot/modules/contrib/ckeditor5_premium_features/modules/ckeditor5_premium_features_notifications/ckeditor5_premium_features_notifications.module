@@ -1,0 +1,238 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+/**
+ * @file
+ * Contains CKEditor 5 Premium Features Notifications module functions.
+ */
+
+declare(strict_types=1);
+
+use Drupal\ckeditor5_premium_features_collaboration\Entity\CommentInterface;
+use Drupal\ckeditor5_premium_features\Event\CollaborationEventBase;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\SuggestionInterface;
+use Drupal\ckeditor5_premium_features_notifications\Plugin\Notification\NotificationMessageFactoryDefault;
+use Drupal\ckeditor5_premium_features_notifications\Plugin\Notification\NotificationSenderMailBulk;
+use Drupal\ckeditor5_premium_features_realtime_collaboration\Entity\RtcCommentNotificationEntity;
+use Drupal\ckeditor5_premium_features_realtime_collaboration\Entity\RtcSuggestionNotificationEntity;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\Markup;
+
+/**
+ * Implements hook_mail().
+ */
+function ckeditor5_premium_features_notifications_mail($key, &$message, $params) {
+  if (!NotificationMessageFactoryDefault::isMessageTypeSupported($key) &&
+    $key != NotificationSenderMailBulk::BULK_MAIL_TYPE) {
+    return;
+  }
+
+  if (empty($params['headers']['content-type'])) {
+    $params['headers']['content-type'] = 'text/html';
+  }
+
+  $cssPath = \Drupal::moduleHandler()->getModule('ckeditor5_premium_features_notifications')->getPath() . '/css/notifications.css';
+  if (file_exists($cssPath)) {
+    $params['body'] = array_merge([
+      '<style>' . file_get_contents($cssPath) . '</style>',
+    ], $params['body']);
+  }
+
+  foreach ($params['body'] as &$bodyItem) {
+    $bodyItem = Markup::create($bodyItem);
+  }
+
+  $message['subject'] = $params['subject'];
+  $message['body'] = $params['body'];
+  $message['headers'] += $params['headers'];
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function ckeditor5_premium_features_notifications_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleableMetadata) {
+  $acceptedTypes = [
+    'ckeditor5_premium_notification',
+    'suggestion',
+  ];
+  if (!in_array($type, $acceptedTypes)) {
+    return [];
+  }
+
+  /** @var \Drupal\ckeditor5_premium_features\Event\CollaborationEventBase $suggestionEvent */
+  $suggestionEvent = $data['suggestion'] ?? NULL;
+  $suggestion = $data['ckeditor5_suggestion'] ?? NULL;
+  $comment = $data['ckeditor5_comment'] ?? NULL;
+  $node = $data['node'] ?? NULL;
+  $key = $data['key_id'] ?? NULL;
+  $marker = $data['marker'] ?? NULL;
+  $originalContent = $data['original_content'] ?? NULL;
+  $newContent = $data['new_content'] ?? NULL;
+  $isDefaultContextRequired = $data['is_default'] ?? FALSE;
+
+  /** @var \Drupal\Core\Render\RendererInterface $renderer */
+  $renderer = Drupal::service('renderer');
+  /** @var \Drupal\ckeditor5_premium_features_notifications\Utility\NotificationContextHelper $contextHelper */
+  $contextHelper = Drupal::service('ckeditor5_premium_features_notifications.notification_context_helper');
+
+  $replacements = [];
+
+  if ($suggestionEvent instanceof CollaborationEventBase) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'status':
+          $replacements[$original] = $suggestionEvent->getEventType();
+          break;
+
+        case 'status-label':
+          try {
+            $replacements[$original] = CollaborationEventBase::getEventLabel($suggestionEvent->getEventType());
+          }
+          catch (Exception) {
+
+          }
+          break;
+      }
+    }
+  }
+
+  if ($suggestion instanceof SuggestionInterface || $suggestion instanceof RtcSuggestionNotificationEntity) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'context':
+          if (!empty($originalContent)) {
+            $result = $contextHelper->getFullContextFromDocument($originalContent, $suggestion);
+          }
+          if (empty($originalContent) || empty($result)) {
+            $result = $contextHelper->getFullContext($node, $key, $suggestion, $newContent);
+          }
+          $replacements[$original] = $renderer->renderInIsolation($result);
+          break;
+      }
+    }
+  }
+  elseif ($comment instanceof CommentInterface || $comment instanceof RtcCommentNotificationEntity) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'context':
+          if (!empty($originalContent)) {
+            $result = $contextHelper->getFullContextFromDocument($originalContent, $comment);
+          }
+          if (empty($originalContent) || empty($result)) {
+            $result = $contextHelper->getFullContext($node, $key, $comment, $newContent);
+          }
+          $replacements[$original] = $renderer->renderInIsolation($result);
+          break;
+      }
+    }
+  }
+
+  if (!empty($marker)) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'context':
+          if ($comment instanceof CommentInterface || $comment instanceof RtcCommentNotificationEntity) {
+            $result = $contextHelper->getFullContext($node, $key, $comment, $newContent);
+          }
+          else {
+            $result = $contextHelper->getDocumentMentionContext($node, $key, $marker, $originalContent);
+          }
+          $replacements[$original] = $renderer->renderInIsolation($result);
+          break;
+      }
+    }
+  }
+
+  if ($isDefaultContextRequired && !empty($originalContent)) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'context':
+          $result = $contextHelper->getHighlightedDocumentChanges($originalContent);
+          $replacements[$original] = $renderer->renderInIsolation($result);
+          break;
+      }
+    }
+  }
+
+  return $replacements;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function ckeditor5_premium_features_notifications_cron() {
+  $bulkMessageSender = \Drupal::service('ckeditor5_premium_features_notifications.bulk_message_sender');
+  $bulkMessageSender->sendBulkMails();
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ckeditor5_premium_features_notifications_theme($existing, $type, $theme, $path) {
+  return [
+    'notification_thread_wrapper' => [
+      'variables' => [
+        'items' => NULL,
+      ],
+    ],
+    'notification_thread_comment' => [
+      'variables' => [
+        'comment' => NULL,
+      ],
+    ],
+    'notification_thread_default' => [
+      'variables' => [
+        'item' => NULL,
+      ],
+    ],
+    'notification_message_bulk' => [
+      'variables' => [
+        'items' => NULL,
+        'title' => NULL,
+      ],
+    ],
+    'notification_message_single' => [
+      'variables' => [
+        'context' => NULL,
+        'thread' => NULL,
+        'threadCounter' => NULL,
+        'firstComment' => NULL,
+        'formattingChange' => NULL,
+      ],
+    ],
+    'notification_context' => [
+      'variables' => [
+        'title' => NULL,
+        'messageContent' => NULL,
+        'context' => NULL,
+        'thread' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function ckeditor5_premium_features_notifications_library_info_alter(&$libraries, $extension): void {
+  if ($extension == 'ckeditor5_premium_features_notifications') {
+    $isRtcEnabled = \Drupal::moduleHandler()->moduleExists('ckeditor5_premium_features_realtime_collaboration');
+    if (!$isRtcEnabled) {
+      unset($libraries['realtime-comment-notifications']);
+    }
+  }
+}
+
+/**
+ * Implements hook_ckeditor5_plugin_info_alter().
+ */
+function ckeditor5_premium_features_notifications_ckeditor5_plugin_info_alter(array &$plugin_definitions): void {
+  $isRtcEnabled = \Drupal::moduleHandler()->moduleExists('ckeditor5_premium_features_realtime_collaboration');
+  if (!$isRtcEnabled) {
+    unset($plugin_definitions['ckeditor5_premium_features_notifications__realtime_comment_notifications']);
+  }
+}

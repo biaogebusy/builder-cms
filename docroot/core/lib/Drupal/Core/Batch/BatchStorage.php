@@ -8,6 +8,9 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
+/**
+ * Defines the storage handler class for batches.
+ */
 class BatchStorage implements BatchStorageInterface {
 
   /**
@@ -16,52 +19,23 @@ class BatchStorage implements BatchStorageInterface {
   const TABLE_NAME = 'batch';
 
   /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
-   * The session.
-   *
-   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
-   */
-  protected $session;
-
-  /**
-   * The CSRF token generator.
-   *
-   * @var \Drupal\Core\Access\CsrfTokenGenerator
-   */
-  protected $csrfToken;
-
-  /**
-   * The time service.
-   */
-  protected readonly TimeInterface $time;
-
-  /**
    * Constructs the database batch storage service.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
    *   The session.
-   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token
+   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrfToken
    *   The CSRF token generator.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(Connection $connection, SessionInterface $session, CsrfTokenGenerator $csrf_token, ?TimeInterface $time = NULL) {
-    $this->connection = $connection;
-    $this->session = $session;
-    $this->csrfToken = $csrf_token;
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3220378', E_USER_DEPRECATED);
-      $time = \Drupal::service('datetime.time');
-    }
-    $this->time = $time;
+  public function __construct(
+    protected Connection $connection,
+    protected SessionInterface $session,
+    protected CsrfTokenGenerator $csrfToken,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -71,10 +45,12 @@ class BatchStorage implements BatchStorageInterface {
     // Ensure that a session is started before using the CSRF token generator.
     $this->session->start();
     try {
-      $batch = $this->connection->query("SELECT [batch] FROM {batch} WHERE [bid] = :bid AND [token] = :token", [
-        ':bid' => $id,
-        ':token' => $this->csrfToken->get($id),
-      ])->fetchField();
+      $batch = $this->connection->select('batch', 'b')
+        ->fields('b', ['batch'])
+        ->condition('bid', $id)
+        ->condition('token', $this->csrfToken->get($id))
+        ->execute()
+        ->fetchField();
     }
     catch (\Exception $e) {
       $this->catchException($e);
@@ -200,9 +176,9 @@ class BatchStorage implements BatchStorageInterface {
     // If another process has already created the batch table, attempting to
     // recreate it will throw an exception. In this case just catch the
     // exception and do nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;
@@ -215,7 +191,7 @@ class BatchStorage implements BatchStorageInterface {
    * yet the query failed, then the batch is stale and the exception needs to
    * propagate.
    *
-   * @param $e
+   * @param \Exception $e
    *   The exception.
    *
    * @throws \Exception

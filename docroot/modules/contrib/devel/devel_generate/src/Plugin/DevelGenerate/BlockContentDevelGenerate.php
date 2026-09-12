@@ -2,14 +2,14 @@
 
 namespace Drupal\devel_generate\Plugin\DevelGenerate;
 
+use Drupal\block_content\BlockContentInterface;
+use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\block_content\BlockContentInterface;
-use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\devel_generate\DevelGenerateBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -56,7 +56,7 @@ class BlockContentDevelGenerate extends DevelGenerateBase implements ContainerFa
   /**
    * The content translation manager.
    */
-  protected ?ContentTranslationManagerInterface $contentTranslationManager;
+  protected ?ContentTranslationManagerInterface $contentTranslationManager = NULL;
 
   /**
    * The Drush batch flag.
@@ -199,8 +199,7 @@ class BlockContentDevelGenerate extends DevelGenerateBase implements ContainerFa
     $values['skip_fields'] = is_null($options['skip-fields']) ? [] : self::csvToArray($options['skip-fields']);
     $values['base_fields'] = is_null($options['base-fields']) ? [] : self::csvToArray($options['base-fields']);
     $values['title_length'] = 6;
-    $values['num'] = array_shift($args);
-    $values['max_comments'] = array_shift($args);
+    $values['num'] = $args['num'];
 
     $all_types = array_keys($this->blockContentGetBundles());
     $selected_types = self::csvToArray($options['block_types']);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\update\Functional;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 
@@ -64,17 +65,17 @@ abstract class UpdateTestBase extends BrowserTestBase {
   /**
    * Refreshes the update status based on the desired available update scenario.
    *
-   * @param $xml_map
+   * @param array $xml_map
    *   Array that maps project names to availability scenarios to fetch. The key
    *   '#all' is used if a project-specific mapping is not defined.
-   * @param $url
+   * @param string $url
    *   (optional) A string containing the URL to fetch update data from.
    *   Defaults to 'update-test'.
    *
    * @see \Drupal\update_test\Controller\UpdateTestController::updateTest()
    */
   protected function refreshUpdateStatus($xml_map, $url = 'update-test') {
-    // Tell the Update Manager module to fetch from the URL provided by
+    // Tell the Update Status module to fetch from the URL provided by
     // update_test module.
     $this->config('update.settings')->set('fetch.url', Url::fromUri('base:' . $url, ['absolute' => TRUE])->toString())->save();
     // Save the map for UpdateTestController::updateTest() to use.
@@ -92,7 +93,7 @@ abstract class UpdateTestBase extends BrowserTestBase {
     $this->assertSession()->responseContains('<h3>Drupal core</h3>');
     // Verify that the link to the Drupal project appears.
     $this->assertSession()->linkExists('Drupal');
-    $this->assertSession()->linkByHrefExists('http://example.com/project/drupal');
+    $this->assertSession()->linkByHrefExists('https://example.com/project/drupal');
     $this->assertSession()->pageTextNotContains('No available releases found');
     $this->assertSession()->pageTextContains('Last checked:');
     // No download URLs should be present.
@@ -134,8 +135,8 @@ abstract class UpdateTestBase extends BrowserTestBase {
       $assert_session->elementTextNotContains('css', $update_element_css_locator, 'Up to date');
       foreach ($expected_security_releases as $expected_security_release) {
         $expected_url_version = str_replace('.', '-', $expected_security_release);
-        $release_url = "http://example.com/$project_path_part-$expected_url_version-release";
-        $assert_session->responseNotContains("http://example.com/$project_path_part-$expected_url_version.tar.gz");
+        $release_url = "https://example.com/$project_path_part-$expected_url_version-release";
+        $assert_session->responseNotContains("https://example.com/$project_path_part-$expected_url_version.tar.gz");
         $expected_release_urls[] = $release_url;
         // Ensure the expected links are security links.
         $this->assertContains($release_url, $all_security_release_urls, "Release $release_url is a security release link.");
@@ -177,9 +178,9 @@ abstract class UpdateTestBase extends BrowserTestBase {
     // In the release notes URL the periods are replaced with dashes.
     $url_version = str_replace('.', '-', $version);
 
-    $this->assertEquals($update_element->findLink($version)->getAttribute('href'), "http://example.com/{$this->updateProject}-$url_version-release");
-    $this->assertStringNotContainsString("http://example.com/{$this->updateProject}-$version.tar.gz", $update_element->getOuterHtml());
-    $this->assertEquals($update_element->findLink('Release notes')->getAttribute('href'), "http://example.com/{$this->updateProject}-$url_version-release");
+    $this->assertEquals($update_element->findLink($version)->getAttribute('href'), "https://example.com/{$this->updateProject}-$url_version-release");
+    $this->assertStringNotContainsString("https://example.com/{$this->updateProject}-$version.tar.gz", $update_element->getOuterHtml());
+    $this->assertEquals($update_element->findLink('Release notes')->getAttribute('href'), "https://example.com/{$this->updateProject}-$url_version-release");
   }
 
   /**
@@ -294,7 +295,7 @@ abstract class UpdateTestBase extends BrowserTestBase {
    * @return \Behat\Mink\Element\NodeElement
    *   The update element.
    */
-  protected function findUpdateElementByLabel($label, int $index = 0) {
+  protected function findUpdateElementByLabel($label, int $index = 0): NodeElement {
     $update_elements = $this->getSession()->getPage()
       ->findAll('css', $this->updateTableLocator . " .project-update__version:contains(\"$label\")");
     $this->assertGreaterThanOrEqual($index, count($update_elements));

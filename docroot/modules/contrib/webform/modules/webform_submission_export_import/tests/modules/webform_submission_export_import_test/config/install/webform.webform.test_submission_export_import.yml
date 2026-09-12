@@ -70,6 +70,7 @@ elements: |
     '#selection_handler': 'default:user'
     '#selection_settings':
       include_anonymous: true
+      target_bundles: null
   entity_references:
     '#type': webform_entity_select
     '#title': entity_references
@@ -77,6 +78,7 @@ elements: |
     '#selection_handler': 'default:user'
     '#selection_settings':
       include_anonymous: true
+      target_bundles: null
 css: ''
 javascript: ''
 settings:

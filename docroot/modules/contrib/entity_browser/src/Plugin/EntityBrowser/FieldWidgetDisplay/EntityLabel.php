@@ -6,18 +6,20 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserDisplay;
+use Drupal\entity_browser\Attribute\EntityBrowserFieldWidgetDisplay;
 use Drupal\entity_browser\FieldWidgetDisplayBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Displays a label of the entity.
- *
- * @EntityBrowserFieldWidgetDisplay(
- *   id = "label",
- *   label = @Translation("Entity label"),
- *   description = @Translation("Displays entity with a label.")
- * )
  */
+#[EntityBrowserFieldWidgetDisplay(
+  id: 'label',
+  label: new TranslatableMarkup('Entity label'),
+  description: new TranslatableMarkup('Displays entity with a label.'),
+)]
 class EntityLabel extends FieldWidgetDisplayBase implements ContainerFactoryPluginInterface {
 
   /**

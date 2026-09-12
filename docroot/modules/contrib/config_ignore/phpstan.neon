@@ -1,0 +1,15 @@
+parameters:
+  level: 4
+  customRulesetUsed: true
+  reportUnmatchedIgnoredErrors: false
+  ignoreErrors:
+    # One day we might get rid of this drupal pattern
+    - '#Unsafe usage of new static\(\)\.#'
+    # Allow our creative use of potx in the test.
+    - message: '#Function _?potx_[a-z_]* not found\.#'
+      path: tests/src/Kernel/IsTranslationSaveTest.php
+    - message: '#Constant POTX_[A-Z_]* not found\.#'
+      path: tests/src/Kernel/IsTranslationSaveTest.php
+  paths:
+    - src
+    - tests

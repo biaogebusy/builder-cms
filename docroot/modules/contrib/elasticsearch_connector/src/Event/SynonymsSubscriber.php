@@ -26,7 +26,7 @@ class SynonymsSubscriber implements EventSubscriberInterface {
         'lenient' => TRUE,
         'synonyms' => array_map('trim', $synonyms),
       ];
-      $settings['analysis']['analyser']['querytime_synonyms'] = [
+      $settings['analysis']['analyzer']['querytime_synonyms'] = [
         'type' => 'custom',
         'tokenizer' => 'standard',
         'filter' => ['lowercase', 'asciifolding', 'synonyms'],

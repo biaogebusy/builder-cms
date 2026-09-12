@@ -185,7 +185,7 @@ final class ProjectCoreCompatibility {
     try {
       return Semver::satisfies($this->existingCoreVersion, $core_compatibility_constraint);
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
   }
@@ -205,7 +205,10 @@ final class ProjectCoreCompatibility {
       $range_messages = [];
       foreach ($core_compatibility_ranges as $core_compatibility_range) {
         if (count($core_compatibility_range) === 2) {
-          $range_messages[] = $this->t('@low_version_number to @high_version_number', ['@low_version_number' => $core_compatibility_range[0], '@high_version_number' => $core_compatibility_range[1]]);
+          $range_messages[] = $this->t('@low_version_number to @high_version_number', [
+            '@low_version_number' => $core_compatibility_range[0],
+            '@high_version_number' => $core_compatibility_range[1],
+          ]);
         }
         else {
           $range_messages[] = $core_compatibility_range[0];

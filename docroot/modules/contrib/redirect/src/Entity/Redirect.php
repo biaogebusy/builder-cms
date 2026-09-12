@@ -4,14 +4,21 @@ namespace Drupal\redirect\Entity;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\link\LinkItemInterface;
+use Drupal\redirect\Form\RedirectDeleteForm;
+use Drupal\redirect\Form\RedirectForm;
 use Drupal\redirect\Plugin\Field\FieldType\RedirectSourceItem;
+use Drupal\redirect\RedirectStorageSchema;
+use Drupal\redirect\RedirectViewsData;
 
 /**
  * The redirect entity class.
@@ -51,6 +58,40 @@ use Drupal\redirect\Plugin\Field\FieldType\RedirectSourceItem;
  *   }
  * )
  */
+#[ContentEntityType(
+  id: 'redirect',
+  label: new TranslatableMarkup('Redirect'),
+  entity_keys: [
+    'id' => 'rid',
+    'label' => 'redirect_source',
+    'uuid' => 'uuid',
+    'bundle' => 'type',
+    'langcode' => 'language',
+    'published' => 'enabled',
+  ],
+  handlers: [
+    'list_builder' => EntityListBuilder::class,
+    'form' => [
+      'default' => RedirectForm::class,
+      'delete' => RedirectDeleteForm::class,
+      'edit' => RedirectForm::class,
+    ],
+    'views_data' => RedirectViewsData::class,
+    'storage_schema' => RedirectStorageSchema::class,
+  ],
+  links: [
+    'canonical' => '/admin/config/search/redirect/edit/{redirect}',
+    'delete-form' => '/admin/config/search/redirect/delete/{redirect}',
+    'edit-form' => '/admin/config/search/redirect/edit/{redirect}',
+  ],
+  admin_permission: 'administer redirects',
+  bundle_label: new TranslatableMarkup('Redirect type'),
+  base_table: 'redirect',
+  translatable: FALSE,
+  constraints: [
+    'RedirectUniqueHash' => [],
+  ]
+)]
 class Redirect extends ContentEntityBase implements EntityPublishedInterface {
 
   use EntityPublishedTrait;
@@ -106,6 +147,19 @@ class Redirect extends ContentEntityBase implements EntityPublishedInterface {
     // Get the language code directly from the field as language() might not
     // be up to date if the language was just changed.
     $this->set('hash', Redirect::generateHash($source->path, (array) $source->query, $this->get('language')->value));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    // The prefix list is not explicitly cleared if a currently valid prefix
+    // would be freed up by a changed or deleted redirect to avoid slow queries.
+    /** @var \Drupal\redirect\RedirectPrefixList $prefix_list */
+    $prefix_list = \Drupal::service('redirect.prefix_list');
+    $prefix_list->registerNewSource($this->get('redirect_source')->path);
   }
 
   /**

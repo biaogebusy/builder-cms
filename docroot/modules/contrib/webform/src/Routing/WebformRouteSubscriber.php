@@ -34,7 +34,7 @@ class WebformRouteSubscriber extends RouteSubscriberBase {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration object factory.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory = NULL) {
+  public function __construct(ModuleHandlerInterface $module_handler, ?ConfigFactoryInterface $config_factory = NULL) {
     $this->moduleHandler = $module_handler;
     $this->configFactory = $config_factory ?: \Drupal::configFactory();
   }
@@ -46,15 +46,15 @@ class WebformRouteSubscriber extends RouteSubscriberBase {
     // Set admin route for webform admin routes.
     foreach ($collection->all() as $route) {
       if (!$route->hasOption('_admin_route') && (
-          strpos($route->getPath(), '/admin/structure/webform/') === 0
-          || strpos($route->getPath(), '/webform/results/') !== FALSE
+          str_starts_with($route->getPath(), '/admin/structure/webform/')
+          || str_contains($route->getPath(), '/webform/results/')
         )) {
         $route->setOption('_admin_route', TRUE);
       }
 
       // Change /admin/structure/webform/ to /admin/webform/.
       if ($this->configFactory->get('webform.settings')->get('ui.toolbar_item')) {
-        if (strpos($route->getPath(), '/admin/structure/webform') === 0) {
+        if (str_starts_with($route->getPath(), '/admin/structure/webform')) {
           $path = str_replace('/admin/structure/webform', '/admin/webform', $route->getPath());
           $route->setPath($path);
         }

@@ -140,7 +140,7 @@ class SimpleOauthAuthenticationProvider implements AuthenticationProviderInterfa
     }
 
     $tokens = $this->entityTypeManager->getStorage('oauth2_token')->loadByProperties([
-      'value' => $auth_request->get('oauth_access_token_id'),
+      'value' => $auth_request->attributes->get('oauth_access_token_id'),
     ]);
     $token = reset($tokens);
     $account = new TokenAuthUser(

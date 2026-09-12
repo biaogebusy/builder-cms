@@ -1,0 +1,5 @@
+admin.find_and_replace:
+  version: 20240212
+  css:
+    theme:
+      css/find-and-replace.admin.css: { }

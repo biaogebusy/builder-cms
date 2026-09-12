@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\Tests\SchemaCheckTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the numeric filter UI.
  *
- * @group views_ui
  * @see \Drupal\views\Plugin\views\filter\NumericFilter
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class FilterNumericWebTest extends UITestBase {
   use SchemaCheckTestTrait;
 

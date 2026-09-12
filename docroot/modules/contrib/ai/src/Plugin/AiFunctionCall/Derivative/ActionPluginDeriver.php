@@ -59,6 +59,10 @@ class ActionPluginDeriver extends DeriverBase implements ContainerDeriverInterfa
       $supported_action_types = ['entity', 'system'];
 
       foreach ($this->actionManager->getDefinitions() as $id => $action_definition) {
+        // Skip any action that does not have a type defined.
+        if (empty($action_definition['type'])) {
+          continue;
+        }
         // @todo add conditions for all types of actions we want to support.
         if (in_array($action_definition['type'], $supported_action_types, TRUE) || $this->entityTypeManager->getDefinition($action_definition['type'], FALSE)) {
           if (!empty($action_definition['confirm_form_route_name'])) {

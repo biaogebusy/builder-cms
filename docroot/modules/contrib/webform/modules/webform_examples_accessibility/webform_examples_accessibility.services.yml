@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_examples_accessibility\Hook\WebformExamplesAccessibilityHooks:
+    class: Drupal\webform_examples_accessibility\Hook\WebformExamplesAccessibilityHooks
+    autowire: true

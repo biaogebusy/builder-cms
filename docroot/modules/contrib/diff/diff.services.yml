@@ -4,6 +4,7 @@ services:
     autoconfigure: true
 
   diff.route_subscriber:
+    autowire: true
     class: Drupal\diff\Routing\RouteSubscriber
 
   diff.diff.formatter:
@@ -28,11 +29,6 @@ services:
 
   diff.entity_comparison:
     class: Drupal\diff\DiffEntityComparison
-    calls:
-      - [
-          setModerationInformation,
-          ["@?content_moderation.moderation_information"],
-        ]
   Drupal\diff\DiffEntityComparison: "@diff.entity_comparison"
 
   diff.html_diff:
@@ -44,3 +40,10 @@ services:
     tags:
       - { name: theme_negotiator, priority: 0 }
   Drupal\diff\VisualDiffThemeNegotiator: "@theme.negotiator.visual_diff"
+
+  Drupal\diff\Hook\DiffViewsHooks:
+    autowire: true
+  Drupal\diff\Hook\DiffHelpHooks:
+    autowire: true
+  Drupal\diff\Hook\DiffEntityHooks:
+    autowire: true

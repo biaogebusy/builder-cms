@@ -39,6 +39,7 @@ content:
       collapsible: false
       collapsed: false
       allow_duplicate: false
+      draggable: true
     third_party_settings: {  }
     region: content
 hidden:

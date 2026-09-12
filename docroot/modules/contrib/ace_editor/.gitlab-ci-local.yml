@@ -1,0 +1,149 @@
+# Pipeline for `gitlab-ci-local` (https://github.com/firecow/gitlab-ci-local).
+#
+# The real .gitlab-ci.yml `include:`s the drupalci templates and runs the
+# varbase-e2e browser job inside the drupalci PHP-Apache image with a MySQL
+# service - none of which gitlab-ci-local can reproduce ($_GITLAB_TEMPLATES_REPO
+# is not a public path). This file reproduces the same work in a self-contained
+# way so the whole thing can be exercised locally before pushing:
+#
+#   validate : cspell + eslint linters (Node 20)
+#   test     : automated functional testing, the BDD suite of
+#              @vardot/varbase-e2e against a freshly built Drupal 11 site
+#              (MariaDB service + `drush runserver`, the module added via a
+#              Composer path repository, the Ace library downloaded, fixtures
+#              provisioned)
+#
+# Usage:
+#   gitlab-ci-local --file .gitlab-ci-local.yml                 # all jobs
+#   gitlab-ci-local --file .gitlab-ci-local.yml functional-tests # just the suite
+#   gitlab-ci-local --file .gitlab-ci-local.yml eslint          # one linter
+
+stages:
+  - validate
+  - pages
+  - test
+
+variables:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+  COMPOSER_MEMORY_LIMIT: "-1"
+  COMPOSER_ALLOW_SUPERUSER: "1"
+  ACE_BUILDS_VERSION: "v1.43.3"
+
+cspell:
+  stage: validate
+  image: node:20
+  before_script:
+    - npm install -g cspell
+  script:
+    - cspell "**/*.{php,module,inc,install,yml,md,js}" --no-progress
+  allow_failure: false
+
+eslint:
+  stage: validate
+  image: node:20
+  before_script:
+    - corepack enable
+    - yarn install
+  script:
+    - node --version
+    # Validate the auto-discovered .eslintrc.json loads and the module JS is
+    # clean (the Node test tooling is ignored, mirroring drupalci discovery).
+    - node ./node_modules/eslint/bin/eslint.js --no-error-on-unmatched-pattern --ext .js .
+    - yarn lint:yaml
+  allow_failure: false
+
+pages:
+  stage: pages
+  image: python:3.12-slim
+  before_script:
+    - pip install --quiet mkdocs-material pymdown-extensions
+  script:
+    - mkdocs build --strict --site-dir public
+  artifacts:
+    paths:
+      - public
+  allow_failure: false
+
+# Self-contained varbase-e2e browser job. One container holds PHP (to build and
+# serve the site via `drush runserver`) and Node (to run the Playwright +
+# Cucumber suite). The module under test is pulled into the site through a
+# Composer path repository pointing at the checked-out repo, so the exact
+# working-tree code is what gets exercised.
+functional-tests:
+  stage: test
+  image: node:20-bookworm
+  # MariaDB service (Drupal 11 needs SQLite >= 3.45, newer than Debian ships,
+  # so use a DB server - the same way the real drupalci pipeline does).
+  services:
+    - name: mariadb:10.11
+      alias: database
+  variables:
+    MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "1"
+    MARIADB_DATABASE: "drupal"
+    LAUNCH_URL: "http://127.0.0.1:8888"
+    BROWSER: "chromium"
+    VARBASE_E2E_REPORT_DISABLE: "1"
+    SITE: "/app"
+    DB_URL: "mysql://root@database:3306/drupal"
+    PHP_CLI_SERVER_WORKERS: "8"
+  before_script:
+    # --- PHP 8.3 (Sury repo - bookworm ships 8.2, Drupal 11 needs >=8.3) ----
+    - apt-get update -qq
+    - apt-get install -y -qq lsb-release ca-certificates curl unzip git apt-transport-https >/dev/null
+    - curl -sSL https://packages.sury.org/php/apt.gpg -o /etc/apt/trusted.gpg.d/sury-php.gpg
+    - echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-php.list
+    - apt-get update -qq
+    - apt-get install -y -qq php8.3-cli php8.3-mysql php8.3-gd php8.3-mbstring php8.3-xml php8.3-curl php8.3-zip default-mysql-client >/dev/null
+    - php -v | head -n1
+    # Wait for the MariaDB service to accept connections.
+    - for i in $(seq 1 60); do mysqladmin --host=database --user=root ping >/dev/null 2>&1 && break; sleep 2; done
+    - mysqladmin --host=database --user=root ping
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    # --- Node test-runner deps (varbase-e2e + cucumber + playwright) --------
+    - cd "$CI_PROJECT_DIR"
+    # Back up cucumber.js - varbase-e2e's postinstall can clobber it under yarn 4
+    # with a config that requires a non-existent playwright.config.
+    - cp cucumber.js .cucumber.js.bak
+    - corepack enable && yarn install
+    - cp .cucumber.js.bak cucumber.js && rm .cucumber.js.bak
+    - ./node_modules/.bin/playwright install --with-deps chromium
+    # --- Build a Drupal 11 site with the module via a path repository ------
+    - composer create-project drupal/recommended-project "$SITE" --no-interaction --no-install
+    - cd "$SITE"
+    - composer config minimum-stability dev
+    - composer config prefer-stable true
+    - composer config --no-plugins allow-plugins.composer/installers true
+    - composer config --no-plugins allow-plugins.drupal/core-composer-scaffold true
+    - composer config --no-plugins allow-plugins.drupal/core-project-message true
+    - composer config repositories.ace path "$CI_PROJECT_DIR"
+    - composer require "drupal/ace_editor:*" drush/drush --no-interaction
+    # --- Download the Ace JS library into the site's libraries/ace ----------
+    - git clone --depth 1 --branch "$ACE_BUILDS_VERSION" https://github.com/ajaxorg/ace-builds.git /tmp/ace-builds
+    - mkdir -p web/libraries/ace
+    - cp -a /tmp/ace-builds/src-min-noconflict web/libraries/ace/
+    # --- Install + enable + provide test fixtures --------------------------
+    - vendor/bin/drush site:install standard --db-url="$DB_URL" --account-name=webmaster --account-pass=dD.123123ddd --site-name="Ace Editor Test" -y
+    # Make the tests/modules/ helper discoverable by drush en.
+    - chmod 644 web/sites/default/settings.php
+    - echo '$settings["extension_discovery_scan_tests"] = TRUE;' >> web/sites/default/settings.php
+    - vendor/bin/drush en -y ace_editor ace_editor_test
+    # drush scr resolves the path relative to cwd, so run it from inside $SITE.
+    - cp "$CI_PROJECT_DIR/tests/fixtures/provision-fixtures.php" "$SITE/provision-fixtures.php"
+    - vendor/bin/drush scr provision-fixtures.php
+    - vendor/bin/drush cr
+    # --- Serve the site in the background ----------------------------------
+    - chmod -R 777 web/sites/default/files
+    - vendor/bin/drush runserver 127.0.0.1:8888 >/tmp/runserver.log 2>&1 &
+    - for i in $(seq 1 30); do curl -fsS -o /dev/null "$LAUNCH_URL/user/login" && break; sleep 1; done
+    - curl -fsS -o /dev/null "$LAUNCH_URL/user/login" && echo "site is up"
+  script:
+    - cd "$CI_PROJECT_DIR"
+    - ./node_modules/.bin/cucumber-js --config cucumber.js --tags "not @wip"
+    - node ./node_modules/@vardot/varbase-e2e/bin/generate-reports.js --json tests/reports/cucumber_report.json --out tests/reports/cucumber_report.html || true
+  artifacts:
+    when: always
+    paths:
+      - tests/reports/
+      - tests/screenshots/
+      - tests/videos/
+  allow_failure: false

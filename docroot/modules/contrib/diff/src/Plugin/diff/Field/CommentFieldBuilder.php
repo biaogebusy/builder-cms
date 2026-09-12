@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\diff\Plugin\diff\Field;
 
+use Drupal\comment\CommentingStatus;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -41,15 +43,18 @@ class CommentFieldBuilder extends FieldDiffBuilderBase {
         if ($this->configuration['compare_string']) {
           if (isset($values['status'])) {
             switch ($values['status']) {
-              case CommentItemInterface::OPEN:
+              // @phpstan-ignore-next-line
+              case DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', static fn() => CommentingStatus::Open->value, static fn() => CommentItemInterface::OPEN):
                 $result[$field_key][] = $this->t('Comments for this entity are open.');
                 break;
 
-              case CommentItemInterface::CLOSED:
+              // @phpstan-ignore-next-line
+              case DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', static fn() => CommentingStatus::Closed->value, static fn() => CommentItemInterface::CLOSED):
                 $result[$field_key][] = $this->t('Comments for this entity are closed.');
                 break;
 
-              case CommentItemInterface::HIDDEN:
+              // @phpstan-ignore-next-line
+              case DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', static fn() => CommentingStatus::Hidden->value, static fn() => CommentItemInterface::HIDDEN):
                 $result[$field_key][] = $this->t('Comments for this entity are hidden.');
                 break;
             }

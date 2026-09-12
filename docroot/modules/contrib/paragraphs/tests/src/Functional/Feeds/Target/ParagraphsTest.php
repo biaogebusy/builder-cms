@@ -4,12 +4,16 @@ namespace Drupal\Tests\paragraphs\Functional\Feeds\Target;
 
 use Drupal\Tests\feeds\Functional\FeedsBrowserTestBase;
 use Drupal\Tests\paragraphs\FunctionalJavascript\ParagraphsTestBaseTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the FeedsTarget plugin "paragraphs" in the UI.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsTest extends FeedsBrowserTestBase {
 
   use ParagraphsTestBaseTrait;

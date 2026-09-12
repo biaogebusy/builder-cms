@@ -76,7 +76,7 @@ class QuickEditImageTest extends QuickEditJavascriptTestBase {
       'image_style' => 'large',
       'image_link' => '',
     ];
-    $this->createImageField($field_name, 'article', [], $field_settings, [], $formatter_settings);
+    $this->createImageField($field_name, 'node', 'article', [], $field_settings, [], $formatter_settings);
 
     // Find images that match our field settings.
     $valid_images = [];
@@ -223,7 +223,7 @@ class QuickEditImageTest extends QuickEditJavascriptTestBase {
    * @return array
    *   Test cases.
    */
-  public function providerTestImageInPlaceEditor(): array {
+  public static function providerTestImageInPlaceEditor(): array {
     return [
       'with permission' => [TRUE],
       'without permission' => [FALSE],

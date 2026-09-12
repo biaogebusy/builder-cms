@@ -5,18 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Kernel\System;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the effectiveness of hook_system_info_alter().
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class InfoAlterTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * Tests that theme .info.yml data is rebuild after enabling a module.

@@ -4,59 +4,65 @@ namespace Drupal\node\Entity;
 
 use Drupal\Core\Config\Action\Attribute\ActionMethod;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\node\Form\NodeTypeDeleteConfirm;
+use Drupal\node\NodePreviewMode;
+use Drupal\node\NodeTypeAccessControlHandler;
+use Drupal\node\Form\NodeTypeForm;
 use Drupal\node\NodeTypeInterface;
+use Drupal\node\NodeTypeListBuilder;
+use Drupal\user\Entity\EntityPermissionsRouteProvider;
 
 /**
  * Defines the Node type configuration entity.
- *
- * @ConfigEntityType(
- *   id = "node_type",
- *   label = @Translation("Content type"),
- *   label_collection = @Translation("Content types"),
- *   label_singular = @Translation("content type"),
- *   label_plural = @Translation("content types"),
- *   label_count = @PluralTranslation(
- *     singular = "@count content type",
- *     plural = "@count content types",
- *   ),
- *   handlers = {
- *     "access" = "Drupal\node\NodeTypeAccessControlHandler",
- *     "form" = {
- *       "add" = "Drupal\node\NodeTypeForm",
- *       "edit" = "Drupal\node\NodeTypeForm",
- *       "delete" = "Drupal\node\Form\NodeTypeDeleteConfirm"
- *     },
- *     "route_provider" = {
- *       "permissions" = "Drupal\user\Entity\EntityPermissionsRouteProvider",
- *     },
- *     "list_builder" = "Drupal\node\NodeTypeListBuilder",
- *   },
- *   admin_permission = "administer content types",
- *   config_prefix = "type",
- *   bundle_of = "node",
- *   entity_keys = {
- *     "id" = "type",
- *     "label" = "name"
- *   },
- *   links = {
- *     "edit-form" = "/admin/structure/types/manage/{node_type}",
- *     "delete-form" = "/admin/structure/types/manage/{node_type}/delete",
- *     "entity-permissions-form" = "/admin/structure/types/manage/{node_type}/permissions",
- *     "collection" = "/admin/structure/types",
- *   },
- *   config_export = {
- *     "name",
- *     "type",
- *     "description",
- *     "help",
- *     "new_revision",
- *     "preview_mode",
- *     "display_submitted",
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'node_type',
+  label: new TranslatableMarkup('Content type'),
+  label_collection: new TranslatableMarkup('Content types'),
+  label_singular: new TranslatableMarkup('content type'),
+  label_plural: new TranslatableMarkup('content types'),
+  config_prefix: 'type',
+  entity_keys: [
+    'id' => 'type',
+    'label' => 'name',
+  ],
+  handlers: [
+    'access' => NodeTypeAccessControlHandler::class,
+    'form' => [
+      'add' => NodeTypeForm::class,
+      'edit' => NodeTypeForm::class,
+      'delete' => NodeTypeDeleteConfirm::class,
+    ],
+    'route_provider' => [
+      'permissions' => EntityPermissionsRouteProvider::class,
+    ],
+    'list_builder' => NodeTypeListBuilder::class,
+  ],
+  links: [
+    'edit-form' => '/admin/structure/types/manage/{node_type}',
+    'delete-form' => '/admin/structure/types/manage/{node_type}/delete',
+    'entity-permissions-form' => '/admin/structure/types/manage/{node_type}/permissions',
+    'collection' => '/admin/structure/types',
+  ],
+  admin_permission: 'administer content types',
+  bundle_of: 'node',
+  label_count: [
+    'singular' => '@count content type',
+    'plural' => '@count content types',
+  ],
+  config_export: [
+    'name',
+    'type',
+    'description',
+    'help',
+    'new_revision',
+    'preview_mode',
+    'display_submitted',
+  ],
+)]
 class NodeType extends ConfigEntityBundleBase implements NodeTypeInterface {
 
   /**
@@ -103,7 +109,7 @@ class NodeType extends ConfigEntityBundleBase implements NodeTypeInterface {
    *
    * @var int
    */
-  protected $preview_mode = DRUPAL_OPTIONAL;
+  protected $preview_mode = NodePreviewMode::Optional->value;
 
   /**
    * Display setting for author and date Submitted by post information.
@@ -153,16 +159,26 @@ class NodeType extends ConfigEntityBundleBase implements NodeTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPreviewMode() {
-    return $this->preview_mode;
+  public function getPreviewMode(bool $returnAsInt = TRUE) {
+    $previewMode = NodePreviewMode::from($this->preview_mode);
+    if ($returnAsInt) {
+      @trigger_error('Calling ' . __METHOD__ . ' with the $returnAsInt parameter is deprecated in drupal:11.3.0 and is removed in drupal:13.0.0. See https://www.drupal.org/node/3538666', E_USER_DEPRECATED);
+      return $previewMode->value;
+    }
+    return $previewMode;
   }
 
   /**
    * {@inheritdoc}
    */
   #[ActionMethod(adminLabel: new TranslatableMarkup('Set preview mode'), pluralize: FALSE)]
-  public function setPreviewMode($preview_mode) {
-    $this->preview_mode = $preview_mode;
+  public function setPreviewMode(/* NodePreviewMode|int */ $preview_mode) {
+    if (!$preview_mode instanceof NodePreviewMode) {
+      @trigger_error('Calling ' . __METHOD__ . ' with an integer $preview_mode parameter is deprecated in drupal:11.3.0 and is removed in drupal:13.0.0. Use the \Drupal\node\NodePreviewMode enum instead. See https://www.drupal.org/node/3538666', E_USER_DEPRECATED);
+      $this->preview_mode = $preview_mode;
+      return;
+    }
+    $this->preview_mode = $preview_mode->value;
   }
 
   /**
@@ -185,18 +201,6 @@ class NodeType extends ConfigEntityBundleBase implements NodeTypeInterface {
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
-    if ($update && $this->getOriginalId() != $this->id()) {
-      $update_count = $storage->updateType($this->getOriginalId(), $this->id());
-      if ($update_count) {
-        \Drupal::messenger()->addStatus(\Drupal::translation()->formatPlural($update_count,
-          'Changed the content type of 1 post from %old-type to %type.',
-          'Changed the content type of @count posts from %old-type to %type.',
-          [
-            '%old-type' => $this->getOriginalId(),
-            '%type' => $this->id(),
-          ]));
-      }
-    }
     if ($update) {
       // Clear the cached field definitions as some settings affect the field
       // definitions.

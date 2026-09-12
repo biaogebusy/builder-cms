@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\FunctionalJavascript;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -9,16 +11,25 @@ use Drupal\FunctionalJavascriptTests\DrupalSelenium2Driver;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\blazy\Traits\BlazyCreationTestTrait;
 use Drupal\Tests\blazy\Traits\BlazyUnitTestTrait;
-use Drupal\blazy\Blazy;
-use Drupal\filter\Entity\FilterFormat;
+use Drupal\blazy\BlazyApi;
 use Drupal\filter\FilterPluginCollection;
 use Drupal\filter\FilterProcessResult;
 
 /**
  * Tests the Blazy Filter JavaScript using Selenium, or Chromedriver.
- *
- * @group blazy
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class BlazyFilterJavaScriptTest extends WebDriverTestBase {
 
   use BlazyUnitTestTrait;
@@ -36,6 +47,13 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
 
   /**
    * {@inheritdoc}
+   */
+  protected $imagePath;
+
+  /**
+   * {@inheritdoc}
+   *
+   * @var array<string>
    */
   protected static $modules = [
     'field',
@@ -64,28 +82,23 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
     $this->blazyOembed            = $this->container->get('blazy.oembed');
     $this->blazyManager           = $this->container->get('blazy.manager');
     $this->testPluginId           = 'blazy_filter';
-    $this->maxParagraphs          = 280;
+    $this->maxParagraphs          = 120;
 
-    // Create a text format.
-    $full_html = FilterFormat::create([
-      'format' => 'full_html',
-      'name' => 'Full HTML',
-      'weight' => 0,
-    ]);
-    $full_html->save();
-
-    // Enable the Blazy filter.
-    $this->filterFormatFull = FilterFormat::load('full_html');
-    $this->filterFormatFull->setFilterConfig('blazy_filter', [
-      'status' => TRUE,
-      'settings' => [
-        'filter_tags' => [
-          'img' => 'img',
-          'iframe' => 'iframe',
+    $this->setupFilterFormat();
+    if ($this->filterFormatFull) {
+      $this->filterFormatFull->setFilterConfig('blazy_filter', [
+        'status' => TRUE,
+        'settings' => [
+          'filter_tags' => [
+            'img' => 'img',
+            'iframe' => 'iframe',
+          ],
         ],
-      ],
-    ]);
-    $this->filterFormatFull->save();
+      ]);
+      $this->filterFormatFull->save();
+    }
+
+    $this->imagePath = $this->getImagePath(TRUE);
 
     $this->setUpRealImage();
   }
@@ -94,9 +107,9 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
    * Test the Blazy filter has media-wrapper--blazy for IMG and IFRAME elements.
    */
   public function testFilterDisplay() {
-    $image_path = $this->getImagePath(TRUE);
-    $settings = Blazy::init();
-    $settings['extra_text'] = $text = $this->dummyText();
+    $text = $this->dummyText();
+    $settings = BlazyApi::init();
+    $settings['extra_text'] = $text;
 
     $this->setUpContentTypeTest($this->bundle);
     $this->setUpContentWithItems($this->bundle, $settings);
@@ -110,14 +123,20 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
     // since the testing browser Chrome support it, it is irrelevant.
     // @todo $this->assertSession()->elementNotExists('css', '.b-loaded');
     // Capture the initial page load moment.
-    $this->createScreenshot($image_path . '/1_blazy_filter_initial.png');
+    $this->createScreenshot($this->imagePath . '/1_blazy_filter_initial.png');
+
+    // Wait a moment.
+    $this->getSession()->wait(6000);
     $this->assertSession()->elementExists('css', '.b-lazy');
 
     // Trigger Blazy to load images by scrolling down window.
     $session->executeScript('window.scrollTo(0, document.body.scrollHeight);');
 
+    // Wait a moment.
+    $this->getSession()->wait(6000);
+
     // Capture the loading moment after scrolling down the window.
-    $this->createScreenshot($image_path . '/2_blazy_filter_loading.png');
+    $this->createScreenshot($this->imagePath . '/2_blazy_filter_loading.png');
 
     // Verifies that our filter works identified by media-wrapper--blazy class.
     $this->assertSession()->elementExists('css', '.media-wrapper--blazy');
@@ -135,26 +154,29 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
     $this->assertSession()->elementNotExists('css', 'img[onmouseover]');
     $this->assertSession()->elementNotExists('css', 'img[alt*=strong]');
 
-    $this->assertSession()->elementExists('css', 'img[src^=data]');
-    $this->assertSession()->elementExists('css', 'img[data-src^=alert]');
-    $this->assertSession()->elementNotExists('css', 'img[data-src^=javascript]');
+    // Already sanitized by text editor since D 10.6.2.
+    // $this->assertSession()->elementExists('css', 'img[data-src^=alert]');
+    // Verifies that we have data URI disallowed. Ensure to not too broad given
+    // valid Blazy lazy-load post-processed placeholder.
+    $this->assertSession()->elementNotExists('css', 'img[src^="data:image/jpg;base64"]');
+    $this->assertSession()->elementNotExists('xpath', '//img[contains(@src, "data:image/jpg;base64")]');
 
-    $this->assertSession()->elementExists('xpath', '//img[contains(@src, "data:image")]');
     $this->assertSession()->elementExists('xpath', '//img[contains(@class, "width-full")]');
 
     // Also verifies that [data-unblazy] should not be touched, nor lazyloaded.
     $this->assertSession()->elementNotContains('css', '.media-wrapper--blazy', 'data-unblazy');
 
     // Verifies that one of the images is there once loaded.
-    // @phpstan-ignore-next-line
+    /** @phpstan-ignore-next-line */
     $loaded = $this->assertSession()->waitForElement('css', '.b-loaded');
     $this->assertNotEmpty($loaded);
 
     // Capture the loaded moment.
     // The screenshots are at sites/default/files/simpletest/blazy.
-    $this->createScreenshot($image_path . '/3_blazy_filter_loaded.png');
+    $this->createScreenshot($this->imagePath . '/3_blazy_filter_loaded.png');
 
     // Verifies the library is loaded.
+    /** @var \Drupal\filter\FilterProcessResult $result */
     ['result' => $result, 'html' => $html] = $this->applyFilter($text);
     $this->assertNotSame($html, $text);
     $attachments = $result->getAttachments();
@@ -172,7 +194,7 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
    * @param string $langcode
    *   The language code of the text to be filtered.
    *
-   * @return \Drupal\filter\FilterProcessResult
+   * @return array
    *   The filtered text, wrapped in a FilterProcessResult object, and possibly
    *   with associated assets, cacheability metadata and placeholders.
    */
@@ -269,6 +291,8 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
 <area alt="Step 1" href="/node/1" coords="158,224,314,317,315,377,156,469,109,346,0" shape="polygon">
 <area alt="Step 2" href="/node/2" coords="377,85,380,268,327,299,168,208,241,100,0" shape="polygon">
 </map>';
+    $text .= '<img alt="Preview" src="data:image/jpg;base64,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" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D&#039;http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg&#039;%20viewBox%3D&#039;0%200%201%201&#039;%2F%3E" width="100" height="67"/>';
+    $text .= '<img src="https://drupal.org/files/One.gif" width="350" height="250" />';
     $text .= '</div>';
 
     return $text;

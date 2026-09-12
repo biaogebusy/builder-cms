@@ -235,7 +235,10 @@ class EntityTypeInfo implements ContainerInjectionInterface {
    *   - bundle: The machine name of a bundle, such as "page" or "article".
    */
   protected function getModeratedBundles() {
-    $entity_types = array_filter($this->entityTypeManager->getDefinitions(), [$this->moderationInfo, 'canModerateEntitiesOfEntityType']);
+    $entity_types = array_filter(
+      $this->entityTypeManager->getDefinitions(),
+      [$this->moderationInfo, 'canModerateEntitiesOfEntityType']
+    );
     foreach ($entity_types as $type_name => $type) {
       foreach ($this->bundleInfo->getBundleInfo($type_name) as $bundle_id => $bundle) {
         if ($this->moderationInfo->shouldModerateEntitiesOfBundle($type, $bundle_id)) {
@@ -263,8 +266,8 @@ class EntityTypeInfo implements ContainerInjectionInterface {
 
     $fields = [];
     $fields['moderation_state'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Moderation state'))
-      ->setDescription(t('The moderation state of this piece of content.'))
+      ->setLabel($this->t('Moderation state'))
+      ->setDescription($this->t('The moderation state of this piece of content.'))
       ->setComputed(TRUE)
       ->setClass(ModerationStateFieldItemList::class)
       ->setDisplayOptions('view', [
@@ -337,7 +340,7 @@ class EntityTypeInfo implements ContainerInjectionInterface {
     if ($form_object instanceof BundleEntityFormBase) {
       $config_entity = $form_object->getEntity();
       $bundle_of = $config_entity->getEntityType()->getBundleOf();
-      if ($bundle_of
+      if (!$config_entity->isNew() && $bundle_of
           && ($bundle_of_entity_type = $this->entityTypeManager->getDefinition($bundle_of))
           && $this->moderationInfo->shouldModerateEntitiesOfBundle($bundle_of_entity_type, $config_entity->id())) {
         $this->entityTypeManager->getHandler($bundle_of, 'moderation')->enforceRevisionsBundleFormAlter($form, $form_state, $form_id);

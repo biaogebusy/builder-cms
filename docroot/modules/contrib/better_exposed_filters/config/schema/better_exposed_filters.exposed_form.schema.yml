@@ -42,6 +42,12 @@ better_exposed_filters.general:
     autosubmit:
       type: boolean
       label: 'Auto-submit'
+    auto_submit_sort_only:
+      type: boolean
+      label: 'Auto-submit sort only'
+    autosubmit_breakpoint:
+      type: string
+      label: 'Autosubmit breakpoint'
     autosubmit_exclude_textfield:
       type: boolean
       label: 'Exclude Textfield'

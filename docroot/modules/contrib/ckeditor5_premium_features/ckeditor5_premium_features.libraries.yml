@@ -1,0 +1,96 @@
+collaboration-integration-base:
+  version: 20251230
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  css:
+    theme:
+      css/sidebar.css: { }
+      css/general.css: { }
+  js:
+    js/ckeditor5_premium_features.js: { minified: false }
+    js/build/sidebarAdapter.js: { minified: true }
+    js/build/disableCollaborationMarkersInCaption.js: { minified: true }
+    js/build/removeIncorrectCollaborationMarkers.js: { minified: true }
+    js/build/commentsAdapter.js: { minified: true }
+    js/build/drupalMediaTrackChangesIntegration.js: { minified: true }
+    js/build/ubb.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - core/ckeditor5.basic
+    - core/ckeditor5.list
+    - core/ckeditor5.autoformat
+    - ckeditor5_premium_features/ckeditor5-collaboration-dll
+    - ckeditor5_premium_features/toolbar-adapter
+    - ckeditor5/internal.drupal.ckeditor5
+
+media-export-features:
+  version: 20250227
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/libraries/document-export-base.js: { minified: false }
+    js/libraries/media-tags-converter.js: { minified: false }
+    js/libraries/relative-paths-processor.js: { minified: false }
+    js/libraries/base64-image-converter.js: { minified: false }
+    js/libraries/caption-filter-converter.js: { minified: false }
+
+export-integration:
+  version: 20230626
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/exportAdapters.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features/cloud-services
+    - ckeditor5_premium_features/collaboration-integration-base
+    - ckeditor5_premium_features/media-export-features
+
+claro--override--node-form:
+  version: 20240326
+  css:
+    layout:
+      css/claro/node-form.css: { }
+
+error-notifications:
+  version: 20260124
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  css:
+    theme:
+      css/notifications.css: { }
+  js:
+      js/build/errorNotifications.js: { minified: true }
+
+toolbar-adapter:
+  version: 20250318
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/toolbarAdapter.js: { minified: true }
+
+distribution-channel:
+  version: 20241121
+  js:
+    js/ckeditor5_distribution_channel.js: { }
+
+dependency-install:
+  version: 20250429
+  js:
+    js/dependency_install.js: { }
+  css:
+    theme:
+      css/dependency-installer.css: { }
+  dependencies:
+    - core/drupal
+    - core/once

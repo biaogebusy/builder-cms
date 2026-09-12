@@ -1,54 +1,61 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\config_test\Entity;
 
+use Drupal\config_test\ConfigTestAccessControlHandler;
+use Drupal\config_test\ConfigTestForm;
+use Drupal\config_test\ConfigTestInterface;
+use Drupal\config_test\ConfigTestListBuilder;
+use Drupal\config_test\ConfigTestStorage;
 use Drupal\Core\Config\Action\Attribute\ActionMethod;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\config_test\ConfigTestInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Entity\EntityDeleteForm;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines the ConfigTest configuration entity.
- *
- * @ConfigEntityType(
- *   id = "config_test",
- *   label = @Translation("Test configuration"),
- *   handlers = {
- *     "storage" = "Drupal\config_test\ConfigTestStorage",
- *     "list_builder" = "Drupal\config_test\ConfigTestListBuilder",
- *     "form" = {
- *       "default" = "Drupal\config_test\ConfigTestForm",
- *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
- *     },
- *     "access" = "Drupal\config_test\ConfigTestAccessControlHandler"
- *   },
- *   config_prefix = "dynamic",
- *   entity_keys = {
- *     "id" = "id",
- *     "label" = "label",
- *     "status" = "status"
- *   },
- *   config_export = {
- *     "id",
- *     "label",
- *     "weight",
- *     "style",
- *     "size",
- *     "size_value",
- *     "protected_property",
- *     "array_property",
- *   },
- *   links = {
- *     "edit-form" = "/admin/structure/config_test/manage/{config_test}",
- *     "delete-form" = "/admin/structure/config_test/manage/{config_test}/delete",
- *     "enable" = "/admin/structure/config_test/manage/{config_test}/enable",
- *     "disable" = "/admin/structure/config_test/manage/{config_test}/disable",
- *     "collection" = "/admin/structure/config_test",
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'config_test',
+  label: new TranslatableMarkup('Test configuration'),
+  config_prefix: 'dynamic',
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'label',
+    'status' => 'status',
+  ],
+  handlers: [
+    'storage' => ConfigTestStorage::class,
+    'list_builder' => ConfigTestListBuilder::class,
+    'form' => [
+      'default' => ConfigTestForm::class,
+      'delete' => EntityDeleteForm::class,
+    ],
+    'access' => ConfigTestAccessControlHandler::class,
+  ],
+  links: [
+    'edit-form' => '/admin/structure/config_test/manage/{config_test}',
+    'delete-form' => '/admin/structure/config_test/manage/{config_test}/delete',
+    'enable' => '/admin/structure/config_test/manage/{config_test}/enable',
+    'disable' => '/admin/structure/config_test/manage/{config_test}/disable',
+    'collection' => '/admin/structure/config_test',
+  ],
+  config_export: [
+    'id',
+    'label',
+    'weight',
+    'style',
+    'size',
+    'size_value',
+    'protected_property',
+    'array_property',
+  ],
+  )]
 class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
 
   /**
@@ -70,7 +77,7 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
    *
    * @var int
    */
-  public $weight = 0;
+  public int $weight = 0;
 
   /**
    * The image style to use.
@@ -195,13 +202,13 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
    * {@inheritdoc}
    */
   public function isInstallable() {
-    return $this->id != 'isinstallable' || \Drupal::state()->get('config_test.isinstallable');
+    return $this->id != 'is_installable' || \Drupal::state()->get('config_test.is_installable');
   }
 
   /**
    * Sets the protected property value.
    *
-   * @param $value
+   * @param string $value
    *   The value to set.
    *
    * @return $this
@@ -226,9 +233,9 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
   /**
    * Concatenates the two params and sets the protected property value.
    *
-   * @param $value1
+   * @param string $value1
    *   The first value to concatenate.
-   * @param $value2
+   * @param string $value2
    *   The second value to concatenate.
    *
    * @return $this
@@ -243,9 +250,9 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
   /**
    * Concatenates up to two params and sets the protected property value.
    *
-   * @param $value1
+   * @param string $value1
    *   The first value to concatenate.
-   * @param $value2
+   * @param string $value2
    *   (optional) The second value to concatenate. Defaults to ''.
    *
    * @return $this
@@ -260,7 +267,7 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
   /**
    * Appends to protected property.
    *
-   * @param $value
+   * @param mixed $value
    *   The value to append.
    *
    * @return $this
@@ -312,7 +319,7 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
   /**
    * Sets the array property.
    *
-   * @param $value
+   * @param array $value
    *   The value to set.
    *
    * @return $this

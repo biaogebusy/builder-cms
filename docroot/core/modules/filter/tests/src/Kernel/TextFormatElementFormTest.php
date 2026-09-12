@@ -10,12 +10,14 @@ use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests PathElement validation and conversion functionality.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class TextFormatElementFormTest extends KernelTestBase implements FormInterface {
 
   /**
@@ -33,7 +35,6 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
     'user',
     'filter',
     'filter_test',
-    'editor',
   ];
 
   /**

@@ -1,0 +1,12 @@
+services:
+  ckeditor5_plugin_pack_restricted_editing.permission_helper:
+    class: \Drupal\ckeditor5_plugin_pack_restricted_editing\Utility\PermissionHelper
+    arguments:
+      - '@entity_type.manager'
+      - '@module_handler'
+
+  ckeditor5_plugin_pack_restricted_editing.config_event_subscriber:
+    class: Drupal\ckeditor5_plugin_pack_restricted_editing\EventSubscriber\ConfigSubscriber
+    arguments: [ '@config.factory', '@entity_type.manager', '@ckeditor5_plugin_pack_restricted_editing.permission_helper' ]
+    tags:
+      - { name: event_subscriber }

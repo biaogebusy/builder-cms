@@ -5,24 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\Number;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests number manipulation utilities.
  *
- * @group Utility
- *
- * @coversDefaultClass \Drupal\Component\Utility\Number
- *
  * @see \Drupal\Component\Utility\Number
  */
+#[CoversClass(Number::class)]
+#[Group('Utility')]
 class NumberTest extends TestCase {
 
   /**
    * Tests Number::validStep() without offset.
-   *
-   * @dataProvider providerTestValidStep
-   * @covers ::validStep
    *
    * @param numeric $value
    *   The value argument for Number::validStep().
@@ -31,6 +30,7 @@ class NumberTest extends TestCase {
    * @param bool $expected
    *   Expected return value from Number::validStep().
    */
+  #[DataProvider('providerTestValidStep')]
   public function testValidStep($value, $step, $expected): void {
     $return = Number::validStep($value, $step);
     $this->assertEquals($expected, $return);
@@ -38,9 +38,6 @@ class NumberTest extends TestCase {
 
   /**
    * Tests Number::validStep() with offset.
-   *
-   * @dataProvider providerTestValidStepOffset
-   * @covers ::validStep
    *
    * @param numeric $value
    *   The value argument for Number::validStep().
@@ -51,6 +48,7 @@ class NumberTest extends TestCase {
    * @param bool $expected
    *   Expected return value from Number::validStep().
    */
+  #[DataProvider('providerTestValidStepOffset')]
   public function testValidStepOffset($value, $step, $offset, $expected): void {
     $return = Number::validStep($value, $step, $offset);
     $this->assertEquals($expected, $return);
@@ -61,7 +59,7 @@ class NumberTest extends TestCase {
    *
    * @see \Drupal\Tests\Component\Utility\Number::testValidStep
    */
-  public static function providerTestValidStep() {
+  public static function providerTestValidStep(): array {
     return [
       // Value and step equal.
       [10.3, 10.3, TRUE],
@@ -95,11 +93,11 @@ class NumberTest extends TestCase {
   }
 
   /**
-   * Data provider for \Drupal\Tests\Component\Utility\NumberTest::testValidStepOffset().
+   * Data provider for testValidStepOffset().
    *
    * @see \Drupal\Tests\Component\Utility\NumberTest::testValidStepOffset()
    */
-  public static function providerTestValidStepOffset() {
+  public static function providerTestValidStepOffset(): array {
     return [
       // Try obvious fits.
       [11.3, 10.3, 1, TRUE],
@@ -121,15 +119,15 @@ class NumberTest extends TestCase {
   /**
    * Tests the alphadecimal conversion functions.
    *
-   * @dataProvider providerTestConversions
-   * @covers ::intToAlphadecimal
-   * @covers ::alphadecimalToInt
-   *
    * @param int $value
    *   The integer value.
    * @param string $expected
    *   The expected alphadecimal value.
+   *
+   * @legacy-covers ::intToAlphadecimal
+   * @legacy-covers ::alphadecimalToInt
    */
+  #[DataProvider('providerTestConversions')]
   public function testConversions($value, $expected): void {
     $this->assertSame(Number::intToAlphadecimal($value), $expected);
     $this->assertSame($value, Number::alphadecimalToInt($expected));
@@ -138,14 +136,14 @@ class NumberTest extends TestCase {
   /**
    * Data provider for testConversions().
    *
-   * @see testConversions()
-   *
    * @return array
    *   An array containing:
    *     - The integer value.
    *     - The alphadecimal value.
+   *
+   * @see testConversions()
    */
-  public static function providerTestConversions() {
+  public static function providerTestConversions(): array {
     return [
       [0, '00'],
       [1, '01'],
@@ -155,6 +153,33 @@ class NumberTest extends TestCase {
       [36, '110'],
       [100, '12s'],
     ];
+  }
+
+  /**
+   * Tests the alphadecimal conversion function input parameter checking.
+   *
+   * Number::alphadecimalToInt() must throw an exception
+   * when non-alphanumeric characters are passed as input.
+   */
+  public function testAlphadecimalToIntThrowsExceptionWithMalformedStrings(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $nonAlphanumericChar = '#';
+    Number::alphadecimalToInt($nonAlphanumericChar);
+  }
+
+  /**
+   * Tests the alphadecimal conversion function keeps backward compatibility.
+   *
+   * Many tests and code rely on Number::alphadecimalToInt() returning 0
+   * for degenerate values '' and NULL. We must ensure they are accepted.
+   */
+  #[IgnoreDeprecations]
+  public function testAlphadecimalToIntReturnsZeroWithNullAndEmptyString(): void {
+    $deprecationMessage = 'Passing NULL or an empty string to Drupal\Component\Utility\Number::alphadecimalToInt() is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. See https://www.drupal.org/node/3494472';
+    $this->expectUserDeprecationMessage($deprecationMessage);
+    $this->assertSame(0, Number::alphadecimalToInt(NULL));
+    $this->expectUserDeprecationMessage($deprecationMessage);
+    $this->assertSame(0, Number::alphadecimalToInt(''));
   }
 
 }

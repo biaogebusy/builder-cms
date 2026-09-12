@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test SimplePageVariant main content rendering fallback page display variant.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class MainContentFallbackTest extends BrowserTestBase {
 
   /**
@@ -23,7 +25,18 @@ class MainContentFallbackTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * The administrator user for the test.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $adminUser;
+
+  /**
+   * The web user for the test.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $webUser;
 
   /**

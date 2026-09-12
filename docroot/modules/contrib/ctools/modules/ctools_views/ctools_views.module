@@ -25,10 +25,12 @@ function ctools_views_config_schema_info_alter(&$definitions) {
   $definitions['views_block']['mapping']['pager'] = [
     'type' => 'string',
     'label' => 'Pager type',
+    'requiredKey' => FALSE,
   ];
   $definitions['views_block']['mapping']['fields'] = [
     'type' => 'sequence',
     'label' => 'Fields settings',
+    'requiredKey' => FALSE,
     'sequence' => [
       [
         'type' => 'mapping',
@@ -49,6 +51,7 @@ function ctools_views_config_schema_info_alter(&$definitions) {
   $definitions['views_block']['mapping']['filter'] = [
     'type' => 'sequence',
     'label' => 'Filters settings',
+    'requiredKey' => FALSE,
     'sequence' => [
       [
         'type' => 'mapping',
@@ -70,6 +73,7 @@ function ctools_views_config_schema_info_alter(&$definitions) {
   $definitions['views_block']['mapping']['exposed'] = [
     'type' => 'sequence',
     'label' => 'Exposed filter values',
+    'requiredKey' => FALSE,
     'sequence' => [
       'type' => 'views.filter.[plugin_id]',
     ],
@@ -78,6 +82,7 @@ function ctools_views_config_schema_info_alter(&$definitions) {
   $definitions['views_block']['mapping']['sort'] = [
     'type' => 'sequence',
     'label' => 'Sort settings',
+    'requiredKey' => FALSE,
     'sequence' => [
       [
         'type' => 'string',
@@ -88,6 +93,7 @@ function ctools_views_config_schema_info_alter(&$definitions) {
   $definitions['views_block']['mapping']['pager_offset'] = [
     'type' => 'integer',
     'label' => 'Pager offset',
+    'requiredKey' => FALSE,
   ];
 
   // Add to the views block display plugin schema.

@@ -4,6 +4,7 @@ namespace Drupal\webform\Breadcrumb;
 
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Link;
@@ -62,7 +63,7 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration object factory.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, WebformRequestInterface $request_handler, TranslationInterface $string_translation, ConfigFactoryInterface $config_factory = NULL) {
+  public function __construct(ModuleHandlerInterface $module_handler, WebformRequestInterface $request_handler, TranslationInterface $string_translation, ?ConfigFactoryInterface $config_factory = NULL) {
     $this->moduleHandler = $module_handler;
     $this->requestHandler = $request_handler;
     $this->setStringTranslation($string_translation);
@@ -72,10 +73,14 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   /**
    * {@inheritdoc}
    */
-  public function applies(RouteMatchInterface $route_match) {
+  public function applies(RouteMatchInterface $route_match, ?CacheableMetadata $cacheable_metadata = NULL) {
+    // @todo Remove null safe operator after Drupal 12.0.0 becomes the minimum
+    //   requirement, see https://www.drupal.org/project/drupal/issues/3459277.
+    $cacheable_metadata?->addCacheContexts(['route']);
+
     $route_name = $route_match->getRouteName();
     // All routes must begin or contain 'webform.
-    if (!$route_name || strpos($route_name, 'webform') === FALSE) {
+    if (!$route_name || !str_contains($route_name, 'webform')) {
       return FALSE;
     }
 
@@ -83,7 +88,18 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     // Skip all config_translation routes except the overview
     // and allow Drupal to use the path as the breadcrumb.
-    if (strpos($route_name, 'config_translation') !== FALSE && !in_array($route_name, ['entity.webform.config_translation_overview', 'config_translation.item.overview.webform.config', 'config_translation.item.add.webform.config', 'config_translation.item.edit.webform.config', 'config_translation.item.delete.webform.config'])) {
+    $config_translation_route = str_contains($route_name, 'config_translation');
+    $webform_config_translation_route = !in_array(
+      $route_name,
+      [
+        'entity.webform.config_translation_overview',
+        'config_translation.item.overview.webform.config',
+        'config_translation.item.add.webform.config',
+        'config_translation.item.edit.webform.config',
+        'config_translation.item.delete.webform.config',
+      ]
+    );
+    if ($config_translation_route && $webform_config_translation_route) {
       return FALSE;
     }
     try {
@@ -105,25 +121,25 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     elseif ($route_name === 'webform.reports_plugins.elements.test') {
       $this->type = 'webform_plugins_elements';
     }
-    elseif (strpos($route_name, 'webform.help.') === 0) {
+    elseif (str_starts_with($route_name, 'webform.help.')) {
       $this->type = 'webform_help';
     }
-    elseif (strpos($route_name, 'entity.webform_ui.element') === 0) {
+    elseif (str_starts_with($route_name, 'entity.webform_ui.element')) {
       $this->type = 'webform_element';
     }
-    elseif (strpos($route_name, 'entity.webform.handler.') === 0) {
+    elseif (str_starts_with($route_name, 'entity.webform.handler.')) {
       $this->type = 'webform_handler';
     }
-    elseif (strpos($route_name, 'entity.webform.variant.') === 0) {
+    elseif (str_starts_with($route_name, 'entity.webform.variant.')) {
       $this->type = 'webform_variant';
     }
-    elseif ($webform_submission && strpos($route_name, '.webform.user.submission') !== FALSE) {
+    elseif ($webform_submission && str_contains($route_name, '.webform.user.submission')) {
       $this->type = 'webform_user_submission';
     }
-    elseif (strpos($route_name, '.webform.user.submissions') !== FALSE) {
+    elseif (str_contains($route_name, '.webform.user.submissions')) {
       $this->type = 'webform_user_submissions';
     }
-    elseif (strpos($route_name, '.webform.user.drafts') !== FALSE) {
+    elseif (str_contains($route_name, '.webform.user.drafts')) {
       $this->type = 'webform_user_drafts';
     }
     elseif ($webform_submission && $webform_submission->access('admin')) {
@@ -132,13 +148,13 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     elseif ($webform && $webform->access('admin')) {
       $this->type = ($webform->isTemplate() && $this->moduleHandler->moduleExists('webform_templates')) ? 'webform_template' : 'webform';
     }
-    elseif (strpos($path, 'admin/structure/webform/test/') !== FALSE) {
+    elseif (str_contains($path, 'admin/structure/webform/test/')) {
       $this->type = 'webform_test';
     }
-    elseif (strpos($path, 'admin/structure/webform/options/') !== FALSE) {
+    elseif (str_contains($path, 'admin/structure/webform/options/')) {
       $this->type = 'webform_options';
     }
-    elseif (strpos($path, 'admin/structure/webform/config/') !== FALSE) {
+    elseif (str_contains($path, 'admin/structure/webform/config/')) {
       $this->type = 'webform_config';
     }
     else {
@@ -163,7 +179,7 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       $breadcrumb->addLink(Link::createFromRoute($this->t('Home'), '<front>'));
       $breadcrumb->addLink($source_entity->toLink());
       if ($webform_submission = $route_match->getParameter('webform_submission')) {
-        if (strpos($route_match->getRouteName(), 'webform.user.submission') !== FALSE) {
+        if (str_contains($route_match->getRouteName(), 'webform.user.submission')) {
           $breadcrumb->addLink(Link::createFromRoute($this->t('Submissions'), "entity.$entity_type.webform.user.submissions", [$entity_type => $entity_id]));
         }
         elseif ($source_entity->access('webform_submission_view') || $webform_submission->access('view_any')) {
@@ -199,7 +215,7 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       switch ($this->type) {
         case 'webform_config':
           $breadcrumb->addLink(Link::createFromRoute($this->t('Configuration'), 'webform.config'));
-          if (strpos($route_name, 'config_translation.item.') === 0 && $route_name !== 'config_translation.item.overview.webform.config') {
+          if (str_starts_with($route_name, 'config_translation.item.') && $route_name !== 'config_translation.item.overview.webform.config') {
             $breadcrumb->addLink(Link::createFromRoute($this->t('Translate'), 'config_translation.item.overview.webform.config'));
           }
           break;
@@ -208,13 +224,13 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
           if ($route_name !== 'entity.webform_options.collection') {
             $breadcrumb->addLink(Link::createFromRoute($this->t('Options'), 'entity.webform_options.collection'));
           }
-          if (strpos($route_name, 'entity.webform_image_select_images') === 0) {
+          if (str_starts_with($route_name, 'entity.webform_image_select_images')) {
             // @see webform_image_select.module.
             if ($route_name !== 'entity.webform_image_select_images.collection') {
               $breadcrumb->addLink(Link::createFromRoute($this->t('Images'), 'entity.webform_image_select_images.collection'));
             }
           }
-          elseif (strpos($route_name, 'entity.webform_options_custom') === 0) {
+          elseif (str_starts_with($route_name, 'entity.webform_options_custom')) {
             // @see webform_custom_options.module.
             if ($route_name !== 'entity.webform_options_custom.collection') {
               $breadcrumb->addLink(Link::createFromRoute($this->t('Custom'), 'entity.webform_options_custom.collection'));
@@ -282,6 +298,8 @@ class WebformBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     // This breadcrumb builder is based on a route parameter, and hence it
     // depends on the 'route' cache context.
+    // @todo Remove after Drupal 12.0.0 becomes the minimum requirement,
+    //   see https://www.drupal.org/project/drupal/issues/3459277.
     $breadcrumb->addCacheContexts(['route']);
 
     return $breadcrumb;

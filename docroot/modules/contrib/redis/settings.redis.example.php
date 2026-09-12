@@ -33,26 +33,30 @@ if (!InstallerKernel::installationAttempted() && extension_loaded('redis')) {
   // $settings['cache']['bins']['bootstrap'] = 'cache.backend.redis';
 
   // Use compression for cache entries longer than the specified limit.
-  $settings['redis_compress_length'] = 100;
+  // This is the default setting.
+  // $settings['redis_compress_length'] = 1000;
 
   // Customize the prefix, a reliable but long fallback is used if not defined.
   // $settings['cache_prefix'] = 'prefix';
 
   // Respect specific TTL with an offset see README.md for more information.
-  $settings['redis_ttl_offset'] = 3600;
+  // This is the default setting.
+  // $settings['redis_ttl_offset'] = 3600;
 
   // Additional optimizations, see README.md
-  $settings['redis_invalidate_all_as_delete'] = TRUE;
+  // This is the default setting.
+  // $settings['redis_invalidate_all_as_delete'] = TRUE;
+
+  // Allow the services to work before the Redis module itself is enabled.
+  $settings['container_yamls'][] = 'modules/contrib/redis/redis.services.yml';
 
   // Apply changes to the container configuration to better leverage Redis.
   // This includes using Redis for the lock and flood control systems, as well
   // as the cache tag checksum. Alternatively, copy the contents of that file
-  // to your project-specific services.yml file, modify as appropriate, and
-  // remove this line.
+  // to a project-specific services.yml file, modify as appropriate, update
+  // this line. When using it to modify the cache backend definition, to use
+  // igbinary for example, it must be loaded after redis.services.yml.
   $settings['container_yamls'][] = 'modules/contrib/redis/example.services.yml';
-
-  // Allow the services to work before the Redis module itself is enabled.
-  $settings['container_yamls'][] = 'modules/contrib/redis/redis.services.yml';
 
   // Manually add the classloader path, this is required for the container cache
   // bin definition below and allows to use it without the redis module being

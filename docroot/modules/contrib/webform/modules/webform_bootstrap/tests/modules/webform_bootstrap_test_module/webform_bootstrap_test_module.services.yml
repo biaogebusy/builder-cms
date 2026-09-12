@@ -1,0 +1,9 @@
+
+services:
+  Drupal\webform_bootstrap_test_module\Hook\WebformBootstrapTestModuleHooks:
+    class: Drupal\webform_bootstrap_test_module\Hook\WebformBootstrapTestModuleHooks
+    autowire: true
+
+  Drupal\webform_bootstrap_test_module\Hook\WebformBootstrapTestModuleHooks1:
+    class: Drupal\webform_bootstrap_test_module\Hook\WebformBootstrapTestModuleHooks1
+    autowire: true

@@ -31,7 +31,7 @@
  * @see \Drupal\config_translation\ConfigMapperManagerInterface
  * @see \Drupal\config_translation\Routing\RouteSubscriber::routes()
  */
-function hook_config_translation_info(&$info) {
+function hook_config_translation_info(&$info): void {
   $entity_type_manager = \Drupal::entityTypeManager();
   $route_provider = \Drupal::service('router.route_provider');
 
@@ -44,7 +44,7 @@ function hook_config_translation_info(&$info) {
       try {
         $base_route = $route_provider->getRouteByName('entity.field_config.' . $entity_type_id . '_field_edit_form');
       }
-      catch (RouteNotFoundException $e) {
+      catch (RouteNotFoundException) {
         // Ignore non-existent routes.
       }
 

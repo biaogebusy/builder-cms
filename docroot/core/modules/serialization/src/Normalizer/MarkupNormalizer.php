@@ -9,20 +9,38 @@ use Drupal\Component\Render\MarkupInterface;
  */
 class MarkupNormalizer extends NormalizerBase {
 
+  use SchematicNormalizerTrait;
+  use JsonSchemaReflectionTrait;
+
   /**
-   * {@inheritdoc}
+   * Normalizes data into a set of arrays/scalars.
+   *
+   * @param object $object
+   *   Data to normalize.
+   * @param string|null $format
+   *   Format the normalization result will be encoded as.
+   * @param array<string, mixed> $context
+   *   Context options for the normalizer.
+   *
+   * @return string
+   *   The normalized data.
    */
-  public function normalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
+  public function doNormalize($object, $format = NULL, array $context = []): string {
     return (string) $object;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function hasCacheableSupportsMethod(): bool {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-
-    return TRUE;
+  public function getNormalizationSchema(mixed $object, array $context = []): array {
+    return $this->getJsonSchemaForMethod(
+      $object,
+      '__toString',
+      [
+        'type' => 'string',
+        'description' => 'May contain HTML markup.',
+      ]
+    );
   }
 
   /**

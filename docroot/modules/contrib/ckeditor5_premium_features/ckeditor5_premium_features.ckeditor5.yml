@@ -1,0 +1,41 @@
+ckeditor5_premium_features__cloud_services:
+  ckeditor5:
+    plugins: []
+  drupal:
+    label: CloudServices
+    class: Drupal\ckeditor5_premium_features\Plugin\CKEditor5Plugin\CloudServices
+    elements: false
+
+ckeditor5_premium_features__collaboration_integration_base:
+  ckeditor5:
+    plugins:
+      - disableCollaborationMarkersInCaption.DisableCollaborationMarkersInCaption
+      - sidebarAdapter.SidebarAdapter
+      - toolbarAdapter.ToolbarAdapter
+      - removeIncorrectCollaborationMarkers.RemoveIncorrectCollaborationMarkers
+      - drupalMediaTrackChangesIntegration.DrupalMediaTrackChangesIntegration
+      - ubb.Ubb
+
+  drupal:
+    label: The load & save integration of collaboration tools.
+    library: ckeditor5_premium_features/collaboration-integration-base
+    class: Drupal\ckeditor5_premium_features\Plugin\CKEditor5Plugin\CollaborationBase
+    elements: false
+    conditions: [ ]
+
+ckeditor5_premium_features__export_adapter:
+  ckeditor5:
+    plugins: []
+  drupal:
+    label: Export Adapter
+    library: ckeditor5_premium_features/export-integration
+    elements: false
+
+ckeditor5_premium_features__error_notifications:
+  ckeditor5:
+    plugins:
+      - errorNotifications.ErrorNotifications
+  drupal:
+    label: Error notifications
+    library: ckeditor5_premium_features/error-notifications
+    elements: false

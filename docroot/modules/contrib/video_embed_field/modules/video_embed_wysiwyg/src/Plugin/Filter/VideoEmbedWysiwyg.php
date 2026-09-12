@@ -88,7 +88,15 @@ class VideoEmbedWysiwyg extends FilterBase implements ContainerFactoryPluginInte
       }
 
       $autoplay = $this->currentUser->hasPermission('never autoplay videos') ? FALSE : $embed_data['settings']['autoplay'];
-      $embed_code = $provider->renderEmbedCode($embed_data['settings']['width'], $embed_data['settings']['height'], $autoplay, $embed_data['settings']['title_format'], $embed_data['settings']['title_fallback']);
+      $options = [
+        'width' => $embed_data['settings']['width'],
+        'height' => $embed_data['settings']['height'],
+        'autoplay' => $autoplay,
+        'title_format' => $embed_data['settings']['title_format'] ?? NULL,
+        'use_title_fallback' => $embed_data['settings']['title_fallback'] ?? TRUE,
+        'loading' => $embed_data['settings']['loading'] ?? Video::defaultSettings()['loading'],
+      ];
+      $embed_code = $provider->renderEmbed($options);
 
       $embed_code = [
         '#type' => 'container',

@@ -56,7 +56,7 @@ class WebformBlockContextTest extends WebformBrowserTestBase {
   /**
    * Tests webform block context.
    */
-  public function testBlockContext() {
+  public function testBlockContext(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

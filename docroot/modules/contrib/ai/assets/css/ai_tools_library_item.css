@@ -1,3 +1,20 @@
+/**
+ * @file
+ * AI Tools Library styles with support for Claro, Gin light, and Gin dark themes.
+ *
+ * This file uses CSS custom properties with a fallback chain:
+ * 1. Gin-specific variables (--gin-*)
+ * 2. Drupal core/Claro variables (--color-*)
+ * 3. Hardcoded fallback values
+ *
+ * This approach ensures the Tool Explorer renders correctly in:
+ * - Claro admin theme
+ * - Gin admin theme (light mode)
+ * - Gin admin theme (dark mode)
+ *
+ * Related issue: #3582473
+ */
+
 .ai-tools-library-wrapper {
   display: flex;
   flex-wrap: wrap;
@@ -41,7 +58,7 @@
   margin: -1.5rem;
   border: var(--input-border-size) solid var(--jui-dropdown-border-color);
   border-radius: 3.5rem;
-  background: var(--color-white);
+  background: var(--gin-bg-layer, var(--color-white, #fff));
   box-shadow: 0 0.25rem 0.625rem var(--jui-dropdown-shadow-color);
 }
 
@@ -67,7 +84,7 @@
   padding: 10px 25px;
   vertical-align: top;
   outline: none;
-  background: #fff;
+  background: var(--gin-bg-layer, var(--color-bg, #fff));
 }
 
 .ai-tools-library-item--grid::before {
@@ -82,7 +99,7 @@
     color 0.2s,
     background 0.2s;
   pointer-events: none;
-  border: 1px solid #dbdbdb;
+  border: 1px solid var(--gin-border-color, var(--color-gray-200, #dbdbdb));
   border-radius: 10px;
   box-shadow: var(--details-box-shadow);
 }
@@ -146,7 +163,7 @@
 .ai-tools-library-item--grid .field--name-thumbnail {
   overflow: hidden;
   text-align: center;
-  background-color: #ebebeb;
+  background-color: var(--gin-bg-layer2, var(--color-gray-050, #ebebeb));
 }
 
 .ai-tools-library-item--grid .field--name-thumbnail img {
@@ -166,20 +183,20 @@
 
 .ai-tools-library-item--grid.is-hover::before,
 .ai-tools-library-item--grid.checked.is-hover::before {
-  border-color: var(--color-absolutezero-hover);
+  border-color: var(--gin-color-primary-hover, var(--color-absolutezero-hover, #0062c7));
 }
 
 .ai-tools-library-item--grid.is-focus::before {
-  border-color: var(--color-focus);
+  border-color: var(--gin-color-focus, var(--color-focus, #26a769));
 }
 
 .ai-tools-library-item--grid.checked::before {
-  border-color: var(--button--focus-border-color);
+  border-color: var(--gin-color-primary, var(--button--focus-border-color, #0073e6));
 }
 
 .ai-tools-library-item--grid .form-boolean--type-checkbox:checked {
-  border-color: var(--button--focus-border-color);
-  background-color: var(--button--focus-border-color);
+  border-color: var(--gin-color-primary, var(--button--focus-border-color, #0073e6));
+  background-color: var(--gin-color-primary, var(--button--focus-border-color, #0073e6));
 }
 
 .ai-tools-library-item--grid.is-focus .ai-tools-library-item__name,

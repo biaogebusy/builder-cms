@@ -57,7 +57,7 @@ abstract class ReadOnlyStream implements StreamWrapperInterface {
    *
    * @param string $uri
    *   A string containing the URI to the file to open.
-   * @param int $mode
+   * @param string $mode
    *   The file mode, only strict readonly modes are supported.
    * @param int $options
    *   A bit mask of STREAM_USE_PATH and STREAM_REPORT_ERRORS.
@@ -99,7 +99,8 @@ abstract class ReadOnlyStream implements StreamWrapperInterface {
    *   (optional) The stream wrapper URI to be converted to a canonical
    *   absolute path. This may point to a directory or another type of file.
    *
-   * @return string|bool
+   * phpcs:ignore Drupal.Commenting.FunctionComment.InvalidNoReturn
+   * @return string|false
    *   If $uri is not set, returns the canonical absolute path of the URI
    *   previously set by the
    *   Drupal\Core\StreamWrapper\StreamWrapperInterface::setUri() function.

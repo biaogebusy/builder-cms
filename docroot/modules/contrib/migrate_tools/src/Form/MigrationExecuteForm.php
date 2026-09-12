@@ -172,6 +172,13 @@ class MigrationExecuteForm extends FormBase {
       ],
     ];
 
+    $form['options']['batch_size'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Batch size:'),
+      '#size' => 10,
+      '#description' => $this->t('Set the number of items to process in each batch within a migration task.'),
+    ];
+
     return $form;
   }
 
@@ -270,6 +277,7 @@ class MigrationExecuteForm extends FormBase {
       'limit' => $form_state->getValue('limit') ?: 0,
       'update' => $form_state->getValue('update') ?: 0,
       'force' => $form_state->getValue('force') ?: 0,
+      'batch-size' => $form_state->getValue('batch_size') ?: 0,
     ];
 
     if ($idlist = $form_state->getValue('idlist')) {

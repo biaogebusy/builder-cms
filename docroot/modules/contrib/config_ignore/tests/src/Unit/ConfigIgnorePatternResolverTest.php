@@ -8,16 +8,12 @@ use Drupal\Tests\UnitTestCase;
 /**
  * Tests the config ignore pattern resolver.
  *
- * @coversDefaultClass \Drupal\config_ignore\EventSubscriber\ConfigIgnoreEventSubscriber
- *
  * @group config_ignore
  */
 class ConfigIgnorePatternResolverTest extends UnitTestCase {
 
   /**
    * Tests the config ignore pattern resolver.
-   *
-   * @covers ::getIgnoredConfigs
    */
   public function testGetIgnoredConfigs() {
     $ignoredConfigs = $this->getIgnoredConfigs(
@@ -107,7 +103,7 @@ class ConfigIgnorePatternResolverTest extends UnitTestCase {
    *   A list of ignored configs as is returned by
    *   ConfigIgnoreEventSubscriber::getIgnoredConfigs()
    *
-   * @see \Drupal\config_ignore\EventSubscriber\ConfigIgnoreEventSubscriber::getIgnoredConfigs()
+   * @see \Drupal\config_ignore\EventSubscriber\ConfigIgnoreEventSubscriber::transformStorage()
    */
   protected function getIgnoredConfigs(array $ignore_config_patterns, array $all_configs) {
     $config = new ConfigIgnoreConfig('simple', $ignore_config_patterns);

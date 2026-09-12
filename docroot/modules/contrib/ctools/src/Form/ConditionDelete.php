@@ -17,26 +17,38 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class ConditionDelete extends ConfirmFormBase {
 
   /**
+   * The tempstore factory.
+   *
    * @var \Drupal\Core\TempStore\SharedTempStoreFactory
    */
   protected $tempstore;
 
   /**
+   * The condition plugin manager.
+   *
    * @var \Drupal\Core\Condition\ConditionManager
    */
   protected $manager;
 
   /**
+   * The tempstore ID.
+   *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $tempstore_id;
 
   /**
+   * The machine name.
+   *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $machine_name;
 
   /**
+   * The condition ID.
+   *
    * @var int
    */
   protected $id;
@@ -113,9 +125,9 @@ abstract class ConditionDelete extends ConfirmFormBase {
   /**
    * Gets the delete question.
    *
-   * @param $id
+   * @param int|null $id
    *   Condition ID.
-   * @param $cached_values
+   * @param array|null $cached_values
    *   Cached Context values.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
@@ -194,8 +206,8 @@ abstract class ConditionDelete extends ConfirmFormBase {
    *   The cached context values.
    *
    * @return array
-   *   In the format of
-   *   return ['route.name', ['machine_name' => $this->machine_name, 'step' => 'step_name]];
+   *   In the format of ['route.name', ['machine_name' => $this->machine_name,
+   *   'step' => 'step_name]];
    */
   abstract protected function getParentRouteInfo(array $cached_values);
 
@@ -230,6 +242,7 @@ abstract class ConditionDelete extends ConfirmFormBase {
    *   The cached context values.
    *
    * @return \Drupal\Core\Plugin\Context\ContextInterface[]
+   *   The contexts from cache.
    */
   abstract protected function getContexts(array $cached_values);
 

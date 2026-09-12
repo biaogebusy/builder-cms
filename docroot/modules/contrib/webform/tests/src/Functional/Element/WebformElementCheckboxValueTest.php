@@ -21,7 +21,7 @@ class WebformElementCheckboxValueTest extends WebformElementBrowserTestBase {
   /**
    * Tests checkbox value element.
    */
-  public function testCheckboxValue() {
+  public function testCheckboxValue(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_checkbox_value');

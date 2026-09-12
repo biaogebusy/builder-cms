@@ -35,6 +35,7 @@ class Email extends FormElementBase {
    * specifies a total length of 320 characters, but mentions that
    * addresses longer than 256 characters are not normally useful. Erratum
    * 1690 was then released which corrected this value to 254 characters.
+   *
    * @see http://tools.ietf.org/html/rfc3696#section-3
    * @see http://www.rfc-editor.org/errata_search.php?rfc=3696&eid=1690
    */
@@ -44,22 +45,21 @@ class Email extends FormElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#size' => 60,
       '#maxlength' => self::EMAIL_MAX_LENGTH,
       '#autocomplete_route_name' => FALSE,
       '#process' => [
-        [$class, 'processAutocomplete'],
-        [$class, 'processAjaxForm'],
-        [$class, 'processPattern'],
+        [static::class, 'processAutocomplete'],
+        [static::class, 'processAjaxForm'],
+        [static::class, 'processPattern'],
       ],
       '#element_validate' => [
-        [$class, 'validateEmail'],
+        [static::class, 'validateEmail'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderEmail'],
+        [static::class, 'preRenderEmail'],
       ],
       '#theme' => 'input__email',
       '#theme_wrappers' => ['form_element'],
@@ -69,7 +69,8 @@ class Email extends FormElementBase {
   /**
    * Form element validation handler for #type 'email'.
    *
-   * Note that #maxlength and #required is validated by _form_validate() already.
+   * Note that #maxlength and #required is validated by _form_validate()
+   * already.
    */
   public static function validateEmail(&$element, FormStateInterface $form_state, &$complete_form) {
     $value = trim($element['#value']);

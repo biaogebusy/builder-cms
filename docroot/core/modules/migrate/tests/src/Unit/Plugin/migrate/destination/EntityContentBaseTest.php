@@ -5,26 +5,26 @@ declare(strict_types=1);
 namespace Drupal\Tests\migrate\Unit\Plugin\migrate\destination;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Row;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests base entity migration destination functionality.
- *
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\destination\EntityContentBase
- * @group migrate
  */
+#[CoversClass(EntityContentBase::class)]
+#[Group('migrate')]
 class EntityContentBaseTest extends EntityTestBase {
 
   /**
    * Tests basic entity save.
-   *
-   * @covers ::import
    */
   public function testImport(): void {
     $bundles = [];
@@ -34,7 +34,8 @@ class EntityContentBaseTest extends EntityTestBase {
       $bundles,
       $this->entityFieldManager->reveal(),
       $this->prophesize(FieldTypePluginManagerInterface::class)->reveal(),
-      $this->prophesize(AccountSwitcherInterface::class)->reveal()
+      $this->prophesize(AccountSwitcherInterface::class)->reveal(),
+      $this->prophesize(EntityTypeBundleInfoInterface::class)->reveal(),
     );
     $entity = $this->prophesize(ContentEntityInterface::class);
     $entity->isValidationRequired()
@@ -45,7 +46,7 @@ class EntityContentBaseTest extends EntityTestBase {
     // Syncing should be set once.
     $entity->setSyncing(Argument::exact(TRUE))
       ->shouldBeCalledTimes(1);
-    // Set an id for the entity
+    // Set an id for the entity.
     $entity->id()
       ->willReturn(5);
     $destination->setEntity($entity->reveal());
@@ -57,8 +58,6 @@ class EntityContentBaseTest extends EntityTestBase {
 
   /**
    * Tests row skipping when we can't get an entity to save.
-   *
-   * @covers ::import
    */
   public function testImportEntityLoadFailure(): void {
     $bundles = [];
@@ -68,7 +67,8 @@ class EntityContentBaseTest extends EntityTestBase {
       $bundles,
       $this->entityFieldManager->reveal(),
       $this->prophesize(FieldTypePluginManagerInterface::class)->reveal(),
-      $this->prophesize(AccountSwitcherInterface::class)->reveal()
+      $this->prophesize(AccountSwitcherInterface::class)->reveal(),
+      $this->prophesize(EntityTypeBundleInfoInterface::class)->reveal(),
     );
     $destination->setEntity(FALSE);
     $this->expectException(MigrateException::class);
@@ -95,7 +95,8 @@ class EntityContentBaseTest extends EntityTestBase {
       [],
       $this->entityFieldManager->reveal(),
       $this->prophesize(FieldTypePluginManagerInterface::class)->reveal(),
-      $this->prophesize(AccountSwitcherInterface::class)->reveal()
+      $this->prophesize(AccountSwitcherInterface::class)->reveal(),
+      $this->prophesize(EntityTypeBundleInfoInterface::class)->reveal(),
     );
     $this->expectException(MigrateException::class);
     $this->expectExceptionMessage('The "foo" entity type does not support translations.');
@@ -111,16 +112,30 @@ class EntityContentBaseTest extends EntityTestBase {
  */
 class EntityTestDestination extends EntityContentBase {
 
+  /**
+   * The test entity.
+   *
+   * @var \Drupal\migrate\Plugin\migrate\destination\EntityContentBase|null
+   */
   private $entity = NULL;
 
-  public function setEntity($entity) {
+  /**
+   * Sets the test entity.
+   */
+  public function setEntity($entity): void {
     $this->entity = $entity;
   }
 
+  /**
+   * Gets the test entity.
+   */
   protected function getEntity(Row $row, array $old_destination_id_values) {
     return $this->entity;
   }
 
+  /**
+   * Gets the test entity ID.
+   */
   public static function getEntityTypeId($plugin_id) {
     return 'foo';
   }

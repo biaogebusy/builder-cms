@@ -2,6 +2,7 @@
 
 namespace Drupal\webform\Entity;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
@@ -9,7 +10,6 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
@@ -783,7 +783,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
       return FALSE;
     }
     else {
-      return (boolean) $this->getSetting('page');
+      return (bool) $this->getSetting('page');
     }
   }
 
@@ -911,10 +911,6 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
 
     // Css.
     $css = [];
-    $shared_css = \Drupal::config('webform.settings')->get('assets.css') ?: '';
-    if ($shared_css) {
-      $css[] = $shared_css;
-    }
     $webform_css = $this->css ?: '';
     if ($webform_css) {
       $css[] = $webform_css;
@@ -923,10 +919,6 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
 
     // JavaScript.
     $javascript = [];
-    $shared_javascript = \Drupal::config('webform.settings')->get('assets.javascript') ?: '';
-    if ($shared_javascript) {
-      $javascript[] = $shared_javascript;
-    }
     $webform_javascript = $this->javascript ?: '';
     if ($webform_javascript) {
       $javascript[] = $webform_javascript;
@@ -1113,6 +1105,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
       'form_access_denied_message' => '',
       'form_access_denied_attributes' => [],
       'form_file_limit' => '',
+      'form_file_limit_message' => '',
       'form_method' => '',
       'form_action' => '',
       'form_attributes' => [],
@@ -1222,7 +1215,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
     if ($webform_variant) {
       $is_add_operation = ($operation === 'add' && $this->access('update'));
       $is_test_operation = ($operation === 'test' && $this->access('test'));
-      $is_share_operation = (strpos(\Drupal::routeMatch()->getRouteName(), 'entity.webform.share_page') === 0);
+      $is_share_operation = str_starts_with(\Drupal::routeMatch()->getRouteName(), 'entity.webform.share_page');
       if ($is_add_operation || $is_test_operation || $is_share_operation) {
         $values += ['data' => []];
         $values['data'] = $webform_variant + $values['data'];
@@ -1675,7 +1668,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
 
       // Prevent regressions where webform_computed_* element is still using
       // #value instead of #template.
-      if (isset($element['#type']) && strpos($element['#type'], 'webform_computed_') === 0) {
+      if (isset($element['#type']) && str_starts_with($element['#type'], 'webform_computed_')) {
         if (isset($element['#value']) && !isset($element['#template'])) {
           $element['#template'] = $element['#value'];
           unset($element['#value']);
@@ -1844,6 +1837,11 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
    * {@inheritdoc}
    */
   public function getElement($key, $include_children = FALSE) {
+    // @todo This should probably not ever be NULL. Figure out why and fix.
+    // Setting to empty string to preserve existing behavior but prevent NULL
+    // from being used as an array key.
+    $key ??= '';
+
     $elements_flattened = $this->getElementsInitializedAndFlattened();
     $element = $elements_flattened[$key] ?? NULL;
     if ($element && $include_children) {
@@ -2026,7 +2024,12 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPages($operation = 'default', WebformSubmissionInterface $webform_submission = NULL) {
+  public function getPages($operation = 'default', ?WebformSubmissionInterface $webform_submission = NULL) {
+    // @todo This should probably not ever be NULL. Figure out why and fix.
+    // Setting to empty string to preserve existing behavior but prevent NULL
+    // from being used as an array key.
+    $operation ??= '';
+
     $pages = $this->buildPages($operation);
     if ($this->getSetting('wizard_progress_states') && $webform_submission) {
       /** @var \Drupal\webform\WebformSubmissionConditionsValidatorInterface $constraint_validator */
@@ -2127,6 +2130,11 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
    * {@inheritdoc}
    */
   public function getPage($operation, $key) {
+    // @todo This should probably not ever be NULL. Figure out why and fix.
+    // Setting to empty string to preserve existing behavior but prevent NULL
+    // from being used as an array key.
+    $key ??= '';
+
     $pages = $this->getPages($operation);
     return $pages[$key] ?? NULL;
   }
@@ -2715,7 +2723,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
     $handlers = $this->getHandlers();
 
     switch ($method) {
-      case 'overrideSettings';
+      case 'overrideSettings':
         // If webform submission and alter settings, make sure to completely
         // reset all settings to their original values.
         $this->resetSettings();
@@ -2773,7 +2781,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
    * @return bool
    *   TRUE if a webform handler is enabled.
    */
-  protected function isHandlerEnabled(WebformHandlerInterface $handler, WebformSubmissionInterface $webform_submission = NULL) {
+  protected function isHandlerEnabled(WebformHandlerInterface $handler, ?WebformSubmissionInterface $webform_submission = NULL) {
     // Check if the handler is disabled.
     if ($handler->isDisabled()) {
       return FALSE;
@@ -2943,7 +2951,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
   /**
    * {@inheritdoc}
    */
-  public function applyVariants(WebformSubmissionInterface $webform_submission = NULL, array $variants = [], $force = FALSE) {
+  public function applyVariants(?WebformSubmissionInterface $webform_submission = NULL, array $variants = [], $force = FALSE) {
     // Get variants from webform submission.
     if ($webform_submission) {
       // Make sure webform submission is associated with this webform.

@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
-use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Tests\block_content\Traits\BlockContentCreationTrait;
 use Drupal\Tests\system\Functional\Entity\EntityCacheTagsTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Content Block entity's cache tags.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentCacheTagsTest extends EntityCacheTagsTestBase {
+
+  use BlockContentCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -32,13 +36,11 @@ class BlockContentCacheTagsTest extends EntityCacheTagsTestBase {
    * {@inheritdoc}
    */
   protected function createEntity() {
-    $block_content_type = BlockContentType::create([
+    $this->createBlockContentType([
       'id' => 'basic',
       'label' => 'basic',
       'revision' => FALSE,
-    ]);
-    $block_content_type->save();
-    block_content_add_body_field($block_content_type->id());
+    ], TRUE);
 
     // Create a "Llama" content block.
     $block_content = BlockContent::create([
@@ -59,7 +61,7 @@ class BlockContentCacheTagsTest extends EntityCacheTagsTestBase {
    *
    * @see \Drupal\block_content\BlockContentAccessControlHandler::checkAccess()
    */
-  protected function getAccessCacheContextsForEntity(EntityInterface $entity) {
+  protected function getAccessCacheContextsForEntity(EntityInterface $entity): array {
     return [];
   }
 
@@ -68,7 +70,7 @@ class BlockContentCacheTagsTest extends EntityCacheTagsTestBase {
    *
    * Each comment must have a comment body, which always has a text format.
    */
-  protected function getAdditionalCacheTagsForEntity(EntityInterface $entity) {
+  protected function getAdditionalCacheTagsForEntity(EntityInterface $entity): array {
     return ['config:filter.format.plain_text'];
   }
 
@@ -85,7 +87,7 @@ class BlockContentCacheTagsTest extends EntityCacheTagsTestBase {
     // Expected keys, contexts, and tags for the block.
     // @see \Drupal\block\BlockViewBuilder::viewMultiple()
     $expected_block_cache_keys = ['entity_view', 'block', $block->id()];
-    $expected_block_cache_tags = Cache::mergeTags(['block_view', 'rendered'], $block->getCacheTags());
+    $expected_block_cache_tags = Cache::mergeTags(['rendered'], $block->getCacheTags());
     $expected_block_cache_tags = Cache::mergeTags($expected_block_cache_tags, $block->getPlugin()->getCacheTags());
 
     // Expected contexts and tags for the BlockContent entity.

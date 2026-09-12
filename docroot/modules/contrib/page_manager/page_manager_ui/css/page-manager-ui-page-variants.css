@@ -20,9 +20,9 @@
 .page-manager-wizard-tree .page__section_item__1 > .page__section__label.active {
   font-weight: bold;
 }
-.page-manager-wizard-tree .page__section_item__1 > .page__section__label.current_variant:before {
-  content: '\00bb';
-  font-weight: bold;
+.page-manager-wizard-tree .page__section_item__1 > .page__section__label.current_variant::before {
+  content: "\00bb";
   color: black;
   font-size: 18px;
+  font-weight: bold;
 }

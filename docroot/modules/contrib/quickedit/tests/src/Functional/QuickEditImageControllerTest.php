@@ -69,7 +69,7 @@ class QuickEditImageControllerTest extends BrowserTestBase {
       'max_resolution' => '100x',
       'min_resolution' => '50x',
     ];
-    $this->createImageField($this->fieldName, 'article', [], $field_settings);
+    $this->createImageField($this->fieldName, 'node', 'article', [], $field_settings);
   }
 
   /**
@@ -88,10 +88,8 @@ class QuickEditImageControllerTest extends BrowserTestBase {
     $this->drupalGet('quickedit/image/info/node/' . $node->id() . '/' . $this->fieldName . '/' . $node->language()->getId() . '/default');
     $this->assertSession()->statusCodeEquals(403);
 
-    /** @var \Symfony\Component\BrowserKit\Client $client */
-    $client = $this->getSession()->getDriver()->getClient();
-    $client->request('POST', '/quickedit/image/upload/node/' . $node->id() . '/' . $this->fieldName . '/' . $node->language()->getId() . '/default');
-    $this->assertEquals('403', $client->getResponse()->getStatusCode());
+    $this->drupalGet('quickedit/image/upload/node/' . $node->id() . '/' . $this->fieldName . '/' . $node->language()->getId() . '/default');
+    $this->assertSession()->statusCodeEquals(403);
   }
 
   /**

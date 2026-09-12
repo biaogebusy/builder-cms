@@ -12,7 +12,10 @@ use Drupal\Core\TypedData\TypedDataInternalPropertiesHelper;
 use Drupal\jsonapi\Normalizer\Value\CacheableNormalization;
 use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\serialization\Normalizer\CacheableNormalizerInterface;
+use Drupal\serialization\Normalizer\JsonSchemaReflectionTrait;
+use Drupal\serialization\Normalizer\SchematicNormalizerTrait;
 use Drupal\serialization\Normalizer\SerializedColumnNormalizerTrait;
+use Drupal\serialization\Serializer\JsonSchemaProviderSerializerInterface;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
@@ -28,6 +31,8 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 class FieldItemNormalizer extends NormalizerBase implements DenormalizerInterface {
 
   use SerializedColumnNormalizerTrait;
+  use SchematicNormalizerTrait;
+  use JsonSchemaReflectionTrait;
 
   /**
    * The entity type manager.
@@ -47,31 +52,41 @@ class FieldItemNormalizer extends NormalizerBase implements DenormalizerInterfac
   }
 
   /**
-   * {@inheritdoc}
+   * Normalizes data into a set of arrays/scalars.
    *
    * This normalizer leaves JSON:API normalizer land and enters the land of
    * Drupal core's serialization system. That system was never designed with
    * cacheability in mind, and hence bubbles cacheability out of band. This must
    * catch it, and pass it to the value object that JSON:API uses.
+   *
+   * @param \Drupal\Core\Field\FieldItemInterface $object
+   *   Data to normalize.
+   * @param string|null $format
+   *   Format the normalization result will be encoded as.
+   * @param array<string, mixed> $context
+   *   Context options for the normalizer.
+   *
+   * @return array|string|int|float|bool|\ArrayObject<mixed, mixed>|null
+   *   \ArrayObject is used to make sure an empty object is encoded as an
+   *   object not an array.
    */
-  public function normalize($field_item, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
-    assert($field_item instanceof FieldItemInterface);
+  public function doNormalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
+    assert($object instanceof FieldItemInterface);
     /** @var \Drupal\Core\TypedData\TypedDataInterface $property */
-    $values = [];
     $context[CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY] = new CacheableMetadata();
-    if (!empty($field_item->getProperties(TRUE))) {
+    // Default: The field has only internal (or no) properties but has a public
+    // value.
+    $values = $object->getValue();
+    // There are non-internal properties. Normalize those.
+    if ($field_properties = TypedDataInternalPropertiesHelper::getNonInternalProperties($object)) {
       // We normalize each individual value, so each can do their own casting,
       // if needed.
-      $field_properties = TypedDataInternalPropertiesHelper::getNonInternalProperties($field_item);
-      foreach ($field_properties as $property_name => $property) {
-        $values[$property_name] = $this->serializer->normalize($property, $format, $context);
-      }
+      $values = array_map(function ($property) use ($format, $context) {
+        return $this->serializer->normalize($property, $format, $context);
+      }, $field_properties);
       // Flatten if there is only a single property to normalize.
-      $flatten = count($field_properties) === 1 && $field_item::mainPropertyName() !== NULL;
+      $flatten = count($field_properties) === 1 && $object::mainPropertyName() !== NULL;
       $values = static::rasterizeValueRecursive($flatten ? reset($values) : $values);
-    }
-    else {
-      $values = $field_item->getValue();
     }
     $normalization = new CacheableNormalization(
       $context[CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY],
@@ -87,6 +102,13 @@ class FieldItemNormalizer extends NormalizerBase implements DenormalizerInterfac
   public function denormalize($data, $class, $format = NULL, array $context = []): mixed {
     $item_definition = $context['field_definition']->getItemDefinition();
     assert($item_definition instanceof FieldItemDataDefinitionInterface);
+
+    // The NULL normalization means there is no value, hence we can return
+    // early. Note that this is not just an optimization but a necessity for
+    // field types without main properties (such as the "map" field type).
+    if ($data === NULL) {
+      return $data;
+    }
 
     $field_item = $this->getFieldItemInstance($context['resource_type'], $item_definition);
     $this->checkForSerializedStrings($data, $class, $field_item);
@@ -109,12 +131,6 @@ class FieldItemNormalizer extends NormalizerBase implements DenormalizerInterfac
     // be expanded to an array of all properties, we special-case single-value
     // properties.
     if (!is_array($data)) {
-      // The NULL normalization means there is no value, hence we can return
-      // early. Note that this is not just an optimization but a necessity for
-      // field types without main properties (such as the "map" field type).
-      if ($data === NULL) {
-        return $data;
-      }
       $property_value = $data;
       $property_name = $item_definition->getMainPropertyName();
       $property_value_class = $property_definitions[$property_name]->getClass();
@@ -236,10 +252,40 @@ class FieldItemNormalizer extends NormalizerBase implements DenormalizerInterfac
   /**
    * {@inheritdoc}
    */
-  public function hasCacheableSupportsMethod(): bool {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-
-    return TRUE;
+  protected function getNormalizationSchema(mixed $object, array $context = []): array {
+    $schema = ['type' => 'object'];
+    if (is_string($object)) {
+      return ['$comment' => 'No detailed schema available.'] + $schema;
+    }
+    assert($object instanceof FieldItemInterface);
+    $field_properties = TypedDataInternalPropertiesHelper::getNonInternalProperties($object);
+    if (count($field_properties) === 0) {
+      // The field item has only internal (or no) properties. In this case, the
+      // value is normalized from ::getValue(). Use a schema from the method or
+      // interface, if available.
+      return $this->getJsonSchemaForMethod(
+        $object,
+        'getValue',
+        ['$comment' => sprintf('Cannot determine schema for %s::getValue().', $object::class)]
+      );
+    }
+    // If we did not early return, iterate over the non-internal properties.
+    foreach ($field_properties as $property_name => $property) {
+      $property_schema = [
+        'title' => (string) $property->getDataDefinition()->getLabel(),
+      ];
+      assert($this->serializer instanceof JsonSchemaProviderSerializerInterface);
+      $property_schema = array_merge(
+        $this->serializer->getJsonSchema($property, $context),
+        $property_schema,
+      );
+      $schema['properties'][$property_name] = $property_schema;
+    }
+    // Flatten if there is only a single property to normalize.
+    if (count($field_properties) === 1 && $object::mainPropertyName() !== NULL) {
+      $schema = $schema['properties'][$object::mainPropertyName()] ?? [];
+    }
+    return $schema;
   }
 
   /**

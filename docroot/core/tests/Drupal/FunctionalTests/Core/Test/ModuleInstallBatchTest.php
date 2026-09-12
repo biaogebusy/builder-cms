@@ -6,16 +6,18 @@ namespace Drupal\FunctionalTests\Core\Test;
 
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests batch operations during tests execution.
  *
  * This demonstrates that a batch will be successfully executed during module
  * installation when running tests.
- *
- * @group Test
- * @group FunctionalTestSetupTrait
  */
+#[Group('Test')]
+#[Group('FunctionalTestSetupTrait')]
+#[RunTestsInSeparateProcesses]
 class ModuleInstallBatchTest extends BrowserTestBase {
 
   /**

@@ -1,0 +1,11 @@
+name: 'Queue UI Test'
+type: module
+description: 'Support module for Queue UI tests.'
+package: Testing
+dependencies:
+  - queue_ui:queue_ui
+
+# Information added by Drupal.org packaging script on 2025-12-24
+version: '3.2.3'
+project: 'queue_ui'
+datestamp: 1766588426

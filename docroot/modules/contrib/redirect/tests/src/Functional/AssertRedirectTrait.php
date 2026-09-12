@@ -46,12 +46,12 @@ trait AssertRedirectTrait {
     $message = "Testing redirect from $path to $expected_ending_url. Ending url: $ending_url";
 
     if ($expected_ending_url == '<front>') {
-      $expected_ending_url = Url::fromUri('base:')->setAbsolute()->toString();
+      $expected_ending_url = Url::fromUri('base:')->toString();
     }
     elseif (!empty($expected_ending_url)) {
-      // Check for absolute/external urls.
+      // Correctly process internal URLs.
       if (!parse_url($expected_ending_url, PHP_URL_SCHEME)) {
-        $expected_ending_url = Url::fromUri('base:' . $expected_ending_url)->setAbsolute()->toString();
+        $expected_ending_url = Url::fromUri('base:' . $expected_ending_url)->toString();
       }
     }
     else {

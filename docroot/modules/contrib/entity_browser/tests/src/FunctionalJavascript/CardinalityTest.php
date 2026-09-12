@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_browser\Element\EntityBrowserElement;
 use Drupal\field\Entity\FieldConfig;
@@ -14,6 +16,8 @@ use Drupal\user\Entity\Role;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class CardinalityTest extends EntityBrowserWebDriverTestBase {
 
   use CKEditor5TestTrait;
@@ -241,10 +245,10 @@ class CardinalityTest extends EntityBrowserWebDriverTestBase {
     $this->getSession()->switchToIFrame('entity_browser_iframe_bundle_filter');
     $this->assertSession()->waitForElementVisible('xpath', "//div[contains(@class, 'views-exposed-form')]");
 
-    // Without use_field_cardinality set, there should be checkboxes, the default.
-    $this->assertCheckBoxExistsByValue('node:' . $westley->id());
-    $this->assertCheckBoxExistsByValue('node:' . $buttercup->id());
-    $this->assertCheckBoxNotExistsByValue('node:' . $humperdinck->id());
+    // Without use_field_cardinality set, default is checkboxes.
+    $this->assertCheckboxExistsByValue('node:' . $westley->id());
+    $this->assertCheckboxExistsByValue('node:' . $buttercup->id());
+    $this->assertCheckboxNotExistsByValue('node:' . $humperdinck->id());
 
     // Set view to use field cardinality.
     $this->config('views.view.bundle_filter_exposed')
@@ -319,10 +323,10 @@ class CardinalityTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->switchToIFrame('entity_browser_iframe_cardinality');
 
-    // Without use_field_cardinality set, there should be checkboxes, the default.
-    $this->assertCheckBoxExistsByValue('node:' . $vizzini->id());
-    $this->assertCheckBoxExistsByValue('node:' . $inigo->id());
-    $this->assertCheckBoxNotExistsByValue('node:' . $miracle_max->id());
+    // Without use_field_cardinality set, default is checkboxes.
+    $this->assertCheckboxExistsByValue('node:' . $vizzini->id());
+    $this->assertCheckboxExistsByValue('node:' . $inigo->id());
+    $this->assertCheckboxNotExistsByValue('node:' . $miracle_max->id());
 
     $view = $this->config('views.view.bundle_filter_exposed');
     $field = $view->get('display.default.display_options.fields.entity_browser_select', TRUE);
@@ -365,6 +369,95 @@ class CardinalityTest extends EntityBrowserWebDriverTestBase {
     $this->assertRadioNotExistsByValue('node:' . $inigo->id());
     $this->assertRadioNotExistsByValue('node:' . $miracle_max->id());
 
+  }
+
+  /**
+   * Tests cardinality enforcement on the selection display step.
+   *
+   * The widget-level Cardinality validator only sees the most recent
+   * batch returned by the widget. When the selection display lets the
+   * user accumulate entities across several widget submissions (e.g.
+   * multi_step_display in append mode), the cumulative count is held in
+   * $form_state['entity_browser']['selected_entities'] and must be
+   * checked by SelectionDisplayBase::validate().
+   *
+   * @see https://www.drupal.org/project/entity_browser/issues/2825730
+   */
+  public function testSelectionDisplayCardinality() {
+    // Cardinality 2 entity_reference field on article, wired to the
+    // bundle_filter browser (multi_step_display) in append mode.
+    FieldStorageConfig::create([
+      'field_name' => 'field_companions',
+      'type' => 'entity_reference',
+      'entity_type' => 'node',
+      'cardinality' => 2,
+      'settings' => ['target_type' => 'node'],
+    ])->save();
+    FieldConfig::create([
+      'field_name' => 'field_companions',
+      'entity_type' => 'node',
+      'bundle' => 'article',
+      'label' => 'Companions',
+      'settings' => [
+        'handler' => 'default:node',
+        'handler_settings' => [
+          'target_bundles' => ['article' => 'article'],
+        ],
+      ],
+    ])->save();
+
+    $this->container->get('entity_type.manager')
+      ->getStorage('entity_form_display')
+      ->load('node.article.default')
+      ->setComponent('field_companions', [
+        'type' => 'entity_browser_entity_reference',
+        'settings' => [
+          'entity_browser' => 'bundle_filter',
+          'open' => TRUE,
+          'field_widget_edit' => TRUE,
+          'field_widget_remove' => TRUE,
+          'field_widget_replace' => FALSE,
+          'selection_mode' => EntityBrowserElement::SELECTION_MODE_APPEND,
+          'field_widget_display' => 'label',
+          'field_widget_display_settings' => [],
+        ],
+      ])->save();
+
+    $role = Role::load('authenticated');
+    $this->grantPermissions($role, [
+      'access bundle_filter entity browser pages',
+    ]);
+
+    $frodo = $this->createNode(['type' => 'article', 'title' => 'Frodo']);
+    $sam = $this->createNode(['type' => 'article', 'title' => 'Sam']);
+    $merry = $this->createNode(['type' => 'article', 'title' => 'Merry']);
+
+    $this->drupalGet('/node/add/article');
+    $this->assertSession()->fieldExists('title[0][value]')->setValue('Hobbits');
+
+    // bundle_filter has auto_open enabled, so the iframe is inserted on
+    // page load by the auto_open JS handler — no AJAX request to await.
+    $this->assertSession()->waitForElementVisible('xpath', "//iframe[contains(@name, 'entity_browser_iframe_bundle_filter')]", 3000);
+    $this->getSession()->switchToIFrame('entity_browser_iframe_bundle_filter');
+
+    // Pick one entity per "Select entities" press. Each batch is size 1
+    // (well under cardinality 2) so the widget-level Cardinality
+    // validator always passes; selected_entities still grows past 2.
+    // SelectionDisplayBase::validate() reads selected_entities *before*
+    // the current submit applies, so each intermediate press also
+    // passes; the failure must surface on the final submit.
+    foreach ([$frodo, $sam, $merry] as $node) {
+      $this->assertCheckboxExistsByValue('node:' . $node->id())->check();
+      $this->assertSession()->buttonExists('Select entities')->press();
+      // The widget submit is a normal form submit (no #ajax), so press()
+      // blocks on the iframe navigation; no AJAX wait is needed. Wait for
+      // the selection display to reflect the just-added entity before
+      // continuing to the next iteration.
+      $this->assertSession()->waitForText($node->getTitle());
+    }
+
+    $this->assertSession()->buttonExists('Use selected')->press();
+    $this->assertSession()->pageTextContains('You can only select up to 2 items');
   }
 
   /**

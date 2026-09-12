@@ -8,29 +8,16 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\RouteProcessor\RouteProcessorManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\Core\RouteProcessor\RouteProcessorManager
- * @group RouteProcessor
+ * Tests Drupal\Core\RouteProcessor\RouteProcessorManager.
  */
+#[CoversClass(RouteProcessorManager::class)]
+#[Group('RouteProcessor')]
 class RouteProcessorManagerTest extends UnitTestCase {
-
-  /**
-   * The route processor manager.
-   *
-   * @var \Drupal\Core\RouteProcessor\RouteProcessorManager
-   */
-  protected $processorManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->processorManager = new RouteProcessorManager();
-  }
 
   /**
    * Tests the Route process manager functionality.
@@ -40,19 +27,14 @@ class RouteProcessorManagerTest extends UnitTestCase {
     $parameters = ['test' => 'test'];
     $route_name = 'test_name';
 
-    $processors = [
-      10 => $this->getMockProcessor($route_name, $route, $parameters),
-      5 => $this->getMockProcessor($route_name, $route, $parameters),
-      0 => $this->getMockProcessor($route_name, $route, $parameters),
-    ];
-
-    // Add the processors in reverse order.
-    foreach ($processors as $priority => $processor) {
-      $this->processorManager->addOutbound($processor, $priority);
-    }
+    $processorManager = new RouteProcessorManager([
+      $this->getMockProcessor($route_name, $route, $parameters),
+      $this->getMockProcessor($route_name, $route, $parameters),
+      $this->getMockProcessor($route_name, $route, $parameters),
+    ]);
 
     $bubbleable_metadata = new BubbleableMetadata();
-    $this->processorManager->processOutbound($route_name, $route, $parameters, $bubbleable_metadata);
+    $processorManager->processOutbound($route_name, $route, $parameters, $bubbleable_metadata);
     // Default cacheability is: permanently cacheable, no cache tags/contexts.
     $this->assertEquals((new BubbleableMetadata())->setCacheMaxAge(Cache::PERMANENT), $bubbleable_metadata);
   }
@@ -68,6 +50,7 @@ class RouteProcessorManagerTest extends UnitTestCase {
    *   The parameters to use in mock with() expectation.
    *
    * @return \Drupal\Core\RouteProcessor\OutboundRouteProcessorInterface|\PHPUnit\Framework\MockObject\MockObject
+   *   The mock processor object.
    */
   protected function getMockProcessor($route_name, $route, $parameters) {
     $processor = $this->createMock('Drupal\Core\RouteProcessor\OutboundRouteProcessorInterface');

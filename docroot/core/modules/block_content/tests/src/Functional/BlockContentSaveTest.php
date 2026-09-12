@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests $block_content->save() for saving content.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentSaveTest extends BlockContentTestBase {
 
   /**
@@ -97,14 +99,14 @@ class BlockContentSaveTest extends BlockContentTestBase {
    * Tests saving a block on block insert.
    *
    * This test ensures that a block has been fully saved when
-   * hook_block_content_insert() is invoked, so that the block can be saved again
-   * in a hook implementation without errors.
+   * hook_block_content_insert() is invoked, so that the block can be saved
+   * again in a hook implementation without errors.
    *
    * @see block_test_block_insert()
    */
   public function testBlockContentSaveOnInsert(): void {
-    // block_content_test_block_content_insert() triggers a save on insert if the
-    // title equals 'new'.
+    // block_content_test_block_content_insert() triggers a save on insert if
+    // the title equals 'new'.
     $block = $this->createBlockContent('new');
     $this->assertEquals('BlockContent ' . $block->id(), $block->label(), 'Content block saved on block insert.');
   }

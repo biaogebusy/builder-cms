@@ -73,21 +73,21 @@ display:
             unit_price__number:
               sortable: false
               default_sort_order: asc
-              align: ''
+              align: views-align-center
               separator: ''
               empty_column: false
               responsive: ''
             quantity:
               sortable: false
               default_sort_order: asc
-              align: ''
+              align: views-align-center
               separator: ''
               empty_column: false
               responsive: ''
             total_price__number:
               sortable: false
               default_sort_order: asc
-              align: ''
+              align: views-align-right
               separator: ''
               empty_column: false
               responsive: ''
@@ -281,12 +281,13 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: value
-          type: number_decimal
+          type: commerce_quantity
           settings:
             thousand_separator: ''
             prefix_suffix: true
             decimal_separator: .
             scale: 2
+            strip_trailing_zeroes: true
           group_column: value
           group_columns: {  }
           group_rows: true

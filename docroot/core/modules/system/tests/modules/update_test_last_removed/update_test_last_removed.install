@@ -5,16 +5,18 @@
  * Update functions for the update_test_last_removed module.
  */
 
+declare(strict_types=1);
+
 /**
  * Implements hook_update_last_removed().
  */
-function update_test_last_removed_update_last_removed() {
+function update_test_last_removed_update_last_removed(): int {
   return 8002;
 }
 
 /**
  * Dummy update function to run during the tests.
  */
-function update_test_last_removed_update_8003() {
+function update_test_last_removed_update_8003(): string {
   return 'The update_test_last_removed_update_8003() update was executed successfully.';
 }

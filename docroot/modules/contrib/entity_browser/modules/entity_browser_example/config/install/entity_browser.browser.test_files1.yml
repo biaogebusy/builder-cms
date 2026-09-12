@@ -13,6 +13,7 @@ display_configuration:
   width: '650'
   height: '500'
   link_text: 'Select entities (Modal)'
+  use_admin_theme: true
 selection_display: no_display
 selection_display_configuration: {  }
 widget_selector: single

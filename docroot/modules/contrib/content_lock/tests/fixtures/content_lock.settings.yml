@@ -1,0 +1,49 @@
+verbose: 1
+types:
+  block_content: {  }
+  comment: {  }
+  file: {  }
+  menu_link_content: {  }
+  node:
+    '*': '*'
+  path_alias: {  }
+  shortcut: {  }
+  taxonomy_term: {  }
+  user: {  }
+types_translation_lock:
+  - node
+  - taxonomy_term
+types_js_lock: {}
+form_op_lock:
+  block_content:
+    mode: 0
+    values: {  }
+  comment:
+    mode: 0
+    values: {  }
+  file:
+    mode: 0
+    values: {  }
+  menu_link_content:
+    mode: 0
+    values: {  }
+  node:
+    mode: 1
+    values:
+      default: default
+      delete: delete
+      edit: edit
+      delete-multiple-confirm: delete-multiple-confirm
+  path_alias:
+    mode: 0
+    values: {  }
+  shortcut:
+    mode: 0
+    values: {  }
+  taxonomy_term:
+    mode: 1
+    values:
+      delete: delete
+  user:
+    mode: 0
+    values: {  }

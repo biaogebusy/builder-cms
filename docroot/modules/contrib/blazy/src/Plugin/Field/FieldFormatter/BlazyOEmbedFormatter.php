@@ -9,6 +9,7 @@ use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\Field\BlazyDependenciesTrait;
+use Drupal\blazy\Internals\Internals;
 use Drupal\media\Entity\MediaType;
 use Drupal\media\Plugin\media\Source\OEmbedInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -94,7 +95,9 @@ class BlazyOEmbedFormatter extends FormatterBase {
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $element = [];
     $definition = $this->getScopedFormElements();
+
     $definition['_views'] = isset($form['field_api_classes']);
+    $definition['field_api_classes'] = $form['field_api_classes']['#default_value'] ?? FALSE;
 
     $this->admin()->buildSettingsForm($element, $definition);
 
@@ -205,10 +208,10 @@ class BlazyOEmbedFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   protected function postSettings(array &$settings, $langcode): void {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $blazies->set('language.code', $langcode);
     // The form is not loaded at views UI, provides the minimum.
-    // @todo remove when the form is loaded at Views UI.
+    // @todo deprecate and remove when the form is loaded at Views UI.
     if ($blazies->get('view.embedded')
       && $defaults = $blazies->get('media.defaults', [])) {
       $settings = array_merge($settings, $defaults);

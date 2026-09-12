@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
 use Drupal\gin\GinContentFormHelper;
 use Drupal\gin\GinDescriptionToggle;
 use Drupal\gin\GinPreRender;
@@ -43,60 +42,6 @@ function gin_form_alter(&$form, $form_state, $form_id) {
     $form['actions']['submit']['#attributes']['class'][] = 'button--danger';
     $form['actions']['cancel']['#attributes']['class'][] = 'button--secondary';
   }
-
-  // $form['#attached']['library'][] = 'gin/more_actions';
-}
-
-/**
- * Helper function to remember the form actions after form has been built.
- */
-function gin_form_after_build(array $form, FormStateInterface $form_state): array {
-  // Allowlist for visible actions.
-  $includes = ['save', 'submit', 'preview'];
-
-  // Secondary action container options.
-  $form['gin_sticky_actions']['more_actions']['more_actions_items']['#weight'] = 2;
-  $form['gin_sticky_actions']['more_actions']['more_actions_items']['#attributes']['class'] = ['gin-more-actions__menu'];
-
-  // Build actions.
-  foreach (Element::children($form['actions']) as $key) {
-    $button = ($form['actions'][$key]) ?? [];
-
-    if (!($button['#access'] ?? TRUE)) {
-      continue;
-    }
-
-    // The media_type_add_form form is a special case.
-    // @see https://www.drupal.org/project/gin/issues/3534385
-    // @see \Drupal\media\MediaTypeForm::actions
-    if ($button['#type'] ?? '' === 'submit' || $form['#form_id'] === 'media_type_add_form') {
-      // Update button.
-      $button['#attributes']['id'] = 'gin-sticky-' . $button['#id'];
-      $button['#attributes']['form'] = $form['#id'];
-      $button['#attributes']['data-drupal-selector'] = 'gin-sticky-' . $button['#attributes']['data-drupal-selector'];
-      $button['#attributes']['data-gin-sticky-form-selector'] = $button['#attributes']['data-drupal-selector'];
-
-      // Add the button to the form actions array.
-      if (in_array($key, $includes, TRUE) || !empty($button['#gin_action_item'])) {
-        $form['gin_sticky_actions']['actions'][$key] = $button;
-      }
-      // Add to more menu.
-      else {
-        $form['gin_sticky_actions']['more_actions']['more_actions_items'][$key] = $button;
-      }
-    }
-    // Else add button to more menu.
-    elseif (!in_array($key, $includes, TRUE)) {
-      $form['gin_sticky_actions']['more_actions']['more_actions_items'][$key] = $button;
-      $form['gin_sticky_actions']['more_actions']['more_actions_items'][$key]['#attributes']['form'] = $button['#id'];
-      continue;
-    }
-  }
-
-  _gin_form_actions($form['gin_sticky_actions'] ?? NULL);
-  unset($form['gin_sticky_actions']);
-
-  return $form;
 }
 
 /**

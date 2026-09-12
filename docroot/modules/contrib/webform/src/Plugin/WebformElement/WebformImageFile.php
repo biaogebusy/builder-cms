@@ -40,14 +40,17 @@ class WebformImageFile extends WebformManagedFileBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // Add upload resolution validation.
     $max_resolution = $this->getElementProperty($element, 'max_resolution');
     $min_resolution = $this->getElementProperty($element, 'min_resolution');
     if ($max_resolution || $min_resolution) {
-      $element['#upload_validators']['file_validate_image_resolution'] = [$max_resolution, $min_resolution];
+      $element['#upload_validators']['FileImageDimensions'] = [
+        'maxDimensions' => $max_resolution,
+        'minDimensions' => $min_resolution,
+      ];
     }
   }
 
@@ -93,13 +96,13 @@ class WebformImageFile extends WebformManagedFileBase {
     $value = $this->getValue($element, $webform_submission, $options);
     $file = $this->getFile($element, $value, $options);
     $format = $this->getItemFormat($element);
-    if (strpos($format, ':') === FALSE) {
+    if (!str_contains($format, ':')) {
       return parent::formatHtmlItem($element, $webform_submission, $options);
     }
     else {
       [$style_name, $format] = explode(':', $format);
       $theme = str_replace('webform_', 'webform_element_', $this->getPluginId());
-      if (strpos($theme, 'webform_') !== 0) {
+      if (!str_starts_with($theme, 'webform_')) {
         $theme = 'webform_element_' . $theme;
       }
       return [

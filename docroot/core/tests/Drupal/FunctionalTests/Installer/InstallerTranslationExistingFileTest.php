@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Installer;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests translation files for multiple languages get imported during install.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerTranslationExistingFileTest extends InstallerTestBase {
 
   /**
@@ -31,7 +34,7 @@ class InstallerTranslationExistingFileTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpLanguage() {
+  protected function setUpLanguage(): void {
     // Place custom local translations in the translations directory.
     mkdir(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations', 0777, TRUE);
     $po_contents = <<<PO
@@ -41,14 +44,14 @@ PO;
     // Create a misnamed translation file that
     // \Drupal\Core\StringTranslation\Translator\FileTranslation::findTranslationFiles()
     // will not find.
-    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0-DEV.xx-lolspeak.po', $po_contents);
+    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '-DEV.xx-lolspeak.po', $po_contents);
     parent::setUpLanguage();
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function setUpProfile() {
+  protected function setUpProfile(): void {
     // Do nothing, because this test only tests the language installation
     // step's results.
   }
@@ -56,7 +59,7 @@ PO;
   /**
    * {@inheritdoc}
    */
-  protected function setUpSettings() {
+  protected function setUpSettings(): void {
     // Do nothing, because this test only tests the language installation
     // step's results.
   }
@@ -64,7 +67,7 @@ PO;
   /**
    * {@inheritdoc}
    */
-  protected function setUpRequirementsProblem() {
+  protected function setUpRequirementsProblem(): void {
     // Do nothing, because this test only tests the language installation
     // step's results.
   }
@@ -72,7 +75,7 @@ PO;
   /**
    * {@inheritdoc}
    */
-  protected function setUpSite() {
+  protected function setUpSite(): void {
     // Do nothing, because this test only tests the language installation
     // step's results.
   }

@@ -1,0 +1,14 @@
+name: 'Charts Chart.js API Example'
+type: module
+description: 'Demonstrates how to use the Charts API with the Chart.js library.'
+core_version_requirement: ^10.3 || ^11 || ^12
+package: Examples
+dependencies:
+  - 'charts:charts'
+  - 'charts:charts_chartjs'
+  - 'charts:charts_api_example'
+
+# Information added by Drupal.org packaging script on 2026-08-04
+version: '5.2.3'
+project: 'charts'
+datestamp: 1785875201

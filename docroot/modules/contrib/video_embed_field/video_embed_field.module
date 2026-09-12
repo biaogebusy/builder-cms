@@ -15,6 +15,7 @@ function video_embed_field_theme() {
   return [
     'video_embed_iframe' => [
       'variables' => [
+        'provider' => '',
         'url' => '',
         'query' => [],
         'attributes' => [],

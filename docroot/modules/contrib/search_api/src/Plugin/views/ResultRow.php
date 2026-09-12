@@ -13,6 +13,7 @@ use Drupal\views\ViewExecutable;
  * @property string search_api_language
  * @property float search_api_relevance
  * @property string|null search_api_excerpt
+ * @property bool $search_api_has_fields_from_server
  */
 class ResultRow extends ViewsResultRow {
 

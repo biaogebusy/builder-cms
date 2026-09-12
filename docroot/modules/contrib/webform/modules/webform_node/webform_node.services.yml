@@ -5,3 +5,11 @@ services:
       - { name: module_install.uninstall_validator }
     arguments: ['@entity_type.manager', '@string_translation']
     lazy: true
+
+  Drupal\webform_node\Hook\WebformNodeHooks:
+    class: Drupal\webform_node\Hook\WebformNodeHooks
+    autowire: true
+
+  Drupal\webform_node\Hook\WebformNodeTokensHooks:
+    class: Drupal\webform_node\Hook\WebformNodeTokensHooks
+    autowire: true

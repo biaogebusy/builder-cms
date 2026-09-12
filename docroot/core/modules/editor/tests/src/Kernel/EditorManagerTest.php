@@ -7,12 +7,14 @@ namespace Drupal\Tests\editor\Kernel;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests detection of text editors and correct generation of attachments.
- *
- * @group editor
  */
+#[Group('editor')]
+#[RunTestsInSeparateProcesses]
 class EditorManagerTest extends KernelTestBase {
 
   /**
@@ -81,6 +83,9 @@ class EditorManagerTest extends KernelTestBase {
     $editor = Editor::create([
       'format' => 'full_html',
       'editor' => 'unicorn',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
     ]);
     $editor->save();
     $this->assertSame([], $this->editorManager->getAttachments([]), 'No attachments when one text editor is enabled and retrieving attachments for zero text formats.');

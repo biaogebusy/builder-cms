@@ -21,64 +21,49 @@ an API to embed and show code snippets in your content.
 
 ## Requirements
 
-This module requires the [ACE Editor JavaScript library](https://github.com/ajaxorg/ace-builds)
+This module requires the CKEditor-independent
+[Ace Editor JavaScript library](https://github.com/ajaxorg/ace-builds).
 
-Please download any of the available builds of the latest version and **copy it under** _/libraries/_ so _ace.js_ file can be found under _{drupal_root}/libraries/{any-sub-dir}/ace.js_. Alternatively, use Composer, see "Installation" below.</li>
+**The module requires the library itself, so there is nothing to require at the
+project level.** Composer brings it in as a `drupal-library` through
+[vardot/ace](https://github.com/Vardot/ace), which packages the minified
+no-conflict `ace-builds` distribution. See `composer.libraries.json`; you should
+be able to copy and paste that into your own `composer.json` if you need to pin
+the library yourself.
 
 
 ## Installation
 
-Install with Composer (recommended) or manually, by following these steps.
-
-[Downloading third-party libraries using Composer](https://www.drupal.org/docs/develop/using-composer/manage-dependencies#third-party-libraries)
-
-### Install with Composer
-
-Define npm-asset repository in the `composer.json`` file, to allow downloading the ACE Editor JavaScript library to the correct folder:
-
-```
-composer config repositories.assets composer https://asset-packagist.org
-composer config --json extra.installer-types '["npm-asset", "bower-asset"]'
-composer config --json extra.installer-paths.web\/libraries\/ace '["npm-asset/ace-builds"]'
-composer config --unset extra.installer-paths.web\/libraries\/\{\$name\}
-composer config --json extra.installer-paths.web\/libraries\/\{\$name\} '["type:drupal-library", "type:bower-asset", "type:npm-asset"]'
-```
-
-Download the ACE Builds library. or require it by composer with.
-```
-composer require npm-asset/ace-builds:~1.0
-```
-
-Better to get the library from https://www.npmjs.com/package/ace-builds
-
-
-Download the ACE Editor module and install it:
+Install as you would normally install a contributed Drupal module:
 
 ```
 composer require drupal/ace_editor:~2.0
 drush en ace_editor
 ```
 
-The Ace library will be downloaded to the `/libraries` folder with `$ composer install/update`. Only one version
-(minified, noconflict...) is required. Other folders (including `/demo`) can be removed.
+Composer installs `vardot/ace` alongside the module, and the usual Drupal
+`installer-paths` place it at `web/libraries/ace`, so `ace.js` is found at
+`{drupal_root}/libraries/ace/src-min-noconflict/ace.js`. Nothing else is needed.
+
+For further information, see
+[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
+
+The module scans `/libraries/ace` and `/libraries/ace-builds` recursively for
+`ace.js`, and prefers the minified no-conflict build when more than one is
+present, so an existing manual installation keeps working.
 
 
-### Install manually
+### Install the library manually
+
+Only needed on a site that is not managed with Composer.
 
 1. Download the latest version of the Ace Editor at
    https://github.com/ajaxorg/ace-builds/ or directly
    via https://github.com/ajaxorg/ace-builds/archive/master.zip
    Do not use a version < 1.4.0.
-1. Extract and place the files tree contents of only one of the releases
-   (minified, noconflict...) under `/libraries/ace` so that`ace.js`
-   is located at `/libraries/ace/ace.js`.
-1. Download, extract and copy the "Ace Editor" module to your
-   `/modules` or `/modules/contrib` directory.
-1. Enable the "Ace Editor" module on your Drupal Extent page,
-   under the Administration heading. An "Ace Editor" filter format
-   is added. You can create a new Text format for use it, or
-   enable the Ace editor for other filter formats at
-   `/admin/config/content/formats`.
+1. Extract and place the file tree contents of only one of the builds
+   (`src-min-noconflict` is recommended) under `/libraries/ace`, so that
+   `ace.js` is located at `/libraries/ace/ace.js`.
 
 
 ## Uninstallation

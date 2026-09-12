@@ -6,14 +6,16 @@ namespace Drupal\Tests\node\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests node translation redirects.
- *
- * @group migrate_drupal
- * @group node
  */
+#[Group('migrate_drupal')]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeTranslationRedirectTest extends MigrateDrupal6TestBase {
 
   use UserCreationTrait;

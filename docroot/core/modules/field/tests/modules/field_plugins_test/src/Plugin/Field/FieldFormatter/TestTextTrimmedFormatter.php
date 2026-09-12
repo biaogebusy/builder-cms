@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\field_plugins_test\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\Attribute\FieldFormatter;
@@ -15,7 +17,6 @@ use Drupal\text\Plugin\Field\FieldFormatter\TextTrimmedFormatter;
   field_types: [
     'text',
     'text_long',
-    'text_with_summary',
   ],
 )]
 class TestTextTrimmedFormatter extends TextTrimmedFormatter {

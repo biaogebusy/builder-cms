@@ -7,3 +7,7 @@ include:
       - '/includes/include.drupalci.main.yml'
       - '/includes/include.drupalci.variables.yml'
       - '/includes/include.drupalci.workflows.yml'
+
+composer:
+  variables:
+    DRUPAL_CORE: 10.2.12

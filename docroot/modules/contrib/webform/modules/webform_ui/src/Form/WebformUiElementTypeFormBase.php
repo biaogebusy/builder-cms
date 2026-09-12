@@ -74,7 +74,7 @@ abstract class WebformUiElementTypeFormBase extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL) {
     $form['#prefix'] = '<div id="webform-ui-element-type-ajax-wrapper">';
     $form['#suffix'] = '</div>';
 
@@ -261,8 +261,12 @@ abstract class WebformUiElementTypeFormBase extends FormBase {
     // which closes the original modal.
     // @todo Remove the below workaround once this issue is resolved.
     if ($webform_element->getTypeName() === 'processed_text' && !WebformDialogHelper::useOffCanvas()) {
-      unset($row['type']['#attributes']);
-      unset($row['operation']['#attributes']);
+      if (isset($row['type']['#attributes'])) {
+        unset($row['type']['#attributes']);
+      }
+      if (isset($row['operation']['#attributes'])) {
+        unset($row['operation']['#attributes']);
+      }
       if (isset($row['operation'])) {
         $row['operation']['#attributes']['class'] = ['button', 'button--primary', 'button--small'];
       }

@@ -3,11 +3,10 @@
 namespace Drupal\ai_test\Plugin\AiProvider;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Tests\ai\Mock\MockIterator;
-use Drupal\Tests\ai\Mock\MockStreamedChatIterator;
 use Drupal\ai\Attribute\AiProvider;
 use Drupal\ai\Base\AiProviderClientBase;
 use Drupal\ai\OperationType\Chat\ChatInput;
@@ -27,10 +26,6 @@ use Drupal\ai\OperationType\ImageClassification\ImageClassificationInput;
 use Drupal\ai\OperationType\ImageClassification\ImageClassificationInterface;
 use Drupal\ai\OperationType\ImageClassification\ImageClassificationItem;
 use Drupal\ai\OperationType\ImageClassification\ImageClassificationOutput;
-use Drupal\ai\OperationType\TextClassification\TextClassificationInput;
-use Drupal\ai\OperationType\TextClassification\TextClassificationInterface;
-use Drupal\ai\OperationType\TextClassification\TextClassificationItem;
-use Drupal\ai\OperationType\TextClassification\TextClassificationOutput;
 use Drupal\ai\OperationType\ImageToImage\ImageToImageInput;
 use Drupal\ai\OperationType\ImageToImage\ImageToImageInterface;
 use Drupal\ai\OperationType\ImageToImage\ImageToImageOutput;
@@ -42,6 +37,10 @@ use Drupal\ai\OperationType\Moderation\ModerationResponse;
 use Drupal\ai\OperationType\SpeechToText\SpeechToTextInput;
 use Drupal\ai\OperationType\SpeechToText\SpeechToTextInterface;
 use Drupal\ai\OperationType\SpeechToText\SpeechToTextOutput;
+use Drupal\ai\OperationType\TextClassification\TextClassificationInput;
+use Drupal\ai\OperationType\TextClassification\TextClassificationInterface;
+use Drupal\ai\OperationType\TextClassification\TextClassificationItem;
+use Drupal\ai\OperationType\TextClassification\TextClassificationOutput;
 use Drupal\ai\OperationType\TextToImage\TextToImageInput;
 use Drupal\ai\OperationType\TextToImage\TextToImageInterface;
 use Drupal\ai\OperationType\TextToImage\TextToImageOutput;
@@ -49,11 +48,12 @@ use Drupal\ai\OperationType\TextToSpeech\TextToSpeechInput;
 use Drupal\ai\OperationType\TextToSpeech\TextToSpeechInterface;
 use Drupal\ai\OperationType\TextToSpeech\TextToSpeechOutput;
 use Drupal\ai\Traits\OperationType\ImageToImageTrait;
+use Drupal\ai_test\Mock\MockIterator;
+use Drupal\ai_test\Mock\MockStreamedChatIterator;
 use Drupal\ai_test\OperationType\Echo\EchoInput;
 use Drupal\ai_test\OperationType\Echo\EchoInterface;
 use Drupal\ai_test\OperationType\Echo\EchoOutput;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * Plugin implementation of the 'mock' provider.
@@ -119,7 +119,7 @@ class EchoProvider extends AiProviderClientBase implements
    */
   public function getApiDefinition(): array {
     // Load the configuration.
-    return Yaml::parseFile($this->moduleHandler->getModule('ai_test')->getPath() . '/definitions/api_defaults.yml');
+    return Yaml::decode(file_get_contents($this->moduleHandler->getModule('ai_test')->getPath() . '/definitions/api_defaults.yml'));
   }
 
   /**
@@ -495,8 +495,8 @@ class EchoProvider extends AiProviderClientBase implements
     $responses = [];
     foreach ($entities as $entity) {
       $responses[] = [
-        'request' => Yaml::parse($entity->get('request')->value),
-        'response' => Yaml::parse($entity->get('response')->value),
+        'request' => Yaml::decode($entity->get('request')->value),
+        'response' => Yaml::decode($entity->get('response')->value),
         'wait' => $entity->get('sleep_time')->value,
       ];
     }
@@ -542,7 +542,7 @@ class EchoProvider extends AiProviderClientBase implements
             if (is_file($file_path)) {
               $file_contents = file_get_contents($file_path);
               if ($file_contents !== FALSE) {
-                $data = Yaml::parse($file_contents);
+                $data = Yaml::decode($file_contents);
                 if (!empty($data)) {
                   $requests[] = $data;
                 }

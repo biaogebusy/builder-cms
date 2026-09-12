@@ -50,7 +50,7 @@ class WebformSubmissionsPurgeForm extends WebformSubmissionsDeleteFormBase {
       '#type' => 'webform_message',
       '#message_type' => 'warning',
       '#message_message' => $this->t('Are you sure you want to purge all submissions?') . '<br/>' .
-        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+      '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
     ];
   }
 

@@ -1,5 +1,20 @@
 # Changelog
 
+### 6.1.0 - 2026/Jun/6
+
+* Support kubectl.context in KubectlTransport (#92)
+* Bugfix: Can't drush ssh into kubectl (#94)
+
+### 6.0.1 - 2026/Mar/28
+
+* Allow Symfony 8 (#87)
+* Add Symfony major version matrix to CI (#88)
+
+### 6.0.0 - 2025/Nov/14
+
+* PHP 8.5 support
+* B/C Break: Remove support for PHP 8.0 and 8.1.
+
 ### 5.4.2 - 2024/Dec/13
 
 * PHP 8.4 support

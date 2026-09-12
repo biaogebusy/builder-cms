@@ -21,7 +21,7 @@ class WebformUiElementTypeSelectForm extends WebformUiElementTypeFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL) {
     $parent = $this->getRequest()->query->get('parent');
 
     if ($parent) {

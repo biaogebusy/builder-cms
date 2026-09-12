@@ -129,7 +129,7 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
    * {@inheritdoc}
    */
   public function getDateFormat() {
-    return ($this->getDateType() === 'datetime') ? 'Y-m-d H:i:s' : 'Y-m-d';
+    return ($this->getDateType() === 'datetime') ? 'c' : 'Y-m-d';
   }
 
   /**
@@ -460,13 +460,13 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
   }
 
   /* ************************************************************************ */
-  // Queuing/sending functions (aka the tumbleweed).
+  // Queueing/sending functions (aka the tumbleweed).
   /* ************************************************************************ */
 
   /**
    * {@inheritdoc}
    */
-  public function cron(EntityInterface $entity = NULL, $handler_id = NULL, $schedule_limit = 1000, $send_limit = NULL) {
+  public function cron(?EntityInterface $entity = NULL, $handler_id = NULL, $schedule_limit = 1000, $send_limit = NULL) {
     // Get default batch email size.
     if ($send_limit === NULL) {
       $send_limit = $this->configFactory->get('webform.settings')->get('batch.default_batch_email_size') ?: 500;
@@ -526,7 +526,7 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
    * @return array
    *   An associative array containing stats.
    */
-  protected function cronSchedule(EntityInterface $entity = NULL, $handler_id = NULL, $limit = 1000) {
+  protected function cronSchedule(?EntityInterface $entity = NULL, $handler_id = NULL, $limit = 1000) {
     $stats = [
       WebformScheduledEmailManagerInterface::EMAIL_SCHEDULED => 0,
       WebformScheduledEmailManagerInterface::EMAIL_RESCHEDULED => 0,
@@ -616,7 +616,7 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
    * @return array
    *   An associative array containing stats.
    */
-  protected function cronSend(EntityInterface $entity = NULL, $handler_id = NULL, $limit = 500) {
+  protected function cronSend(?EntityInterface $entity = NULL, $handler_id = NULL, $limit = 500) {
     $stats = [
       WebformScheduledEmailManagerInterface::EMAIL_SENT => 0,
       WebformScheduledEmailManagerInterface::EMAIL_NOT_SENT => 0,
@@ -700,7 +700,22 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
 
         // Send (translated) email.
         $message = $handler->getMessage($webform_submission);
-        $status = $handler->sendMessage($webform_submission, $message);
+        // Catch any exception thrown while sending (e.g. a mail transport
+        // rejecting a malformed recipient address) so a single bad submission
+        // cannot abort the entire cron batch. An uncaught exception here skips
+        // the delete query at the end of this method, leaving every already-sent
+        // record in the 'send' state to be re-sent on every subsequent cron run.
+        try {
+          $status = $handler->sendMessage($webform_submission, $message);
+        }
+        catch (\Exception $e) {
+          $status = FALSE;
+          $this->getLogger('webform_scheduled_email')->error('Scheduled email not sent for submission @sid via the @handler handler: @message', [
+            '@sid' => $sid,
+            '@handler' => $handler_id,
+            '@message' => $e->getMessage(),
+          ]);
+        }
 
         // Switch back to original language.
         if ($switch_languages) {
@@ -752,7 +767,7 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
   /**
    * {@inheritdoc}
    */
-  public function stats(EntityInterface $entity = NULL, $handler_id = NULL) {
+  public function stats(?EntityInterface $entity = NULL, $handler_id = NULL) {
     return [
       WebformScheduledEmailManagerInterface::SUBMISSION_WAITING => $this->waiting($entity, $handler_id),
       WebformScheduledEmailManagerInterface::SUBMISSION_QUEUED => $this->queued($entity, $handler_id),
@@ -764,28 +779,28 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
   /**
    * {@inheritdoc}
    */
-  public function waiting(EntityInterface $entity = NULL, $handler_id = NULL) {
+  public function waiting(?EntityInterface $entity = NULL, $handler_id = NULL) {
     return $this->total($entity, $handler_id, WebformScheduledEmailManagerInterface::SUBMISSION_WAITING);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function queued(EntityInterface $entity = NULL, $handler_id = NULL) {
+  public function queued(?EntityInterface $entity = NULL, $handler_id = NULL) {
     return $this->total($entity, $handler_id, WebformScheduledEmailManagerInterface::SUBMISSION_QUEUED);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function ready(EntityInterface $entity = NULL, $handler_id = NULL) {
+  public function ready(?EntityInterface $entity = NULL, $handler_id = NULL) {
     return $this->total($entity, $handler_id, WebformScheduledEmailManagerInterface::SUBMISSION_READY);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function total(EntityInterface $entity = NULL, $handler_id = NULL, $state = FALSE) {
+  public function total(?EntityInterface $entity = NULL, $handler_id = NULL, $state = FALSE) {
     [$webform, $webform_submission, $source_entity] = $this->getEntities($entity);
 
     $query = $this->database->select('webform_scheduled_email', 'w');
@@ -819,7 +834,7 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
    * @return array
    *   An array containing webform, webform submission, and source entity.
    */
-  protected function getEntities(EntityInterface $entity = NULL) {
+  protected function getEntities(?EntityInterface $entity = NULL) {
     $webform = NULL;
     $webform_submission = NULL;
     $source_entity = NULL;
@@ -855,7 +870,7 @@ class WebformScheduledEmailManager implements WebformScheduledEmailManagerInterf
    * @param string|null $state
    *   The state of the scheduled emails.
    */
-  protected function addQueryConditions($query, WebformInterface $webform = NULL, WebformSubmissionInterface $webform_submission = NULL, EntityInterface $source_entity = NULL, $handler_id = NULL, $state = NULL) {
+  protected function addQueryConditions($query, ?WebformInterface $webform = NULL, ?WebformSubmissionInterface $webform_submission = NULL, ?EntityInterface $source_entity = NULL, $handler_id = NULL, $state = NULL) {
     $prefix = ($query instanceof QueryDelete) ? '' : 'w.';
 
     if ($webform) {

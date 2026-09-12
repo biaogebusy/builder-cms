@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Kernel\Migrate\d6;
 
 use Drupal\Core\Field\Entity\BaseFieldOverride;
-use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\node\Entity\Node;
+use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test migrating node settings into the base_field_bundle_override config entity.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeBundleSettingsTest extends MigrateDrupal6TestBase {
 
   /**

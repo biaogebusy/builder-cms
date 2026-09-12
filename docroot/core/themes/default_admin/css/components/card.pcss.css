@@ -1,0 +1,123 @@
+/**
+ * @file
+ * Card.
+ */
+
+:root {
+  --card-border-size: 1px;
+  --card-border-radius-size: var(--admin-radius-2xs);
+  --card-image-border-radius-size: calc(var(--card-border-radius-size) - var(--card-border-size));
+}
+
+.card-list {
+  margin-block-end: var(--admin-space-xl);
+}
+
+.card {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  align-items: stretch;
+  justify-items: flex-start;
+  padding: 0;
+  border: 1px solid var(--admin-color-border);
+  border-radius: var(--admin-radius-m);
+}
+
+/* 588px theme screenshot width. 53.75rem is screenshot image width + toolbar width (15rem) + 2rem of margins. */
+.card--horizontal {
+  /* 588px theme screenshot width */
+  @media screen and (min-width: 36.75rem) {
+    flex-direction: row;
+
+    .card__image {
+      flex-basis: 35%;
+      border-start-start-radius: var(--card-image-border-radius-size);
+      border-start-end-radius: 0;
+      border-end-start-radius: var(--card-image-border-radius-size);
+      border-end-end-radius: 0;
+    }
+
+    .card__content-wrapper {
+      flex-basis: 65%;
+    }
+
+    /* Card content with image. */
+    .card__image ~ .card__content-wrapper {
+      padding-inline-start: var(--admin-space-m);
+    }
+  }
+
+  @media screen and (min-width: 85.375rem) {
+    .card__image {
+      flex-basis: 45%;
+    }
+
+    .card__content-wrapper {
+      flex-basis: 55%;
+    }
+  }
+}
+
+/**
+ * Card image.
+ */
+.card__image {
+  overflow: hidden;
+  border-radius: var(--admin-radius-m) var(--admin-radius-m) 0 0;
+  line-height: 0;
+
+  @media (--admin-xsmall) {
+    border-radius: var(--admin-radius-m) 0 0 var(--admin-radius-m);
+  }
+}
+
+/**
+ * Card content.
+ */
+.card__content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: var(--admin-space-l);
+  border-radius: 0 0 var(--admin-radius-xs) var(--admin-radius-xs);
+  background-color: var(--admin-color-bg-surface);
+
+  .gin--dark-mode & {
+    background-color: var(--admin-color-bg-surface-nested);
+  }
+
+  @media (--admin-xsmall) {
+    border-radius: 0 var(--admin-radius-xs) var(--admin-radius-xs) 0;
+  }
+}
+
+.card__content {
+  flex-grow: 1;
+}
+
+/**
+ * Card content items (title, description).
+ */
+.card__content-item {
+  margin-block: 0 var(--admin-space-m);
+
+  &:last-child {
+    margin-block-end: 0;
+  }
+}
+
+/**
+ * Card footer.
+ */
+.card__footer {
+  order: 100;
+  margin-block-start: var(--admin-space-l);
+
+  .action-links {
+    margin-block: 0;
+    text-align: end;
+  }
+}

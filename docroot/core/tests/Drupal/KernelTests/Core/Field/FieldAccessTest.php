@@ -8,12 +8,14 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Field level access hooks.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class FieldAccessTest extends KernelTestBase {
 
   /**
@@ -24,9 +26,7 @@ class FieldAccessTest extends KernelTestBase {
   protected static $modules = [
     'entity_test',
     'field',
-    'system',
     'text',
-    'filter',
     'user',
   ];
 

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\file\Functional;
 
 use Drupal\file\Entity\File;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensure that files added to nodes appear correctly in RSS feeds.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileFieldRSSContentTest extends FileFieldTestBase {
 
   /**
@@ -35,10 +37,12 @@ class FileFieldRSSContentTest extends FileFieldTestBase {
 
     // RSS display must be added manually.
     $this->drupalGet("admin/structure/types/manage/$type_name/display");
-    $edit = [
-      "display_modes_custom[rss]" => '1',
-    ];
-    $this->submitForm($edit, 'Save');
+    // Find and click the enable link for the RSS view mode.
+    $page = $this->getSession()->getPage();
+    $enable_link = $page->find('xpath', "//tr[@id='display-mode-node-article-rss']//a[contains(., 'Enable')]");
+    if ($enable_link) {
+      $enable_link->click();
+    }
 
     // Change the format to 'RSS enclosure'.
     $this->drupalGet("admin/structure/types/manage/$type_name/display/rss");
@@ -57,7 +61,6 @@ class FileFieldRSSContentTest extends FileFieldTestBase {
     $nid = $this->uploadNodeFile($test_file, $field_name, $node->id());
 
     // Get the uploaded file from the node.
-    $node_storage->resetCache([$nid]);
     $node = $node_storage->load($nid);
     $node_file = File::load($node->{$field_name}->target_id);
 

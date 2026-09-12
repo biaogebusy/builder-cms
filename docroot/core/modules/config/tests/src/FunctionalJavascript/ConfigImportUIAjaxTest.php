@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\config\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user interface for importing configuration.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigImportUIAjaxTest extends WebDriverTestBase {
 
   /**

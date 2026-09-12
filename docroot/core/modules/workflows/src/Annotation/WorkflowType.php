@@ -9,7 +9,8 @@ use Drupal\Component\Annotation\Plugin;
  *
  * Plugin Namespace: Plugin\WorkflowType
  *
- * For a working example, see \Drupal\content_moderation\Plugin\Workflow\ContentModerate
+ * For a working example, see
+ * \Drupal\content_moderation\Plugin\Workflow\ContentModerate
  *
  * @see \Drupal\workflows\WorkflowTypeInterface
  * @see \Drupal\workflows\WorkflowTypeManager
@@ -53,6 +54,8 @@ class WorkflowType extends Plugin {
    * - 'state' (\Drupal\workflows\StateInterface::PLUGIN_FORM_KEY)
    * - 'transition' (\Drupal\workflows\TransitionInterface::PLUGIN_FORM_KEY)
    *
+   * @var array
+   *
    * @see \Drupal\Core\Plugin\PluginWithFormsInterface
    * @see \Drupal\Core\Plugin\PluginFormInterface
    * @see \Drupal\workflows\Plugin\WorkflowTypeConfigureFormBase
@@ -61,8 +64,6 @@ class WorkflowType extends Plugin {
    * @see \Drupal\workflows\WorkflowTypeInterface::PLUGIN_FORM_KEY
    * @see \Drupal\workflows\StateInterface::PLUGIN_FORM_KEY
    * @see \Drupal\workflows\TransitionInterface::PLUGIN_FORM_KEY
-   *
-   * @var array
    */
   public $forms = [];
 

@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Main functions and methods for the "Simple hierarchical select: Media" module.
+ */
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function shs_media_views_data_alter(&$data) {
+  $data['media_field_data']['term_shs_media_tid_depth'] = [
+    'help' => t('Display media if it has the selected taxonomy terms, or children of the selected terms.'),
+    'real field' => 'mid',
+    'filter' => [
+      'title' => t('Media has taxonomy term ID (with depth) - shs'),
+      'id' => 'shs_media_taxonomy_index_tid_depth',
+    ],
+  ];
+}

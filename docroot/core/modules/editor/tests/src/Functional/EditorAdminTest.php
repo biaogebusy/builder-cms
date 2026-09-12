@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\editor\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Html;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests administration of text editors.
- *
- * @group editor
  */
+#[Group('editor')]
+#[RunTestsInSeparateProcesses]
 class EditorAdminTest extends BrowserTestBase {
 
   /**
@@ -115,10 +116,8 @@ class EditorAdminTest extends BrowserTestBase {
     // Install the node module.
     $this->container->get('module_installer')->install(['node']);
     $this->resetAll();
-    // Create a new node type and attach the 'body' field to it.
-    $node_type = NodeType::create(['type' => $this->randomMachineName(), 'name' => $this->randomString()]);
-    $node_type->save();
-    node_add_body_field($node_type, $this->randomString());
+    // Create a new node type and attach a text field to it.
+    $node_type = $this->drupalCreateContentType(['type' => $this->randomMachineName(), 'name' => $this->randomString()]);
 
     $permissions = ['administer filters', "edit any {$node_type->id()} content"];
     foreach ($formats as $format => $name) {
@@ -142,7 +141,7 @@ class EditorAdminTest extends BrowserTestBase {
     $this->drupalLogin($account);
 
     // The node edit page header.
-    $text = (string) new FormattableMarkup('<em>Edit @type</em> @title', ['@type' => $node_type->label(), '@title' => $node->label()]);
+    $text = sprintf('<em>Edit %s</em> %s', Html::escape($node_type->label()), Html::escape($node->label()));
 
     // Go to node edit form.
     $this->drupalGet('node/' . $node->id() . '/edit');
@@ -181,7 +180,7 @@ class EditorAdminTest extends BrowserTestBase {
    * @param string $format_name
    *   The format name.
    */
-  protected function addEditorToNewFormat($format_id, $format_name) {
+  protected function addEditorToNewFormat($format_id, $format_name): void {
     $this->enableUnicornEditor();
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('admin/config/content/formats/add');
@@ -197,7 +196,7 @@ class EditorAdminTest extends BrowserTestBase {
   /**
    * Enables the unicorn editor.
    */
-  protected function enableUnicornEditor() {
+  protected function enableUnicornEditor(): void {
     if (!$this->container->get('module_handler')->moduleExists('editor_test')) {
       $this->container->get('module_installer')->install(['editor_test']);
     }
@@ -209,7 +208,7 @@ class EditorAdminTest extends BrowserTestBase {
    * @return array
    *   Returns an edit array containing the values to be posted.
    */
-  protected function selectUnicornEditor() {
+  protected function selectUnicornEditor(): array {
     // Verify the <select> when a text editor is available.
     $select = $this->assertSession()->selectExists('editor[editor]');
     $this->assertFalse($select->hasAttribute('disabled'));
@@ -239,8 +238,8 @@ class EditorAdminTest extends BrowserTestBase {
    * @param bool $ponies_too
    *   The expected value of the ponies_too setting.
    */
-  protected function verifyUnicornEditorConfiguration($format_id, $ponies_too = TRUE) {
-    $editor = editor_load($format_id);
+  protected function verifyUnicornEditorConfiguration($format_id, $ponies_too = TRUE): void {
+    $editor = \Drupal::entityTypeManager()->getStorage('editor')->load($format_id);
     $settings = $editor->getSettings();
     $this->assertSame('unicorn', $editor->getEditor(), 'The text editor is configured correctly.');
     $this->assertSame($ponies_too, $settings['ponies_too'], 'The text editor settings are stored correctly.');

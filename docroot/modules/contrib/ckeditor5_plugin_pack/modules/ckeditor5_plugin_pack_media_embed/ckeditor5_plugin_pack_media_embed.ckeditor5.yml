@@ -1,0 +1,22 @@
+ckeditor5_plugin_pack_media_embed__media_embed:
+  ckeditor5:
+    plugins:
+      - mediaEmbed.MediaEmbed
+    config:
+      mediaEmbed:
+        previewsInData: true
+        removeProviders: ['facebook', 'instagram', 'twitter', 'googleMaps', 'flickr']
+  drupal:
+    label: Media Embed
+    library: ckeditor5_plugin_pack_media_embed/media-embed
+    admin_library: ckeditor5_plugin_pack_media_embed/admin.media_embed
+    elements:
+      - <figure>
+      - <figure class>
+      - <iframe>
+      - <iframe src allow allowfullscreen frameborder>
+      - <div>
+      - <div data-oembed-url>
+    toolbar_items:
+      mediaEmbed:
+        label: Insert media

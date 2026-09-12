@@ -131,6 +131,9 @@ webform.handler.email:
     theme_name:
       type: string
       label: 'Theme name'
+    langcode:
+      type: string
+      label: Language
     parameters:
       label: 'Parameters'
       type: ignore
@@ -165,6 +168,9 @@ webform.handler.remote_post:
     cast:
       type: boolean
       label: 'Cast remote post data'
+    check_access:
+      type: boolean
+      label: 'Check if an element is displayed'
     debug:
       type: boolean
       label: 'Enable debugging'

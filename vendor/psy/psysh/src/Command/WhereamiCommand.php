@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,6 @@ namespace Psy\Command;
 
 use Psy\ConfigPaths;
 use Psy\Formatter\CodeFormatter;
-use Psy\Output\ShellOutput;
 use Psy\Shell;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -36,7 +35,7 @@ class WhereamiCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('whereami')
@@ -112,6 +111,8 @@ HELP
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $shellOutput = $this->shellOutput($output);
+
         $info = $this->fileInfo();
         $num = $input->getOption('num');
         $lineNum = $info['line'];
@@ -124,16 +125,12 @@ HELP
             $endLine = null;
         }
 
-        if ($output instanceof ShellOutput) {
-            $output->startPaging();
-        }
+        $shellOutput->startPaging();
 
         $output->writeln(\sprintf('From <info>%s:%s</info>:', ConfigPaths::prettyPath($info['file']), $lineNum));
         $output->write(CodeFormatter::formatCode($code, $startLine, $endLine, $lineNum), false);
 
-        if ($output instanceof ShellOutput) {
-            $output->stopPaging();
-        }
+        $shellOutput->stopPaging();
 
         return 0;
     }

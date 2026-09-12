@@ -186,3 +186,6 @@ show_invisibles: false
 print_margins: true
 auto_complete: true
 use_wrap_mode: true
+syntax_field: _none
+modelist: false
+inline: false

@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_example_variant\Hook\WebformExampleVariantHooks:
+    class: Drupal\webform_example_variant\Hook\WebformExampleVariantHooks
+    autowire: true

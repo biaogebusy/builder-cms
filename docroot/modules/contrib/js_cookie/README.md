@@ -43,7 +43,7 @@ If you are using the Composer Merge Plugin you can add the composer.libraries.js
 ```
 "extra": {
   "merge-plugin": {
-    "include": [
+    "require": [
       "web/modules/contrib/js_cookie/composer.libraries.json"
     ]
   }
@@ -60,7 +60,7 @@ For more information see [How to use composer to install libraries for the Webfo
 
 If you are using the Asset Packagist and has already prepared your composer.json, you can use the following command:
 
-`composer require npm-asset/js-cookie:3.0.5`
+`composer require npm-asset/js-cookie:^3`
 
 See [Downloading third-party libraries using Composer](https://www.drupal.org/docs/develop/using-composer/manage-dependencies#third-party-libraries) for more information.
 

@@ -22,6 +22,10 @@
       extra_classes: 'top-bar__burger',
     } only %}
     <div class="top-bar__tools">
+      {% if gin_breadcrumbs %}
+        {{ gin_breadcrumbs }}
+      {% endif %}
+
       {% if local_tasks %}
         {{ local_tasks }}
       {% endif %}
@@ -32,8 +36,6 @@
       {{- context -}}
     </div>
     <div class="top-bar__actions">
-      {{- actions -}}
-
       {% if gin_local_actions %}
         <ul class="local-actions">
           {{ gin_local_actions }}
@@ -43,6 +45,8 @@
       {% if gin_form_actions %}
         {{ gin_form_actions }}
       {% endif %}
+
+      {{- actions -}}
     </div>
   </div>
 </div>

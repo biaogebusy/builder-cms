@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views\Functional\Wizard;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests node wizard and generic entity integration.
- *
- * @group Views
- * @group node
  */
+#[Group('Views')]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeWizardTest extends WizardTestBase {
 
   /**

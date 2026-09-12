@@ -5,6 +5,7 @@ namespace AlibabaCloud\Credentials\Providers;
 use AlibabaCloud\Credentials\Utils\Helper;
 use AlibabaCloud\Credentials\Utils\Filter;
 use AlibabaCloud\Credentials\Request\Request;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use RuntimeException;
@@ -111,6 +112,16 @@ class EcsRamRoleCredentialsProvider extends SessionCredentialsProvider
     }
 
     /**
+     * @param string|null $metadataToken
+     *
+     * @return bool
+     */
+    private function shouldFallbackToIMDSv1($metadataToken)
+    {
+        return !is_null($metadataToken) && !$this->disableIMDSv1;
+    }
+
+    /**
      * Get credentials by request.
      *
      * @return RefreshResult
@@ -128,12 +139,33 @@ class EcsRamRoleCredentialsProvider extends SessionCredentialsProvider
             $this->roleName = $this->getRoleNameFromMeta();
         }
 
-        $url = $this->metadataHost . $this->ecsUri . $this->roleName;
+        $metadataToken = $this->getMetadataToken();
+        try {
+            return $this->doRefreshCredentials($this->roleName, $metadataToken);
+        } catch (Exception $e) {
+            if ($this->shouldFallbackToIMDSv1($metadataToken)) {
+                return $this->doRefreshCredentials($this->roleName, null);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @param string      $roleName
+     * @param string|null $metadataToken
+     *
+     * @return RefreshResult
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     * @throws GuzzleException
+     */
+    private function doRefreshCredentials($roleName, $metadataToken)
+    {
+        $url = $this->metadataHost . $this->ecsUri . $roleName;
         $options = Request::commonOptions();
         $options['read_timeout'] = $this->readTimeout;
         $options['connect_timeout'] = $this->connectTimeout;
 
-        $metadataToken = $this->getMetadataToken();
         if (!is_null($metadataToken)) {
             $options['headers']['X-aliyun-ecs-metadata-token'] = $metadataToken;
         }
@@ -175,11 +207,31 @@ class EcsRamRoleCredentialsProvider extends SessionCredentialsProvider
      */
     private function getRoleNameFromMeta()
     {
+        $metadataToken = $this->getMetadataToken();
+        try {
+            return $this->doGetRoleNameFromMeta($metadataToken);
+        } catch (Exception $e) {
+            if ($this->shouldFallbackToIMDSv1($metadataToken)) {
+                return $this->doGetRoleNameFromMeta(null);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @param string|null $metadataToken
+     *
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     * @throws GuzzleException
+     */
+    private function doGetRoleNameFromMeta($metadataToken)
+    {
         $options = Request::commonOptions();
         $options['read_timeout'] = $this->readTimeout;
         $options['connect_timeout'] = $this->connectTimeout;
 
-        $metadataToken = $this->getMetadataToken();
         if (!is_null($metadataToken)) {
             $options['headers']['X-aliyun-ecs-metadata-token'] = $metadataToken;
         }
@@ -209,7 +261,7 @@ class EcsRamRoleCredentialsProvider extends SessionCredentialsProvider
     /**
      * Get metadata token by request.
      *
-     * @return string
+     * @return string|null
      * @throws RuntimeException
      * @throws GuzzleException
      */

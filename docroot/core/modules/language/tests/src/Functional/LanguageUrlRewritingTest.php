@@ -9,13 +9,15 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests that URL rewriting works as expected.
- *
- * @group language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageUrlRewritingTest extends BrowserTestBase {
 
   /**
@@ -89,7 +91,7 @@ class LanguageUrlRewritingTest extends BrowserTestBase {
    * @param string $message
    *   Message to display in assertion that language prefixes are not added.
    */
-  private function checkUrl(LanguageInterface $language, $message) {
+  private function checkUrl(LanguageInterface $language, $message): void {
     $options = ['language' => $language, 'script' => ''];
     $base_path = trim(base_path(), '/');
     $rewritten_path = trim(str_replace($base_path, '', Url::fromRoute('<front>', [], $options)->toString()), '/');

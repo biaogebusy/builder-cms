@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment block functionality.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentBlockTest extends CommentTestBase {
 
   /**

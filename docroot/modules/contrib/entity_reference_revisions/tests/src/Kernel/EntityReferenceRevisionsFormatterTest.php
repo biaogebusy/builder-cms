@@ -12,11 +12,14 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\entity_reference_revisions\Plugin\Field\FieldFormatter\EntityReferenceRevisionsEntityFormatter
  * @group entity_reference_revisions
  */
+#[RunTestsInSeparateProcesses]
+#[Group('entity_reference_revisions')]
 class EntityReferenceRevisionsFormatterTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -49,7 +52,6 @@ class EntityReferenceRevisionsFormatterTest extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('entity_test');
     $this->installEntitySchema('entity_test_composite');
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
 
     // Add the entity_reference_revisions field to article.

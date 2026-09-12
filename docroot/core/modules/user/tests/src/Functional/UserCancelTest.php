@@ -10,17 +10,23 @@ use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use Drupal\node\NodeAccessRebuild;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\node\Traits\NodeAccessTrait;
 use Drupal\user\Entity\User;
+use Drupal\user\OneTimeAuthentication;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensure that account cancellation methods work as expected.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserCancelTest extends BrowserTestBase {
 
   use CommentTestTrait;
+  use NodeAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -53,7 +59,6 @@ class UserCancelTest extends BrowserTestBase {
     $account = $this->drupalCreateUser([]);
     $this->drupalLogin($account);
     // Load a real user object.
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
     // Create a node.
@@ -65,7 +70,7 @@ class UserCancelTest extends BrowserTestBase {
 
     // Attempt bogus account cancellation request confirmation.
     $timestamp = $account->getLastLoginTime();
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . user_pass_rehash($account, $timestamp));
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, (int) $timestamp));
     $this->assertSession()->statusCodeEquals(403);
     $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
@@ -122,7 +127,6 @@ class UserCancelTest extends BrowserTestBase {
     $this->submitForm($edit, 'Apply to selected items');
 
     // Verify that uid 1's account was not cancelled.
-    $user_storage->resetCache([1]);
     $user1 = $user_storage->load(1);
     $this->assertTrue($user1->isActive(), 'User #1 still exists and is not blocked.');
   }
@@ -139,7 +143,6 @@ class UserCancelTest extends BrowserTestBase {
     $account = $this->drupalCreateUser(['cancel account']);
     $this->drupalLogin($account);
     // Load a real user object.
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
     // Create a node.
@@ -153,22 +156,19 @@ class UserCancelTest extends BrowserTestBase {
 
     // Attempt bogus account cancellation request confirmation.
     $bogus_timestamp = $timestamp + 60;
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$bogus_timestamp/" . user_pass_rehash($account, $bogus_timestamp));
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$bogus_timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $bogus_timestamp));
     $this->assertSession()->pageTextContains('You have tried to use an account cancellation link that has expired. Request a new one using the form below.');
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
     $this->assertTrue($account->isActive(), 'User account was not canceled.');
 
     // Attempt expired account cancellation request confirmation.
     $bogus_timestamp = $timestamp - 86400 - 60;
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$bogus_timestamp/" . user_pass_rehash($account, $bogus_timestamp));
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$bogus_timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $bogus_timestamp));
     $this->assertSession()->pageTextContains('You have tried to use an account cancellation link that has expired. Request a new one using the form below.');
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
     $this->assertTrue($account->isActive(), 'User account was not canceled.');
 
     // Confirm user's content has not been altered.
-    $node_storage->resetCache([$node->id()]);
     $test_node = $node_storage->load($node->id());
     $this->assertEquals($account->id(), $test_node->getOwnerId(), 'Node of the user has not been altered.');
     $this->assertTrue($test_node->isPublished());
@@ -186,7 +186,6 @@ class UserCancelTest extends BrowserTestBase {
     $this->drupalLogin($web_user);
 
     // Load a real user object.
-    $user_storage->resetCache([$web_user->id()]);
     $account = $user_storage->load($web_user->id());
 
     // Attempt to cancel account.
@@ -202,8 +201,7 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('A confirmation request to cancel your account has been sent to your email address.');
 
     // Confirm account cancellation request.
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . user_pass_rehash($account, $timestamp));
-    $user_storage->resetCache([$account->id()]);
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $timestamp));
     $account = $user_storage->load($account->id());
     $this->assertTrue($account->isBlocked(), 'User has been blocked.');
 
@@ -225,7 +223,6 @@ class UserCancelTest extends BrowserTestBase {
     $account = $this->drupalCreateUser(['cancel account']);
     $this->drupalLogin($account);
     // Load a real user object.
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
     // Create a node with two revisions.
@@ -259,26 +256,23 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('A confirmation request to cancel your account has been sent to your email address.');
 
     // Confirm account cancellation request.
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . user_pass_rehash($account, $timestamp));
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $timestamp));
     // Confirm that the user was redirected to the front page.
     $this->assertSession()->addressEquals('');
     $this->assertSession()->statusCodeEquals(200);
     // Confirm that the confirmation message made it through to the end user.
     $this->assertSession()->pageTextContains("Account {$account->getAccountName()} has been disabled.");
 
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
     $this->assertTrue($account->isBlocked(), 'User has been blocked.');
 
     // Confirm user's content has been unpublished.
-    $node_storage->resetCache([$node->id()]);
     $test_node = $node_storage->load($node->id());
     $this->assertFalse($test_node->isPublished(), 'Node of the user has been unpublished.');
     $test_node = $node_storage->loadRevision($node->getRevisionId());
     $this->assertFalse($test_node->isPublished(), 'Node revision of the user has been unpublished.');
 
     $storage = \Drupal::entityTypeManager()->getStorage('comment');
-    $storage->resetCache([$comment->id()]);
     $comment = $storage->load($comment->id());
     $this->assertFalse($comment->isPublished(), 'Comment of the user has been unpublished.');
   }
@@ -289,9 +283,9 @@ class UserCancelTest extends BrowserTestBase {
   public function testUserBlockUnpublishNodeAccess(): void {
     \Drupal::service('module_installer')->install(['node_access_test', 'user_form_test']);
 
-    // Setup node access
-    node_access_rebuild();
-    node_access_test_add_field(NodeType::load('page'));
+    // Setup node access.
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
+    $this->addPrivateField(NodeType::load('page'));
     \Drupal::state()->set('node_access_test.private', TRUE);
 
     $this->config('user.settings')->set('cancel_method', 'user_cancel_block_unpublish')->save();
@@ -300,7 +294,6 @@ class UserCancelTest extends BrowserTestBase {
     $user_storage = $this->container->get('entity_type.manager')->getStorage('user');
     $account = $this->drupalCreateUser(['cancel account']);
     // Load a real user object.
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
     // Create a published private node.
@@ -320,7 +313,6 @@ class UserCancelTest extends BrowserTestBase {
     // Confirm node has been unpublished, even though the admin user
     // does not have permission to access it.
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
-    $node_storage->resetCache([$node->id()]);
     $test_node = $node_storage->load($node->id());
     $this->assertFalse($test_node->isPublished(), 'Node of the user has been unpublished.');
   }
@@ -339,7 +331,6 @@ class UserCancelTest extends BrowserTestBase {
     $account = $this->drupalCreateUser(['cancel account']);
     $this->drupalLogin($account);
     // Load a real user object.
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
     // Create a simple node.
@@ -380,26 +371,22 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('A confirmation request to cancel your account has been sent to your email address.');
 
     // Confirm account cancellation request.
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . user_pass_rehash($account, $timestamp));
-    $user_storage->resetCache([$account->id()]);
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $timestamp));
     $this->assertNull($user_storage->load($account->id()), 'User is not found in the database.');
 
     // Confirm that user's content has been attributed to anonymous user.
     $anonymous_user = User::getAnonymousUser();
-    $node_storage->resetCache([$node->id()]);
     $test_node = $node_storage->load($node->id());
     $this->assertEquals(0, $test_node->getOwnerId(), 'Node of the user has been attributed to anonymous user.');
     $this->assertTrue($test_node->isPublished());
     $test_node = $node_storage->loadRevision($revision);
     $this->assertEquals(0, $test_node->getRevisionUser()->id(), 'Node revision of the user has been attributed to anonymous user.');
     $this->assertTrue($test_node->isPublished());
-    $node_storage->resetCache([$revision_node->id()]);
     $test_node = $node_storage->load($revision_node->id());
     $this->assertNotEquals(0, $test_node->getOwnerId(), "Current revision of the user's node was not attributed to anonymous user.");
     $this->assertTrue($test_node->isPublished());
 
     $storage = \Drupal::entityTypeManager()->getStorage('comment');
-    $storage->resetCache([$comment->id()]);
     $test_comment = $storage->load($comment->id());
     $this->assertEquals(0, $test_comment->getOwnerId(), 'Comment of the user has been attributed to anonymous user.');
     $this->assertTrue($test_comment->isPublished());
@@ -411,6 +398,8 @@ class UserCancelTest extends BrowserTestBase {
 
   /**
    * Delete account and anonymize all content using a batch process.
+   *
+   * @see \Drupal\node\NodeBulkUpdate::process()
    */
   public function testUserAnonymizeBatch(): void {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
@@ -421,11 +410,9 @@ class UserCancelTest extends BrowserTestBase {
     $account = $this->drupalCreateUser(['cancel account']);
     $this->drupalLogin($account);
     // Load a real user object.
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
-    // Create 11 nodes in order to trigger batch processing in
-    // node_mass_update().
+    // Create 11 nodes in order to trigger batch processing.
     $nodes = [];
     for ($i = 0; $i < 11; $i++) {
       $node = $this->drupalCreateNode(['uid' => $account->id()]);
@@ -443,8 +430,7 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('A confirmation request to cancel your account has been sent to your email address.');
 
     // Confirm account cancellation request.
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . user_pass_rehash($account, $timestamp));
-    $user_storage->resetCache([$account->id()]);
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $timestamp));
     $this->assertNull($user_storage->load($account->id()), 'User is not found in the database.');
 
     // Confirm that user's content has been attributed to anonymous user.
@@ -475,7 +461,6 @@ class UserCancelTest extends BrowserTestBase {
     ]);
     $this->drupalLogin($account);
     // Load a real user object.
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
     // Create a simple node.
@@ -515,8 +500,7 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('A confirmation request to cancel your account has been sent to your email address.');
 
     // Confirm account cancellation request.
-    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . user_pass_rehash($account, $timestamp));
-    $user_storage->resetCache([$account->id()]);
+    $this->drupalGet("user/" . $account->id() . "/cancel/confirm/$timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $timestamp));
     $this->assertNull($user_storage->load($account->id()), 'User is not found in the database.');
 
     // Confirm there's only one session in the database. The user will be logged
@@ -525,12 +509,9 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertSame(1, (int) \Drupal::database()->select('sessions', 's')->countQuery()->execute()->fetchField());
 
     // Confirm that user's content has been deleted.
-    $node_storage->resetCache([$node->id()]);
     $this->assertNull($node_storage->load($node->id()), 'Node of the user has been deleted.');
     $this->assertNull($node_storage->loadRevision($revision), 'Node revision of the user has been deleted.');
-    $node_storage->resetCache([$revision_node->id()]);
     $this->assertInstanceOf(Node::class, $node_storage->load($revision_node->id()));
-    \Drupal::entityTypeManager()->getStorage('comment')->resetCache([$comment->id()]);
     $this->assertNull(Comment::load($comment->id()), 'Comment of the user has been deleted.');
 
     // Confirm that the confirmation message made it through to the end user.
@@ -538,27 +519,40 @@ class UserCancelTest extends BrowserTestBase {
   }
 
   /**
-   * Create an administrative user and delete another user.
+   * Create an administrative user and delete other users.
    */
   public function testUserCancelByAdmin(): void {
     $this->config('user.settings')->set('cancel_method', 'user_cancel_reassign')->save();
-
-    // Create a regular user.
-    $account = $this->drupalCreateUser([]);
 
     // Create administrative user.
     $admin_user = $this->drupalCreateUser(['administer users']);
     $this->drupalLogin($admin_user);
 
+    // Test deletion of a user account without email confirmation.
+    $account1 = $this->drupalCreateUser([]);
+
     // Delete regular user.
-    $this->drupalGet('user/' . $account->id() . '/cancel');
-    $this->assertSession()->pageTextContains("Are you sure you want to cancel the account {$account->getAccountName()}?");
+    $this->drupalGet('user/' . $account1->id() . '/cancel');
+    $this->assertSession()->pageTextContains("Are you sure you want to cancel the account {$account1->getAccountName()}?");
     $this->assertSession()->pageTextContains('Cancellation method');
 
     // Confirm deletion.
     $this->submitForm([], 'Confirm');
-    $this->assertSession()->pageTextContains("Account {$account->getAccountName()} has been deleted.");
-    $this->assertNull(User::load($account->id()), 'User is not found in the database.');
+    $this->assertSession()->pageTextContains("Account {$account1->getAccountName()} has been deleted.");
+    $this->assertNull(User::load($account1->id()), 'User is not found in the database.');
+
+    // Test deletion of a user account with email confirmation.
+    $account2 = $this->drupalCreateUser([]);
+
+    // Delete regular user.
+    $this->drupalGet('user/' . $account2->id() . '/cancel');
+    $this->assertSession()->pageTextContains("Are you sure you want to cancel the account {$account2->getAccountName()}?");
+    $this->assertSession()->pageTextContains('Cancellation method');
+
+    // Confirm deletion.
+    $this->submitForm(['edit-user-cancel-confirm' => 1], 'Confirm');
+    $this->assertSession()->pageTextContains("A confirmation request to cancel the account {$account2->getAccountName()} has been sent to the user's email address.");
+    $this->assertNotNull(User::load($account2->id()), 'User is found in the database.');
   }
 
   /**
@@ -627,7 +621,6 @@ class UserCancelTest extends BrowserTestBase {
     $status = TRUE;
     foreach ($users as $account) {
       $status = $status && (str_contains($this->getTextContent(), "Account {$account->getAccountName()} has been deleted."));
-      $user_storage->resetCache([$account->id()]);
       $status = $status && !$user_storage->load($account->id());
     }
     $this->assertTrue($status, 'Users deleted and not found in the database.');
@@ -638,7 +631,6 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertTrue($admin_user->isActive(), 'Administrative user is found in the database and enabled.');
 
     // Verify that uid 1's account was not cancelled.
-    $user_storage->resetCache([1]);
     $user1 = $user_storage->load(1);
     $this->assertTrue($user1->isActive(), 'User #1 still exists and is not blocked.');
   }
@@ -650,7 +642,7 @@ class UserCancelTest extends BrowserTestBase {
 
     \Drupal::service('module_installer')->install(['node_access_test']);
     // Rebuild node access.
-    node_access_rebuild();
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
 
     $account = $this->drupalCreateUser(['access content']);
     $node = $this->drupalCreateNode(['type' => 'page', 'uid' => $account->id()]);
@@ -679,7 +671,6 @@ class UserCancelTest extends BrowserTestBase {
 
     $account = $this->drupalCreateUser(['cancel account']);
     $this->drupalLogin($account);
-    $user_storage->resetCache([$account->id()]);
     $account = $user_storage->load($account->id());
 
     $node = $this->drupalCreateNode(['uid' => $account->id()]);
@@ -713,7 +704,7 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('A confirmation request to cancel your account has been sent to your email address.');
 
     // Confirm account cancellation request.
-    $this->drupalGet('user/' . $account->id() . "/cancel/confirm/$timestamp/" . user_pass_rehash($account, $timestamp));
+    $this->drupalGet('user/' . $account->id() . "/cancel/confirm/$timestamp/" . \Drupal::service(OneTimeAuthentication::class)->generateHmac($account, $timestamp));
     $user_storage->resetCache([$account->id()]);
     $this->assertNull($user_storage->load($account->id()), 'User is not found in the database.');
 
@@ -721,7 +712,6 @@ class UserCancelTest extends BrowserTestBase {
     $anonymous_user = User::getAnonymousUser();
 
     $storage = \Drupal::entityTypeManager()->getStorage('comment');
-    $storage->resetCache([$comment->id()]);
     $test_comment = $storage->load($comment->id());
     $this->assertEquals(0, $test_comment->getOwnerId());
     $this->assertTrue($test_comment->isPublished(), 'Comment of the user has been attributed to anonymous user.');
@@ -733,7 +723,7 @@ class UserCancelTest extends BrowserTestBase {
     $this->assertEquals($anonymous_user->getDisplayName(), $comment_translation->getAuthorName());
 
     // Confirm that the confirmation message made it through to the end user.
-    $this->assertSession()->responseContains(t('%name has been deleted.', ['%name' => $account->getAccountName()]));
+    $this->assertSession()->pageTextContains($account->getAccountName() . ' has been deleted.');
   }
 
 }

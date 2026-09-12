@@ -29,7 +29,6 @@ class ParagraphsBehaviorCollection extends DefaultLazyPluginCollection {
    * Retrieves all enabled behavior plugins.
    */
   public function getEnabled() {
-    $this->getAll();
     $enabled = [];
     foreach ($this->getConfiguration() as $key => $value) {
       if (isset($value['enabled']) && $value['enabled'] == TRUE) {

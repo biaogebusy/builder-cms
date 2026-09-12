@@ -25,6 +25,7 @@ use Drupal\entity_reference_revisions\EntityNeedsSaveTrait;
 use Drupal\field\FieldConfigInterface;
 use Drupal\paragraphs\ParagraphAccessControlHandler;
 use Drupal\paragraphs\ParagraphInterface;
+use Drupal\paragraphs\ParagraphsStorage;
 use Drupal\paragraphs\ParagraphStorageSchema;
 use Drupal\paragraphs\ParagraphViewBuilder;
 use Drupal\user\EntityOwnerInterface;
@@ -50,6 +51,7 @@ use Drupal\views\EntityViewsData;
  *   handlers = {
  *     "view_builder" = "Drupal\paragraphs\ParagraphViewBuilder",
  *     "access" = "Drupal\paragraphs\ParagraphAccessControlHandler",
+ *     "storage" = "\Drupal\paragraphs\ParagraphsStorage",
  *     "storage_schema" = "Drupal\paragraphs\ParagraphStorageSchema",
  *     "form" = {
  *       "default" = "Drupal\Core\Entity\ContentEntityForm",
@@ -123,6 +125,7 @@ use Drupal\views\EntityViewsData;
   handlers: [
     'view_builder' => ParagraphViewBuilder::class,
     'access' => ParagraphAccessControlHandler::class,
+    'storage' => ParagraphsStorage::class,
     'storage_schema' => ParagraphStorageSchema::class,
     'form' => [
       'default' => ContentEntityForm::class,
@@ -527,7 +530,7 @@ class Paragraph extends ContentEntityBase implements ParagraphInterface {
       '#expanded' => isset($options['expanded']) ? $options['expanded'] : FALSE,
     ];
 
-    return \Drupal::service('renderer')->renderPlain($summary);
+    return \Drupal::service('renderer')->renderInIsolation($summary);
   }
 
   /**
@@ -684,8 +687,13 @@ class Paragraph extends ContentEntityBase implements ParagraphInterface {
 
     // $this->original only exists during save. If it exists we re-use it here
     // for performance reasons.
-    /** @var \Drupal\paragraphs\ParagraphInterface $original */
-    $original = $this->original ?: NULL;
+    if (method_exists($this, 'getOriginal')) {
+      $original = $this->getOriginal();
+    }
+    else {
+      /** @var \Drupal\paragraphs\ParagraphInterface $original */
+      $original = $this->original ?: NULL;
+    }
     if (!$original) {
       $original = $this->entityTypeManager()->getStorage($this->getEntityTypeId())->loadRevision($this->getLoadedRevisionId());
     }

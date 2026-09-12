@@ -2,16 +2,21 @@
 
 /**
  * @file
+ * Test module for elements.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_test_element\Hook\WebformTestElementHooks;
+
+/**
+ * @file
  * Support module for webform that provides element plugin tests.
  */
 
 /**
  * Implements hook_theme().
  */
+#[LegacyHook]
 function webform_test_element_handler_theme() {
-  return [
-    'webform_handler_test_summary' => [
-      'variables' => ['settings' => NULL, 'handler' => []],
-    ],
-  ];
+  return \Drupal::service(WebformTestElementHooks::class)->handlerTheme();
 }

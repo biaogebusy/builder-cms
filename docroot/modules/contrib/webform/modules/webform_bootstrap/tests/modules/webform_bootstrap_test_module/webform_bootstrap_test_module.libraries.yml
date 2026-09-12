@@ -1,5 +1,4 @@
 webform_bootstrap_test_module:
-  version: VERSION
   css:
     theme:
       css/webform_bootstrap_test_module.css: {}

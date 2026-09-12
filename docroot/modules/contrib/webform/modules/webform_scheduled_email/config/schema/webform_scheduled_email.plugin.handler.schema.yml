@@ -7,7 +7,7 @@ webform.handler.scheduled_email:
   mapping:
     send:
       type: string
-      label: 'Send on (YYYY-MM-DD or [token])'
+      label: 'Send on (date / datetime string or [token])'
     days:
       type: integer
       label: 'After/before days'

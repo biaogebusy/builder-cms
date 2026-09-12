@@ -6,7 +6,6 @@
  */
 
 use Drupal\Component\Utility\Crypt;
-use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Test\TestDatabase;
 use Drupal\Core\Utility\Error;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -37,23 +36,6 @@ const ERROR_REPORTING_DISPLAY_VERBOSE = 'verbose';
  * The maximum number of characters in a module or theme name.
  */
 const DRUPAL_EXTENSION_NAME_MAX_LENGTH = 50;
-
-/**
- * Time of the current request in seconds elapsed since the Unix Epoch.
- *
- * This differs from $_SERVER['REQUEST_TIME'], which is stored as a float
- * since PHP 5.4.0. Float timestamps confuse most PHP functions
- * (including date_create()).
- *
- * @see http://php.net/manual/reserved.variables.server.php
- * @see http://php.net/manual/function.time.php
- *
- * @deprecated in drupal:8.3.0 and is removed from drupal:11.0.0.
- *   Use \Drupal::time()->getRequestTime();
- *
- * @see https://www.drupal.org/node/2785211
- */
-define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
 
 /**
  * Defines the root directory of the Drupal installation.
@@ -101,67 +83,23 @@ define('DRUPAL_ROOT', dirname(__DIR__, 2));
  * @ingroup sanitization
  */
 function t($string, array $args = [], array $options = []) {
+  // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
   return new TranslatableMarkup($string, $args, $options);
-}
-
-/**
- * Logs an exception.
- *
- * This is a wrapper logging function which automatically decodes an exception.
- *
- * @param $type
- *   The category to which this message belongs.
- * @param $exception
- *   The exception that is going to be logged.
- * @param $message
- *   The message to store in the log. If empty, a text that contains all useful
- *   information about the passed-in exception is used.
- * @param $variables
- *   Array of variables to replace in the message on display or
- *   NULL if message is already translated or not possible to
- *   translate.
- * @param $severity
- *   The severity of the message, as per RFC 3164.
- * @param $link
- *   A link to associate with the message.
- *
- * @see \Drupal\Core\Utility\Error::decodeException()
- *
- * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
- *   Use \Drupal\Core\Utility\Error::logException() instead.
- *
- * @see https://www.drupal.org/node/2932520
- */
-function watchdog_exception($type, Exception $exception, $message = NULL, $variables = [], $severity = RfcLogLevel::ERROR, $link = NULL) {
-  @trigger_error('watchdog_exception() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Utility\Error::logException() instead. See https://www.drupal.org/node/2932520', E_USER_DEPRECATED);
-
-  // Use a default value if $message is not set.
-  if (empty($message)) {
-    $message = Error::DEFAULT_ERROR_MESSAGE;
-  }
-
-  if ($link) {
-    $variables['link'] = $link;
-  }
-
-  $variables += Error::decodeException($exception);
-
-  \Drupal::logger($type)->log($severity, $message, $variables);
 }
 
 /**
  * Provides custom PHP error handling.
  *
- * @param $error_level
+ * @param int $error_level
  *   The level of the error raised.
- * @param $message
+ * @param string $message
  *   The error message.
- * @param $filename
+ * @param string $filename
  *   (optional) The filename that the error was raised in.
- * @param $line
+ * @param int $line
  *   (optional) The line number the error was raised at.
  */
-function _drupal_error_handler($error_level, $message, $filename = NULL, $line = NULL) {
+function _drupal_error_handler($error_level, $message, $filename = NULL, $line = NULL): void {
   require_once __DIR__ . '/errors.inc';
   _drupal_error_handler_real($error_level, $message, $filename, $line);
 }
@@ -176,7 +114,7 @@ function _drupal_error_handler($error_level, $message, $filename = NULL, $line =
  * @param \Exception|\Throwable $exception
  *   The exception object that was thrown.
  */
-function _drupal_exception_handler($exception) {
+function _drupal_exception_handler($exception): void {
   require_once __DIR__ . '/errors.inc';
 
   try {
@@ -197,7 +135,7 @@ function _drupal_exception_handler($exception) {
  * @param \Exception|\Throwable $exception2
  *   The second exception object that was thrown.
  */
-function _drupal_exception_handler_additional($exception, $exception2) {
+function _drupal_exception_handler_additional($exception, $exception2): void {
   // Another uncaught exception was thrown while handling the first one.
   // If we are displaying errors, then do so with no possibility of a further
   // uncaught exception being thrown.
@@ -276,6 +214,9 @@ function drupal_valid_test_ua($new_prefix = NULL) {
 
 /**
  * Generates a user agent string with a HMAC and timestamp for tests.
+ *
+ * @return string|null
+ *   The user agent, or NULL on failure.
  */
 function drupal_generate_test_ua($prefix) {
   static $key, $last_prefix;
@@ -300,7 +241,9 @@ function drupal_generate_test_ua($prefix) {
       // Generate and save a new hash salt for a test run.
       // Consumed by drupal_valid_test_ua() before settings.php is loaded.
       $private_key = Crypt::randomBytesBase64(55);
-      file_put_contents($key_file, $private_key);
+      if (!@file_put_contents($key_file, $private_key)) {
+        return NULL;
+      }
     }
     // The file properties add more entropy not easily accessible to others.
     $key = $private_key . filectime(__FILE__) . fileinode(__FILE__);
@@ -319,7 +262,7 @@ function drupal_generate_test_ua($prefix) {
  *
  * @see _drupal_maintenance_theme()
  */
-function drupal_maintenance_theme() {
+function drupal_maintenance_theme(): void {
   require_once __DIR__ . '/theme.maintenance.inc';
   _drupal_maintenance_theme();
 }
@@ -419,14 +362,14 @@ function drupal_maintenance_theme() {
  * }
  * @endcode
  *
- * @param $name
+ * @param string|null $name
  *   Globally unique name for the variable. For a function with only one static,
  *   variable, the function name (e.g. via the PHP magic __FUNCTION__ constant)
  *   is recommended. For a function with multiple static variables add a
  *   distinguishing suffix to the function name for each one.
- * @param $default_value
+ * @param mixed|null $default_value
  *   Optional default value.
- * @param $reset
+ * @param bool $reset
  *   TRUE to reset one or all variables(s). This parameter is only used
  *   internally and should not be passed in; use drupal_static_reset() instead.
  *   (This function's return value should not be used when TRUE is passed in.)
@@ -477,18 +420,44 @@ function &drupal_static($name, $default_value = NULL, $reset = FALSE) {
 /**
  * Resets one or all centrally stored static variable(s).
  *
- * @param $name
+ * @param string $name
  *   Name of the static variable to reset. Omit to reset all variables.
  *   Resetting all variables should only be used, for example, for running
  *   unit tests with a clean environment.
  */
-function drupal_static_reset($name = NULL) {
+function drupal_static_reset($name = NULL): void {
   switch ($name) {
-    case 'system_get_module_admin_tasks':
-      @trigger_error("Calling " . __FUNCTION__ . "() with 'system_get_module_admin_tasks' as an argument is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no replacement for this usage. See https://www.drupal.org/node/3038972", E_USER_DEPRECATED);
-    case 'shortcut_current_displayed_set':
-      @trigger_error("Calling " . __FUNCTION__ . "() with 'shortcut_current_displayed_set' as an argument is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement for this usage. See https://www.drupal.org/node/3427050", E_USER_DEPRECATED);
+    case 'node_access_view_all_nodes':
+      @trigger_error('Calling drupal_static_reset() with "node_access_view_all_nodes" as argument is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use \Drupal::service(\'node.view_all_nodes_memory_cache\')->deleteAll(); instead. See https://www.drupal.org/node/3038909', E_USER_DEPRECATED);
+      \Drupal::service('node.view_all_nodes_memory_cache')->deleteAll();
       break;
+
+    case 'locale_translation_get_projects':
+      @trigger_error('Calling drupal_static_reset() with "locale_translation_get_projects" as argument is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service("cache.memory")->delete("locale_get_projects") instead. See https://www.drupal.org/node/3569330', E_USER_DEPRECATED);
+      if (\Drupal::hasService('cache.memory')) {
+        \Drupal::service('cache.memory')->delete('locale_get_projects');
+      }
+      break;
+
+    case 'locale_translation_project_list':
+      @trigger_error("Using drupal_static_reset() with 'locale_translation_project_list' as argument is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. See https://www.drupal.org/node/3037033", E_USER_DEPRECATED);
+      break;
+
+    case 'locale_translation_get_file_history':
+      @trigger_error('Calling drupal_static_reset() with "locale_translation_get_file_history" as argument is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service("cache.memory")->invalidateTags(["locale_current_import"]) instead. See https://www.drupal.org/node/3037162', E_USER_DEPRECATED);
+      \Drupal::service('cache.memory')->invalidateTags(['locale_current_import']);
+      break;
+
+    case 'filter_formats':
+      @trigger_error("Using drupal_static_reset() with 'filter_formats' as argument is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. No replacement is provided. See https://www.drupal.org/node/3035368", E_USER_DEPRECATED);
+      break;
+
+    case 'file_get_file_references':
+    case 'file_get_file_references:field_columns':
+      @trigger_error("Calling drupal_static_reset() with \"$name\" as argument is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service('cache.memory')->invalidateTags(['file_references']) instead. See https://www.drupal.org/node/3573884", E_USER_DEPRECATED);
+      \Drupal::service('cache.memory')->invalidateTags(['file_references']);
+      break;
+
   }
   drupal_static($name, NULL, TRUE);
 }
@@ -501,7 +470,7 @@ function drupal_static_reset($name = NULL) {
  *
  * @param callable $callback
  *   The shutdown function to register.
- * @param ...
+ * @param mixed ...$args
  *   Additional arguments to pass to the shutdown function.
  *
  * @return array
@@ -510,7 +479,7 @@ function drupal_static_reset($name = NULL) {
  * @see register_shutdown_function()
  * @ingroup php_wrappers
  */
-function &drupal_register_shutdown_function($callback = NULL) {
+function &drupal_register_shutdown_function($callback = NULL, ...$args) {
   // We cannot use drupal_static() here because the static cache is reset during
   // batch processing, which breaks batch handling.
   static $callbacks = [];
@@ -520,10 +489,7 @@ function &drupal_register_shutdown_function($callback = NULL) {
     if (empty($callbacks)) {
       register_shutdown_function('_drupal_shutdown_function');
     }
-    $args = func_get_args();
-    // Remove $callback from the arguments.
-    unset($args[0]);
-    // Save callback and arguments
+    // Save callback and arguments.
     $callbacks[] = ['callback' => $callback, 'arguments' => $args];
   }
   return $callbacks;
@@ -532,7 +498,7 @@ function &drupal_register_shutdown_function($callback = NULL) {
 /**
  * Executes registered shutdown functions.
  */
-function _drupal_shutdown_function() {
+function _drupal_shutdown_function(): void {
   $callbacks = &drupal_register_shutdown_function();
 
   // Set the CWD to DRUPAL_ROOT as it is not guaranteed to be the same as it
@@ -562,7 +528,7 @@ function _drupal_shutdown_function() {
  *
  * @see _drupal_shutdown_function()
  */
-function _drupal_shutdown_function_handle_exception($exception) {
+function _drupal_shutdown_function_handle_exception($exception): void {
   // If using PHP-FPM then fastcgi_finish_request() will have been fired
   // preventing further output to the browser.
   if (!function_exists('fastcgi_finish_request')) {

@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\BaseFieldDefinition;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore onewidgetfield
 /**
  * Tests the field widget manager.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class WidgetPluginManagerTest extends FieldKernelTestBase {
 
   /**

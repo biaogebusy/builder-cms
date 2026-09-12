@@ -117,7 +117,15 @@ class PostRequestIndexing implements PostRequestIndexingInterface, DestructableI
   /**
    * {@inheritdoc}
    */
-  public function removeFromIndexing($index_id, array $item_ids): void {
+  public function removeFromIndexing(/* string */ $index_id, array $item_ids): void {
+    // Unfortunately, when adding this method we only added type hint for
+    // $index_id to the interface, not to this class, so it is technically
+    // possible to pass NULL. Trigger a deprecation warning in this case and
+    // cast to a string.
+    if (!is_string($index_id)) {
+      @trigger_error('Passing a non-string as the first parameter of \Drupal\search_api\Utility\PostRequestIndexing::removeFromIndexing() is deprecated in search_api:8.x-1.41 and causes an error in search_api:2.0.0. If $index_id is NULL in your code, do not call this method. See https://www.drupal.org/node/3562988');
+      $index_id = "$index_id";
+    }
     foreach ($item_ids as $item_id) {
       unset($this->operations[$index_id][$item_id]);
     }

@@ -12,14 +12,16 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\views\Tests\ViewResultAssertionTrait;
-use Drupal\views\Views;
 use Drupal\views\Tests\ViewTestData;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file on user relationship handler.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class RelationshipUserFileDataTest extends ViewsKernelTestBase {
 
   use UserCreationTrait;
@@ -32,9 +34,6 @@ class RelationshipUserFileDataTest extends ViewsKernelTestBase {
     'field',
     'file',
     'file_test_views',
-    'system',
-    'user',
-    'views',
   ];
 
   /**

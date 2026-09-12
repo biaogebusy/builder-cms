@@ -1,0 +1,6 @@
+ckeditor5_premium_features_realtime_collaboration.form.settings:
+  title: Real-time Collaboration
+  route_name: ckeditor5_premium_features_realtime_collaboration.form.settings
+  parent: ckeditor5_premium_features.form.settings
+  description: 'Additional configuration for module providing Real-time collaboration together with Comments, Track Changes and Revision history.'
+  weight: 130

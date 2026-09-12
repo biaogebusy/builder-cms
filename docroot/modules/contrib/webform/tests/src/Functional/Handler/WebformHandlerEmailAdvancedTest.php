@@ -45,7 +45,7 @@ class WebformHandlerEmailAdvancedTest extends WebformBrowserTestBase {
    *
    * @see \Drupal\Core\Mail\Plugin\Mail\TestMailCollector
    */
-  public function testAdvancedEmailHandler() {
+  public function testAdvancedEmailHandler(): void {
     global $base_url;
 
     $assert_session = $this->assertSession();
@@ -142,11 +142,13 @@ class WebformHandlerEmailAdvancedTest extends WebformBrowserTestBase {
     $this->assertEquals($sent_email['subject'], 'This has "special" \'characters\'');
 
     // Check email body is HTML.
+    $this->assertStringContainsString('<h2 class="webform-section-title">General</h2>', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>First name</b><br />John<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Last name</b><br />Smith<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Email</b><br /><a href="mailto:from@example.com">from@example.com</a><br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Subject</b><br />This has &lt;removed&gt;&quot;special&quot; &#039;characters&#039;<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Message</b><br /><p><em>Please enter a message.</em> Test that double "quotes" are not encoded.</p><br /><br />', $sent_email['params']['body']);
+    $this->assertStringContainsString('<h2 class="webform-section-title">Advanced</h2>', $sent_email['params']['body']);
     $this->assertStringContainsString('<p style="color:yellow"><em>Custom styled HTML markup</em></p>', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>File</b><br />', $sent_email['params']['body']);
     $this->assertStringNotContainsString('<b>Optional</b><br />{Empty}<br /><br />', $sent_email['params']['body']);
@@ -213,6 +215,26 @@ class WebformHandlerEmailAdvancedTest extends WebformBrowserTestBase {
     $sent_email = $this->getLastEmail();
     $this->assertStringContainsString('<b>Optional</b><br />{Empty}<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Checkbox</b><br />No<br /><br />', $sent_email['params']['body']);
+
+    // Exclude all general elements.
+    $email_handler->setSetting('excluded_elements', [
+      'first_name' => 'first_name',
+      'last_name' => 'last_name',
+      'email' => 'email',
+      'subject' => 'subject',
+      'message' => 'message',
+    ]);
+    $webform->save();
+
+    // Check empty elements and section is excluded.
+    $this->postSubmissionTest($webform, $edit);
+    $sent_email = $this->getLastEmail();
+    $this->assertStringNotContainsString('<h2 class="webform-section-title">General</h2>', $sent_email['params']['body']);
+    $this->assertStringNotContainsString('<b>First name</b><br />John<br /><br />', $sent_email['params']['body']);
+    $this->assertStringNotContainsString('<b>Last name</b><br />Smith<br /><br />', $sent_email['params']['body']);
+    $this->assertStringNotContainsString('<b>Email</b><br /><a href="mailto:from@example.com">from@example.com</a><br /><br />', $sent_email['params']['body']);
+    $this->assertStringNotContainsString('<b>Subject</b><br />This has &lt;removed&gt;&quot;special&quot; &#039;characters&#039;<br /><br />', $sent_email['params']['body']);
+    $this->assertStringNotContainsString('<b>Message</b><br /><p><em>Please enter a message.</em> Test that double "quotes" are not encoded.</p><br /><br />', $sent_email['params']['body']);
 
     // Logout and use anonymous user account.
     $this->drupalLogout();

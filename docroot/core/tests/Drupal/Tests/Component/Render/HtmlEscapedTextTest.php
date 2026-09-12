@@ -6,23 +6,24 @@ namespace Drupal\Tests\Component\Render;
 
 use Drupal\Component\Render\HtmlEscapedText;
 use Drupal\Component\Render\MarkupInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Prophet;
 
 /**
  * Tests the HtmlEscapedText class.
- *
- * @coversDefaultClass \Drupal\Component\Render\HtmlEscapedText
- * @group utility
  */
+#[CoversClass(HtmlEscapedText::class)]
+#[Group('utility')]
 class HtmlEscapedTextTest extends TestCase {
 
   /**
-   * @covers ::__toString
-   * @covers ::jsonSerialize
-   *
-   * @dataProvider providerToString
+   * @legacy-covers ::__toString
+   * @legacy-covers ::jsonSerialize
    */
+  #[DataProvider('providerToString')]
   public function testToString($text, $expected, $message): void {
     $escapable_string = new HtmlEscapedText($text);
     $this->assertEquals($expected, (string) $escapable_string, $message);
@@ -34,7 +35,7 @@ class HtmlEscapedTextTest extends TestCase {
    *
    * @see testToString()
    */
-  public static function providerToString() {
+  public static function providerToString(): array {
     $prophet = new Prophet();
 
     // Checks that invalid multi-byte sequences are escaped.
@@ -46,19 +47,31 @@ class HtmlEscapedTextTest extends TestCase {
     $script_tag = $prophet->prophesize(MarkupInterface::class);
     $script_tag->__toString()->willReturn('<script>');
     $script_tag = $script_tag->reveal();
-    $tests[] = [$script_tag, '&lt;script&gt;', 'Escapes &lt;script&gt; even inside an object that implements MarkupInterface.'];
+    $tests[] = [
+      $script_tag,
+      '&lt;script&gt;',
+      'Escapes &lt;script&gt; even inside an object that implements MarkupInterface.',
+    ];
     $tests[] = ["<script>", '&lt;script&gt;', 'Escapes &lt;script&gt;'];
-    $tests[] = ['<>&"\'', '&lt;&gt;&amp;&quot;&#039;', 'Escapes reserved HTML characters.'];
+    $tests[] = [
+      '<>&"\'',
+      '&lt;&gt;&amp;&quot;&#039;',
+      'Escapes reserved HTML characters.',
+    ];
     $special_chars = $prophet->prophesize(MarkupInterface::class);
     $special_chars->__toString()->willReturn('<>&"\'');
     $special_chars = $special_chars->reveal();
-    $tests[] = [$special_chars, '&lt;&gt;&amp;&quot;&#039;', 'Escapes reserved HTML characters even inside an object that implements MarkupInterface.'];
+    $tests[] = [
+      $special_chars,
+      '&lt;&gt;&amp;&quot;&#039;',
+      'Escapes reserved HTML characters even inside an object that implements MarkupInterface.',
+    ];
 
     return $tests;
   }
 
   /**
-   * @covers ::count
+   * Tests count.
    */
   public function testCount(): void {
     $string = 'Can I have a <em>kitten</em>';

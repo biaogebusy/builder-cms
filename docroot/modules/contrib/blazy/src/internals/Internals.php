@@ -1,16 +1,14 @@
 <?php
 
-namespace Drupal\blazy\internals;
+namespace Drupal\blazy\Internals;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\blazy\BlazySettings;
-use Drupal\blazy\Media\BlazyFile;
+use Drupal\blazy\Media\Uri;
 use Drupal\blazy\Theme\Grid;
 use Drupal\blazy\Utility\Markdown;
-use Drupal\blazy\Utility\Path;
 
 /**
  * Provides internal kitchen-sink non-reusable blazy utilities.
@@ -19,7 +17,7 @@ use Drupal\blazy\Utility\Path;
  *   This is an internal part of the Blazy system and should only be used by
  *   blazy-related code in Blazy module.
  */
-class Internals extends Content {
+final class Internals extends Content {
 
   /**
    * The data URI text.
@@ -40,8 +38,8 @@ class Internals extends Content {
     if (class_exists(FileExists::class)) {
       return FileExists::Replace;
     }
-    // @todo remove when min D10.3.
-    // @phpstan-ignore-next-line
+    // @todo deprecate and remove when min D10.3.
+    /** @phpstan-ignore-next-line */
     return FileSystemInterface::EXISTS_REPLACE;
   }
 
@@ -50,7 +48,8 @@ class Internals extends Content {
    *
    * @todo replace base_path() if any replacement by D11.
    */
-  public static function basePath(): ?string {
+  public static function basePath(): string {
+    // @todo recheck \Drupal::request()->getBasePath().
     return \base_path() ?: '';
   }
 
@@ -111,7 +110,7 @@ class Internals extends Content {
   /**
    * Alias for Path::getPath().
    */
-  public static function getPath($type, $name, $absolute = FALSE): ?string {
+  public static function getPath($type, $name, $absolute = FALSE): string {
     return Path::getPath($type, $name, $absolute);
   }
 
@@ -119,7 +118,7 @@ class Internals extends Content {
    * Checks if it is an SVG.
    */
   public static function isSvg($uri): bool {
-    return BlazyFile::isSvg($uri);
+    return Uri::isSvg($uri);
   }
 
   /**
@@ -127,20 +126,6 @@ class Internals extends Content {
    */
   public static function markdown($string, $help = TRUE, $sanitize = TRUE): string {
     return Markdown::parse($string, $help, $sanitize);
-  }
-
-  /**
-   * Returns a wrapper to pass tests, or DI where adding params is troublesome.
-   */
-  public static function service($service) {
-    return \Drupal::hasService($service) ? \Drupal::service($service) : NULL;
-  }
-
-  /**
-   * Alias for Settings::init().
-   */
-  public static function settings(array $data = []): BlazySettings {
-    return static::init($data);
   }
 
   /**
@@ -153,27 +138,27 @@ class Internals extends Content {
   /**
    * Returns a entity object by a property.
    *
-   * @todo remove for BlazyInterface::loadByProperty().
+   * @todo deprecate and remove for BlazyInterface::loadByProperty().
    */
   public static function loadByProperty($property, $value, $type, $manager = NULL): ?object {
-    $manager = $manager ?: self::service('blazy.manager');
+    $manager = $manager ?: self::blazy();
     return $manager ? $manager->loadByProperty($property, $value, $type) : NULL;
   }
 
   /**
    * Returns a entity object by a UUID.
    *
-   * @todo remove for BlazyInterface::loadByUuid().
+   * @todo deprecate and remove for BlazyInterface::loadByUuid().
    */
   public static function loadByUuid($uuid, $type, $manager = NULL): ?object {
-    $manager = $manager ?: self::service('blazy.manager');
+    $manager = $manager ?: self::blazy();
     return $manager ? $manager->loadByUuid($uuid, $type) : NULL;
   }
 
   /**
    * Returns the app root.
    *
-   * @todo remove after usage checks.
+   * @todo deprecate and remove after usage checks.
    */
   public static function root($container) {
     return $container->getParameter('app.root');

@@ -226,24 +226,4 @@ class PrivateTempStore {
     return $owner;
   }
 
-  /**
-   * Start session because it is required for a private temp store.
-   *
-   * Ensures that an anonymous user has a session created for them, as
-   * otherwise subsequent page loads will not be able to retrieve their
-   * tempstore data.
-   */
-  protected function startSession() {
-    @trigger_error(__METHOD__ . "() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3432359", E_USER_DEPRECATED);
-    $has_session = $this->requestStack
-      ->getCurrentRequest()
-      ->hasSession();
-    if (!$has_session) {
-      /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface $session */
-      $session = \Drupal::service('session');
-      $this->requestStack->getCurrentRequest()->setSession($session);
-      $session->start();
-    }
-  }
-
 }

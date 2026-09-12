@@ -59,7 +59,7 @@ class EntityViewController implements ContainerInjectionInterface, TrustedCallba
    * entity type property 'enable_page_title_template'.
    * - FALSE (default): use the output of the related field formatter if it
    *   exists. This approach only works correctly for the node entity type and
-   *   with the 'string' formatter. In other cases it likely produces illegal
+   *   with the 'string' formatter. In other cases it likely produces invalid
    *   markup and possibly incorrect display. This option has been retained for
    *   backward-compatibility to support sites that expect attributes set on
    *   the field to propagate to the page title.
@@ -169,30 +169,6 @@ class EntityViewController implements ContainerInjectionInterface, TrustedCallba
    */
   public static function trustedCallbacks() {
     return ['buildTitle'];
-  }
-
-  /**
-   * Provides a page to render a single entity revision.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $_entity_revision
-   *   The Entity to be rendered. Note this variable is named $_entity_revision
-   *   rather than $entity to prevent collisions with other named placeholders
-   *   in the route.
-   * @param string $view_mode
-   *   (optional) The view mode that should be used to display the entity.
-   *   Defaults to 'full'.
-   *
-   * @return array
-   *   A render array.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
-   *   \Drupal\Core\Entity\Controller\EntityRevisionViewController instead.
-   *
-   * @see https://www.drupal.org/node/3314346
-   */
-  public function viewRevision(EntityInterface $_entity_revision, $view_mode = 'full') {
-    @trigger_error(__METHOD__ . ' is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Entity\Controller\EntityRevisionViewController instead. See https://www.drupal.org/node/3314346', E_USER_DEPRECATED);
-    return $this->view($_entity_revision, $view_mode);
   }
 
 }

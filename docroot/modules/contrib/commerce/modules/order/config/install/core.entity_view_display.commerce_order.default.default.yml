@@ -50,7 +50,7 @@ content:
     third_party_settings: {  }
     region: content
   mail:
-    label: inline
+    label: above
     type: basic_string
     weight: 6
     settings: {  }
@@ -59,7 +59,9 @@ content:
   order_items:
     type: commerce_order_item_table
     weight: 0
-    settings: {  }
+    settings:
+      show_add_items_link: true
+      view: commerce_order_item_table_admin
     third_party_settings: {  }
     label: hidden
     region: content
@@ -90,13 +92,6 @@ content:
     third_party_settings: {  }
     weight: 5
     region: content
-  total_price:
-    type: commerce_order_total_summary
-    weight: 1
-    settings: {  }
-    third_party_settings: {  }
-    label: hidden
-    region: content
   uid:
     label: inline
     type: author
@@ -104,7 +99,15 @@ content:
     settings: {  }
     third_party_settings: {  }
     region: content
+  billing_profile:
+    label: hidden
+    type: commerce_billing_information
+    weight: 5
+    settings:
+      profile_view_mode: admin
+    third_party_settings: {  }
+    region: content
 hidden:
-  billing_profile: true
   order_number: true
   total_paid: true
+  total_price: true

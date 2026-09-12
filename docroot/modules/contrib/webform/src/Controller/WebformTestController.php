@@ -2,9 +2,9 @@
 
 namespace Drupal\webform\Controller;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\Plugin\WebformHandler\EmailWebformHandler;
 use Drupal\webform\WebformInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;

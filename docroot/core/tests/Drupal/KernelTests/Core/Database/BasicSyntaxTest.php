@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Database;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests SQL syntax interpretation.
  *
  * In order to ensure consistent SQL handling throughout Drupal
  * across multiple kinds of database systems, we test that the
  * database system interprets SQL syntax in an expected fashion.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class BasicSyntaxTest extends DatabaseTestBase {
 
   /**
@@ -60,18 +63,6 @@ class BasicSyntaxTest extends DatabaseTestBase {
       ':a4' => 'world.',
     ]);
     $this->assertSame('Hello, , world.', $result->fetchField());
-  }
-
-  /**
-   * Tests string concatenation with separator, with field values.
-   */
-  public function testConcatWsFields(): void {
-    $result = $this->connection->query("SELECT CONCAT_WS('-', :a1, [name], :a2, [age]) FROM {test} WHERE [age] = :age", [
-      ':a1' => 'name',
-      ':a2' => 'age',
-      ':age' => 25,
-    ]);
-    $this->assertSame('name-John-age-25', $result->fetchField());
   }
 
   /**

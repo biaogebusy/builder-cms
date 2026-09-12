@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate taxonomy vocabularies to taxonomy.vocabulary.*.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyVocabularyTranslationTest extends MigrateDrupal6TestBase {
 
   /**

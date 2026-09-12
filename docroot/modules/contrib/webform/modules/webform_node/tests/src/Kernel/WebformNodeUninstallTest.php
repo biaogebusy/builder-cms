@@ -42,7 +42,7 @@ class WebformNodeUninstallTest extends KernelTestBase {
   /**
    * Tests the webform_node_uninstall() method.
    */
-  public function testWebformNodeUninstall() {
+  public function testWebformNodeUninstall(): void {
     \Drupal::moduleHandler()->loadInclude('webform_node', 'install');
 
     // Check that webform node module can not be installed.

@@ -20,6 +20,7 @@ class PaymentMethodAddForm extends PaymentMethodFormBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form_state->set(['use_save_button', 'billing'], TRUE);
     $form = parent::buildConfigurationForm($form, $form_state);
     /** @var \Drupal\commerce_payment\Entity\PaymentMethodInterface $payment_method */
     $payment_method = $this->entity;
@@ -84,11 +85,11 @@ class PaymentMethodAddForm extends PaymentMethodFormBase {
     }
     catch (DeclineException $e) {
       $this->logger->warning($e->getMessage());
-      throw DeclineException::createForPayment($payment_method, t('We encountered an error processing your payment method. Please verify your details and try again.'));
+      throw DeclineException::createForPayment($payment_method, t('We encountered an error processing your payment method. Please verify your details and try again.'), $e->getCode(), $e->getPrevious() ?? $e);
     }
     catch (PaymentGatewayException $e) {
       $this->logger->error($e->getMessage());
-      throw PaymentGatewayException::createForPayment($payment_method, t('We encountered an unexpected error processing your payment method. Please try again later.'));
+      throw PaymentGatewayException::createForPayment($payment_method, t('We encountered an unexpected error processing your payment method. Please try again later.'), $e->getCode(), $e->getPrevious() ?? $e);
     }
   }
 

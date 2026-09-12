@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\comment\Kernel\Plugin\migrate\source;
 
+use Drupal\comment\Plugin\migrate\source\CommentType;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the comment type source plugin.
- *
- * @covers \Drupal\comment\Plugin\migrate\source\CommentType
- *
- * @group comment
  */
+#[CoversClass(CommentType::class)]
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentTypeTest extends MigrateSqlSourceTestBase {
 
   /**

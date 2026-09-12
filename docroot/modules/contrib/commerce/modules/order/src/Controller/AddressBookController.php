@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_order\Controller;
 
+use Drupal\commerce\CurrentCountryInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -32,41 +33,23 @@ class AddressBookController implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
-   * The address book.
-   *
-   * @var \Drupal\commerce_order\AddressBookInterface
-   */
-  protected $addressBook;
-
-  /**
-   * The entity form builder.
-   *
-   * @var \Drupal\Core\Entity\EntityFormBuilderInterface
-   */
-  protected $entityFormBuilder;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * Constructs a new AddressBookController object.
    *
-   * @param \Drupal\commerce_order\AddressBookInterface $address_book
+   * @param \Drupal\commerce_order\AddressBookInterface $addressBook
    *   The address book.
-   * @param \Drupal\Core\Entity\EntityFormBuilderInterface $entity_form_builder
+   * @param \Drupal\Core\Entity\EntityFormBuilderInterface $entityFormBuilder
    *   The entity form builder.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\commerce\CurrentCountryInterface $currentCountry
+   *   The current country.
    */
-  public function __construct(AddressBookInterface $address_book, EntityFormBuilderInterface $entity_form_builder, EntityTypeManagerInterface $entity_type_manager) {
-    $this->addressBook = $address_book;
-    $this->entityFormBuilder = $entity_form_builder;
-    $this->entityTypeManager = $entity_type_manager;
-  }
+  public function __construct(
+    protected AddressBookInterface $addressBook,
+    protected EntityFormBuilderInterface $entityFormBuilder,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected CurrentCountryInterface $currentCountry,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -75,7 +58,8 @@ class AddressBookController implements ContainerInjectionInterface {
     return new static(
       $container->get('commerce_order.address_book'),
       $container->get('entity.form_builder'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('commerce.current_country')
     );
   }
 
@@ -239,6 +223,15 @@ class AddressBookController implements ContainerInjectionInterface {
       'uid' => $user->id(),
       'type' => $profile_type->id(),
     ]);
+
+    // Set default country in the profile if it's available.
+    $default_country = $this->currentCountry->getCountry();
+    if ($default_country && $profile->hasField('address')) {
+      $profile->get('address')->setValue([
+        'country_code' => $default_country->getCountryCode(),
+      ]);
+    }
+
     return $this->entityFormBuilder->getForm($profile, 'address-book-add');
   }
 

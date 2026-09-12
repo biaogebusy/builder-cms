@@ -1,9 +1,9 @@
+parameters:
+  path_alias.skip_procedural_hook_scan: true
+
 services:
   _defaults:
     autoconfigure: true
-  path_alias.subscriber:
-    class: Drupal\path_alias\EventSubscriber\PathAliasSubscriber
-    arguments: ['@path_alias.manager', '@path.current']
   path_alias.path_processor:
     class: Drupal\path_alias\PathProcessor\AliasPathProcessor
     tags:
@@ -12,7 +12,7 @@ services:
     arguments: ['@path_alias.manager']
   path_alias.manager:
     class: Drupal\path_alias\AliasManager
-    arguments: ['@path_alias.repository', '@path_alias.whitelist', '@language_manager', '@cache.data', '@datetime.time']
+    arguments: ['@path_alias.repository', '@path_alias.prefix_list', '@language_manager', '@cache.data', '@datetime.time']
   Drupal\path_alias\AliasManagerInterface: '@path_alias.manager'
   path_alias.repository:
     class: Drupal\path_alias\AliasRepository
@@ -20,9 +20,21 @@ services:
     tags:
       - { name: backend_overridable }
   Drupal\path_alias\AliasRepositoryInterface: '@path_alias.repository'
+  # cspell:ignore whitelist
   path_alias.whitelist:
     class: Drupal\path_alias\AliasWhitelist
     tags:
       - { name: needs_destruction }
     arguments: [path_alias_whitelist, '@cache.bootstrap', '@lock', '@state', '@path_alias.repository']
+    deprecated:  The "%service_id%" service is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. Use the 'router.prefix_list' service instead. See https://www.drupal.org/node/3467559
   Drupal\path_alias\AliasWhitelistInterface: '@path_alias.whitelist'
+  path_alias.prefix_list:
+    class: Drupal\path_alias\AliasPrefixList
+    tags:
+      - { name: needs_destruction }
+    arguments: [path_alias_prefix_list, '@cache.bootstrap', '@lock', '@state', '@path_alias.repository']
+  Drupal\path_alias\AliasPrefixListInterface: '@path_alias.prefix_list'
+  Drupal\path_alias\AliasPathMatcher:
+    public: false
+    autowire: true
+    decorates: path.matcher

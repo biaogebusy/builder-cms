@@ -21,7 +21,7 @@ use Drupal\blazy\BlazyDefault;
  *   }
  * )
  *
- * @todo remove `image` at 3.x, unless dedicated for SVG (forms and displays).
+ * @todo deprecate and remove `image` at 3.x, unless dedicated for SVG (forms and displays).
  */
 class BlazyFileFormatter extends BlazyFormatterBlazy {
 

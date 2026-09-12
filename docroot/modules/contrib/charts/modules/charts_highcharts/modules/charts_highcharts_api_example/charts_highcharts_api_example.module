@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Charts Highcharts API Example module file.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+
+/**
+ * Implements hook_chart_definition_CHART_ID_alter().
+ *
+ * @phpstan-ignore-next-line
+ */
+#[LegacyHook]
+function charts_highcharts_api_example_chart_definition_example_id_php_alter(&$chart) {
+  return \Drupal::service('charts_highcharts_api_example.hooks')->chartDefinitionExampleIdPhpAlter($chart);
+}
+
+/**
+ * Implements hook_chart_alter().
+ *
+ * @phpstan-ignore-next-line
+ */
+#[LegacyHook]
+function charts_highcharts_api_example_chart_alter(array &$element, ?string $chart_id) {
+  return \Drupal::service('charts_highcharts_api_example.hooks')->chartAlter($element, $chart_id);
+}

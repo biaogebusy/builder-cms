@@ -7,10 +7,14 @@ namespace Drupal\FunctionalTests;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group Database
+ * Tests Existing Drupal8Style Database Connection In Settings Php.
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class ExistingDrupal8StyleDatabaseConnectionInSettingsPhpTest extends BrowserTestBase {
 
   /**
@@ -26,7 +30,7 @@ class ExistingDrupal8StyleDatabaseConnectionInSettingsPhpTest extends BrowserTes
 
     $driver = Database::getConnection()->driver();
     if (!in_array($driver, ['mysql', 'pgsql', 'sqlite'])) {
-      $this->markTestSkipped("This test does not support the {$driver} database driver.");
+      $this->markTestSkipped("This test is only relevant for database drivers that were available in Drupal prior to database drivers becoming part of modules. The {$driver} database driver is not qualifying.");
     }
 
     $filename = $this->siteDirectory . '/settings.php';

@@ -19,15 +19,17 @@ use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Log\LoggerInterface;
 
 /**
  * Test Cron handling of suspended queues with a delay.
- *
- * @group Cron
- * @covers \Drupal\Core\Queue\SuspendQueueException
- * @coversDefaultClass \Drupal\Core\Cron
  */
+#[CoversClass(Cron::class)]
+#[Group('Cron')]
+#[CoversClass(SuspendQueueException::class)]
 final class CronSuspendQueueDelayTest extends UnitTestCase {
 
   /**
@@ -61,13 +63,13 @@ final class CronSuspendQueueDelayTest extends UnitTestCase {
       ->method('acquire')
       ->willReturn(TRUE);
     $this->cronConstructorArguments = [
-      'module_handler' => $this->createMock(ModuleHandlerInterface::class),
+      'moduleHandler' => $this->createMock(ModuleHandlerInterface::class),
       'lock' => $lock,
-      'queue_factory' => $this->createMock(QueueFactory::class),
+      'queueFactory' => $this->createMock(QueueFactory::class),
       'state' => $this->createMock(StateInterface::class),
-      'account_switcher' => $this->createMock(AccountSwitcherInterface::class),
+      'accountSwitcher' => $this->createMock(AccountSwitcherInterface::class),
       'logger' => $this->createMock(LoggerInterface::class),
-      'queue_manager' => $this->createMock(QueueWorkerManagerInterface::class),
+      'queueManager' => $this->createMock(QueueWorkerManagerInterface::class),
       'time' => $this->createMock(TimeInterface::class),
       'queue_config' => [],
     ];
@@ -125,8 +127,8 @@ final class CronSuspendQueueDelayTest extends UnitTestCase {
    */
   public function testSuspendQueue(): void {
     [
-      'queue_factory' => $queueFactory,
-      'queue_manager' => $queueManager,
+      'queueFactory' => $queueFactory,
+      'queueManager' => $queueManager,
       'time' => $time,
     ] = $this->cronConstructorArguments;
 
@@ -222,16 +224,15 @@ final class CronSuspendQueueDelayTest extends UnitTestCase {
    *   An interval in seconds a worker will suspend the queue.
    * @param bool $expectQueueDelay
    *   Whether to expect cron to sleep and re-process the queue.
-   *
-   * @dataProvider providerSuspendQueueThreshold
    */
+  #[DataProvider('providerSuspendQueueThreshold')]
   public function testSuspendQueueThreshold(float $threshold, float $suspendQueueDelay, bool $expectQueueDelay): void {
     $this->cronConstructorArguments['queue_config'] = [
       'suspendMaximumWait' => $threshold,
     ];
     [
-      'queue_factory' => $queueFactory,
-      'queue_manager' => $queueManager,
+      'queueFactory' => $queueFactory,
+      'queueManager' => $queueManager,
     ] = $this->cronConstructorArguments;
 
     $cron = $this->getMockBuilder(Cron::class)
@@ -307,8 +308,8 @@ final class CronSuspendQueueDelayTest extends UnitTestCase {
    */
   public function testSuspendQueueOrder(): void {
     [
-      'queue_factory' => $queueFactory,
-      'queue_manager' => $queueManager,
+      'queueFactory' => $queueFactory,
+      'queueManager' => $queueManager,
       'time' => $time,
     ] = $this->cronConstructorArguments;
 

@@ -1,0 +1,53 @@
+/**
+ * @file
+ * Page title.
+ */
+
+@import "../base/media-queries.pcss.css";
+
+.block-page-title-block {
+  margin-block: var(--admin-space-s);
+}
+
+.page-title {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 90%;
+  margin: 0;
+  padding-inline-end: 0.25em;
+  white-space: nowrap;
+  letter-spacing: -0.05em;
+  text-overflow: ellipsis;
+  color: var(--admin-color-text-loud);
+  font-size: var(--admin-font-size-page-title);
+  font-weight: var(--admin-font-weight-bold);
+  line-height: normal;
+  -webkit-font-smoothing: antialiased;
+
+  .region-header > & {
+    /**
+     * In this case page title is not rendered as a block ¯\_(ツ)_/¯.
+     *
+     * @see Drupal\system\Controller\BatchController::batchPage()
+     */
+    margin-block: var(--breadcrumb-height) var(--admin-space-l);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: font-size 0.25s ease;
+  }
+
+  @media (--admin-large) {
+    .region-sticky--is-sticky & {
+      font-size: var(--admin-font-size-h3);
+    }
+  }
+}
+
+.page-title__language {
+  display: block;
+  letter-spacing: normal;
+  color: var(--admin-color-text);
+  font-size: var(--admin-font-size-xs);
+  font-weight: var(--admin-font-weight-normal);
+}

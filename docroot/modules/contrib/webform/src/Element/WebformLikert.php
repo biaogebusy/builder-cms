@@ -5,7 +5,7 @@ namespace Drupal\webform\Element;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\webform\Utility\WebformAccessibilityHelper;
 use Drupal\webform\Utility\WebformElementHelper;
 use Drupal\webform\Utility\WebformHtmlHelper;
@@ -17,7 +17,7 @@ use Drupal\webform\Utility\WebformXss;
  *
  * @FormElement("webform_likert")
  */
-class WebformLikert extends FormElement {
+class WebformLikert extends FormElementBase {
 
   /**
    * {@inheritdoc}

@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\Core\Render;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Render\Element;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Render\Element
- * @group Render
+ * Tests Drupal\Core\Render\Element.
  */
+#[CoversClass(Element::class)]
+#[Group('Render')]
 class ElementTest extends UnitTestCase {
 
   /**
@@ -130,9 +134,8 @@ class ElementTest extends UnitTestCase {
    *   The test element array.
    * @param array $expected_keys
    *   The expected keys to be returned from Element::getVisibleChildren().
-   *
-   * @dataProvider providerVisibleChildren
    */
+  #[DataProvider('providerVisibleChildren')]
   public function testVisibleChildren(array $element, array $expected_keys): void {
     $this->assertSame($expected_keys, Element::getVisibleChildren($element));
   }
@@ -141,15 +144,30 @@ class ElementTest extends UnitTestCase {
    * Data provider for testVisibleChildren.
    *
    * @return array
+   *   An array of test cases.
    */
-  public static function providerVisibleChildren() {
+  public static function providerVisibleChildren(): array {
     return [
       [['#property1' => '', '#property2' => []], []],
       [['#property1' => '', 'child1' => []], ['child1']],
       [['#property1' => '', 'child1' => [], 'child2' => ['#access' => TRUE]], ['child1', 'child2']],
       [['#property1' => '', 'child1' => [], 'child2' => ['#access' => FALSE]], ['child1']],
-      'access_result_object_allowed' => [['#property1' => '', 'child1' => [], 'child2' => ['#access' => AccessResult::allowed()]], ['child1', 'child2']],
-      'access_result_object_forbidden' => [['#property1' => '', 'child1' => [], 'child2' => ['#access' => AccessResult::forbidden()]], ['child1']],
+      'access_result_object_allowed' => [
+        [
+          '#property1' => '',
+          'child1' => [],
+          'child2' => ['#access' => AccessResult::allowed()],
+        ],
+        ['child1', 'child2'],
+      ],
+      'access_result_object_forbidden' => [
+        [
+          '#property1' => '',
+          'child1' => [],
+          'child2' => ['#access' => AccessResult::forbidden()],
+        ],
+        ['child1'],
+      ],
       [['#property1' => '', 'child1' => [], 'child2' => ['#type' => 'textfield']], ['child1', 'child2']],
       [['#property1' => '', 'child1' => [], 'child2' => ['#type' => 'value']], ['child1']],
       [['#property1' => '', 'child1' => [], 'child2' => ['#type' => 'hidden']], ['child1']],
@@ -158,9 +176,8 @@ class ElementTest extends UnitTestCase {
 
   /**
    * Tests the setAttributes() method.
-   *
-   * @dataProvider providerTestSetAttributes
    */
+  #[DataProvider('providerTestSetAttributes')]
   public function testSetAttributes($element, $map, $expected_element): void {
     Element::setAttributes($element, $map);
     $this->assertSame($expected_element, $element);
@@ -169,25 +186,32 @@ class ElementTest extends UnitTestCase {
   /**
    * Data provider for testSetAttributes().
    */
-  public static function providerTestSetAttributes() {
+  public static function providerTestSetAttributes(): array {
     $base = ['#id' => 'id', '#class' => []];
     return [
       [$base, [], $base],
-      [$base, ['id', 'class'], $base + ['#attributes' => ['id' => 'id', 'class' => []]]],
-      [$base + ['#attributes' => ['id' => 'id-not-overwritten']], ['id', 'class'], $base + ['#attributes' => ['id' => 'id-not-overwritten', 'class' => []]]],
+      [
+        $base,
+        ['id', 'class'],
+        $base + ['#attributes' => ['id' => 'id', 'class' => []]],
+      ],
+      [
+        $base + ['#attributes' => ['id' => 'id-not-overwritten']],
+        ['id', 'class'],
+        $base + ['#attributes' => ['id' => 'id-not-overwritten', 'class' => []]],
+      ],
     ];
   }
 
   /**
-   * @covers ::isEmpty
-   *
-   * @dataProvider providerTestIsEmpty
+   * Tests is empty.
    */
+  #[DataProvider('providerTestIsEmpty')]
   public function testIsEmpty(array $element, $expected): void {
     $this->assertSame(Element::isEmpty($element), $expected);
   }
 
-  public static function providerTestIsEmpty() {
+  public static function providerTestIsEmpty(): array {
     return [
       [[], TRUE],
       [['#attached' => []], FALSE],
@@ -226,9 +250,9 @@ class ElementTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isRenderArray
-   * @dataProvider dataProviderIsRenderArray
+   * Tests is render array.
    */
+  #[DataProvider('dataProviderIsRenderArray')]
   public function testIsRenderArray($build, $expected): void {
     $this->assertSame(
       $expected,
@@ -236,7 +260,7 @@ class ElementTest extends UnitTestCase {
     );
   }
 
-  public static function dataProviderIsRenderArray() {
+  public static function dataProviderIsRenderArray(): array {
     return [
       'valid markup render array' => [['#markup' => 'hello world'], TRUE],
       'invalid "foo" string' => [['foo', '#markup' => 'hello world'], FALSE],

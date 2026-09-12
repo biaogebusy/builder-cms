@@ -56,7 +56,7 @@ class WebformEntityPrintAttachment extends WebformAttachmentBase {
   /**
    * {@inheritdoc}
    */
-  public function finalize(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function finalize(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::finalize($element, $webform_submission);
     // Explode element_type:export_type.
     // @see \Drupal\webform_entity_print_attachment\Element\WebformEntityPrintAttachment::getExportTypeId

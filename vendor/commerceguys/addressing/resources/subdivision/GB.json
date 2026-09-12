@@ -1,0 +1,675 @@
+{
+	"country_code": "GB",
+	"locale": "cy",
+	"subdivisions": {
+		"ABE": {
+			"name": "Aberdeen City"
+		},
+		"ABD": {
+			"name": "Aberdeenshire"
+		},
+		"ANS": {
+			"name": "Angus"
+		},
+		"ANN": {
+			"name": "Antrim and Newtownabbey"
+		},
+		"AND": {
+			"name": "Ards and North Down"
+		},
+		"AGB": {
+			"name": "Argyll and Bute"
+		},
+		"ABC": {
+			"name": "Armagh City, Banbridge and Craigavon"
+		},
+		"BDG": {
+			"name": "Barking and Dagenham"
+		},
+		"BNE": {
+			"name": "Barnet"
+		},
+		"BNS": {
+			"name": "Barnsley"
+		},
+		"BAS": {
+			"name": "Bath and North East Somerset"
+		},
+		"BDF": {
+			"name": "Bedford"
+		},
+		"BFS": {
+			"name": "Belfast City"
+		},
+		"BEX": {
+			"name": "Bexley"
+		},
+		"BIR": {
+			"name": "Birmingham"
+		},
+		"BBD": {
+			"name": "Blackburn with Darwen"
+		},
+		"BPL": {
+			"name": "Blackpool"
+		},
+		"BGW": {
+			"name": "Blaenau Gwent"
+		},
+		"BOL": {
+			"name": "Bolton"
+		},
+		"BCP": {
+			"name": "Bournemouth, Christchurch and Poole"
+		},
+		"BRC": {
+			"name": "Bracknell Forest"
+		},
+		"BRD": {
+			"name": "Bradford"
+		},
+		"BEN": {
+			"name": "Brent"
+		},
+		"BGE": {
+			"name": "Bridgend",
+			"local_name": "Pen-y-bont ar Ogwr"
+		},
+		"BNH": {
+			"name": "Brighton and Hove"
+		},
+		"BRY": {
+			"name": "Bromley"
+		},
+		"BKM": {
+			"name": "Buckinghamshire"
+		},
+		"BUR": {
+			"name": "Bury"
+		},
+		"CAY": {
+			"name": "Caerphilly",
+			"local_name": "Caerffili"
+		},
+		"CLD": {
+			"name": "Calderdale"
+		},
+		"CAM": {
+			"name": "Cambridgeshire"
+		},
+		"CMD": {
+			"name": "Camden"
+		},
+		"CRF": {
+			"name": "Cardiff",
+			"local_name": "Caerdydd"
+		},
+		"CMN": {
+			"name": "Carmarthenshire",
+			"local_name": "Sir Gaerfyrddin"
+		},
+		"CCG": {
+			"name": "Causeway Coast and Glens"
+		},
+		"CBF": {
+			"name": "Central Bedfordshire"
+		},
+		"CGN": {
+			"name": "Ceredigion",
+			"local_name": "Sir Ceredigion"
+		},
+		"CHE": {
+			"name": "Cheshire East"
+		},
+		"CHW": {
+			"name": "Cheshire West and Chester"
+		},
+		"BST": {
+			"name": "City of Bristol"
+		},
+		"EDH": {
+			"name": "City of Edinburgh"
+		},
+		"LND": {
+			"name": "City of London"
+		},
+		"CLK": {
+			"name": "Clackmannanshire"
+		},
+		"CWY": {
+			"name": "Conwy"
+		},
+		"CON": {
+			"name": "Cornwall"
+		},
+		"DUR": {
+			"name": "County Durham"
+		},
+		"COV": {
+			"name": "Coventry"
+		},
+		"CRY": {
+			"name": "Croydon"
+		},
+		"CMA": {
+			"name": "Cumbria"
+		},
+		"DAL": {
+			"name": "Darlington"
+		},
+		"DEN": {
+			"name": "Denbighshire",
+			"local_name": "Sir Ddinbych"
+		},
+		"DER": {
+			"name": "Derby"
+		},
+		"DBY": {
+			"name": "Derbyshire"
+		},
+		"DRS": {
+			"name": "Derry and Strabane"
+		},
+		"DEV": {
+			"name": "Devon"
+		},
+		"DNC": {
+			"name": "Doncaster"
+		},
+		"DOR": {
+			"name": "Dorset"
+		},
+		"DUD": {
+			"name": "Dudley"
+		},
+		"DGY": {
+			"name": "Dumfries and Galloway"
+		},
+		"DND": {
+			"name": "Dundee City"
+		},
+		"EAL": {
+			"name": "Ealing"
+		},
+		"EAY": {
+			"name": "East Ayrshire"
+		},
+		"EDU": {
+			"name": "East Dunbartonshire"
+		},
+		"ELN": {
+			"name": "East Lothian"
+		},
+		"ERW": {
+			"name": "East Renfrewshire"
+		},
+		"ERY": {
+			"name": "East Riding of Yorkshire"
+		},
+		"ESX": {
+			"name": "East Sussex"
+		},
+		"ELS": {
+			"name": "Eilean Siar"
+		},
+		"ENF": {
+			"name": "Enfield"
+		},
+		"ESS": {
+			"name": "Essex"
+		},
+		"FAL": {
+			"name": "Falkirk"
+		},
+		"FMO": {
+			"name": "Fermanagh and Omagh"
+		},
+		"FIF": {
+			"name": "Fife"
+		},
+		"FLN": {
+			"name": "Flintshire",
+			"local_name": "Sir y Fflint"
+		},
+		"GAT": {
+			"name": "Gateshead"
+		},
+		"GLG": {
+			"name": "Glasgow City"
+		},
+		"GLS": {
+			"name": "Gloucestershire"
+		},
+		"GRE": {
+			"name": "Greenwich"
+		},
+		"GWN": {
+			"name": "Gwynedd"
+		},
+		"HCK": {
+			"name": "Hackney"
+		},
+		"HAL": {
+			"name": "Halton"
+		},
+		"HMF": {
+			"name": "Hammersmith and Fulham"
+		},
+		"HAM": {
+			"name": "Hampshire"
+		},
+		"HRY": {
+			"name": "Haringey"
+		},
+		"HRW": {
+			"name": "Harrow"
+		},
+		"HPL": {
+			"name": "Hartlepool"
+		},
+		"HAV": {
+			"name": "Havering"
+		},
+		"HEF": {
+			"name": "Herefordshire"
+		},
+		"HRT": {
+			"name": "Hertfordshire"
+		},
+		"HLD": {
+			"name": "Highland"
+		},
+		"HIL": {
+			"name": "Hillingdon"
+		},
+		"HNS": {
+			"name": "Hounslow"
+		},
+		"IVC": {
+			"name": "Inverclyde"
+		},
+		"AGY": {
+			"name": "Isle of Anglesey",
+			"local_name": "Sir Ynys Môn"
+		},
+		"IOW": {
+			"name": "Isle of Wight"
+		},
+		"IOS": {
+			"name": "Isles of Scilly"
+		},
+		"ISL": {
+			"name": "Islington"
+		},
+		"KEC": {
+			"name": "Kensington and Chelsea"
+		},
+		"KEN": {
+			"name": "Kent"
+		},
+		"KHL": {
+			"name": "Kingston upon Hull"
+		},
+		"KTT": {
+			"name": "Kingston upon Thames"
+		},
+		"KIR": {
+			"name": "Kirklees"
+		},
+		"KWL": {
+			"name": "Knowsley"
+		},
+		"LBH": {
+			"name": "Lambeth"
+		},
+		"LAN": {
+			"name": "Lancashire"
+		},
+		"LDS": {
+			"name": "Leeds"
+		},
+		"LCE": {
+			"name": "Leicester"
+		},
+		"LEC": {
+			"name": "Leicestershire"
+		},
+		"LEW": {
+			"name": "Lewisham"
+		},
+		"LIN": {
+			"name": "Lincolnshire"
+		},
+		"LBC": {
+			"name": "Lisburn and Castlereagh"
+		},
+		"LIV": {
+			"name": "Liverpool"
+		},
+		"LUT": {
+			"name": "Luton"
+		},
+		"MAN": {
+			"name": "Manchester"
+		},
+		"MDW": {
+			"name": "Medway"
+		},
+		"MTY": {
+			"name": "Merthyr Tydfil",
+			"local_name": "Merthyr Tudful"
+		},
+		"MRT": {
+			"name": "Merton"
+		},
+		"MEA": {
+			"name": "Mid and East Antrim"
+		},
+		"MUL": {
+			"name": "Mid-Ulster"
+		},
+		"MDB": {
+			"name": "Middlesbrough"
+		},
+		"MLN": {
+			"name": "Midlothian"
+		},
+		"MIK": {
+			"name": "Milton Keynes"
+		},
+		"MON": {
+			"name": "Monmouthshire",
+			"local_name": "Sir Fynwy"
+		},
+		"MRY": {
+			"name": "Moray"
+		},
+		"NTL": {
+			"name": "Neath Port Talbot",
+			"local_name": "Castell-nedd Port Talbot"
+		},
+		"NET": {
+			"name": "Newcastle upon Tyne"
+		},
+		"NWM": {
+			"name": "Newham"
+		},
+		"NWP": {
+			"name": "Newport",
+			"local_name": "Casnewydd"
+		},
+		"NMD": {
+			"name": "Newry, Mourne and Down"
+		},
+		"NFK": {
+			"name": "Norfolk"
+		},
+		"NAY": {
+			"name": "North Ayrshire"
+		},
+		"NEL": {
+			"name": "North East Lincolnshire"
+		},
+		"NLK": {
+			"name": "North Lanarkshire"
+		},
+		"NLN": {
+			"name": "North Lincolnshire"
+		},
+		"NNH": {
+			"name": "North Northamptonshire"
+		},
+		"NSM": {
+			"name": "North Somerset"
+		},
+		"NTY": {
+			"name": "North Tyneside"
+		},
+		"NYK": {
+			"name": "North Yorkshire"
+		},
+		"NBL": {
+			"name": "Northumberland"
+		},
+		"NGM": {
+			"name": "Nottingham"
+		},
+		"NTT": {
+			"name": "Nottinghamshire"
+		},
+		"OLD": {
+			"name": "Oldham"
+		},
+		"ORK": {
+			"name": "Orkney Islands"
+		},
+		"OXF": {
+			"name": "Oxfordshire"
+		},
+		"PEM": {
+			"name": "Pembrokeshire",
+			"local_name": "Sir Benfro"
+		},
+		"PKN": {
+			"name": "Perth and Kinross"
+		},
+		"PTE": {
+			"name": "Peterborough"
+		},
+		"PLY": {
+			"name": "Plymouth"
+		},
+		"POR": {
+			"name": "Portsmouth"
+		},
+		"POW": {
+			"name": "Powys"
+		},
+		"RDG": {
+			"name": "Reading"
+		},
+		"RDB": {
+			"name": "Redbridge"
+		},
+		"RCC": {
+			"name": "Redcar and Cleveland"
+		},
+		"RFW": {
+			"name": "Renfrewshire"
+		},
+		"RCT": {
+			"name": "Rhondda Cynon Taff",
+			"local_name": "Rhondda Cynon Taf"
+		},
+		"RIC": {
+			"name": "Richmond upon Thames"
+		},
+		"RCH": {
+			"name": "Rochdale"
+		},
+		"ROT": {
+			"name": "Rotherham"
+		},
+		"RUT": {
+			"name": "Rutland"
+		},
+		"SLF": {
+			"name": "Salford"
+		},
+		"SAW": {
+			"name": "Sandwell"
+		},
+		"SCB": {
+			"name": "Scottish Borders"
+		},
+		"SFT": {
+			"name": "Sefton"
+		},
+		"SHF": {
+			"name": "Sheffield"
+		},
+		"ZET": {
+			"name": "Shetland Islands"
+		},
+		"SHR": {
+			"name": "Shropshire"
+		},
+		"SLG": {
+			"name": "Slough"
+		},
+		"SOL": {
+			"name": "Solihull"
+		},
+		"SOM": {
+			"name": "Somerset"
+		},
+		"SAY": {
+			"name": "South Ayrshire"
+		},
+		"SGC": {
+			"name": "South Gloucestershire"
+		},
+		"SLK": {
+			"name": "South Lanarkshire"
+		},
+		"STY": {
+			"name": "South Tyneside"
+		},
+		"STH": {
+			"name": "Southampton"
+		},
+		"SOS": {
+			"name": "Southend-on-Sea"
+		},
+		"SWK": {
+			"name": "Southwark"
+		},
+		"SHN": {
+			"name": "St. Helens"
+		},
+		"STS": {
+			"name": "Staffordshire"
+		},
+		"STG": {
+			"name": "Stirling"
+		},
+		"SKP": {
+			"name": "Stockport"
+		},
+		"STT": {
+			"name": "Stockton-on-Tees"
+		},
+		"STE": {
+			"name": "Stoke-on-Trent"
+		},
+		"SFK": {
+			"name": "Suffolk"
+		},
+		"SND": {
+			"name": "Sunderland"
+		},
+		"SRY": {
+			"name": "Surrey"
+		},
+		"STN": {
+			"name": "Sutton"
+		},
+		"SWA": {
+			"name": "Swansea",
+			"local_name": "Abertawe"
+		},
+		"SWD": {
+			"name": "Swindon"
+		},
+		"TAM": {
+			"name": "Tameside"
+		},
+		"TFW": {
+			"name": "Telford and Wrekin"
+		},
+		"VGL": {
+			"name": "The Vale of Glamorgan",
+			"local_name": "Bro Morgannwg"
+		},
+		"THR": {
+			"name": "Thurrock"
+		},
+		"TOB": {
+			"name": "Torbay"
+		},
+		"TOF": {
+			"name": "Torfaen",
+			"local_name": "Tor-faen"
+		},
+		"TWH": {
+			"name": "Tower Hamlets"
+		},
+		"TRF": {
+			"name": "Trafford"
+		},
+		"WKF": {
+			"name": "Wakefield"
+		},
+		"WLL": {
+			"name": "Walsall"
+		},
+		"WFT": {
+			"name": "Waltham Forest"
+		},
+		"WND": {
+			"name": "Wandsworth"
+		},
+		"WRT": {
+			"name": "Warrington"
+		},
+		"WAR": {
+			"name": "Warwickshire"
+		},
+		"WBK": {
+			"name": "West Berkshire"
+		},
+		"WDU": {
+			"name": "West Dunbartonshire"
+		},
+		"WLN": {
+			"name": "West Lothian"
+		},
+		"WNH": {
+			"name": "West Northamptonshire"
+		},
+		"WSX": {
+			"name": "West Sussex"
+		},
+		"WSM": {
+			"name": "Westminster"
+		},
+		"WGN": {
+			"name": "Wigan"
+		},
+		"WIL": {
+			"name": "Wiltshire"
+		},
+		"WNM": {
+			"name": "Windsor and Maidenhead"
+		},
+		"WRL": {
+			"name": "Wirral"
+		},
+		"WOK": {
+			"name": "Wokingham"
+		},
+		"WLV": {
+			"name": "Wolverhampton"
+		},
+		"WOR": {
+			"name": "Worcestershire"
+		},
+		"WRX": {
+			"name": "Wrexham",
+			"local_name": "Wrecsam"
+		},
+		"YOR": {
+			"name": "York"
+		}
+	}
+}

@@ -1,0 +1,44 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+/**
+ * @file
+ * Install and update hooks for the CKEditor 5 Premium Features module.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Change uid field to nullable.
+ */
+function ckeditor5_premium_features_update_9001() {
+  $schema = Database::getConnection()->schema();
+  $schema->changeField('ckeditor5_revision', 'uid', 'uid', [
+    'not null' => FALSE,
+    'mysql_type' => 'INT(10)',
+    'unsigned' => TRUE,
+  ]);
+}
+
+/**
+ *  Set alter_node_form_css config field to TRUE as default.
+ */
+function ckeditor5_premium_features_update_10000() {
+  $cke5PremiumFeaturesSettings = \Drupal::configFactory()->getEditable('ckeditor5_premium_features.settings');
+  $cke5PremiumFeaturesSettings->set('alter_node_form_css', 1);
+  $cke5PremiumFeaturesSettings->save();
+}
+
+/**
+ *  Print the CKEditor 5 Premium Features 1.5.0 update message.
+ */
+function ckeditor5_premium_features_update_10001() {
+  $message = t('The CKEditor 5 Premium Features module has been updated to version 1.5.0. This version makes external dependencies optional which means they are not automatically installed. If you\'re using modules that require external dependencies you\'ll have to install them manually. To learn more, go to the <a href="@url" target="_blank">CKEditor 5 Premium Features configuration guide</a>', [
+    '@url' => 'https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/ckeditor-5-premium-features/configuration-guide#s-optional-composer-dependencies'
+  ]);
+  \Drupal::messenger()->addMessage($message);
+}

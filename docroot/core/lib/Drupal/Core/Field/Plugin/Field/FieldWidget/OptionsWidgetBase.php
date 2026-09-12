@@ -187,7 +187,7 @@ abstract class OptionsWidgetBase extends WidgetBase {
       $value = $item->{$this->column};
       // Keep the value if it actually is in the list of options (needs to be
       // checked against the flat list).
-      if (isset($flat_options[$value])) {
+      if ($value !== NULL && isset($flat_options[$value])) {
         $selected_options[] = $value;
       }
     }
@@ -222,6 +222,8 @@ abstract class OptionsWidgetBase extends WidgetBase {
    * @return string|null
    *   Either a label of the empty option, or NULL.
    */
-  protected function getEmptyLabel() {}
+  protected function getEmptyLabel() {
+    return NULL;
+  }
 
 }

@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Admin styles for the help component.
+ */
+
+.help {
+  max-width: 1024px;
+  margin: 0;
+  font-size: var(--admin-font-size-s);
+
+  &:has(*:not(.region-help)) {
+    margin-block-end: var(--admin-space-m);
+  }
+
+  p {
+    margin: 0 0 10px;
+    color: var(--admin-color-text-soft);
+  }
+}
+
+#edit-help {
+  color: var(--admin-color-text-soft);
+  font-size: var(--admin-font-size-s);
+}

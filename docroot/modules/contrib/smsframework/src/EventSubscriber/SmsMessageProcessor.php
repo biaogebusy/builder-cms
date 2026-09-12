@@ -1,26 +1,26 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\EventSubscriber;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsGateway;
+use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\sms\Event\RecipientGatewayEvent;
+use Drupal\sms\Event\SmsEvents;
 use Drupal\sms\Event\SmsMessageEvent;
 use Drupal\sms\Exception\RecipientRouteException;
 use Drupal\sms\Exception\SmsException;
 use Drupal\sms\Exception\SmsPluginReportException;
-use Drupal\sms\Entity\SmsGateway;
-use Drupal\sms\Event\SmsEvents;
 use Drupal\sms\Message\SmsDeliveryReportInterface;
 use Drupal\sms\Message\SmsMessageInterface;
 use Drupal\sms\Message\SmsMessageResultInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Handles messages before they are processed by queue(), send(), or incoming().
@@ -59,7 +59,7 @@ class SmsMessageProcessor implements EventSubscriberInterface {
           throw new SmsException('Gateway not set on incoming message');
         }
         if (!$gateway->supportsIncoming()) {
-          throw new SmsException(sprintf('Gateway `%s` does not support incoming messages.', $gateway->id()));
+          throw new SmsException(\sprintf('Gateway `%s` does not support incoming messages.', $gateway->id()));
         }
       }
     }
@@ -110,16 +110,16 @@ class SmsMessageProcessor implements EventSubscriberInterface {
     }
 
     $message_recipients = $sms_message->getRecipients();
-    $result_recipients = array_map(
+    $result_recipients = \array_map(
       static function (SmsDeliveryReportInterface $report) {
         return $report->getRecipient();
       },
       $result->getReports(),
     );
 
-    $difference_count = count(array_diff($message_recipients, $result_recipients));
+    $difference_count = \count(\array_diff($message_recipients, $result_recipients));
     if ($difference_count) {
-      throw new SmsPluginReportException(sprintf('Missing reports for %s recipient(s).', $difference_count));
+      throw new SmsPluginReportException(\sprintf('Missing reports for %s recipient(s).', $difference_count));
     }
   }
 
@@ -135,8 +135,8 @@ class SmsMessageProcessor implements EventSubscriberInterface {
     foreach ($sms_messages as $sms_message) {
       if ($sms_message->getDirection() == Direction::OUTGOING) {
         $recipients = $sms_message->getRecipients();
-        if (!count($recipients)) {
-          throw new RecipientRouteException(sprintf('There are no recipients.'));
+        if (!\count($recipients)) {
+          throw new RecipientRouteException(\sprintf('There are no recipients.'));
         }
       }
     }
@@ -179,7 +179,7 @@ class SmsMessageProcessor implements EventSubscriberInterface {
         }
         else {
           $event->stopPropagation();
-          throw new RecipientRouteException(sprintf('Unable to determine gateway for recipient %s.', $recipient));
+          throw new RecipientRouteException(\sprintf('Unable to determine gateway for recipient %s.', $recipient));
         }
       }
 
@@ -215,7 +215,7 @@ class SmsMessageProcessor implements EventSubscriberInterface {
 
     $gateways = $event->getGatewaysSorted();
     // Use the gateway with the greatest weight.
-    $gateway = array_shift($gateways);
+    $gateway = \array_shift($gateways);
     if ($gateway instanceof SmsGatewayInterface) {
       return $gateway;
     }
@@ -261,7 +261,7 @@ class SmsMessageProcessor implements EventSubscriberInterface {
     foreach ($event->getMessages() as $sms_message) {
       if ($sms_message->getDirection() == Direction::OUTGOING) {
         $max = $sms_message->getGateway()->getMaxRecipientsOutgoing();
-        $result = array_merge($result, $sms_message->chunkByRecipients($max));
+        $result = \array_merge($result, $sms_message->chunkByRecipients($max));
       }
       else {
         $result[] = $sms_message;

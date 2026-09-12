@@ -5,6 +5,7 @@ namespace Drupal\acquia_connector\EventSubscriber\GetSettings;
 use Drupal\acquia_connector\AcquiaConnectorEvents;
 use Drupal\acquia_connector\Event\AcquiaSubscriptionSettingsEvent;
 use Drupal\acquia_connector\Settings;
+use Drupal\acquia_connector\Traits\UtilityTrait;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings as CoreSettings;
@@ -18,6 +19,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class FromAcquiaCloud implements EventSubscriberInterface {
 
   use StringTranslationTrait;
+  use UtilityTrait;
 
   /**
    * Array containing the necessary environment variable keys.
@@ -83,12 +85,8 @@ class FromAcquiaCloud implements EventSubscriberInterface {
    * @see \Acquia\ContentHubClient\Settings
    */
   public function onGetSettings(AcquiaSubscriptionSettingsEvent $event) {
-    $metadata = [];
-    foreach (self::ENVIRONMENT_VARIABLES as $var) {
-      if (!empty(getenv($var))) {
-        $metadata[$var] = getenv($var);
-      }
-    }
+    // Get metadata from environment variables.
+    $metadata = $this->getEnvironmentInformation(self::ENVIRONMENT_VARIABLES);
 
     // If the expected Acquia cloud environment variables are missing, return.
     if (count($metadata) !== count(self::ENVIRONMENT_VARIABLES)) {

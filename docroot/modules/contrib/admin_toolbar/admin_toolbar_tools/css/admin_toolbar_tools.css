@@ -1,0 +1,36 @@
+/* Admin Toolbar Tools menu icon and local tasks tab styles. */
+
+/* Admin Toolbar Tools link displaying drupal 9 icon in the toolbar. */
+.toolbar-icon-admin-toolbar-tools-help {
+  /* Hide the default link text: 'Tools' */
+  text-indent: -625rem;
+
+  /* Replace the menu label text with the Drupal logo as an icon. */
+  &::before {
+    box-sizing: content-box;
+    margin-left: 0.25rem;
+    padding: 0.125rem;
+    padding-bottom: 0;
+    background-image: url(../images/drupal-logo.svg);
+  }
+  &:active,
+  &.active {
+    &::before {
+      background-image: url(../images/drupal-logo.svg);
+    }
+  }
+}
+
+/* Local tasks tab and links displayed in the toolbar. */
+.local-tasks-toolbar-tab {
+  /* Move the local tasks tab to the right side of the toolbar. */
+  .toolbar-oriented .toolbar-bar &,
+  /* Align the local tasks menu to the right side of the toolbar menu tray. */
+  .toolbar-horizontal & .toolbar-menu {
+    float: right;
+  }
+  /* Local tasks tab link icon in the toolbar. */
+  .toolbar-icon-local-tasks::before {
+    background-image: url(../images/local_tasks.svg);
+  }
+}

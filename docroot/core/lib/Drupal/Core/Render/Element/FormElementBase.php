@@ -104,7 +104,9 @@ abstract class FormElementBase extends RenderElementBase implements FormElementI
   }
 
   /**
-   * #process callback for #pattern form element property.
+   * Render API callback: Handles the #pattern form element property.
+   *
+   * This function is assigned as a #process callback.
    *
    * @param array $element
    *   An associative array containing the properties and children of the
@@ -127,9 +129,11 @@ abstract class FormElementBase extends RenderElementBase implements FormElementI
   }
 
   /**
-   * #element_validate callback for #pattern form element property.
+   * Render API callback: Handles the #pattern form element property.
    *
-   * @param $element
+   * This function is assigned as a #element_validate callback.
+   *
+   * @param array $element
    *   An associative array containing the properties and children of the
    *   generic form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
@@ -178,7 +182,7 @@ abstract class FormElementBase extends RenderElementBase implements FormElementI
    *   - #autocomplete_route_parameters: The parameters to be used in
    *     conjunction with the route name.
    *   - #autocomplete_query_parameters: The parameters to be used in
-   *     query string
+   *     query string.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    * @param array $complete_form

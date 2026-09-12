@@ -68,11 +68,23 @@ abstract class DiffLayoutBase extends PluginBase implements DiffLayoutInterface,
    *   Header link for a revision in the table.
    */
   protected function buildRevisionLink(ContentEntityInterface $revision): GeneratedLink {
-    if ($revision instanceof RevisionLogInterface) {
-      $revision_date = $this->date->format($revision->getRevisionCreationTime(), 'short');
-      return Link::fromTextAndUrl($revision_date, $revision->toUrl('revision'))->toString();
+    $url = $revision->toUrl();
+    if ($revision->hasLinkTemplate('revision')) {
+      // Some entity-types like block_content don't have a revision link despite
+      // supporting revision history etc.
+      $url = $revision->toUrl('revision');
     }
-    return Link::fromTextAndUrl($revision->label(), $revision->toUrl('revision'))->toString();
+    if ($revision instanceof RevisionLogInterface) {
+      $creation_time = $revision->getRevisionCreationTime();
+      if ($creation_time !== NULL) {
+        $revision_date = $this->date->format($creation_time, 'short');
+      }
+      else {
+        $revision_date = $this->t('Date unavailable');
+      }
+      return Link::fromTextAndUrl($revision_date, $url)->toString();
+    }
+    return Link::fromTextAndUrl($revision->label(), $url)->toString();
   }
 
   /**
@@ -101,7 +113,7 @@ abstract class DiffLayoutBase extends PluginBase implements DiffLayoutInterface,
         'diff_revisions' => [
           '#type' => 'item',
           '#title' => $this->t('Comparing'),
-          '#wrapper_attributes' => ['class' => 'diff-revision'],
+          '#wrapper_attributes' => ['class' => ['diff-revision']],
           'items' => [
             '#prefix' => '<div class="diff-revision__items">',
             '#suffix' => '</div>',
@@ -123,13 +135,26 @@ abstract class DiffLayoutBase extends PluginBase implements DiffLayoutInterface,
    *   Revision data about author, creation date and log.
    */
   protected function buildRevisionData(ContentEntityInterface $revision): array {
+    $url = $revision->toUrl();
+    if ($revision->hasLinkTemplate('revision')) {
+      // Some entity-types like block_content don't have a revision link despite
+      // supporting revision history etc.
+      $url = $revision->toUrl('revision');
+    }
     if ($revision instanceof RevisionLogInterface) {
       $revision_log = $revision->getRevisionLogMessage();
 
+      $creation_time = $revision->getRevisionCreationTime();
+      if ($creation_time !== NULL) {
+        $revision_link_title = $this->date->format($creation_time, 'short');
+      }
+      else {
+        $revision_link_title = $this->t('Date unavailable');
+      }
       $revision_link['date'] = [
         '#type' => 'link',
-        '#title' => $this->date->format($revision->getRevisionCreationTime(), 'short'),
-        '#url' => $revision->toUrl('revision'),
+        '#title' => $revision_link_title,
+        '#url' => $url,
         '#prefix' => '<div class="diff-revision__item diff-revision__item-date">',
         '#suffix' => '</div>',
       ];
@@ -154,7 +179,7 @@ abstract class DiffLayoutBase extends PluginBase implements DiffLayoutInterface,
       $revision_link['label'] = [
         '#type' => 'link',
         '#title' => $revision->label(),
-        '#url' => $revision->toUrl('revision'),
+        '#url' => $url,
         '#prefix' => '<div class="diff-revision__item diff-revision__item-date">',
         '#suffix' => '</div>',
       ];
@@ -247,6 +272,7 @@ abstract class DiffLayoutBase extends PluginBase implements DiffLayoutInterface,
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    return [];
   }
 
   /**

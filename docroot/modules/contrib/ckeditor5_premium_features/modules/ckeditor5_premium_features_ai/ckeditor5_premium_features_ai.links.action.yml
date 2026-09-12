@@ -1,0 +1,17 @@
+entity.ckeditor5_ai_custom_action.add_form:
+  route_name: entity.ckeditor5_ai_custom_action.add_form
+  title: 'Add Custom Action'
+  appears_on:
+    - entity.ckeditor5_ai_custom_action.collection
+
+entity.ckeditor5_ai_custom_review.add_form:
+  route_name: entity.ckeditor5_ai_custom_review.add_form
+  title: 'Add Custom Review'
+  appears_on:
+    - entity.ckeditor5_ai_custom_review.collection
+
+entity.ckeditor5_ai_chat_shortcut.add_form:
+  route_name: entity.ckeditor5_ai_chat_shortcut.add_form
+  title: 'Add Chat Shortcut'
+  appears_on:
+    - entity.ckeditor5_ai_chat_shortcut.collection

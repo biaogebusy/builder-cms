@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\layout_library\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 
@@ -10,6 +14,8 @@ use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
  *
  * @group layout_library
  */
+#[Group('layout_library')]
+#[RunTestsInSeparateProcesses]
 class AddLayoutTest extends BrowserTestBase {
 
   use ContentTypeCreationTrait;
@@ -92,7 +98,12 @@ class AddLayoutTest extends BrowserTestBase {
     $session->statusCodeEquals(200);
     $session->linkNotExists('Configure Header');
 
-    $this->drupalGet('admin/structure/types/manage/my_little_dinosaur/display');
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet('admin/structure/types/manage/my_little_dinosaur/display/default'),
+      fn() => $this->drupalGet('admin/structure/types/manage/my_little_dinosaur/display'),
+    );
     $page->checkField('layout[enabled]');
     $page->checkField('layout[library]');
     $page->pressButton('Save');
@@ -102,7 +113,12 @@ class AddLayoutTest extends BrowserTestBase {
     $this->drupalGet('node/add/my_little_dinosaur');
     $session->optionExists('Layout', 'Archaeopteryx');
 
-    $this->drupalGet('admin/structure/types/manage/my_little_dinosaur/display');
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet('admin/structure/types/manage/my_little_dinosaur/display/default'),
+      fn() => $this->drupalGet('admin/structure/types/manage/my_little_dinosaur/display'),
+    );
     $page->uncheckField('layout[allow_custom]');
     $page->uncheckField('layout[library]');
     $page->pressButton('Save');

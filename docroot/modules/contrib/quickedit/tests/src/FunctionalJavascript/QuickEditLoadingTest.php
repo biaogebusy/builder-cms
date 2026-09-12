@@ -98,10 +98,8 @@ class QuickEditLoadingTest extends WebDriverTestBase {
     $this->testNode = $this->drupalCreateNode([
       'type' => 'article',
       'body' => [
-        0 => [
-          'value' => '<p>How are you?</p>',
-          'format' => 'filtered_html',
-        ],
+        'value' => '<p>How are you?</p>',
+        'format' => 'filtered_html',
       ],
       'revision_log' => $this->randomString(),
     ]);
@@ -168,7 +166,7 @@ class QuickEditLoadingTest extends WebDriverTestBase {
     $assert->waitForElementRemoved('css', '.quickedit-toolgroup.ops [type="submit"][aria-hidden="false"]');
 
     // Ensure that the changes take effect.
-    $assert->responseMatches("|\s*$body_text\s*|");
+    $assert->responseContains($body_text);
 
     // Reload the page and check for updated body.
     $this->drupalGet('node/' . $nid);

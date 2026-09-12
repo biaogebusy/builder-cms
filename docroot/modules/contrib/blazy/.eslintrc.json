@@ -5,7 +5,8 @@
   // "extends": "../../../core/.eslintrc.json",
   "extends": "../../../core/.eslintrc.legacy.json",
   // Eslint reading unwanted .yml?
-  "ignorePatterns": ["*.yml", "config/**/*", "tests/*", "js/*.min.js", "js/*/*.min.js", "js/*/*/*.min.js"],
+  // @todo enable when using modern eslint.
+  // "ignorePatterns": ["*.yml", "config/**/*", "tests/*", "js/*.min.js", "js/*/*.min.js", "js/*/*/*.min.js"],
   "root": true,
   "globals": {
     "once": true,

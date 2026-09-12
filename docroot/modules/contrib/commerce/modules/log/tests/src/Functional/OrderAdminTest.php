@@ -2,9 +2,8 @@
 
 namespace Drupal\Tests\commerce_log\Functional;
 
-use Drupal\Component\Utility\Html;
-use Drupal\Tests\commerce_order\Functional\OrderBrowserTestBase;
 use Drupal\commerce_order\Entity\Order;
+use Drupal\Tests\commerce_order\Functional\OrderBrowserTestBase;
 
 /**
  * Tests the order admin.
@@ -52,21 +51,38 @@ class OrderAdminTest extends OrderBrowserTestBase {
       'store_id' => $this->store,
     ]);
 
-    $test_comment = sprintf('Urgent order for %s!', $this->loggedInUser->getEmail());
-
     $this->drupalGet($order->toUrl('canonical'));
     $this->assertSession()->pageTextContains('Comment on this order');
     $this->assertSession()->pageTextContains('Your comment will only be visible to users who have access to the activity log.');
-    $this->getSession()->getPage()->fillField('Comment', $test_comment);
-    $this->getSession()->getPage()->pressButton('Add comment');
-    $this->assertSession()->pageTextContainsOnce($test_comment);
 
-    $test_filtered_comment = '<script>alert("hello")</script> test comment';
-    $this->getSession()->getPage()->fillField('Comment', $test_filtered_comment);
+    $comments = [
+      sprintf('Urgent order for %s!', $this->loggedInUser->getEmail()),
+      "Admin's comment<br/><script>alert('Hello!')</script>",
+    ];
+    $this->getSession()->getPage()->fillField('Comment', $comments[0]);
     $this->getSession()->getPage()->pressButton('Add comment');
+    $this->assertSession()->pageTextContainsOnce($comments[0]);
 
-    $this->assertSession()->pageTextNotContains($test_filtered_comment);
-    $this->assertSession()->pageTextContains(Html::escape($test_filtered_comment));
+    $this->getSession()->getPage()->fillField('Comment', $comments[1]);
+    $this->getSession()->getPage()->pressButton('Add comment');
+    $html = $this->getSession()->getPage()->getHtml();
+    $this->assertStringContainsString("<p><strong>Admin comment:</strong><br> Admin's comment&lt;br/&gt;&lt;script&gt;alert('Hello!')&lt;/script&gt;</p>", $html);
+    $this->assertSession()->pageTextContains($comments[1]);
+
+    // Confirm that comments were not filtered on input.
+    /** @var \Drupal\commerce_log\LogStorageInterface $log_storage */
+    $log_storage = $this->container->get('entity_type.manager')->getStorage('commerce_log');
+    /** @var \Drupal\commerce_log\Entity\LogInterface[] $logs */
+    $logs = $log_storage->loadByProperties([
+      'template_id' => 'commerce_order_admin_comment',
+      'source_entity_type' => 'commerce_order',
+      'source_entity_id' => $order->id(),
+    ]);
+    $this->assertCount(2, $logs);
+    foreach (array_values($logs) as $delta => $log) {
+      $params = $log->getParams();
+      $this->assertStringContainsString($comments[$delta], $params['comment']);
+    }
   }
 
   /**

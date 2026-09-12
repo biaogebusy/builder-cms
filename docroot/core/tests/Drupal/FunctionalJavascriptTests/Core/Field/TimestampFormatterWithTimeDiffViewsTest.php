@@ -7,12 +7,14 @@ namespace Drupal\FunctionalJavascriptTests\Core\Field;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the timestamp formatter used with time difference setting in views.
- *
- * @group Field
  */
+#[Group('Field')]
+#[RunTestsInSeparateProcesses]
 class TimestampFormatterWithTimeDiffViewsTest extends WebDriverTestBase {
 
   /**
@@ -36,7 +38,6 @@ class TimestampFormatterWithTimeDiffViewsTest extends WebDriverTestBase {
    * Tests the timestamp formatter used with time difference setting in views.
    */
   public function testTimestampFormatterWithTimeDiff(): void {
-    $this->markTestSkipped("Skipped due to frequent random test failures. See https://www.drupal.org/project/drupal/issues/3400150");
     ViewTestData::createTestViews(self::class, ['views_test_formatter']);
 
     $data = $this->getRowData();
@@ -67,9 +68,9 @@ class TimestampFormatterWithTimeDiffViewsTest extends WebDriverTestBase {
       $this->assertMatchesRegularExpression($regex_pattern, $time_diff);
     }
 
-    // Wait at least 1 second + 1 millisecond to make sure the 'right now' time
-    // difference was refreshed.
-    $this->assertJsCondition("document.querySelector('.entity-$delta time').textContent >= '$time_diff'", 1001);
+    // Wait up to 2 seconds to make sure the 'right now' time difference was
+    // refreshed.
+    $this->assertJsCondition("document.querySelector('.entity-$delta time').textContent >= '$time_diff'", 2000);
   }
 
   /**

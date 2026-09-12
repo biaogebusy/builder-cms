@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Drupal\Tests\taxonomy\Kernel\Views;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the taxonomy term with depth argument.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyTermArgumentDepthTest extends TaxonomyTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'taxonomy',
     'taxonomy_test_views',
-    'views',
-    'node',
   ];
 
   /**
@@ -167,6 +166,16 @@ class TaxonomyTermArgumentDepthTest extends TaxonomyTestBase {
     // due to performance the "and" meaning of comma is not supported.
     $expected = [['nid' => 4], ['nid' => 5]];
     $this->assertTermWithDepthResult($expected, $this->terms[0]->id() . ',' . $this->terms[1]->id(), 1, TRUE);
+  }
+
+  /**
+   * Tests title escaping when the taxonomy argument provides it.
+   */
+  public function testTermWithDepthArgumentTitleEscaping(): void {
+    $this->terms[0]->setName('<em>First</em>')->save();
+    $this->setUpCurrentUser(permissions: ['access content']);
+    $this->drupalGet('test_argument_taxonomy_index_tid_depth/' . $this->terms[0]->id());
+    $this->assertSession()->assertEscaped($this->terms[0]->label());
   }
 
   /**

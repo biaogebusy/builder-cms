@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\file\Functional;
 
-use Drupal\node\Entity\Node;
-use Drupal\file\Entity\File;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\entity_test\Entity\EntityTestConstraints;
+use Drupal\entity_test\EntityTestHelper;
+use Drupal\file\Entity\File;
+use Drupal\node\Entity\Node;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file listing page functionality.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileListingTest extends FileFieldTestBase {
 
   /**
@@ -62,7 +66,7 @@ class FileListingTest extends FileFieldTestBase {
    * @return int
    *   Total usage count.
    */
-  protected function sumUsages($usage) {
+  protected function sumUsages($usage): int {
     $count = 0;
     foreach ($usage as $module) {
       foreach ($module as $entity_type) {
@@ -214,7 +218,7 @@ class FileListingTest extends FileFieldTestBase {
 
     // Create a bundle and attach a File field to the bundle.
     $bundle = $this->randomMachineName();
-    entity_test_create_bundle($bundle, NULL, 'entity_test_constraints');
+    EntityTestHelper::createBundle($bundle, NULL, 'entity_test_constraints');
     $this->createFileField('field_test_file', 'entity_test_constraints', $bundle, [], ['file_extensions' => 'txt png']);
 
     // Create file to attach to entity.
@@ -247,8 +251,7 @@ class FileListingTest extends FileFieldTestBase {
     $this->drupalGet('admin/content/files/usage/' . $file->id());
 
     $this->assertSession()->statusCodeEquals(200);
-    // Entity name should be displayed, but not linked if Entity::toUrl
-    // throws an exception
+    // Entity name should be displayed.
     $this->assertSession()->pageTextContains($entity_name);
     $this->assertSession()->linkNotExists($entity_name, 'Linked entity name not added to file usage listing.');
     $this->assertSession()->linkExists($node->getTitle());
@@ -260,7 +263,7 @@ class FileListingTest extends FileFieldTestBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   A file entity.
    */
-  protected function createFile() {
+  protected function createFile(): EntityInterface {
     // Create a new file entity.
     $file = File::create([
       'uid' => 1,

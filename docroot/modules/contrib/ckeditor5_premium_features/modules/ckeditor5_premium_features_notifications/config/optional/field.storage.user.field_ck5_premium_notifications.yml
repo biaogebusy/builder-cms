@@ -1,0 +1,17 @@
+status: true
+dependencies:
+  module:
+    - user
+    - ckeditor5_premium_features_notifications
+id: user.field_ck5_premium_notifications
+field_name: field_ck5_premium_notifications
+entity_type: user
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

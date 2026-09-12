@@ -4,7 +4,7 @@
   "license": "GPL-2.0-or-later",
   "description": "Provides a user interface for the Token API, some missing core tokens.",
   "require-dev": {
-    "drupal/book": "*"
+    "drupal/book": "^1 || ^2"
   },
   "extra": {
     "drush": {

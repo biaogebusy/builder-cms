@@ -7,7 +7,7 @@ dependencies:
  - entity_reference_revisions:entity_reference_revisions
  - drupal:entity_test
 
-# Information added by Drupal.org packaging script on 2024-08-04
-version: '8.x-1.12'
+# Information added by Drupal.org packaging script on 2026-01-01
+version: '8.x-1.14'
 project: 'entity_reference_revisions'
-datestamp: 1722804499
+datestamp: 1767266827

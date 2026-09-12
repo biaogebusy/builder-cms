@@ -3,12 +3,16 @@
 namespace Drupal\Tests\paragraphs\Functional;
 
 use Drupal\Tests\paragraphs\Functional\WidgetStable\ParagraphsTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Paragraphs user interface.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsUiTest extends ParagraphsTestBase {
 
   /**
@@ -108,17 +112,25 @@ class ParagraphsUiTest extends ParagraphsTestBase {
 
     // Add a new paragraphs field to the content type.
     $this->clickLink('Create a new field');
-
-    $this->getSession()->getPage()->fillField('new_storage_type', 'field_ui:entity_reference_revisions:paragraph');
-    if ($this->coreVersion('10.3')) {
+    if ($this->coreVersion('11.2')) {
+      $this->clickLink('Paragraphs');
+    }
+    else {
+      $this->getSession()->getPage()->fillField('new_storage_type', 'field_ui:entity_reference_revisions:paragraph');
       $this->getSession()->getPage()->pressButton('Continue');
     }
+
     $edit = [
       'label' => 'Paragraph',
       'field_name' => 'paragraph',
     ];
     $this->submitForm($edit, 'Continue');
-    $this->submitForm([], 'Save settings');
+    if ($this->coreVersion('11.2')) {
+      $this->submitForm([], 'Save');
+    }
+    else {
+      $this->submitForm([], 'Save settings');
+    }
 
     // Visit the "Manage form display" page of the new content type.
     $this->drupalGet('admin/structure/types/manage/test/form-display');

@@ -5,42 +5,29 @@
  * Provides the ability to export and import submissions.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_submission_export_import\Hook\WebformSubmissionExportImportHooks;
 use Drupal\Component\Utility\Environment;
 use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
 
 /**
  * Implements hook_webform_help_info().
  */
+#[LegacyHook]
 function webform_submission_export_import_webform_help_info() {
-  $help = [];
-  $help['webform_submission_export_import'] = [
-    'group' => 'forms',
-    'title' => t('Upload'),
-    'content' => t('The <strong>Upload</strong> page allows a CSV (comma separated values) file or URL to be uploaded, converted, and imported into webform submissions.'),
-    'video_id' => 'import',
-    'routes' => [
-      // @see /admin/structure/webform/manage/{webform}/results/upload
-      'entity.webform_submission_export_import.results_import',
-      // @see /node/{node}/webform/results/upload
-      'entity.node.webform_submission_export_import.results_import',
-    ],
-  ];
-  return $help;
+  return \Drupal::service(WebformSubmissionExportImportHooks::class)->webformHelpInfo();
 }
 
 /**
  * Implements hook_local_tasks_alter().
  */
+#[LegacyHook]
 function webform_submission_export_import_local_tasks_alter(&$local_tasks) {
-  // Remove webform node results import if the webform_node.module
-  // is not installed.
-  if (!\Drupal::moduleHandler()->moduleExists('webform_node')) {
-    unset(
-      $local_tasks['entity.node.webform_submission_export_import.results_import']
-    );
-  }
+  \Drupal::service(WebformSubmissionExportImportHooks::class)->localTasksAlter($local_tasks);
 }
 
 /* ************************************************************************** */
@@ -76,7 +63,7 @@ function webform_submission_export_import_local_tasks_alter(&$local_tasks) {
  * @see file_save_upload()
  * @see file_save_upload_single()
  */
-function _webform_submission_export_import_file_save_upload_single(\SplFileInfo $file_info, $form_field_name, array $validators = [], $destination = FALSE, $replace = FileSystemInterface::EXISTS_RENAME) {
+function _webform_submission_export_import_file_save_upload_single(\SplFileInfo $file_info, $form_field_name, array $validators = [], $destination = FALSE, $replace = FileExists::Rename) {
   /** @var \Drupal\Core\File\FileSystemInterface $file_system */
   $file_system = \Drupal::service('file_system');
   $current_user = \Drupal::currentUser();
@@ -90,7 +77,7 @@ function _webform_submission_export_import_file_save_upload_single(\SplFileInfo 
   switch ($file_info->getError()) {
     case UPLOAD_ERR_INI_SIZE:
     case UPLOAD_ERR_FORM_SIZE:
-      \Drupal::messenger()->addError(t('The file %file could not be saved because it exceeds %maxsize, the maximum allowed size for uploads.', ['%file' => $file_info->getFilename(), '%maxsize' => format_size(Environment::getUploadMaxSize())]));
+      \Drupal::messenger()->addError(t('The file %file could not be saved because it exceeds %maxsize, the maximum allowed size for uploads.', ['%file' => $file_info->getFilename(), '%maxsize' => ByteSizeMarkup::create(Environment::getUploadMaxSize())]));
       return FALSE;
 
     case UPLOAD_ERR_PARTIAL:
@@ -130,24 +117,24 @@ function _webform_submission_export_import_file_save_upload_single(\SplFileInfo 
   $file = File::create($values);
 
   $extensions = '';
-  if (isset($validators['file_validate_extensions'])) {
-    if (isset($validators['file_validate_extensions'][0])) {
+  if (isset($validators['FileExtension'])) {
+    if (isset($validators['FileExtension']['extensions'])) {
       // Build the list of non-munged extensions if the caller provided them.
-      $extensions = $validators['file_validate_extensions'][0];
+      $extensions = $validators['FileExtension']['extensions'];
     }
     else {
-      // If 'file_validate_extensions' is set and the list is empty then the
+      // If 'FileExtension' is set and the list is empty then the
       // caller wants to allow any extension. In this case we have to remove the
       // validator or else it will reject all extensions.
-      unset($validators['file_validate_extensions']);
+      unset($validators['FileExtension']);
     }
   }
   else {
     // No validator was provided, so add one using the default list.
     // Build a default non-munged safe list for file_munge_filename().
     $extensions = 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp';
-    $validators['file_validate_extensions'] = [];
-    $validators['file_validate_extensions'][0] = $extensions;
+    $validators['FileExtension'] = [];
+    $validators['FileExtension']['extensions'] = $extensions;
   }
 
   if (!empty($extensions)) {
@@ -169,7 +156,7 @@ function _webform_submission_export_import_file_save_upload_single(\SplFileInfo 
     // The .txt extension may not be in the allowed list of extensions. We have
     // to add it here or else the file upload will fail.
     if (!empty($extensions)) {
-      $validators['file_validate_extensions'][0] .= ' txt';
+      $validators['FileExtension']['extensions'] .= ' txt';
       \Drupal::messenger()->addStatus(t('For security reasons, your upload has been renamed to %filename.', ['%filename' => $file->getFilename()]));
     }
   }
@@ -200,10 +187,17 @@ function _webform_submission_export_import_file_save_upload_single(\SplFileInfo 
   }
 
   // Add in our check of the file name length.
-  $validators['file_validate_name_length'] = [];
+  $validators['FileNameLength'] = [];
 
   // Call the validation functions specified by this function's caller.
-  $errors = file_validate($file, $validators);
+  /** @var \Drupal\file\Validation\FileValidatorInterface $file_validator */
+  $file_validator = \Drupal::service('file.validator');
+  /** @var \Symfony\Component\Validator\ConstraintViolationListInterface $violations */
+  $violations = $file_validator->validate($file, $validators);
+  $errors = [];
+  foreach ($violations as $violation) {
+    $errors[] = $violation->getMessage();
+  }
 
   // Check for errors.
   if (!empty($errors)) {
@@ -219,7 +213,7 @@ function _webform_submission_export_import_file_save_upload_single(\SplFileInfo 
     // @todo Add support for render arrays in
     // \Drupal\Core\Messenger\MessengerInterface::addMessage()?
     // @see https://www.drupal.org/node/2505497.
-    \Drupal::messenger()->addError(\Drupal::service('renderer')->renderPlain($message));
+    \Drupal::messenger()->addError(\Drupal::service('renderer')->renderInIsolation($message));
     return FALSE;
   }
 
@@ -242,7 +236,7 @@ function _webform_submission_export_import_file_save_upload_single(\SplFileInfo 
   // If we are replacing an existing file re-use its database record.
   // @todo Do not create a new entity in order to update it.
   // @see https://www.drupal.org/node/2241865.
-  if ($replace === FileSystemInterface::EXISTS_REPLACE) {
+  if ($replace === FileExists::Replace) {
     $existing_files = \Drupal::entityTypeManager()
       ->getStorage('file')
       ->loadByProperties(['uri' => $file->getFileUri()]);

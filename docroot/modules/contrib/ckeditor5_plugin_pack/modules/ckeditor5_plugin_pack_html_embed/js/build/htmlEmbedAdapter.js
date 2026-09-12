@@ -1,0 +1,5 @@
+/*!
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+!function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t():"function"==typeof define&&define.amd?define([],t):"object"==typeof exports?exports.CKEditor5=t():(e.CKEditor5=e.CKEditor5||{},e.CKEditor5.htmlEmbedAdapter=t())}(self,()=>(()=>{"use strict";var e={d:(t,o)=>{for(var i in o)e.o(o,i)&&!e.o(t,i)&&Object.defineProperty(t,i,{enumerable:!0,get:o[i]})},o:(e,t)=>Object.prototype.hasOwnProperty.call(e,t)},t={};e.d(t,{default:()=>o});const o={HtmlEmbedAdapter:class{static get pluginName(){return"HtmlEmbedAdapter"}constructor(e){this.editor=e}init(){const e=this.editor.config._config.htmlEmbed;e&&e.showPreviews&&e.enablePurify&&("undefined"!=typeof DOMPurify?this.editor.config._config.htmlEmbed.sanitizeHtml=e=>{const t=DOMPurify.sanitize(e,{USE_PROFILES:{html:!0}});return{html:t,hasChanged:t!==e}}:console.warn("DOMPurify is not loaded. Please include DOMPurify in your page to enable HTML sanitization."))}}};return t=t.default})());

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\Attribute\FieldType;
@@ -102,7 +104,7 @@ class FieldTestItem extends FieldItemBase {
    * @return bool
    *   TRUE if the item should be resaved, FALSE otherwise.
    */
-  protected function mustResave() {
+  protected function mustResave(): bool {
     return $this->getValue()['value'] == 'resave';
   }
 

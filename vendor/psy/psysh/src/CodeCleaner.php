@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,23 +11,16 @@
 
 namespace Psy;
 
-use PhpParser\Node;
-use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\Assign;
-use PhpParser\Node\Expr\AssignOp;
-use PhpParser\Node\Expr\AssignRef;
+use PhpParser\Error as PhpParserError;
 use PhpParser\Node\Expr\ClassConstFetch;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\PropertyFetch;
-use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Expr\StaticPropertyFetch;
-use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Namespace_;
-use PhpParser\Node\Stmt\Return_;
+use PhpParser\Node\Stmt\Use_;
 use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use PhpParser\PrettyPrinter\Standard as Printer;
 use Psy\CodeCleaner\AbstractClassPass;
@@ -48,6 +41,7 @@ use Psy\CodeCleaner\LeavePsyshAlonePass;
 use Psy\CodeCleaner\ListPass;
 use Psy\CodeCleaner\LoopContextPass;
 use Psy\CodeCleaner\MagicConstantsPass;
+use Psy\CodeCleaner\NamespaceAwarePass;
 use Psy\CodeCleaner\NamespacePass;
 use Psy\CodeCleaner\PassableByReferencePass;
 use Psy\CodeCleaner\RequirePass;
@@ -73,9 +67,10 @@ class CodeCleaner
     private Parser $parser;
     private Printer $printer;
     private NodeTraverser $traverser;
-    private NodeTraverser $nameResolver;
     private ?array $namespace = null;
     private array $messages = [];
+    private array $aliasesByNamespace = [];
+    private array $aliasesByTypeByNamespace = [];
 
     /**
      * CodeCleaner constructor.
@@ -96,17 +91,17 @@ class CodeCleaner
         $this->parser = $parser ?? (new ParserFactory())->createParser();
         $this->printer = $printer ?: new Printer();
         $this->traverser = $traverser ?: new NodeTraverser();
-        $this->nameResolver = new NodeTraverser();
+
+        // Try to add implicit `use` statements and an implicit namespace, based on the file in
+        // which the `debug` call was made.
+        $this->addImplicitDebugContext();
 
         foreach ($this->getDefaultPasses() as $pass) {
             $this->traverser->addVisitor($pass);
 
-            // Add only name resolution passes to the name resolver traverser
-            // These share state with the main traverser since they're the same instances
-            if ($pass instanceof UseStatementPass ||
-                $pass instanceof ImplicitUsePass ||
-                $pass instanceof NamespacePass) {
-                $this->nameResolver->addVisitor($pass);
+            // Set CodeCleaner instance on NamespaceAwarePass for state management
+            if ($pass instanceof NamespaceAwarePass) {
+                $pass->setCleaner($this);
             }
         }
     }
@@ -126,15 +121,8 @@ class CodeCleaner
      */
     private function getDefaultPasses(): array
     {
-        $useStatementPass = new UseStatementPass();
-        $namespacePass = new NamespacePass($this);
-
-        // Try to add implicit `use` statements and an implicit namespace,
-        // based on the file in which the `debug` call was made.
-        $this->addImplicitDebugContext([$useStatementPass, $namespacePass]);
-
         // Add implicit use pass if enabled (must run before use statement pass)
-        $usePasses = [$useStatementPass];
+        $usePasses = [new UseStatementPass()];
         if ($this->implicitUse) {
             \array_unshift($usePasses, new ImplicitUsePass($this->implicitUse, $this));
         }
@@ -145,11 +133,11 @@ class CodeCleaner
         // When in --yolo mode, these are the only code cleaner passes used.
         $rewritePasses = [
             new LeavePsyshAlonePass(),
-            ...$usePasses,            // must run before namespace pass
             new ExitPass(),
             new ImplicitReturnPass(),
             new MagicConstantsPass(),
-            $namespacePass,           // must run after the implicit return pass
+            new NamespacePass(),      // must run after the implicit return pass
+            ...$usePasses,            // must run after the namespace pass has re-injected the current namespace
             new RequirePass(),
             new StrictTypesPass($this->strictTypes),
         ];
@@ -188,13 +176,10 @@ class CodeCleaner
     /**
      * "Warm up" code cleaner passes when we're coming from a debug call.
      *
-     * This is useful, for example, for `UseStatementPass` and `NamespacePass`
-     * which keep track of state between calls, to maintain the current
-     * namespace and a map of use statements.
-     *
-     * @param array $passes
+     * This sets up the alias and namespace state that `UseStatementPass` and `NamespacePass` need
+     * to track between calls.
      */
-    private function addImplicitDebugContext(array $passes)
+    private function addImplicitDebugContext()
     {
         $file = $this->getDebugFile();
         if ($file === null) {
@@ -212,12 +197,17 @@ class CodeCleaner
                 return;
             }
 
+            $useStatementPass = new UseStatementPass();
+            $useStatementPass->setCleaner($this);
+
+            $namespacePass = new NamespacePass();
+            $namespacePass->setCleaner($this);
+
             // Set up a clean traverser for just these code cleaner passes
             // @todo Pass visitors directly to once we drop support for PHP-Parser 4.x
             $traverser = new NodeTraverser();
-            foreach ($passes as $pass) {
-                $traverser->addVisitor($pass);
-            }
+            $traverser->addVisitor($useStatementPass);
+            $traverser->addVisitor($namespacePass);
 
             $traverser->traverse($stmts);
         } catch (\Throwable $e) {
@@ -302,9 +292,18 @@ class CodeCleaner
 
     /**
      * Set the current local namespace.
+     *
+     * TODO: switch $this->namespace over to storing ?Name at some point!
+     *
+     * @param Name|array|null $namespace Namespace as Name node, array of parts, or null
      */
-    public function setNamespace(?array $namespace = null)
+    public function setNamespace($namespace = null)
     {
+        if ($namespace instanceof Name) {
+            // Backwards compatibility shim for PHP-Parser 4.x
+            $namespace = \method_exists($namespace, 'getParts') ? $namespace->getParts() : $namespace->parts;
+        }
+
         $this->namespace = $namespace;
     }
 
@@ -319,10 +318,77 @@ class CodeCleaner
     }
 
     /**
+     * Set use statement aliases for a specific namespace.
+     *
+     * @param Name|null $namespace Namespace name or Name node (null for global namespace)
+     * @param array     $aliases   Map of lowercase alias names to Name nodes
+     */
+    public function setAliasesForNamespace(?Name $namespace, array $aliases)
+    {
+        $namespaceKey = \strtolower($namespace ? $namespace->toString() : '');
+        $this->aliasesByNamespace[$namespaceKey] = $aliases;
+        $this->aliasesByTypeByNamespace[$namespaceKey][Use_::TYPE_NORMAL] = $aliases;
+    }
+
+    /**
+     * Get use statement aliases for a specific namespace.
+     *
+     * (This currently accepts a string namespace name, because that's all we're storing in
+     * CodeCleaner as the current namespace; we should update that to be a Name node.)
+     *
+     * @param Name|string|null $namespace Namespace name or Name node (null for global namespace)
+     *
+     * @return array Map of lowercase alias names to Name nodes
+     */
+    public function getAliasesForNamespace($namespace): array
+    {
+        $namespaceName = $namespace instanceof Name ? $namespace->toString() : $namespace;
+        $namespaceKey = \strtolower($namespaceName ?? '');
+
+        return $this->aliasesByTypeByNamespace[$namespaceKey][Use_::TYPE_NORMAL] ?? $this->aliasesByNamespace[$namespaceKey] ?? [];
+    }
+
+    /**
+     * Set use statement aliases by import type for a specific namespace.
+     *
+     * @param Name|null $namespace     Namespace name or Name node (null for global namespace)
+     * @param array     $aliasesByType Map of Use_::TYPE_* constants to alias maps
+     */
+    public function setAliasesByTypeForNamespace(?Name $namespace, array $aliasesByType): void
+    {
+        $namespaceKey = \strtolower($namespace ? $namespace->toString() : '');
+        $this->aliasesByTypeByNamespace[$namespaceKey] = $aliasesByType;
+        $this->aliasesByNamespace[$namespaceKey] = $aliasesByType[Use_::TYPE_NORMAL] ?? [];
+    }
+
+    /**
+     * Get use statement aliases by import type for a specific namespace.
+     *
+     * @param Name|string|null $namespace Namespace name or Name node (null for global namespace)
+     *
+     * @return array Map of Use_::TYPE_* constants to alias maps
+     */
+    public function getAliasesByTypeForNamespace($namespace): array
+    {
+        $namespaceName = $namespace instanceof Name ? $namespace->toString() : $namespace;
+        $namespaceKey = \strtolower($namespaceName ?? '');
+
+        if (isset($this->aliasesByTypeByNamespace[$namespaceKey])) {
+            return $this->aliasesByTypeByNamespace[$namespaceKey];
+        }
+
+        if (!isset($this->aliasesByNamespace[$namespaceKey])) {
+            return [];
+        }
+
+        return [Use_::TYPE_NORMAL => $this->aliasesByNamespace[$namespaceKey]];
+    }
+
+    /**
      * Resolve a class name using current use statements and namespace.
      *
      * This is used by commands to resolve short names the same way code execution does.
-     * Uses a minimal traverser with only name resolution passes (no validation).
+     * Uses PHP-Parser's NameResolver along with PsySH's custom passes.
      *
      * @param string $name Class name to resolve (e.g., "NoopChecker" or "Bar\Baz")
      *
@@ -339,32 +405,70 @@ class CodeCleaner
         }
 
         try {
-            // Parse as a class name constant, and transform using name resolution passes
+            // Parse as a class name constant
             $stmts = $this->parser->parse('<?php '.$name.'::class;');
-            $stmts = $this->nameResolver->traverse($stmts);
 
-            // Extract resolved name from transformed AST
-            if (isset($stmts[0]) && $stmts[0] instanceof Expression) {
-                $expr = $stmts[0]->expr;
-                if ($expr instanceof ClassConstFetch) {
-                    $class = $expr->class;
-                    if ($class instanceof FullyQualified) {
-                        return '\\'.$class->toString();
-                    } elseif ($class instanceof Name) {
-                        // Not fully qualified, might be in current namespace
-                        $resolved = $class->toString();
-                        if ($this->namespace) {
-                            $namespacedName = \implode('\\', $this->namespace).'\\'.$resolved;
-                            // Check if it exists in current namespace
-                            if (\class_exists($namespacedName, false) ||
-                                \interface_exists($namespacedName, false) ||
-                                \trait_exists($namespacedName, false)) {
-                                return $namespacedName;
-                            }
+            // Create fresh passes for name resolution. They read state from $this.
+            $namespacePass = new NamespacePass();
+            $namespacePass->setCleaner($this);
+
+            $useStatementPass = new UseStatementPass();
+            $useStatementPass->setCleaner($this);
+
+            // Create a fresh traverser with fresh passes
+            $traverser = new NodeTraverser();
+            $traverser->addVisitor($namespacePass);
+            $traverser->addVisitor($useStatementPass);
+
+            // Add PHP-Parser's NameResolver - preserveOriginalNames lets us detect when resolution occurred
+            $traverser->addVisitor(new NameResolver(null, [
+                'preserveOriginalNames' => true,
+            ]));
+
+            // Traverse: NamespacePass wraps in namespace if needed,
+            // UseStatementPass re-injects use statements,
+            // PHP-Parser's NameResolver resolves to FullyQualified
+            $stmts = $traverser->traverse($stmts);
+
+            // Find the Expression node - it might be after re-injected use statements
+            // or wrapped in a Namespace_ node
+            $targetStmt = null;
+            foreach ($stmts as $stmt) {
+                if ($stmt instanceof Namespace_) {
+                    // Look inside the namespace for the Expression
+                    foreach ($stmt->stmts ?? [] as $innerStmt) {
+                        if ($innerStmt instanceof Expression) {
+                            $targetStmt = $innerStmt;
+                            break 2;
                         }
-
-                        return $resolved;
                     }
+                } elseif ($stmt instanceof Expression) {
+                    $targetStmt = $stmt;
+                    break;
+                }
+            }
+
+            if ($targetStmt instanceof Expression) {
+                $expr = $targetStmt->expr;
+                if ($expr instanceof ClassConstFetch && $expr->class instanceof FullyQualified) {
+                    $resolved = '\\'.$expr->class->toString();
+
+                    // Check if actual resolution occurred by comparing original to resolved
+                    // NameResolver preserves the original Name node in the 'originalName' attribute
+                    $originalName = $expr->class->getAttribute('originalName');
+
+                    if ($originalName instanceof Name) {
+                        $originalStr = $originalName->toString();
+                        $resolvedStr = $expr->class->toString();
+
+                        // If they differ, resolution occurred (use statement was applied)
+                        if ($originalStr !== $resolvedStr) {
+                            return $resolved;
+                        }
+                    }
+
+                    // No transformation occurred - return original name unchanged
+                    return $name;
                 }
             }
         } catch (\Throwable $e) {
@@ -372,6 +476,134 @@ class CodeCleaner
         }
 
         return $name;
+    }
+
+    /**
+     * Resolve a function name using current use statements and namespace.
+     *
+     * Returns the fully-qualified callable name, or null if the name would not
+     * resolve to a callable function in the current REPL scope.
+     */
+    public function resolveFunctionName(string $name): ?string
+    {
+        if ($name === '') {
+            return null;
+        }
+
+        if ($name[0] === '\\') {
+            $name = \substr($name, 1);
+
+            return \function_exists($name) ? '\\'.$name : null;
+        }
+
+        $parts = \explode('\\', $name);
+        $namespace = $this->getNamespace();
+        $namespaceString = $namespace ? \implode('\\', $namespace) : null;
+        $functionAliases = $this->getAliasesByTypeForNamespace($namespaceString)[Use_::TYPE_FUNCTION] ?? [];
+        $firstPart = \strtolower($parts[0]);
+
+        if (isset($functionAliases[$firstPart])) {
+            $aliasName = $functionAliases[$firstPart];
+            // PHP-Parser 5.x uses getParts(), 4.x uses ->parts
+            $aliasParts = \method_exists($aliasName, 'getParts') ? $aliasName->getParts() : $aliasName->parts;
+            $resolved = \implode('\\', \array_merge($aliasParts, \array_slice($parts, 1)));
+
+            return \function_exists($resolved) ? '\\'.$resolved : null;
+        }
+
+        if ($namespace) {
+            $namespaced = \implode('\\', \array_merge($namespace, $parts));
+            if (\function_exists($namespaced)) {
+                return '\\'.$namespaced;
+            }
+        }
+
+        if (\count($parts) > 1) {
+            return null;
+        }
+
+        return \function_exists($name) ? '\\'.$name : null;
+    }
+
+    /**
+     * Resolve a direct function call from raw input in the current REPL scope.
+     *
+     * If $expectedName is provided, the input must be a direct call to that
+     * function name in order to be considered a collision.
+     */
+    public function getCallableFunctionForInput(string $input, ?string $expectedName = null): ?string
+    {
+        try {
+            $stmts = $this->parse('<?php '.$input, false);
+        } catch (ParseErrorException $e) {
+            return null;
+        }
+
+        if ($stmts === false) {
+            return null;
+        }
+
+        $call = $this->getDirectFunctionCallFromStatements($stmts, $expectedName);
+        if ($call === null) {
+            return null;
+        }
+
+        $function = $this->resolveFunctionName($call->name->toString());
+
+        if ($function !== null && $this->functionCallMatchesArity($function, $call)) {
+            return $function;
+        }
+
+        return null;
+    }
+
+    /**
+     * Return the first direct function call expression from a statement list.
+     *
+     * @param \PhpParser\Node[] $stmts
+     */
+    private function getDirectFunctionCallFromStatements(array $stmts, ?string $expectedName = null): ?FuncCall
+    {
+        $stmt = $stmts[0] ?? null;
+        if (!$stmt instanceof Expression) {
+            return null;
+        }
+
+        $expr = $stmt->expr;
+        if (!$expr instanceof FuncCall || !$expr->name instanceof Name) {
+            return null;
+        }
+
+        if ($expectedName !== null && \strtolower($expr->name->toString()) !== \strtolower($expectedName)) {
+            return null;
+        }
+
+        return $expr;
+    }
+
+    /**
+     * Check whether a parsed function call could satisfy the target function's arity.
+     */
+    private function functionCallMatchesArity(string $function, FuncCall $call): bool
+    {
+        try {
+            $reflection = new \ReflectionFunction(\ltrim($function, '\\'));
+        } catch (\ReflectionException $e) {
+            return false;
+        }
+
+        // Unpacked args can satisfy any arity, so only validate fixed arg counts.
+        foreach ($call->args as $arg) {
+            if ($arg->unpack) {
+                return true;
+            }
+        }
+
+        $argCount = \count($call->args);
+        $required = $reflection->getNumberOfRequiredParameters();
+        $max = $reflection->isVariadic() ? \PHP_INT_MAX : $reflection->getNumberOfParameters();
+
+        return $argCount >= $required && $argCount <= $max;
     }
 
     /**
@@ -395,141 +627,6 @@ class CodeCleaner
     }
 
     /**
-     * Determine whether code looks like an "action" vs "inspection".
-     *
-     * Actions (assignments, setters, etc.) should use concise output.
-     * Inspections (variable reads, getters, etc.) should use full output.
-     *
-     * @param array $codeBuffer Array of code lines
-     *
-     * @return bool True if code looks like an action (use concise output)
-     */
-    public function codeLooksLikeAction(array $codeBuffer): bool
-    {
-        if (empty($codeBuffer)) {
-            return false;
-        }
-
-        try {
-            $stmts = $this->parser->parse('<?php '.\implode(\PHP_EOL, $codeBuffer).';');
-
-            if (empty($stmts)) {
-                return false;
-            }
-
-            $expr = \end($stmts);
-
-            // Unwrap namespace if present
-            if ($expr instanceof Namespace_) {
-                if (empty($expr->stmts)) {
-                    return false;
-                }
-                $expr = \end($expr->stmts);
-            }
-
-            // Unwrap Expression and Return_ nodes to get to the actual expression
-            if ($expr instanceof Expression || $expr instanceof Return_) {
-                $expr = $expr->expr;
-            }
-
-            if ($expr === null) {
-                return false;
-            }
-
-            // Assignment operations are actions
-            if ($expr instanceof Assign || $expr instanceof AssignOp || $expr instanceof AssignRef) {
-                return true;
-            }
-
-            // Simple variable reads or property fetches are inspections
-            if ($expr instanceof Variable ||
-                $expr instanceof PropertyFetch ||
-                $expr instanceof StaticPropertyFetch) {
-                return false;
-            }
-
-            // Check for method calls that look like actions
-            if ($this->isActionMethodCall($expr)) {
-                return true;
-            }
-        } catch (\Throwable $e) {
-            // Fall back to default behavior if parsing fails
-        }
-
-        // Default: if we can't tell, it's not an action
-        return false;
-    }
-
-    /**
-     * Determine if a method call appears to be an action vs inspection.
-     */
-    private function isActionMethodCall(Expr $expr): bool
-    {
-        if (!$expr instanceof MethodCall && !$expr instanceof StaticCall) {
-            return false;
-        }
-
-        $methodName = $expr->name;
-        if ($methodName instanceof Node\Identifier) {
-            $methodName = $methodName->toString();
-        }
-
-        if (!\is_string($methodName)) {
-            return false;
-        }
-
-        // Common inspection method prefixes
-        $inspectionPrefixes = [
-            'get', 'find', 'fetch', 'load', 'read', 'retrieve',
-            'is', 'has', 'can', 'should', 'count', 'exists',
-            'to', 'as', // converters like toArray, asString
-        ];
-
-        foreach ($inspectionPrefixes as $prefix) {
-            if ($this->hasMethodPrefix($methodName, $prefix)) {
-                return false;
-            }
-        }
-
-        // If it doesn't match an inspection pattern, assume it's an action
-        return true;
-    }
-
-    /**
-     * Check if a method name has a given prefix in camelCase or snake_case.
-     *
-     * @param string $methodName Original method name
-     * @param string $prefix     Lowercase prefix to check
-     */
-    private function hasMethodPrefix(string $methodName, string $prefix): bool
-    {
-        if (\stripos($methodName, $prefix) !== 0) {
-            return false;
-        }
-
-        $prefixLen = \strlen($prefix);
-
-        // Exact match (e.g., "get", "is")
-        if (\strlen($methodName) === $prefixLen) {
-            return true;
-        }
-
-        $nextChar = $methodName[$prefixLen];
-
-        // snake_case: prefix followed by underscore (e.g., "get_name", "is_valid")
-        if ($nextChar === '_') {
-            return true;
-        }
-
-        // camelCase: prefix followed by uppercase (e.g., "getName", "isValid")
-        if (\ctype_upper($nextChar)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Lex and parse a block of code.
      *
      * @see Parser::parse
@@ -543,7 +640,7 @@ class CodeCleaner
     {
         try {
             return $this->parser->parse($code);
-        } catch (\PhpParser\Error $e) {
+        } catch (PhpParserError $e) {
             if ($this->parseErrorIsUnclosedString($e, $code)) {
                 return false;
             }
@@ -567,13 +664,13 @@ class CodeCleaner
             try {
                 // Unexpected EOF, try again with an implicit semicolon
                 return $this->parser->parse($code.';');
-            } catch (\PhpParser\Error $e) {
+            } catch (PhpParserError $e) {
                 return false;
             }
         }
     }
 
-    private function parseErrorIsEOF(\PhpParser\Error $e): bool
+    private function parseErrorIsEOF(PhpParserError $e): bool
     {
         $msg = $e->getRawMessage();
 
@@ -587,7 +684,7 @@ class CodeCleaner
      * their own special beautiful snowflake syntax error just for
      * themselves.
      */
-    private function parseErrorIsUnclosedString(\PhpParser\Error $e, string $code): bool
+    private function parseErrorIsUnclosedString(PhpParserError $e, string $code): bool
     {
         if ($e->getRawMessage() !== 'Syntax error, unexpected T_ENCAPSED_AND_WHITESPACE') {
             return false;
@@ -602,12 +699,12 @@ class CodeCleaner
         return true;
     }
 
-    private function parseErrorIsUnterminatedComment(\PhpParser\Error $e, string $code): bool
+    private function parseErrorIsUnterminatedComment(PhpParserError $e, string $code): bool
     {
         return $e->getRawMessage() === 'Unterminated comment';
     }
 
-    private function parseErrorIsTrailingComma(\PhpParser\Error $e, string $code): bool
+    private function parseErrorIsTrailingComma(PhpParserError $e, string $code): bool
     {
         return ($e->getRawMessage() === 'A trailing comma is not allowed here') && (\substr(\rtrim($code), -1) === ',');
     }

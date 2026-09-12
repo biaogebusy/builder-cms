@@ -42,7 +42,7 @@
   height: 55px;
   vertical-align: top;
 }
-.webform-help-support__item-icon:before {
+.webform-help-support__item-icon::before {
   display: block;
   width: 100%;
   height: 100%;
@@ -51,13 +51,13 @@
   background-position: 50% center;
   background-size: 45px;
 }
-.webform-help-support__item-icon--contribute:before {
+.webform-help-support__item-icon--contribute::before {
   background-image: url(../icons/cccccc/drupal.svg);
 }
-.webform-help-support__item-icon--join:before {
+.webform-help-support__item-icon--join::before {
   background-image: url(../icons/cccccc/drupal-association.svg);
 }
-.webform-help-support__item-icon--fund:before {
+.webform-help-support__item-icon--fund::before {
   background-image: url(../icons/cccccc/webform.svg);
 }
 
@@ -105,7 +105,7 @@
     width: 55px;
     height: 55px;
   }
-  .webform-help-support__item-icon:before {
+  .webform-help-support__item-icon::before {
     background-size: 45px;
   }
 }

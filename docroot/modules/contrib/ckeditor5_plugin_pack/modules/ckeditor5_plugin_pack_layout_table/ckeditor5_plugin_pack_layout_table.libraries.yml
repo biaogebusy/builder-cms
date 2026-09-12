@@ -1,0 +1,5 @@
+admin.layout_table:
+  version: 20250521
+  css:
+    theme:
+      css/layout_table.admin.css: { }

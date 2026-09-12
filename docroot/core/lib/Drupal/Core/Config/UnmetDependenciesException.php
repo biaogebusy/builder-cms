@@ -13,9 +13,9 @@ class UnmetDependenciesException extends ConfigException {
   /**
    * A list of configuration objects that have unmet dependencies.
    *
+   * @var array
    * The list is keyed by the config object name, and the value is an array of
    * the missing dependencies:
-   *
    * @code
    *
    * self::configObjects = [
@@ -26,8 +26,6 @@ class UnmetDependenciesException extends ConfigException {
    * ];
    *
    * @endcode
-   *
-   * @var array
    */
   protected $configObjects = [];
 
@@ -68,6 +66,7 @@ class UnmetDependenciesException extends ConfigException {
    *   The name of the extension that is being installed.
    *
    * @return string
+   *   The translated exception message.
    */
   public function getTranslatedMessage(TranslationInterface $string_translation, $extension) {
     return $string_translation->translate(
@@ -82,13 +81,14 @@ class UnmetDependenciesException extends ConfigException {
   /**
    * Creates an exception for an extension and a list of configuration objects.
    *
-   * @param $extension
+   * @param string $extension
    *   The name of the extension that is being installed.
    * @param array $config_objects
    *   A list of configuration keyed by configuration name, with unmet
    *   dependencies as the value.
    *
    * @return \Drupal\Core\Config\PreExistingConfigException
+   *   An exception for the extension with a list of configuration objects.
    */
   public static function create($extension, array $config_objects) {
     $message = new FormattableMarkup('Configuration objects provided by %extension have unmet dependencies: %config_names',

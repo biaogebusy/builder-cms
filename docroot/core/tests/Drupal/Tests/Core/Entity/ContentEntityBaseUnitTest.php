@@ -6,25 +6,30 @@ namespace Drupal\Tests\Core\Entity;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Language\Language;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\ContentEntityBase
- * @group Entity
- * @group Access
+ * Tests Drupal\Core\Entity\ContentEntityBase.
  */
+#[CoversClass(ContentEntityBase::class)]
+#[Group('Entity')]
+#[Group('Access')]
 class ContentEntityBaseUnitTest extends UnitTestCase {
 
   /**
@@ -143,6 +148,15 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
         'id' => 'id',
         'uuid' => 'uuid',
       ]);
+    $this->entityType
+      ->method('getKey')
+      ->willReturnMap([
+        ['default_langcode', 'default_langcode'],
+        ['id', 'id'],
+        ['langcode', 'langcode'],
+        ['revision', 'revision_id'],
+        ['uuid', 'uuid'],
+      ]);
 
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->entityTypeManager->expects($this->any())
@@ -224,8 +238,10 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isNewRevision
-   * @covers ::setNewRevision
+   * Tests is new revision.
+   *
+   * @legacy-covers ::isNewRevision
+   * @legacy-covers ::setNewRevision
    */
   public function testIsNewRevision(): void {
     // Set up the entity type so that on the first call there is no revision key
@@ -234,17 +250,11 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
       ->method('hasKey')
       ->with('revision')
       ->willReturnOnConsecutiveCalls(FALSE, TRUE, TRUE, TRUE);
-    $this->entityType->expects($this->exactly(2))
-      ->method('getKey')
-      ->with('revision')
-      ->willReturn('revision_id');
 
     $field_item_list = $this->getMockBuilder('\Drupal\Core\Field\FieldItemList')
       ->disableOriginalConstructor()
       ->getMock();
-    $field_item = $this->getMockBuilder('\Drupal\Core\Field\FieldItemBase')
-      ->disableOriginalConstructor()
-      ->getMockForAbstractClass();
+    $field_item = new StubFieldItemBase();
 
     $this->fieldTypePluginManager->expects($this->any())
       ->method('createFieldItemList')
@@ -260,7 +270,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setNewRevision
+   * Tests set new revision exception.
    */
   public function testSetNewRevisionException(): void {
     $this->entityType->expects($this->once())
@@ -273,7 +283,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isDefaultRevision
+   * Tests is default revision.
    */
   public function testIsDefaultRevision(): void {
     // The default value is TRUE.
@@ -283,6 +293,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
     // The last call changed the return value for this call.
     $this->assertFalse($this->entity->isDefaultRevision());
     // The revision for a new entity should always be the default revision.
+    $this->entity->isDefaultRevision(TRUE);
     $this->entity->expects($this->any())
       ->method('isNew')
       ->willReturn(TRUE);
@@ -291,7 +302,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getRevisionId
+   * Tests get revision id.
    */
   public function testGetRevisionId(): void {
     // The default getRevisionId() implementation returns NULL.
@@ -299,7 +310,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isTranslatable
+   * Tests is translatable.
    */
   public function testIsTranslatable(): void {
     $this->entityTypeBundleInfo->expects($this->any())
@@ -323,7 +334,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isTranslatable
+   * Tests is translatable for monolingual.
    */
   public function testIsTranslatableForMonolingual(): void {
     $this->languageManager->expects($this->any())
@@ -333,7 +344,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::preSaveRevision
+   * Tests pre save revision.
    */
   public function testPreSaveRevision(): void {
     // This method is internal, so check for errors on calling it only.
@@ -382,9 +393,9 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   /**
    * Tests each condition in EntityBase::getTypedData().
    *
-   * @covers ::getTypedData
-   * @dataProvider providerTestTypedData
+   * @legacy-covers ::getTypedData
    */
+  #[DataProvider('providerTestTypedData')]
   public function testTypedData(bool $bundle_typed_data_definition, bool $entity_type_typed_data_definition): void {
     $expected = EntityAdapter::class;
 
@@ -422,7 +433,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate.
    */
   public function testValidate(): void {
     $validator = $this->createMock(ValidatorInterface::class);
@@ -445,11 +456,11 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   /**
    * Tests required validation.
    *
-   * @covers ::validate
-   * @covers ::isValidationRequired
-   * @covers ::setValidationRequired
-   * @covers ::save
-   * @covers ::preSave
+   * @legacy-covers ::validate
+   * @legacy-covers ::isValidationRequired
+   * @legacy-covers ::setValidationRequired
+   * @legacy-covers ::save
+   * @legacy-covers ::preSave
    */
   public function testRequiredValidation(): void {
     $validator = $this->createMock(ValidatorInterface::class);
@@ -467,7 +478,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
     $storage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
     $storage->expects($this->any())
       ->method('save')
-      ->willReturnCallback(function (ContentEntityInterface $entity) use ($storage) {
+      ->willReturnCallback(function (ContentEntityInterface $entity) use ($storage): void {
         $entity->preSave($storage);
       });
 
@@ -498,14 +509,14 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::bundle
+   * Tests bundle.
    */
   public function testBundle(): void {
     $this->assertSame($this->bundle, $this->entity->bundle());
   }
 
   /**
-   * @covers ::access
+   * Tests access.
    */
   public function testAccess(): void {
     $access = $this->createMock('\Drupal\Core\Entity\EntityAccessControlHandlerInterface');
@@ -535,7 +546,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
    *   - Language code for $activeLanguage.
    *   - Fields array for $fields.
    */
-  public static function providerGet() {
+  public static function providerGet(): array {
     return [
       // Populated fields array.
       ['result', 'field_name', 'langcode', ['field_name' => ['langcode' => 'result']]],
@@ -547,9 +558,9 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::get
-   * @dataProvider providerGet
+   * Tests get.
    */
+  #[DataProvider('providerGet')]
   public function testGet($expected, $field_name, $active_langcode, $fields): void {
     // Mock ContentEntityBase.
     $mock_base = $this->getMockBuilder(ContentEntityBaseMockableClass::class)
@@ -597,7 +608,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
    *     Drupal\Core\Field\FieldDefinitionInterface object will be mocked for
    *     each name.
    */
-  public static function providerGetFields() {
+  public static function providerGetFields(): array {
     return [
       [[], FALSE, FALSE, []],
       [['field' => 'field', 'field2' => 'field2'], TRUE, FALSE, ['field', 'field2']],
@@ -607,9 +618,9 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getFields
-   * @dataProvider providerGetFields
+   * Tests get fields.
    */
+  #[DataProvider('providerGetFields')]
   public function testGetFields($expected, $include_computed, $is_computed, $field_definitions): void {
     // Mock ContentEntityBase.
     $mock_base = $this->getMockBuilder(ContentEntityBaseMockableClass::class)
@@ -658,10 +669,10 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::set
+   * Tests set.
    */
   public function testSet(): void {
-    // Exercise set(), check if it returns $this
+    // Exercise set(), check if it returns $this.
     $this->assertSame(
       $this->entity,
       $this->entity->set('id', 0)

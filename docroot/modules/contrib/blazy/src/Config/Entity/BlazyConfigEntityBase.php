@@ -8,10 +8,6 @@ use Drupal\blazy\Utility\Arrays;
 
 /**
  * Defines the common configuration entity.
- *
- * @internal
- *   This is an internal part of the Blazy system and should only be used by
- *   blazy-related code in Blazy module, or its sub-modules.
  */
 abstract class BlazyConfigEntityBase extends ConfigEntityBase implements BlazyConfigEntityBaseInterface {
 
@@ -199,6 +195,7 @@ abstract class BlazyConfigEntityBase extends ConfigEntityBase implements BlazyCo
    *
    * @todo deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use
    *   self::loadSafely() instead.
+   *
    * @see https://www.drupal.org/node/3103018
    */
   public static function loadWithFallback($id) {

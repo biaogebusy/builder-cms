@@ -1,0 +1,6 @@
+ckeditor5_premium_features_notifications.form.settings:
+  title: Notifications
+  route_name: ckeditor5_premium_features_notifications.form.settings
+  parent: ckeditor5_premium_features.form.settings
+  description: 'Adjust how and when users are notified about changes in the document and what messages to send.'
+  weight: 110

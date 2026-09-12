@@ -6,10 +6,14 @@ namespace Drupal\Tests\filter\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Filter Format Xml Cookie.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class FilterFormatXmlCookieTest extends FilterFormatResourceTestBase {
 
   use CookieResourceTestTrait;
@@ -23,7 +27,7 @@ class FilterFormatXmlCookieTest extends FilterFormatResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

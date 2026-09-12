@@ -168,11 +168,11 @@
             </trans-unit>
             <trans-unit id="45">
                 <source>The image height is too big ({{ height }}px). Allowed maximum height is {{ max_height }}px.</source>
-                <target>Mae uchder y ddelwedd yn rhy fawr ({{ width }}px). Yr uchder mwyaf â ganiateir yw {{ max_height }}px.</target>
+                <target>Mae uchder y ddelwedd yn rhy fawr ({{ height }}px). Yr uchder mwyaf â ganiateir yw {{ max_height }}px.</target>
             </trans-unit>
             <trans-unit id="46">
                 <source>The image height is too small ({{ height }}px). Minimum height expected is {{ min_height }}px.</source>
-                <target>Mae uchder y ddelwedd yn rhy fach ({{ width }}px). Yr uchder lleiaf â ganiateir yw {{ min_height }}px.</target>
+                <target>Mae uchder y ddelwedd yn rhy fach ({{ height }}px). Yr uchder lleiaf â ganiateir yw {{ min_height }}px.</target>
             </trans-unit>
             <trans-unit id="47">
                 <source>This value should be the user's current password.</source>
@@ -553,6 +553,30 @@
             <trans-unit id="142">
                 <source>This filename does not match the expected charset.</source>
                 <target state="needs-review-translation">Nid yw'r enw ffeil hwn yn cyfateb i'r set nodau ddisgwyliedig.</target>
+            </trans-unit>
+            <trans-unit id="143">
+                <source>This value is not valid XML.</source>
+                <target state="needs-review-translation">Nid yw'r gwerth hwn yn XML dilys.</target>
+            </trans-unit>
+            <trans-unit id="144">
+                <source>This value does not conform to the expected XSD schema.</source>
+                <target state="needs-review-translation">Nid yw'r gwerth hwn yn cydymffurfio â'r sgema XSD disgwyliedig.</target>
+            </trans-unit>
+            <trans-unit id="145">
+                <source>This XML payload is too large ({{ size }} bytes): it exceeds the limit of {{ limit }} bytes.</source>
+                <target state="needs-review-translation">Mae'r llwyth XML hwn yn rhy fawr ({{ size }} beit): mae'n fwy na'r terfyn o {{ limit }} beit.</target>
+            </trans-unit>
+            <trans-unit id="146">
+                <source>This value is not a valid cron expression.</source>
+                <target state="needs-review-translation">Nid yw'r gwerth hwn yn fynegiad cron dilys.</target>
+            </trans-unit>
+            <trans-unit id="147">
+                <source>The referenced entity does not exist.</source>
+                <target state="needs-review-translation">Nid yw'r endid y cyfeirir ato yn bodoli.</target>
+            </trans-unit>
+            <trans-unit id="148" resname="This is not a valid ULID.">
+                <source>This value is not a valid ULID.</source>
+                <target state="needs-review-translation">Nid yw'r gwerth hwn yn ULID dilys.</target>
             </trans-unit>
         </body>
     </file>

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\TestSite;
 
-// cspell:ignore enregistrer
+// cspell:ignore nmsgid nmsgstr enregistrer
 
 /**
  * Setup file used by TestSiteApplicationTest.
@@ -16,16 +16,16 @@ class TestSiteMultilingualInstallTestScript implements TestSetupInterface, TestP
   /**
    * {@inheritdoc}
    */
-  public function preinstall($db_prefix, $site_directory) {
+  public function preinstall($db_prefix, $site_directory): void {
     // Place a custom local translation in the translations directory.
     mkdir($site_directory . '/files/translations', 0777, TRUE);
-    file_put_contents($site_directory . '/files/translations/drupal-8.0.0.fr.po', "msgid \"\"\nmsgstr \"\"\nmsgid \"Save and continue\"\nmsgstr \"Enregistrer et continuer\"");
+    file_put_contents($site_directory . '/files/translations/drupal-' . \Drupal::VERSION . '.fr.po', "msgid \"\"\nmsgstr \"\"\nmsgid \"Save and continue\"\nmsgstr \"Enregistrer et continuer\"");
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setup() {
+  public function setup(): void {
     \Drupal::service('module_installer')->install(['test_page_test']);
   }
 

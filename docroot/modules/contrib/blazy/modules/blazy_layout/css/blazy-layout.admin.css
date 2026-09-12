@@ -100,7 +100,7 @@
   margin-top: 2em;
 }
 
-.b-layout .blazy__warning {
+.b-layout-wrapper .blazy__warning {
   padding: 26px 0;
   text-align: center;
   color: #fff;

@@ -29,35 +29,35 @@ class MenuLinkContentService implements MenuLinkContentServiceInterface {
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  private $entityTypeManager;
+  protected $entityTypeManager;
 
   /**
    * Entity definition update manager.
    *
    * @var \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface
    */
-  private $entityDefinitionUpdateManager;
+  protected $entityDefinitionUpdateManager;
 
   /**
    * The entity field manager.
    *
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
-  private $entityFieldManager;
+  protected $entityFieldManager;
 
   /**
    * The field storage definition listener.
    *
    * @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface
    */
-  private $fieldStorageDefinitionListener;
+  protected $fieldStorageDefinitionListener;
 
   /**
    * The entity last installed schema repository.
    *
    * @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface
    */
-  private $entityLastInstalledSchemaRepository;
+  protected $entityLastInstalledSchemaRepository;
 
   /**
    * The current database connection.

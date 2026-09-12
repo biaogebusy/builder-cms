@@ -6,22 +6,22 @@ namespace Drupal\Tests\options\Kernel\Views;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test to ensure views data is properly created for the Options module.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewsDataTest extends OptionsTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'options',
     'options_test',
     'entity_test',
-    'views',
   ];
 
   /**
@@ -50,7 +50,7 @@ class ViewsDataTest extends OptionsTestBase {
       'type' => 'list_string',
       'cardinality' => 1,
       'settings' => [
-        'allowed_values_function' => 'options_test_dynamic_values_callback',
+        'allowed_values_function' => '\Drupal\options_test\OptionsAllowedValues::dynamicValues',
       ],
     ]);
     $this->fieldStorage->save();

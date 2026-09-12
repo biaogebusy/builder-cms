@@ -1,0 +1,27 @@
+ckeditor5_premium_features_notifications.form.settings:
+  path: '/admin/config/ckeditor5-premium-features/notifications'
+  defaults:
+    _title: 'Notifications'
+    _form: 'Drupal\ckeditor5_premium_features_notifications\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+ckeditor5_premium_features_notifications.check_channel:
+  path: '/ckeditor5-premium-features-realtime-collaboration/check-channel/{channel}'
+  defaults:
+    _controller: 'Drupal\ckeditor5_premium_features_notifications\Controller\RealtimeCommentsNotificationController::checkChannel'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+ckeditor5_premium_features_notifications.realtime_comments_notification:
+  path: '/ckeditor5-premium-features-realtime-collaboration/realtime-comment-notification/{channel}'
+  defaults:
+    _controller: 'Drupal\ckeditor5_premium_features_notifications\Controller\RealtimeCommentsNotificationController::send'
+  methods: [POST]
+  requirements:
+    _custom_access: '\Drupal\ckeditor5_premium_features_notifications\Controller\RealtimeCommentsNotificationController::access'
+  options:
+    parameters:
+      channel:
+        type: entity:ckeditor5_channel

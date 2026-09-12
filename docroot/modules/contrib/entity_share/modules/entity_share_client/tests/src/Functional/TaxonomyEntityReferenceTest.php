@@ -19,6 +19,17 @@ class TaxonomyEntityReferenceTest extends EntityShareClientFunctionalTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'node',
+    'taxonomy',
+    'field',
+    'menu_ui',
+    'entity_share_test',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $entityTypeId = 'taxonomy_term';
 
   /**

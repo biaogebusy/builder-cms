@@ -31,9 +31,9 @@ views.display.data_export:
     facet_settings:
       type: string
       label: 'Facet sources'
-    store_in_public_file_directory:
-      type: boolean
-      label: 'Allow anonymous users to download this file'
+    export_filesystem:
+      type: string
+      label: 'Allow users to choose the default file system'
     custom_redirect_path:
       type: boolean
       label: 'Custom redirect path'

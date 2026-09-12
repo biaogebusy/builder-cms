@@ -8,12 +8,14 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\help_test\SupernovaGenerator;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the empty HTML page.
- *
- * @group help
  */
+#[Group('help')]
+#[RunTestsInSeparateProcesses]
 class HelpEmptyPageTest extends KernelTestBase {
 
   /**
@@ -24,7 +26,7 @@ class HelpEmptyPageTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
 
     $container->set('url_generator', new SupernovaGenerator());

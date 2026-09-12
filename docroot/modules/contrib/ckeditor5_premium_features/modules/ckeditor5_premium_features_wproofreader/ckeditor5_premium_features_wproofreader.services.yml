@@ -1,0 +1,6 @@
+services:
+  ckeditor5_premium_features_wproofreader.wsc_handler:
+    class: Drupal\ckeditor5_premium_features_wproofreader\Utility\WebSpellCheckerHandler
+    arguments:
+      - '@http_client'
+      - '@router.request_context'

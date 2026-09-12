@@ -1,0 +1,12 @@
+name: CKEditor 5 Premium Features Cloud Services
+type: module
+description: "Provides shared functionalities for plugins connecting to CKEditor cloud or self-hosted servers."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - ckeditor5_premium_features:ckeditor5_premium_features
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

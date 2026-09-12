@@ -1,9 +1,0 @@
-{
-    "name": "drupal/color",
-    "description": "Allows users to change the color scheme of compatible themes",
-    "type": "drupal-module",
-    "require": {
-        "drupal/core": ">=10.1.3 || ^11"
-    },
-    "license": "GPL-2.0-or-later"
-}

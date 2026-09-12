@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\eck\Functional;
 
-use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -160,12 +160,13 @@ abstract class FunctionalTestBase extends BrowserTestBase {
 
     $edit = ['name' => $label];
 
-    foreach ($title_overrides as $field =>  $title_override) {
+    foreach ($title_overrides as $field => $title_override) {
       $edit[$field . '_title_override'] = $title_override;
     }
 
     $this->submitForm($edit, 'Save bundle');
     $this->assertSession()->responseContains("The entity bundle <em class=\"placeholder\">$label</em> has been updated.");
+    return $edit;
   }
 
   /**

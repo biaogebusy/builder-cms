@@ -2,18 +2,19 @@
 
 namespace Drupal\entity_browser\Plugin\EntityBrowser\WidgetSelector;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserWidgetSelector;
 use Drupal\entity_browser\WidgetSelectorBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Displays widgets in a select list.
- *
- * @EntityBrowserWidgetSelector(
- *   id = "drop_down",
- *   label = @Translation("Drop down widget"),
- *   description = @Translation("Displays the widgets in a drop down.")
- * )
  */
+#[EntityBrowserWidgetSelector(
+  id: 'drop_down',
+  label: new TranslatableMarkup('Drop down widget'),
+  description: new TranslatableMarkup("Displays the widgets in a drop down."),
+)]
 class DropDown extends WidgetSelectorBase {
 
   /**

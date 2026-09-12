@@ -127,6 +127,10 @@ class TextExtractor implements TextExtractorInterface {
     }
     $fieldName = $fieldDefinition->getName();
     $fieldType = $fieldDefinition->getType();
+    // Fields the acting account cannot view must not be sent for translation.
+    if (!$entity->get($fieldName)->access('view')) {
+      return FALSE;
+    }
     if ($fieldDefinition->getName() === $entity->getEntityType()->getKey('label')) {
       return $fieldDefinition->isTranslatable();
     }

@@ -6,7 +6,6 @@
 .slick-wrapper,
 .slick,
 .slick * {
-  -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
 
@@ -47,23 +46,16 @@
 
 /** Draggable. */
 .draggable {
-  cursor: -webkit-grab;
   cursor: grab;
 }
 
 .draggable:active {
-  cursor: -webkit-grabbing;
   cursor: grabbing;
 }
 
 .draggable:active a,
 .draggable:active .slide__caption {
-  cursor: -webkit-grabbing;
   cursor: grabbing;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -126,10 +118,6 @@
 .slide__caption {
   width: 100%;
   cursor: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  -o-user-select: text;
-  -webkit-user-select: text;
   user-select: text;
 }
 
@@ -194,7 +182,6 @@
   top: 50%;
   width: 42px;
   height: 42px;
-  -webkit-transform: translateY(-50%);
   transform: translateY(-50%);
   pointer-events: auto;
   border: 0;

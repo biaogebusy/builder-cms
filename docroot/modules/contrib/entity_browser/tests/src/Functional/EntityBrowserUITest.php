@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\file\Entity\File;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\TestFileCreationTrait;
@@ -11,6 +13,8 @@ use Drupal\Tests\TestFileCreationTrait;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityBrowserUITest extends BrowserTestBase {
 
   use TestFileCreationTrait;
@@ -34,7 +38,7 @@ class EntityBrowserUITest extends BrowserTestBase {
   /**
    * Tests entity browser UI.
    */
-  public function testEntityBrowserUI() {
+  public function testEntityBrowserUi() {
     $account = $this->drupalCreateUser([
       'administer entity browsers',
       'access test_entity_browser_iframe entity browser pages',

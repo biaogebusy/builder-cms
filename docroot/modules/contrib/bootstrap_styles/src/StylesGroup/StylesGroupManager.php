@@ -117,7 +117,7 @@ class StylesGroupManager extends DefaultPluginManager {
    * @return array
    *   The allowed groups with its plugins.
    */
-  public function getAllowedPlugins(string $filter = NULL) {
+  public function getAllowedPlugins(?string $filter = NULL) {
     $allowed_plugins = [];
     if ($filter) {
       $config = $this->configFactory->get($filter);
@@ -152,7 +152,7 @@ class StylesGroupManager extends DefaultPluginManager {
    * @return array
    *   The form structure.
    */
-  public function buildStylesFormElements(array &$form, FormStateInterface $form_state, array $storage, string $filter = NULL) {
+  public function buildStylesFormElements(array &$form, FormStateInterface $form_state, array $storage, ?string $filter = NULL) {
     // Restrict styles.
     $allowed_plugins = $this->getAllowedPlugins($filter);
 

@@ -10,16 +10,18 @@ use Drupal\migrate\Plugin\migrate\process\Route;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore nzdt
-
 /**
  * Tests the route process plugin.
- *
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\process\Route
- *
- * @group migrate
  */
+#[CoversClass(Route::class)]
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class RouteTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -36,9 +38,8 @@ class RouteTest extends KernelTestBase {
    *   Input value for the Route process plugin.
    * @param array $expected
    *   The expected results from the Route transform process.
-   *
-   * @dataProvider providerTestRoute
    */
+  #[DataProvider('providerTestRoute')]
   public function testRoute($value, $expected): void {
     $actual = $this->doTransform($value);
     $this->assertSame($expected, $actual);
@@ -197,9 +198,8 @@ class RouteTest extends KernelTestBase {
    *   Input value for the Route process plugin.
    * @param array $expected
    *   The expected results from the Route transform process.
-   *
-   * @dataProvider providerTestRouteWithParamQuery
    */
+  #[DataProvider('providerTestRouteWithParamQuery')]
   public function testRouteWithParamQuery($value, $expected): void {
     // Create a user so that user/1/edit is a valid path.
     $this->setUpCurrentUser();

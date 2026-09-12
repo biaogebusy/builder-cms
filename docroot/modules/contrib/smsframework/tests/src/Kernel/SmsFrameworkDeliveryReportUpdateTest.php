@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
@@ -24,9 +24,6 @@ final class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
 
   use SmsFrameworkTestTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms',
     'sms_test_gateway',
@@ -42,9 +39,6 @@ final class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
    */
   private SmsProviderInterface $defaultSmsProvider;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->httpClient = $this->container->get('http_client');
@@ -86,7 +80,7 @@ final class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
     static::assertEquals(SmsMessageReportStatus::QUEUED, $saved_reports[2]->getStatus());
 
     /** @var \Drupal\sms\Message\SmsDeliveryReportInterface $first_report */
-    $first_report = reset($saved_reports);
+    $first_report = \reset($saved_reports);
     static::assertEquals($request_time, $first_report->getStatusTime());
 
     $message_id = $first_report->getMessageId();

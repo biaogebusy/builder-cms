@@ -64,6 +64,7 @@
   overflow: hidden;
   margin-bottom: 20px;
   transition:
+    left var(--admin-toolbar-transition, 0.3s ease-in-out),
     transform 0.3s ease-in-out,
     opacity 0.3s ease-in-out;
   border-radius: 8px 8px 0 0;
@@ -79,6 +80,30 @@
 /* Chat Container Positioning */
 .chat-container.bottom-left {
   left: 20px;
+}
+
+/* Drupal 11's new admin toolbar is a persistent sidebar only at >=64rem
+   (1024px); below that it collapses into a horizontal control bar at the
+   top and the sidebar sits off-canvas until the user opens it (see the
+   tablet/mobile rule below). The 4.5rem fallback matches core's collapsed
+   desktop sidebar width, in case the custom property is unavailable. */
+@media (min-width: 64rem) {
+  body:has(#admin-toolbar) .chat-container.bottom-left {
+    left: calc(calc(var(--admin-toolbar-sidebar-width, 4.5rem) + 1px) + 1rem);
+  }
+}
+
+/* Between the chatbot's own mobile breakpoint (768px, below which the
+   chat already goes full width) and core's desktop breakpoint (64rem),
+   Navigation only shows the horizontal control bar until toggled open —
+   so the chatbot keeps the original 20px while it's closed. Once opened,
+   core marks html[data-admin-toolbar="expanded"] and slides the sidebar
+   in with inline-size: calc(var(--admin-toolbar-sidebar-width) + 1px);
+   match that here so the chatbot isn't hidden underneath it. */
+@media (min-width: 769px) and (max-width: 63.9375rem) {
+  html[data-admin-toolbar="expanded"] body:has(#admin-toolbar) .chat-container.bottom-left {
+    left: calc(calc(var(--admin-toolbar-sidebar-width, 16.5rem) + 1px) + 1rem);
+  }
 }
 
 /* On mobile, chat is full width */

@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,6 +27,13 @@ interface ManualInterface
      * @return string|array|null Formatted string (v2) or structured data (v3), or null if not found
      */
     public function get(string $id);
+
+    /**
+     * Get all available manual IDs, if the manual format exposes them.
+     *
+     * @return string[]
+     */
+    public function getIds(): array;
 
     /**
      * Get the manual format version.

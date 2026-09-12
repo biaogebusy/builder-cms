@@ -100,8 +100,8 @@ interface FileMetadataInterface {
    *   (optional) Allows specifying additional options to control the list of
    *   metadata keys returned.
    *
-   * @return array
-   *   A simple array of metadata keys supported.
+   * @return list<string|int>
+   *   A list of metadata keys supported.
    */
   public function getSupportedKeys(string $metadataId, mixed $options = NULL): array;
 
@@ -190,8 +190,8 @@ interface FileMetadataInterface {
    *
    * @param string $metadataId
    *   The id of the FileMetadata plugin.
-   * @param array $tags
-   *   (optional) An array of cache tags to save to cache.
+   * @param list<string> $tags
+   *   (optional) A list of cache tags to save to cache.
    *
    * @return bool
    *   TRUE if metadata was saved successfully, FALSE otherwise.

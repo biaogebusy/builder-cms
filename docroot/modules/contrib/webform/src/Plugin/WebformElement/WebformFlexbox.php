@@ -25,6 +25,7 @@ class WebformFlexbox extends Container {
   protected function defineDefaultProperties() {
     return [
       // Flexbox.
+      'justify_content' => 'justify-flex-start',
       'align_items' => 'flex-start',
     ] + parent::defineDefaultProperties();
   }
@@ -55,6 +56,18 @@ class WebformFlexbox extends Container {
     $form['flexbox'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Flexbox settings'),
+    ];
+    $form['flexbox']['justify_content'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Justify content'),
+      '#options' => [
+        'justify-flex-start' => $this->t('Top (flex-start)'),
+        'justify-flex-end' => $this->t('Bottom (flex-end)'),
+        'justify-center' => $this->t('Center (center)'),
+        'justify-space-between' => $this->t('Space between (space-between)'),
+        'justify-space-around' => $this->t('Space around (space-around)'),
+      ],
+      '#required' => TRUE,
     ];
     $form['flexbox']['align_items'] = [
       '#type' => 'select',

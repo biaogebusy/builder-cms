@@ -32,13 +32,6 @@ class CheckoutAccessTest extends CartKernelTestBase {
   protected $accessManager;
 
   /**
-   * The order item storage.
-   *
-   * @var \Drupal\commerce_order\OrderItemStorageInterface
-   */
-  protected $orderItemStorage;
-
-  /**
    * The variation to test against.
    *
    * @var \Drupal\commerce_product\Entity\ProductVariation
@@ -70,7 +63,6 @@ class CheckoutAccessTest extends CartKernelTestBase {
     $this->installConfig('commerce_checkout');
     $this->createUser();
     $this->accessManager = $this->container->get('access_manager');
-    $this->orderItemStorage = $this->container->get('entity_type.manager')->getStorage('commerce_order_item');
 
     $variation = ProductVariation::create([
       'type' => 'default',
@@ -207,7 +199,9 @@ class CheckoutAccessTest extends CartKernelTestBase {
       'order_number' => '6',
       'store_id' => $this->store->id(),
     ]);
-    $order_item = $this->orderItemStorage->createFromPurchasableEntity($this->variation);
+    /** @var \Drupal\commerce_order\OrderItemStorageInterface $order_item_storage */
+    $order_item_storage = $this->entityTypeManager->getStorage('commerce_order_item');
+    $order_item = $order_item_storage->createFromPurchasableEntity($this->variation);
     $order_item->save();
     $order->addItem($order_item);
     $order->save();

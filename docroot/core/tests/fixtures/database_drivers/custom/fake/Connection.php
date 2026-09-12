@@ -46,7 +46,7 @@ class Connection extends CoreConnection {
   /**
    * {@inheritdoc}
    */
-  public function queryRange($query, $from, $count, array $args = [], array $options = []) {
+  public function queryRange($query, $from, $count, array $args = [], array $options = []): NULL {
     return NULL;
   }
 
@@ -60,7 +60,7 @@ class Connection extends CoreConnection {
   /**
    * {@inheritdoc}
    */
-  public function databaseType() {
+  public function databaseType(): string {
     return 'fake';
   }
 
@@ -72,71 +72,63 @@ class Connection extends CoreConnection {
   /**
    * {@inheritdoc}
    */
-  public function mapConditionOperator($operator) {
+  public function mapConditionOperator($operator): NULL {
     return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function nextId($existing_id = 0) {
-    @trigger_error('Drupal\Core\Database\Connection::nextId() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Modules should use instead the keyvalue storage for the last used id. See https://www.drupal.org/node/3349345', E_USER_DEPRECATED);
-    return 0;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function exceptionHandler() {
+  public function exceptionHandler(): ExceptionHandler {
     return new ExceptionHandler();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function select($table, $alias = NULL, array $options = []) {
+  public function select($table, $alias = NULL, array $options = []): Select {
     return new Select($this, $table, $alias, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function insert($table, array $options = []) {
+  public function insert($table, array $options = []): Insert {
     return new Insert($this, $table, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function merge($table, array $options = []) {
+  public function merge($table, array $options = []): Merge {
     return new Merge($this, $table, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function upsert($table, array $options = []) {
+  public function upsert($table, array $options = []): Upsert {
     return new Upsert($this, $table, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function update($table, array $options = []) {
+  public function update($table, array $options = []): Update {
     return new Update($this, $table, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function delete($table, array $options = []) {
+  public function delete($table, array $options = []): Delete {
     return new Delete($this, $table, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function truncate($table, array $options = []) {
+  public function truncate($table, array $options = []): Truncate {
     return new Truncate($this, $table, $options);
   }
 
@@ -153,14 +145,14 @@ class Connection extends CoreConnection {
   /**
    * {@inheritdoc}
    */
-  public function condition($conjunction) {
+  public function condition($conjunction): Condition {
     return new Condition($conjunction, FALSE);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function startTransaction($name = '') {
+  public function startTransaction($name = ''): Transaction {
     return new Transaction($this, $name);
   }
 

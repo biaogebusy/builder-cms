@@ -2,6 +2,9 @@
 
 namespace Drupal\Core\Render;
 
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Extension\ThemeSettingsProvider;
+
 /**
  * Default bare HTML page renderer.
  */
@@ -28,10 +31,20 @@ class BareHtmlPageRenderer implements BareHtmlPageRendererInterface {
    *   The renderer service.
    * @param \Drupal\Core\Render\AttachmentsResponseProcessorInterface $html_response_attachments_processor
    *   The HTML response attachments processor service.
+   * @param \Drupal\Core\Extension\ThemeSettingsProvider|null $themeSettingsProvider
+   *   The theme settings provider service.
    */
-  public function __construct(RendererInterface $renderer, AttachmentsResponseProcessorInterface $html_response_attachments_processor) {
+  public function __construct(
+    RendererInterface $renderer,
+    AttachmentsResponseProcessorInterface $html_response_attachments_processor,
+    protected ?ThemeSettingsProvider $themeSettingsProvider,
+  ) {
     $this->renderer = $renderer;
     $this->htmlResponseAttachmentsProcessor = $html_response_attachments_processor;
+    if ($themeSettingsProvider === NULL) {
+      @trigger_error('Calling ' . __CLASS__ . ' constructor without the $themeSettingsProvider argument is deprecated in drupal:11.3.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/node/3035289', E_USER_DEPRECATED);
+      $this->themeSettingsProvider = \Drupal::service(ThemeSettingsProvider::class);
+    }
   }
 
   /**
@@ -62,7 +75,7 @@ class BareHtmlPageRenderer implements BareHtmlPageRendererInterface {
 
     // Add the bare minimum of attachments from the system module and the
     // current maintenance theme.
-    system_page_attachments($html['page']);
+    $this->systemPageAttachments($html['page']);
     $this->renderer->renderRoot($html);
 
     $response = new HtmlResponse();
@@ -70,7 +83,109 @@ class BareHtmlPageRenderer implements BareHtmlPageRendererInterface {
     // Process attachments, because this does not go via the regular render
     // pipeline, but will be sent directly.
     $response = $this->htmlResponseAttachmentsProcessor->processAttachments($response);
+
     return $response;
+  }
+
+  /**
+   * Helper for system_page_attachments.
+   *
+   * SystemPageAttachment needs to be on BareHtmlPageRenderer.
+   * When BareHtmlPageRenderer is called, the system module is not available.
+   * PageAttachmentsHook can inject BareHtmlPageRenderer to use for
+   * system_page_attachments.
+   *
+   * @param array $page
+   *   The page to attach to.
+   */
+  public function systemPageAttachments(array &$page): void {
+    // Ensure the same CSS is loaded in
+    // \Drupal\Core\Theme\ThemePreprocess::preprocessMaintenancePage().
+    $page['#attached']['library'][] = 'system/base';
+    if (\Drupal::service('router.admin_context')->isAdminRoute()) {
+      $page['#attached']['library'][] = 'system/admin';
+    }
+
+    // Attach libraries used by this theme.
+    $active_theme = \Drupal::theme()->getActiveTheme();
+    foreach ($active_theme->getLibraries() as $library) {
+      $page['#attached']['library'][] = $library;
+    }
+
+    // Attach favicon.
+    if ($this->themeSettingsProvider->getSetting('features.favicon')) {
+      $favicon = $this->themeSettingsProvider->getSetting('favicon.url');
+      $type = $this->themeSettingsProvider->getSetting('favicon.mimetype');
+      $page['#attached']['html_head_link'][][] = [
+        'rel' => 'icon',
+        'href' => UrlHelper::stripDangerousProtocols($favicon),
+        'type' => $type,
+      ];
+    }
+
+    // Get the major Drupal version.
+    [$version] = explode('.', \Drupal::VERSION);
+
+    // Attach default meta tags.
+    $meta_default = [
+      // Make sure the Content-Type comes first because the IE browser may be
+      // vulnerable to XSS via encoding attacks from any content that comes
+      // before this META tag, such as a TITLE tag.
+      'system_meta_content_type' => [
+        '#tag' => 'meta',
+        '#attributes' => [
+          'charset' => 'utf-8',
+        ],
+        // Security: This always has to be output first.
+        '#weight' => -1000,
+      ],
+      // Show Drupal and the major version number in the META GENERATOR tag.
+      'system_meta_generator' => [
+        '#type' => 'html_tag',
+        '#tag' => 'meta',
+        '#attributes' => [
+          'name' => 'Generator',
+          'content' => 'Drupal ' . $version . ' (https://www.drupal.org)',
+        ],
+      ],
+      // Attach default mobile meta tags for responsive design.
+      'MobileOptimized' => [
+        '#tag' => 'meta',
+        '#attributes' => [
+          'name' => 'MobileOptimized',
+          'content' => 'width',
+        ],
+      ],
+      'HandheldFriendly' => [
+        '#tag' => 'meta',
+        '#attributes' => [
+          'name' => 'HandheldFriendly',
+          'content' => 'true',
+        ],
+      ],
+      'viewport' => [
+        '#tag' => 'meta',
+        '#attributes' => [
+          'name' => 'viewport',
+          'content' => 'width=device-width, initial-scale=1.0',
+        ],
+      ],
+    ];
+    foreach ($meta_default as $key => $value) {
+      $page['#attached']['html_head'][] = [$value, $key];
+    }
+
+    // Handle setting the "active" class on links by:
+    // - loading the active-link library if the current user is authenticated;
+    // - applying a response filter if the current user is anonymous.
+    // @see \Drupal\Core\Link
+    // @see \Drupal\Core\Utility\LinkGenerator::generate()
+    // @see \Drupal\Core\Theme\ThemePreprocess::preprocessLinks()
+    // @see \Drupal\Core\EventSubscriber\ActiveLinkResponseFilter
+    $page['#cache']['contexts'][] = 'user.roles:authenticated';
+    if (\Drupal::currentUser()->isAuthenticated()) {
+      $page['#attached']['library'][] = 'core/drupal.active-link';
+    }
   }
 
 }

@@ -21,7 +21,7 @@ class WebformElementSubmittedValueTest extends WebformElementBrowserTestBase {
   /**
    * Tests submitted value.
    */
-  public function testSubmittedValue() {
+  public function testSubmittedValue(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

@@ -1,0 +1,13 @@
+name: 'CKEditor 5 Restricted Editing'
+type: module
+description: 'Provides the CKEditor 5 Restricted Editing plugin.'
+package: CKEditor 5 Plugin Pack
+core_version_requirement: ^10.6 || ^11.3
+dependencies:
+  - drupal:ckeditor5
+  - ckeditor5_plugin_pack:ckeditor5_plugin_pack
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.5.4'
+project: 'ckeditor5_plugin_pack'
+datestamp: 1785320334

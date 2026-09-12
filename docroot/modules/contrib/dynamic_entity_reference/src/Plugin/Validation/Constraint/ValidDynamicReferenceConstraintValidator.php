@@ -56,7 +56,7 @@ final class ValidDynamicReferenceConstraintValidator extends ConstraintValidator
   /**
    * {@inheritdoc}
    */
-  public function validate($value, Constraint $constraint) {
+  public function validate($value, Constraint $constraint): void {
     /** @var \Drupal\dynamic_entity_reference\Plugin\Validation\Constraint\ValidDynamicReferenceConstraint $constraint */
     /** @var \Drupal\Core\Field\FieldItemListInterface $value */
     if (!isset($value)) {

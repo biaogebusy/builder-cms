@@ -1,23 +1,23 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Form;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Routing\RequestContext;
+use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\sms\Plugin\SmsGatewayPluginManagerInterface;
-use Drupal\sms\Entity\SmsGateway;
 use Drupal\sms\Direction;
-use Drupal\Component\Utility\NestedArray;
+use Drupal\sms\Entity\SmsGateway;
+use Drupal\sms\Plugin\SmsGatewayPluginManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form controller for SMS Gateways.
@@ -246,11 +246,11 @@ class SmsGatewayForm extends EntityForm {
     foreach ($path_elements_parents as $parents) {
       $element = NestedArray::getValue($form, $parents);
       $path = $form_state->getValue($parents);
-      $path_length = mb_strlen($path);
+      $path_length = \mb_strlen($path);
 
       // Length must be more than 2 chars, including leading slash character.
       if ($path_length > 0) {
-        if (mb_substr($path, 0, 1) !== '/') {
+        if (\mb_substr($path, 0, 1) !== '/') {
           $form_state->setError($element, $this->t("Path must begin with a '/' character."));
         }
         if ($path_length == 1) {

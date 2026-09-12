@@ -5,6 +5,9 @@ namespace Drupal\node\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\CalculatedCacheContextInterface;
 use Drupal\Core\Cache\Context\UserCacheContextBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeGrantsHelper;
 
 /**
  * Defines the node access view cache context service.
@@ -15,10 +18,32 @@ use Drupal\Core\Cache\Context\UserCacheContextBase;
  *
  * This allows for node access grants-sensitive caching when listing nodes.
  *
- * @see node_query_node_access_alter()
+ * @see \Drupal\node\Hook\NodeHooks1::queryNodeAccessAlter()
  * @ingroup node_access
  */
 class NodeAccessGrantsCacheContext extends UserCacheContextBase implements CalculatedCacheContextInterface {
+
+  /**
+   * The node grants helper service.
+   */
+  protected NodeGrantsHelper $nodeGrantsHelper;
+
+  public function __construct(
+    AccountInterface $user,
+    protected ?EntityTypeManagerInterface $entityTypeManager = NULL,
+    ?NodeGrantsHelper $nodeGrantsHelper = NULL,
+  ) {
+    parent::__construct($user);
+    if (!$entityTypeManager) {
+      @trigger_error('Calling NodeAccessGrantsCacheContext::__construct() without the $entityTypeManager argument is deprecated in drupal:11.3.0 and the $entityTypeManager argument will be required in drupal:12.0.0. See https://www.drupal.org/node/3038909', E_USER_DEPRECATED);
+      $this->entityTypeManager = \Drupal::entityTypeManager();
+    }
+    if (!$nodeGrantsHelper) {
+      @trigger_error('Calling NodeAccessGrantsCacheContext::__construct() without the $nodeGrantsHelper argument is deprecated in drupal:11.4.0 and the $nodeGrantsHelper argument will be required in drupal:12.0.0. See https://www.drupal.org/node/3578055', E_USER_DEPRECATED);
+      $nodeGrantsHelper = \Drupal::service(NodeGrantsHelper::class);
+    }
+    $this->nodeGrantsHelper = $nodeGrantsHelper;
+  }
 
   /**
    * {@inheritdoc}
@@ -31,6 +56,10 @@ class NodeAccessGrantsCacheContext extends UserCacheContextBase implements Calcu
    * {@inheritdoc}
    */
   public function getContext($operation = NULL) {
+    // If there are no grants at all, then always return all.
+    if (!\Drupal::moduleHandler()->hasImplementations('node_grants')) {
+      return 'all';
+    }
     // If the current user either can bypass node access then we don't need to
     // determine the exact node grants for the current user.
     if ($this->user->hasPermission('bypass node access')) {
@@ -66,11 +95,11 @@ class NodeAccessGrantsCacheContext extends UserCacheContextBase implements Calcu
     // this is automatically the case if no node access modules exist (no
     // hook_node_grants() implementations) then we don't need to determine the
     // exact node view grants for the current user.
-    if ($operation === 'view' && node_access_view_all_nodes($this->user)) {
+    if ($operation === 'view' && $this->entityTypeManager->getAccessControlHandler('node')->checkAllGrants($this->user)) {
       return 'view.all';
     }
 
-    $grants = node_access_grants($operation, $this->user);
+    $grants = $this->nodeGrantsHelper->nodeAccessGrants($operation, $this->user);
     $grants_context_parts = [];
     foreach ($grants as $realm => $gids) {
       $grants_context_parts[] = $realm . ':' . implode(',', $gids);

@@ -63,11 +63,13 @@ mail_order_receipt_failure:
 commerce_order_admin_comment:
   category: commerce_order
   label: 'Admin comment'
-  template: '<p><strong>Admin comment:</strong><br /> {{ comment }}</p>'
+  template: '<p><strong>Admin comment:</strong><br /> {{ comment|nl2br }}</p>'
+  can_disable: false
 commerce_order_from_customer_comment:
   category: commerce_order
   label: 'Comment from customer'
-  template: '<p><strong>From customer:</strong><br /> {{ comment|raw }}</p>'
+  template: '<p><strong>From customer:</strong><br /> {{ comment|nl2br }}</p>'
+  can_disable: false
 payment_added:
   category: commerce_payment
   label: 'Payment added'

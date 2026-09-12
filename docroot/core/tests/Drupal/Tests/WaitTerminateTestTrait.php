@@ -16,8 +16,9 @@ trait WaitTerminateTestTrait {
    * Tests with assertions which operate on data computed during the terminate
    * event need to enable this.
    */
-  protected function setWaitForTerminate() {
-    $this->container->get('state')->set('drupal.test_wait_terminate', TRUE);
+  protected function setWaitForTerminate(): void {
+    $this->setContainerParameter('drupal.test_wait_terminate', TRUE);
+    $this->rebuildContainer();
   }
 
 }

@@ -3,7 +3,7 @@
  * Attaches behaviors for the Contextual module.
  */
 
-(function ($, Drupal, drupalSettings, _, Backbone, JSON, storage) {
+(function ($, Drupal, drupalSettings, JSON, storage) {
   const options = $.extend(
     drupalSettings.contextual,
     // Merge strings on top of drupalSettings so that they are not mutable.
@@ -14,22 +14,19 @@
       },
     },
   );
-
   // Clear the cached contextual links whenever the current user's set of
   // permissions changes.
   const cachedPermissionsHash = storage.getItem(
     'Drupal.contextual.permissionsHash',
   );
-  const permissionsHash = drupalSettings.user.permissionsHash;
+  const { permissionsHash } = drupalSettings.user;
   if (cachedPermissionsHash !== permissionsHash) {
     if (typeof permissionsHash === 'string') {
-      _.chain(storage)
-        .keys()
-        .each((key) => {
-          if (key.startsWith('Drupal.contextual.')) {
-            storage.removeItem(key);
-          }
-        });
+      Object.keys(storage).forEach((key) => {
+        if (key.startsWith('Drupal.contextual.')) {
+          storage.removeItem(key);
+        }
+      });
     }
     storage.setItem('Drupal.contextual.permissionsHash', permissionsHash);
   }
@@ -87,7 +84,7 @@
    */
   function initContextual($contextual, html) {
     const $region = $contextual.closest('.contextual-region');
-    const contextual = Drupal.contextual;
+    const { contextual } = Drupal;
 
     $contextual
       // Update the placeholder to contain its rendered contextual links.
@@ -107,46 +104,18 @@
       const glue = url.includes('?') ? '&' : '?';
       this.setAttribute('href', url + glue + destination);
     });
-
     let title = '';
     const $regionHeading = $region.find('h2');
     if ($regionHeading.length) {
       title = $regionHeading[0].textContent.trim();
     }
-    // Create a model and the appropriate views.
-    const model = new contextual.StateModel({
-      title,
-    });
-    const viewOptions = $.extend({ el: $contextual, model }, options);
-    contextual.views.push({
-      visual: new contextual.VisualView(viewOptions),
-      aural: new contextual.AuralView(viewOptions),
-      keyboard: new contextual.KeyboardView(viewOptions),
-    });
-    contextual.regionViews.push(
-      new contextual.RegionView($.extend({ el: $region, model }, options)),
+    options.title = title;
+    const contextualModelView = new Drupal.contextual.ContextualModelView(
+      $contextual,
+      $region,
+      options,
     );
-
-    // Add the model to the collection. This must happen after the views have
-    // been associated with it, otherwise collection change event handlers can't
-    // trigger the model change event handler in its views.
-    contextual.collection.add(model);
-
-    // Let other JavaScript react to the adding of a new contextual link.
-    $(document).trigger(
-      'drupalContextualLinkAdded',
-      Drupal.deprecatedProperty({
-        target: {
-          $el: $contextual,
-          $region,
-          model,
-        },
-        deprecatedProperty: 'model',
-        message:
-          'The model property is deprecated in drupal:9.4.0 and is removed from drupal:12.0.0. There is no replacement.',
-      }),
-    );
-
+    contextual.instances.push(contextualModelView);
     // Fix visual collisions between contextual link triggers.
     adjustIfNestedAndOverlapping($contextual);
   }
@@ -187,12 +156,14 @@
       const uncachedIDs = [];
       const uncachedTokens = [];
       ids.forEach((contextualID) => {
-        const html = storage.getItem(`Drupal.contextual.${contextualID.id}`);
-        if (html && html.length) {
+        const html = storage.getItem(
+          `Drupal.contextual.${contextualID.id}.${drupalSettings.contextual.theme}`,
+        );
+        if (html?.length) {
           // Initialize after the current execution cycle, to make the AJAX
           // request for retrieving the uncached contextual links as soon as
           // possible, but also to ensure that other Drupal behaviors have had
-          // the chance to set up an event listener on the Backbone collection
+          // the chance to set up an event listener on the collection
           // Drupal.contextual.collection.
           window.setTimeout(() => {
             initContextual(
@@ -211,15 +182,25 @@
       // Perform an AJAX request to let the server render the contextual links
       // for each of the placeholders.
       if (uncachedIDs.length > 0) {
-        $.ajax({
-          url: Drupal.url('contextual/render'),
-          type: 'POST',
-          data: { 'ids[]': uncachedIDs, 'tokens[]': uncachedTokens },
-          dataType: 'json',
-          success(results) {
-            _.each(results, (html, contextualID) => {
+        const data = new URLSearchParams();
+        uncachedIDs.forEach((id) => data.append('ids[]', id));
+        uncachedTokens.forEach((id) => data.append('tokens[]', id));
+
+        const controllerUrl = `contextual/render?theme=${drupalSettings.contextual.theme}`;
+        const req = new Request(Drupal.url(controllerUrl), {
+          method: 'POST',
+          body: data,
+        });
+
+        fetch(req)
+          .then((res) => res.json())
+          .then((json) =>
+            Object.entries(json).forEach(([contextualID, html]) => {
               // Store the metadata.
-              storage.setItem(`Drupal.contextual.${contextualID}`, html);
+              storage.setItem(
+                `Drupal.contextual.${contextualID}.${drupalSettings.contextual.theme}`,
+                html,
+              );
               // If the rendered contextual links are empty, then the current
               // user does not have permission to access the associated links:
               // don't render anything.
@@ -238,9 +219,9 @@
                   initContextual($placeholders.eq(i), html);
                 }
               }
-            });
-          },
-        });
+            }),
+          )
+          .catch((error) => console.warn(error));
       }
     },
   };
@@ -274,19 +255,273 @@
      *  replacement.
      */
     regionViews: [],
-  };
+    instances: new Proxy([], {
+      set: function set(obj, prop, value) {
+        obj[prop] = value;
+        window.dispatchEvent(new Event('contextual-instances-added'));
+        return true;
+      },
+      deleteProperty(target, prop) {
+        if (prop in target) {
+          delete target[prop];
+          window.dispatchEvent(new Event('contextual-instances-removed'));
+        }
+      },
+    }),
 
-  /**
-   * A Backbone.Collection of {@link Drupal.contextual.StateModel} instances.
-   *
-   * @type {Backbone.Collection}
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:12.0.0. There is no
-   *  replacement.
-   */
-  Drupal.contextual.collection = new Backbone.Collection([], {
-    model: Drupal.contextual.StateModel,
-  });
+    /**
+     * Models the state of a contextual link's trigger, list & region.
+     */
+    ContextualModelView: class {
+      constructor($contextual, $region, options) {
+        this.title = options.title || '';
+        this.regionIsHovered = false;
+        this._hasFocus = false;
+        this._isOpen = false;
+        this._isLocked = false;
+        this.strings = options.strings;
+        this.timer = NaN;
+        this.modelId = btoa(Math.random()).substring(0, 12);
+        this.$region = $region;
+        this.$contextual = $contextual;
+
+        if (!document.body.classList.contains('touchevents')) {
+          this.$region.on({
+            mouseenter: () => {
+              this.regionIsHovered = true;
+            },
+            mouseleave: () => {
+              this.close().blur();
+              this.regionIsHovered = false;
+            },
+            'mouseleave mouseenter': () => this.render(),
+          });
+          this.$contextual.on('mouseenter', () => {
+            this.focus();
+            this.render();
+          });
+        }
+
+        this.$contextual.on(
+          {
+            click: () => {
+              this.toggleOpen();
+            },
+            touchend: () => {
+              Drupal.contextual.ContextualModelView.touchEndToClick();
+            },
+            focus: () => {
+              this.focus();
+            },
+            blur: () => {
+              this.blur();
+            },
+            'click blur touchend focus': () => this.render(),
+          },
+          '.trigger',
+        );
+
+        this.$contextual.on(
+          {
+            click: () => {
+              this.close().blur();
+            },
+            touchend: (event) => {
+              Drupal.contextual.ContextualModelView.touchEndToClick(event);
+            },
+            focus: () => {
+              this.focus();
+            },
+            blur: () => {
+              this.waitCloseThenBlur();
+            },
+            'click blur touchend focus': () => this.render(),
+          },
+          '.contextual-links a',
+        );
+
+        this.render();
+
+        // Let other JavaScript react to the adding of a new contextual link.
+        $(document).trigger('drupalContextualLinkAdded', {
+          $el: $contextual,
+          $region,
+          model: this,
+        });
+      }
+
+      /**
+       * Updates the rendered representation of the current contextual links.
+       */
+      render() {
+        const { isOpen } = this;
+        const isVisible = this.isLocked || this.regionIsHovered || isOpen;
+        this.$region.toggleClass('focus', this.hasFocus);
+        this.$contextual
+          .toggleClass('open', isOpen)
+          // Update the visibility of the trigger.
+          .find('.trigger')
+          .toggleClass('visually-hidden', !isVisible);
+
+        this.$contextual.find('.contextual-links').prop('hidden', !isOpen);
+        const trigger = this.$contextual.find('.trigger').get(0);
+        trigger.textContent = Drupal.t('@action @title configuration options', {
+          '@action': !isOpen ? this.strings.open : this.strings.close,
+          '@title': this.title,
+        });
+        trigger.setAttribute('aria-pressed', isOpen);
+      }
+
+      /**
+       * Prevents delay and simulated mouse events.
+       *
+       * @param {jQuery.Event} event the touch end event.
+       */
+      static touchEndToClick(event) {
+        event.preventDefault();
+        event.target.click();
+      }
+
+      /**
+       * Set up a timeout to allow a user to tab between the trigger and the
+       * contextual links without the menu dismissing.
+       */
+      waitCloseThenBlur() {
+        this.timer = window.setTimeout(() => {
+          this.isOpen = false;
+          this.hasFocus = false;
+          this.render();
+        }, 150);
+      }
+
+      /**
+       * Opens or closes the contextual link.
+       *
+       * If it is opened, then also give focus.
+       *
+       * @return {Drupal.contextual.ContextualModelView}
+       *   The current contextual model view.
+       */
+      toggleOpen() {
+        const newIsOpen = !this.isOpen;
+        this.isOpen = newIsOpen;
+        if (newIsOpen) {
+          this.focus();
+        }
+        return this;
+      }
+
+      /**
+       * Gives focus to this contextual link.
+       *
+       * Also closes + removes focus from every other contextual link.
+       *
+       * @return {Drupal.contextual.ContextualModelView}
+       *   The current contextual model view.
+       */
+      focus() {
+        const { modelId } = this;
+        Drupal.contextual.instances.forEach((model) => {
+          if (model.modelId !== modelId) {
+            model.close().blur();
+          }
+        });
+        window.clearTimeout(this.timer);
+        this.hasFocus = true;
+        return this;
+      }
+
+      /**
+       * Removes focus from this contextual link, unless it is open.
+       *
+       * @return {Drupal.contextual.ContextualModelView}
+       *   The current contextual model view.
+       */
+      blur() {
+        if (!this.isOpen) {
+          this.hasFocus = false;
+        }
+        return this;
+      }
+
+      /**
+       * Closes this contextual link.
+       *
+       * Does not call blur() because we want to allow a contextual link to have
+       * focus, yet be closed for example when hovering.
+       *
+       * @return {Drupal.contextual.ContextualModelView}
+       *   The current contextual model view.
+       */
+      close() {
+        this.isOpen = false;
+        return this;
+      }
+
+      /**
+       * Gets the current focus state.
+       *
+       * @return {boolean} the focus state.
+       */
+      get hasFocus() {
+        return this._hasFocus;
+      }
+
+      /**
+       * Sets the current focus state.
+       *
+       * @param {boolean} value - new focus state
+       */
+      set hasFocus(value) {
+        this._hasFocus = value;
+        this.$region.toggleClass('focus', this._hasFocus);
+      }
+
+      /**
+       * Gets the current open state.
+       *
+       * @return {boolean} the open state.
+       */
+      get isOpen() {
+        return this._isOpen;
+      }
+
+      /**
+       * Sets the current open state.
+       *
+       * @param {boolean} value - new open state
+       */
+      set isOpen(value) {
+        this._isOpen = value;
+        // Nested contextual region handling: hide any nested contextual triggers.
+        this.$region
+          .closest('.contextual-region')
+          .find('.contextual .trigger:not(:first)')
+          .toggle(!this.isOpen);
+      }
+
+      /**
+       * Gets the current locked state.
+       *
+       * @return {boolean} the locked state.
+       */
+      get isLocked() {
+        return this._isLocked;
+      }
+
+      /**
+       * Sets the current locked state.
+       *
+       * @param {boolean} value - new locked state
+       */
+      set isLocked(value) {
+        if (value !== this._isLocked) {
+          this._isLocked = value;
+          this.render();
+        }
+      }
+    },
+  };
 
   /**
    * A trigger is an interactive element often bound to a click handler.
@@ -309,14 +544,6 @@
    * @listens event:drupalContextualLinkAdded
    */
   $(document).on('drupalContextualLinkAdded', (event, data) => {
-    Drupal.ajax.bindAjaxLinks(data.$el[0]);
+    Drupal.ajax?.bindAjaxLinks(data.$el[0]);
   });
-})(
-  jQuery,
-  Drupal,
-  drupalSettings,
-  _,
-  Backbone,
-  window.JSON,
-  window.sessionStorage,
-);
+})(jQuery, Drupal, drupalSettings, window.JSON, window.sessionStorage);

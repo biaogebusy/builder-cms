@@ -54,9 +54,7 @@ services:
     class: Drupal\simple_oauth\Access\DecoratedUserRolesAccessPolicy
     decorates: access_policy.user_roles
     decoration_priority: 100
-    arguments: [ '@simple_oauth.access_policy.user_roles.inner', '@entity_type.manager' ]
-    tags:
-      - { name: access_policy }
+    arguments: [ '@simple_oauth.access_policy.user_roles.inner', '@entity_type.manager', '@config.installer' ]
   simple_oauth.normalizer.oauth2_token:
     class: Drupal\simple_oauth\Normalizer\TokenEntityNormalizer
     arguments: [ '@entity_type.manager' ]

@@ -2,15 +2,20 @@
 
 namespace Drupal\charts_chartjs\Plugin\chart\Library;
 
+use Drupal\charts\ApplyRawOptionsTrait;
 use Drupal\charts\Attribute\Chart;
+use Drupal\charts\BackgroundColorTrait;
 use Drupal\Component\Utility\Color;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\charts\Plugin\chart\Library\ChartBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * The 'Chartjs' chart type attribute.
@@ -24,14 +29,51 @@ use Drupal\charts\Plugin\chart\Library\ChartBase;
     "bubble",
     "column",
     "donut",
+    "gauge",
     "line",
     "pie",
     "polarArea",
     "scatter",
     "spline",
-  ]
+    "treemap",
+  ],
+  example_route: "charts_chartjs_api_example.display",
 )]
-class Chartjs extends ChartBase {
+class Chartjs extends ChartBase implements ContainerFactoryPluginInterface {
+
+  use ApplyRawOptionsTrait;
+  use BackgroundColorTrait;
+
+  /**
+   * Constructs a \Drupal\views\Plugin\Block\ViewsBlockBase object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface|null $module_handler
+   *   The module handler service.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, FormBuilderInterface $form_builder, ?ModuleHandlerInterface $module_handler = NULL) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler, $form_builder);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('form_builder'),
+      $container->get('module_handler')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -122,16 +164,26 @@ class Chartjs extends ChartBase {
    * {@inheritdoc}
    */
   public function preRender(array $element) {
-    $chart_definition = [];
-
     if (!isset($element['#id'])) {
       $element['#id'] = Html::getUniqueId('chartjs-render');
     }
 
+    // Handle manual sizing wrapper.
+    // Only add the wrapper if at least one dimension is specified.
     if (!empty($element['#height']) || !empty($element['#width'])) {
+      $style = 'display:inline-block;';
+
+      if (!empty($element['#height'])) {
+        $style .= 'height:' . $element['#height'] . $element['#height_units'] . ';';
+      }
+
+      if (!empty($element['#width'])) {
+        $style .= 'width:' . $element['#width'] . $element['#width_units'] . ';';
+      }
+
       $element['#content_prefix']['manual_sizing'] = [
         '#type' => 'inline_template',
-        '#template' => '<div data-chartjs-render-wrapper style="display:inline-block;height:' . $element['#height'] . $element['#height_units'] . ';width:' . $element['#width'] . $element['#width_units'] . ';">',
+        '#template' => '<div data-chartjs-render-wrapper style="' . $style . '">',
       ];
       $element['#content_suffix']['manual_sizing'] = [
         '#type' => 'inline_template',
@@ -139,22 +191,104 @@ class Chartjs extends ChartBase {
       ];
     }
 
-    $chart_definition = $this->populateOptions($element, $chart_definition);
-    $chart_definition = $this->populateCategories($element, $chart_definition);
-    $chart_definition = $this->populateDatasets($element, $chart_definition);
-    $chart_definition = $this->populateAxes($element, $chart_definition);
-
-    // Merge in chart raw options.
-    if (!empty($element['#raw_options'])) {
-      $chart_definition = NestedArray::mergeDeepArray([
-        $chart_definition,
-        $element['#raw_options'],
-      ]);
+    // Use raw definition if provided, otherwise build from elements.
+    if (!empty($element['#chart_definition'])) {
+      $chart_definition = $element['#chart_definition'];
+    }
+    else {
+      $chart_definition = [];
+      $chart_definition = $this->populateOptions($element, $chart_definition);
+      $chart_definition = $this->populateCategories($element, $chart_definition);
+      $chart_definition = $this->populateDatasets($element, $chart_definition);
+      $chart_definition = $this->populateAxes($element, $chart_definition);
+      if ($element['#chart_type'] === 'gauge') {
+        $chart_definition = $this->buildGaugeChart($element, $chart_definition);
+      }
     }
 
+    // Workaround because Chart.js does not natively support background color.
+    $element = $this->applyBackgroundColor($element);
+
+    // Merge in chart raw options (applies to both methods).
+    $chart_definition = $this->applyRawOptions($element, $chart_definition);
+
     $element['#attached']['library'][] = 'charts_chartjs/chartjs';
+    if ($element['#chart_type'] === 'treemap') {
+      $element['#attached']['library'][] = 'charts_chartjs/chartjs_treemap_plugin';
+    }
     $element['#attributes']['class'][] = 'charts-chartjs';
     $element['#chart_definition'] = $chart_definition;
+
+    // Attach the color changer form if requested.
+    if (!empty($element['#color_changer']) && empty($element['#in_preview_mode'])) {
+      $element = $this->applyColorChanger($element, $chart_definition);
+    }
+
+    return $element;
+  }
+
+  /**
+   * Utility to apply color changer options.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   The chart element.
+   *
+   * @throws \Drupal\Core\Form\EnforcedResponseException
+   * @throws \Drupal\Core\Form\FormAjaxException
+   */
+  private function applyColorChanger(array $element, array $chart_definition): array {
+    $chart_type = $chart_definition['type'] ?? 'line';
+    $datasets = $chart_definition['data']['datasets'] ?? [];
+
+    // Transform datasets to be compatible with BaseColorChanger.
+    $formatted_series = [];
+    foreach ($datasets as $index => $dataset) {
+      // Ensure the label is a string.
+      $label = $dataset['label'] ?? '';
+      if (is_array($label)) {
+        // If it's an array, we grab the first value or use a fallback.
+        $label = reset($label);
+      }
+
+      // Use a string fallback for the label.
+      $series_name = !empty($label) ? $label : $this->t('Series @n', ['@n' => $index]);
+
+      if (in_array($chart_type, ['pie', 'doughnut'])) {
+        $formatted_series[$index] = [
+          'name' => $series_name,
+          'data' => [],
+        ];
+
+        foreach ($chart_definition['data']['labels'] as $i => $label_item) {
+          // Ensure individual data point names are strings too.
+          $item_name = is_array($label_item) ? reset($label_item) : $label_item;
+          $formatted_series[$index]['data'][$i] = [
+            'name' => $item_name,
+            'color' => $dataset['backgroundColor'][$i] ?? '#000000',
+          ];
+        }
+      }
+      else {
+        $formatted_series[$index] = [
+          'name' => $series_name,
+          'color' => $dataset['backgroundColor'] ?? '#000000',
+        ];
+      }
+    }
+
+    $form_state_items = [
+      'chart_series' => $formatted_series,
+      'chart_id' => $element['#id'],
+      'chart_type' => $chart_type,
+    ];
+
+    $element['#attached']['library'][] = 'charts_chartjs/color_changer';
+    $element['#content_suffix']['color_changer'] = $this->colorChangerFormBuilder($form_state_items);
 
     return $element;
   }
@@ -396,17 +530,12 @@ class Chartjs extends ChartBase {
             if (!empty($item['color'])) {
               unset($item['color']);
             }
-            return gettype($item) === 'array' ? array_values($item) : $item;
+            return is_array($item) ? reset($item) : $item;
           }, $element[$child]['#data']);
         }
       }
       // Merge in axis raw options.
-      if (!empty($element[$child]['#raw_options'])) {
-        $categories = NestedArray::mergeDeepArray([
-          $categories,
-          $element[$child]['#raw_options'],
-        ]);
-      }
+      $categories = $this->applyRawOptions($element[$child], $categories);
     }
     $chart_definition['data']['labels'] = $categories;
     return $chart_definition;
@@ -437,7 +566,10 @@ class Chartjs extends ChartBase {
           }
           else {
             if ($chart_type === 'scatter') {
-              $data = ['y' => $data[1], 'x' => $data[0]];
+              $data = [
+                'x' => $data[0] ?? 0,
+                'y' => $data[1] ?? 0,
+              ];
             }
             if ($chart_type === 'bubble') {
               /*
@@ -445,7 +577,11 @@ class Chartjs extends ChartBase {
                * For suggestions about how to deal with this, see:
                * https://github.com/chartjs/Chart.js/issues/3355
                */
-              $data = ['y' => $data[1], 'x' => $data[0], 'r' => $data[2]];
+              $data = [
+                'x' => $data[0] ?? 0,
+                'y' => $data[1] ?? 0,
+                'r' => $data[2] ?? 0,
+              ];
             }
             // Convert the array from Views when using pie-type charts
             // and no label field.
@@ -496,12 +632,7 @@ class Chartjs extends ChartBase {
         }
 
         // Merge in dataset raw options.
-        if (!empty($element[$key]['#raw_options'])) {
-          $dataset = NestedArray::mergeDeepArray([
-            $dataset,
-            $element[$key]['#raw_options'],
-          ]);
-        }
+        $dataset = $this->applyRawOptions($element[$key], $dataset);
 
         $datasets[] = $dataset;
       }
@@ -541,8 +672,11 @@ class Chartjs extends ChartBase {
         break;
 
       case 'gauge':
-        // Gauge is currently not supported by Chart.js.
-        $type = 'donut';
+        // Chart.js does not have a native gauge type. Gauges are rendered as
+        // a half-doughnut combined with a "doughnutLabel" annotation provided
+        // by the chartjs-plugin-annotation library.
+        // @see https://www.chartjs.org/chartjs-plugin-annotation/3.1.0/samples/doughnutLabel/gauge.html
+        $type = 'doughnut';
         break;
 
       default:
@@ -652,6 +786,123 @@ class Chartjs extends ChartBase {
   }
 
   /**
+   * Builds a gauge chart definition.
+   *
+   * Chart.js has no native gauge type, so the gauge is emulated with a
+   * half-doughnut chart: the first slice represents the value and the second
+   * (gray) slice represents the remainder of the range. The current value and
+   * the series label are printed in the center of the gauge using the
+   * "doughnutLabel" annotation from the chartjs-plugin-annotation library.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   *
+   * @see https://www.chartjs.org/chartjs-plugin-annotation/3.1.0/samples/doughnutLabel/gauge.html
+   */
+  private function buildGaugeChart(array $element, array $chart_definition) {
+    $gauge_settings = array_filter($element['#gauge'] ?? [], fn ($value) => $value !== '' && $value !== NULL);
+    $gauge_settings += [
+      'min' => 0,
+      'max' => 100,
+      'red_from' => 0,
+      'red_to' => 50,
+      'yellow_from' => 50,
+      'yellow_to' => 85,
+      'green_from' => 85,
+      'green_to' => 100,
+    ];
+    $min = (float) $gauge_settings['min'];
+    $max = (float) $gauge_settings['max'];
+
+    // Extract the gauge value and label from the first dataset built by
+    // populateDatasets().
+    $dataset = $chart_definition['data']['datasets'][0] ?? [];
+    $value = $dataset['data'][0] ?? 0;
+    // Views/API data may come as [label, value] pairs.
+    if (is_array($value)) {
+      $value = end($value);
+    }
+    $value = (float) $value;
+    $label = $dataset['label'] ?? '';
+    if (is_array($label)) {
+      $label = reset($label);
+    }
+    $label = (string) $label;
+
+    // Keep the value inside the configured range.
+    $value = max($min, min($max, $value));
+    $color = $this->getGaugeColor($value, $gauge_settings);
+
+    // A single dataset with two slices: the value and the remainder.
+    $chart_definition['data']['labels'] = [$label];
+    $chart_definition['data']['datasets'] = [
+      [
+        'label' => $label,
+        'data' => [$value - $min, $max - $value],
+        'backgroundColor' => [$color, 'rgb(234, 234, 234)'],
+        'borderWidth' => 0,
+        'type' => 'doughnut',
+      ],
+    ];
+
+    // Render the doughnut as a half circle.
+    $chart_definition['options']['aspectRatio'] = 2;
+    $chart_definition['options']['circumference'] = 180;
+    $chart_definition['options']['rotation'] = -90;
+
+    // Print the value and the series label in the center of the gauge with
+    // the doughnutLabel annotation type.
+    $formatted_value = rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
+    $chart_definition['options']['plugins']['annotation']['annotations']['gaugeLabel'] = [
+      'type' => 'doughnutLabel',
+      'drawTime' => 'beforeDraw',
+      'position' => ['y' => '-50%'],
+      'content' => array_values(array_filter([$formatted_value, $label], fn ($item) => $item !== '')),
+      'font' => [
+        ['size' => 50, 'weight' => 'bold'],
+        ['size' => 20],
+      ],
+      'color' => [$color, 'gray'],
+    ];
+
+    return $chart_definition;
+  }
+
+  /**
+   * Resolves the gauge color for a given value.
+   *
+   * @param float $value
+   *   The gauge value.
+   * @param array $gauge_settings
+   *   The gauge settings, containing "(red|yellow|green)_(from|to)" ranges.
+   *
+   * @return string
+   *   A CSS color string.
+   */
+  private function getGaugeColor(float $value, array $gauge_settings) {
+    $bands = [
+      'red' => 'rgb(231, 24, 49)',
+      'yellow' => 'rgb(239, 198, 0)',
+      'green' => 'rgb(140, 214, 16)',
+    ];
+    foreach ($bands as $band => $color) {
+      if (!isset($gauge_settings[$band . '_from']) || !isset($gauge_settings[$band . '_to'])) {
+        continue;
+      }
+      if ($value >= (float) $gauge_settings[$band . '_from'] && $value <= (float) $gauge_settings[$band . '_to']) {
+        return $color;
+      }
+    }
+    // Fall back to gray when the value is not inside any configured band.
+    return 'rgb(128, 128, 128)';
+  }
+
+  /**
    * Returns pie-style chart types.
    *
    * @return array
@@ -662,6 +913,7 @@ class Chartjs extends ChartBase {
       'pie',
       'doughnut',
       'donut',
+      'gauge',
       'polarArea',
     ];
   }

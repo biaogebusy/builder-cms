@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_test_message_custom\Hook\WebformTestMessageCustomHooks:
+    class: Drupal\webform_test_message_custom\Hook\WebformTestMessageCustomHooks
+    autowire: true

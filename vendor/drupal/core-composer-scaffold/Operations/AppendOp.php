@@ -41,11 +41,15 @@ class AppendOp extends AbstractOperation {
 
   /**
    * An indicator of whether the file we are appending to is managed or not.
+   *
+   * @var bool
    */
   protected $managed;
 
   /**
    * An indicator of whether we are allowed to append to a non-scaffolded file.
+   *
+   * @var bool
    */
   protected $forceAppend;
 
@@ -136,7 +140,7 @@ class AppendOp extends AbstractOperation {
       $io->write($interpolator->interpolate("  - Append to <info>[dest-rel-path]</info> from <info>[append-rel-path]</info>"));
     }
 
-    // Write the resulting data
+    // Write the resulting data.
     file_put_contents($destination_path, $this->contents());
 
     // Return a ScaffoldResult with knowledge of whether this file is managed.
@@ -195,7 +199,7 @@ class AppendOp extends AbstractOperation {
    * @param string $contents
    *   The contents of the target file.
    * @param \Drupal\Composer\Plugin\Scaffold\ScaffoldFilePath $data_path
-   *   The path to the data to append or prepend
+   *   The path to the data to append or prepend.
    *
    * @return bool
    *   'TRUE' if the append/prepend data already exists in contents.

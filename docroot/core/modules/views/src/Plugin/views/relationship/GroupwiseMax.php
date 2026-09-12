@@ -179,7 +179,7 @@ class GroupwiseMax extends RelationshipPluginBase {
    * generate the subquery when the options are saved, rather than when the view
    * is run. This saves considerable time.
    *
-   * @param $options
+   * @param array $options
    *   An array of options:
    *    - subquery_sort: the id of a views sort.
    *    - subquery_order: either ASC or DESC.
@@ -191,7 +191,7 @@ class GroupwiseMax extends RelationshipPluginBase {
     // Either load another view, or create one on the fly.
     if ($options['subquery_view']) {
       $temp_view = Views::getView($options['subquery_view']);
-      // Remove all fields from default display
+      // Remove all fields from default display.
       unset($temp_view->display['default']['display_options']['fields']);
     }
     else {
@@ -303,7 +303,7 @@ class GroupwiseMax extends RelationshipPluginBase {
   /**
    * Recursive helper to add a namespace to conditions.
    *
-   * Similar to _views_query_tag_alter_condition().
+   * Similar to ViewsHooks::viewsQueryTagAlterCondition().
    *
    * (Though why is the condition we get in a simple query 3 levels deep???)
    */
@@ -383,7 +383,7 @@ class GroupwiseMax extends RelationshipPluginBase {
     else {
       $id = 'subquery';
     }
-    $join = Views::pluginManager('join')->createInstance($id, $def);
+    $join = \Drupal::service('plugin.manager.views.join')->createInstance($id, $def);
 
     // Use a short alias for this:
     $alias = $def['table'] . '_' . $this->table;

@@ -5,11 +5,9 @@ namespace Drupal\commerce_order\Form;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce\EntityHelper;
-use Drupal\commerce\EntityTraitManagerInterface;
 use Drupal\commerce\Form\CommerceBundleEntityFormBase;
 use Drupal\commerce_order\Entity\OrderType;
 use Drupal\entity\Form\EntityDuplicateFormTrait;
-use Drupal\state_machine\WorkflowManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -27,27 +25,20 @@ class OrderTypeForm extends CommerceBundleEntityFormBase {
   protected $workflowManager;
 
   /**
-   * Constructs a new OrderTypeForm object.
+   * A local task manager instance.
    *
-   * @param \Drupal\commerce\EntityTraitManagerInterface $trait_manager
-   *   The entity trait manager.
-   * @param \Drupal\state_machine\WorkflowManagerInterface $workflow_manager
-   *   The workflow manager.
+   * @var \Drupal\Core\Menu\LocalTaskManager
    */
-  public function __construct(EntityTraitManagerInterface $trait_manager, WorkflowManagerInterface $workflow_manager) {
-    parent::__construct($trait_manager);
-
-    $this->workflowManager = $workflow_manager;
-  }
+  protected $localTaskLinkManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.commerce_entity_trait'),
-      $container->get('plugin.manager.workflow')
-    );
+    $instance = parent::create($container);
+    $instance->workflowManager = $container->get('plugin.manager.workflow');
+    $instance->localTaskLinkManager = $container->get('plugin.manager.menu.local_task');
+    return $instance;
   }
 
   /**
@@ -85,6 +76,12 @@ class OrderTypeForm extends CommerceBundleEntityFormBase {
       '#options' => $workflows,
       '#default_value' => $order_type->getWorkflowId(),
       '#description' => $this->t('Used by all orders of this type.'),
+    ];
+    $form['showOrderEditLinks'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show the edit tab and operations link for orders of this type to users with relevant permissions.'),
+      '#default_value' => $order_type->shouldShowOrderEditLinks(),
+      '#description' => $this->t('This is disabled by default as all standard order edit operations have been moved to the order view page.'),
     ];
     $form['generate_number'] = [
       '#type' => 'checkbox',
@@ -215,6 +212,7 @@ class OrderTypeForm extends CommerceBundleEntityFormBase {
     $status = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
     $this->submitTraitForm($form, $form_state);
+    $this->localTaskLinkManager->clearCachedDefinitions();
 
     $this->messenger()->addMessage($this->t('Saved the %label order type.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.commerce_order_type.collection');

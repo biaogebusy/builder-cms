@@ -8,12 +8,15 @@ use Drupal\ajax_test\Controller\AjaxTestController;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Performs tests on opening and manipulating dialogs via AJAX commands.
- *
- * @group Ajax
  */
+#[Group('Ajax')]
+#[RunTestsInSeparateProcesses]
 class OffCanvasDialogTest extends BrowserTestBase {
 
   /**
@@ -28,9 +31,8 @@ class OffCanvasDialogTest extends BrowserTestBase {
 
   /**
    * Tests sending AJAX requests to open and manipulate off-canvas dialog.
-   *
-   * @dataProvider dialogPosition
    */
+  #[DataProvider('dialogPosition')]
   public function testDialog($position): void {
     // Ensure the elements render without notices or exceptions.
     $this->drupalGet('ajax-test/dialog');
@@ -38,7 +40,6 @@ class OffCanvasDialogTest extends BrowserTestBase {
     // Set up variables for this test.
     $dialog_renderable = AjaxTestController::dialogContents();
     $dialog_contents = \Drupal::service('renderer')->renderRoot($dialog_renderable);
-    $dialog_class = 'ui-dialog-off-canvas ui-dialog-position-' . ($position ?: 'side');
     $off_canvas_expected_response = [
       'command' => 'openDialog',
       'selector' => '#drupal-off-canvas',
@@ -46,7 +47,10 @@ class OffCanvasDialogTest extends BrowserTestBase {
       'data' => (string) $dialog_contents,
       'dialogOptions' =>
         [
-          'classes' => ['ui-dialog' => $dialog_class, 'ui-dialog-content' => 'drupal-off-canvas-reset'],
+          'classes' => [
+            'ui-dialog' => 'ui-dialog-off-canvas ui-dialog-position-' . ($position ?: 'side'),
+            'ui-dialog-content' => 'drupal-off-canvas-reset',
+          ],
           'title' => 'AJAX Dialog & contents',
           'modal' => FALSE,
           'autoResize' => FALSE,
@@ -72,6 +76,7 @@ class OffCanvasDialogTest extends BrowserTestBase {
    * The data provider for potential dialog positions.
    *
    * @return array
+   *   An array of dialog positions.
    */
   public static function dialogPosition() {
     return [

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests config schema deprecation.
- *
- * @group config
- * @group legacy
  */
+#[Group('config')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class ConfigSchemaDeprecationTest extends KernelTestBase {
 
   /**
@@ -25,7 +28,7 @@ class ConfigSchemaDeprecationTest extends KernelTestBase {
    * Tests config schema deprecation.
    */
   public function testConfigSchemaDeprecation(): void {
-    $this->expectDeprecation('The \'complex_structure_deprecated\' config schema is deprecated in drupal:9.1.0 and is removed from drupal 10.0.0. Use the \'complex_structure\' config schema instead. See http://drupal.org/node/the-change-notice-nid.');
+    $this->expectUserDeprecationMessage('The \'complex_structure_deprecated\' config schema is deprecated in drupal:9.1.0 and is removed from drupal 10.0.0. Use the \'complex_structure\' config schema instead. See http://drupal.org/node/the-change-notice-nid.');
     $config = $this->config('config_schema_deprecated_test.settings');
     $config
       ->set('complex_structure_deprecated.type', 'fruits')

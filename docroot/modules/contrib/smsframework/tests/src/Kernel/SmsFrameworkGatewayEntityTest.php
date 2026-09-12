@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
 use Drupal\Core\Url;
-use Drupal\sms\Entity\SmsGateway;
 use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsGateway;
 use Drupal\sms\Entity\SmsGatewayInterface;
 
 /**
@@ -16,9 +16,6 @@ use Drupal\sms\Entity\SmsGatewayInterface;
  */
 final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test_gateway', 'telephone', 'dynamic_entity_reference',
   ];
@@ -77,7 +74,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway(['plugin' => 'incoming']);
 
     $path = $gateway->getPushIncomingPath();
-    static::assertTrue(strpos($path, '/sms/incoming/receive/') === 0);
+    static::assertTrue(\strpos($path, '/sms/incoming/receive/') === 0);
 
     $new_path = '/' . $this->randomMachineName();
     $return = $gateway->setPushIncomingPath($new_path);
@@ -125,7 +122,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway();
 
     $path = $gateway->getPushReportPath();
-    static::assertTrue(strpos($path, '/sms/delivery-report/receive/') === 0);
+    static::assertTrue(\strpos($path, '/sms/delivery-report/receive/') === 0);
 
     $new_path = '/' . $this->randomMachineName();
     $return = $gateway->setPushReportPath($new_path);

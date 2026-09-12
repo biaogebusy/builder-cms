@@ -5,27 +5,32 @@ declare(strict_types=1);
 namespace Drupal\Tests\jsonapi\Kernel\ResourceType;
 
 use Drupal\Core\Database\Database;
-use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
+use Drupal\jsonapi\ResourceType\ResourceType;
+use Drupal\jsonapi\ResourceType\ResourceTypeRepository;
 use Drupal\node\Entity\NodeType;
+use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\jsonapi\ResourceType\ResourceType
- * @coversClass \Drupal\jsonapi\ResourceType\ResourceTypeRepository
- * @group jsonapi
+ * Tests Drupal\jsonapi\ResourceType\ResourceType.
  *
  * @internal
  */
+#[CoversClass(ResourceType::class)]
+#[CoversClass(ResourceTypeRepository::class)]
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class RelatedResourceTypesTest extends JsonapiKernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'file',
     'node',
-    'jsonapi',
     'serialization',
-    'system',
     'user',
     'field',
     'dblog',
@@ -112,9 +117,9 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   }
 
   /**
-   * @covers ::getRelatableResourceTypes
-   * @dataProvider getRelatableResourceTypesProvider
+   * Tests get relatable resource types.
    */
+  #[DataProvider('getRelatableResourceTypesProvider')]
   public function testGetRelatableResourceTypes($resource_type_name, $relatable_type_names): void {
     // We're only testing the fields that we set up.
     $test_fields = [
@@ -145,9 +150,11 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   }
 
   /**
-   * @covers ::getRelatableResourceTypes
-   * @dataProvider getRelatableResourceTypesProvider
+   * Tests get relatable resource types provider.
+   *
+   * @legacy-covers ::getRelatableResourceTypes
    */
+  #[DataProvider('getRelatableResourceTypesProvider')]
   public static function getRelatableResourceTypesProvider() {
     return [
       [
@@ -163,9 +170,9 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   }
 
   /**
-   * @covers ::getRelatableResourceTypesByField
-   * @dataProvider getRelatableResourceTypesByFieldProvider
+   * Tests get relatable resource types by field.
    */
+  #[DataProvider('getRelatableResourceTypesByFieldProvider')]
   public function testGetRelatableResourceTypesByField($entity_type_id, $bundle, $field): void {
     $resource_type = $this->resourceTypeRepository->get($entity_type_id, $bundle);
     $relatable_types = $resource_type->getRelatableResourceTypes();
@@ -189,11 +196,11 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   /**
    * Ensure a graceful failure when a field can references a missing bundle.
    *
-   * @covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::all
-   * @covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::calculateRelatableResourceTypes
-   * @covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::getRelatableResourceTypesFromFieldDefinition
    *
    * @link https://www.drupal.org/project/drupal/issues/2996114
+   * @legacy-covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::all
+   * @legacy-covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::calculateRelatableResourceTypes
+   * @legacy-covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::getRelatableResourceTypesFromFieldDefinition
    */
   public function testGetRelatableResourceTypesFromFieldDefinition(): void {
     $field_config_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
@@ -204,7 +211,7 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
     ]);
     $fields = $field_config_storage->loadByProperties(['field_name' => 'field_ref_with_missing_bundle']);
     static::assertSame(['missing_bundle'], $fields['node.foo.field_ref_with_missing_bundle']->getItemDefinition()->getSetting('handler_settings')['target_bundles']);
-    $a = $this->resourceTypeRepository->get('node', 'foo')->getRelatableResourceTypesByField('field_ref_with_missing_bundle');
+    $this->resourceTypeRepository->get('node', 'foo')->getRelatableResourceTypesByField('field_ref_with_missing_bundle');
     static::assertSame(['missing_bundle'], $fields['node.foo.field_ref_with_missing_bundle']->getItemDefinition()->getSetting('handler_settings')['target_bundles']);
     $arguments = [
       '@name' => 'field_ref_with_missing_bundle',
@@ -220,17 +227,6 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
       ->execute()
       ->fetchField();
     $this->assertEquals(serialize($arguments), $logged);
-  }
-
-  /**
-   * Test the deprecation error on entity reference fields.
-   *
-   * @group legacy
-   */
-  public function testGetRelatableResourceTypesFromFieldDefinitionEntityReferenceFieldDeprecated(): void {
-    \Drupal::service('module_installer')->install(['jsonapi_test_reference_types']);
-    $this->expectDeprecation('Entity reference field items not implementing Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItemInterface is deprecated in drupal:10.2.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3279140');
-    $this->resourceTypeRepository->all();
   }
 
 }

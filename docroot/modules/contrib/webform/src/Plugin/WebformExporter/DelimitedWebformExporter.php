@@ -105,7 +105,7 @@ class DelimitedWebformExporter extends TabularBaseWebformExporter {
       fwrite($this->fileHandle, "\xEF\xBB\xBF");
     }
     $header = $this->buildHeader();
-    fputcsv($this->fileHandle, $header, $this->configuration['delimiter']);
+    fputcsv($this->fileHandle, $header, $this->configuration['delimiter'], escape: '\\');
   }
 
   /**
@@ -113,7 +113,7 @@ class DelimitedWebformExporter extends TabularBaseWebformExporter {
    */
   public function writeSubmission(WebformSubmissionInterface $webform_submission) {
     $record = $this->buildRecord($webform_submission);
-    fputcsv($this->fileHandle, $record, $this->configuration['delimiter']);
+    fputcsv($this->fileHandle, $record, $this->configuration['delimiter'], escape: '\\');
   }
 
   /**

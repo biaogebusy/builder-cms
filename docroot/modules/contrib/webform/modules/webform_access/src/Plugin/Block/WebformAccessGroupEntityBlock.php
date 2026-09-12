@@ -56,11 +56,11 @@ class WebformAccessGroupEntityBlock extends BlockBase implements ContainerFactor
   /**
    * {@inheritdoc}
    */
-  public function build() {
+  public function build() : array {
     /** @var \Drupal\node\NodeInterface[] $nodes */
     $nodes = $this->getEntityStorage('webform_access_group')->getUserEntities($this->currentUser, 'node');
     if (empty($nodes)) {
-      return NULL;
+      return [];
     }
 
     $langcode = $this->languageManager->getCurrentLanguage()->getId();
@@ -74,7 +74,7 @@ class WebformAccessGroupEntityBlock extends BlockBase implements ContainerFactor
       }
     }
     if (empty($items)) {
-      return NULL;
+      return [];
     }
 
     return [

@@ -13,7 +13,7 @@
 /**
  * Alter the information provided in \Drupal\image\Annotation\ImageEffect.
  *
- * @param $effects
+ * @param array $effects
  *   The array of image effects, keyed on the machine-readable effect name.
  */
 function hook_image_effect_info_alter(&$effects) {
@@ -36,7 +36,7 @@ function hook_image_effect_info_alter(&$effects) {
  *   (optional) The original image path or URI. If it's supplied, only this
  *   image derivative will be flushed.
  */
-function hook_image_style_flush($style, $path = NULL) {
+function hook_image_style_flush($style, $path = NULL): void {
   // Empty cached data that contains information about the style.
   \Drupal::cache('my_module')->deleteAll();
 }

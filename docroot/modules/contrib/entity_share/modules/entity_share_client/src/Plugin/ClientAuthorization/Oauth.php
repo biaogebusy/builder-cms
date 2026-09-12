@@ -4,10 +4,11 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\ClientAuthorization;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_share_client\Attribute\ClientAuthorization;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationPluginBase;
 use Drupal\entity_share_client\Entity\Remote;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -17,12 +18,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * The entity share server needs to be configured with an Oauth scope or role
  * with permission entity_share_server_access_channels.
- *
- * @ClientAuthorization(
- *   id = "oauth",
- *   label = @Translation("Oauth2"),
- * )
  */
+#[ClientAuthorization(
+  id: 'oauth',
+  label: new TranslatableMarkup('Oauth2'),
+)]
 class Oauth extends ClientAuthorizationPluginBase {
 
   /**
@@ -275,7 +275,7 @@ class Oauth extends ClientAuthorizationPluginBase {
         $this->t('OAuth token obtained from remote website and stored.')
       );
     }
-    catch (IdentityProviderException $e) {
+    catch (\Throwable $e) {
       // Failed to get the access token.
       // Reset original configuration.
       $this->setConfiguration($resetConfiguration);
@@ -324,11 +324,11 @@ class Oauth extends ClientAuthorizationPluginBase {
    * @param array $credentials
    *   Trial credentials.
    *
-   * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
-   *   Exception thrown if the provider response contains errors.
-   *
    * @return \League\OAuth2\Client\Token\AccessTokenInterface
    *   A valid access token.
+   *
+   * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
+   *   Exception thrown if the provider response contains errors.
    */
   public function initializeToken(Remote $remote, array $credentials) {
     $oauth_client = $this->getOauthClient($remote->get('url'), $credentials);

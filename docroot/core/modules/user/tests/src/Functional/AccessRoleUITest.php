@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Tests\views_ui\Functional\UITestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views role access plugin UI.
  *
- * @group user
  * @see \Drupal\user\Plugin\views\access\Role
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class AccessRoleUITest extends UITestBase {
 
   /**

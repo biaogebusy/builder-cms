@@ -10,11 +10,17 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestMulRevPub;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\workspaces\Plugin\Validation\Constraint\EntityReferenceSupportedNewEntitiesConstraintValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\workspaces\Plugin\Validation\Constraint\EntityReferenceSupportedNewEntitiesConstraintValidator
- * @group workspaces
+ * Tests Drupal\workspaces\Plugin\Validation\Constraint\EntityReferenceSupportedNewEntitiesConstraintValidator.
  */
+#[CoversClass(EntityReferenceSupportedNewEntitiesConstraintValidator::class)]
+#[Group('workspaces')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -26,7 +32,6 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
   protected static $modules = [
     'system',
     'user',
-    'workspaces',
     'entity_test',
   ];
 
@@ -55,7 +60,9 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
   }
 
   /**
-   * @covers ::validate
+   * Tests new entities allowed in default workspace.
+   *
+   * @legacy-covers ::validate
    */
   public function testNewEntitiesAllowedInDefaultWorkspace(): void {
     $entity = EntityTestMulRevPub::create([
@@ -70,7 +77,9 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
   }
 
   /**
-   * @covers ::validate
+   * Tests new entities forbidden in non default workspace.
+   *
+   * @legacy-covers ::validate
    */
   public function testNewEntitiesForbiddenInNonDefaultWorkspace(): void {
     $this->switchToWorkspace('stage');

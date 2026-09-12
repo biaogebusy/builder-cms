@@ -51,6 +51,30 @@ class AutologoutAjaxTest extends BrowserTestBase {
   protected Config $moduleConfig;
 
   /**
+   * Parses a URL with token query string into path and query components.
+   *
+   * This is needed because drupalGet() double-encodes query strings when
+   * passed as part of the URL string.
+   *
+   * @param string $url
+   *   The URL string with query parameters (e.g., '/path?token=abc').
+   *
+   * @return array
+   *   Array with 'path' and 'query' keys.
+   */
+  protected function parseUrlWithToken(string $url): array {
+    $parsed = parse_url($url);
+    $query = [];
+    if (!empty($parsed['query'])) {
+      parse_str($parsed['query'], $query);
+    }
+    return [
+      'path' => $parsed['path'] ?? $url,
+      'query' => $query,
+    ];
+  }
+
+  /**
    * SetUp() performs any pre-requisite tasks that need to happen.
    */
   public function setUp(): void {
@@ -83,12 +107,20 @@ class AutologoutAjaxTest extends BrowserTestBase {
   public function testAutologoutByAjax() {
     $this->moduleConfig->set('timeout', 100)->set('padding', 10)->save();
 
-    // Check that the user can access the page after login.
+    // Check that the user can access the page after login and get URLs with
+    // CSRF tokens from drupalSettings.
     $this->drupalGet('node');
     $this->assertSession()->statusCodeEquals(200);
+    $settings = $this->getDrupalSettings();
+
+    // Get URLs with valid CSRF tokens from drupalSettings and parse them.
+    // We need to separate path from query string to avoid double-encoding.
+    $ajaxGetTimeLeftParts = $this->parseUrlWithToken($settings['autologout']['ajax_get_time_left_url']);
+    $ajaxLogoutParts = $this->parseUrlWithToken($settings['autologout']['ajax_logout_url']);
 
     // Test the time remaining callback works as expected.
-    $result = Json::decode($this->drupalGet('autologout_ajax_get_time_left'));
+    $result = Json::decode($this->drupalGet($ajaxGetTimeLeftParts['path'], ['query' => $ajaxGetTimeLeftParts['query']]));
+    $this->assertSession()->statusCodeEquals(200);
     self::assertEquals(
       'insert',
       $result[0]['command'],
@@ -114,7 +146,7 @@ class AutologoutAjaxTest extends BrowserTestBase {
     );
 
     // Test that ajax logout works as expected.
-    $this->drupalGet('autologout_ajax_logout');
+    $this->drupalGet($ajaxLogoutParts['path'], ['query' => $ajaxLogoutParts['query']]);
     $this->assertSession()->statusCodeEquals(200);
 
     // Check we are now logged out.
@@ -123,11 +155,12 @@ class AutologoutAjaxTest extends BrowserTestBase {
     self::assertFalse($this->drupalUserIsLoggedIn($this->privilegedUser));
 
     // Check further get time remaining requests return access denied.
-    $this->drupalGet('autologout_ajax_get_time_left');
+    // Note: User is logged out so should get 403 regardless of token.
+    $this->drupalGet($ajaxGetTimeLeftParts['path'], ['query' => $ajaxGetTimeLeftParts['query']]);
     $this->assertSession()->statusCodeEquals(403);
 
     // Check further logout requests result in access denied.
-    $this->drupalGet('autologout_ajax_logout');
+    $this->drupalGet($ajaxLogoutParts['path'], ['query' => $ajaxLogoutParts['query']]);
     $this->assertSession()->statusCodeEquals(403);
 
   }
@@ -138,9 +171,15 @@ class AutologoutAjaxTest extends BrowserTestBase {
   public function testAutologoutAjaxWithResponseAdded(): void {
     $this->moduleConfig->set('timeout', 100)->set('padding', 10)->save();
 
-    // Check that the user can access the page after login.
+    // Check that the user can access the page after login and get URLs with
+    // CSRF tokens from drupalSettings.
     $this->drupalGet('node');
     $this->assertSession()->statusCodeEquals(200);
+    $settings = $this->getDrupalSettings();
+
+    // Get URLs with valid CSRF tokens from drupalSettings and parse them.
+    $ajaxGetTimeLeftParts = $this->parseUrlWithToken($settings['autologout']['ajax_get_time_left_url']);
+    $ajaxLogoutParts = $this->parseUrlWithToken($settings['autologout']['ajax_logout_url']);
 
     // Add a "response" in the first place.
     $addResponse = [
@@ -150,9 +189,10 @@ class AutologoutAjaxTest extends BrowserTestBase {
         'message' => 'Test response.',
       ],
     ];
-    // Test the time remaining callback works as expected.
-    $result = Json::decode($this->drupalGet('autologout_ajax_get_time_left'));
 
+    // Test the time remaining callback works as expected.
+    $result = Json::decode($this->drupalGet($ajaxGetTimeLeftParts['path'], ['query' => $ajaxGetTimeLeftParts['query']]));
+    $this->assertSession()->statusCodeEquals(200);
     // Merge the added response with the real ajax response.
     $result = array_merge($addResponse, $result);
 
@@ -188,7 +228,7 @@ class AutologoutAjaxTest extends BrowserTestBase {
     );
 
     // Test that ajax logout works as expected.
-    $this->drupalGet('autologout_ajax_logout');
+    $this->drupalGet($ajaxLogoutParts['path'], ['query' => $ajaxLogoutParts['query']]);
     $this->assertSession()->statusCodeEquals(200);
 
     // Check we are now logged out.
@@ -203,16 +243,22 @@ class AutologoutAjaxTest extends BrowserTestBase {
   public function testStayloggedInByAjax() {
     $this->moduleConfig->set('timeout', 20)->set('padding', 5)->save();
 
-    // Check that the user can access the page after login.
+    // Check that the user can access the page after login and get URLs with
+    // CSRF tokens from drupalSettings.
     $this->drupalGet('node');
     $this->assertSession()->statusCodeEquals(200);
     self::assertTrue($this->drupalUserIsLoggedIn($this->privilegedUser));
+    $settings = $this->getDrupalSettings();
+
+    // Get URLs with valid CSRF tokens from drupalSettings and parse them.
+    $ajaxSetLastParts = $this->parseUrlWithToken($settings['autologout']['ajax_set_last_url']);
+    $ajaxLogoutParts = $this->parseUrlWithToken($settings['autologout']['ajax_logout_url']);
 
     // Sleep for half the timeout.
     sleep(14);
 
     // Test that ajax stay logged in works.
-    $result = Json::decode($this->drupalGet('autologout_ajax_set_last'));
+    $result = Json::decode($this->drupalGet($ajaxSetLastParts['path'], ['query' => $ajaxSetLastParts['query']]));
     $this->assertSession()->statusCodeEquals(200);
     self::assertEquals(
       'insert',
@@ -233,13 +279,14 @@ class AutologoutAjaxTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
     self::assertTrue($this->drupalUserIsLoggedIn($this->privilegedUser));
 
-    // Logout.
-    $this->drupalGet('autologout_ajax_logout');
+    // Test that logout works as expected.
+    $this->drupalGet($ajaxLogoutParts['path'], ['query' => $ajaxLogoutParts['query']]);
     $this->assertSession()->statusCodeEquals(200);
     self::assertFalse($this->drupalUserIsLoggedIn($this->privilegedUser));
 
     // Check further requests to set last result in 403.
-    $this->drupalGet('autologout_ajax_set_last');
+    // Note: User is logged out so should get 403.
+    $this->drupalGet($ajaxSetLastParts['path'], ['query' => $ajaxSetLastParts['query']]);
     $this->assertSession()->statusCodeEquals(403);
   }
 

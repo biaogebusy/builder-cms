@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_promotion\Plugin\views\area;
 
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -10,7 +11,6 @@ use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\commerce\InlineFormManager;
 use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Drupal\views\Plugin\views\argument\NumericArgument;
@@ -28,11 +28,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CouponRedemption extends AreaPluginBase {
 
   /**
-   * The order storage.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $orderStorage;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The inline form manager.
@@ -42,37 +42,13 @@ class CouponRedemption extends AreaPluginBase {
   protected $inlineFormManager;
 
   /**
-   * Constructs a new OrderTotal instance.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce\InlineFormManager $inline_form_manager
-   *   The inline form manager.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, InlineFormManager $inline_form_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
-    $this->inlineFormManager = $inline_form_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_inline_form')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->inlineFormManager = $container->get('plugin.manager.commerce_inline_form');
+    return $instance;
   }
 
   /**
@@ -115,6 +91,7 @@ class CouponRedemption extends AreaPluginBase {
    *   The current state of the form.
    */
   public function viewsForm(array &$form, FormStateInterface $form_state) {
+    $order_storage = $this->entityTypeManager->getStorage('commerce_order');
     foreach ($this->view->argument as $name => $argument) {
       // First look for an order_id argument.
       if (!$argument instanceof NumericArgument) {
@@ -123,8 +100,8 @@ class CouponRedemption extends AreaPluginBase {
       if ($argument->getField() !== 'commerce_order.order_id') {
         continue;
       }
-      $order = $this->orderStorage->load($argument->getValue());
-      if (!$order) {
+      $order = $order_storage->load($argument->getValue());
+      if (!$order instanceof OrderInterface) {
         continue;
       }
       $inline_form = $this->inlineFormManager->createInstance('coupon_redemption', [

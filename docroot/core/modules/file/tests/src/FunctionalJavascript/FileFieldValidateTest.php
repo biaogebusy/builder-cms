@@ -7,15 +7,17 @@ namespace Drupal\Tests\file\FunctionalJavascript;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\file\Functional\FileFieldCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file field validation functions.
  *
  * Values validated include the file type, max file size, max size per node,
  * and whether the field is required.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileFieldValidateTest extends WebDriverTestBase {
 
   use FileFieldCreationTrait;

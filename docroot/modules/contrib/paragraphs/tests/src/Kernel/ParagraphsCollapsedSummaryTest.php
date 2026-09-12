@@ -11,12 +11,16 @@ use Drupal\paragraphs\Entity\ParagraphsType;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the collapsed summary options.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsCollapsedSummaryTest extends KernelTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -44,7 +48,6 @@ class ParagraphsCollapsedSummaryTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('paragraph');
-    $this->installSchema('system', ['sequences']);
     \Drupal::moduleHandler()->loadInclude('paragraphs', 'install');
 
     // Create a text paragraph type with test_text_color plugin enabled.

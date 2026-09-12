@@ -1,0 +1,5 @@
+services:
+  charts_highcharts_api_example.hooks:
+    class: Drupal\charts_highcharts_api_example\Hook\HighchartsApiExampleHooks
+    tags:
+      - { name: hook }

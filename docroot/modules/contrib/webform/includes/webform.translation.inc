@@ -7,6 +7,8 @@
  * @see webform_preprocess_table()
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform\Hook\WebformTranslationHooks;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -81,35 +83,31 @@ function webform_form_config_translation_edit_form_alter(&$form, FormStateInterf
 /**
  * Implements hook_lingotek_config_entity_document_upload().
  */
+#[LegacyHook]
 function webform_lingotek_config_entity_document_upload(array &$source_data, ConfigEntityInterface &$entity, &$url) {
-  /** @var \Drupal\webform\WebformTranslationLingotekManagerInterface $translation_lingotek_manager */
-  $translation_lingotek_manager = \Drupal::service('webform.translation_lingotek_manager');
-  $translation_lingotek_manager->configEntityDocumentUpload($source_data, $entity, $url);
+  \Drupal::service(WebformTranslationHooks::class)->lingotekConfigEntityDocumentUpload($source_data, $entity, $url);
 }
 
 /**
  * Implements hook_lingotek_config_entity_translation_presave().
  */
+#[LegacyHook]
 function webform_lingotek_config_entity_translation_presave(ConfigEntityInterface &$translation, $langcode, &$data) {
-  /** @var \Drupal\webform\WebformTranslationLingotekManagerInterface $translation_lingotek_manager */
-  $translation_lingotek_manager = \Drupal::service('webform.translation_lingotek_manager');
-  $translation_lingotek_manager->configEntityTranslationPresave($translation, $langcode, $data);
+  \Drupal::service(WebformTranslationHooks::class)->lingotekConfigEntityTranslationPresave($translation, $langcode, $data);
 }
 
 /**
  * Implements hook_lingotek_config_object_document_upload().
  */
+#[LegacyHook]
 function webform_lingotek_config_object_document_upload(array &$data, $config_name) {
-  /** @var \Drupal\webform\WebformTranslationLingotekManagerInterface $translation_lingotek_manager */
-  $translation_lingotek_manager = \Drupal::service('webform.translation_lingotek_manager');
-  $translation_lingotek_manager->configObjectDocumentUpload($data, $config_name);
+  \Drupal::service(WebformTranslationHooks::class)->lingotekConfigObjectDocumentUpload($data, $config_name);
 }
 
 /**
  * Implements hook_lingotek_config_object_translation_presave().
  */
+#[LegacyHook]
 function webform_lingotek_config_object_translation_presave(array &$data, $config_name) {
-  /** @var \Drupal\webform\WebformTranslationLingotekManagerInterface $translation_lingotek_manager */
-  $translation_lingotek_manager = \Drupal::service('webform.translation_lingotek_manager');
-  $translation_lingotek_manager->configObjectTranslationPresave($data, $config_name);
+  \Drupal::service(WebformTranslationHooks::class)->lingotekConfigObjectTranslationPresave($data, $config_name);
 }

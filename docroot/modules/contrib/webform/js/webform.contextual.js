@@ -4,9 +4,6 @@
  */
 
 (function ($, once) {
-
-  'use strict';
-
   // Bind click event to all .contextual links which are
   // dynamically inserted via Ajax.
   // @see webform_contextual_links_view_alter()

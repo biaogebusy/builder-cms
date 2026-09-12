@@ -1,4 +1,7 @@
 services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
   cache.backend.redis:
     class: Drupal\redis\Cache\CacheBackendFactory
     arguments: ['@redis.factory', '@cache_tags.invalidator.checksum', '@serialization.phpserialize']
@@ -6,6 +9,7 @@ services:
     class: Drupal\redis\ClientFactory
     tags:
       - { name: service_collector, call: addFactory, tag: redis_client_factory }
+  'Drupal\redis\ClientFactory': '@redis.factory'
   redis.factory.phpredis:
     class: Drupal\redis\Client\PhpRedisFactory
     tags:
@@ -20,17 +24,12 @@ services:
       - { name: redis_client_factory, priority: 0 }
   redis.lock.factory:
     class: Drupal\redis\Lock\LockFactory
-    arguments: ['@redis.factory']
   redis.flood.factory:
     class: Drupal\redis\Flood\FloodFactory
-    arguments: ['@redis.factory', '@request_stack']
   queue.redis_reliable:
     class: Drupal\redis\Queue\ReliableQueueRedisFactory
-    arguments: ['@redis.factory', '@settings']
-    tags:
-      - queue_factory
   queue.redis:
     class: Drupal\redis\Queue\QueueRedisFactory
-    arguments: ['@redis.factory', '@settings']
-    tags:
-      - queue_factory
+
+  'Drupal\redis\Hook\RedisHooks':
+    class: Drupal\redis\Hook\RedisHooks

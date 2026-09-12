@@ -21,7 +21,7 @@ class WebformElementValidateUniqueTest extends WebformElementBrowserTestBase {
   /**
    * Tests element validate unique.
    */
-  public function testValidateUnique() {
+  public function testValidateUnique(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -123,6 +123,16 @@ class WebformElementValidateUniqueTest extends WebformElementBrowserTestBase {
     $assert_session->responseNotContains('unique_entity_textfield error message.');
     $this->postSubmission($webform, $edit);
     $assert_session->responseContains('unique_entity_textfield error message.');
+
+    // Purge existing submissions.
+    $this->purgeSubmissions();
+
+    // Check #unique FALSE from configuration does not trigger validation.
+    $edit = ['unique_textfield_false' => '{unique_textfield_false}'];
+    $this->postSubmission($webform, $edit);
+    $assert_session->responseNotContains('unique_textfield_false error message.');
+    $this->postSubmission($webform, $edit);
+    $assert_session->responseNotContains('unique_textfield_false error message.');
   }
 
 }

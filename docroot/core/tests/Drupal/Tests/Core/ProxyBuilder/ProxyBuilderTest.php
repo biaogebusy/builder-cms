@@ -6,11 +6,14 @@ namespace Drupal\Tests\Core\ProxyBuilder;
 
 use Drupal\Core\ProxyBuilder\ProxyBuilder;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\ProxyBuilder\ProxyBuilder
- * @group proxy_builder
+ * Tests Drupal\Core\ProxyBuilder\ProxyBuilder.
  */
+#[CoversClass(ProxyBuilder::class)]
+#[Group('proxy_builder')]
 class ProxyBuilderTest extends UnitTestCase {
 
   /**
@@ -30,16 +33,18 @@ class ProxyBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::buildMethod
-   * @covers ::buildParameter
-   * @covers ::buildMethodBody
+   * Tests build complex method.
+   *
+   * @legacy-covers ::buildMethod
+   * @legacy-covers ::buildParameter
+   * @legacy-covers ::buildMethodBody
    */
   public function testBuildComplexMethod(): void {
     $class = 'Drupal\Tests\Core\ProxyBuilder\TestServiceComplexMethod';
 
     $result = $this->proxyBuilder->build($class);
 
-    // @todo Solve the silly linebreak for array()
+    // @todo Solve the silly linebreak for an empty array.
     $method_body = <<<'EOS'
 
 /**
@@ -69,7 +74,7 @@ EOS;
    * @return string
    *   The code of the entire proxy.
    */
-  protected function buildExpectedClass($class, $expected_methods_body, $interface_string = '') {
+  protected function buildExpectedClass($class, $expected_methods_body, $interface_string = ''): string {
     $reflection = new \ReflectionClass($class);
     $namespace = ProxyBuilder::buildProxyNamespace($class);
     $proxy_class = $reflection->getShortName();
@@ -161,10 +166,16 @@ EOS;
 
 }
 
+/**
+ * Class used to test a service that has no methods.
+ */
 class TestServiceNoMethod {
 
 }
 
+/**
+ * Call used to test a service with a complex method.
+ */
 class TestServiceComplexMethod {
 
   public function complexMethod($parameter, callable $function, ?TestServiceNoMethod $test_service = NULL, array &$elements = []) {

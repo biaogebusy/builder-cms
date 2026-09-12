@@ -11,6 +11,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\elasticsearch_connector\Connector\ElasticSearchConnectorInterface;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
+use Psr\Http\Client\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,6 +24,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class ElasticCloudEndpointConnector extends PluginBase implements ElasticSearchConnectorInterface, ContainerFactoryPluginInterface {
+
+  /**
+   * Drupal's HTTP Client, which might be configured to use a proxy.
+   *
+   * @var \Psr\Http\Client\ClientInterface
+   */
+  protected ClientInterface $httpClient;
 
   /**
    * A repository for Key configuration entities.
@@ -47,6 +55,7 @@ class ElasticCloudEndpointConnector extends PluginBase implements ElasticSearchC
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->httpClient = $container->get('http_client');
     $instance->logger = $container->get('logger.channel.elasticsearch_connector_client');
 
     // If the key module is installed, then a 'key.repository' service will be
@@ -98,6 +107,7 @@ class ElasticCloudEndpointConnector extends PluginBase implements ElasticSearchC
    */
   public function getClient(): Client {
     $clientBuilder = ClientBuilder::create()
+      ->setHttpClient($this->httpClient)
       ->setHosts([$this->configuration['url']]);
 
     if ($this->keyRepositoryIsValid()) {

@@ -5,10 +5,10 @@ namespace Drupal\eck\Controller;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\eck\EckEntityTypeBundleInfo;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
  * Provides a listing of ECK entities.
@@ -65,6 +65,7 @@ class EckEntityTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function buildHeader() {
     $header['label'] = $this->t('Entity Type');
+    $header['description'] = $this->t('Description');
     $header['machine_name'] = $this->t('Machine Name');
 
     return $header + parent::buildHeader();
@@ -75,6 +76,7 @@ class EckEntityTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $entity->label();
+    $row['description'] = $entity->getDescription();
     $row['machine_name'] = $entity->id();
 
     if (!$this->eckBundleInfo->entityTypeHasBundles($entity->id())) {

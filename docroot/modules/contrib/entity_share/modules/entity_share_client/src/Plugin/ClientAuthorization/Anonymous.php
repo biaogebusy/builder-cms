@@ -4,17 +4,18 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\ClientAuthorization;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_share_client\Attribute\ClientAuthorization;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationPluginBase;
 
 /**
  * Provides Anonymous authorization.
- *
- * @ClientAuthorization(
- *   id = "anonymous",
- *   label = @Translation("Anonymous"),
- * )
  */
+#[ClientAuthorization(
+  id: 'anonymous',
+  label: new TranslatableMarkup('Anonymous'),
+)]
 class Anonymous extends ClientAuthorizationPluginBase {
 
   /**

@@ -18,25 +18,12 @@ use Drupal\Core\Database\Connection;
 class MatcherDumper implements MatcherDumperInterface {
 
   /**
-   * The database connection to which to dump route information.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
    * The routes to be dumped.
    *
    * @var \Symfony\Component\Routing\RouteCollection
    */
   protected $routes;
 
-  /**
-   * The state.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
 
   /**
    * The name of the SQL table to which to dump the routes.
@@ -46,13 +33,6 @@ class MatcherDumper implements MatcherDumperInterface {
   protected $tableName;
 
   /**
-   * The logger.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected LoggerInterface $logger;
-
-  /**
    * Construct the MatcherDumper.
    *
    * @param \Drupal\Core\Database\Connection $connection
@@ -60,22 +40,17 @@ class MatcherDumper implements MatcherDumperInterface {
    *   information.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state.
-   * @param \Psr\Log\LoggerInterface|null $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    * @param string $table
    *   (optional) The table to store the route info in. Defaults to 'router'.
    */
-  public function __construct(Connection $connection, StateInterface $state, LoggerInterface|string|null $logger = NULL, $table = 'router') {
-    $this->connection = $connection;
-    $this->state = $state;
-    if (is_string($logger) || is_null($logger)) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $logger argument is deprecated in drupal:10.1.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/2932520', E_USER_DEPRECATED);
-      $this->logger = \Drupal::service('logger.channel.router');
-      $this->tableName = $logger;
-    }
-    else {
-      $this->logger = $logger;
-    }
+  public function __construct(
+    protected Connection $connection,
+    protected StateInterface $state,
+    protected LoggerInterface $logger,
+    protected $table = 'router',
+  ) {
     if (is_null($this->tableName)) {
       $this->tableName = $table;
     }
@@ -167,6 +142,25 @@ class MatcherDumper implements MatcherDumperInterface {
         $insert->execute();
       }
 
+      // Split the aliases into chunks to avoid big INSERT queries.
+      $alias_chunks = array_chunk($this->routes->getAliases(), 50, TRUE);
+      foreach ($alias_chunks as $aliases) {
+        $insert = $this->connection->insert($this->tableName)->fields([
+          'name',
+          'route',
+          'alias',
+        ]);
+        foreach ($aliases as $name => $alias) {
+          $insert->values([
+            'name' => $name,
+            'route' => serialize($alias),
+            'alias' => $alias->getId(),
+          ]);
+        }
+        $insert->execute();
+      }
+
+      $transaction->commitOrRelease();
     }
     catch (\Exception $e) {
       if (isset($transaction)) {
@@ -206,12 +200,12 @@ class MatcherDumper implements MatcherDumperInterface {
     try {
       $this->connection->schema()->createTable($this->tableName, $this->schemaDefinition());
     }
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
       // If another process has already created the config table, attempting to
       // recreate it will throw an exception. In this case just catch the
       // exception and do nothing.
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;
@@ -268,9 +262,15 @@ class MatcherDumper implements MatcherDumperInterface {
           'default' => 0,
           'size' => 'small',
         ],
+        'alias' => [
+          'description' => 'The alias of the route, if applicable.',
+          'type' => 'varchar_ascii',
+          'length' => 255,
+        ],
       ],
       'indexes' => [
         'pattern_outline_parts' => ['pattern_outline', 'number_parts'],
+        'alias' => ['alias'],
       ],
       'primary key' => ['name'],
     ];

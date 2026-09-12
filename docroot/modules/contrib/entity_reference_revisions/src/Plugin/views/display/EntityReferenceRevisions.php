@@ -2,14 +2,12 @@
 
 namespace Drupal\entity_reference_revisions\Plugin\views\display;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsDisplay;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 
 /**
  * The plugin that handles an EntityReferenceRevisions display.
- *
- * "entity_reference_revisions_display" is a custom property, used with
- * \Drupal\views\Views::getApplicableViews() to retrieve all views with a
- * 'Entity Reference Revisions' display.
  *
  * @ingroup views_display_plugins
  *
@@ -24,6 +22,15 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
  *   entity_reference_revisions_display = TRUE
  * )
  */
+#[ViewsDisplay(
+  id: 'entity_reference_revisions',
+  title: new TranslatableMarkup('Entity Reference Revisions'),
+  admin: new TranslatableMarkup('Entity Reference Revisions Source'),
+  help: new TranslatableMarkup('Selects referenceable entities for an entity reference revisions field.'),
+  uses_menu_links: FALSE,
+  theme: 'views_view',
+  register_theme: FALSE,
+)]
 class EntityReferenceRevisions extends DisplayPluginBase {
 
   /**
@@ -40,6 +47,12 @@ class EntityReferenceRevisions extends DisplayPluginBase {
    * Overrides \Drupal\views\Plugin\views\display\DisplayPluginBase::$usesAttachments.
    */
   protected $usesAttachments = FALSE;
+
+  /**
+   * The id field alias.
+   */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  public string $id_field_alias;
 
   /**
    * Overrides \Drupal\views\Plugin\views\display\DisplayPluginBase::defineOptions().

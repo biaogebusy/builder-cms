@@ -19,7 +19,7 @@ class WebformElementMoreTest extends WebformElementBrowserTestBase {
   /**
    * Test element more.
    */
-  public function testMore() {
+  public function testMore(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_more');

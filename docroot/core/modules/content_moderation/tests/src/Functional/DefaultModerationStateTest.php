@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\content_moderation\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests setting a custom default moderation state.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class DefaultModerationStateTest extends ModerationStateTestBase {
 
   /**

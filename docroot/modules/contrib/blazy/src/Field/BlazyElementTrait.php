@@ -3,9 +3,10 @@
 namespace Drupal\blazy\Field;
 
 use Drupal\Core\Render\Markup;
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyApi;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\Theme\Attributes;
+use Drupal\blazy\Internals\Internals;
 
 /**
  * A Trait for blazy element and its captions.
@@ -26,14 +27,14 @@ trait BlazyElementTrait {
   /**
    * Returns the relevant elements based on the configuration.
    *
-   * @todo remove caption for captions at 3.x.
+   * @todo deprecate and remove caption for captions at 3.x.
    */
   protected function toElement($blazies, array &$data, array $captions = []): array {
     $delta    = $data['#delta'] ?? 0;
     $captions = $captions ?: ($data['captions'] ?? $data['caption'] ?? []);
     $captions = array_filter($captions);
 
-    // @todo remove caption for captions at 3.x.
+    // @todo deprecate and remove caption for captions at 3.x.
     unset($data['captions'], $data['caption']);
 
     // Call manager not formatter due to sub-module deviations.
@@ -51,18 +52,19 @@ trait BlazyElementTrait {
    * @todo move it into ::getBlazy() for more available data, like title, etc.
    */
   protected function viewSvg(array &$element): void {
+    /** @var array $settings */
     $settings = $this->formatter->toHashtag($element);
     $item     = $this->formatter->toHashtag($element, 'item', NULL);
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $inline   = $settings['svg_inline'] ?? FALSE;
     $bg       = $settings['background'] ?? FALSE;
-    $exist    = Blazy::svgSanitizerExists();
+    $exist    = BlazyApi::svgSanitizerExists();
     $valid    = $inline && $exist && !$bg;
 
     if ($valid && $uri = $blazies->get('image.uri')) {
       $options = BlazyDefault::toSvgOptions($settings);
 
-      // @todo remove fallback after entities updated, except file which has it.
+      // @todo deprecate and remove fallback after entities updated, except file which has it.
       $title = $blazies->get('image.title')
         ?: Attributes::altTitle($blazies, $item)['title'];
 
@@ -94,7 +96,7 @@ trait BlazyElementTrait {
   /**
    * Builds the item using theme_blazy(), if so-configured.
    */
-  private function themeBlazy(array $data, array $captions, $delta): array {
+  protected function themeBlazy(array $data, array $captions, $delta): array {
     $internal = $data;
 
     // Allows sub-modules to use theme_blazy() as their theme_ITEM() contents.

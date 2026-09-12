@@ -2,10 +2,13 @@
 
 namespace Drupal\Core\Test;
 
+use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Database;
 
 /**
  * Provides a trait for shared test setup functionality.
+ *
+ * @property \Drupal\Component\DependencyInjection\ContainerInterface $container
  */
 trait TestSetupTrait {
 
@@ -26,11 +29,11 @@ trait TestSetupTrait {
   ];
 
   /**
-   * The dependency injection container used in the test.
+   * Stores the container in case it is set before available with \Drupal.
    *
-   * @var \Symfony\Component\DependencyInjection\ContainerInterface
+   * @see \Drupal::getContainer()
    */
-  protected $container;
+  private ?ContainerInterface $privateContainer = NULL;
 
   /**
    * The site directory of this test run.
@@ -42,9 +45,9 @@ trait TestSetupTrait {
   /**
    * The public file directory for the test environment.
    *
-   * @see \Drupal\Tests\BrowserTestBase::prepareEnvironment()
-   *
    * @var string
+   *
+   * @see \Drupal\Tests\BrowserTestBase::prepareEnvironment()
    */
   protected $publicFilesDirectory;
 
@@ -58,18 +61,18 @@ trait TestSetupTrait {
   /**
    * The private file directory for the test environment.
    *
-   * @see \Drupal\Tests\BrowserTestBase::prepareEnvironment()
-   *
    * @var string
+   *
+   * @see \Drupal\Tests\BrowserTestBase::prepareEnvironment()
    */
   protected $privateFilesDirectory;
 
   /**
    * Set to TRUE to strict check all configuration saved.
    *
-   * @see \Drupal\Core\Config\Testing\ConfigSchemaChecker
-   *
    * @var bool
+   *
+   * @see \Drupal\Core\Config\Testing\ConfigSchemaChecker
    */
   protected $strictConfigSchema = TRUE;
 
@@ -88,22 +91,15 @@ trait TestSetupTrait {
   protected $databasePrefix;
 
   /**
-   * The app root.
-   *
-   * @var string
-   */
-  protected $root;
-
-  /**
    * The temporary file directory for the test environment.
    *
    * This value has to match the temporary directory created in
    * install_base_system() for test installs.
    *
+   * @var string
+   *
    * @see \Drupal\Tests\BrowserTestBase::prepareEnvironment()
    * @see install_base_system()
-   *
-   * @var string
    */
   protected $tempFilesDirectory;
 
@@ -113,22 +109,6 @@ trait TestSetupTrait {
    * @var string
    */
   protected $testId;
-
-  /**
-   * Returns the database connection to the site under test.
-   *
-   * @return \Drupal\Core\Database\Connection
-   *   The database connection to use for inserting assertions.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
-   *   replacement.
-   *
-   * @see https://www.drupal.org/node/3176816
-   */
-  public static function getDatabaseConnection() {
-    @trigger_error(__METHOD__ . ' is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3176816', E_USER_DEPRECATED);
-    return SimpletestTestRunResultsStorage::getConnection();
-  }
 
   /**
    * Generates a database prefix for running tests.
@@ -150,7 +130,7 @@ trait TestSetupTrait {
    * @see \Drupal\Tests\BrowserTestBase::prepareEnvironment()
    * @see drupal_valid_test_ua()
    */
-  protected function prepareDatabasePrefix() {
+  protected function prepareDatabasePrefix(): void {
     $test_db = new TestDatabase();
     $this->siteDirectory = $test_db->getTestSitePath();
     $this->databasePrefix = $test_db->getDatabasePrefix();
@@ -159,7 +139,7 @@ trait TestSetupTrait {
   /**
    * Changes the database connection to the prefixed one.
    */
-  protected function changeDatabasePrefix() {
+  protected function changeDatabasePrefix(): void {
     if (empty($this->databasePrefix)) {
       $this->prepareDatabasePrefix();
     }
@@ -170,7 +150,7 @@ trait TestSetupTrait {
       // Ensure no existing database gets in the way. If a default database
       // exists already it must be removed.
       Database::removeConnection('default');
-      $database = Database::convertDbUrlToConnectionInfo($db_url, $this->root ?? DRUPAL_ROOT, TRUE);
+      $database = Database::convertDbUrlToConnectionInfo($db_url, TRUE);
       Database::addConnectionInfo('default', 'default', $database);
     }
 
@@ -186,6 +166,7 @@ trait TestSetupTrait {
         // prefixes of the test runner leak into the test.
         $connection_info[$target]['prefix'] = $value['prefix'] . $this->databasePrefix;
       }
+      Database::removeConnection('default');
       Database::addConnectionInfo('default', 'default', $connection_info['default']);
     }
   }
@@ -207,6 +188,42 @@ trait TestSetupTrait {
     }
     // Filter out any duplicates.
     return array_unique(array_merge(...$exceptions));
+  }
+
+  /**
+   * Implements the magic method for getting object properties.
+   *
+   * Ensures \Drupal::getContainer() is used when getting the container
+   * property, if possible.
+   */
+  public function __get($name): mixed {
+    if ($name === 'container') {
+      return \Drupal::hasContainer() ? \Drupal::getContainer() : $this->privateContainer;
+    }
+
+    trigger_error('Undefined property ' . __CLASS__ . "::\${$name}", E_USER_WARNING);
+    return NULL;
+  }
+
+  /**
+   * Implements the magic method for setting object properties.
+   *
+   * Ensures \Drupal::getContainer() is used when getting the container
+   * property, if possible.
+   */
+  public function __set($name, $value): void {
+    if ($name === 'container') {
+      $this->privateContainer = $value;
+      return;
+    }
+
+    // This deprecation message is intended to match the one PHP 8.2+ emits for
+    // dynamic properties. The magic setter and this deprecation message will
+    // be removed once property hooks can be used.
+    // @see https://www.drupal.org/project/drupal/issues/3558863
+    // @phpcs:ignore Drupal.Semantics.FunctionTriggerError.TriggerErrorTextLayoutRelaxed
+    trigger_error('Creation of dynamic property ' . __CLASS__ . "::\${$name} is deprecated", E_USER_DEPRECATED);
+    $this->$name = $value;
   }
 
 }

@@ -1,0 +1,66 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_font__font_size:
+  type: mapping
+  label: 'Font Size'
+  mapping:
+    options:
+      type: string
+
+ckeditor5.plugin.ckeditor5_plugin_pack_font__font_family:
+  type: mapping
+  label: 'Font Family'
+  mapping:
+    options:
+      type: string
+
+ckeditor5.plugin.ckeditor5_plugin_pack_font__font_color:
+  type: mapping
+  label: Custom colors
+  mapping:
+    colors:
+      type: sequence
+      label: 'Colors'
+      sequence:
+        type: mapping
+        label: 'Color'
+        mapping:
+          label:
+            type: string
+          color:
+            type: string
+          type:
+            type: mapping
+            mapping:
+              font:
+                type: string
+              background:
+                type: string
+    use_default_colors:
+      type: boolean
+      label: Use default colors
+    use_colorpicker:
+      type: boolean
+      label: Use colorpickers
+    font_color_columns:
+      type: integer
+      label: 'Font color columns'
+      constraints:
+        Range:
+          min: 1
+    font_color_document_colors:
+      type: integer
+      label: 'Font color document colors'
+      constraints:
+        Range:
+          min: 0
+    bg_color_columns:
+      type: integer
+      label: 'Background color columns'
+      constraints:
+        Range:
+          min: 1
+    bg_color_document_colors:
+      type: integer
+      label: 'Background color document colors'
+      constraints:
+        Range:
+          min: 0

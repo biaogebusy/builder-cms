@@ -2,9 +2,9 @@ Drush is built by people like you! Please [join us](https://github.com/drush-ops
 
 ## Git and Pull requests
 * Contributions are submitted, reviewed, and accepted using GitHub pull requests.
-* The latest changes are in the `13.x` branch. PR's should initially target this branch.
+* The latest changes are in the `14.x` branch. PR's should initially target this branch.
 * See the test-specific [README.md](https://github.com/drush-ops/drush/blob/13.x/docs/contribute/unish.md) for instructions on running the test suite. Test before you push. Get familiar with Unish, our test suite. Optionally run tests in the provided Docker containers.
-* We maintain branches named 13.x, 12.x, etc. These are release branches. From these branches, we make new tags for patch and minor versions.
+* We maintain branches named 14.x, 13.x, etc. These are release branches. From these branches, we make new tags for patch and minor versions.
 
 ## Development Environment
 * You may choose to use the [DDEV](https://ddev.readthedocs.io/) for a [standardized development environment](/.ddev/config.yaml).
@@ -14,7 +14,7 @@ Drush is built by people like you! Please [join us](https://github.com/drush-ops
 * Do write comments. You don't have to comment every line, but if you come up with something that's a bit complex/weird, just leave a comment. Bear in mind that you will probably leave the project at some point and that other people will read your code. Undocumented huge amounts of code are nearly worthless!
 * We use [PSR-12](https://www.php-fig.org/psr/psr-12/).
 * Keep it compatible. Do not introduce changes to the public API, or configurations too casually. Don't make incompatible changes without good reasons!
-* Run `composer cs` to check the project for coding style issues and run `composer cbf` to fix them automatically where possible. These scripts use [`PHP_CodeSniffer`](https://github.com/squizlabs/PHP_CodeSniffer) in background.
+* Run `composer cs` to check the project for coding style issues and run `composer cbf` to fix them automatically where possible. These scripts use [`PHP_CodeSniffer`](https://github.com/PHPCSStandards/PHP_CodeSniffer) in background.
 
 ## Documentation
 * The docs are on our [web site](https://www.drush.org). You may also read these from within Drush, with the `drush topic` command.

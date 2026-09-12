@@ -25,8 +25,8 @@ class OrderAccessControlHandler extends EntityAccessControlHandler {
       $operation = 'update';
       $additional_operation = 'unlock';
     }
-    // Unlocking an order requires the same permissions as 'view', with an
-    // additional check to ensure that the order has been placed.
+    // Resending an order receipt requires the same permissions as 'view', with
+    // an additional check to ensure that the order has been placed.
     elseif ($operation == 'resend_receipt') {
       if ($entity->getState()->getId() == 'draft') {
         return AccessResult::forbidden()->addCacheableDependency($entity);

@@ -6,12 +6,14 @@ namespace Drupal\Tests\block\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that a new default theme gets blocks.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class NewDefaultThemeBlocksTest extends KernelTestBase {
 
   use BlockCreationTrait;
@@ -22,18 +24,12 @@ class NewDefaultThemeBlocksTest extends KernelTestBase {
   protected static $modules = [
     'block',
     'system',
-    'user',
   ];
 
   /**
-   * The theme installer service.
-   *
-   * @var \Drupal\Core\Extension\ThemeInstallerInterface
-   */
-  protected $themeInstaller;
-
-  /**
    * The default theme.
+   *
+   * @var string
    */
   protected $defaultTheme;
 
@@ -44,18 +40,18 @@ class NewDefaultThemeBlocksTest extends KernelTestBase {
     parent::setUp();
 
     $this->installConfig(['system']);
-    /** @var \Drupal\Core\Extension\ThemeInstallerInterface $themeInstaller */
-    $this->themeInstaller = $this->container->get('theme_installer');
     $this->defaultTheme = $this->config('system.theme')->get('default');
   }
 
   /**
-   * Check the blocks are correctly copied by block_themes_installed().
+   * Check the blocks are correctly copied.
+   *
+   * This tests that blocks are correctly copied by
+   * \Drupal\block\Hook\BlockHooks::themesInstalled().
    */
   public function testNewDefaultThemeBlocks(): void {
     $default_theme = $this->defaultTheme;
-    $theme_installer = $this->themeInstaller;
-    $theme_installer->install([$default_theme]);
+    $this->container->get('theme_installer')->install([$default_theme]);
 
     // Add two instances of the user login block.
     $this->placeBlock('user_login_block', [
@@ -75,7 +71,7 @@ class NewDefaultThemeBlocksTest extends KernelTestBase {
     // The new theme is different from the previous default theme.
     $this->assertNotEquals($new_theme, $default_theme);
 
-    $theme_installer->install([$new_theme]);
+    $this->container->get('theme_installer')->install([$new_theme]);
     $this->config('system.theme')
       ->set('default', $new_theme)
       ->save();
@@ -103,8 +99,8 @@ class NewDefaultThemeBlocksTest extends KernelTestBase {
     $this->assertEmpty($new_blocks);
 
     // Install a hidden base theme and ensure blocks are not copied.
-    $base_theme = 'test_basetheme';
-    $theme_installer->install([$base_theme]);
+    $base_theme = 'test_base_theme';
+    $this->container->get('theme_installer')->install([$base_theme]);
     $new_blocks = $block_storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('theme', $base_theme)
@@ -117,8 +113,7 @@ class NewDefaultThemeBlocksTest extends KernelTestBase {
    */
   public function testBlockCollision(): void {
     $default_theme = $this->defaultTheme;
-    $theme_installer = $this->themeInstaller;
-    $theme_installer->install([$default_theme]);
+    $this->container->get('theme_installer')->install([$default_theme]);
 
     // Add two instances of the user login block with machine
     // names that will collide.
@@ -139,7 +134,7 @@ class NewDefaultThemeBlocksTest extends KernelTestBase {
     // The new theme is different from the previous default theme.
     $this->assertNotEquals($new_theme, $default_theme);
 
-    $theme_installer->install([$new_theme]);
+    $this->container->get('theme_installer')->install([$new_theme]);
     $this->config('system.theme')
       ->set('default', $new_theme)
       ->save();
@@ -164,15 +159,15 @@ class NewDefaultThemeBlocksTest extends KernelTestBase {
       // unset block.block.olivero_admin.
       unset($new_blocks[str_replace($default_theme . '_', $new_theme . '_', $default_block_name)]);
     }
-    // The test_theme_user_login_block machine name is already in use, so therefore
-    // \Drupal\block\BlockRepository::getUniqueMachineName
-    // appends a counter.
+    // The test_theme_user_login_block machine name is already in use, so
+    // therefore \Drupal\block\BlockRepository::getUniqueMachineName appends a
+    // counter.
     unset($new_blocks[$new_theme . '_user_login_block_2']);
     $this->assertEmpty($new_blocks);
 
     // Install a hidden base theme and ensure blocks are not copied.
-    $base_theme = 'test_basetheme';
-    $theme_installer->install([$base_theme]);
+    $base_theme = 'test_base_theme';
+    $this->container->get('theme_installer')->install([$base_theme]);
     $new_blocks = $block_storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('theme', $base_theme)

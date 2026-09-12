@@ -33,22 +33,30 @@ class Textarea extends FormElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#cols' => 60,
       '#rows' => 5,
       '#resizable' => 'vertical',
       '#process' => [
-        [$class, 'processAjaxForm'],
-        [$class, 'processGroup'],
+        [static::class, 'processAjaxForm'],
+        [static::class, 'processGroup'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderGroup'],
+        [static::class, 'preRenderGroup'],
+        [static::class, 'preRenderAttachments'],
       ],
       '#theme' => 'textarea',
       '#theme_wrappers' => ['form_element'],
     ];
+  }
+
+  /**
+   * Adds the textarea resize library.
+   */
+  public static function preRenderAttachments($element): array {
+    $element['#attached']['library'][] = 'core/drupal.textarea-resize';
+    return $element;
   }
 
   /**

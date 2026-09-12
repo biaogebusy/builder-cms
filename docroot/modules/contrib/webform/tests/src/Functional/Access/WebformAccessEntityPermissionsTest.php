@@ -22,7 +22,7 @@ class WebformAccessEntityPermissionsTest extends WebformBrowserTestBase {
   /**
    * Tests webform entity access controls.
    */
-  public function testAccessControlHandler() {
+  public function testAccessControlHandler(): void {
     $assert_session = $this->assertSession();
 
     $own_account = $this->drupalCreateUser([

@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\contact\Kernel\Migrate;
 
-use Drupal\contact\Entity\ContactForm;
 use Drupal\contact\ContactFormInterface;
+use Drupal\contact\Entity\ContactForm;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate contact categories to contact.form.*.yml.
- *
- * @group contact_category
  */
+#[Group('contact_category')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MigrateContactCategoryTest extends MigrateDrupal6TestBase {
 
   /**
@@ -26,6 +30,13 @@ class MigrateContactCategoryTest extends MigrateDrupal6TestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->executeMigration('contact_category');
+  }
+
+  /**
+   * Gets the path to the fixture file.
+   */
+  protected function getFixtureFilePath():string {
+    return __DIR__ . '/../../../fixtures/drupal6.php';
   }
 
   /**

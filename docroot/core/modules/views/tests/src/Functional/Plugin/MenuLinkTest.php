@@ -6,12 +6,14 @@ namespace Drupal\Tests\views\Functional\Plugin;
 
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the menu links created in views.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkTest extends ViewTestBase {
 
   /**

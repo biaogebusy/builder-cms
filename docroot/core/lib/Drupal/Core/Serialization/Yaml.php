@@ -1,24 +1,7 @@
 <?php
-
-namespace Drupal\Core\Serialization;
-
-use Drupal\Core\Site\Settings;
-use Drupal\Component\Serialization\Yaml as ComponentYaml;
+// phpcs:ignoreFile
 
 /**
- * Provides a YAML serialization implementation.
- *
- * Allow settings to override the YAML implementation resolution.
+ * Provides a BC layer for Drupal\Core\Serialization\Yaml.
  */
-class Yaml extends ComponentYaml {
-
-  public static function decode($raw) {
-    $class = Settings::get('yaml_parser_class');
-    if ($class && $class !== TRUE) {
-      return $class::decode($raw);
-    }
-
-    return parent::decode($raw);
-  }
-
-}
+class_alias('\Drupal\Component\Serialization\Yaml', '\Drupal\Core\Serialization\Yaml');

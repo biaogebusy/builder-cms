@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests reinstall modules.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelModulesReinstallTest extends DevelBrowserTestBase {
 
   /**

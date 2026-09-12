@@ -8,12 +8,14 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\FunctionalJavascriptTests\SortableTestTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Media library entity reference widget.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceWidgetTest extends MediaLibraryTestBase {
 
   use SortableTestTrait;
@@ -181,7 +183,12 @@ class EntityReferenceWidgetTest extends MediaLibraryTestBase {
     foreach ($links as $link) {
       $link_titles[] = $link->getText();
     }
-    $expected_link_titles = ['Show Type Three media (selected)', 'Show Type One media', 'Show Type Two media', 'Show Type Four media'];
+    $expected_link_titles = [
+      'Show Type Three media (selected)',
+      'Show Type One media',
+      'Show Type Two media',
+      'Show Type Four media',
+    ];
     $this->assertSame($link_titles, $expected_link_titles);
     $this->drupalGet('admin/structure/types/manage/basic_page/form-display');
 
@@ -203,7 +210,9 @@ class EntityReferenceWidgetTest extends MediaLibraryTestBase {
     $link_titles = array_map(function ($link) {
       return $link->getText();
     }, $links);
-    $this->assertSame($link_titles, ['Show Type One media (selected)', 'Show Type Three media', 'Show Type Four media', 'Show Type Two media']);
+    $this->assertSame(
+      $link_titles,
+      ['Show Type One media (selected)', 'Show Type Three media', 'Show Type Four media', 'Show Type Two media']);
     $assert_session->elementExists('css', '.ui-dialog-titlebar-close')->click();
 
     // Assert the announcements for media type navigation in the media library.
@@ -566,7 +575,8 @@ class EntityReferenceWidgetTest extends MediaLibraryTestBase {
    * Checks for inclusion of text in #drupal-live-announce.
    *
    * @param string $expected_message
-   *   The text that is expected to be present in the #drupal-live-announce element.
+   *   The text that is expected to be present in the #drupal-live-announce
+   *   element.
    *
    * @internal
    */
@@ -578,7 +588,7 @@ class EntityReferenceWidgetTest extends MediaLibraryTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function sortableUpdate($item, $from, $to = NULL) {
+  protected function sortableUpdate($item, $from, $to = NULL): void {
     // See core/modules/media_library/js/media_library.widget.js.
     $script = <<<JS
 (function ($) {

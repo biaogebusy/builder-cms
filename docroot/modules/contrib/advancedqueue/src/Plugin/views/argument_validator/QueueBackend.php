@@ -3,6 +3,8 @@
 namespace Drupal\advancedqueue\Plugin\views\argument_validator;
 
 use Drupal\advancedqueue\Entity\Queue;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsArgumentValidator;
 use Drupal\views\Plugin\views\argument_validator\ArgumentValidatorPluginBase;
 
 /**
@@ -13,6 +15,10 @@ use Drupal\views\Plugin\views\argument_validator\ArgumentValidatorPluginBase;
  *   title = @Translation("Queue backend"),
  * )
  */
+#[ViewsArgumentValidator(
+  id: "advancedqueue_backend",
+  title: new TranslatableMarkup("Queue backend"),
+)]
 class QueueBackend extends ArgumentValidatorPluginBase {
 
   /**

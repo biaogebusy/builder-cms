@@ -28,7 +28,7 @@ class WebformElementInputMaskTest extends WebformElementBrowserTestBase {
   /**
    * Test element input mask.
    */
-  public function testInputMask() {
+  public function testInputMask(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_input_mask');
@@ -53,6 +53,7 @@ vin: ''
 zip: ''
 uppercase: ''
 lowercase: ''
+titlecase: ''
 custom: ''
 module: ''");
 
@@ -76,6 +77,7 @@ module: ''");
       'zip' => '99999-9999',
       'uppercase' => 'UPPERCASE',
       'lowercase' => 'lowercase',
+      'titlecase' => 'Title Case',
       'module' => '999',
     ];
     $this->postSubmission($webform, $edit);
@@ -97,6 +99,7 @@ vin: JA3AY11A82U020534
 zip: 99999-9999
 uppercase: UPPERCASE
 lowercase: lowercase
+titlecase: 'Title Case'
 custom: ''
 module: '999'");
 

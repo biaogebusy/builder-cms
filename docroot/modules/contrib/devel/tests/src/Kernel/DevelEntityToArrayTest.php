@@ -5,12 +5,12 @@ namespace Drupal\Tests\devel\Kernel;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test Load with References.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelEntityToArrayTest extends EntityKernelTestBase {
 
   use EntityReferenceFieldCreationTrait;

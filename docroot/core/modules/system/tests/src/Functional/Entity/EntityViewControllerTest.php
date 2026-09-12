@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Functional\Entity;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests EntityViewController functionality.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityViewControllerTest extends BrowserTestBase {
 
   /**
@@ -131,7 +134,7 @@ class EntityViewControllerTest extends BrowserTestBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The created entity.
    */
-  protected function createTestEntity($entity_type, $name = NULL) {
+  protected function createTestEntity($entity_type, $name = NULL): EntityInterface {
     $data = [
       'bundle' => $entity_type,
       'name' => $name ?? $this->randomMachineName(),

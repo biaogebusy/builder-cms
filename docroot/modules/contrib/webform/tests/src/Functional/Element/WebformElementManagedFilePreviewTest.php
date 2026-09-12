@@ -26,7 +26,7 @@ class WebformElementManagedFilePreviewTest extends WebformElementManagedFileTest
   /**
    * Test image file upload.
    */
-  public function testImageFileUpload() {
+  public function testImageFileUpload(): void {
     global $base_url;
 
     $assert_session = $this->assertSession();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\form_test\Form;
 
 use Drupal\Core\Form\FormBase;
@@ -26,18 +28,18 @@ class FormTestCheckboxesZeroForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $json = TRUE) {
     $form_state->set('json', $json);
     $form['checkbox_off'] = [
-      '#title' => t('Checkbox off'),
+      '#title' => $this->t('Checkbox off'),
       '#type' => 'checkboxes',
       '#options' => ['foo', 'bar', 'baz'],
     ];
     $form['checkbox_zero_default'] = [
-      '#title' => t('Zero default'),
+      '#title' => $this->t('Zero default'),
       '#type' => 'checkboxes',
       '#options' => ['foo', 'bar', 'baz'],
       '#default_value' => [0],
     ];
     $form['checkbox_string_zero_default'] = [
-      '#title' => t('Zero default (string)'),
+      '#title' => $this->t('Zero default (string)'),
       '#type' => 'checkboxes',
       '#options' => ['foo', 'bar', 'baz'],
       '#default_value' => ['0'],

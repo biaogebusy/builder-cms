@@ -97,6 +97,14 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
       $instance->paymentMethodTypes[$plugin_id] = $payment_method_type_manager->createInstance($plugin_id);
     }
     $instance->pluginDefinition['forms'] += $instance->getDefaultForms();
+    // If an "add-payment-method" form is defined, use the same form class by
+    // default for checkout for backwards compatibility.
+    // The PaymentInformation pane now uses the "checkout-add-payment-method"
+    // form operation.
+    if (isset($instance->pluginDefinition['forms']['add-payment-method']) &&
+      !isset($instance->pluginDefinition['forms']['checkout-add-payment-method'])) {
+      $instance->pluginDefinition['forms']['checkout-add-payment-method'] = $instance->pluginDefinition['forms']['add-payment-method'];
+    }
     $instance->setConfiguration($configuration);
 
     return $instance;

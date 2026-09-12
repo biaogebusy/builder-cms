@@ -2,6 +2,8 @@
 
 namespace Drupal\entity_browser\Plugin\EntityBrowser\WidgetValidation;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserWidgetValidation;
 use Drupal\entity_browser\WidgetValidationBase;
 use Drupal\file\Validation\FileValidatorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -10,12 +12,11 @@ use Symfony\Component\Validator\ConstraintViolationList;
 
 /**
  * Validates a file based on passed validators.
- *
- * @EntityBrowserWidgetValidation(
- *   id = "file",
- *   label = @Translation("File validator")
- * )
  */
+#[EntityBrowserWidgetValidation(
+  id: 'file',
+  label: new TranslatableMarkup('File validator'),
+)]
 class File extends WidgetValidationBase {
 
   /**

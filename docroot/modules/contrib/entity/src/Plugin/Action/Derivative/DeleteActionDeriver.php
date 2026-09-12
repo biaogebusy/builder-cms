@@ -12,7 +12,8 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 /**
  * Provides a delete action for each content entity type.
  *
- * @deprecated
+ * @deprecated in entity:8.x-1.7 and is removed from entity:2.0.0. Use Drupal core instead.
+ * @see https://www.drupal.org/node/2997467
  */
 class DeleteActionDeriver extends DeriverBase implements ContainerDeriverInterface {
 

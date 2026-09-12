@@ -20,7 +20,7 @@
       var views_instance = Drupal.views.instances[Object.keys(Drupal.views.instances)[0]];
       if (views_instance) {
         views_instance.$exposed_form = $('.js-view-dom-id-' + views_instance.settings.view_dom_id + ' .views-exposed-form');
-        $(once('exposed-form', views_instance.$exposed_form)).each(jQuery.proxy(views_instance.attachExposedFormAjax, views_instance));
+        $(once('exposed-form', views_instance.$exposed_form)).each(views_instance.attachExposedFormAjax.bind(views_instance));
 
         // The form values form_id, form_token, and form_build_id will break
         // the exposed form. Remove them by splicing the end of form_values.
@@ -42,7 +42,7 @@
           $(this).on('keypress', function (event) {
             if (event.keyCode == 13) {
               event.preventDefault();
-              views_instance.$exposed_form.find('input[type="submit"]').first().click();
+              views_instance.$exposed_form.find('input[type="submit"]').first().trigger('click');
             }
           });
         });
@@ -56,7 +56,7 @@
           if (selection_cells.length > 0) {
             // Register on cell parents (rows) click event.
             $(once('register-row-click', selection_cells.parent()))
-              .click(function (event) {
+              .on('click', function (event) {
                 event.preventDefault();
 
                 var $row = $(this);

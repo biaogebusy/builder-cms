@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Unit\Message;
 
@@ -8,8 +8,8 @@ use Drupal\Component\Uuid\Php;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\sms\Message\SmsMessage;
 use Drupal\sms\Message\SmsMessageInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\sms\Functional\SmsFrameworkMessageTestTrait;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Unit Tests for SmsMessage.
@@ -38,9 +38,6 @@ final class SmsMessageTest extends UnitTestCase {
  */
 final class TestSmsMessage extends SmsMessage {
 
-  /**
-   * {@inheritdoc}
-   */
   protected function uuidGenerator(): UuidInterface {
     return new Php();
   }

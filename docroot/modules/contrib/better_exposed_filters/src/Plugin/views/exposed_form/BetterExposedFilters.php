@@ -2,6 +2,7 @@
 
 namespace Drupal\better_exposed_filters\Plugin\views\exposed_form;
 
+use Drupal\breakpoint\BreakpointManagerInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -9,9 +10,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager;
+use Drupal\views\Attribute\ViewsExposedForm;
 use Drupal\views\Plugin\views\exposed_form\InputRequired;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,13 +23,12 @@ use Symfony\Component\HttpFoundation\Request;
  * Exposed form plugin that provides a basic exposed form.
  *
  * @ingroup views_exposed_form_plugins
- *
- * @ViewsExposedForm(
- *   id = "bef",
- *   title = @Translation("Better Exposed Filters"),
- *   help = @Translation("Provides additional options for exposed form elements.")
- * )
  */
+#[ViewsExposedForm(
+  id: 'bef',
+  title: new TranslatableMarkup('Better Exposed Filters'),
+  help: new TranslatableMarkup('Provides additional options for exposed form elements.')
+)]
 class BetterExposedFilters extends InputRequired {
 
   /**
@@ -52,6 +54,8 @@ class BetterExposedFilters extends InputRequired {
    *   The element info manager.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The Request object.
+   * @param \Drupal\breakpoint\BreakpointManagerInterface|null $breakpointManager
+   *   The breakpoint manager.
    */
   public function __construct(
     array $configuration,
@@ -64,6 +68,7 @@ class BetterExposedFilters extends InputRequired {
     protected ThemeManagerInterface $themeManager,
     protected ElementInfoManagerInterface $elementInfo,
     protected Request $request,
+    protected ?BreakpointManagerInterface $breakpointManager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -72,7 +77,6 @@ class BetterExposedFilters extends InputRequired {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    // @phpstan-ignore-next-line
     return new static(
       $configuration,
       $plugin_id,
@@ -83,7 +87,8 @@ class BetterExposedFilters extends InputRequired {
       $container->get('module_handler'),
       $container->get('theme.manager'),
       $container->get('element_info'),
-      $container->get('request_stack')->getCurrentRequest()
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->has('breakpoint.manager') ? $container->get('breakpoint.manager') : NULL,
     );
   }
 
@@ -97,6 +102,8 @@ class BetterExposedFilters extends InputRequired {
     $bef_options = [
       'general' => [
         'autosubmit' => FALSE,
+        'auto_submit_sort_only' => FALSE,
+        'autosubmit_breakpoint' => '',
         'autosubmit_exclude_textfield' => FALSE,
         'autosubmit_textfield_delay' => 500,
         'autosubmit_textfield_minimum_length' => 3,
@@ -225,6 +232,49 @@ class BetterExposedFilters extends InputRequired {
       '#title' => $this->t('Enable auto-submit'),
       '#description' => $this->t('Automatically submits the form when an element has changed.'),
       '#default_value' => $bef_options['general']['autosubmit'],
+    ];
+
+    // Add the 'auto-submit' for sorts only feature'.
+    $form['bef']['general']['auto_submit_sort_only'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable auto-submit for sorts only.'),
+      '#description' => $this->t('Automatically submits the form when sorts has changed. Note submits the full form.'),
+      '#default_value' => $bef_options['general']['auto_submit_sort_only'],
+      '#states' => [
+        'visible' => [
+          ':input[name="exposed_form_options[bef][general][autosubmit]"]' => ['checked' => TRUE],
+          ':input[name="exposed_form_options[bef][sort][configuration][advanced][combine]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $breakpoints = ['' => $this->t('-Any-')];
+    $autosubmit_breakpoint_description = $this->t('Breakpoint to determinate whether auto-submit should be enabled for the current screen dimensions.');
+    if ($this->breakpointManager instanceof BreakpointManagerInterface) {
+      foreach ($this->breakpointManager->getGroups() as $group => $group_label) {
+        $group_label_str = (string) $group_label;
+        $group_breakpoints = $this->breakpointManager->getBreakpointsByGroup($group);
+        /** @var \Drupal\breakpoint\Breakpoint $breakpoint */
+        foreach ($group_breakpoints as $breakpoint_id => $breakpoint) {
+          $breakpoints[$group_label_str]["$group:$breakpoint_id"] = (string) $breakpoint->getLabel();
+        }
+      }
+    }
+    else {
+      $autosubmit_breakpoint_description .= ' ' . $this->t('Enable the Breakpoint Module if you want to limit auto-submit feature only for specific device dimensions.');
+    }
+    $form['bef']['general']['autosubmit_breakpoint'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Breakpoint autosubmit'),
+      '#description' => $autosubmit_breakpoint_description,
+      '#default_value' => $bef_options['general']['autosubmit_breakpoint'],
+      '#options' => $breakpoints,
+      '#disabled' => count($breakpoints) <= 1,
+      '#states' => [
+        'visible' => [
+          ':input[name="exposed_form_options[bef][general][autosubmit]"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     $form['bef']['general']['autosubmit_exclude_textfield'] = [
@@ -357,13 +407,16 @@ class BetterExposedFilters extends InputRequired {
       '#type' => 'item',
       '#description' => $this->t('No sort elements have been exposed yet.'),
       '#access' => !$is_sort_exposed,
+      '#input' => FALSE,
     ];
 
     if ($is_sort_exposed) {
       $options = [];
       foreach ($this->sortWidgetManager->getDefinitions() as $plugin_id => $definition) {
         if ($definition['class']::isApplicable()) {
-          $options[$plugin_id] = $definition['label'];
+          // Definition['label'] is a fallback for older plugins.
+          // @todo remove in 8.0.x of bef.
+          $options[$plugin_id] = $definition['title'] ?? $definition['label'];
         }
       }
 
@@ -428,6 +481,7 @@ class BetterExposedFilters extends InputRequired {
       '#type' => 'item',
       '#description' => $this->t('No pager elements have been exposed yet.'),
       '#access' => !$is_pager_exposed,
+      '#input' => FALSE,
     ];
 
     if ($is_pager_exposed) {
@@ -435,7 +489,9 @@ class BetterExposedFilters extends InputRequired {
 
       foreach ($this->pagerWidgetManager->getDefinitions() as $plugin_id => $definition) {
         if ($definition['class']::isApplicable()) {
-          $options[$plugin_id] = $definition['label'];
+          // Definition['label'] is a fallback for older plugins.
+          // @todo remove in 8.0.x of bef.
+          $options[$plugin_id] = $definition['title'] ?? $definition['label'];
         }
       }
 
@@ -497,7 +553,9 @@ class BetterExposedFilters extends InputRequired {
       $options = [];
       foreach ($this->filterWidgetManager->getDefinitions() as $plugin_id => $definition) {
         if ($definition['class']::isApplicable($filter, $this->displayHandler->handlers['filter'][$filter_id]->options)) {
-          $options[$plugin_id] = $definition['label'];
+          // Definition['label'] is a fallback for older plugins.
+          // @todo remove in 8.0.x of bef.
+          $options[$plugin_id] = $definition['title'] ?? $definition['label'];
         }
       }
 
@@ -748,13 +806,22 @@ class BetterExposedFilters extends InputRequired {
     $bef_options = &$this->options['bef'];
     $this->moduleHandler->alter('better_exposed_filters_options', $bef_options, $this->view, $this->displayHandler);
     $this->themeManager->alter('better_exposed_filters_options', $bef_options, $this->view, $this->displayHandler);
-
     // Apply auto-submit values.
     if (!empty($bef_options['general']['autosubmit'])) {
+      $breakpoint_media_query = NULL;
+      $autosubmit_breakpoint = $bef_options['general']['autosubmit_breakpoint'];
+      if ($this->breakpointManager instanceof BreakpointManagerInterface && !empty($autosubmit_breakpoint)) {
+        [$group, $breakpoint_id] = explode(':', $autosubmit_breakpoint);
+        $breakpoints = $this->breakpointManager->getBreakpointsByGroup($group);
+        $breakpoint_media_query = isset($breakpoints[$breakpoint_id])
+          ? $breakpoints[$breakpoint_id]->getMediaQuery()
+          : '';
+      }
+
       $form = array_merge_recursive($form, [
         '#attributes' => [
-          'data-bef-auto-submit-full-form' => '',
           'data-bef-auto-submit' => '',
+          'data-bef-auto-submit-media-query' => $breakpoint_media_query,
           'data-bef-auto-submit-delay' => $bef_options['general']['autosubmit_textfield_delay'],
           'data-bef-auto-submit-minimum-length' => $bef_options['general']['autosubmit_textfield_minimum_length'],
         ],
@@ -762,12 +829,31 @@ class BetterExposedFilters extends InputRequired {
       $form['actions']['submit']['#attributes']['data-bef-auto-submit-click'] = '';
       $form['#attached']['library'][] = 'better_exposed_filters/auto_submit';
       /* There are text fields provided by other modules which have different
-      "type" attributes, so attach the autosubmit exclude config setting
+      "type" attributes, so attach the autosubmit exclude config setting,
       so we can handle it with JS. */
       $form['#attached']['drupalSettings']['better_exposed_filters']['autosubmit_exclude_textfield'] = $bef_options['general']['autosubmit_exclude_textfield'];
 
+      if (!empty($bef_options['general']['auto_submit_sort_only'])) {
+        $form['#attached']['drupalSettings']['better_exposed_filters']['auto_submit_sort_only'] = TRUE;
+        $form['#attributes']['data-bef-auto-submit-sort-only'] = '';
+      }
+      else {
+        $form['#attributes']['data-bef-auto-submit-full-form'] = '';
+      }
+
       if (!empty($bef_options['general']['autosubmit_hide'])) {
+        // Always hide the submit button itself. The actions container is
+        // not always a rendered, attribute-honoring wrapper (e.g. inline
+        // exposed forms render the button with no form-actions div), so
+        // hiding only the container can leave the button visible.
         $form['actions']['submit']['#attributes']['class'][] = 'js-hide';
+
+        // When submit is the only action, also hide the container so it
+        // does not leave an empty block (the intent of #3568944).
+        $children = array_diff(Element::children($form['actions']), ['submit']);
+        if (empty($children)) {
+          $form['actions']['#attributes']['class'][] = 'js-hide';
+        }
       }
     }
 
@@ -864,6 +950,12 @@ class BetterExposedFilters extends InputRequired {
       $form['actions']['reset']['#op'] = 'reset';
       $form['actions']['reset']['#type'] = 'submit';
       $form['actions']['reset']['#id'] = Html::getUniqueId('edit-reset-' . $this->view->storage->id());
+      $form['actions']['reset']['#limit_validation_errors'] = [];
+      $form['actions']['reset']['#submit'][] = [$this, 'resetForm'];
+
+      if ($this->view->display_handler->ajaxEnabled()) {
+        $form['#attached']['library'][] = 'better_exposed_filters/reset_ajax';
+      }
     }
 
     // Ensure default process/pre_render callbacks are included when a BEF
@@ -905,7 +997,12 @@ class BetterExposedFilters extends InputRequired {
     if (isset($views_session[$this->view->storage->id()][$display_id])) {
       unset($views_session[$this->view->storage->id()][$display_id]);
     }
-    $session->set('views', $views_session);
+    if (!empty($views_session)) {
+      $session->set('views', $views_session);
+    }
+    else {
+      $session->remove('views');
+    }
 
     // Set the form to allow redirect.
     if (empty($this->view->live_preview) && !$this->request->isXmlHttpRequest()) {
@@ -969,7 +1066,13 @@ class BetterExposedFilters extends InputRequired {
       $this->view->exposed_data = $form_state->getValues();
     }
 
-    $form_state->setRedirect('<current>');
+    if ($this->view->hasUrl()) {
+      $form_state->setRedirectUrl($this->view->getUrl());
+    }
+    else {
+      // Fallback if the view does not have a URL (embedded or block views?)
+      $form_state->setRedirect('<current>');
+    }
   }
 
   /**

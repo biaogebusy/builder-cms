@@ -28,7 +28,7 @@ interface WebformAccessGroupStorageInterface extends ConfigEntityStorageInterfac
    * @return \Drupal\webform\WebformSubmissionInterface[]
    *   An array of webform access group objects indexed by their ids.
    */
-  public function loadByEntities(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $type = NULL);
+  public function loadByEntities(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $type = NULL);
 
   /**
    * Get source entities associated with a user account.

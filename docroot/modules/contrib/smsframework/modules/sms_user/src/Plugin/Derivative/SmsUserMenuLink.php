@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_user\Plugin\Derivative;
 
@@ -44,8 +44,8 @@ class SmsUserMenuLink extends DeriverBase implements ContainerDeriverInterface {
 
     if ($this->phoneNumberVerification->getPhoneNumberSettings('user', 'user')) {
       $links['sms_user_phone_number_settings'] = [
-        'title' => t('User phone number'),
-        'description' => t('Set up phone number fields and settings for users.'),
+        'title' => \t('User phone number'),
+        'description' => \t('Set up phone number fields and settings for users.'),
         'route_name' => 'entity.phone_number_settings.edit_form',
         'route_parameters' => ['phone_number_settings' => 'user.user'],
         'parent' => 'user.admin_index',

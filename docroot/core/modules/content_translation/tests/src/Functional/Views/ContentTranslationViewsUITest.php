@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\content_translation\Functional\Views;
 
 use Drupal\Tests\views_ui\Functional\UITestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the views UI when content_translation is enabled.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationViewsUITest extends UITestBase {
 
   /**

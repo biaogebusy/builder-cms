@@ -2,9 +2,10 @@
 
 namespace Drupal\blazy\Form;
 
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyApi;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\BlazySettings;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Traits\PluginScopesTrait;
 
 /**
@@ -43,12 +44,13 @@ trait TraitScopes {
    */
   public function toScopes(array &$definition): BlazySettings {
     // Looks like unit test failed with manager methods given a Trait.
-    $definition += Blazy::init();
-    $blazies = $definition['blazies'];
+    $definition += BlazyApi::init();
+    $blazies = Internals::getBlazies($definition);
     $namespace = $blazies->get('namespace') ?: ($definition['namespace'] ?? '');
 
     static::$namespace = $namespace;
 
+    /** @var \Drupal\blazy\BlazySettings $scopes */
     $scopes = $definition['scopes'] ?? $this->toPluginScopes();
     if (!$scopes->get('initializer')) {
       $definition['scopes'] = $scopes = $this->getScopes($definition);
@@ -56,7 +58,7 @@ trait TraitScopes {
 
       // Might be called directly without calling self::buildSettingsForm(),
       // such as \Drupal\blazy\Plugin\views\field\BlazyViewsFieldPluginBase.
-      // @todo remove this failsafe after sub-module migrations done.
+      // @todo deprecate and remove this failsafe after sub-module migrations done.
       $this->checkScopes($scopes, $definition);
     }
 
@@ -71,7 +73,14 @@ trait TraitScopes {
    * Temporary re-definitions during migration after BlazyFormatterTrait
    * ::getScopedFormElements() for sensible checks.
    *
-   * @todo remove most after sub-module migrations.
+   * @param \Drupal\blazy\BlazySettings $scopes
+   *   The given $scopes.
+   * @param array $definition
+   *   The definition being modified.
+   * @param bool $refresh
+   *   Whether refreshed.
+   *
+   * @todo deprecate and remove most after sub-module migrations.
    */
   protected function checkScopes(&$scopes, array &$definition, $refresh = FALSE): void {
     if ($scopes->was('scoped') && !$refresh) {
@@ -81,7 +90,7 @@ trait TraitScopes {
     $namespace = static::$namespace;
     $definition['plugin_id'] = $definition['plugin_id'] ?? 'x';
     $settings = $definition['settings'] ?? [];
-    $blazies = $definition['blazies'];
+    $blazies = Internals::getBlazies($definition);
     $lightboxes = $this->blazyManager->getLightboxes();
     $is_responsive = function_exists('responsive_image_get_image_dimensions');
     $plugin_id = $blazies->get('field.plugin_id') ?: $definition['plugin_id'];
@@ -121,6 +130,7 @@ trait TraitScopes {
       'thumbnail_style',
       'vanilla',
       '_views',
+      'field_api_classes',
     ];
 
     foreach ($bools as $bool) {
@@ -129,7 +139,7 @@ trait TraitScopes {
     }
 
     // Redefine for easy calls later due to sub-modules not migrated yet.
-    // @todo remove after sub-modules migrations, and simplify all these at 3.x.
+    // @todo deprecate and remove after sub-modules migrations, and simplify all these at 3.x.
     $responsive = $is_responsive && $scopes->is('responsive_image');
     $sliders = in_array($namespace, ['slick', 'splide']);
     $by_delta = $lb && $scopes->is('multiple') &&  $namespace == 'blazy';
@@ -143,7 +153,7 @@ trait TraitScopes {
       ->set('is.slider', $scopes->is('slider') ?: $sliders)
       ->set('is.switch', $switch)
       ->set('namespace', $namespace)
-      // @todo remove dups for $blazies object.
+      // @todo deprecate and remove dups for $blazies object.
       ->set('entity.type', $entity_type)
       ->set('plugin_id', $plugin_id)
       ->set('target_type', $target_type)
@@ -216,6 +226,12 @@ trait TraitScopes {
 
   /**
    * Returns the plugin scopes.
+   *
+   * @param array $definition
+   *   The definition being modified.
+   *
+   * @return \Drupal\blazy\BlazySettings
+   *   The BlazySettings.
    */
   protected function getScopes(array &$definition): BlazySettings {
     return $this->toPluginScopes($definition);

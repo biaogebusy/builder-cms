@@ -2,8 +2,8 @@
 
 namespace Drupal\webform\Plugin\WebformHandler;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\Element\WebformHtmlEditor;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformSubmissionInterface;
@@ -303,7 +303,7 @@ class ActionWebformHandler extends WebformHandlerBase {
         $this->replaceTokens($this->configuration['message'], $webform_submission)
       );
       $message_type = $this->configuration['message_type'];
-      $this->messenger()->addMessage($this->renderer->renderPlain($message), $message_type);
+      $this->messenger()->addMessage($this->renderer->renderInIsolation($message), $message_type);
     }
 
     // Resave the webform submission without trigger any hooks or handlers.
@@ -380,7 +380,7 @@ class ActionWebformHandler extends WebformHandlerBase {
       '#wrapper_attributes' => ['class' => ['container-inline'], 'style' => 'margin: 0'],
     ];
 
-    $this->messenger()->addWarning($this->renderer->renderPlain($build), TRUE);
+    $this->messenger()->addWarning($this->renderer->renderInIsolation($build), TRUE);
   }
 
 }

@@ -9,16 +9,20 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\jsonapi\Traits\CommonCollectionFilterAccessTestPatternsTrait;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API integration test for the "Term" content entity type.
- *
- * @group jsonapi
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class TermTest extends ResourceTestBase {
 
   use CommonCollectionFilterAccessTestPatternsTrait;
@@ -65,7 +69,7 @@ class TermTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpAuthorization($method) {
+  protected function setUpAuthorization($method): void {
     switch ($method) {
       case 'GET':
         $this->grantPermissionsToTestedRole(['access content', 'view vocabulary labels']);
@@ -92,7 +96,7 @@ class TermTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpRevisionAuthorization($method) {
+  protected function setUpRevisionAuthorization($method): void {
     parent::setUpRevisionAuthorization($method);
     $this->grantPermissionsToTestedRole(['administer taxonomy']);
   }
@@ -125,7 +129,7 @@ class TermTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedDocument() {
+  protected function getExpectedDocument(): array {
     $base_url = Url::fromUri('base:/jsonapi/taxonomy_term/camelids/' . $this->entity->uuid())->setAbsolute();
     $self_url = clone $base_url;
     $version_identifier = 'id:' . $this->entity->getRevisionId();
@@ -249,10 +253,10 @@ class TermTest extends ResourceTestBase {
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'links' => [
         'self' => ['href' => $base_url->toString()],
@@ -346,7 +350,7 @@ class TermTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getPostDocument() {
+  protected function getPostDocument(): array {
     return [
       'data' => [
         'type' => 'taxonomy_term--camelids',
@@ -403,7 +407,7 @@ class TermTest extends ResourceTestBase {
   public function testPatchPath(): void {
     $this->setUpAuthorization('GET');
     $this->setUpAuthorization('PATCH');
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
 
     // @todo Remove line below in favor of commented line in https://www.drupal.org/project/drupal/issues/2878463.
     $url = Url::fromRoute(sprintf('jsonapi.%s.individual', static::$resourceTypeName), ['entity' => $this->entity->uuid()]);
@@ -456,9 +460,8 @@ class TermTest extends ResourceTestBase {
    * Tests GETting a term with a parent term other than the default <root> (0).
    *
    * @see ::getExpectedNormalizedEntity()
-   *
-   * @dataProvider providerTestGetIndividualTermWithParent
    */
+  #[DataProvider('providerTestGetIndividualTermWithParent')]
   public function testGetIndividualTermWithParent(array $parent_term_ids): void {
     // Create all possible parent terms.
     Term::create(['vid' => Vocabulary::load('camelids')->id()])

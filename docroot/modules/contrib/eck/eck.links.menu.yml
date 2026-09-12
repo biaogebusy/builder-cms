@@ -3,5 +3,8 @@
 eck.entity_type.admin.structure.settings:
   title: ECK Entity Types
   description: 'Configure ECK entity types'
-  route_name:  eck.entity_type.list
+  route_name: eck.entity_type.list
   parent: system.admin_structure
+
+eck.entity_types:
+  deriver: Drupal\eck\Plugin\Derivative\EckTypesMenuItemsDeriver

@@ -17,7 +17,7 @@ trait DependencySerializationTrait {
    * @var array
    */
   // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName
-  protected array $_serviceIds = [];
+  protected $_serviceIds = [];
 
   /**
    * An array of entity type IDs keyed by the property name of their storages.
@@ -25,12 +25,12 @@ trait DependencySerializationTrait {
    * @var array
    */
   // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName
-  protected array $_entityStorages = [];
+  protected $_entityStorages = [];
 
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $vars = get_object_vars($this);
     try {
       $container = \Drupal::getContainer();
@@ -53,14 +53,14 @@ trait DependencySerializationTrait {
         }
         elseif ($service_id = $reverse_container->getId($value)) {
           // If a class member was instantiated by the dependency injection
-          // container, only store its ID so it can be used to get a fresh object
-          // on unserialization.
+          // container, only store its ID so it can be used to get a fresh
+          // object on unserialization.
           $this->_serviceIds[$key] = $service_id;
           unset($vars[$key]);
         }
       }
     }
-    catch (ContainerNotInitializedException $e) {
+    catch (ContainerNotInitializedException) {
       // No container, no problem.
     }
 
@@ -70,8 +70,7 @@ trait DependencySerializationTrait {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function __wakeup() {
+  public function __wakeup(): void {
     // Avoid trying to wakeup if there's nothing to do.
     if (empty($this->_serviceIds) && empty($this->_entityStorages)) {
       return;

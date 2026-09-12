@@ -5,6 +5,7 @@
 
 /* global Highcharts */
 (function (Drupal, once, drupalSettings) {
+  Drupal.highchartsCharts = Drupal.highchartsCharts || { instances: {} };
   Drupal.behaviors.chartsHighcharts = {
     attach(context) {
       const contents = new Drupal.Charts.Contents();
@@ -23,7 +24,7 @@
           }
 
           config.chart.renderTo = id;
-          new Highcharts.Chart(config);
+          Drupal.highchartsCharts.instances[id] = new Highcharts.Chart(config);
           if (
             element.nextElementSibling &&
             element.nextElementSibling.hasAttribute(
@@ -40,10 +41,10 @@
       if (trigger === 'unload') {
         once('charts-highchart-detach', '.charts-highchart', context).forEach(
           function (element) {
-            if (!element.dataset.hasOwnProperty('highchartsChart')) {
-              return;
+            if (Drupal.highchartsCharts.instances[element.id]) {
+              Drupal.highchartsCharts.instances[element.id].destroy();
+              delete Drupal.highchartsCharts.instances[element.id];
             }
-            Highcharts.charts[element.dataset.highchartsChart].destroy();
           },
         );
       }

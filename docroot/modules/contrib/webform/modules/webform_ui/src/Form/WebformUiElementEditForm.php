@@ -23,7 +23,7 @@ class WebformUiElementEditForm extends WebformUiElementFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $key = NULL, $parent_key = NULL, $type = NULL) {
     $this->element = $webform->getElementDecoded($key);
     if ($this->element === NULL) {
       throw new NotFoundHttpException();

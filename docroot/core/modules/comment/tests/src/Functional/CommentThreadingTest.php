@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\CommentManagerInterface;
+use Drupal\comment\CommentPreviewMode;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests to make sure the comment number increments properly.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentThreadingTest extends CommentTestBase {
 
   /**
@@ -23,7 +26,7 @@ class CommentThreadingTest extends CommentTestBase {
    */
   public function testCommentReplyLinkUnpublished(): void {
     // Set comments to have a subject with preview disabled.
-    $this->setCommentPreview(DRUPAL_DISABLED);
+    $this->setCommentPreview(CommentPreviewMode::Disabled);
     $this->setCommentForm(FALSE);
     $this->setCommentSettings('default_mode', CommentManagerInterface::         COMMENT_MODE_THREADED, 'Comment paging changed.');
 
@@ -48,7 +51,7 @@ class CommentThreadingTest extends CommentTestBase {
    */
   public function testCommentThreading(): void {
     // Set comments to have a subject with preview disabled.
-    $this->setCommentPreview(DRUPAL_DISABLED);
+    $this->setCommentPreview(CommentPreviewMode::Disabled);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_THREADED, 'Comment paging changed.');

@@ -1,0 +1,14 @@
+ckeditor5_premium_features_line_height__line_height:
+  ckeditor5:
+    plugins:
+      - lineHeight.LineHeight
+  drupal:
+    label: Line Height
+    library: ckeditor5_premium_features_line_height/line-height
+    admin_library: ckeditor5_premium_features_line_height/admin.line_height
+    class: Drupal\ckeditor5_premium_features_line_height\Plugin\CKEditor5Plugin\LineHeight
+    elements:
+      - <p class>
+    toolbar_items:
+      lineHeight:
+        label: Line height

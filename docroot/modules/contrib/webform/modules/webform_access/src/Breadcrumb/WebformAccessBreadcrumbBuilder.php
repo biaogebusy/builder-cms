@@ -4,6 +4,7 @@ namespace Drupal\webform_access\Breadcrumb;
 
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -37,10 +38,13 @@ class WebformAccessBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   /**
    * {@inheritdoc}
    */
-  public function applies(RouteMatchInterface $route_match) {
+  public function applies(RouteMatchInterface $route_match, ?CacheableMetadata $cacheable_metadata = NULL) {
+    // @todo Remove null safe operator after Drupal 12.0.0 becomes the minimum
+    //   requirement, see https://www.drupal.org/project/drupal/issues/3459277.
+    $cacheable_metadata?->addCacheContexts(['route']);
     $route_name = $route_match->getRouteName();
     // All routes must begin or contain 'webform_access'.
-    if (strpos($route_name, 'webform_access') === FALSE) {
+    if (!str_contains($route_name, 'webform_access')) {
       return FALSE;
     }
 
@@ -50,14 +54,14 @@ class WebformAccessBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     $path = Url::fromRouteMatch($route_match)->toString();
 
-    if (strpos($path, 'admin/structure/webform/access/') === FALSE) {
+    if (!str_contains($path, 'admin/structure/webform/access/')) {
       return FALSE;
     }
 
-    if (strpos($path, 'admin/structure/webform/access/group/manage/') !== FALSE) {
+    if (str_contains($path, 'admin/structure/webform/access/group/manage/')) {
       $this->type = 'webform_access_group';
     }
-    elseif (strpos($path, 'admin/structure/webform/access/type/manage/') !== FALSE) {
+    elseif (str_contains($path, 'admin/structure/webform/access/type/manage/')) {
       $this->type = 'webform_access_type';
     }
     else {
@@ -82,13 +86,15 @@ class WebformAccessBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $breadcrumb->addLink(Link::createFromRoute($this->t('Groups'), 'entity.webform_access_group.collection'));
         break;
 
-      case 'webform_access_type';
+      case 'webform_access_type':
         $breadcrumb->addLink(Link::createFromRoute($this->t('Types'), 'entity.webform_access_type.collection'));
         break;
     }
 
     // This breadcrumb builder is based on a route parameter, and hence it
     // depends on the 'route' cache context.
+    // @todo Remove after Drupal 12.0.0 becomes the minimum requirement,
+    //   see https://www.drupal.org/project/drupal/issues/3459277.
     $breadcrumb->addCacheContexts(['route']);
 
     return $breadcrumb;

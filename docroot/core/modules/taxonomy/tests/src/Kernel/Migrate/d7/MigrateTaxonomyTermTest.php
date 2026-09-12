@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\taxonomy\TermInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade taxonomy terms.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyTermTest extends MigrateDrupal7TestBase {
 
   /**
@@ -65,9 +67,9 @@ class MigrateTaxonomyTermTest extends MigrateDrupal7TestBase {
    *   Entity ID to load and check.
    * @param string $expected_language
    *   The language code for this term.
-   * @param $expected_label
+   * @param string $expected_label
    *   The label the migrated entity should have.
-   * @param $expected_vid
+   * @param string $expected_vid
    *   The parent vocabulary the migrated entity should have.
    * @param string|null $expected_description
    *   The description the migrated entity should have.
@@ -204,13 +206,13 @@ class MigrateTaxonomyTermTest extends MigrateDrupal7TestBase {
   /**
    * Retrieves the parent term IDs for a given term.
    *
-   * @param $tid
+   * @param int $tid
    *   ID of the term to check.
    *
    * @return array
    *   List of parent term IDs.
    */
-  protected function getParentIDs($tid) {
+  protected function getParentIDs($tid): array {
     return array_keys(\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadParents($tid));
   }
 

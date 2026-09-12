@@ -1,12 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\FunctionalJavascript;
 
 /**
  * Tests the Blazy IO JavaScript using PhantomJS, or Chromedriver.
- *
- * @group blazy
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class BlazyIoJavaScriptTest extends BlazyJavaScriptTestBase {
 
   /**
@@ -22,6 +34,7 @@ class BlazyIoJavaScriptTest extends BlazyJavaScriptTestBase {
    * Test the Blazy element from loading to loaded states.
    */
   public function testFormatterDisplay() {
+    $settings = $data = [];
     $settings['blazy'] = TRUE;
     $settings['ratio'] = 'fluid';
     $settings['image_style'] = '';
@@ -38,7 +51,7 @@ class BlazyIoJavaScriptTest extends BlazyJavaScriptTestBase {
     // @todo with Native lazyload, b-loaded is enforced on page load. And
     // since the testing browser Chrome support it, it is irrelevant.
     // @todo $this->assertSession()->elementNotExists('css', '.b-loaded');
-    // @phpstan-ignore-next-line
+    /** @phpstan-ignore-next-line */
     $result = $this->assertSession()->waitForElement('css', '.b-lazy');
     $this->assertNotEmpty($result);
     $this->doTestFormatterDisplay();

@@ -14,7 +14,7 @@
 
 const { globSync } = require('glob');
 const log = require('./log');
-const fs = require('fs');
+const fs = require('node:fs');
 
 const globOptions = {
   // Search within the ckeditor npm namespace.

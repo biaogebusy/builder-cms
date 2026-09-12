@@ -36,7 +36,7 @@ class BackendClientFactory {
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    * @param \Drupal\elasticsearch_connector\Analyser\AnalyserManager $analyserManager
-   *   Analyser manager.
+   *   Analyzer manager.
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    */

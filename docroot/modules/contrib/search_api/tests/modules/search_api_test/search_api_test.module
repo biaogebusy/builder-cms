@@ -82,6 +82,20 @@ function search_api_test_search_api_server_load($servers) {
  */
 function search_api_test_preprocess_node(&$variables) {
   if (\Drupal::keyValue('search_api_test')->get('preprocess_node_error')) {
+    // The new recursive render protection, added in Drupal 11.4, unfortunately
+    // does not reset its protection flag if the rendering throws an exception,
+    // so when the test attempts to render the node a second time, the render
+    // protection would trigger. Manually unset protection for the node to
+    // circumvent this.
+    $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
+    // @todo Remove if once we depend on Drupal 11.4+.
+    if (method_exists($view_builder, 'unsetRecursiveRenderProtection')) {
+      $view_builder->unsetRecursiveRenderProtection('', [
+        '#node' => $variables['node'],
+        '#view_mode' => $variables['view_mode'],
+      ]);
+    }
+
     throw new \RuntimeException('search_api_test_preprocess_node');
   }
 }

@@ -1,0 +1,12 @@
+ckeditor5_plugin_pack_select_all__select_all:
+  ckeditor5:
+    plugins:
+      - selectAll.SelectAll
+  drupal:
+    label: Select all
+    elements: false
+    library: core/ckeditor5.essentials
+    admin_library: ckeditor5_plugin_pack_select_all/admin.select_all
+    toolbar_items:
+      selectAll:
+        label: Select all

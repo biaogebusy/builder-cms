@@ -4,14 +4,14 @@ namespace Drupal\webform\Element;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides a form element for selecting webform submission views replacement routes.
  *
  * @FormElement("webform_submission_views_replace")
  */
-class WebformSubmissionViewsReplace extends FormElement {
+class WebformSubmissionViewsReplace extends FormElementBase {
 
   /**
    * {@inheritdoc}

@@ -1,0 +1,25 @@
+admin.wproofreader:
+  version: 20250624
+  css:
+    theme:
+      css/wproofreader.admin.css: { }
+
+wproofreader:
+  version: 20250624
+  license:
+    name: MIT
+    url: https://raw.githubusercontent.com/WebSpellChecker/wproofreader-ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/wproofreader.js: { minified: true }
+
+wproofreader.adapter:
+  version: 20250624
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/wproofreaderAdapter.js: { minified: true }
+  dependencies:
+    - ckeditor5_premium_features_wproofreader/wproofreader

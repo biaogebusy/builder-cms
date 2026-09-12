@@ -41,7 +41,13 @@ class WebformPluginExporterController extends ControllerBase implements Containe
     foreach ($definitions as $plugin_id => $definition) {
       $row = [];
       $row[] = $plugin_id;
-      $row[] = ['data' => ['#markup' => $definition['label'], '#prefix' => '<span class="webform-form-filter-text-source">', '#suffix' => '</span>']];
+      $row[] = [
+        'data' => [
+          '#markup' => $definition['label'],
+          '#prefix' => '<span class="webform-form-filter-text-source">',
+          '#suffix' => '</span>',
+        ],
+      ];
       $row[] = $definition['description'];
       $row[] = (isset($excluded_exporters[$plugin_id])) ? $this->t('Yes') : $this->t('No');
       $row[] = $definition['provider'];

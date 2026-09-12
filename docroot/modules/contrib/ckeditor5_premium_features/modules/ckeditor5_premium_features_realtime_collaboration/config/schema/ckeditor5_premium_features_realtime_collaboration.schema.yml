@@ -1,0 +1,48 @@
+ckeditor5.plugin.ckeditor5_premium_features_realtime_collaboration.settings:
+  type: config_object
+  label: 'CKEditor 5 Realtime Collaboration settings'
+  mapping:
+    presence_list:
+      type: string
+      label: 'User presence list'
+    presence_list_collapse_at:
+      type: int
+      label: 'User presence list collapse at'
+    sidebar:
+      type: string
+      label: 'Annotations sidebar'
+    editor_bundles:
+      type: sequence
+      label: 'Editor bundles'
+
+ckeditor5.plugin.ckeditor5_premium_features_realtime_collaboration__realtime:
+  type: mapping
+  label: 'Realtime'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+
+ckeditor5.plugin.ckeditor5_premium_features_realtime_collaboration__comment:
+  type: mapping
+  label: 'Realtime'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+
+ckeditor5.plugin.ckeditor5_premium_features_realtime_collaboration__track_changes:
+  type: mapping
+  label: 'Realtime'
+  mapping:
+    default_state:
+      type: boolean
+      label: 'Enable on editor init'
+
+ckeditor5.plugin.ckeditor5_premium_features_realtime_collaboration__revision_history:
+  type: mapping
+  label: 'Realtime'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'

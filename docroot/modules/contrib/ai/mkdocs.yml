@@ -105,7 +105,12 @@ nav:
       - Getting Started: developers/writing_an_ai_provider.md
       - Testing a Provider: developers/testing_an_ai_provider.md
     - Develop a third-party module: developers/develop_third_party_module.md
-    - Guardrails: developers/guardrails.md
+    - Guardrails:
+      - Overview: developers/guardrails/index.md
+      - Input Length Limit: developers/guardrails/input_length_limit.md
+      - Regexp Guardrail: developers/guardrails/regexp_guardrail.md
+      - Restrict to Topic: developers/guardrails/restrict_to_topic.md
+      - Writing Custom Guardrails: developers/guardrails/custom_guardrail.md
     - Events: developers/events.md
     - DDEV: developers/ddev.md
     - Prompt Management: developers/ai_prompt_management.md

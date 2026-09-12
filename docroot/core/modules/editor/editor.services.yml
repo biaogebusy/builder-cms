@@ -1,13 +1,20 @@
+parameters:
+  editor.skip_procedural_hook_scan: true
+
 services:
   _defaults:
     autoconfigure: true
   plugin.manager.editor:
     class: Drupal\editor\Plugin\EditorManager
     parent: default_plugin_manager
+    arguments:
+      $entityTypeManager: '@entity_type.manager'
   element.editor:
     class: Drupal\editor\Element
-    arguments: ['@plugin.manager.editor']
+    arguments: ['@plugin.manager.editor', '@module_handler']
   Drupal\editor\Element: '@element.editor'
   editor.config_translation_mapper_subscriber:
     class: Drupal\editor\EventSubscriber\EditorConfigTranslationSubscriber
     arguments: ['@config.factory']
+  Drupal\editor\EditorImageUploadSettings:
+    autowire: true

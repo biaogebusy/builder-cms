@@ -2,12 +2,14 @@
 
 namespace Drupal\Core\Routing;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
+use Drupal\Core\Routing\Exception\CacheableResourceNotFoundException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface as BaseUrlGeneratorInterface;
 use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\RouterInterface;
@@ -30,6 +32,12 @@ use Symfony\Component\Routing\RouterInterface;
  *    See ::applyRouteEnhancers().
  */
 class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterface {
+  use DeprecatedServicePropertyTrait;
+
+  /**
+   * The service properties that should raise a deprecation error.
+   */
+  private array $deprecatedProperties = ['urlGenerator' => 'url_generator'];
 
   /**
    * The route provider responsible for the first-pass match.
@@ -53,26 +61,16 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
   protected $filters = [];
 
   /**
-   * The URL generator.
-   *
-   * @var \Symfony\Component\Routing\Generator\UrlGeneratorInterface
-   */
-  protected $urlGenerator;
-
-  /**
    * Constructs a new Router.
    *
    * @param \Drupal\Core\Routing\RouteProviderInterface $route_provider
    *   The route provider.
    * @param \Drupal\Core\Path\CurrentPathStack $current_path
    *   The current path stack.
-   * @param \Symfony\Component\Routing\Generator\UrlGeneratorInterface $url_generator
-   *   The URL generator.
    */
-  public function __construct(RouteProviderInterface $route_provider, CurrentPathStack $current_path, BaseUrlGeneratorInterface $url_generator) {
+  public function __construct(RouteProviderInterface $route_provider, CurrentPathStack $current_path) {
     parent::__construct($current_path);
     $this->routeProvider = $route_provider;
-    $this->urlGenerator = $url_generator;
   }
 
   /**
@@ -86,44 +84,12 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
   }
 
   /**
-   * Adds a deprecated route filter.
-   *
-   * @param \Drupal\Core\Routing\FilterInterface $route_filter
-   *   The route filter.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
-   *   route_filter instead.
-   *
-   * @see https://www.drupal.org/node/2894934
-   */
-  public function addDeprecatedRouteFilter(FilterInterface $route_filter) {
-    @trigger_error('non_lazy_route_filter is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use route_filter instead. See https://www.drupal.org/node/2894934', E_USER_DEPRECATED);
-    $this->filters[] = $route_filter;
-  }
-
-  /**
    * Adds a route enhancer.
    *
    * @param \Drupal\Core\Routing\EnhancerInterface $route_enhancer
    *   The route enhancer.
    */
   public function addRouteEnhancer(EnhancerInterface $route_enhancer) {
-    $this->enhancers[] = $route_enhancer;
-  }
-
-  /**
-   * Adds a deprecated route enhancer.
-   *
-   * @param \Drupal\Core\Routing\EnhancerInterface $route_enhancer
-   *   The route enhancer.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
-   *   route_enhancer instead.
-   *
-   * @see https://www.drupal.org/node/2894934
-   */
-  public function addDeprecatedRouteEnhancer(EnhancerInterface $route_enhancer) {
-    @trigger_error('non_lazy_route_enhancer is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use route_enhancer instead. See https://www.drupal.org/node/2894934', E_USER_DEPRECATED);
     $this->enhancers[] = $route_enhancer;
   }
 
@@ -147,7 +113,16 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
   public function matchRequest(Request $request): array {
     $collection = $this->getInitialRouteCollection($request);
     if ($collection->count() === 0) {
-      throw new ResourceNotFoundException(sprintf('No routes found for "%s".', $this->currentPath->getPath()));
+      // Allow caching the empty route lookup. Note that even though this result
+      // inherently depends on the path we do not bubble any cache contexts
+      // because:
+      // 1. This is outside the scope of Dynamic Page Cache since we have not
+      //    actually resolved a route
+      // 2. Page Cache does not use cache contexts (and caches per URL anyway)
+      throw new CacheableResourceNotFoundException(
+        new CacheableMetadata(),
+        sprintf('No routes found for "%s".', $this->currentPath->getPath()),
+      );
     }
     $collection = $this->applyRouteFilters($collection, $request);
     $collection = $this->applyFitOrder($collection);
@@ -183,7 +158,7 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
    * RouteProvider::getRoutesByPath().
    *
    * @param string $pathinfo
-   *   The path info to be parsed
+   *   The path info to be parsed.
    * @param \Symfony\Component\Routing\RouteCollection $routes
    *   The set of routes.
    * @param bool $case_sensitive

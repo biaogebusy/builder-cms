@@ -7,12 +7,12 @@ namespace Drupal\Tests\file_mdm_font\Kernel;
 use Drupal\file_mdm\FileMetadataInterface;
 use Drupal\file_mdm\FileMetadataManagerInterface;
 use Drupal\Tests\file_mdm\Kernel\FileMetadataManagerTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests that the file metadata 'font' plugin works properly.
- *
- * @group file_mdm
  */
+#[Group('file_mdm')]
 class FileMetadataFontTest extends FileMetadataManagerTestBase {
 
   protected static $modules = [

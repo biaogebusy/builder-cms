@@ -6,14 +6,17 @@ namespace Drupal\Tests\taxonomy\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\taxonomy\Plugin\Validation\Constraint\TaxonomyTermHierarchyConstraintValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests handling of pending revisions.
- *
- * @coversDefaultClass \Drupal\taxonomy\Plugin\Validation\Constraint\TaxonomyTermHierarchyConstraintValidator
- *
- * @group taxonomy
  */
+#[CoversClass(TaxonomyTermHierarchyConstraintValidator::class)]
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermHierarchyValidationTest extends EntityKernelTestBase {
 
   /**

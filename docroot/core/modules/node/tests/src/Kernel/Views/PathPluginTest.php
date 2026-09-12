@@ -10,12 +10,14 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the node row plugin.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class PathPluginTest extends ViewsKernelTestBase {
 
   use NodeCreationTrait;
@@ -34,7 +36,6 @@ class PathPluginTest extends ViewsKernelTestBase {
   protected static $modules = [
     'node',
     'node_test_views',
-    'user',
   ];
 
   /**

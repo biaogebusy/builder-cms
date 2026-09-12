@@ -2,13 +2,13 @@
 
 namespace Drupal\webform\Element;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\OptGroup;
-use Drupal\Core\Render\Element\FormElement;
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\webform\Utility\WebformAccessibilityHelper;
 use Drupal\webform\Utility\WebformArrayHelper;
 use Drupal\webform\Utility\WebformYaml;
@@ -18,7 +18,7 @@ use Drupal\webform\Utility\WebformYaml;
  *
  * @FormElement("webform_element_states")
  */
-class WebformElementStates extends FormElement {
+class WebformElementStates extends FormElementBase {
 
   /**
    * {@inheritdoc}
@@ -510,7 +510,7 @@ class WebformElementStates extends FormElement {
         ],
       ],
     ];
-    $row['condition']['pattern'] = [
+    $row['condition']['between'] = [
       '#type' => 'container',
       'description' => ['#markup' => t('Enter a number range (1:100)')],
       '#states' => [

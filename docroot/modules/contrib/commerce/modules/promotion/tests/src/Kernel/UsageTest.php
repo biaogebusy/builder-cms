@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\commerce_promotion\PromotionStorageInterface;
+use Drupal\commerce_promotion\PromotionUsageInterface;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItem;
-use Drupal\commerce_order\Entity\OrderType;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\CouponInterface;
@@ -22,32 +23,18 @@ use Drupal\commerce_promotion\Entity\PromotionInterface;
 class UsageTest extends OrderKernelTestBase {
 
   /**
-   * The coupon storage.
-   *
-   * @var \Drupal\commerce_promotion\CouponStorageInterface
-   */
-  protected $couponStorage;
-
-  /**
-   * The promotion storage.
-   *
-   * @var \Drupal\commerce_promotion\PromotionStorageInterface
-   */
-  protected $promotionStorage;
-
-  /**
    * The usage.
    *
    * @var \Drupal\commerce_promotion\PromotionUsageInterface
    */
-  protected $usage;
+  protected PromotionUsageInterface $usage;
 
   /**
    * The test order.
    *
    * @var \Drupal\commerce_order\Entity\OrderInterface
    */
-  protected $order;
+  protected OrderInterface $order;
 
   /**
    * Modules to enable.
@@ -69,10 +56,7 @@ class UsageTest extends OrderKernelTestBase {
     $this->installConfig(['commerce_promotion']);
     $this->installSchema('commerce_promotion', ['commerce_promotion_usage']);
 
-    $this->couponStorage = $this->container->get('entity_type.manager')->getStorage('commerce_promotion_coupon');
-    $this->promotionStorage = $this->container->get('entity_type.manager')->getStorage('commerce_promotion');
     $this->usage = $this->container->get('commerce_promotion.usage');
-
     $order_item = OrderItem::create([
       'type' => 'test',
       'quantity' => 1,
@@ -285,8 +269,9 @@ class UsageTest extends OrderKernelTestBase {
     $usage = $this->usage->load($promotion);
     $this->assertEquals(1, $usage);
 
-    $order_type = OrderType::load($this->order->bundle());
-    $valid_promotions = $this->promotionStorage->loadAvailable($this->order);
+    $promotion_storage = $this->entityTypeManager->getStorage('commerce_promotion');
+    assert($promotion_storage instanceof PromotionStorageInterface);
+    $valid_promotions = $promotion_storage->loadAvailable($this->order);
     $this->assertEmpty($valid_promotions);
   }
 
@@ -321,8 +306,9 @@ class UsageTest extends OrderKernelTestBase {
     $usage = $this->usage->load($promotion);
     $this->assertEquals(1, $usage);
 
-    $order_type = OrderType::load($this->order->bundle());
-    $valid_promotions = $this->promotionStorage->loadAvailable($this->order);
+    $promotion_storage = $this->entityTypeManager->getStorage('commerce_promotion');
+    assert($promotion_storage instanceof PromotionStorageInterface);
+    $valid_promotions = $promotion_storage->loadAvailable($this->order);
     $this->assertEmpty($valid_promotions);
   }
 
@@ -374,9 +360,10 @@ class UsageTest extends OrderKernelTestBase {
     $this->assertEquals(SAVED_NEW, $promotion2->save());
     $this->usage->register($this->order, $promotion2);
 
-    $this->assertCount(4, $this->promotionStorage->loadByProperties(['status' => TRUE]));
+    $promotion_storage = $this->entityTypeManager->getStorage('commerce_promotion');
+    $this->assertCount(4, $promotion_storage->loadByProperties(['status' => TRUE]));
     \Drupal::service('commerce_promotion.cron')->run();
-    $this->assertCount(2, $this->promotionStorage->loadByProperties(['status' => TRUE]));
+    $this->assertCount(2, $promotion_storage->loadByProperties(['status' => TRUE]));
   }
 
 }

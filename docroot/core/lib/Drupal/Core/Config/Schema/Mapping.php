@@ -166,7 +166,8 @@ class Mapping extends ArrayElement {
     $all_type_definitions = $typed_data_manager->getDefinitions();
     $possible_type_definitions = array_intersect_key($all_type_definitions, array_fill_keys($possible_types, TRUE));
     // TRICKY: \Drupal\Core\Config\TypedConfigManager::getDefinition() does the
-    // necessary resolving, but TypedConfigManager::getDefinitions() does not! 🤷‍♂️
+    // necessary resolving, but TypedConfigManager::getDefinitions() does not
+    // 🤷‍♂️!
     // @see \Drupal\Core\Config\TypedConfigManager::getDefinitionWithReplacements()
     // @see ::getValidKeys()
     $valid_keys_per_type = [];
@@ -179,22 +180,21 @@ class Mapping extends ArrayElement {
     // ("statically") valid. Not all types have a fallback type.
     // @see \Drupal\Core\Config\TypedConfigManager::getDefinitionWithReplacements()
     $fallback_type = $typed_data_manager->findFallback($original_mapping_type);
-    $valid_keys_everywhere = array_intersect_key(
-      $valid_keys_per_type,
-      [$fallback_type => NULL],
-    );
-    assert(count($valid_keys_everywhere) <= 1);
-    $statically_required_keys = NestedArray::mergeDeepArray($valid_keys_everywhere);
+    if ($fallback_type !== NULL && isset($valid_keys_per_type[$fallback_type])) {
+      $valid_keys_everywhere = [$fallback_type => $valid_keys_per_type[$fallback_type]];
+      $statically_required_keys = NestedArray::mergeDeepArray($valid_keys_everywhere);
 
-    // Now that statically valid keys are known, determine which valid keys are
-    // only valid in *some* cases: remove the statically valid keys from every
-    // per-type array of valid keys.
-    $valid_keys_some = array_diff_key($valid_keys_per_type, $valid_keys_everywhere);
-    $valid_keys_some_processed = array_map(
-      fn (array $keys) => array_values(array_filter($keys, fn (string $key) => !in_array($key, $statically_required_keys, TRUE))),
-      $valid_keys_some
-    );
-    return $valid_keys_some_processed;
+      // Now that statically valid keys are known, determine which valid keys
+      // are only valid in *some* cases: remove the statically valid keys from
+      // every per-type array of valid keys.
+      unset($valid_keys_per_type[$fallback_type]);
+      $valid_keys_per_type = array_map(
+        fn (array $keys) => array_values(array_filter($keys, fn (string $key) => !in_array($key, $statically_required_keys, TRUE))),
+        $valid_keys_per_type
+      );
+    }
+
+    return $valid_keys_per_type;
   }
 
   /**
@@ -220,8 +220,6 @@ class Mapping extends ArrayElement {
    *
    * @param \Drupal\Core\TypedData\MapDataDefinition $definition
    *   The config schema definition for a `type: mapping`.
-   *
-   * @return void
    *
    * @throws \LogicException
    *   Thrown when `requiredKey: true` is specified.
@@ -274,7 +272,7 @@ class Mapping extends ArrayElement {
     // use in a regex. So:
     // `module\.something\.foo_.*`
     // or
-    // `.*\.third_party\..*`
+    // `.*\.third_party\..*`.
     $regex = str_replace(['.', '[]'], ['\.', '.*'], $name);
     // Now find all possible types:
     // 1. `module.something.foo_foo`, `module.something.foo_bar`, etc.

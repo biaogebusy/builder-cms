@@ -3,8 +3,10 @@
 namespace Drupal\redirect\Plugin\Action;
 
 use Drupal\Core\Action\ActionBase;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,6 +20,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   confirm_form_route_name = "entity.redirect.multiple_delete_confirm"
  * )
  */
+#[Action(
+  id: 'redirect_delete_action',
+  label: new TranslatableMarkup('Delete redirect'),
+  confirm_form_route_name: 'entity.redirect.multiple_delete_confirm',
+  type: 'redirect',
+)]
 class DeleteRedirect extends ActionBase implements ContainerFactoryPluginInterface {
 
   /**

@@ -9,6 +9,7 @@ use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\system\Traits\OffCanvasTestTrait;
+use Drupal\views\Entity\View;
 
 /**
  * @group commerce
@@ -30,6 +31,7 @@ class ProductLayoutBuilderIntegrationTest extends ProductWebDriverTestBase {
     'off_canvas_test',
     'views',
     'views_ui',
+    'commerce_product_test',
   ];
 
   /**
@@ -49,6 +51,20 @@ class ProductLayoutBuilderIntegrationTest extends ProductWebDriverTestBase {
       'administer site configuration',
       'administer views',
     ], parent::getAdministratorPermissions());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    // Workaround to the faulty deprecation check performed in the parent method
+    // Somehow, the $warnings array contain non string items causing the
+    // str_starts_with() check to trigger a TypeError.
+    // @see https://www.drupal.org/project/drupal/issues/3568635.
+    $this->getSession()->executeScript(
+      "sessionStorage.setItem('js_testing_log_test.warnings', '[]');"
+    );
+    parent::tearDown();
   }
 
   /**
@@ -203,24 +219,44 @@ class ProductLayoutBuilderIntegrationTest extends ProductWebDriverTestBase {
     $this->addBlockToLayout('SKU');
     $this->configureDefaultLayout();
 
-    $this->drupalGet('admin/structure/views/add');
-    $page = $this->getSession()->getPage();
-
-    $name = 'Product list';
-    $name_input = $page->findField('label');
-    $name_input->setValue($name);
-
-    $this->getSession()->getPage()->selectFieldOption('show[wizard_key]', 'standard:commerce_product_field_data');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-
-    $page->findField('page[create]')->click();
-    $this->assertEquals($name, $page->findField('page[title]')->getValue());
-    $this->assertEquals(strtolower(str_replace(' ', '-', $name)), $page->findField('page[path]')->getValue());
-    $this->getSession()->getPage()->selectFieldOption('page[style][row_plugin]', 'entity:commerce_product');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-
-    $this->submitForm([], 'Save and edit');
-    $this->assertSession()->addressEquals('admin/structure/views/view/product_list');
+    // A page view listing products with the entity row, so each product
+    // (including those without variations) is rendered through its Layout
+    // Builder-enabled display. Built directly rather than through the Views UI
+    // wizard, whose live-preview AJAX is unreliable in this test.
+    View::create([
+      'id' => 'product_list',
+      'label' => 'Product list',
+      'base_table' => 'commerce_product_field_data',
+      'base_field' => 'product_id',
+      'display' => [
+        'default' => [
+          'display_plugin' => 'default',
+          'id' => 'default',
+          'display_title' => 'Default',
+          'position' => 0,
+          'display_options' => [
+            'title' => 'Product list',
+            'access' => ['type' => 'none'],
+            'row' => [
+              'type' => 'entity:commerce_product',
+              'options' => ['view_mode' => 'default'],
+            ],
+            'style' => ['type' => 'default'],
+          ],
+        ],
+        'page_1' => [
+          'display_plugin' => 'page',
+          'id' => 'page_1',
+          'display_title' => 'Page',
+          'position' => 1,
+          'display_options' => [
+            'path' => 'product-list',
+          ],
+        ],
+      ],
+    ])->save();
+    // Register the new page display's route.
+    $this->container->get('router.builder')->rebuild();
 
     $this->drupalGet('product-list');
     $this->assertSession()->pageTextContains('Product list');
@@ -351,6 +387,42 @@ class ProductLayoutBuilderIntegrationTest extends ProductWebDriverTestBase {
   }
 
   /**
+   * Tests that an extra field can be added to the layout.
+   */
+  public function testExtraFieldInLayoutBuilder() {
+    $variation = $this->createEntity('commerce_product_variation', [
+      'type' => 'default',
+      'sku' => 'variation',
+      'price' => [
+        'number' => 10,
+        'currency_code' => 'USD',
+      ],
+    ]);
+
+    $product = $this->createEntity('commerce_product', [
+      'type' => 'default',
+      'title' => $this->randomMachineName(),
+      'stores' => $this->stores,
+      'body' => ['value' => 'Testing product variation extra field injection!'],
+      'variations' => [$variation],
+    ]);
+
+    $this->enableLayoutsForBundle('default');
+    $this->addBlockToLayout('Variations', function () {
+      $this->getSession()->getPage()->selectFieldOption('Label', '- Hidden -');
+      $this->getSession()->getPage()->selectFieldOption('Formatter', 'Rendered entity');
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    });
+    $save_layout = $this->getSession()->getPage()->findButton('Save layout');
+    $save_layout->focus();
+    $save_layout->click();
+
+    // Confirm that extra field shown correctly.
+    $this->drupalGet($product->toUrl());
+    $this->assertSession()->pageTextContains('Extra field content');
+  }
+
+  /**
    * Configures a default layout for a product type.
    */
   protected function configureDefaultLayout() {
@@ -365,6 +437,7 @@ class ProductLayoutBuilderIntegrationTest extends ProductWebDriverTestBase {
     $this->addBlockToLayout('Variations', function () {
       $this->getSession()->getPage()->selectFieldOption('Label', '- Hidden -');
       $this->getSession()->getPage()->selectFieldOption('Formatter', 'Add to cart form');
+      $this->assertSession()->assertWaitOnAjaxRequest();
     });
 
     $save_layout = $this->getSession()->getPage()->findButton('Save layout');
@@ -429,8 +502,7 @@ class ProductLayoutBuilderIntegrationTest extends ProductWebDriverTestBase {
       $configure();
     }
     $this->getSession()->getPage()->pressButton('Add block');
-    $assert_session->assertWaitOnAjaxRequest();
-    $assert_session->assertNoElementAfterWait('css', '#drupal-off-canvas');
+    $assert_session->waitForElementRemoved('css', '#drupal-off-canvas');
   }
 
   /**

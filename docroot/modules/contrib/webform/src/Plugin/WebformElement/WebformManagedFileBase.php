@@ -12,6 +12,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url as UrlGenerator;
 use Drupal\file\Entity\File;
@@ -35,11 +36,11 @@ use Symfony\Component\HttpFoundation\HeaderUtils;
 abstract class WebformManagedFileBase extends WebformElementBase implements WebformElementAttachmentInterface, WebformElementEntityReferenceInterface, WebformElementFileDownloadAccessInterface {
 
   /**
-   * List of blacklisted mime types that must be downloaded.
+   * List of mime types that must be downloaded.
    *
    * @var array
    */
-  protected static $blacklistedMimeTypes = [
+  protected static $downloadMimeTypes = [
     'application/pdf',
     'application/xml',
     'image/svg+xml',
@@ -191,7 +192,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     // Track if this element has been processed because the work-around below
     // for 'Issue #2705471: Webform states File fields' which nests the
     // 'managed_file' element in a basic container, which triggers this element
@@ -239,28 +240,24 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
     array_splice($element['#element_validate'], 1, 0, $element_validate);
 
     // Upload validators.
-    // @see webform_preprocess_file_upload_help
-    $element['#upload_validators']['file_validate_size'] = [$this->getMaxFileSize($element)];
-    $element['#upload_validators']['file_validate_extensions'] = [$this->getFileExtensions($element)];
-    // Define 'webform_file_validate_extensions' which allows file
-    // extensions within webforms to be comma-delimited. The
-    // 'webform_file_validate_extensions' will be ignored by file_validate().
-    // @see file_validate()
-    // Issue #3136578: Comma-separate the list of allowed file extensions.
-    // @see https://www.drupal.org/project/drupal/issues/3136578
-    $element['#upload_validators']['webform_file_validate_extensions'] = [];
-    $element['#upload_validators']['webform_file_validate_name_length'] = [];
+    $element['#upload_validators']['FileSizeLimit'] = ['fileLimit' => $this->getMaxFileSize($element)];
+    $element['#upload_validators']['FileExtension'] = ['extensions' => $this->getFileExtensions($element)];
+    $element['#upload_validators']['FileNameLength'] = [
+      'maxLength' => 150,
+      'messageTooLong' => "The file's name exceeds the Webform module's 150 characters limit. Please rename the file and try again.",
+    ];
 
     // Add file upload help to the element as #description, #help, or #more.
     // Copy upload validator so that we can add webform's file limit to
     // file upload help only.
-    $upload_validators = $element['#upload_validators'];
-    if ($file_limit) {
-      $upload_validators['webform_file_limit'] = [Bytes::toNumber($file_limit)];
-    }
     $file_upload_help = [
       '#theme' => 'file_upload_help',
-      '#upload_validators' => $upload_validators,
+      '#upload_validators' => $element['#upload_validators'] + ($file_limit ? [
+        // Add a custom "validator" that is just used in
+        // webform_preprocess_file_upload_help to show a "per form" upload
+        // limit. This is validated below in ::validateManagedFileLimit.
+        'webform_file_limit' => Bytes::toNumber($file_limit),
+      ] : []),
       '#cardinality' => (empty($element['#multiple'])) ? 1 : $element['#multiple'],
     ];
     $file_help = $element['#file_help'] ?? 'description';
@@ -298,7 +295,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
     // @see \Drupal\webform\Plugin\WebformElementBase::preRenderFixFlexboxWrapper
     $request_params = \Drupal::request()->request->all();
     if (\Drupal::request()->request->get('_drupal_ajax')
-      && (!empty($request_params['files']) || !empty($request_params[$element['#webform_key']]))) {
+      && (!empty($request_params['files']) || (isset($element['#webform_key']) && !empty($request_params[$element['#webform_key']])))) {
       $element['#webform_wrapper'] = FALSE;
     }
 
@@ -356,7 +353,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
 
       default:
         $theme = str_replace('webform_', 'webform_element_', $this->getPluginId());
-        if (strpos($theme, 'webform_') !== 0) {
+        if (!str_starts_with($theme, 'webform_')) {
           $theme = 'webform_element_' . $theme;
         }
         return [
@@ -604,24 +601,32 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
    *   Max file size.
    */
   protected function getMaxFileSize(array $element) {
-    $max_filesize = $this->configFactory->get('webform.settings')->get('file.default_max_filesize') ?: Environment::getUploadMaxSize();
-    $max_filesize = Bytes::toNumber($max_filesize);
-    if (!empty($element['#max_filesize'])) {
-      $max_filesize = min($max_filesize, Bytes::toNumber($element['#max_filesize'] . 'MB'));
-    }
-    return $max_filesize;
+    $max_filesizes = [
+      'default' => $this->configFactory->get('webform.settings')->get('file.default_max_filesize'),
+      'php' => Environment::getUploadMaxSize(),
+      'element' => !empty($element['#max_filesize']) ? $element['#max_filesize'] . 'MB' : 0,
+    ];
+
+    // Convert max file sizes to bytes.
+    $max_filesizes = array_map(fn ($size): int => Bytes::toNumber($size), $max_filesizes);
+
+    // Filter out zero values (which indicate no limit).
+    $max_filesizes = array_filter($max_filesizes);
+
+    // Return the smallest max file size, defaulting to 0 if no limits are set.
+    return !empty($max_filesizes) ? min($max_filesizes) : 0;
   }
 
   /**
    * Get the allowed file extensions for an element.
    *
-   * @param array $element
+   * @param array|null $element
    *   An element.
    *
    * @return string
    *   File extensions.
    */
-  protected function getFileExtensions(array $element = NULL) {
+  protected function getFileExtensions(?array $element = NULL) {
     $extensions = (!empty($element['#file_extensions'])) ? $element['#file_extensions'] : $this->getDefaultFileExtensions();
     $extensions = str_replace(',', ' ', $extensions);
     return $extensions;
@@ -795,7 +800,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
         // Don't allow anonymous temporary files to be previewed.
         // @see template_preprocess_file_link().
         // @see webform_preprocess_file_link().
-        if ($file->isTemporary() && $file->getOwner()->isAnonymous() && strpos($file->getFileUri(), 'private://') === 0) {
+        if ($file->isTemporary() && $file->getOwner()->isAnonymous() && str_starts_with($file->getFileUri(), 'private://')) {
           continue;
         }
 
@@ -940,8 +945,11 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
 
     // If has access and total file size exceeds file limit then display error.
     if (Element::isVisibleElement($element) && $total_file_size > $file_limit) {
-      $t_args = ['%quota' => format_size($file_limit)];
-      $message = t("This form's file upload quota of %quota has been exceeded. Please remove some files.", $t_args);
+      $file_limit_message = $webform_submission->getWebform()->getSetting('form_file_limit_message')
+        ?: \Drupal::config('webform.settings')->get('settings.default_form_file_limit_message')
+        ?: '';
+      $t_args = ['%quota' => ByteSizeMarkup::create($file_limit)];
+      $message = t($file_limit_message, $t_args);
       $form_state->setError($element, $message);
     }
   }
@@ -969,8 +977,8 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
       $form['file']['file_message'] = [
         '#type' => 'webform_message',
         '#message_message' => '<strong>' . $this->t('Saving of results is disabled.') . '</strong> ' .
-          $this->t('Uploaded files will be temporarily stored on the server and referenced in the database for %interval.', ['%interval' => $temporary_interval]) . ' ' .
-          $this->t('Uploaded files should be attached to an email and/or remote posted to an external server.'),
+        $this->t('Uploaded files will be temporarily stored on the server and referenced in the database for %interval.', ['%interval' => $temporary_interval]) . ' ' .
+        $this->t('Uploaded files should be attached to an email and/or remote posted to an external server.'),
         '#message_type' => 'warning',
         '#access' => TRUE,
       ];
@@ -990,7 +998,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
         '#type' => 'webform_message',
         '#message_type' => 'warning',
         '#message_message' => $this->t('Public files upload destination is dangerous for webforms that are available to anonymous and/or untrusted users.') . ' ' .
-          $this->t('For more information see: <a href="https://www.drupal.org/psa-2016-003">DRUPAL-PSA-2016-003</a>'),
+        $this->t('For more information see: <a href="https://www.drupal.org/psa-2016-003">DRUPAL-PSA-2016-003</a>'),
         '#access' => TRUE,
         '#states' => [
           'visible' => [
@@ -1032,8 +1040,8 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
       '#type' => 'select',
       '#title' => $this->t('File upload preview (Authenticated users only)'),
       '#description' => $this->t('Select how the uploaded file previewed.') . '<br/><br/>' .
-          $this->t('Allowing anonymous users to preview files is dangerous.') . '<br/>' .
-          $this->t('For more information see: <a href="https://www.drupal.org/psa-2016-003">DRUPAL-PSA-2016-003</a>'),
+      $this->t('Allowing anonymous users to preview files is dangerous.') . '<br/>' .
+      $this->t('For more information see: <a href="https://www.drupal.org/psa-2016-003">DRUPAL-PSA-2016-003</a>'),
       '#options' => WebformOptionsHelper::appendValueToText($this->getItemFormats()),
       '#empty_option' => '<' . $this->t('no preview') . '>',
     ];
@@ -1051,7 +1059,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
       '#type' => 'textfield',
       '#title' => $this->t('Allowed file extensions'),
       '#description' => $this->t('Separate extensions with a space or comma and do not include the leading dot.') . '<br/><br/>' .
-        $this->t('Defaults to: %value', ['%value' => $this->getDefaultFileExtensions()]),
+      $this->t('Defaults to: %value', ['%value' => $this->getDefaultFileExtensions()]),
       '#maxlength' => 255,
     ];
     $form['file']['file_name'] = [
@@ -1142,7 +1150,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
    * @param null|array $fids
    *   An array of file ids. If NULL all files are deleted.
    */
-  public static function deleteFiles(WebformSubmissionInterface $webform_submission, array $fids = NULL) {
+  public static function deleteFiles(WebformSubmissionInterface $webform_submission, ?array $fids = NULL) {
     // Make sure the file.module is enabled since this method is called from
     // \Drupal\webform\WebformSubmissionStorage::delete.
     if (!\Drupal::moduleHandler()->moduleExists('file')) {
@@ -1220,7 +1228,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
       if ($source_uri !== $destination_uri) {
         $destination_uri = $this->fileSystem->move($source_uri, $destination_uri);
         $file->setFileUri($destination_uri);
-        $file->setFileName($this->fileSystem->basename($destination_uri));
+        $file->setFileName(\basename($destination_uri));
         $file->save();
         $this->entityTypeManager->getStorage('file')->resetCache([$file->id()]);
       }
@@ -1319,7 +1327,7 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
    *   Returns FALSE if the user can't access the file.
    *   Returns TRUE if the user can access the file.
    */
-  public static function accessFile(FileInterface $file, AccountInterface $account = NULL) {
+  public static function accessFile(FileInterface $file, ?AccountInterface $account = NULL) {
     if (empty($file)) {
       return NULL;
     }
@@ -1374,16 +1382,14 @@ abstract class WebformManagedFileBase extends WebformElementBase implements Webf
       // Return file content headers.
       $headers = file_get_content_headers($file);
 
-      /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-      $file_system = \Drupal::service('file_system');
-      $filename = $file_system->basename($uri);
+      $filename = \basename($uri);
       // Fallback name in case file name contains none ASCII characters.
       $filename_fallback = \Drupal::transliteration()->transliterate($filename);
       // Remove other characters not removed by Transliteration.
       $illegal_characters = '/[%#&{}\<>*?\/ $!\'":@+`|=]/';
       $filename_fallback = preg_replace($illegal_characters, '', $filename_fallback);
-      // Force blacklisted files to be downloaded instead of opening in the browser.
-      if (in_array($headers['Content-Type'], static::$blacklistedMimeTypes)) {
+      // Force some files to be downloaded instead of opening in the browser.
+      if (in_array($headers['Content-Type'], static::$downloadMimeTypes)) {
         $headers['Content-Disposition'] = HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, (string) $filename, $filename_fallback);
       }
       else {

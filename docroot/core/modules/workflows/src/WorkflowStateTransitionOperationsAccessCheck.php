@@ -27,8 +27,8 @@ class WorkflowStateTransitionOperationsAccessCheck implements AccessInterface {
    * is required in the route for the access check to be applied. For the "add"
    * operation, only a workflow is required. The '_workflow_access' requirement
    * translates into access checks on the workflow entity type in the formats:
-   *   - @code"$operation-state:$state_id"@endcode
-   *   - @code"$operation-transition:$transition_id"@endcode
+   *   - "$operation-state:$state_id"
+   *   - "$operation-transition:$transition_id"
    *
    * For example the following route definition with the path
    * "/test-workflow/foo-state/delete" the 'delete-state:foo-state' operation
@@ -40,7 +40,7 @@ class WorkflowStateTransitionOperationsAccessCheck implements AccessInterface {
    * @endcode
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The parametrized route
+   *   The parametrized route.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The currently logged in account.
    *
@@ -72,7 +72,7 @@ class WorkflowStateTransitionOperationsAccessCheck implements AccessInterface {
    * Get the operation that will be used for the access check.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The parametrized route
+   *   The parametrized route.
    *
    * @return string
    *   The access operation.

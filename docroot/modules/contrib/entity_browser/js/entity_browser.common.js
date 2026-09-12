@@ -141,7 +141,7 @@
       }
 
       if (typeof fn === 'function') {
-        $(element).bind(event_name, fn);
+        $(element).on(event_name, fn);
       }
     }
   };

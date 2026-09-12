@@ -2,7 +2,9 @@
 
 namespace Drupal\charts\Element;
 
+use Drupal\charts\Service\ChartTableBuilder;
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -27,34 +29,6 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
   use LibraryRetrieverTrait;
 
   /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * The chart plugin manager.
-   *
-   * @var \Drupal\charts\ChartManager
-   */
-  protected $chartsManager;
-
-  /**
-   * The chart type info service.
-   *
-   * @var \Drupal\charts\Plugin\chart\Type\TypeInterface
-   */
-  protected $chartsTypeManager;
-
-  /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
    * Constructs a Chart object.
    *
    * @param array $configuration
@@ -63,22 +37,30 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory service.
-   * @param \Drupal\charts\ChartManager $chart_manager
+   * @param \Drupal\charts\ChartManager $chartsManager
    *   The chart plugin manager.
-   * @param \Drupal\charts\TypeManager $type_manager
+   * @param \Drupal\charts\TypeManager $chartsTypeManager
    *   The chart type manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler service.
+   * @param \Drupal\charts\Service\ChartTableBuilder|null $tableBuilder
+   *   The chart table builder service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $config_factory, ChartManager $chart_manager, TypeManager $type_manager, ModuleHandlerInterface $module_handler) {
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    mixed $plugin_definition,
+    protected ConfigFactoryInterface $configFactory,
+    protected ChartManager $chartsManager,
+    protected TypeManager $chartsTypeManager,
+    protected ModuleHandlerInterface $moduleHandler,
+    protected ?ChartTableBuilder $tableBuilder = NULL,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->configFactory = $config_factory;
-    $this->chartsManager = $chart_manager;
-    $this->chartsTypeManager = $type_manager;
-    $this->moduleHandler = $module_handler;
+    // @phpstan-ignore-next-line
+    $this->tableBuilder ??= \Drupal::service('charts.table_builder');
   }
 
   /**
@@ -92,7 +74,8 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
       $container->get('config.factory'),
       $container->get('plugin.manager.charts'),
       $container->get('plugin.manager.charts_type'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('charts.table_builder')
     );
   }
 
@@ -111,6 +94,11 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
       '#title_font_size' => 14,
       '#title_position' => 'out',
       '#subtitle' => NULL,
+      '#figure_caption' => '',
+      '#chart_summary' => '',
+      '#accessible_table' => 'disabled',
+      '#accessible_table_button_text' => '',
+      '#accessible_table_button_class' => 'button',
       '#colors' => ChartBase::getDefaultColors(),
       '#font' => 'Arial',
       '#font_size' => 12,
@@ -157,7 +145,7 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  public function preRender(array $element) {
+  public function preRender(array $element): array {
     /** @var \Drupal\charts\Plugin\chart\Library\ChartInterface[] $definitions */
     $definitions = $this->chartsManager->getDefinitions();
 
@@ -169,18 +157,21 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
 
     // Ensure there's an x and y axis to provide defaults.
     $type_name = $element['#chart_type'];
-    $type = $this->chartsTypeManager->getDefinition($type_name);
-    if ($type && $type['axis'] === ChartInterface::DUAL_AXIS) {
-      $children_types = [];
-      foreach (Element::children($element) as $key) {
-        $children_types[] = $element[$key]['#type'];
-      }
+    // Only lookup definition if a type name is provided.
+    if ($type_name) {
+      $type = $this->chartsTypeManager->getDefinition($type_name);
+      if ($type && $type['axis'] === ChartInterface::DUAL_AXIS) {
+        $children_types = [];
+        foreach (Element::children($element) as $key) {
+          $children_types[] = $element[$key]['#type'];
+        }
 
-      if (!in_array('chart_xaxis', $children_types)) {
-        $element['xaxis'] = ['#type' => 'chart_xaxis'];
-      }
-      if (!in_array('chart_yaxis', $children_types)) {
-        $element['yaxis'] = ['#type' => 'chart_yaxis'];
+        if (!in_array('chart_xaxis', $children_types)) {
+          $element['xaxis'] = ['#type' => 'chart_xaxis'];
+        }
+        if (!in_array('chart_yaxis', $children_types)) {
+          $element['yaxis'] = ['#type' => 'chart_yaxis'];
+        }
       }
     }
 
@@ -205,9 +196,19 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
     $plugin_configuration = $charts_settings->get('charts_default_settings.library_config') ?? [];
     /** @var \Drupal\charts\Plugin\chart\Library\ChartInterface $plugin */
     $plugin = $this->chartsManager->createInstance($library, $plugin_configuration);
-    if (!$plugin->isSupportedChartType($type_name)) {
+
+    // Only check supported types if a type is actually declared.
+    if ($type_name && !$plugin->isSupportedChartType($type_name)) {
       // Chart type not supported by the library.
       throw new \LogicException(sprintf('The provided chart type "%s" is not supported by "%s" chart plugin library.', $type_name, $plugin->getChartName()));
+    }
+
+    // If using the raw option and the user input a JSON string.
+    if (!empty($element['#chart_definition']) && is_string($element['#chart_definition'])) {
+      $decoded = $this->decodeLooseJson($element['#chart_definition']);
+      if ($decoded !== NULL) {
+        $element['#chart_definition'] = $decoded;
+      }
     }
 
     $element = $plugin->preRender($element);
@@ -216,16 +217,23 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
       $chart_definition = $element['#chart_definition'];
       unset($element['#chart_definition']);
 
-      // Allow the chart definition to be altered - @TODO use event dispatching
-      // if needed.
+      // Allow the chart definition to be altered.
       $alter_hooks = ['chart_definition'];
       if ($element['#chart_id']) {
         $alter_hooks[] = 'chart_definition_' . $chart_id;
       }
-      $this->moduleHandler->alter($alter_hooks, $chart_definition, $element, $chart_id);
+
+      // Ensure element is an array before passing to hooks.
+      if (is_array($element)) {
+        $this->moduleHandler->alter($alter_hooks, $chart_definition, $element, $chart_id);
+      }
+
       // Set the element #chart_json property as a data-attribute.
       $element['#attributes']['data-chart'] = Json::encode($chart_definition);
     }
+
+    // Accessible table options.
+    $element = $this->accessibleTableLogic($element);
 
     $element['#cache']['tags'][] = 'config:charts.settings';
 
@@ -238,7 +246,7 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
    * @param array $element
    *   The element.
    */
-  public static function castElementIntegerValues(array &$element) {
+  public static function castElementIntegerValues(array &$element): void {
     // Cast options to integers to avoid redundant library fixing problems.
     $integer_options = [
       // Chart options.
@@ -259,11 +267,11 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
     ];
 
     foreach ($element as $property_name => $value) {
-      if (is_array($element[$property_name])) {
+      if (is_array($value)) {
         self::castElementIntegerValues($element[$property_name]);
       }
       elseif ($property_name && in_array($property_name, $integer_options)) {
-        $element[$property_name] = (is_null($element[$property_name]) || strlen($element[$property_name]) === 0) ? NULL : (int) $element[$property_name];
+        $element[$property_name] = (is_null($value) || strlen($value) === 0) ? NULL : (int) $value;
       }
     }
   }
@@ -274,7 +282,7 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
    * @param array $array
    *   The array to trim.
    */
-  public static function trimArray(array &$array) {
+  public static function trimArray(array &$array): void {
     foreach ($array as $key => &$value) {
       if (is_array($value)) {
         self::trimArray($value);
@@ -309,6 +317,11 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
       '#title' => $settings['display']['title'],
       '#title_position' => $settings['display']['title_position'],
       '#subtitle' => $settings['display']['subtitle'] ?? '',
+      '#figure_caption' => $settings['display']['figure_caption'] ?? '',
+      '#chart_summary' => $settings['display']['chart_summary'] ?? '',
+      '#accessible_table' => $settings['display']['accessible_table'] ?? 'disabled',
+      '#accessible_table_button_text' => $settings['display']['accessible_table_button_text'] ?? '',
+      '#accessible_table_button_class' => $settings['display']['accessible_table_button_class'] ?? '',
       '#tooltips' => $settings['display']['tooltips'] ?? [],
       '#data_labels' => $settings['display']['data_labels'] ?? FALSE,
       '#data_markers' => $settings['display']['data_markers'] ?? FALSE,
@@ -410,6 +423,9 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
         if (!empty($data['color'])) {
           $element[$key]['#color'] = $data['color'];
         }
+        if (!empty($data['chart_type'])) {
+          $element[$key]['#chart_type'] = $data['chart_type'];
+        }
         if (isset($element['yaxis'])) {
           $element[$key]['#prefix'] = $settings['yaxis']['prefix'];
           $element[$key]['#suffix'] = $settings['yaxis']['suffix'];
@@ -423,6 +439,118 @@ class Chart extends RenderElementBase implements ContainerFactoryPluginInterface
         }
         $series_counter++;
       }
+    }
+
+    return $element;
+  }
+
+  /**
+   * Attempts to decode a loose JSON object string.
+   *
+   * This method attempts to fix common syntax issues found in JavaScript
+   * library examples that are not valid strict JSON.
+   *
+   * @param string $input
+   *   The raw string input.
+   *
+   * @return mixed|null
+   *   The decoded array, or NULL if it cannot be decoded.
+   */
+  protected function decodeLooseJson(string $input): ?array {
+    // Try strict decode first.
+    $decoded = Json::decode($input);
+
+    if ($decoded !== NULL || json_last_error() === JSON_ERROR_NONE) {
+      return $decoded;
+    }
+
+    // If strict decode fails, try to fix common "Loose JS" issues.
+    $loose_json = $input;
+
+    // Replace single quotes with double quotes, but ignore escaped
+    // single quotes.
+    $loose_json = str_replace("'", '"', $loose_json);
+
+    // Quote unquoted keys, ignoring keys that already have quotes.
+    // Looks for word characters at the start of the string or preceded by
+    // a comma/brace, followed by a colon.
+    $loose_json = preg_replace('/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/', '$1"$2"$3', $loose_json);
+
+    // Fix trailing commas (common in JS, invalid in JSON).
+    $loose_json = preg_replace('/,\s*([]}])/', '$1', $loose_json);
+
+    return Json::decode($loose_json);
+  }
+
+  /**
+   * Logic to build the accessible table.
+   *
+   * @param array $element
+   *   The chart element.
+   *
+   * @return array
+   *   The element with a table alternative.
+   */
+  protected function accessibleTableLogic(array $element): array {
+    $visibility = $element['#accessible_table'] ?? 'collapsible';
+
+    if ($visibility !== 'disabled') {
+      $raw_table = $this->tableBuilder->buildTable($element);
+
+      if ($visibility === 'collapsible') {
+        $unique_id = Html::getUniqueId('charts-table-' . $element['#id']);
+
+        // Get custom classes.
+        $custom_classes = !empty($element['#accessible_table_button_class'])
+          ? explode(' ', $element['#accessible_table_button_class'])
+          : [];
+        // Merge with required JS trigger class.
+        $btn_classes = array_merge(['charts-accordion-trigger'], $custom_classes);
+
+        $element['#table_alternative'] = [
+          'trigger' => [
+            '#type' => 'html_tag',
+            '#tag' => 'button',
+            '#value' => !empty($element['#accessible_table_button_text']) ? $element['#accessible_table_button_text'] : $this->t('View data table'),
+            '#attributes' => [
+              'class' => $btn_classes,
+              'type' => 'button',
+              'aria-expanded' => 'false',
+              'aria-controls' => $unique_id,
+            ],
+          ],
+          'content' => [
+            '#type' => 'html_tag',
+            '#tag' => 'div',
+            '#attributes' => [
+              'id' => $unique_id,
+              'class' => ['charts-accordion-content'],
+              'style' => 'display:none;',
+            ],
+            'table' => $raw_table,
+          ],
+        ];
+      }
+      elseif ($visibility === 'visible') {
+        $element['#table_alternative'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['chart-table-visible', 'charts-accessible-table-wrapper']],
+          'content' => $raw_table,
+        ];
+      }
+      elseif ($visibility === 'invisible') {
+        $element['#table_alternative'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['visually-hidden', 'charts-accessible-table-wrapper']],
+          'content' => $raw_table,
+        ];
+      }
+      $element['#table_visibility'] = $visibility;
+    }
+    else {
+      // Explicitly empty variables when disabled.
+      $element['#table_alternative'] = [];
+      $element['#table_visibility'] = 'disabled';
     }
 
     return $element;

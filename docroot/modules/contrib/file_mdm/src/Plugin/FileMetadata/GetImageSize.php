@@ -18,7 +18,7 @@ use Drupal\file_mdm\Plugin\Attribute\FileMetadata;
 )]
 class GetImageSize extends FileMetadataPluginBase {
 
-  public function getSupportedKeys(array $options = NULL): array {
+  public function getSupportedKeys(?array $options = NULL): array {
     return [0, 1, 2, 3, 'mime', 'channels', 'bits'];
   }
 

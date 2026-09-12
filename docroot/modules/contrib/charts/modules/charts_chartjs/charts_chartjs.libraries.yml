@@ -5,18 +5,34 @@ charts_chartjs:
     name: 'Apache 2.0'
     url: 'https://www.apache.org/licenses/LICENSE-2.0'
     gpl-compatible: false
-  # @todo
   cdn:
     /libraries/chart.js/: https://unpkg.com/chart.js@4.4.0/
     /libraries/chartjs-adapter-date-fns/: https://unpkg.com/chartjs-adapter-date-fns@3.0.0/
     /libraries/chartjs-plugin-datalabels/: https://unpkg.com/chartjs-plugin-datalabels@2.0.0/
+    /libraries/chartjs-plugin-annotation/: https://unpkg.com/chartjs-plugin-annotation@3.1.0/
   js:
     /libraries/chart.js/dist/chart.umd.js: { }
     /libraries/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.js: { }
     /libraries/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.js: { }
+    /libraries/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.js: { }
   dependencies:
     - core/drupal
     - core/once
+
+chartjs_treemap_plugin:
+  remote: 'https://github.com/kurkle/chartjs-chart-treemap'
+  version: VERSION
+  license:
+    name: 'MIT'
+    url: 'https://opensource.org/licenses/MIT'
+    gpl-compatible: true
+  cdn:
+    /libraries/chartjs-chart-treemap/: https://unpkg.com/chartjs-chart-treemap@3.1.0/
+  js:
+    /libraries/chartjs-chart-treemap/dist/chartjs-chart-treemap.min.js: { }
+  dependencies:
+    - charts_chartjs/charts_chartjs
+
 chartjs:
   version: 1.x
   js:
@@ -24,3 +40,12 @@ chartjs:
   dependencies:
     - charts/global
     - charts_chartjs/charts_chartjs
+
+color_changer:
+  version: VERSION
+  js:
+    js/color_changer.js: { }
+  dependencies:
+    - core/drupal
+    - core/once
+    - charts_chartjs/chartjs

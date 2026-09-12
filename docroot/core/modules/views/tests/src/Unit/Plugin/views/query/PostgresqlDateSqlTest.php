@@ -7,14 +7,15 @@ namespace Drupal\Tests\views\Unit\Plugin\views\query;
 use Drupal\Core\Database\Connection;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\query\PostgresqlDateSql;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the PostgreSQL-specific date query handler.
- *
- * @coversDefaultClass \Drupal\views\Plugin\views\query\PostgresqlDateSql
- *
- * @group views
  */
+#[CoversClass(PostgresqlDateSql::class)]
+#[Group('views')]
 class PostgresqlDateSqlTest extends UnitTestCase {
 
   /**
@@ -34,8 +35,6 @@ class PostgresqlDateSqlTest extends UnitTestCase {
 
   /**
    * Tests the getDateField method.
-   *
-   * @covers ::getDateField
    */
   public function testGetDateField(): void {
     $date_sql = new PostgresqlDateSql($this->database);
@@ -49,11 +48,8 @@ class PostgresqlDateSqlTest extends UnitTestCase {
 
   /**
    * Tests date formatting replacement.
-   *
-   * @covers ::getDateFormat
-   *
-   * @dataProvider providerTestGetDateFormat
    */
+  #[DataProvider('providerTestGetDateFormat')]
   public function testGetDateFormat($field, $format, $expected_format): void {
     $date_sql = new PostgresqlDateSql($this->database);
 
@@ -73,8 +69,6 @@ class PostgresqlDateSqlTest extends UnitTestCase {
 
   /**
    * Tests timezone offset formatting.
-   *
-   * @covers ::setFieldTimezoneOffset
    */
   public function testSetFieldTimezoneOffset(): void {
     $date_sql = new PostgresqlDateSql($this->database);
@@ -86,8 +80,6 @@ class PostgresqlDateSqlTest extends UnitTestCase {
 
   /**
    * Tests setting the database offset.
-   *
-   * @covers ::setTimezoneOffset
    */
   public function testSetTimezoneOffset(): void {
     $database = $this->prophesize(Connection::class);

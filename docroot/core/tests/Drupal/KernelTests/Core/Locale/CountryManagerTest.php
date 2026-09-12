@@ -4,22 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Locale;
 
+use Drupal\Core\Locale\CountryManager;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Country Manager functionality.
- *
- * @group CountryManager
- * @covers Drupal\Core\Locale\CountryManager
  */
+#[Group('CountryManager')]
+#[CoversClass(CountryManager::class)]
+#[RunTestsInSeparateProcesses]
 class CountryManagerTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'language',
-    'locale',
     'locale_test',
   ];
 

@@ -5,10 +5,13 @@ namespace Drupal\page_manager\Plugin\DisplayVariant;
 use Drupal\Core\Display\ContextAwareVariantInterface;
 use Drupal\Core\Display\VariantBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Layout\LayoutPluginManagerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ctools\Plugin\PluginWizardInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\SectionListTrait;
 use Drupal\page_manager\Form\LayoutBuilderForm;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a Layout Builder variant.
@@ -18,7 +21,7 @@ use Drupal\page_manager\Form\LayoutBuilderForm;
  *   admin_label = @Translation("Layout Builder")
  * )
  */
-class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInterface, ContextAwareVariantInterface {
+class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInterface, ContextAwareVariantInterface, ContainerFactoryPluginInterface {
 
   use SectionListTrait;
   use LayoutEntityHelperTrait;
@@ -31,6 +34,50 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
    * @var \Drupal\Component\Plugin\Context\ContextInterface[]
    */
   protected $contexts = [];
+
+  /**
+   * The layout plugin instance, lazily created by ::getLayout().
+   *
+   * @var \Drupal\Core\Layout\LayoutInterface|null
+   */
+  protected $layout;
+
+  /**
+   * The layout plugin manager.
+   *
+   * @var \Drupal\Core\Layout\LayoutPluginManagerInterface|null
+   */
+  protected $layoutManager;
+
+  /**
+   * Constructs a new LayoutBuilderDisplayVariant.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin ID for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Layout\LayoutPluginManagerInterface|null $layout_manager
+   *   (optional) The layout plugin manager. Defaults to the manager from the
+   *   service container when not provided.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ?LayoutPluginManagerInterface $layout_manager = NULL) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->layoutManager = $layout_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('plugin.manager.core.layout')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -78,6 +125,7 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
    */
   protected function setSections(array $sections) {
     $this->configuration['sections'] = array_values($sections);
+    return $this;
   }
 
   /**
@@ -98,9 +146,23 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
    */
   public function getLayout() {
     if (!isset($this->layout)) {
-      $this->layout = $this->layoutManager->createInstance($this->configuration['layout'], $this->configuration['layout_settings']);
+      $this->layout = $this->getLayoutManager()->createInstance($this->configuration['layout'], $this->configuration['layout_settings']);
     }
     return $this->layout;
+  }
+
+  /**
+   * Returns the layout plugin manager.
+   *
+   * @return \Drupal\Core\Layout\LayoutPluginManagerInterface
+   *   The layout plugin manager.
+   */
+  protected function getLayoutManager() {
+    if (!isset($this->layoutManager)) {
+      // @phpstan-ignore-next-line
+      $this->layoutManager = \Drupal::service('plugin.manager.core.layout');
+    }
+    return $this->layoutManager;
   }
 
   /**

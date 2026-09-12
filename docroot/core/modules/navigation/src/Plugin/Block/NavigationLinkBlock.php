@@ -67,7 +67,7 @@ final class NavigationLinkBlock extends BlockBase {
       '#default_value' => $display_uri,
       '#element_validate' => [[static::class, 'validateUriElement']],
       '#attributes' => [
-        'data-autocomplete-first-character-blacklist' => '/#?',
+        'data-autocomplete-first-character-denylist' => '/#?',
       ],
       // @todo The user should be able to select an entity type. Will be fixed
       //   in https://www.drupal.org/node/2423093.
@@ -189,6 +189,7 @@ final class NavigationLinkBlock extends BlockBase {
    *   The URI to get the displayable string for.
    *
    * @return string
+   *   The displayable string for the URI.
    *
    * @see static::getUserEnteredStringAsUri()
    */
@@ -246,6 +247,10 @@ final class NavigationLinkBlock extends BlockBase {
     // Ensure that user has access to link before rendering it.
     try {
       $url = Url::fromUri($config['uri']);
+      // Internal routes must exist.
+      if (!$url->isExternal() && !$url->isRouted()) {
+        return $build;
+      }
       $access = $url->access(NULL, TRUE);
       if (!$access->isAllowed()) {
         // Cacheable dependency is explicitly added when access is not granted.
@@ -269,6 +274,9 @@ final class NavigationLinkBlock extends BlockBase {
           'title' => $config['title'],
           'class' => $config['icon_class'],
           'url' => $url,
+          'icon' => [
+            'icon_id' => $config['icon_class'],
+          ],
         ],
       ],
     ];

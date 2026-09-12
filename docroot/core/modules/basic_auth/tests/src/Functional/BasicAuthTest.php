@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Drupal\Tests\basic_auth\Functional;
 
 use Drupal\Core\Url;
-use Drupal\Tests\basic_auth\Traits\BasicAuthTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\basic_auth\Traits\BasicAuthTestTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for BasicAuth authentication provider.
- *
- * @group basic_auth
  */
+#[Group('basic_auth')]
+#[RunTestsInSeparateProcesses]
 class BasicAuthTest extends BrowserTestBase {
 
   use BasicAuthTestTrait;
@@ -66,7 +68,7 @@ class BasicAuthTest extends BrowserTestBase {
     // Ensure that the user is prompted to authenticate if they are not yet
     // authenticated and the route only allows basic auth.
     $this->drupalGet($url);
-    $this->assertSession()->responseHeaderEquals('WWW-Authenticate', 'Basic realm="' . \Drupal::config('system.site')->get('name') . '"');
+    $this->assertSession()->responseHeaderEquals('WWW-Authenticate', 'Basic realm="' . $this->config('system.site')->get('name') . '"');
     $this->assertSession()->statusCodeEquals(401);
 
     // Ensure that a route without basic auth defined doesn't prompt for auth.
@@ -212,21 +214,21 @@ class BasicAuthTest extends BrowserTestBase {
   public function testCacheabilityOf401Response(): void {
     $url = Url::fromRoute('router_test.11');
 
-    $assert_response_cacheability = function ($expected_page_cache_header_value, $expected_dynamic_page_cache_header_value) use ($url) {
+    $assert_response_cacheability = function ($expected_page_cache_header_value, $expected_dynamic_page_cache_header_sub_request_value) use ($url) {
       $this->drupalGet($url);
       $this->assertSession()->statusCodeEquals(401);
       $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', $expected_page_cache_header_value);
-      $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', $expected_dynamic_page_cache_header_value);
+      $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', "UNCACHEABLE (401, sub-request: $expected_dynamic_page_cache_header_sub_request_value)");
     };
 
-    // 1. First request: cold caches, both Page Cache and Dynamic Page Cache are
-    // now primed.
+    // 1. First request: cold caches, both Page Cache and Dynamic Page Cache for
+    // the 401 sub-request are now primed.
     $assert_response_cacheability('MISS', 'MISS');
     // 2. Second request: Page Cache HIT, we don't even hit Dynamic Page Cache.
     // This is going to keep happening.
     $assert_response_cacheability('HIT', 'MISS');
     // 3. Third request: after clearing Page Cache, we now see that Dynamic Page
-    // Cache is a HIT too.
+    // Cache has a HIT for the sub-request.
     $this->container->get('cache.page')->deleteAll();
     $assert_response_cacheability('MISS', 'HIT');
     // 4. Fourth request: warm caches.

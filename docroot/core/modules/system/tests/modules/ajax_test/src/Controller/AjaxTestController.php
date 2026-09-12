@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ajax_test\Controller;
 
 use Drupal\Component\Serialization\Json;
@@ -8,7 +10,9 @@ use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides content for dialog tests.
@@ -298,7 +302,7 @@ class AjaxTestController {
         ],
         'link6' => [
           'title' => 'Link 6 (entity form)',
-          'url' => Url::fromRoute('contact.form_add'),
+          'url' => Url::fromRoute('dialog_test.form_add'),
           'attributes' => [
             'class' => ['use-ajax'],
             'data-dialog-type' => 'modal',
@@ -522,6 +526,33 @@ class AjaxTestController {
   public function linkPageDialogTitle(): string {
     $title = 'Dialog link page title';
     return $title;
+  }
+
+  /**
+   * Provides a valid AJAX response for the "constructor" URL.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The Ajax link.
+   */
+  public function constructor(): Response {
+    return new JsonResponse();
+  }
+
+  /**
+   * Provides an Ajax link to a URL that is also a JS object property.
+   *
+   * @return array
+   *   The Ajax link.
+   */
+  public function propertyLink(): array {
+    return [
+      '#markup' => '<a class="use-ajax" href="constructor" data-ajax-http-method="GET">Ajax constructor</a>',
+      '#attached' => [
+        'library' => [
+          'core/drupal.ajax',
+        ],
+      ],
+    ];
   }
 
 }

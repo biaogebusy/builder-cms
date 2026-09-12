@@ -23,6 +23,9 @@ use Drupal\search_api\Hook\SearchApiViewsHooks;
  * Also, for each entity type encountered in any table, a table with
  * field/relationship handlers for all of that entity type's properties is
  * created. Those tables will use the key "search_api_entity_ENTITY".
+ *
+ * @throws \Exception
+ *   Thrown if an internal error occurred in Typed Data handling twice in a row.
  */
 #[LegacyHook]
 function search_api_views_data(): array {

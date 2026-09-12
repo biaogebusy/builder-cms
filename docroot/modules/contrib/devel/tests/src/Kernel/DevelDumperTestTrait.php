@@ -106,7 +106,7 @@ trait DevelDumperTestTrait {
    */
   private function getDumperExportDump(mixed $input, ?string $name = NULL): string {
     $output = \Drupal::service('devel.dumper')->export($input, $name);
-    return rtrim($output);
+    return rtrim((string) $output);
   }
 
   /**

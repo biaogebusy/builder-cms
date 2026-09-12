@@ -2,70 +2,99 @@
 # deprecated code.
 # See https://www.drupal.org/node/3285162 for more details.
 
-%The "Symfony\\Component\\Validator\\Context\\ExecutionContextInterface::.*\(\)" method is considered internal Used by the validator engine\. (Should not be called by user\W+code\. )?It may change without further notice\. You should not extend it from "[^"]+"\.%
-%The "PHPUnit\\Framework\\TestCase::addWarning\(\)" method is considered internal%
+# @todo Remove when we no longer support PHPUnit 11.
+%The "PHPUnit\\Framework\\TestCase::__construct\(\)" method is considered internal.* You should not extend it from "Drupal\\[^"]+"%
+%The "PHPUnit\\Framework\\TestCase::__construct\(\)" method is considered final.* You should not extend it from "Drupal\\[^"]+"%
 
-# Skip some dependencies' DebugClassLoader forward compatibility warnings.
-%Method "Behat\\[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Composer\\EventDispatcher\\EventSubscriberInterface::getSubscribedEvents\(\)" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Composer\\Plugin\\PluginInterface::(activate|deactivate|uninstall)\(\)" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Doctrine\\Common\\Annotations\\Reader::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Twig\\Extension\\ExtensionInterface::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Twig\\Loader\\FilesystemLoader::findTemplate\(\)" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Twig\\Loader\\LoaderInterface::exists\(\)" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Twig\\Node\\Node::compile\(\)" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Twig\\NodeVisitor\\AbstractNodeVisitor::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Twig\\NodeVisitor\\NodeVisitorInterface::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "Twig\\TokenParser\\TokenParserInterface::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-%Method "WebDriver\\Service\\CurlServiceInterface::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in implementation "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-
-# Skip root namespace native DebugClassLoader forward compatibility warnings.
-# These mostly refer to PHP native classes, could be fixed for PHP 8.1.
-%Method "[^\\]+::\w+\(\)" might add "[^"]+" as a native return type declaration in the future. Do the same in (child class|implementation) "[^"]+" now to avoid errors or add an explicit @return annotation to suppress this message%
-
-# The following deprecation is listed for Twig 2 compatibility when unit
-# testing using \Symfony\Component\ErrorHandler\DebugClassLoader.
+# Internal code that we cannot avoid extending.
 %The "Twig\\Environment::getTemplateClass\(\)" method is considered internal\. It may change without further notice\. You should not extend it from "Drupal\\Core\\Template\\TwigEnvironment"\.%
 
-# Drupal 11.
-%Drupal\\Core\\Form\\FormBuilder::getForm\(\).* will require a new "mixed \.\.\. \$args" argument in the next major version of its interface%
-%Drupal\\Core\\Form\\FormBuilder::submitForm\(\).* will require a new "mixed \.\.\. \$args" argument in the next major version of its interface%
-%The core/tabbable.jquery.shim asset library is deprecated in Drupal 10.3.0 and will be removed in Drupal 11.0.0. See https://www.drupal.org/node/3441616%
-%The core/internal.shepherd asset library is deprecated in Drupal 10.3.0 and will be removed in Drupal 11.0.0. See https://www.drupal.org/node/3442299%
+# Skip some dependencies' DebugClassLoader forward compatibility warnings, in
+# order to let contrib modules make their necessary fixes first.
+%Method "Twig\\Extension\\ExtensionInterface::[^"]+" might add "array" as a native return type declaration in the future. Do the same in implementation "Drupal\\Core\\Template\\TwigExtension" now to avoid errors or add an explicit @return annotation to suppress this message%
+%Method "Twig\\Loader\\FilesystemLoader::findTemplate\(\)" might add "\?string" as a native return type declaration in the future. Do the same in child class "Drupal\\Core\\Template\\Loader\\FilesystemLoader" now to avoid errors or add an explicit @return annotation to suppress this message%
+%Method "Twig\\Loader\\LoaderInterface::exists\(\)" might add "bool" as a native return type declaration in the future. Do the same in implementation "Drupal\\Core\\Template\\Loader\\StringLoader" now to avoid errors or add an explicit @return annotation to suppress this message%
+%Method "Twig\\Node\\Node::compile\(\)" might add "void" as a native return type declaration in the future. Do the same in child class "Drupal\\Core\\Template\\TwigNodeCheckDeprecations" now to avoid errors or add an explicit @return annotation to suppress this message%
+%Method "Twig\\Node\\Node::compile\(\)" might add "void" as a native return type declaration in the future. Do the same in child class "Drupal\\Core\\Template\\TwigNodeTrans" now to avoid errors or add an explicit @return annotation to suppress this message%
+%Method "Twig\\NodeVisitor\\NodeVisitorInterface::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in implementation "Drupal\\Core\\Template\\RemoveCheckToStringNodeVisitor" now to avoid errors or add an explicit @return annotation to suppress this message%
+%Method "Twig\\NodeVisitor\\NodeVisitorInterface::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in implementation "Drupal\\Core\\Template\\TwigNodeVisitor" now to avoid errors or add an explicit @return annotation to suppress this message%
+%Method "Twig\\TokenParser\\TokenParserInterface::[^"]+" might add "[^"]+" as a native return type declaration in the future. Do the same in implementation "Drupal\\Core\\Template\\TwigTransTokenParser" now to avoid errors or add an explicit @return annotation to suppress this message%
 
-# PHPUnit 9.
-%"PHPUnit\\Framework\\TestListener".*is deprecated%
-%"PHPUnit\\Framework\\TestListenerDefaultImplementation".*is deprecated%
-%"PHPUnit\\Framework\\TestSuite".*is considered internal%
-%"PHPUnit\\TextUI\\DefaultResultPrinter".*is considered internal%
+# Indirect deprecations. These are not in Drupal's remit to fix, but it is
+# worth keeping track of dependencies' issues.
+%Method "Iterator::[^"]+" might add "void" as a native return type declaration in the future. Do the same in implementation "org\\bovigo\\vfs\\vfsStreamContainerIterator" now to avoid errors or add an explicit @return annotation to suppress this message%
 
-# PHPUnit 9.6.
-%Expecting E_WARNING and E_USER_WARNING is deprecated and will no longer be possible in PHPUnit 10%
-%Expecting E_ERROR and E_USER_ERROR is deprecated and will no longer be possible in PHPUnit 10%
+# Drupal 12.
+%ExpectDeprecationTrait is deprecated in drupal:11\.4\.0%
+%The "Drupal\\Core\\Database\\Query\\Select::hasAllTags\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
+%The "Drupal\\Core\\Database\\Query\\Select::hasAnyTag\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
+%The "Drupal\\Core\\Database\\Query\\SelectExtender::hasAllTags\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
+%The "Drupal\\Core\\Database\\Query\\SelectExtender::hasAnyTag\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
+%The "Drupal\\Core\\Entity\\Query\\QueryBase::hasAllTags\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
+%The "Drupal\\Core\\Entity\\Query\\QueryBase::hasAnyTag\(\)" method will require a new "string \.\.\. \$tags" argument in the next major version of its interface%
+%The "Drupal\\workspaces\\WorkspaceManager::setActiveWorkspace\(\)" method will require a new "bool \$persist" argument in the next major version of its interface%
+%The "Drupal\\(?:Core\\(?:Action|Field|Condition)|(?:user|action_test|action_bulk_test|user_batch_action_test)\\Plugin\\Action)\\.*::execute\(\)" method will require a new "object\|null \$object" argument in the next major version of its interface "Drupal\\Core\\Executable\\ExecutableInterface"%
+%The "(?:Drupal\\Core\\Layout\\LayoutPluginManagerInterface|Drupal\\Core\\Block\\BlockManager)::get(?:Sorted|Grouped)Definitions\(\)" method will require a new "string \$label_key" argument in the next major version of its interface "Drupal\\Component\\Plugin\\CategorizingPluginManagerInterface"%
+%.*::getDefaultOperations\(\) will require a new "\Drupal\Core\Cache\CacheableMetadata|null \$cacheability" argument in the next major version of its parent class%
+%.*::getOperations\(\) will require a new "\Drupal\Core\Cache\CacheableMetadata|null \$cacheability" argument in the next major version of its interface%
+%Class "Drupal\\migrate_drupal\\Plugin\\migrate\\source\\DrupalSqlBase" as extended by "Drupal\\(ban|block|block_content|comment|config_translation|contact|content_translation|field|file|filter|image|language|menu_link_content|migrate_drupal|node|path|responsive_image|search|shortcut|system|taxonomy|update|user)\\[^"]+" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Class "Drupal\\migrate_drupal\\Plugin\\migrate\\source\\DrupalSqlBase" as extended by "Drupal\\Tests\\migrate_drupal\\[^"]+" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Migrate source plugin "md_empty" used in migration "(d6_upload_field|user_picture_field)" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Trait "Drupal\\migrate_drupal\\Plugin\\migrate\\source\\I18nQueryTrait" used by "Drupal\\(block_content|menu_link_content|taxonomy)\\[^"]+" is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0%
+%Drupal\\migrate_drupal\\Plugin\\MigrateFieldPluginManager is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566%
+%The "plugin.manager.migrate.field" service is deprecated in drupal:11.3 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockPluginId is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockRegion is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockTheme is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\BlockVisibility is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\process\\RolesLookup is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\FieldType is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement.%
+%The "plugin.manager.archiver" service is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3556927%
+%Drupal\\Core\\Archiver\\ArchiverManager is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3556927%
+%Drupal\\field\\Plugin\\migrate\\process\\ProcessField is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement.%
+%Drupal\\field\\Plugin\\migrate\\process\\d6\\FieldFormatterSettingsDefaults is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d6\\FieldInstanceWidgetSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d7\\FieldBundle is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldInstanceDefaults is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldInstanceOptionTranslation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldInstanceSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldOptionTranslation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\field\\Plugin\\migrate\\process\\d[67]\\FieldTypeDefaults is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\file\\Plugin\\migrate\\process\\d6\\FieldFile is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\file\\Plugin\\migrate\\process\\d6\\FileUri is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\filter\\Plugin\\migrate\\process\\FilterID is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\filter\\Plugin\\migrate\\process\\FilterSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\filter\\Plugin\\migrate\\process\\d6\\FilterFormatPermission is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\image\\Plugin\\migrate\\process\\d6\\ImageCacheActions is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\ContentTranslationEnabledSetting is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\LanguageDomains is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\LanguageNegotiation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\language\\Plugin\\migrate\\process\\LanguageTypes is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\link\\Plugin\\migrate\\process\\FieldLink is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\node\\Plugin\\migrate\\process\\d6\\NodeUpdate7008 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\path\\Plugin\\migrate\\process\\PathSetTranslated is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\responsive_image\\Plugin\\migrate\\process\\ImageStyleMappings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\search\\Plugin\\migrate\\process\\SearchConfigurationRankings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\system\\Plugin\\migrate\\process\\d6\\SystemUpdate7000 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\taxonomy\\Plugin\\migrate\\process\\TargetBundle is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\ConvertTokens is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\ProfileFieldSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\UserUpdate8002 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\d6\\ProfileFieldOptionTranslation is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\user\\Plugin\\migrate\\process\\d6\\UserUpdate7002 is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560%
+%Drupal\\block\\Plugin\\migrate\\destination\\EntityBlock::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\comment\\Plugin\\migrate\\destination\\EntityComment::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\migrate\\Plugin\\Derivative\\MigrateEntityComplete is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\migrate\\Plugin\\migrate\\destination\\EntityContentComplete is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\node\\Plugin\\migrate\\destination\\EntityNodeType::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\search\\Plugin\\migrate\\destination\\EntitySearchPage::import\(\) is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\shortcut\\Plugin\\migrate\\destination\\EntityShortcutSet is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\system\\Plugin\\migrate\\destination\\d7\\ThemeSettings is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%Drupal\\user\\Plugin\\migrate\\destination\\EntityUserRole is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565%
+%The \$long argument to Drupal\\filter\\Plugin\\Filter\\Filter(Align|AutoP|Caption|Html|HtmlEscape|HtmlImageSecure|Url)::tips\(\) is deprecated in drupal:11.4.0 and is removed from drupal:12.0.0. Only short tips are used. See https://www.drupal.org/node/3567879%
 
-# Skip deprecations for EditorMediaDialog, EditorImageDialog and EditorLinkDialog triggered by
-# \Drupal\Core\Entity\EntityResolverManager::setRouteOptions().
-%Drupal\\media\\Form\\EditorMediaDialog is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3291493%
-%Drupal\\editor\\Form\\EditorImageDialog is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3291493%
-%Drupal\\editor\\Form\\EditorLinkDialog is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3291493%
-
-# In Drupal 10, skip deprecations for the "yaml_parser_class" setting.
-# This is retained with a BC layer, but removed in Drupal 11.
-%The "yaml_parser_class" setting is deprecated in drupal:10.3.0. This setting should be removed from the settings file, since its usage has been removed. See https://www.drupal.org/node/3415489.%
-
-# Symfony 7.
-%Method "Symfony\\Contracts\\Service\\ResetInterface::reset\(\)" might add "void" as a native return type declaration in the future. Do the same in implementation "Drupal\\Component\\DependencyInjection\\Container" now to avoid errors or add an explicit @return annotation to suppress this message.%
-
-# Temporarily for testing Symfony 6.4.
-%Since symfony/dependency-injection 6.4: "Symfony\\Component\\DependencyInjection\\ContainerAwareTrait" is deprecated, use dependency injection instead.%
-%The "Drupal\\Core\\DrupalKernelInterface" interface extends "Symfony\\Component\\DependencyInjection\\ContainerAwareInterface" that is deprecated since Symfony 6.4, use dependency injection instead.%
-%The "Drupal\\Core\\Logger\\LoggerChannelFactory" class implements "Symfony\\Component\\DependencyInjection\\ContainerAwareInterface" that is deprecated since Symfony 6.4, use dependency injection instead.%
-%The "Drupal\\Core\\Logger\\LoggerChannelFactory" class uses "Symfony\\Component\\DependencyInjection\\ContainerAwareTrait" that is deprecated since Symfony 6.4, use dependency injection instead.%
-%The "Drupal\\Core\\Queue\\QueueFactory" class implements "Symfony\\Component\\DependencyInjection\\ContainerAwareInterface" that is deprecated since Symfony 6.4, use dependency injection instead.%
-%The "Drupal\\Core\\Queue\\QueueFactory" class uses "Symfony\\Component\\DependencyInjection\\ContainerAwareTrait" that is deprecated since Symfony 6.4, use dependency injection instead.%
-%The "Drupal\\Tests\\Core\\Controller\\MockContainerAware" class implements "Symfony\\Component\\DependencyInjection\\ContainerAwareInterface" that is deprecated since Symfony 6.4, use dependency injection instead.%
-%The "Drupal\\Tests\\Core\\DependencyInjection\\DependencySerializationTestDummy" class implements "Symfony\\Component\\DependencyInjection\\ContainerAwareInterface" that is deprecated since Symfony 6.4, use dependency injection instead.%
-%The "Drupal\\Tests\\Core\\Utility\\MockContainerAware" class implements "Symfony\\Component\\DependencyInjection\\ContainerAwareInterface" that is deprecated since Symfony 6.4, use dependency injection instead.%
-
-# Twig 3.
-%Since twig/twig 3.12: Twig Filter "spaceless" is deprecated%
+# Drupal 13.
+%The "cache.backend.memory" service is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use cache.backend.memory.memory instead. See https://www.drupal.org/node/3546856%
+%The "cache.static" service is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use the cache.memory bin instead. See https://www.drupal.org/node/3546856%

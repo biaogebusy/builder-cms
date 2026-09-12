@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_data\Plugin\views\field;
 
 use Drupal\views\Attribute\ViewsField;
@@ -34,6 +36,7 @@ class FieldTest extends FieldPluginBase {
    * Returns the testValue property.
    *
    * @return string
+   *   The value of the test.
    */
   public function getTestValue() {
     return $this->testValue;

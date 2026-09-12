@@ -6,16 +6,19 @@ namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Core\Form\FormState;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\views\Views;
-use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the generic entity row plugin.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\row\EntityRow
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class RowEntityTest extends ViewsKernelTestBase {
 
   /**
@@ -23,9 +26,6 @@ class RowEntityTest extends ViewsKernelTestBase {
    */
   protected static $modules = [
     'entity_test',
-    'field',
-    'system',
-    'user',
   ];
 
   /**

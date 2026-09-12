@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Recipe;
 
-use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Config\Action\ConfigActionException;
+use Drupal\Core\Config\Action\Plugin\ConfigAction\CreateForEachBundle;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Recipe\InvalidConfigException;
 use Drupal\Core\Recipe\RecipeRunner;
@@ -15,18 +15,23 @@ use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\FunctionalTests\Core\Recipe\RecipeTestTrait;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Tests config actions targeting multiple entities using wildcards.
- *
- * @covers \Drupal\Core\Config\Action\Plugin\ConfigAction\CreateForEachBundle
- * @group Recipe
  */
+#[Group('Recipe')]
+#[CoversClass(CreateForEachBundle::class)]
+#[RunTestsInSeparateProcesses]
 class WildcardConfigActionsTest extends KernelTestBase {
 
   use ContentTypeCreationTrait;
@@ -49,11 +54,13 @@ class WildcardConfigActionsTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('node');
     $this->installConfig('node');
 
     $this->createContentType(['type' => 'one', 'name' => 'Type A']);
     $this->createContentType(['type' => 'two', 'name' => 'Type B']);
 
+    $this->installEntitySchema('entity_test_with_bundle');
     EntityTestBundle::create(['id' => 'one'])->save();
     EntityTestBundle::create(['id' => 'two'])->save();
 
@@ -87,15 +94,16 @@ class WildcardConfigActionsTest extends KernelTestBase {
    *   The expression the recipe will use to target multiple config entities.
    * @param string[] $expected_changed_entities
    *   The IDs of the config entities that we expect the recipe to change.
-   *
-   * @testWith ["field.field.node.one.*", ["node.one.body", "node.one.field_test"]]
-   *   ["field.field.node.*.body", ["node.one.body", "node.two.body"]]
-   *   ["field.field.*.one.field_test", ["entity_test_with_bundle.one.field_test", "node.one.field_test"]]
-   *   ["field.field.node.*.*", ["node.one.body", "node.one.field_test", "node.two.body", "node.two.field_test"]]
-   *   ["field.field.*.one.*", ["entity_test_with_bundle.one.field_test", "node.one.field_test", "node.one.body"]]
-   *   ["field.field.*.*.field_test", ["entity_test_with_bundle.one.field_test", "entity_test_with_bundle.two.field_test", "node.one.field_test", "node.two.field_test"]]
-   *   ["field.field.*.*.*", ["entity_test_with_bundle.one.field_test", "entity_test_with_bundle.two.field_test", "node.one.field_test", "node.two.field_test", "node.one.body", "node.two.body"]]
    */
+  // phpcs:disable Drupal.Arrays.Array.LongLineDeclaration
+  #[TestWith(["field.field.node.one.*", ["node.one.body", "node.one.field_test"]])]
+  #[TestWith(["field.field.node.*.body", ["node.one.body", "node.two.body"]])]
+  #[TestWith(["field.field.*.one.field_test", ["entity_test_with_bundle.one.field_test", "node.one.field_test"]])]
+  #[TestWith(["field.field.node.*.*", ["node.one.body", "node.one.field_test", "node.two.body", "node.two.field_test"]])]
+  #[TestWith(["field.field.*.one.*", ["entity_test_with_bundle.one.field_test", "node.one.field_test", "node.one.body"]])]
+  #[TestWith(["field.field.*.*.field_test", ["entity_test_with_bundle.one.field_test", "entity_test_with_bundle.two.field_test", "node.one.field_test", "node.two.field_test"]])]
+  #[TestWith(["field.field.*.*.*", ["entity_test_with_bundle.one.field_test", "entity_test_with_bundle.two.field_test", "node.one.field_test", "node.two.field_test", "node.one.body", "node.two.body"]])]
+  // phpcs:enable
   public function testTargetEntitiesByWildcards(string $expression, array $expected_changed_entities): void {
     $contents = <<<YAML
 name: 'Wildcards!'
@@ -120,10 +128,11 @@ YAML;
 
   /**
    * Tests that an invalid wildcard expression will raise an error.
-   *
-   * @testWith ["field.*.node.one.*", "No installed config entity type uses the prefix in the expression 'field.*.node.one.*'. Either there is a typo in the expression or this recipe should install an additional module or depend on another recipe."]
-   *   ["field.field.node.*.body/", " could not be parsed."]
    */
+  // phpcs:disable Drupal.Arrays.Array.LongLineDeclaration
+  #[TestWith(["field.*.node.one.*", "No installed config entity type uses the prefix in the expression 'field.*.node.one.*'. Either there is a typo in the expression or this recipe should install an additional module or depend on another recipe."])]
+  #[TestWith(["field.field.node.*.body/", " could not be parsed."])]
+  // phpcs:enable
   public function testInvalidExpression(string $expression, string $expected_exception_message): void {
     $contents = <<<YAML
 name: 'Wildcards gone wild...'
@@ -144,7 +153,7 @@ YAML;
    * Tests that the createForEach action works as expected in normal conditions.
    */
   public function testCreateForEach(): void {
-    $this->enableModules(['language']);
+    $this->enableModules(['image', 'language']);
 
     /** @var \Drupal\Core\Config\Action\ConfigActionManager $manager */
     $manager = $this->container->get('plugin.manager.config_action');
@@ -162,7 +171,7 @@ YAML;
    * Tests that the createForEach action validates the config it creates.
    */
   public function testCreateForEachValidatesCreatedEntities(): void {
-    $this->enableModules(['block_content']);
+    $this->enableModules(['image']);
 
     // To prove that the validation runs, we need to disable strict schema
     // checking in this test. We need to explicitly unsubscribe it from events
@@ -175,12 +184,12 @@ YAML;
     try {
       $this->container->get('plugin.manager.config_action')
         ->applyAction('createForEach', 'node.type.*', [
-          'block_content.type.%bundle_block' => [],
+          'image.style.node__%bundle' => [],
         ]);
       $this->fail('Expected an exception to be thrown but it was not.');
     }
     catch (InvalidConfigException $e) {
-      $this->assertSame('block_content.type.one_block', $e->data->getName());
+      $this->assertSame('image.style.node__one', $e->data->getName());
       $this->assertCount(1, $e->violations);
       $this->assertSame('label', $e->violations[0]->getPropertyPath());
       $this->assertSame(NotNull::IS_NULL_ERROR, $e->violations[0]->getCode());
@@ -191,17 +200,24 @@ YAML;
    * Tests using the `%label` placeholder with the createForEach action.
    */
   public function testCreateForEachWithLabel(): void {
-    $this->enableModules(['block_content']);
+    $this->enableModules(['image']);
 
     // We should be able to use the `%label` placeholder.
+    // Also ensure nested and non-string keys/values are handled correctly.
     $this->container->get('plugin.manager.config_action')
       ->applyAction('createForEach', 'node.type.*', [
-        'block_content.type.%bundle_block' => [
-          'label' => 'Block on %label content',
+        'image.style.node_%bundle_big' => [
+          'label' => 'Big image for %label content',
+          'effects' => [
+            [
+              'id' => 'image_scale',
+              'weight' => 10,
+            ],
+          ],
         ],
       ]);
-    $this->assertSame('Block on Type A content', BlockContentType::load('one_block')?->label());
-    $this->assertSame('Block on Type B content', BlockContentType::load('two_block')?->label());
+    $this->assertSame('Big image for Type A content', ImageStyle::load('node_one_big')?->label());
+    $this->assertSame('Big image for Type B content', ImageStyle::load('node_two_big')?->label());
   }
 
   /**

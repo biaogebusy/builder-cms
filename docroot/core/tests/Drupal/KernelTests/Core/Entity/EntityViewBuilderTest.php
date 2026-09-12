@@ -4,23 +4,26 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Entity;
 
-use Drupal\Core\Entity\EntityViewBuilder;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityViewMode;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityViewBuilder;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the entity view builder.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityViewBuilderTest extends EntityKernelTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -63,7 +66,14 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
     // Get a fully built entity view render array.
     $entity_test->save();
     $build = $this->container->get('entity_type.manager')->getViewBuilder('entity_test')->view($entity_test, 'full');
-    $cid_parts = array_merge($build['#cache']['keys'], $cache_contexts_manager->convertTokensToKeys(['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'user.permissions'])->getKeys());
+    $cid_parts = array_merge(
+      $build['#cache']['keys'],
+      $cache_contexts_manager->convertTokensToKeys([
+        'languages:' . LanguageInterface::TYPE_INTERFACE,
+        'theme',
+        'user.permissions',
+      ])->getKeys()
+    );
     $cid = implode(':', $cid_parts);
     $bin = $build['#cache']['bin'];
 
@@ -120,7 +130,14 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
 
     // Get a fully built entity view render array for the referenced entity.
     $build = $this->container->get('entity_type.manager')->getViewBuilder('entity_test')->view($entity_test_reference, 'full');
-    $cid_parts = array_merge($build['#cache']['keys'], $cache_contexts_manager->convertTokensToKeys(['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'user.permissions'])->getKeys());
+    $cid_parts = array_merge(
+      $build['#cache']['keys'],
+      $cache_contexts_manager->convertTokensToKeys([
+        'languages:' . LanguageInterface::TYPE_INTERFACE,
+        'theme',
+        'user.permissions',
+      ])->getKeys()
+    );
     $cid_reference = implode(':', $cid_parts);
     $bin_reference = $build['#cache']['bin'];
 
@@ -139,7 +156,14 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
 
     // Get a fully built entity view render array.
     $build = $this->container->get('entity_type.manager')->getViewBuilder('entity_test')->view($entity_test, 'full');
-    $cid_parts = array_merge($build['#cache']['keys'], $cache_contexts_manager->convertTokensToKeys(['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'user.permissions'])->getKeys());
+    $cid_parts = array_merge(
+      $build['#cache']['keys'],
+      $cache_contexts_manager->convertTokensToKeys([
+        'languages:' . LanguageInterface::TYPE_INTERFACE,
+        'theme',
+        'user.permissions',
+      ])->getKeys()
+    );
     $cid = implode(':', $cid_parts);
     $bin = $build['#cache']['bin'];
 
@@ -348,7 +372,7 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The created entity.
    */
-  protected function createTestEntity($entity_type) {
+  protected function createTestEntity($entity_type): EntityInterface {
     $data = [
       'bundle' => $entity_type,
       'name' => $this->randomMachineName(),

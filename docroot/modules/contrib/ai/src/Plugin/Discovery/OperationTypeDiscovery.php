@@ -73,7 +73,7 @@ class OperationTypeDiscovery implements DiscoveryInterface {
             'interface_class' => $interface,
             'actual_type' => $instance->actual_type ?? $plugin_id,
             'filter' => $instance->filter ?? [],
-            'description' => $instance->description ?? NULL,
+            'description' => $instance->description,
           ];
         }
       }

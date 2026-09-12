@@ -8,7 +8,7 @@ use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Provides a block to display the breadcrumbs.
@@ -47,7 +47,14 @@ class SystemBreadcrumbBlock extends BlockBase implements ContainerFactoryPluginI
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route match.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, BreadcrumbBuilderInterface $breadcrumb_manager, RouteMatchInterface $route_match) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    #[Autowire(service: 'breadcrumb')]
+    BreadcrumbBuilderInterface $breadcrumb_manager,
+    RouteMatchInterface $route_match,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->breadcrumbManager = $breadcrumb_manager;
     $this->routeMatch = $route_match;
@@ -56,21 +63,15 @@ class SystemBreadcrumbBlock extends BlockBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('breadcrumb'),
-      $container->get('current_route_match')
-    );
+  public function build() {
+    return $this->breadcrumbManager->build($this->routeMatch)->toRenderable();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function build() {
-    return $this->breadcrumbManager->build($this->routeMatch)->toRenderable();
+  public function createPlaceholder(): bool {
+    return TRUE;
   }
 
 }

@@ -19,7 +19,7 @@ class WebformElementScaleTest extends WebformElementBrowserTestBase {
   /**
    * Test scale element.
    */
-  public function testRating() {
+  public function testRating(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_scale');

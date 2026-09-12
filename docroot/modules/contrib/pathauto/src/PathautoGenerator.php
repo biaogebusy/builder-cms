@@ -11,11 +11,13 @@ use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Utility\Token;
+use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\token\TokenEntityMapperInterface;
 
 /**
@@ -111,6 +113,13 @@ class PathautoGenerator implements PathautoGeneratorInterface {
   protected $aliasTypeManager;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * Creates a new Pathauto manager.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -133,10 +142,12 @@ class PathautoGenerator implements PathautoGeneratorInterface {
    *   The token entity mapper.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\pathauto\AliasTypeManager $alias_type_manager
+   * @param \Drupal\pathauto\AliasTypeManager|null $alias_type_manager
    *   Manages pathauto alias type plugins.
+   * @param \Drupal\Core\Language\LanguageManagerInterface|null $language_manager
+   *   The language manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, Token $token, AliasCleanerInterface $alias_cleaner, AliasStorageHelperInterface $alias_storage_helper, AliasUniquifierInterface $alias_uniquifier, MessengerInterface $pathauto_messenger, TranslationInterface $string_translation, TokenEntityMapperInterface $token_entity_mapper, EntityTypeManagerInterface $entity_type_manager, ?AliasTypeManager $alias_type_manager = NULL) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, Token $token, AliasCleanerInterface $alias_cleaner, AliasStorageHelperInterface $alias_storage_helper, AliasUniquifierInterface $alias_uniquifier, MessengerInterface $pathauto_messenger, TranslationInterface $string_translation, TokenEntityMapperInterface $token_entity_mapper, EntityTypeManagerInterface $entity_type_manager, ?AliasTypeManager $alias_type_manager = NULL, ?LanguageManagerInterface $language_manager = NULL) {
     $this->configFactory = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->token = $token;
@@ -147,7 +158,10 @@ class PathautoGenerator implements PathautoGeneratorInterface {
     $this->stringTranslation = $string_translation;
     $this->tokenEntityMapper = $token_entity_mapper;
     $this->entityTypeManager = $entity_type_manager;
+    // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
     $this->aliasTypeManager = $alias_type_manager ?: \Drupal::service('plugin.manager.alias_type');
+    // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
+    $this->languageManager = $language_manager ?: \Drupal::service('language_manager');
   }
 
   /**
@@ -164,14 +178,7 @@ class PathautoGenerator implements PathautoGeneratorInterface {
     try {
       $internalPath = $entity->toUrl()->getInternalPath();
     }
-    // @todo convert to multi-exception handling in PHP 7.1.
-    catch (EntityMalformedException $exception) {
-      return NULL;
-    }
-    catch (UndefinedLinkTemplateException $exception) {
-      return NULL;
-    }
-    catch (\UnexpectedValueException $exception) {
+    catch (EntityMalformedException | UndefinedLinkTemplateException | \UnexpectedValueException) {
       return NULL;
     }
 
@@ -196,11 +203,18 @@ class PathautoGenerator implements PathautoGeneratorInterface {
       'source' => $source,
       'data' => $data,
       'bundle' => $entity->bundle(),
+      // @todo Remove the reference on 'language' in 2.0.0.
       'language' => &$langcode,
     ];
     $pattern_original = $pattern->getPattern();
+    $pre_alter_langcode = $langcode;
     $this->moduleHandler->alter('pathauto_pattern', $pattern, $context);
     $pattern_altered = $pattern->getPattern();
+
+    // Detect deprecated language alteration.
+    if ($langcode !== $pre_alter_langcode) {
+      @trigger_error('Altering $context[\'language\'] in hook_pathauto_pattern_alter() is deprecated in pathauto:8.x-1.15 and will be removed in pathauto:2.0.0. See https://www.drupal.org/node/3187945', E_USER_DEPRECATED);
+    }
 
     // Special handling when updating an item which is already aliased.
     $existing_alias = NULL;
@@ -218,9 +232,9 @@ class PathautoGenerator implements PathautoGeneratorInterface {
 
     // Replace any tokens in the pattern.
     // Uses callback option to clean replacements. No sanitization.
-    // Pass empty BubbleableMetadata object to explicitly ignore cacheablity,
+    // Pass empty BubbleableMetadata object to explicitly ignore cacheability,
     // as the result is never rendered.
-    $alias = $this->token->replace($pattern->getPattern(), $data, [
+    $alias = $this->token->replace($pattern->getPattern(), $context['data'], [
       'clear' => TRUE,
       'callback' => [$this->aliasCleaner, 'cleanTokenValues'],
       'langcode' => $langcode,
@@ -237,10 +251,23 @@ class PathautoGenerator implements PathautoGeneratorInterface {
 
     $alias = $this->aliasCleaner->cleanAlias($alias);
 
+    // Save original values to detect deprecated alterations.
+    $pre_alter_source = $source;
+    $pre_alter_langcode = $langcode;
+
     // Allow other modules to alter the alias.
+    // @todo Remove the reference on 'source' in 2.0.0.
     $context['source'] = &$source;
     $context['pattern'] = $pattern;
     $this->moduleHandler->alter('pathauto_alias', $alias, $context);
+
+    // Detect deprecated source/language alterations.
+    if ($source !== $pre_alter_source) {
+      @trigger_error('Altering $context[\'source\'] in hook_pathauto_alias_alter() is deprecated in pathauto:8.x-1.15 and will be removed in pathauto:2.0.0. Use a custom route or the Safe tokens setting instead. See https://www.drupal.org/node/3187945', E_USER_DEPRECATED);
+    }
+    if ($langcode !== $pre_alter_langcode) {
+      @trigger_error('Altering $context[\'language\'] in hook_pathauto_alias_alter() is deprecated in pathauto:8.x-1.15 and will be removed in pathauto:2.0.0. See https://www.drupal.org/node/3187945', E_USER_DEPRECATED);
+    }
 
     // If we have arrived at an empty string, discontinue.
     if (!mb_strlen($alias)) {
@@ -319,6 +346,19 @@ class PathautoGenerator implements PathautoGeneratorInterface {
     if (!isset($this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode])) {
       foreach ($this->getPatternByEntityType($entity->getEntityTypeId()) as $pattern) {
         if ($pattern->applies($entity)) {
+          // Fetch the translated pattern string if a language-specific config
+          // override exists.
+          if ($this->languageManager instanceof ConfigurableLanguageManagerInterface) {
+            $override = $this->languageManager->getLanguageConfigOverride($langcode, 'pathauto.pattern.' . $pattern->id());
+            $translated = $override->get('pattern');
+            if ($translated !== NULL) {
+              $pattern = clone $pattern;
+              $pattern->setPattern($translated);
+            }
+          }
+          if ($entity->isNew()) {
+            return $pattern;
+          }
           $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode] = $pattern;
           break;
         }
@@ -387,8 +427,8 @@ class PathautoGenerator implements PathautoGeneratorInterface {
 
     // @todo Move this to a method on the pattern plugin.
     if ($type == 'taxonomy_term') {
-      foreach ($this->loadTermChildren($entity->id()) as $subterm) {
-        $this->updateEntityAlias($subterm, $op, $options);
+      foreach ($this->loadTermChildren($entity->id()) as $sub_term) {
+        $this->updateEntityAlias($sub_term, $op, $options);
       }
     }
 

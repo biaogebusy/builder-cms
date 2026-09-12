@@ -10,27 +10,20 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 class DefaultStoreResolver implements StoreResolverInterface {
 
   /**
-   * The store storage.
-   *
-   * @var \Drupal\commerce_store\StoreStorageInterface
-   */
-  protected $storage;
-
-  /**
    * Constructs a new DefaultStoreResolver object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->storage = $entity_type_manager->getStorage('commerce_store');
-  }
+  public function __construct(protected EntityTypeManagerInterface $entityTypeManager) {}
 
   /**
    * {@inheritdoc}
    */
   public function resolve() {
-    return $this->storage->loadDefault();
+    /** @var \Drupal\commerce_store\StoreStorageInterface $store_storage */
+    $store_storage = $this->entityTypeManager->getStorage('commerce_store');
+    return $store_storage->loadDefault();
   }
 
 }

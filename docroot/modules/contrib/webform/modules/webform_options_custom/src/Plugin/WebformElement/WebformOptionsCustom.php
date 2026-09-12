@@ -72,7 +72,7 @@ class WebformOptionsCustom extends Select implements WebformOptionsCustomInterfa
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     // Remove the #template property to make sure people can't inject
     // custom markup.
     $this->setOptions($element, ['webform_submission' => $webform_submission]);

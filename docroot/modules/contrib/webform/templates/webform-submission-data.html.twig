@@ -4,8 +4,10 @@
  * Default theme implementation for webform submission data.
  *
  * Available variables:
+ * - view_mode: The view mode; e.g., 'html', 'text', 'table', 'yaml', etc.
  * - webform_submission: The webform submission.
  * - webform: The webform.
+ * - content: The webform submission content to render.
  *
  * @see template_preprocess_webform_submission_data()
  *
@@ -20,5 +22,5 @@
   ]
 %}
 <div{{ attributes.addClass(classes) }}>
-{{ elements }}
+  {{ content }}
 </div>

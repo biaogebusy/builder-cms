@@ -122,6 +122,7 @@ trait ContextAwarePluginTrait {
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Plugin\Context\ContextDefinitionInterface[]
+   *   The array of context definitions, keyed by context name.
    */
   public function getContextDefinitions() {
     $definition = $this->getPluginDefinition();
@@ -136,6 +137,7 @@ trait ContextAwarePluginTrait {
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Plugin\Context\ContextDefinitionInterface
+   *   The definition against which the context value must validate.
    */
   public function getContextDefinition($name) {
     $definition = $this->getPluginDefinition();

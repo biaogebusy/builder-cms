@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Settings;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\WebformInterface;
@@ -24,7 +24,7 @@ class WebformSettingsPathTest extends WebformBrowserTestBase {
   /**
    * Tests YAML page and title.
    */
-  public function testPaths() {
+  public function testPaths(): void {
     $assert_session = $this->assertSession();
 
     /** @var \Drupal\path_alias\AliasRepositoryInterface $path_alias_repository */

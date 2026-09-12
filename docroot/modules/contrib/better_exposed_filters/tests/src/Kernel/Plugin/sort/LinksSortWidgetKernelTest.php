@@ -21,10 +21,11 @@ class LinksSortWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
 
   /**
    * Tests the exposed links sort widget.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testExposedLinks() {
     $view = Views::getView('bef_test');
-    $display = &$view->storage->getDisplay('default');
 
     // Change exposed sort to links (i.e. 'bef_links').
     $this->setBetterExposedOptions($view, [
@@ -38,11 +39,11 @@ class LinksSortWidgetKernelTest extends BetterExposedFiltersKernelTestBase {
 
     // Check our sort item "sort_by" is rendered as links.
     $actual = $this->xpath('//form//a[starts-with(@id, "edit-sort-by")]');
-    $this->assertCount(1, $actual, 'Exposed sort "sort_by" has correct number of exposed links.');
+    $this->assertCount(1, $actual);
 
     // Check our sort item "sort_order" is rendered as links.
     $actual = $this->xpath('//form//a[starts-with(@id, "edit-sort-order")]');
-    $this->assertCount(2, $actual, 'Exposed sort "sort_order" has correct number of exposed links.');
+    $this->assertCount(2, $actual);
 
     $view->destroy();
   }

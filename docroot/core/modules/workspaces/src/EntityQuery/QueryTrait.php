@@ -4,6 +4,7 @@ namespace Drupal\workspaces\EntityQuery;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\workspaces\WorkspaceTracker;
 use Drupal\workspaces\WorkspaceInformationInterface;
 use Drupal\workspaces\WorkspaceManagerInterface;
 
@@ -56,11 +57,19 @@ trait QueryTrait {
    * {@inheritdoc}
    */
   public function prepare() {
+    // Latest revision queries have to return the latest workspace-specific
+    // revisions, in order to prevent changes done outside the workspace from
+    // leaking into the currently active one. For the same reason, latest
+    // revision queries will return the default revision for entities that are
+    // not tracked in the active workspace.
+    if ($this->latestRevision && $this->workspaceInfo->isEntityTypeSupported($this->entityType) && $this->workspaceManager->hasActiveWorkspace()) {
+      $this->allRevisions = FALSE;
+      $this->latestRevision = FALSE;
+    }
+
     parent::prepare();
 
     // Do not alter entity revision queries.
-    // @todo How about queries for the latest revision? Should we alter them to
-    //   look for the latest workspace-specific revision?
     if ($this->allRevisions) {
       return $this;
     }
@@ -76,7 +85,8 @@ trait QueryTrait {
       // can properly include live content along with a possible workspace
       // revision.
       $id_field = $this->entityType->getKey('id');
-      $this->sqlQuery->leftJoin('workspace_association', 'workspace_association', "[%alias].[target_entity_type_id] = '{$this->entityTypeId}' AND [%alias].[target_entity_id] = [base_table].[$id_field] AND [%alias].[workspace] = '{$active_workspace->id()}'");
+      $target_id_field = WorkspaceTracker::getIdField($this->entityTypeId);
+      $this->sqlQuery->leftJoin('workspace_association', 'workspace_association', "[%alias].[target_entity_type_id] = '{$this->entityTypeId}' AND [%alias].[$target_id_field] = [base_table].[$id_field] AND [%alias].[workspace] = '{$active_workspace->id()}'");
     }
 
     return $this;

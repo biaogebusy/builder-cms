@@ -118,7 +118,7 @@ class DevelMailLog implements MailInterface, ContainerFactoryPluginInterface {
     $mimeheaders = [];
     $message['headers']['To'] = $message['to'];
     foreach ($message['headers'] as $name => $value) {
-      $mimeheaders[] = $name . ': ' . iconv_mime_decode($value);
+      $mimeheaders[] = $name . ': ' . iconv_mime_decode((string) $value);
     }
 
     $line_endings = Settings::get('mail_line_endings', PHP_EOL);
@@ -127,7 +127,7 @@ class DevelMailLog implements MailInterface, ContainerFactoryPluginInterface {
     $output .= 'Subject: ' . $message['subject'] . $line_endings;
     // Blank line to separate headers from body.
     $output .= $line_endings;
-    return $output . preg_replace('@\r?\n@', $line_endings, $message['body']);
+    return $output . preg_replace('@\r?\n@', (string) $line_endings, (string) $message['body']);
   }
 
   /**

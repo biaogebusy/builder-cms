@@ -9,13 +9,16 @@ use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\user\Plugin\views\access\Role;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views role access plugin.
  *
- * @group user
  * @see \Drupal\user\Plugin\views\access\Role
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class AccessRoleTest extends AccessTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;

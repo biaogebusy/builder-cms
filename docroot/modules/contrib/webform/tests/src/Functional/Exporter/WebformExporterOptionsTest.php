@@ -22,7 +22,7 @@ class WebformExporterOptionsTest extends WebformBrowserTestBase {
   /**
    * Test exporter options.
    */
-  public function testExporterOptions() {
+  public function testExporterOptions(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

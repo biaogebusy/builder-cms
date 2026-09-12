@@ -7,12 +7,15 @@ namespace Drupal\Tests\content_moderation\Functional;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
+use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test content_moderation functionality with content_translation.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ModerationContentTranslationTest extends BrowserTestBase {
 
   use ContentModerationTestTrait;
@@ -36,14 +39,6 @@ class ModerationContentTranslationTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @todo Remove and fix test to not rely on super user.
-   * @see https://www.drupal.org/project/drupal/issues/3437620
-   */
-  protected bool $usesSuperUserAccessPolicy = TRUE;
-
-  /**
-   * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
 
@@ -52,7 +47,12 @@ class ModerationContentTranslationTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->drupalLogin($this->rootUser);
+    $this->adminUser = $this->drupalCreateUser([
+      'bypass node access',
+      'create content translations',
+      'translate any entity',
+    ]);
+    $this->drupalLogin($this->adminUser);
     // Create an Article content type.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article'])->save();
     static::createLanguageFromLangcode('fr');
@@ -91,7 +91,7 @@ class ModerationContentTranslationTest extends BrowserTestBase {
     $workflow = $this->createEditorialWorkflow();
     $workflow->getTypePlugin()->addEntityTypeAndBundle('node', 'article');
     $workflow->save();
-    $this->drupalLogin($this->rootUser);
+    $this->grantPermissions(Role::load(Role::AUTHENTICATED_ID), ['use editorial transition publish']);
 
     // Edit the English node.
     $this->drupalGet('node/' . $english_node->id() . '/edit');

@@ -21,7 +21,7 @@ class WebformElementHeightTest extends WebformElementBrowserTestBase {
   /**
    * Test height element.
    */
-  public function testheightElement() {
+  public function testheightElement(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_height');
@@ -33,12 +33,71 @@ class WebformElementHeightTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<input data-drupal-selector="edit-height-number-text-inches" type="number" id="edit-height-number-text-inches" name="height_number_text[inches]" value="0" step="1" min="0" max="11" class="form-number" />');
 
     // Check height_select_text.
-    $assert_session->responseContains('<select data-drupal-selector="edit-height-select-text-feet" id="edit-height-select-text-feet" name="height_select_text[feet]" class="form-select"><option value=""></option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3" selected="selected">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select>');
-    $assert_session->responseContains('<select data-drupal-selector="edit-height-select-text-inches" id="edit-height-select-text-inches" name="height_select_text[inches]" class="form-select"><option value=""></option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected="selected">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option></select>');
+    $this->assertEquals('0', $assert_session->optionExists('height_select_text[feet]', '0')->getValue());
+    $this->assertEquals('1', $assert_session->optionExists('height_select_text[feet]', '1')->getValue());
+    $this->assertEquals('2', $assert_session->optionExists('height_select_text[feet]', '2')->getValue());
+    $threeOption = $assert_session->optionExists('height_select_text[feet]', '3');
+    $this->assertEquals('3', $threeOption->getValue());
+    $this->assertTrue($threeOption->isSelected());
+    $this->assertEquals('4', $assert_session->optionExists('height_select_text[feet]', '4')->getValue());
+    $this->assertEquals('5', $assert_session->optionExists('height_select_text[feet]', '5')->getValue());
+    $this->assertEquals('6', $assert_session->optionExists('height_select_text[feet]', '6')->getValue());
+    $this->assertEquals('7', $assert_session->optionExists('height_select_text[feet]', '7')->getValue());
+    $this->assertEquals('8', $assert_session->optionExists('height_select_text[feet]', '8')->getValue());
+
+    $this->assertEquals('0', $assert_session->optionExists('height_select_text[inches]', '0')->getValue());
+    $this->assertEquals('1', $assert_session->optionExists('height_select_text[inches]', '1')->getValue());
+    $this->assertEquals('2', $assert_session->optionExists('height_select_text[inches]', '2')->getValue());
+    $this->assertEquals('3', $assert_session->optionExists('height_select_text[inches]', '3')->getValue());
+    $fourOption = $assert_session->optionExists('height_select_text[inches]', '4');
+    $this->assertEquals('4', $fourOption->getValue());
+    $this->assertTrue($fourOption->isSelected());
+    $this->assertEquals('5', $assert_session->optionExists('height_select_text[inches]', '5')->getValue());
+    $this->assertEquals('6', $assert_session->optionExists('height_select_text[inches]', '6')->getValue());
+    $this->assertEquals('7', $assert_session->optionExists('height_select_text[inches]', '7')->getValue());
+    $this->assertEquals('8', $assert_session->optionExists('height_select_text[inches]', '8')->getValue());
+    $this->assertEquals('9', $assert_session->optionExists('height_select_text[inches]', '9')->getValue());
+    $this->assertEquals('10', $assert_session->optionExists('height_select_text[inches]', '10')->getValue());
+    $this->assertEquals('11', $assert_session->optionExists('height_select_text[inches]', '11')->getValue());
 
     // Check height_number_step.
-    $assert_session->responseContains('<select data-drupal-selector="edit-height-number-step-feet" id="edit-height-number-step-feet" name="height_number_step[feet]" class="form-select"><option value=""></option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected="selected">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select>');
-    $assert_session->responseContains('<select data-drupal-selector="edit-height-number-step-inches" id="edit-height-number-step-inches" name="height_number_step[inches]" class="form-select"><option value=""></option><option value="0.0">0.0</option><option value="0.5" selected="selected">0.5</option><option value="1.0">1.0</option><option value="1.5">1.5</option><option value="2.0">2.0</option><option value="2.5">2.5</option><option value="3.0">3.0</option><option value="3.5">3.5</option><option value="4.0">4.0</option><option value="4.5">4.5</option><option value="5.0">5.0</option><option value="5.5">5.5</option><option value="6.0">6.0</option><option value="6.5">6.5</option><option value="7.0">7.0</option><option value="7.5">7.5</option><option value="8.0">8.0</option><option value="8.5">8.5</option><option value="9.0">9.0</option><option value="9.5">9.5</option><option value="10.0">10.0</option><option value="10.5">10.5</option><option value="11.0">11.0</option></select>');
+    $this->assertEquals('0', $assert_session->optionExists('height_number_step[feet]', '0')->getValue());
+    $this->assertEquals('1', $assert_session->optionExists('height_number_step[feet]', '1')->getValue());
+    $this->assertEquals('2', $assert_session->optionExists('height_number_step[feet]', '2')->getValue());
+    $this->assertEquals('3', $assert_session->optionExists('height_number_step[feet]', '3')->getValue());
+    $this->assertEquals('4', $assert_session->optionExists('height_number_step[feet]', '4')->getValue());
+    $fiveOption = $assert_session->optionExists('height_number_step[feet]', '5');
+    $this->assertEquals('5', $fiveOption->getValue());
+    $this->assertTrue($fiveOption->isSelected());
+    $this->assertEquals('6', $assert_session->optionExists('height_number_step[feet]', '6')->getValue());
+    $this->assertEquals('7', $assert_session->optionExists('height_number_step[feet]', '7')->getValue());
+    $this->assertEquals('8', $assert_session->optionExists('height_number_step[feet]', '8')->getValue());
+
+    $this->assertEquals('0.0', $assert_session->optionExists('height_number_step[inches]', '0.0')->getValue());
+    $halfOption = $assert_session->optionExists('height_number_step[inches]', '0.5');
+    $this->assertEquals('0.5', $halfOption->getValue());
+    $this->assertTrue($halfOption->isSelected());
+    $this->assertEquals('1.0', $assert_session->optionExists('height_number_step[inches]', '1.0')->getValue());
+    $this->assertEquals('1.5', $assert_session->optionExists('height_number_step[inches]', '1.5')->getValue());
+    $this->assertEquals('2.0', $assert_session->optionExists('height_number_step[inches]', '2.0')->getValue());
+    $this->assertEquals('2.5', $assert_session->optionExists('height_number_step[inches]', '2.5')->getValue());
+    $this->assertEquals('3.0', $assert_session->optionExists('height_number_step[inches]', '3.0')->getValue());
+    $this->assertEquals('3.5', $assert_session->optionExists('height_number_step[inches]', '3.5')->getValue());
+    $this->assertEquals('4.0', $assert_session->optionExists('height_number_step[inches]', '4.0')->getValue());
+    $this->assertEquals('4.5', $assert_session->optionExists('height_number_step[inches]', '4.5')->getValue());
+    $this->assertEquals('5.0', $assert_session->optionExists('height_number_step[inches]', '5.0')->getValue());
+    $this->assertEquals('5.5', $assert_session->optionExists('height_number_step[inches]', '5.5')->getValue());
+    $this->assertEquals('6.0', $assert_session->optionExists('height_number_step[inches]', '6.0')->getValue());
+    $this->assertEquals('6.5', $assert_session->optionExists('height_number_step[inches]', '6.5')->getValue());
+    $this->assertEquals('7.0', $assert_session->optionExists('height_number_step[inches]', '7.0')->getValue());
+    $this->assertEquals('7.5', $assert_session->optionExists('height_number_step[inches]', '7.5')->getValue());
+    $this->assertEquals('8.0', $assert_session->optionExists('height_number_step[inches]', '8.0')->getValue());
+    $this->assertEquals('8.5', $assert_session->optionExists('height_number_step[inches]', '8.5')->getValue());
+    $this->assertEquals('9.0', $assert_session->optionExists('height_number_step[inches]', '9.0')->getValue());
+    $this->assertEquals('9.5', $assert_session->optionExists('height_number_step[inches]', '9.5')->getValue());
+    $this->assertEquals('10.0', $assert_session->optionExists('height_number_step[inches]', '10.0')->getValue());
+    $this->assertEquals('10.5', $assert_session->optionExists('height_number_step[inches]', '10.5')->getValue());
+    $this->assertEquals('11.0', $assert_session->optionExists('height_number_step[inches]', '11.0')->getValue());
 
     // Post a submission.
     $edit = [

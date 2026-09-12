@@ -4,16 +4,13 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   /**
    * Enhance roles element.
    *
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformRoles = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-roles', '.js-webform-roles-role[value="authenticated"]', context)).each(function () {
         var $authenticated = $(this);
         var $checkboxes = $authenticated.parents('.form-checkboxes').find('.js-webform-roles-role').filter(function () {

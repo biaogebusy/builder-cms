@@ -30,16 +30,16 @@
     background-position: right center;
     background-size: 40px;
 
+    [dir="rtl"] & {
+      background-position: left center;
+    }
+
     @media (forced-colors: active) {
       background-color: canvastext;
       background-image: none;
       mask-repeat: no-repeat;
       mask-position: right center;
       mask-size: 40px;
-    }
-
-    @nest [dir="rtl"] & {
-      background-position: left center;
     }
   }
 }

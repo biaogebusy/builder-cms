@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\toolbar\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the implementation of hook_toolbar() by a module.
- *
- * @group toolbar
  */
+#[Group('toolbar')]
+#[RunTestsInSeparateProcesses]
 class ToolbarHookToolbarTest extends BrowserTestBase {
 
   /**

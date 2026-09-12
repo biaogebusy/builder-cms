@@ -10,12 +10,14 @@ use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests a condition with optional context.
- *
- * @group condition_test
  */
+#[Group('condition_test')]
+#[RunTestsInSeparateProcesses]
 class OptionalContextConditionTest extends KernelTestBase {
 
   /**

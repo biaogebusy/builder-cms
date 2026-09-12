@@ -2,9 +2,11 @@
 
 namespace PhpOffice\PhpSpreadsheet\Writer;
 
+use Composer\Pcre\Preg;
 use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Chart\Chart;
 use PhpOffice\PhpSpreadsheet\Comment;
 use PhpOffice\PhpSpreadsheet\Document\Properties;
@@ -117,13 +119,6 @@ class Html extends BaseWriter
     protected bool $isPdf = false;
 
     /**
-     * Is the current writer creating mPDF?
-     *
-     * @deprecated 2.0.1 use instanceof Mpdf instead
-     */
-    protected bool $isMPdf = false;
-
-    /**
      * Generate the Navigation block.
      */
     private bool $generateSheetNavigationBlock = true;
@@ -141,6 +136,12 @@ class Html extends BaseWriter
     /** @var Chart[] */
     private $sheetCharts;
 
+    private bool $betterBoolean = false;
+
+    private string $getTrue = 'TRUE';
+
+    private string $getFalse = 'FALSE';
+
     /**
      * Create a new HTML.
      */
@@ -148,6 +149,9 @@ class Html extends BaseWriter
     {
         $this->spreadsheet = $spreadsheet;
         $this->defaultFont = $this->spreadsheet->getDefaultStyle()->getFont();
+        $calc = Calculation::getInstance($this->spreadsheet);
+        $this->getTrue = $calc->getTRUE();
+        $this->getFalse = $calc->getFALSE();
     }
 
     /**
@@ -174,13 +178,15 @@ class Html extends BaseWriter
      */
     public function generateHtmlAll(): string
     {
+        $sheets = $this->generateSheetPrep();
+        foreach ($sheets as $sheet) {
+            $sheet->calculateArrays($this->preCalculateFormulas);
+        }
         // garbage collect
         $this->spreadsheet->garbageCollect();
 
         $saveDebugLog = Calculation::getInstance($this->spreadsheet)->getDebugLog()->getWriteDebugLog();
         Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog(false);
-        $saveArrayReturnType = Calculation::getArrayReturnType();
-        Calculation::setArrayReturnType(Calculation::RETURN_ARRAY_AS_VALUE);
 
         // Build CSS
         $this->buildCSS(!$this->useInlineCss);
@@ -205,7 +211,6 @@ class Html extends BaseWriter
             $html = $callback($html);
         }
 
-        Calculation::setArrayReturnType($saveArrayReturnType);
         Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog($saveDebugLog);
 
         return $html;
@@ -409,11 +414,9 @@ class Html extends BaseWriter
         return $html;
     }
 
+    /** @return Worksheet[] */
     private function generateSheetPrep(): array
     {
-        // Ensure that Spans have been calculated?
-        $this->calculateSpans();
-
         // Fetch sheets
         if ($this->sheetIndex === null) {
             $sheets = $this->spreadsheet->getAllSheets();
@@ -461,6 +464,8 @@ class Html extends BaseWriter
      */
     public function generateSheetData(): string
     {
+        // Ensure that Spans have been calculated?
+        $this->calculateSpans();
         $sheets = $this->generateSheetPrep();
 
         // Construct HTML
@@ -489,7 +494,7 @@ class Html extends BaseWriter
                 $html .= $startTag;
 
                 // Write row if there are HTML table cells in it
-                if ($this->shouldGenerateRow($sheet, $row) && !isset($this->isSpannedRow[$sheet->getParent()->getIndex($sheet)][$row])) {
+                if ($this->shouldGenerateRow($sheet, $row) && !isset($this->isSpannedRow[$sheet->getParentOrThrow()->getIndex($sheet)][$row])) {
                     // Start a new rowData
                     $rowData = [];
                     // Loop through columns
@@ -621,19 +626,27 @@ class Html extends BaseWriter
         // Write images
         $drawing = $this->sheetDrawings[$coordinates] ?? null;
         if ($drawing !== null) {
+            $opacity = '';
+            $opacityValue = $drawing->getOpacity();
+            if ($opacityValue !== null) {
+                $opacityValue = $opacityValue / 100000;
+                if ($opacityValue >= 0.0 && $opacityValue <= 1.0) {
+                    $opacity = "opacity:$opacityValue; ";
+                }
+            }
             $filedesc = $drawing->getDescription();
             $filedesc = $filedesc ? htmlspecialchars($filedesc, ENT_QUOTES) : 'Embedded image';
             if ($drawing instanceof Drawing && $drawing->getPath() !== '') {
                 $filename = $drawing->getPath();
 
                 // Strip off eventual '.'
-                $filename = (string) preg_replace('/^[.]/', '', $filename);
+                $filename = Preg::replace('/^[.]/', '', $filename);
 
                 // Prepend images root
                 $filename = $this->getImagesRoot() . $filename;
 
                 // Strip off eventual '.' if followed by non-/
-                $filename = (string) preg_replace('@^[.]([^/])@', '$1', $filename);
+                $filename = Preg::replace('@^[.]([^/])@', '$1', $filename);
 
                 // Convert UTF8 data to PCDATA
                 $filename = htmlspecialchars($filename, Settings::htmlEntityFlags());
@@ -654,7 +667,7 @@ class Html extends BaseWriter
                     }
                 }
 
-                $html .= '<img style="position: absolute; z-index: 1; left: '
+                $html .= '<img style="' . $opacity . 'position: absolute; z-index: 1; left: '
                     . $drawing->getOffsetX() . 'px; top: ' . $drawing->getOffsetY() . 'px; width: '
                     . $drawing->getWidth() . 'px; height: ' . $drawing->getHeight() . 'px;" src="'
                     . $imageData . '" alt="' . $filedesc . '" />';
@@ -677,7 +690,7 @@ class Html extends BaseWriter
                     //    Its use here is suspect and is being eliminated.
                     //  width: X sets width of supplied image.
                     //  As a result, images bigger than cell will be contained and images smaller will not get stretched
-                    $html .= '<img alt="' . $filedesc . '" src="' . $dataUri . '" style="width:' . $drawing->getWidth() . 'px;left: '
+                    $html .= '<img alt="' . $filedesc . '" src="' . $dataUri . '" style="' . $opacity . 'width:' . $drawing->getWidth() . 'px;left: '
                         . $drawing->getOffsetX() . 'px; top: ' . $drawing->getOffsetY() . 'px;position: absolute; z-index: 1;" />';
                 }
             }
@@ -1130,9 +1143,16 @@ class Html extends BaseWriter
 
         // Create CSS
         if ($fill->getFillType() !== Fill::FILL_NONE) {
-            $value = $fill->getFillType() == Fill::FILL_NONE
-                ? 'white' : '#' . $fill->getStartColor()->getRGB();
-            $css['background-color'] = $value;
+            if (
+                (in_array($fill->getFillType(), ['', Fill::FILL_SOLID], true) || !$fill->getEndColor()->getRGB())
+                && $fill->getStartColor()->getRGB()
+            ) {
+                $value = '#' . $fill->getStartColor()->getRGB();
+                $css['background-color'] = $value;
+            } elseif ($fill->getEndColor()->getRGB()) {
+                $value = '#' . $fill->getEndColor()->getRGB();
+                $css['background-color'] = $value;
+            }
         }
 
         return $css;
@@ -1337,8 +1357,21 @@ class Html extends BaseWriter
         if ($cell->getValue() instanceof RichText) {
             $cellData .= $this->generateRowCellDataValueRich($cell->getValue());
         } else {
-            $origData = $this->preCalculateFormulas ? $cell->getCalculatedValue() : $cell->getValue();
-            $origData2 = $this->preCalculateFormulas ? $cell->getCalculatedValueString() : $cell->getValueString();
+            if ($this->preCalculateFormulas) {
+                $origData = $cell->getCalculatedValue();
+                if ($this->betterBoolean && is_bool($origData)) {
+                    $origData2 = $origData ? $this->getTrue : $this->getFalse;
+                } else {
+                    $origData2 = $cell->getCalculatedValueString();
+                }
+            } else {
+                $origData = $cell->getValue();
+                if ($this->betterBoolean && is_bool($origData)) {
+                    $origData2 = $origData ? $this->getTrue : $this->getFalse;
+                } else {
+                    $origData2 = $cell->getValueString();
+                }
+            }
             $formatCode = $worksheet->getParentOrThrow()->getCellXfByIndex($cell->getXfIndex())->getNumberFormat()->getFormatCode();
 
             $cellData = NumberFormat::toFormattedString(
@@ -1372,15 +1405,26 @@ class Html extends BaseWriter
 
             // Converts the cell content so that spaces occuring at beginning of each new line are replaced by &nbsp;
             // Example: "  Hello\n to the world" is converted to "&nbsp;&nbsp;Hello\n&nbsp;to the world"
-            $cellData = (string) preg_replace('/(?m)(?:^|\G) /', '&nbsp;', $cellData);
+            $cellData = Preg::replace('/(?m)(?:^|\G) /', '&nbsp;', $cellData);
 
             // convert newline "\n" to '<br>'
             $cellData = nl2br($cellData);
 
             // Extend CSS class?
+            $dataType = $cell->getDataType();
+            if ($this->betterBoolean && $this->preCalculateFormulas && $dataType === DataType::TYPE_FORMULA) {
+                $calculatedValue = $cell->getCalculatedValue();
+                if (is_bool($calculatedValue)) {
+                    $dataType = DataType::TYPE_BOOL;
+                } elseif (is_numeric($calculatedValue)) {
+                    $dataType = DataType::TYPE_NUMERIC;
+                } elseif (is_string($calculatedValue)) {
+                    $dataType = DataType::TYPE_STRING;
+                }
+            }
             if (!$this->useInlineCss && is_string($cssClass)) {
                 $cssClass .= ' style' . $cell->getXfIndex();
-                $cssClass .= ' ' . $cell->getDataType();
+                $cssClass .= ' ' . $dataType;
             } elseif (is_array($cssClass)) {
                 $index = $cell->getXfIndex();
                 $styleIndex = 'td.style' . $index . ', th.style' . $index;
@@ -1394,7 +1438,7 @@ class Html extends BaseWriter
                     $sharedStyle->getAlignment()->getHorizontal() == Alignment::HORIZONTAL_GENERAL
                     && isset($this->cssStyles['.' . $cell->getDataType()]['text-align'])
                 ) {
-                    $cssClass['text-align'] = $this->cssStyles['.' . $cell->getDataType()]['text-align'];
+                    $cssClass['text-align'] = $this->cssStyles['.' . $dataType]['text-align'];
                 }
             }
         } else {
@@ -1439,6 +1483,16 @@ class Html extends BaseWriter
         $htmlx .= $this->generateRowIncludeCharts($worksheet, $coordinate);
         // Column start
         $html .= '            <' . $cellType;
+        if ($this->betterBoolean) {
+            $dataType = $worksheet->getCell($coordinate)->getDataType();
+            if ($dataType === DataType::TYPE_BOOL) {
+                $html .= ' data-type="' . DataType::TYPE_BOOL . '"';
+            } elseif ($dataType === DataType::TYPE_FORMULA && is_bool($worksheet->getCell($coordinate)->getCalculatedValue())) {
+                $html .= ' data-type="' . DataType::TYPE_BOOL . '"';
+            } elseif (is_numeric($cellData) && $worksheet->getCell($coordinate)->getDataType() === DataType::TYPE_STRING) {
+                $html .= ' data-type="' . DataType::TYPE_STRING . '"';
+            }
+        }
         if (!$this->useInlineCss && !$this->isPdf && is_string($cssClass)) {
             $html .= ' class="' . $cssClass . '"';
             if ($htmlx) {
@@ -1505,7 +1559,7 @@ class Html extends BaseWriter
     /**
      * Generate row.
      *
-     * @param array $values Array containing cells in a row
+     * @param array<int, mixed> $values Array containing cells in a row
      * @param int $row Row number (0-based)
      * @param string $cellType eg: 'td'
      */
@@ -1517,7 +1571,19 @@ class Html extends BaseWriter
 
         // Write cells
         $colNum = 0;
-        foreach ($values as $cellAddress) {
+        $tcpdfInited = false;
+        foreach ($values as $key => $cellAddress) {
+            if ($this instanceof Pdf\Mpdf) {
+                $colNum = $key - 1;
+            } elseif ($this instanceof Pdf\Tcpdf) {
+                // It appears that Tcpdf requires first cell in tr.
+                $colNum = $key - 1;
+                if (!$tcpdfInited && $key !== 1) {
+                    $tempspan = ($colNum > 1) ? " colspan='$colNum'" : '';
+                    $html .= "<td$tempspan></td>\n";
+                }
+                $tcpdfInited = true;
+            }
             [$cell, $cssClass, $coordinate] = $this->generateRowCellCss($worksheet, $cellAddress, $row, $colNum);
 
             // Cell Data
@@ -1527,13 +1593,18 @@ class Html extends BaseWriter
             if ($worksheet->hyperlinkExists($coordinate) && !$worksheet->getHyperlink($coordinate)->isInternal()) {
                 $url = $worksheet->getHyperlink($coordinate)->getUrl();
                 $urlDecode1 = html_entity_decode($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                $urlTrim = preg_replace('/^\s+/u', '', $urlDecode1) ?? $urlDecode1;
-                $parseScheme = preg_match('/^([\w\s\x00-\x1f]+):/u', strtolower($urlTrim), $matches);
-                if ($parseScheme === 1 && !in_array($matches[1], ['http', 'https', 'file', 'ftp', 'mailto', 's3'], true)) {
+                $urlTrim = Preg::replace('/^\s+/u', '', $urlDecode1);
+                $parseScheme = Preg::isMatch('/^([\w\s\x00-\x1f]+):/u', strtolower($urlTrim), $matches);
+                if ($parseScheme && !in_array($matches[1], ['http', 'https', 'file', 'ftp', 'mailto', 's3'], true)) {
                     $cellData = htmlspecialchars($url, Settings::htmlEntityFlags());
-                     $cellData = self::replaceControlChars($cellData);
+                    $cellData = self::replaceControlChars($cellData);
                 } else {
-                    $cellData = '<a href="' . htmlspecialchars($url, Settings::htmlEntityFlags()) . '" title="' . htmlspecialchars($worksheet->getHyperlink($coordinate)->getTooltip(), Settings::htmlEntityFlags()) . '">' . $cellData . '</a>';
+                    $tooltip = $worksheet->getHyperlink($coordinate)->getTooltip();
+                    $tooltipOut = empty($tooltip) ? '' : (' title="' . htmlspecialchars($tooltip) . '"');
+                    $cellData = '<a href="'
+                        . htmlspecialchars($url) . '"'
+                        . $tooltipOut
+                        . '>' . $cellData . '</a>';
                 }
             }
 
@@ -1677,18 +1748,29 @@ class Html extends BaseWriter
      */
     public function formatColor(string $value, string $format): string
     {
+        return self::formatColorStatic($value, $format);
+    }
+
+    /**
+     * Add color to formatted string as inline style.
+     *
+     * @param string $value Plain formatted value without color
+     * @param string $format Format code
+     */
+    public static function formatColorStatic(string $value, string $format): string
+    {
         // Color information, e.g. [Red] is always at the beginning
         $color = null; // initialize
         $matches = [];
 
         $color_regex = '/^\[[a-zA-Z]+\]/';
-        if (preg_match($color_regex, $format, $matches)) {
+        if (Preg::isMatch($color_regex, $format, $matches)) {
             $color = str_replace(['[', ']'], '', $matches[0]);
             $color = strtolower($color);
         }
 
         // convert to PCDATA
-        $result = htmlspecialchars($value, Settings::htmlEntityFlags());
+        $result = htmlspecialchars($value, ENT_NOQUOTES);
 
         // color span tag
         if ($color !== null) {
@@ -1909,5 +1991,17 @@ class Html extends BaseWriter
         }
 
         return $sheet->getColumnDimension($colStr)->getVisible();
+    }
+
+    public function getBetterBoolean(): bool
+    {
+        return $this->betterBoolean;
+    }
+
+    public function setBetterBoolean(bool $betterBoolean): self
+    {
+        $this->betterBoolean = $betterBoolean;
+
+        return $this;
     }
 }

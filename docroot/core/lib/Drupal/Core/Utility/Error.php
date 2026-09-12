@@ -206,4 +206,20 @@ class Error {
     return $return;
   }
 
+  /**
+   * Returns the current PHP error handler as a callable.
+   *
+   * @return callable|null
+   *   The current error handler as a callable, or NULL if none is set.
+   *
+   * @deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use
+   *   get_error_handler() instead.
+   *
+   * @see https://www.drupal.org/node/3529500
+   */
+  public static function currentErrorHandler(): ?callable {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use get_error_handler() instead. See https://www.drupal.org/node/3529500', E_USER_DEPRECATED);
+    return get_error_handler();
+  }
+
 }

@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - commerce_order
+id: commerce_order.order_details
+label: 'Order details'
+description: null
+targetEntityType: commerce_order
+cache: true

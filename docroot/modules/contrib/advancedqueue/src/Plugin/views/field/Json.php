@@ -4,6 +4,7 @@ namespace Drupal\advancedqueue\Plugin\views\field;
 
 use Drupal\Component\Serialization\Json as JsonDecoder;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 
@@ -14,6 +15,7 @@ use Drupal\views\ResultRow;
  *
  * @ViewsField("advancedqueue_json")
  */
+#[ViewsField("advancedqueue_json")]
 class Json extends FieldPluginBase {
 
   /**

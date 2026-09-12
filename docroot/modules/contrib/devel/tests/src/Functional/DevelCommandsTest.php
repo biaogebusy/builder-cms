@@ -2,20 +2,18 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use Drupal\devel\Drush\Commands\DevelServicesCommand;
+use Drupal\devel\Drush\Commands\DevelTokenCommand;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\devel\Drush\Commands\DevelCommands;
 use Drush\TestTraits\DrushTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for the Devel drush commands.
  *
  * Note: Drush must be installed. Add it to your require-dev in composer.json.
  */
-
-/**
- * @coversDefaultClass \Drupal\devel\Drush\Commands\DevelCommands
- * @group devel
- */
+#[Group('devel')]
 class DevelCommandsTest extends BrowserTestBase {
 
   use DrushTestTrait;
@@ -34,14 +32,14 @@ class DevelCommandsTest extends BrowserTestBase {
    * Tests drush commands.
    */
   public function testCommands(): void {
-    $this->drush(DevelCommands::TOKEN, [], ['format' => 'json']);
+    $this->drush(DevelTokenCommand::NAME, [], ['format' => 'json']);
     $output = $this->getOutputFromJSON();
     $tokens = array_column($output, 'token');
     $this->assertContains('account-name', $tokens);
 
-    $this->drush(DevelCommands::SERVICES, [], ['format' => 'json']);
-    $output = $this->getOutputFromJSON();
-    $this->assertContains('current_user', $output);
+    $this->drush(DevelServicesCommand::NAME, [], ['format' => 'json']);
+    $output = $this->getOutput();
+    $this->assertStringContainsString('current_user', $output);
   }
 
 }

@@ -1,0 +1,7 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_find_and_replace__find_and_replace:
+  type: mapping
+  label: 'Find And Replace'
+  mapping:
+    ui_type:
+      type: string
+      label: 'UI type'

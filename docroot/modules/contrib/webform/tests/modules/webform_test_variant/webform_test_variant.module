@@ -2,19 +2,21 @@
 
 /**
  * @file
+ * Test module for variants.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_test_variant\Hook\WebformTestVariantHooks;
+
+/**
+ * @file
  * Support module for webform that provides variant plugin tests.
  */
 
 /**
  * Implements hook_theme().
  */
+#[LegacyHook]
 function webform_test_variant_theme() {
-  return [
-    'webform_variant_test_summary' => [
-      'variables' => ['settings' => NULL, 'variant' => []],
-    ],
-    'webform_variant_test_offcanvas_width' => [
-      'variables' => ['settings' => NULL, 'variant' => []],
-    ],
-  ];
+  return \Drupal::service(WebformTestVariantHooks::class)->theme();
 }

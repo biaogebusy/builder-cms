@@ -26,6 +26,10 @@
     id:
       type: string
       label: 'Machine name'
+      constraints:
+        Regex:
+          pattern: '/^[a-z0-9_]+$/'
+          message: "The %value machine name is not valid."
     title:
       type: label
       label: Title
@@ -171,6 +175,9 @@
         form_file_limit:
           type: string
           label: 'Form file upload limit'
+        form_file_limit_message:
+          type: text
+          label: 'File upload limit message'
         form_elements_attributes:
           type: ignore
           label: 'Form elements attributes'

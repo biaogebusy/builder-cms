@@ -1,0 +1,10 @@
+admin.content_templates:
+  version: 20240325
+  css:
+    theme:
+      css/content-templates.admin.css: { }
+
+distribution-channel:
+  version: 20241217
+  js:
+    js/ckeditor5_distribution_channel.js: { }

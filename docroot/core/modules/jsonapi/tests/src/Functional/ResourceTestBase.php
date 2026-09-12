@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Random;
@@ -70,6 +71,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     'basic_auth',
     'rest_test',
     'jsonapi_test_field_access',
+    'jsonapi_response_validator',
     'text',
   ];
 
@@ -171,9 +173,9 @@ abstract class ResourceTestBase extends BrowserTestBase {
    * @var array
    */
   protected static $jsonApiMember = [
-    'version' => '1.0',
+    'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
     'meta' => [
-      'links' => ['self' => ['href' => 'http://jsonapi.org/format/1.0/']],
+      'links' => ['self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK]],
     ],
   ];
 
@@ -243,6 +245,8 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $this->uuidKey = $entity_type_manager->getDefinition(static::$entityTypeId)
       ->getKey('uuid');
     $this->entity = $this->setUpFields($this->createEntity(), $this->account);
+    // Refresh entity storage as new fields have been created.
+    $this->entityStorage = $entity_type_manager->getStorage(static::$entityTypeId);
 
     $this->resourceType = $this->container->get('jsonapi.resource_type.repository')->getByTypeName(static::$resourceTypeName);
   }
@@ -260,7 +264,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function setUpFields(EntityInterface $entity, UserInterface $account) {
+  protected function setUpFields(EntityInterface $entity, UserInterface $account): EntityInterface {
     if (!$entity instanceof FieldableEntityInterface) {
       return $entity;
     }
@@ -327,11 +331,15 @@ abstract class ResourceTestBase extends BrowserTestBase {
     return $this->resaveEntity($entity, $account);
   }
 
+  /**
+   * Reloads and updates an entity with test field values before saving it.
+   */
   protected function resaveEntity(EntityInterface $entity, AccountInterface $account): EntityInterface {
     // Reload entity so that it has the new field.
-    $reloaded_entity = $this->entityLoadUnchanged($entity->id());
+    $entity_id = $entity->id();
     // Some entity types are not stored, hence they cannot be reloaded.
-    if ($reloaded_entity !== NULL) {
+    if ($entity_id !== NULL) {
+      $reloaded_entity = $this->entityLoadUnchanged($entity_id);
       $entity = $reloaded_entity;
       // Set a default value on the fields.
       $entity->set('field_rest_test', ['value' => 'All the faith he had had had had no effect on the outcome of his life.']);
@@ -427,11 +435,8 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $id_key = $duplicate->getEntityType()->getKey('id');
     $needs_manual_id = $duplicate instanceof ConfigEntityInterface && $id_key;
 
-    if ($duplicate instanceof FieldableEntityInterface && $id_key) {
-      $id_field = $duplicate->getFieldDefinition($id_key);
-      if ($id_field->getType() !== 'integer') {
-        $needs_manual_id = TRUE;
-      }
+    if (!$duplicate->getEntityType()->hasIntegerId()) {
+      $needs_manual_id = TRUE;
     }
 
     if ($needs_manual_id) {
@@ -584,6 +589,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
                     $cacheability->addCacheableDependency(CacheableMetadata::createFromObject($property));
                   }
                 }
+                $cacheability->addCacheableDependency(CacheableMetadata::createFromObject($field_item_list));
               }
             }
           }
@@ -599,6 +605,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       'url.query_args',
       // Drupal defaults.
       'url.site',
+      'user.permissions',
     ];
     // If the entity type is revisionable, add a resource version cache context.
     $cache_contexts = Cache::mergeContexts($cache_contexts, $entity_type->isRevisionable() ? ['url.query_args:resourceVersion'] : []);
@@ -672,7 +679,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     foreach ($permissions as $permission) {
       $role->revokePermission($permission);
     }
-    $role->trustData()->save();
+    $role->save();
   }
 
   /**
@@ -820,7 +827,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
    *   The error response to assert.
    * @param string|false $pointer
    *   The expected JSON Pointer to the associated entity in the request
-   *   document. See http://jsonapi.org/format/#error-objects.
+   *   document. See https://jsonapi.org/format/#error-objects.
    * @param string[]|false $expected_cache_tags
    *   (optional) The expected cache tags in the X-Drupal-Cache-Tags response
    *   header, or FALSE if that header should be absent. Defaults to FALSE.
@@ -967,13 +974,21 @@ abstract class ResourceTestBase extends BrowserTestBase {
           'status' => '400',
           'detail' => "The following query parameters violate the JSON:API spec: 'foo'.",
           'links' => [
-            'info' => ['href' => 'http://jsonapi.org/format/#query-parameters'],
+            'info' => ['href' => 'https://jsonapi.org/format/#query-parameters'],
             'via' => ['href' => $url_reserved_custom_query_parameter->toString()],
           ],
         ],
       ],
     ];
-    $this->assertResourceResponse(400, $expected_document, $response, ['4xx-response', 'http_response'], ['url.query_args', 'url.site'], 'UNCACHEABLE (request policy)', TRUE);
+    $this->assertResourceResponse(
+      400,
+      $expected_document,
+      $response,
+      ['4xx-response', 'http_response'],
+      ['url.query_args', 'url.site', 'user.permissions'],
+      'UNCACHEABLE (request policy)',
+      TRUE,
+    );
 
     // 200 for well-formed HEAD request.
     $response = $this->request('HEAD', $url, $request_options);
@@ -1065,14 +1080,52 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $url = Url::fromRoute(sprintf('jsonapi.%s.individual', static::$resourceTypeName), ['entity' => $random_uuid]);
     $response = $this->request('GET', $url, $request_options);
     $message_url = clone $url;
-    $path = str_replace($random_uuid, '{entity}', $message_url->setAbsolute()->setOptions(['base_url' => '', 'query' => []])->toString());
+    $path = str_replace(
+      $random_uuid,
+     '{entity}',
+      $message_url->setAbsolute()->setOptions(['base_url' => '', 'query' => []])->toString(),
+    );
     $message = 'The "entity" parameter was not converted for the path "' . $path . '" (route name: "jsonapi.' . static::$resourceTypeName . '.individual")';
-    $this->assertResourceErrorResponse(404, $message, $url, $response, FALSE, ['4xx-response', 'http_response'], ['url.query_args', 'url.site'], 'UNCACHEABLE (request policy)', 'UNCACHEABLE (poor cacheability)');
+    $this->assertResourceErrorResponse(
+      404,
+      $message,
+      $url,
+      $response,
+      FALSE,
+      [
+        '4xx-response',
+        'http_response',
+      ],
+      [
+        'url.query_args',
+        'url.site',
+        'user.permissions',
+      ],
+      'UNCACHEABLE (request policy)',
+      'UNCACHEABLE (404)',
+    );
 
     // DX: when Accept request header is missing, still 404, same response.
     unset($request_options[RequestOptions::HEADERS]['Accept']);
     $response = $this->request('GET', $url, $request_options);
-    $this->assertResourceErrorResponse(404, $message, $url, $response, FALSE, ['4xx-response', 'http_response'], ['url.query_args', 'url.site'], 'UNCACHEABLE (request policy)', 'UNCACHEABLE (poor cacheability)');
+    $this->assertResourceErrorResponse(
+      404,
+      $message,
+      $url,
+      $response,
+      FALSE,
+      [
+        '4xx-response',
+        'http_response',
+      ],
+      [
+        'url.query_args',
+        'url.site',
+        'user.permissions',
+      ],
+      'UNCACHEABLE (request policy)',
+      'UNCACHEABLE (404)',
+    );
   }
 
   /**
@@ -1329,7 +1382,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $this->doTestRelationshipGet($request_options);
 
     // Test POST.
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
     $this->doTestRelationshipMutation($request_options);
     // Grant entity-level edit access.
     $this->setUpAuthorization('PATCH');
@@ -1383,7 +1436,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
         NULL,
         $actual_response->getStatusCode() === 200
           ? $expected_dynamic_page_cache_header_value
-          : ($expected_dynamic_page_cache_header_value === 'MISS' ? FALSE : $expected_dynamic_page_cache_header_value)
+          : "UNCACHEABLE ({$expected_resource_response->getStatusCode()})"
       );
     }
   }
@@ -1419,7 +1472,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
         $expected_cacheability->getCacheTags(),
         $expected_cacheability->getCacheContexts(),
         NULL,
-        $expected_dynamic_page_cache_header_value === 'MISS' && !$expected_resource_response->isSuccessful() ? FALSE : $expected_dynamic_page_cache_header_value
+        !$expected_resource_response->isSuccessful() ? "UNCACHEABLE ({$expected_resource_response->getStatusCode()})" : $expected_dynamic_page_cache_header_value
       );
     }
   }
@@ -1963,11 +2016,11 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $this->doTestPostIndividual();
     $this->entity = $this->resaveEntity($this->entity, $this->account);
     $this->revokePermissions();
-    $this->config('jsonapi.settings')->set('read_only', TRUE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', TRUE)->save();
     $this->doTestPatchIndividual();
     $this->entity = $this->resaveEntity($this->entity, $this->account);
     $this->revokePermissions();
-    $this->config('jsonapi.settings')->set('read_only', TRUE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', TRUE)->save();
     $this->doTestDeleteIndividual();
   }
 
@@ -2011,7 +2064,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       $this->assertSame([''], $response->getHeader('Allow'));
     }
 
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
 
     // DX: 415 when no Content-Type request header.
     $response = $this->request('POST', $url, $request_options);
@@ -2044,7 +2097,8 @@ abstract class ResourceTestBase extends BrowserTestBase {
 
     if ($this->entity->getEntityType()->hasKey('label')) {
       $request_options[RequestOptions::BODY] = $parseable_invalid_request_body;
-      // DX: 422 when invalid entity: multiple values sent for single-value field.
+      // DX: 422 when invalid entity: multiple values sent for single-value
+      // field.
       $response = $this->request('POST', $url, $request_options);
       $label_field = $this->entity->getEntityType()->getKey('label');
       $label_field_capitalized = $this->entity->getFieldDefinition($label_field)->getLabel();
@@ -2238,7 +2292,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $this->assertResourceErrorResponse(405, sprintf("JSON:API is configured to accept only read operations. Site administrators can configure this at %s.", Url::fromUri('base:/admin/config/services/jsonapi')->setAbsolute()->toString(TRUE)->getGeneratedUrl()), $url, $response);
     $this->assertSame(['GET'], $response->getHeader('Allow'));
 
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
 
     // DX: 415 when no Content-Type request header.
     $response = $this->request('PATCH', $url, $request_options);
@@ -2540,7 +2594,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $this->assertResourceErrorResponse(405, sprintf("JSON:API is configured to accept only read operations. Site administrators can configure this at %s.", Url::fromUri('base:/admin/config/services/jsonapi')->setAbsolute()->toString(TRUE)->getGeneratedUrl()), $url, $response);
     $this->assertSame(['GET'], $response->getHeader('Allow'));
 
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
 
     // DX: 403 when unauthorized.
     $response = $this->request('DELETE', $url, $request_options);
@@ -2569,7 +2623,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     ksort($array);
 
     // Then check for child arrays.
-    foreach ($array as $key => &$value) {
+    foreach ($array as &$value) {
       if (is_array($value)) {
         static::recursiveKsort($value);
       }
@@ -2686,7 +2740,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       if (str_starts_with($type, 'nested')) {
         $this->grantPermissionsToTestedRole(['access user profiles']);
         $query['fields[user--user]'] = implode(',', $field_set);
-        $query['include'] = 'uid';
+        $query['include'] = $this->entity->getEntityType()->getKey('owner');
         $owner = $this->entity->getOwner();
         $owner_resource = static::toResourceIdentifier($owner);
         foreach ($field_set as $field_name) {
@@ -2770,7 +2824,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       }
     }
 
-    foreach ($field_sets as $type => $included_paths) {
+    foreach ($field_sets as $included_paths) {
       $this->grantIncludedPermissions($included_paths);
       $query = ['include' => implode(',', $included_paths)];
       $url->setOption('query', $query);
@@ -3036,16 +3090,28 @@ abstract class ResourceTestBase extends BrowserTestBase {
       'url.path',
       'url.query_args',
       'url.site',
+      'user.permissions',
     ];
-    $this->assertResourceErrorResponse(501, 'JSON:API does not support filtering on revisions other than the latest version because a secure Drupal core API does not yet exist to do so.', $rel_working_copy_collection_url_filtered, $actual_response, FALSE, ['http_response'], $filtered_collection_expected_cache_contexts);
+    $this->assertResourceErrorResponse(501, 'JSON:API does not support filtering on revisions other than the latest version because a secure Drupal core API does not yet exist to do so.', $rel_working_copy_collection_url_filtered, $actual_response, FALSE, ['http_response'], $filtered_collection_expected_cache_contexts, NULL, 'UNCACHEABLE (501)');
     // Fetch the collection URL using an invalid version identifier.
     $actual_response = $this->request('GET', $rel_invalid_collection_url, $request_options);
     $invalid_version_expected_cache_contexts = [
       'url.path',
       'url.query_args',
       'url.site',
+      'user.permissions',
     ];
-    $this->assertResourceErrorResponse(400, 'Collection resources only support the following resource version identifiers: rel:latest-version, rel:working-copy', $rel_invalid_collection_url, $actual_response, FALSE, ['4xx-response', 'http_response'], $invalid_version_expected_cache_contexts);
+    $this->assertResourceErrorResponse(
+      400,
+      'Collection resources only support the following resource version identifiers: rel:latest-version, rel:working-copy',
+      $rel_invalid_collection_url,
+      $actual_response,
+      FALSE,
+      ['4xx-response', 'http_response'],
+      $invalid_version_expected_cache_contexts,
+      NULL,
+      'UNCACHEABLE (400)',
+    );
 
     // Move the entity to its draft moderation state.
     $entity->set('field_revisionable_number', 42);
@@ -3241,7 +3307,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       $this->assertResourceResponse(200, $expected_document, $actual_response, $expected_cache_tags, $expected_cacheability->getCacheContexts(), NULL, TRUE);
     }
 
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
 
     // Ensures that PATCH and DELETE on individual resources with a
     // `resourceVersion` query parameter is not supported.
@@ -3501,10 +3567,13 @@ abstract class ResourceTestBase extends BrowserTestBase {
    *   TRUE if the field definition is found to be a reference field. FALSE
    *   otherwise.
    */
-  protected static function isReferenceFieldDefinition(FieldDefinitionInterface $field_definition) {
+  protected static function isReferenceFieldDefinition(FieldDefinitionInterface $field_definition): bool {
     /** @var \Drupal\Core\Field\TypedData\FieldItemDataDefinition $item_definition */
     $item_definition = $field_definition->getItemDefinition();
     $main_property = $item_definition->getMainPropertyName();
+    if ($main_property === NULL) {
+      return FALSE;
+    }
     $property_definition = $item_definition->getPropertyDefinition($main_property);
     return $property_definition instanceof DataReferenceTargetDefinition;
   }
@@ -3535,8 +3604,9 @@ abstract class ResourceTestBase extends BrowserTestBase {
    * @todo Remove this after https://www.drupal.org/project/drupal/issues/3038706 lands.
    */
   protected function entityLoadUnchanged($id) {
-    $this->entityStorage->resetCache();
-    return $this->entityStorage->loadUnchanged($id);
+    $entity_storage = \Drupal::service('entity_type.manager')->getStorage(static::$entityTypeId);
+    $entity_storage->resetCache();
+    return $entity_storage->loadUnchanged($id);
   }
 
   /**
@@ -3559,8 +3629,8 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $entity_type = $this->entity->getEntityType();
     if ($entity_type instanceof ContentEntityTypeInterface &&
       ($field_name = $entity_type->getRevisionMetadataKey('revision_log_message'))) {
-      // The default entity access control handler assumes that permissions do not
-      // change during the lifetime of a request and caches access results.
+      // The default entity access control handler assumes that permissions do
+      // not change during the lifetime of a request and caches access results.
       // However, we're changing permissions during a test run and need fresh
       // results, so reset the cache.
       \Drupal::entityTypeManager()->getAccessControlHandler($this->entity->getEntityTypeId())->resetCache();

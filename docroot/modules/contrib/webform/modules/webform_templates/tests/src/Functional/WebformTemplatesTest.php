@@ -30,7 +30,7 @@ class WebformTemplatesTest extends WebformBrowserTestBase {
   /**
    * Tests webform templates.
    */
-  public function testTemplates() {
+  public function testTemplates(): void {
     $assert_session = $this->assertSession();
 
     $user_account = $this->drupalCreateUser([

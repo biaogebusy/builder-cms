@@ -5,6 +5,7 @@
  * Post update functions for Views.
  */
 
+use Drupal\block\BlockInterface;
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
 use Drupal\views\ViewEntityInterface;
 use Drupal\views\ViewsConfigUpdater;
@@ -12,7 +13,7 @@ use Drupal\views\ViewsConfigUpdater;
 /**
  * Implements hook_removed_post_updates().
  */
-function views_removed_post_updates() {
+function views_removed_post_updates(): array {
   return [
     'views_post_update_update_cacheability_metadata' => '9.0.0',
     'views_post_update_cleanup_duplicate_views_data' => '9.0.0',
@@ -39,125 +40,18 @@ function views_removed_post_updates() {
     'views_post_update_sort_identifier' => '10.0.0',
     'views_post_update_provide_revision_table_relationship' => '10.0.0',
     'views_post_update_image_lazy_load' => '10.0.0',
+    'views_post_update_boolean_custom_titles' => '11.0.0',
+    'views_post_update_oembed_eager_load' => '11.0.0',
+    'views_post_update_responsive_image_lazy_load' => '11.0.0',
+    'views_post_update_timestamp_formatter' => '11.0.0',
+    'views_post_update_fix_revision_id_part' => '11.0.0',
+    'views_post_update_add_missing_labels' => '11.0.0',
+    'views_post_update_remove_skip_cache_setting' => '11.0.0',
+    'views_post_update_remove_default_argument_skip_url' => '11.0.0',
+    'views_post_update_taxonomy_filter_user_context' => '11.0.0',
+    'views_post_update_pager_heading' => '11.0.0',
+    'views_post_update_rendered_entity_field_cache_metadata' => '11.0.0',
   ];
-}
-
-/**
- * Update Views config schema to make boolean custom titles translatable.
- */
-function views_post_update_boolean_custom_titles(?array &$sandbox = NULL): void {
-  // Empty update to rebuild Views config schema.
-}
-
-/**
- * Add eager load option to all oembed type field configurations.
- */
-function views_post_update_oembed_eager_load(?array &$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsOembedEagerLoadFieldUpdate($view);
-  });
-}
-
-/**
- * Add lazy load options to all responsive image type field configurations.
- */
-function views_post_update_responsive_image_lazy_load(?array &$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsResponsiveImageLazyLoadFieldUpdate($view);
-  });
-}
-
-/**
- * Update timestamp formatter settings for views.
- */
-function views_post_update_timestamp_formatter(?array &$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsTimestampFormatterTimeDiffUpdate($view);
-  });
-}
-
-/**
- * Fix '-revision_id' replacement token syntax.
- */
-function views_post_update_fix_revision_id_part(&$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  $view_config_updater->setDeprecationsEnabled(FALSE);
-  \Drupal::classResolver(ConfigEntityUpdater::class)
-    ->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater) {
-      return $view_config_updater->needsRevisionFieldHyphenFix($view);
-    });
-}
-
-/**
- * Add labels to views which don't have one.
- */
-function views_post_update_add_missing_labels(&$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->addLabelIfMissing($view);
-  });
-}
-
-/**
- * Remove the skip_cache settings.
- */
-function views_post_update_remove_skip_cache_setting(): void {
-  \Drupal::configFactory()
-    ->getEditable('views.settings')
-    ->clear('skip_cache')
-    ->save(TRUE);
-}
-
-/**
- * Remove default_argument_skip_url setting.
- */
-function views_post_update_remove_default_argument_skip_url(?array &$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsDefaultArgumentSkipUrlUpdate($view);
-  });
-}
-
-/**
- * Removes User context from views with taxonomy filters.
- */
-function views_post_update_taxonomy_filter_user_context(?array &$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsTaxonomyTermFilterUpdate($view);
-  });
-}
-
-/**
- * Adds a default pager heading.
- */
-function views_post_update_pager_heading(?array &$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsPagerHeadingUpdate($view);
-  });
-}
-
-/**
- * Removes entity display cache metadata from views with rendered entity fields.
- */
-function views_post_update_rendered_entity_field_cache_metadata(?array &$sandbox = NULL): void {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsRenderedEntityFieldUpdate($view);
-  });
 }
 
 /**
@@ -165,9 +59,80 @@ function views_post_update_rendered_entity_field_cache_metadata(?array &$sandbox
  */
 function views_post_update_views_data_argument_plugin_id(?array &$sandbox = NULL): void {
   /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  $view_config_updater = \Drupal::service(ViewsConfigUpdater::class);
   $view_config_updater->setDeprecationsEnabled(FALSE);
   \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
     return $view_config_updater->needsEntityArgumentUpdate($view);
   });
+}
+
+/**
+ * Updates the format plural option for those views using aggregation.
+ */
+function views_post_update_format_plural(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  $view_config_updater->setDeprecationsEnabled(FALSE);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsFormatPluralUpdate($view);
+  });
+}
+
+/**
+ * Clean-up empty remember_roles display settings for views filters.
+ */
+function views_post_update_update_remember_role_empty(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::service(ViewsConfigUpdater::class);
+  $view_config_updater->setDeprecationsEnabled(FALSE);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsRememberRolesUpdate($view);
+  });
+}
+
+/**
+ * Adds a default table CSS class.
+ */
+function views_post_update_table_css_class(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::service(ViewsConfigUpdater::class);
+  $view_config_updater->setDeprecationsEnabled(FALSE);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsTableCssClassUpdate($view);
+  });
+}
+
+/**
+ * Defaults `items_per_page` to NULL in Views blocks.
+ */
+function views_post_update_block_items_per_page(?array &$sandbox = NULL): void {
+  if (!\Drupal::moduleHandler()->moduleExists('block')) {
+    return;
+  }
+  \Drupal::classResolver(ConfigEntityUpdater::class)
+    ->update($sandbox, 'block', function (BlockInterface $block): bool {
+      if (str_starts_with($block->getPluginId(), 'views_block:')) {
+        $settings = $block->get('settings');
+        if ($settings['items_per_page'] === 'none') {
+          $settings['items_per_page'] = NULL;
+          $block->set('settings', $settings);
+          return TRUE;
+        }
+      }
+      return FALSE;
+    });
+}
+
+/**
+ * Clear cache to add new date default arguments.
+ */
+function views_post_update_add_date_default_arguments(): void {
+  // Empty update to cause a cache rebuild so that schema additions are read.
+}
+
+/**
+ * Clear cache to apply non-sortable counter field change.
+ */
+function views_post_update_counter_field_not_sortable(): void {
+  // Empty update to trigger a cache rebuild so updated Views data is applied.
 }

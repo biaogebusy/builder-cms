@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\locale\Gettext;
 
@@ -10,6 +13,8 @@ use Drupal\locale\Gettext;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceLocaleTest extends DynamicEntityReferenceTest {
 
   /**

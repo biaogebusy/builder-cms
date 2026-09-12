@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_product\Plugin\Field\FieldWidget;
 
+use Drupal\commerce_product\ProductVariationStorageInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -26,57 +27,27 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class ProductVariationWidgetBase extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The product variation storage.
+   * The entity type manager.
    *
-   * @var \Drupal\commerce_product\ProductVariationStorageInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $variationStorage;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The entity repository service.
    *
    * @var \Drupal\Core\Entity\EntityRepositoryInterface
    */
-  protected $entityRepository;
-
-  /**
-   * Constructs a new ProductVariationWidgetBase object.
-   *
-   * @param string $plugin_id
-   *   The plugin_id for the widget.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
-   *   The definition of the field to which the widget is associated.
-   * @param array $settings
-   *   The widget settings.
-   * @param array $third_party_settings
-   *   Any third party settings.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
-   *   The entity repository.
-   */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
-
-    $this->entityRepository = $entity_repository;
-    $this->variationStorage = $entity_type_manager->getStorage('commerce_product_variation');
-  }
+  protected EntityRepositoryInterface $entityRepository;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['third_party_settings'],
-      $container->get('entity_type.manager'),
-      $container->get('entity.repository')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityRepository = $container->get('entity.repository');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    return $instance;
   }
 
   /**
@@ -150,7 +121,9 @@ abstract class ProductVariationWidgetBase extends WidgetBase implements Containe
    */
   protected function getDefaultVariation(ProductInterface $product, array $variations) {
     $langcode = $product->language()->getId();
-    $selected_variation = $this->variationStorage->loadFromContext($product);
+    $variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    assert($variation_storage instanceof ProductVariationStorageInterface);
+    $selected_variation = $variation_storage->loadFromContext($product);
     $selected_variation = $this->entityRepository->getTranslationFromContext($selected_variation, $langcode);
     // The returned variation must also be enabled.
     if (!isset($variations[$selected_variation->id()])) {
@@ -170,7 +143,9 @@ abstract class ProductVariationWidgetBase extends WidgetBase implements Containe
    */
   protected function loadEnabledVariations(ProductInterface $product) {
     $langcode = $product->language()->getId();
-    $variations = $this->variationStorage->loadEnabled($product);
+    $variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    assert($variation_storage instanceof ProductVariationStorageInterface);
+    $variations = $variation_storage->loadEnabled($product);
     foreach ($variations as $key => $variation) {
       $variations[$key] = $this->entityRepository->getTranslationFromContext($variation, $langcode);
     }

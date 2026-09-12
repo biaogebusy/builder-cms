@@ -4,3 +4,9 @@ entity.commerce_promotion.collection:
   parent: 'commerce.admin_commerce'
   description: 'Manage your promotions.'
   weight: -10
+
+commerce_promotion.settings:
+  title: 'Promotion settings'
+  route_name: 'commerce_promotion.settings'
+  parent: 'commerce_order.configuration'
+  description: 'Configure promotion settings.'

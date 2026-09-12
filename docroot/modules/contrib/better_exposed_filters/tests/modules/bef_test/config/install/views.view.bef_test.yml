@@ -8,6 +8,7 @@ dependencies:
     - field.storage.node.field_bef_letters
     - field.storage.node.field_bef_location
     - field.storage.node.field_bef_price
+    - node.type.bef_test
     - taxonomy.vocabulary.bef_test_location
   module:
     - better_exposed_filters
@@ -563,7 +564,7 @@ display:
           text_input_required_format: basic_html
           bef:
             general:
-              autosubmit: true
+              autosubmit: false
               autosubmit_exclude_textfield: true
               autosubmit_textfield_delay: 500
               autosubmit_hide: false
@@ -577,6 +578,7 @@ display:
               advanced:
                 combine: false
                 combine_rewrite: ''
+                combine_param: sort_bef_combine
                 reset: false
                 reset_label: ''
                 collapsible: false
@@ -596,14 +598,18 @@ display:
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
               field_bef_email_value:
                 plugin_id: default
                 advanced:
                   placeholder_text: ''
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
               field_bef_integer_value:
                 plugin_id: default
                 advanced:
@@ -613,7 +619,9 @@ display:
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
               field_bef_letters_value:
                 plugin_id: default
                 advanced:
@@ -623,7 +631,9 @@ display:
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
               term_node_tid_depth:
                 plugin_id: default
                 advanced:
@@ -633,14 +643,18 @@ display:
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
               field_bef_price_value:
                 plugin_id: default
                 advanced:
                   placeholder_text: ''
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
               field_bef_boolean_value:
                 plugin_id: default
                 advanced:
@@ -650,13 +664,17 @@ display:
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
               field_bef_email_value_1:
                 plugin_id: default
                 advanced:
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
+                  field_classes: ''
       access:
         type: perm
         options:
@@ -704,220 +722,14 @@ display:
             description: ''
             use_operator: false
             operator: status_op
+            operator_limit_selection: false
+            operator_list: {  }
             identifier: status
-            required: true
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-        field_bef_email_value:
-          id: field_bef_email_value
-          table: node__field_bef_email
-          field: field_bef_email_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: string
-          operator: contains
-          value: ''
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_bef_email_value_op
-            label: 'bef_email (field_bef_email)'
-            description: ''
-            use_operator: false
-            operator: field_bef_email_value_op
-            identifier: field_bef_email_value
-            required: false
-            remember: true
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-        field_bef_integer_value:
-          id: field_bef_integer_value
-          table: node__field_bef_integer
-          field: field_bef_integer_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: list_field
-          operator: or
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_bef_integer_value_op
-            label: 'bef_integer (field_bef_integer)'
-            description: ''
-            use_operator: false
-            operator: field_bef_integer_value_op
-            identifier: field_bef_integer_value
             required: false
             remember: false
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          reduce_duplicates: false
-        field_bef_letters_value:
-          id: field_bef_letters_value
-          table: node__field_bef_letters
-          field: field_bef_letters_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: list_field
-          operator: or
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_bef_letters_value_op
-            label: 'bef_letters (field_bef_letters)'
-            description: ''
-            use_operator: false
-            operator: field_bef_letters_value_op
-            identifier: field_bef_letters_value
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          reduce_duplicates: false
-        term_node_tid_depth:
-          id: term_node_tid_depth
-          table: node_field_data
-          field: term_node_tid_depth
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: node
-          plugin_id: taxonomy_index_tid_depth
-          operator: or
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: term_node_tid_depth_op
-            label: 'Has taxonomy terms (with depth)'
-            description: ''
-            use_operator: false
-            operator: term_node_tid_depth_op
-            identifier: term_node_tid_depth
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          reduce_duplicates: false
-          vid: bef_test_location
-          type: select
-          hierarchy: true
-          limit: true
-          error_message: true
-          depth: 10
-        field_bef_price_value:
-          id: field_bef_price_value
-          table: node__field_bef_price
-          field: field_bef_price_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: numeric
-          operator: '<='
-          value:
-            min: ''
-            max: ''
-            value: ''
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_bef_price_value_op
-            label: 'Price less than'
-            description: ''
-            use_operator: false
-            operator: field_bef_price_value_op
-            identifier: field_bef_price_value
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
           is_grouped: false
           group_info:
             label: ''
@@ -954,13 +766,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              marketing_editor: '0'
-              vendor: '0'
-              partner: '0'
-              partner_admin: '0'
-              editor: '0'
           is_grouped: false
           group_info:
             label: ''
@@ -973,52 +778,251 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
-        field_bef_email_value_1:
-          id: field_bef_email_value_1
+        field_bef_email_value:
+          id: field_bef_email_value
           table: node__field_bef_email
           field: field_bef_email_value
           relationship: none
           group_type: group
           admin_label: ''
           plugin_id: string
-          operator: '='
+          operator: contains
           value: ''
           group: 1
           exposed: true
           expose:
-            operator_id: field_bef_email_value_1_op
-            label: 'bef_email_exposed_operator (field_bef_email)'
+            operator_id: field_bef_email_value_op
+            label: 'bef_email (field_bef_email)'
             description: ''
-            use_operator: true
-            operator: field_bef_email_value_1_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: field_bef_email_value_1
+            use_operator: false
+            operator: field_bef_email_value_op
+            identifier: field_bef_email_value
             required: false
-            remember: false
+            remember: true
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
-              test_role: '0'
-            placeholder: ''
           is_grouped: false
           group_info:
-            label: 'bef_email (field_bef_email)'
-            description: null
-            identifier: field_bef_email_value_1
+            label: ''
+            description: ''
+            identifier: ''
             optional: true
             widget: select
             multiple: false
             remember: false
             default_group: All
             default_group_multiple: {  }
-            group_items:
-              1: {  }
-              2: {  }
-              3: {  }
+            group_items: {  }
+        field_bef_integer_value:
+          id: field_bef_integer_value
+          table: node__field_bef_integer
+          field: field_bef_integer_value
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: list_field
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_bef_integer_value_op
+            label: 'bef_integer (field_bef_integer)'
+            description: ''
+            use_operator: false
+            operator: field_bef_integer_value_op
+            identifier: field_bef_integer_value
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+        field_bef_letters_value:
+          id: field_bef_letters_value
+          table: node__field_bef_letters
+          field: field_bef_letters_value
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: list_field
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_bef_letters_value_op
+            label: 'bef_letters (field_bef_letters)'
+            description: ''
+            use_operator: false
+            operator: field_bef_letters_value_op
+            identifier: field_bef_letters_value
+            required: false
+            remember: true
+            multiple: true
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+        field_bef_location_target_id:
+          id: field_bef_location_target_id
+          table: node__field_bef_location
+          field: field_bef_location_target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: taxonomy_index_tid
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_bef_location_target_id_op
+            label: 'bef_location (field_bef_location)'
+            description: ''
+            use_operator: false
+            operator: field_bef_location_target_id_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: field_bef_location_target_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          vid: bef_test_location
+          type: select
+          hierarchy: false
+          limit: true
+          error_message: true
+        field_bef_price_value:
+          id: field_bef_price_value
+          table: node__field_bef_price
+          field: field_bef_price_value
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: numeric
+          operator: '<='
+          value:
+            min: ''
+            max: ''
+            value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_bef_price_value_op
+            label: 'Price less than'
+            description: ''
+            use_operator: false
+            operator: field_bef_price_value_op
+            identifier: field_bef_price_value
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        term_node_tid_depth:
+          id: term_node_tid_depth
+          table: node_field_data
+          field: term_node_tid_depth
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          plugin_id: taxonomy_index_tid_depth
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: term_node_tid_depth_op
+            label: 'Has taxonomy terms (with depth)'
+            description: ''
+            use_operator: false
+            operator: term_node_tid_depth_op
+            identifier: term_node_tid_depth
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          vid: bef_test_location
+          type: select
+          hierarchy: true
+          limit: true
+          error_message: true
+          depth: 10
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
       style:
         type: table
       row:
@@ -1042,6 +1046,8 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - 'url.query_args:sort_by'
+        - 'url.query_args:sort_order'
         - 'user.node_grants:view'
         - user.permissions
       tags:
@@ -1066,6 +1072,8 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - 'url.query_args:sort_by'
+        - 'url.query_args:sort_order'
         - 'user.node_grants:view'
         - user.permissions
       tags:
@@ -1092,6 +1100,8 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - 'url.query_args:sort_by'
+        - 'url.query_args:sort_order'
         - 'user.node_grants:view'
         - user.permissions
       tags:
@@ -1103,7 +1113,7 @@ display:
         - 'config:field.storage.node.field_bef_price'
   page_3:
     id: page_3
-    display_title: 'Page with slider (single)'
+    display_title: 'Page with Date picker (Single)'
     display_plugin: page
     position: 3
     display_options:
@@ -1155,15 +1165,17 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_bef_price:
-          id: field_bef_price
-          table: node__field_bef_price
-          field: field_bef_price
+        created:
+          id: created
+          table: node_field_data
+          field: created
           relationship: none
           group_type: group
           admin_label: ''
+          entity_type: node
+          entity_field: created
           plugin_id: field
-          label: Price
+          label: 'Authored on'
           exclude: false
           alter:
             alter_text: false
@@ -1196,7 +1208,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -1205,12 +1217,20 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: value
-          type: number_decimal
+          type: timestamp
           settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 2
-            prefix_suffix: true
+            date_format: medium
+            custom_date_format: ''
+            timezone: ''
+            tooltip:
+              date_format: long
+              custom_date_format: ''
+            time_diff:
+              enabled: false
+              future_format: '@interval hence'
+              past_format: '@interval ago'
+              granularity: 2
+              refresh: 60
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -1236,6 +1256,8 @@ display:
           bef:
             general:
               autosubmit: false
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: true
               autosubmit_textfield_delay: 500
               autosubmit_textfield_minimum_length: 3
@@ -1250,20 +1272,16 @@ display:
               advanced:
                 is_secondary: false
             filter:
-              field_bef_price_value:
-                plugin_id: bef_sliders
+              created:
+                plugin_id: bef_datepicker
                 advanced:
                   placeholder_text: ''
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
-                min: '0'
-                max: '100'
-                step: '1'
-                animate: '0'
-                animate_ms: '0'
-                orientation: horizontal
+                  field_classes: ''
       sorts:
         created:
           id: created
@@ -1282,38 +1300,38 @@ display:
           exposed: false
           granularity: second
       filters:
-        field_bef_price_value:
-          id: field_bef_price_value
-          table: node__field_bef_price
-          field: field_bef_price_value
+        created:
+          id: created
+          table: node_field_data
+          field: created
           relationship: none
           group_type: group
           admin_label: ''
-          plugin_id: numeric
-          operator: '>'
+          entity_type: node
+          entity_field: created
+          plugin_id: date
+          operator: '<'
           value:
             min: ''
             max: ''
-            value: ''
+            value: '-1 day'
+            type: offset
           group: 1
           exposed: true
           expose:
-            operator_id: field_bef_price_value_op
-            label: 'Price greater than'
+            operator_id: created_op
+            label: 'Authored on'
             description: ''
             use_operator: false
-            operator: field_bef_price_value_op
+            operator: created_op
             operator_limit_selection: false
             operator_list: {  }
-            identifier: field_bef_price_value
+            identifier: created
             required: false
             remember: false
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
             min_placeholder: ''
             max_placeholder: ''
             placeholder: ''
@@ -1341,7 +1359,7 @@ display:
         filter_groups: false
       display_description: ''
       display_extenders: {  }
-      path: bef-test-slider-single
+      path: bef-test-date-picker
     cache_metadata:
       max-age: -1
       contexts:
@@ -1351,257 +1369,4 @@ display:
         - url.query_args
         - 'user.node_grants:view'
         - user.permissions
-      tags:
-        - 'config:field.storage.node.field_bef_price'
-  page_4:
-    id: page_4
-    display_title: 'Page with slider (between)'
-    display_plugin: page
-    position: 3
-    display_options:
-      fields:
-        title:
-          id: title
-          table: node_field_data
-          field: title
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: node
-          entity_field: title
-          plugin_id: field
-          label: Title
-          exclude: false
-          alter:
-            alter_text: false
-            make_link: false
-            absolute: false
-            word_boundary: false
-            ellipsis: false
-            strip_tags: false
-            trim: false
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: string
-          settings:
-            link_to_entity: true
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_bef_price:
-          id: field_bef_price
-          table: node__field_bef_price
-          field: field_bef_price
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Price
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 2
-            prefix_suffix: true
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-      exposed_form:
-        type: bef
-        options:
-          submit_button: Apply
-          reset_button: true
-          reset_button_label: Reset
-          exposed_sorts_label: 'Sort by'
-          expose_sort_order: true
-          sort_asc_label: Asc
-          sort_desc_label: Desc
-          text_input_required: 'Select any filter and click on Apply to see results'
-          text_input_required_format: basic_html
-          bef:
-            general:
-              autosubmit: false
-              autosubmit_exclude_textfield: true
-              autosubmit_textfield_delay: 500
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_hide: false
-              input_required: false
-              allow_secondary: false
-              secondary_label: 'Advanced options'
-              secondary_open: false
-              reset_button_always_show: false
-            pager:
-              plugin_id: default
-              advanced:
-                is_secondary: false
-            filter:
-              field_bef_price_value:
-                plugin_id: bef_sliders
-                advanced:
-                  placeholder_text: ''
-                  collapsible: false
-                  collapsible_disable_automatic_open: false
-                  is_secondary: false
-                  hide_label: false
-                min: '0'
-                max: '100'
-                step: '1'
-                animate: '0'
-                animate_ms: '0'
-                orientation: horizontal
-      sorts:
-        created:
-          id: created
-          table: node_field_data
-          field: created
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: node
-          entity_field: created
-          plugin_id: date
-          order: DESC
-          expose:
-            label: Created
-            field_identifier: created
-          exposed: false
-          granularity: second
-      filters:
-        field_bef_price_value:
-          id: field_bef_price_value
-          table: node__field_bef_price
-          field: field_bef_price_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: numeric
-          operator: between
-          value:
-            min: ''
-            max: ''
-            value: ''
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_bef_price_value_op
-            label: 'Price between'
-            description: ''
-            use_operator: false
-            operator: field_bef_price_value_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: field_bef_price_value
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              content_editor: '0'
-              administrator: '0'
-            min_placeholder: ''
-            max_placeholder: ''
-            placeholder: ''
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-      filter_groups:
-        operator: AND
-        groups:
-          1: AND
-      defaults:
-        exposed_form: false
-        fields: false
-        sorts: false
-        filters: false
-        filter_groups: false
-      display_description: ''
-      display_extenders: {  }
-      path: bef-test-slider-between
-    cache_metadata:
-      max-age: -1
-      contexts:
-        - 'languages:language_content'
-        - 'languages:language_interface'
-        - url
-        - url.query_args
-        - 'user.node_grants:view'
-        - user.permissions
-      tags:
-        - 'config:field.storage.node.field_bef_price'
+      tags: {  }

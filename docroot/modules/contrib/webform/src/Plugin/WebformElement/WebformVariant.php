@@ -85,7 +85,7 @@ class WebformVariant extends WebformElementBase implements WebformElementDisplay
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // Hide element if it should not be displayed on 'form'.

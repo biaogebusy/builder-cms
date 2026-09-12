@@ -34,10 +34,11 @@ Framework managers
   - Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
 
   Frontend
-  - Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
   - Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
   - Cristina Chumillas 'ckrina' https://www.drupal.org/u/ckrina
+  - Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
   - Sally Young 'justafish' https://www.drupal.org/u/justafish
+  - Pierre Dureau 'pdureau' https://www.drupal.org/u/pdureau
 
 Release managers
 - Nathaniel Catchpole 'catch' https://www.drupal.org/u/catch
@@ -70,8 +71,9 @@ subsystems. See https://www.drupal.org/contribute/core-maintainers for more
 information on their responsibilities, and to find out how to become a subsystem
 maintainer. Current subsystem maintainers:
 
-Actions UI
-- ?
+Admin theme
+- Jürgen Haas 'jurgenhaas' https://www.drupal.org/u/jurgenhaas
+- Sascha Eggenberger 'saschaeggi' https://www.drupal.org/u/saschaeggi
 
 Ajax
 - Alex Bronstein 'effulgentsia' https://www.drupal.org/u/effulgentsia
@@ -79,7 +81,8 @@ Ajax
 - Tim Plunkett 'tim.plunkett' https://www.drupal.org/u/tim.plunkett
 
 Asset Library API
-- ?
+- Pierre Dureau 'pdureau' https://www.drupal.org/u/pdureau
+- Florent Torregrosa 'grimreaper' https://www.drupal.org/u/grimreaper
 
 Authentication and Authorization
 - Lucas Hedding 'heddn' https://www.drupal.org/u/heddn
@@ -111,9 +114,6 @@ Block Content
 - Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
 - Stephen Mustgrave 'smustgrave' https://www.drupal.org/u/smustgrave
 
-Book
-- Peter Wolanin 'pwolanin' https://www.drupal.org/u/pwolanin
-
 Bootstrap
 - ?
 
@@ -131,6 +131,10 @@ Claro
 - Cristina Chumillas 'ckrina' https://www.drupal.org/u/ckrina
 - Sascha Eggenberger 'saschaeggi' https://www.drupal.org/u/saschaeggi
 - Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
+
+Command Line Interface (CLI) - `dr`
+- Moshe Weitzman 'moshe weitzman' https://www.drupal.org/u/moshe-weitzman
+- Derek Wright 'dww' https://www.drupal.org/u/dww
 
 Comment
 - Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
@@ -156,7 +160,6 @@ Contact
 - Andrey Postnikov 'andypost' https://www.drupal.org/u/andypost
 
 Content Moderation
-- Sam Becker 'Sam152' https://www.drupal.org/u/sam152
 - Andrei Mateescu 'amateescu' https://www.drupal.org/u/amateescu
 - Derek Wright 'dww' https://www.drupal.org/u/dww
 
@@ -215,7 +218,7 @@ Entity API
 - Sascha Grossenbacher 'Berdir' https://www.drupal.org/u/berdir
 
 Extension API
-- ?
+- Nic Laflin 'nicxvan' https://www.drupal.org/u/nicxvan
 
 Field API
 - Andrei Mateescu 'amateescu' https://www.drupal.org/u/amateescu
@@ -230,12 +233,10 @@ File
 Filter
 - ?
 
-Forum
-- Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
-
 Form API
 - Alex Bronstein 'effulgentsia' https://www.drupal.org/u/effulgentsia
 - Tim Plunkett 'tim.plunkett' https://www.drupal.org/u/tim.plunkett
+- Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
 
 History
 - Andrey Postnikov 'andypost' https://www.drupal.org/u/andypost
@@ -360,6 +361,7 @@ Recipes
 Render API
 - Alex Bronstein 'effulgentsia' https://www.drupal.org/u/effulgentsia
 - Moshe Weitzman 'moshe weitzman' https://www.drupal.org/u/moshe-weitzman
+- Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
 
 Request Processing
 - ?
@@ -386,11 +388,11 @@ Settings Tray
 Shortcut
 - Jibran Ijaz 'jibran' https://www.drupal.org/u/jibran
 
+Stable9
+- Mark Conroy 'markconroy' https://www.drupal.org/u/markconroy
+
 Stark
 - John Albin Wilkins 'JohnAlbin' https://www.drupal.org/u/johnalbin
-
-Statistics
-- ?
 
 Syslog
 - Mariano D'Agostino 'dagmar' https://www.drupal.org/u/dagmar
@@ -423,12 +425,6 @@ Token
 Toolbar
 - Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
 
-Tour
-- Nick Schuch 'nick_schuch' https://www.drupal.org/u/nick_schuch
-
-Tracker
-- ?
-
 Transliteration
 - Andrei Mateescu 'amateescu' https://www.drupal.org/u/amateescu
 
@@ -440,7 +436,7 @@ Umami demo
 - Keith Jay 'kjay' https://www.drupal.org/u/kjay
 - Ivan Berdinsky 'finnsky' https://www.drupal.org/u/finnsky
 
-Update Manager
+Update Status
 - Ted Bowman 'tedbow' https://www.drupal.org/u/tedbow
 - Derek Wright 'dww' https://www.drupal.org/u/dww
 
@@ -454,7 +450,6 @@ Views
 - Len Swaneveld 'Lendude' https://www.drupal.org/u/lendude
 
 Workflows
-- Sam Becker 'Sam152' https://www.drupal.org/u/sam152
 - Andrei Mateescu 'amateescu' https://www.drupal.org/u/amateescu
 
 Workspaces

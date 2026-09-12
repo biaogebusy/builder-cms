@@ -7,12 +7,14 @@ namespace Drupal\Tests\user\Functional;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests adding, editing and deleting user roles and changing role weights.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserRoleAdminTest extends BrowserTestBase {
 
   /**
@@ -85,7 +87,6 @@ class UserRoleAdminTest extends BrowserTestBase {
     $this->drupalGet("admin/people/roles/manage/{$role->id()}");
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("Role {$role_name} has been updated.");
-    \Drupal::entityTypeManager()->getStorage('user_role')->resetCache([$role->id()]);
     $new_role = Role::load($role->id());
     $this->assertEquals($role_name, $new_role->label(), 'The role name has been successfully changed.');
 
@@ -95,7 +96,6 @@ class UserRoleAdminTest extends BrowserTestBase {
     $this->submitForm([], 'Delete');
     $this->assertSession()->pageTextContains("Role {$role_name} has been deleted.");
     $this->assertSession()->linkByHrefNotExists("admin/people/roles/manage/{$role->id()}", 'Role edit link removed.');
-    \Drupal::entityTypeManager()->getStorage('user_role')->resetCache([$role->id()]);
     $this->assertNull(Role::load($role->id()), 'A deleted role can no longer be loaded.');
 
     // Make sure that the system-defined roles can be edited via the user

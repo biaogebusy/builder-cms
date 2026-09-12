@@ -146,17 +146,6 @@ interface WebformHelpManagerInterface {
   public function buildVideoLink($video_id, $video_display = NULL, $title = NULL, array $options = []);
 
   /**
-   * Build the add-ons section.
-   *
-   * @param bool $docs
-   *   Set to TRUE to build exportable HTML documentation.
-   *
-   * @return array
-   *   An render array containing the add-ons section.
-   */
-  public function buildAddOns($docs = FALSE);
-
-  /**
    * Build the libraries section.
    *
    * @param bool $docs

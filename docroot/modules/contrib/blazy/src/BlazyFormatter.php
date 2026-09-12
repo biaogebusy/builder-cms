@@ -3,7 +3,8 @@
 namespace Drupal\blazy;
 
 use Drupal\blazy\Media\Preloader;
-use Drupal\blazy\Utility\Check;
+use Drupal\blazy\Internals\Check;
+use Drupal\blazy\Internals\Internals;
 
 /**
  * Provides common image, file, media formatter-related methods.
@@ -27,18 +28,12 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
 
   /**
    * {@inheritdoc}
-   */
-  public function fieldSettings(array &$settings, $items): void {
-    Check::fields($settings, $items);
-  }
-
-  /**
-   * {@inheritdoc}
    *
    * @todo make it protected after sub-modules, mostly are just tests + BVEF.
    */
   public function buildSettings(array &$build, $items) {
-    $this->hashtag($build);
+    // @todo deprecate and remove $this->hashtag($build);.
+    /** @var array $settings */
     $settings = &$build['#settings'];
 
     // BC for mismatched minor versions.
@@ -57,6 +52,13 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
   /**
    * {@inheritdoc}
    */
+  public function fieldSettings(array &$settings, $items): void {
+    Check::fields($settings, $items);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function minimalSettings(array &$settings, $items): void {
     Check::grids($settings);
   }
@@ -65,7 +67,8 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
    * {@inheritdoc}
    */
   public function preBuildElements(array &$build, $items, array $entities = []) {
-    $this->hashtag($build);
+    // @todo deprecate and remove $this->hashtag($build);.
+    /** @var array $settings */
     $settings = &$build['#settings'];
 
     // BC for mismatched minor versions.
@@ -106,6 +109,7 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
   public function preElements(array &$build, $items, array $entities = []): void {
     $this->preBuildElements($build, $items, $entities);
 
+    /** @var array $settings */
     $settings = &$build['#settings'];
 
     $build['#vanilla'] = !empty($settings['vanilla']);
@@ -123,8 +127,9 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
    * {@inheritdoc}
    */
   public function postBuildElements(array &$build, $items, array $entities = []) {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
 
     // The last method before being passed to each manager builders.
     // Supports lightbox gallery if using Blazy formatter.
@@ -141,9 +146,10 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
         $data = $item['#build'] ?? $fallback;
 
         if ($data = array_filter($data)) {
-          if ($blazy = $data['#settings']['blazies'] ?? NULL) {
+          $blazy = Internals::getBlazies($data['#settings']);
+          if ($uri = $blazy->get('image.uri')) {
             $blazies->set('first.data', $data)
-              ->set('first.uri', $blazy->get('image.uri'));
+              ->set('first.uri', $uri);
           }
         }
       }

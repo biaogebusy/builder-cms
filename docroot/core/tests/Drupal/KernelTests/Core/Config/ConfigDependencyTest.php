@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Config;
 
+use Drupal\Core\Config\ConfigManager;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for configuration dependencies.
- *
- * @coversDefaultClass \Drupal\Core\Config\ConfigManager
- *
- * @group config
  */
+#[CoversClass(ConfigManager::class)]
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigDependencyTest extends EntityKernelTestBase {
 
   /**
@@ -73,11 +77,20 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     $this->assertEmpty($root_module_dependencies, 'Node module is not written to the root dependencies array as it is enforced.');
 
     // Create additional entities to test dependencies on config entities.
-    $entity2 = $storage->create(['id' => 'entity2', 'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]]]);
+    $entity2 = $storage->create([
+      'id' => 'entity2',
+      'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]],
+    ]);
     $entity2->save();
-    $entity3 = $storage->create(['id' => 'entity3', 'dependencies' => ['enforced' => ['config' => [$entity2->getConfigDependencyName()]]]]);
+    $entity3 = $storage->create([
+      'id' => 'entity3',
+      'dependencies' => ['enforced' => ['config' => [$entity2->getConfigDependencyName()]]],
+    ]);
     $entity3->save();
-    $entity4 = $storage->create(['id' => 'entity4', 'dependencies' => ['enforced' => ['config' => [$entity3->getConfigDependencyName()]]]]);
+    $entity4 = $storage->create([
+      'id' => 'entity4',
+      'dependencies' => ['enforced' => ['config' => [$entity3->getConfigDependencyName()]]],
+    ]);
     $entity4->save();
 
     // Test getting $entity1's dependencies as configuration dependency objects.
@@ -94,6 +107,12 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     $this->assertNotContains('config_test:entity2', $dependent_ids, 'config_test.dynamic.entity2 does not have a dependency on itself.');
     $this->assertContains('config_test:entity3', $dependent_ids, 'config_test.dynamic.entity3 has a dependency on config_test.dynamic.entity2.');
     $this->assertContains('config_test:entity4', $dependent_ids, 'config_test.dynamic.entity4 has a dependency on config_test.dynamic.entity2.');
+
+    // Test that config entities are loaded without overrides.
+    $GLOBALS['config']['config_test.dynamic.entity3'] = ['status' => FALSE];
+    $this->container->get('config.factory')->clearStaticCache();
+    $dependents = $config_manager->findConfigEntityDependenciesAsEntities('config', [$entity2->getConfigDependencyName()]);
+    $this->assertTrue($dependents['config_test.dynamic.entity3']->get('status'));
 
     // Test getting node module's dependencies as configuration dependency
     // objects.
@@ -120,7 +139,10 @@ class ConfigDependencyTest extends EntityKernelTestBase {
       'type' => 'entity_test',
     ]);
     $entity_test->save();
-    $entity2->setEnforcedDependencies(['config' => [$entity1->getConfigDependencyName()], 'content' => [$entity_test->getConfigDependencyName()]])->save();
+    $entity2->setEnforcedDependencies([
+      'config' => [$entity1->getConfigDependencyName()],
+      'content' => [$entity_test->getConfigDependencyName()],
+    ])->save();
     $dependents = $config_manager->findConfigEntityDependencies('content', [$entity_test->getConfigDependencyName()]);
     $this->assertFalse(isset($dependents['config_test.dynamic.entity1']), 'config_test.dynamic.entity1 does not have a dependency on the content entity.');
     $this->assertTrue(isset($dependents['config_test.dynamic.entity2']), 'config_test.dynamic.entity2 has a dependency on the content entity.');
@@ -130,8 +152,14 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     // Create a configuration entity of a different type with the same ID as one
     // of the entities already created.
     $alt_storage = $this->container->get('entity_type.manager')->getStorage('config_query_test');
-    $alt_storage->create(['id' => 'entity1', 'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]]])->save();
-    $alt_storage->create(['id' => 'entity2', 'dependencies' => ['enforced' => ['module' => ['views']]]])->save();
+    $alt_storage->create([
+      'id' => 'entity1',
+      'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]],
+    ])->save();
+    $alt_storage->create([
+      'id' => 'entity2',
+      'dependencies' => ['enforced' => ['module' => ['views']]],
+    ])->save();
 
     $dependents = $config_manager->findConfigEntityDependenciesAsEntities('config', [$entity1->getConfigDependencyName()]);
     $dependent_ids = $this->getDependentIds($dependents);
@@ -178,7 +206,9 @@ class ConfigDependencyTest extends EntityKernelTestBase {
 
     // Add a fake missing dependency to ensure multiple missing dependencies
     // work.
-    $entity1->setEnforcedDependencies(['content' => [$entity_test->getConfigDependencyName(), 'entity_test:bundle:uuid']])->save();
+    $entity1
+      ->setEnforcedDependencies(['content' => [$entity_test->getConfigDependencyName(), 'entity_test:bundle:uuid']])
+      ->save();
     $expected['uuid'] = [
       'entity_type' => 'entity_test',
       'bundle' => 'bundle',
@@ -230,7 +260,7 @@ class ConfigDependencyTest extends EntityKernelTestBase {
   /**
    * Data provider for self::testConfigEntityUninstallComplex().
    */
-  public static function providerConfigEntityUninstallComplex() {
+  public static function providerConfigEntityUninstallComplex(): array {
     // Ensure that alphabetical order has no influence on dependency fixing and
     // removal.
     return [
@@ -248,9 +278,8 @@ class ConfigDependencyTest extends EntityKernelTestBase {
    *
    * @param array $entity_id_suffixes
    *   The suffixes to add to the 4 entities created by the test.
-   *
-   * @dataProvider providerConfigEntityUninstallComplex
    */
+  #[DataProvider('providerConfigEntityUninstallComplex')]
   public function testConfigEntityUninstallComplex(array $entity_id_suffixes): void {
     /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
     $config_manager = \Drupal::service('config.manager');
@@ -346,11 +375,27 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     // is called as expected and with the correct dependencies.
     $called = \Drupal::state()->get('config_test.on_dependency_removal_called', []);
     $this->assertArrayNotHasKey($entity_3->id(), $called, 'ConfigEntityInterface::onDependencyRemoval() is not called for entity 3.');
-    $this->assertSame([$entity_1->id(), $entity_4->id(), $entity_2->id(), $entity_5->id()], array_keys($called), 'The most dependent entities have ConfigEntityInterface::onDependencyRemoval() called first.');
-    $this->assertSame(['config' => [], 'content' => [], 'module' => ['node'], 'theme' => []], $called[$entity_1->id()]);
-    $this->assertSame(['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => [], 'theme' => []], $called[$entity_2->id()]);
-    $this->assertSame(['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => ['node'], 'theme' => []], $called[$entity_4->id()]);
-    $this->assertSame(['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => [], 'theme' => []], $called[$entity_5->id()]);
+    $this->assertSame(
+      [$entity_1->id(), $entity_4->id(), $entity_2->id(), $entity_5->id()],
+      array_keys($called),
+      'The most dependent entities have ConfigEntityInterface::onDependencyRemoval() called first.',
+    );
+    $this->assertSame(
+      ['config' => [], 'content' => [], 'module' => ['node'], 'theme' => []],
+      $called[$entity_1->id()],
+    );
+    $this->assertSame(
+      ['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => [], 'theme' => []],
+      $called[$entity_2->id()],
+    );
+    $this->assertSame(
+      ['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => ['node'], 'theme' => []],
+      $called[$entity_4->id()],
+    );
+    $this->assertSame(
+      ['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => [], 'theme' => []],
+      $called[$entity_5->id()],
+    );
 
     $this->assertEquals($entity_1->uuid(), $config_entities['delete'][1]->uuid(), 'Entity 1 will be deleted.');
     $this->assertEquals($entity_2->uuid(), $config_entities['update'][0]->uuid(), 'Entity 2 will be updated.');
@@ -373,8 +418,10 @@ class ConfigDependencyTest extends EntityKernelTestBase {
   }
 
   /**
-   * @covers ::uninstall
-   * @covers ::getConfigEntitiesToChangeOnDependencyRemoval
+   * Tests config entity uninstall third party.
+   *
+   * @legacy-covers ::uninstall
+   * @legacy-covers ::getConfigEntitiesToChangeOnDependencyRemoval
    */
   public function testConfigEntityUninstallThirdParty(): void {
     /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
@@ -650,9 +697,15 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     $entity1 = $storage->create(['id' => 'entity1']);
     $entity1->save();
     // Create additional entities to test dependencies on config entities.
-    $entity2 = $storage->create(['id' => 'entity2', 'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]]]);
+    $entity2 = $storage->create([
+      'id' => 'entity2',
+      'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]],
+    ]);
     $entity2->save();
-    $entity3 = $storage->create(['id' => 'entity3', 'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]]]);
+    $entity3 = $storage->create([
+      'id' => 'entity3',
+      'dependencies' => ['enforced' => ['config' => [$entity1->getConfigDependencyName()]]],
+    ]);
     $entity3->save();
     // Include a role entity to test ordering when dependencies have multiple
     // entity types.
@@ -701,7 +754,7 @@ class ConfigDependencyTest extends EntityKernelTestBase {
    * @return array
    *   An array with values of entity_type_id:ID
    */
-  protected function getDependentIds(array $dependents) {
+  protected function getDependentIds(array $dependents): array {
     $dependent_ids = [];
     foreach ($dependents as $dependent) {
       $dependent_ids[] = $dependent->getEntityTypeId() . ':' . $dependent->id();

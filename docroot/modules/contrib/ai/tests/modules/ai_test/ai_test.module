@@ -5,6 +5,7 @@
  * AI test module file.
  */
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Hook\Attribute\LegacyHook;
 use Drupal\Core\Url;
@@ -23,7 +24,7 @@ function ai_test_ai_operationtype_alter(array &$operation_types) {
  * Implements hook_entity_operation().
  */
 #[LegacyHook]
-function ai_test_entity_operation(EntityInterface $entity) {
+function ai_test_entity_operation(EntityInterface $entity, CacheableMetadata $cacheability) {
   return $entity instanceof AIMockProviderResult ? [
     'export' => [
       'title' => t('Export to test'),

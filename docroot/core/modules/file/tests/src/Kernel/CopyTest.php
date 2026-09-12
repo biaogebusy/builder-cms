@@ -11,13 +11,16 @@ use Drupal\Core\File\Exception\InvalidStreamWrapperException;
 use Drupal\Core\File\FileExists;
 use Drupal\file\Entity\File;
 use Drupal\file\FileRepository;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the file copy function.
- *
- * @coversDefaultClass \Drupal\file\FileRepository
- * @group file
  */
+#[CoversClass(FileRepository::class)]
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class CopyTest extends FileManagedUnitTestBase {
 
   /**
@@ -38,7 +41,7 @@ class CopyTest extends FileManagedUnitTestBase {
   /**
    * Tests file copying in the normal, base case.
    *
-   * @covers ::copy
+   * @legacy-covers ::copy
    */
   public function testNormal(): void {
     $contents = $this->randomMachineName(10);
@@ -69,7 +72,7 @@ class CopyTest extends FileManagedUnitTestBase {
   /**
    * Tests renaming when copying over a file that already exists.
    *
-   * @covers ::copy
+   * @legacy-covers ::copy
    */
   public function testExistingRename(): void {
     // Setup a file to overwrite.
@@ -111,7 +114,7 @@ class CopyTest extends FileManagedUnitTestBase {
   /**
    * Tests replacement when copying over a file that already exists.
    *
-   * @covers ::copy
+   * @legacy-covers ::copy
    */
   public function testExistingReplace(): void {
     // Setup a file to overwrite.
@@ -151,7 +154,7 @@ class CopyTest extends FileManagedUnitTestBase {
   /**
    * Tests that copying over an existing file fails when instructed to do so.
    *
-   * @covers ::copy
+   * @legacy-covers ::copy
    */
   public function testExistingError(): void {
     $contents = $this->randomMachineName(10);
@@ -162,7 +165,7 @@ class CopyTest extends FileManagedUnitTestBase {
     // Clone the object so we don't have to worry about the function changing
     // our reference copy.
     try {
-      $result = $this->fileRepository->copy(clone $source, $target->getFileUri(), FileExists::Error);
+      $this->fileRepository->copy(clone $source, $target->getFileUri(), FileExists::Error);
       $this->fail('expected FileExistsException');
     }
     // FileExistsException is a subclass of FileException.
@@ -182,7 +185,7 @@ class CopyTest extends FileManagedUnitTestBase {
   /**
    * Tests for an invalid stream wrapper.
    *
-   * @covers ::copy
+   * @legacy-covers ::copy
    */
   public function testInvalidStreamWrapper(): void {
     $this->expectException(InvalidStreamWrapperException::class);
@@ -194,7 +197,7 @@ class CopyTest extends FileManagedUnitTestBase {
   /**
    * Tests for entity storage exception.
    *
-   * @covers ::copy
+   * @legacy-covers ::copy
    */
   public function testEntityStorageException(): void {
     /** @var \Drupal\Core\Entity\EntityTypeManager $entityTypeManager */

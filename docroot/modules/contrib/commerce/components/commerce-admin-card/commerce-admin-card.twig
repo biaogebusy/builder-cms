@@ -1,0 +1,82 @@
+{#
+/**
+ * @file
+ * Commerce Admin Card component.
+ *
+ * Available variables:
+ * - id: Optional, pre-generated unique ID for the card element (content section uses id__content)
+ * - title: The card title text
+ * - title_tag: HTML tag to use for the title (defaults to 'span')
+ * - badge: The badge/link markup displayed in the header
+ * - content: The main content
+ * - collapsible: Whether the content section can be toggled
+ * - collapsed: Whether the content should be collapsed by default
+ *
+ * Available slots:
+ * - card_header: Override the entire header structure
+ * - card_content: The main content block of the card
+ * - card_footer: Footer content displayed below the main content
+ */
+#}
+
+{% set id = id ? id|clean_id : ('commerce-admin-card-' ~ random())|clean_id %}
+{% set content_id = id ~ '__content' %}
+
+<div
+  id="{{ id }}"
+  class="card commerce-admin-card{{ collapsible ? ' commerce-admin-card--collapsible' }}"
+  >
+  <div class="card__content-wrapper">
+    {% if title or badge or collapsible %}
+      <div class="card__header">
+        {% block card_header %}
+          {% if title or badge %}
+            {% if title %}
+              {% set title_tag = title_tag|default('span') %}
+              <{{ title_tag }} class="card__title">{{ title }}</{{ title_tag }}>
+            {% endif %}
+            {% if badge %}
+              {{ badge }}
+            {% endif %}
+          {% endif %}
+        {% endblock %}
+        {% if collapsible %}
+          <button
+            type="button"
+            class="card__toggle"
+            data-commerce-admin-card-trigger
+            aria-expanded="{{ collapsed ? 'false' : 'true' }}"
+            aria-controls="{{ content_id }}"
+          >
+            <span class="visually-hidden">
+              {{ collapsed ? 'Expand section'|t : 'Collapse section'|t }}
+            </span>
+          </button>
+        {% endif %}
+      </div>
+    {% endif %}
+    <div
+      id="{{ content_id }}"
+      class="card__content{{ collapsible ? ' card__content--collapsible' }}"
+      {% if collapsible %}
+        data-commerce-admin-card-target
+        {{ collapsed ? 'hidden' }}
+      {% endif %}
+    >
+      {% block card_content %}
+        {{ content }}
+      {% endblock %}
+    </div>
+    {% set footer_content %}
+      {% apply spaceless %}
+        {% block card_footer %}
+        {% endblock %}
+      {% endapply %}
+    {% endset %}
+    {% if footer_content|trim is not empty %}
+      <div class="card__footer">
+        {{ footer_content|raw }}
+      </div>
+    {% endif %}
+  </div>
+</div>

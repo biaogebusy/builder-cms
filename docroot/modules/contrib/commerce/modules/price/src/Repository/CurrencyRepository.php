@@ -20,22 +20,15 @@ use Drupal\commerce_price\Entity\CurrencyInterface;
 class CurrencyRepository extends ExternalCurrencyRepository implements CurrencyRepositoryInterface {
 
   /**
-   * The currency storage.
-   *
-   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
-   */
-  protected $currencyStorage;
-
-  /**
    * Constructs a new CurrencyRepository object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
     parent::__construct();
-
-    $this->currencyStorage = $entity_type_manager->getStorage('commerce_currency');
   }
 
   /**
@@ -43,7 +36,7 @@ class CurrencyRepository extends ExternalCurrencyRepository implements CurrencyR
    */
   public function get($currency_code, $locale = NULL): Currency {
     /** @var \Drupal\commerce_price\Entity\CurrencyInterface $currency */
-    $currency = $this->currencyStorage->load($currency_code);
+    $currency = $this->entityTypeManager->getStorage('commerce_currency')->load($currency_code);
     if (!$currency) {
       throw new UnknownCurrencyException($currency_code);
     }
@@ -57,7 +50,7 @@ class CurrencyRepository extends ExternalCurrencyRepository implements CurrencyR
   public function getAll($locale = NULL): array {
     $all = [];
     /** @var \Drupal\commerce_price\Entity\CurrencyInterface[] $currencies */
-    $currencies = $this->currencyStorage->loadMultiple();
+    $currencies = $this->entityTypeManager->getStorage('commerce_currency')->loadMultiple();
     foreach ($currencies as $currency_code => $currency) {
       $all[$currency_code] = $this->createValueObjectFromEntity($currency);
     }
@@ -71,7 +64,7 @@ class CurrencyRepository extends ExternalCurrencyRepository implements CurrencyR
   public function getList($locale = NULL): array {
     $list = [];
     /** @var \Drupal\commerce_price\Entity\CurrencyInterface[] $entities */
-    $currencies = $this->currencyStorage->loadMultiple();
+    $currencies = $this->entityTypeManager->getStorage('commerce_currency')->loadMultiple();
     foreach ($currencies as $currency_code => $currency) {
       $list[$currency_code] = $currency->getName();
     }

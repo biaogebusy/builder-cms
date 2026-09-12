@@ -843,10 +843,10 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
   /**
    * Get roles with the permission entity_share_server_access_channels.
    *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   *
    * @return array
    *   An array of options.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   protected function getAuthorizedRolesOptions() {
     $authorized_roles = [];
@@ -868,10 +868,10 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
   /**
    * Get users with the permission entity_share_server_access_channels.
    *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   *
    * @return array
    *   An array of options.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   protected function getAuthorizedUsersOptions() {
     $authorized_users = [];

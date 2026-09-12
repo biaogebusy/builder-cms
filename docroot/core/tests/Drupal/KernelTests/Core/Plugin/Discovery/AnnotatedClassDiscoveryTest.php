@@ -6,12 +6,14 @@ namespace Drupal\KernelTests\Core\Plugin\Discovery;
 
 use Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that plugins are correctly discovered using annotated classes.
- *
- * @group Plugin
  */
+#[Group('Plugin')]
+#[RunTestsInSeparateProcesses]
 class AnnotatedClassDiscoveryTest extends DiscoveryTestBase {
 
   /**
@@ -81,7 +83,10 @@ class AnnotatedClassDiscoveryTest extends DiscoveryTestBase {
 
     $base_directory = $this->root . '/core/modules/system/tests/modules/plugin_test/src';
     $base_directory2 = $this->root . '/core/modules/system/tests/modules/plugin_test_extended/src';
-    $namespaces = new \ArrayObject(['Drupal\plugin_test' => $base_directory, 'Drupal\plugin_test_extended' => $base_directory2]);
+    $namespaces = new \ArrayObject([
+      'Drupal\plugin_test' => $base_directory,
+      'Drupal\plugin_test_extended' => $base_directory2,
+    ]);
 
     $annotation_namespaces = ['Drupal\plugin_test\Plugin\Annotation', 'Drupal\plugin_test_extended\Plugin\Annotation'];
     $this->discovery = new AnnotatedClassDiscovery('Plugin/plugin_test/fruit', $namespaces, 'Drupal\Component\Annotation\Plugin', $annotation_namespaces);

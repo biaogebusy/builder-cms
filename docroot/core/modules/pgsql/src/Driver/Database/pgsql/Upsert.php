@@ -14,16 +14,6 @@ class Upsert extends QueryUpsert {
   /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $connection, string $table, array $options = []) {
-    // @todo Remove the __construct in Drupal 11.
-    // @see https://www.drupal.org/project/drupal/issues/3256524
-    parent::__construct($connection, $table, $options);
-    unset($this->queryOptions['return']);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function execute() {
     if (!$this->preExecute()) {
       return NULL;
@@ -38,6 +28,7 @@ class Upsert extends QueryUpsert {
     $blobs = [];
     $blob_count = 0;
     foreach ($this->insertValues as $insert_values) {
+      $insert_values = array_values($insert_values);
       foreach ($this->insertFields as $idx => $field) {
         if (isset($table_information->blob_fields[$field]) && $insert_values[$idx] !== NULL) {
           $blobs[$blob_count] = fopen('php://memory', 'a');
@@ -88,14 +79,20 @@ class Upsert extends QueryUpsert {
     // mimic MySQL and SQLite transactions which don't fail if a single query
     // fails. This is important for tables that are created on demand. For
     // example, \Drupal\Core\Cache\DatabaseBackend.
-    $this->connection->addSavepoint();
+    if ($this->connection->inTransaction()) {
+      $savepoint = $this->connection->startTransaction('mimic_implicit_commit');
+    }
     try {
       $stmt->execute(NULL, $options);
-      $this->connection->releaseSavepoint();
+      if (isset($savepoint)) {
+        $savepoint->commitOrRelease();
+      }
       return $stmt->rowCount();
     }
     catch (\Exception $e) {
-      $this->connection->rollbackSavepoint();
+      if (isset($savepoint)) {
+        $savepoint->rollback();
+      }
       $this->connection->exceptionHandler()->handleExecutionException($e, $stmt, [], $options);
     }
   }
@@ -107,8 +104,13 @@ class Upsert extends QueryUpsert {
     // Create a sanitized comment string to prepend to the query.
     $comments = $this->connection->makeComment($this->comments);
 
+    $keys = array_map(function ($key) {
+      return $this->connection->escapeField($key);
+    }, $this->key);
+
     // Default fields are always placed first for consistency.
     $insert_fields = array_merge($this->defaultFields, $this->insertFields);
+    $insert_fields = array_combine($insert_fields, $insert_fields);
     $insert_fields = array_map(function ($field) {
       return $this->connection->escapeField($field);
     }, $insert_fields);
@@ -118,8 +120,10 @@ class Upsert extends QueryUpsert {
     $values = $this->getInsertPlaceholderFragment($this->insertValues, $this->defaultFields);
     $query .= implode(', ', $values);
 
-    // Updating the unique / primary key is not necessary.
-    unset($insert_fields[$this->key]);
+    // Updating the unique / primary key fields is not necessary.
+    foreach ($this->key as $key) {
+      unset($insert_fields[$key]);
+    }
 
     $update = [];
     foreach ($insert_fields as $field) {
@@ -128,7 +132,14 @@ class Upsert extends QueryUpsert {
       $update[] = "$field = EXCLUDED.$field";
     }
 
-    $query .= ' ON CONFLICT (' . $this->connection->escapeField($this->key) . ') DO UPDATE SET ' . implode(', ', $update);
+    $query .= ' ON CONFLICT (' . implode(', ', $keys) . ') DO ';
+
+    if (!empty($update)) {
+      $query .= 'UPDATE SET ' . implode(', ', $update);
+    }
+    else {
+      $query .= 'NOTHING';
+    }
 
     return $query;
   }

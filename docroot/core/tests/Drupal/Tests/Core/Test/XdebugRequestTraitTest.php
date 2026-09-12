@@ -6,14 +6,16 @@ namespace Drupal\Tests\Core\Test;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\XdebugRequestTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Provides tests for the Xdebug request trait.
- *
- * @coversDefaultClass \Drupal\Tests\XdebugRequestTrait
- * @group Test
  */
+#[CoversClass(XdebugRequestTrait::class)]
+#[Group('Test')]
 class XdebugRequestTraitTest extends UnitTestCase {
 
   use XdebugRequestTrait;
@@ -25,10 +27,8 @@ class XdebugRequestTraitTest extends UnitTestCase {
    *   The request server array.
    * @param array $expected_cookies
    *   The expected cookies for the request.
-   *
-   * @covers ::extractCookiesFromRequest
-   * @dataProvider extractCookiesDataProvider
    */
+  #[DataProvider('extractCookiesDataProvider')]
   public function testExtractCookiesFromRequest(array $server, array $expected_cookies): void {
     $request = new Request([], [], [], [], [], $server);
     $this->assertSame($expected_cookies, $this->extractCookiesFromRequest($request));

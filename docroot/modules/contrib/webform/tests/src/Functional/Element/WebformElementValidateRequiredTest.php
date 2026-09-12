@@ -19,12 +19,12 @@ class WebformElementValidateRequiredTest extends WebformElementBrowserTestBase {
   /**
    * Tests pattern validation.
    */
-  public function testPattern() {
+  public function testPattern(): void {
     $assert_session = $this->assertSession();
 
     // Check that HTML tags are stripped  from required error attribute.
     $this->drupalGet('/webform/test_element_validate_required');
-    $assert_session->responseContains('<input data-webform-required-error="This is a custom required message" data-drupal-selector="edit-required-error-textfield" type="text" id="edit-required-error-textfield" name="required_error_textfield" value="" size="60" maxlength="255" class="form-text required" required="required" aria-required="true" />');
+    $assert_session->elementExists('xpath', '//input[@data-webform-required-error = "This is a custom required message"][@data-drupal-selector = "edit-required-error-textfield"][@type = "text"][@id = "edit-required-error-textfield"][@name = "required_error_textfield"][@value = ""][@size = "60"][@maxlength = "255"][@class="form-text required"][@required]');
 
     // Check that HTML tags are rendered in validation message.
     $this->drupalGet('/webform/test_element_validate_required');

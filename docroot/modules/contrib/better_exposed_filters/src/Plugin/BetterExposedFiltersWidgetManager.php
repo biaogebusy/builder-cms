@@ -2,6 +2,9 @@
 
 namespace Drupal\better_exposed_filters\Plugin;
 
+use Drupal\better_exposed_filters\Attribute\FiltersWidget;
+use Drupal\better_exposed_filters\Attribute\PagerWidget;
+use Drupal\better_exposed_filters\Attribute\SortWidget;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
@@ -35,7 +38,25 @@ class BetterExposedFiltersWidgetManager extends DefaultPluginManager {
   public function __construct($type, \Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     $plugin_interface = 'Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetInterface';
     $plugin_definition_annotation_name = 'Drupal\better_exposed_filters\Annotation\BetterExposedFilters' . Container::camelize($type) . 'Widget';
-    parent::__construct("Plugin/better_exposed_filters/$type", $namespaces, $module_handler, $plugin_interface, $plugin_definition_annotation_name);
+    $attribute_name = '';
+    switch ($type) {
+      case 'filter':
+        $attribute_name = FiltersWidget::class;
+        break;
+
+      case 'pager':
+        $attribute_name = PagerWidget::class;
+        break;
+
+      case 'sort':
+        $attribute_name = SortWidget::class;
+        break;
+
+      default:
+        break;
+    }
+
+    parent::__construct("Plugin/better_exposed_filters/$type", $namespaces, $module_handler, $plugin_interface, $attribute_name, $plugin_definition_annotation_name);
 
     $this->type = $type;
     $this->alterInfo('better_exposed_filters_better_exposed_filters_' . $type . '_widget_info');

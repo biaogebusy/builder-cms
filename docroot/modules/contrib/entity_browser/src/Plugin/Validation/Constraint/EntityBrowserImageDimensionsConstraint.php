@@ -10,12 +10,6 @@ use Drupal\file\Plugin\Validation\Constraint\FileImageDimensionsConstraint;
 
 /**
  * File extension dimensions constraint.
- *
- * @Constraint(
- *   id = "EntityBrowserImageDimensions",
- *   label = @Translation("Entity Browser Image Dimensions", context = "Validation"),
- *   type = "file"
- * )
  */
 #[Constraint(
   id: 'EntityBrowserImageDimensions',

@@ -6,6 +6,9 @@ namespace Drupal\KernelTests\Core\Updater;
 
 use Drupal\Core\Updater\Updater;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests InfoParser class and exception.
@@ -13,9 +16,10 @@ use Drupal\KernelTests\KernelTestBase;
  * Files for this test are stored in core/modules/system/tests/fixtures and end
  * with .info.txt instead of info.yml in order not to be considered as real
  * extensions.
- *
- * @group Extension
  */
+#[Group('Extension')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class UpdaterTest extends KernelTestBase {
 
   /**

@@ -5,12 +5,16 @@ namespace Drupal\Tests\redis\Kernel;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\ChainedFastBackend;
 use Drupal\Core\Cache\PhpBackend;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Redis cache backend using GenericCacheBackendUnitTestBase.
  *
  * @group redis
  */
+#[Group('redis')]
+#[RunTestsInSeparateProcesses]
 class ChainedFastWithRedisCacheTest extends RedisCacheTest {
 
   /**

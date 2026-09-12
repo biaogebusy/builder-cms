@@ -4,6 +4,7 @@ namespace Drupal\views\Plugin\views\row;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\PluginBase;
+use Drupal\views\ResultRow;
 use Drupal\views\Views;
 
 /**
@@ -65,6 +66,7 @@ abstract class RowPluginBase extends PluginBase {
    * Returns the usesFields property.
    *
    * @return bool
+   *   TRUE if fields are used by this row plugin, FALSE otherwise.
    */
   public function usesFields() {
     return $this->usesFields;
@@ -96,7 +98,7 @@ abstract class RowPluginBase extends PluginBase {
       $relationship_options = [];
 
       foreach ($relationships as $relationship) {
-        $relationship_handler = Views::handlerManager('relationship')->getHandler($relationship);
+        $relationship_handler = \Drupal::service('plugin.manager.views.relationship')->getHandler($relationship);
 
         // If this relationship is valid for this type, add it to the list.
         $data = Views::viewsData()->get($relationship['table']);
@@ -161,24 +163,27 @@ abstract class RowPluginBase extends PluginBase {
   /**
    * Allow the style to do stuff before each row is rendered.
    *
-   * @param $result
+   * @param array $result
    *   The full array of results from the query.
    */
   public function preRender($result) {}
 
   /**
-   * Renders a row object.
+   * Creates a render array for a row object.
    *
    * This usually passes through to a theme template of some form, but not
    * always.
    *
-   * @param object $row
+   * @param \Drupal\views\ResultRow $row
    *   A single row of the query result, so an element of $view->result.
    *
-   * @return string
-   *   The rendered output of a single row, used by the style plugin.
+   * @return array
+   *   The render array for a single row, used by the style plugin.
    */
   public function render($row) {
+    if (!$row instanceof ResultRow) {
+      @trigger_error('Passing an object other than a ResultRow to RowPluginBase::render() is deprecated in drupal:11.4.0 and will throw a type error in drupal:12.0.0. Pass a \Drupal\views\ResultRow object instead. See https://www.drupal.org/node/2939099', E_USER_DEPRECATED);
+    }
     return [
       '#theme' => $this->themeFunctions(),
       '#view' => $this->view,

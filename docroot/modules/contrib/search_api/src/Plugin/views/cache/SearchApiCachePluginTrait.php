@@ -191,31 +191,28 @@ trait SearchApiCachePluginTrait {
     // $view->current_page.
     $cache = $this->getCacheBackend()->get($this->generateResultsKey());
     if (!empty($cache->data['search_api results'])) {
-      $cutoff = $this->cacheExpire($type);
-      if (!$cutoff || $cache->created > $cutoff) {
-        $view = $this->getView();
-        $view->result = $cache->data['result'];
-        $view->total_rows = $cache->data['total_rows'];
-        $view->setCurrentPage($cache->data['current_page']);
-        $view->execute_time = 0;
+      $view = $this->getView();
+      $view->result = $cache->data['result'];
+      $view->total_rows = $cache->data['total_rows'];
+      $view->setCurrentPage($cache->data['current_page']);
+      $view->execute_time = 0;
 
-        // Trick Search API into believing a search happened, to make faceting
-        // et al. work.
-        /** @var \Drupal\search_api\Query\ResultSetInterface $results */
-        $results = $cache->data['search_api results'];
-        $this->getQueryHelper()->addResults($results);
+      // Trick Search API into believing a search happened, to make faceting
+      // et al. work.
+      /** @var \Drupal\search_api\Query\ResultSetInterface $results */
+      $results = $cache->data['search_api results'];
+      $this->getQueryHelper()->addResults($results);
 
-        try {
-          $query = $results->getQuery();
-          $query->setOption('search_api_view', $view);
-          $this->getQuery()->setSearchApiQuery($query);
-        }
-        catch (SearchApiException) {
-          // Ignore.
-        }
-
-        return TRUE;
+      try {
+        $query = $results->getQuery();
+        $query->setOption('search_api_view', $view);
+        $this->getQuery()->setSearchApiQuery($query);
       }
+      catch (SearchApiException) {
+        // Ignore.
+      }
+
+      return TRUE;
     }
     return FALSE;
   }

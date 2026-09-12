@@ -2,7 +2,7 @@
 
 namespace Drupal\webform\Element;
 
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\file\Element\ManagedFile;
 
 // As we do not force dependency on the core file module, we do this If
@@ -58,7 +58,7 @@ else {
   /**
    * Provides a empty base class for 'managed_file' elements.
    */
-  abstract class WebformManagedFileBase extends FormElement {
+  abstract class WebformManagedFileBase extends FormElementBase {
 
     /**
      * {@inheritdoc}

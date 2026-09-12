@@ -1,4 +1,32 @@
-# Installation Using Composer (recommended)
+# Installation
+
+## Using npm (new)
+
+If you are using npm for JavaScript assets and have a build step that would
+run `npm install` (for example), then you can add a package.json file to your
+site root that looks like this:
+
+        {
+            "name": "my_site",
+            "private": true,
+            "scripts": {
+                "postinstall": "npm run libraries:copy --workspaces --if-present"
+            },
+            "workspaces": [
+                "web/modules/contrib/charts/**/*"
+            ]
+        }
+
+If you already have a package.json file present in your site root, then edit
+it to include the "postinstall" script and the "workspaces".
+
+`npm install` will then add your JS files to the appropriate library
+directories (e.g. web/libraries/chart.js).
+
+This assumes that you are using the "web" directory and the charts module
+is in a directory like "web/modules/contrib/charts".
+
+## Using Composer
 
 If you use Composer to manage dependencies, edit your site's "composer.json"
 file as follows.
@@ -47,6 +75,9 @@ remove "web/" from the lines below:
                 "web/libraries/chartjs-plugin-datalabels": [
                   "npm-asset/chartjs-plugin-datalabels"
                 ],
+                "web/libraries/chartjs-plugin-annotation": [
+                  "npm-asset/chartjs-plugin-annotation"
+                ],
             },
         }
 
@@ -87,6 +118,7 @@ them. So: create a new directory in your project root called "scripts".
           "web/libraries/chart.js/dist/scales"
           "web/libraries/chart.js/dist/types"
           "web/libraries/chartjs-plugin-datalabels/types"
+          "web/libraries/chartjs-plugin-annotation/types"
         )
         counter=0
         echo "Deleting unneeded directories inside web/libraries/chartjs"
@@ -124,6 +156,9 @@ them. So: create a new directory in your project root called "scripts".
           "web/libraries/chartjs-plugin-datalabels/LICENSE.md"
           "web/libraries/chartjs-plugin-datalabels/package.json"
           "web/libraries/chartjs-plugin-datalabels/bower.json"
+          "web/libraries/chartjs-plugin-annotation/README.md"
+          "web/libraries/chartjs-plugin-annotation/LICENSE.md"
+          "web/libraries/chartjs-plugin-annotation/package.json"
         )
         counter=0
         echo "Deleting unneeded files inside web/libraries/chartjs"
@@ -158,3 +193,4 @@ them. So: create a new directory in your project root called "scripts".
         composer require --prefer-dist npm-asset/chart.js:^4.4
         npm-asset/chartjs-adapter-date-fns:^3.0
         npm-asset/chartjs-plugin-datalabels:^2.0
+        npm-asset/chartjs-plugin-annotation:^3.1

@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\blazy\Traits\BlazyUnitTestTrait;
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyApi;
 use Drupal\blazy\Theme\Grid;
 
 /**
- * @coversDefaultClass \Drupal\blazy\Theme\Grid
- *
- * @group blazy
+ * Testing Blazy Grid.
  */
 class BlazyGridUnitTest extends UnitTestCase {
 
@@ -18,11 +18,9 @@ class BlazyGridUnitTest extends UnitTestCase {
 
   /**
    * Tests \Drupal\blazy\Theme\Grid::build().
-   *
-   * @covers ::build
    */
   public function testBuild() {
-    $settings                = Blazy::init();
+    $settings                = BlazyApi::init();
     $settings['grid']        = '4';
     $settings['grid_medium'] = '3';
     $settings['grid_small']  = '2';

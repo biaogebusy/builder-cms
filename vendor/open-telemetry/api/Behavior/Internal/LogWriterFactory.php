@@ -9,6 +9,7 @@ use OpenTelemetry\API\Behavior\Internal\LogWriter\LogWriterInterface;
 use OpenTelemetry\API\Behavior\Internal\LogWriter\NoopLogWriter;
 use OpenTelemetry\API\Behavior\Internal\LogWriter\Psr3LogWriter;
 use OpenTelemetry\API\Behavior\Internal\LogWriter\StreamLogWriter;
+use OpenTelemetry\API\Behavior\Internal\LogWriter\TriggerErrorLogWriter;
 use OpenTelemetry\API\Instrumentation\ConfigurationResolver;
 use OpenTelemetry\API\LoggerHolder;
 
@@ -18,6 +19,7 @@ class LogWriterFactory
 
     public function create(): LogWriterInterface
     {
+        /** @phan-suppress-next-line PhanDeprecatedClass */
         $dest = (new ConfigurationResolver())->getString(self::OTEL_PHP_LOG_DESTINATION);
         $logger = LoggerHolder::get();
 
@@ -38,6 +40,8 @@ class LogWriterFactory
                 return new ErrorLogWriter();
             case 'error_log':
                 return new ErrorLogWriter();
+            case 'trigger_error':
+                return new TriggerErrorLogWriter();
             default:
                 if ($logger) {
                     return new Psr3LogWriter($logger);

@@ -1,0 +1,24 @@
+ckeditor5_premium_features_footnotes__footnotes:
+  ckeditor5:
+    plugins:
+      - footnotes.Footnotes
+      - footnotes.FootnotesProperties
+  drupal:
+    label: Footnotes
+    library: ckeditor5_premium_features_footnotes/footnotes_integration
+    admin_library: ckeditor5_premium_features_footnotes/admin.footnotes
+    class: Drupal\ckeditor5_premium_features_footnotes\Plugin\CKEditor5Plugin\Footnotes
+    toolbar_items:
+      insertFootnote:
+        label: Insert footnote
+    elements:
+      - <sup>
+      - <sup id class contenteditable>
+      - <hr>
+      - <hr class>
+      - <ol>
+      - <ol class start>
+      - <li>
+      - <li id class>
+      - <a>
+      - <a href class>

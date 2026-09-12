@@ -57,7 +57,7 @@ class WebformSubmissionLogManager implements WebformSubmissionLogManagerInterfac
   /**
    * {@inheritdoc}
    */
-  public function getQuery(EntityInterface $webform_entity = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []): SelectInterface {
+  public function getQuery(?EntityInterface $webform_entity = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []): SelectInterface {
     // Default options.
     $options += [
       'header' => NULL,
@@ -81,7 +81,7 @@ class WebformSubmissionLogManager implements WebformSubmissionLogManagerInterfac
     ]);
 
     // User fields.
-    $query->leftJoin('users_field_data', 'u', 'log.uid = u.uid');
+    $query->leftJoin('users_field_data', 'ufd', 'log.uid = ufd.uid');
 
     // Submission fields.
     $query->leftJoin('webform_submission', 'submission', 'log.sid = submission.sid');
@@ -129,20 +129,20 @@ class WebformSubmissionLogManager implements WebformSubmissionLogManagerInterfac
   /**
    * {@inheritdoc}
    */
-  public function loadByEntities(EntityInterface $webform_entity = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, array $options = []) {
+  public function loadByEntities(?EntityInterface $webform_entity = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, array $options = []) {
     $result = $this->getQuery($webform_entity, $source_entity, $account, $options)
       ->execute();
     $records = [];
     while ($record = $result->fetchObject()) {
       $record->variables = unserialize($record->variables, [
-      'allowed_classes' => [
-        'Drupal\Core\StringTranslation\TranslatableMarkup',
-      ],
+        'allowed_classes' => [
+          'Drupal\Core\StringTranslation\TranslatableMarkup',
+        ],
       ]);
       $record->data = unserialize($record->data, [
-      'allowed_classes' => [
-        'Drupal\Core\StringTranslation\TranslatableMarkup',
-      ],
+        'allowed_classes' => [
+          'Drupal\Core\StringTranslation\TranslatableMarkup',
+        ],
       ]);
       $records[] = $record;
     }

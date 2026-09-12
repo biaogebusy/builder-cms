@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\language\Functional;
 
-use Drupal\Core\Url;
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Url;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Adds a new language and tests changing its status and the default language.
- *
- * @group language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageListTest extends BrowserTestBase {
 
   /**
@@ -216,7 +218,15 @@ class LanguageListTest extends BrowserTestBase {
     ConfigurableLanguage::create(['label' => $this->randomMachineName(), 'id' => 'l3'])->save();
     ConfigurableLanguage::create(['label' => $this->randomMachineName(), 'id' => 'l4', 'locked' => TRUE])->save();
     $expected_locked_languages = ['l4' => 'l4', 'l2' => 'l2', 'und' => 'und', 'zxx' => 'zxx'];
-    $expected_all_languages = ['l4' => 'l4', 'l3' => 'l3', 'l2' => 'l2', 'l1' => 'l1', 'en' => 'en', 'und' => 'und', 'zxx' => 'zxx'];
+    $expected_all_languages = [
+      'l4' => 'l4',
+      'l3' => 'l3',
+      'l2' => 'l2',
+      'l1' => 'l1',
+      'en' => 'en',
+      'und' => 'und',
+      'zxx' => 'zxx',
+    ];
     $expected_conf_languages = ['l3' => 'l3', 'l1' => 'l1', 'en' => 'en'];
 
     $locked_languages = $this->container->get('language_manager')->getLanguages(LanguageInterface::STATE_LOCKED);

@@ -21,6 +21,7 @@ class FieldWidgetActionsUiTest extends WebDriverTestBase {
    */
   protected static $modules = [
     'node',
+    'file',
     'field_test',
     'field_ui',
     'field_widget_actions',

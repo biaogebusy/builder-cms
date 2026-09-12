@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Access;
 
-use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
+use Drupal\filter\Entity\FilterFormat;
 use Drupal\webform\Element\WebformHtmlEditor;
 
 /**
@@ -18,7 +18,7 @@ class WebformAccessFilterFormatTest extends WebformBrowserTestBase {
    *
    * @var array
    */
-  protected static $modules = ['webform'];
+  protected static $modules = ['node', 'field_ui', 'webform'];
 
   /**
    * Webforms to load.
@@ -38,9 +38,9 @@ class WebformAccessFilterFormatTest extends WebformBrowserTestBase {
   }
 
   /**
-   * Tests webform default filter format access..
+   * Tests webform default filter format access.
    */
-  public function testFilterFormatAccess() {
+  public function testFilterFormatAccess(): void {
     $assert_session = $this->assertSession();
 
     /** @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
@@ -100,6 +100,13 @@ class WebformAccessFilterFormatTest extends WebformBrowserTestBase {
     $assert_session->statusCodeEquals(200);
     $assert_session->responseNotContains(WebformHtmlEditor::DEFAULT_FILTER_FORMAT);
 
+    // Check that webform default filter format is not included on
+    // permissions pages.
+    $this->drupalGet('/admin/people/permissions');
+    $assert_session->responseNotContains(WebformHtmlEditor::DEFAULT_FILTER_FORMAT);
+    $this->drupalGet('/admin/people/permissions/authenticated');
+    $assert_session->responseNotContains(WebformHtmlEditor::DEFAULT_FILTER_FORMAT);
+
     // Check that editing the webform default format is blocked.
     $this->drupalGet('/admin/config/content/formats/manage/webform_default');
     $assert_session->statusCodeEquals(403);
@@ -117,6 +124,37 @@ class WebformAccessFilterFormatTest extends WebformBrowserTestBase {
     // Check webform default format is NOT accessible via check_markup().
     // @see \Drupal\webform\Element\WebformHtmlEditor::preRenderText
     $this->assertEquals('', check_markup('<script></script>Test', WebformHtmlEditor::DEFAULT_FILTER_FORMAT));
+
+    /* ********************************************************************** */
+    // Check Text format access.
+    /* ********************************************************************** */
+
+    // Check that a user won't see the text format select menu
+    // when they only have the default or one filter visible.
+    // @covers \Drupal\webform\Element\WebformHtmlEditor::processTextFormat
+    $this->drupalLogout();
+    $this->drupalLogin(
+      $this->drupalCreateUser([
+        'administer nodes',
+        'bypass node access',
+      ])
+    );
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
+    $node = $this->drupalCreateNode();
+    $this->drupalGet('/node/' . $node->id() . '/edit');
+    $assert_session->elementNotExists('css', '[name="body[0][format]"]');
+    $assert_session->responseNotContains('<option value="plain_text" selected="selected">Plain text</option><');
+
+    /* ********************************************************************** */
+    // Check config settings allowed formats test.
+    // @see \Drupal\text\Plugin\Field\FieldType\TextItemBase::fieldSettingsForm
+    /* ********************************************************************** */
+
+    // Check removing the 'Webform (Default) - DO NOT EDIT' options
+    // from allowed formats.
+    $this->drupalLogin($this->rootUser);
+    $this->drupalGet('/admin/structure/types/manage/page/fields/node.page.body');
+    $assert_session->responseNotContains(WebformHtmlEditor::DEFAULT_FILTER_FORMAT);
   }
 
 }

@@ -17,38 +17,50 @@
         "ext-SPL": "*",
         "ext-tokenizer": "*",
         "ext-xml": "*",
-        "php": ">=8.1.0",
-        "symfony/console": "^6.4",
-        "symfony/dependency-injection": "^6.4",
-        "symfony/event-dispatcher": "^6.4",
-        "symfony/filesystem": "^6.4",
-        "symfony/finder": "^6.4",
-        "symfony/http-foundation": "^6.4.41",
-        "symfony/http-kernel": "^6.4.40",
-        "symfony/mailer": "^6.4.40",
-        "symfony/mime": "^6.4.40",
-        "symfony/routing": "^6.4.41",
-        "symfony/serializer": "^6.4",
-        "symfony/validator": "^6.4",
-        "symfony/process": "^6.4.33",
-        "symfony/polyfill-iconv": "^1.26",
-        "symfony/yaml": "^6.4.40",
-        "twig/twig": "^3.27.0",
-        "doctrine/lexer": "^2",
-        "guzzlehttp/guzzle": "^7.5",
-        "guzzlehttp/psr7": "^2.4.5",
+        "ext-zlib": "*",
+        "php": ">=8.3.0",
+        "symfony/console": "^7.4",
+        "symfony/dependency-injection": "^7.4",
+        "symfony/event-dispatcher": "^7.4",
+        "symfony/filesystem": "^7.4",
+        "symfony/finder": "^7.4",
+        "symfony/http-foundation": "^7.4.13",
+        "symfony/http-kernel": "^7.4.12",
+        "symfony/mailer": "^7.4.12",
+        "symfony/mime": "^7.4.12",
+        "symfony/routing": "^7.4.13",
+        "symfony/runtime": "^7.4",
+        "symfony/serializer": "^7.4",
+        "symfony/validator": "^7.4",
+        "symfony/process": "^7.4.5",
+        "symfony/polyfill-iconv": "^1.32",
+        "symfony/polyfill-php84": "^1.32",
+        "symfony/polyfill-php85": "^1.32",
+        "symfony/polyfill-php86": "^1.37",
+        "symfony/yaml": "^7.4.12",
+        "revolt/event-loop": "^1.0",
+        "twig/twig": "^3.28.0",
+        "doctrine/lexer": "^2 || ^3",
+        "drupal/core-composer-scaffold": "self.version",
+        "guzzlehttp/guzzle": "^7.10",
+        "guzzlehttp/psr7": "^2.8.0",
         "egulias/email-validator": "^3.2.1|^4.0",
         "masterminds/html5": "^2.7",
-        "symfony/psr-http-message-bridge": "^2.1|^6.4",
+        "symfony/psr-http-message-bridge": "^7.4",
         "composer-runtime-api": "^2.1",
         "composer/semver": "^3.3",
         "asm89/stack-cors": "^2.3",
         "pear/archive_tar": "^1.4.14",
         "psr/log": "^3.0",
-        "mck89/peast": "^1.14",
-        "sebastian/diff": "^4"
+        "mck89/peast": "^1.17.4",
+        "sebastian/diff": "^4 || ^5 || ^6 || ^7",
+        "php-tuf/composer-stager": "^2.0",
+        "justinrainbow/json-schema": "^5.2 || ^6.5.2",
+        "twig/html-extra": "^3.23"
     },
     "conflict": {
+        "drupal/automatic_updates": "<4",
+        "drupal/project_browser": "<2.1",
         "drush/drush": "<12.4.3",
         "dealerdirect/phpcodesniffer-composer-installer": "1.1.0"
     },
@@ -76,7 +88,11 @@
         "drupal/core-transliteration": "self.version",
         "drupal/core-utility": "self.version",
         "drupal/core-uuid": "self.version",
-        "drupal/core-version": "self.version"
+        "drupal/core-version": "self.version",
+        "drupal/search": "*",
+        "drupal/settings_tray": "*",
+        "drupal/shortcut": "*",
+        "drupal/toolbar": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -113,6 +129,9 @@
             "includes/bootstrap.inc"
         ]
     },
+    "bin": [
+        "scripts/dr"
+    ],
     "config": {
         "preferred-install": "dist"
     },
@@ -120,10 +139,14 @@
         "ext-zip": "Needed to extend the plugin.manager.archiver service capability with the handling of files in the ZIP format."
     },
     "extra": {
+        "branch-alias": {
+            "dev-main": "11.x-dev"
+        },
         "drupal-scaffold": {
             "file-mapping": {
                 "[project-root]/.editorconfig": "assets/scaffold/files/editorconfig",
                 "[project-root]/.gitattributes": "assets/scaffold/files/gitattributes",
+                "[project-root]/recipes/README.txt": "assets/scaffold/files/recipes.README.txt",
                 "[web-root]/.csslintrc": "assets/scaffold/files/csslintrc",
                 "[web-root]/.eslintignore": "assets/scaffold/files/eslintignore",
                 "[web-root]/.eslintrc.json": "assets/scaffold/files/eslintrc.json",
@@ -135,7 +158,6 @@
                 "[web-root]/README.md": "assets/scaffold/files/drupal.README.md",
                 "[web-root]/robots.txt": "assets/scaffold/files/robots.txt",
                 "[web-root]/update.php": "assets/scaffold/files/update.php",
-                "[web-root]/web.config": "assets/scaffold/files/web.config",
                 "[web-root]/sites/README.txt": "assets/scaffold/files/sites.README.txt",
                 "[web-root]/sites/development.services.yml": "assets/scaffold/files/development.services.yml",
                 "[web-root]/sites/example.settings.local.php": "assets/scaffold/files/example.settings.local.php",
@@ -150,5 +172,11 @@
     },
     "scripts": {
         "pre-autoload-dump": "Drupal\\Core\\Composer\\Composer::preAutoloadDump"
-    }
+    },
+    "funding": [
+        {
+            "type": "other",
+            "url": "https://www.drupal.org/composer-fund"
+        }
+    ]
 }

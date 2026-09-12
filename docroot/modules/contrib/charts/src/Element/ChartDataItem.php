@@ -20,6 +20,8 @@ class ChartDataItem extends RenderElementBase {
       '#color' => NULL,
       // Often used as content of the tooltip.
       '#title' => NULL,
+      // Allows properties or options not coded in the Charts module.
+      '#raw_options' => [],
     ];
   }
 

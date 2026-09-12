@@ -41,7 +41,7 @@ abstract class PaymentCheckoutPaneBase extends CheckoutPaneBase {
     $event = new RequirePaymentMethodEvent($this->order,
       !empty($configuration['require_payment_method']));
     $this->eventDispatcher->dispatch($event, PaymentEvents::REQUIRE_PAYMENT_METHOD);
-    return $this->order->getBalance()->isZero() && !$event->isRequired();
+    return $this->order->getBalance()?->isZero() && !$event->isRequired();
   }
 
 }

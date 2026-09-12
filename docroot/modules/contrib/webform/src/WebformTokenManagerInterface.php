@@ -37,7 +37,7 @@ interface WebformTokenManagerInterface {
    *
    * @see \Drupal\Core\Utility\Token::replace
    */
-  public function replace($text, EntityInterface $entity = NULL, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL);
+  public function replace($text, ?EntityInterface $entity = NULL, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL);
 
   /**
    * Replace tokens in text with no render context.
@@ -66,7 +66,7 @@ interface WebformTokenManagerInterface {
    *
    * @see \Drupal\Core\Utility\Token::replace
    */
-  public function replaceNoRenderContext($text, EntityInterface $entity = NULL, array $data = [], array $options = []);
+  public function replaceNoRenderContext($text, ?EntityInterface $entity = NULL, array $data = [], array $options = []);
 
   /**
    * Build token tree link if token.module is installed.

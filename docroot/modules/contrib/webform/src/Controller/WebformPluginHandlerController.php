@@ -56,7 +56,13 @@ class WebformPluginHandlerController extends ControllerBase implements Container
     foreach ($definitions as $plugin_id => $definition) {
       $row = [];
       $row[] = $plugin_id;
-      $row[] = ['data' => ['#markup' => $definition['label'], '#prefix' => '<span class="webform-form-filter-text-source">', '#suffix' => '</span>']];
+      $row[] = [
+        'data' => [
+          '#markup' => $definition['label'],
+          '#prefix' => '<span class="webform-form-filter-text-source">',
+          '#suffix' => '</span>',
+        ],
+      ];
       $row[] = $definition['description'];
       $row[] = $definition['category'];
       $row[] = (isset($excluded_handlers[$plugin_id])) ? $this->t('Yes') : $this->t('No');
@@ -197,7 +203,13 @@ class WebformPluginHandlerController extends ControllerBase implements Container
         $row['title']['data'] = [
           '#type' => 'link',
           '#title' => $definition['label'],
-          '#url' => Url::fromRoute('entity.webform.handler.add_form', ['webform' => $webform->id(), 'webform_handler' => $plugin_id]),
+          '#url' => Url::fromRoute(
+            'entity.webform.handler.add_form',
+            [
+              'webform' => $webform->id(),
+              'webform_handler' => $plugin_id,
+            ]
+          ),
           '#attributes' => WebformDialogHelper::getOffCanvasDialogAttributes($handler_plugin->getOffCanvasWidth()),
           '#prefix' => '<div class="webform-form-filter-text-source">',
           '#suffix' => '</div>',
@@ -224,7 +236,13 @@ class WebformPluginHandlerController extends ControllerBase implements Container
       else {
         $links['add'] = [
           'title' => $this->t('Add handler'),
-          'url' => Url::fromRoute('entity.webform.handler.add_form', ['webform' => $webform->id(), 'webform_handler' => $plugin_id]),
+          'url' => Url::fromRoute(
+            'entity.webform.handler.add_form',
+            [
+              'webform' => $webform->id(),
+              'webform_handler' => $plugin_id,
+            ]
+          ),
           'attributes' => WebformDialogHelper::getOffCanvasDialogAttributes($handler_plugin->getOffCanvasWidth()),
         ];
         $row['operations']['data'] = [

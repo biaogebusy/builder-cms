@@ -8,6 +8,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -23,6 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class AiContentSuggestionsPluginBase extends PluginBase implements AiContentSuggestionsInterface, ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
+  use DependencySerializationTrait;
 
   /**
    * The module configuration.
@@ -30,6 +32,13 @@ abstract class AiContentSuggestionsPluginBase extends PluginBase implements AiCo
    * @var \Drupal\Core\Config\ImmutableConfig|null
    */
   protected ?ImmutableConfig $config;
+
+  /**
+   * Configuration object for this plugin prompts.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $promptConfig;
 
   /**
    * {@inheritdoc}
@@ -44,15 +53,29 @@ abstract class AiContentSuggestionsPluginBase extends PluginBase implements AiCo
     );
   }
 
+  /**
+   * Constructs the instance of plugin class.
+   *
+   * @param array $configuration
+   *   The plugin configuration.
+   * @param string $plugin_id
+   *   The plugin ID.
+   * @param mixed $plugin_definition
+   *   The plugin definition.
+   * @param \Drupal\ai\AiProviderPluginManager $providerPluginManager
+   *   The AI provider plugin manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The configuration factory.
+   */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
     protected AiProviderPluginManager $providerPluginManager,
-    ConfigFactoryInterface $configFactory,
+    protected ConfigFactoryInterface $configFactory,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
+    $this->promptConfig = $configFactory->getEditable('ai_content_suggestions.prompts');
     $this->config = $configFactory->get('ai_content_suggestions.settings');
   }
 
@@ -171,7 +194,7 @@ abstract class AiContentSuggestionsPluginBase extends PluginBase implements AiCo
         '#plugin' => $this->getPluginId(),
         '#limit_validation_errors' => [],
         '#ajax' => [
-          'callback' => [AiContentSuggestionsFormAlter::class, 'getPluginResponse'],
+          'callback' => [$this, 'getPluginResponse'],
           'wrapper' => $this->getAjaxId(),
         ],
         '#weight' => 51,
@@ -246,7 +269,7 @@ abstract class AiContentSuggestionsPluginBase extends PluginBase implements AiCo
    * {@inheritdoc}
    */
   public function getFormFieldValue(string $form_field, FormStateInterface $form_state): mixed {
-    $value = NULL;
+    $value = [];
 
     if ($values = $form_state->getValue($this->getPluginId())) {
       if (isset($values[$form_field])) {
@@ -270,14 +293,14 @@ abstract class AiContentSuggestionsPluginBase extends PluginBase implements AiCo
       }
 
       if ($field) {
-        if (isset($field[0]['value'])) {
+        if (!empty($field[0]['value'])) {
           $values[] = $field[0]['value'];
         }
       }
     }
 
     $value = implode(PHP_EOL . PHP_EOL, $values);
-    return $value;
+    return trim($value);
   }
 
   /**
@@ -314,6 +337,22 @@ abstract class AiContentSuggestionsPluginBase extends PluginBase implements AiCo
     }
 
     return $message;
+  }
+
+  /**
+   * Helper to identify the submitted plugin and allow it to update the form.
+   *
+   * @param array $form
+   *   The Content Entity form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   The appropriate section of the updated form.
+   */
+  public function getPluginResponse(array $form, FormStateInterface $form_state): array {
+    $this->updateFormWithResponse($form, $form_state);
+    return $form[$this->getPluginId()]['response'];
   }
 
 }

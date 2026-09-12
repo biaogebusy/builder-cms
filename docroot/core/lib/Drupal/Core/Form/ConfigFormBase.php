@@ -3,13 +3,15 @@
 namespace Drupal\Core\Form;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for implementing system configuration forms.
@@ -37,29 +39,14 @@ abstract class ConfigFormBase extends FormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\Core\Config\TypedConfigManagerInterface|null $typedConfigManager
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
    *   The typed config manager.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
-    protected $typedConfigManager = NULL,
+    protected TypedConfigManagerInterface $typedConfigManager,
   ) {
     $this->setConfigFactory($config_factory);
-
-    if (!$typedConfigManager instanceof TypedConfigManagerInterface) {
-      $type = get_debug_type($typedConfigManager);
-      @trigger_error("Passing $type to the \$typedConfigManager parameter of ConfigFormBase::__construct() is deprecated in drupal:10.2.0 and must be an instance of \Drupal\Core\Config\TypedConfigManagerInterface in drupal:11.0.0. See https://www.drupal.org/node/3404140", E_USER_DEPRECATED);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('config.typed')
-    );
   }
 
   /**
@@ -124,7 +111,9 @@ abstract class ConfigFormBase extends FormBase {
   }
 
   /**
-   * #after_build callback which stores a map of element names to config keys.
+   * Render API callback: Stores a map of element names to config keys.
+   *
+   * This function is assigned as a #after_build callback.
    *
    * This will store an array in the form state whose keys are strings in the
    * form of `CONFIG_NAME:PROPERTY_PATH`, and whose values are instances of
@@ -149,7 +138,21 @@ abstract class ConfigFormBase extends FormBase {
     // rebuilding the form.
     $form_state->set(static::CONFIG_KEY_TO_FORM_ELEMENT_MAP, []);
 
-    return $this->doStoreConfigMap($element, $form_state);
+    $element = $this->doStoreConfigMap($element, $form_state);
+
+    // Use the map to set the cacheability metadata on the form.
+    $map = $form_state->get(static::CONFIG_KEY_TO_FORM_ELEMENT_MAP) ?? [];
+    $tags = [];
+    foreach (array_merge(array_keys($map), $this->getEditableConfigNames()) as $config_name) {
+      $tags = Cache::mergeTags(
+        $tags,
+        $this->configFactory()->getEditable($config_name)->getCacheTags()
+      );
+    }
+    if (!empty($tags)) {
+      CacheableMetadata::createFromRenderArray($element)->addCacheTags($tags)->applyTo($element);
+    }
+    return $element;
   }
 
   /**
@@ -281,9 +284,10 @@ abstract class ConfigFormBase extends FormBase {
    * @param \Symfony\Component\Validator\ConstraintViolationListInterface $violations
    *   The list of constraint violations that apply to this form element.
    *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   * @return \Drupal\Component\Render\MarkupInterface|\Stringable
+   *   The rendered HTML.
    */
-  protected function formatMultipleViolationsMessage(string $form_element_name, array $violations): TranslatableMarkup {
+  protected function formatMultipleViolationsMessage(string $form_element_name, array $violations): MarkupInterface|\Stringable {
     $transformed_message_parts = [];
     foreach ($violations as $index => $violation) {
       // Note that `@validation_error_message` (should) already contain a
@@ -296,7 +300,9 @@ abstract class ConfigFormBase extends FormBase {
         '@validation_error_message' => $violation->getMessage(),
       ]);
     }
-    return $this->t(implode("\n", $transformed_message_parts));
+    // We use \Drupal\Core\Render\Markup::create() here as it is safe,
+    // rather than use t() because all input has been escaped by t().
+    return Markup::create(implode("\n", $transformed_message_parts));
   }
 
   /**

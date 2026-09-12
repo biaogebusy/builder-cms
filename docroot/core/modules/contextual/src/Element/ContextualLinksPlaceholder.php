@@ -3,6 +3,7 @@
 namespace Drupal\contextual\Element;
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Render\Attribute\RenderElement;
@@ -19,10 +20,9 @@ class ContextualLinksPlaceholder extends RenderElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#pre_render' => [
-        [$class, 'preRenderPlaceholder'],
+        [static::class, 'preRenderPlaceholder'],
       ],
       '#id' => NULL,
     ];
@@ -42,7 +42,7 @@ class ContextualLinksPlaceholder extends RenderElementBase {
    * @return array
    *   The passed-in element with a contextual link placeholder in '#markup'.
    *
-   * @see _contextual_links_to_id()
+   * @see \Drupal\contextual\ContextualLinksSerializer::linksToId()
    */
   public static function preRenderPlaceholder(array $element) {
     $token = Crypt::hmacBase64($element['#id'], Settings::getHashSalt() . \Drupal::service('private_key')->get());
@@ -52,6 +52,10 @@ class ContextualLinksPlaceholder extends RenderElementBase {
       'data-drupal-ajax-container' => '',
     ]);
     $element['#markup'] = new FormattableMarkup('<div@attributes></div>', ['@attributes' => $attribute]);
+    $element['#attached']['drupalSettings']['contextual']['theme'] = \Drupal::service('theme.manager')->getActiveTheme()->getName();
+    $cache = CacheableMetadata::createFromRenderArray($element);
+    $cache->addCacheContexts(['theme']);
+    $cache->applyTo($element);
 
     return $element;
   }

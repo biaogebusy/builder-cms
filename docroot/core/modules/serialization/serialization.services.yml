@@ -1,8 +1,11 @@
+parameters:
+  serialization.skip_procedural_hook_scan: true
+
 services:
   _defaults:
     autoconfigure: true
   serializer:
-    class: Symfony\Component\Serializer\Serializer
+    class: Drupal\serialization\Serializer\Serializer
     arguments: [{  }, {  }]
   serializer.normalizer.config_entity:
     class: Drupal\serialization\Normalizer\ConfigEntityNormalizer

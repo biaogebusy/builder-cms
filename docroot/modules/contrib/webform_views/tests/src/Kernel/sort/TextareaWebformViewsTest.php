@@ -2,26 +2,38 @@
 
 namespace Drupal\Tests\webform_views\Kernel\sort;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Test 'textarea' webform element as a views sort.
- *
- * @group webform_views_textarea
  */
+#[Group('webform_views')]
+#[RunTestsInSeparateProcesses]
 class TextareaWebformViewsTest extends WebformViewsSortTestBase {
 
-  protected $webform_elements = [
+  /**
+   * {@inheritdoc}
+   */
+  protected static array $webform_elements = [
     'element' => [
       '#type' => 'textarea',
       '#title' => 'Text area',
     ],
   ];
 
-  protected $webform_submissions_data = [
+  /**
+   * {@inheritdoc}
+   */
+  protected static array $webform_submissions_data = [
     ['element' => 'Submission 1'],
     ['element' => 'Submission 2'],
   ];
 
-  protected $view_handlers = [
+  /**
+   * {@inheritdoc}
+   */
+  protected static array $view_handlers = [
     'field' => [[
       'id' => 'element',
       'table' => 'webform_submission_field_webform_element',

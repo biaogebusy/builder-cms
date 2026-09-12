@@ -1,0 +1,8 @@
+.todo-list {
+  list-style: none;
+}
+
+.todo-list .todo-list__label .todo-list__label__description {
+  vertical-align: middle;
+  margin: 0 0.5rem
+}

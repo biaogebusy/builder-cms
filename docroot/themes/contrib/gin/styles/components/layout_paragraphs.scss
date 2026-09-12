@@ -379,9 +379,7 @@
 .erl-loading div.spinner {
   width: 1.125rem;
   height: 1.125rem;
-  @media (prefers-reduced-motion: no-preference) {
-    animation: gin-throbber 0.75s linear infinite;
-  }
+  animation: gin-throbber 0.75s linear infinite;
   border: 2px solid var(--gin-color-primary);
   border-inline-end: 2px dotted transparent;
   border-radius: 50%;

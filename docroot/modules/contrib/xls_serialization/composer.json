@@ -4,6 +4,12 @@
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
   "require": {
-    "phpoffice/phpspreadsheet": "^2.3.7"
+    "phpoffice/phpspreadsheet": "^2.4.6 || ^3.10.6"
+  },
+  "require-dev": {
+    "openspout/openspout": "^4"
+  },
+  "suggest": {
+    "openspout/openspout": "Alternative library to use for serialization, offers a better performance but does not support all features"
   }
 }

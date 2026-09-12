@@ -5,9 +5,10 @@
  * Contains main module functionality.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\dynamic_entity_reference\Hook\DynamicEntityReferenceHooks;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\dynamic_entity_reference\Plugin\Field\FieldType\DynamicEntityReferenceItem;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\field\FieldConfigInterface;
 
 /**
@@ -18,46 +19,9 @@ use Drupal\field\FieldConfigInterface;
  * because we need to take into account bundles that are not provided by a
  * config entity type so they are not part of the config dependencies.
  */
+#[LegacyHook]
 function dynamic_entity_reference_entity_bundle_delete($entity_type_id, $bundle) {
-
-  // Gather a list of all entity reference fields.
-  $map = Drupal::service('entity_field.manager')->getFieldMapByFieldType('dynamic_entity_reference');
-  $ids = [];
-  foreach ($map as $type => $info) {
-    foreach ($info as $name => $data) {
-      foreach ($data['bundles'] as $bundle_name) {
-        $ids[] = "$type.$bundle_name.$name";
-      }
-    }
-  }
-
-  // Update the 'target_bundles' handler setting if needed.
-  foreach (FieldConfig::loadMultiple($ids) as $field_config) {
-    $settings = $field_config->getSettings();
-    $target_types = DynamicEntityReferenceItem::getTargetTypes($settings);
-    if (in_array($entity_type_id, $target_types, TRUE) && isset($settings[$entity_type_id]['handler_settings'])) {
-      $handler_settings = $settings[$entity_type_id]['handler_settings'];
-      if (isset($handler_settings['target_bundles'][$bundle])) {
-        unset($handler_settings['target_bundles'][$bundle]);
-        $settings[$entity_type_id]['handler_settings'] = $handler_settings;
-        $field_config->setSettings($settings);
-        $field_config->save();
-
-        // In case we deleted the only target bundle allowed by the field we
-        // have to log a critical message because the field will not function
-        // correctly anymore.
-        if ($handler_settings['target_bundles'] === []) {
-          \Drupal::logger('dynamic_entity_reference')->critical('The %target_bundle bundle (entity type: %target_entity_type) was deleted. As a result, the %field_name dynamic entity reference field (entity_type: %entity_type, bundle: %bundle) no longer has any valid bundle it can reference. The field is not working correctly anymore and has to be adjusted.', [
-            '%target_bundle' => $bundle,
-            '%target_entity_type' => $entity_type_id,
-            '%field_name' => $field_config->getName(),
-            '%entity_type' => $field_config->getTargetEntityTypeId(),
-            '%bundle' => $field_config->getTargetBundle(),
-          ]);
-        }
-      }
-    }
-  }
+  \Drupal::service(DynamicEntityReferenceHooks::class)->entityBundleDelete($entity_type_id, $bundle);
 }
 
 /**
@@ -122,8 +86,7 @@ function dynamic_entity_reference_form_field_ui_field_storage_add_form_alter(arr
 /**
  * Implements hook_field_info_alter().
  */
+#[LegacyHook]
 function dynamic_entity_reference_field_info_alter(&$info) {
-  if (version_compare(\Drupal::VERSION, '10.1.999', '<')) {
-    $info['dynamic_entity_reference']['category'] = t('Dynamic Reference');
-  }
+  \Drupal::service(DynamicEntityReferenceHooks::class)->fieldInfoAlter($info);
 }

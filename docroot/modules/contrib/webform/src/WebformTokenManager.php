@@ -109,7 +109,7 @@ class WebformTokenManager implements WebformTokenManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function replace($text, EntityInterface $entity = NULL, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function replace($text, ?EntityInterface $entity = NULL, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL) {
     // Replace tokens within an array.
     if (is_array($text)) {
       foreach ($text as $key => $token_value) {
@@ -119,7 +119,7 @@ class WebformTokenManager implements WebformTokenManagerInterface {
     }
 
     // Most strings won't contain tokens so let's check and return ASAP.
-    if (!is_string($text) || strpos($text, '[') === FALSE) {
+    if (!is_string($text) || !str_contains($text, '[')) {
       return $text;
     }
 
@@ -138,7 +138,7 @@ class WebformTokenManager implements WebformTokenManagerInterface {
     // anonymous user properties from being displayed.
     // For example, the [current-user:display-name] token will return
     // 'Anonymous', which is not an expected behavior.
-    if ($this->currentUser->isAnonymous() && strpos($text, '[current-user:') !== FALSE) {
+    if ($this->currentUser->isAnonymous() && str_contains($text, '[current-user:')) {
       $text = preg_replace('/\[current-user:[^]]+\]/', '', $text);
     }
 
@@ -155,7 +155,7 @@ class WebformTokenManager implements WebformTokenManagerInterface {
     $text = $this->processSuffixes($text);
 
     // Clear current user tokens for undefined values.
-    if (strpos($text, '[current-user:') !== FALSE) {
+    if (str_contains($text, '[current-user:')) {
       $text = preg_replace('/\[current-user:[^\]]+\]/', '', $text);
     }
 
@@ -165,7 +165,7 @@ class WebformTokenManager implements WebformTokenManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function replaceNoRenderContext($text, EntityInterface $entity = NULL, array $data = [], array $options = []) {
+  public function replaceNoRenderContext($text, ?EntityInterface $entity = NULL, array $data = [], array $options = []) {
     // Create BubbleableMetadata object which will be ignored.
     $bubbleable_metadata = new BubbleableMetadata();
     return $this->replace($text, $entity, $data, $options, $bubbleable_metadata);
@@ -292,7 +292,10 @@ class WebformTokenManager implements WebformTokenManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function elementValidate(array &$form, array $token_types = ['webform', 'webform_submission', 'webform_handler']) {
+  public function elementValidate(
+    array &$form,
+    array $token_types = ['webform', 'webform_submission', 'webform_handler'],
+  ) {
     if (!function_exists('token_element_validate')) {
       return;
     }

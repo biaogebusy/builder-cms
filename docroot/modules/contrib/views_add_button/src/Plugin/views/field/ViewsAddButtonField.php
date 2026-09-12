@@ -2,17 +2,17 @@
 
 namespace Drupal\views_add_button\Plugin\views\field;
 
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\views_add_button\Service\ViewsAddButtonService;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Utility\Xss;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views_add_button\Plugin\views\ViewsAddButtonTrait;
 use Drupal\views_add_button\Plugin\views_add_button\ViewsAddButtonDefault;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
+use Drupal\views_add_button\Service\ViewsAddButtonService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a views field plugin.
@@ -26,31 +26,43 @@ class ViewsAddButtonField extends FieldPluginBase {
   use ViewsAddButtonTrait;
 
   /**
-   * @var ViewsAddButtonService
+   * The Views Add Button service.
+   *
+   * @var \Drupal\views_add_button\Service\ViewsAddButtonService
    */
   protected $vab;
 
   /**
-   * @var EntityTypeManager
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManager
    */
   protected $entityTypeManager;
 
   /**
-   * @var EntityTypeBundleInfo
+   * The entity type bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfo
    */
   protected $bundleInfo;
 
   /**
    * ViewsAddButtonField constructor.
+   *
    * @param array $configuration
-   * @param $plugin_id
-   * @param $plugin_definition
-   * @param ViewsAddButtonService $vab
-   * @param EntityTypeManager $entityTypeManager
-   * @param EntityTypeBundleInfo $bundleInfo
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\views_add_button\Service\ViewsAddButtonService $vab
+   *   The Views Add Button service.
+   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfo $bundleInfo
+   *   The entity type bundle info service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ViewsAddButtonService $vab, EntityTypeManager $entityTypeManager, EntityTypeBundleInfo $bundleInfo)
-  {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ViewsAddButtonService $vab, EntityTypeManager $entityTypeManager, EntityTypeBundleInfo $bundleInfo) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->vab = $vab;
     $this->entityTypeManager = $entityTypeManager;
@@ -67,6 +79,7 @@ class ViewsAddButtonField extends FieldPluginBase {
       $container->get('entity_type.bundle.info')
     );
   }
+
   /**
    * {@inheritdoc}
    */
@@ -117,7 +130,7 @@ class ViewsAddButtonField extends FieldPluginBase {
     $form['render_plugin'] = [
       '#type' => 'select',
       '#title' => t('Custom Rendering Plugin'),
-      '#description' => t('If you would like to specify a plugin to use for rendering, set it here. 
+      '#description' => t('If you would like to specify a plugin to use for rendering, set it here.
         Leave unset to use the entity default plugin (recommended).'),
       '#options' => $this->vab->createPluginList(),
       '#empty_option' => '- Select -',
@@ -127,7 +140,7 @@ class ViewsAddButtonField extends FieldPluginBase {
     $form['access_plugin'] = [
       '#type' => 'select',
       '#title' => t('Custom Access Plugin'),
-      '#description' => t('If you would like to specify an access plugin to use, set it here. 
+      '#description' => t('If you would like to specify an access plugin to use, set it here.
         Leave unset to use the entity default plugin (recommended).'),
       '#options' => $this->vab->createPluginList(),
       '#empty_option' => '- Select -',
@@ -154,6 +167,7 @@ class ViewsAddButtonField extends FieldPluginBase {
       '#description' => t('Add the query string, without the "?" .'),
       '#default_value' => $this->options['query_string'],
       '#weight' => -6,
+      '#maxlength' => 511,
     ];
     $form['button_classes'] = [
       '#type' => 'textfield',
@@ -237,11 +251,20 @@ class ViewsAddButtonField extends FieldPluginBase {
   }
 
   /**
-   * @param $plugin_definitions
-   * @param $default_plugin
-   * @param $entity_type
-   * @param $bundle
+   * Checks access for a views add button plugin.
+   *
+   * @param array $plugin_definitions
+   *   An array of available plugin definitions.
+   * @param string $default_plugin
+   *   The ID of the default plugin to check.
+   * @param string $entity_type
+   *   The entity type ID.
+   * @param string $bundle
+   *   The bundle ID.
+   *
    * @return bool|\Drupal\Core\Access\AccessResultInterface
+   *   The access result. Returns TRUE if access is allowed, or a specific
+   *   AccessResult object.
    */
   public function checkButtonAccess($plugin_definitions, $default_plugin, $entity_type, $bundle) {
     $access = FALSE;
@@ -270,10 +293,10 @@ class ViewsAddButtonField extends FieldPluginBase {
    */
   public function render(ResultRow $values) {
     // Get the entity/bundle type.
-    $type = explode('+', $this->options['type'], 2);
+    $type = explode('+', (string) $this->options['type'], 2);
     // If we do not have a '+', then assume we have a no-bundle entity type.
     $entity_type = $type[0];
-    $bundle = isset($type[1]) ? $type[1] : $type[0];
+    $bundle = $type[1] ?? $type[0];
 
     // Load ViewsAddButton plugin definitions, and find the right one.
     $plugin_definitions = $this->vab->getPluginDefinitions();
@@ -320,16 +343,16 @@ class ViewsAddButtonField extends FieldPluginBase {
         $dest = Url::fromRoute('<current>');
         $opts['query']['destination'] = $dest->toString();
       }
-      $opts['attributes']['class'] = $this->options['tokenize'] ? $this->tokenizeValue($this->options['button_classes'],$values->index) : $this->options['button_classes'];
+      $opts['attributes']['class'] = $this->options['tokenize'] ? $this->tokenizeValue($this->options['button_classes'], $values->index) : $this->options['button_classes'];
 
       // Build custom attributes.
       if ($this->options['button_attributes']) {
-        $attrs = $this->options['button_attributes'] ? $this->tokenizeValue($this->options['button_attributes'],$values->index) : $this->options['button_attributes'];
-        $attr_lines = preg_split('/$\R?^/m', $attrs);
+        $attrs = $this->options['button_attributes'] ? $this->tokenizeValue($this->options['button_attributes'], $values->index) : $this->options['button_attributes'];
+        $attr_lines = preg_split('/$\R?^/m', (string) $attrs);
         foreach ($attr_lines as $line) {
           $attr = explode('=', $line);
           if (count($attr) === 2) {
-            $opts['attributes'][$attr[0]] = $attr[1];
+            $opts['attributes'][$attr[0]] = trim($attr[1]);
           }
         }
       }
@@ -340,7 +363,7 @@ class ViewsAddButtonField extends FieldPluginBase {
 
       // Get the url from the plugin and build the link.
       if ($this->options['context']) {
-        $context = $this->options['tokenize'] ? $this->tokenizeValue($this->options['context'],$values->index) : $this->options['context'];
+        $context = $this->options['tokenize'] ? $this->tokenizeValue($this->options['context'], $values->index) : $this->options['context'];
         $url = $plugin_class::generateUrl($entity_type, $bundle, $opts, $context);
       }
       else {
@@ -349,8 +372,8 @@ class ViewsAddButtonField extends FieldPluginBase {
 
       $bundles = $this->bundleInfo->getBundleInfo($entity_type);
       $bundle_label = $bundles[$bundle]['label'] ?? $bundle;
-      $text = $this->options['button_text'] ? $this->options['button_text'] : $this->t('Add @bundle', ['@bundle' => $bundle_label]);
-      $text = $this->options['tokenize'] ? $this->tokenizeValue($text,$values->index) : $text;
+      $text = $this->options['button_text'] ?: $this->t('Add @bundle', ['@bundle' => $bundle_label]);
+      $text = $this->options['tokenize'] ? $this->tokenizeValue($text, $values->index) : $text;
 
       // Generate the link.
       $l = NULL;
@@ -366,12 +389,12 @@ class ViewsAddButtonField extends FieldPluginBase {
       if (isset($this->options['button_prefix']) || isset($this->options['button_suffix'])) {
         if (!empty($this->options['button_prefix']['value'])) {
           $prefix = check_markup($this->options['button_prefix']['value'], $this->options['button_prefix']['format']);
-          $prefix = $this->options['tokenize'] ? $this->tokenizeValue($prefix,$values->index) : $prefix;
+          $prefix = $this->options['tokenize'] ? $this->tokenizeValue($prefix, $values->index) : $prefix;
           $l['#prefix'] = $prefix;
         }
         if (!empty($this->options['button_suffix']['value'])) {
           $suffix = check_markup($this->options['button_suffix']['value'], $this->options['button_suffix']['format']);
-          $suffix = $this->options['tokenize'] ? $this->tokenizeValue($suffix,$values->index) : $suffix;
+          $suffix = $this->options['tokenize'] ? $this->tokenizeValue($suffix, $values->index) : $suffix;
           $l['#suffix'] = $suffix;
         }
         return $l;
@@ -379,24 +402,23 @@ class ViewsAddButtonField extends FieldPluginBase {
 
       return $l;
     }
-    else {
-      if (isset($this->options['button_access_denied']['value']) && !empty($this->options['button_access_denied']['value'])) {
-        $markup = check_markup($this->options['button_access_denied']['value'], $this->options['button_access_denied']['format']);
-        $markup = $this->options['tokenize'] ? $this->tokenizeValue($markup) : $markup;
 
-        return ['#markup' => $markup];
-      }
-      else {
-        return ['#markup' => ''];
-      }
+    if (isset($this->options['button_access_denied']['value'])
+      && !empty($this->options['button_access_denied']['value'])) {
+      $markup = check_markup($this->options['button_access_denied']['value'], $this->options['button_access_denied']['format']);
+      $markup = $this->options['tokenize'] ? $this->tokenizeValue($markup) : $markup;
+
+      return ['#markup' => $markup];
     }
+
+    return ['#markup' => ''];
   }
 
   /**
    * {@inheritdoc}
    */
   public function tokenizeValue($value, $row_index = NULL) {
-    if (strpos($value, '{{') !== FALSE) {
+    if (str_contains((string) $value, '{{')) {
       $fake_item = [
         'alter_text' => TRUE,
         'text' => $value,
@@ -404,28 +426,20 @@ class ViewsAddButtonField extends FieldPluginBase {
 
       // Use isset() because empty() will trigger on 0 and 0 is
       // the first row.
-      if (isset($row_index) && isset($this->view->style_plugin->render_tokens[$row_index])) {
+      if (isset($row_index, $this->view->style_plugin->render_tokens[$row_index])) {
         $tokens = $this->view->style_plugin->render_tokens[$row_index];
-      }
-      elseif (!empty($tokens = $this->getRenderTokens($value))) {
-        // We defined $tokens in the if statement.
       }
       else {
         // Get tokens from the last field.
         $last_field = end($this->view->field);
-        if (isset($last_field->last_tokens)) {
-          $tokens = $last_field->last_tokens;
-        }
-        else {
-          $tokens = $last_field->getRenderTokens($fake_item);
-        }
+        $tokens = $last_field->last_tokens ?? $last_field->getRenderTokens($fake_item);
       }
 
       if (empty($this->options['preserve_tags'])) {
         $value = strip_tags($this->renderAltered($fake_item, $tokens));
       }
       else {
-        $ts = explode(' ', $this->options['preserve_tags']);
+        $ts = explode(' ', (string) $this->options['preserve_tags']);
         $tags = [];
         foreach ($ts as $t) {
           $tags[] = trim($t);

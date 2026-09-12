@@ -10,26 +10,30 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\text\Plugin\Field\FieldType\TextItemBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests TextItemBase.
- *
- * @coversDefaultClass \Drupal\text\Plugin\Field\FieldType\TextItemBase
- * @group text
  */
+#[CoversClass(TextItemBase::class)]
+#[Group('text')]
+#[RunTestsInSeparateProcesses]
 class TextItemBaseTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['filter', 'text', 'entity_test', 'field'];
+  protected static $modules = ['filter', 'text', 'entity_test', 'field', 'user'];
 
   /**
    * Tests creation of sample values.
    *
-   * @covers ::generateSampleValue
-   * @dataProvider providerTextFieldSampleValue
+   * @legacy-covers ::generateSampleValue
    */
+  #[DataProvider('providerTextFieldSampleValue')]
   public function testTextFieldSampleValue($max_length): void {
     // Create a text field.
     $field_definition = BaseFieldDefinition::create('text')
@@ -64,9 +68,11 @@ class TextItemBaseTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::calculateDependencies
+   * Tests calculate dependencies.
    */
   public function testCalculateDependencies(): void {
+    $this->installEntitySchema('user');
+    $this->installEntitySchema('entity_test');
     $format = FilterFormat::create([
       'format' => 'test_format',
       'name' => 'Test format',

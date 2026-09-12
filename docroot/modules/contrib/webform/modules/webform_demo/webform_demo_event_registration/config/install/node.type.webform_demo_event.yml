@@ -14,7 +14,7 @@ third_party_settings:
 name: 'Demo: Event'
 type: webform_demo_event
 description: ''
-help: ''
+help: null
 new_revision: true
 preview_mode: 1
 display_submitted: true

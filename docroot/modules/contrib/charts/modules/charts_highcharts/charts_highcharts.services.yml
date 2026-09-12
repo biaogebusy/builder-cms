@@ -1,0 +1,6 @@
+services:
+  charts_highcharts.hooks:
+    class: Drupal\charts_highcharts\Hook\ChartsHighchartsHooks
+    arguments: ['@config.factory']
+    tags:
+      - { name: hook }

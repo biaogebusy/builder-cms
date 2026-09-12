@@ -12,7 +12,7 @@ class WebformParagraphsTokenTest extends WebformParagraphsTestBase {
   /**
    * Tests paragraphs.
    */
-  public function testParagraphsToken() {
+  public function testParagraphsToken(): void {
     $assert_session = $this->assertSession();
 
     $default_data = "textfield: 'default_data'
@@ -33,7 +33,7 @@ test_node_value: 'default_data-[webform_submission:source-entity:field_webform_t
     $assert_session->fieldValueEquals('test_para_value', '{paragraph.field_webform_test_para_value}');
     $assert_session->fieldValueEquals('test_node_value', '[webform_submission:source-entity:field_webform_test_node_value]');
 
-    // Set tokens using default data which overides default values.
+    // Set tokens using default data which overrides default values.
     /** @var \Drupal\paragraphs\ParagraphInterface $paragraph */
     $paragraph = $node->field_webform_test_paragraphs->entity;
     $paragraph->field_webform_test->default_data = $default_data;
@@ -60,7 +60,7 @@ test_node_value: 'default_data-[webform_submission:source-entity:field_webform_t
     $assert_session->fieldValueEquals('test_para_value', '[webform_submission:source-entity:field_webform_test_para_value]');
     $assert_session->fieldValueEquals('test_node_value', '{node.field_webform_test_node_value}');
 
-    // Set tokens using default data which overides default values.
+    // Set tokens using default data which overrides default values.
     /** @var \Drupal\paragraphs\ParagraphInterface $paragraph */
     $paragraph = $node->field_webform_test_paragraphs->entity;
     $paragraph->field_webform_test->default_data = $default_data;
@@ -91,7 +91,7 @@ test_node_value: 'default_data-[webform_submission:source-entity:field_webform_t
     $assert_session->fieldValueEquals('test_para_value', '{paragraph.field_webform_test_para_value}');
     $assert_session->fieldValueEquals('test_node_value', '[webform_submission:source-entity:field_webform_test_node_value]');
 
-    // Set tokens using default data which overides default values.
+    // Set tokens using default data which overrides default values.
     /** @var \Drupal\paragraphs\ParagraphInterface $paragraph */
     $paragraph = $node->field_webform_test_paragraphs->entity;
     $paragraph->field_webform_test->default_data = $default_data;

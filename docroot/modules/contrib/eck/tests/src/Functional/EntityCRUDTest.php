@@ -12,6 +12,8 @@ use Drupal\Core\Url;
 class EntityCRUDTest extends FunctionalTestBase {
 
   /**
+   * Tests if new entities can be created successfully.
+   *
    * @test
    */
   public function newEntitiesCanBeCreated() {
@@ -110,6 +112,8 @@ class EntityCRUDTest extends FunctionalTestBase {
   }
 
   /**
+   * Test that attempting to create a non-existing entity type results in a 404.
+   *
    * @test
    */
   public function attemptedCreationOfNonExistingEntityTypeResultsIn404() {
@@ -124,6 +128,8 @@ class EntityCRUDTest extends FunctionalTestBase {
   }
 
   /**
+   * Tests that attempting to create a non-existing bundle results in a 404.
+   *
    * @test
    */
   public function attemptedCreationOfNonExistingBundleResultsIn404() {

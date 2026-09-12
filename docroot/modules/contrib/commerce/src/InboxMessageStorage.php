@@ -28,11 +28,10 @@ class InboxMessageStorage implements InboxMessageStorageInterface {
    */
   public function save(InboxMessage $message) {
     $fields = (array) $message;
-    $result = $this->connection->merge(self::TABLE_NAME)
+    $this->connection->merge(self::TABLE_NAME)
       ->fields($fields)
       ->keys([
         'id' => $message->id,
-        'state' => 'unread',
       ])
       ->execute();
     Cache::invalidateTags(['commerce_inbox_message']);

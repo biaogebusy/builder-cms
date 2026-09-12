@@ -21,6 +21,7 @@ class DeepChatBlockNoAssistantTest extends BaseClassFunctionalJavascriptTests {
     'ai',
     'ai_test',
     'ai_assistant_api',
+    'file',
     'ai_chatbot',
     'block',
     'user',

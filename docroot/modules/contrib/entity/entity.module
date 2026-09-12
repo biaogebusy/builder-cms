@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Database\Query\SelectInterface;
@@ -24,15 +25,19 @@ use Drupal\views\ViewExecutable;
 /**
  * Implements hook_entity_operation().
  */
-function entity_entity_operation(EntityInterface $entity) {
+function entity_entity_operation(EntityInterface $entity, CacheableMetadata $cacheability = new CacheableMetadata()): array {
   $operations = [];
   $entity_type = $entity->getEntityType();
-  if ($entity_type->hasLinkTemplate('duplicate-form') && $entity->access('duplicate')) {
-    $operations['duplicate'] = [
-      'title' => t('Duplicate'),
-      'weight' => 40,
-      'url' => $entity->toUrl('duplicate-form'),
-    ];
+  if ($entity_type->hasLinkTemplate('duplicate-form')) {
+    $access = $entity->access('duplicate', NULL, TRUE);
+    $cacheability->addCacheableDependency($access);
+    if ($access->isAllowed()) {
+      $operations['duplicate'] = [
+        'title' => t('Duplicate'),
+        'weight' => 40,
+        'url' => $entity->toUrl('duplicate-form'),
+      ];
+    }
   }
 
   return $operations;
@@ -74,7 +79,7 @@ function entity_entity_type_build(array &$entity_types) {
  * Implements hook_entity_type_alter().
  */
 function entity_entity_type_alter(array &$entity_types) {
-  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
   foreach ($entity_types as $entity_type_id => $entity_type) {
     // Sets a default query_access handler for all entity types that have none.
     if (!$entity_type->hasHandlerClass('query_access')) {
@@ -149,7 +154,7 @@ function entity_query_entity_query_alter(AlterableInterface $query) {
   if (!$query instanceof SelectInterface) {
     return;
   }
-  
+
   $entity_type_id = $query->getMetaData('entity_type');
   if ($query->hasTag($entity_type_id . '_access')) {
     $entity_type_manager = \Drupal::entityTypeManager();
@@ -192,10 +197,7 @@ function entity_jsonapi_entity_filter_access(EntityTypeInterface $entity_type, A
 
   $allowed = AccessResult::allowed()->addCacheableDependency($conditions);
   $result = [];
-  if ($conditions->count() === 0) {
-    $result[JSONAPI_FILTER_AMONG_ALL] = $allowed;
-  }
-  elseif ($conditions->count() === 1 || $conditions->getConjunction() === 'OR') {
+  if ($conditions->count() === 1 || $conditions->getConjunction() === 'OR') {
     $published_key = $entity_type->getKey('published');
     $owner_key = $entity_type->getKey('owner');
     foreach ($conditions->getConditions() as $condition) {

@@ -64,9 +64,6 @@ interface AliasStorageHelperInterface {
    *
    * @param string $source
    *   An internal Drupal path.
-   *
-   * @return bool
-   *   The URL alias source.
    */
   public function deleteBySourcePrefix($source);
 
@@ -102,7 +99,7 @@ interface AliasStorageHelperInterface {
   /**
    * Returns the count of url aliases for the source.
    *
-   * @param $source
+   * @param string $source
    *   An internal Drupal path prefix.
    *
    * @return int

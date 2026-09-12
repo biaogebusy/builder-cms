@@ -24,4 +24,27 @@ use Drupal\commerce_payment_example\PluginForm\Onsite\PaymentMethodAddForm;
     "amex", "dinersclub", "discover", "jcb", "maestro", "mastercard", "visa",
   ],
 )]
-class TestOnsite extends Onsite {}
+class TestOnsite extends Onsite {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return parent::defaultConfiguration() + [
+      'skip_add_payment_method_form' => FALSE,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasFormClass($operation) {
+    if (!empty($this->configuration['skip_add_payment_method_form']) &&
+      $operation === 'checkout-add-payment-method') {
+      return FALSE;
+    }
+
+    return parent::hasFormClass($operation);
+  }
+
+}

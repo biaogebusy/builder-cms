@@ -18,15 +18,15 @@ All is applicable only to multi-value fields. Ignored for single value.
 
 
 ### USAGE
-Manage the fields on any entity (e.g.: node of type Article):
+* Manage the fields on any entity (e.g.: node of type Article):
 
-[Article display](/admin/structure/types/manage/article/display)
+  [Article display](/admin/structure/types/manage/article/display)
 
-Select any field of type "Image", "Media Entity" or "Paragraphs" and set the
-display options to "Slick Text", "Slick Image", "Slick Media" or
-"Slick Paragraphs", "Slick ...", accordingly under "Format".
+* Select any field of type "Image", "Media Entity" or "Paragraphs" and set the
+  display options to "Slick Text", "Slick Image", "Slick Media" or
+  "Slick Paragraphs", "Slick ...", accordingly under "Format".
 
-Adjust formatter options accordingly, including your optionset.
+* Adjust formatter options accordingly, including your optionset.
 
 The more complex is your slide, the more options are available.
 
@@ -60,13 +60,13 @@ Option #1
 ---------
 
 ```
-bottom|Caption bottom  
-top|Caption top  
-right|Caption right  
-left|Caption left  
-center|Caption center  
-center-top|Caption center top  
-below|Caption below the slide  
+bottom|Caption bottom
+top|Caption top
+right|Caption right
+left|Caption left
+center|Caption center
+center-top|Caption center top
+below|Caption below the slide
 ```
 
 Option #2
@@ -75,9 +75,9 @@ If you have complex slide layout via Media Entity/ Paragraphs with overlay video
 or images within slide captions, also supported:
 
 ```
-stage-right|Caption left, stage right  
-stage-left|Caption right, stage left  
-stage-zebra|Stage zebra  
+stage-right|Caption left, stage right
+stage-left|Caption right, stage left
+stage-zebra|Stage zebra
 ```
 
 Option #3
@@ -86,9 +86,9 @@ Option #3
 If you choose skin Split, additional layout options supported:
 
 ```
-split-right|Caption left, stage right, split half  
-split-left|Caption right, stage left, split half  
-split-zebra|Split zebra  
+split-right|Caption left, stage right, split half
+split-left|Caption right, stage left, split half
+split-zebra|Split zebra
 ```
 
 Split means image and caption are displayed side by side.

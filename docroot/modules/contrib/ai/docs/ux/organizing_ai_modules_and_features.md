@@ -50,7 +50,7 @@ These are the "doers" - not pure configuration, not end-user interfaces, but the
     - AI Agents (execute Drupal operations)  
     - AI Assistants (conversational logic and configuration)  
     - AI Automation Workflows (chained operations)  
-    - AI Moderation Guardrails (automatic safety filtering)
+    - AI Guardrails (automatic safety filtering)
 
 **Key distinction:** Configuration for these tools lives here; the user interfaces appear in Features.
 

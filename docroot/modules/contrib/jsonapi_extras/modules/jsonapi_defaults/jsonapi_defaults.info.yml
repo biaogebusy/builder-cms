@@ -6,7 +6,7 @@ package: Web services
 dependencies:
   - jsonapi_extras:jsonapi_extras
 
-# Information added by Drupal.org packaging script on 2025-10-17
-version: '8.x-3.27'
+# Information added by Drupal.org packaging script on 2025-12-19
+version: '8.x-3.28'
 project: 'jsonapi_extras'
-datestamp: 1760700369
+datestamp: 1766134433

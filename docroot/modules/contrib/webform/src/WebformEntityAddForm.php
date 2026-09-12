@@ -76,6 +76,7 @@ class WebformEntityAddForm extends BundleEntityFormBase {
     if ($this->operation === 'duplicate') {
       // Display custom title.
       $form['#title'] = $this->t("Duplicate '@label' form", ['@label' => $webform->label()]);
+      $form['#attached']['library'][] = 'webform/webform.admin.machine-name';
     }
 
     $form = parent::buildForm($form, $form_state);
@@ -97,7 +98,6 @@ class WebformEntityAddForm extends BundleEntityFormBase {
         'exists' => '\Drupal\webform\Entity\Webform::load',
         'source' => ['title'],
         'label' => '<br/>' . $this->t('Machine name'),
-
       ],
       '#maxlength' => 32,
       '#field_suffix' => ' (' . $this->t('Maximum @max characters', ['@max' => 32]) . ')',
@@ -214,7 +214,7 @@ class WebformEntityAddForm extends BundleEntityFormBase {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = $this->getEntity();
 
-    $webform->save();
+    $status = $webform->save();
 
     $context = [
       '@label' => $webform->label(),
@@ -223,6 +223,7 @@ class WebformEntityAddForm extends BundleEntityFormBase {
     $t_args = ['%label' => $webform->label()];
     $this->logger('webform')->notice('Webform @label created.', $context);
     $this->messenger()->addStatus($this->t('Webform %label created.', $t_args));
+    return $status;
   }
 
 }

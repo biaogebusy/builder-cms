@@ -207,12 +207,7 @@ class EditorIntegrationTest extends QuickEditTestBase {
 
     $editors = ['editor'];
     $attachments = $this->editorSelector->getEditorAttachments($editors);
-    // Since #3291047 is not backported to 9.4.x in core, the expected module
-    // providing this library is different for each core branch. If we're on
-    // 9.5.* and up, it should be coming from 'quickedit', but prior to that
-    // it's from 'editor'.
-    $provider = version_compare(\Drupal::VERSION, '9.4.999999', '>') ? 'quickedit' : 'editor';
-    $this->assertSame(['library' => [$provider . '/quickedit.inPlaceEditor.formattedText']], $attachments, "Expected attachments for Editor module's in-place editor found.");
+    $this->assertSame(['library' => ['quickedit/quickedit.inPlaceEditor.formattedText']], $attachments, "Expected attachments for Editor module's in-place editor found.");
   }
 
   /**
@@ -250,11 +245,11 @@ class EditorIntegrationTest extends QuickEditTestBase {
     ];
 
     $ajax_response_attachments_processor = \Drupal::service('ajax_response.attachments_processor');
-    $subscriber = new AjaxResponseSubscriber($ajax_response_attachments_processor);
+    $subscriber = new AjaxResponseSubscriber(fn() => $ajax_response_attachments_processor);
     $event = new ResponseEvent(
       \Drupal::service('http_kernel'),
       $request,
-      HttpKernelInterface::MASTER_REQUEST,
+      HttpKernelInterface::MAIN_REQUEST,
       $response
     );
     $subscriber->onResponse($event);

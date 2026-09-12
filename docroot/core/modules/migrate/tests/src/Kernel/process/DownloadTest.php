@@ -7,22 +7,19 @@ namespace Drupal\Tests\migrate\Kernel\process;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\KernelTests\Core\File\FileTestBase;
 use Drupal\migrate\MigrateException;
-use Drupal\migrate\Plugin\migrate\process\Download;
 use Drupal\migrate\MigrateExecutableInterface;
+use Drupal\migrate\Plugin\migrate\process\Download;
 use Drupal\migrate\Row;
 use GuzzleHttp\Client;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the download process plugin.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class DownloadTest extends FileTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * {@inheritdoc}
@@ -83,7 +80,7 @@ class DownloadTest extends FileTestBase {
       $fix_permissions();
       $this->fail('MigrateException was not thrown for non-writable destination URI.');
     }
-    catch (MigrateException $e) {
+    catch (MigrateException) {
       $this->assertTrue(TRUE, 'MigrateException was thrown for non-writable destination URI.');
       $fix_permissions();
     }

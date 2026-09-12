@@ -60,7 +60,7 @@ class PathValidator implements PathValidatorInterface {
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The current user.
    * @param \Drupal\Core\PathProcessor\InboundPathProcessorInterface $path_processor
-   *   The path processor;
+   *   The path processor.
    */
   public function __construct(AccessAwareRouterInterface $access_aware_router, UrlMatcherInterface $access_unaware_router, AccountInterface $account, InboundPathProcessorInterface $path_processor) {
     $this->accessAwareRouter = $access_aware_router;
@@ -148,7 +148,7 @@ class PathValidator implements PathValidatorInterface {
    *   If FALSE then skip access check and check only whether the path is
    *   valid.
    *
-   * @return array|bool
+   * @return array|false
    *   An array of request attributes or FALSE if an exception was thrown.
    */
   protected function getPathAttributes($path, Request $request, $access_check) {
@@ -159,23 +159,23 @@ class PathValidator implements PathValidatorInterface {
       $router = $this->accessAwareRouter;
     }
 
-    $initial_request_context = $router->getContext() ? $router->getContext() : new RequestContext();
+    $initial_request_context = $router->getContext() ?: new RequestContext();
     $path = $this->pathProcessor->processInbound('/' . $path, $request);
 
     try {
       $router->setContext((new RequestContext())->fromRequest($request));
       $result = $router->match($path);
     }
-    catch (ResourceNotFoundException $e) {
+    catch (ResourceNotFoundException) {
       $result = FALSE;
     }
-    catch (ParamNotConvertedException $e) {
+    catch (ParamNotConvertedException) {
       $result = FALSE;
     }
-    catch (AccessDeniedHttpException $e) {
+    catch (AccessDeniedHttpException) {
       $result = FALSE;
     }
-    catch (MethodNotAllowedException $e) {
+    catch (MethodNotAllowedException) {
       $result = FALSE;
     }
     catch (BadRequestException) {

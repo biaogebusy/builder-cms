@@ -32,10 +32,10 @@
       var $entities = $(context).find('.entities-list');
       // Register add/remove entities event handlers.
       $(once('register-add-entities', $entities))
-        .bind('add-entities', Drupal.entityBrowserMultiStepDisplay.addEntities);
+        .on('add-entities', Drupal.entityBrowserMultiStepDisplay.addEntities);
 
       $(once('register-remove-entities', $entities))
-        .bind('remove-entities', Drupal.entityBrowserMultiStepDisplay.removeEntities);
+        .on('remove-entities', Drupal.entityBrowserMultiStepDisplay.removeEntities);
 
       // Register event for remove button to use AJAX event.
       $(once('register-click', $entities.find('.entity-browser-remove-selected-entity'))).on('click', function (event) {

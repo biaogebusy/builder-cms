@@ -65,6 +65,29 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
   }
 
   /**
+   * Pulls specific entities in a channel from a remote website.
+   *
+   * @param string $remote_id
+   *   The remote website ID to import from.
+   * @param string $channel_id
+   *   The remote channel ID to import.
+   * @param string $import_config_id
+   *   The import config entity ID.
+   * @param string $entity_uuids
+   *   A comma-separated list of entity UUIDs.
+   *
+   * @command entity-share-client:pull-entities
+   * @validate-remote-id
+   * @validate-import-config-id
+   * @usage drush entity-share-client:pull-entities site_1 articles_en default UUID
+   *   Pull an entity from a remote website.
+   */
+  public function pullEntities(string $remote_id, string $channel_id, string $import_config_id, string $entity_uuids) {
+    $entity_uuids_list = explode(',', $entity_uuids);
+    $this->cliService->ioPullEntity($remote_id, $channel_id, $import_config_id, $entity_uuids_list, $this->io(), 'dt');
+  }
+
+  /**
    * Pull a channel from a remote website.
    *
    * @param string $remote_id
@@ -86,7 +109,7 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
    *   provided by the JSON:API Extras module.
    */
   public function pullChannel(string $remote_id, string $channel_id, string $import_config_id): void {
-    $this->cliService->ioPull($remote_id, $channel_id, $import_config_id, $this->io(), 'dt');
+    $this->cliService->ioPullChannel($remote_id, $channel_id, $import_config_id, $this->io(), 'dt');
   }
 
   /**

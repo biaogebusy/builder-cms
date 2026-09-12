@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_test\Plugin\ImageToolkit;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -10,7 +12,7 @@ use Drupal\Core\ImageToolkit\ImageToolkitOperationManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Defines a Test toolkit for image manipulation within Drupal.
@@ -67,24 +69,18 @@ class TestToolkit extends ImageToolkitBase {
    * @param \Drupal\Core\State\StateInterface $state
    *   The state key value store.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ImageToolkitOperationManagerInterface $operation_manager, LoggerInterface $logger, ConfigFactoryInterface $config_factory, StateInterface $state) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    array $plugin_definition,
+    ImageToolkitOperationManagerInterface $operation_manager,
+    #[Autowire(service: 'logger.channel.image')]
+    LoggerInterface $logger,
+    ConfigFactoryInterface $config_factory,
+    StateInterface $state,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $operation_manager, $logger, $config_factory);
     $this->state = $state;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('image.toolkit.operation.manager'),
-      $container->get('logger.channel.image'),
-      $container->get('config.factory'),
-      $container->get('state')
-    );
   }
 
   /**
@@ -251,7 +247,11 @@ class TestToolkit extends ImageToolkitBase {
    *   IMAGETYPE_* constant (e.g. IMAGETYPE_JPEG, IMAGETYPE_PNG, etc.).
    */
   protected static function supportedTypes() {
-    return [IMAGETYPE_PNG, IMAGETYPE_JPEG, IMAGETYPE_GIF];
+    $types = [IMAGETYPE_PNG, IMAGETYPE_JPEG, IMAGETYPE_GIF];
+    if (\Drupal::keyValue('image_test')->get('avif_enabled', FALSE)) {
+      $types[] = IMAGETYPE_AVIF;
+    }
+    return $types;
   }
 
   /**

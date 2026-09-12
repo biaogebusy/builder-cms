@@ -6,22 +6,19 @@
  */
 
 /**
- * Implements hook_requirements().
+ * Implements hook_install().
  */
-function navigation_requirements($phase) {
-  $requirements = [];
-
-  if ($phase === 'runtime') {
-    if (\Drupal::moduleHandler()->moduleExists('toolbar')) {
-      $requirements['toolbar'] = [
-        'title' => t('Toolbar and Navigation modules are both installed'),
-        'value' => t('The Navigation module is a complete replacement for the Toolbar module and disables its functionality when both modules are installed. If you are planning to continue using Navigation module, you can uninstall the Toolbar module now.'),
-        'severity' => REQUIREMENT_WARNING,
-      ];
-    }
+function navigation_install(bool $is_syncing): void {
+  // Do not modify config during sync. Config should be already consolidated.
+  if ($is_syncing) {
+    return;
   }
 
-  return $requirements;
+  $blocks = \Drupal::moduleHandler()->invokeAll('navigation_defaults');
+  $manager = \Drupal::service('plugin.manager.config_action');
+  foreach ($blocks as $block) {
+    $manager->applyAction('addNavigationBlock', 'navigation.block_layout', $block);
+  }
 }
 
 /**
@@ -40,7 +37,7 @@ function navigation_update_11001(array &$sandbox): void {
       ],
     ],
   ]);
-  $settings->save(TRUE);
+  $settings->save();
 }
 
 /**

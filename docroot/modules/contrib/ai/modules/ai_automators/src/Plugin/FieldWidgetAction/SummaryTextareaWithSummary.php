@@ -2,12 +2,18 @@
 
 namespace Drupal\ai_automators\Plugin\FieldWidgetAction;
 
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 
 /**
  * Provides a Field Widget Action for summary generation.
+ *
+ * Only the 'summary' sub-element is written. The main 'value' and
+ * 'format' sub-elements are left untouched so that any in-flight edits
+ * the user made to the main text area are preserved when they click the
+ * Generate Summary button.
  */
 #[FieldWidgetAction(
   id: 'summary_textarea_with_summary',
@@ -18,26 +24,26 @@ use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 class SummaryTextareaWithSummary extends AutomatorBaseAction {
 
   /**
-   * Do not clear the entity values.
+   * {@inheritdoc}
    */
   protected bool $clearEntity = FALSE;
 
   /**
-   * Target the 'summary' subfield for auto-filling.
+   * {@inheritdoc}
+   *
+   * Merges only the 'summary' sub-field into existing per-delta user
+   * input so browser-submitted 'value' / 'format' entries aren't
+   * clobbered.
    */
-  public string $formElementProperty = 'summary';
-
-  /**
-   * Ajax handler for AI Automator.
-   */
-  public function aiAutomatorsAjax(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $array_parents = $triggering_element['#array_parents'];
-    array_pop($array_parents);
-    $array_parents[] = static::FORM_ELEMENT_PROPERTY;
-    $form_key = $array_parents[0];
-
-    return $this->populateAutomatorValues($form, $form_state, $form_key, NULL);
+  protected function setFormInput(FieldableEntityInterface $entity, FormStateInterface $form_state, $form_key): void {
+    $input = $form_state->getUserInput();
+    foreach ($entity->get($form_key) as $index => $item) {
+      if (!isset($input[$form_key][$index]) || !is_array($input[$form_key][$index])) {
+        $input[$form_key][$index] = [];
+      }
+      $input[$form_key][$index]['summary'] = (string) ($item->summary ?? '');
+    }
+    $form_state->setUserInput($input);
   }
 
 }

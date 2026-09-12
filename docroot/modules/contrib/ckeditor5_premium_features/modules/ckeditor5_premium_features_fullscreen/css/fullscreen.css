@@ -1,0 +1,130 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ck-fullscreen-overlay {
+  overflow: hidden;
+  --ck-z-default: 10000;
+  --ck-z-modal: calc(var(--ck-z-default) + 999);
+}
+.ck-fullscreen-overlay .ui-dialog,
+.ck-fullscreen-overlay .ck-dialog-overlay {
+  z-index: calc(var(--ck-z-modal) + 2) !important;
+}
+.ck-fullscreen-overlay .ck.ck-balloon-panel {
+  z-index: calc(var(--ck-z-modal) + 10000) !important;
+}
+
+.ck-fullscreen-overlay:not(.ck-fullscreen-with-word-count) .ck-evaluation-badge-balloon .ck-evaluation-badge,
+.ck-fullscreen-overlay:not(.ck-fullscreen-with-word-count) .ck-powered-by-balloon .ck-powered-by {
+  margin-bottom: 13px;
+}
+
+.ck-fullscreen-overlay .field-group-tabs-wrapper > div > ul {
+  z-index: -1;
+}
+
+.ck-fullscreen-overlay .ui-dialog-off-canvas {
+  height: 100vh!important;
+  width: 100vw!important;
+  top: 0!important;
+  left: 0!important;
+}
+.ck-fullscreen.ck.ck-editor.ck-rounded-corners,
+.ck-fullscreen.revision-history-container-data,
+.ck-fullscreen.ck-editor-premium-wrapper,
+#drupal-off-canvas-wrapper .ck-fullscreen.ck.ck-editor.ck-rounded-corners,
+#drupal-off-canvas-wrapper .ck-fullscreen.revision-history-container-data,
+#drupal-off-canvas-wrapper .ck-fullscreen.ck-editor-premium-wrapper {
+  position: fixed !important;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: calc(var(--ck-z-modal) + 1);
+  display: flex;
+  flex-direction: column;
+}
+.ck-fullscreen.ck-word-count {
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: calc(var(--ck-z-modal) + 1);
+
+}
+.ck-fullscreen.revision-history-container-data .ck-editor__main {
+  height: calc(100% - 40px);
+}
+.ck-fullscreen:not(.ck-editor-premium-wrapper) .ck-editor__main > .ck-content,
+#drupal-off-canvas-wrapper .ck-fullscreen:not(.ck-editor-premium-wrapper) .ck-editor__main > .ck-content,
+.ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance,
+.ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance > .ck-editor,
+.ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance > .ck-editor > .ck-editor__main,
+.ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance > .ck-editor > .ck-editor__main > .ck-content,
+.ck-fullscreen .ck-editor__main .ck-source-editing-area,
+#drupal-off-canvas-wrapper .ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance,
+#drupal-off-canvas-wrapper .ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance > .ck-editor,
+#drupal-off-canvas-wrapper .ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance > .ck-editor > .ck-editor__main,
+#drupal-off-canvas-wrapper .ck-fullscreen.ck-editor-premium-wrapper .ck-editor-instance > .ck-editor > .ck-editor__main > .ck-content {
+  height: 100%;
+  max-height: 100%!important;
+}
+.ck-fullscreen-overlay #toolbar-administration,
+.ck-fullscreen-overlay .form-item__label {
+  display:none;
+}
+.ck-fullscreen-overlay .ck-sidebar-wrapper {
+  margin-top:0!important;
+}
+.ck-fullscreen-overlay .ck-fullscreen.ck-editor-premium-wrapper .document-outline-container{
+  max-width: 350px;
+}
+.ck-fullscreen-overlay .ck-fullscreen.ck-editor-premium-wrapper .ck-editor-container .ck-editor-instance .ck-editor,
+.ck-fullscreen-overlay .ck-fullscreen.ck-editor-premium-wrapper .ck-editor-container .ck-editor-instance .ck-editor .ck-editor__main,
+.ck-fullscreen-overlay .ck-fullscreen.ck-editor-premium-wrapper .ck-editor-container .ck-editor-instance .ck-editor .ck-editor__main .ck-content {
+  height: 100%;
+  max-height: 100%;
+}
+.ck-fullscreen .ck.ck-editor__main .ck-source-editing-area {
+  height: 100%;
+}
+.ck-fullscreen .ck.ck-editor__main .ck-source-editing-area textarea {
+  overflow: auto;
+}
+.ck-fullscreen.revision-history-container-data {
+  background: hsl(0, 0%, 100%);
+  overflow: auto;
+}
+.ck-fullscreen-overlay .ck-fullscreen.ck-sidebar-wrapper.narrowSidebar,
+.ck-fullscreen-overlay .ck-fullscreen.ck-sidebar-wrapper.wideSidebar {
+  margin:0;
+}
+.ck-fullscreen-overlay .ck-fullscreen.ck-sidebar-wrapper a.ck-sidebar-auto-toggle {
+  margin-top:0
+}
+
+.ck-fullscreen-overlay .ck-fullscreen .ck-sticky-panel__content {
+  top:0 !important;
+}
+
+/* Revision history */
+.ck-fullscreen-overlay .editor-container {
+  height: 100%;
+}
+
+.ck-fullscreen-overlay .revision-viewer-sidebar {
+  max-width: 340px;
+  min-width: 340px;
+}
+
+.ck-fullscreen-overlay .revision-history-container-data > .editor-container > .ck-editor {
+  width: calc(100% - 301px);
+}
+
+/* Sidebar */
+.ck-fullscreen-overlay .ck-editor-sidebar-wrapper.wideSidebar .ck-sidebar-wrapper {
+  max-width: 400px;
+  padding: 0 24px;
+}

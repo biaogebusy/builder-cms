@@ -23,6 +23,7 @@ bubble:
   axis: 'xy'
   axis_inverted: false
   stacking: false
+  coordinate: true
 candlestick:
   label: 'Candlestick'
   axis: 'xy'
@@ -48,6 +49,7 @@ heatmap:
   axis: 'xy'
   axis_inverted: false
   stacking: false
+  coordinate: true
 line:
   label: 'Line'
   axis: 'xy'
@@ -63,8 +65,14 @@ scatter:
   axis: 'xy'
   axis_inverted: false
   stacking: false
+  coordinate: true
 spline:
   label: 'Spline'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false
+treemap:
+  label: 'Treemap'
   axis: 'xy'
   axis_inverted: false
   stacking: false

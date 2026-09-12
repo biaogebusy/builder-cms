@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Drupal\Tests\image\Kernel\Views;
 
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\User;
-use Drupal\views\Views;
 use Drupal\views\Tests\ViewTestData;
-use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests image on user relationship handler.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class RelationshipUserImageDataTest extends ViewsKernelTestBase {
 
   /**
@@ -27,8 +29,6 @@ class RelationshipUserImageDataTest extends ViewsKernelTestBase {
     'field',
     'image',
     'image_test_views',
-    'system',
-    'user',
   ];
 
   /**

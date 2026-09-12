@@ -6,6 +6,7 @@ namespace Drupal\menu_per_role\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * Menu Per Role administration form.
@@ -66,7 +67,9 @@ class MenuPerRoleAdminSettings extends ConfigFormBase {
     $form['admin_bypass'] = [
       '#type' => 'details',
       '#title' => $this->t('Administrator bypass'),
-      '#description' => $this->t('The user with UID 1 and the users with the "admin" role configured on the <a href=":url">Account settings</a> page (or marked via config) have all the permissions. So they will automatically bypass Menu Per Role access check due to the bypass permissions. These settings allows you to configure if those users can bypass or not Menu Per Role access check.'),
+      '#description' => $this->t('The user with UID 1 and the users with the "admin" role configured on the <a href=":url">Role settings</a> page (or marked via config) have all the permissions. So they will automatically bypass Menu Per Role access check due to the bypass permissions. These settings allows you to configure if those users can bypass or not Menu Per Role access check.', [
+        ':url' => Url::fromRoute('user.role.settings')->toString(),
+      ]),
       '#open' => TRUE,
     ];
 

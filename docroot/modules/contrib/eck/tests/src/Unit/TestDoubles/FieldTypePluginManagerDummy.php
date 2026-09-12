@@ -3,7 +3,9 @@
 namespace Drupal\Tests\eck\Unit\TestDoubles;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 
 /**
@@ -15,21 +17,23 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    * {@inheritdoc}
    */
   public function getCategories() {
-    // Stub.
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSortedDefinitions(array $definitions = NULL) {
+  public function getSortedDefinitions(?array $definitions = NULL) {
     // Stub.
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getGroupedDefinitions(array $definitions = NULL) {
+  public function getGroupedDefinitions(?array $definitions = NULL) {
     // Stub.
+    return [];
   }
 
   /**
@@ -37,6 +41,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getDefinition($plugin_id, $exception_on_invalid = TRUE) {
     // Stub.
+    return NULL;
   }
 
   /**
@@ -44,6 +49,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getDefinitions() {
     // Stub.
+    return [];
   }
 
   /**
@@ -51,6 +57,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function hasDefinition($plugin_id) {
     // Stub.
+    return FALSE;
   }
 
   /**
@@ -58,6 +65,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function createInstance($plugin_id, array $configuration = []) {
     // Stub.
+    return new \stdClass();
   }
 
   /**
@@ -65,6 +73,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function createFieldItemList(FieldableEntityInterface $entity, $field_name, $values = NULL) {
     // Stub.
+    return '\Drupal\Core\Field\FieldItemListInterface';
   }
 
   /**
@@ -72,6 +81,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function createFieldItem(FieldItemListInterface $items, $index, $values = NULL) {
     // Stub.
+    return '\Drupal\Core\Field\FieldItemInterface';
   }
 
   /**
@@ -79,6 +89,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getDefaultFieldSettings($type) {
     // Stub.
+    return [];
   }
 
   /**
@@ -86,6 +97,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getDefaultStorageSettings($type) {
     // Stub.
+    return [];
   }
 
   /**
@@ -93,6 +105,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getUiDefinitions() {
     // Stub.
+    return [];
   }
 
   /**
@@ -100,6 +113,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getPluginClass($type) {
     // Stub.
+    return '\Drupal\field\Plugin\Field\FieldType\BaseFieldType';
   }
 
   /**
@@ -107,6 +121,7 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getInstance(array $options) {
     // Stub.
+    return new \stdClass();
   }
 
   /**
@@ -114,6 +129,31 @@ class FieldTypePluginManagerDummy implements FieldTypePluginManagerInterface {
    */
   public function getPreconfiguredOptions($field_type) {
     // Stub.
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getStorageSettingsSummary(FieldStorageDefinitionInterface $storage_definition): array {
+    // Stub.
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldSettingsSummary(FieldDefinitionInterface $field_definition): array {
+    // Stub.
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeUiDefinitions(string $entity_type_id): array {
+    // Stub.
+    return [];
   }
 
 }

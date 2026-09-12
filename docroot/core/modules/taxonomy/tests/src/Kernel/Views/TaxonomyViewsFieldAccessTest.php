@@ -7,12 +7,14 @@ namespace Drupal\Tests\taxonomy\Kernel\Views;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\views\Kernel\Handler\FieldFieldAccessTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests base field access in Views for the taxonomy entity.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyViewsFieldAccessTest extends FieldFieldAccessTestBase {
 
   /**

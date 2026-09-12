@@ -29,7 +29,7 @@ class WebformSubmissionTokenOperationsTest extends WebformBrowserTestBase {
   /**
    * Test operations on a webform submission using a tokenized URL.
    */
-  public function testTokenOperationsTest() {
+  public function testTokenOperationsTest(): void {
     $assert_session = $this->assertSession();
 
     $normal_user = $this->drupalCreateUser();

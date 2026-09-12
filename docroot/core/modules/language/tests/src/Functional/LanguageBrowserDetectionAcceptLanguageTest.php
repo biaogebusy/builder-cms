@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\language\Functional;
 
-use Drupal\Tests\BrowserTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests browser language detection with different accept-language headers.
- *
- * @group language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageBrowserDetectionAcceptLanguageTest extends BrowserTestBase {
 
   /**
@@ -99,7 +101,8 @@ class LanguageBrowserDetectionAcceptLanguageTest extends BrowserTestBase {
     $this->assertSession()->responseHeaderEquals('Content-Language', 'fr');
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', 'UNCACHEABLE (response policy)');
 
-    // Check with browser without language settings - should return fallback language.
+    // Check with browser without language settings - should return fallback
+    // language.
     $this->drupalGet('/system-test/echo/language test', [], ['Accept-Language' => '']);
     $this->assertSession()->responseHeaderEquals('Content-Language', 'en');
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', 'UNCACHEABLE (response policy)');

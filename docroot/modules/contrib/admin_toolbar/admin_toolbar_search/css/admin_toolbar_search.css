@@ -1,0 +1,124 @@
+/* CSS styles for the Admin Toolbar Search module. */
+
+/* Styles for the search tab menu link used for desktop and mobile. */
+#admin-toolbar-search-tab {
+  /* Add a small magnifier icon before the search tab link. */
+  .toolbar-item {
+    display: block;
+    &::before {
+      /* Use the lighter color icon ('#bebebe') by default. */
+      background-image: url("../images/search_icon.svg");
+    }
+  }
+}
+
+/* Styles for the search JS autocomplete input text fields. */
+#admin-toolbar-search-input,
+#admin-toolbar-search-field-input {
+  height: 100%;
+  min-height: 1.875rem;
+  margin: 0;
+  padding: 0 0.5rem;
+  color: #3b3b3b;
+  border: 1px solid #ccc;
+  border-radius: unset;
+  background: #fcfcfa;
+  font-size: 0.8125rem;
+  line-height: 1.625rem;
+}
+
+/* Styles for the field tab and its interactions with the search tab. */
+#admin-toolbar-search-field-tab {
+  /* Hide the field tab and show the search tab by default on mobile. */
+  display: none;
+  .form-item {
+    /* Unset default form item margin to prevent a scrollbar from appearing. */
+    margin-block: auto;
+    /* Add padding to the wrapper around the search label and input field. */
+    padding: 0.3125rem 1rem;
+  }
+}
+
+/* Styles for the autocomplete suggestion list. Class added through the JS. */
+.admin-toolbar-search-autocomplete-list {
+  /* Limit the height of the suggestion list (to '300px' max) and enable
+  vertical scrolling if needed. */
+  overflow-y: scroll;
+  max-height: 18.75rem;
+  font-size: 0.8125rem;
+
+  &.ui-autocomplete {
+    /* override core 'toolbar.module.css' class '.toolbar .toolbar-tray' default
+      value of 'z-index:501', to prevent overlaps with other toolbar trays. */
+    z-index: 600;
+  }
+
+  /* Styles for each suggestion item in the autocomplete list. */
+  .ui-menu-item {
+    /* Add a bit of vertical spacing between the list items. */
+    .ui-menu-item-wrapper {
+      padding: 0.125rem 0.75rem;
+      border: 1px solid transparent;
+    }
+    /* Styles for the links within each suggestion item. */
+    a {
+      /* Darker color on a white background without underline. */
+      text-decoration: none;
+      color: #333;
+    }
+    /* Styles for the active (hovered or keyboard selected) suggestion item. */
+    .ui-state-active {
+      &:hover a,
+      a {
+        /* Change link color on hover or when selected with keyboard. */
+        color: white;
+      }
+    }
+  }
+}
+
+/* Styles for the search form within the admin toolbar tray. */
+#toolbar-item-administration-search-tray {
+  .form-item {
+    /* Unset default form item margin. */
+    margin-block: auto;
+    /* Add padding to the wrapper around the search label and input field. */
+    padding: 0.625rem;
+  }
+  /* Basic styles for the search label and input field. */
+  label {
+    display: inline-block;
+    margin-right: 0.5rem;
+    color: #000;
+    font-weight: bold;
+  }
+  input {
+    display: inline-block;
+    padding: 0.3125rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile first media query for screens wider than 769px (desktop, tablets). */
+@media only screen and (min-width: 769px) {
+  .admin-toolbar-search-autocomplete-list {
+    /* Increase font size of autocomplete suggestions for wider screens. */
+    font-size: 1rem;
+  }
+  /* Display the search field and and hide the search tab for wider screens. */
+  #admin-toolbar-search-field-tab {
+    display: block;
+    /* These styles only work if the search field is before the search tab. */
+    ~ #admin-toolbar-search-tab {
+      /* Hide the search tab when the field tab is visible on wider screens. */
+      display: none;
+    }
+  }
+  /* Add a bit more margin space on the left of the search label in the toolbar
+  tray when displayed on wider screens ('display menu item'). */
+  #toolbar-item-administration-search-tray {
+    label {
+      margin-left: 0.45rem;
+    }
+  }
+}

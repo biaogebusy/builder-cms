@@ -15,13 +15,6 @@ use Drupal\commerce_store\Entity\StoreInterface;
 class CartProvider implements CartProviderInterface {
 
   /**
-   * The order storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $orderStorage;
-
-  /**
    * The loaded cart data, grouped by uid, then keyed by cart order ID.
    *
    * Each data item is an array with the following keys:
@@ -35,7 +28,7 @@ class CartProvider implements CartProviderInterface {
   /**
    * Constructs a new CartProvider object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\commerce_store\CurrentStoreInterface $currentStore
    *   The current store.
@@ -45,12 +38,11 @@ class CartProvider implements CartProviderInterface {
    *   The cart session.
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected CurrentStoreInterface $currentStore,
     protected AccountInterface $currentUser,
     protected CartSessionInterface $cartSession,
   ) {
-    $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
   }
 
   /**
@@ -65,9 +57,10 @@ class CartProvider implements CartProviderInterface {
       // Don't allow multiple cart orders matching the same criteria.
       throw new DuplicateCartException("A cart order for type '$order_type', store '$store_id' and account '$uid' already exists.");
     }
-
+    /** @var \Drupal\commerce_order\OrderStorageInterface $order_storage */
+    $order_storage = $this->entityTypeManager->getStorage('commerce_order');
     // Create the new cart order.
-    $cart = $this->orderStorage->create([
+    $cart = $order_storage->create([
       'type' => $order_type,
       'store_id' => $store_id,
       'uid' => $uid,
@@ -116,7 +109,9 @@ class CartProvider implements CartProviderInterface {
     $cart = NULL;
     $cart_id = $this->getCartId($order_type, $store, $account);
     if ($cart_id) {
-      $cart = $this->orderStorage->load($cart_id);
+      /** @var \Drupal\commerce_order\OrderStorageInterface $order_storage */
+      $order_storage = $this->entityTypeManager->getStorage('commerce_order');
+      $cart = $order_storage->load($cart_id);
     }
 
     return $cart;
@@ -147,7 +142,9 @@ class CartProvider implements CartProviderInterface {
     $carts = [];
     $cart_ids = $this->getCartIds($account, $store);
     if ($cart_ids) {
-      $carts = $this->orderStorage->loadMultiple($cart_ids);
+      /** @var \Drupal\commerce_order\OrderStorageInterface $order_storage */
+      $order_storage = $this->entityTypeManager->getStorage('commerce_order');
+      $carts = $order_storage->loadMultiple($cart_ids);
     }
 
     return $carts;
@@ -188,8 +185,10 @@ class CartProvider implements CartProviderInterface {
       return $this->cartData[$uid];
     }
 
+    /** @var \Drupal\commerce_order\OrderStorageInterface $order_storage */
+    $order_storage = $this->entityTypeManager->getStorage('commerce_order');
     if ($account->isAuthenticated()) {
-      $query = $this->orderStorage->getQuery()
+      $query = $order_storage->getQuery()
         ->condition('state', 'draft')
         ->condition('cart', TRUE)
         ->condition('uid', $account->id())
@@ -202,15 +201,16 @@ class CartProvider implements CartProviderInterface {
       $cart_ids = $this->cartSession->getCartIds();
     }
 
-    $this->cartData[$uid] = [];
     if (!$cart_ids) {
-      return [];
+      $this->cartData[$uid] = [];
+      return $this->cartData[$uid];
     }
+    $cart_data = [];
     // Getting the cart data and validating the cart IDs received from the
     // session requires loading the entities. This is a performance hit, but
     // it's assumed that these entities would be loaded at one point anyway.
     /** @var \Drupal\commerce_order\Entity\OrderInterface[] $carts */
-    $carts = $this->orderStorage->loadMultiple($cart_ids);
+    $carts = $order_storage->loadMultiple($cart_ids);
     $non_eligible_cart_ids = [];
     foreach ($carts as $cart) {
       if ($cart->isLocked()) {
@@ -224,7 +224,7 @@ class CartProvider implements CartProviderInterface {
         continue;
       }
 
-      $this->cartData[$uid][$cart->id()] = [
+      $cart_data[$cart->id()] = [
         'type' => $cart->bundle(),
         'store_id' => $cart->getStoreId(),
       ];
@@ -236,6 +236,7 @@ class CartProvider implements CartProviderInterface {
       }
     }
 
+    $this->cartData[$uid] = $cart_data;
     return $this->cartData[$uid];
   }
 
@@ -260,7 +261,7 @@ class CartProvider implements CartProviderInterface {
       return FALSE;
     }
     // A cart belonging to an unpublished store should no longer be eligible.
-    if (!$cart->getStore()->isPublished()) {
+    if (!$cart->getStore()?->isPublished()) {
       return FALSE;
     }
     // Carts not in draft mode should not be valid.

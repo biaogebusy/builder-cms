@@ -26,11 +26,46 @@ class AjaxPageState implements HttpKernelInterface {
    */
   public function handle(Request $request, $type = self::MAIN_REQUEST, $catch = TRUE): Response {
     if ($type === static::MAIN_REQUEST) {
+      $request_ajax_page_state = [];
       if ($request->request->has('ajax_page_state')) {
-        $request->request->set('ajax_page_state', $this->parseAjaxPageState($request->request->all('ajax_page_state')));
+        $request_ajax_page_state = $this->parseAjaxPageState($request->request->all('ajax_page_state'));
+        if (!empty($request_ajax_page_state)) {
+          $request->request->set('ajax_page_state', $request_ajax_page_state);
+        }
+        else {
+          $request->request->remove('ajax_page_state');
+        }
       }
-      elseif ($request->query->has('ajax_page_state')) {
-        $request->query->set('ajax_page_state', $this->parseAjaxPageState($request->query->all('ajax_page_state')));
+
+      $query_ajax_page_state = [];
+      if ($request->query->has('ajax_page_state')) {
+        $query_ajax_page_state = $this->parseAjaxPageState($request->query->all('ajax_page_state'));
+        if (!empty($query_ajax_page_state)) {
+          $request->query->set('ajax_page_state', $query_ajax_page_state);
+        }
+        else {
+          $request->query->remove('ajax_page_state');
+        }
+      }
+
+      // If libraries are present in both the request and the query, ensure they
+      // match by merging them together.
+      if (!empty($request_ajax_page_state['libraries']) && !empty($query_ajax_page_state['libraries'])) {
+        $request_libraries = explode(',', $request_ajax_page_state['libraries']);
+        $query_libraries = explode(',', $query_ajax_page_state['libraries']);
+        $libraries = implode(',', array_unique(array_merge($request_libraries, $query_libraries)));
+        $request_ajax_page_state['libraries'] = $libraries;
+        $query_ajax_page_state['libraries'] = $libraries;
+        $request->request->set('ajax_page_state', $request_ajax_page_state);
+        $request->query->set('ajax_page_state', $query_ajax_page_state);
+      }
+
+      // Copy the final page state to a request attribute.
+      if (!empty($request_ajax_page_state)) {
+        $request->attributes->set('ajax_page_state', $request_ajax_page_state);
+      }
+      elseif (!empty($query_ajax_page_state)) {
+        $request->attributes->set('ajax_page_state', $query_ajax_page_state);
       }
     }
     return $this->httpKernel->handle($request, $type, $catch);
@@ -42,12 +77,26 @@ class AjaxPageState implements HttpKernelInterface {
    * Decompresses the libraries array key.
    *
    * @param array $ajax_page_state
-   *   An array of query parameters, where the libraries parameter is compressed.
+   *   An array of query parameters, where the libraries parameter is
+   *   compressed.
    *
    * @return array
+   *   The input array of query parameters, where the libraries parameter is
+   *   changed to be uncompressed.
    */
   private function parseAjaxPageState(array $ajax_page_state): array {
-    $ajax_page_state['libraries'] = UrlHelper::uncompressQueryParameter($ajax_page_state['libraries']);
+    if (isset($ajax_page_state['libraries'])) {
+      $libraries = explode(',', UrlHelper::uncompressQueryParameter($ajax_page_state['libraries']));
+      // A library name always consists of an extension and a library name,
+      // separated by a slash.
+      $libraries = array_filter($libraries, static fn (string $library): bool => str_contains($library, '/'));
+      if ($libraries) {
+        $ajax_page_state['libraries'] = implode(',', $libraries);
+      }
+      else {
+        unset($ajax_page_state['libraries']);
+      }
+    }
     return $ajax_page_state;
   }
 

@@ -1,0 +1,58 @@
+document_outline.adapter:
+  version: 20251230
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/documentOutlineAdapter.js: { preprocess: false, minified: true }
+  css:
+    base:
+      css/document_outline.css: { }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features_productivity_pack/document-outline
+    - ckeditor5_premium_features/toolbar-adapter
+
+table_of_contents.style:
+  version: 20231109
+  css:
+    base:
+      css/table_of_contents.css: { }
+
+table_of_contents.adapter:
+  version: 20231109
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/tableOfContentsAdapter.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features_productivity_pack/document-outline
+    - ckeditor5_premium_features_productivity_pack/table_of_contents.style
+
+admin.table_of_contents:
+  version: 20230626
+  css:
+    theme:
+      css/table-of-contents.admin.css: { }
+
+admin.format_painter:
+  version: 20230626
+  css:
+    theme:
+      css/format-painter.admin.css: { }
+
+admin.content_templates:
+  version: 20230626
+  css:
+    theme:
+      css/content-templates.admin.css: { }
+
+admin.case_change:
+  version: 20240411
+  css:
+    theme:
+      css/case-change.admin.css: { }

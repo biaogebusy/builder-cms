@@ -19,7 +19,7 @@ class WebformElementMultiplePropertyTest extends WebformElementBrowserTestBase {
   /**
    * Tests multiple element.
    */
-  public function testMultipleProperty() {
+  public function testMultipleProperty(): void {
     $assert_session = $this->assertSession();
 
     // Check processing.

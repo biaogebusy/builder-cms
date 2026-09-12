@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\user\Kernel\Views;
 
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\user\Entity\User;
 use Drupal\Tests\views\Kernel\Handler\FieldFieldAccessTestBase;
+use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests base field access in Views for the user entity.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserViewsFieldAccessTest extends FieldFieldAccessTestBase {
 
   /**
@@ -29,6 +31,9 @@ class UserViewsFieldAccessTest extends FieldFieldAccessTestBase {
     $this->installEntitySchema('user');
   }
 
+  /**
+   * Tests the user fields.
+   */
   public function testUserFields(): void {
     ConfigurableLanguage::createFromLangcode('es')->save();
     ConfigurableLanguage::createFromLangcode('fr')->save();

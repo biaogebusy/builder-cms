@@ -152,7 +152,7 @@ class SlickForm extends SlickFormBase {
 
       // In case more useful stupidity gets in the way.
       if ($element_type == 'textfield') {
-        $default_value = strip_tags($default_value);
+        $default_value = is_string($default_value) ? strip_tags($default_value) : $default_value;
       }
 
       $form['settings'][$name] = [
@@ -418,7 +418,7 @@ class SlickForm extends SlickFormBase {
   /**
    * Returns the typecast values.
    *
-   * @param array $settings
+   * @param array<string, mixed> $settings
    *   An array of Optionset settings.
    */
   public function typecastOptionset(array &$settings = []) {
@@ -485,7 +485,7 @@ class SlickForm extends SlickFormBase {
     // Check if rows is set to 1 and show a warning.
     // See: https://www.drupal.org/project/slick/issues/3123787#comment-13532059
     if (($form['settings']['rows']['#value'] ?? -1) == 1) {
-      $message = $this->t('Hint: You set Slicks "rows" option to "1" (optionset: %optionset), this will result in markup issues on Slick versions >1.9.0. Consider to set it to "0" instead, or leave it as if not using >1.9.0. Check out <a href=":url">this issue</a> for further information.', [
+      $message = $this->t('Hint: You set Slicks "rows" option to "1" (optionset: %optionset), this will result in markup issues on Slick versions >=1.8.1. Consider to set it to "0" instead, or leave it as is if not using >=1.8.1. Check out <a href=":url">this issue</a> for further information.', [
         ':url' => 'https://www.drupal.org/project/slick/issues/3123787',
         '%optionset' => $form['name']['#value'],
       ]);
@@ -494,7 +494,7 @@ class SlickForm extends SlickFormBase {
     // Check if slidesPerRow is set to 0 and show a warning.
     // See: https://www.drupal.org/project/slick/issues/3123787#comment-13532059
     if (($form['settings']['slidesPerRow']['#value'] ?? -1) == 0) {
-      $message = $this->t('Important: You set Slicks "slidesPerRow" option to "0" (optionset: %optionset), this will result in browser crashes >1.9.0. Consider to set it to "1" instead. Consider to set it to "0" instead, or leave it as if not using >1.9.0. Check out <a href=":url">this issue</a> for further information.', [
+      $message = $this->t('Important: You set Slicks "slidesPerRow" option to "0" (optionset: %optionset), this will result in broken Slick >=1.8.1. Consider to set it to "1" instead. Consider to set it to "0" instead, or leave it as is if not using >=1.8.1. Check out <a href=":url">this issue</a> for further information.', [
         ':url' => 'https://www.drupal.org/project/slick/issues/3123787',
         '%optionset' => $form['name']['#value'],
       ]);
@@ -949,7 +949,7 @@ class SlickForm extends SlickFormBase {
         $elements[$name]['default'] = $value;
 
         if (isset($elements[$name]['description'])) {
-          $elements[$name]['description'] .= $this->getDefaultValue($value, $checkbox);
+          $elements[$name]['description'] .= $this->getDefaultValue($value, $checkbox, $name);
         }
       }
 
@@ -1087,12 +1087,16 @@ class SlickForm extends SlickFormBase {
   /**
    * Returns default value.
    */
-  private function getDefaultValue($value, $checkbox): string {
+  private function getDefaultValue($value, $checkbox, $name): string {
     $empty = !$checkbox && empty($value) && $value != '0';
     $value = var_export($value, TRUE);
 
     if ($empty) {
       $value = $this->t('None');
+    }
+
+    if ($name == 'rows') {
+      return '<br><em>' . $this->t('Default for <= 1.8.0: 1<br>Default for >= 1.8.1: 0') . '</em>';
     }
 
     return '<br><em>' . $this->t('Default: @value', [

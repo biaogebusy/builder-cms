@@ -27,7 +27,11 @@ class AceEditor extends EditorBase {
    */
   public function getDefaultSettings() {
     $config = \Drupal::config('ace_editor.settings')->get();
-    return $config;
+    // theme_list and syntax_list are the option sources of the settings form,
+    // not settings. Drupal merges default settings into the saved entity, so
+    // returning them here writes both maps (174 entries) into every
+    // editor.editor.* configuration and breaks its schema (issue #3618752).
+    return array_diff_key($config, array_flip(['theme_list', 'syntax_list', '_core']));
   }
 
   /**
@@ -112,8 +116,8 @@ class AceEditor extends EditorBase {
       ],
       'auto_complete' => [
         '#type' => 'checkbox',
-        '#title' => $this->t('Enable Autocomplete (Ctrl+Space'),
-        '#default_value' => isset($settings['auto_complete']) ? $settings['auto_complete'] : TRUE,
+        '#title' => $this->t('Enable Autocomplete (Ctrl+Space)'),
+        '#default_value' => $settings['auto_complete'] ?? TRUE,
       ],
     ];
   }
@@ -158,8 +162,9 @@ class AceEditor extends EditorBase {
     $config = \Drupal::config('ace_editor.settings');
 
     // Get theme and mode.
-    $theme = trim($editor->getSettings()['fieldset']['theme']);
-    $mode = trim($editor->getSettings()['fieldset']['syntax']);
+    $settings = $this->instanceSettings($editor);
+    $theme = trim((string) ($settings['theme'] ?? ''));
+    $mode = trim((string) ($settings['syntax'] ?? ''));
 
     // Check if theme and mode library exist.
     $theme_exist = \Drupal::service('library.discovery')->getLibraryByName('ace_editor', 'theme.' . $theme);
@@ -189,8 +194,30 @@ class AceEditor extends EditorBase {
    * {@inheritdoc}
    */
   public function getJsSettings(Editor $editor) {
-    // Pass settings to javascript.
-    return $editor->getSettings()['fieldset'];
+    return $this->instanceSettings($editor);
+  }
+
+  /**
+   * Returns the settings of one editor instance.
+   *
+   * Settings saved through the configuration form are nested under "fieldset",
+   * while configuration created programmatically - by a recipe, a config
+   * import, or an older release - keeps them at the top level.
+   *
+   * @param \Drupal\editor\Entity\Editor $editor
+   *   The text editor whose settings to read.
+   *
+   * @return array
+   *   The instance settings, flattened, with the defaults filled in.
+   */
+  protected function instanceSettings(Editor $editor): array {
+    $settings = $editor->getSettings();
+
+    if (isset($settings['fieldset']) && is_array($settings['fieldset'])) {
+      $settings = $settings['fieldset'];
+    }
+
+    return $settings + $this->getDefaultSettings();
   }
 
   /**

@@ -1,0 +1,13 @@
+name: CKEditor 5 WProofreader
+type: module
+description: "Provides free access  to the CKEditor 5 WProofreader plugin. Requires the CKEditor 5 Premium Features module to work."
+package: CKEditor 5 Plugin Pack
+core_version_requirement: ^10.3 || ^11.0
+dependencies:
+  - ckeditor5_plugin_pack:ckeditor5_plugin_pack
+  - ckeditor5_premium_features:ckeditor5_premium_features_wproofreader
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.5.4'
+project: 'ckeditor5_plugin_pack'
+datestamp: 1785320334

@@ -132,6 +132,15 @@ trait SearchApiFieldTrait {
   protected $entityTypeManager;
 
   /**
+   * Static cache for whether the number of displayed values should be limited.
+   *
+   * @var bool
+   *
+   * @see shouldLimitValues()
+   */
+  public $limit_values;
+
+  /**
    * Retrieves the typed data manager.
    *
    * @return \Drupal\Core\TypedData\TypedDataManagerInterface
@@ -214,6 +223,25 @@ trait SearchApiFieldTrait {
   }
 
   /**
+   * Determines whether field values should be limited based on delta options.
+   *
+   * @return bool
+   *   TRUE if field values should be limited; FALSE otherwise.
+   */
+  protected function shouldLimitValues(): bool {
+    // Values are limited if the field is multi-valued, and one of the
+    // relevant options ("delta_limit", "delta_offset", "delta_first_last")
+    // was set.
+    $this->limit_values ??= $this->isMultiple()
+      && (
+        !empty($this->options['delta_first_last'])
+        || $this->options['delta_limit'] > 0
+        || intval($this->options['delta_offset'])
+      );
+    return $this->limit_values;
+  }
+
+  /**
    * Defines the options used by this plugin.
    *
    * @return array
@@ -230,6 +258,10 @@ trait SearchApiFieldTrait {
     if ($this->isMultiple()) {
       $options['multi_type'] = ['default' => 'separator'];
       $options['multi_separator'] = ['default' => ', '];
+      $options['delta_limit'] = ['default' => 0];
+      $options['delta_offset'] = ['default' => 0];
+      $options['delta_reversed'] = ['default' => FALSE];
+      $options['delta_first_last'] = ['default' => FALSE];
     }
 
     return $options;
@@ -293,6 +325,50 @@ trait SearchApiFieldTrait {
         ],
         '#fieldset' => 'multi_value_settings',
         '#weight' => 1,
+      ];
+
+      // Make the string translatable by keeping it as a whole rather than
+      // translating prefix and suffix separately.
+      [$prefix, $suffix] = explode('@count', $this->t('Display @count value(s)'));
+
+      $form['delta_limit'] = [
+        '#type' => 'number',
+        '#min' => 0,
+        '#field_prefix' => $prefix,
+        '#field_suffix' => $suffix,
+        '#default_value' => $this->options['delta_limit'],
+        '#prefix' => '<div class="container-inline">',
+        '#fieldset' => 'multi_value_settings',
+        '#weight' => 2,
+      ];
+
+      [$prefix, $suffix] = explode('@count', $this->t('starting from @count'));
+      $form['delta_offset'] = [
+        '#type' => 'number',
+        '#min' => 0,
+        '#field_prefix' => $prefix,
+        '#field_suffix' => $suffix,
+        '#default_value' => $this->options['delta_offset'],
+        '#description' => $this->t('(first item is 0)'),
+        '#fieldset' => 'multi_value_settings',
+        '#weight' => 3,
+      ];
+      $form['delta_reversed'] = [
+        '#title' => $this->t('Reversed'),
+        '#type' => 'checkbox',
+        '#default_value' => $this->options['delta_reversed'],
+        '#suffix' => $suffix,
+        '#description' => $this->t('(start from last values)'),
+        '#fieldset' => 'multi_value_settings',
+        '#weight' => 4,
+      ];
+      $form['delta_first_last'] = [
+        '#title' => $this->t('First and last only'),
+        '#type' => 'checkbox',
+        '#default_value' => $this->options['delta_first_last'],
+        '#suffix' => '</div>',
+        '#fieldset' => 'multi_value_settings',
+        '#weight' => 5,
       ];
     }
   }
@@ -363,7 +439,7 @@ trait SearchApiFieldTrait {
     }
 
     [$datasource_id, $property_path] = Utility::splitCombinedId($combined_property_path);
-    $this->retrievedProperties[$datasource_id][$property_path] = $combined_property_path;
+    $this->retrievedProperties["$datasource_id"][$property_path] = $combined_property_path;
     return $this;
   }
 
@@ -409,7 +485,7 @@ trait SearchApiFieldTrait {
         $value_index = $values->_relationship_parent_indices[$combined_property_path][$value_index];
       }
       [$property_path] = Utility::splitPropertyPath($property_path);
-      $combined_property_path = $this->createCombinedPropertyPath($datasource_id, $property_path);
+      $combined_property_path = (string) $this->createCombinedPropertyPath($datasource_id, $property_path);
     }
 
     return NULL;
@@ -435,7 +511,7 @@ trait SearchApiFieldTrait {
    * @see \Drupal\views\Plugin\views\field\FieldHandlerInterface::getValue()
    */
   public function getValue(ResultRow $values, $field = NULL) {
-    return $this->overriddenValues[$field] ?? parent::getValue($values, $field);
+    return $this->overriddenValues["$field"] ?? parent::getValue($values, $field);
   }
 
   /**
@@ -519,17 +595,17 @@ trait SearchApiFieldTrait {
           $paths_to_add[] = $path_to_add;
         }
         foreach ($paths_to_add as $path_to_add) {
-          if (!isset($required_properties[$datasource_id][$path_to_add])) {
+          if (!isset($required_properties["$datasource_id"]["$path_to_add"])) {
             $path = $this->createCombinedPropertyPath($datasource_id, $path_to_add);
-            if (isset($this->propertyReplacements[$path])) {
-              $path = $this->propertyReplacements[$path];
+            if (isset($this->propertyReplacements["$path"])) {
+              $path = $this->propertyReplacements["$path"];
             }
-            $required_properties[$datasource_id][$path_to_add] = [
+            $required_properties["$datasource_id"]["$path_to_add"] = [
               'combined_property_path' => $path,
               'dependents' => [],
             ];
           }
-          $required_properties[$datasource_id][$path_to_add]['dependents'][] = $combined_property_path;
+          $required_properties["$datasource_id"]["$path_to_add"]['dependents'][] = $combined_property_path;
         }
       }
     }
@@ -557,7 +633,7 @@ trait SearchApiFieldTrait {
       $object = $row->_item->getOriginalObject(FALSE);
       if ($object) {
         $row->_object = $object;
-        $row->_relationship_objects[NULL] = [$object];
+        $row->_relationship_objects[''] = [$object];
         continue;
       }
       // We also don't need to load the object if all field values that depend
@@ -584,7 +660,7 @@ trait SearchApiFieldTrait {
     foreach ($to_load as $item_id => $i) {
       if (!empty($items[$item_id])) {
         $values[$i]->_object = $items[$item_id];
-        $values[$i]->_relationship_objects[NULL] = [$items[$item_id]];
+        $values[$i]->_relationship_objects[''] = [$items[$item_id]];
       }
     }
   }
@@ -613,7 +689,7 @@ trait SearchApiFieldTrait {
     // Determine the path of the parent property, and the property key to
     // take from it for this property.
     [$parent_path, $name] = Utility::splitPropertyPath($property_path);
-    $combined_parent_path = $this->createCombinedPropertyPath($datasource_id, $parent_path);
+    $combined_parent_path = (string) $this->createCombinedPropertyPath($datasource_id, $parent_path);
 
     // For top-level properties, we need the definition to check whether its
     // a processor-generated property later.
@@ -1166,7 +1242,7 @@ trait SearchApiFieldTrait {
    * @see \Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface::render_item()
    */
   public function render_item($count, $item) {
-    $this->overriddenValues[NULL] = $item['value'];
+    $this->overriddenValues[''] = $item['value'];
     $render = $this->render(new ResultRow());
     $this->overriddenValues = [];
     return $render;
@@ -1210,9 +1286,62 @@ trait SearchApiFieldTrait {
 
         $items[] = $item;
       }
-      return $items;
+      return $this->prepareItemsByDelta($items);
     }
     return [];
+  }
+
+  /**
+   * Adapts the $items according to the delta configuration.
+   *
+   * This selects displayed deltas, reorders items, and takes offsets into
+   * account.
+   *
+   * @param array $all_values
+   *   The items for individual rendering.
+   *
+   * @return array
+   *   The manipulated items.
+   */
+  protected function prepareItemsByDelta(array $all_values): array {
+    if ($this->options['delta_reversed']) {
+      $all_values = array_reverse($all_values);
+    }
+
+    // We are supposed to show only certain deltas.
+    if ($this->shouldLimitValues()) {
+      $delta_limit = (int) $this->options['delta_limit'];
+      $offset = intval($this->options['delta_offset']);
+
+      // We should only get here in this case if there is an offset, and in
+      // that case we are limiting to all values after the offset.
+      if ($delta_limit === 0) {
+        $delta_limit = count($all_values) - $offset;
+      }
+
+      // Determine if only the first and last values should be shown.
+      $delta_first_last = $this->options['delta_first_last'];
+
+      $new_values = [];
+      for ($i = 0; $i < $delta_limit; $i++) {
+        $new_delta = $offset + $i;
+
+        if (isset($all_values[$new_delta])) {
+          // If first-last option was selected, only use the first and last
+          // values.
+          if (!$delta_first_last
+            // Use the first value.
+            || $new_delta == $offset
+            // Use the last value.
+            || $new_delta == ($delta_limit + $offset - 1)) {
+            $new_values[] = $all_values[$new_delta];
+          }
+        }
+      }
+      $all_values = $new_values;
+    }
+
+    return $all_values;
   }
 
   /**
@@ -1293,11 +1422,11 @@ trait SearchApiFieldTrait {
       }
     }
 
-    if (!empty($row->_relationship_objects[NULL][0])) {
+    if (!empty($row->_relationship_objects[''][0])) {
       try {
         return $this->getIndex()
           ->getDatasource($row->search_api_datasource)
-          ->getItemUrl($row->_relationship_objects[NULL][0]);
+          ->getItemUrl($row->_relationship_objects[''][0]);
       }
       catch (SearchApiException) {
       }

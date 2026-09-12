@@ -4,16 +4,13 @@
  */
 
 (function ($, Drupal, once) {
-
-  'use strict';
-
   /**
    * Element (read) more.
    *
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformElementMore = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-element-more', '.js-webform-element-more', context)).each(function (event) {
         var $more = $(this);
         var $a = $more.find('a').first();

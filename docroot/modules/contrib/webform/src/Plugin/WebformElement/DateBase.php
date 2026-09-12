@@ -59,7 +59,7 @@ abstract class DateBase extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     // Don't used 'datetime_wrapper', instead use 'form_element' wrapper.
     // Note: Below code must be executed before parent::prepare().
     // @see \Drupal\Core\Datetime\Element\Datelist
@@ -127,7 +127,7 @@ abstract class DateBase extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareElementValidateCallbacks(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  protected function prepareElementValidateCallbacks(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     $element['#element_validate'] = array_merge([[get_class($this), 'preValidateDate']], $element['#element_validate']);
     $element['#element_validate'][] = [get_class($this), 'validateDate'];
     parent::prepareElementValidateCallbacks($element, $webform_submission);
@@ -194,7 +194,7 @@ abstract class DateBase extends WebformElementBase {
     if ($format === 'raw') {
       return $value;
     }
-    elseif (DateFormat::load($format)) {
+    elseif (DateFormat::load(mb_convert_encoding($format, 'ASCII', 'UTF-8'))) {
       return $this->dateFormatter->format($timestamp, $format);
     }
     else {
@@ -281,17 +281,17 @@ abstract class DateBase extends WebformElementBase {
       '#type' => 'textfield',
       '#title' => $this->t('Date minimum'),
       '#description' => $this->t('Specifies the minimum date.')
-        . ' ' . $this->t('To limit the minimum date to the submission date use the <code>[webform_submission:created:html_date]</code> token.')
-        . '<br /><br />'
-        . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 are all valid.'),
+      . ' ' . $this->t('To limit the minimum date to the submission date use the <code>[webform_submission:created:html_date]</code> token.')
+      . '<br /><br />'
+      . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 are all valid.'),
     ];
     $form['date']['date_container']['date_date_max'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Date maximum'),
       '#description' => $this->t('Specifies the maximum date.')
-        . ' ' . $this->t('To limit the maximum date to the submission date use the <code>[webform_submission:created:html_date]</code> token.')
-        . '<br /><br />'
-        . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 are all valid.'),
+      . ' ' . $this->t('To limit the maximum date to the submission date use the <code>[webform_submission:created:html_date]</code> token.')
+      . '<br /><br />'
+      . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 are all valid.'),
     ];
 
     // Date days of the week validation.
@@ -315,7 +315,7 @@ abstract class DateBase extends WebformElementBase {
         '#message_type' => 'warning',
         '#access' => TRUE,
         '#message_message' => $this->t("'Date/time' minimum or maximum should not be used with 'Date' or 'Time' specific minimum or maximum.") . '<br/>' .
-          '<strong>' . $this->t('This can cause unexpected validation errors.') . '</strong>',
+        '<strong>' . $this->t('This can cause unexpected validation errors.') . '</strong>',
         '#message_close' => TRUE,
         '#message_storage' => WebformMessageElement::STORAGE_SESSION,
         '#states' => [
@@ -333,17 +333,17 @@ abstract class DateBase extends WebformElementBase {
       '#type' => 'textfield',
       '#title' => $this->t('Date/time minimum'),
       '#description' => $this->t('Specifies the minimum date/time.')
-        . ' ' . $this->t('To limit the minimum date/time to the submission date/time use the <code>[webform_submission:created:html_datetime]</code> token.')
-        . '<br /><br />'
-        . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date/Time Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 10:00 PM are all valid.'),
+      . ' ' . $this->t('To limit the minimum date/time to the submission date/time use the <code>[webform_submission:created:html_datetime]</code> token.')
+      . '<br /><br />'
+      . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date/Time Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 10:00 PM are all valid.'),
     ];
     $form['validation']['date_container']['date_max'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Date/time maximum'),
       '#description' => $this->t('Specifies the maximum date/time.')
-        . ' ' . $this->t('To limit the maximum date/time to the submission date/time use the <code>[webform_submission:created:html_datetime]</code> token.')
-        . '<br /><br />'
-        . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date/Time Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 10:00 PM are all valid.'),
+      . ' ' . $this->t('To limit the maximum date/time to the submission date/time use the <code>[webform_submission:created:html_datetime]</code> token.')
+      . '<br /><br />'
+      . $this->t('Accepts any date in any <a href="https://www.gnu.org/software/tar/manual/html_chapter/tar_7.html#Date-input-formats">GNU Date/Time Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 10:00 PM are all valid.'),
     ];
     return $form;
   }
@@ -621,10 +621,24 @@ abstract class DateBase extends WebformElementBase {
     $format = DateFormat::load('html_datetime')->getPattern();
     if (!empty($element['#date_year_range'])) {
       [$min, $max] = static::datetimeRangeYears($element['#date_year_range']);
+      $min = strtotime("$min-01-01 00:00:00");
+      $max = strtotime("$max-01-01 00:00:00");
+    }
+    elseif (!empty($element['#date_date_min']) && empty($element['#date_date_max'])) {
+      $min = strtotime($element['#date_date_min']);
+      $max = max($min, strtotime('+20 years') ?: PHP_INT_MAX);
+    }
+    elseif (!empty($element['#date_date_max']) && empty($element['#date_date_min'])) {
+      $max = strtotime($element['#date_date_max']);
+      $min = min($max, strtotime('-10 years'));
+    }
+    elseif (empty($element['#date_date_min']) && empty($element['#date_date_max'])) {
+      $min = strtotime('-10 years');
+      $max = max($min, strtotime('+20 years') ?: PHP_INT_MAX);
     }
     else {
-      $min = !empty($element['#date_date_min']) ? strtotime($element['#date_date_min']) : strtotime('-10 years');
-      $max = !empty($element['#date_date_max']) ? strtotime($element['#date_date_max']) : max($min, strtotime('+20 years') ?: PHP_INT_MAX);
+      $min = strtotime($element['#date_date_min']);
+      $max = strtotime($element['#date_date_max']);
     }
     return static::formatDate($format, rand($min, $max));
   }
@@ -648,7 +662,10 @@ abstract class DateBase extends WebformElementBase {
   protected static function datetimeRangeYears($string, $date = NULL) {
     $datetime = new DrupalDateTime();
     $this_year = $datetime->format('Y');
-    [$min_year, $max_year] = explode(':', $string);
+    // Ensure we always have two elements, even if $string is malformed.
+    $parts = explode(':', $string ?? '');
+    $min_year = $parts[0] ?? '';
+    $max_year = $parts[1] ?? '';
 
     // Valid patterns would be -5:+5, 0:+1, 2008:2010.
     $plus_pattern = '@[\+|\-][0-9]{1,4}@';

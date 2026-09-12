@@ -11,7 +11,7 @@ entity_print:
     # @see entity_print_test_system_info_alter
     # page: entity_print_test_theme/page
 
-# Information added by Drupal.org packaging script on 2025-07-17
-version: '8.x-2.18'
+# Information added by Drupal.org packaging script on 2026-08-21
+version: '8.x-2.19'
 project: 'entity_print'
-datestamp: 1752758009
+datestamp: 1787298444

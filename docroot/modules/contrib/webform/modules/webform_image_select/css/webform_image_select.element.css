@@ -12,6 +12,8 @@ html.js .js-form-type-webform-image-select {
 html.js .js-webform-image-select {
   position: absolute;
   opacity: 0;
+  top: -1000px;
+  left: -1000px;
 }
 
 .webform-image-select-filter .field-suffix {

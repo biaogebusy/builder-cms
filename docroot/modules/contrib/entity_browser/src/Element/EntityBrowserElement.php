@@ -4,7 +4,8 @@ namespace Drupal\entity_browser\Element;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Attribute\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\entity_browser\Entity\EntityBrowser;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Component\Utility\NestedArray;
@@ -32,10 +33,9 @@ use Drupal\Component\Utility\Crypt;
  *
  * Return value will be an array of selected entities, which will appear under
  * 'entities' key on the root level of the element's values in the form state.
- *
- * @FormElement("entity_browser")
  */
-class EntityBrowserElement extends FormElement {
+#[FormElement('entity_browser')]
+class EntityBrowserElement extends FormElementBase {
 
   /**
    * Indicating an entity browser can return an unlimited number of values.
@@ -253,14 +253,15 @@ class EntityBrowserElement extends FormElement {
       $ids = array_filter(explode(' ', $ids));
     }
 
-    return array_map(
-      function ($item) {
-        [$entity_type, $entity_id] = explode(':', $item);
-        $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
-        return \Drupal::service('entity.repository')->getTranslationFromContext($entity);
-      },
-      $ids
-    );
+    $entities = [];
+    foreach ($ids as $item) {
+      [$entity_type, $entity_id] = explode(':', $item);
+      $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
+      if ($entity) {
+        $entities[] = \Drupal::service('entity.repository')->getTranslationFromContext($entity);
+      }
+    }
+    return $entities;
   }
 
   /**

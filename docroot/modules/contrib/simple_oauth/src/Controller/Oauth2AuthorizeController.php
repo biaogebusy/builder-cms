@@ -128,7 +128,7 @@ class Oauth2AuthorizeController extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function authorize(Request $request) {
-    $client_id = $request->get('client_id');
+    $client_id = $request->query->get('client_id');
     $server_response = new Response();
 
     try {
@@ -148,7 +148,7 @@ class Oauth2AuthorizeController extends ControllerBase {
 
       // Validate that at least one scope is provided either in the request
       // or as default scopes on the consumer.
-      $requested_scopes = $request->get('scope');
+      $requested_scopes = $request->query->get('scope');
       if (empty($requested_scopes) && $client_drupal_entity->get('authorization_code_scopes')->isEmpty()) {
         throw OAuthServerException::invalidRequest('scope');
       }

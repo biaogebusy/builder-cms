@@ -16,9 +16,10 @@ class PhpRedis implements ClientInterface {
    */
   public function scan(string $match, int $count = 1000) {
     $it = NULL;
-    while ($keys = $this->redis->scan($it, $match, $count)) {
+    do {
+      $keys = $this->redis->scan($it, $match, $count);
       yield from $keys;
-    }
+    } while ($it != 0);
   }
 
   /**
@@ -36,9 +37,13 @@ class PhpRedis implements ClientInterface {
     $info['used_memory_human'] = $info['used_memory_human'] ?? $info['Memory']['used_memory_human'] ?? NULL;
 
     if (empty($info['maxmemory_policy'])) {
-      $memory_config = $this->redis->config('get', 'maxmemory*');
-      $info['maxmemory_policy'] = $memory_config['maxmemory-policy'];
-      $info['maxmemory'] = $memory_config['maxmemory'];
+      try {
+        // Hosted Redis instances may disallow CONFIG commands.
+        $memory_config = $this->redis->config('get', 'maxmemory*');
+      }
+      catch (\Exception) {}
+      $info['maxmemory_policy'] = $memory_config['maxmemory-policy'] ?? '';
+      $info['maxmemory'] = $memory_config['maxmemory'] ?? '';
     }
 
     $info['uptime_in_seconds'] = $info['uptime_in_seconds'] ?? $info['Server']['uptime_in_seconds'] ?? NULL;

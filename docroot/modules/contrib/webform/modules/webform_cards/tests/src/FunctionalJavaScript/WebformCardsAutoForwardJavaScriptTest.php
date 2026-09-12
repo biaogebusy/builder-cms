@@ -21,7 +21,7 @@ class WebformCardsAutoForwardJavaScriptTest extends WebformWebDriverTestBase {
   /**
    * Test webform cards auto-forward.
    */
-  public function testAutoForward() {
+  public function testAutoForward(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();

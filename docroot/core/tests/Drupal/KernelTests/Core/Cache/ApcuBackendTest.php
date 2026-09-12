@@ -6,19 +6,22 @@ namespace Drupal\KernelTests\Core\Cache;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\ApcuBackend;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the APCu cache backend.
- *
- * @group Cache
- * @requires extension apcu
  */
+#[Group('Cache')]
+#[RequiresPhpExtension('apcu')]
+#[RunTestsInSeparateProcesses]
 class ApcuBackendTest extends GenericCacheBackendUnitTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected function createCacheBackend($bin) {
+  protected function createCacheBackend($bin): ApcuBackend {
     return new ApcuBackend($bin, $this->databasePrefix, \Drupal::service('cache_tags.invalidator.checksum'), \Drupal::service(TimeInterface::class));
   }
 

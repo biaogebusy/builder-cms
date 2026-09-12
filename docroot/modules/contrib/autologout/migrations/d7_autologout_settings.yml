@@ -5,6 +5,7 @@ migration_tags:
   - Configuration
 source:
   plugin: variable
+  # cspell:ignore whitelisted
   variables:
     - autologout_timeout
     - autologout_max_timeout

@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_options_custom\Hook\WebformOptionsCustomHooks:
+    class: Drupal\webform_options_custom\Hook\WebformOptionsCustomHooks
+    autowire: true

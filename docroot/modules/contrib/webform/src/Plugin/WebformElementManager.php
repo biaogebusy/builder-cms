@@ -254,7 +254,7 @@ class WebformElementManager extends DefaultPluginManager implements FallbackPlug
   /**
    * {@inheritdoc}
    */
-  public function getElementInstance(array $element, EntityInterface $entity = NULL) {
+  public function getElementInstance(array $element, ?EntityInterface $entity = NULL) {
     $plugin_id = $this->getElementPluginId($element);
 
     /** @var \Drupal\webform\Plugin\WebformElementInterface $element_plugin */
@@ -273,7 +273,7 @@ class WebformElementManager extends DefaultPluginManager implements FallbackPlug
   /**
    * {@inheritdoc}
    */
-  public function getSortedDefinitions(array $definitions = NULL, $sort_by = 'label') {
+  public function getSortedDefinitions(?array $definitions = NULL, $sort_by = 'label') {
     $definitions = $definitions ?? $this->getDefinitions();
 
     switch ($sort_by) {
@@ -296,8 +296,7 @@ class WebformElementManager extends DefaultPluginManager implements FallbackPlug
   /**
    * {@inheritdoc}
    */
-  public function getGroupedDefinitions(array $definitions = NULL, $label_key = 'label') {
-    /** @var \Drupal\Core\Plugin\CategorizingPluginManagerTrait|\Drupal\Component\Plugin\PluginManagerInterface $this */
+  public function getGroupedDefinitions(?array $definitions = NULL, $label_key = 'label') {
     $definitions = $this->getSortedDefinitions($definitions ?? $this->getDefinitions(), $label_key);
 
     // Organize grouped definition with basic and advanced first and other last.

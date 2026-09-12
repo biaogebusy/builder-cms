@@ -7,12 +7,14 @@ namespace Drupal\Tests\content_translation\Kernel;
 use Drupal\entity_test\Entity\EntityTestWithBundle;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests content translation for modules that provide translatable bundles.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationModuleInstallTest extends KernelTestBase {
 
   /**

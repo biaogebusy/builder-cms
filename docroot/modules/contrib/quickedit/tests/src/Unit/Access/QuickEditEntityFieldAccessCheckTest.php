@@ -27,6 +27,7 @@ class QuickEditEntityFieldAccessCheckTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $this->editAccessCheck = new QuickEditEntityFieldAccessCheck();
 
     $cache_contexts_manager = $this->prophesize(CacheContextsManager::class);
@@ -42,7 +43,7 @@ class QuickEditEntityFieldAccessCheckTest extends UnitTestCase {
    *
    * @see \Drupal\Tests\edit\Unit\quickedit\Access\QuickEditEntityFieldAccessCheckTest::testAccess()
    */
-  public function providerTestAccess() {
+  public static function providerTestAccess(): array {
     $data = [];
     $data[] = [TRUE, TRUE, AccessResult::allowed()];
     $data[] = [FALSE, TRUE, AccessResult::neutral()];
@@ -65,6 +66,7 @@ class QuickEditEntityFieldAccessCheckTest extends UnitTestCase {
    * @dataProvider providerTestAccess
    */
   public function testAccess($entity_is_editable, $field_storage_is_accessible, AccessResult $expected_result) {
+    /** @var \PHPUnit\Framework\MockObject\MockObject $entity */
     $entity = $this->createMockEntity();
     $entity->expects($this->any())
       ->method('access')
@@ -82,11 +84,11 @@ class QuickEditEntityFieldAccessCheckTest extends UnitTestCase {
     $entity_with_field->expects($this->any())
       ->method('get')
       ->with($field_name)
-      ->will($this->returnValue($field_storage));
+      ->willReturn($field_storage);
     $entity_with_field->expects($this->once())
       ->method('hasTranslation')
       ->with(LanguageInterface::LANGCODE_NOT_SPECIFIED)
-      ->will($this->returnValue(TRUE));
+      ->willReturn(TRUE);
 
     $account = $this->createMock('Drupal\Core\Session\AccountInterface');
     $access = $this->editAccessCheck->access($entity_with_field, $field_name, LanguageInterface::LANGCODE_NOT_SPECIFIED, $account);
@@ -107,7 +109,7 @@ class QuickEditEntityFieldAccessCheckTest extends UnitTestCase {
   /**
    * Provides test data for testAccessForbidden.
    */
-  public function providerTestAccessForbidden() {
+  public static function providerTestAccessForbidden(): array {
     $data = [];
     // Tests the access method without a field_name.
     $data[] = [NULL, LanguageInterface::LANGCODE_NOT_SPECIFIED];

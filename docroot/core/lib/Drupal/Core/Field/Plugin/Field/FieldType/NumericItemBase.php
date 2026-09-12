@@ -64,10 +64,9 @@ abstract class NumericItemBase extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    if (empty($this->value) && (string) $this->value !== '0') {
-      return TRUE;
-    }
-    return FALSE;
+    $value = $this->get('value')->getValue();
+
+    return empty($value) && (string) $value !== '0';
   }
 
   /**
@@ -83,10 +82,12 @@ abstract class NumericItemBase extends FieldItemBase {
     if (isset($settings['min']) && $settings['min'] !== '') {
       $min = $settings['min'];
       $constraints[] = $constraint_manager->create('ComplexData', [
-        'value' => [
-          'Range' => [
-            'min' => $min,
-            'minMessage' => $this->t('%name: the value may be no less than %min.', ['%name' => $label, '%min' => $min]),
+        'properties' => [
+          'value' => [
+            'Range' => [
+              'min' => $min,
+              'minMessage' => $this->t('%name: the value may be no less than %min.', ['%name' => $label, '%min' => $min]),
+            ],
           ],
         ],
       ]);
@@ -95,13 +96,15 @@ abstract class NumericItemBase extends FieldItemBase {
     if (isset($settings['max']) && $settings['max'] !== '') {
       $max = $settings['max'];
       $constraints[] = $constraint_manager->create('ComplexData', [
-        'value' => [
-          'Range' => [
-            'max' => $max,
-            'maxMessage' => $this->t('%name: the value may be no greater than %max.', [
-              '%name' => $label,
-              '%max' => $max,
-            ]),
+        'properties' => [
+          'value' => [
+            'Range' => [
+              'max' => $max,
+              'maxMessage' => $this->t('%name: the value may be no greater than %max.', [
+                '%name' => $label,
+                '%max' => $max,
+              ]),
+            ],
           ],
         ],
       ]);

@@ -33,7 +33,7 @@ use Drupal\profile\Entity\ProfileInterface;
  *     "list_builder" = "Drupal\commerce_payment\PaymentMethodListBuilder",
  *     "storage" = "Drupal\commerce_payment\PaymentMethodStorage",
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
- *     "storage_schema" = "Drupal\commerce\CommerceContentEntityStorageSchema",
+ *     "storage_schema" = "Drupal\commerce_payment\PaymentMethodStorageSchema",
  *     "form" = {
  *       "edit" = "Drupal\commerce_payment\Form\PaymentMethodEditForm",
  *       "delete" = "Drupal\commerce_payment\Form\PaymentMethodDeleteForm"

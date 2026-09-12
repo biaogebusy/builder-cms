@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the FooTable module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function footable_requirements($phase) {
+  $requirements = [];
+
+  if ($phase === 'runtime') {
+    $source = file_exists(DRUPAL_ROOT . '/libraries/footable/compiled/footable.js');
+    $minified = file_exists(DRUPAL_ROOT . '/libraries/footable/compiled/footable.min.js');
+
+    if (!$source && !$minified) {
+      $requirements['footable'] = [
+        'title' => t('FooTable library'),
+        'value' => t('Missing'),
+        'description' => t('Download the <a href=":url">FooTable library</a> and copy the compiled directory to :library', [
+          ':url' => 'https://github.com/fooplugins/FooTable',
+          ':library' => DRUPAL_ROOT . '/libraries/footable/compiled',
+        ]),
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+    else {
+      $requirements['footable'] = [
+        'title' => t('FooTable library'),
+        'value' => t('Installed'),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+  }
+
+  return $requirements;
+}

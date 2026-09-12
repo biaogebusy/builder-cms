@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Plugin\migrate\process;
 
@@ -33,9 +33,9 @@ class PhoneNumberSettings extends ProcessPluginBase {
       }
       else {
         // Replace both D6 and D7 message token formats.
-        $value = str_replace('[site-name]', '[site:name]', $value);
-        $value = str_replace('[confirm-code]', '[sms-message:verification-code]', $value);
-        $value = str_replace('[confirm:code]', '[sms-message:verification-code]', $value);
+        $value = \str_replace('[site-name]', '[site:name]', $value);
+        $value = \str_replace('[confirm-code]', '[sms-message:verification-code]', $value);
+        $value = \str_replace('[confirm:code]', '[sms-message:verification-code]', $value);
       }
     }
     return $value;

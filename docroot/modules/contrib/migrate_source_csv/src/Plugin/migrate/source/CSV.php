@@ -14,10 +14,7 @@ use League\Csv\Reader;
  * Available configuration options:
  * - path: Path to the  CSV file. File streams are supported. Use /dev/null to
  *   get an empty source (useful for migration_lookup).
- * - ids: Array of column names that uniquely identify each record. Column
- *   names used as IDs can only contain letters (uppercase and lowercase),
- *   numbers (0-9), and underscores. No spaces or other special characters
- *   are allowed.
+ * - ids: Array of column names that uniquely identify each record.
  * - header_offset: (optional) The record to be used as the CSV header and the
  *   thereby each record's field name. Defaults to 0 and because records are
  *   zero indexed. Can be set to null to indicate no header record.
@@ -122,12 +119,6 @@ class CSV extends SourcePluginBase implements ConfigurableInterface {
     if ($this->configuration['ids'] !== array_unique(array_filter($this->configuration['ids'], 'is_string'))) {
       throw new \InvalidArgumentException('The ids must a flat array with unique string values.');
     }
-    foreach ($this->configuration['ids'] as $id) {
-      if (!preg_match('/^\w+$/', $id)) {
-        throw new \InvalidArgumentException(sprintf('The id (%s) must only include word characters a-z, A-Z, 0-9, including _ (underscore).', $id));
-      }
-    }
-
     // CSV character control characters must be exactly 1 character.
     foreach (['delimiter', 'enclosure', 'escape'] as $character) {
       if (1 !== strlen($this->configuration[$character])) {
@@ -238,7 +229,7 @@ class CSV extends SourcePluginBase implements ConfigurableInterface {
     }
     $fields = [];
     foreach ($this->configuration['fields'] as $field) {
-      $fields[$field['name']] = isset($field['label']) ? $field['label'] : $field['name'];
+      $fields[$field['name']] = $field['label'] ?? $field['name'];
     }
     return $fields;
   }

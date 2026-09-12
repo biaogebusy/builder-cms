@@ -6,10 +6,10 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityDeleteForm;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldPurger;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\field_ui\FieldUI;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for removing a field from a bundle.
@@ -19,37 +19,23 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class FieldConfigDeleteForm extends EntityDeleteForm {
 
   /**
-   * The entity type bundle info service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   * The field purger service.
    */
-  protected $entityTypeBundleInfo;
+  protected FieldPurger $fieldPurger;
 
-  /**
-   * Constructs a new FieldConfigDeleteForm object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface|null $entity_type_manager
-   *   The entity type manager service.
-   */
-  public function __construct(EntityTypeBundleInfoInterface $entity_type_bundle_info, ?EntityTypeManagerInterface $entity_type_manager = NULL) {
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    if (!$entity_type_manager) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $entity_type_manager argument is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3396525', E_USER_DEPRECATED);
-      $entity_type_manager = \Drupal::service('entity_type.manager');
+  public function __construct(
+    protected EntityTypeBundleInfoInterface $entityTypeBundleInfo,
+    EntityTypeManagerInterface $entityTypeManager,
+    ?FieldPurger $fieldPurger = NULL,
+  ) {
+    $this->entityTypeManager = $entityTypeManager;
+    if (!$fieldPurger instanceof FieldPurger) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $fieldPurger argument is deprecated in drupal:11.4.0 and will be required in drupal:12.0.0. See https://www.drupal.org/node/3494023', E_USER_DEPRECATED);
+      $this->fieldPurger = \Drupal::service(FieldPurger::class);
     }
-    $this->entityTypeManager = $entity_type_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.bundle.info'),
-      $container->get('entity_type.manager'),
-    );
+    else {
+      $this->fieldPurger = $fieldPurger;
+    }
   }
 
   /**
@@ -134,13 +120,14 @@ class FieldConfigDeleteForm extends EntityDeleteForm {
 
     $form_state->setRedirectUrl($this->getCancelUrl());
 
-    // Fields are purged on cron. However field module prevents disabling
+    // Fields are purged on cron. However, the field module prevents disabling
     // modules when field types they provided are used in a field until it is
     // fully purged. In the case that a field has minimal or no content, a
-    // single call to field_purge_batch() will remove it from the system. Call
-    // this with a low batch limit to avoid administrators having to wait for
-    // cron runs when removing fields that meet this criteria.
-    field_purge_batch(10);
+    // single call to \Drupal\Core\Field\FieldPurger::purgeBatch() will remove
+    // it from the system. Call this with a low batch limit to  avoid
+    // administrators having to wait for cron runs when removing fields that
+    // meet this criteria.
+    $this->fieldPurger->purgeBatch(10);
   }
 
 }

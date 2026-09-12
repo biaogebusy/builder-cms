@@ -2,15 +2,24 @@
 
 namespace Drupal\dblog\Form;
 
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
+use Drupal\dblog\DbLogFilters;
 
 /**
  * Provides the database logging filter form.
  *
  * @internal
  */
-class DblogFilterForm extends FormBase {
+class DblogFilterForm extends FormBase implements WorkspaceSafeFormInterface {
+
+  use AutowireTrait;
+
+  public function __construct(
+    protected readonly DbLogFilters $dbLogFilters,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -23,7 +32,7 @@ class DblogFilterForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $filters = dblog_filters();
+    $filters = $this->dbLogFilters->filters();
 
     $form['filters'] = [
       '#type' => 'details',
@@ -77,7 +86,7 @@ class DblogFilterForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $filters = dblog_filters();
+    $filters = $this->dbLogFilters->filters();
     $session_filters = $this->getRequest()->getSession()->get('dblog_overview_filter', []);
     foreach ($filters as $name => $filter) {
       if ($form_state->hasValue($name)) {

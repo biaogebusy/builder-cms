@@ -1015,7 +1015,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id) {
-    if (!isset($this->properties[$datasource_id])) {
+    if (!isset($this->properties["$datasource_id"])) {
       if (isset($datasource_id)) {
         $datasource = $this->getDatasource($datasource_id);
         $properties = $datasource->getPropertyDefinitions();
@@ -1029,10 +1029,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $properties += $processor->getPropertyDefinitions($datasource);
       }
 
-      $this->properties[$datasource_id] = $properties;
+      $this->properties["$datasource_id"] = $properties;
     }
 
-    return $this->properties[$datasource_id];
+    return $this->properties["$datasource_id"];
   }
 
   /**
@@ -1052,7 +1052,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $items_by_datasource = [];
     foreach ($item_ids as $item_id) {
       [$datasource_id, $raw_id] = Utility::splitCombinedId($item_id);
-      $items_by_datasource[$datasource_id][$raw_id] = $item_id;
+      $items_by_datasource["$datasource_id"][$raw_id] = $item_id;
     }
 
     // Load the items from the datasources and keep track of which were
@@ -1066,14 +1066,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $id = $raw_ids[$raw_id];
           $items[$id] = $item;
           // Remember that we successfully loaded this item.
-          unset($items_by_datasource[$datasource_id][$raw_id]);
+          unset($items_by_datasource["$datasource_id"][$raw_id]);
         }
       }
       catch (SearchApiException $e) {
         $this->logException($e);
         // If the complete datasource could not be loaded, don't report all its
         // individual requested items as missing.
-        unset($items_by_datasource[$datasource_id]);
+        unset($items_by_datasource["$datasource_id"]);
       }
     }
 

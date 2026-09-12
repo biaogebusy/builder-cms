@@ -8,12 +8,14 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the basic AJAX functionality of Views exposed forms.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ExposedFilterAJAXTest extends WebDriverTestBase {
 
   use ContentTypeCreationTrait;
@@ -95,6 +97,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
     $html = $session->getPage()->getHtml();
     $this->assertStringContainsString('Page One', $html);
     $this->assertStringContainsString('Page Two', $html);
+    $this->assertSession()->addressEquals('admin/content');
 
     // Search for "Page One".
     $this->submitForm(['title' => 'Page One'], 'Filter');
@@ -104,6 +107,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
     $html = $session->getPage()->getHtml();
     $this->assertStringContainsString('Page One', $html);
     $this->assertStringNotContainsString('Page Two', $html);
+    $this->assertSession()->addressEquals('admin/content?title=Page%20One&type=All&status=All');
 
     // Search for "Page Two".
     $this->submitForm(['title' => 'Page Two'], 'Filter');
@@ -113,6 +117,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
     $html = $session->getPage()->getHtml();
     $this->assertStringContainsString('Page Two', $html);
     $this->assertStringNotContainsString('Page One', $html);
+    $this->assertSession()->addressEquals('admin/content?type=All&status=All&title=Page%20Two');
 
     // Submit bulk actions form to ensure that the previous AJAX submit does not
     // break it.
@@ -123,6 +128,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
 
     // Verify that the action was performed.
     $this->assertSession()->pageTextContains('Make content sticky was applied to 1 item.');
+    $this->assertSession()->addressEquals('admin/content?type=All&status=All&title=Page%20Two');
 
     // Reset the form.
     $this->submitForm([], 'Reset');
@@ -130,6 +136,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
     $this->assertSession()->pageTextContains('Page One');
     $this->assertSession()->pageTextContains('Page Two');
     $this->assertFalse($session->getPage()->hasButton('Reset'));
+    $this->assertSession()->addressEquals('admin/content');
   }
 
   /**

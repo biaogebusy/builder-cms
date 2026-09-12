@@ -12,7 +12,7 @@
  * Note: This template renders the content for each task item in
  * menu-local-tasks.html.twig.
  *
- * @see template_preprocess_menu_local_task()
+ * @see \Drupal\Core\Menu\MenuPreprocess::preprocessMenuLocalTask()
  */
 #}
 {%
@@ -26,8 +26,10 @@
 <li{{ attributes.addClass(classes) }}>
   {{ link }}
   {% if is_active and level == 'primary' %}
+    {{ attach_library('core/drupal.reset-appearance') }}
     <button class="reset-appearance tabs__trigger" type="button" aria-label="{{ 'Tabs display toggle'|t }}" data-drupal-nav-tabs-trigger>
-      {% include "@claro/../images/src/hamburger-menu.svg" %}
+      <span class="hamburger-icon" aria-hidden="false">{% include "@claro/../images/src/hamburger-menu.svg" %}</span>
+      <span class="close-icon" aria-hidden="true">{% include "@claro/../images/icons/002e9a/ex.svg" %}</span>
     </button>
   {% endif %}
 </li>

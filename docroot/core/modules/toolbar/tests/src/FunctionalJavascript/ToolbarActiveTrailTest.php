@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\toolbar\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
  * Tests that the active trail is maintained in the toolbar.
- *
- * @group toolbar
  */
+#[Group('toolbar')]
+#[RunTestsInSeparateProcesses]
 class ToolbarActiveTrailTest extends WebDriverTestBase {
 
   /**
@@ -43,11 +46,10 @@ class ToolbarActiveTrailTest extends WebDriverTestBase {
    * @param string $orientation
    *   The toolbar orientation.
    *
-   * @testWith ["vertical"]
-   *           ["horizontal"]
-   *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    */
+  #[TestWith(["vertical"])]
+  #[TestWith(["horizontal"])]
   public function testToolbarActiveTrail(string $orientation): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();

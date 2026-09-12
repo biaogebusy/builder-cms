@@ -1,0 +1,19 @@
+admin.todo_document_list:
+  version: 20240212
+  css:
+    theme:
+      css/todo-document-list.admin.css: { }
+
+style.todo_document_list:
+  version: 20250210
+  css:
+    theme:
+      css/todo-list.css: { }
+
+todo_document_list:
+  version: 20260114
+  css:
+    theme:
+      css/todo-list.editing.css: { }
+  dependencies:
+    - core/ckeditor5.list

@@ -7,6 +7,7 @@ namespace Drupal\Tests\config_ignore\Kernel;
 use Drupal\Core\Config\Schema\SchemaCheckTrait;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Validator\ConstraintViolation;
 
 /**
@@ -19,9 +20,7 @@ class IgnoreSchemaTest extends KernelTestBase {
   use SchemaCheckTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
@@ -35,9 +34,8 @@ class IgnoreSchemaTest extends KernelTestBase {
    *   The configuration.
    * @param bool $valid
    *   Whether the config is valid.
-   *
-   * @dataProvider ignoreConfigValidationProvider
    */
+  #[DataProvider('ignoreConfigValidationProvider')]
   public function testConfigSchemaValidation(array $config, $valid): void {
     $check = $this->checkConfigSchema($this->container->get('config.typed'), 'config_ignore.settings', $config);
     if (is_array($check)) {
@@ -61,7 +59,7 @@ class IgnoreSchemaTest extends KernelTestBase {
    * @return \Generator
    *   The test scenario.
    */
-  public function ignoreConfigValidationProvider() {
+  public static function ignoreConfigValidationProvider() {
     yield 'default' => [
       'config' => [
         'mode' => 'simple',

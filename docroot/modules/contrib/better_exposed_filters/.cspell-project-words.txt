@@ -1,9 +1,12 @@
 Andrii
+befs
+bmin
 Canil
 Chimpanzé
 Datepicker
 datepicker
 datepickers
+datetimepicker
 doco
 Etroid
 Fritsch

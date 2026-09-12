@@ -7,16 +7,19 @@ namespace Drupal\Tests\jsonapi\Functional;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\media\Entity\Media;
 use Drupal\media\Entity\MediaType;
 use Drupal\Tests\jsonapi\Traits\CommonCollectionFilterAccessTestPatternsTrait;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API integration test for the "Media" content entity type.
- *
- * @group jsonapi
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class MediaTest extends ResourceTestBase {
 
   use CommonCollectionFilterAccessTestPatternsTrait;
@@ -63,7 +66,7 @@ class MediaTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpAuthorization($method) {
+  protected function setUpAuthorization($method): void {
     switch ($method) {
       case 'GET':
         $this->grantPermissionsToTestedRole(['view media', 'view any camelids media revisions']);
@@ -88,7 +91,7 @@ class MediaTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpRevisionAuthorization($method) {
+  protected function setUpRevisionAuthorization($method): void {
     parent::setUpRevisionAuthorization($method);
     $this->grantPermissionsToTestedRole(['view all media revisions']);
   }
@@ -152,7 +155,7 @@ class MediaTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedDocument() {
+  protected function getExpectedDocument(): array {
     $file = File::load(1);
     $thumbnail = File::load(3);
     $author = User::load($this->entity->getOwnerId());
@@ -165,10 +168,10 @@ class MediaTest extends ResourceTestBase {
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'links' => [
         'self' => ['href' => $base_url->toString()],
@@ -293,7 +296,7 @@ class MediaTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getPostDocument() {
+  protected function getPostDocument(): array {
     $file = File::load(2);
     return [
       'data' => [
@@ -343,7 +346,7 @@ class MediaTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEditorialPermissions() {
+  protected function getEditorialPermissions(): array {
     return array_merge(parent::getEditorialPermissions(), ['view any unpublished content']);
   }
 
@@ -397,7 +400,7 @@ class MediaTest extends ResourceTestBase {
    *
    * @todo Remove this in https://www.drupal.org/node/2824851.
    */
-  protected function doTestRelationshipMutation(array $request_options) {
+  protected function doTestRelationshipMutation(array $request_options): void {
     $this->grantPermissionsToTestedRole(['access content']);
     parent::doTestRelationshipMutation($request_options);
   }

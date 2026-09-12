@@ -1,0 +1,6 @@
+use ckeditor5 access token:
+  title: 'Use premium features access token'
+  description: 'Give this permission to roles that will use cloud services or on-premises server functionalities such as real-time collaboration or export to Word/PDF'
+use ckeditor5 exporters endpoints:
+  title: 'Use exporters endpoints'
+  description: 'Give this permission to roles that will use the export plugins (Word/PDF)'

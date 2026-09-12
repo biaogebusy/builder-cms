@@ -5,13 +5,13 @@ namespace Drupal\webform\Element;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\webform\Utility\WebformElementHelper;
 
 /**
  * Provides an base composite webform element.
  */
-abstract class WebformCompositeBase extends FormElement implements WebformCompositeInterface {
+abstract class WebformCompositeBase extends FormElementBase implements WebformCompositeInterface {
 
   use WebformCompositeFormElementTrait;
 
@@ -235,7 +235,7 @@ abstract class WebformCompositeBase extends FormElement implements WebformCompos
       // Transfer '#{composite_key}_{property}' from main element to composite
       // element.
       foreach ($element as $property_key => $property_value) {
-        if (strpos($property_key, '#' . $composite_key . '__') === 0) {
+        if (str_starts_with($property_key, '#' . $composite_key . '__')) {
           $composite_property_key = str_replace('#' . $composite_key . '__', '#', $property_key);
           $composite_element[$composite_property_key] = $property_value;
         }
@@ -257,7 +257,7 @@ abstract class WebformCompositeBase extends FormElement implements WebformCompos
       }
 
       // Apply #select2, #choices, and #chosen to select elements.
-      if (isset($composite_element['#type']) && strpos($composite_element['#type'], 'select') !== FALSE) {
+      if (isset($composite_element['#type']) && str_contains($composite_element['#type'], 'select')) {
         $select_properties = [
           '#select2' => '#select2',
           '#choices' => '#choices',

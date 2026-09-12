@@ -134,9 +134,21 @@ class AiPromptSubform {
       '#description' => $this->t('Label for the AI Prompt.'),
     ];
     $form = $this->setFormElementName($form, 'label', $set_name);
-    $source = ['label'];
 
-    if (isset($form['#parents'])) {
+    // Build the machine_name 'source' path for tree traversal.
+    // Drupal's MachineName::processElement() resolves the source via
+    // NestedArray::getValue($complete_form, $source), which requires the
+    // form-tree path (array_parents), not the values path (parents). When the
+    // two differ (e.g. the editor-module subform pattern skips a 'subform'
+    // level in the values path), using #parents as the source would point to
+    // the wrong tree position, causing the JS to not attach. Prefer
+    // #array_parents when available; fall back to #parents for the entity form
+    // path where no mismatch can occur.
+    $source = ['label'];
+    if (isset($form['#array_parents'])) {
+      $source = array_merge($form['#array_parents'], ['add_form', 'subform', 'label']);
+    }
+    elseif (isset($form['#parents'])) {
       $source = array_merge($form['#parents'], ['add_form', 'subform', 'label']);
     }
 

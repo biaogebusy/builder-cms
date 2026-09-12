@@ -7,6 +7,9 @@ namespace Drupal\KernelTests\Core\Theme;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\Component\FrontMatter\FrontMatterTest as ComponentFrontMatterTest;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\DependencyInjection\Definition;
 use Twig\Error\Error;
 use Twig\Error\SyntaxError;
@@ -14,9 +17,9 @@ use Twig\Loader\FilesystemLoader;
 
 /**
  * Tests Twig front matter support.
- *
- * @group Twig
  */
+#[Group('Twig')]
+#[RunTestsInSeparateProcesses]
 class FrontMatterTest extends KernelTestBase {
 
   /**
@@ -42,7 +45,7 @@ class FrontMatterTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
 
     $definition = new Definition(FilesystemLoader::class, [[sys_get_temp_dir()]]);
@@ -69,8 +72,8 @@ class FrontMatterTest extends KernelTestBase {
   /**
    * Tests broken front matter.
    *
-   * @covers \Drupal\Core\Template\TwigEnvironment::getTemplateMetadata
-   * @covers \Drupal\Component\FrontMatter\Exception\FrontMatterParseException
+   * @legacy-covers \Drupal\Core\Template\TwigEnvironment::getTemplateMetadata
+   * @legacy-covers \Drupal\Component\FrontMatter\Exception\FrontMatterParseException
    */
   public function testFrontMatterBroken(): void {
     $source = "---\ncollection:\n-  key: foo\n  foo: bar\n---\n" . ComponentFrontMatterTest::SOURCE;
@@ -90,11 +93,10 @@ class FrontMatterTest extends KernelTestBase {
    * @param string $content
    *   The content to use for testing purposes.
    *
-   * @covers \Drupal\Core\Template\TwigEnvironment::compileSource
-   * @covers \Drupal\Core\Template\TwigEnvironment::getTemplateMetadata
-   *
-   * @dataProvider \Drupal\Tests\Component\FrontMatter\FrontMatterTest::providerFrontMatterData
+   * @legacy-covers \Drupal\Core\Template\TwigEnvironment::compileSource
+   * @legacy-covers \Drupal\Core\Template\TwigEnvironment::getTemplateMetadata
    */
+  #[DataProviderExternal(ComponentFrontMatterTest::class, 'providerFrontMatterData')]
   public function testFrontMatter($yaml, $line, $content = ComponentFrontMatterTest::SOURCE): void {
     // Create a temporary Twig template.
     $source = ComponentFrontMatterTest::createFrontMatterSource($yaml, $content);

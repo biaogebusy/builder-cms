@@ -20,6 +20,14 @@ elements: |
   trigger_checkbox:
     '#type': checkbox
     '#title': trigger_checkbox
+  dependent_item:
+    '#type': item
+    '#title': dependent_item
+    '#markup': 'Some value'
+    '#states':
+      visible:
+        ':input[name="trigger_checkbox"]':
+          checked: true
   dependent_textfield:
     '#type': textfield
     '#title': dependent_textfield

@@ -1,0 +1,46 @@
+/**
+ * @file
+ * Commerce Status Badge component styles.
+ */
+
+:root {
+  /* Status system */
+  --commerce-status-badge-warning-bg: var(--commerce-color--warning);
+  --commerce-status-badge-warning-color: white;
+  --commerce-status-badge-success-bg: var(--commerce-color--success);
+  --commerce-status-badge-success-color: white;
+  --commerce-status-badge-danger-bg: var(--commerce-color--danger);
+  --commerce-status-badge-danger-color: white;
+  --commerce-status-badge-neutral-bg: var(--commerce-color--neutral);
+  --commerce-status-badge-neutral-color: white;
+}
+
+/* Status badges */
+.commerce-status-badge {
+  padding: 0.25rem 0.5rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.commerce-status-badge--warning {
+  color: var(--commerce-status-badge-warning-color);
+  background-color: var(--commerce-status-badge-warning-bg);
+}
+
+.commerce-status-badge--success {
+  color: var(--commerce-status-badge-success-color);
+  background-color: var(--commerce-status-badge-success-bg);
+}
+
+.commerce-status-badge--danger {
+  color: var(--commerce-status-badge-danger-color);
+  background-color: var(--commerce-status-badge-danger-bg);
+}
+
+.commerce-status-badge--neutral {
+  color: var(--commerce-status-badge-neutral-color);
+  background-color: var(--commerce-status-badge-neutral-bg);
+}

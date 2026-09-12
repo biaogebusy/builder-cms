@@ -31,7 +31,7 @@ abstract class WebformViewsTestBase extends KernelTestBase {
    *
    * @var array
    */
-  protected $webform_elements = [];
+  protected static array $webform_elements = [];
 
   /**
    * A list of webform submissions data to submit into the webform.
@@ -41,7 +41,7 @@ abstract class WebformViewsTestBase extends KernelTestBase {
    *
    * @var array
    */
-  protected $webform_submissions_data = [];
+  protected static array $webform_submissions_data = [];
 
   /**
    * A list of webform submissions data for the case of multivalue elements.
@@ -51,7 +51,7 @@ abstract class WebformViewsTestBase extends KernelTestBase {
    *
    * @var array
    */
-  protected $webform_submission_multivalue_data = [];
+  protected static array $webform_submission_multivalue_data = [];
 
   /**
    * View on which the tests will be executed.
@@ -68,7 +68,7 @@ abstract class WebformViewsTestBase extends KernelTestBase {
    *
    * @var array
    */
-  protected $view_handlers = [];
+  protected static array $view_handlers = [];
 
   /**
    * Account with super privileges.
@@ -80,7 +80,7 @@ abstract class WebformViewsTestBase extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installSchema('system', ['sequences']);

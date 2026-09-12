@@ -11,6 +11,8 @@ use Drupal\Composer\Plugin\Scaffold\ScaffoldOptions;
 /**
  * Collection of scaffold files.
  *
+ * @implements \IteratorAggregate<string, array<string, \Drupal\Composer\Plugin\Scaffold\ScaffoldFileInfo>>
+ *
  * @internal
  */
 class ScaffoldFileCollection implements \IteratorAggregate {
@@ -22,7 +24,7 @@ class ScaffoldFileCollection implements \IteratorAggregate {
    * scaffold files provided by that package. Each collection of scaffold files
    * is keyed by destination path.
    *
-   * @var \Drupal\Composer\Plugin\Scaffold\ScaffoldFileInfo[][]
+   * @var array<string, array<string, \Drupal\Composer\Plugin\Scaffold\ScaffoldFileInfo>>
    */
   protected $scaffoldFilesByProject = [];
 
@@ -77,7 +79,7 @@ class ScaffoldFileCollection implements \IteratorAggregate {
    * Matching is done via destination path.
    *
    * @param string[] $files_to_filter
-   *   List of destination paths
+   *   List of destination paths.
    */
   public function filterFiles(array $files_to_filter) {
     foreach ($this->scaffoldFilesByProject as $project_name => $scaffold_files) {
@@ -97,7 +99,7 @@ class ScaffoldFileCollection implements \IteratorAggregate {
    * Scans through a list of scaffold files and determines if any has contents.
    *
    * @param \Drupal\Composer\Plugin\Scaffold\ScaffoldFileInfo[] $scaffold_files
-   *   List of scaffold files, path: ScaffoldFileInfo
+   *   List of scaffold files, path: ScaffoldFileInfo.
    *
    * @return bool
    *   TRUE if at least one item in the list has content
@@ -113,10 +115,12 @@ class ScaffoldFileCollection implements \IteratorAggregate {
   }
 
   /**
-   * {@inheritdoc}
+   * Retrieves the iterator for the object.
+   *
+   * @return \ArrayIterator<string, array<string, \Drupal\Composer\Plugin\Scaffold\ScaffoldFileInfo>>
+   *   The iterator.
    */
-  #[\ReturnTypeWillChange]
-  public function getIterator() {
+  public function getIterator(): \ArrayIterator {
     return new \ArrayIterator($this->scaffoldFilesByProject);
   }
 

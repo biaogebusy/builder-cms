@@ -17,20 +17,6 @@ use Drupal\commerce_price\Entity\CurrencyInterface;
 class CurrencyImporter implements CurrencyImporterInterface {
 
   /**
-   * The currency storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storage;
-
-  /**
-   * The language manager.
-   *
-   * @var \Drupal\language\ConfigurableLanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
    * The library's currency repository.
    *
    * @var \CommerceGuys\Intl\Currency\CurrencyRepositoryInterface
@@ -40,14 +26,15 @@ class CurrencyImporter implements CurrencyImporterInterface {
   /**
    * Creates a new CurrencyImporter object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager) {
-    $this->storage = $entity_type_manager->getStorage('commerce_currency');
-    $this->languageManager = $language_manager;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected LanguageManagerInterface $languageManager,
+  ) {
     $this->externalRepository = new CurrencyRepository();
   }
 
@@ -55,7 +42,7 @@ class CurrencyImporter implements CurrencyImporterInterface {
    * {@inheritdoc}
    */
   public function getImportable() {
-    $imported_currencies = $this->storage->loadMultiple();
+    $imported_currencies = $this->entityTypeManager->getStorage('commerce_currency')->loadMultiple();
     // The getCurrentLanguage() fallback is a workaround for core bug #2684873.
     $language = $this->languageManager->getConfigOverrideLanguage() ?: $this->languageManager->getCurrentLanguage();
     $langcode = $language->getId();
@@ -72,7 +59,8 @@ class CurrencyImporter implements CurrencyImporterInterface {
    * {@inheritdoc}
    */
   public function import($currency_code) {
-    if ($existing_entity = $this->storage->load($currency_code)) {
+    $currency_storage = $this->entityTypeManager->getStorage('commerce_currency');
+    if ($existing_entity = $currency_storage->load($currency_code)) {
       // Pretend the currency was just imported.
       return $existing_entity;
     }
@@ -88,8 +76,8 @@ class CurrencyImporter implements CurrencyImporterInterface {
       'fractionDigits' => $currency->getFractionDigits(),
     ];
     /** @var \Drupal\commerce_price\Entity\CurrencyInterface $entity */
-    $entity = $this->storage->create($values);
-    $entity->trustData()->save();
+    $entity = $currency_storage->create($values);
+    $entity->save();
     if ($this->languageManager->isMultilingual()) {
       // Import translations for any additional languages the site has.
       $languages = $this->languageManager->getLanguages(LanguageInterface::STATE_CONFIGURABLE);
@@ -122,7 +110,8 @@ class CurrencyImporter implements CurrencyImporterInterface {
    * {@inheritdoc}
    */
   public function importTranslations(array $langcodes) {
-    foreach ($this->storage->loadMultiple() as $currency) {
+    foreach ($this->entityTypeManager->getStorage('commerce_currency')->loadMultiple() as $currency) {
+      assert($currency instanceof CurrencyInterface);
       $this->importEntityTranslations($currency, $langcodes);
     }
   }

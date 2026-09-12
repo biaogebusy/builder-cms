@@ -10,24 +10,24 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\filter\BooleanOperator handler.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\filter\BooleanOperator
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FilterBooleanOperatorGroupTest extends ViewsKernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'field',
-    'text',
     'node',
-    'user',
     'views_test_config',
   ];
 

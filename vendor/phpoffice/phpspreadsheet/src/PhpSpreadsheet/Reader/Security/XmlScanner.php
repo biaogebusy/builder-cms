@@ -95,7 +95,6 @@ class XmlScanner
         }
 
         $xml = $this->toUtf8($xml);
-
         if (preg_match($pattern, $xml)) {
             throw new Reader\Exception('Detected use of ENTITY in XML, spreadsheet file load() aborted to prevent XXE/XEE attacks');
         }

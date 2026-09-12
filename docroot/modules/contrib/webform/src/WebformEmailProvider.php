@@ -3,6 +3,7 @@
 namespace Drupal\webform;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 
@@ -12,40 +13,23 @@ use Drupal\Core\Mail\MailManagerInterface;
 class WebformEmailProvider implements WebformEmailProviderInterface {
 
   /**
-   * The configuration object factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * Mail manager service.
-   *
-   * @var \Drupal\Core\Mail\MailManagerInterface
-   */
-  protected $mailManager;
-
-  /**
    * Constructs a WebformEmailProvider object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The configuration object factory.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler class to use for loading includes.
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   * @param \Drupal\Core\Mail\MailManagerInterface $mailManager
    *   Mail manager service.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $moduleExtensionList
+   *   Module extension list service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, MailManagerInterface $mail_manager) {
-    $this->configFactory = $config_factory;
-    $this->moduleHandler = $module_handler;
-    $this->mailManager = $mail_manager;
+  public function __construct(
+    protected ConfigFactoryInterface $configFactory,
+    protected ModuleHandlerInterface $moduleHandler,
+    protected MailManagerInterface $mailManager,
+    protected ModuleExtensionList $moduleExtensionList,
+  ) {
   }
 
   /**
@@ -142,7 +126,7 @@ class WebformEmailProvider implements WebformEmailProviderInterface {
    * {@inheritdoc}
    */
   public function getModuleName() {
-    return ($module = $this->getModule()) ? $this->moduleHandler->getName($module) : FALSE;
+    return ($module = $this->getModule()) ? $this->moduleExtensionList->getName($module) : FALSE;
   }
 
   /**

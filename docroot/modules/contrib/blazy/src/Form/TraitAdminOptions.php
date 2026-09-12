@@ -172,18 +172,14 @@ trait TraitAdminOptions {
    *   A corresponding form API state.
    */
   protected function getState($state, BlazySettings $scopes): array {
-    $lightboxes = [];
-
-    // @todo remove the second after complete migrations.
+    // @todo deprecate and remove the second after complete migrations.
     // @todo $options = $scopes->data('lightboxes')
     // ?: $this->blazyManager->getLightboxes();
     $options = ['content', 'link', 'media', 'rendered', ''];
 
-    // @fixme this appears to be broken at some point of Drupal, seen
-    // inconsistent between field formatters and Views field UI. Works at field
-    // formatters, but broken at Views field UI.
-    foreach ($options as $key => $lightbox) {
-      $lightboxes[$key]['!value'] = $lightbox;
+    $lightboxes = [];
+    foreach ($options as $option) {
+      $lightboxes[] = ['!value' => $option];
     }
 
     $states = [

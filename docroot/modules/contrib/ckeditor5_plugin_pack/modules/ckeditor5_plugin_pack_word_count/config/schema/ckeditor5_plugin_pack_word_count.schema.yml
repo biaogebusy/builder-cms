@@ -1,0 +1,10 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_word_count__word_count:
+  type: mapping
+  label: 'Word Count'
+  mapping:
+    word_count_enabled:
+      type: boolean
+      label: 'Word Count Enabled'
+    word_count_mode:
+      type: string
+      label: 'Word Count Mode'

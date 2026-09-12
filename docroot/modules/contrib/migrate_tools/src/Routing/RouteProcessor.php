@@ -24,11 +24,13 @@ class RouteProcessor implements OutboundRouteProcessorInterface {
   public function processOutbound($route_name, Route $route, array &$parameters, ?BubbleableMetadata $bubbleable_metadata = NULL): void {
     if ($route->hasDefault('_migrate_group')) {
       $parameters['migration_group'] = 'default';
-      if ($this->entityTypeManager->hasHandler('migration', 'storage')) {
+
+      if ($this->entityTypeManager->hasHandler('migration', 'storage') && !empty($parameters['migration'])) {
         /** @var \Drupal\migrate_plus\Entity\MigrationInterface */
         $migration = $this->entityTypeManager
           ->getStorage('migration')
           ->load($parameters['migration']);
+
         if (($migration !== NULL) && $group = $migration->get('migration_group')) {
           $parameters['migration_group'] = $group;
         }

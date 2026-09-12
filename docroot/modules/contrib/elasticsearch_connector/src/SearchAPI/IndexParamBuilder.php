@@ -60,8 +60,11 @@ class IndexParamBuilder {
       $params['body'][] = $data;
     }
 
+    // Get Original Index name (without prefix/suffix)
+    $original_id = $index->getOriginalId() ?? $indexId;
+
     // Allow modification of search params.
-    $event = new IndexParamsEvent($indexId, $params);
+    $event = new IndexParamsEvent($indexId, $params, $original_id);
     $this->eventDispatcher->dispatch($event);
     $params = $event->getParams();
 

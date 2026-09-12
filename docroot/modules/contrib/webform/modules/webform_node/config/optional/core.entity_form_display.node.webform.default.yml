@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.webform.body
     - field.field.node.webform.webform
     - node.type.webform
   module:
@@ -14,14 +13,6 @@ targetEntityType: node
 bundle: webform
 mode: default
 content:
-  body:
-    type: text_textarea_with_summary
-    weight: 0
-    settings:
-      rows: 9
-      summary_rows: 3
-      placeholder: ''
-    third_party_settings: {  }
   created:
     type: datetime_timestamp
     weight: 10

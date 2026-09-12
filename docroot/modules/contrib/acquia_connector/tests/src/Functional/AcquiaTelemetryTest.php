@@ -13,6 +13,7 @@ use Symfony\Component\HttpKernel\Event\KernelEvent;
 /**
  * @coversDefaultClass \Drupal\acquia_connector\EventSubscriber\KernelTerminate\AcquiaTelemetry
  * @group acquia_connector
+ * @group functional
  */
 final class AcquiaTelemetryTest extends BrowserTestBase {
 
@@ -64,6 +65,7 @@ final class AcquiaTelemetryTest extends BrowserTestBase {
       $this->container->get('config.factory'),
       $this->container->get("state"),
       $this->container->get("logger.factory"),
+      $this->container->get("datetime.time"),
     );
     $this->eventTypeMachine = preg_replace('@[^a-z0-9-]+@', '_', strtolower('Drupal Module Statistics'));
   }

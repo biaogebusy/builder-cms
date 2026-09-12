@@ -131,7 +131,7 @@ class MigrateExecutable extends MigrateExecutableBase {
     }
     if (!$keyValue instanceof KeyValueFactoryInterface) {
       // If options aren't passed, the keyValue parameter must be the options.
-      if (!isset($options)) {
+      if (!isset($options) || empty($options)) {
         $options = $keyValue;
       }
       @trigger_error('Calling ' . __METHOD__ . '() without the $keyValue argument is deprecated in migrate_tools:6.1.0 and it will be required in migrate_tools:7.0.0. See https://www.drupal.org/node/3537201', E_USER_DEPRECATED);
@@ -314,13 +314,43 @@ class MigrateExecutable extends MigrateExecutableBase {
   public function onPostImport(MigrateImportEvent $event) {
     $migrate_last_imported_store = $this->keyValue->get('migrate_last_imported');
     $migrate_last_imported_store->set($event->getMigration()->id(), round($this->time->getCurrentMicroTime() * 1000));
-    $this->progressMessage();
+    $this->progressMessageEmit();
     $this->removeListeners();
 
+    $keys = array_keys($this->getSource()->getIds());
     $unused_ids = $this->getSource()->getRemainingIdList();
-    if ($unused_ids) {
-      $this->message->display($this->t("The following specified IDs were not found in the source IDs: @idlist.", [
-        '@idlist' => implode(', ', array_map(static fn($ids): string => implode(':', $ids), $unused_ids)),
+    $map_rows = [];
+    $bad_rows = [];
+    foreach ($unused_ids as $unused_id) {
+      if (count($keys) == count($unused_id)) {
+        $selector = array_combine($keys, $unused_id);
+        // Handle possible TypeError.
+        // @see https://www.drupal.org/project/migrate_tools/issues/3416010
+        try {
+          $row_data = $this->getIdMap()->getRowBySource($selector);
+          $map_rows[implode(':', $unused_id)] = $row_data;
+        }
+        catch (\TypeError $e) {
+          $bad_rows[] = implode(':', $unused_id);
+        }
+      }
+      else {
+        $id = implode(':', $unused_id);
+        $this->message->display($this->t("Invalid source id: Source id @id does not match this migration's source key count, which is :count.", [
+          '@id' => $id,
+          ':count' => count($keys),
+        ]));
+        $bad_rows[] = $id;
+      }
+    }
+    if ($bad_rows) {
+      $this->message->display($this->t("The following specified IDs could not be migrated: @idlist. They may be missing from your source.", [
+        '@idlist' => implode(', ', $bad_rows),
+      ]));
+    }
+    if ($map_rows) {
+      $this->message->display($this->t("The following specified IDs have been migrated in the past, but were ignored in this migration: @idlist. Check the migrate status of their rows for more information.", [
+        '@idlist' => implode(', ', array_keys($map_rows)),
       ]));
     }
   }
@@ -358,14 +388,15 @@ class MigrateExecutable extends MigrateExecutableBase {
   }
 
   /**
-   * Emit information on what we've done.
-   *
-   * Either since the last feedback or the beginning of this migration.
+   * Generate a progress message.
    *
    * @param bool $done
-   *   TRUE if this is the last items to process. Otherwise FALSE.
+   *   Whether the import has fully finished.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   *   The progress message to show to the end user.
    */
-  protected function progressMessage($done = TRUE) {
+  public function progressMessage($done = TRUE) {
     $processed = $this->getProcessedCount();
     if ($done) {
       $singular_message = "Processed 1 item (@created created, @updated updated, @failures failed, @ignored ignored) - done with '@name'";
@@ -375,17 +406,29 @@ class MigrateExecutable extends MigrateExecutableBase {
       $singular_message = "Processed 1 item (@created created, @updated updated, @failures failed, @ignored ignored) - continuing with '@name'";
       $plural_message = "Processed @numItems items (@created created, @updated updated, @failures failed, @ignored ignored) - continuing with '@name'";
     }
-    $this->message->display($this->translation->formatPlural($processed,
+    return $this->translation->formatPlural($processed,
       $singular_message, $plural_message,
-        [
-          '@numItems' => $processed,
-          '@created' => $this->getCreatedCount(),
-          '@updated' => $this->getUpdatedCount(),
-          '@failures' => $this->getFailedCount(),
-          '@ignored' => $this->getIgnoredCount(),
-          '@name' => $this->migration->id(),
-        ]
-    ));
+      [
+        '@numItems' => $processed,
+        '@created' => $this->getCreatedCount(),
+        '@updated' => $this->getUpdatedCount(),
+        '@failures' => $this->getFailedCount(),
+        '@ignored' => $this->getIgnoredCount(),
+        '@name' => $this->migration->id(),
+      ]
+    );
+  }
+
+  /**
+   * Emit information on what we've done.
+   *
+   * Either since the last feedback or the beginning of this migration.
+   *
+   * @param bool $done
+   *   TRUE if this is the last items to process. Otherwise FALSE.
+   */
+  protected function progressMessageEmit($done = TRUE) {
+    $this->message->display($this->progressMessage($done));
   }
 
   /**
@@ -462,7 +505,7 @@ class MigrateExecutable extends MigrateExecutableBase {
    */
   public function onPostRowDelete(MigrateRowDeleteEvent $event) {
     if ($this->feedback && ($this->deleteCounter) && $this->deleteCounter % $this->feedback == 0) {
-      $this->rollbackMessage(FALSE);
+      $this->progressMessageEmit(FALSE);
       $this->resetCounters();
     }
   }
@@ -477,7 +520,7 @@ class MigrateExecutable extends MigrateExecutableBase {
    */
   public function onPrepareRow(MigratePrepareRowEvent $event) {
     if ($this->feedback && $this->counter && $this->counter % $this->feedback == 0) {
-      $this->progressMessage(FALSE);
+      $this->progressMessageEmit(FALSE);
       $this->resetCounters();
     }
     $this->counter++;

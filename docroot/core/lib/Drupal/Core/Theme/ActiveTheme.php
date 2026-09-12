@@ -127,6 +127,7 @@ class ActiveTheme {
    * Returns the machine name of the theme.
    *
    * @return string
+   *   The machine name for the theme.
    */
   public function getName() {
     return $this->name;
@@ -136,6 +137,7 @@ class ActiveTheme {
    * Returns the path to the theme directory.
    *
    * @return string
+   *   The file path of the theme directory.
    */
   public function getPath() {
     return $this->path;
@@ -145,6 +147,7 @@ class ActiveTheme {
    * Returns the theme engine.
    *
    * @return string
+   *   The engine of the theme.
    */
   public function getEngine() {
     return $this->engine;
@@ -153,11 +156,13 @@ class ActiveTheme {
   /**
    * Returns the path to the theme engine for root themes.
    *
-   * @see \Drupal\Core\Extension\ThemeExtensionList::doList()
-   *
    * @return mixed
+   *   The path to the theme engine for root themes.
+   *
+   * @see \Drupal\Core\Extension\ThemeExtensionList::doList()
    */
   public function getOwner() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Theme engines are now tagged services instead of extensions. See https://www.drupal.org/node/3547356', E_USER_DEPRECATED);
     return $this->owner;
   }
 
@@ -165,6 +170,7 @@ class ActiveTheme {
    * Returns the extension object.
    *
    * @return \Drupal\Core\Extension\Extension
+   *   The extension object for the theme.
    */
   public function getExtension() {
     return $this->extension;
@@ -174,6 +180,7 @@ class ActiveTheme {
    * Returns the libraries provided by the theme.
    *
    * @return mixed
+   *   The libraries provided by the theme.
    */
   public function getLibraries() {
     return $this->libraries;
@@ -187,6 +194,7 @@ class ActiveTheme {
    * be called first, so this order needs to be reversed with array_reverse()
    *
    * @return \Drupal\Core\Extension\Extension[]
+   *   An array of base theme extension objects keyed by name.
    */
   public function getBaseThemeExtensions() {
     return $this->baseThemeExtensions;
@@ -208,7 +216,8 @@ class ActiveTheme {
    * @return string[]
    *   The list of region machine names supported by the theme.
    *
-   * @see system_region_list()
+   * @see \Drupal\Core\Extension\Theme::listAllRegions()
+   * @see \Drupal\Core\Extension\Theme::listVisibleRegions()
    */
   public function getRegions() {
     return array_keys($this->regions);

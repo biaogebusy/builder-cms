@@ -7,7 +7,7 @@ core_version_requirement: '^9.5 || ^10 || ^11'
 dependencies:
   - drupal:field
 
-# Information added by Drupal.org packaging script on 2024-07-23
-version: '8.x-1.4'
+# Information added by Drupal.org packaging script on 2026-01-09
+version: '8.x-1.5'
 project: 'field_permissions'
-datestamp: 1721754782
+datestamp: 1767983209

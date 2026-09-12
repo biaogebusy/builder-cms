@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\devel\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests routes rebuild.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelRouterRebuildTest extends DevelBrowserTestBase {
 
   /**

@@ -21,6 +21,7 @@ class ExplorerSetupListTest extends BrowserTestBase {
     'user',
     'ai',
     'ai_api_explorer',
+    'file',
   ];
 
   /**

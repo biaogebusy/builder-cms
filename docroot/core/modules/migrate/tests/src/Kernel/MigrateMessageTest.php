@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Event\MigrateEvents;
 use Drupal\migrate\Event\MigrateIdMapMessageEvent;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\MigrateMessageInterface;
 use Drupal\migrate\Plugin\migrate\id_map\Sql;
+use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether idmap messages are sent to message interface when requested.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterface {
 
   /**
@@ -132,7 +134,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
    * @param string $name
    *   The event name.
    */
-  public function mapMessageRecorder(MigrateIdMapMessageEvent $event, $name) {
+  public function mapMessageRecorder(MigrateIdMapMessageEvent $event, $name): void {
     if ($event->getLevel() == MigrationInterface::MESSAGE_NOTICE ||
         $event->getLevel() == MigrationInterface::MESSAGE_INFORMATIONAL) {
       $type = 'status';
@@ -147,7 +149,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
   /**
    * {@inheritdoc}
    */
-  public function display($message, $type = 'status') {
+  public function display($message, $type = 'status'): void {
     $this->messages[] = $message;
   }
 

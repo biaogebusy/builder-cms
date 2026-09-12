@@ -9,12 +9,16 @@ use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\Core\Menu\LocalTaskDefault
- * @group Menu
+ * Tests Drupal\Core\Menu\LocalTaskDefault.
  */
+#[CoversClass(LocalTaskDefault::class)]
+#[Group('Menu')]
 class LocalTaskDefaultTest extends UnitTestCase {
 
   /**
@@ -74,14 +78,14 @@ class LocalTaskDefaultTest extends UnitTestCase {
   /**
    * Setups the local task default.
    */
-  protected function setupLocalTaskDefault() {
+  protected function setupLocalTaskDefault(): void {
     $this->localTaskBase = new TestLocalTaskDefault($this->config, $this->pluginId, $this->pluginDefinition);
     $this->localTaskBase
       ->setRouteProvider($this->routeProvider);
   }
 
   /**
-   * @covers ::getRouteParameters
+   * Tests get route parameters for static route.
    */
   public function testGetRouteParametersForStaticRoute(): void {
     $this->pluginDefinition = [
@@ -100,7 +104,7 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getRouteParameters
+   * Tests get route parameters in plugin definitions.
    */
   public function testGetRouteParametersInPluginDefinitions(): void {
     $this->pluginDefinition = [
@@ -120,7 +124,7 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getRouteParameters
+   * Tests get route parameters for dynamic route with non upcasted parameters.
    */
   public function testGetRouteParametersForDynamicRouteWithNonUpcastedParameters(): void {
     $this->pluginDefinition = [
@@ -142,8 +146,6 @@ class LocalTaskDefaultTest extends UnitTestCase {
 
   /**
    * Tests the getRouteParameters method for a route with upcasted parameters.
-   *
-   * @covers ::getRouteParameters
    */
   public function testGetRouteParametersForDynamicRouteWithUpcastedParameters(): void {
     $this->pluginDefinition = [
@@ -164,8 +166,6 @@ class LocalTaskDefaultTest extends UnitTestCase {
 
   /**
    * Tests the getRouteParameters method for a route with upcasted parameters.
-   *
-   * @covers ::getRouteParameters
    */
   public function testGetRouteParametersForDynamicRouteWithUpcastedParametersEmptyRawParameters(): void {
     $this->pluginDefinition = [
@@ -190,7 +190,7 @@ class LocalTaskDefaultTest extends UnitTestCase {
    * @return array
    *   A list or test plugin definition and expected weight.
    */
-  public static function providerTestGetWeight() {
+  public static function providerTestGetWeight(): array {
     return [
       // Manually specify a weight, so this is used.
       [['weight' => 314], 'test_id', 314],
@@ -228,9 +228,9 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @dataProvider providerTestGetWeight
-   * @covers ::getWeight
+   * Tests get weight.
    */
+  #[DataProvider('providerTestGetWeight')]
   public function testGetWeight($plugin_definition, $plugin_id, $expected_weight): void {
     $this->pluginDefinition = $plugin_definition;
     $this->pluginId = $plugin_id;
@@ -240,8 +240,10 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getActive
-   * @covers ::setActive
+   * Tests active.
+   *
+   * @legacy-covers ::getActive
+   * @legacy-covers ::setActive
    */
   public function testActive(): void {
     $this->setupLocalTaskDefault();
@@ -252,7 +254,7 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTitle
+   * Tests get title.
    */
   public function testGetTitle(): void {
     $this->pluginDefinition['title'] = (new TranslatableMarkup('Example', [], [], $this->stringTranslation));
@@ -266,10 +268,11 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTitle
+   * Tests get title with context.
    */
   public function testGetTitleWithContext(): void {
     $title = 'Example';
+    // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
     $this->pluginDefinition['title'] = (new TranslatableMarkup($title, [], ['context' => 'context'], $this->stringTranslation));
     $this->stringTranslation->expects($this->once())
       ->method('translateString')
@@ -281,7 +284,7 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTitle
+   * Tests get title with title arguments.
    */
   public function testGetTitleWithTitleArguments(): void {
     $this->pluginDefinition['title'] = (new TranslatableMarkup('Example @test', ['@test' => 'value'], [], $this->stringTranslation));
@@ -295,7 +298,7 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getOptions
+   * Tests get options.
    */
   public function testGetOptions(): void {
     $this->pluginDefinition['options'] = [
@@ -320,9 +323,11 @@ class LocalTaskDefaultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCacheContexts
-   * @covers ::getCacheTags
-   * @covers ::getCacheMaxAge
+   * Tests cacheability metadata.
+   *
+   * @legacy-covers ::getCacheContexts
+   * @legacy-covers ::getCacheTags
+   * @legacy-covers ::getCacheMaxAge
    */
   public function testCacheabilityMetadata(): void {
     $this->pluginDefinition['cache_contexts'] = ['route'];
@@ -338,9 +343,12 @@ class LocalTaskDefaultTest extends UnitTestCase {
 
 }
 
+/**
+ * Stub class for testing LocalTaskDefault.
+ */
 class TestLocalTaskDefault extends LocalTaskDefault {
 
-  public function setRouteProvider(RouteProviderInterface $route_provider) {
+  public function setRouteProvider(RouteProviderInterface $route_provider): static {
     $this->routeProvider = $route_provider;
     return $this;
   }

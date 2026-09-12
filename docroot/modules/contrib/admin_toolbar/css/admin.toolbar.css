@@ -6,10 +6,7 @@
   background: #abeae4;
 }
 
-.toolbar-tray-horizontal
-  .toolbar-menu:not(:first-child)
-  li.menu-item--expanded
-  > a:focus {
+.toolbar-tray-horizontal .toolbar-menu:not(:first-child) li.menu-item--expanded > a:focus {
   background-image: url(../misc/icons/0074bd/chevron-right.svg);
   background-repeat: no-repeat;
   background-position: center right;
@@ -82,12 +79,7 @@
   background-position: center right;
 }
 
-.toolbar-tray-horizontal
-  ul
-  li.menu-item--expanded
-  ul
-  li.menu-item--expanded
-  a.is-active {
+.toolbar-tray-horizontal ul li.menu-item--expanded ul li.menu-item--expanded a.is-active {
   background: unset;
 }
 
@@ -123,32 +115,18 @@
   color: #434343;
 }
 
-[dir="rtl"]
-  .toolbar-tray-horizontal
-  ul
-  li.menu-item--expanded
-  ul
-  li.menu-item--expanded {
+[dir="rtl"] .toolbar-tray-horizontal ul li.menu-item--expanded ul li.menu-item--expanded {
   background-image: url(../misc/icons/0074bd/chevron-left.svg);
   background-position: center left;
 }
 
-[dir="rtl"]
-  .toolbar-tray-horizontal
-  .toolbar-menu:not(:first-child)
-  li.menu-item--expanded
-  > a:focus {
+[dir="rtl"] .toolbar-tray-horizontal .toolbar-menu:not(:first-child) li.menu-item--expanded > a:focus {
   background-image: url(../misc/icons/0074bd/chevron-left.svg);
   background-repeat: no-repeat;
   background-position: center left;
 }
 
-[dir="rtl"]
-  .toolbar-tray-horizontal
-  ul
-  li.menu-item--expanded
-  .menu-item.hover-intent
-  ul {
+[dir="rtl"] .toolbar-tray-horizontal ul li.menu-item--expanded .menu-item.hover-intent ul {
   margin: -40px 197px 0 0;
 }
 

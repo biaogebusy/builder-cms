@@ -35,7 +35,7 @@ class ProviderProxy {
   /**
    * The plugin to proxy.
    *
-   * @var object
+   * @var \Drupal\ai\Base\AiProviderClientBase
    */
   protected $plugin;
 
@@ -220,20 +220,28 @@ class ProviderProxy {
     // Temporary fix until 2.0.0, to move the streamed chat into the input.
     // And also do the reverse for the providers that might not have updated.
     // @todo Remove in 2.0.0.
+    // @phpstan-ignore-next-line
     if (is_bool($this->plugin->isStreamedOutput()) && $this->plugin->isStreamedOutput() && isset($arguments[0]) && $arguments[0] instanceof ChatInput) {
+      // @phpstan-ignore-next-line
       $arguments[0]->setStreamedOutput($this->plugin->isStreamedOutput());
     }
+    // @phpstan-ignore-next-line
     if ($this->plugin->isStreamedOutput() !== NULL && isset($arguments[0]) && $arguments[0] instanceof ChatInput && is_bool($arguments[0]->isStreamedOutput())) {
+      // @phpstan-ignore-next-line
       $this->plugin->streamedOutput($arguments[0]->isStreamedOutput());
     }
 
     // Temporary fix until 2.0.0, to move the system role into the input.
     // And also do the reverse for the providers that might not have updated.
     // @todo Remove in 2.0.0.
+    // @phpstan-ignore-next-line
     if (!empty($this->plugin->getChatSystemRole()) && isset($arguments[0]) && $arguments[0] instanceof ChatInput) {
+      // @phpstan-ignore-next-line
       $arguments[0]->setSystemPrompt($this->plugin->getChatSystemRole());
     }
+    // @phpstan-ignore-next-line
     if (empty($this->plugin->getChatSystemRole()) && isset($arguments[0]) && $arguments[0] instanceof ChatInput && !empty($arguments[0]->getSystemPrompt())) {
+      // @phpstan-ignore-next-line
       $this->plugin->setChatSystemRole($arguments[0]->getSystemPrompt());
     }
 
@@ -308,7 +316,7 @@ class ProviderProxy {
           providerId: $this->plugin->getPluginId(),
           operationType: $operation_type,
           configuration: $this->plugin->configuration ?? [],
-          input: $arguments[0] ?? NULL,
+          input: $arguments[0],
           modelId: $arguments[1] ?? '',
           tags: $this->plugin->getTags(),
           debugData: $this->plugin->getDebugData(),
@@ -358,10 +366,10 @@ class ProviderProxy {
         $this->attachStreamMetadata(
           streamed: $response->getNormalized(),
           event_id: $event_id,
-          input: $arguments[0] ?? NULL,
+          input: $arguments[0],
           provider_id: $this->plugin->getPluginId(),
-          model_id: $arguments[1] ?? NULL,
-          provider_configuration: $this->plugin->configuration ?? NULL,
+          model_id: $arguments[1],
+          provider_configuration: $this->plugin->configuration,
           tags: $this->plugin->getTags() ?? []
         );
       }
@@ -546,6 +554,16 @@ class ProviderProxy {
     $pattern = '/(?<=\\w)(?=[A-Z])|(?<=[a-z])(?=[0-9])/';
     $snakeCase = preg_replace($pattern, '_', $camelCase);
     return strtolower($snakeCase);
+  }
+
+  /**
+   * Get the proxied plugin.
+   *
+   * @return \Drupal\ai\Base\AiProviderClientBase
+   *   The plugin.
+   */
+  public function getPlugin(): AiProviderClientBase {
+    return $this->plugin;
   }
 
 }

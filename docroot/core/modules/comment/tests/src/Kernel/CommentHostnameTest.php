@@ -7,17 +7,19 @@ namespace Drupal\Tests\comment\Kernel;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * Tests the hostname base field.
- *
- * @coversDefaultClass \Drupal\comment\Entity\Comment
- *
- * @group comment
  */
+#[CoversClass(Comment::class)]
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentHostnameTest extends KernelTestBase {
 
   /**
@@ -27,8 +29,6 @@ class CommentHostnameTest extends KernelTestBase {
 
   /**
    * Tests hostname default value callback.
-   *
-   * @covers ::getDefaultHostname
    */
   public function testGetDefaultHostname(): void {
     // Create a fake request to be used for testing.
@@ -51,7 +51,7 @@ class CommentHostnameTest extends KernelTestBase {
     \Drupal::configFactory()
       ->getEditable('comment.settings')
       ->set('log_ip_addresses', TRUE)
-      ->save(TRUE);
+      ->save();
     // Check that the hostname was set correctly.
     $comment = Comment::create(['comment_type' => 'foo']);
     $this->assertEquals('203.0.113.1', $comment->getHostname());

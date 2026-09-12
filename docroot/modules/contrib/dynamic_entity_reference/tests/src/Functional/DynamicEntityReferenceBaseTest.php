@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Site\Settings;
@@ -14,6 +17,8 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceBaseTest extends BrowserTestBase {
 
   /**

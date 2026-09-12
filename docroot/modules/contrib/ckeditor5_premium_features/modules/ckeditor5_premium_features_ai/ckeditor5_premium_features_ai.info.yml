@@ -1,0 +1,14 @@
+name: CKEditor 5 Premium Features CKEditor AI
+type: module
+description: "Provides CKEditor 5 AI features."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^10.6.5 || ^11.3.5
+configure: ckeditor5_premium_features_ai.settings
+dependencies:
+  - ckeditor5_premium_features:ckeditor5_premium_features
+  - ckeditor5_premium_features:ckeditor5_premium_features_cloud_services
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

@@ -3,7 +3,7 @@
 namespace Drupal\ctools_wizard_test\Wizard;
 
 /**
- *
+ * Class used for testing.
  */
 class EntityAddWizard extends EntityEditWizard {
 

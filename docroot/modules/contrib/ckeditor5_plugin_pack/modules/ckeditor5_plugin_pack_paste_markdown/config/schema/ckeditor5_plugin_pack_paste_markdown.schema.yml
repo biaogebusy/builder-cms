@@ -1,0 +1,7 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_paste_markdown__paste_markdown:
+  type: mapping
+  label: 'Paste Markdown'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'

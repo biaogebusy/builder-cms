@@ -1,0 +1,17 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_link_attributes__link_attributes:
+  type: mapping
+  label: 'Link attributes'
+  mapping:
+    attributes:
+      type: sequence
+      label: 'Groups'
+      sequence:
+        type: mapping
+        label: 'Group'
+        mapping:
+          label:
+            type: string
+            label: 'Label'
+          attributes:
+            type: string
+            label: 'Attributes'

@@ -209,9 +209,7 @@ trait ElasticsearchTestViewTrait {
       ':column' => $columnId,
     ]));
     foreach ($cellsInColumn as $cell) {
-      if (($cell instanceof ElementInterface)
-        && \trim($cell->getHtml()) === $innerHtml
-      ) {
+      if (\trim($cell->getHtml()) === $innerHtml) {
         throw new ExpectationException('Found a table cell with the matching inner HTML but expected not to.', $this->getSession()->getDriver());
       }
     }
@@ -271,9 +269,7 @@ trait ElasticsearchTestViewTrait {
       ':column' => $columnId,
     ]));
     foreach ($cellsInColumn as $cell) {
-      if (($cell instanceof ElementInterface)
-        && \trim($cell->getHtml()) === $innerHtml
-      ) {
+      if (\trim($cell->getHtml()) === $innerHtml) {
         return $cell;
       }
     }

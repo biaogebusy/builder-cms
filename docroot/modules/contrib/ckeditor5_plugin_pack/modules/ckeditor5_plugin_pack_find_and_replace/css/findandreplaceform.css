@@ -1,0 +1,17 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ck.ck-find-and-replace-form {
+    max-width: 100%;
+}
+
+.ck.ck-find-and-replace-form fieldset {
+  display: flex;
+}
+
+/* The find fieldset */
+.ck.ck-find-and-replace-form fieldset.ck-find-and-replace-form__find .ck-results-counter {
+   position: absolute;
+ }

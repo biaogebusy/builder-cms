@@ -324,7 +324,7 @@ class MenuLinksOriginTest extends KernelTestBase {
   /**
    * Tests handling of pending revisions.
    *
-   * @coversDefaultClass \Drupal\menu_link_content\Plugin\Validation\Constraint\MenuTreeHierarchyConstraintValidator
+   * @covers \Drupal\menu_link_content\Plugin\Validation\Constraint\MenuTreeHierarchyConstraintValidator::validate
    */
   public function testPendingRevisions() {
     /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */

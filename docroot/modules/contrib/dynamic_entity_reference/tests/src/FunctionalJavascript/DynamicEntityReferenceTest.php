@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\FunctionalJavascript;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Behat\Mink\Element\NodeElement;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -19,6 +23,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  * @group dynamic_entity_reference
  * @group functional_javascript
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceTest extends WebDriverTestBase {
 
   /**
@@ -217,7 +223,7 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->checkField('settings[entity_test][handler_settings][auto_create]');
     $this->submitForm([], 'Save settings');
-    $assert_session->pageTextContains('Saved Foobar configuration');
+    $assert_session->assert($assert_session->waitForText('Saved Foobar configuration.'), 'text not found');
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
     $this->drupalGet('entity_test/add');
     $autocomplete_field = $page->findField('field_foobar[0][target_id]');
@@ -263,7 +269,12 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
       ],
       'Foobar'
     );
-    $this->drupalGet('admin/structure/types/manage/test_content/display');
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet('admin/structure/types/manage/test_content/display/default'),
+      fn() => $this->drupalGet('admin/structure/types/manage/test_content/display'),
+    );
     $page = $this->getSession()->getPage();
     $formats = $assert_session->selectExists('fields[field_foobar][type]', $page);
     $formats->selectOption('dynamic_entity_reference_entity_view');
@@ -277,8 +288,14 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
     // Edit field, turn on exclude entity types and check display again.
     $storage = FieldStorageConfig::loadByName('node', 'field_foobar');
     $storage->setSetting('exclude_entity_types', TRUE)->save();
-    $this->drupalGet('admin/structure/types/manage/test_content/display');
     $page = $this->getSession()->getPage();
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet('admin/structure/types/manage/test_content/display/default'),
+      fn() => $this->drupalGet('admin/structure/types/manage/test_content/display'),
+    );
+
     $formats = $assert_session->selectExists('fields[field_foobar][type]', $page);
     $formats->selectOption('dynamic_entity_reference_entity_view');
     $assert_session->assertWaitOnAjaxRequest();

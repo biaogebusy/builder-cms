@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests module overrides of configuration using event subscribers.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigModuleOverridesTest extends KernelTestBase {
 
   /**
@@ -18,6 +20,9 @@ class ConfigModuleOverridesTest extends KernelTestBase {
    */
   protected static $modules = ['system', 'config', 'config_override_test'];
 
+  /**
+   * Tests simple module overrides of configuration using event subscribers.
+   */
   public function testSimpleModuleOverrides(): void {
     $GLOBALS['config_test_run_module_overrides'] = TRUE;
     $name = 'system.site';

@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Contains install hook.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function queue_ui_order_fixtures_install($is_syncing) {
+  if ($is_syncing) {
+    return;
+  }
+  \Drupal::configFactory()->getEditable('queue_order.settings')
+    ->set('order', [
+      'queue_order_worker_A' => 30,
+      'queue_order_worker_B' => 20,
+      'queue_order_worker_C' => 10,
+      'queue_order_worker_D' => 0,
+      'queue_order_worker_E' => -10,
+      'queue_order_worker_F' => -20,
+    ])
+    ->save();
+}

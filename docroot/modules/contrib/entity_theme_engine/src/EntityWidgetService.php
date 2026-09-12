@@ -25,6 +25,11 @@ class EntityWidgetService {
   public $logger;
 
   /**
+   * @var \Twig\Environment
+   */
+  private $twig;
+
+  /**
    * Constructs.
    *
    * @param SerializerInterface $serializer
@@ -32,6 +37,7 @@ class EntityWidgetService {
   public function __construct(SerializerInterface $serializer) {
     $this->serializer = $serializer;
     $this->logger = \Drupal::logger('entity_theme_engine');
+    $this->twig = \Drupal::service('twig');
   }
 
   /**
@@ -55,7 +61,12 @@ class EntityWidgetService {
    * @return array
    */
   public function renderEntity(array $build, EntityWidget $widget, EntityInterface $entity, $display) {
-    $variables = $this->getRenderVariables($build, $widget, $entity);
+    try {
+      $variables = $this->getRenderVariables($build, $widget, $entity);
+    } catch(\Twig\Error\RuntimeError $e) {
+      $this->logger->error("Twig\Error\RuntimeError: renderEntity, key: {$entity->id()}:{$entity->getEntityTypeId()}:{$entity->bundle()}:{$display}");
+      throw $e;
+    }
     $cache = [
       'contexts' => [],
       'tags' => Cache::mergeTags($widget->getCacheTags(), $entity->getCacheTags()),
@@ -74,9 +85,18 @@ class EntityWidgetService {
       '#view_mode' => $display,
       '#attached' => isset($build['#attached'])?$build['#attached']:[],
     ];
+    $content = $widget->getTemplate();
+    if ($this->twig->isDebug()) {
+      $content = "<!-- entity_theme_engine start {$entity->id()}:{$entity->getEntityTypeId()}:{$entity->bundle()}:{$display} -->$content<!-- entity_theme_engine end {$entity->id()}:{$entity->getEntityTypeId()}:{$entity->bundle()}:{$display} -->";
+    }
+    try {
+      $this->twig->renderInline($content, $variables);
+    } catch (\Exception $e) {
+      $this->logger->error("Twig\Error\RuntimeError: renderEntity, key: {$entity->id()}:{$entity->getEntityTypeId()}:{$entity->bundle()}:{$display}");
+    }
     $render['content'] = [
       '#type' => 'inline_template',
-      '#template' => $widget->getTemplate(),
+      '#template' => $content,
       '#context' => $variables,
       '#cache' => $cache
     ];
@@ -91,8 +111,9 @@ class EntityWidgetService {
    * Get widget.
    * @param EntityInterface $entity
    * @param string $display
-   * @param booleam $render
-   * @return array
+   * @return EntityWidget|null
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function getRenderVariables(array $build, EntityWidget $widget, EntityInterface $entity, array $context = []) {
     $context = [

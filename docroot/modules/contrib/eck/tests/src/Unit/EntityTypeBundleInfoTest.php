@@ -85,7 +85,7 @@ class EntityTypeBundleInfoTest extends UnitTestBase {
    * @test
    */
   public function entityTypeHasBundlesMethodCachesData() {
-    $this->cacheBackendMock = $this->getMockForAbstractClass(CacheBackendInterface::class);
+    $this->cacheBackendMock = $this->createMock(CacheBackendInterface::class);
     $this->cacheBackendMock->expects($this->once())->method('set');
     $sut = $this->createNewTestSubject();
     $sut->entityTypeHasBundles('test');
@@ -97,7 +97,7 @@ class EntityTypeBundleInfoTest extends UnitTestBase {
    * @test
    */
   public function usesCachedDataWhenAvailable() {
-    $this->cacheBackendMock = $this->cacheBackendMock = $this->getMockForAbstractClass(CacheBackendInterface::class);
+    $this->cacheBackendMock = $this->cacheBackendMock = $this->createMock(CacheBackendInterface::class);
     $this->cacheBackendMock->expects($this->once())
       ->method('get')
       ->willReturn((object) ['data' => 'obviously not normal bundle info']);
@@ -176,20 +176,20 @@ class EntityTypeBundleInfoTest extends UnitTestBase {
    */
   protected function createNewTestSubject() {
     if (NULL === $this->entityTypeManagerMock) {
-      $this->entityTypeManagerMock = $this->getMockForAbstractClass(EntityTypeManagerInterface::class);
+      $this->entityTypeManagerMock = $this->createMock(EntityTypeManagerInterface::class);
       $this->entityTypeManagerMock->method('getDefinitions')->willReturn([]);
     }
     if (NULL === $this->languageManagerMock) {
       $this->languageManagerMock = $this->createLanguageManagerMock();
     }
     if (NULL === $this->moduleHandlerMock) {
-      $this->moduleHandlerMock = $this->getMockForAbstractClass(ModuleHandlerInterface::class);
+      $this->moduleHandlerMock = $this->createMock(ModuleHandlerInterface::class);
     }
     if (NULL === $this->typedDataManagerMock) {
-      $this->typedDataManagerMock = $this->getMockForAbstractClass(TypedDataManagerInterface::class);
+      $this->typedDataManagerMock = $this->createMock(TypedDataManagerInterface::class);
     }
     if (NULL === $this->cacheBackendMock) {
-      $this->cacheBackendMock = $this->getMockForAbstractClass(CacheBackendInterface::class);
+      $this->cacheBackendMock = $this->createMock(CacheBackendInterface::class);
     }
 
     return new EckEntityTypeBundleInfo($this->entityTypeManagerMock, $this->languageManagerMock, $this->moduleHandlerMock, $this->typedDataManagerMock, $this->cacheBackendMock);
@@ -206,18 +206,18 @@ class EntityTypeBundleInfoTest extends UnitTestBase {
    * @return \Drupal\eck\EckEntityTypeBundleInfo
    *   The test subject.
    */
-  protected function createNewTestSubjectWithEntityType(EntityTypeInterface $entityTypeMock = NULL, EntityStorageInterface $entityStorageMock = NULL) {
+  protected function createNewTestSubjectWithEntityType(?EntityTypeInterface $entityTypeMock = NULL, ?EntityStorageInterface $entityStorageMock = NULL) {
     if (NULL === $entityTypeMock) {
-      $entityTypeMock = $this->getMockForAbstractClass(EntityTypeInterface::class);
+      $entityTypeMock = $this->createMock(EntityTypeInterface::class);
       $entityTypeMock->method('getBundleEntityType')
         ->willReturn('eck_entity_bundle');
     }
     if (NULL === $entityStorageMock) {
-      $entityStorageMock = $this->getMockForAbstractClass(EntityStorageInterface::class);
+      $entityStorageMock = $this->createMock(EntityStorageInterface::class);
       $entityStorageMock->method('loadMultiple')->willReturn([]);
     }
 
-    $this->entityTypeManagerMock = $this->getMockForAbstractClass(EntityTypeManagerInterface::class);
+    $this->entityTypeManagerMock = $this->createMock(EntityTypeManagerInterface::class);
     $this->entityTypeManagerMock->method('getDefinitions')
       ->willReturn(['existing_entity_type' => $entityTypeMock]);
     $this->entityTypeManagerMock->method('getStorage')
@@ -239,12 +239,12 @@ class EntityTypeBundleInfoTest extends UnitTestBase {
     $bundles = [];
     for ($i = 0; $i < $numberOfBundlesToCreate; $i++) {
       $machineName = $this->randomMachineName();
-      $bundleMock = $this->getMockForAbstractClass(EntityInterface::class);
+      $bundleMock = $this->createMock(EntityInterface::class);
       $bundleMock->method('id')->willReturn(strtolower($machineName));
       $bundleMock->method('label')->willReturn($machineName);
       $bundles[strtolower($machineName)] = $bundleMock;
     }
-    $entityStorageMock = $this->getMockForAbstractClass(EntityStorageInterface::class);
+    $entityStorageMock = $this->createMock(EntityStorageInterface::class);
     $entityStorageMock->method('loadMultiple')->willReturn($bundles);
     return $this->createNewTestSubjectWithEntityType(NULL, $entityStorageMock);
   }

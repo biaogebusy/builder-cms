@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_test_gateway\Plugin\SmsGateway;
 
@@ -26,9 +26,6 @@ final class ScheduleAware extends Memory {
     return [];
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function send(SmsMessageInterface $sms): SmsMessageResultInterface {
     if ($sms instanceof SmsMessageEntityInterface) {
       return parent::send($sms);

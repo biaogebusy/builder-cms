@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\elasticsearch_connector\Functional;
 
 use Drupal\elasticsearch_connector\Plugin\search_api\backend\ElasticSearchBackend;
+use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\IndexInterface;
@@ -43,7 +46,9 @@ trait IndexConfigFunctionalTestTrait {
     $entity_type = 'entity_test_mulrev_changed';
     $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
     $values['id'] = $id;
-    $this->entities[$id] = $storage->create($values);
+    $newEntity = $storage->create($values);
+    \assert($newEntity instanceof EntityTestMulRevChanged);
+    $this->entities[$id] = $newEntity;
     $this->entities[$id]->save();
     $this->ids[$id] = Utility::createCombinedId("entity:$entity_type", "$id:en");
     return $this->entities[$id];

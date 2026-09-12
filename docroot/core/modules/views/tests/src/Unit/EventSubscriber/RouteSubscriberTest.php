@@ -8,13 +8,16 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteBuildEvent;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\EventSubscriber\RouteSubscriber;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @coversDefaultClass \Drupal\views\EventSubscriber\RouteSubscriber
- * @group views
+ * Tests Drupal\views\EventSubscriber\RouteSubscriber.
  */
+#[CoversClass(RouteSubscriber::class)]
+#[Group('views')]
 class RouteSubscriberTest extends UnitTestCase {
 
   /**
@@ -64,7 +67,7 @@ class RouteSubscriberTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::routeRebuildFinished
+   * Tests route rebuild finished.
    */
   public function testRouteRebuildFinished(): void {
     [$display_1, $display_2] = $this->setupMocks();
@@ -80,7 +83,9 @@ class RouteSubscriberTest extends UnitTestCase {
 
     $this->state->expects($this->once())
       ->method('set')
-      ->with('views.view_route_names', ['test_id.page_1' => 'views.test_id.page_1', 'test_id.page_2' => 'views.test_id.page_2']);
+      ->with(
+        'views.view_route_names',
+        ['test_id.page_1' => 'views.test_id.page_1', 'test_id.page_2' => 'views.test_id.page_2']);
     $this->routeSubscriber->routeRebuildFinished();
   }
 
@@ -145,7 +150,7 @@ class RouteSubscriberTest extends UnitTestCase {
    * @return \Drupal\views\Plugin\views\display\DisplayRouterInterface[]|\PHPUnit\Framework\MockObject\MockObject[]
    *   An array of two mocked view displays.
    */
-  protected function setupMocks() {
+  protected function setupMocks(): array {
     $executable = $this->getMockBuilder('Drupal\views\ViewExecutable')
       ->disableOriginalConstructor()
       ->getMock();

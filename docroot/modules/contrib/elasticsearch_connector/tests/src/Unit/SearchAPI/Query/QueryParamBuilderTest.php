@@ -46,7 +46,7 @@ class QueryParamBuilderTest extends UnitTestCase {
       ->willReturn([]);
 
     $filterBuilder = $this->prophesize(FilterBuilder::class);
-    $filterBuilder->buildFilters(Argument::any(), Argument::any())
+    $filterBuilder->buildFilters(Argument::any(), Argument::any(), Argument::any())
       ->willReturn([]);
 
     $searchParamBuilder = $this->prophesize(SearchParamBuilder::class);
@@ -57,7 +57,11 @@ class QueryParamBuilderTest extends UnitTestCase {
     $facetParamBuilder = $this->prophesize(FacetParamBuilder::class);
     $spellCheckBuilder = $this->prophesize(SpellCheckBuilder::class);
     $eventDispatcher = $this->prophesize(EventDispatcherInterface::class);
-    $event = new QueryParamsEvent($indexId, []);
+
+    $query = $this->prophesize(QueryInterface::class);
+    $test_query = $query->reveal();
+
+    $event = new QueryParamsEvent($indexId, [], $test_query);
     $eventDispatcher->dispatch(Argument::any())->willReturn($event);
     $logger = new NullLogger();
 
@@ -73,7 +77,6 @@ class QueryParamBuilderTest extends UnitTestCase {
     $index->getFields()
       ->willReturn($fields);
 
-    $query = $this->prophesize(QueryInterface::class);
     $query->getOption('offset')
       ->willReturn(0);
     $query->getOption('limit')
@@ -92,6 +95,8 @@ class QueryParamBuilderTest extends UnitTestCase {
       ->willReturn(NULL);
     $query->getIndex()
       ->willReturn($index->reveal());
+    $query->getOption('elasticsearch_connector_type_boost_functions', [])
+      ->willReturn(NULL);
     $conditionGroup = $this->prophesize(ConditionGroupInterface::class);
     $query->getConditionGroup()
       ->willReturn($conditionGroup->reveal());

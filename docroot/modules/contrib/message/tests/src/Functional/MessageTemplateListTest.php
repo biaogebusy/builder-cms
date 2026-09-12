@@ -17,14 +17,25 @@ class MessageTemplateListTest extends MessageTestBase {
   protected $user;
 
   /**
-   * Listing of messages.
+   * Listing of message templates.
    */
-  public function testEntityTypeList() {
+  public function testEntityTypeList(): void {
     $this->user = $this->drupalCreateUser(['administer message templates']);
     $this->drupalLogin($this->user);
 
+    $this->createMessageTemplate(
+      'list_template',
+      'List template label',
+      'List template description',
+      ['Body text']
+    );
+
     $this->drupalGet('admin/structure/message');
     $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('List template label');
+    $this->assertSession()->pageTextContains('List template description');
+    $this->assertSession()->linkExists('Edit');
+    $this->assertSession()->linkExists('Delete');
   }
 
 }

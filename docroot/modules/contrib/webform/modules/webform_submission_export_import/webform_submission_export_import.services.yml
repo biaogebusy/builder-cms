@@ -15,3 +15,7 @@ services:
     class: Drupal\Core\Logger\LoggerChannel
     factory: logger.factory:get
     arguments: ['webform_submission_export_import']
+
+  Drupal\webform_submission_export_import\Hook\WebformSubmissionExportImportHooks:
+    class: Drupal\webform_submission_export_import\Hook\WebformSubmissionExportImportHooks
+    autowire: true

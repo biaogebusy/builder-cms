@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, drupalSettings, once) {
-
-  'use strict';
-
   // @see http://api.jqueryui.com/dialog/
   Drupal.webform = Drupal.webform || {};
   Drupal.webform.dialog = Drupal.webform.dialog || {};
@@ -35,7 +32,7 @@
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformDialog = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-dialog', 'a.webform-dialog', context)).each(function () {
         var $a = $(this);
 

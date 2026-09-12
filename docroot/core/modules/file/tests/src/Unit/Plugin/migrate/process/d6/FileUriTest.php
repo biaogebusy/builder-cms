@@ -8,17 +8,30 @@ use Drupal\file\Plugin\migrate\process\d6\FileUri;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\Row;
 use Drupal\Tests\migrate\Unit\MigrateTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @coversDefaultClass \Drupal\file\Plugin\migrate\process\d6\FileUri
- * @group file
+ * Tests Drupal\file\Plugin\migrate\process\d6\FileUri.
  */
+#[CoversClass(FileUri::class)]
+#[Group('file')]
+#[IgnoreDeprecations]
 class FileUriTest extends MigrateTestCase {
 
+  /**
+   * The plugin configuration.
+   *
+   * @var array
+   */
   protected $migrationConfiguration = [
     'id' => 'test',
   ];
 
+  /**
+   * Tests with a public scheme.
+   */
   public function testPublic(): void {
     $value = [
       'sites/default/files/foo.jpg',
@@ -29,6 +42,9 @@ class FileUriTest extends MigrateTestCase {
     $this->assertEquals('public://foo.jpg', $this->doTransform($value));
   }
 
+  /**
+   * Tests with a base path that is not known.
+   */
   public function testPublicUnknownBasePath(): void {
     $value = [
       '/path/to/public/files/foo.jpg',
@@ -39,6 +55,9 @@ class FileUriTest extends MigrateTestCase {
     $this->assertEquals('public://path/to/public/files/foo.jpg', $this->doTransform($value));
   }
 
+  /**
+   * Tests with a private scheme.
+   */
   public function testPrivate(): void {
     $value = [
       'sites/default/files/baz.gif',
@@ -49,6 +68,9 @@ class FileUriTest extends MigrateTestCase {
     $this->assertEquals('private://baz.gif', $this->doTransform($value));
   }
 
+  /**
+   * Tests with a private base path that is not known.
+   */
   public function testPrivateUnknownBasePath(): void {
     $value = [
       '/path/to/private/files/baz.gif',
@@ -59,6 +81,9 @@ class FileUriTest extends MigrateTestCase {
     $this->assertEquals('private://path/to/private/files/baz.gif', $this->doTransform($value));
   }
 
+  /**
+   * Tests the temporary scheme.
+   */
   public function testTemporary(): void {
     $value = [
       '/tmp/bar.png',
@@ -69,6 +94,9 @@ class FileUriTest extends MigrateTestCase {
     $this->assertEquals('temporary://bar.png', $this->doTransform($value));
   }
 
+  /**
+   * Performs the transform process.
+   */
   protected function doTransform(array $value) {
     $executable = new MigrateExecutable($this->getMigration());
     $row = new Row();

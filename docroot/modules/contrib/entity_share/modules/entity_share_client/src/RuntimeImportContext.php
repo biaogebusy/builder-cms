@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_client;
 
 use Drupal\entity_share_client\Entity\RemoteInterface;
-use Drupal\entity_share_client\Service\ImportServiceInterface;
 
 /**
  * Class RuntimeImportContext.
@@ -76,13 +75,6 @@ class RuntimeImportContext {
    * @var array
    */
   protected $fieldMappings;
-
-  /**
-   * The import service used for the import.
-   *
-   * @var \Drupal\entity_share_client\Service\ImportServiceInterface
-   */
-  protected $importService;
 
   /**
    * The import max size.
@@ -301,26 +293,6 @@ class RuntimeImportContext {
    */
   public function setFieldMappings(array $fieldMappings): void {
     $this->fieldMappings = $fieldMappings;
-  }
-
-  /**
-   * Getter.
-   *
-   * @return \Drupal\entity_share_client\Service\ImportServiceInterface
-   *   The import service used for the import.
-   */
-  public function getImportService(): ImportServiceInterface {
-    return $this->importService;
-  }
-
-  /**
-   * Setter.
-   *
-   * @param \Drupal\entity_share_client\Service\ImportServiceInterface $importService
-   *   The import service used for the import.
-   */
-  public function setImportService(ImportServiceInterface $importService): void {
-    $this->importService = $importService;
   }
 
   /**

@@ -1,0 +1,234 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+/**
+ * @file
+ * Contains CKEditor 5 Premium Features Collaboration module install functions.
+ */
+
+use Drupal\ckeditor5_premium_features_collaboration\Entity\CommentsStorage;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\Revision;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\RevisionStorage;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\Suggestion;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\SuggestionStorage;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Url;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\CommentInterface;
+use Drupal\ckeditor5_premium_features\Entity\CollaborationStorageSchema;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\CommentStorageSchema;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\SuggestionStorageSchema;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\SuggestionInterface;
+use Drupal\ckeditor5_premium_features_collaboration\Entity\RevisionInterface;
+use \Drupal\ckeditor5_premium_features_collaboration\Entity\Comment as CollaborationComment;
+/**
+ * Implements hook_requirements().
+ */
+function ckeditor5_premium_features_collaboration_requirements($phase): array {
+  $requirements = [];
+
+  if (($phase === 'install')) {
+    // phpcs:ignore
+    if (\Drupal::moduleHandler()->moduleExists('ckeditor5_premium_features_realtime_collaboration') || defined('COLLABORATION_INSTALLING')) {
+      $requirements[] = [
+        'description' => t('You cannot install CKEditor 5 Real-time Collaboration and CKEditor 5 Non-realtime Collaboration modules at the same time.'),
+        'severity' => ckeditor5_premium_features_get_error_severity(),
+      ];
+    } else {
+      // phpcs:ignore
+      define('COLLABORATION_INSTALLING', TRUE);
+    }
+  }
+
+  if ($phase == 'runtime') {
+    /** @var \Drupal\ckeditor5_premium_features\Config\SettingsConfigHandlerInterface $config_handler */
+    $config_handler = \Drupal::service('ckeditor5_premium_features.config_handler.settings');
+    if (empty($config_handler->getLicenseKey())) {
+      $requirements[] = [
+        'title' => t('CKEditor Premium'),
+        'description' => t('You have to define the License Key in the <a href=":url">CKEditor Premium Settings</a>. It is required for Revision History, Track changes and Comments. Otherwise, the WYSIWYG editor may appear broken.', [
+          ':url' => Url::fromRoute('ckeditor5_premium_features.form.settings_general')->setAbsolute()->toString(),
+        ]),
+        'severity' => ckeditor5_premium_features_get_error_severity(),
+      ];
+    }
+  }
+
+  return $requirements;
+}
+
+/*
+ * Implements hook_install().
+ */
+function ckeditor5_premium_features_collaboration_install(): void {
+  ckeditor5_premium_features_display_dependency_general_info_message();
+}
+
+/**
+ * Implements hook_update().
+ */
+function ckeditor5_premium_features_collaboration_update_10000() {
+  $entityDefinition = \Drupal::entityDefinitionUpdateManager();
+
+  $commentEntity = $entityDefinition->getEntityType(CommentInterface::ENTITY_TYPE_ID);
+  $commentEntity->setHandlerClass('storage_schema', CommentStorageSchema::class);
+
+  $suggestionEntity = $entityDefinition->getEntityType(SuggestionInterface::ENTITY_TYPE_ID);
+  $suggestionEntity->setHandlerClass('storage_schema', SuggestionStorageSchema::class);
+
+  $revisionEntity = $entityDefinition->getEntityType(RevisionInterface::ENTITY_TYPE_ID);
+  $revisionEntity->setHandlerClass('storage_schema', CollaborationStorageSchema::class);
+
+  $entityDefinition->updateEntityType($commentEntity);
+  $entityDefinition->updateEntityType($suggestionEntity);
+  $entityDefinition->updateEntityType($revisionEntity);
+}
+
+/**
+ * Add language code field definition.
+ */
+function ckeditor5_premium_features_collaboration_update_10001() {
+  $lang = \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+  $field_storage_definition = BaseFieldDefinition::create('language')
+    ->setLabel(t('Language code'))
+    ->setInitialValue($lang)
+    ->setDescription(t('The collaboration entity language code.'));
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition(
+      'langcode',
+      CommentInterface::ENTITY_TYPE_ID,
+      'ckeditor5_premium_features_collaboration',
+      $field_storage_definition
+    );
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition(
+      'langcode',
+      SuggestionInterface::ENTITY_TYPE_ID,
+      'ckeditor5_premium_features_collaboration',
+      $field_storage_definition
+    );
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition(
+      'langcode',
+      RevisionInterface::ENTITY_TYPE_ID,
+      'ckeditor5_premium_features_collaboration',
+      $field_storage_definition
+    );
+
+  $initialRevisions = \Drupal::entityTypeManager()->getStorage(RevisionInterface::ENTITY_TYPE_ID)
+    ->loadByProperties([
+      'name' => 'Initial revision'
+    ]);
+
+  /**
+   * @var $revision Revision
+   */
+  foreach ($initialRevisions as $revision) {
+    $id = $revision->getId() . '_' . $lang;
+    $newRevision = $revision->createDuplicate();
+    $newRevision->set('id', $id);
+    $newRevision->save();
+    $revision->delete();
+  }
+}
+
+/**
+ *  Change Collaboration Revision entities Id to Uuid.
+ */
+function ckeditor5_premium_features_collaboration_update_10002(&$sandbox) {
+  $storage = \Drupal::entityTypeManager()->getStorage(RevisionInterface::ENTITY_TYPE_ID);
+  updateCollaborationEntities($storage, $sandbox);
+}
+
+/**
+ * Change Collaboration Suggestion entities Id to Uuid.
+ */
+function ckeditor5_premium_features_collaboration_update_10003(&$sandbox) {
+  $storage = \Drupal::entityTypeManager()->getStorage(SuggestionInterface::ENTITY_TYPE_ID);
+  updateCollaborationEntities($storage, $sandbox);
+}
+
+/**
+ *  Change Collaboration Comment entities Id to Uuid.
+ */
+function ckeditor5_premium_features_collaboration_update_10004(&$sandbox) {
+  $storage = \Drupal::entityTypeManager()->getStorage(CommentInterface::ENTITY_TYPE_ID);
+  updateCollaborationEntities($storage, $sandbox);
+}
+
+/**
+ * Change Collaboration entities Id to Uuid.
+ */
+function updateCollaborationEntities($storage, &$sandbox) {
+  $sandbox['entities_uuid'] = [];
+  $query = $storage->getQuery();
+  $query->accessCheck(FALSE);
+  $entities = $query->execute();
+  $perBatch = 50;
+
+  if (!isset($sandbox['total'])) {
+    $sandbox['total'] = count($entities);
+    $sandbox['current'] = 0;
+
+    if (empty($sandbox['total'])) {
+      $sandbox['#finished'] = 1;
+    }
+  }
+  $query = $storage->getQuery();
+  $query->accessCheck(FALSE);
+  $entitiesIds = $query->range($sandbox['current'], $perBatch)
+    ->execute();
+
+  foreach ($entitiesIds as $entityId) {
+    $collaborationEntity = match(true) {
+      $storage instanceof RevisionStorage => Revision::load($entityId),
+      $storage instanceof SuggestionStorage => Suggestion::load($entityId),
+      $storage instanceof CommentsStorage => CollaborationComment::load($entityId),
+      default => NULL
+    };
+
+    if (!$collaborationEntity) {
+      $sandbox['current']++;
+      continue;
+    }
+
+    $relatedEntityId = $collaborationEntity->getEntityId();
+    if (!isset($sandbox['entities_uuid'][$relatedEntityId])) {
+      $entityTypeTargetId = $collaborationEntity->getEntityTypeTargetId();
+      $entityStorage = \Drupal::entityTypeManager()->getStorage($entityTypeTargetId);
+      if ($entityStorage) {
+        $relatedEntity = $entityStorage->load($relatedEntityId);
+        if (!$relatedEntity) {
+          $sandbox['current']++;
+          continue;
+        }
+        $relatedEntityUuid = $relatedEntity->uuid();
+        $sandbox['entities_uuid'][$relatedEntityId] = $relatedEntityUuid;
+      }
+    }
+
+    $collaborationEntity->set('entity_id', $sandbox['entities_uuid'][$relatedEntityId]);
+    $collaborationEntity->save();
+    $sandbox['current']++;
+  }
+
+  if (empty($entitiesIds)) {
+    $sandbox['#finished'] = 1;
+  }
+
+  \Drupal::messenger()
+    ->addMessage('('. $storage->getEntityTypeId() . ')' .$sandbox['current'] . ' collaboration entities processed.');
+
+  if ($sandbox['current'] >= $sandbox['total']) {
+    $sandbox['#finished'] = 1;
+  } else {
+    $sandbox['#finished'] = ($sandbox['current'] / $sandbox['total']);
+  }
+
+}
+

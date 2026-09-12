@@ -30,7 +30,7 @@ class FieldPermissionsFieldConfigEditFormTest extends NodeTestBase {
   /**
    * Tests that plugins can opt-out for a given field.
    *
-   * @covers \Drupal\field_permissions\Plugin\FieldPermissionTypeInterface::appliesToField
+   * @covers \Drupal\field_permissions\Plugin\FieldPermissionType\Base::appliesToField
    */
   public function testAppliesToField(): void {
     $assert = $this->assertSession();

@@ -1,0 +1,19 @@
+ckeditor5_premium_features_ai_assistant__ai_assistant:
+  ckeditor5:
+    plugins:
+      - ai.AIAssistant
+      - ai.AWSTextAdapter
+      - ai.OpenAITextAdapter
+      - aiServiceAdapter.AIServiceAdapter
+  drupal:
+    label: AI Assistant
+    elements:
+      - <h1>
+    library: ckeditor5_premium_features_ai_assistant/ai-service-adapter
+    class: Drupal\ckeditor5_premium_features_ai_assistant\Plugin\CKEditor5Plugin\AiAssistant
+    admin_library: ckeditor5_premium_features_ai_assistant/admin.ai_assistant
+    toolbar_items:
+      aiAssistant:
+        label: AI Assistant
+      aiCommands:
+        label: AI Commands

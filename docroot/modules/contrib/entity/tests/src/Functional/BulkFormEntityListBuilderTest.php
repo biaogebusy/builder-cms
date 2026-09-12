@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\entity\Functional;
 
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\entity_module_test\Entity\EnhancedEntityWithOwner;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
 use Drupal\Tests\BrowserTestBase;
@@ -18,13 +19,6 @@ use Drupal\Tests\BrowserTestBase;
 class BulkFormEntityListBuilderTest extends BrowserTestBase {
 
   use BlockCreationTrait;
-
-  /**
-   * The entity storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storage;
 
   /**
    * {@inheritdoc}
@@ -53,10 +47,6 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    /* @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
-    $entity_type_manager = $this->container->get('entity_type.manager');
-    $this->storage = $entity_type_manager->getStorage('entity_test_enhanced_with_owner');
-
     $this->placeBlock('page_title_block');
     $this->placeBlock('local_tasks_block');
 
@@ -65,10 +55,20 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
   }
 
   /**
+   * Gets the test entity storage.
+   *
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   The entity storage.
+   */
+  protected function getStorage(): EntityStorageInterface {
+    return $this->container->get('entity_type.manager')->getStorage('entity_test_enhanced_with_owner');
+  }
+
+  /**
    * Tests that the bulk form is displayed correctly.
    */
   public function testBulkForm() {
-    $entity = $this->storage->create([
+    $entity = $this->getStorage()->create([
       'name' => 'Entity 1',
       'type' => 'default',
     ]);
@@ -95,7 +95,7 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
    * Test the delete action on the bulk form.
    */
   public function testDeleteAction() {
-    $entity = $this->storage->create([
+    $entity = $this->getStorage()->create([
       'name' => 'Entity 1',
       'type' => 'default',
       'user_id' => $this->loggedInUser->id(),
@@ -109,7 +109,7 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
     $this->submitForm($edit, 'Apply to selected items');
 
     $this->assertSession()->elementTextContains('xpath', '//div[@aria-label="Error message"]', 'No access to execute Delete enhanced entities with owner on the enhanced entity with owner Entity 1.');
-    $this->assertInstanceOf(EnhancedEntityWithOwner::class, $this->storage->load($id));
+    $this->assertInstanceOf(EnhancedEntityWithOwner::class, $this->getStorage()->load($id));
 
     $account = $this->drupalCreateUser(array_merge(
       $this->basePermissions,
@@ -123,19 +123,19 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
     $this->submitForm([], 'Delete');
     // The entity is deleted in the web process, but will still be in the static
     // cache of the test process, so we need to clear it manually.
-    $this->storage->resetCache([$id]);
+    $this->getStorage()->resetCache([$id]);
 
     $this->assertSession()->elementTextContains('css', 'h1', 'Enhanced entities with owner');
     $this->assertSession()->elementTextContains('xpath', '//div[@aria-label="Status message"]', 'Deleted 1 item.');
-    $this->assertNull($this->storage->load($id));
+    $this->assertNull($this->getStorage()->load($id));
   }
 
   /**
    * Test the publish action on the bulk form.
    */
   public function testPublishAction() {
-    /* @var \Drupal\entity_module_test\Entity\EnhancedEntityWithOwner $entity */
-    $entity = $this->storage->create([
+    /** @var \Drupal\entity_module_test\Entity\EnhancedEntityWithOwner $entity */
+    $entity = $this->getStorage()->create([
       'name' => 'Entity 1',
       'type' => 'default',
       'user_id' => $this->loggedInUser->id(),
@@ -152,7 +152,7 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
     $this->submitForm($edit, 'Apply to selected items');
 
     $this->assertSession()->elementTextContains('xpath', '//div[@aria-label="Error message"]', 'No access to execute Publish enhanced entities with owner on the enhanced entity with owner Entity 1.');
-    $entity = $this->storage->load($id);
+    $entity = $this->getStorage()->load($id);
     $this->assertFalse($entity->isPublished());
 
     $account = $this->drupalCreateUser(array_merge(
@@ -165,11 +165,11 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
     $this->submitForm($edit, 'Apply to selected items');
     // The entity is deleted in the web process, but will still be in the static
     // cache of the test process, so we need to clear it manually.
-    $this->storage->resetCache([$id]);
+    $this->getStorage()->resetCache([$id]);
 
     $this->assertSession()->elementTextContains('css', 'h1', 'Enhanced entities with owner');
     $this->assertSession()->elementTextContains('xpath', '//div[@aria-label="Status message"]', 'Publish enhanced entities with owner was applied to 1 item.');
-    $entity = $this->storage->load($id);
+    $entity = $this->getStorage()->load($id);
     $this->assertTrue($entity->isPublished());
   }
 
@@ -177,8 +177,8 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
    * Test the unpublish action on the bulk form.
    */
   public function testUnpublishAction() {
-    /* @var \Drupal\entity_module_test\Entity\EnhancedEntityWithOwner $entity */
-    $entity = $this->storage->create([
+    /** @var \Drupal\entity_module_test\Entity\EnhancedEntityWithOwner $entity */
+    $entity = $this->getStorage()->create([
       'name' => 'Entity 1',
       'type' => 'default',
       'user_id' => $this->loggedInUser->id(),
@@ -194,7 +194,7 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
     $this->submitForm($edit, 'Apply to selected items');
 
     $this->assertSession()->elementTextContains('xpath', '//div[@aria-label="Error message"]', 'No access to execute Unpublish enhanced entities with owner on the enhanced entity with owner Entity 1.');
-    $entity = $this->storage->load($id);
+    $entity = $this->getStorage()->load($id);
     $this->assertTrue($entity->isPublished());
 
     $account = $this->drupalCreateUser(array_merge(
@@ -207,11 +207,11 @@ class BulkFormEntityListBuilderTest extends BrowserTestBase {
     $this->submitForm($edit, 'Apply to selected items');
     // The entity is deleted in the web process, but will still be in the static
     // cache of the test process, so we need to clear it manually.
-    $this->storage->resetCache([$id]);
+    $this->getStorage()->resetCache([$id]);
 
     $this->assertSession()->elementTextContains('css', 'h1', 'Enhanced entities with owner');
     $this->assertSession()->elementTextContains('xpath', '//div[@aria-label="Status message"]', 'Unpublish enhanced entities with owner was applied to 1 item.');
-    $entity = $this->storage->load($id);
+    $entity = $this->getStorage()->load($id);
     $this->assertFalse($entity->isPublished());
   }
 

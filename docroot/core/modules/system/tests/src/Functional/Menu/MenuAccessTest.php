@@ -7,12 +7,14 @@ namespace Drupal\Tests\system\Functional\Menu;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the route access checks on menu links.
- *
- * @group Menu
  */
+#[Group('Menu')]
+#[RunTestsInSeparateProcesses]
 class MenuAccessTest extends BrowserTestBase {
 
   /**
@@ -76,8 +78,8 @@ class MenuAccessTest extends BrowserTestBase {
   /**
    * Test routes implementing _access_admin_menu_block_page.
    *
-   * @covers \Drupal\system\EventSubscriber\AccessRouteAlterSubscriber::accessAdminMenuBlockPage
-   * @covers \Drupal\system\Access\SystemAdminMenuBlockAccessCheck::access
+   * @legacy-covers \Drupal\system\EventSubscriber\AccessRouteAlterSubscriber::accessAdminMenuBlockPage
+   * @legacy-covers \Drupal\system\Access\SystemAdminMenuBlockAccessCheck::access
    */
   public function testSystemAdminMenuBlockAccessCheck(): void {
     // Create an admin user.
@@ -327,10 +329,11 @@ class MenuAccessTest extends BrowserTestBase {
       Url::fromRoute('menu_test.child_test_param_explicit', ['param' => 'my_default'])
     );
 
-    // If we try to access a route that takes a parameter but route is not in the
-    // with that parameter we should always be denied access because the sole
-    // purpose of \Drupal\system\Controller\SystemController::systemAdminMenuBlockPage
-    // is to display items in the menu.
+    // If we try to access a route that takes a parameter but route is not in
+    // the with that parameter we should always be denied access because the
+    // sole purpose of
+    // \Drupal\system\Controller\SystemController::systemAdminMenuBlockPage is
+    // to display items in the menu.
     $this->drupalLogin($parentUser);
     $this->assertMenuItemRoutesAccess(
       403,
@@ -342,6 +345,12 @@ class MenuAccessTest extends BrowserTestBase {
     $this->assertMenuItemRoutesAccess(403, Url::fromRoute('menu_test.parent_test_param', ['param' => 'any-other']));
     // $childOnlyUser has the 'access child1 test page' permission.
     $this->assertMenuItemRoutesAccess(200, Url::fromRoute('menu_test.child_test_param', ['param' => 'any-other']));
+
+    // User that has access to the child route must also have access to the
+    // parent route if it's a systemAdminMenuBlockPage page.
+    // This test validates the cases where the child link has a url attribute.
+    $this->drupalLogin($noParentAccessUser);
+    $this->assertMenuItemRoutesAccess(200, Url::fromRoute('menu_test.parent_url_test'));
   }
 
   /**

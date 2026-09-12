@@ -4,6 +4,7 @@ namespace Drupal\views\Element;
 
 use Drupal\Core\Render\Attribute\RenderElement;
 use Drupal\Core\Render\Element\RenderElementBase;
+use Drupal\views\ContextualLinksHelper;
 use Drupal\views\Exception\ViewRenderElementException;
 use Drupal\views\Views;
 
@@ -17,10 +18,9 @@ class View extends RenderElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#pre_render' => [
-        [$class, 'preRenderViewElement'],
+        [static::class, 'preRenderViewElement'],
       ],
       '#name' => NULL,
       '#display_id' => 'default',
@@ -67,11 +67,11 @@ class View extends RenderElementBase {
       }
       else {
         // Add contextual links to the view. We need to attach them to the dummy
-        // $view_array variable, since contextual_preprocess() requires that they
-        // be attached to an array (not an object) in order to process them. For
-        // our purposes, it doesn't matter what we attach them to, since once they
-        // are processed by contextual_preprocess() they will appear in the
-        // $title_suffix variable (which we will then render in
+        // $view_array variable, since contextual_preprocess() requires that
+        // they be attached to an array (not an object) in order to process
+        // them. For our purposes, it doesn't matter what we attach them to,
+        // since once they are processed by contextual_preprocess() they will
+        // appear in the $title_suffix variable (which we will then render in
         // views-view.html.twig).
         $view->setDisplay($element['#display_id']);
         // Add the result of the executed view as a child element so any
@@ -85,12 +85,12 @@ class View extends RenderElementBase {
         }
 
         if (empty($view->display_handler->getPluginDefinition()['returns_response'])) {
-          // views_add_contextual_links() needs the following information in
-          // order to be attached to the view.
+          // \Drupal\views\ContextualLinksHelper::addLinks() needs the following
+          // information to be attached to the view.
           $element['#view_id'] = $view->storage->id();
           $element['#view_display_show_admin_links'] = $view->getShowAdminLinks();
           $element['#view_display_plugin_id'] = $view->display_handler->getPluginId();
-          views_add_contextual_links($element, 'view', $view->current_display);
+          \Drupal::service(ContextualLinksHelper::class)->addLinks($element, 'view', $view->current_display);
         }
       }
       if (empty($view->display_handler->getPluginDefinition()['returns_response'])) {

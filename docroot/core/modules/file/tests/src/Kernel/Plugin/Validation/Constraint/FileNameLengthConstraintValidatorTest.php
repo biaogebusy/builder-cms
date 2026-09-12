@@ -5,20 +5,24 @@ declare(strict_types=1);
 namespace Drupal\Tests\file\Kernel\Plugin\Validation\Constraint;
 
 use Drupal\file\Entity\File;
+use Drupal\file\Plugin\Validation\Constraint\FileNameLengthConstraintValidator;
 use Drupal\Tests\file\Kernel\Validation\FileValidatorTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the FileNameLengthConstraintValidator.
- *
- * @group file
- * @coversDefaultClass \Drupal\file\Plugin\Validation\Constraint\FileNameLengthConstraintValidator
  */
+#[CoversClass(FileNameLengthConstraintValidator::class)]
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileNameLengthConstraintValidatorTest extends FileValidatorTestBase {
 
   /**
    * This will ensure the filename length is valid.
    *
-   * @covers ::validate
+   * @legacy-covers ::validate
    */
   public function testFileValidateNameLength(): void {
     // Create a new file entity.

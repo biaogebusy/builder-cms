@@ -5,13 +5,14 @@
  * Implement module related hooks for the charts_c3 module.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+
 /**
  * Implements hook_charts_version3_to_new_settings_structure_alter().
+ *
+ * @phpstan-ignore-next-line
  */
+#[LegacyHook]
 function charts_c3_charts_version3_to_new_settings_structure_alter(array &$new_settings, string $for) {
-  $config_factory = \Drupal::configFactory();
-  $c3_config = $config_factory->getEditable('charts_c3.settings');
-  if ($c3_config) {
-    $c3_config->delete();
-  }
+  return \Drupal::service('charts_c3.hooks')->chartsVersion3ToNewSettingsStructureAlter($new_settings, $for);
 }

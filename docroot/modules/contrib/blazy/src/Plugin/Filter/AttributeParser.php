@@ -3,8 +3,8 @@
 namespace Drupal\blazy\Plugin\Filter;
 
 use Drupal\Component\Utility\Crypt;
-use Drupal\blazy\Blazy;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Media\Uri;
 
 /**
  * Provides filter attribute utilities.
@@ -34,7 +34,7 @@ class AttributeParser {
     $func = function ($input, $key) use ($use_data_uri) {
       $check = trim($input ?: '');
       if ($check) {
-        $data_uri = Blazy::isDataUri($check);
+        $data_uri = Uri::isDataUri($check);
         // @todo recheck against sub-modules priority order in Filter admin.
         // The SRC might be 1px, but DATA-SRC is the real data URI.
         // @todo phpstan bug doesn't catch multiple conditions:
@@ -58,7 +58,7 @@ class AttributeParser {
     }
 
     // If starts with 2 slashes, it is always external.
-    if ($url && mb_substr($url, 0, 2) === '//') {
+    if ($url && substr($url, 0, 2) === '//') {
       // We need to query stored SRC for image dimensions, https is enforced.
       $url = 'https:' . $url;
     }
@@ -99,7 +99,7 @@ class AttributeParser {
    */
   public static function toGrid(\DOMElement $node, array &$settings): void {
     if ($check = $node->getAttribute('grid')) {
-      $blazies = $settings['blazies'];
+      $blazies = Internals::getBlazies($settings);
       [$settings['style'], $grid, $settings['visible_items']] = array_pad(array_map('trim', explode(":", $check, 3)), 3, NULL);
 
       if ($grid) {

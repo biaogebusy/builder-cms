@@ -2,6 +2,14 @@
 
 /**
  * @file
+ * Example module for composite fields.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_example_composite\Hook\WebformExampleCompositeHooks;
+
+/**
+ * @file
  * Provides an example that shows how to create a Webform composite.
  */
 
@@ -10,12 +18,9 @@ include_once __DIR__ . '/../../includes/webform.theme.template.inc';
 /**
  * Implements hook_theme().
  */
+#[LegacyHook]
 function webform_example_composite_theme() {
-  return [
-    'webform_example_composite' => [
-      'render element' => 'element',
-    ],
-  ];
+  return \Drupal::service(WebformExampleCompositeHooks::class)->theme();
 }
 
 /**

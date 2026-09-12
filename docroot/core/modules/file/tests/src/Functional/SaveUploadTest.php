@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\file\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Database\Database;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
+use Drupal\file_test\FileTestHelper;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cSpell:ignore TÉXT Pácê
-
 /**
  * Tests the file_save_upload() function.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class SaveUploadTest extends FileManagedTestBase {
 
   use TestFileCreationTrait {
@@ -104,7 +107,7 @@ class SaveUploadTest extends FileManagedTestBase {
     // Check that the correct hooks were called then clean out the hook
     // counters.
     $this->assertFileHooksCalled(['validate', 'insert']);
-    file_test_reset();
+    FileTestHelper::reset();
   }
 
   /**
@@ -123,7 +126,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertEquals('image', substr($file1->getMimeType(), 0, 5), 'A MIME type was set.');
 
     // Reset the hook counters to get rid of the 'load' we just called.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Upload a second file.
     $image2 = current($this->drupalGetTestFiles('image'));
@@ -162,7 +165,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains("You WIN!");
-    $this->assertFileExists('temporary://' . $dir . '/' . trim(\Drupal::service('file_system')->basename($image3_realpath)));
+    $this->assertFileExists('temporary://' . $dir . '/' . trim(basename($image3_realpath)));
   }
 
   /**
@@ -226,7 +229,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     $extensions = 'foo ' . $this->imageExtension;
     // Now tell file_save_upload() to allow the extension of our test image.
@@ -246,7 +249,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'load', 'update']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Now tell file_save_upload() to allow any extension.
     $edit = [
@@ -264,7 +267,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'load', 'update']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Now tell file_save_upload() to allow any extension and try and upload a
     // malicious file.
@@ -277,7 +280,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->responseContains('For security reasons, your upload has been renamed to <em class="placeholder">' . $this->phpFile->filename . '_.txt' . '</em>');
     $this->assertSession()->pageTextContains('File name is php-2.php_.txt.');
     $this->assertSession()->pageTextContains('File MIME type is text/plain.');
     $this->assertSession()->pageTextContains("You WIN!");
@@ -302,7 +304,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->responseContains('For security reasons, your upload has been renamed to <em class="placeholder">' . $this->phpFile->filename . '_.txt' . '</em>');
     $this->assertSession()->pageTextContains('File name is php-2.php_.txt.');
     $this->assertSession()->pageTextContains('File MIME type is text/plain.');
     $this->assertSession()->pageTextContains("You WIN!");
@@ -314,12 +315,11 @@ class SaveUploadTest extends FileManagedTestBase {
     // Turn on insecure uploads.
     $config->set('allow_insecure_uploads', 1)->save();
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextNotContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains('File name is php-2.php.');
     $this->assertSession()->pageTextContains("You WIN!");
 
@@ -327,7 +327,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'insert']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Even with insecure uploads allowed, the .php file should not be uploaded
     // if it is not explicitly included in the list of allowed extensions.
@@ -342,7 +342,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Turn off insecure uploads, then try the same thing as above (ensure that
     // the .php file is still rejected since it's not in the list of allowed
@@ -358,7 +358,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     \Drupal::service('cache.config')->deleteAll();
 
@@ -377,6 +377,36 @@ class SaveUploadTest extends FileManagedTestBase {
 
     // Check that the correct hooks were called.
     $this->assertFileHooksCalled(['validate']);
+  }
+
+  /**
+   * Tests that security renames are logged to watchdog.
+   */
+  public function testSecurityRenameLogging(): void {
+    // Clear the watchdog log to ensure we only see entries from this test.
+    Database::getConnection()->delete('watchdog')->execute();
+
+    // Upload a dangerous file that will be renamed for security reasons.
+    $edit = [
+      'file_test_replace' => FileExists::Replace->name,
+      'files[file_test_upload]' => \Drupal::service('file_system')->realpath($this->phpFile->uri),
+      'is_image_file' => FALSE,
+      'extensions' => 'php txt',
+    ];
+
+    $this->drupalGet('file-test/upload');
+    $this->submitForm($edit, 'Submit');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains("You WIN!");
+
+    // Verify that the security rename was logged.
+    $query = Database::getConnection()->select('watchdog', 'w')
+      ->fields('w', ['message', 'variables'])
+      ->condition('type', 'file')
+      ->condition('message', '%security reasons%', 'LIKE')
+      ->execute();
+    $log_entry = $query->fetchObject();
+    $this->assertNotNull($log_entry, 'A security rename log entry was created.');
   }
 
   /**
@@ -409,7 +439,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('For security reasons, your upload has been renamed to test.');
     $this->assertSession()->pageTextContains('File name is test.');
     $this->assertSession()->pageTextContains('You WIN!');
 
@@ -417,7 +446,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'insert']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Turn off insecure uploads, then try the same thing as above to ensure dot
     // files are renamed regardless.
@@ -425,7 +454,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('For security reasons, your upload has been renamed to test_0.');
     $this->assertSession()->pageTextContains('File name is test_0.');
     $this->assertSession()->pageTextContains('You WIN!');
 
@@ -433,7 +461,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'insert']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
   }
 
   /**
@@ -448,7 +476,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->image = $file_repository->move($this->image, $original_image_uri . '.foo.' . $this->imageExtension);
 
     // Reset the hook counters to get rid of the 'move' we just called.
-    file_test_reset();
+    FileTestHelper::reset();
 
     $extensions = $this->imageExtension;
     $edit = [
@@ -463,7 +491,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains("File name is $munged_filename");
     $this->assertSession()->pageTextContains("You WIN!");
 
@@ -471,7 +498,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'insert']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Ensure we don't munge the .foo extension if it is in the list of allowed
     // extensions.
@@ -484,7 +511,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextNotContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains("File name is {$this->image->getFilename()}");
     $this->assertSession()->pageTextContains("You WIN!");
 
@@ -494,7 +520,7 @@ class SaveUploadTest extends FileManagedTestBase {
     // Ensure we don't munge files if we're allowing any extension.
     $this->image = $file_repository->move($this->image, $original_image_uri . '.foo.txt.' . $this->imageExtension);
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     $edit = [
       'files[file_test_upload]' => \Drupal::service('file_system')->realpath($this->image->getFileUri()),
@@ -504,7 +530,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextNotContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains("File name is {$this->image->getFilename()}");
     $this->assertSession()->pageTextContains("You WIN!");
 
@@ -515,7 +540,7 @@ class SaveUploadTest extends FileManagedTestBase {
     // the list of allowed extensions.
     $this->image = $file_repository->move($this->image, $original_image_uri . '.php.' . $this->imageExtension);
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     $extensions = 'php ' . $this->imageExtension;
     $edit = [
@@ -526,7 +551,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains("File name is image-test.png_.php_.png");
     $this->assertSession()->pageTextContains("You WIN!");
 
@@ -534,7 +558,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'insert']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Dangerous extensions are munged even when all extensions are allowed.
     $edit = [
@@ -545,7 +569,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains("File name is image-test.png_.php__0.png");
     $this->assertSession()->pageTextContains("You WIN!");
 
@@ -555,7 +578,7 @@ class SaveUploadTest extends FileManagedTestBase {
     // Dangerous extensions are munged if is renamed to end in .txt.
     $this->image = $file_repository->move($this->image, $original_image_uri . '.cgi.' . $this->imageExtension . '.txt');
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Dangerous extensions are munged even when all extensions are allowed.
     $edit = [
@@ -566,7 +589,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/upload');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains("File name is image-test.png_.cgi_.png_.txt");
     $this->assertSession()->pageTextContains("You WIN!");
 
@@ -574,7 +596,7 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertFileHooksCalled(['validate', 'insert']);
 
     // Reset the hook counters.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Ensure that setting $validators['FileExtension'] = ['extensions' = '']
     // rejects all files without munging or renaming.
@@ -586,7 +608,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->drupalGet('file-test/save_upload_from_form_test');
     $this->submitForm($edit, 'Submit');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextNotContains('For security reasons, your upload has been renamed');
     $this->assertSession()->pageTextContains("Epic upload FAIL!");
 
     // Check that the correct hooks were called.
@@ -737,8 +758,8 @@ class SaveUploadTest extends FileManagedTestBase {
 
     $content = (string) $response->getBody();
     $this->htmlOutput($content);
-    $error_text = new FormattableMarkup('The file %filename could not be uploaded because the name is invalid.', ['%filename' => $filename]);
-    $this->assertStringContainsString((string) $error_text, $content);
+    $error_text = 'The file <em class="placeholder">' . Html::escape($filename) . '</em> could not be uploaded because the name is invalid.';
+    $this->assertStringContainsString($error_text, $content);
     $this->assertStringContainsString('Epic upload FAIL!', $content);
     $this->assertFileDoesNotExist('temporary://' . $filename);
   }
@@ -748,7 +769,7 @@ class SaveUploadTest extends FileManagedTestBase {
    */
   public function testRequired(): void {
     // Reset the hook counters to get rid of the 'load' we just called.
-    file_test_reset();
+    FileTestHelper::reset();
 
     // Confirm the field is required.
     $this->drupalGet('file-test/upload_required');
@@ -807,9 +828,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertSession()->statusCodeEquals(200);
     // Test that the file name has been transliterated.
     $this->assertSession()->responseContains('File name is TEXT-oe.txt.');
-    // Make sure we got a message about the rename.
-    $message = 'Your upload has been renamed to <em class="placeholder">TEXT-oe.txt</em>';
-    $this->assertSession()->responseContains($message);
 
     // Generate another file with a name with All The Things(tm) we care about.
     $file = $this->generateFile('S  Pácê--táb#	#--🙈', 64, 5, 'text');
@@ -891,9 +909,6 @@ class SaveUploadTest extends FileManagedTestBase {
     $this->assertSession()->statusCodeEquals(200);
     // Make sure all the sanitization options work as intended.
     $this->assertSession()->responseContains('File name is s-pace-tab-2.txt.');
-    // Make sure we got a message about the rename.
-    $message = 'Your upload has been renamed to <em class="placeholder">s-pace-tab-2.txt</em>';
-    $this->assertSession()->responseContains($message);
   }
 
 }

@@ -1,6 +1,0 @@
-<?php
-
-/**
- * @file
- * Adds a hook for attaching a css file with indentation information to each page.
- */

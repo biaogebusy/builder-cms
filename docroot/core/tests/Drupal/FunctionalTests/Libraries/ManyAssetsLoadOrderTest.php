@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\FunctionalTests\Libraries;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the loading of many weighted assets.
- *
- * @group libraries
  */
+#[Group('libraries')]
+#[RunTestsInSeparateProcesses]
 class ManyAssetsLoadOrderTest extends BrowserTestBase {
 
   /**

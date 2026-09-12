@@ -10,13 +10,15 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the views moderation_state field sorting integration.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ViewsModerationStateSortTest extends ViewsKernelTestBase {
 
   use ContentModerationTestTrait;
@@ -31,7 +33,6 @@ class ViewsModerationStateSortTest extends ViewsKernelTestBase {
     'workflow_type_test',
     'entity_test',
     'language',
-    'content_translation',
   ];
 
   /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_data\Plugin\views\row;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -45,9 +47,9 @@ class RowTest extends RowPluginBase {
     parent::buildOptionsForm($form, $form_state);
 
     $form['test_option'] = [
-      '#title' => $this->t('Test option'),
+      '#title' => 'Test option',
       '#type' => 'textfield',
-      '#description' => $this->t('This is a textfield for test_option.'),
+      '#description' => 'This is a textfield for test_option.',
       '#default_value' => $this->options['test_option'],
     ];
   }
@@ -66,6 +68,7 @@ class RowTest extends RowPluginBase {
    * Returns the output property.
    *
    * @return string
+   *   The string to output by this plugin.
    */
   public function getOutput() {
     return $this->output;

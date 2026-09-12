@@ -4,6 +4,7 @@ namespace Drupal\Core\Entity\KeyValueStore;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Entity\TranslatableInterface;
 
@@ -49,6 +50,13 @@ class KeyValueContentEntityStorage extends KeyValueEntityStorage implements Cont
   /**
    * {@inheritdoc}
    */
+  public function loadRevisionUnchanged($revision_id): ?EntityInterface {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getLatestRevisionId($entity_id) {
     return NULL;
   }
@@ -57,6 +65,20 @@ class KeyValueContentEntityStorage extends KeyValueEntityStorage implements Cont
    * {@inheritdoc}
    */
   public function getLatestTranslationAffectedRevisionId($entity_id, $langcode) {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadRevision($revision_id) {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteRevision($revision_id) {
     return NULL;
   }
 

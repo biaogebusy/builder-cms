@@ -6,12 +6,14 @@ namespace Drupal\FunctionalTests\Breadcrumb;
 
 use Drupal\Tests\block\Traits\BlockCreationTrait;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the breadcrumb of 404 pages.
- *
- * @group breadcrumb
  */
+#[Group('breadcrumb')]
+#[RunTestsInSeparateProcesses]
 class Breadcrumb404Test extends BrowserTestBase {
 
   use BlockCreationTrait;

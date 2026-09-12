@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - ai_test
+id: ai_test_nesting
+label: 'AI Test Nesting Prompt Type'
+variables: {  }
+tokens: {  }

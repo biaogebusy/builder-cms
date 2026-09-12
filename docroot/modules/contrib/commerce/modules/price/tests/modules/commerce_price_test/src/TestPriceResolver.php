@@ -17,7 +17,7 @@ class TestPriceResolver implements PriceResolverInterface {
    * {@inheritdoc}
    */
   public function resolve(PurchasableEntityInterface $entity, $quantity, Context $context) {
-    if (!($entity instanceof ProductVariationInterface && strpos($entity->getSku(), 'TEST_') !== FALSE)) {
+    if (!($entity instanceof ProductVariationInterface && str_contains($entity->getSku(), 'TEST_'))) {
       return NULL;
     }
 

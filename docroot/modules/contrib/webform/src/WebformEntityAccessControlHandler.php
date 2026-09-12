@@ -101,7 +101,7 @@ class WebformEntityAccessControlHandler extends EntityAccessControlHandler imple
       // Make sure JSON API 1.x requests format which is 'html' is
       // detected properly.
       // @see https://www.drupal.org/project/jsonapi/issues/2877584
-      $is_jsonapi = (strpos($this->requestStack->getCurrentRequest()->getPathInfo(), '/jsonapi/') === 0) ? TRUE : FALSE;
+      $is_jsonapi = str_starts_with($this->requestStack->getCurrentRequest()->getPathInfo(), '/jsonapi/');
       if ($is_html && !$is_jsonapi) {
         $access_result = $this->accessRulesManager->checkWebformAccess('create', $account, $entity);
       }
@@ -150,7 +150,7 @@ class WebformEntityAccessControlHandler extends EntityAccessControlHandler imple
     }
 
     // Check submission_* operation.
-    if (strpos($operation, 'submission_') === 0) {
+    if (str_starts_with($operation, 'submission_')) {
       // Grant user with administer webform submission access to do whatever they
       // like on the submission operations.
       if ($account->hasPermission('administer webform submission')) {

@@ -9,12 +9,15 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\media\Entity\Media;
 use Drupal\media\Entity\MediaType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore sisko
 /**
  * Tests media source plugins related logic.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaSourceTest extends MediaKernelTestBase {
 
   /**
@@ -120,8 +123,10 @@ class MediaSourceTest extends MediaKernelTestBase {
 
     // Change the default name attribute and see if it is used to set the name.
     $name = 'Old Major';
-    \Drupal::state()->set('media_source_test_attributes', ['alternative_name' => ['title' => 'Alternative name', 'value' => $name]]);
-    \Drupal::state()->set('media_source_test_definition', ['default_name_metadata_attribute' => 'alternative_name']);
+    \Drupal::state()
+      ->set('media_source_test_attributes', ['alternative_name' => ['title' => 'Alternative name', 'value' => $name]]);
+    \Drupal::state()
+      ->set('media_source_test_definition', ['default_name_metadata_attribute' => 'alternative_name']);
     /** @var \Drupal\media\MediaInterface $media */
     $media = Media::create(['bundle' => $this->testMediaType->id()]);
     $media_source = $media->getSource();
@@ -211,6 +216,27 @@ class MediaSourceTest extends MediaKernelTestBase {
     $this->assertSame('Snowball', $media_source->getMetadata($media, $attribute_name), 'Value of the metadata attribute is not correct.');
     $media->save();
     $this->assertSame('Snowball', $media->get($field_name)->value, 'Metadata attribute was not mapped to the field.');
+
+    // Test that we only overwrite existing field values if the source changed
+    // from a non-empty value to another non-empty value.
+    $media = Media::create([
+      'bundle' => $this->testMediaType->id(),
+      // Force an empty source field.
+      'field_media_test' => NULL,
+      $field_name => 'Some pre-existing value',
+    ]);
+    $media->save();
+    // After first save, the entity has the pre-existing value in the mapped
+    // field.
+    $this->assertSame('Some pre-existing value', $media->get($field_name)->value);
+    \Drupal::state()->set('media_source_test_attributes', [
+      $attribute_name => ['title' => 'Attribute to map', 'value' => 'Snowball'],
+    ]);
+    // Change the source field value from NULL to something different.
+    $media->set('field_media_test', 'some_new_value');
+    $media->save();
+    // Verify the pre-existing value was not overwritten.
+    $this->assertSame('Some pre-existing value', $media->get($field_name)->value);
   }
 
   /**
@@ -514,6 +540,43 @@ class MediaSourceTest extends MediaKernelTestBase {
     $this->assertEquals('Test source with constraints', $field->label(), 'Incorrect label is used.');
     $this->assertSame('test_constraints_type', $field->getTargetBundle(), 'Field is not targeting correct bundle.');
 
+    // Test a source with a long machine name.
+    $type = MediaType::create([
+      'id' => 'test_type_fail',
+      'label' => 'Test type - Fail',
+      'source' => 'test_source_with_a_really_long_name',
+    ]);
+    $type->save();
+
+    /** @var \Drupal\field\Entity\FieldConfig $field */
+    $field = $type->getSource()->createSourceField($type);
+    /** @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
+    $field_storage = $field->getFieldStorageDefinition();
+    $field_storage->save();
+    // Field configuration depends on the field storage, which must be saved first.
+    $field->save();
+
+    // Test long field name is truncated.
+    $this->assertSame('field_media_test_source_with_a_r', $field_storage->getName(), 'Incorrect field name is used.');
+
+    $type = MediaType::create([
+      'id' => 'test_type_fail_2',
+      'label' => 'Test type - Fail 2',
+      'source' => 'test_source_with_a_really_long_name',
+    ]);
+    $type->save();
+
+    /** @var \Drupal\field\Entity\FieldConfig $field */
+    $field = $type->getSource()->createSourceField($type);
+    /** @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
+    $field_storage = $field->getFieldStorageDefinition();
+    $field_storage->save();
+    // Field configuration depends on the field storage, which must be saved first.
+    $field->save();
+
+    // Test long field name is truncated.
+    $this->assertSame('field_media_test_source_with_a_1', $field_storage->getName(), 'Incorrect field name is used.');
+
     // Test that new source fields respect the configured field prefix, no
     // prefix at all if that's what's configured.
     $this->installConfig('field_ui');
@@ -614,9 +677,9 @@ class MediaSourceTest extends MediaKernelTestBase {
    * @param string $field_name
    *   Source field name.
    */
-  protected function createMediaTypeViaForm($source_plugin_id, $field_name) {
+  protected function createMediaTypeViaForm($source_plugin_id, $field_name): void {
     /** @var \Drupal\media\MediaTypeInterface $type */
-    $type = MediaType::create(['source' => $source_plugin_id]);
+    $type = MediaType::create(['source' => $source_plugin_id, 'id' => 'test_media_type']);
 
     $form = $this->container->get('entity_type.manager')
       ->getFormObject('media_type', 'add')

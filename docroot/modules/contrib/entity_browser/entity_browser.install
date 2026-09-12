@@ -11,3 +11,21 @@
 function entity_browser_update_last_removed() {
   return 8201;
 }
+
+/**
+ * New setting: "use_admin_theme". 
+ * Seed each entity browser display's new "use_admin_theme" setting from
+ * node.settings:use_admin_theme so existing sites keep their prior behavior.
+ */
+function entity_browser_update_8202() {
+  $node_default = \Drupal::moduleHandler()->moduleExists('node')
+    ? (bool) \Drupal::config('node.settings')->get('use_admin_theme')
+    : FALSE;
+
+  foreach (\Drupal::entityTypeManager()->getStorage('entity_browser')->loadMultiple() as $browser) {
+    if (!array_key_exists('use_admin_theme', $browser->display_configuration)) {
+      $browser->display_configuration['use_admin_theme'] = $node_default;
+      $browser->save();
+    }
+  }
+}

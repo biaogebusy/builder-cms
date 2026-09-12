@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Functional;
 
@@ -31,11 +31,11 @@ final class SmsFrameworkDeliveryReportTest extends SmsFrameworkBrowserTestBase {
 
     $result = $sms_messages[0]->getResult();
     static::assertTrue($result instanceof SmsMessageResultInterface);
-    static::assertCount(count($sms_message->getRecipients()), $result->getReports());
+    static::assertCount(\count($sms_message->getRecipients()), $result->getReports());
     $reports = $result->getReports();
 
     /** @var \Drupal\sms\Message\SmsDeliveryReportInterface $first_report */
-    $first_report = reset($reports);
+    $first_report = \reset($reports);
     $message_id = $first_report->getMessageId();
     static::assertTrue($first_report instanceof SmsDeliveryReportInterface);
     static::assertEquals($first_report->getStatus(), SmsMessageReportStatus::QUEUED);

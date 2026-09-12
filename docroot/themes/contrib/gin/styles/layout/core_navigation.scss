@@ -41,7 +41,7 @@ body.gin--core-navigation {
 }
 
 // This applies to both the sidebar and the control bar on small screens.
-[data-drupal-admin-styles] {
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) {
   --admin-toolbar-font-family: var(--gin-font);
   --admin-toolbar-color-white: var(--gin-bg-layer);
   --admin-toolbar-color-gray-050: var(--gin-bg-layer2);
@@ -54,301 +54,331 @@ body.gin--core-navigation {
 // --------------------------------------------------
 // Custom overrides
 // --------------------------------------------------
-
-.gin--core-navigation .top-bar,
-.gin--core-navigation .admin-toolbar-control-bar {
-  position: sticky;
-  inset-block-start: 0;
-}
-
-// Core currently hard codes this as 'white' rather than a custom property, so
-// we need to fix that to correctly apply dark colours.
-.gin--core-navigation .admin-toolbar-control-bar {
-  background-color: var(--admin-toolbar-color-white);
-}
-
-.gin--core-navigation .gin-secondary-toolbar:not(.gin-secondary-toolbar--frontend) {
-  margin-block-end: var(--gin-spacing-xxs);
-}
-
-.gin--core-navigation .gin-secondary-toolbar--frontend {
-  z-index: 102;
-  margin-inline-start: var(--gin-toolbar-x-offset);
-}
-
-.toolbar-menu__link:hover::before {
-  inline-size: var(--gin-spacing-xxs);
-}
-
-.admin-toolbar {
-  top: 0;
-  height: 100%;
-}
-
-.admin-toolbar__header {
-  padding-block-start: var(--gin-spacing-xs);
-
-  @include mq(large) {
-    padding-block-start: 0;
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) {
+  // Core currently hard codes this as 'white' rather than a custom property, so
+  // we need to fix that to correctly apply dark colours.
+  &.admin-toolbar-control-bar {
+    background-color: var(--admin-toolbar-color-white);
   }
-}
 
-.admin-toolbar__content {
-  padding: var(--admin-toolbar-sidebar-header) var(--gin-spacing-s) var(--gin-spacing-s) var(--gin-spacing-s);
-  margin-block-start: calc(var(--gin-spacing-xxs) * -1);
+  .toolbar-menu__link:hover::before {
+    inline-size: var(--gin-spacing-xxs);
+  }
 
-  @include mq(large) {
+  &.admin-toolbar {
+    top: 0;
+    height: 100%;
+  }
+
+  .admin-toolbar__header {
+    padding-block-start: var(--gin-spacing-xs);
+
+    @include mq(large) {
+      padding-block-start: 0;
+    }
+  }
+
+  .admin-toolbar__content {
+    padding: var(--admin-toolbar-sidebar-header) var(--gin-spacing-s) var(--gin-spacing-s) var(--gin-spacing-s);
+    margin-block-start: calc(var(--gin-spacing-xxs) * -1);
+
+    @include mq(large) {
+      padding: var(--gin-spacing-s);
+      margin-block-start: 0;
+    }
+  }
+
+  .admin-toolbar__footer {
     padding: var(--gin-spacing-s);
-    margin-block-start: 0;
-  }
-}
-
-.admin-toolbar__footer {
-  padding: var(--gin-spacing-s);
-}
-
-.admin-toolbar__footer,
-.admin-toolbar__content .toolbar-block:nth-last-child(n+2)::after {
-  border-block-start-color: var(--gin-border-color-secondary);
-}
-
-// --------------------------------------------------
-// Remove anti-flicker
-// --------------------------------------------------
-.toolbar-anti-flicker.toolbar-loading.toolbar-fixed body.gin--core-navigation,
-body.gin--core-navigation {
-  padding-block-start: unset !important;
-  margin-inline-start: auto !important;
-}
-
-// --------------------------------------------------
-// Logo override
-// --------------------------------------------------
-.admin-toolbar__logo {
-  line-height: 0;
-  border-radius: 10px;
-
-  svg rect {
-    fill: var(--gin-color-primary);
   }
 
-  svg path {
-    fill: var(--gin-bg-app);
+  .admin-toolbar__footer,
+  .admin-toolbar__content .toolbar-block:nth-last-child(n+2)::after {
+    border-block-start-color: var(--gin-border-color-secondary);
   }
 
-  &:hover svg rect {
-    fill: var(--gin-color-primary-hover);
+  // --------------------------------------------------
+  // Logo override
+  // --------------------------------------------------
+  .admin-toolbar__logo {
+    line-height: 0;
+    border-radius: 10px;
+
+    svg rect {
+      fill: var(--gin-color-primary);
+    }
+
+    svg path {
+      fill: var(--gin-bg-app);
+    }
+
+    &:hover svg rect {
+      fill: var(--gin-color-primary-hover);
+    }
+
+    &:active svg rect,
+    &:focus svg rect {
+      fill: var(--gin-color-primary-active);
+    }
   }
 
-  &:active svg rect,
-  &:focus svg rect {
-    fill: var(--gin-color-primary-active);
-  }
-}
-
-// --------------------------------------------------
-// Button style overrides
-// --------------------------------------------------
-#navigation-link-navigationcreate {
-  margin-block-start: var(--gin-spacing-xxs);
-}
-
-.toolbar-block__list {
-  gap: 0;
-}
-
-.toolbar-button {
-  padding-inline: 10px;
-  padding-block: calc(var(--gin-spacing-xs) + 1px);
-  margin-block-end: var(--gin-spacing-xxxs);
-}
-
-.toolbar-button,
-.toolbar-menu__link {
-  color: var(--gin-color-text);
-  font-weight: var(--gin-font-weight-normal);
-  font-variation-settings: unset;
-
-  &,
-  &:hover,
-  &:active {
-    outline: none;
-    box-shadow: none;
+  // --------------------------------------------------
+  // Button style overrides
+  // --------------------------------------------------
+  #navigation-link-navigationcreate {
+    margin-block-start: var(--gin-spacing-xxs);
   }
 
-  &:hover {
-    color: var(--gin-color-primary);
-    background-color: var(--gin-bg-item-hover);
-  }
-
-  &:active,
-  &:focus,
-  &:hover:focus {
-    color: var(--gin-color-primary-hover);
-    background-color: var(--gin-color-primary-light);
-  }
-}
-
-.toolbar-button--large {
-  font-weight: var(--gin-font-weight-bold);
-}
-
-// --------------------------------------------------
-// Focus style overrides
-// --------------------------------------------------
-.admin-toolbar__logo:focus,
-.toolbar-button:focus,
-.admin-toolbar__expand-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);
-}
-
-.toolbar-menu__link:focus {
-  outline: none;
-  box-shadow: inset 0 0 0 1px var(--gin-color-focus-border), inset 0 0 0 3px var(--gin-color-focus);
-}
-
-// --------------------------------------------------
-// Active style overrides
-// --------------------------------------------------
-.toolbar-button.current {
-  background-color: var(--gin-bg-item-hover);
-
-  &:hover {
-    background-color: var(--gin-color-primary-light);
-  }
-
-  &:active,
-  &:focus,
-  &:hover:focus {
-    background-color: var(--gin-color-primary-light);
-  }
-}
-
-.toolbar-button.current.is-active,
-.toolbar-button:has(+ .toolbar-popover__wrapper .is-active) {
-  color: var(--gin-color-primary);
-  background-color: var(--gin-color-primary-light);
-
-  &::before {
-    background: var(--gin-color-primary);
-  }
-}
-
-// --------------------------------------------------
-// Icon overrides
-// --------------------------------------------------
-[class*="toolbar-button--icon"] {
-  --icon: #{icon('fallback')}; /* Default icon, aka --basic */
-
-  &::before {
-    width: var(--gin-icon-size-toolbar);
-    height: var(--gin-icon-size-toolbar);
-    background-color: var(--gin-icon-color);
-    mask-size: 100% 100%;
-    mask-image: var(--icon);
-  }
-
-  &:hover::before,
-  &:focus::before {
-    background-color: var(--gin-color-primary);
-  }
-}
-
-@import "../helpers/toolbar-icons";
-
-// --------------------------------------------------
-// Create menu: Separate if first item
-// --------------------------------------------------
-#navigation-link-navigationcreate:first-child {
-  margin-block-end: var(--admin-toolbar-space-8);
-
-  &::after {
-    content: "";
-    display: block;
-    margin-block-start: var(--admin-toolbar-space-12);
-    border-block-end: 1px solid var(--gin-border-color-secondary);
-  }
-}
-
-// --------------------------------------------------
-// Expand button
-// --------------------------------------------------
-.admin-toolbar__expand-button {
-  margin-block-start: calc(var(--gin-spacing-xs) * -1);
-
-  &,
-  &:hover {
-    color: var(--gin-color-text-light);
-    border-color: var(--gin-border-color);
-  }
-}
-
-// --------------------------------------------------
-// Popover
-// --------------------------------------------------
-.toolbar-popover--expanded {
-  background-color: transparent;
-
-  > .toolbar-button {
-    background-color: var(--gin-bg-item-hover);
-  }
-}
-
-.gin--dark-mode .toolbar-popover__wrapper {
-  border-inline-start: 2px solid var(--gin-border-color-secondary);
-}
-
-// --------------------------------------------------
-// Tooltips
-// --------------------------------------------------
-.admin-toolbar__tooltip {
-  font-size: var(--gin-font-size-xs);
-  color: #fff;
-  background-color: var(--gin-tooltip-bg);
-}
-
-// --------------------------------------------------
-// Hide links from Admin Toolbar Extra module
-// --------------------------------------------------
-.toolbar-block__list-item[id*="navigation-link-admin-toolbar-toolsextra-links"] {
-  display: none;
-}
-
-// --------------------------------------------------
-// Hide Shortcuts & Announcements in primary nav
-// --------------------------------------------------
-#toolbar-item-shortcuts,
-#toolbar-item-announcement
-{
-  display: none;
-}
-
-// --------------------------------------------------
-// Hide duplicated Gin secondary items
-// --------------------------------------------------
-.gin-secondary-toolbar {
-  .toolbar-id--toolbar-icon-user {
-    display: none !important;
-  }
-
-  .toolbar-menu {
+  .toolbar-block__list {
     gap: 0;
   }
 
-  // Fixes quirks when the toolbar
-  // module is still active
-  .toolbar-menu__trigger {
+  &.admin-toolbar .toolbar-button {
+    min-height: unset;
+    padding-inline: 10px;
+    padding-block: calc(var(--gin-spacing-xs) + 1px);
+    margin-block-end: var(--gin-spacing-xxxs);
+  }
+
+  &.admin-toolbar .toolbar-button--primary {
+    color: var(--gin-color-button-text) !important;
+  }
+
+  &.gin--navigation-top-bar .toolbar-button.toolbar-button {
+    padding: var(--gin-spacing-xs) var(--gin-spacing-s);
+    min-height: auto;
+    border: 0 none;
+    border-radius: var(--gin-border-m);
+    outline: none;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: var(--gin-transition);
+    }
+  }
+
+  &.gin--navigation-top-bar .toolbar-button.toolbar-button--primary {
+    --toolbar-button-color: var(--gin-color-button-text);
+    --toolbar-button-bg: var(--gin-color-primary);
+    --toolbar-button-hover-color: var(--gin-color-button-text);
+    --toolbar-button-hover-bg: var(--gin-color-primary-hover);
+    --toolbar-button-focus-color: var(--gin-color-button-text);
+    --toolbar-button-focus-bg: var(--gin-color-primary-active);
+    --toolbar-button-icon-size: var(--gin-font-size-s);
+    box-shadow: .1em .25em .5em var(--gin-color-primary-light);
+  }
+
+  &.gin--navigation-top-bar .toolbar-button.toolbar-button--icon--dots {
+    cursor: pointer;
+    color: var(--gin-color-text);
+    background: transparent;
+    display: block;
+    height: 32px;
+    width: 32px;
+    padding: 6px;
+    margin-inline: calc(var(--gin-spacing-xxs) * -1);
+    border-radius: var(--gin-border-m);
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: background var(--gin-transition-fast);
+    }
+
+    &:hover, &:focus {
+      background: var(--gin-color-primary-light);
+
+      &::before {
+        background: var(--gin-color-primary);
+      }
+    }
+
+    &[aria-expanded=true],
+    &.is-active {
+      background-color: var(--gin-color-primary-light-hover);
+
+      &::before {
+        background-color: var(--gin-color-primary-active);
+      }
+    }
+  }
+
+  &.admin-toolbar .toolbar-button,
+  .toolbar-menu__link {
+    color: var(--gin-color-text);
+    font-weight: var(--gin-font-weight-semibold);
+    font-variation-settings: unset;
+
+    &,
+    &:hover,
+    &:active {
+      outline: none;
+      box-shadow: none;
+    }
+
+    &:hover {
+      color: var(--gin-color-primary);
+      background-color: var(--gin-bg-item-hover);
+    }
+
+    &:active,
+    &:focus,
+    &:hover:focus {
+      color: var(--gin-color-primary-hover);
+      background-color: var(--gin-color-primary-light);
+    }
+  }
+
+  .toolbar-button--large {
+    font-weight: var(--gin-font-weight-bold);
+  }
+
+  // --------------------------------------------------
+  // Focus style overrides
+  // --------------------------------------------------
+  *:focus,
+  &.gin--navigation-top-bar .button:focus,
+  &.gin--navigation-top-bar .local-actions__item *:focus,
+  &.gin--navigation-top-bar .toolbar-button.toolbar-button:focus,
+  .local-actions__item *:focus,
+  .admin-toolbar__logo:focus,
+  .toolbar-button.toolbar-button:focus,
+  .admin-toolbar__expand-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);
+  }
+
+  .toolbar-menu__link:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--gin-color-focus-border), inset 0 0 0 3px var(--gin-color-focus);
+  }
+
+  // --------------------------------------------------
+  // Active style overrides
+  // --------------------------------------------------
+  .toolbar-button.current {
+    background-color: var(--gin-bg-item-hover);
+
+    &:hover {
+      background-color: var(--gin-color-primary-light);
+    }
+
+    &:active,
+    &:focus,
+    &:hover:focus {
+      background-color: var(--gin-color-primary-light);
+    }
+  }
+
+  .toolbar-button.current.is-active,
+  .toolbar-button:has(+ .toolbar-popover__wrapper .is-active) {
+    color: var(--gin-color-primary);
+    background-color: var(--gin-color-primary-light);
+
+    &::before {
+      background: var(--gin-color-primary);
+    }
+  }
+
+  // --------------------------------------------------
+  // Icon overrides
+  // --------------------------------------------------
+  .toolbar-button__icon {
+    stroke-width: 0.25px;
+    stroke: currentColor;
+  }
+
+  // --------------------------------------------------
+  // Create menu: Separate if first item
+  // --------------------------------------------------
+  #navigation-link-navigationcreate:first-child {
+    margin-block-end: var(--admin-toolbar-space-8);
+
+    &::after {
+      content: "";
+      display: block;
+      margin-block-start: var(--admin-toolbar-space-12);
+      border-block-end: 1px solid var(--gin-border-color-secondary);
+    }
+  }
+
+  // --------------------------------------------------
+  // Expand button
+  // --------------------------------------------------
+  .admin-toolbar__expand-button {
+    margin-block-start: calc(var(--gin-spacing-xs) * -1);
+
+    &,
+    &:hover {
+      color: var(--gin-color-text-light);
+      border-color: var(--gin-border-color);
+    }
+  }
+
+  // --------------------------------------------------
+  // Popover
+  // --------------------------------------------------
+  .toolbar-popover--expanded {
+    background-color: transparent;
+
+    > .toolbar-button {
+      background-color: var(--gin-bg-item-hover);
+    }
+  }
+
+  .gin--dark-mode .toolbar-popover__wrapper {
+    border-inline-start: 2px solid var(--gin-border-color-secondary);
+  }
+
+  // --------------------------------------------------
+  // Tooltips
+  // --------------------------------------------------
+  .admin-toolbar__tooltip {
+    font-size: var(--gin-font-size-xs);
+    color: #fff;
+    background-color: var(--gin-tooltip-bg);
+  }
+
+  // --------------------------------------------------
+  // Hide links from Admin Toolbar Extra module
+  // --------------------------------------------------
+  .toolbar-block__list-item[id*="navigation-link-admin-toolbar-toolsextra-links"] {
     display: none;
   }
 
-  .toolbar-tray .menu-item + .menu-item {
-    border-inline-start: none;
+  // --------------------------------------------------
+  // Hide Shortcuts & Announcements in primary nav
+  // --------------------------------------------------
+  #toolbar-item-shortcuts,
+  #toolbar-item-announcement
+  {
+    display: none;
   }
-}
 
-// Fix weird shortcuts menu flickering.
-.toolbar-loading #toolbar-item-shortcuts-tray,
-.toolbar-loading #toolbar-item-shortcuts {
-  visibility: hidden;
+  // --------------------------------------------------
+  // Hide duplicated Gin secondary items
+  // --------------------------------------------------
+  .gin-secondary-toolbar {
+    .toolbar-id--toolbar-icon-user {
+      display: none !important;
+    }
+
+    .toolbar-menu {
+      gap: 0;
+    }
+
+    // Fixes quirks when the toolbar
+    // module is still active
+    .toolbar-menu__trigger {
+      display: none;
+    }
+
+    .toolbar-tray .menu-item + .menu-item {
+      border-inline-start: none;
+    }
+  }
+
+  // Fix weird shortcuts menu flickering.
+  .toolbar-loading #toolbar-item-shortcuts-tray,
+  .toolbar-loading #toolbar-item-shortcuts {
+    visibility: hidden;
+  }
+
 }

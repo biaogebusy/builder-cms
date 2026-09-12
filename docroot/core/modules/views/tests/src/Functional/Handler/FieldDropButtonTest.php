@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\views\Functional\Handler;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the dropbutton field handler.
  *
- * @group views
  * @see \Drupal\system\Plugin\views\field\Dropbutton
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldDropButtonTest extends ViewTestBase {
 
   /**

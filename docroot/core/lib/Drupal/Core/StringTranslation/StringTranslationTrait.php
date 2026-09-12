@@ -68,6 +68,7 @@ trait StringTranslationTrait {
    * @ingroup sanitization
    */
   protected function t($string, array $args = [], array $options = []) {
+    // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
     return new TranslatableMarkup($string, $args, $options, $this->getStringTranslation());
   }
 
@@ -75,6 +76,9 @@ trait StringTranslationTrait {
    * Formats a string containing a count of items.
    *
    * @see \Drupal\Core\StringTranslation\TranslationInterface::formatPlural()
+   *
+   * @return \Drupal\Core\StringTranslation\PluralTranslatableMarkup
+   *   An object that, when cast to a string, returns the translated string.
    */
   protected function formatPlural($count, $singular, $plural, array $args = [], array $options = []) {
     return new PluralTranslatableMarkup($count, $singular, $plural, $args, $options, $this->getStringTranslation());
@@ -84,6 +88,9 @@ trait StringTranslationTrait {
    * Returns the number of plurals supported by a given language.
    *
    * @see \Drupal\locale\PluralFormulaInterface::getNumberOfPlurals()
+   *
+   * @return int
+   *   The number of plurals supported.
    */
   protected function getNumberOfPlurals($langcode = NULL) {
     if (\Drupal::hasService('locale.plural.formula')) {

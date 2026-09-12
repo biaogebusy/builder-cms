@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Kernel\Theme;
 
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests low-level theme functions.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class ThemeTest extends KernelTestBase {
 
   /**
@@ -30,12 +32,11 @@ class ThemeTest extends KernelTestBase {
   /**
    * Tests attribute merging.
    *
-   * Render arrays that use a render element and templates (and hence call
-   * template_preprocess()) must ensure the attributes at different occasions
-   * are all merged correctly:
+   * Drupal/Core/Theme/ThemeManagerInterface::addDefaultTemplateVariables())
+   * must ensure the attributes at different occasions are all merged correctly:
    *   - $variables['attributes'] as passed in to the theme hook implementation.
    *   - the render element's #attributes
-   *   - any attributes set in the template's preprocessing function
+   *   - any attributes set in the template's preprocessing function.
    */
   public function testAttributeMerging(): void {
     $theme_test_render_element = [
@@ -68,8 +69,8 @@ class ThemeTest extends KernelTestBase {
       }
     }
 
-    // suggestion_not_implemented is not an implemented theme hook so \Drupal::theme() service
-    // should return FALSE instead of a string.
+    // suggestion_not_implemented is not an implemented theme hook so
+    // \Drupal::theme() service should return FALSE instead of a string.
     $output = \Drupal::theme()->render(['suggestion_not_implemented'], []);
     $this->assertFalse($output, '\Drupal::theme() returns FALSE when a hook suggestion is not implemented.');
   }
@@ -114,15 +115,15 @@ class ThemeTest extends KernelTestBase {
 
     // Check if ThemeHandlerInterface::listInfo() returns disabled themes.
     // Check for base theme and subtheme lists.
-    $base_theme_list = ['test_basetheme' => 'Theme test base theme'];
+    $base_theme_list = ['test_base_theme' => 'Theme test base theme'];
     $sub_theme_list = ['test_subsubtheme' => 'Theme test subsubtheme', 'test_subtheme' => 'Theme test subtheme'];
 
-    $this->assertSame($sub_theme_list, $themes['test_basetheme']->sub_themes, 'Base theme\'s object includes list of subthemes.');
+    $this->assertSame($sub_theme_list, $themes['test_base_theme']->sub_themes, 'Base theme\'s object includes list of subthemes.');
     $this->assertSame($base_theme_list, $themes['test_subtheme']->base_themes, 'Subtheme\'s object includes list of base themes.');
     // Check for theme engine in subtheme.
     $this->assertSame('twig', $themes['test_subtheme']->engine, 'Subtheme\'s object includes the theme engine.');
     // Check for theme engine prefix.
-    $this->assertSame('twig', $themes['test_basetheme']->prefix, 'Base theme\'s object includes the theme engine prefix.');
+    $this->assertSame('twig', $themes['test_base_theme']->prefix, 'Base theme\'s object includes the theme engine prefix.');
     $this->assertSame('twig', $themes['test_subtheme']->prefix, 'Subtheme\'s object includes the theme engine prefix.');
   }
 

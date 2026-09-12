@@ -14,7 +14,7 @@ class PriceTwigExtension extends AbstractExtension {
   /**
    * {@inheritdoc}
    */
-  public function getFilters() {
+  public function getFilters(): array {
     return [
       new TwigFilter('commerce_price_format', [$this, 'formatPrice']),
     ];

@@ -22,7 +22,7 @@ class WebformElementSignatureTest extends WebformElementBrowserTestBase {
   /**
    * Test signature element.
    */
-  public function testSignature() {
+  public function testSignature(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);

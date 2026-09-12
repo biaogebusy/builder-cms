@@ -6,6 +6,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Form\BaseFormIdInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 use Drupal\field_widget_actions\Traits\ImageAltTextActionButtonTrait;
 
@@ -26,12 +27,7 @@ class ImageAltText extends AutomatorBaseAction {
   /**
    * {@inheritdoc}
    */
-  public string $formElementProperty = 'alt';
-
-  /**
-   * {@inheritdoc}
-   */
-  public bool $clearEntity = FALSE;
+  protected bool $clearEntity = FALSE;
 
   /**
    * Ajax handler for Automators.
@@ -49,7 +45,6 @@ class ImageAltText extends AutomatorBaseAction {
     $triggering_element = $form_state->getTriggeringElement();
     $array_parents = $triggering_element['#array_parents'];
     array_pop($array_parents);
-    $array_parents[] = $this->formElementProperty;
     // Find 'widget' in array_parents to correctly identify the field name
     // and delta regardless of form nesting depth (e.g. media library wraps
     // fields under media/0/fields/...).
@@ -62,16 +57,31 @@ class ImageAltText extends AutomatorBaseAction {
 
     // Handle media library add forms. These use a different form structure
     // where media entities are stored in form state and fields are nested
-    // under $form['media'][$delta]['fields']. We pass the fields subtree
-    // so that populateAutomatorValues() works with the correct form root.
+    // under $form['media'][$delta]['fields']. Run populateAutomatorValues()
+    // on the subtree so the base class can locate the field correctly. The
+    // base-class submit handler bails for this case because $form[$form_key]
+    // doesn't exist at the form root, so we do the work here.
     $form_object = $form_state->getFormObject();
     if ($form_object instanceof BaseFormIdInterface && $form_object->getBaseFormId() === 'media_library_add_form') {
       $media_index = array_search('media', $array_parents);
       $media_delta = is_int($media_index) ? (int) ($array_parents[$media_index + 1] ?? 0) : 0;
-      return $this->populateAutomatorValues($form['media'][$media_delta]['fields'], $form_state, $form_key, $key);
+      $this->populateAutomatorValues($form['media'][$media_delta]['fields'], $form_state, $form_key, $key);
+      return $form['media'][$media_delta]['fields'][$form_key];
     }
 
-    return $this->populateAutomatorValues($form, $form_state, $form_key, $key);
+    return $form[$form_key];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function transformFormInput(ComplexDataInterface $item): array {
+    $values = parent::transformFormInput($item);
+    if (array_key_exists('target_id', $values)) {
+      $values['fids'] = $values['target_id'];
+      unset($values['target_id']);
+    }
+    return $values;
   }
 
   /**

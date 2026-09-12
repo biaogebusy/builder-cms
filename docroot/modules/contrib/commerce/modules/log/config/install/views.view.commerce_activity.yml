@@ -5,7 +5,7 @@ dependencies:
     - commerce_log
     - user
 id: commerce_activity
-label: Activity
+label: 'Commerce Activity'
 module: views
 description: ''
 tag: ''
@@ -13,80 +13,12 @@ base_table: commerce_log
 base_field: log_id
 display:
   default:
-    display_plugin: default
     id: default
     display_title: Master
+    display_plugin: default
     position: 0
     display_options:
-      access:
-        type: none
-        options: {  }
-      cache:
-        type: tag
-        options: {  }
-      query:
-        type: views_query
-        options:
-          disable_sql_rewrite: false
-          distinct: false
-          replica: false
-          query_comment: ''
-          query_tags: {  }
-      exposed_form:
-        type: basic
-        options:
-          submit_button: Apply
-          reset_button: false
-          reset_button_label: Reset
-          exposed_sorts_label: 'Sort by'
-          expose_sort_order: true
-          sort_asc_label: Asc
-          sort_desc_label: Desc
-      pager:
-        type: none
-        options:
-          offset: 0
-      style:
-        type: table
-        options:
-          grouping: {  }
-          row_class: ''
-          default_row_class: true
-          override: true
-          sticky: false
-          caption: ''
-          summary: ''
-          description: ''
-          columns:
-            created: created
-            rendered_entity: rendered_entity
-            uid: uid
-          info:
-            created:
-              sortable: true
-              default_sort_order: desc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            rendered_entity:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            uid:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-          default: '-1'
-          empty_table: false
-      row:
-        type: fields
+      title: 'Order activity'
       fields:
         created:
           id: created
@@ -95,6 +27,9 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
+          entity_type: commerce_log
+          entity_field: created
+          plugin_id: field
           label: Date
           exclude: false
           alter:
@@ -139,9 +74,18 @@ display:
           click_sort_column: value
           type: timestamp
           settings:
-            date_format: medium
+            date_format: short
             custom_date_format: ''
             timezone: ''
+            tooltip:
+              date_format: ''
+              custom_date_format: ''
+            time_diff:
+              enabled: false
+              future_format: '@interval hence'
+              past_format: '@interval ago'
+              granularity: 2
+              refresh: 60
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -152,9 +96,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-          entity_type: commerce_log
-          entity_field: created
-          plugin_id: field
         rendered_entity:
           id: rendered_entity
           table: commerce_log
@@ -162,6 +103,9 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
+          entity_type: null
+          entity_field: null
+          plugin_id: rendered_entity
           label: Message
           exclude: false
           alter:
@@ -204,9 +148,6 @@ display:
           empty_zero: false
           hide_alter_empty: true
           view_mode: default
-          entity_type: null
-          entity_field: null
-          plugin_id: rendered_entity
         uid:
           id: uid
           table: commerce_log
@@ -214,11 +155,14 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
+          entity_type: commerce_log
+          entity_field: uid
+          plugin_id: field
           label: User
           exclude: false
           alter:
-            alter_text: false
-            text: ''
+            alter_text: true
+            text: '<span class="commerce-text--muted">By: {{ uid }}</span> '
             make_link: false
             path: ''
             absolute: false
@@ -268,37 +212,26 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-          entity_type: commerce_log
-          entity_field: uid
-          plugin_id: field
-      filters: {  }
-      sorts:
-        log_id:
-          id: log_id
-          table: commerce_log
-          field: log_id
-          relationship: none
-          group_type: group
-          admin_label: ''
-          order: DESC
-          exposed: false
-          expose:
-            label: ''
-          entity_type: commerce_log
-          entity_field: log_id
-          plugin_id: standard
-      title: 'Order logs'
-      header:
-        commerce_log_admin_comment_form:
-          id: commerce_log_admin_comment_form
-          table: views
-          field: commerce_log_admin_comment_form
-          relationship: none
-          group_type: group
-          admin_label: ''
-          empty: true
-          plugin_id: commerce_log_admin_comment_form
-      footer: {  }
+      pager:
+        type: none
+        options:
+          offset: 0
+      exposed_form:
+        type: basic
+        options:
+          submit_button: Apply
+          reset_button: false
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          expose_sort_order: true
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      access:
+        type: none
+        options: {  }
+      cache:
+        type: tag
+        options: {  }
       empty:
         area_text_custom:
           id: area_text_custom
@@ -307,11 +240,25 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
-          empty: true
-          tokenize: false
-          content: 'No log entries.'
           plugin_id: text_custom
-      relationships: {  }
+          empty: true
+          content: 'No log entries.'
+          tokenize: false
+      sorts:
+        log_id:
+          id: log_id
+          table: commerce_log
+          field: log_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: commerce_log
+          entity_field: log_id
+          plugin_id: standard
+          order: DESC
+          expose:
+            label: ''
+          exposed: false
       arguments:
         source_entity_id:
           id: source_entity_id
@@ -320,6 +267,9 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
+          entity_type: commerce_log
+          entity_field: source_entity_id
+          plugin_id: numeric
           default_action: empty
           exception:
             value: all
@@ -333,8 +283,8 @@ display:
           summary_options:
             base_path: ''
             count: true
-            items_per_page: 25
             override: false
+            items_per_page: 25
           summary:
             sort_order: asc
             number_of_records: 0
@@ -346,10 +296,6 @@ display:
           validate_options: {  }
           break_phrase: false
           not: false
-          entity_type: commerce_log
-          entity_field: source_entity_id
-          plugin_id: entity_target_id
-          target_entity_type_id: commerce_log
         source_entity_type:
           id: source_entity_type
           table: commerce_log
@@ -357,6 +303,9 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
+          entity_type: commerce_log
+          entity_field: source_entity_type
+          plugin_id: string
           default_action: 'not found'
           exception:
             value: all
@@ -370,8 +319,8 @@ display:
           summary_options:
             base_path: ''
             count: true
-            items_per_page: 25
             override: false
+            items_per_page: 25
           summary:
             sort_order: asc
             number_of_records: 0
@@ -387,9 +336,69 @@ display:
           path_case: none
           transform_dash: false
           break_phrase: false
-          entity_type: commerce_log
-          entity_field: source_entity_type
-          plugin_id: string
+      filters: {  }
+      style:
+        type: table
+        options:
+          grouping: {  }
+          row_class: ''
+          default_row_class: true
+          columns:
+            created: created
+            rendered_entity: rendered_entity
+            uid: created
+          default: created
+          info:
+            created:
+              sortable: true
+              default_sort_order: desc
+              align: ''
+              separator: '<br/>'
+              empty_column: false
+              responsive: ''
+            rendered_entity:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            uid:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+          override: true
+          sticky: false
+          summary: ''
+          empty_table: true
+          caption: ''
+          description: ''
+      row:
+        type: fields
+      query:
+        type: views_query
+        options:
+          query_comment: ''
+          disable_sql_rewrite: false
+          distinct: false
+          replica: false
+          query_tags: {  }
+      relationships: {  }
+      use_ajax: true
+      header:
+        commerce_log_admin_comment_form:
+          id: commerce_log_admin_comment_form
+          table: views
+          field: commerce_log_admin_comment_form
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: commerce_log_admin_comment_form
+          empty: true
+      footer: {  }
       display_extenders: {  }
     cache_metadata:
       max-age: -1
@@ -400,9 +409,9 @@ display:
         - url.query_args
       tags: {  }
   block_1:
-    display_plugin: block
     id: block_1
     display_title: Block
+    display_plugin: block
     position: 1
     display_options:
       display_extenders: {  }

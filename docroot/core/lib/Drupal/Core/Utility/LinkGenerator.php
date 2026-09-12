@@ -9,7 +9,6 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\GeneratedLink;
 use Drupal\Core\GeneratedButton;
 use Drupal\Core\GeneratedNoLink;
-use Drupal\Core\Link;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Template\Attribute;
@@ -59,14 +58,6 @@ class LinkGenerator implements LinkGeneratorInterface {
 
   /**
    * {@inheritdoc}
-   */
-  public function generateFromLink(Link $link) {
-    @trigger_error('\Drupal\Core\Utility\LinkGeneratorInterface::generateFromLink() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Utility\LinkGeneratorInterface::generate() instead. See https://www.drupal.org/node/3342992', E_USER_DEPRECATED);
-    return $this->generate($link->getText(), $link->getUrl());
-  }
-
-  /**
-   * {@inheritdoc}
    *
    * For anonymous users, the "active" class will be calculated on the server,
    * because most sites serve each anonymous user the same cached page anyway.
@@ -91,7 +82,8 @@ class LinkGenerator implements LinkGeneratorInterface {
       $text = $this->renderer->render($text);
     }
 
-    // Start building a structured representation of our link to be altered later.
+    // Start building a structured representation of our link to be altered
+    // later.
     $variables = [
       'text' => $text,
       'url' => $url,
@@ -133,7 +125,8 @@ class LinkGenerator implements LinkGeneratorInterface {
       // Add a "data-drupal-link-system-path" attribute to let the
       // drupal.active-link library know the path in a standardized manner.
       if ($url->isRouted() && !isset($variables['options']['attributes']['data-drupal-link-system-path'])) {
-        // @todo System path is deprecated - use the route name and parameters.
+        // @todo System path is deprecated - use the route name and parameters
+        //   see https://www.drupal.org/project/drupal/issues/3443759.
         $system_path = $url->getInternalPath();
 
         // Special case for the front page.
@@ -147,8 +140,8 @@ class LinkGenerator implements LinkGeneratorInterface {
       }
     }
 
-    // Remove all HTML and PHP tags from a tooltip, calling expensive strip_tags()
-    // only when a quick strpos() gives suspicion tags are present.
+    // Remove all HTML and PHP tags from a tooltip, calling expensive
+    // strip_tags() only when a quick strpos() gives suspicion tags are present.
     if (isset($variables['options']['attributes']['title']) && str_contains($variables['options']['attributes']['title'], '<')) {
       $variables['options']['attributes']['title'] = strip_tags($variables['options']['attributes']['title']);
     }

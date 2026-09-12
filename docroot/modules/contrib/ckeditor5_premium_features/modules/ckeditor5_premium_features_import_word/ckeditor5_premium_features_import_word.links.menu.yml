@@ -1,0 +1,6 @@
+ckeditor5_premium_features_import_word.form.settings:
+  title: Import from Word
+  description: Import from Word plugin settings.
+  parent: ckeditor5_premium_features.form.settings
+  route_name: ckeditor5_premium_features_import_word.form.settings
+  weight: 80

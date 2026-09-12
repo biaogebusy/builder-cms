@@ -23,7 +23,7 @@
   }
 
   // Hide delete Tab
-  [data-drupal-link-system-path*="/delete"] {
+  .tabs [data-drupal-link-system-path*="/delete"] {
     display: none;
   }
 

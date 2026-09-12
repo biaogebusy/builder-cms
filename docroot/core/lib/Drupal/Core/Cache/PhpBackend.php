@@ -54,16 +54,12 @@ class PhpBackend implements CacheBackendInterface {
    *   The cache bin for which the object is created.
    * @param \Drupal\Core\Cache\CacheTagsChecksumInterface $checksum_provider
    *   The cache tags checksum provider.
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct($bin, CacheTagsChecksumInterface $checksum_provider, protected ?TimeInterface $time = NULL) {
+  public function __construct($bin, CacheTagsChecksumInterface $checksum_provider, protected TimeInterface $time) {
     $this->bin = 'cache_' . $bin;
     $this->checksumProvider = $checksum_provider;
-    if (!$time) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
-      $this->time = \Drupal::service(TimeInterface::class);
-    }
   }
 
   /**
@@ -83,6 +79,7 @@ class PhpBackend implements CacheBackendInterface {
    *   has been invalidated.
    *
    * @return bool|mixed
+   *   The requested cached item. Defaults to FALSE when the cache is not set.
    */
   protected function getByHash($cidhash, $allow_invalid = FALSE) {
     if ($file = $this->storage()->getFullPath($cidhash)) {
@@ -228,6 +225,7 @@ class PhpBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function invalidateAll() {
+    @trigger_error("CacheBackendInterface::invalidateAll() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use CacheBackendInterface::deleteAll() or cache tag invalidation instead. See https://www.drupal.org/node/3500622", E_USER_DEPRECATED);
     foreach ($this->storage()->listAll() as $cidhash) {
       $this->invalidateByHash($cidhash);
     }
@@ -264,6 +262,7 @@ class PhpBackend implements CacheBackendInterface {
    * Gets the PHP code storage object to use.
    *
    * @return \Drupal\Component\PhpStorage\PhpStorageInterface
+   *   The PHP storage.
    */
   protected function storage() {
     if (!isset($this->storage)) {

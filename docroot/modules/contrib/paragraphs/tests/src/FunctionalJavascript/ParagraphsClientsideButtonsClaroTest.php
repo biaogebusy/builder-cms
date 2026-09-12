@@ -2,17 +2,16 @@
 
 namespace Drupal\Tests\paragraphs\FunctionalJavascript;
 
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
-use Drupal\Tests\paragraphs\Traits\ParagraphsCoreVersionUiTestTrait;
-use Drupal\Tests\paragraphs\Traits\ParagraphsLastEntityQueryTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test paragraphs user interface.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsClientsideButtonsClaroTest extends ParagraphsClientsideButtonsTest {
 
   /**

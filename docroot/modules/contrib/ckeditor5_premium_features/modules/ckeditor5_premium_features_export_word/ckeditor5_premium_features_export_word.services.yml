@@ -1,0 +1,11 @@
+services:
+  ckeditor5_premium_features_export_word.config_handler.export_settings:
+    class: Drupal\ckeditor5_premium_features_export_word\Config\WordExportConfigHandler
+    arguments:
+      - '@config.factory'
+
+  ckeditor5_premium_features_export_word.token_generator:
+    class: Drupal\ckeditor5_premium_features\Generator\ExportTokenGenerator
+    arguments:
+      - '@current_user'
+      - '@ckeditor5_premium_features_export_word.config_handler.export_settings'

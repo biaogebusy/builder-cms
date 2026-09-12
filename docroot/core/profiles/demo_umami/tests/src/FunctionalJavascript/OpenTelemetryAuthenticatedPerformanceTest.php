@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\demo_umami\FunctionalJavascript;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\FunctionalJavascriptTests\PerformanceTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests demo_umami profile performance.
- *
- * @group OpenTelemetry
- * @group #slow
- * @requires extension apcu
  */
+#[Group('OpenTelemetry')]
+#[Group('#slow')]
+#[RequiresPhpExtension('apcu')]
+#[RunTestsInSeparateProcesses]
 class OpenTelemetryAuthenticatedPerformanceTest extends PerformanceTestBase {
 
   /**
@@ -20,42 +24,143 @@ class OpenTelemetryAuthenticatedPerformanceTest extends PerformanceTestBase {
    */
   protected $profile = 'demo_umami';
 
-  protected function setUp(): void {
-    parent::setUp();
-    $user = $this->drupalCreateUser();
-    $this->drupalLogin($user);
+  /**
+   * Logs authenticated tracing data.
+   */
+  public function testAuthenticatedPerformance(): void {
+    // Replace toolbar with navigation to avoid AJAX requests while recording
+    // performance data.
+    \Drupal::service('module_installer')->uninstall(['toolbar']);
+    \Drupal::service('module_installer')->install(['navigation']);
+    $this->doTestFrontPageAuthenticatedWarmCache();
+    $this->doTestNodePageAdministrator();
   }
 
   /**
    * Logs front page tracing data with an authenticated user and warm cache.
    */
-  public function testFrontPageAuthenticatedWarmCache(): void {
+  protected function doTestFrontPageAuthenticatedWarmCache(): void {
+    $user = $this->drupalCreateUser();
+    $this->drupalLogin($user);
     $this->drupalGet('<front>');
+    sleep(2);
     $this->drupalGet('<front>');
+    sleep(2);
 
     $performance_data = $this->collectPerformanceData(function () {
       $this->drupalGet('<front>');
     }, 'authenticatedFrontPage');
-    $this->assertSame(2, $performance_data->getStylesheetCount());
-    $this->assertLessThan(44000, $performance_data->getStylesheetBytes());
-    $this->assertSame(1, $performance_data->getScriptCount());
-    $this->assertLessThan(133000, $performance_data->getScriptBytes());
 
     $expected_queries = [
       'SELECT "session" FROM "sessions" WHERE "sid" = "SESSION_ID" LIMIT 0, 1',
       'SELECT * FROM "users_field_data" "u" WHERE "u"."uid" = "10" AND "u"."default_langcode" = 1',
       'SELECT "roles_target_id" FROM "user__roles" WHERE "entity_id" = "10"',
-      'SELECT "config"."name" AS "name" FROM "config" "config" WHERE ("collection" = "") AND ("name" LIKE "language.entity.%" ESCAPE ' . "'\\\\'" . ') ORDER BY "collection" ASC, "name" ASC',
     ];
     $recorded_queries = $performance_data->getQueries();
     $this->assertSame($expected_queries, $recorded_queries);
-    $this->assertSame(4, $performance_data->getQueryCount());
-    $this->assertSame(43, $performance_data->getCacheGetCount());
-    $this->assertSame(0, $performance_data->getCacheSetCount());
-    $this->assertSame(0, $performance_data->getCacheDeleteCount());
-    $this->assertSame(0, $performance_data->getCacheTagChecksumCount());
-    $this->assertSame(11, $performance_data->getCacheTagIsValidCount());
-    $this->assertSame(0, $performance_data->getCacheTagInvalidationCount());
+
+    $expected = [
+      'QueryCount' => 3,
+      'CacheGetCount' => 34,
+      'CacheGetCountByBin' => [
+        'config' => 12,
+        'bootstrap' => 7,
+        'discovery' => 5,
+        'data' => 4,
+        'dynamic_page_cache' => 2,
+        'render' => 2,
+        'routes' => 2,
+      ],
+      'CacheSetCount' => 0,
+      'CacheDeleteCount' => 0,
+      'CacheTagInvalidationCount' => 0,
+      'CacheTagLookupQueryCount' => 4,
+      'ScriptCount' => 1,
+      'ScriptBytes' => 13150,
+      'StylesheetCount' => 2,
+      'StylesheetBytes' => 39163,
+    ];
+    $this->assertMetrics($expected, $performance_data);
+  }
+
+  /**
+   * Logs node page performance with an administrator.
+   */
+  protected function doTestNodePageAdministrator(): void {
+    // Create a user with most important admin permissions, but not access to
+    // contextual links. This is because contextual module makes an AJAX request
+    // dependent on the content of browser local storage, which can make
+    // performance testing indeterminate.
+    $user = $this->drupalCreateUser([
+      'administer nodes',
+      'bypass node access',
+      'access administration pages',
+      'administer site configuration',
+      'administer modules',
+      'administer themes',
+      'access site reports',
+      'administer users',
+      'access navigation',
+      'administer media',
+      'access files overview',
+      'administer blocks',
+      'administer block content',
+      'administer taxonomy',
+      'administer menu',
+    ]);
+
+    $this->drupalLogin($user);
+
+    // Ensure the asset cache warming request happens with empty caches,
+    // otherwise the unique combination of assets for the performance request
+    // may not have been created yet.
+    $this->clearCaches();
+
+    $this->drupalGet('node/1');
+    sleep(1);
+    $this->drupalGet('node/1');
+    sleep(1);
+
+    $this->clearCaches();
+    $performance_data = $this->collectPerformanceData(function () {
+      $this->drupalGet('node/1');
+    }, 'administratorNodePage');
+
+    $expected = [
+      'QueryCount' => 273,
+      'CacheGetCount' => 268,
+      'CacheGetCountByBin' => [
+        'config' => 60,
+        'bootstrap' => 15,
+        'discovery' => 75,
+        'data' => 13,
+        'entity' => 24,
+        'dynamic_page_cache' => 1,
+        'default' => 21,
+        'routes' => 18,
+        'render' => 18,
+        'file_parsing' => 1,
+        'menu' => 22,
+      ],
+      'CacheSetCount' => 266,
+      'CacheDeleteCount' => 0,
+      'CacheTagInvalidationCount' => 0,
+      'CacheTagLookupQueryCount' => 28,
+      'ScriptCount' => 4,
+      'ScriptBytes' => 200400,
+      'StylesheetCount' => 6,
+      'StylesheetBytes' => 79412,
+    ];
+    $this->assertMetrics($expected, $performance_data);
+  }
+
+  /**
+   * Clear caches.
+   */
+  protected function clearCaches(): void {
+    foreach (Cache::getBins() as $bin) {
+      $bin->deleteAll();
+    }
   }
 
 }

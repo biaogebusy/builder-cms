@@ -1,0 +1,5 @@
+admin.select_all:
+  version: 20240521
+  css:
+    theme:
+      css/select-all.admin.css: { }

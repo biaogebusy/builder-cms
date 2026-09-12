@@ -1,0 +1,10 @@
+# Merge Fields overview page.
+ckeditor5_premium_features_merge_fields.overview:
+  path: '/admin/config/ckeditor5-premium-features/merge-fields'
+  defaults:
+    _form: '\Drupal\ckeditor5_premium_features_merge_fields\Form\MergeFieldsOverviewForm'
+    _title: 'Merge Fields'
+  requirements:
+    _permission: 'administer merge fields'
+  options:
+    _admin_route: TRUE

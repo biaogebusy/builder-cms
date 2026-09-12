@@ -7,7 +7,12 @@
  * @see phpunit.xml.dist
  */
 
-use Drupal\TestTools\PhpUnitCompatibility\ClassWriter;
+declare(strict_types=1);
+
+use Drupal\TestTools\ErrorHandler\BootstrapErrorHandler;
+use Drupal\TestTools\Extension\DeprecationBridge\DeprecationHandler;
+use PHPUnit\Runner\ErrorHandler as PhpUnitErrorHandler;
+use Symfony\Component\ErrorHandler\DebugClassLoader;
 
 /**
  * Finds all valid extension directories recursively within a given directory.
@@ -43,7 +48,7 @@ function drupal_phpunit_find_extension_directories($scan_directory) {
  * @return array
  *   An array of directories under which contributed extensions may exist.
  */
-function drupal_phpunit_contrib_extension_directory_roots($root = NULL) {
+function drupal_phpunit_contrib_extension_directory_roots($root = NULL): array {
   if ($root === NULL) {
     $root = dirname(__DIR__, 2);
   }
@@ -139,10 +144,8 @@ function drupal_phpunit_populate_class_loader() {
 }
 
 // Do class loader population.
-$loader = drupal_phpunit_populate_class_loader();
+drupal_phpunit_populate_class_loader();
 class_alias('\Drupal\Tests\DocumentElement', '\Behat\Mink\Element\DocumentElement', TRUE);
-
-ClassWriter::mutateTestBase($loader);
 
 // Set sane locale settings, to ensure consistent string, dates, times and
 // numbers handling.
@@ -160,13 +163,18 @@ mb_language('uni');
 // reduce the fragility of the testing system in general.
 date_default_timezone_set('Australia/Sydney');
 
-// Ensure ignored deprecation patterns listed in .deprecation-ignore.txt are
-// considered in testing.
-if (getenv('SYMFONY_DEPRECATIONS_HELPER') === FALSE) {
-  $deprecation_ignore_filename = realpath(__DIR__ . "/../.deprecation-ignore.txt");
-  putenv("SYMFONY_DEPRECATIONS_HELPER=ignoreFile=$deprecation_ignore_filename");
-}
+// Bootstrap the DeprecationHandler extension and the DebugClassloader to report
+// deprecations.
+if ($deprecationBridgeConfiguration = DeprecationHandler::getConfiguration()) {
+  DeprecationHandler::init($deprecationBridgeConfiguration['ignoreFile'] ?? NULL);
 
-// Drupal expects to be run from its root directory. This ensures all test types
-// are consistent.
-chdir(dirname(__DIR__, 2));
+  // Need to have an early error handler to manage deprecations triggered by
+  // DebugClassLoader, that occur before tests' setUp() methods are called.
+  // We pass an instance of the PHPUnit error handler to redirect any error not
+  // managed by our layer back to PHPUnit.
+  set_error_handler(new BootstrapErrorHandler(PhpUnitErrorHandler::instance()));
+
+  // Enable the DebugClassLoader to get deprecations for methods' signature
+  // changes.
+  DebugClassLoader::enable();
+}

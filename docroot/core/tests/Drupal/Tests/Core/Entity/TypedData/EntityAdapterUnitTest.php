@@ -9,19 +9,22 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Tests\Core\Entity\ContentEntityBaseMockableClass;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Language\Language;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\Plugin\DataType\EntityAdapter
- * @group Entity
- * @group TypedData
+ * Tests Drupal\Core\Entity\Plugin\DataType\EntityAdapter.
  */
+#[CoversClass(EntityAdapter::class)]
+#[Group('Entity')]
+#[Group('TypedData')]
 class EntityAdapterUnitTest extends UnitTestCase {
 
   /**
@@ -140,6 +143,14 @@ class EntityAdapterUnitTest extends UnitTestCase {
       ->willReturn([
         'id' => 'id',
         'uuid' => 'uuid',
+        'langcode' => 'langcode',
+      ]);
+    $this->entityType->expects($this->any())
+      ->method('getKey')
+      ->willReturnMap([
+        ['id', 'id'],
+        ['uuid', 'uuid'],
+        ['langcode', 'langcode'],
       ]);
 
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
@@ -224,42 +235,42 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getConstraints
+   * Tests get constraints.
    */
   public function testGetConstraints(): void {
     $this->assertIsArray($this->entityAdapter->getConstraints());
   }
 
   /**
-   * @covers ::getName
+   * Tests get name.
    */
   public function testGetName(): void {
     $this->assertNull($this->entityAdapter->getName());
   }
 
   /**
-   * @covers ::getRoot
+   * Tests get root.
    */
   public function testGetRoot(): void {
     $this->assertSame(spl_object_hash($this->entityAdapter), spl_object_hash($this->entityAdapter->getRoot()));
   }
 
   /**
-   * @covers ::getPropertyPath
+   * Tests get property path.
    */
   public function testGetPropertyPath(): void {
     $this->assertSame('', $this->entityAdapter->getPropertyPath());
   }
 
   /**
-   * @covers ::getParent
+   * Tests get parent.
    */
   public function testGetParent(): void {
     $this->assertNull($this->entityAdapter->getParent());
   }
 
   /**
-   * @covers ::setContext
+   * Tests set context.
    */
   public function testSetContext(): void {
     $name = $this->randomMachineName();
@@ -271,21 +282,21 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getValue
+   * Tests get value.
    */
   public function testGetValue(): void {
     $this->assertEquals($this->entity, $this->entityAdapter->getValue());
   }
 
   /**
-   * @covers ::getEntity
+   * Tests get entity.
    */
   public function testGetEntity(): void {
     $this->assertSame($this->entity, $this->entityAdapter->getEntity());
   }
 
   /**
-   * @covers ::setValue
+   * Tests set value.
    */
   public function testSetValue(): void {
     $this->entityAdapter->setValue(NULL);
@@ -293,14 +304,14 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::get
+   * Tests get.
    */
   public function testGet(): void {
     $this->assertInstanceOf('\Drupal\Core\Field\FieldItemListInterface', $this->entityAdapter->get('id'));
   }
 
   /**
-   * @covers ::get
+   * Tests get invalid field.
    */
   public function testGetInvalidField(): void {
     $this->expectException(\InvalidArgumentException::class);
@@ -308,7 +319,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::get
+   * Tests get without data.
    */
   public function testGetWithoutData(): void {
     $this->entityAdapter->setValue(NULL);
@@ -317,7 +328,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::set
+   * Tests set.
    */
   public function testSet(): void {
     $id_items = [['value' => $this->id + 1]];
@@ -330,7 +341,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::set
+   * Tests set without data.
    */
   public function testSetWithoutData(): void {
     $this->entityAdapter->setValue(NULL);
@@ -340,7 +351,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getProperties
+   * Tests get properties.
    */
   public function testGetProperties(): void {
     $fields = $this->entityAdapter->getProperties();
@@ -349,7 +360,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::toArray
+   * Tests to array.
    */
   public function testToArray(): void {
     $array = $this->entityAdapter->toArray();
@@ -360,7 +371,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::toArray
+   * Tests to array without data.
    */
   public function testToArrayWithoutData(): void {
     $this->entityAdapter->setValue(NULL);
@@ -369,7 +380,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isEmpty
+   * Tests is empty.
    */
   public function testIsEmpty(): void {
     $this->assertFalse($this->entityAdapter->isEmpty());
@@ -378,7 +389,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::onChange
+   * Tests on change.
    */
   public function testOnChange(): void {
     $entity = $this->createMock('\Drupal\Core\Entity\ContentEntityInterface');
@@ -391,7 +402,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDataDefinition
+   * Tests get data definition.
    */
   public function testGetDataDefinition(): void {
     $definition = $this->entityAdapter->getDataDefinition();
@@ -401,7 +412,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getString
+   * Tests get string.
    */
   public function testGetString(): void {
     $entity = $this->createMock('\Drupal\Core\Entity\ContentEntityInterface');
@@ -415,7 +426,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyDefaultValue
+   * Tests apply default value.
    */
   public function testApplyDefaultValue(): void {
     // For each field on the entity the mock method has to be invoked once.
@@ -425,7 +436,7 @@ class EntityAdapterUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getIterator
+   * Tests get iterator.
    */
   public function testGetIterator(): void {
     // Content entity test.

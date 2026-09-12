@@ -30,3 +30,9 @@ services:
     class: Drupal\commerce_checkout\EventSubscriber\GuestCheckoutCompletionSubscriber
     tags:
       - { name: event_subscriber }
+
+  Drupal\commerce_checkout\Hook\CommerceCheckoutHooks:
+    class: Drupal\commerce_checkout\Hook\CommerceCheckoutHooks
+
+  Drupal\commerce_checkout\Hook\CommerceCheckoutThemeHooks:
+    class: Drupal\commerce_checkout\Hook\CommerceCheckoutThemeHooks

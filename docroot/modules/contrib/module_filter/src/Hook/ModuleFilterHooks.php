@@ -1,0 +1,250 @@
+<?php
+
+namespace Drupal\module_filter\Hook;
+
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Link;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RequestStack;
+
+/**
+ * Hook implementations for module_filter.
+ */
+class ModuleFilterHooks {
+
+  use StringTranslationTrait;
+
+  public function __construct(
+    protected ConfigFactoryInterface $configFactory,
+    protected RequestStack $requestStack,
+    protected StateInterface $state,
+    protected TimeInterface $time,
+    protected ModuleExtensionList $moduleExtensionList,
+  ) {}
+
+  /**
+   * Implements hook_help().
+   */
+  #[Hook('help')]
+  public function help($route_name, RouteMatchInterface $route_match) {
+    if ($route_name == 'help.page.module_filter') {
+      $output = '<p>';
+      $output .= $this->t('The modules list page can become quite big when dealing with a fairly large site or even just a dev site meant for testing new and various modules being considered.');
+      $output .= '</p>';
+      $output .= '<p>';
+      $output .= $this->t('What this module aims to accomplish is the ability to quickly find the module you are looking for without having to rely on the browsers search feature which more times than not shows you the module name in the -Required by- or -Depends on- sections of the various modules or even some other location on the page like a menu item.');
+      $output .= '</p>';
+      $output .= '<p>';
+      $output .= $this->t('See the <a href=":project_page">project page on Drupal.org</a> for more details.', [
+        ':project_page' => 'https://www.drupal.org/project/module_filter',
+      ]);
+      return $output;
+    }
+  }
+
+  /**
+   * Implements hook_form_FORM_ID_alter().
+   */
+  #[Hook('form_system_modules_alter')]
+  public function formSystemModulesAlter(&$form, FormStateInterface $form_state, $form_id): void {
+    $request_object = $this->requestStack->getCurrentRequest();
+    $config = $this->configFactory->get('module_filter.settings');
+    $key = array_search('system/drupal.system.modules', $form['#attached']['library']);
+    if ($key !== FALSE) {
+      unset($form['#attached']['library'][$key]);
+    }
+    $form['#attached']['library'][] = $config->get('tabs') ? 'module_filter/modules.tabs' : 'module_filter/modules.bare';
+    unset($form['filters']['text']['#description']);
+    $form['filters']['text']['#placeholder'] = $this->t('Filter by module name or description');
+    if (!empty($request_object->query->get('filter'))) {
+      $form['filters']['text']['#default_value'] = $request_object->query->get('filter');
+    }
+    $status_defaults = [
+      (!empty($request_object->query->get('enabled')) ? $request_object->query->get('enabled') : 1) ? 'enabled' : '',
+      (!empty($request_object->query->get('disabled')) ? $request_object->query->get('disabled') : 1) ? 'disabled' : '',
+      (!empty($request_object->query->get('unavailable')) ? $request_object->query->get('unavailable') : 1) ? 'unavailable' : '',
+    ];
+    $form['filters']['status'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'module-filter-status',
+        ],
+      ],
+      'checkboxes' => [
+        '#type' => 'checkboxes',
+        '#default_value' => array_filter($status_defaults),
+        '#options' => [
+          'enabled' => $this->t('Enabled'),
+          'disabled' => $this->t('Disabled'),
+          'unavailable' => $this->t('Unavailable'),
+        ],
+      ],
+    ];
+    $recent = $this->state->get('module_filter.recent') ?: [];
+    // Remove recent items older than a week.
+    $request_time = $this->time->getRequestTime();
+    $recent = array_filter($recent, function ($val) use ($request_time) {
+      return !($val < $request_time - 60 * 60 * 24 * 7);
+    });
+    $this->state->set('module_filter.recent', $recent);
+    if (!empty($recent)) {
+      foreach ($recent as $module => $time) {
+        foreach (Element::children($form['modules']) as $package) {
+          if (isset($form['modules'][$package][$module])) {
+            $form['modules'][$package][$module]['#attributes']['class'][] = 'recent';
+            break;
+          }
+        }
+      }
+    }
+    $modules = $this->moduleExtensionList->getList();
+    foreach ($modules as $name => $module) {
+      $ctime = filectime($module->getPathname());
+      if ($ctime - strtotime('-1 week') > 0) {
+        foreach (Element::children($form['modules']) as $package) {
+          if (isset($form['modules'][$package][$name])) {
+            $form['modules'][$package][$name]['#attributes']['class'][] = 'new';
+            break;
+          }
+        }
+      }
+      foreach (array_keys($module->requires) as $requires_name) {
+        // If the required name is not in $modules then that module is missing,
+        // so change the name into a link to assist admins to get the project.
+        // We assume that the project at least has a page on drupal.org even if
+        // the primary source repo is hosted somewhere else.
+        if (empty($modules[$requires_name])) {
+          $package = $module->info['package'];
+          if (isset($form['modules'][$package][$name]['#requires'][$requires_name])) {
+            $project = Link::fromTextAndUrl($requires_name, Url::fromUri('https://www.drupal.org/project/' . $requires_name));
+            $missing_link = $this->t('<strong>@module_name</strong> (<span class="admin-missing">missing</span>)', [
+              '@module_name' => $project->toString(),
+            ]);
+            $form['modules'][$package][$name]['#requires'][$requires_name] = $missing_link;
+          }
+        }
+      }
+    }
+    $form['#submit'][] = 'module_filter_system_modules_recent_enabled_submit';
+    $form['#submit'][] = 'module_filter_system_modules_redirect_submit';
+  }
+
+  /**
+   * Implements hook_form_FORM_ID_alter().
+   */
+  #[Hook('form_system_modules_confirm_form_alter')]
+  public function formSystemModulesConfirmFormAlter(&$form, FormStateInterface $form_state, $form_id): void {
+    $request_object = $this->requestStack->getCurrentRequest();
+    $form['filters']['text'] = [
+      '#type' => 'value',
+      '#value' => !empty($request_object->query->get('filter')) ? $request_object->query->get('filter') : '',
+    ];
+    $form['#submit'][] = 'module_filter_system_modules_redirect_submit';
+  }
+
+  /**
+   * Implements hook_form_FORM_ID_alter().
+   */
+  #[Hook('form_system_modules_uninstall_alter')]
+  public function formSystemModulesUninstallAlter(&$form, FormStateInterface $form_state, $form_id): void {
+    $request_object = $this->requestStack->getCurrentRequest();
+    // Remove the 'system/drupal.system.modules' library if it is attached, and
+    // replace it with this module's 'module_filter/modules.uninstall' library.
+    $key = array_search('system/drupal.system.modules', $form['#attached']['library']);
+    if ($key !== FALSE) {
+      unset($form['#attached']['library'][$key]);
+    }
+    $form['#attached']['library'][] = 'module_filter/modules.uninstall';
+    unset($form['filters']['text']['#description']);
+    $form['filters']['text']['#placeholder'] = $this->t('Filter by module name, description or machine name');
+    // Increase the input field size to cater for longer placeholder.
+    $form['filters']['text']['#size'] = 50;
+    if (!empty($request_object->query->get('filter'))) {
+      $form['filters']['text']['#default_value'] = $request_object->query->get('filter');
+    }
+  }
+
+  /**
+   * Implements hook_form_FORM_ID_alter().
+   */
+  #[Hook('form_user_admin_permissions_alter')]
+  public function formUserAdminPermissionsAlter(&$form, FormStateInterface $form_state, $form_id): void {
+    $config = $this->configFactory->get('module_filter.settings');
+    if (!$config->get('enabled_filters.permissions')) {
+      return;
+    }
+    $request_object = $this->requestStack->getCurrentRequest();
+    $form['filters'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'table-filter',
+          'js-show',
+        ],
+      ],
+    ];
+    $form['filters']['text'] = [
+      '#type' => 'search',
+      '#title' => $this->t('Filter modules'),
+      '#title_display' => 'invisible',
+      '#size' => 30,
+      '#placeholder' => $this->t('Filter by module or permission'),
+      '#attributes' => [
+        'class' => [
+          'table-filter-text',
+        ],
+        'data-table' => '#permissions',
+        'autocomplete' => 'off',
+      ],
+      '#weight' => -1000,
+    ];
+    if (!empty($request_object->query->get('filter'))) {
+      $form['filters']['text']['#default_value'] = $request_object->query->get('filter');
+    }
+    $form['#attached']['library'][] = 'module_filter/permissions';
+  }
+
+  /**
+   * Implements hook_theme_registry_alter().
+   */
+  #[Hook('theme_registry_alter')]
+  public function themeRegistryAlter(&$theme_registry): void {
+    // We need to alter the system-modules-details template, so we can add
+    // applicable requires and required-by classes.
+    $theme_registry['system_modules_details']['path'] = $this->moduleExtensionList->getPath('module_filter') . '/templates';
+  }
+
+  /**
+   * Implements hook_preprocess_HOOK().
+   */
+  #[Hook('preprocess_system_modules_details')]
+  public function preprocessSystemModulesDetails(&$variables): void {
+    $settings = $this->configFactory->get('module_filter.settings');
+    $display_path = $settings->get('path');
+    if ($display_path) {
+      foreach ($variables['modules'] as &$module) {
+        // Get the module id from parents.
+        // Because core does not provide it in
+        // template_preprocess_system_modules_details.
+        $id = $module['name']['#parents'][1];
+        $path = $this->moduleExtensionList->getPath($id);
+        if (!empty($path)) {
+          $module['path'] = $path;
+        }
+      }
+    }
+    if ($settings->get('descriptions_show')) {
+      $variables['descriptions_show'] = 'open';
+    }
+  }
+
+}

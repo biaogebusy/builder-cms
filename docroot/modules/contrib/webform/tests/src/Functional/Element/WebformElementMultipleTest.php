@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
-use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -25,7 +24,7 @@ class WebformElementMultipleTest extends WebformElementBrowserTestBase {
   /**
    * Tests multiple element.
    */
-  public function testMultiple() {
+  public function testMultiple(): void {
     $assert_session = $this->assertSession();
 
     /* ********************************************************************** */
@@ -129,20 +128,10 @@ webform_multiple_custom_attributes: {  }");
 
     // Check first tr.
     $assert_session->responseContains('<tr class="draggable" data-drupal-selector="edit-webform-multiple-default-items-0">');
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<td><div class="js-form-item form-item form-type-textfield js-form-type-textfield form-item-webform-multiple-default-items-0--item- js-form-item-webform-multiple-default-items-0--item- form-no-label">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<td><div class="js-form-item form-item js-form-type-textfield form-item-webform-multiple-default-items-0--item- js-form-item-webform-multiple-default-items-0--item- form-no-label">'),
-    );
+    $assert_session->responseContains('<td><div class="js-form-item form-item form-type-textfield js-form-type-textfield form-item-webform-multiple-default-items-0--item- js-form-item-webform-multiple-default-items-0--item- form-no-label">');
     $assert_session->responseContains('<label for="edit-webform-multiple-default-items-0-item-" class="visually-hidden">Item value</label>');
     $assert_session->responseContains('<input data-drupal-selector="edit-webform-multiple-default-items-0-item-" type="text" id="edit-webform-multiple-default-items-0-item-" name="webform_multiple_default[items][0][_item_]" value="One" size="60" maxlength="128" placeholder="Enter value…" class="form-text" />');
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<td class="webform-multiple-table--weight"><div class="webform-multiple-table--weight js-form-item form-item form-type-number js-form-type-number form-item-webform-multiple-default-items-0-weight js-form-item-webform-multiple-default-items-0-weight form-no-label">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<td class="webform-multiple-table--weight"><div class="webform-multiple-table--weight js-form-item form-item js-form-type-number form-item-webform-multiple-default-items-0-weight js-form-item-webform-multiple-default-items-0-weight form-no-label">'),
-    );
+    $assert_session->responseContains('<td class="webform-multiple-table--weight"><div class="webform-multiple-table--weight js-form-item form-item form-type-number js-form-type-number form-item-webform-multiple-default-items-0-weight js-form-item-webform-multiple-default-items-0-weight form-no-label">');
     $assert_session->responseContains('<label for="edit-webform-multiple-default-items-0-weight" class="visually-hidden">Item weight</label>');
     $assert_session->responseContains('<input class="webform-multiple-sort-weight form-number" data-drupal-selector="edit-webform-multiple-default-items-0-weight" type="number" id="edit-webform-multiple-default-items-0-weight" name="webform_multiple_default[items][0][weight]" value="0" step="1" size="10" />');
     $assert_session->responseContains('<td class="webform-multiple-table--operations webform-multiple-table--operations-two"><input data-drupal-selector="edit-webform-multiple-default-items-0-operations-add" formnovalidate="formnovalidate" type="image" id="edit-webform-multiple-default-items-0-operations-add" name="webform_multiple_default_table_add_0"');
@@ -181,7 +170,7 @@ webform_multiple_custom_attributes: {  }");
     $assert_session->responseContains('<table class="custom-table responsive-enabled" data-drupal-selector="edit-webform-multiple-custom-attributes-items" id="edit-webform-multiple-custom-attributes-items" data-striping="1">');
     $assert_session->responseContains('<th class="custom-label webform_multiple_custom_attributes-table--textfield webform-multiple-table--textfield">textfield</th>');
     $assert_session->responseContains('<label class="custom-label visually-hidden"');
-    $assert_session->responseContains('<div class="custom-wrapper js-form-item form-item');
+    $assert_session->responseContains('<div class="custom-wrapper js-webform-type-textfield webform-type-textfield js-form-item form-item form-type-textfield js-form-type-textfield form-item-webform-multiple-custom-attributes-items-0-textfield js-form-item-webform-multiple-custom-attributes-items-0-textfield form-no-label">');
     $assert_session->responseContains('<input class="custom-element form-text"');
 
     /* ********************************************************************** */

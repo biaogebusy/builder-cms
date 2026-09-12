@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\comment\Functional;
 
+use Drupal\comment\CommentingStatus;
 use Drupal\comment\Entity\Comment;
-use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for comment language.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentLanguageTest extends BrowserTestBase {
 
   use CommentTestTrait;
@@ -121,7 +123,7 @@ class CommentLanguageTest extends BrowserTestBase {
         'title[0][value]' => $title,
         'body[0][value]' => $this->randomMachineName(),
         'langcode[0][value]' => $node_langcode,
-        'comment[0][status]' => CommentItemInterface::OPEN,
+        'comment[0][status]' => CommentingStatus::Open->value,
       ];
       $this->drupalGet("node/add/article");
       $this->submitForm($edit, 'Save');

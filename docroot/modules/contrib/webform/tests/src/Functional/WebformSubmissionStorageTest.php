@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
 use Drupal\webform\WebformInterface;
@@ -17,7 +17,7 @@ class WebformSubmissionStorageTest extends WebformBrowserTestBase {
   /**
    * Test webform submission storage.
    */
-  public function testSubmissionStorage() {
+  public function testSubmissionStorage(): void {
     /** @var \Drupal\webform\WebformSubmissionStorageInterface $storage */
     $storage = \Drupal::entityTypeManager()->getStorage('webform_submission');
 

@@ -2,159 +2,189 @@
 
 /**
  * @file
- * Functionality for search of Admin Toolbar.
+ * Integration of a JS autocomplete search text field in the admin toolbar.
  */
 
-use Drupal\Core\Routing\RouteMatchInterface;
+declare(strict_types=1);
+
+use Drupal\admin_toolbar_search\Constants\AdminToolbarSearchConstants;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
  */
-function admin_toolbar_search_help($route_name, RouteMatchInterface $route_match) {
+function admin_toolbar_search_help($route_name) {
   switch ($route_name) {
-    // Main module help.
+    // Main user documentation page for the Admin Toolbar Search module.
     case 'help.page.admin_toolbar_search':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Admin Toolbar Search module add a search option to the toolbar for site administrative tasks.') . '</p>';
+      $output .= '<p>' . t('Type text to quickly search for menu links in the Admin Toolbar!<br/>') . '</p>';
+      $output .= '<p>' . t('The Admin Toolbar Search module adds an easy-to-use JS autocomplete filter of the links in the Administration menu.<br/>It is very convenient for finding quickly an administration configuration page without knowing where its menu link could be in the Administration dropdown menu or the organization of the site.') . '</p>';
 
       return $output;
   }
 }
 
 /**
- * Implements hook_toolbar_alter().
+ * Implements hook_toolbar().
+ *
+ * Inject the admin toolbar search JS autocomplete text field in the Toolbar
+ * directly as a toolbar item or as a menu item tab with a tray
+ * ('display_menu_item'). Add the necessary CSS classes, HTML IDs and load
+ * required JS libraries and settings.
+ *
+ * The autocomplete search field is always loaded with a menu item tab and tray,
+ * but if the 'display_menu_item' setting is disabled, the search field is also
+ * added directly in the toolbar as a separate toolbar item.
+ * The default search tab is then hidden or displayed with CSS styles when the
+ * toolbar width is below '769px', to support mobile devices.
+ *
+ * In other words, support for smaller devices is not provided by the module,
+ * but by Drupal core.
+ *
+ * @see admin_toolbar_search/css/admin_toolbar_search.css
+ * @see admin_toolbar_search/js/admin_toolbar_search.js
  */
-function admin_toolbar_search_toolbar_alter(&$items) {
+function admin_toolbar_search_toolbar() {
+  // Load the admin toolbar search only if the user has the required permission.
   if (!\Drupal::currentUser()->hasPermission('use admin toolbar search')) {
-    return;
+    return [];
   }
+  // Check if the Admin Toolbar Tools module is enabled to load extra links.
   $admin_toolbar_tools_enabled = \Drupal::service('module_handler')
     ->moduleExists('admin_toolbar_tools');
 
+  // Load the Admin Toolbar Search settings from the configuration.
   $admin_toolbar_search_settings = \Drupal::config('admin_toolbar_search.settings');
+  // Get the 'display_menu_item' setting to determine if the search field is
+  // displayed directly in the toolbar or in a tray under a menu item tab.
   $display_menu_item = $admin_toolbar_search_settings->get('display_menu_item');
-  // Admin Toolbar Search field labels.
+  // Admin Toolbar Search field default label, title and placeholder text.
   $search_field_title = t('Search');
-  $search_field_placeholder = t('Admin Toolbar Search (Alt+a)');
-  $search_field_title_attribute = t('Keyboard shortcut: Alt + a');
+  $search_field_placeholder = t('Search for menu links');
+  $search_field_title_attribute = t('Type text to search for menu links in the admin toolbar.');
 
-  if (!$display_menu_item) {
-    // The search field is displayed directly in the Toolbar.
-    $items['administration_mobile_search'] = [
-      '#type' => 'toolbar_item',
-      '#weight' => 100,
-      'tab' => [
-        '#type' => 'link',
-        '#title' => $search_field_title,
-        '#url' => Url::fromRoute('system.admin'),
-        '#attributes' => [
-          'class' => [
-            'toolbar-icon',
-          ],
-        ],
+  // Ensure the toolbar items are rebuilt when the user permissions or module's
+  // settings change and keep the render arrays cached.
+  $toolbar_search_item_cache = [
+    'contexts' => [
+      'user.permissions',
+    ],
+    'tags' => [
+      'config:admin_toolbar_search.settings',
+    ],
+  ];
+  // Render array of properties for the admin toolbar search JS autocomplete
+  // input text field.
+  $administration_search_field = [
+    'search' => [
+      // Define a form element of type 'search' to get HTML5 features.
+      '#type' => 'search',
+      // Set field HTML attributes: ID, label, title, placeholder text and size.
+      '#id' => AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_input'],
+      '#title' => $search_field_title,
+      '#placeholder' => $search_field_placeholder,
+      '#attributes' => [
+        'title' => $search_field_title_attribute,
       ],
-      '#wrapper_attributes' => [
-        'id' => 'admin-toolbar-mobile-search-tab',
-      ],
-    ];
+      // Default size of the search input field when displayed in the tray.
+      // The size is reduced when displayed directly in the toolbar.
+      '#size' => 60,
+    ],
+  ];
 
-    $items['administration_search'] = [
-      "#type" => "toolbar_item",
-      '#weight' => 101,
-      'tab' => [
-        'search' => [
-          '#title' => $search_field_title,
-          '#title_display' => 'invisible',
-          '#type' => 'search',
-          '#size' => 30,
-          '#attributes' => [
-            'placeholder' => $search_field_placeholder,
-            'title' => $search_field_title_attribute,
-          ],
-          '#id' => 'admin-toolbar-search-input',
+  // Add the admin toolbar search as a toolbar item render array.
+  $items['administration_search'] = [
+    '#type' => 'toolbar_item',
+    'tab' => [
+      // Render array of properties for the admin search tab menu link, when it
+      // is *not* displayed directly in the toolbar or as a fallback for mobile.
+      '#type' => 'link',
+      '#title' => $search_field_title,
+      // Since the search field is handled with JS, there is no link url for the
+      // tab, so a simple 'span' element could be used instead.
+      '#url' => Url::fromRoute('<nolink>'),
+      '#attributes' => [
+        'class' => [
+          // Ensures compatibility with Drupal core toolbar styles for the
+          // search tab magnifying glass icon.
+          'toolbar-icon',
         ],
       ],
-      '#attached' => [
-        'library' => [
-          'admin_toolbar_search/search',
-        ],
-        'drupalSettings' => [
-          'adminToolbarSearch' => [
-            'loadExtraLinks' => $admin_toolbar_tools_enabled,
-          ],
+    ],
+    // Move the search tab to the end of the toolbar items, by default.
+    '#weight' => 110,
+    // Set the ID of the HTML element wrapping the toolbar item.
+    '#wrapper_attributes' => [
+      'id' => AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_tab'],
+    ],
+    // Load the required JS library and settings by default.
+    '#attached' => [
+      'library' => [
+        'admin_toolbar_search/admin_toolbar_search',
+      ],
+      // Add a setting to determine if extra links should be loaded via AJAX.
+      'drupalSettings' => [
+        'adminToolbarSearch' => [
+          'loadExtraLinks' => $admin_toolbar_tools_enabled,
         ],
       ],
-      '#wrapper_attributes' => [
-        'id' => 'admin-toolbar-search-tab',
-      ],
-      '#cache' => [
-        'contexts' => [
-          'user.permissions',
-        ],
-        'tags' => [
-          'config:admin_toolbar_search.settings',
-        ],
-      ],
-    ];
-  }
-  else {
-    // The search field is displayed in a specific Tray under the Search Tab.
-    $items['administration_search'] = [
-      "#type" => "toolbar_item",
-      'tab' => [
-        '#type' => 'link',
-        '#title' => $search_field_title,
-        '#url' => URL::fromRoute('system.admin'),
-        '#attributes' => [
-          'class' => [
-            'toolbar-icon',
-          ],
-        ],
-      ],
-      'tray' => [
-        'search' => [
-          '#title' => $search_field_title,
-          '#type' => 'search',
-          '#size' => 60,
-          '#id' => 'admin-toolbar-search-input',
-          '#attributes' => [
-            'placeholder' => $search_field_placeholder,
-            'title' => $search_field_title_attribute,
-          ],
-        ],
-      ],
-      '#attached' => [
-        'library' => [
-          'admin_toolbar_search/search',
-        ],
-        'drupalSettings' => [
-          'adminToolbarSearch' => [
-            'loadExtraLinks' => $admin_toolbar_tools_enabled,
-          ],
-        ],
-      ],
-      '#wrapper_attributes' => [
-        "id" => "admin-toolbar-search-tab",
-      ],
-      '#cache' => [
-        'contexts' => [
-          'user.permissions',
-        ],
-        'tags' => [
-          'config:admin_toolbar_search.settings',
-        ],
-      ],
-    ];
-  }
+    ],
+    // Set the cache metadata for the administration search toolbar item.
+    '#cache' => $toolbar_search_item_cache,
+  ];
 
-  // Add the keyboard shortcut library if enabled.
+  // Add the keyboard shortcut library if enabled ('enable_keyboard_shortcut').
   if ($admin_toolbar_search_settings->get('enable_keyboard_shortcut')) {
-    $items['administration_search']['#attached']['library'][] = 'admin_toolbar_search/search.keyboard_shortcut';
-    // The display menu item setting is used to determine if the search input
-    // should be displayed as a menu item or directly in the toolbar.
-    $items['administration_search']['#attached']['drupalSettings']['adminToolbarSearch']['displayMenuItem'] = $display_menu_item;
+    $items['administration_search']['#attached']['library'][] = 'admin_toolbar_search/admin_toolbar_search.keyboard_shortcut';
+
+    // Add the keyboard shortcut label to the search field placeholder and
+    // title attributes.
+    $search_keyboard_shortcut_label = t('Alt + a');
+    $administration_search_field['search']['#placeholder'] .= ' (' . $search_keyboard_shortcut_label . ')';
+    $administration_search_field['search']['#attributes']['title'] = t('Keyboard shortcut: @shortcut_label', [
+      '@shortcut_label' => $search_keyboard_shortcut_label,
+    ]);
   }
+
+  // The search field is always displayed in a specific tray under the 'Search'
+  // tab menu item. This tab is hidden or shown with CSS styles depending on the
+  // toolbar width breakpoint and the 'display_menu_item' setting.
+  $items['administration_search']['tray'] = $administration_search_field;
+
+  // Add the autocomplete search field directly in the toolbar by default, as
+  // a toolbar item ('display_menu_item:false').
+  if (!$display_menu_item) {
+    // The search field is displayed directly in the Toolbar without a tray.
+    $items['administration_search_field'] = [
+      '#type' => 'toolbar_item',
+      // Display the search field directly in the toolbar tab: Modify the search
+      // field properties for the toolbar item by merging the new options with
+      // the existing ones.
+      'tab' => NestedArray::mergeDeep($administration_search_field, [
+        'search' => [
+          // Reduce the size and hide the label of the search input field.
+          '#size' => 30,
+          '#title_display' => 'invisible',
+          // Set a different HTML ID for the search input field when displayed
+          // directly in the toolbar.
+          '#id' => AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_field_input'],
+        ],
+      ]),
+      // The search field toolbar item should be right before the main search
+      // tab so it stays at the same position when the tab is hidden or shown.
+      '#weight' => $items['administration_search']['#weight'] - 1,
+      // Set the ID of the HTML element wrapping the toolbar item.
+      '#wrapper_attributes' => [
+        'id' => AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_field_tab'],
+      ],
+      // Set the cache metadata for the admin search field toolbar item.
+      '#cache' => $toolbar_search_item_cache,
+    ];
+  }
+
+  return $items;
 
 }

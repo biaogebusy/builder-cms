@@ -64,7 +64,7 @@ interface WebformElementAttachmentInterface {
    * Get attachment export batch limit.
    *
    * @return int|null
-   *   Batch limit or NULL if the batch limit should not be overidden.
+   *   Batch limit or NULL if the batch limit should not be overridden.
    */
   public function getExportAttachmentsBatchLimit();
 

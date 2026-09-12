@@ -2,9 +2,20 @@ block.settings.webform_block:
   type: block_settings
   label: 'Webforms block'
   mapping:
+    id:
+      type: string
+      label: Identifier
+      constraints:
+        Regex:
+          pattern: '/^[a-z0-9_]+$/'
+          message: "The %value machine name is not valid."
     webform_id:
       type: string
       label: Webform
+      constraints:
+        Regex:
+          pattern: '/^[a-z0-9_]+$/'
+          message: "The %value machine name is not valid."
     default_data:
       type: text
       label: 'Default webform submission data'
@@ -15,6 +26,8 @@ block.settings.webform_block:
     lazy:
       type: boolean
       label: 'Use lazy builder'
+  constraints:
+    FullyValidatable: ~
 block.settings.webform_submission_limit_block:
   type: block_settings
   label: 'Webform submission limits block'

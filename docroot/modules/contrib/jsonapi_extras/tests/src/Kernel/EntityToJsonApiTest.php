@@ -150,6 +150,7 @@ class EntityToJsonApiTest extends JsonapiKernelTestBase {
       $this->createImageField('field_image', 'node', 'article');
     }
     else {
+      /* @phpstan-ignore-next-line */
       $this->createImageField('field_image', 'article');
     }
 

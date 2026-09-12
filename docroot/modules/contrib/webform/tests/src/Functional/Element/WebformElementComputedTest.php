@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
-use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
 
@@ -44,7 +43,7 @@ class WebformElementComputedTest extends WebformElementBrowserTestBase {
   /**
    * Test computed elements.
    */
-  public function testComputedElement() {
+  public function testComputedElement(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -76,12 +75,7 @@ class WebformElementComputedTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<b class="webform_computed_token_html">xss:</b> &lt;script&gt;alert(&quot;XSS&quot;);&lt;/script&gt;<br />');
 
     // Check token plain text rendering.
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.2',
-      currentCallable: fn() => $assert_session->responseContains('<div class="webform-element webform-element-type-webform-computed-token js-form-item form-item form-type-item js-form-type-item form-item-webform-computed-token-text js-form-item-webform-computed-token-text" id="test_element_computed_token--webform_computed_token_text">'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<div class="webform-element webform-element-type-webform-computed-token js-form-item form-item js-form-type-item form-item-webform-computed-token-text js-form-item-webform-computed-token-text" id="test_element_computed_token--webform_computed_token_text">'),
-    );
+    $assert_session->responseContains('<div class="webform-element webform-element-type-webform-computed-token js-form-item form-item form-type-item js-form-type-item form-item-webform-computed-token-text js-form-item-webform-computed-token-text" id="test_element_computed_token--webform_computed_token_text">');
     $assert_session->responseContains('<label>webform_computed_token_text</label>');
     $assert_session->responseContains('simple string: This is a string<br />');
     $assert_session->responseContains('complex string : This is a &lt;strong&gt;complex&lt;/strong&gt; string, which contains &quot;double&quot; and &#039;single&#039; quotes with special characters like &gt;, &lt;, &gt;&lt;, and &lt;&gt;.<br />');

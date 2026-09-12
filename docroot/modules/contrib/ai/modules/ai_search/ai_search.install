@@ -243,3 +243,38 @@ function ai_search_update_10005() {
     '@number' => $updated_servers,
   ]);
 }
+
+/**
+ * Migrate RAG action configs to enforce access control by default.
+ */
+function ai_search_update_10006(): string {
+  $config_factory = \Drupal::configFactory();
+  $updated = 0;
+
+  foreach ($config_factory->listAll('ai_assistant_api.ai_assistant') as $config_name) {
+    $config = $config_factory->getEditable($config_name);
+    $actions_enabled = $config->get('actions_enabled');
+
+    if (empty($actions_enabled['rag_action'])) {
+      continue;
+    }
+
+    $changed = FALSE;
+    foreach ($actions_enabled['rag_action'] as $key => $rag_db) {
+      if (array_key_exists('access_check', $rag_db)) {
+        unset($actions_enabled['rag_action'][$key]['access_check']);
+        // Force the safe default regardless of the previous value.
+        $actions_enabled['rag_action'][$key]['allow_access_bypass'] = FALSE;
+        $changed = TRUE;
+      }
+    }
+
+    if ($changed) {
+      $config->set('actions_enabled', $actions_enabled);
+      $config->save();
+      $updated++;
+    }
+  }
+
+  return (string) t('Updated @count AI Assistant configuration(s) to enforce RAG access control by default.', ['@count' => $updated]);
+}

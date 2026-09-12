@@ -10,16 +10,19 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Link;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\LinkGenerator;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Url object.
- *
- * @covers \Drupal\Component\Utility\UrlHelper::filterQueryParameters
- * @covers \Drupal\Core\Utility\LinkGenerator::generate
- *
- * @group Common
  */
+#[Group('Common')]
+#[CoversMethod(UrlHelper::class, 'filterQueryParameters')]
+#[CoversMethod(LinkGenerator::class, 'generate')]
+#[RunTestsInSeparateProcesses]
 class UrlTest extends KernelTestBase {
 
   /**
@@ -53,17 +56,72 @@ class UrlTest extends KernelTestBase {
     \Drupal::service('module_installer')->install(['user']);
 
     $cases = [
-      ['Regular link', 'internal:/user', [], ['contexts' => [], 'tags' => [], 'max-age' => Cache::PERMANENT], []],
-      ['Regular link, absolute', 'internal:/user', ['absolute' => TRUE], ['contexts' => ['url.site'], 'tags' => [], 'max-age' => Cache::PERMANENT], []],
-      ['Route processor link', 'route:system.run_cron', [], ['contexts' => ['session'], 'tags' => [], 'max-age' => Cache::PERMANENT], ['placeholders' => []]],
-      ['Route processor link, absolute', 'route:system.run_cron', ['absolute' => TRUE], ['contexts' => ['url.site', 'session'], 'tags' => [], 'max-age' => Cache::PERMANENT], ['placeholders' => []]],
-      ['Path processor link', 'internal:/user/1', [], ['contexts' => [], 'tags' => ['user:1'], 'max-age' => Cache::PERMANENT], []],
-      ['Path processor link, absolute', 'internal:/user/1', ['absolute' => TRUE], ['contexts' => ['url.site'], 'tags' => ['user:1'], 'max-age' => Cache::PERMANENT], []],
+      [
+        'Regular link',
+        'internal:/user',
+        [],
+        ['contexts' => [], 'tags' => [], 'max-age' => Cache::PERMANENT],
+        [],
+      ],
+      [
+        'Regular link, absolute',
+        'internal:/user',
+        ['absolute' => TRUE],
+        [
+          'contexts' => ['url.site'],
+          'tags' => [],
+          'max-age' => Cache::PERMANENT,
+        ],
+        [],
+      ],
+      [
+        'Route processor link',
+        'route:system.run_cron',
+        [],
+        [
+          'contexts' => ['session'],
+          'tags' => [],
+          'max-age' => Cache::PERMANENT,
+        ],
+        ['placeholders' => []],
+      ],
+      [
+        'Route processor link, absolute',
+        'route:system.run_cron',
+        ['absolute' => TRUE],
+        [
+          'contexts' => ['url.site', 'session'],
+          'tags' => [],
+          'max-age' => Cache::PERMANENT,
+        ],
+        ['placeholders' => []],
+      ],
+      [
+        'Path processor link',
+        'internal:/user/1',
+        [],
+        ['contexts' => [], 'tags' => ['user:1'], 'max-age' => Cache::PERMANENT],
+        [],
+      ],
+      [
+        'Path processor link, absolute',
+        'internal:/user/1',
+        ['absolute' => TRUE],
+        [
+          'contexts' => ['url.site'],
+          'tags' => ['user:1'],
+          'max-age' => Cache::PERMANENT,
+        ],
+        [],
+      ],
     ];
 
     foreach ($cases as $case) {
       [$title, $uri, $options, $expected_cacheability, $expected_attachments] = $case;
-      $expected_cacheability['contexts'] = Cache::mergeContexts($expected_cacheability['contexts'], ['languages:language_interface', 'theme', 'user.permissions']);
+      $expected_cacheability['contexts'] = Cache::mergeContexts(
+        $expected_cacheability['contexts'],
+        ['languages:language_interface', 'theme', 'user.permissions']
+      );
       $link = [
         '#type' => 'link',
         '#title' => $title,
@@ -168,17 +226,17 @@ class UrlTest extends KernelTestBase {
   /**
    * Checks for class existence in link.
    *
-   * @param $attribute
+   * @param string $attribute
    *   Attribute to be checked.
-   * @param $link
+   * @param string $link
    *   URL to search.
-   * @param $class
+   * @param string $class
    *   Element class to search for.
    *
    * @return bool
    *   TRUE if the class is found, FALSE otherwise.
    */
-  private function hasAttribute($attribute, $link, $class) {
+  private function hasAttribute($attribute, $link, $class): bool {
     return (bool) preg_match('|' . $attribute . '="([^\"\s]+\s+)*' . $class . '|', $link);
   }
 
@@ -247,11 +305,13 @@ class UrlTest extends KernelTestBase {
     ];
     $this->assertEquals($result, UrlHelper::parse($url), 'Relative URL parsed correctly.');
 
-    // Test that drupal can recognize an absolute URL. Used to prevent attack vectors.
+    // Test that drupal can recognize an absolute URL. Used to prevent attack
+    // vectors.
     $url = 'https://www.example.org/foo/bar?foo=bar&bar=baz&baz#foo';
     $this->assertTrue(UrlHelper::isExternal($url), 'Correctly identified an external URL.');
 
-    // Test that UrlHelper::parse() does not allow spoofing a URL to force a malicious redirect.
+    // Test that UrlHelper::parse() does not allow spoofing a URL to force a
+    // malicious redirect.
     $parts = UrlHelper::parse('forged:http://cwe.mitre.org/data/definitions/601.html');
     $this->assertFalse(UrlHelper::isValid($parts['path'], TRUE), '\Drupal\Component\Utility\UrlHelper::isValid() correctly parsed a forged URL.');
   }

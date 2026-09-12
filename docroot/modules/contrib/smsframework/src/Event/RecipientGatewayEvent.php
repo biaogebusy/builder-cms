@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Event;
 
@@ -81,7 +81,7 @@ class RecipientGatewayEvent extends Event {
    */
   public function getGatewaysSorted() {
     $sorted = $this->gateways;
-    uasort($sorted, static function ($a, $b) {
+    \uasort($sorted, static function ($a, $b) {
       [, $priority_a] = $a;
       [, $priority_b] = $b;
       if ($priority_a == $priority_b) {

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\block_content\Functional\Views;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the block_content integration into views.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentIntegrationTest extends BlockContentTestBase {
 
   /**

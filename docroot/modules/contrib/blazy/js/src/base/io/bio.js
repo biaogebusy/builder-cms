@@ -13,59 +13,33 @@
  * @todo remove traces of fallback to be taken care of by old bLazy fork.
  */
 
-/* global define, module */
-(function (root, factory) {
+(function ($, _win, _doc) {
 
   'use strict';
-
-  var ns = 'Bio';
-  var db = root.dBlazy;
-
-  // Inspired by https://github.com/addyosmani/memoize.js/blob/master/memoize.js
-  if (db.isAmd) {
-    // AMD. Register as an anonymous module.
-    define([ns, db, root], factory);
-  }
-  else if (typeof exports === 'object') {
-    // Node. Does not work with strict CommonJS, but only CommonJS-like
-    // environments that support module.exports, like Node.
-    module.exports = factory(ns, db, root);
-  }
-  else {
-    // Browser globals (root is window).
-    root[ns] = factory(ns, db, root);
-  }
-
-}((this || module || {}), function (ns, $, _win) {
-
-  'use strict';
-
-  if ($.isAmd) {
-    _win = window;
-  }
 
   /**
    * Private variables.
    */
-  var DOC = _win.document;
-  var ROOT = DOC;
-  var NICK = 'bio';
-  var WINDATA = {};
-  var BIOTICK = 0;
-  var REVTICK = 0;
-  var HITTICK = 0;
+  var VARS = {
+    nick: 'bio',
+    winData: {},
+    bioTick: 0,
+    revTick: 0,
+    hitTick: 0,
+    bgClass: 'b-bg',
+    isVisibleClass: 'is-b-visible',
+    eIntersecting: 'bio:intersecting',
+    sParent: '.media',
+    addClass: 'addClass',
+    removeClass: 'removeClass',
+    initialized: false,
+    isNative: $.isNativeLazy,
+    isResizing: false,
+    validateDelay: 25,
+    ww: 0
+  };
+  var ROOT = _doc;
   var OPTS = {};
-  var C_BG = 'b-bg';
-  var C_IS_VISIBLE = 'is-b-visible';
-  // @todo remove the first at 3.x:
-  var E_INTERSECTING = NICK + '.intersecting ' + NICK + ':intersecting';
-  var S_PARENT = '.media';
-  var ADDCLASS = 'addClass';
-  var REMOVECLASS = 'removeClass';
-  var INITIALIZED = false;
-  var IS_RESIZING = false;
-  var VALIDATE_DELAY = 25;
-  var V_WW = 0;
   var FN_OBSERVER = $.observer;
   var FN_VIEWPORT = $.viewport;
   var FN;
@@ -84,16 +58,17 @@
   function Bio(options) {
     var me = $.extend({}, FN, this);
 
-    me.name = ns;
+    me.name = 'Bio';
     me.options = OPTS = $.extend({}, $._defaults, options || {});
+    me.options.isNative = VARS.isNative;
 
-    C_BG = OPTS.bgClass || C_BG;
-    VALIDATE_DELAY = OPTS.validateDelay || VALIDATE_DELAY;
-    S_PARENT = OPTS.parent || S_PARENT;
+    VARS.bgClass = OPTS.bgClass || VARS.bgClass;
+    VARS.validateDelay = OPTS.validateDelay || VARS.validateDelay;
+    VARS.sParent = OPTS.parent || VARS.sParent;
     ROOT = OPTS.root || ROOT;
 
     // DOM ready fix. Ain't a culprit.
-    setTimeout(function () {
+    $.ready(function () {
       me.reinit();
     });
 
@@ -109,10 +84,8 @@
     var watching = opts.visibleClass || revalidate || false;
 
     // Only destroy if no use for is-b-visible class.
-    if (BIOTICK === count - 1) {
-      $.trigger(_win, NICK + ':done', {
-        options: opts
-      });
+    if (VARS.bioTick === count - 1) {
+      $.trigger(_win, VARS.nick + ':done', [me, opts]);
 
       if (!watching) {
         me.destroyQuietly();
@@ -135,7 +108,7 @@
         }
 
         // Count the loaded ones, watching or not.
-        BIOTICK++;
+        VARS.bioTick++;
       }
     }
 
@@ -145,23 +118,21 @@
     // until having VIS alike which may spit out new images on AJAX request.
     if (!el.bhit || revalidate) {
       // Makes sure to have media loaded beforehand.
-      me.lazyLoad(el, WINDATA);
+      me.lazyLoad(el, VARS.winData);
 
-      // If not extending/ overriding, at least provide the option.
-      if ($.isFun(opts.intersecting)) {
-        opts.intersecting(el, opts);
-      }
-
-      // If not extending/ overriding, also allows to listen to.
-      $.trigger(el, E_INTERSECTING, {
-        options: opts
-      });
-
-      HITTICK++;
+      VARS.hitTick++;
 
       // Marks it hit/ requested, not necessarily loaded.
       el.bhit = true;
     }
+
+    // If not extending/ overriding, at least provide the option.
+    if ($.isFun(opts.intersecting)) {
+      opts.intersecting(el, opts);
+    }
+
+    // If not extending/ overriding, also allows to listen to.
+    $.trigger(el, VARS.eIntersecting, [me, opts]);
   }
 
   // This function is called by two observers: IO and RO.
@@ -178,25 +149,25 @@
 
     // RO is another abserver.
     if (isResizing) {
-      WINDATA = FN_VIEWPORT.update(opts);
+      VARS.winData = FN_VIEWPORT.update(opts);
 
-      FN_VIEWPORT.onresizing(me, WINDATA);
+      FN_VIEWPORT.onresizing(me, VARS.winData);
 
-      if (V_WW > 0) {
+      if (VARS.ww > 0) {
         var details = {
-          winData: WINDATA,
+          winData: VARS.winData,
           entries: me.elms,
           currentWidth: ww,
-          oldWidth: V_WW,
-          enlarged: ww > V_WW
+          oldWidth: VARS.ww,
+          enlarged: ww > VARS.ww
         };
 
         // Ensures only before settled, or if any different from previous size.
-        if (V_WW !== ww) {
-          $.trigger(_win, NICK + ':resizing', details);
+        if (VARS.ww !== ww) {
+          $.trigger(_win, VARS.nick + ':resizing', details);
         }
         else {
-          $.trigger(_win, NICK + ':resized', details);
+          $.trigger(_win, VARS.nick + ':resized', details);
         }
         me.resizeTick++;
       }
@@ -217,7 +188,7 @@
       var el = target || e;
       var resized = FN_VIEWPORT.isResized(me, e);
       var visible = FN_VIEWPORT.isVisible(e, vp);
-      var cn = $.closest(el, S_PARENT) || el;
+      var cn = el._bioParent || el;
 
       isBlur = isBlur && !$.hasClass(cn, 'is-b-animated');
 
@@ -225,7 +196,7 @@
       if (visible) {
         // Triggers loading indicator animation before being loaded.
         if (!me.isLoaded(el)) {
-          $[ADDCLASS](cn, C_IS_VISIBLE);
+          $[VARS.addClass](cn, VARS.isVisibleClass);
         }
 
         intersecting.call(me, el);
@@ -234,32 +205,32 @@
         // To make efficient blur filter via CSS, etc. Blur filter is expensive.
         if (me.isLoaded(el)) {
           if (isBlur || forAnim) {
-            $[ADDCLASS](cn, C_IS_VISIBLE);
+            $[VARS.addClass](cn, VARS.isVisibleClass);
           }
 
           if (!forAnim) {
             setTimeout(function () {
-              $[REMOVECLASS](cn, C_IS_VISIBLE);
+              $[VARS.removeClass](cn, VARS.isVisibleClass);
             }, 601);
           }
         }
       }
       else {
-        $[REMOVECLASS](cn, C_IS_VISIBLE);
+        $[VARS.removeClass](cn, VARS.isVisibleClass);
       }
 
       // For different toggle purposes regardless being loaded, or not.
       // Avoid using the reserved `is-b-visible`, use `is-b-inview`, etc.
       if (visibleClass && $.isStr(visibleClass)) {
-        $[visible ? ADDCLASS : REMOVECLASS](cn, visibleClass);
+        $[visible ? VARS.addClass : VARS.removeClass](cn, visibleClass);
       }
 
       // The element is being resized.
-      IS_RESIZING = resized && V_WW > 0;
-      if (IS_RESIZING && !isBlur) {
+      VARS.isResizing = resized && VARS.ww > 0;
+      if (VARS.isResizing && !isBlur) {
         // Ensures only before settled, or if any different from previous size.
-        if (V_WW !== ww) {
-          me.resizing(el, WINDATA);
+        if (VARS.ww !== ww) {
+          me.resizing(el, VARS.winData);
         }
       }
 
@@ -270,18 +241,39 @@
       }
     });
 
-    V_WW = ww;
+    VARS.ww = ww;
+  }
+
+  function verify(me, elms, cb) {
+    if (elms.length) {
+      $.each(elms, function (el) {
+        if (!el._bioParent) {
+          el._bioParent = $.closest(el, VARS.sParent) || el;
+          me.preprocess(el);
+
+          if ($.isFun(cb)) {
+            cb(el);
+          }
+        }
+      });
+    }
   }
 
   // Initializes the IO with fallback to old bLazy.
   function init(me) {
+    me.elms = $.findAll(ROOT, $.selector(me.options));
+    me.count = me.elms.length;
+
+    if (!me.elms.length) {
+      return;
+    }
+
+    verify(me, me.elms);
+
     // Swap data-[SRC|SRCSET] for non-js version once, if not choosing Native.
     // Native lazy markup is triggered by enabling `No JavaScript` lazy option.
     me.prepare();
 
-    var elms = $.findAll(ROOT, $.selector(me.options));
-    me.elms = elms;
-    me.count = elms.length;
     me._raf = [];
     me._queue = [];
     me.withIo = true;
@@ -300,13 +292,15 @@
   FN.erCount = 0;
   FN.resizeTick = 0;
   FN.destroyed = false;
+  FN.elms = [];
   FN.options = {};
-  FN.lazyLoad = function (el, winData) {};
-  FN.loadImage = function (el, isBg, winData) {};
-  FN.resizing = function (el, winData) {};
-  FN.prepare = function () {};
+  FN.preprocess = function (el, key, cb) { };
+  FN.lazyLoad = function (el, winData) { };
+  FN.loadImage = function (el, isBg, winData) { };
+  FN.resizing = function (el, winData) { };
+  FN.prepare = function () { };
   FN.windowData = function () {
-    return $.isUnd(WINDATA.vp) ? FN_VIEWPORT.windowData(this.options, true) : WINDATA;
+    return $.isUnd(VARS.winData.vp) ? FN_VIEWPORT.windowData(this.options, true) : VARS.winData;
   };
 
   // BC for interchanging with bLazy.
@@ -326,32 +320,51 @@
 
     // Manually load elements regardless of being disconnected, or not, relevant
     // for Slick slidesToShow > 1 which rebuilds clones of unloaded elements.
-    $.each(elms, function (el) {
-      if (me.isValid(el) || ($.isElm(el) && revalidate)) {
+    verify(me, elms, function (el) {
+      if (!me.isLoaded(el) || ($.isElm(el) && revalidate)) {
+        if (!el._bioValidated) {
+          el._bioValidated = true;
+
+          me.elms.push(el);
+        }
+
         intersecting.call(me, el, revalidate);
       }
     });
   };
 
   FN.isLoaded = function (el) {
-    return $.hasClass(el, this.options.successClass);
+    if ($.isElm(el)) {
+      // @todo remove class-based check after another check.
+      return el._bioLoaded || $.hasClass(el, this.options.successClass);
+    }
+    return false;
   };
 
-  FN.isValid = function (el) {
-    return $.isElm(el) && !this.isLoaded(el);
+  FN.isNotLoaded = function (el) {
+    return !this.isLoaded(el);
   };
 
+  // @todo remove, no longer needed since 2.18 with event-based bio.ajax.
   FN.revalidate = function (force) {
     var me = this;
 
     // Prevents from too many revalidations unless needed.
-    if ((force === true || me.count !== HITTICK) && (REVTICK < HITTICK)) {
-      var elms = me.elms = $.findAll(ROOT, $.selector(me.options));
+    if ((force === true || me.count !== VARS.hitTick) && (VARS.revTick < VARS.hitTick)) {
+      var elms = $.findAll(ROOT, $.selector(me.options));
 
       if (elms.length) {
+        verify(me, elms, function (el) {
+          if (!me.isLoaded(el) && !el._bioValidated) {
+            el._bioValidated = true;
+
+            me.elms.push(el);
+          }
+        });
+
         me.observe(true);
 
-        REVTICK++;
+        VARS.revTick++;
       }
     }
   };
@@ -363,7 +376,7 @@
     // Infinite pager like IO wants to keep monitoring infinite contents.
     // Multi-breakpoint BG/ ratio may want to update during resizing.
     if (!me.destroyed && (force || $.isUnd(Drupal.io))) {
-      var el = $.find(DOC, $.selector(opts, ':not(.' + opts.successClass + ')'));
+      var el = $.find(_doc, $.selector(opts, ':not(.' + opts.successClass + ')'));
 
       if (!$.isElm(el)) {
         me.destroy(force);
@@ -375,11 +388,11 @@
     var me = this;
     var opts = me.options;
     var io = me.ioObserver;
-    var done = (BIOTICK === me.count - 1);
+    var done = (VARS.bioTick === me.count - 1);
     var disconnect = done && opts.disconnect;
 
     // Do not disconnect if any error found.
-    if (me.destroyed || (me.erCounted > 0 && !force)) {
+    if (me.destroyed || (me.erCount > 0 && !force)) {
       return;
     }
 
@@ -399,30 +412,30 @@
 
   FN.observe = function (reobserve) {
     var me = this;
-    var elms = me.elms;
 
     reobserve = reobserve || me.destroyed;
 
     // Observe as IO, or initialize old bLazy as fallback.
-    if (!INITIALIZED || reobserve) {
-      WINDATA = FN_OBSERVER.init(me, interact, elms, true);
+    if (!VARS.initialized || reobserve) {
+      VARS.winData = FN_OBSERVER.init(me, interact, me.elms, true);
 
       me.destroyed = false;
 
       FN_OBSERVER.observe();
 
-      INITIALIZED = true;
+      VARS.initialized = true;
     }
   };
 
   FN.reinit = function () {
     var me = this;
+
     me.destroyed = true;
-    BIOTICK = 0;
+    VARS.bioTick = 0;
 
     init(me);
   };
 
-  return Bio;
+  _win.Bio = Bio;
 
-}));
+})(dBlazy, this, this.document);

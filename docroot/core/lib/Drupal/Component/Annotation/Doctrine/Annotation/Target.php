@@ -6,7 +6,7 @@
  *
  * This class is a near-copy of
  * Doctrine\Common\Annotations\Annotation\Target, which is part of the Doctrine
- * project: <http://www.doctrine-project.org>. It was copied from version 1.14.4.
+ * project: <http://www.doctrine-project.org>. It was copied from version 2.0.2.
  *
  * Original copyright:
  *

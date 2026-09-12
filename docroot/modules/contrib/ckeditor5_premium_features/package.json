@@ -1,0 +1,22 @@
+{
+  "name": "ckeditor5-premium-features",
+  "version": "1.0.0",
+  "description": "Drupal CKEditor 5 Premium Features integration",
+  "author": "",
+  "license": "GPL-2.0-or-later",
+  "type": "module",
+  "scripts": {
+    "watch": "webpack --watch",
+    "build": "webpack"
+  },
+  "devDependencies": {
+    "ckeditor5": "^47.6.1",
+    "css-loader": "^7.1.4",
+    "glob": "^13.0.6",
+    "raw-loader": "^4.0.2",
+    "style-loader": "^4.0.0",
+    "terser-webpack-plugin": "^5.4.0",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^6.0.1"
+  }
+}

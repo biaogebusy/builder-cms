@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\theme_test;
 
 use Drupal\Core\Controller\ControllerBase;
@@ -138,16 +140,6 @@ class ThemeTestController extends ControllerBase {
   public function preprocessCallback() {
     return [
       '#theme' => 'theme_test_preprocess_callback',
-    ];
-  }
-
-  /**
-   * Controller for testing a namespaced class in a theme.
-   */
-  public function testThemeClass() {
-    return [
-      '#theme' => 'theme_test_theme_class',
-      '#title' => 'Testing loading a class from a .theme file',
     ];
   }
 

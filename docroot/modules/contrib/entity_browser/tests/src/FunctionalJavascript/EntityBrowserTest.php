@@ -2,11 +2,16 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the entity_browser.
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityBrowserTest extends EntityBrowserWebDriverTestBase {
 
   /**
@@ -38,10 +43,11 @@ class EntityBrowserTest extends EntityBrowserWebDriverTestBase {
     // Switch back to the main page.
     $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
-    // Test the Edit functionality.
     $this->assertSession()->pageTextContains('llama.jpg');
-    $this->assertSession()->buttonExists('Edit');
-    // @todo Test the edit button.
+    // The "Edit" button is hidden for file entities when the file_entity
+    // module is not installed, because core's File entity declares no 'edit'
+    // or 'default' form handler.
+    $this->assertSession()->buttonNotExists('Edit');
     // Test the Delete functionality.
     $this->assertSession()->buttonExists('Remove');
     $this->getSession()->getPage()->pressButton('Remove');
@@ -183,8 +189,9 @@ class EntityBrowserTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->linkExists('upload');
 
     // Commenting out header checks for now:
-    // Behat\Mink\Exception\UnsupportedDriverActionException: Response headers are not available
-    // from Drupal\FunctionalJavascriptTests\DrupalSelenium2Driver
+    // Behat\Mink\Exception\UnsupportedDriverActionException: Response headers
+    // are not available from
+    // Drupal\FunctionalJavascriptTests\DrupalSelenium2Driver
     // $this->assertHeader('X-Drupal-Cache-Contexts', 'eb_dummy');
     // Move dummy widget to the first place and make sure it does not appear.
     $browser = $this->container->get('entity_type.manager')

@@ -29,7 +29,7 @@ class MenuItemExtrasMenuLinkContent extends MenuLinkContent implements MenuItemE
    */
   public function getUrlObject() {
     if (!$this->link->first()) {
-      return Url::fromRoute($this->route_name);
+      return Url::fromRoute($this->route_name, $this->route_parameters ?? []);
     }
     return parent::getUrlObject();
   }

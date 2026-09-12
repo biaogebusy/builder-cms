@@ -196,12 +196,12 @@ class FieldsHelper implements FieldsHelperInterface {
       $processor_fields = [];
       $needed_processors = [];
       foreach ([NULL, $item->getDatasourceId()] as $datasource_id) {
-        if (empty($required_properties[$datasource_id])) {
+        if (empty($required_properties["$datasource_id"])) {
           continue;
         }
 
         $properties = $index->getPropertyDefinitions($datasource_id);
-        foreach ($required_properties[$datasource_id] as $property_path => $combined_id) {
+        foreach ($required_properties["$datasource_id"] as $property_path => $combined_id) {
           // Extract a field ID the caller might have added to the property
           // path.
           $field_id = NULL;

@@ -1,5 +1,5 @@
 ---
-name: create-new-explorer
+name: create-ai-api-explorer
 description: Scaffolds a new AiApiExplorer plugin for the AI API Explorer module. Verifies the operation type exists first, then generates the plugin class using AiProviderFormHelper::generateAiProvidersForm() for provider/model selection.
 ---
 

@@ -1,4 +1,8 @@
+# Service definitions for the Admin Toolbar Search module.
+
 services:
+  # Expose the 'SearchLinks' class as a service, called by the Controller used
+  # as an endpoint of an AJAX request to load search links.
   admin_toolbar_search.search_links:
     class: Drupal\admin_toolbar_search\SearchLinks
     arguments:

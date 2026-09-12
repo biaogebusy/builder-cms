@@ -12,7 +12,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a "Tabs" block to display the local tasks.
@@ -60,22 +59,9 @@ class LocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterfa
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('plugin.manager.menu.local_task'),
-      $container->get('current_route_match')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function defaultConfiguration() {
     return [
-      'label_display' => FALSE,
+      'label_display' => '0',
       'primary' => TRUE,
       'secondary' => TRUE,
     ];
@@ -163,6 +149,13 @@ class LocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterfa
     $levels = $form_state->getValue('levels');
     $this->configuration['primary'] = $levels['primary'];
     $this->configuration['secondary'] = $levels['secondary'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createPlaceholder(): bool {
+    return TRUE;
   }
 
 }

@@ -1,0 +1,35 @@
+admin.ai:
+  version: 20260310
+  css:
+    theme:
+      css/ai.admin.css: { }
+
+ai-sidebar-adapter:
+  version: 20260310
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  css:
+    theme:
+      css/ai.css: { }
+  js:
+    js/build/aiSidebarAdapter.js: { minified: true }
+  dependencies:
+    - ckeditor5/core
+
+ai-adapter:
+  version: 20260310
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/aiAdapter.js: { minified: true }
+  dependencies:
+    - ckeditor5/core
+    - ckeditor5_premium_features_ai/ai-sidebar-adapter
+    - ckeditor5_premium_features_ai/ai
+    - ckeditor5_premium_features_ai/track-changes
+    - ckeditor5_premium_features_ai/comments
+    - ckeditor5_premium_features/cloud-services

@@ -24,7 +24,7 @@ class WebformSettingsConfidentialTest extends WebformBrowserTestBase {
   /**
    * Tests webform confidential setting.
    */
-  public function testConfidential() {
+  public function testConfidential(): void {
     $assert_session = $this->assertSession();
 
     /** @var \Drupal\user\RoleInterface $anonymous_role */

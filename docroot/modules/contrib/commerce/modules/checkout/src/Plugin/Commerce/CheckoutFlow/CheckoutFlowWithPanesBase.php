@@ -511,6 +511,7 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
 
+    /** @var \Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneInterface[] $panes */
     $panes = $form_state->get('panes');
     // If the main "Save" button was submitted while a pane configuration
     // subform was being edited, update the configuration as if the subform's
@@ -518,9 +519,7 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
     if ($pane_id = $form_state->get('pane_configuration_edit')) {
       $parents = ['panes', $pane_id, 'configuration'];
       $pane_configuration_form = NestedArray::getValue($form, $parents);
-      /** @var \Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneInterface[] $panes */
-      $pane = &$panes[$pane_id];
-      $pane->submitConfigurationForm($pane_configuration_form, $form_state);
+      $panes[$pane_id]->submitConfigurationForm($pane_configuration_form, $form_state);
     }
 
     $form_values = $form_state->getValue($form['#parents']);

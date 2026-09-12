@@ -1,0 +1,79 @@
+ckeditor5_premium_features_collaboration__track_changes:
+  ckeditor5:
+    plugins:
+      - basicStyles.Bold
+      - basicStyles.Italic
+      - autoformat.Autoformat
+      - list.List
+      - comments.Comments
+      - commentsAdapter.CommentsAdapter
+      - sidebarAdapter.SidebarAdapter
+      - trackChanges.TrackChanges
+      - trackChanges.TrackChangesPreview
+      - trackChangesAdapter.TrackChangesAdapter
+  drupal:
+    label: Track changes
+    library: ckeditor5_premium_features_collaboration/collaboration
+    admin_library: ckeditor5_premium_features_collaboration/admin.track-changes
+    class: Drupal\ckeditor5_premium_features_collaboration\Plugin\CKEditor5Plugin\TrackChanges
+    toolbar_items:
+      trackChanges:
+        label: Track changes
+    elements: false
+    conditions:
+      toolbarItem: trackChanges
+
+ckeditor5_premium_features_collaboration__comments:
+  ckeditor5:
+    plugins:
+      - basicStyles.Bold
+      - basicStyles.Italic
+      - autoformat.Autoformat
+      - list.List
+      - comments.Comments
+      - commentsAdapter.CommentsAdapter
+  drupal:
+    label: Comments
+    library: ckeditor5_premium_features_collaboration/collaboration
+    admin_library: ckeditor5_premium_features_collaboration/admin.comments
+    class: Drupal\ckeditor5_premium_features_collaboration\Plugin\CKEditor5Plugin\Collaboration
+    toolbar_items:
+      comment:
+        label: Comment
+      commentsArchive:
+        label: Comments archive
+    elements:
+      - '<comment-start name>'
+      - '<comment-end name>'
+      - '<suggestion-start name>'
+      - '<suggestion-end name>'
+    conditions:
+      toolbarItem: comment
+
+ckeditor5_premium_features_collaboration__revision_history:
+  ckeditor5:
+    plugins:
+      - revisionHistory.RevisionHistory
+      - revisionHistoryAdapter.RevisionHistoryAdapter
+    config:
+      revisionHistory: [ ]
+  drupal:
+    label: Revision history
+    library: ckeditor5_premium_features_collaboration/revision-history-integration
+    admin_library: ckeditor5_premium_features_collaboration/admin.revision-history
+    toolbar_items:
+      revisionHistory:
+        label: Revision history
+    elements: false
+    conditions:
+      toolbarItem: revisionHistory
+
+ckeditor5_premium_features_collaboration__collaboration_integration:
+  ckeditor5:
+    plugins:
+      - userAdapter.UserAdapter
+  drupal:
+    label: The load & save integration of collaboration tools.
+    library: ckeditor5_premium_features_collaboration/collaboration-integration
+    elements: false
+    conditions: [ ]

@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Core\Recipe;
 
-use Drupal\contact\Entity\ContactForm;
 use Drupal\Core\Config\Checkpoint\Checkpoint;
+use Drupal\Core\Recipe\Command\RecipeCommand;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Recipe\RecipeCommand
- * @group Recipe
+ * Tests recipe command.
  *
  * BrowserTestBase is used for a proper Drupal install.
  */
+#[CoversClass(RecipeCommand::class)]
+#[Group('Recipe')]
+#[RunTestsInSeparateProcesses]
 class RecipeCommandTest extends BrowserTestBase {
 
   use RecipeTestTrait;
@@ -75,7 +80,7 @@ class RecipeCommandTest extends BrowserTestBase {
       "Backup before the 'Install two modules' recipe.",
       "Test log message",
     ]);
-    $this->assertStringContainsString('[notice] A backup checkpoint was not created because nothing has changed since the "Test log message" checkpoint was created.', $process->getOutput());
+    $this->assertStringContainsString('[notice] A backup checkpoint was not created because nothing has changed since the "Test log message" checkpoint was created.', $process->getErrorOutput());
   }
 
   /**
@@ -113,43 +118,40 @@ class RecipeCommandTest extends BrowserTestBase {
    */
   private function assertCheckpointsExist(array $expected_labels): void {
     $checkpoints = \Drupal::service('config.checkpoints');
-    $labels = array_map(fn (Checkpoint $c) => $c->label, iterator_to_array($checkpoints));
+    $labels = array_map(fn (Checkpoint $c): \Stringable|string => $c->label, iterator_to_array($checkpoints));
     $this->assertSame($expected_labels, array_values($labels));
   }
 
   public function testPassInput(): void {
-    $dir = $this->getDrupalRoot() . '/core/recipes/feedback_contact_form';
+    $dir = $this->root . '/core/tests/fixtures/recipes/input_test';
     $this->applyRecipe($dir, options: [
-      '--input=feedback_contact_form.recipient=hello@good.bye',
+      '--input=input_test.owner=Test Owner',
     ]);
-    $this->assertSame(['hello@good.bye'], ContactForm::load('feedback')?->getRecipients());
+    $this->assertSame("Test Owner's Turf", $this->config('system.site')->get('name'));
   }
 
   public function testPassInvalidInput(): void {
-    $dir = $this->getDrupalRoot() . '/core/recipes/feedback_contact_form';
+    $dir = $this->root . '/core/tests/fixtures/recipes/input_test';
     $process = $this->applyRecipe($dir, 1, options: [
-      '--input=feedback_contact_form.recipient=nobody',
+      '--input=input_test.owner=hack',
     ]);
-    $this->assertStringContainsString('This value is not a valid email address.', $process->getErrorOutput());
+    $this->assertStringContainsString("I don't think you should be owning sites.", $process->getErrorOutput());
   }
 
   public function testDefaultInputValueFromConfig(): void {
-    $this->config('system.site')
-      ->set('mail', 'goodbye@hello.net')
-      ->save();
-
-    $this->applyRecipe($this->getDrupalRoot() . '/core/recipes/feedback_contact_form');
-    $this->assertSame(['goodbye@hello.net'], ContactForm::load('feedback')?->getRecipients());
+    // Test that default values are used when no input is provided
+    $this->applyRecipe($this->root . '/core/tests/fixtures/recipes/input_test');
+    $this->assertSame("Dries Buytaert's Turf", $this->config('system.site')->get('name'));
   }
 
   public function testListInputs(): void {
-    $root = $this->getDrupalRoot();
+    $root = $this->root;
 
-    $output = $this->applyRecipe($root . '/core/recipes/feedback_contact_form', command: 'recipe:info')->getOutput();
-    $this->assertStringContainsString('feedback_contact_form.recipient', $output);
-    $this->assertStringContainsString('The email address that should receive submissions from the feedback form.', $output);
+    $output = $this->applyRecipe($root . '/core/tests/fixtures/recipes/input_test', command: 'recipe:info')->getOutput();
+    $this->assertStringContainsString('input_test.owner', $output);
+    $this->assertStringContainsString('The name of the site owner.', $output);
 
-    $output = $this->applyRecipe($root . '/core/recipes/page_content_type', command: 'recipe:info')->getOutput();
+    $output = $this->applyRecipe($root . '/core/recipes/basic_block_type', command: 'recipe:info')->getOutput();
     $this->assertStringContainsString('This recipe does not accept any input.', $output);
   }
 

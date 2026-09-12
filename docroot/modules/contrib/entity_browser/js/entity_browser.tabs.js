@@ -79,7 +79,7 @@
     return $('<li tabindex="-1"></li>')
       .addClass(settings.class)
       .append($('<a href="#"></a>').addClass(settings.class).attr('data-button-id', settings.id)
-      .append(settings.title)
+      .append(Drupal.checkPlain(settings.title))
     );
   };
 

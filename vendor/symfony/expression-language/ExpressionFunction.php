@@ -30,7 +30,6 @@ namespace Symfony\Component\ExpressionLanguage;
  */
 class ExpressionFunction
 {
-    private string $name;
     private \Closure $compiler;
     private \Closure $evaluator;
 
@@ -39,9 +38,11 @@ class ExpressionFunction
      * @param callable $compiler  A callable able to compile the function
      * @param callable $evaluator A callable able to evaluate the function
      */
-    public function __construct(string $name, callable $compiler, callable $evaluator)
-    {
-        $this->name = $name;
+    public function __construct(
+        private string $name,
+        callable $compiler,
+        callable $evaluator,
+    ) {
         $this->compiler = $compiler(...);
         $this->evaluator = $evaluator(...);
     }
@@ -82,9 +83,9 @@ class ExpressionFunction
             throw new \InvalidArgumentException(\sprintf('An expression function name must be defined when PHP function "%s" is namespaced.', $phpFunctionName));
         }
 
-        $compiler = fn (...$args) => \sprintf('\%s(%s)', $phpFunctionName, implode(', ', $args));
+        $compiler = static fn (...$args) => \sprintf('\%s(%s)', $phpFunctionName, implode(', ', $args));
 
-        $evaluator = fn ($p, ...$args) => $phpFunctionName(...$args);
+        $evaluator = static fn ($p, ...$args) => $phpFunctionName(...$args);
 
         return new self($expressionFunctionName ?: end($parts), $compiler, $evaluator);
     }

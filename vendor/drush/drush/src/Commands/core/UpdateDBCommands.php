@@ -41,7 +41,7 @@ final class UpdateDBCommands extends DrushCommands
      */
 
     /**
-     * Apply any database updates required (as with running update.php).
+     * Apply any pending database updates. Automatically enables maintenance mode during the update.
      */
     #[CLI\Command(name: self::UPDATEDB, aliases: ['updb'])]
     #[CLI\Option(name: 'cache-clear', description: 'Clear caches upon completion.')]
@@ -117,7 +117,7 @@ final class UpdateDBCommands extends DrushCommands
     {
         require_once DRUSH_DRUPAL_CORE . '/includes/install.inc';
         drupal_load_updates();
-        list($pending, $start, $warnings) = $this->getUpdatedbStatus($options);
+        [$pending, $start, $warnings] = $this->getUpdatedbStatus($options);
 
         // Output any warnings.
         $return = null;
@@ -193,7 +193,7 @@ final class UpdateDBCommands extends DrushCommands
         if (method_exists($update_hook_registry, 'getEquivalentUpdate')) {
             $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate($module, $number);
         }
-        if ($equivalent_update && $equivalent_update instanceof EquivalentUpdate) {
+        if ($equivalent_update instanceof EquivalentUpdate) {
             $ret['results']['query'] = $equivalent_update->toSkipMessage();
             $ret['results']['success'] = true;
             $context['sandbox']['#finished'] = true;
@@ -280,7 +280,7 @@ final class UpdateDBCommands extends DrushCommands
             return;
         }
 
-        list($extension, $name) = explode('_post_update_', $function, 2);
+        [$extension, $name] = explode('_post_update_', $function, 2);
         \Drupal::service('update.post_update_registry')->getUpdateFunctions($extension);
 
         if (function_exists($function)) {
@@ -558,12 +558,12 @@ final class UpdateDBCommands extends DrushCommands
                 $return = false;
             }
             foreach ($requirements as $requirement) {
-                if (isset($requirement['severity']) && $requirement['severity'] != REQUIREMENT_OK) {
+                if (isset($requirement['severity']) && drush_drupal_requirement_severity_int($requirement['severity']) !== REQUIREMENT_OK) {
                     $message = isset($requirement['description']) ? DrupalUtil::drushRender($requirement['description']) : '';
                     if (isset($requirement['value']) && $requirement['value']) {
                         $message .= ' (Currently using ' . $requirement['title'] . ' ' . DrupalUtil::drushRender($requirement['value']) . ')';
                     }
-                    $log_level = $requirement['severity'] === REQUIREMENT_ERROR ? LogLevel::ERROR : LogLevel::WARNING;
+                    $log_level = drush_drupal_requirement_severity_int($requirement['severity']) === REQUIREMENT_ERROR ? LogLevel::ERROR : LogLevel::WARNING;
                     $this->logger()->log($log_level, $message);
                 }
             }

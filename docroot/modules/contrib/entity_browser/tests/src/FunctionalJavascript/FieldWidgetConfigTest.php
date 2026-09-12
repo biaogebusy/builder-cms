@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_browser\Element\EntityBrowserElement;
 use Drupal\entity_browser\Entity\EntityBrowser;
@@ -16,6 +18,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  *
  * @package Drupal\Tests\entity_browser\FunctionalJavascript
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class FieldWidgetConfigTest extends WebDriverTestBase {
 
   /**
@@ -154,7 +158,7 @@ class FieldWidgetConfigTest extends WebDriverTestBase {
   }
 
   /**
-   * Tests 'selection_edit' validation on field widget form and warning message on content entity forms.
+   * Tests 'selection_edit' validation and warning on content entity forms.
    */
   public function testSelectionModeValidation() {
 

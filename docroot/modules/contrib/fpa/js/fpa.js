@@ -4,7 +4,7 @@
  */
 
 // Wrapper normalizes 'jQuery' to '$'.
-;(function fpa_scope($, Drupal, window, document, cookies) {
+;(function fpa_scope($, Drupal, window, document, cookies, once) {
   "use strict";
   
   var Fpa = function (context, settings) {
@@ -402,16 +402,18 @@
     
     this.filter_timeout_time = Math.min(this.dom.table.find('tr').length, 200);
     
-    this.dom.form
-      .delegate('.fpa-toggle-container a', 'click', $.proxy(function fpa_toggle(e) {
+    var links = once('filter-links', '.fpa-toggle-container a');
+    if (links.length > 0) {
+      const unbound_fpa_toggle = function(e) {
         e.preventDefault();
-        
         var toggle_class = $(e.currentTarget).attr('fpa-toggle-class');
-        
         this.dom.container.toggleClass(toggle_class).hasClass(toggle_class);
-        
-      }, this))
-    ;
+      }
+      const fpa_toggle = unbound_fpa_toggle.bind(this);
+      links.forEach(function(link) {
+        link.addEventListener('click', fpa_toggle);
+      });
+    }
     
     this.dom.section_left
       .delegate('li', 'click', $.proxy(this.filter_module, this))
@@ -678,4 +680,4 @@
   Drupal.behaviors.permissions.attach = function() {};
 
   // Drupal.behaviors.formUpdated.attach = $.noop;
-})(jQuery, Drupal, window, document, window.Cookies);
+})(jQuery, Drupal, window, document, window.Cookies, once);

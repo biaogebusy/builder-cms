@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel\Views;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestMul;
@@ -16,6 +19,8 @@ use Drupal\views\Views;
  *
  * @see dynamic_entity_reference_views_data()
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceBaseFieldRelationshipTest extends ViewsKernelTestBase {
 
   /**

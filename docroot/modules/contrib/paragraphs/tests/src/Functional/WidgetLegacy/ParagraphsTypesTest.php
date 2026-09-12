@@ -3,12 +3,16 @@
 namespace Drupal\Tests\paragraphs\Functional\WidgetLegacy;
 
 use Drupal\paragraphs\Entity\ParagraphsType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Paragraphs types.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsTypesTest extends ParagraphsTestBase {
 
   /**

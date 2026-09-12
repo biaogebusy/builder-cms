@@ -11,7 +11,7 @@ test_dependencies:
   - xls_serialization:xls_serialization
   - search_api:search_api
 
-# Information added by Drupal.org packaging script on 2025-10-24
-version: '8.x-1.8'
+# Information added by Drupal.org packaging script on 2026-05-15
+version: '8.x-1.10'
 project: 'views_data_export'
-datestamp: 1761320261
+datestamp: 1778832734

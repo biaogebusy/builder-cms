@@ -24,7 +24,7 @@ class XlsTest extends UnitTestCase {
    *
    * @var \Drupal\xls_serialization\Encoder\Xls
    */
-  private Xls $encoder;
+  protected Xls $encoder;
 
   /**
    * {@inheritdoc}
@@ -184,6 +184,53 @@ class XlsTest extends UnitTestCase {
   }
 
   /**
+   * Tests that entity-encoded angle brackets in content survive strip-tags.
+   *
+   * Regression test for #3591045: when Strip HTML was enabled, the encoder
+   * decoded HTML entities before stripping tags. Content with entity-encoded
+   * literal "<" or ">" characters (for example "low pressure, &lt;1 MPa")
+   * was decoded to a literal "<" first and then strip_tags() consumed the
+   * rest of the string as if it were an unfinished HTML tag, truncating the
+   * cell. The order is now reversed: strip first, decode entities after.
+   *
+   * @covers ::formatValue
+   */
+  public function testFormatValueWithEncodedAngleBrackets() {
+    $encoder = $this->encoder;
+    $format_value_method = new \ReflectionMethod($encoder, 'formatValue');
+    $strip_tags_property = new \ReflectionProperty($encoder, 'stripTags');
+    $trim_property = new \ReflectionProperty($encoder, 'trimValues');
+
+    $strip_tags_property->setValue($encoder, TRUE);
+    $trim_property->setValue($encoder, TRUE);
+
+    // Real Drupal output: HTML wrapper plus entity-encoded literal "<" in
+    // the body of a formatted text field.
+    $result = $format_value_method->invoke(
+      $encoder,
+      '<p>Buffer hydrogen gas holder: low pressure, &lt;1 MPa</p>',
+    );
+    $this->assertEquals(
+      'Buffer hydrogen gas holder: low pressure, <1 MPa',
+      $result,
+    );
+
+    // Same shape with ">" instead of "<".
+    $result = $format_value_method->invoke(
+      $encoder,
+      '<p>5 &gt; 3 in absolute value</p>',
+    );
+    $this->assertEquals('5 > 3 in absolute value', $result);
+
+    // Both bracket entities adjacent to real tags.
+    $result = $format_value_method->invoke(
+      $encoder,
+      '<p>If <em>x &lt; y</em> and <em>y &gt; z</em> then x &lt; z.</p>',
+    );
+    $this->assertEquals('If x < y and y > z then x < z.', $result);
+  }
+
+  /**
    * Helper function to retrieve an xls object for a xls file.
    *
    * @param object $xls
@@ -213,9 +260,7 @@ class XlsTest extends UnitTestCase {
    */
   protected static function getMethod($name) {
     $class = new \ReflectionClass('Drupal\xls_serialization\Encoder\Xls');
-    $method = $class->getMethod($name);
-    $method->setAccessible(TRUE);
-    return $method;
+    return $class->getMethod($name);
   }
 
 }

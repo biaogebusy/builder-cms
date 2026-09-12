@@ -1,0 +1,45 @@
+ckeditor5.plugin.ckeditor5_premium_features_ai_assistant__ai_assistant:
+  type: mapping
+  label: 'AI Assistant'
+  mapping:
+    remove_commands:
+      type: sequence
+      sequence:
+        type: string
+        label: 'Command to be removed from editor'
+
+
+ckeditor5_premium_features_ai_assistant.settings:
+  type: config_object
+  label: 'CKEditor 5 Premium Features - AI Assistant'
+  mapping:
+    api_url:
+      type: string
+      label: 'Api Url'
+    auth_key:
+      type: string
+      label: 'Auth key'
+    proxy_auth_key:
+      type: boolean
+      label: 'Use the Auth key as auth endpoint'
+    disable_default_styles:
+      type: boolean
+      label: 'Disable default styles'
+
+ckeditor5_premium_features_ai_assistant.ckeditor5_ai_command_group.*:
+  type: config_entity
+  label: CKEditor 5 AI Commands group
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    textFormats:
+      type: sequence
+      label: Available in text format
+    commands:
+      type: sequence
+      sequence:
+        type: ai_command

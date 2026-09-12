@@ -61,7 +61,7 @@ function search_api_post_update_views_query_type() {
         $view->set('display', $displays);
         // Mark the resulting configuration as trusted data. This avoids issues
         // with future schema changes.
-        $view->save(TRUE);
+        $view->save();
         if ($update_cache) {
           $changed_cache[] = $view->get('id');
         }
@@ -104,7 +104,7 @@ function search_api_post_update_views_cache_none(): ?TranslatableMarkup {
       $view->set('display', $displays);
       // Mark the resulting configuration as trusted data. This avoids issues
       // with future schema changes.
-      $view->save(TRUE);
+      $view->save();
       $changed_cache[] = $view->get('id');
     }
   }

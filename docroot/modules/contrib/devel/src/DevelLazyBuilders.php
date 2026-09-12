@@ -15,11 +15,6 @@ use Drupal\Core\Security\TrustedCallbackInterface;
 class DevelLazyBuilders implements TrustedCallbackInterface {
 
   /**
-   * The menu link tree service.
-   */
-  protected MenuLinkTreeInterface $menuLinkTree;
-
-  /**
    * The devel toolbar config.
    */
   protected ImmutableConfig $config;
@@ -27,16 +22,15 @@ class DevelLazyBuilders implements TrustedCallbackInterface {
   /**
    * Constructs a new ShortcutLazyBuilders object.
    *
-   * @param \Drupal\Core\Menu\MenuLinkTreeInterface $menu_link_tree
+   * @param \Drupal\Core\Menu\MenuLinkTreeInterface $menuLinkTree
    *   The menu link tree service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
    */
   public function __construct(
-    MenuLinkTreeInterface $menu_link_tree,
+    protected MenuLinkTreeInterface $menuLinkTree,
     ConfigFactoryInterface $config_factory,
   ) {
-    $this->menuLinkTree = $menu_link_tree;
     $this->config = $config_factory->get('devel.toolbar.settings');
   }
 
@@ -62,9 +56,7 @@ class DevelLazyBuilders implements TrustedCallbackInterface {
       ['callable' => 'menu.default_tree_manipulators:checkAccess'],
       ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
       [
-        'callable' => function (array $tree): array {
-          return $this->processTree($tree);
-        },
+        'callable' => fn(array $tree): array => $this->processTree($tree),
       ],
     ];
     $tree = $this->menuLinkTree->transform($tree, $manipulators);

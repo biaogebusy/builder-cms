@@ -11,12 +11,13 @@
  */
 
 .button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   height: var(--sp3);
   margin-block: var(--sp1);
   margin-inline-start: 0;
   margin-inline-end: var(--sp1);
-  padding-block: calc((var(--sp3) - var(--line-height-s)) / 2);
+  padding-block: 1px 0;
   padding-inline: var(--sp1-5);
   cursor: pointer;
   text-align: center;
@@ -29,51 +30,35 @@
   font-family: var(--font-sans);
   font-size: var(--font-size-l);
   font-weight: 700;
+  line-height: var(--line-height-s);
   appearance: none;
   -webkit-font-smoothing: antialiased;
-}
 
-.button:hover,
-.button:focus {
-  -webkit-text-decoration: none;
-  text-decoration: none;
-  color: var(--color-text-primary-loud);
-  border: solid 2px currentColor;
-  background: none;
-  font-weight: 700;
-}
+  &:hover,
+  &:focus {
+    -webkit-text-decoration: none;
+    text-decoration: none;
+    color: var(--color-text-primary-loud);
+    border: solid 2px currentColor;
+    background: none;
+    font-weight: 700;
+  }
 
-.button:focus {
-  outline: 2px solid var(--color--primary-60);
-  outline-offset: 2px;
-}
+  &:focus {
+    outline: 2px solid var(--color--primary-60);
+    outline-offset: 2px;
+  }
 
-.button:active {
-  color: var(--color-text-primary-medium);
-  border-color: currentColor;
-}
+  &:active {
+    color: var(--color-text-primary-medium);
+    border-color: currentColor;
+  }
 
-.button:disabled,
-.button.is-disabled {
-  cursor: default;
-  color: var(--color--gray-90);
-  border-color: var(--color--gray-90);
-}
-
-/*
-    IE11 doesn't work properly on button elements so we only do
-    inline-flex on modern browsers.
-  */
-
-@supports (display: inline-flex) {
-  .button {
-    display: inline-flex;
-    align-items: center;
-
-    /* Top padding accounts for font not being vertically centered within line-height. */
-    padding-block: 1px 0;
-    padding-inline: var(--sp1-5);
-    line-height: var(--line-height-s);
+  &:disabled,
+  &.is-disabled {
+    cursor: default;
+    color: var(--color--gray-90);
+    border-color: var(--color--gray-90);
   }
 }
 
@@ -97,46 +82,63 @@
   color: var(--color--white);
   border-color: var(--color--primary-40);
   background-color: var(--color--primary-40);
-}
 
-.button--primary:hover,
-.button--primary:focus {
-  color: var(--color--white);
-  border-color: var(--color--primary-30);
-  background-color: var(--color--primary-30);
-}
+  &:hover,
+  &:focus {
+    color: var(--color--white);
+    border-color: var(--color--primary-30);
+    background-color: var(--color--primary-30);
+  }
 
-.button--primary:active {
-  color: var(--color--white);
-  background-color: var(--color--primary-40);
-}
+  &:active {
+    color: var(--color--white);
+    background-color: var(--color--primary-40);
+  }
 
-.button--primary:disabled,
-.button--primary.is-disabled {
-  color: var(--color--white);
-  background-color: var(--color--gray-90);
+  &:disabled,
+  &.is-disabled {
+    color: var(--color--white);
+    background-color: var(--color--gray-90);
+  }
 }
 
 .button--icon-back {
   display: inline-flex;
   align-items: center;
-}
 
-.button--icon-back::before {
-  display: block;
-  width: 0.5em;
-  height: 0.5em;
-  margin-inline-end: 0.5em;
-  content: "";
-  transform: rotate(45deg); /* LTR */
-  border-block-end: solid 2px currentColor;
-  border-inline-start: solid 2px currentColor;
+  &::before {
+    display: block;
+    width: 0.5em;
+    height: 0.5em;
+    margin-inline-end: 0.5em;
+    content: "";
+    transform: rotate(45deg); /* LTR */
+    border-block-end: solid 2px currentColor;
+    border-inline-start: solid 2px currentColor;
+  }
 }
 
 [dir="rtl"] .button--icon-back::before {
   transform: rotate(-45deg);
 }
 
-.shepherd-cancel-icon {
-  font-size: 1.5em;
+/* Trigger button for core's responsive tables API. */
+
+button.link {
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-primary-medium);
+  border: 0;
+  background: transparent;
+  font-size: 1em;
+
+  &:hover {
+    color: var(--color--primary-50);
+  }
+
+  &:focus {
+    outline: solid 2px currentColor;
+    outline-offset: 2px;
+  }
 }

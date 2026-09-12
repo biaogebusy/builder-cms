@@ -82,7 +82,7 @@
     </div>
   {% endif %}
   <div{{ content_attributes.addClass(wrapper_classes) }}>
-    {% if description_display == 'before' and description.content %}
+    {% if description.content and (description_display == 'before' or description_display_toggle == 'before') %}
       <div{{ description.attributes.addClass(description_classes) }}>{{ description.content }}</div>
     {% endif %}
     {% if inline_items %}
@@ -101,7 +101,7 @@
           {{ errors }}
         </div>
       {% endif %}
-      {% if description_display in ['after', 'invisible'] and description.content %}
+      {% if description.content and description_display in ['after', 'invisible'] and description_display_toggle != 'before' %}
         <div{{ description.attributes.addClass(description_classes) }}>{{ description.content }}</div>
       {% endif %}
 

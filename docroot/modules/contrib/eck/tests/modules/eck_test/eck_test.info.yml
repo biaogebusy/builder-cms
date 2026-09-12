@@ -1,0 +1,12 @@
+name: ECK test
+type: module
+description: 'Provides functionality for testing the ECK module.'
+package: Testing
+dependencies:
+  - eck:eck
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2026-03-19
+version: '2.1.0'
+project: 'eck'
+datestamp: 1773924027

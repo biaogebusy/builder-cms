@@ -6,19 +6,21 @@ namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\views\Views;
-use Drupal\views_test_data\Plugin\views\row\RowTest;
 use Drupal\views\Plugin\views\row\Fields;
 use Drupal\views\ResultRow;
+use Drupal\views\Views;
+use Drupal\views_test_data\Plugin\views\row\RowTest;
 use Drupal\views_test_data\Plugin\views\style\StyleTest as StyleTestPlugin;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests general style functionality.
  *
- * @group views
- *
  * @see \Drupal\views_test_data\Plugin\views\style\StyleTest.
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class StyleTest extends ViewsKernelTestBase {
 
   /**
@@ -86,7 +88,7 @@ class StyleTest extends ViewsKernelTestBase {
   /**
    * Provides reusable code for ::testGrouping().
    */
-  protected function doTestGrouping($stripped = FALSE) {
+  protected function doTestGrouping($stripped = FALSE): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
     // Setup grouping by the job and the age field.
@@ -111,6 +113,7 @@ class StyleTest extends ViewsKernelTestBase {
         'field' => 'name',
         'relationship' => 'none',
         'label' => 'Name',
+        'element_label_colon' => TRUE,
       ],
       'job' => [
         'id' => 'job',
@@ -118,6 +121,7 @@ class StyleTest extends ViewsKernelTestBase {
         'field' => 'job',
         'relationship' => 'none',
         'label' => 'Job',
+        'element_label_colon' => TRUE,
       ],
       'age' => [
         'id' => 'age',
@@ -125,11 +129,12 @@ class StyleTest extends ViewsKernelTestBase {
         'field' => 'age',
         'relationship' => 'none',
         'label' => 'Age',
+        'element_label_colon' => TRUE,
       ],
     ];
     $view->displayHandlers->get('default')->overrideOption('fields', $fields);
 
-    // Now run the query and groupby the result.
+    // Now run the query and group by the result.
     $this->executeView($view);
 
     $expected = [];

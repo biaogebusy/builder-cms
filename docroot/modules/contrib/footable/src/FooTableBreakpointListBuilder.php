@@ -26,6 +26,7 @@ class FooTableBreakpointListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    /** @var \Drupal\footable\Entity\FooTableBreakpointInterface $entity */
     $row['label'] = $entity->label();
     $row['name'] = $entity->id();
     $row['breakpoint'] = $entity->getBreakpoint() . 'px';

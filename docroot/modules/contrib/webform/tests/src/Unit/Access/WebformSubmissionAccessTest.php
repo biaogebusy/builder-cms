@@ -19,7 +19,7 @@ class WebformSubmissionAccessTest extends WebformAccessTestBase {
    * @covers ::checkResendAccess
    * @covers ::checkWizardPagesAccess
    */
-  public function testWebformSubmissionAccess() {
+  public function testWebformSubmissionAccess(): void {
     // Mock Drupal service container.
     $this->container = new ContainerBuilder();
     \Drupal::setContainer($this->container);
@@ -28,7 +28,7 @@ class WebformSubmissionAccessTest extends WebformAccessTestBase {
     $module_handler = $this->createMock('Drupal\Core\Extension\ModuleHandlerInterface');
     $module_handler->expects($this->any())
       ->method('moduleExists')
-      ->will($this->returnValue(FALSE));
+      ->willReturn(FALSE);
     $this->container->set('module_handler', $module_handler);
 
     // Mock anonymous account.
@@ -47,7 +47,7 @@ class WebformSubmissionAccessTest extends WebformAccessTestBase {
     $webform_submission = $this->createMock('Drupal\webform\WebformSubmissionInterface');
     $webform_submission->expects($this->any())
       ->method('getWebform')
-      ->will($this->returnValue($webform));
+      ->willReturn($webform);
 
     // Mock message handler.
     $message_handler = $this->createMock('\Drupal\webform\Plugin\WebformHandlerMessageInterface');
@@ -56,32 +56,32 @@ class WebformSubmissionAccessTest extends WebformAccessTestBase {
     $email_webform = $this->createMock('Drupal\webform\WebformInterface');
     $email_webform->expects($this->any())
       ->method('getHandlers')
-      ->will($this->returnValue([$message_handler]));
+      ->willReturn([$message_handler]);
     $email_webform->expects($this->any())
       ->method('access')
       ->with('submission_update_any')
-      ->will($this->returnValue(TRUE));
+      ->willReturn(TRUE);
     $email_webform->expects($this->any())
       ->method('hasMessageHandler')
-      ->will($this->returnValue(TRUE));
+      ->willReturn(TRUE);
 
     // Mock email webform submission.
     $email_webform_submission = $this->createMock('Drupal\webform\WebformSubmissionInterface');
     $email_webform_submission->expects($this->any())
       ->method('getWebform')
-      ->will($this->returnValue($email_webform));
+      ->willReturn($email_webform);
 
     // Mock webform wizard.
     $webform_wizard = $this->createMock('Drupal\webform\WebformInterface');
     $webform_wizard->expects($this->any())
       ->method('hasWizardPages')
-      ->will($this->returnValue(TRUE));
+      ->willReturn(TRUE);
 
     // Mock webform wizard submission.
     $webform_wizard_submission = $this->createMock('Drupal\webform\WebformSubmissionInterface');
     $webform_wizard_submission->expects($this->any())
       ->method('getWebform')
-      ->will($this->returnValue($webform_wizard));
+      ->willReturn($webform_wizard);
 
     /* ********************************************************************** */
 

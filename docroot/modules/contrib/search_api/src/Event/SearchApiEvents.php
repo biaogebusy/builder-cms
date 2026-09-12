@@ -230,4 +230,39 @@ final class SearchApiEvents {
    */
   public const IS_RENDERED_IN_CURRENT_REQUEST = 'search_api.is_rendered_in_current_request';
 
+  /**
+   * Common prefix for all events dispatched by the Search API task system.
+   *
+   * Events with these names should usually not be used like regular events but
+   * only in the context of the Search API task system. See the
+   * \Drupal\search_api\Task\TaskManager class for a detailed explanation.
+   *
+   * The final event name for a given task is this prefix followed by the task's
+   * "type" property. The following task types are currently used within this
+   * module:
+   *
+   * - Index tasks:
+   *   - trackItems
+   * - Server tasks:
+   *   - addIndex
+   *   - updateIndex
+   *   - removeIndex
+   *   - deleteItems
+   *   - deleteAllIndexItems
+   * - Custom tasks used by the Content Entity datasource (not part of the
+   *   public API):
+   *   - search_api.entity_datasource.trackItemsInserted
+   *   - search_api.entity_datasource.trackItemsDeleted
+   *
+   * Similar to the Content Entity datasource, other modules are free to add
+   * their own task types and provide event listeners that consume them.
+   *
+   * @see \Drupal\search_api\Task\TaskManager
+   * @see \Drupal\search_api\Task\IndexTaskManager
+   * @see \Drupal\search_api\Task\ServerTaskManager
+   * @see \Drupal\search_api\Plugin\search_api\datasource\ContentEntityTaskManager
+   * @see \Drupal\search_api\Task\TaskEvent
+   */
+  public const EXECUTE_TASK_EVENT_PREFIX = 'search_api.task.';
+
 }

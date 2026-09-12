@@ -23,7 +23,7 @@ class FieldTest extends WebDriverTestBase {
    */
   protected static $modules = [
     'node',
-    'ckeditor',
+    'ckeditor5',
     'contextual',
     'quickedit',
   ];
@@ -39,17 +39,24 @@ class FieldTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    // Create a text format and associate CKEditor.
+    // Create a text format and associate CKEditor5.
     $filtered_html_format = FilterFormat::create([
-      'format' => 'filtered_html',
-      'name' => 'Filtered HTML',
+      'format' => 'full_html',
+      'name' => 'Full HTML',
       'weight' => 0,
     ]);
     $filtered_html_format->save();
 
     Editor::create([
-      'format' => 'filtered_html',
-      'editor' => 'ckeditor',
+      'format' => 'full_html',
+      'editor' => 'ckeditor5',
+      'settings' => [
+        'toolbar' => [
+          'items' => [
+            'blockQuote',
+          ],
+        ],
+      ],
     ])->save();
 
     // Create note type with body field.
@@ -61,7 +68,7 @@ class FieldTest extends WebDriverTestBase {
       'access content',
       'administer nodes',
       'edit any page content',
-      'use text format filtered_html',
+      'use text format full_html',
       'access contextual links',
       'access in-place editing',
     ]);
@@ -70,35 +77,39 @@ class FieldTest extends WebDriverTestBase {
   }
 
   /**
-   * Tests that quickeditor works correctly for field with CKEditor.
+   * Tests that quickeditor works correctly for field with CKEditor5.
    */
   public function testFieldWithCkeditor() {
     $body_value = '<p>Dare to be wise</p>';
     $node = Node::create([
       'type' => 'page',
       'title' => 'Page node',
-      'body' => [['value' => $body_value, 'format' => 'filtered_html']],
+      'body' => [
+        'value' => $body_value,
+        'format' => 'full_html',
+      ],
     ]);
     $node->save();
 
     $page = $this->getSession()->getPage();
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert */
     $assert = $this->assertSession();
 
     $this->drupalGet('node/' . $node->id());
 
     // Wait "Quick edit" button for node.
-    $this->assertSession()->waitForElement('css', '[data-quickedit-entity-id="node/' . $node->id() . '"] .contextual .quickedit');
+    $assert->waitForElement('css', '[data-quickedit-entity-id="node/' . $node->id() . '"] .contextual .quickedit');
     // Click by "Quick edit".
     $this->clickContextualLink('[data-quickedit-entity-id="node/' . $node->id() . '"]', 'Quick edit');
     // Switch to body field.
     $page->find('css', '[data-quickedit-field-id="node/' . $node->id() . '/body/en/full"]')->click();
     // Wait and click by "Blockquote" button from editor for body field.
-    $this->assertSession()->waitForElementVisible('css', '.cke_button.cke_button__blockquote')->click();
-    // Wait and click by "Save" button after body field was changed.
-    $this->assertSession()->waitForElementVisible('css', '.quickedit-toolgroup.ops [type="submit"][aria-hidden="false"]')->click();
-    // Wait until the save occurs and the editor UI disappears.
-    $this->assertSession()->assertNoElementAfterWait('css', '.cke_button.cke_button__blockquote');
-    // Ensure that the changes take effect.
+    $assert->waitForElementVisible('css', '.ck-button[data-cke-tooltip-text="Block quote"]')->click();
+    // // Wait and click by "Save" button after body field was changed.
+    $assert->waitForElementVisible('css', '.quickedit-toolgroup.ops [type="submit"][aria-hidden="false"]')->click();
+    // // Wait until the save occurs and the editor UI disappears.
+    $this->assertSession()->assertNoElementAfterWait('css', '.ck-button[data-cke-tooltip-text="Block quote"]');
+    // // Ensure that the changes take effect.
     $assert->responseMatches("|<blockquote>\s*$body_value\s*</blockquote>|");
   }
 

@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Form;
 
+use Drupal\Core\Form\FormBuilder;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests FormBuilder caching.
- *
- * @covers \Drupal\Core\Form\FormBuilder::getCache
- * @covers \Drupal\Core\Form\FormBuilder::setCache
- *
- * @group Form
  */
+#[Group('Form')]
+#[CoversMethod(FormBuilder::class, 'getCache')]
+#[CoversMethod(FormBuilder::class, 'setCache')]
+#[RunTestsInSeparateProcesses]
 class FormCacheTest extends KernelTestBase {
 
   /**
@@ -26,16 +29,22 @@ class FormCacheTest extends KernelTestBase {
   protected static $modules = ['system', 'user'];
 
   /**
+   * The form ID.
+   *
    * @var string
    */
   protected $formBuildId;
 
   /**
+   * The form array.
+   *
    * @var array
    */
   protected $form;
 
   /**
+   * The form state array.
+   *
    * @var array
    */
   protected $formState;

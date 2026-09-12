@@ -65,6 +65,17 @@ interface ProviderPluginInterface extends PluginInspectionInterface {
   public function downloadThumbnail();
 
   /**
+   * Render the embedded video.
+   *
+   * @param array $options
+   *   The render options.
+   *
+   * @return mixed
+   *   A renderable array of the embed code.
+   */
+  public function renderEmbed(array $options);
+
+  /**
    * Render embed code.
    *
    * @param string $width
@@ -80,6 +91,12 @@ interface ProviderPluginInterface extends PluginInspectionInterface {
    *
    * @return mixed
    *   A renderable array of the embed code.
+   *
+   * @deprecated in video_embed_field:3.1.0 and is removed from
+   *   video_embed_field:3.2.0. Use
+   *   \Drupal\video_embed_field\ProviderPluginInterface::renderEmbed()
+   *   instead.
+   * @see https://www.drupal.org/project/video_embed_field/issues/3580405
    */
   public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE);
 

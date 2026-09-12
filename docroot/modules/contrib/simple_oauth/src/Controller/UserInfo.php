@@ -3,7 +3,6 @@
 namespace Drupal\simple_oauth\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -36,11 +35,11 @@ class UserInfo implements ContainerInjectionInterface {
   private SerializerInterface $serializer;
 
   /**
-   * The configuration object.
+   * The configuration factory.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  private ImmutableConfig $config;
+  private ConfigFactoryInterface $configFactory;
 
   /**
    * UserInfo constructor.
@@ -55,8 +54,7 @@ class UserInfo implements ContainerInjectionInterface {
   private function __construct(AccountProxyInterface $user, SerializerInterface $serializer, ConfigFactoryInterface $config_factory) {
     $this->user = $user->getAccount();
     $this->serializer = $serializer;
-    $this->config = $config_factory
-      ->get('simple_oauth.settings');
+    $this->configFactory = $config_factory;
   }
 
   /**
@@ -82,15 +80,20 @@ class UserInfo implements ContainerInjectionInterface {
     if (!$this->user instanceof TokenAuthUser) {
       throw new AccessDeniedHttpException('This route is only available for authenticated requests using OAuth2.');
     }
-    if ($this->config->get('disable_openid_connect')) {
+
+    $config = $this->configFactory->get('simple_oauth.settings');
+
+    if ($config->get('disable_openid_connect')) {
       throw new NotFoundHttpException('Not Found');
     }
+
     assert($this->serializer instanceof NormalizerInterface);
     $identifier = $this->user->id();
     $user_entity = new UserEntityWithClaims();
     $user_entity->setIdentifier($identifier);
     $data = $this->serializer
       ->normalize($user_entity, 'json', [$identifier => $this->user]);
+
     return new JsonResponse($data);
   }
 

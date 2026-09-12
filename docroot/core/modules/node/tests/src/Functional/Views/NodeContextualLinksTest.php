@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Functional\Views;
 
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views contextual links on nodes.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeContextualLinksTest extends NodeTestBase {
 
   /**

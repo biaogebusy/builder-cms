@@ -102,6 +102,9 @@ class FloodUnblockAdminForm extends FormBase {
     // Fetches the identifier from the query string of the request.
     $identifier = $request->query->get('identifier') ?? '';
 
+    // Fetches the event from the query string of the request.
+    $event = $request->query->get('event') ?? '';
+
     // Fetches the blocked status from the query string of the request.
     $blocked = $request->query->get('blocked') ?? FALSE;
 
@@ -140,6 +143,14 @@ class FloodUnblockAdminForm extends FormBase {
           '#default_value' => $identifier,
           '#size' => 20,
           '#description' => $this->t('(Part of) identifier: IP address or UID'),
+          '#maxlength' => 256,
+        ],
+        'event' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('Event'),
+          '#default_value' => $event,
+          '#size' => 20,
+          '#description' => $this->t('(Part of) event'),
           '#maxlength' => 256,
         ],
         'blocked' => [
@@ -184,46 +195,56 @@ class FloodUnblockAdminForm extends FormBase {
     $options = [];
 
     // Fetches data for the table.
-    $entries = $this->floodUnblockManager->getEntries($limit, $identifier, $header);
+    $entries = $this->floodUnblockManager->getEntries($limit, $identifier, $event, $header);
 
-    // Fetches user names or location string for identifiers.
-    $identifiers = $this->floodUnblockManager->fetchIdentifiers(array_unique($entries['result_identifiers']));
+    if (!empty($entries)) {
+      // Fetches user names or location string for identifiers.
+      $identifiers = $this->floodUnblockManager->fetchIdentifiers(array_unique($entries['result_identifiers']));
 
-    foreach ($entries['results'] as $result) {
+      foreach ($entries['results'] as $result) {
 
-      // Gets status of identifier.
-      $is_blocked = $this->floodUnblockManager->isBlocked($result->identifier, $result->event);
+        // Gets status of identifier.
+        $is_blocked = $this->floodUnblockManager->isBlocked($result->identifier, $result->event);
 
-      // Defines list of options for tableselect element.
-      if ($blocked && $is_blocked) {
-        $options[$result->fid] = [
-          'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
-          'identifier' => $identifiers[$result->identifier],
-          'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
-          'event' => $this->floodUnblockManager->getEventLabel($result->event),
-          'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
-          'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
-        ];
+        // Defines list of options for tableselect element.
+        if ($blocked && $is_blocked) {
+          $options[$result->fid] = [
+            'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
+            'identifier' => $identifiers[$result->identifier],
+            'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
+            'event' => $this->floodUnblockManager->getEventLabel($result->event),
+            'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
+            'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
+          ];
+        }
+        elseif (!$blocked) {
+          $options[$result->fid] = [
+            'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
+            'identifier' => $identifiers[$result->identifier],
+            'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
+            'event' => $this->floodUnblockManager->getEventLabel($result->event),
+            'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
+            'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
+          ];
+        }
       }
-      elseif (!$blocked) {
-        $options[$result->fid] = [
-          'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
-          'identifier' => $identifiers[$result->identifier],
-          'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
-          'event' => $this->floodUnblockManager->getEventLabel($result->event),
-          'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
-          'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
-        ];
-      }
+      // Provides the tableselect element.
+      $form['table'] = [
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+        '#empty' => $this->t('There are no failed logins at this time.'),
+      ];
     }
+    else {
+      $form['table'] = [
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+        '#empty' => $this->t("There is no table found named 'flood'."),
+      ];
 
-    // Provides the tableselect element.
-    $form['table'] = [
-      '#type' => 'tableselect',
-      '#header' => $header,
-      '#options' => $options,
-      '#empty' => $this->t('There are no failed logins at this time.'),
-    ];
+    }
 
     $form['actions'] = ['#type' => 'actions'];
 
@@ -277,6 +298,7 @@ class FloodUnblockAdminForm extends FormBase {
         [
           'limit' => $field["limit"],
           'identifier' => $field["identifier"],
+          'event' => $field["event"],
           'blocked' => $field['blocked'],
         ]
       );

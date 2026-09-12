@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\FileTransfer;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+
 /**
  * Defines the base FileTransfer class.
  *
@@ -17,9 +19,16 @@ namespace Drupal\Core\FileTransfer;
  *   Path to connection chroot.
  * @property object|false|null $connection
  *   The instantiated connection object.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3512364
  */
 #[\AllowDynamicProperties]
 abstract class FileTransfer {
+
+  use StringTranslationTrait;
 
   /**
    * The username for this file transfer.
@@ -59,12 +68,14 @@ abstract class FileTransfer {
   /**
    * Constructs a Drupal\Core\FileTransfer\FileTransfer object.
    *
-   * @param $jail
+   * @param string $jail
    *   The full path where all file operations performed by this object will
    *   be restricted to. This prevents the FileTransfer classes from being
    *   able to touch other parts of the filesystem.
    */
   public function __construct($jail) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+
     $this->jail = $jail;
   }
 
@@ -83,6 +94,7 @@ abstract class FileTransfer {
    *   getSettingsForm() method uses any nested settings, the same structure
    *   will be assumed here.
    *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.InvalidNoReturn
    * @return object
    *   New instance of the appropriate FileTransfer subclass.
    *
@@ -263,7 +275,10 @@ abstract class FileTransfer {
       ->realpath(substr($this->chroot . $path, 0, strlen($full_jail)));
     $full_path = $this->fixRemotePath($full_path, FALSE);
     if ($full_jail !== $full_path) {
-      throw new FileTransferException('@directory is outside of the @jail', 0, ['@directory' => $path, '@jail' => $this->jail]);
+      throw new FileTransferException('@directory is outside of the @jail', 0, [
+        '@directory' => $path,
+        '@jail' => $this->jail,
+      ]);
     }
   }
 
@@ -324,7 +339,7 @@ abstract class FileTransfer {
    */
   protected function copyDirectoryJailed($source, $destination) {
     if ($this->isDirectory($destination)) {
-      $destination = $destination . '/' . \Drupal::service('file_system')->basename($source);
+      $destination = $destination . '/' . basename($source);
     }
     $this->createDirectory($destination);
     foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($source, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $filename => $file) {
@@ -376,7 +391,7 @@ abstract class FileTransfer {
    * Checks if a particular path is a directory.
    *
    * @param string $path
-   *   The path to check
+   *   The path to check.
    *
    * @return bool
    *   TRUE if the specified path is a directory, FALSE otherwise.
@@ -399,7 +414,7 @@ abstract class FileTransfer {
    *
    * It does this by moving up the tree until it finds itself
    *
-   * @return string|bool
+   * @return string|false
    *   If successful, the chroot path for this connection, otherwise FALSE.
    */
   public function findChroot() {
@@ -416,7 +431,7 @@ abstract class FileTransfer {
     $chroot = '';
     while (count($parts)) {
       $check = implode('/', $parts);
-      if ($this->isFile($check . '/' . \Drupal::service('file_system')->basename(__FILE__))) {
+      if ($this->isFile($check . '/' . basename(__FILE__))) {
         // Remove the trailing slash.
         return substr($chroot, 0, -1);
       }
@@ -445,26 +460,26 @@ abstract class FileTransfer {
   public function getSettingsForm() {
     $form['username'] = [
       '#type' => 'textfield',
-      '#title' => t('Username'),
+      '#title' => $this->t('Username'),
     ];
     $form['password'] = [
       '#type' => 'password',
-      '#title' => t('Password'),
-      '#description' => t('Your password is not saved in the database and is only used to establish a connection.'),
+      '#title' => $this->t('Password'),
+      '#description' => $this->t('Your password is not saved in the database and is only used to establish a connection.'),
     ];
     $form['advanced'] = [
       '#type' => 'details',
-      '#title' => t('Advanced settings'),
+      '#title' => $this->t('Advanced settings'),
     ];
     $form['advanced']['hostname'] = [
       '#type' => 'textfield',
-      '#title' => t('Host'),
+      '#title' => $this->t('Host'),
       '#default_value' => 'localhost',
-      '#description' => t('The connection will be created between your web server and the machine hosting the web server files. In the vast majority of cases, this will be the same machine, and "localhost" is correct.'),
+      '#description' => $this->t('The connection will be created between your web server and the machine hosting the web server files. In the vast majority of cases, this will be the same machine, and "localhost" is correct.'),
     ];
     $form['advanced']['port'] = [
       '#type' => 'textfield',
-      '#title' => t('Port'),
+      '#title' => $this->t('Port'),
       '#default_value' => NULL,
     ];
     return $form;

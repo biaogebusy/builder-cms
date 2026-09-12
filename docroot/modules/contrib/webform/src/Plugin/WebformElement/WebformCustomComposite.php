@@ -60,7 +60,7 @@ class WebformCustomComposite extends WebformCompositeBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // Set cardinality.
@@ -71,7 +71,7 @@ class WebformCustomComposite extends WebformCompositeBase {
     // Apply multiple properties.
     $multiple_properties = $this->defineDefaultMultipleProperties();
     foreach ($multiple_properties as $multiple_property => $multiple_value) {
-      if (strpos($multiple_property, 'multiple__') === 0) {
+      if (str_starts_with($multiple_property, 'multiple__')) {
         $property_name = str_replace('multiple__', '', $multiple_property);
         $element["#$property_name"] = $element["#$multiple_property"] ?? $multiple_value;
       }
@@ -84,7 +84,7 @@ class WebformCustomComposite extends WebformCompositeBase {
     // element.
     foreach ($element['#element'] as $composite_key => $composite_element) {
       foreach ($element as $property_key => $property_value) {
-        if (strpos($property_key, '#' . $composite_key . '__') === 0) {
+        if (str_starts_with($property_key, '#' . $composite_key . '__')) {
           $composite_property_key = str_replace('#' . $composite_key . '__', '#', $property_key);
           $element['#element'][$composite_key][$composite_property_key] = $property_value;
         }
@@ -95,7 +95,7 @@ class WebformCustomComposite extends WebformCompositeBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareElementPreRenderCallbacks(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  protected function prepareElementPreRenderCallbacks(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepareElementPreRenderCallbacks($element, $webform_submission);
 
     // Set custom wrapper type to theme wrappers.

@@ -2,6 +2,7 @@
 
 namespace Drupal\ctools\Testing;
 
+use PHPUnit\Framework\TestCase;
 use Drupal\Component\Render\FormattableMarkup;
 
 /**
@@ -34,7 +35,7 @@ trait EntityCreationTrait {
     $status = $entity->save();
     \Drupal::service('router.builder')->rebuild();
 
-    if ($this instanceof \PHPUnit\Framework\TestCase) {
+    if ($this instanceof TestCase) {
       // phpcs:ignore
       $this->assertSame(SAVED_NEW, $status, (new FormattableMarkup('Created entity %id of type %type.', ['%id' => $entity->id(), '%type' => $entity_type]))->__toString()); //psp
     }
@@ -50,6 +51,8 @@ trait EntityCreationTrait {
    * Retrieves the Entity Type Manager for the Entity.
    *
    * @return \Drupal\Core\Entity\EntityTypeManager|\Drupal\Core\Entity\EntityTypeManagerInterface|object|null
+   *   The Entity Type Manager for the Entity.
+   *
    * @throws \Exception
    */
   protected function getEntityTypeManager() {

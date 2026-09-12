@@ -20,8 +20,13 @@ abstract class BlazyListBuilderBase extends DraggableListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * @todo Uncomment new method parameters before drupal:12.0.0.
+   * @see https://www.drupal.org/project/drupal/issues/3533078
+   *
+   * @phpstan-ignore-next-line
    */
-  public function getDefaultOperations(EntityInterface $entity) {
+  public function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
     $operations = parent::getDefaultOperations($entity);
 
     if (isset($operations['edit'])) {

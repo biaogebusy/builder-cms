@@ -2,7 +2,6 @@
 
 /**
  * @file
- * Code required only when comparing available updates to existing data.
  */
 
 use Drupal\Core\Extension\ExtensionVersion;
@@ -19,11 +18,11 @@ use Drupal\update\ProjectCoreCompatibility;
  * installed versions, and other information that is required before we can
  * compare against the available releases to produce the status report.
  *
- * @param $projects
+ * @param array $projects
  *   Array of project information from
  *   \Drupal\update\UpdateManager::getProjects().
  */
-function update_process_project_info(&$projects) {
+function update_process_project_info(&$projects): void {
   foreach ($projects as $key => $project) {
     // Assume an official release until we see otherwise.
     $install_type = 'official';
@@ -31,7 +30,7 @@ function update_process_project_info(&$projects) {
     $info = $project['info'];
 
     if (isset($info['version'])) {
-      // Check for development snapshots
+      // Check for development snapshots.
       if (preg_match('@(dev|HEAD)@', $info['version'])) {
         $install_type = 'dev';
       }
@@ -201,12 +200,12 @@ function update_calculate_project_data($available) {
  * NOTE: This function *must* set a value for $project_data['status'] before
  * returning, or the rest of the Update Manager will break in unexpected ways.
  *
- * @param $project_data
+ * @param array $project_data
  *   An array containing information about a specific project.
- * @param $available
+ * @param array $available
  *   Data about available project releases of a specific project.
  */
-function update_calculate_project_update_status(&$project_data, $available) {
+function update_calculate_project_update_status(&$project_data, $available): void {
   foreach (['title', 'link'] as $attribute) {
     if (!isset($project_data[$attribute]) && isset($available[$attribute])) {
       $project_data[$attribute] = $available[$attribute];
@@ -372,7 +371,7 @@ function update_calculate_project_update_status(&$project_data, $available) {
     try {
       $release_module_version = ExtensionVersion::createFromVersionString($release->getVersion());
     }
-    catch (UnexpectedValueException $exception) {
+    catch (UnexpectedValueException) {
       continue;
     }
     // This release is supported only if it is in a supported branch and is

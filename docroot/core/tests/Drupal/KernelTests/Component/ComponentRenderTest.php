@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Component;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the correct rendering of components.
- *
- * @group sdc
  */
+#[Group('sdc')]
+#[RunTestsInSeparateProcesses]
 final class ComponentRenderTest extends KernelTestBase {
 
   /**

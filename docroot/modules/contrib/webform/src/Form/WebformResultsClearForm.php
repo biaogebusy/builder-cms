@@ -52,7 +52,7 @@ class WebformResultsClearForm extends WebformSubmissionsDeleteFormBase {
       '#type' => 'webform_message',
       '#message_type' => 'warning',
       '#message_message' => $this->t('Are you sure you want to clear all %label submissions?', $t_args) . '<br/>' .
-        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+      '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
     ];
   }
 

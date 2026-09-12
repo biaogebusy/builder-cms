@@ -11,10 +11,6 @@ use Drupal\Core\Ajax\CommandInterface;
  */
 class LockFormCommand implements CommandInterface {
 
-  protected $lockable;
-
-  protected $lock;
-
   /**
    * LockFormCommand constructor.
    *
@@ -23,15 +19,16 @@ class LockFormCommand implements CommandInterface {
    * @param bool $lock
    *   Whether to lock the form.
    */
-  public function __construct($lockable = FALSE, $lock = FALSE) {
-    $this->lockable = $lockable;
-    $this->lock = $lock;
+  public function __construct(
+    protected bool $lockable = FALSE,
+    protected bool $lock = FALSE,
+  ) {
   }
 
   /**
    * {@inheritdoc}
    */
-  public function render() {
+  public function render(): array {
     return [
       'command' => 'lockForm',
       'selector' => '',

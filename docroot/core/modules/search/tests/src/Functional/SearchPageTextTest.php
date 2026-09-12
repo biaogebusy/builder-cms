@@ -6,18 +6,20 @@ namespace Drupal\Tests\search\Functional;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the search help text and search page text.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchPageTextTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'node', 'search'];
+  protected static $modules = ['block', 'node', 'search', 'search_node'];
 
   /**
    * {@inheritdoc}

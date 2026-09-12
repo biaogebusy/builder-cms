@@ -5,39 +5,48 @@
  * Provides activity logs for Commerce entities.
  */
 
+use Drupal\commerce_log\Hook\CommerceLogHooks;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Hook\Attribute\LegacyHook;
 
 /**
  * Implements hook_preprocess_commerce_order().
  */
-function commerce_log_preprocess_commerce_order(&$variables) {
-  /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
-  $order = $variables['elements']['#commerce_order'];
-  $variables['order']['activity'] = [
-    '#type' => 'view',
-    '#name' => 'commerce_activity',
-    '#display_id' => 'default',
-    '#arguments' => [$order->id(), 'commerce_order'],
-    '#embed' => TRUE,
-    '#title' => t('Order activity'),
-  ];
+#[LegacyHook]
+function commerce_log_preprocess_commerce_order(&$variables): void {
+  \Drupal::service(CommerceLogHooks::class)->preprocessCommerceOrder($variables);
 }
 
 /**
  * Implements hook_form_FORM_ID_alter() for 'commerce_order_add_form'.
  */
-function commerce_log_form_commerce_order_add_form_alter(array &$form, FormStateInterface $form_state) {
-  $form['#submit'][] = 'commerce_log_add_form_submit';
+#[LegacyHook]
+function commerce_log_form_commerce_order_add_form_alter(array &$form, FormStateInterface $form_state): void {
+  \Drupal::service(CommerceLogHooks::class)->commerceOrderAddFormAlter($form, $form_state);
 }
 
 /**
- * Submission handler for commerce_log_form_commerce_order_add_form_alter().
+ * Implements hook_views_data().
  */
-function commerce_log_add_form_submit($form, FormStateInterface $form_state) {
-  /** @var \Drupal\commerce_log\LogStorageInterface $log_storage */
-  $log_storage = \Drupal::entityTypeManager()->getStorage('commerce_log');
-  $order_storage = \Drupal::entityTypeManager()->getStorage('commerce_order');
-  /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
-  $order = $order_storage->load($form_state->getValue('order_id'));
-  $log_storage->generate($order, 'order_created_admin')->save();
+#[LegacyHook]
+function commerce_log_views_data(): array {
+  return \Drupal::service(CommerceLogHooks::class)->viewsData();
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+#[LegacyHook]
+function commerce_log_entity_extra_field_info(): array {
+  return \Drupal::service(CommerceLogHooks::class)->entityExtraFieldInfo();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for commerce_order.
+ */
+#[LegacyHook]
+function commerce_log_commerce_order_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  \Drupal::service(CommerceLogHooks::class)->commerceOrderView($build, $entity, $display, $view_mode);
 }

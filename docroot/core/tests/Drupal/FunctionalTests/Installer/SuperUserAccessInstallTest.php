@@ -6,12 +6,15 @@ namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Serialization\Yaml;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests superuser access and the installer.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class SuperUserAccessInstallTest extends InstallerTestBase {
 
   /**
@@ -34,7 +37,7 @@ class SuperUserAccessInstallTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
     $info = [
       'type' => 'profile',
@@ -46,18 +49,18 @@ class SuperUserAccessInstallTest extends InstallerTestBase {
     mkdir($path, 0777, TRUE);
     file_put_contents("$path/superuser.info.yml", Yaml::encode($info));
 
-    file_put_contents("$path/superuser.install", $this->getProvidedData()['install_code']);
+    file_put_contents("$path/superuser.install", $this->providedData()['install_code']);
 
     $services = Yaml::decode(file_get_contents(DRUPAL_ROOT . '/sites/default/default.services.yml'));
-    $services['parameters']['security.enable_super_user'] = $this->getProvidedData()['super_user_policy'];
+    $services['parameters']['security.enable_super_user'] = $this->providedData()['super_user_policy'];
     file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/services.yml', Yaml::encode($services));
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function setUpSite() {
-    if ($this->getProvidedData()['super_user_policy'] === FALSE && empty($this->getProvidedData()['expected_roles'])) {
+  protected function setUpSite(): void {
+    if ($this->providedData()['super_user_policy'] === FALSE && empty($this->providedData()['expected_roles'])) {
       $this->assertSession()->pageTextContains('Site account');
       $this->assertSession()->pageTextNotContains('Site maintenance account');
     }
@@ -70,9 +73,8 @@ class SuperUserAccessInstallTest extends InstallerTestBase {
 
   /**
    * Confirms that the installation succeeded.
-   *
-   * @dataProvider getInstallTests
    */
+  #[DataProvider('getInstallTests')]
   public function testInstalled(bool $expected_runtime_has_permission, bool $expected_no_access_message, array $expected_roles, string $install_code, bool $super_user_policy): void {
     $user = User::load(1);
     $this->assertSame($expected_runtime_has_permission, $user->hasPermission('administer software updates'));

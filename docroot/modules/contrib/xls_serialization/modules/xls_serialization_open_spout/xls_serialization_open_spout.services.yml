@@ -1,0 +1,7 @@
+services:
+  xls_serialization_open_spout.encoder.xlsx:
+    autowire: true
+    class: Drupal\xls_serialization_open_spout\Encoder\OpenSpoutXlsxEncoder
+    decorates: xls_serialization.encoder.xlsx
+    tags:
+      - { name: encoder, format: xlsx }

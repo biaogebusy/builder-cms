@@ -17,10 +17,9 @@ class Toolbar extends RenderElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#pre_render' => [
-        [$class, 'preRenderToolbar'],
+        [static::class, 'preRenderToolbar'],
       ],
       '#theme' => 'toolbar',
       '#attached' => [
@@ -96,6 +95,7 @@ class Toolbar extends RenderElementBase {
    * Wraps the breakpoint manager.
    *
    * @return \Drupal\breakpoint\BreakpointManagerInterface
+   *   The breakpoint manager service.
    */
   protected static function breakpointManager() {
     return \Drupal::service('breakpoint.manager');
@@ -105,6 +105,7 @@ class Toolbar extends RenderElementBase {
    * Wraps the module handler.
    *
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
+   *   The module handler service.
    */
   protected static function moduleHandler() {
     return \Drupal::moduleHandler();

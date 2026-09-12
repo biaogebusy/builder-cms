@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_data\Controller;
 
 use Drupal\Core\Security\TrustedCallbackInterface;
@@ -27,7 +29,9 @@ class ViewsTestDataController implements TrustedCallbackInterface {
   }
 
   /**
-   * #lazy_builder callback; for testing purposes only.
+   * Render API callback: For testing placeholdering only.
+   *
+   * This function is assigned as a #lazy_builder callback.
    */
   public static function placeholderLazyBuilder() {
     // No-op.

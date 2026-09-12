@@ -50,6 +50,7 @@ class ConfigIgnoreTest extends ConfigIgnoreBrowserTestBase {
     $this->container->get('module_installer')->install(['field']);
     $this->drupalLogin($this->drupalCreateUser(['import configuration', 'synchronize configuration']));
     $edit = [
+      // phpcs:ignore
       'ignored_config_entities' => "system.site" . "\r\n" . "'system.menu.*'",
     ];
     $this->drupalGet('admin/config/development/configuration/ignore');

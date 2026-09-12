@@ -8,12 +8,14 @@ use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\UnsupportedDataTypeConfigException;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StreamWrapper\PublicStream;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests FileStorage operations.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class FileStorageTest extends ConfigStorageTestBase {
 
   /**
@@ -38,20 +40,32 @@ class FileStorageTest extends ConfigStorageTestBase {
     $this->storage->write('core.extension', ['module' => []]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function read($name) {
     $data = file_get_contents($this->storage->getFilePath($name));
     return Yaml::decode($data);
   }
 
-  protected function insert($name, $data) {
+  /**
+   * {@inheritdoc}
+   */
+  protected function insert($name, $data): void {
     file_put_contents($this->storage->getFilePath($name), $data);
   }
 
-  protected function update($name, $data) {
+  /**
+   * {@inheritdoc}
+   */
+  protected function update($name, $data): void {
     file_put_contents($this->storage->getFilePath($name), $data);
   }
 
-  protected function delete($name) {
+  /**
+   * {@inheritdoc}
+   */
+  protected function delete($name): void {
     unlink($this->storage->getFilePath($name));
   }
 

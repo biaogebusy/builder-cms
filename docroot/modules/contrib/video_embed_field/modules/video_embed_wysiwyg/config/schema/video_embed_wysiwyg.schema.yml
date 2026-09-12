@@ -29,3 +29,6 @@ ckeditor5.plugin.video_embed_wysiwyg_video_embed:
             title_fallback:
               type: boolean
               label: 'Use a fallback title'
+            loading:
+              type: string
+              label: 'Video loading mode'

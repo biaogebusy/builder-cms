@@ -2,20 +2,21 @@
 
 namespace Drupal\Tests\pathauto\Kernel;
 
-use Drupal\Component\Serialization\PhpSerialize;
 use Drupal\Component\Utility\Crypt;
-use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\KeyValueStore\KeyValueDatabaseFactory;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\pathauto\PathautoState;
-use Drupal\pathauto_string_id_test\Entity\PathautoStringIdTest;
+use Drupal\pathauto_string_id_test\Entity\PathautoStringId;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests auto-aliasing of entities that use string IDs.
  *
  * @group pathauto
  */
+#[Group('pathauto')]
+#[RunTestsInSeparateProcesses]
 class PathautoEntityWithStringIdTest extends KernelTestBase {
 
   use PathautoTestHelperTrait;
@@ -44,21 +45,6 @@ class PathautoEntityWithStringIdTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
-    parent::register($container);
-    // Kernel tests are using the 'keyvalue.memory' store but we want to test
-    // against the 'keyvalue.database'.
-    $container
-      ->register('keyvalue.database', KeyValueDatabaseFactory::class)
-      ->addArgument(new PhpSerialize())
-      ->addArgument($container->get('database'))
-      ->addTag('persist');
-    $container->setAlias('keyvalue', 'keyvalue.database');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installConfig(['system', 'pathauto']);
@@ -68,20 +54,24 @@ class PathautoEntityWithStringIdTest extends KernelTestBase {
     /** @var \Drupal\pathauto\AliasTypeManager $alias_type_manager */
     $alias_type_manager = $this->container->get('plugin.manager.alias_type');
     $this->aliasType = $alias_type_manager->createInstance('canonical_entities:pathauto_string_id_test');
+    // Kernel tests default to in-memory key-value storage. Use the
+    // database-backed service to validate that Pathauto state can be
+    // persisted to the database without errors.
+    $this->container->set('keyvalue', $this->container->get('keyvalue.database'));
   }
 
   /**
    * Test aliasing entities with long string ID.
    *
-   * @dataProvider entityWithStringIdProvider
-   *
    * @param string|int $id
-   *   The entity ID
+   *   The entity ID.
    * @param string $expected_key
    *   The expected key for 'pathauto_state.*' collections.
+   *
+   * @dataProvider entityWithStringIdProvider
    */
   public function testEntityWithStringId($id, $expected_key) {
-    $entity = PathautoStringIdTest::create([
+    $entity = PathautoStringId::create([
       'id' => $id,
       'name' => $name = $this->randomMachineName(),
     ]);
@@ -108,7 +98,7 @@ class PathautoEntityWithStringIdTest extends KernelTestBase {
    *
    * @see \Drupal\Tests\pathauto\Kernel\PathautoEntityWithStringIdTest::testEntityWithStringId()
    */
-  public function entityWithStringIdProvider() {
+  public static function entityWithStringIdProvider() {
     return [
       'ascii with less or equal 128 chars' => [
         str_repeat('a', 128), str_repeat('a', 128),

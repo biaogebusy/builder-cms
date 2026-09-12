@@ -7,14 +7,18 @@
 
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Extension\Requirement\RequirementSeverity;
+use Drupal\Core\Hook\Attribute\LegacyRequirementsHook;
 use Drupal\search_api\IndexListBuilder;
 
 /**
  * Implements hook_requirements().
  */
+#[LegacyRequirementsHook]
 function search_api_db_defaults_requirements($phase) {
   $requirements = [];
 
+  // @todo Once we depend on Drupal 11.2, move this code to
+  //   SearchApiDbDefaultsInstallRequirements::getRequirements().
   if ($phase == 'install') {
     // In case this is installed at the same time as the Search API module
     // itself, the class autoloader will not be able to find the

@@ -1188,4 +1188,55 @@ class PaymentCheckoutTest extends CommerceWebDriverTestBase {
     $this->assertSession()->addressEquals('checkout/1/order_information');
   }
 
+  /**
+   * Tests skipping the add payment method form in checkout.
+   */
+  public function testSkipAddPaymentMethodFormInCheckout(): void {
+    /** @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface $payment_gateway */
+    $payment_gateway = PaymentGateway::create([
+      'id' => 'skip_add_payment_method_form',
+      'label' => 'Skip the add payment method form in checkout',
+      'plugin' => 'test_onsite',
+      'configuration' => [
+        'api_key' => '2342fewfsfs',
+        'mode' => 'test',
+        'skip_add_payment_method_form' => TRUE,
+        'collect_billing_information' => TRUE,
+      ],
+    ]);
+    $payment_gateway->save();
+    $this->drupalGet($this->product->toUrl()->toString());
+    $this->submitForm([], 'Add to cart');
+
+    $this->drupalGet('checkout/1');
+    $this->assertSession()->pageTextContains('Payment information');
+
+    $this->getSession()->getPage()->selectFieldOption(
+      'payment_information[payment_method]',
+      'new--credit_card--skip_add_payment_method_form'
+    );
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->fieldNotExists('payment_information[add_payment_method][payment_details][number]');
+    $this->submitForm([], 'Continue to review');
+
+    $order = Order::load(1);
+    $this->assertEquals('skip_add_payment_method_form', $order->get('payment_gateway')->target_id);
+    $this->assertTrue($order->get('payment_method')->isEmpty());
+    /** @var \Drupal\profile\Entity\ProfileInterface $order_billing_profile */
+    $order_billing_profile = $order->getBillingProfile();
+    $this->assertNotEmpty($order_billing_profile);
+    $this->assertSession()->pageTextContains('Payment information');
+    $this->assertSession()->pageTextContains('Example');
+    $this->assertSession()->pageTextContains('Bryan Centarro');
+    $this->assertSession()->pageTextContains('9 Drupal Ave');
+    $this->submitForm([], 'Pay and complete purchase');
+
+    // No payment method was created / collected, there should be an error.
+    // Payment gateways deferring the payment method creation to a later stage
+    // should be responsible for exposing an add payment method form manually in
+    // the review step for example.
+    $this->assertSession()->pageTextContains('We encountered an unexpected error processing your payment. Please try again later.');
+    $this->assertSession()->addressEquals('checkout/1/order_information');
+  }
+
 }

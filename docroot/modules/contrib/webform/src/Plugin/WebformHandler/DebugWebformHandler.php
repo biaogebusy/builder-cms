@@ -140,7 +140,7 @@ class DebugWebformHandler extends WebformHandlerBase {
         '#suffix' => '</pre>',
       ],
     ];
-    $message = $this->renderer->renderPlain($build);
+    $message = $this->renderer->renderInIsolation($build);
 
     $this->messenger()->addWarning($message);
   }

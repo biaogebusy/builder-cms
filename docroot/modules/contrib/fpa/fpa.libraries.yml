@@ -1,5 +1,4 @@
 fpa.permissions:
-  version: VERSION
   css:
     theme:
       css/fpa.admin.css: {}
@@ -10,6 +9,5 @@ fpa.permissions:
     - core/jquery
     - core/drupal
     - core/drupalSettings
-    - core/drupal.user.permissions
-    - core/js-cookie
-
+    - user/drupal.user.permissions
+    - js_cookie/js-cookie

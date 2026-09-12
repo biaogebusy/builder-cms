@@ -21,7 +21,7 @@ class WebformImageSelectElementImagesTest extends WebformElementBrowserTestBase 
   /**
    * Tests webform images select images element.
    */
-  public function testElementOptions() {
+  public function testElementOptions(): void {
     $assert_session = $this->assertSession();
 
     // Check default value handling.

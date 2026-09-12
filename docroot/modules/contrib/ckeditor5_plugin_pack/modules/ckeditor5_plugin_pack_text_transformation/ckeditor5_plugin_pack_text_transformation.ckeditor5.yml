@@ -1,0 +1,10 @@
+ckeditor5_plugin_pack_text_transformation__text_transformation:
+  ckeditor5:
+    plugins:
+      - typing.TextTransformation
+      - textTransformationAdapter.TextTransformationAdapter
+  drupal:
+    label: Text transformation
+    class: Drupal\ckeditor5_plugin_pack_text_transformation\Plugin\CKEditor5Plugin\TextTransformation
+    elements: false
+    library: ckeditor5_plugin_pack_text_transformation/text_transformation_adapter

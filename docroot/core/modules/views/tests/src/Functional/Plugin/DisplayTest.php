@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views\Functional\Plugin;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
 use Drupal\views_test_data\Plugin\views\display\DisplayTest as DisplayTestPlugin;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the basic display plugin.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class DisplayTest extends ViewTestBase {
 
   /**
@@ -22,7 +23,16 @@ class DisplayTest extends ViewTestBase {
    *
    * @var array
    */
-  public static $testViews = ['test_filter_groups', 'test_get_attach_displays', 'test_view', 'test_display_more', 'test_display_invalid', 'test_display_empty', 'test_exposed_relationship_admin_ui', 'test_simple_argument'];
+  public static $testViews = [
+    'test_filter_groups',
+    'test_get_attach_displays',
+    'test_view',
+    'test_display_more',
+    'test_display_invalid',
+    'test_display_empty',
+    'test_exposed_relationship_admin_ui',
+    'test_simple_argument',
+  ];
 
   /**
    * {@inheritdoc}
@@ -147,7 +157,7 @@ class DisplayTest extends ViewTestBase {
 
     $this->clickLink('Test option title');
 
-    $test_option = $this->randomString();
+    $test_option = $this->randomMachineName();
     $this->submitForm(['test_option' => $test_option], 'Apply');
 
     // Check the new value has been saved by checking the UI summary text.
@@ -189,7 +199,7 @@ class DisplayTest extends ViewTestBase {
   }
 
   /**
-   * Tests the readmore validation.
+   * Tests the 'read more' validation.
    */
   public function testReadMoreNoDisplay(): void {
     $view = Views::getView('test_display_more');
@@ -197,7 +207,8 @@ class DisplayTest extends ViewTestBase {
     $errors = $view->validate();
     $this->assertEmpty($errors, 'More link validation has no errors.');
 
-    // Confirm that the view does not validate when the page display is disabled.
+    // Confirm that the view does not validate when the page display is
+    // disabled.
     $view->setDisplay('page_1');
     $view->display_handler->setOption('enabled', FALSE);
     $view->setDisplay('default');
@@ -205,7 +216,8 @@ class DisplayTest extends ViewTestBase {
     $this->assertNotEmpty($errors, 'More link validation has some errors.');
     $this->assertEquals('Display "Default" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', $errors['default'][0], 'More link validation has the right error.');
 
-    // Confirm that the view does not validate when the page display does not exist.
+    // Confirm that the view does not validate when the page display does not
+    // exist.
     $view = Views::getView('test_view');
     $view->setDisplay('default');
     $view->display_handler->setOption('use_more', 1);
@@ -215,7 +227,7 @@ class DisplayTest extends ViewTestBase {
   }
 
   /**
-   * Tests the readmore with custom URL.
+   * Tests the 'read more' with custom URL.
    */
   public function testReadMoreCustomURL(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
@@ -300,6 +312,14 @@ class DisplayTest extends ViewTestBase {
     $output = (string) $renderer->renderRoot($output);
     $this->assertStringContainsString('/node/22?date=22&amp;foo=bar', $output, 'The read more link with href "/node/22?date=22&foo=bar" was found.');
 
+    // Test more link with array arguments in path.
+    $view->display_handler->setOption('link_url', 'node/{{ raw_arguments.age }}?date[{{ raw_arguments.age }}]={{ raw_arguments.age }}&foo=bar');
+    $view->setArguments([22]);
+    $this->executeView($view);
+    $output = $view->preview();
+    $output = (string) $renderer->renderRoot($output);
+    $this->assertStringContainsString('/node/22?date%5B22%5D=22&amp;foo=bar', $output, 'The read more link with href "/node/22?date[22]=22&foo=bar" was found.');
+
     // Test more link with arguments in fragment.
     $view->display_handler->setOption('link_url', 'node?date={{ raw_arguments.age }}&foo=bar#{{ raw_arguments.age }}');
     $view->setArguments([22]);
@@ -307,6 +327,14 @@ class DisplayTest extends ViewTestBase {
     $output = $view->preview();
     $output = (string) $renderer->renderRoot($output);
     $this->assertStringContainsString('/node?date=22&amp;foo=bar#22', $output, 'The read more link with href "/node?date=22&foo=bar#22" was found.');
+
+    // Test more link isn't rendered if user doesn't have permission to the
+    // more link URL.
+    $view->display_handler->setOption('link_url', 'admin/content');
+    $this->executeView($view);
+    $output = $view->preview();
+    $output = (string) $renderer->renderRoot($output);
+    $this->assertStringNotContainsString('/admin/content', $output, 'The read more link with href "/admin/content" was not found.');
   }
 
   /**
@@ -375,12 +403,12 @@ class DisplayTest extends ViewTestBase {
 
     // Remove the relationship used by other handlers.
     $view->removeHandler('default', 'relationship', 'uid');
-    // Validate display
+    // Validate display.
     $errors = $view->validate();
     // Check that the error messages are shown.
     $this->assertCount(2, $errors['default'], 'Error messages found for required relationship');
-    $this->assertEquals(new FormattableMarkup('The %relationship_name relationship used in %handler_type %handler is not present in the %display_name display.', ['%relationship_name' => 'uid', '%handler_type' => 'field', '%handler' => 'User: Last login', '%display_name' => 'Default']), $errors['default'][0]);
-    $this->assertEquals(new FormattableMarkup('The %relationship_name relationship used in %handler_type %handler is not present in the %display_name display.', ['%relationship_name' => 'uid', '%handler_type' => 'field', '%handler' => 'User: Created', '%display_name' => 'Default']), $errors['default'][1]);
+    $this->assertEquals("The uid relationship used in field User: Last login is not present in the Default display.", $errors['default'][0]);
+    $this->assertEquals("The uid relationship used in field User: Created is not present in the Default display.", $errors['default'][1]);
   }
 
   /**
@@ -455,7 +483,7 @@ class DisplayTest extends ViewTestBase {
    *   Whether the node based view should be expected to support translation
    *   settings.
    */
-  protected function checkTranslationSetting($expected_node_translatability = FALSE) {
+  protected function checkTranslationSetting($expected_node_translatability = FALSE): void {
     $not_supported_text = 'The view is not based on a translatable entity type or the site is not multilingual.';
     $supported_text = 'All content that supports translations will be displayed in the selected language.';
 

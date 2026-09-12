@@ -1,0 +1,9 @@
+ck5_notifications_email_instant:
+  label: 'CKEditor 5 mail - instant'
+  description: 'Plugin responsible for sending instant notifications to users email address.'
+  class: Drupal\ckeditor5_premium_features_notifications\Plugin\Notification\NotificationSenderMailInstant
+
+ck5_notifications_email_bulk:
+  label: 'CKEditor 5 mail - bulk'
+  description: 'Plugin responsible for sending stacked notifications to users email address.'
+  class: Drupal\ckeditor5_premium_features_notifications\Plugin\Notification\NotificationSenderMailBulk

@@ -33,10 +33,10 @@ class BulkFormEntityListBuilder extends EntityListBuilder implements FormInterfa
   /**
    * The bulk operations.
    *
+   * @var \Drupal\system\Entity\Action[]
+   *
    * @todo Change the type hint to ActionConfigEntityInterface when
    *   https://www.drupal.org/project/drupal/issues/3017214 is in.
-   *
-   * @var \Drupal\system\Entity\Action[]
    */
   protected $actions;
 
@@ -66,9 +66,11 @@ class BulkFormEntityListBuilder extends EntityListBuilder implements FormInterfa
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
    */
+  // @phpstan-ignore-next-line
   public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $entity_storage, EntityStorageInterface $action_storage, FormBuilderInterface $form_builder) {
     parent::__construct($entity_type, $entity_storage);
 
+    // @phpstan-ignore-next-line
     $this->actionStorage = $action_storage;
     $this->formBuilder = $form_builder;
   }

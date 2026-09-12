@@ -73,7 +73,7 @@ class RedirectRequestSubscriber implements EventSubscriberInterface {
   protected $pathProcessor;
 
   /**
-   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber object.
+   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber.
    *
    * @param \Drupal\redirect\RedirectRepository $redirect_repository
    *   The redirect entity repository.
@@ -169,7 +169,7 @@ class RedirectRequestSubscriber implements EventSubscriberInterface {
       $headers = [
         'X-Redirect-ID' => $redirect->id(),
       ];
-      $response = new TrustedRedirectResponse($url->setAbsolute()->toString(), $redirect->getStatusCode(), $headers);
+      $response = new TrustedRedirectResponse($url->toString(), $redirect->getStatusCode(), $headers);
       $response->addCacheableDependency($cacheable_metadata);
 
       // Invoke hook_redirect_response_alter().

@@ -2,6 +2,7 @@
 
 namespace Drupal\charts\Plugin\Field\FieldFormatter;
 
+use Drupal\charts\Plugin\Field\DataCollectorTableHasDataTrait;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemInterface;
@@ -19,6 +20,8 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
   field_types: ["chart_config"]
 )]
 class ChartConfigItemDefaultFormatter extends FormatterBase {
+
+  use DataCollectorTableHasDataTrait;
 
   /**
    * {@inheritdoc}
@@ -59,30 +62,11 @@ class ChartConfigItemDefaultFormatter extends FormatterBase {
    */
   protected function viewElement(FieldItemInterface $item, string $chart_id) {
     $settings = $item->toArray()['config'];
-    if ($this->hasData($settings['series']['data_collector_table'])) {
+    $data_collector_table = $settings['series']['data_collector_table'] ?? [];
+    if (static::hasData($data_collector_table)) {
       return Chart::buildElement($settings, $chart_id);
     }
     return [];
-  }
-
-  /**
-   * Checks if the chart has data.
-   *
-   * @param array $data_collector_table
-   *   The data collector table.
-   *
-   * @return bool
-   *   TRUE if the chart has data, FALSE otherwise.
-   */
-  protected function hasData(array $data_collector_table) {
-    foreach ($data_collector_table as $row) {
-      foreach ($row as $cell) {
-        if (!empty($cell['data'])) {
-          return TRUE;
-        }
-      }
-    }
-    return FALSE;
   }
 
 }

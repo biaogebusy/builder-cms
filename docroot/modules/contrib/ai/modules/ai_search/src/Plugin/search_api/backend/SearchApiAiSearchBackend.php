@@ -218,7 +218,7 @@ class SearchApiAiSearchBackend extends AiSearchBackendPluginBase implements Plug
     $chosen_database = $this->configuration['database'] ?? NULL;
     if (!$chosen_database) {
       // Try to get from form state.
-      $chosen_database = $form_state->get('database') ?? NULL;
+      $chosen_database = $form_state->get('database');
     }
 
     $form['database'] = [

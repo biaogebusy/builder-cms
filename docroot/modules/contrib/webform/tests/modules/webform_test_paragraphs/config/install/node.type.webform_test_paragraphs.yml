@@ -7,7 +7,7 @@ dependencies:
 name: 'Webform Test Paragraphs'
 type: webform_test_paragraphs
 description: ''
-help: ''
+help: null
 new_revision: true
 preview_mode: 1
 display_submitted: true

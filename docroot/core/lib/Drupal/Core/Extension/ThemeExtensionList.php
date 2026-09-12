@@ -38,7 +38,7 @@ class ThemeExtensionList extends ExtensionList {
     ],
     'description' => '',
     // The following array should be kept inline with
-    // _system_default_theme_features().
+    // ThemeSettingsProvider::DEFAULT_THEME_FEATURES.
     'features' => [
       'favicon',
       'logo',
@@ -291,6 +291,13 @@ class ThemeExtensionList extends ExtensionList {
       $info['screenshot'] = $extension->getPath() . '/' . $info['screenshot'];
     }
     return $info;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function subClassExtension(Extension $extension): Theme {
+    return new Theme($this->root, $extension->getPathname(), $extension->info, $extension->getExtensionFilename());
   }
 
   /**

@@ -157,6 +157,9 @@ abstract class BlazyEntityFormBase extends EntityForm implements BlazyEntityForm
 
   /**
    * Setup form attributes.
+   *
+   * @param array $form
+   *   The form being modified.
    */
   protected function finalize(array &$form): void {
     $admin_css = $this->manager->config('admin_css', 'blazy.settings');
@@ -169,6 +172,11 @@ abstract class BlazyEntityFormBase extends EntityForm implements BlazyEntityForm
 
   /**
    * Setup form attributes.
+   *
+   * @param array $form
+   *   The form being modified.
+   * @param string $context
+   *   The string being passed.
    */
   protected function attributes(array &$form, $context = 'optionset'): void {
     if (!isset($form['#attributes'])) {
@@ -179,7 +187,7 @@ abstract class BlazyEntityFormBase extends EntityForm implements BlazyEntityForm
     $name = str_replace('_', '-', static::$machineName);
 
     $classes = ['form'];
-    // @todo remove slick after sub-modules.
+    // @todo deprecate and remove slick after sub-modules.
     foreach (['blazy', 'slick', $context, $name] as $key) {
       $classes[] = 'form--' . $key;
     }
@@ -194,6 +202,9 @@ abstract class BlazyEntityFormBase extends EntityForm implements BlazyEntityForm
    * Returns the keys of form item parents which should be wrapped as a grid.
    *
    * If you are overriding this, be sure to merge, not add (+), nor nullify.
+   *
+   * @return array
+   *   The form item grids.
    */
   protected function formGrids(): array {
     return $this->formGrids;
@@ -201,6 +212,12 @@ abstract class BlazyEntityFormBase extends EntityForm implements BlazyEntityForm
 
   /**
    * Converts form items to grids started at the found parent form keys.
+   *
+   * @param array $form
+   *   The form being modified.
+   *
+   * @return array
+   *   The form item grids.
    */
   protected function toGrid(array &$form): array {
     $result = [];
@@ -250,6 +267,12 @@ abstract class BlazyEntityFormBase extends EntityForm implements BlazyEntityForm
 
   /**
    * Wraps form items inside a grid container.
+   *
+   * @param array $form
+   *   The form being modified.
+   *
+   * @return array
+   *   The form item grids.
    */
   private function toNativeGrid(array &$form): array {
     $children = Element::children($form);

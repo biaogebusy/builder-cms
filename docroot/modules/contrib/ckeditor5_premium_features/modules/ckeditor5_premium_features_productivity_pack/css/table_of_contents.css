@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.table-of-contents.ck-widget ol:not(:has(> li > a)),
+.ck-table-of-contents ol:not(:has(> li > a)) {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.ck-table-of-contents li:not(:has(> a))::marker {
+  content: '';
+}
+
+.gin--dark-mode .ck {
+  --ck-table-of-contents-background-color: var(--gin-bg-layer);
+}

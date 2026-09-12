@@ -6,48 +6,63 @@ use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\views_add_button\ViewsAddButtonManager;
 
 /**
- * Class ViewsAddButtonService
+ * The ViewsAddButton service.
+ *
  * @package Drupal\views_add_button\Service
  */
 class ViewsAddButtonService {
 
   /**
-   * @var EntityTypeManager
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
   /**
-   * @var EntityTypeBundleInfo
+   * The entity type bundle info.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    */
-  protected $bundle_info;
+  protected EntityTypeBundleInfoInterface $entityTypeBundleInfo;
 
   /**
-   * @var ConfigFactoryInterface
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $config;
 
   /**
-   * @var ViewsAddButtonManager
+   * The plugin manager.
+   *
+   * @var \Drupal\views_add_button\ViewsAddButtonManager
    */
-  protected $plugin_manager;
+  protected ViewsAddButtonManager $viewsAddButtonManager;
 
   /**
    * ViewsAddButtonService constructor.
-   * @param EntityTypeManager $manager
-   * @param EntityTypeBundleInfo $bundle_info
-   * @param ConfigFactoryInterface $config
-   * @param ViewsAddButtonManager $plugin_manager
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManager $manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfo $bundle_info
+   *   The entity type bundle info service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   *   The config factory.
+   * @param \Drupal\views_add_button\ViewsAddButtonManager $plugin_manager
+   *   The views add button plugin manager.
    */
   public function __construct(EntityTypeManager $manager, EntityTypeBundleInfo $bundle_info, ConfigFactoryInterface $config, ViewsAddButtonManager $plugin_manager) {
     $this->entityTypeManager = $manager;
-    $this->bundle_info = $bundle_info;
+    $this->entityTypeBundleInfo = $bundle_info;
     $this->config = $config;
-    $this->plugin_manager = $plugin_manager;
+    $this->viewsAddButtonManager = $plugin_manager;
   }
 
   /**
@@ -69,7 +84,7 @@ class ViewsAddButtonService {
    *   Array of entity types and their available plugins.
    */
   public function createPluginList() {
-    $plugin_definitions = $this->plugin_manager->getDefinitions();
+    $plugin_definitions = $this->viewsAddButtonManager->getDefinitions();
 
     $options = [t('Any Entity')->render() => []];
     $entity_info = $this->entityTypeManager->getDefinitions();
@@ -79,7 +94,7 @@ class ViewsAddButtonService {
         $label = $pd['label']->render();
       }
 
-      $type_info = isset($pd['target_entity']) && isset($entity_info[$pd['target_entity']]) ? $entity_info[$pd['target_entity']] : 'default';
+      $type_info = isset($pd['target_entity'], $entity_info[$pd['target_entity']]) ? $entity_info[$pd['target_entity']] : 'default';
       $type_label = t('Any Entity')->render();
       if ($type_info instanceof ContentEntityType) {
         $type_label = $type_info->getLabel();
@@ -109,7 +124,7 @@ class ViewsAddButtonService {
           $label = $label->render();
         }
         $ret[$label] = [];
-        $bundles = $this->bundle_info->getBundleInfo($type);
+        $bundles = $this->entityTypeBundleInfo->getBundleInfo($type);
         foreach ($bundles as $key => $bundle) {
           if ($bundle['label'] instanceof TranslatableMarkup) {
             $ret[$label][$type . '+' . $key] = $bundle['label']->render();
@@ -124,10 +139,13 @@ class ViewsAddButtonService {
   }
 
   /**
+   * Get Plugin definitions.
+   *
    * @return array
+   *   Plugin definitions.
    */
   public function getPluginDefinitions() {
-    return $this->plugin_manager->getDefinitions();
+    return $this->viewsAddButtonManager->getDefinitions();
   }
 
 }

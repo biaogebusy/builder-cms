@@ -893,7 +893,7 @@ interface WebformInterface extends ConfigEntityInterface, EntityWithPluginCollec
    *
    * @see \Drupal\webform\Entity\WebformSubmission
    */
-  public function getPages($operation = '', WebformSubmissionInterface $webform_submission = NULL);
+  public function getPages($operation = '', ?WebformSubmissionInterface $webform_submission = NULL);
 
   /**
    * Get webform wizard page.
@@ -1128,7 +1128,7 @@ interface WebformInterface extends ConfigEntityInterface, EntityWithPluginCollec
    * @throws \Exception
    *   Throws exception if submission was not created using this webform.
    */
-  public function applyVariants(WebformSubmissionInterface $webform_submission = NULL, array $variants = [], $force = FALSE);
+  public function applyVariants(?WebformSubmissionInterface $webform_submission = NULL, array $variants = [], $force = FALSE);
 
   /**
    * Get variants data from a webform submission.

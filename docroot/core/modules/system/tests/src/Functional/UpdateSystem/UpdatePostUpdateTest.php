@@ -7,12 +7,15 @@ namespace Drupal\Tests\system\Functional\UpdateSystem;
 use Drupal\Core\Database\Database;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore postupdate
 /**
  * Tests hook_post_update().
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class UpdatePostUpdateTest extends BrowserTestBase {
   use UpdatePathTestTrait;
 
@@ -65,7 +68,7 @@ class UpdatePostUpdateTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function doSelectionTest() {
+  protected function doSelectionTest(): void {
     // Ensure that normal and post_update updates are merged together on the
     // selection page.
     $this->assertSession()->responseContains('<ul><li>8001 - Normal update_N() function.</li><li>First update.</li><li>Second update.</li><li>Test0 update.</li><li>Test1 update.</li><li>Testing batch processing in post updates update.</li></ul>');

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\commerce_promotion\CouponStorageInterface;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_promotion\Entity\Coupon;
 
@@ -11,13 +12,6 @@ use Drupal\commerce_promotion\Entity\Coupon;
  * @group commerce
  */
 class CouponStorageTest extends OrderKernelTestBase {
-
-  /**
-   * The coupon storage.
-   *
-   * @var \Drupal\commerce_promotion\CouponStorageInterface
-   */
-  protected $couponStorage;
 
   /**
    * Modules to enable.
@@ -38,8 +32,6 @@ class CouponStorageTest extends OrderKernelTestBase {
     $this->installEntitySchema('commerce_promotion_coupon');
     $this->installConfig(['commerce_promotion']);
     $this->installSchema('commerce_promotion', ['commerce_promotion_usage']);
-
-    $this->couponStorage = $this->container->get('entity_type.manager')->getStorage('commerce_promotion_coupon');
   }
 
   /**
@@ -53,7 +45,9 @@ class CouponStorageTest extends OrderKernelTestBase {
     ]);
     $coupon->save();
 
-    $coupon_loaded = $this->couponStorage->loadEnabledByCode($coupon_code);
+    $coupon_storage = $this->entityTypeManager->getStorage('commerce_promotion_coupon');
+    assert($coupon_storage instanceof CouponStorageInterface);
+    $coupon_loaded = $coupon_storage->loadEnabledByCode($coupon_code);
     $this->assertEquals($coupon->id(), $coupon_loaded->id());
 
     $coupon_code = $this->randomMachineName();
@@ -63,7 +57,7 @@ class CouponStorageTest extends OrderKernelTestBase {
     ]);
     $coupon->save();
 
-    $coupon_loaded = $this->couponStorage->loadEnabledByCode($coupon_code);
+    $coupon_loaded = $coupon_storage->loadEnabledByCode($coupon_code);
     $this->assertEmpty($coupon_loaded);
   }
 

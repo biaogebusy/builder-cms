@@ -69,6 +69,16 @@ class OrderItemViewsData extends CommerceEntityViewsData {
       ];
     }
 
+    // The "commerce_order_item" entity type does not have a list builder,
+    // so we need our own field for operation links.
+    $data['commerce_order_item']['inline_operations'] = [
+      'field' => [
+        'title' => $this->t('Inline Operations'),
+        'help' => $this->t('The inline operations list for the order item.'),
+        'id' => 'commerce_order_item_inline_operations',
+      ],
+    ];
+
     return $data;
   }
 

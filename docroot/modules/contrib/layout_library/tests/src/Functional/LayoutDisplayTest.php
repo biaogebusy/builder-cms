@@ -2,6 +2,11 @@
 
 namespace Drupal\Tests\layout_library\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 
@@ -10,6 +15,8 @@ use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
  *
  * @group layout_library
  */
+#[Group('layout_library')]
+#[RunTestsInSeparateProcesses]
 class LayoutDisplayTest extends BrowserTestBase {
 
   use ContentTypeCreationTrait;
@@ -83,9 +90,13 @@ class LayoutDisplayTest extends BrowserTestBase {
 
     // Enable full content display, then enable layout builder and library on
     // the default view display.
-    $this->drupalGet('admin/structure/types/manage/cats/display');
-    $page->checkField('display_modes_custom[full]');
-    $page->pressButton('Save');
+    \Drupal::service(EntityDisplayRepositoryInterface::class)->getViewDisplay('node', 'cats', 'full')->enable()->save();
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet('admin/structure/types/manage/cats/display/default'),
+      fn() => $this->drupalGet('admin/structure/types/manage/cats/display'),
+    );
     $page->checkField('layout[enabled]');
     $page->checkField('layout[library]');
     $page->pressButton('Save');
@@ -99,9 +110,7 @@ class LayoutDisplayTest extends BrowserTestBase {
     $assert_session->pageTextNotContains('This is from the library');
 
     // Disable the full content display.
-    $this->drupalGet('admin/structure/types/manage/cats/display');
-    $page->uncheckField('display_modes_custom[full]');
-    $page->pressButton('Save');
+    \Drupal::service(EntityDisplayRepositoryInterface::class)->getViewDisplay('node', 'cats', 'full')->disable()->save();
 
     $this->drupalGet($node->toUrl());
     $assert_session->pageTextContains('This is from the library');
@@ -110,7 +119,12 @@ class LayoutDisplayTest extends BrowserTestBase {
     // https://www.drupal.org/project/layout_library/issues/3082434.
     if (class_exists('Drupal\layout_builder\Event\PrepareLayoutEvent')) {
       // Enable layout overrides.
-      $this->drupalGet('admin/structure/types/manage/cats/display');
+      DeprecationHelper::backwardsCompatibleCall(
+        \Drupal::VERSION,
+        '11.4',
+        fn() => $this->drupalGet('admin/structure/types/manage/cats/display/default'),
+        fn() => $this->drupalGet('admin/structure/types/manage/cats/display'),
+      );
       $page->checkField('layout[allow_custom]');
       $page->pressButton('Save');
 

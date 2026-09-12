@@ -19,7 +19,7 @@ class WebformElementImageResolutionTest extends WebformElementBrowserTestBase {
   /**
    * Tests image resolution element.
    */
-  public function testImageResolution() {
+  public function testImageResolution(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_image_resolution');

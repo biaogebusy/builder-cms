@@ -93,7 +93,7 @@ class DefaultFormatter implements FormatterInterface
         foreach ($view as $key => $element) {
             $replacements['%' . $key] = $element;
         }
-        $output = strtr($formatString, $replacements);
+        $output = $this->insertValues($formatString, $replacements);
         $output = $this->cleanupOutput($output);
 
         if (!empty($options['html'])) {
@@ -211,6 +211,45 @@ class DefaultFormatter implements FormatterInterface
     }
 
     /**
+     * Inserts the rendered address fields into the format string.
+     *
+     * Empty fields need special handling. When one falls between two values,
+     * keep the separator before it and discard the one after it.
+     */
+    protected function insertValues(string $formatString, array $replacements): string
+    {
+        $lines = [];
+        foreach (explode("\n", $formatString) as $line) {
+            $rendered = '';
+            $separator = '';
+            $skipped = false;
+            foreach (preg_split('/(%[a-zA-Z0-9]+)/', $line, -1, PREG_SPLIT_DELIM_CAPTURE) as $part) {
+                if (!array_key_exists($part, $replacements)) {
+                    // A separator before an empty field usually belongs to
+                    // the value that came before it, so keep that one.
+                    if (!$skipped) {
+                        $separator = $part;
+                    }
+                    continue;
+                }
+                if ($replacements[$part] === '') {
+                    $skipped = true;
+                    continue;
+                }
+                if ($rendered !== '' || !$skipped) {
+                    $rendered .= $separator;
+                }
+                $rendered .= $replacements[$part];
+                $separator = '';
+                $skipped = false;
+            }
+            $lines[] = $rendered;
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * Removes empty lines, leading/trailing punctuation, excess whitespace.
      */
     protected function cleanupOutput(string $output): string
@@ -242,22 +281,19 @@ class DefaultFormatter implements FormatterInterface
         }
 
         // Replace the subdivision values with the names of any predefined ones.
-        $originalValues = [];
-        $subdivisionFields = $addressFormat->getUsedSubdivisionFields();
-        $parents = [];
+        $subdivisionFields = $addressFormat->getSubdivisionDataFields();
+        $parents = [$address->getCountryCode()];
         foreach ($subdivisionFields as $index => $field) {
             if (empty($values[$field])) {
                 // This level is empty, so there can be no sublevels.
                 break;
             }
-            $parents[] = $index ? $originalValues[$subdivisionFields[$index - 1]] : $address->getCountryCode();
             $subdivision = $this->subdivisionRepository->get($values[$field], $parents);
             if (!$subdivision) {
                 break;
             }
+            $parents[] = $values[$field];
 
-            // Remember the original value so that it can be used for $parents.
-            $originalValues[$field] = $values[$field];
             // Replace the value with the expected code.
             $useLocalName = Locale::matchCandidates($address->getLocale(), $subdivision->getLocale());
             $values[$field] = $useLocalName ? $subdivision->getLocalCode() : $subdivision->getCode();

@@ -1,0 +1,31 @@
+{
+  "name": "drupal-charts-c3-libraries",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Manages C3 JS libraries for the Drupal Charts module.",
+  "scripts": {
+    "libraries:copy": "rimraf ../../../../../libraries/c3 && copy-files-from-to && rimraf ./node_modules"
+  },
+  "dependencies": {
+    "c3": "^0.7.20",
+    "d3": "^7.9.0"
+  },
+  "devDependencies": {
+    "copy-files-from-to": "^3.9.0",
+    "rimraf": "^5.0.7"
+  },
+  "copyFiles": [
+    {
+      "from": "../../../../../../node_modules/c3/c3.min.css",
+      "to": "../../../../../libraries/c3/c3.min.css"
+    },
+    {
+      "from": "../../../../../../node_modules/c3/c3.min.js",
+      "to": "../../../../../libraries/c3/c3.min.js"
+    },
+    {
+      "from": "../../../../../../node_modules/d3/dist/d3.min.js",
+      "to": "../../../../../libraries/d3/d3.min.js"
+    }
+  ]
+}

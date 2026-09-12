@@ -15,10 +15,10 @@ use Drupal\Core\TypedData\DataDefinition;
  */
 #[FieldType(
   id: "list_integer",
-  label: new TranslatableMarkup("List (integer)"),
+  label: new TranslatableMarkup("Integer"),
   description: [
-    new TranslatableMarkup("Values stored are numbers without decimals"),
-    new TranslatableMarkup("For example, 'Lifetime in days': 1 => 1 day, 7 => 1 week, 31 => 1 month"),
+    new TranslatableMarkup("Values are whole numbers"),
+    new TranslatableMarkup("Example: Disagree (-1), Neutral (0), Agree (1)"),
   ],
   category: "selection_list",
   weight: -30,
@@ -70,6 +70,7 @@ class ListIntegerItem extends ListItemBase {
     if (!preg_match('/^-?\d+$/', $option)) {
       return new TranslatableMarkup('Allowed values list: keys must be integers.');
     }
+    return NULL;
   }
 
   /**

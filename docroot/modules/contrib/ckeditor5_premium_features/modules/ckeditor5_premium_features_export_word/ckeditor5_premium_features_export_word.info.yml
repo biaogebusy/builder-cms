@@ -1,0 +1,13 @@
+name: CKEditor 5 Premium Features Export to Word
+type: module
+description: "Generate Word files directly from the CKEditor 5."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^10.3 || ^11
+configure: ckeditor5_premium_features_export_word.form.settings
+dependencies:
+  - ckeditor5_premium_features:ckeditor5_premium_features
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

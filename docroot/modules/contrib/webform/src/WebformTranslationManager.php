@@ -2,11 +2,11 @@
 
 namespace Drupal\webform;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\Plugin\WebformElement\WebformCompositeBase;
 use Drupal\webform\Plugin\WebformElement\WebformCustomComposite;
 use Drupal\webform\Plugin\WebformElementManagerInterface;
@@ -98,7 +98,7 @@ class WebformTranslationManager implements WebformTranslationManagerInterface {
     }
 
     // Don't initialize translation on webform UI routes.
-    if (strpos($route_name, 'entity.webform_ui.') === 0) {
+    if (str_starts_with($route_name, 'entity.webform_ui.')) {
       return TRUE;
     }
 

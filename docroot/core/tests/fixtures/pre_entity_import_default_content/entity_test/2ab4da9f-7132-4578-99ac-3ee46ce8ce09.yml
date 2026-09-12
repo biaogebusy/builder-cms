@@ -1,0 +1,16 @@
+_meta:
+  version: '1.0'
+  entity_type: entity_test
+  uuid: 2ab4da9f-7132-4578-99ac-3ee46ce8ce09
+  bundle: entity_test
+  default_langcode: en
+default:
+  name:
+    -
+      value: 'Test Entity Two'
+  user_id:
+    -
+      target_id: 1
+  langcode:
+    -
+      value: en

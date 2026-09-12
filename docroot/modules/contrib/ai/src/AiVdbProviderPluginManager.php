@@ -6,7 +6,9 @@ namespace Drupal\ai;
 
 use Drupal\ai\Enum\VdbSimilarityMetrics;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\ai\Attribute\AiVdbProvider;
 use Drupal\Core\Utility\Error;
@@ -15,6 +17,20 @@ use Drupal\Core\Utility\Error;
  * Vector DB plugin manager.
  */
 final class AiVdbProviderPluginManager extends DefaultPluginManager {
+
+  /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
+   * The logger channel factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected LoggerChannelFactoryInterface $loggerFactory;
 
   /**
    * Constructs the object.
@@ -33,7 +49,7 @@ final class AiVdbProviderPluginManager extends DefaultPluginManager {
    * @param array $configuration
    *   An array of configuration relevant to the plugin instance.
    *
-   * @return \Drupal\ai\Attribute\AiVdbProviderInterface
+   * @return \Drupal\ai\AiVdbProviderInterface
    *   A fully configured vector database plugin instance.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
@@ -43,6 +59,28 @@ final class AiVdbProviderPluginManager extends DefaultPluginManager {
     /** @var \Drupal\ai\AiVdbProviderInterface $providerInstance */
     $providerInstance = parent::createInstance($plugin_id, $configuration);
     return $providerInstance;
+  }
+
+  /**
+   * Sets config factory.
+   *
+   * The dependency is injected automatically.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
+   */
+  public function setConfigFactory(ConfigFactoryInterface $config_factory): void {
+    $this->configFactory = $config_factory;
+  }
+
+  /**
+   * Sets the logger channel factory.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger channel factory.
+   */
+  public function setLoggerChannelFactory(LoggerChannelFactoryInterface $logger_factory): void {
+    $this->loggerFactory = $logger_factory;
   }
 
   /**
@@ -64,6 +102,41 @@ final class AiVdbProviderPluginManager extends DefaultPluginManager {
       $plugins[$definition['id']] = $definition['label']->__toString();
     }
     return $plugins;
+  }
+
+  /**
+   * Returns the default vector database plugin id.
+   *
+   * If none was set in configuration, the first one that is set up will be set
+   * as default so next time it will take it from configuration value.
+   *
+   * @param string $preferred_provider
+   *   The preferred provider in case there are more than 1.
+   *
+   * @return string
+   *   The id of the default vector database provider plugin.
+   */
+  public function defaultIfNone(string $preferred_provider = ''): string {
+    $config = $this->configFactory->getEditable('ai.settings');
+    $default = $config->get('default_vdb_provider') ?? '';
+    if (empty($default)) {
+      // Take only setup providers.
+      $providers = array_keys($this->getProviders(TRUE));
+      if (!empty($providers)) {
+        if (!empty($preferred_provider) && in_array($preferred_provider, $providers, TRUE)) {
+          $default = $preferred_provider;
+        }
+        // If no preferred provider is there, or it is not setup, take the first
+        // setup provider.
+        else {
+          $default = reset($providers);
+        }
+        $this->loggerFactory->get('ai')->notice("$default was set as default vector database provider.");
+        $config->set('default_vdb_provider', $default);
+        $config->save();
+      }
+    }
+    return $default;
   }
 
   /**
@@ -138,10 +211,7 @@ final class AiVdbProviderPluginManager extends DefaultPluginManager {
     }
     catch (\Exception $exception) {
       /** @var \Psr\Log\LoggerInterface $logger */
-      // phpcs:disable
-      // @phpstan-ignore-next-line
-      $logger = \Drupal::logger('ai_search');
-      // phpcs:enable
+      $logger = $this->loggerFactory->get('ai_search');
       Error::logException($logger, $exception, '%type: @message in %function (line %line of %file).');
       return FALSE;
     }

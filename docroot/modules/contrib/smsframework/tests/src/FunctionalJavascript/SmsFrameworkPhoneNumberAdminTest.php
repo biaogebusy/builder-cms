@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\FunctionalJavascript;
 
@@ -17,14 +17,8 @@ final class SmsFrameworkPhoneNumberAdminTest extends WebDriverTestBase {
 
   use SmsFrameworkTestTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected $defaultTheme = 'stark';
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = ['sms', 'block', 'entity_test'];
 
   /**
@@ -34,9 +28,6 @@ final class SmsFrameworkPhoneNumberAdminTest extends WebDriverTestBase {
    */
   protected EntityTypeManagerInterface $entityTypeManager;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->entityTypeManager = $this->container->get('entity_type.manager');
@@ -62,7 +53,7 @@ final class SmsFrameworkPhoneNumberAdminTest extends WebDriverTestBase {
     /** @var \Drupal\field\FieldStorageConfigInterface $field_telephone */
     $field_telephone = $field_storage->create([
       'entity_type' => 'entity_test',
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => \mb_strtolower($this->randomMachineName()),
       'type' => 'telephone',
     ]);
     $field_telephone->save();

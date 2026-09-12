@@ -34,7 +34,7 @@ trait WebformEntityInjectionTrait {
    * @return $this
    *   This webform handler.
    */
-  public function setWebform(WebformInterface $webform = NULL) {
+  public function setWebform(?WebformInterface $webform = NULL) {
     $this->webform = $webform;
     return $this;
   }
@@ -55,7 +55,7 @@ trait WebformEntityInjectionTrait {
    * @return \Drupal\webform\WebformSubmissionInterface
    *   A webform submission.
    */
-  public function setWebformSubmission(WebformSubmissionInterface $webform_submission = NULL) {
+  public function setWebformSubmission(?WebformSubmissionInterface $webform_submission = NULL) {
     $this->webformSubmission = $webform_submission;
     return $this;
   }

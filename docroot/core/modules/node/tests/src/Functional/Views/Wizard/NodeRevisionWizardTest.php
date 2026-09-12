@@ -6,13 +6,16 @@ namespace Drupal\Tests\node\Functional\Views\Wizard;
 
 use Drupal\Tests\views\Functional\Wizard\WizardTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the wizard with node_revision as base table.
  *
- * @group node
  * @see \Drupal\node\Plugin\views\wizard\NodeRevision
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeRevisionWizardTest extends WizardTestBase {
 
   /**
@@ -28,7 +31,11 @@ class NodeRevisionWizardTest extends WizardTestBase {
     // Create two nodes with two revision.
     $node_storage = \Drupal::entityTypeManager()->getStorage('node');
     /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create(['title' => $this->randomString(), 'type' => 'article', 'changed' => \Drupal::time()->getRequestTime() + 40]);
+    $node = $node_storage->create([
+      'title' => $this->randomString(),
+      'type' => 'article',
+      'changed' => \Drupal::time()->getRequestTime() + 40,
+    ]);
     $node->save();
 
     $node = $node->createDuplicate();
@@ -36,7 +43,11 @@ class NodeRevisionWizardTest extends WizardTestBase {
     $node->changed->value = \Drupal::time()->getRequestTime() + 20;
     $node->save();
 
-    $node = $node_storage->create(['title' => $this->randomString(), 'type' => 'article', 'changed' => \Drupal::time()->getRequestTime() + 30]);
+    $node = $node_storage->create([
+      'title' => $this->randomString(),
+      'type' => 'article',
+      'changed' => \Drupal::time()->getRequestTime() + 30,
+    ]);
     $node->save();
 
     $node = $node->createDuplicate();
@@ -45,7 +56,11 @@ class NodeRevisionWizardTest extends WizardTestBase {
     $node->save();
 
     $this->drupalCreateContentType(['type' => 'not_article']);
-    $node = $node_storage->create(['title' => $this->randomString(), 'type' => 'not_article', 'changed' => \Drupal::time()->getRequestTime() + 80]);
+    $node = $node_storage->create([
+      'title' => $this->randomString(),
+      'type' => 'not_article',
+      'changed' => \Drupal::time()->getRequestTime() + 80,
+    ]);
     $node->save();
 
     $type = [

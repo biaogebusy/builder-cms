@@ -1,0 +1,13 @@
+admin.merge_fields:
+  version: 20250707
+  css:
+    theme:
+      css/merge-fields.admin.css: { }
+
+merge_fields_adapter:
+  version: 20260310
+  js:
+    js/build/mergeFieldsAdapter.js: { minified: true }
+  dependencies:
+    - core/ckeditor5
+    - ckeditor5_premium_features_merge_fields/merge-fields

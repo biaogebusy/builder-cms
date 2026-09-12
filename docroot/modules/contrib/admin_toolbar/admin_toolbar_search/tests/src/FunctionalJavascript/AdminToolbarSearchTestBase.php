@@ -1,17 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\admin_toolbar_search\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\system\Entity\Menu;
+use Drupal\Tests\admin_toolbar\Traits\AdminToolbarHelperTestTrait;
+use Drupal\admin_toolbar_search\Constants\AdminToolbarSearchConstants;
 
 /**
- * Base class for testing the functionality of admin toolbar search.
+ * Base class for testing the functionality of Admin Toolbar Search.
+ *
+ * @see \Drupal\Tests\admin_toolbar_search\FunctionalJavascript\AdminToolbarSearchTest
  *
  * @group admin_toolbar
  * @group admin_toolbar_search
  */
 abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
+
+  use AdminToolbarHelperTestTrait;
+
+  /**
+   * A user with access to the Admin Toolbar Search.
+   *
+   * An admin user with the permissions to access the site's admin backend form
+   * pages and the 'use admin toolbar search' permission defined by the module.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  public $adminUser;
 
   /**
    * {@inheritdoc}
@@ -22,27 +39,11 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'admin_toolbar',
     'admin_toolbar_search',
-    'node',
-    'media',
-    'field_ui',
+    // Required to test route: 'Menus'.
     'menu_ui',
-    'block',
   ];
-
-  /**
-   * A user with the 'Use Admin Toolbar search' permission.
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected $userWithAccess;
-
-  /**
-   * A test user without the 'Use Admin Toolbar search' permission..
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected $noAccessUser;
 
   /**
    * {@inheritdoc}
@@ -50,110 +51,157 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
   public function setUp(): void {
     parent::setUp();
 
-    $baby_names = [
-      'ada' => 'Ada',
-      'amara' => 'Amara',
-      'amelia' => 'Amelia',
-      'arabella' => 'Arabella',
-      'asher' => 'Asher',
-      'astrid' => 'Astrid',
-      'atticus' => 'Atticus',
-      'aurora' => 'Aurora',
-      'ava' => 'Ava',
-      'cora' => 'Cora',
-      'eleanor' => 'Eleanor',
-      'eloise' => 'Eloise',
-      'felix' => 'Felix',
-      'freya' => 'Freya',
-      'genevieve' => 'Genevieve',
-      'isla' => 'Isla',
-      'jasper' => 'Jasper',
-      'luna' => 'Luna',
-      'maeve' => 'Maeve',
-      'milo' => 'Milo',
-      'nora' => 'Nora',
-      'olivia' => 'Olivia',
-      'ophelia' => 'Ophelia',
-      'posie' => 'Posie',
-      'rose' => 'Rose',
-      'silas' => 'Silas',
-      'soren' => 'Soren',
-    ];
+    /* Setup users for the tests. */
 
-    foreach ($baby_names as $id => $label) {
-      $menu = Menu::create([
-        'id' => $id,
-        'label' => $label,
-      ]);
-      $menu->save();
-    }
-
-    $this->drupalPlaceBlock('local_tasks_block');
-
+    // Access to the toolbar and site's configuration admin pages, so basic
+    // system config routes could be tested in the search autocomplete.
     $permissions = [
       'access toolbar',
-      'administer menu',
+      // Access to the menu links under '/admin/config/'.
       'access administration pages',
       'administer site configuration',
-      'administer content types',
+      // Permission needed to test links provided by the 'menu_ui' module.
+      'administer menu',
+      // This permission is needed to test the search autocomplete.
+      'use admin toolbar search',
     ];
-    $this->noAccessUser = $this->drupalCreateUser($permissions);
-    $permissions[] = 'use admin toolbar search';
-    $this->userWithAccess = $this->drupalCreateUser($permissions);
+
+    // Create an admin user with access to the admin toolbar search.
+    $this->adminUser = $this->drupalCreateUser($permissions);
+
+    // Login with an admin user with access to the search in the toolbar.
+    $this->drupalLogin($this->adminUser);
+
+    // Wait for the necessary CSS and JS elements to load to test suggestions.
+    $this->waitForAdminToolbarSearchVisible();
   }
 
   /**
-   * Assert that the search suggestions contain a given string with given input.
-   *
-   * @param string $search
-   *   The string to search for.
-   * @param string $contains
-   *   Some HTML that is expected to be within the suggestions element.
+   * Helper function to wait for Admin Toolbar Search HTML IDs to be visible.
    *
    * @return void
    *   Nothing to return.
    */
-  protected function assertSuggestionContains($search, $contains) {
-    $this->resetSearch();
-    $page = $this->getSession()->getPage();
-    $page->fillField('admin-toolbar-search-input', $search);
-    $this->getSession()->getDriver()->keyDown('//input[@id="admin-toolbar-search-input"]', ' ');
-    $page->waitFor(3, function () use ($page) {
-      return ($page->find('css', 'ul.ui-autocomplete')->isVisible() === TRUE);
-    });
-    $suggestions_markup = $page->find('css', 'ul.ui-autocomplete')->getHtml();
-    $this->assertStringContainsString($contains, $suggestions_markup);
+  protected function waitForAdminToolbarSearchVisible() {
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
+    $assert_session = $this->assertSession();
+    // Wait for the necessary CSS and JS elements to load to test suggestions.
+    $assert_session->waitForElementVisible('css', '#' . AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_tab']);
+    $assert_session->waitForElementVisible('css', '#' . AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_toolbar_item']);
+    $assert_session->waitForElementVisible('css', '#' . AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_tray']);
+    $assert_session->waitForElementVisible('css', '#' . AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_field_input']);
   }
 
   /**
-   * Assert that the search suggestions does not contain a given string.
+   * Assert the search suggestions for a given query contain expected string.
    *
-   * Assert that the search suggestions does not contain a given string with a
-   * given input.
-   *
-   * @param string $search
-   *   The string to search for.
-   * @param string $contains
-   *   Some HTML that is not expected to be within the suggestions element.
+   * @param string $query
+   *   The string for which to search: the 'query' is the text submitted in the
+   *   autocomplete search field.
+   * @param string $expected_url
+   *   The 'expected' is the string that should be contained in the HTML
+   *   returned in the expected suggestions (links, HTML markup, etc...).
+   * @param int $expected_count
+   *   (optional) An integer to check the number of expected suggestions.
+   * @param bool $expected_contains
+   *   (optional) A flag indicating whether the expected url should be matched
+   *   exactly (strict, by default) with an end of string operator ('$=') or
+   *   loosely (contains) with a contains xpath expression.
    *
    * @return void
    *   Nothing to return.
    */
-  protected function assertSuggestionNotContains($search, $contains) {
+  protected function assertSuggestionsContain($query, $expected_url, int $expected_count = 0, bool $expected_contains = FALSE) {
+    $this->assetSuggestionsContainHelper($query, $expected_url, TRUE, $expected_count, $expected_contains);
+  }
+
+  /**
+   * Assert the search suggestions for a given query do not contain a string.
+   *
+   * @param string $query
+   *   The string for which to search: the 'query' is the text submitted in the
+   *   autocomplete search field.
+   * @param string $expected_url
+   *   The 'expected' is the string that should not be contained in the HTML
+   *   returned in the expected suggestions (links, HTML markup, etc...).
+   *
+   * @return void
+   *   Nothing to return.
+   */
+  protected function assertSuggestionsNotContain($query, $expected_url) {
+    // By default, the last parameter is 'FALSE' to assert not contains.
+    // Note: A search query can return results which could not include the
+    // expected url.
+    $this->assetSuggestionsContainHelper($query, $expected_url);
+  }
+
+  /**
+   * Helper function to assert search suggestions contain a string or not.
+   *
+   * @param string $query
+   *   The string for which to search: the 'query' is the text submitted in the
+   *   autocomplete search field.
+   * @param string $expected_url
+   *   The 'expected' is the string that should be contained in the HTML
+   *   returned in the expected suggestions (links, HTML markup, etc...).
+   * @param bool $assert_contains
+   *   Set to 'FALSE', by default, to assert suggestions are *not* contained,
+   *   or set to 'TRUE' to assert suggestions are contained with an exact match.
+   * @param int $expected_count
+   *   (optional) An integer to check the number of expected suggestions.
+   * @param bool $expected_contains
+   *   (optional) A flag indicating whether the expected url should be matched
+   *   exactly (strict, by default) with an end of string operator ('$=') or
+   *   loosely (contains) with a contains xpath expression.
+   *
+   * @return void
+   *   Nothing to return.
+   *
+   * @throws \Behat\Mink\Exception\ExpectationException
+   */
+  protected function assetSuggestionsContainHelper(string $query, string $expected_url, bool $assert_contains = FALSE, int $expected_count = 0, bool $expected_contains = FALSE) {
+    /** @var \Behat\Mink\Session $test_session */
+    $test_session = $this->getSession();
+
+    // Reset the search field to ensure no previous search results are visible.
     $this->resetSearch();
-    $page = $this->getSession()->getPage();
-    $page->fillField('admin-toolbar-search-input', $search);
-    $this->getSession()->getDriver()->keyDown('//input[@id="admin-toolbar-search-input"]', ' ');
-    $page->waitFor(3, function () use ($page) {
-      return ($page->find('css', 'ul.ui-autocomplete')->isVisible() === TRUE);
+    $page = $test_session->getPage();
+
+    // Fill in the search input field with the query and trigger a search.
+    $suggestions = $page->find('css', 'ul.ui-autocomplete');
+    $page->fillField(AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_field_input'], $query);
+    // Add a space character by pressing the key down to trigger the search.
+    $test_session->getDriver()->keyDown('//input[@id="' . AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_field_input'] . '"]', ' ');
+
+    // Wait for the suggestions to be visible and continue.
+    $page->waitFor(3, function () use ($suggestions) {
+      // If the search is empty, the list of suggestions should not be visible.
+      return $suggestions->isVisible() === TRUE;
     });
-    if ($page->find('css', 'ul.ui-autocomplete')->isVisible() === FALSE) {
-      return;
+
+    // Assert contains exact match, otherwise, assert not contains.
+    if ($assert_contains && !$expected_contains) {
+      // A CSS selector has to be used here, since xpath 1.0 does not support
+      // 'ends-with'. Use the ends with CSS selector '$=' to allow absolute URLs
+      // to be used as well and ensure the expected URL is an exact match.
+      $exact_match_count = count($suggestions->findAll('css', 'a[href$="' . $expected_url . '"]'));
     }
     else {
-      $suggestions_markup = $page->find('css', 'ul.ui-autocomplete')->getHtml();
-      $this->assertStringNotContainsString($contains, $suggestions_markup);
+      // Try to be more flexible by searching links containing the expected
+      // value that should not be found in the results.
+      $exact_match_count = count($suggestions->findAll('xpath', '//a[contains(@href, "' . $expected_url . '")]'));
     }
+    // By default: assert contains, otherwise, assert not contains.
+    $this->assertEquals($assert_contains, ($exact_match_count > 0));
+
+    // Assert the number of expected suggestions.
+    if ($expected_count > 0) {
+      // Count the number of 'a' tags in the suggestions list.
+      $suggestions_count = count($suggestions->findAll('xpath', '//a'));
+      // Compare the number of suggestions with the expected count.
+      $this->assertEquals($expected_count, $suggestions_count);
+    }
+
   }
 
   /**
@@ -165,43 +213,13 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
   protected function resetSearch() {
     $page = $this->getSession()->getPage();
     // Empty out the suggestions.
-    $page->fillField('admin-toolbar-search-input', '');
-    $this->getSession()->getDriver()->keyDown('//input[@id="admin-toolbar-search-input"]', ' ');
-    $page->waitFor(3, function () use ($page) {
-      return ($page->find('css', 'ul.ui-autocomplete')->isVisible() === FALSE);
+    $page->fillField(AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_field_input'], '');
+    // Add a space character by pressing the key down to trigger the search.
+    $this->getSession()->getDriver()->keyDown('//input[@id="' . AdminToolbarSearchConstants::ADMIN_TOOLBAR_SEARCH_HTML_IDS['search_field_input'] . '"]', ' ');
+    $page->waitFor(3, function ($element) {
+      // If the search is empty, the list of suggestions should not be visible.
+      return ($element->find('css', 'ul.ui-autocomplete')->isVisible() === FALSE);
     });
-  }
-
-  /**
-   * Checks that there is a link with the specified url in the admin toolbar.
-   *
-   * @param string $url
-   *   The url to assert exists in the admin menu.
-   *
-   * @return void
-   *   Nothing to return.
-   *
-   * @throws \Behat\Mink\Exception\ElementNotFoundException
-   */
-  protected function assertMenuHasHref($url) {
-    $this->assertSession()
-      ->elementExists('xpath', '//div[@id="toolbar-item-administration-tray"]//a[contains(@href, "' . $url . '")]');
-  }
-
-  /**
-   * Checks that there is no link with the specified url in the admin toolbar.
-   *
-   * @param string $url
-   *   The url to assert exists in the admin menu.
-   *
-   * @return void
-   *   Nothing to return.
-   *
-   * @throws \Behat\Mink\Exception\ExpectationException
-   */
-  protected function assertMenuDoesNotHaveHref($url) {
-    $this->assertSession()
-      ->elementNotExists('xpath', '//div[@id="toolbar-item-administration-tray"]//a[contains(@href, "' . $url . '")]');
   }
 
 }

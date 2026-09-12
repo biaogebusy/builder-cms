@@ -26,7 +26,7 @@ final class PaymentMethodProfileFormatter extends EntityReferenceRevisionsEntity
    *
    * @var \Drupal\Core\Routing\RouteMatchInterface
    */
-  private $currentRouteMatch;
+  protected $currentRouteMatch;
 
   /**
    * {@inheritdoc}

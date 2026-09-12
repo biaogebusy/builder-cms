@@ -1,0 +1,25 @@
+# This file provides a working example of configuring a Symfony service container to use Composer Stager.
+#
+# @see https://symfony.com/doc/current/service_container.html#creating-configuring-services-in-the-container
+---
+services:
+
+    _defaults:
+        # Define services dependencies automatically (autowiring).
+        # Manual wiring is brittle and therefore not officially supported.
+        # @see https://symfony.com/doc/current/best_practices.html#use-autowiring-to-automate-the-configuration-of-application-services
+        autowire: true
+
+    # This makes Composer Stager classes available as services.
+    PhpTuf\ComposerStager\:
+        resource: '../vendor/php-tuf/composer-stager/src/*'
+        # Some kinds of classes aren't meant to be accessed as services.
+        exclude:
+            - '../vendor/php-tuf/composer-stager/src/*/*/Value'
+            - '../vendor/php-tuf/composer-stager/src/API/Exception'
+        public: true
+
+    # Composer Stager depends on services from these Symfony Components.
+    Symfony\Component\Filesystem\Filesystem: ~
+    Symfony\Component\Process\ExecutableFinder: ~
+    Symfony\Component\Process\PhpExecutableFinder: ~

@@ -58,6 +58,32 @@ have disabled the CDN option on the "Charts configuration" page
 
 Below are a couple outlines for adding the libraries locally.
 
+### Using npm (new)
+
+If you are using npm for JavaScript assets and have a build step that would
+run `npm install` (for example), then you can add a package.json file to your
+site root that looks like this:
+```json
+{
+    "name": "my_site",
+    "private": true,
+    "scripts": {
+        "postinstall": "npm run libraries:copy --workspaces --if-present"
+    },
+    "workspaces": [
+        "web/modules/contrib/charts/**/*"
+    ]
+}
+```
+If you already have a package.json file present in your site root, then edit
+it to include the "postinstall" script and the "workspaces".
+
+`npm install` will then add your JS files to the appropriate library
+directories (e.g. web/libraries/highcharts).
+
+This assumes that you are using the "web" directory and the charts module
+is in a directory like "web/modules/contrib/charts".
+
 ### Using Composer
 
 1. Ensure that you have the `composer/installers` package installed.

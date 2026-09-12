@@ -5,7 +5,7 @@
 
   // Adds our "shiny" selected effect with linear gradients.
   &.with-selected-gradient input {
-    @include sr-only();
+    @include visually-hidden();
 
     &:checked + label.option {
       &:before {

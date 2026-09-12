@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
@@ -29,9 +29,6 @@ final class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase {
     testTimeDelivered as timeDelivered;
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'user',
     'sms',
@@ -41,9 +38,6 @@ final class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase {
     'entity_test',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('entity_test');
@@ -53,9 +47,6 @@ final class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase {
     $this->installEntitySchema('sms_report');
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected function createDeliveryReport(): BaseSmsDeliveryReportInterface {
     return SmsDeliveryReport::create();
   }
@@ -139,7 +130,7 @@ final class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase {
       'recipient' => '1234567890',
     ]);
     static::assertCount(1, $saved);
-    $saved = reset($saved);
+    $saved = \reset($saved);
     static::assertEquals($report->getRecipient(), $saved->getRecipient());
     static::assertEquals($report->getMessageId(), $saved->getMessageId());
     static::assertEquals($report->getStatus(), $saved->getStatus());

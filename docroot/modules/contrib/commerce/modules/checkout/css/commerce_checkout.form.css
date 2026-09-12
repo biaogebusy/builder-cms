@@ -9,8 +9,7 @@
 }
 
 /* Wide screens */
-@media screen and (min-width: 780px),
-  (orientation: landscape) and (min-device-height: 780px) {
+@media screen and (min-width: 780px), (orientation: landscape) and (min-device-height: 780px) {
   .layout-region-checkout-main,
   .layout-region-checkout-footer {
     float: left; /* LTR */
@@ -52,9 +51,9 @@
   }
 }
 
-.checkout-review-edit-link:before {
-    content: " (";
+.checkout-review-edit-link::before {
+  content: " (";
 }
-.checkout-review-edit-link:after {
-    content: ")";
+.checkout-review-edit-link::after {
+  content: ")";
 }

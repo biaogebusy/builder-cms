@@ -8,15 +8,15 @@ use Drupal\Component\Discovery\DiscoveryException;
 use Drupal\Component\Discovery\YamlDirectoryDiscovery;
 use Drupal\Component\FileCache\FileCacheFactory;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * YamlDirectoryDiscoveryTest component unit tests.
- *
- * @coversDefaultClass \Drupal\Component\Discovery\YamlDirectoryDiscovery
- *
- * @group Discovery
  */
+#[CoversClass(YamlDirectoryDiscovery::class)]
+#[Group('Discovery')]
 class YamlDirectoryDiscoveryTest extends TestCase {
 
   /**
@@ -30,7 +30,7 @@ class YamlDirectoryDiscoveryTest extends TestCase {
   /**
    * Tests YAML directory discovery.
    *
-   * @covers ::findAll
+   * @legacy-covers ::findAll
    */
   public function testDiscovery(): void {
     vfsStream::setup('modules', NULL, [
@@ -82,26 +82,69 @@ class YamlDirectoryDiscoveryTest extends TestCase {
     $discovery = new YamlDirectoryDiscovery($directories, 'test');
     $data = $discovery->findAll();
 
-    // The file path is dependent on the operating system, so we adjust the directory separator.
-    $this->assertSame(['id' => 'item1', 'name' => 'test1 item 1', YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_1/subdir1' . DIRECTORY_SEPARATOR . 'item_1.test.yml'], $data['test_1']['item1']);
-    $this->assertSame(['id' => 'item2', 'name' => 'test1 item 2', YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_1/subdir2' . DIRECTORY_SEPARATOR . 'item_2.test.yml'], $data['test_1']['item2']);
+    // The file path is dependent on the operating system, so we adjust the
+    // directory separator.
+    $this->assertSame(
+      [
+        'id' => 'item1',
+        'name' => 'test1 item 1',
+        YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_1/subdir1' . DIRECTORY_SEPARATOR . 'item_1.test.yml',
+      ],
+      $data['test_1']['item1'],
+    );
+    $this->assertSame(
+      [
+        'id' => 'item2',
+        'name' => 'test1 item 2',
+        YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_1/subdir2' . DIRECTORY_SEPARATOR . 'item_2.test.yml',
+      ],
+      $data['test_1']['item2'],
+    );
     $this->assertCount(2, $data['test_1']);
 
-    $this->assertSame(['id' => 'item3', 'name' => 'test2 item 3', YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_2/subdir1' . DIRECTORY_SEPARATOR . 'item_3.test.yml'], $data['test_2']['item3']);
+    $this->assertSame(
+      [
+        'id' => 'item3',
+        'name' => 'test2 item 3',
+        YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_2/subdir1' . DIRECTORY_SEPARATOR . 'item_3.test.yml',
+      ],
+      $data['test_2']['item3'],
+    );
     $this->assertCount(1, $data['test_2']);
 
     $this->assertArrayNotHasKey('test_3', $data, 'test_3 provides 0 items');
 
-    $this->assertSame(['id' => 'item4', 'name' => 'test4 item 4', YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_4/subdir1' . DIRECTORY_SEPARATOR . 'item_4.test.yml'], $data['test_4']['item4']);
-    $this->assertSame(['id' => 'item5', 'name' => 'test4 item 5', YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_4/subdir1' . DIRECTORY_SEPARATOR . 'item_5.test.yml'], $data['test_4']['item5']);
-    $this->assertSame(['id' => 'item6', 'name' => 'test4 item 6', YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_4/subdir1' . DIRECTORY_SEPARATOR . 'item_6.test.yml'], $data['test_4']['item6']);
+    $this->assertSame(
+      [
+        'id' => 'item4',
+        'name' => 'test4 item 4',
+        YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_4/subdir1' . DIRECTORY_SEPARATOR . 'item_4.test.yml',
+      ],
+      $data['test_4']['item4'],
+    );
+    $this->assertSame(
+      [
+        'id' => 'item5',
+        'name' => 'test4 item 5',
+        YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_4/subdir1' . DIRECTORY_SEPARATOR . 'item_5.test.yml',
+      ],
+      $data['test_4']['item5'],
+    );
+    $this->assertSame(
+      [
+        'id' => 'item6',
+        'name' => 'test4 item 6',
+        YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_4/subdir1' . DIRECTORY_SEPARATOR . 'item_6.test.yml',
+      ],
+      $data['test_4']['item6'],
+    );
     $this->assertCount(3, $data['test_4']);
   }
 
   /**
    * Tests YAML directory discovery with an alternate ID key.
    *
-   * @covers ::findAll
+   * @legacy-covers ::findAll
    */
   public function testDiscoveryAlternateId(): void {
     vfsStream::setup('modules', NULL, [
@@ -116,15 +159,22 @@ class YamlDirectoryDiscoveryTest extends TestCase {
     $discovery = new YamlDirectoryDiscovery($directories, 'test', 'alt_id');
     $data = $discovery->findAll();
 
-    $this->assertSame(['alt_id' => 'item1', 'id' => 'ignored', YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_1' . DIRECTORY_SEPARATOR . 'item_1.test.yml'], $data['test_1']['item1']);
+    $this->assertSame(
+      [
+        'alt_id' => 'item1',
+        'id' => 'ignored',
+        YamlDirectoryDiscovery::FILE_KEY => 'vfs://modules/test_1' . DIRECTORY_SEPARATOR . 'item_1.test.yml',
+      ],
+      $data['test_1']['item1'],
+    );
     $this->assertCount(1, $data['test_1']);
   }
 
   /**
    * Tests YAML directory discovery with a missing ID key.
    *
-   * @covers ::findAll
-   * @covers ::getIdentifier
+   * @legacy-covers ::findAll
+   * @legacy-covers ::getIdentifier
    */
   public function testDiscoveryNoIdException(): void {
     $this->expectException(DiscoveryException::class);
@@ -145,7 +195,7 @@ class YamlDirectoryDiscoveryTest extends TestCase {
   /**
    * Tests YAML directory discovery with invalid YAML.
    *
-   * @covers ::findAll
+   * @legacy-covers ::findAll
    */
   public function testDiscoveryInvalidYamlException(): void {
     $this->expectException(DiscoveryException::class);

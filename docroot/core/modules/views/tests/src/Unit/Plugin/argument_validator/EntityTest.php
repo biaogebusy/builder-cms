@@ -6,13 +6,17 @@ namespace Drupal\Tests\views\Unit\Plugin\argument_validator;
 
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Tests\Core\Entity\StubEntityBase;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\argument_validator\Entity;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\argument_validator\Entity
- * @group views
+ * Tests Drupal\views\Plugin\views\argument_validator\Entity.
  */
+#[CoversClass(Entity::class)]
+#[Group('views')]
 class EntityTest extends UnitTestCase {
 
   /**
@@ -59,7 +63,10 @@ class EntityTest extends UnitTestCase {
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfoInterface::class);
 
-    $mock_entity = $this->getMockForAbstractClass('Drupal\Core\Entity\EntityBase', [], '', FALSE, TRUE, TRUE, ['bundle', 'access']);
+    $mock_entity = $this->getMockBuilder(StubEntityBase::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['bundle', 'access'])
+      ->getMock();
     $mock_entity->expects($this->any())
       ->method('bundle')
       ->willReturn('test_bundle');
@@ -71,7 +78,10 @@ class EntityTest extends UnitTestCase {
         ['test_op_3', NULL, FALSE, TRUE],
       ]);
 
-    $mock_entity_bundle_2 = $this->getMockForAbstractClass('Drupal\Core\Entity\EntityBase', [], '', FALSE, TRUE, TRUE, ['bundle', 'access']);
+    $mock_entity_bundle_2 = $this->getMockBuilder(StubEntityBase::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['bundle', 'access'])
+      ->getMock();
     $mock_entity_bundle_2->expects($this->any())
       ->method('bundle')
       ->willReturn('test_bundle_2');
@@ -188,11 +198,11 @@ class EntityTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::calculateDependencies
+   * Tests calculate dependencies.
    */
   public function testCalculateDependencies(): void {
-    // Create an entity type manager, storage, entity type, and entity to mock the
-    // loading of entities providing bundles.
+    // Create an entity type manager, storage, entity type, and entity to mock
+    // the loading of entities providing bundles.
     $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
     $storage = $this->createMock('Drupal\Core\Entity\EntityStorageInterface');
     $entity_type = $this->createMock('Drupal\Core\Entity\EntityTypeInterface');

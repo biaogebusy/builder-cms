@@ -70,7 +70,9 @@ class PromotionForm extends ContentEntityForm {
         $coupon_code = '';
         if ($coupons_count === 1) {
           $coupons = $promotion->getCoupons();
-          $coupon_code = $coupons[0]?->getCode() ?? '';
+          if (isset($coupons[0])) {
+            $coupon_code = $coupons[0]->getCode();
+          }
         }
         $description = $this->formatPlural($coupons_count, 'There is one coupon defined for this promotion: @coupon_code.', 'There are @count coupons defined for this promotion.', ['@coupon_code' => $coupon_code]);
         // When the promotion references coupons, regardless of the setting

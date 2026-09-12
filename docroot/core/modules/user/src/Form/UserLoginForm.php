@@ -169,20 +169,6 @@ class UserLoginForm extends FormBase implements WorkspaceSafeFormInterface {
   }
 
   /**
-   * Sets an error if supplied username has been blocked.
-   *
-   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement.
-   * @see https://www.drupal.org/node/3410706
-   */
-  public function validateName(array &$form, FormStateInterface $form_state) {
-    @trigger_error(__METHOD__ . ' is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3410706', E_USER_DEPRECATED);
-    if (!$form_state->isValueEmpty('name') && user_is_blocked($form_state->getValue('name'))) {
-      // Blocked in user administration.
-      $form_state->setErrorByName('name', $this->t('The username %name has not been activated or is blocked.', ['%name' => $form_state->getValue('name')]));
-    }
-  }
-
-  /**
    * Checks supplied username/password against local users table.
    *
    * If successful, $form_state->get('uid') is set to the matching user ID.
@@ -196,7 +182,8 @@ class UserLoginForm extends FormBase implements WorkspaceSafeFormInterface {
       // reached. Default is 50 failed attempts allowed in one hour. This is
       // independent of the per-user limit to catch attempts from one IP to log
       // in to many different user accounts.  We have a reasonably high limit
-      // since there may be only one apparent IP for all users at an institution.
+      // since there may be only one apparent IP for all users at an
+      // institution.
       if (!$this->userFloodControl->isAllowed('user.failed_login_ip', $flood_config->get('ip_limit'), $flood_config->get('ip_window'))) {
         $form_state->set('flood_control_triggered', 'ip');
         return;

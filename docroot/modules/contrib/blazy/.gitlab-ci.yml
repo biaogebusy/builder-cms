@@ -54,6 +54,11 @@ variables:
   # See https://www.drupal.org/project/gitlab_templates/issues/3423402
   SKIP_CSPELL: "1"
 
+# @todo remove if not working with .dist.
+# phpstan:
+#   script:
+#     - vendor/bin/phpstan analyse -c web/modules/custom/blazy/phpstan.neon.dist --no-progress
+
 
 ###################################################################################
 #

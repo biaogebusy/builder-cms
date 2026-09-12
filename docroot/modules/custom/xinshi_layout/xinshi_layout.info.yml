@@ -1,7 +1,7 @@
 name: 'Xinshi Layout'
 type: module
 description: 'Layout Builder translation migration tools for landing_page.'
-core_version_requirement: ^10
+core_version_requirement: ^10 || ^11
 package: Xinshi
 dependencies:
   - xinshi_api

@@ -1,0 +1,6 @@
+ckeditor5_premium_features.form.settings:
+  title: General Settings
+  route_name: ckeditor5_premium_features.form.settings_general
+  base_route: ckeditor5_premium_features.form.settings
+  description: 'General configuration for all premium features (such as license keys etc.).'
+  weight: 20

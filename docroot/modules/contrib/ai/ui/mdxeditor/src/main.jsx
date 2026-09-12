@@ -5,79 +5,76 @@ import Demo from "./Demo";
 
 import "./index.css";
 
-function initTextareaEditors() {
-  const textareas = document.querySelectorAll("textarea[data-mdxeditor]");
+window.Drupal.behaviors.aiMdxEditor = {
+  attach: function (context, settings) {
+    const textareas = context.querySelectorAll("textarea[data-mdxeditor]");
 
-  if (textareas.length === 0) {
-    // No textareas found, check for #mdxeditor-demo element for demo mode
-    const rootElement = document.getElementById("mdxeditor-demo");
-    if (rootElement) {
-      createRoot(rootElement).render(
-        <StrictMode>
-          <Demo />
-        </StrictMode>,
-      );
-    }
-    return;
-  }
-
-  textareas.forEach((textarea, index) => {
-    if (textarea.getAttribute("data-mdxeditor-initialized") === "true") {
+    if (textareas.length === 0) {
+      // No textareas found, check for #mdxeditor-demo element for demo mode
+      const rootElement = context.getElementById("mdxeditor-demo");
+      if (rootElement) {
+        createRoot(rootElement).render(
+          <StrictMode>
+            <Demo />
+          </StrictMode>,
+        );
+      }
       return;
     }
 
-    textarea.setAttribute("data-mdxeditor-initialized", "true");
+    textareas.forEach((textarea, index) => {
+      if (textarea.getAttribute("data-mdxeditor-initialized") === "true") {
+        return;
+      }
 
-    const initialValue = textarea.value || "";
-    const mdxeditorId = textarea.getAttribute('data-mdxeditor');
+      textarea.setAttribute("data-mdxeditor-initialized", "true");
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "mdxeditor-wrapper";
-    wrapper.id = `mdxeditor-wrapper-${index}`;
+      const initialValue = textarea.value || "";
+      const mdxeditorId = textarea.getAttribute('data-mdxeditor');
 
-    // Insert wrapper before textarea
-    textarea.parentNode.insertBefore(wrapper, textarea);
+      const wrapper = document.createElement("div");
+      wrapper.className = "mdxeditor-wrapper";
+      wrapper.id = `mdxeditor-wrapper-${index}`;
 
-    // Hide the original textarea
-    textarea.style.display = "none";
+      // Insert wrapper before textarea
+      textarea.parentNode.insertBefore(wrapper, textarea);
 
-    const handleChange = (markdown) => {
-      textarea.value = markdown;
+      // Hide the original textarea
+      textarea.style.display = "none";
 
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-      textarea.dispatchEvent(new Event("change", { bubbles: true }));
-    };
+      const handleChange = (markdown) => {
+        textarea.value = markdown;
 
-    const mdxeditorSettings = window?.drupalSettings?.mdxeditor?.[mdxeditorId];
-
-    const variables = mdxeditorSettings?.plugins?.typeaheadPlugin?.types || [];
-
-    const editorMethods = { current: null };
-
-    createRoot(wrapper).render(
-      <StrictMode>
-        <Editor
-          initialValue={initialValue}
-          onChange={handleChange}
-          variables={variables}
-          onRef={(ref) => { editorMethods.current = ref; }}
-        />
-      </StrictMode>,
-    );
-
-    textarea.addEventListener("drupal:mdx-fill", function (event) {
-      const content = event?.detail?.content;
-      if (editorMethods.current && typeof content === "string") {
-        editorMethods.current.setMarkdown(content);
-        textarea.value = content;
         textarea.dispatchEvent(new Event("input", { bubbles: true }));
         textarea.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });   
-  });
-}
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initTextareaEditors);
-} else {
-  initTextareaEditors();
+      };
+
+      const mdxeditorSettings = settings?.mdxeditor?.[mdxeditorId];
+
+      const variables = mdxeditorSettings?.plugins?.typeaheadPlugin?.types || [];
+
+      const editorMethods = { current: null };
+
+      createRoot(wrapper).render(
+        <StrictMode>
+          <Editor
+            initialValue={initialValue}
+            onChange={handleChange}
+            variables={variables}
+            onRef={(ref) => { editorMethods.current = ref; }}
+          />
+        </StrictMode>,
+      );
+
+      textarea.addEventListener("drupal:mdx-fill", function (event) {
+        const content = event?.detail?.content;
+        if (editorMethods.current && typeof content === "string") {
+          editorMethods.current.setMarkdown(content);
+          textarea.value = content;
+          textarea.dispatchEvent(new Event("input", { bubbles: true }));
+          textarea.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+    });
+  }
 }

@@ -57,8 +57,16 @@ function autologout_update_8003(&$sandbox) {
 }
 
 /**
- * Make sure the js_cookie dependency is enabled.
+ * Note: js_cookie is no longer used by autologout; no action needed.
  */
 function autologout_update_9201(&$sandbox): void {
-  \Drupal::service('module_installer')->install(['js_cookie']);
+  // This is now a no-op to allow the schema version to advance safely.
+}
+
+/**
+ * Note: js_cookie can now be cleanly removed.
+ */
+function autologout_update_9202(&$sandbox): string {
+  $message = 'The js_cookie library is no longer used by autologout and can be uninstalled if it is not needed by any other modules.';
+  return $message;
 }

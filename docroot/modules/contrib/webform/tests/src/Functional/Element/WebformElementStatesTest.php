@@ -19,7 +19,7 @@ class WebformElementStatesTest extends WebformElementBrowserTestBase {
   /**
    * Tests element #states.
    */
-  public function testElement() {
+  public function testElement(): void {
     $assert_session = $this->assertSession();
 
     /* ********************************************************************** */
@@ -92,15 +92,26 @@ states_custom_condition:
     $this->drupalGet('/webform/test_element_states');
 
     // Check 'States custom selector'.
-    $assert_session->responseContains('<option value="custom_selector" selected="selected">custom_selector</option>');
+    $this->assertEquals('custom_selector', $assert_session->optionExists('states_custom_selector[states][1][selector]', 'custom_selector')->getValue());
 
     // Check 'States unsupport operator'.
     $assert_session->responseContains('Conditional logic (Form API #states) is using the <em class="placeholder">XXX</em> operator. Form API #states must be manually entered.');
-    $assert_session->responseContains('<textarea data-drupal-selector="edit-states-unsupported-operator-states" aria-describedby="edit-states-unsupported-operator-states--description" class="js-webform-codemirror webform-codemirror yaml form-textarea" data-webform-codemirror-mode="text/x-yaml" id="edit-states-unsupported-operator-states" name="states_unsupported_operator[states]" rows="5" cols="60">');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<textarea data-drupal-selector="edit-states-unsupported-operator-states" aria-describedby="edit-states-unsupported-operator-states--description" class="js-webform-codemirror webform-codemirror yaml form-textarea" data-webform-codemirror-mode="text/x-yaml" id="edit-states-unsupported-operator-states" name="states_unsupported_operator[states]" rows="5" cols="60">');
+    }
+    else {
+      $assert_session->responseContains('<textarea data-drupal-selector="edit-states-unsupported-operator-states" aria-describedby="edit-states-unsupported-operator-states--description" class="js-webform-codemirror webform-codemirror yaml form-textarea resize-vertical" data-webform-codemirror-mode="text/x-yaml" id="edit-states-unsupported-operator-states" name="states_unsupported_operator[states]" rows="5" cols="60">');
+    }
 
     // Check 'States unsupport nested multiple selectors'.
     $assert_session->responseContains('Conditional logic (Form API #states) is using multiple nested conditions. Form API #states must be manually entered.');
-    $assert_session->responseContains('<textarea data-drupal-selector="edit-states-unsupported-nesting-states" aria-describedby="edit-states-unsupported-nesting-states--description" class="js-webform-codemirror webform-codemirror yaml form-textarea" data-webform-codemirror-mode="text/x-yaml" id="edit-states-unsupported-nesting-states" name="states_unsupported_nesting[states]" rows="5" cols="60">');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<textarea data-drupal-selector="edit-states-unsupported-nesting-states" aria-describedby="edit-states-unsupported-nesting-states--description" class="js-webform-codemirror webform-codemirror yaml form-textarea" data-webform-codemirror-mode="text/x-yaml" id="edit-states-unsupported-nesting-states" name="states_unsupported_nesting[states]" rows="5" cols="60">');
+    }
+    else {
+      $assert_session->responseContains('<textarea data-drupal-selector="edit-states-unsupported-nesting-states" aria-describedby="edit-states-unsupported-nesting-states--description" class="js-webform-codemirror webform-codemirror yaml form-textarea resize-vertical" data-webform-codemirror-mode="text/x-yaml" id="edit-states-unsupported-nesting-states" name="states_unsupported_nesting[states]" rows="5" cols="60">');
+
+    }
 
     // Check 'States single' (#multiple: FALSE)
     $assert_session->buttonExists('edit-states-empty-actions-add');

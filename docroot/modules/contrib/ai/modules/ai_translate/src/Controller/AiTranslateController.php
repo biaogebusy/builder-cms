@@ -2,6 +2,10 @@
 
 namespace Drupal\ai_translate\Controller;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -11,6 +15,8 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\ai_translate\TextExtractorInterface;
 use Drupal\ai_translate\TextTranslatorInterface;
 use Drupal\ai_translate\TranslationException;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\TypedData\TranslatableInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -34,6 +40,13 @@ class AiTranslateController extends ControllerBase {
    * @var \Drupal\ai_translate\TextTranslatorInterface
    */
   protected TextTranslatorInterface $aiTranslator;
+
+  /**
+   * Entity to translate.
+   *
+   * @var \Drupal\Core\Entity\ContentEntityInterface
+   */
+  protected ContentEntityInterface $entity;
 
   /**
    * {@inheritdoc}
@@ -68,7 +81,9 @@ class AiTranslateController extends ControllerBase {
     if (empty($langNames)) {
       $langNames = $this->languageManager->getNativeLanguages();
     }
-    $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entity ?? $this->entityTypeManager()
+      ->getStorage($entity_type)
+      ->load($entity_id);
 
     // From UI, translation is always request from default entity language,
     // but nothing stops users from using different $lang_from.
@@ -208,6 +223,51 @@ class AiTranslateController extends ControllerBase {
       $this->getLogger('ai_translate')->warning($exception->getMessage());
       $this->messenger()->addError($this->t('There was some issue with content translation.'));
     }
+  }
+
+  /**
+   * Controller access callback.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user account.
+   * @param string $entity_type
+   *   Entity type machine name.
+   * @param string $entity_id
+   *   Entity ID.
+   * @param string $lang_to
+   *   Language to translate to.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  public function checkAccess(
+    AccountInterface $account,
+    string $entity_type,
+    string $entity_id,
+    string $lang_to,
+  ) : AccessResultInterface {
+    if (!$account->hasPermission('create ai content translation')) {
+      return AccessResult::forbidden();
+    }
+    try {
+      $storage = $this->entityTypeManager()->getStorage($entity_type);
+      $translationHandler = $this->entityTypeManager()->getHandler($entity_type, 'translation');
+    }
+    catch (PluginNotFoundException | InvalidPluginDefinitionException) {
+      return AccessResult::forbidden();
+    }
+    $entity = $storage->load($entity_id);
+    // @todo Allow update of existing translations. For now, only new translations are allowed.
+    if (!$entity
+      || !($entity instanceof TranslatableInterface)
+      || !$entity->isTranslatable()
+      || !$entity->access('update', $account) || $entity->hasTranslation($lang_to)) {
+      return AccessResult::forbidden();
+    }
+    // Store internally so that page callback doesn't need to load
+    // the same entity.
+    $this->entity = $entity;
+    return $translationHandler->getTranslationAccess($entity, 'create');
   }
 
 }

@@ -5,30 +5,36 @@
  * Install hooks for test module.
  */
 
+declare(strict_types=1);
+
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
+
 /**
  * Implements hook_requirements().
+ *
+ * This tests the procedural implementations for this hook.
  */
-function requirements1_test_requirements($phase) {
+function requirements1_test_requirements($phase): array {
   $requirements = [];
 
   // Always fails requirements.
   if ('install' == $phase) {
     $requirements['requirements1_test'] = [
       'title' => t('Requirements 1 Test'),
-      'severity' => REQUIREMENT_ERROR,
+      'severity' => RequirementSeverity::Error,
       'description' => t('Requirements 1 Test failed requirements.'),
     ];
   }
 
   $requirements['requirements1_test_alterable'] = [
     'title' => t('Requirements 1 Test Alterable'),
-    'severity' => REQUIREMENT_ERROR,
+    'severity' => RequirementSeverity::Error,
     'description' => t('A requirement that will be altered.'),
   ];
 
   $requirements['requirements1_test_deletable'] = [
     'title' => t('Requirements 1 Test Deletable'),
-    'severity' => REQUIREMENT_INFO,
+    'severity' => RequirementSeverity::Info,
     'description' => t('A requirement that will be deleted.'),
   ];
 

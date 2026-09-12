@@ -1,13 +1,16 @@
+# Admin Toolbar Search module info file.
 name: Admin Toolbar Search
-description: Provides search of Admin Toolbar items.
+description: Allows searching and filtering links in the Admin menu in the Toolbar.
 package: Administration
 type: module
+# Provide support for three major Drupal core versions.
 core_version_requirement: ^9.5 || ^10 || ^11
+# Link to the module's configuration form.
 configure: admin_toolbar_search.settings
 dependencies:
-  - admin_toolbar:admin_toolbar
+  - drupal:toolbar
 
-# Information added by Drupal.org packaging script on 2025-07-29
-version: '3.6.2'
+# Information added by Drupal.org packaging script on 2025-12-30
+version: '3.6.3'
 project: 'admin_toolbar'
-datestamp: 1753826108
+datestamp: 1767127271

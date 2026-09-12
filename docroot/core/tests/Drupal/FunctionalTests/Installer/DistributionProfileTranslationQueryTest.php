@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Serialization\Yaml;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests distribution profile support with a 'langcode' query string.
  *
- * @group Installer
- *
  * @see \Drupal\FunctionalTests\Installer\DistributionProfileTranslationTest
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class DistributionProfileTranslationQueryTest extends InstallerTestBase {
 
   /**
@@ -35,7 +37,7 @@ class DistributionProfileTranslationQueryTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
     $this->info = [
       'type' => 'profile',
@@ -55,25 +57,25 @@ class DistributionProfileTranslationQueryTest extends InstallerTestBase {
     file_put_contents("$path/my_distribution.info.yml", Yaml::encode($this->info));
     // Place a custom local translation in the translations directory.
     mkdir($this->root . '/' . $this->siteDirectory . '/files/translations', 0777, TRUE);
-    file_put_contents($this->root . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0.de.po', $this->getPo('de'));
-    file_put_contents($this->root . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0.fr.po', $this->getPo('fr'));
+    file_put_contents($this->root . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '.de.po', $this->getPo('de'));
+    file_put_contents($this->root . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '.fr.po', $this->getPo('fr'));
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function visitInstaller() {
+  protected function visitInstaller(): void {
     // Pass a different language code than the one set in the distribution
     // profile. This distribution language should still be used.
     // The unrouted URL assembler does not exist at this point, so we build the
     // URL ourselves.
-    $this->drupalGet($GLOBALS['base_url'] . '/core/install.php' . '?langcode=fr');
+    $this->drupalGet($GLOBALS['base_url'] . '/core/install.php?langcode=fr');
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function setUpLanguage() {
+  protected function setUpLanguage(): void {
     // This step is skipped, because the distribution profile uses a fixed
     // language.
   }
@@ -81,14 +83,14 @@ class DistributionProfileTranslationQueryTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpProfile() {
+  protected function setUpProfile(): void {
     // This step is skipped, because there is a distribution profile.
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function setUpSettings() {
+  protected function setUpSettings(): void {
     // The language should have been automatically detected, all following
     // screens should be translated already.
     $this->assertSession()->buttonExists('Save and continue de');
@@ -120,7 +122,8 @@ class DistributionProfileTranslationQueryTest extends InstallerTestBase {
 
     // Verify German was configured but not English.
     $this->drupalGet('admin/config/regional/language');
-    $this->assertSession()->pageTextContains('German');
+    // cspell:ignore deutsch
+    $this->assertSession()->pageTextContains('Deutsch');
     $this->assertSession()->pageTextNotContains('English');
   }
 

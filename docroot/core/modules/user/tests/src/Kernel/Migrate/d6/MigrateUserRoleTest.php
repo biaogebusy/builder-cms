@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
+use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
-use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
-use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade user roles to user.role.*.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateUserRoleTest extends MigrateDrupal6TestBase {
 
   /**
@@ -28,14 +31,14 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
   /**
    * Assert the logged migrate messages.
    *
-   * @param string[][] $role_data
+   * @param array{string, array{'rid': int, 'valid': string[], 'invalid': string[]}} $role_data
    *   An array of role data keyed by the destination role id. The role data
    *   contains the source role id, an array of valid permissions and an array
    *   of invalid permissions.
    * @param \Drupal\migrate\Plugin\MigrateIdMapInterface $id_map
    *   The migration ID map plugin.
    */
-  public function assertMessages(array $role_data, MigrateIdMapInterface $id_map) {
+  public function assertMessages(array $role_data, MigrateIdMapInterface $id_map): void {
     foreach ($id_map->getMessages() as $message) {
       $permissions = implode("', '", $role_data[$message->dest_id]['invalid']);
       $expected_message = "Permission(s) '" . $permissions . "' not found.";
@@ -48,7 +51,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
   /**
    * Asserts there are no duplicate roles.
    */
-  public function assertNoDuplicateRoles() {
+  public function assertNoDuplicateRoles(): void {
     $roles = [
       'anonymous1',
       'authenticated1',
@@ -181,7 +184,6 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
           'block',
           'block_content',
           'comment',
-          'contact',
           'config_translation',
           'language',
           'link',
@@ -194,7 +196,6 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
           'language',
           'd6_comment_type',
           'block_content_type',
-          'contact_category',
           'd6_filter_format',
           'd6_taxonomy_vocabulary',
           'd6_taxonomy_vocabulary_translation',
@@ -238,7 +239,6 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             'rid' => 4,
             'valid' => [
               'access content overview',
-              'administer contact forms',
               'administer nodes',
               'create forum content',
               'delete any forum content',
@@ -249,6 +249,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
               'use text format php_code',
             ],
             'invalid' => [
+              'administer contact forms',
               'delete any blog content',
               'delete own blog content',
               'edit any blog content',
@@ -276,13 +277,12 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
    *   A list of modules to install.
    * @param string[] $migrations
    *   A list of migrations to execute.
-   * @param string[][] $role_data
+   * @param array{string, array{'rid': int, 'valid': string[], 'invalid': string[]}} $role_data
    *   An array of role data keyed by the destination role id. The role data
    *   contains the source role id, an array of valid permissions and an array
    *   of invalid permissions.
-   *
-   * @dataProvider providerTestUserRole
    */
+  #[DataProvider('providerTestUserRole')]
   public function testUserRole(array $modules, array $migrations, array $role_data): void {
     if ($modules) {
       // Install modules that have migrations that may provide permissions.

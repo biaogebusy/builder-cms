@@ -6,10 +6,14 @@ namespace Drupal\FunctionalTests\Rest;
 
 use Drupal\Tests\rest\Functional\AnonResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Entity View Mode Xml Anon.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class EntityViewModeXmlAnonTest extends EntityViewModeResourceTestBase {
 
   use AnonResourceTestTrait;
@@ -23,7 +27,7 @@ class EntityViewModeXmlAnonTest extends EntityViewModeResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

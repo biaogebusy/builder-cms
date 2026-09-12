@@ -182,6 +182,7 @@ class AiPrompt extends FormElementBase {
         'callback' => [self::class, 'promptCallbackProcessOpenAdd'],
         'wrapper' => 'js-add-prompt-wrapper-for-' . $element['#id'],
         'parents' => $element['#parents'],
+        'array_parents' => $element['#array_parents'],
       ],
       '#attributes' => [
         'class' => [
@@ -227,6 +228,7 @@ class AiPrompt extends FormElementBase {
         'callback' => [self::class, 'promptCallbackProcessSaveAdd'],
         'wrapper' => 'js-add-prompt-wrapper-for-' . $element['#id'],
         'parents' => $element['#parents'],
+        'array_parents' => $element['#array_parents'],
       ],
       '#attributes' => [
         'class' => [
@@ -254,6 +256,7 @@ class AiPrompt extends FormElementBase {
         'callback' => [self::class, 'promptCallbackProcessCancelAdd'],
         'wrapper' => 'js-add-prompt-wrapper-for-' . $element['#id'],
         'parents' => $element['#parents'],
+        'array_parents' => $element['#array_parents'],
       ],
       '#attributes' => [
         'class' => [
@@ -286,11 +289,19 @@ class AiPrompt extends FormElementBase {
     // can be contributed to the ajax form building here.
     /** @var \Drupal\ai\Form\AiPromptSubform $subform_helper */
     $subform_helper = \Drupal::service('ai.prompt_subform');
-    // The ID and parents are used to nest the subform to ensure multiple
-    // AI Prompt elements in the same form are unique and compatible.
+    // The ID, parents, and array_parents are used to nest the subform to ensure
+    // multiple AI Prompt elements in the same form are unique and compatible.
+    // array_parents (the actual form-tree path) is passed alongside #parents
+    // (the values path) so that AiPromptSubform can build the correct
+    // machine_name 'source' path for tree traversal. When #parents ≠
+    // #array_parents (e.g. the editor-module subform pattern where a 'subform'
+    // tree level is skipped in the values path), using #parents as the source
+    // causes NestedArray::getValue($complete_form, $source) to return NULL,
+    // which prevents Drupal's MachineName JS from attaching.
     $subform = [
       '#id' => $form_state->getFormObject()->getFormId(),
       '#parents' => array_merge(($element['#parents'] ?? []), ['add_prompt']),
+      '#array_parents' => array_merge(($element['#array_parents'] ?? $element['#parents'] ?? []), ['add_prompt']),
     ];
     $prompt_type_id = reset($element['#prompt_types']);
     $prompt_type = AiPromptType::load($prompt_type_id);
@@ -298,9 +309,6 @@ class AiPrompt extends FormElementBase {
       'type' => $prompt_type_id,
     ]);
 
-    // @todo Figure out why machine name JS does not work here in subform. At
-    // the moment the user must manually fill in the machine name, instead of it
-    // being automatically generated from the label.
     $element['add_prompt']['add_form']['subform'] = $subform_helper->buildForm(
       $subform,
       $form_state,
@@ -337,31 +345,37 @@ class AiPrompt extends FormElementBase {
    * Open the add new prompt form.
    */
   public static function promptCallbackOpenAdd(array &$form, FormStateInterface $form_state) {
-    $parents = $form_state->getTriggeringElement()['#ajax']['parents'];
+    $ajax = $form_state->getTriggeringElement()['#ajax'];
+    $parents = $ajax['parents'];
+    $array_parents = $ajax['array_parents'] ?? $parents;
     $form_state->setValue(array_merge($parents, ['prompt_state']), TRUE);
     $form_state->setRebuild();
-    return NestedArray::getValue($form, $parents);
+    return NestedArray::getValue($form, $array_parents);
   }
 
   /**
    * Close the add new prompt form.
    */
   public static function promptCallbackCancelAdd(array &$form, FormStateInterface $form_state) {
-    $parents = $form_state->getTriggeringElement()['#ajax']['parents'];
+    $ajax = $form_state->getTriggeringElement()['#ajax'];
+    $parents = $ajax['parents'];
+    $array_parents = $ajax['array_parents'] ?? $parents;
     $form_state->setValue(array_merge($parents, ['prompt_state']), FALSE);
     $user_input = $form_state->getUserInput();
     NestedArray::setValue($user_input, array_merge($parents, ['prompt_state']), FALSE);
     $form_state->setUserInput($user_input);
     $form_state->setRebuild();
-    return NestedArray::getValue($form, $parents);
+    return NestedArray::getValue($form, $array_parents);
   }
 
   /**
    * Save the prompt and close the add new prompt form.
    */
   public static function promptCallbackSaveAdd(array &$form, FormStateInterface $form_state) {
-    $parents = $form_state->getTriggeringElement()['#ajax']['parents'];
-    $element = NestedArray::getValue($form, $parents);
+    $ajax = $form_state->getTriggeringElement()['#ajax'];
+    $parents = $ajax['parents'];
+    $array_parents = $ajax['array_parents'] ?? $parents;
+    $element = NestedArray::getValue($form, $array_parents);
 
     // Validate the subform.
     /** @var \Drupal\ai\Form\AiPromptSubform $subform_helper */
@@ -420,23 +434,26 @@ class AiPrompt extends FormElementBase {
         $form_state->setRebuild();
       }
     }
-    return NestedArray::getValue($form, $parents);
+    return NestedArray::getValue($form, $array_parents);
   }
 
   /**
    * Process the changes made in the prompt cancel callback.
    */
   public static function promptCallbackProcessCancelAdd(array &$form, FormStateInterface $form_state) {
-    $parents = $form_state->getTriggeringElement()['#ajax']['parents'];
-    return NestedArray::getValue($form, $parents);
+    $ajax = $form_state->getTriggeringElement()['#ajax'];
+    $array_parents = $ajax['array_parents'] ?? $ajax['parents'];
+    return NestedArray::getValue($form, $array_parents);
   }
 
   /**
    * Process the changes made in the prompt save callback.
    */
   public static function promptCallbackProcessSaveAdd(array &$form, FormStateInterface $form_state) {
-    $parents = $form_state->getTriggeringElement()['#ajax']['parents'];
-    $element = NestedArray::getValue($form, $parents);
+    $ajax = $form_state->getTriggeringElement()['#ajax'];
+    $parents = $ajax['parents'];
+    $array_parents = $ajax['array_parents'] ?? $parents;
+    $element = NestedArray::getValue($form, $array_parents);
 
     // The form validation occurs in ::promptCallbackSaveAdd(), here we persist
     // the effects so the form stays open and status messages are shown instead.
@@ -479,8 +496,9 @@ class AiPrompt extends FormElementBase {
    * Process the changes made in the prompt open callback.
    */
   public static function promptCallbackProcessOpenAdd(array &$form, FormStateInterface $form_state) {
-    $parents = $form_state->getTriggeringElement()['#ajax']['parents'];
-    return NestedArray::getValue($form, $parents);
+    $ajax = $form_state->getTriggeringElement()['#ajax'];
+    $array_parents = $ajax['array_parents'] ?? $ajax['parents'];
+    return NestedArray::getValue($form, $array_parents);
   }
 
   /**

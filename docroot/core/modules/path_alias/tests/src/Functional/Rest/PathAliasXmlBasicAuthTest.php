@@ -6,12 +6,14 @@ namespace Drupal\Tests\path_alias\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test path_alias entities for XML requests with cookie authentication.
- *
- * @group path_alias
  */
+#[Group('path_alias')]
+#[RunTestsInSeparateProcesses]
 class PathAliasXmlBasicAuthTest extends PathAliasResourceTestBase {
 
   use BasicAuthResourceTestTrait;
@@ -35,7 +37,7 @@ class PathAliasXmlBasicAuthTest extends PathAliasResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}

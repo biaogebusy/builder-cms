@@ -1,0 +1,107 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\Tests\migrate\Kernel\Plugin\source;
+
+use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
+/**
+ * Tests discovery of source plugins with annotations.
+ *
+ * Migrate source plugins use a specific discovery class to accommodate multiple
+ * providers. This tests that the backwards compatibility of discovery for
+ * plugin classes using annotations still works, even after all core plugins
+ * have been converted to attributes.
+ */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
+class MigrateSourceDiscoveryTest extends KernelTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['migrate'];
+
+  /**
+   * Tests get definitions.
+   *
+   * @legacy-covers \Drupal\migrate\Plugin\MigrateSourcePluginManager::getDefinitions
+   */
+  public function testGetDefinitions(): void {
+    // First, check the expected plugins are provided by migrate only.
+    $expected = ['config_entity', 'embedded_data', 'empty'];
+    $source_plugins = \Drupal::service('plugin.manager.migrate.source')->getDefinitions();
+    ksort($source_plugins);
+    $this->assertSame($expected, array_keys($source_plugins));
+
+    // Next, install the file module. The content_entity:file plugin should not
+    // be discovered either, because it has an implicit dependency on the user
+    // module which has not been installed.
+    $expected = ['config_entity', 'embedded_data', 'empty'];
+    $this->enableModules(['file']);
+    $source_plugins = \Drupal::service('plugin.manager.migrate.source')->getDefinitions();
+    ksort($source_plugins);
+    $this->assertSame($expected, array_keys($source_plugins));
+
+    // Install user and 'content_entity:file', 'content_entity:user' should now
+    // be discovered.
+    $expected = ['config_entity', 'content_entity:file', 'content_entity:user', 'embedded_data', 'empty'];
+    $this->enableModules(['user']);
+    $source_plugins = \Drupal::service('plugin.manager.migrate.source')->getDefinitions();
+    ksort($source_plugins);
+    $this->assertSame($expected, array_keys($source_plugins));
+
+    // Install migrate_drupal and now the source plugins from the file modules
+    // should be found.
+    $expected = [
+      'config_entity',
+      'embedded_data',
+      'empty',
+    ];
+    $this->enableModules(['migrate_multiple_provider_test']);
+    $source_plugins = \Drupal::service('plugin.manager.migrate.source')->getDefinitions();
+    $this->assertSame(array_diff($expected, array_keys($source_plugins)), []);
+  }
+
+  /**
+   * Tests annotation get definitions backwards compatibility.
+   *
+   * @legacy-covers \Drupal\migrate\Plugin\MigrateSourcePluginManager::getDefinitions
+   */
+  public function testAnnotationGetDefinitionsBackwardsCompatibility(): void {
+    // First, test attribute-only discovery.
+    $expected = ['config_entity', 'embedded_data', 'empty'];
+    $source_plugins = \Drupal::service('plugin.manager.migrate.source')->getDefinitions();
+    ksort($source_plugins);
+    $this->assertSame($expected, array_keys($source_plugins));
+
+    // Next, test discovery of both attributed and annotated plugins. The
+    // annotated plugin with multiple providers depends on
+    // migrate_multiple_provider_test and should not be discovered with it
+    // uninstalled.
+    $expected = ['annotated', 'config_entity', 'embedded_data', 'empty'];
+    $this->enableModules(['migrate_source_annotation_bc_test']);
+    $source_plugins = \Drupal::service('plugin.manager.migrate.source')->getDefinitions();
+    ksort($source_plugins);
+    $this->assertSame($expected, array_keys($source_plugins));
+
+    // Install migrate_multiple_provider_test and now the annotated plugin that
+    // depends on it should be discovered.
+    $expected = [
+      'annotated',
+      'annotated_multiple_providers',
+      'config_entity',
+      'embedded_data',
+      'empty',
+    ];
+    $this->enableModules(['migrate_multiple_provider_test']);
+    $source_plugins = \Drupal::service('plugin.manager.migrate.source')->getDefinitions();
+    // Confirming here the that the source plugins that migrate and
+    // migrate_source_annotation_bc_test are discovered.
+    $this->assertSame(array_diff($expected, array_keys($source_plugins)), []);
+  }
+
+}

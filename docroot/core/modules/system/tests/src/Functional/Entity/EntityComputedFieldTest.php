@@ -8,12 +8,14 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\State\StateInterface;
 use Drupal\entity_test\Entity\EntityTestComputedField;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that entities with computed fields work correctly.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityComputedFieldTest extends BrowserTestBase {
 
   /**
@@ -33,6 +35,9 @@ class EntityComputedFieldTest extends BrowserTestBase {
    */
   protected StateInterface $state;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -54,21 +59,21 @@ class EntityComputedFieldTest extends BrowserTestBase {
     $this->drupalGet($entity->toUrl('canonical')->toString());
     $field_item_selector = '.field--name-computed-test-cacheable-integer-field .field__item';
     $this->assertSession()->elementTextEquals('css', $field_item_selector, '2024');
-    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'url.query_args:computed_test_cacheable_integer_field');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'headers:X-computed_test_cacheable_integer_field=1');
     $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'field:computed_test_cacheable_integer_field');
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache-Max-Age', "31536000");
 
     $this->state->set('entity_test_computed_integer_value', 2025);
     $this->drupalGet($entity->toUrl('canonical')->toString());
     $this->assertSession()->elementTextEquals('css', $field_item_selector, '2024');
-    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'url.query_args:computed_test_cacheable_integer_field');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'headers:X-computed_test_cacheable_integer_field=1');
     $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'field:computed_test_cacheable_integer_field');
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache-Max-Age', "31536000");
 
     Cache::invalidateTags(['field:computed_test_cacheable_integer_field']);
     $this->drupalGet($entity->toUrl('canonical')->toString());
     $this->assertSession()->elementTextEquals('css', $field_item_selector, '2025');
-    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'url.query_args:computed_test_cacheable_integer_field');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'headers:X-computed_test_cacheable_integer_field=1');
     $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'field:computed_test_cacheable_integer_field');
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache-Max-Age', "31536000");
   }

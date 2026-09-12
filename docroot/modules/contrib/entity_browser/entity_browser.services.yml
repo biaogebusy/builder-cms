@@ -27,3 +27,15 @@ services:
     class: Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface
     factory: keyvalue.expirable:get
     arguments: ['entity_browser']
+
+  Drupal\entity_browser\Hook\EntityBrowserHooks:
+    class: Drupal\entity_browser\Hook\EntityBrowserHooks
+    autowire: true
+
+  Drupal\entity_browser\Hook\EntityBrowserThemeHooks:
+    class: Drupal\entity_browser\Hook\EntityBrowserThemeHooks
+    autowire: true
+
+  Drupal\entity_browser\Hook\EntityBrowserViewsHooks:
+    class: Drupal\entity_browser\Hook\EntityBrowserViewsHooks
+    autowire: true

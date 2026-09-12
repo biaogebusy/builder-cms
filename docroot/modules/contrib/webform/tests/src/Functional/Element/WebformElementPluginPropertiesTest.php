@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\webform\Utility\WebformElementHelper;
 
 /**
@@ -29,10 +29,7 @@ class WebformElementPluginPropertiesTest extends WebformElementBrowserTestBase {
     'webform_jqueryui_datepicker',
     'webform_entity_print_attachment',
     'webform_image_select',
-    'webform_location_geocomplete',
-    'webform_location_places',
     'webform_options_custom',
-    'webform_toggles',
   ];
 
   /**
@@ -45,7 +42,7 @@ class WebformElementPluginPropertiesTest extends WebformElementBrowserTestBase {
   /**
    * Test element default properties.
    */
-  public function testElementDefaultProperties() {
+  public function testElementDefaultProperties(): void {
     // Comparing all element's expected and actual default properties ensures
     // that there are not unexpected changes to any element's
     // default properties.
@@ -357,6 +354,7 @@ date:
   admin_notes: ''
   admin_title: ''
   attributes: {  }
+  autocomplete: 'on'
   date_date_format: Y-m-d
   date_date_max: ''
   date_date_min: ''
@@ -461,6 +459,7 @@ datelist:
     - day
     - hour
     - minute
+  date_part_title_display: invisible
   date_text_parts: {  }
   date_year_range: '1900:2050'
   date_year_range_reverse: false
@@ -830,6 +829,7 @@ fieldset:
   states: {  }
   states_clear: true
   title: ''
+  title_attributes: {  }
   title_display: ''
 hidden:
   access_create_permissions: {  }
@@ -3242,6 +3242,7 @@ webform_flexbox:
   format_attributes: {  }
   format_html: ''
   format_text: ''
+  justify_content: justify-flex-start
   randomize: false
   states: {  }
   states_clear: true
@@ -3591,155 +3592,6 @@ webform_link:
   url__type: url
   wrapper_attributes: {  }
   wrapper_type: fieldset
-webform_location_geocomplete:
-  access: true
-  access_create_permissions: {  }
-  access_create_roles:
-    - anonymous
-    - authenticated
-  access_create_users: {  }
-  access_update_permissions: {  }
-  access_update_roles:
-    - anonymous
-    - authenticated
-  access_update_users: {  }
-  access_view_permissions: {  }
-  access_view_roles:
-    - anonymous
-    - authenticated
-  access_view_users: {  }
-  admin_notes: ''
-  admin_title: ''
-  administrative_area_level_1__access: false
-  administrative_area_level_1__title: State/Province
-  api_key: ''
-  country__access: false
-  country__title: Country
-  country_short__access: false
-  country_short__title: 'Country Code'
-  default_value: {  }
-  description: ''
-  description_display: ''
-  disabled: false
-  flex: 1
-  format: value
-  format_html: ''
-  format_items: ul
-  format_items_html: ''
-  format_items_text: ''
-  format_text: ''
-  formatted_address__access: false
-  formatted_address__title: 'Formatted Address'
-  geolocation: false
-  help: ''
-  help_title: ''
-  hidden: false
-  label_attributes: {  }
-  lat__access: false
-  lat__title: Latitude
-  lng__access: false
-  lng__title: Longitude
-  locality__access: false
-  locality__title: Locality
-  location__access: false
-  location__title: Location
-  map: false
-  more: ''
-  more_title: ''
-  multiple: false
-  postal_code__access: false
-  postal_code__title: 'Postal Code'
-  prepopulate: false
-  private: false
-  required: false
-  required_error: ''
-  states: {  }
-  states_clear: true
-  street_address__access: false
-  street_address__title: 'Street Address'
-  street_number__access: false
-  street_number__title: 'Street Number'
-  sublocality__access: false
-  sublocality__title: City
-  subpremise__access: false
-  subpremise__title: Unit
-  title: ''
-  title_display: ''
-  value__placeholder: ''
-  value__title: Address
-  wrapper_attributes: {  }
-webform_location_places:
-  access: true
-  access_create_permissions: {  }
-  access_create_roles:
-    - anonymous
-    - authenticated
-  access_create_users: {  }
-  access_update_permissions: {  }
-  access_update_roles:
-    - anonymous
-    - authenticated
-  access_update_users: {  }
-  access_view_permissions: {  }
-  access_view_roles:
-    - anonymous
-    - authenticated
-  access_view_users: {  }
-  admin_notes: ''
-  admin_title: ''
-  administrative__access: false
-  administrative__title: State/Province
-  api_key: ''
-  app_id: ''
-  city__access: false
-  city__title: City
-  country__access: false
-  country__title: Country
-  country_code__access: false
-  country_code__title: 'Country Code'
-  county__access: false
-  county__title: County
-  default_value: {  }
-  description: ''
-  description_display: ''
-  disabled: false
-  flex: 1
-  format: value
-  format_html: ''
-  format_items: ul
-  format_items_html: ''
-  format_items_text: ''
-  format_text: ''
-  geolocation: false
-  help: ''
-  help_title: ''
-  hidden: false
-  label_attributes: {  }
-  lat__access: false
-  lat__title: Latitude
-  lng__access: false
-  lng__title: Longitude
-  more: ''
-  more_title: ''
-  multiple: false
-  name__access: false
-  name__title: Name
-  placeholder: ''
-  postcode__access: false
-  postcode__title: 'Postal Code'
-  prepopulate: false
-  private: false
-  required: false
-  required_error: ''
-  states: {  }
-  states_clear: true
-  suburb__access: false
-  suburb__title: Suburb
-  title: ''
-  title_display: ''
-  value__placeholder: ''
-  value__title: Address
-  wrapper_attributes: {  }
 webform_mapping:
   access: true
   access_create_permissions: {  }
@@ -4996,6 +4848,8 @@ webform_terms_of_service:
   states: {  }
   states_clear: true
   terms_content: ''
+  terms_link: ''
+  terms_link_target: ''
   terms_title: ''
   terms_type: modal
   title: 'I agree to the {terms of service}.'
@@ -5069,115 +4923,6 @@ webform_time:
   timepicker: false
   title: ''
   title_display: ''
-  unique: false
-  unique_entity: false
-  unique_error: ''
-  unique_user: false
-  wrapper_attributes: {  }
-webform_toggle:
-  access: true
-  access_create_permissions: {  }
-  access_create_roles:
-    - anonymous
-    - authenticated
-  access_create_users: {  }
-  access_update_permissions: {  }
-  access_update_roles:
-    - anonymous
-    - authenticated
-  access_update_users: {  }
-  access_view_permissions: {  }
-  access_view_roles:
-    - anonymous
-    - authenticated
-  access_view_users: {  }
-  admin_notes: ''
-  admin_title: ''
-  attributes: {  }
-  default_value: false
-  description: ''
-  description_display: ''
-  disabled: false
-  exclude_empty: false
-  field_prefix: ''
-  field_suffix: ''
-  flex: 1
-  format: value
-  format_attributes: {  }
-  format_html: ''
-  format_text: ''
-  help: ''
-  help_display: ''
-  help_title: ''
-  label_attributes: {  }
-  more: ''
-  more_title: ''
-  off_text: ''
-  on_text: ''
-  prepopulate: false
-  private: false
-  required_error: ''
-  return_value: ''
-  states: {  }
-  states_clear: true
-  title: ''
-  title_display: after
-  toggle_size: medium
-  toggle_theme: light
-  wrapper_attributes: {  }
-webform_toggles:
-  access: true
-  access_create_permissions: {  }
-  access_create_roles:
-    - anonymous
-    - authenticated
-  access_create_users: {  }
-  access_update_permissions: {  }
-  access_update_roles:
-    - anonymous
-    - authenticated
-  access_update_users: {  }
-  access_view_permissions: {  }
-  access_view_roles:
-    - anonymous
-    - authenticated
-  access_view_users: {  }
-  admin_notes: ''
-  admin_title: ''
-  attributes: {  }
-  default_value: ''
-  description: ''
-  description_display: ''
-  disabled: false
-  field_prefix: ''
-  field_suffix: ''
-  flex: 1
-  format: value
-  format_attributes: {  }
-  format_html: ''
-  format_items: comma
-  format_items_html: ''
-  format_items_text: ''
-  format_text: ''
-  help: ''
-  help_display: ''
-  help_title: ''
-  label_attributes: {  }
-  more: ''
-  more_title: ''
-  off_text: ''
-  on_text: ''
-  options: {  }
-  options_randomize: false
-  prepopulate: false
-  private: false
-  required_error: ''
-  states: {  }
-  states_clear: true
-  title: ''
-  title_display: ''
-  toggle_size: medium
-  toggle_theme: light
   unique: false
   unique_entity: false
   unique_error: ''

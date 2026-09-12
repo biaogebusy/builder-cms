@@ -5,13 +5,14 @@ namespace Drupal\blazy\Plugin\Filter;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
 // @todo use Drupal\media\MediaInterface;
-use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault as Defaults;
 use Drupal\blazy\Field\BlazyElementTrait;
-use Drupal\blazy\Media\BlazyFile as File;
-use Drupal\blazy\Media\BlazyImage as Image;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Media\File;
+use Drupal\blazy\Media\Image;
+use Drupal\blazy\Media\Uri;
 // @todo use Drupal\blazy\Media\BlazyMedia;
+use Drupal\blazy\Utility\Sanitize;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -64,9 +65,12 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    */
   protected function buildSettings($text) {
     $config = $this->settings;
+
+    /** @var array $settings */
     $settings = &$this->settings;
     $settings += Defaults::lazySettings();
 
+    /** @var \Drupal\blazy\BlazySettings $blazies */
     $blazies = $this->manager->verifySafely($settings);
 
     $plugin_id = $this->getPluginId();
@@ -124,14 +128,22 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
       return $list;
     }
 
-    $entity  = $this->manager->load($id, $entity_type);
-    $blazies = $settings['blazies'];
-    $id      = (int) $id;
+    $entity = $this->manager->load($id, $entity_type);
 
-    if ($entity && $entity->hasField($field_name)) {
+    // The referenced entity must be viewable by the current user.
+    if (!$entity || !$entity->access('view')) {
+      return NULL;
+    }
+
+    $blazies = Internals::getBlazies($settings);
+    $id = (int) $id;
+
+    if ($entity->hasField($field_name)) {
       $bundle = $entity->bundle();
-      $list   = $entity->get($field_name);
-      $count  = count($list);
+
+      // @todo check \Drupal\file\Plugin\Field\FieldType\FileFieldItemList.
+      $list  = $entity->get($field_name);
+      $count = count($list);
 
       if ($list && $count > 0) {
         $definition = $list->getFieldDefinition();
@@ -143,7 +155,7 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
 
         $settings['image'] = $field_image;
 
-        // @todo remove most of these, except few.
+        // @todo deprecate and remove most of these, except few.
         $blazies->set('bundles.' . $bundle, $bundle, TRUE)
           ->set('count', $count)
           ->set('total', $count)
@@ -173,9 +185,10 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    *   The item index.
    */
   protected function buildImageItem(array &$build, &$node, $delta = 0): void {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
-    $attrs    = $blazies->get('item.raw_attributes', []);
+    $blazies = Internals::getBlazies($settings);
+    $attrs = $blazies->get('item.raw_attributes', []);
 
     $build['#delta'] = $delta;
     if ($src = trim($attrs['src'] ?? '')) {
@@ -194,17 +207,17 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
       }
     }
 
-    // @todo remove all ImageItem references at 3.x for blazies as object.
+    // @todo deprecate and remove all ImageItem references at 3.x for blazies as object.
     $item = $this->manager->toHashtag($build, 'item', NULL);
 
-    // @todo remove all ImageItem references at 3.x for blazies as object.
+    // @todo deprecate and remove all ImageItem references at 3.x for blazies as object.
     $build['#item'] = $item;
 
     // Might be extracted at BlazyOembed, but not always iframes here.
     // Extract ImageItem info and merge them all here for sure.
     if ($item && $data = Image::toArray($item)) {
       $blazies->set('image', $data, TRUE)
-        // @todo remove this pingpong at 3.x:
+        // @todo deprecate and remove this pingpong at 3.x:
         ->set('image.item', $item);
     }
   }
@@ -223,8 +236,9 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    * @todo add return type after sub-modules: ?\DOMElement.
    */
   protected function buildImageCaption(array &$build, &$node) {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $item = $this->getCaptionElement($node);
 
     // Sanitization was done by Caption filter when arriving here, as
@@ -327,29 +341,31 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    * @todo refactor to move ImageItem downstream, or remove it completely.
    */
   protected function getImageItemFromImageSrc(array &$build, $node, $src): void {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $attrs    = $blazies->get('item.raw_attributes', []);
     $file     = NULL;
     $data_uri = FALSE;
     $uuid     = $attrs['data-entity-uuid'] ?? NULL;
 
     // 1. Data URI can only be seen if `Trust data URI` enabled, else empty.
-    if (Blazy::isDataUri($src)) {
+    if (Uri::isDataUri($src)) {
       $uri = $src;
       $data_uri = TRUE;
+      $use_data_uri = $this->settings['use_data_uri'] ?? FALSE;
 
       // Data URI is just an URI, only monstrous.
       $blazies->set('image.uri', $uri)
         ->set('image.url', $uri)
         ->set('is.data_uri', TRUE)
-        ->set('image.trusted', TRUE);
+        ->set('image.trusted', $use_data_uri);
     }
     else {
       // 2. Uploaded files, external, etc. Might be NULL.
       // Attempts to get the correct URI with hard-coded URL if applicable, e.g:
       // /site/default/files/image.jpg into public://image.jpg.
-      $uri = File::buildUri($src);
+      $uri = Uri::build($src);
 
       if ($uri) {
         $blazies->set('entity.uuid', $uuid)
@@ -359,7 +375,7 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
     }
 
     // 3. Uploaded image has UUID with file API.
-    if (File::isFile($file)) {
+    if (File::isValid($file)) {
       $uuid = $uuid ?: $file->uuid();
 
       $blazies->set('entity.uuid', $uuid)
@@ -384,9 +400,9 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
 
       // 5. External URL, or unmanaged file URL, excluding data URI.
       // Do not pass this file system URI into fake image item.
-      if (!$data_uri && !File::isValidUri($uri)) {
+      if (!$data_uri && !Uri::isValid($uri)) {
         // At least provide root URI to figure out image dimensions.
-        $uri = mb_substr($src, 0, 4) === 'http' ? $src : $this->root . $src;
+        $uri = substr($src, 0, 4) === 'http' ? $src : $this->root . $src;
         $blazies->set('image.uri_root', $uri);
       }
     }
@@ -405,8 +421,9 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    *   The delta.
    */
   protected function getImageItemFromIframeSrc(array &$build, &$node, $src, $delta = 0): void {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
 
     // @todo figure out to not hard-code `field_media_oembed_video`.
     $media = NULL;
@@ -427,8 +444,8 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    * Provides the shortcode ITEM|SLIDE attributes, and caption. Not IMG/IFRAME.
    */
   protected function buildItemAttributes(array &$build, $node, $delta = 0): void {
-    $sets    = &$build['#settings'];
-    $blazies = $sets['blazies'];
+    $sets = &$build['#settings'];
+    $blazies = Internals::getBlazies($sets);
 
     // In case we forgot what we were talking about, add a reminder.
     if (in_array($node->tagName, ['item', 'slide'])) {
@@ -447,7 +464,7 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
       // These are shortcode attributes for grid ITEM, or SLIDE.
       if ($attrs = AttributeParser::getAttribute($node)) {
         // Might be consumed directly by sub-modules.
-        $attrs = Blazy::sanitize($attrs);
+        $attrs = Sanitize::attribute($attrs);
         $this->shortcodeItemAttributes($build, $node, $blazies, $attrs);
       }
     }
@@ -487,10 +504,11 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    * Provides the media IMG|IFRAME attributes w/o shortcodes ITEM|SLIDE.
    */
   protected function buildMediaAttributes(array &$build, $node, $delta = 0): void {
+    /** @var array $settings */
     $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
-    $tag      = $node->nodeName;
-    $attrs    = AttributeParser::getAttribute($node);
+    $blazies = Internals::getBlazies($settings);
+    $tag = $node->nodeName;
+    $attrs = AttributeParser::getAttribute($node);
 
     if (!$attrs) {
       return;
@@ -537,18 +555,19 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
 
     // Ensures relevant attributes are passed through.
     $type = 'image';
-    $safe_attrs = Blazy::sanitize($attrs);
+    $safe_attrs = Sanitize::attribute($attrs);
     if ($tag == 'img') {
       $blazies->set('image.attributes', $safe_attrs);
     }
     elseif ($tag == 'iframe') {
       $type = 'video';
 
-      Internals::toPlayable($blazies)
-        ->set('media.bundle', 'remote_video');
+      Internals::toPlayable($blazies);
 
-      $blazies->set('iframe.attributes', $safe_attrs);
+      $blazies->set('media.bundle', 'remote_video')
+        ->set('iframe.attributes', $safe_attrs);
     }
+
     $blazies->set('media.type', $type);
   }
 
@@ -566,8 +585,9 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    *   TRUE if it has different image style from the selected option.
    */
   protected function buildItemSettings(array &$build, $node, $delta = 0): bool {
+    /** @var array $settings */
     $settings   = &$build['#settings'];
-    $blazies    = $settings['blazies'];
+    $blazies    = Internals::getBlazies($settings);
     $ui_style   = $settings['image_style'] ?? NULL;
     $ui_restyle = $settings['responsive_image_style'] ?? NULL;
     $attrs      = $blazies->get('item.raw_attributes', []);
@@ -625,8 +645,9 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
     // Responsive image is at item level due to requiring URI detection.
     // Must have an URI set above.
     if ($update) {
+      /** @var array $settings */
       $settings = &$build['#settings'];
-      $blazies  = $settings['blazies'];
+      $blazies = Internals::getBlazies($settings);
 
       $blazies->set('is.multistyle', TRUE);
       $this->manager->imageStyles($settings, TRUE);

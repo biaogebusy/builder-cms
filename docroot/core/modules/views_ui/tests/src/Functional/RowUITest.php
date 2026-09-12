@@ -6,13 +6,16 @@ namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI of row plugins.
  *
- * @group views_ui
  * @see \Drupal\views_test_data\Plugin\views\row\RowTest.
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class RowUITest extends UITestBase {
 
   /**

@@ -8,7 +8,7 @@
 /**
  * Implements hook_schema().
  */
-function search_schema() {
+function search_schema(): array {
   $schema['search_dataset'] = [
     'description' => 'Stores items that will be searched.',
     'fields' => [
@@ -124,33 +124,36 @@ function search_schema() {
 }
 
 /**
- * Implements hook_requirements().
- *
- * For the Status Report, return information about search index status.
+ * Install Search Node and Search and Node are installed.
  */
-function search_requirements($phase) {
-  $requirements = [];
+function search_update_11400(): void {
+  // Moved to system_update_11401().
+}
 
-  if ($phase == 'runtime') {
-    $remaining = 0;
-    $total = 0;
-    $search_page_repository = \Drupal::service('search.search_page_repository');
-    foreach ($search_page_repository->getIndexableSearchPages() as $entity) {
-      $status = $entity->getPlugin()->indexStatus();
-      $remaining += $status['remaining'];
-      $total += $status['total'];
-    }
-
-    $done = $total - $remaining;
-    // Use floor() to calculate the percentage, so if it is not quite 100%, it
-    // will show as 99%, to indicate "almost done".
-    $percent = ($total > 0 ? floor(100 * $done / $total) : 100);
-    $requirements['search_status'] = [
-      'title' => t('Search index progress'),
-      'value' => t('@percent% (@remaining remaining)', ['@percent' => $percent, '@remaining' => $remaining]),
-      'severity' => REQUIREMENT_INFO,
-    ];
+/**
+ * Install Help Search module if the Search and Help modules are installed.
+ */
+function search_update_11401(): void {
+  $module_handler = \Drupal::moduleHandler();
+  // Search help may already have been installed by sites on 11.4.0 or 11.4.1.
+  if ($module_handler->moduleExists('search_help')) {
+    return;
   }
+  if ($module_handler->moduleExists('help')) {
+    \Drupal::service('module_installer')->install(['search_help']);
+  }
+}
 
-  return $requirements;
+/**
+ * Install Search node module if node is installed.
+ */
+function search_update_11402(): void {
+  if (\Drupal::moduleHandler()->moduleExists('node') && !\Drupal::moduleHandler()->moduleExists('search_node')) {
+    \Drupal::configFactory()->getEditable('core.entity_view_mode.node.search_index')->delete();
+    \Drupal::configFactory()->getEditable('core.entity_view_mode.node.search_result')->delete();
+    \Drupal::service('module_installer')->install(['search_node']);
+    /** @var \Drupal\search\SearchPageInterface|null $node_search_page */
+    $node_search_page = \Drupal::entityTypeManager()->getStorage('search_page')->load('node_search');
+    $node_search_page?->calculateDependencies()->save();
+  }
 }

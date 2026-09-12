@@ -85,7 +85,7 @@ abstract class WebformHandlerFormBase extends FormBase {
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   * @param \Drupal\webform\WebformInterface $webform
+   * @param \Drupal\webform\WebformInterface|null $webform
    *   The webform.
    * @param string $webform_handler
    *   The webform handler ID.
@@ -97,10 +97,12 @@ abstract class WebformHandlerFormBase extends FormBase {
    *   Throws not found exception if the number of handler instances for this
    *   webform exceeds the handler's cardinality.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $webform_handler = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $webform_handler = NULL) {
     $this->webform = $webform;
     try {
-      $this->webformHandler = $this->prepareWebformHandler($webform_handler);
+      if (method_exists($this, 'prepareWebformHandler')) {
+        $this->webformHandler = $this->prepareWebformHandler($webform_handler);
+      }
     }
     catch (PluginNotFoundException $e) {
       throw new NotFoundHttpException("Invalid handler id: '$webform_handler'.");

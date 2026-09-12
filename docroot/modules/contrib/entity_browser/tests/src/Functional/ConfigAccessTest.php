@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -11,6 +13,8 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @package Drupal\Tests\entity_browser\FunctionalJavascript
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class ConfigAccessTest extends BrowserTestBase {
 
   /**

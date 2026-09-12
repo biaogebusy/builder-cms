@@ -91,7 +91,11 @@ trait AutosaveFormAlterTrait {
       '#type' => 'submit',
       '#name' => AutosaveFormInterface::AUTOSAVE_ELEMENT_NAME,
       '#value' => $this->t('Autosave save'),
-      '#attributes' => ['class' => ['autosave-form-save', 'hidden'], 'style' => ['display: none;']],
+      '#attributes' => [
+        'class' => ['autosave-form-save', 'hidden'],
+        'style' => ['display: none;'],
+        'formnovalidate' => 'formnovalidate',
+      ],
       '#submit' => [[$this, 'autosaveFormSubmit']],
       '#ajax' => [
         'callback' => [$this, 'autosaveFormAjax'],

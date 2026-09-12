@@ -56,21 +56,26 @@ class PluginRevisionController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $storage
    *   The entity storage manager.
-   * @param int|string $entity_id
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to find revisions of.
    *
    * @return int[]
    *   The revision ids.
    */
-  public function getRevisionIds(EntityStorageInterface $storage, int|string $entity_id): array {
-    $result = $storage->getQuery()
-      ->allRevisions()
-      ->condition($storage->getEntityType()->getKey('id'), $entity_id)
+  private function getRevisionIds(EntityStorageInterface $storage, ContentEntityInterface $entity): array {
+    $entityType = $entity->getEntityType();
+    $query = $storage->getQuery()
+      ->addTag('diff_compare_revisions_list')
       ->accessCheck(FALSE)
-      ->execute();
-    $result_array = \array_keys($result);
-    \sort($result_array);
-    return $result_array;
+      ->allRevisions()
+      ->condition($entityType->getKey('id'), $entity->id())
+      ->sort($entityType->getKey('revision'), 'ASC');
+    if ($entityType->isTranslatable()) {
+      $query->condition($entityType->getKey('langcode'), $entity->language()->getId())
+        ->condition($entityType->getKey('revision_translation_affected'), '1');
+    }
+    $result = $query->execute();
+    return \array_keys($result);
   }
 
   /**
@@ -115,17 +120,7 @@ class PluginRevisionController extends ControllerBase {
     $left_revision = $left_revision->getTranslation($langcode);
     $right_revision = $right_revision->getTranslation($langcode);
 
-    $revisions_ids = [];
-    // Filter revisions of current translation and where the translation is
-    // affected.
-    foreach ($this->getRevisionIds($storage, $entity->id()) as $revision_id) {
-      /** @var \Drupal\Core\Entity\ContentEntityInterface $revision */
-      $revision = $storage->loadRevision($revision_id);
-      if ($revision->hasTranslation($langcode) && $revision->getTranslation($langcode)->isRevisionTranslationAffected()) {
-        $revisions_ids[] = $revision_id;
-      }
-    }
-
+    $revisions_ids = $this->getRevisionIds($storage, $entity);
     $build = [
       '#title' => $this->t('Changes to %title', ['%title' => $entity->label()]),
       'header' => [
@@ -145,7 +140,7 @@ class PluginRevisionController extends ControllerBase {
     $build['controls']['diff_layout'] = [
       '#type' => 'item',
       '#title' => $this->t('Layout'),
-      '#wrapper_attributes' => ['class' => 'diff-controls__item'],
+      '#wrapper_attributes' => ['class' => ['diff-controls__item']],
       'filter' => $this->buildLayoutNavigation($entity, $left_revision->getRevisionId(), $right_revision->getRevisionId(), $filter),
     ];
 
@@ -229,7 +224,7 @@ class PluginRevisionController extends ControllerBase {
     $element = [
       '#type' => 'item',
       '#title' => $this->t('Navigation'),
-      '#wrapper_attributes' => ['class' => 'diff-navigation'],
+      '#wrapper_attributes' => ['class' => ['diff-navigation']],
     ];
     $i = 0;
     // Find the previous revision.

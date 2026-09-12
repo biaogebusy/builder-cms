@@ -3,11 +3,9 @@
 namespace Drupal\commerce_order\Form;
 
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Password\PasswordGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -18,49 +16,13 @@ class OrderAddForm extends FormBase {
   use CustomerFormTrait;
 
   /**
-   * The order storage.
-   *
-   * @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage
-   */
-  protected $orderStorage;
-
-  /**
-   * The store storage.
-   *
-   * @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage
-   */
-  protected $storeStorage;
-
-  /**
-   * The user storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $userStorage;
-
-  /**
-   * Constructs a new OrderAddForm object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Password\PasswordGeneratorInterface $password_generator
-   *   The password generator.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, PasswordGeneratorInterface $password_generator) {
-    $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
-    $this->storeStorage = $entity_type_manager->getStorage('commerce_store');
-    $this->userStorage = $entity_type_manager->getStorage('user');
-    $this->passwordGenerator = $password_generator;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('password_generator')
-    );
+    $instance = parent::create($container);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->passwordGenerator = $container->get('password_generator');
+    return $instance;
   }
 
   /**
@@ -75,7 +37,7 @@ class OrderAddForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Skip building the form if there are no available stores.
-    $store_query = $this->storeStorage->getQuery()->accessCheck(TRUE);
+    $store_query = $this->entityTypeManager->getStorage('commerce_store')->getQuery()->accessCheck(TRUE);
     if ($store_query->count()->execute() == 0) {
       $link = Link::createFromRoute('Add a new store.', 'entity.commerce_store.add_page');
       $form['warning'] = [
@@ -153,12 +115,12 @@ class OrderAddForm extends FormBase {
     if (!empty($values['custom_placed_date']) && !empty($values['placed'])) {
       $order_data['placed'] = $values['placed']->getTimestamp();
     }
-    $order = $this->orderStorage->create($order_data);
+    $order = $this->entityTypeManager->getStorage('commerce_order')->create($order_data);
     $order->save();
     $values['order_id'] = $order->id();
     $form_state->setValues($values);
-    // Redirect to the edit form to complete the order.
-    $form_state->setRedirect('entity.commerce_order.edit_form', ['commerce_order' => $order->id()]);
+    // Redirect to the order view page to complete the order.
+    $form_state->setRedirect('entity.commerce_order.canonical', ['commerce_order' => $order->id()]);
   }
 
 }

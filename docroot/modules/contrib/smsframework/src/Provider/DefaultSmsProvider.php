@@ -1,23 +1,23 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Provider;
 
-use Drupal\sms\Event\SmsDeliveryReportEvent;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\sms\Entity\SmsMessage;
+use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsGatewayInterface;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Entity\SmsMessageInterface as SmsMessageEntityInterface;
+use Drupal\sms\Event\SmsDeliveryReportEvent;
+use Drupal\sms\Event\SmsEvents;
 use Drupal\sms\Event\SmsMessageEvent;
+use Drupal\sms\Exception\SmsDirectionException;
+use Drupal\sms\Exception\SmsException;
 use Drupal\sms\Message\SmsMessageInterface;
 use Drupal\sms\Plugin\SmsGateway\SmsIncomingEventProcessorInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\sms\Exception\SmsException;
-use Drupal\sms\Exception\SmsDirectionException;
-use Drupal\sms\Direction;
-use Drupal\sms\Event\SmsEvents;
 
 /**
  * The SMS provider that provides default messaging functionality.
@@ -56,12 +56,12 @@ class DefaultSmsProvider implements SmsProviderInterface {
         $violations = $sms_message->validate();
         foreach ($violations->getFieldNames() as $field_name) {
           foreach ($violations->getByField($field_name) as $violation) {
-            $errors[] = "[$field_name]: " . strip_tags((string) $violation->getMessage());
+            $errors[] = "[$field_name]: " . \strip_tags((string) $violation->getMessage());
           }
         }
 
         if ($errors) {
-          throw new SmsException(sprintf('Can not queue SMS message because there are %s validation error(s): %s', count($errors), implode(' ', $errors)));
+          throw new SmsException(\sprintf('Can not queue SMS message because there are %s validation error(s): %s', \count($errors), \implode(' ', $errors)));
         }
       }
 

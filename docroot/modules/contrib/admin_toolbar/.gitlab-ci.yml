@@ -48,6 +48,42 @@ variables:
   # # Convenient for debugging: Enable in issue forks for testing.
   # _SHOW_ENVIRONMENT_VARIABLES: 1
 
+#
+# Composer overrides and configuration.
+#   - Require 'project_browser' to test integration with 'admin_toolbar_tools'.
+#
+composer:
+  after_script:
+    - composer require drupal/project_browser
+composer (max PHP version):
+  after_script:
+    - composer require drupal/project_browser
+composer (previous minor):
+  after_script:
+    - composer require drupal/project_browser
+composer (next minor):
+  after_script:
+    - composer require drupal/project_browser
+composer (previous major):
+  after_script:
+    - composer require drupal/project_browser
+# composer (next major):
+#   after_script:
+#     - composer require drupal/project_browser
+
+# #
+# # CSPELL overrides and configuration.
+# #
+# cspell:
+#   # Require spellcheck to pass.
+#   allow_failure: false
+
+# #
+# # ESLINT overrides and configuration.
+# #
+# eslint:
+#   # Require eslint to pass.
+#   allow_failure: false
 
 #
 # PHPCS overrides and configuration.
@@ -56,8 +92,22 @@ phpcs:
   # Require phpcs to pass.
   allow_failure: false
 
+# #
+# # PHPSTAN overrides and configuration.
+# #
+# phpstan:
+#   # Require phpstan to pass.
+#   allow_failure: false
+
+# #
+# # PHPUNIT overrides and configuration.
+# #
+# phpunit:
+#   # Require phpunit to pass.
+#   allow_failure: false
+
 #
-# Stylelint overrides and configuration.
+# STYLELINT overrides and configuration.
 #
 stylelint:
   # Require stylelint to pass.

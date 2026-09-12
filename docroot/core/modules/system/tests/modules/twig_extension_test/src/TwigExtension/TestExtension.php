@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\twig_extension_test\TwigExtension;
 
 use Twig\Extension\AbstractExtension;
@@ -25,7 +27,10 @@ class TestExtension extends AbstractExtension {
    */
   public function getFunctions() {
     return [
-      'custom_function' => new TwigFunction('custom_function', ['Drupal\twig_extension_test\TwigExtension\TestExtension', 'testFunction']),
+      'custom_function' => new TwigFunction('custom_function', [
+        'Drupal\twig_extension_test\TwigExtension\TestExtension',
+        'testFunction',
+      ]),
     ];
   }
 
@@ -43,7 +48,10 @@ class TestExtension extends AbstractExtension {
    */
   public function getFilters() {
     return [
-      'test_filter' => new TwigFilter('test_filter', ['Drupal\twig_extension_test\TwigExtension\TestExtension', 'testFilter']),
+      'test_filter' => new TwigFilter('test_filter', [
+        'Drupal\twig_extension_test\TwigExtension\TestExtension',
+        'testFilter',
+      ]),
     ];
   }
 

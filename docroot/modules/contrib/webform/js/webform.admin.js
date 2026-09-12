@@ -4,16 +4,13 @@
  */
 
 (function ($, Drupal, debounce, once) {
-
-  'use strict';
-
   /**
    * Filter webform autocomplete handler.
    *
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformFilterAutocomplete = {
-    attach: function (context) {
+    attach(context) {
       $(once('webform-autocomplete', '.webform-filter-form input.form-autocomplete', context))
         .each(function () {
           // If input value is an autocomplete match, reset the input to its
@@ -39,7 +36,7 @@
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformTableRowHref = {
-    attach: function (context) {
+    attach(context) {
       // Only attach the click event handler to the entire table and determine
       // which row triggers the event.
       $(once('webform-results-table', '.webform-results-table', context)).on('click', function (event) {

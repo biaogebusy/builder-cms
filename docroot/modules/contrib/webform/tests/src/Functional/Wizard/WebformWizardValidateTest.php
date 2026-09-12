@@ -26,7 +26,7 @@ class WebformWizardValidateTest extends WebformWizardTestBase {
   /**
    * Test webform wizard validation.
    */
-  public function testWizardValidate() {
+  public function testWizardValidate(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_form_wizard_validate');
@@ -42,7 +42,7 @@ class WebformWizardValidateTest extends WebformWizardTestBase {
     $assert_session->responseContains('wizard_1_select_other field is required.');
     $assert_session->responseContains('wizard_1_datelist field is required.');
 
-    // Check submiting page #1.
+    // Check submitting page #1.
     $this->drupalGet('/webform/test_form_wizard_validate');
     $edit = [
       'wizard_1_textfield' => '{wizard_1_textfield}',
@@ -62,7 +62,7 @@ wizard_2_textfield: ''
 wizard_2_select_other: null
 wizard_2_datelist: {  }");
 
-    // Check submiting page #2.
+    // Check submitting page #2.
     $edit = [
       'wizard_2_textfield' => '{wizard_2_textfield}',
       'wizard_2_select_other[select]' => 'two',
@@ -92,7 +92,7 @@ wizard_2_datelist:
     // $assert_session->responseContains('The <em class="placeholder">datelist</em> date is required.');
     $assert_session->responseContains('textfield field is required.');
 
-    // Check submiting page #1.
+    // Check submitting page #1.
     $this->drupalGet('/webform/test_form_wizard_validate_comp');
     $edit = [
       'wizard_1_custom_composite[items][0][datelist][year]' => '2001',
@@ -152,7 +152,7 @@ wizard_2_custom_composite: {  }
 wizard_2_test_composite: null
 wizard_2_test_composite_multiple: {  }");
 
-    // Check submiting page #2.
+    // Check submitting page #2.
     $edit = [
       'wizard_2_custom_composite[items][0][datelist][year]' => '2002',
       'wizard_2_custom_composite[items][0][datelist][month]' => '2',

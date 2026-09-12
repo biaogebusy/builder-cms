@@ -1,0 +1,67 @@
+.ck-notification {
+  min-width: 250px;
+  max-width: 325px;
+
+  display: flex;
+  flex-direction: column;
+
+  border-style: solid;
+  border-color: #ebebeb;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-left-width: 0px;
+  border-right-width: 1px;
+  border-radius: 5px;
+
+  background: #fffbfb;
+  box-shadow: 5px 2px 16px -10px rgba(66,68,90,1);
+}
+
+.ck-notification__error::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  height:100%;
+  border-left: 3px solid #f58282;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.ck-notification__header {
+  font-weight: 600;
+  padding: 5px 10px 0 10px;
+  font-size: 1em;
+  margin: 0;
+  line-height: unset;
+}
+
+.ck-notification__header-error {
+  color: #f58282;
+}
+
+.ck-notification__description {
+  font-weight: 400;
+  color: #3f3f3f;
+  padding: 0 10px 10px 10px;
+  font-size: .8em;
+  margin: 0;
+  line-height: unset;
+}
+
+.ck-notification__close {
+  position: absolute;
+  top: 3px;
+  right: 10px;
+
+  font-size: 1.2em;
+  color: #d8d3d3;
+
+  transition: color .5s;
+}
+
+.ck-notification__close:hover {
+  cursor: pointer;
+  color: #8b8989;
+
+  transition: color .5s;
+}

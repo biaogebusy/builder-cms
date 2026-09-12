@@ -1,0 +1,6 @@
+services:
+  charts_c3.hooks:
+    class: Drupal\charts_c3\Hook\ChartsC3Hooks
+    arguments: ['@config.factory']
+    tags:
+      - { name: hook }

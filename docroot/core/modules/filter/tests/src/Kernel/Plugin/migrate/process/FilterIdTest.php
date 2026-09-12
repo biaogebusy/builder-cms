@@ -9,13 +9,17 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Unit tests of the filter_id plugin.
- *
- * @coversDefaultClass \Drupal\filter\Plugin\migrate\process\FilterID
- * @group filter
  */
+#[CoversClass(FilterID::class)]
+#[Group('filter')]
+#[RunTestsInSeparateProcesses]
 class FilterIdTest extends KernelTestBase {
 
   /**
@@ -51,11 +55,8 @@ class FilterIdTest extends KernelTestBase {
    * @param bool $stop_pipeline
    *   (optional) Set to TRUE if we expect the filter to be skipped because it
    *   is a transformation-only filter.
-   *
-   * @dataProvider provideFilters
-   *
-   * @covers ::transform
    */
+  #[DataProvider('provideFilters')]
   public function testTransform($value, $expected_value, $invalid_id = NULL, $stop_pipeline = FALSE): void {
     $configuration = [
       'bypass' => TRUE,
@@ -64,6 +65,7 @@ class FilterIdTest extends KernelTestBase {
         'baz' => 'php_code',
       ],
     ];
+    // @phpstan-ignore-next-line
     $plugin = FilterID::create($this->container, $configuration, 'filter_id', []);
 
     if ($stop_pipeline) {

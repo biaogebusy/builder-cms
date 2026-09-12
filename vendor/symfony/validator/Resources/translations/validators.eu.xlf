@@ -328,7 +328,7 @@
             </trans-unit>
             <trans-unit id="85">
                 <source>This Business Identifier Code (BIC) is not associated with IBAN {{ iban }}.</source>
-                <target>Banku Identifikazioko Kode hau ez dago lotuta {{ IBAN }} IBAN-rekin.</target>
+                <target>Banku Identifikazioko Kode hau ez dago lotuta {{ iban }} IBAN-rekin.</target>
             </trans-unit>
             <trans-unit id="86">
                 <source>This value should be valid JSON.</source>
@@ -553,6 +553,30 @@
             <trans-unit id="142">
                 <source>This filename does not match the expected charset.</source>
                 <target state="needs-review-translation">Fitxategi-izen honek ez du espero zen karaktere multzoarekin bat egiten.</target>
+            </trans-unit>
+            <trans-unit id="143">
+                <source>This value is not valid XML.</source>
+                <target state="needs-review-translation">Balio hau ez da baliozko XML bat.</target>
+            </trans-unit>
+            <trans-unit id="144">
+                <source>This value does not conform to the expected XSD schema.</source>
+                <target state="needs-review-translation">Balio hau ez dator bat espero den XSD eskemarekin.</target>
+            </trans-unit>
+            <trans-unit id="145">
+                <source>This XML payload is too large ({{ size }} bytes): it exceeds the limit of {{ limit }} bytes.</source>
+                <target state="needs-review-translation">XML karga hau handiegia da ({{ size }} byte): {{ limit }} byteko muga gainditzen du.</target>
+            </trans-unit>
+            <trans-unit id="146">
+                <source>This value is not a valid cron expression.</source>
+                <target state="needs-review-translation">Balio hau ez da baliozko cron adierazpena.</target>
+            </trans-unit>
+            <trans-unit id="147">
+                <source>The referenced entity does not exist.</source>
+                <target state="needs-review-translation">Erreferentziatutako entitatea ez da existitzen.</target>
+            </trans-unit>
+            <trans-unit id="148" resname="This is not a valid ULID.">
+                <source>This value is not a valid ULID.</source>
+                <target state="needs-review-translation">Balio hau ez da ULID baliozko bat.</target>
             </trans-unit>
         </body>
     </file>

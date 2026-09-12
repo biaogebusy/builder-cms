@@ -169,7 +169,7 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // If #flexbox is not set or an empty string, determine if the
@@ -209,7 +209,7 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
         // Transfer '#{composite_key}_{property}' from main element to composite
         // element.
         foreach ($element as $property_key => $property_value) {
-          if (strpos($property_key, '#' . $composite_key . '__') === 0) {
+          if (str_starts_with($property_key, '#' . $composite_key . '__')) {
             $composite_property_key = str_replace('#' . $composite_key . '__', '#', $property_key);
             $composite_element[$composite_property_key] = $property_value;
           }
@@ -413,7 +413,10 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
         }
         foreach ($lines as $key => $line) {
           if (is_string($line)) {
-            $lines[$key] = ['#markup' => $line];
+            // Note: We have to include the empty '#markup' to ensure the line
+            // is rendered as expected via an item_list.
+            // @see \template_preprocess_item_list()
+            $lines[$key] = ['#plain_text' => $line, '#markup' => ''];
           }
           $lines[$key]['#suffix'] = '<br />';
         }
@@ -574,7 +577,7 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
 
       $composite_value = $this->formatCompositeText($element, $webform_submission, ['composite_key' => $composite_key] + $options);
       if (is_array($composite_value)) {
-        $composite_value = $this->renderer->renderPlain($composite_value);
+        $composite_value = $this->renderer->renderInIsolation($composite_value);
       }
 
       if ($composite_value !== '') {
@@ -796,11 +799,14 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
         continue;
       }
 
-      if ($export_options['composite_element_item_format'] === 'label' && $composite_element['#type'] !== 'textfield' && !empty($composite_element['#options'])) {
+      if (!isset($value[$composite_key])) {
+        $record[] = NULL;
+      }
+      elseif ($export_options['composite_element_item_format'] === 'label' && $composite_element['#type'] !== 'textfield' && !empty($composite_element['#options'])) {
         $record[] = WebformOptionsHelper::getOptionText($value[$composite_key], $composite_element['#options']);
       }
       else {
-        $record[] = $value[$composite_key] ?? NULL;
+        $record[] = $value[$composite_key];
       }
     }
     return $record;
@@ -980,11 +986,11 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
       'help' => [
         '#type' => 'webform_help',
         '#help' => '<b>' . $this->t('Key') . ':</b> ' . $this->t('The machine-readable name.') .
-          '<hr/><b>' . $this->t('Title') . ':</b> ' . $this->t('This is used as a descriptive label when displaying this webform element.') .
-          '<hr/><b>' . $this->t('Placeholder') . ':</b> ' . $this->t('The placeholder will be shown in the element until the user starts entering a value.') .
-          '<hr/><b>' . $this->t('Description') . ':</b> ' . $this->t('A short description of the element used as help for the user when they use the webform.') .
-          '<hr/><b>' . $this->t('Help text') . ':</b> ' . $this->t('A tooltip displayed after the title.') .
-          '<hr/><b>' . $this->t('Title display') . ':</b> ' . $this->t('A tooltip displayed after the title.'),
+        '<hr/><b>' . $this->t('Title') . ':</b> ' . $this->t('This is used as a descriptive label when displaying this webform element.') .
+        '<hr/><b>' . $this->t('Placeholder') . ':</b> ' . $this->t('The placeholder will be shown in the element until the user starts entering a value.') .
+        '<hr/><b>' . $this->t('Description') . ':</b> ' . $this->t('A short description of the element used as help for the user when they use the webform.') .
+        '<hr/><b>' . $this->t('Help text') . ':</b> ' . $this->t('A tooltip displayed after the title.') .
+        '<hr/><b>' . $this->t('Title display') . ':</b> ' . $this->t('A tooltip displayed after the title.'),
         '#help_title' => $this->t('Labels'),
       ],
     ];
@@ -992,8 +998,8 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
       'help' => [
         '#type' => 'webform_help',
         '#help' => '<b>' . $this->t('Required') . ':</b> ' . $this->t('Check this option if the user must enter a value.') .
-          '<hr/><b>' . $this->t('Type') . ':</b> ' . $this->t('The type of element to be displayed.') .
-          '<hr/><b>' . $this->t('Options') . ':</b> ' . $this->t('Please select predefined options.'),
+        '<hr/><b>' . $this->t('Type') . ':</b> ' . $this->t('The type of element to be displayed.') .
+        '<hr/><b>' . $this->t('Options') . ':</b> ' . $this->t('Please select predefined options.'),
         '#help_title' => $this->t('Settings'),
       ],
     ];
@@ -1254,7 +1260,7 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
     foreach ($properties as $key => $value) {
       // Convert composite element access and required to boolean value.
       if (preg_match('/__(access|required)$/', $key)) {
-        $properties[$key] = (boolean) $value;
+        $properties[$key] = (bool) $value;
       }
     }
     return $properties;
@@ -1353,7 +1359,7 @@ abstract class WebformCompositeBase extends WebformElementBase implements Webfor
     $webform_options = WebformOptions::loadMultiple();
     $options = [];
     foreach ($webform_options as $key => $webform_option) {
-      if (strpos($key, $composite_key) === 0) {
+      if (str_starts_with($key, $composite_key)) {
         $options[$key] = $webform_option->label();
       }
     }

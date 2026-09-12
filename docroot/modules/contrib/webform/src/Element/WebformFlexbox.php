@@ -19,6 +19,11 @@ class WebformFlexbox extends Container {
     $element = parent::processContainer($element, $form_state, $complete_form);
     $element['#attributes']['class'][] = 'webform-flexbox';
     $element['#attributes']['class'][] = 'js-webform-flexbox';
+
+    if (isset($element['#justify_content'])) {
+      $element['#attributes']['class'][] = 'webform-flexbox--' . $element['#justify_content'];
+    }
+
     if (isset($element['#align_items'])) {
       $element['#attributes']['class'][] = 'webform-flexbox--' . $element['#align_items'];
     }

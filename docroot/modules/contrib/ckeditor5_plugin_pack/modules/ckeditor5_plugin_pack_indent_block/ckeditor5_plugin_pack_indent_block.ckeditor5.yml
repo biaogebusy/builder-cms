@@ -1,0 +1,25 @@
+ckeditor5_plugin_pack_indent_block__indent_block:
+  ckeditor5:
+    plugins:
+      - indent.IndentBlock
+  drupal:
+    label: Indent block
+    library: ckeditor5_plugin_pack_indent_block/indent_block
+    class: Drupal\ckeditor5_plugin_pack_indent_block\Plugin\CKEditor5Plugin\IndentBlock
+    elements:
+      - <p class>
+      - <h1>
+      - <h1 class>
+      - <h2>
+      - <h2 class>
+      - <h3>
+      - <h3 class>
+      - <h4>
+      - <h4 class>
+      - <h5>
+      - <h5 class>
+      - <h6>
+      - <h6 class>
+    conditions:
+      plugins:
+        - ckeditor5_indent

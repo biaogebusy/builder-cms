@@ -112,12 +112,12 @@ class AliasCleaner implements AliasCleanerInterface {
     $output = $alias;
 
     // Trim duplicate, leading, and trailing separators. Do this before cleaning
-    // backslashes since a pattern like "[token1]/[token2]-[token3]/[token4]"
-    // could end up like "value1/-/value2" and if backslashes were cleaned first
-    // this would result in a duplicate backslash.
+    // slashes since a pattern like "[token1]/[token2]-[token3]/[token4]"
+    // could end up like "value1/-/value2" and if slashes were cleaned first
+    // this would result in a duplicate slash.
     $output = $this->getCleanSeparators($output);
 
-    // Trim duplicate, leading, and trailing backslashes.
+    // Trim duplicate, leading, and trailing slashes.
     $output = $this->getCleanSeparators($output, '/');
 
     // Shorten to a logical place based on word boundaries.
@@ -138,19 +138,19 @@ class AliasCleaner implements AliasCleanerInterface {
 
     $output = $string;
 
-    if (strlen($separator)) {
+    if ($separator !== NULL && $separator !== '') {
       // Trim any leading or trailing separators.
       $output = trim($output, $separator);
 
       // Escape the separator for use in regular expressions.
-      $seppattern = preg_quote($separator, '/');
+      $sep_pattern = preg_quote($separator, '/');
 
       // Replace multiple separators with a single one.
-      $output = preg_replace("/$seppattern+/", $separator, $output);
+      $output = preg_replace("/$sep_pattern+/", $separator, $output);
 
       // Replace trailing separators around slashes.
       if ($separator !== '/') {
-        $output = preg_replace("/\/+$seppattern\/+|$seppattern\/+|\/+$seppattern/", "/", $output);
+        $output = preg_replace("/\/+$sep_pattern\/+|$sep_pattern\/+|\/+$sep_pattern/", "/", $output);
       }
       else {
         // If the separator is a slash, we need to re-add the leading slash
@@ -253,7 +253,6 @@ class AliasCleaner implements AliasCleanerInterface {
       $output = strtr($output, $this->cleanStringCache['punctuation']);
     }
 
-
     // Reduce strings to letters and numbers.
     if ($this->cleanStringCache['reduce_ascii']) {
       $output = preg_replace('/[^a-zA-Z0-9\/]+/', $this->cleanStringCache['separator'], $output);
@@ -306,6 +305,7 @@ class AliasCleaner implements AliasCleanerInterface {
         $punctuation['comma']             = ['value' => ',', 'name' => $this->t('Comma')];
         $punctuation['period']            = ['value' => '.', 'name' => $this->t('Period')];
         $punctuation['hyphen']            = ['value' => '-', 'name' => $this->t('Hyphen')];
+        $punctuation['soft_hyphen']       = ['value' => "\xC2\xAD", 'name' => $this->t('Soft Hyphen')];
         $punctuation['underscore']        = ['value' => '_', 'name' => $this->t('Underscore')];
         $punctuation['colon']             = ['value' => ':', 'name' => $this->t('Colon')];
         $punctuation['semicolon']         = ['value' => ';', 'name' => $this->t('Semicolon')];
@@ -347,10 +347,12 @@ class AliasCleaner implements AliasCleanerInterface {
    * {@inheritdoc}
    */
   public function cleanTokenValues(&$replacements, $data = [], $options = []) {
+    // Build the safe tokens pattern once outside the loop.
+    $safe_tokens = implode('|', array_map(function ($token) {
+      return preg_quote($token, '/');
+    }, (array) $this->configFactory->get('pathauto.settings')->get('safe_tokens')));
     foreach ($replacements as $token => $value) {
       // Only clean non-path tokens.
-      $config = $this->configFactory->get('pathauto.settings');
-      $safe_tokens = implode('|', (array) $config->get('safe_tokens'));
       if (!preg_match('/(\[|\:)(' . $safe_tokens . ')(:|\]$)/', $token)) {
         $replacements[$token] = $this->cleanString($value, $options);
       }

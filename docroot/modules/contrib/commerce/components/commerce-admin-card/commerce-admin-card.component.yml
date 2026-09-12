@@ -1,0 +1,49 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Commerce Admin Card
+description: A card component for displaying commerce administration content with optional header, collapsible content, and footer sections.
+status: stable
+props:
+  type: object
+  properties:
+    id:
+      type: string
+      title: Custom card ID
+      description: Provide a unique ID for the card element (defaults to a generated commerce-admin-card-* value)
+    title:
+      type: string
+      title: Title
+      description: The card title text
+    title_tag:
+      type: string
+      title: Title HTML tag
+      description: HTML tag to use for the title (e.g., h1, h2, h3, span). Defaults to 'span'.
+      default: span
+    badge:
+      type: string
+      title: Badge
+      description: The badge/link markup displayed in the header
+    content:
+      type: object
+      title: Content
+      description: The main content of the card (alternative to using the card_content slot)
+    collapsible:
+      type: boolean
+      title: Collapsible
+      description: Enable to toggle the visibility of the card content
+      default: false
+    collapsed:
+      type: boolean
+      title: Collapsed by default
+      description: When collapsible, render the card content collapsed on initial load
+      default: false
+slots:
+  card_header:
+    title: Card Header
+    description: Override the header content (title, badge). The toggle button is automatically added when collapsible is enabled.
+  card_content:
+    title: Content
+    description: The main content block of the card
+  card_footer:
+    title: Card Footer
+    description: Footer content displayed below the main content
+

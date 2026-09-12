@@ -67,7 +67,7 @@ class EuropeanUnionVat extends LocalTaxTypeBase {
     $store_zones = $this->getMatchingZones($store_address);
 
     $customer_tax_number = '';
-    if (!$customer_profile->get('tax_number')->isEmpty()) {
+    if ($customer_profile->hasField('tax_number') && !$customer_profile->get('tax_number')->isEmpty()) {
       /** @var \Drupal\commerce_tax\Plugin\Field\FieldType\TaxNumberItemInterface $tax_number_item */
       $tax_number_item = $customer_profile->get('tax_number')->first();
       if ($tax_number_item->checkValue('european_union_vat')) {
@@ -174,6 +174,20 @@ class EuropeanUnionVat extends LocalTaxTypeBase {
           'label' => $labels['reduced'],
           'percentages' => [
             ['number' => '0.1', 'start_date' => '1995-01-01'],
+          ],
+        ],
+        [
+          'id' => 'zero',
+          'label' => $labels['zero'],
+          'percentages' => [
+            ['number' => '0', 'start_date' => '2026-01-01'],
+          ],
+        ],
+        [
+          'id' => 'super_reduced',
+          'label' => $labels['super_reduced'],
+          'percentages' => [
+            ['number' => '0.049', 'start_date' => '2026-07-01'],
           ],
         ],
       ],
@@ -462,7 +476,8 @@ class EuropeanUnionVat extends LocalTaxTypeBase {
           'id' => 'intermediate',
           'label' => $labels['intermediate'],
           'percentages' => [
-            ['number' => '0.14', 'start_date' => '2013-01-01'],
+            ['number' => '0.14', 'start_date' => '2013-01-01', 'end_date' => '2025-12-31'],
+            ['number' => '0.135', 'start_date' => '2026-01-01'],
           ],
         ],
         [
@@ -802,7 +817,8 @@ class EuropeanUnionVat extends LocalTaxTypeBase {
           'id' => 'intermediate',
           'label' => $labels['intermediate'],
           'percentages' => [
-            ['number' => '0.09', 'start_date' => '2004-05-01'],
+            ['number' => '0.09', 'start_date' => '2004-05-01', 'end_date' => '2025-12-31'],
+            ['number' => '0.12', 'start_date' => '2026-01-01'],
           ],
         ],
         [

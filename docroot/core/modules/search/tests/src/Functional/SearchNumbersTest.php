@@ -7,12 +7,14 @@ namespace Drupal\Tests\search\Functional;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that numbers can be searched.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchNumbersTest extends BrowserTestBase {
 
   use CronRunTrait;
@@ -20,7 +22,7 @@ class SearchNumbersTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['dblog', 'node', 'search'];
+  protected static $modules = ['dblog', 'node', 'search', 'search_node'];
 
   /**
    * {@inheritdoc}

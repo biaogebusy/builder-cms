@@ -31,6 +31,20 @@ variables:
   _CSPELL_IGNORE_PATHS: 'images/*, config/optional/views.view.advancedqueue_jobs.yml'
   _CSPELL_WORDS: 'queuename'
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'
+  OPT_IN_TEST_MAX_PHP: '1'
+  OPT_IN_TEST_PREVIOUS_MINOR: '1'
+  OPT_IN_TEST_NEXT_MINOR: '1'
+  OPT_IN_TEST_NEXT_MAJOR: '1'
+
+phpunit:
+  parallel:
+    matrix:
+      - _TARGET_DB_TYPE: 'mysql'
+        _TARGET_DB_VERSION: $CORE_MYSQL_TEST_DEFAULT
+      - _TARGET_DB_TYPE: 'pgsql'
+        _TARGET_DB_VERSION: $CORE_PGSQL_MIN
+      - _TARGET_DB_TYPE: 'sqlite'
+        _TARGET_DB_VERSION: $CORE_SQLITE_MIN
 
 #
 # Linting jobs are passing so any issue that breaks them should fix them.

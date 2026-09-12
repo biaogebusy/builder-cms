@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Entity;
 
@@ -126,11 +126,11 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function setCreditsBalance($balance) {
-    if (is_numeric($balance) || is_null($balance)) {
+    if (\is_numeric($balance) || \is_null($balance)) {
       $this->set('credits_balance', $balance);
     }
     else {
-      throw new SmsException(sprintf('Credit balance set is a %s', gettype($balance)));
+      throw new SmsException(\sprintf('Credit balance set is a %s', \gettype($balance)));
     }
     return $this;
   }
@@ -146,11 +146,11 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function setCreditsUsed($credits_used) {
-    if (is_numeric($credits_used) || is_null($credits_used)) {
+    if (\is_numeric($credits_used) || \is_null($credits_used)) {
       $this->set('credits_used', $credits_used);
     }
     else {
-      throw new SmsException(sprintf('Credit used is a %s', gettype($credits_used)));
+      throw new SmsException(\sprintf('Credit used is a %s', \gettype($credits_used)));
     }
     return $this;
   }
@@ -177,34 +177,34 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
     $fields = parent::baseFieldDefinitions($entity_type);
 
     $fields['error'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Error'))
-      ->setDescription(t('The normalized error code.'))
+      ->setLabel(\t('Error'))
+      ->setDescription(\t('The normalized error code.'))
       ->setReadOnly(TRUE)
       ->setRequired(FALSE);
 
     $fields['error_message'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Error message'))
-      ->setDescription(t('The description of the error from the gateway.'))
+      ->setLabel(\t('Error message'))
+      ->setDescription(\t('The description of the error from the gateway.'))
       ->setReadOnly(TRUE)
       ->setDefaultValue('')
       ->setRequired(FALSE);
 
     $fields['credits_balance'] = BaseFieldDefinition::create('decimal')
-      ->setLabel(t('Credits balance'))
-      ->setDescription(t('The balance of credits after the message was sent.'))
+      ->setLabel(\t('Credits balance'))
+      ->setDescription(\t('The balance of credits after the message was sent.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 
     $fields['credits_used'] = BaseFieldDefinition::create('decimal')
-      ->setLabel(t('Credits used'))
-      ->setDescription(t('The credits used for the message transaction.'))
+      ->setLabel(\t('Credits used'))
+      ->setDescription(\t('The credits used for the message transaction.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 
     $fields['sms_message'] = BaseFieldDefinition::create('entity_reference')
       ->setSetting('target_type', 'sms')
-      ->setLabel(t('SMS Message'))
-      ->setDescription(t('The parent SMS message.'))
+      ->setLabel(\t('SMS Message'))
+      ->setDescription(\t('The parent SMS message.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 

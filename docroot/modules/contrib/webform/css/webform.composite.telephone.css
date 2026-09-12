@@ -3,13 +3,13 @@
  * Telephone composite styles.
  */
 
-div.webform-type-webform-telephone:after {
+div.webform-type-webform-telephone::after {
   display: table;
   clear: both;
   content: "";
 }
 
-fieldset.webform-type-webform-telephone > div:after {
+fieldset.webform-type-webform-telephone > div::after {
   display: table;
   clear: both;
   content: "";

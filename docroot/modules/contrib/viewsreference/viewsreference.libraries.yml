@@ -1,5 +1,4 @@
 viewsreference:
-  version: VERSION
   js:
     js/viewsreference.js: {}
   dependencies:

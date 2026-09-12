@@ -22,7 +22,7 @@ class WebformHandlerEmailMappingTest extends WebformBrowserTestBase {
   /**
    * Test email mapping handler.
    */
-  public function testEmailMapping() {
+  public function testEmailMapping(): void {
     $assert_session = $this->assertSession();
 
     $site_name = \Drupal::config('system.site')->get('name');

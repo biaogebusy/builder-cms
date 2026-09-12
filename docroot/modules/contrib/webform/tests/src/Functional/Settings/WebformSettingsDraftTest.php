@@ -25,7 +25,7 @@ class WebformSettingsDraftTest extends WebformBrowserTestBase {
   /**
    * Test webform submission form draft.
    */
-  public function testDraft() {
+  public function testDraft(): void {
     $assert_session = $this->assertSession();
 
     /** @var \Drupal\webform\WebformSubmissionStorageInterface $webform_submission_storage */

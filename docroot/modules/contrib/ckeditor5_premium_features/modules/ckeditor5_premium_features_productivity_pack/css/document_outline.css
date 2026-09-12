@@ -1,0 +1,55 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ck-editor-container .ck-document-outline-container {
+  width: 25%;
+}
+
+.document-outline-container {
+  background: var(--ck-color-toolbar-background);
+  border: 1px solid var(--ck-color-base-border);
+  border-right: 0;
+  overflow: hidden;
+  width: 100%;
+  max-width: 250px;
+  max-height: calc(100vh - var(--drupal-displace-offset-top,0px) - var(--drupal-displace-offset-bottom,0px) - 22px);
+}
+
+.document-outline-container .ck-document-outline {
+  overflow-y: auto;
+}
+
+.document-outline-container .ck-document-outline-toggle {
+  margin-left: calc(100% - 40px);
+  height: 40px;
+  width: 40px;
+}
+
+.document-outline-container .ck-document-outline-toggle .ck-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.ck-fullscreen-overlay .document-outline-container,
+tr.draggable .document-outline-container {
+  margin-top: unset;
+}
+
+.document-outline-container.collapsed {
+  width: 40px;
+  min-width: 40px;
+  overflow: visible;
+}
+
+.document-outline-container.collapsed .ck-document-outline {
+  display: none;
+}
+
+/* Gin theme specific */
+body[class*="gin--"] {
+  --ck-document-outline-item-default-color: var(--gin-color-text);
+  --ck-document-outline-item-active-color: var(--gin-color-primary);
+  --ck-document-outline-item-hover-state-color: var(--gin-color-text-light);
+}

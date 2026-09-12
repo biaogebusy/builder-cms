@@ -7,12 +7,14 @@ namespace Drupal\KernelTests\Core\Config;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests events fired on configuration objects.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigEventsTest extends KernelTestBase {
 
   /**

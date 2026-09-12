@@ -5,7 +5,8 @@
  * Support module for webform related testing.
  */
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_test\Hook\WebformTestHooks;
 use Drupal\Core\Url;
 use Drupal\webform\Utility\WebformElementHelper;
 
@@ -77,32 +78,9 @@ function webform_test_preprocess_webform_confirmation(array &$variables) {
 /**
  * Implements hook_webform_load().
  */
+#[LegacyHook]
 function webform_test_webform_load(array $entities) {
-  // If ?generate is passed to the current pages URL the test webform's elements
-  // will get rebuilt.
-  // phpcs:ignore
-  if (!isset($_GET['generate'])) {
-    return;
-  }
-
-  foreach ($entities as $id => $entity) {
-    $name = _webform_test_load_include($id);
-    if ($name && function_exists('webform_test_' . $name)) {
-      $function = 'webform_test_' . $name;
-      $elements = $function($entity);
-      $entity->setElements($elements);
-
-      // Issue: Unable to execute Webform::save().
-      // $entity->save();
-      // Workaround: Write the elements directory to webform config.
-      \Drupal::configFactory()->getEditable('webform.webform.' . $id)
-        ->set('elements', Yaml::encode($elements))
-        ->save();
-
-      // Display message.
-      \Drupal::messenger()->addStatus(t('Generated elements for %title webform', ['%title' => $entity->label()]));
-    }
-  }
+  return \Drupal::service(WebformTestHooks::class)->webformLoad($entities);
 }
 
 /**

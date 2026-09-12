@@ -28,13 +28,6 @@ class OrderItemProduct extends ConditionBase implements PurchasableEntityConditi
   use ProductTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * Constructs a new OrderItemProduct object.
    *
    * @param array $configuration
@@ -53,7 +46,6 @@ class OrderItemProduct extends ConditionBase implements PurchasableEntityConditi
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entity_type_manager;
-    $this->productStorage = $entity_type_manager->getStorage('commerce_product');
     $this->entityUuidMapper = $entity_uuid_mapper;
   }
 
@@ -95,7 +87,7 @@ class OrderItemProduct extends ConditionBase implements PurchasableEntityConditi
 
     $product_ids = $this->getProductIds();
     if (!empty($product_ids)) {
-      foreach ($this->productStorage->loadMultiple($product_ids) as $product) {
+      foreach ($this->entityTypeManager->getStorage('commerce_product')->loadMultiple($product_ids) as $product) {
         /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
         $variation_ids += $product->getVariationIds();
       }

@@ -11,7 +11,7 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  * This interface details the methods that most plugin implementations will want
  * to override. See Drupal\Core\Field\WidgetBaseInterface for base
  * wrapping methods that should most likely be inherited directly from
- * Drupal\Core\Field\WidgetBase..
+ * Drupal\Core\Field\WidgetBase.
  *
  * @ingroup field_widget
  */
@@ -120,7 +120,7 @@ interface WidgetInterface extends WidgetBaseInterface {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    *
-   * @return array|bool
+   * @return array|false
    *   The element on which the error should be flagged, or FALSE to completely
    *   ignore the violation (use with care!).
    */

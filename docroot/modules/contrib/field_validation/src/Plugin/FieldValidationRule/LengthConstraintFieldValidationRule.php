@@ -58,14 +58,14 @@ class LengthConstraintFieldValidationRule extends ConstraintFieldValidationRuleB
     $form['min'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Min'),
+      '#description' => $this->t('At least one of Min or Max is required.'),
       '#default_value' => $this->configuration['min'],
-      '#required' => TRUE,
     ];
     $form['max'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Max'),
+      '#description' => $this->t('At least one of Min or Max is required.'),
       '#default_value' => $this->configuration['max'],
-      '#required' => TRUE,
     ];
     $form['maxMessage'] = [
       '#type' => 'textfield',
@@ -87,6 +87,17 @@ class LengthConstraintFieldValidationRule extends ConstraintFieldValidationRuleB
     ];
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    parent::validateConfigurationForm($form, $form_state);
+
+    if ($form_state->getValue('min') === '' && $form_state->getValue('max') === '') {
+      $form_state->setErrorByName('min', $this->t('Either Min or Max must be given for the Length constraint.'));
+    }
   }
 
   /**

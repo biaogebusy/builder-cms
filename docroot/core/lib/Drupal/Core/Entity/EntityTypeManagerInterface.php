@@ -79,6 +79,7 @@ interface EntityTypeManagerInterface extends PluginManagerInterface, CachedDisco
    *   The entity type ID for the route providers.
    *
    * @return \Drupal\Core\Entity\Routing\EntityRouteProviderInterface[]
+   *   An array of all the route providers for this entity type.
    */
   public function getRouteProviders($entity_type_id);
 
@@ -138,6 +139,8 @@ interface EntityTypeManagerInterface extends PluginManagerInterface, CachedDisco
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Entity\EntityTypeInterface|null
+   *   A plugin definition, or NULL if the plugin ID is invalid and
+   *   $exception_on_invalid is FALSE.
    */
   public function getDefinition($entity_type_id, $exception_on_invalid = TRUE);
 
@@ -145,6 +148,8 @@ interface EntityTypeManagerInterface extends PluginManagerInterface, CachedDisco
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Entity\EntityTypeInterface[]
+   *   An array of plugin definitions (empty array if no definitions were
+   *   found). Keys are plugin IDs.
    */
   public function getDefinitions();
 

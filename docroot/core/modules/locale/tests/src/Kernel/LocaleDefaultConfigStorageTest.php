@@ -7,10 +7,14 @@ namespace Drupal\Tests\locale\Kernel;
 use Drupal\Core\Config\NullStorage;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\locale\LocaleDefaultConfigStorage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group locale
+ * Tests Locale Default Config Storage.
  */
+#[Group('locale')]
+#[RunTestsInSeparateProcesses]
 class LocaleDefaultConfigStorageTest extends KernelTestBase {
 
   /**
@@ -18,11 +22,13 @@ class LocaleDefaultConfigStorageTest extends KernelTestBase {
    */
   protected static $modules = [
     'language',
-    'locale',
     'locale_test',
     'locale_test_translate',
   ];
 
+  /**
+   * Tests retrieval of component names from locale default config storage.
+   */
   public function testGetComponentNames(): void {
     $storage = new LocaleDefaultConfigStorage(
       new NullStorage(),

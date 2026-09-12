@@ -112,9 +112,9 @@ class Oauth2Token extends ControllerBase {
   public function token(Request $request): ResponseInterface {
     $server_request = $this->httpMessageFactory->createRequest($request);
     $server_response = new Response();
-    $client_id = $request->get('client_id');
-    $grant_type = $request->get('grant_type');
-    $scopes = $request->get('scope');
+    $client_id = $request->request->get('client_id');
+    $grant_type = $request->request->get('grant_type');
+    $scopes = $request->request->get('scope');
 
     $lock_key = $this->createLockKey($request);
 

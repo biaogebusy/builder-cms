@@ -218,9 +218,19 @@ class Padding extends StylePluginBase {
       $classes[] = $storage['padding']['class'];
     }
 
+    $attach_padding_library = FALSE;
+
+    if (isset($storage['padding']['class']) && $storage['padding']['class'] !== '_none') {
+      $attach_padding_library = TRUE;
+    }
+
     for ($i = 0; $i < 4; $i++) {
       if (isset($storage['padding_' . $directions[$i]]['class'])) {
         $classes[] = $storage['padding_' . $directions[$i]]['class'];
+
+        if ($storage['padding_' . $directions[$i]]['class'] !== '_none') {
+          $attach_padding_library = TRUE;
+        }
       }
     }
 
@@ -228,7 +238,9 @@ class Padding extends StylePluginBase {
     $build = $this->addClassesToBuild($build, $classes, $theme_wrapper);
 
     // Attach bs-classes to the build.
-    $build['#attached']['library'][] = 'bootstrap_styles/plugin.padding.build';
+    if ($attach_padding_library) {
+      $build['#attached']['library'][] = 'bootstrap_styles/plugin.padding.build';
+    }
 
     return $build;
   }

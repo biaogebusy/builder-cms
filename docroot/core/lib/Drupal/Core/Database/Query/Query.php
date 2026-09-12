@@ -71,7 +71,7 @@ abstract class Query implements PlaceholderInterface {
    *   Array of query options.
    */
   public function __construct(Connection $connection, $options) {
-    $this->uniqueIdentifier = uniqid('', TRUE);
+    $this->uniqueIdentifier = bin2hex(random_bytes(12));
 
     $this->connection = $connection;
     $this->connectionKey = $this->connection->getKey();
@@ -83,7 +83,7 @@ abstract class Query implements PlaceholderInterface {
   /**
    * Implements the magic __sleep function to disconnect from the database.
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $keys = get_object_vars($this);
     unset($keys['connection']);
     return array_keys($keys);
@@ -92,7 +92,7 @@ abstract class Query implements PlaceholderInterface {
   /**
    * Implements the magic __wakeup function to reconnect to the database.
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     $this->connection = Database::getConnection($this->connectionTarget, $this->connectionKey);
   }
 
@@ -100,7 +100,7 @@ abstract class Query implements PlaceholderInterface {
    * Implements the magic __clone function.
    */
   public function __clone() {
-    $this->uniqueIdentifier = uniqid('', TRUE);
+    $this->uniqueIdentifier = bin2hex(random_bytes(12));
   }
 
   /**
@@ -119,6 +119,10 @@ abstract class Query implements PlaceholderInterface {
    *
    * @return string
    *   A prepared statement query string for this object.
+   *
+   * @throws \BadMethodCallException
+   *   Thrown when the operation is a Merge or the operation is not implemented,
+   *   as in test.
    */
   abstract public function __toString();
 
@@ -150,7 +154,7 @@ abstract class Query implements PlaceholderInterface {
    * The comment string will be sanitized to remove * / and other characters
    * that may terminate the string early so as to avoid SQL injection attacks.
    *
-   * @param $comment
+   * @param string $comment
    *   The comment string to be inserted into the query.
    *
    * @return $this

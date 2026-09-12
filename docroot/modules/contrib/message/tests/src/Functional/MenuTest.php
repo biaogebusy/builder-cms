@@ -8,7 +8,7 @@ use Drupal\Tests\BrowserTestBase;
 /**
  * Tests admin menus for the message module.
  *
- * @group message_subscribe
+ * @group Message
  */
 class MenuTest extends BrowserTestBase {
 

@@ -4,6 +4,7 @@ namespace Drupal\xls_serialization\Encoder;
 
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Utility\Html;
+use Drupal\serialization\Encoder\JsonEncoder;
 use Drupal\views\ViewExecutable;
 use Drupal\xls_serialization\XlsSerializationConstants;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -112,6 +113,14 @@ class Xls implements EncoderInterface {
         break;
     }
 
+    // Do not display unreadable Excel binary content in preview mode.
+    if ($context['views_style_plugin']->view->live_preview ?? FALSE) {
+      $jsonEncoder = new JsonEncoder();
+      return $jsonEncoder->encode($data, $format, [
+        'json_encode_options' => JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
+      ]);
+    }
+
     try {
       // Instantiate a new excel object.
       $xls = new Spreadsheet();
@@ -124,6 +133,9 @@ class Xls implements EncoderInterface {
       if (isset($context['views_style_plugin']->options['xls_settings'])) {
         $this->setSettings($context['views_style_plugin']->options['xls_settings']);
       }
+
+      // Set sheet styles.
+      $this->setStyles($sheet, $data, $context);
 
       // Set the data.
       $this->setData($sheet, $data);
@@ -225,6 +237,20 @@ class Xls implements EncoderInterface {
   }
 
   /**
+   * Set sheet styles.
+   *
+   * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+   *   The worksheet to set headers for.
+   * @param array $data
+   *   The data array.
+   * @param array $context
+   *   The context options array.
+   */
+  protected function setStyles(Worksheet $sheet, array $data, array $context) {
+    // Used by the Excel Serialization Extras module.
+  }
+
+  /**
    * Set any available metadata.
    *
    * @param \PhpOffice\PhpSpreadsheet\Document\Properties $document_properties
@@ -308,18 +334,23 @@ class Xls implements EncoderInterface {
    *   The data to be put in the worksheet.
    */
   protected function setData(Worksheet $sheet, array $data) {
-    foreach ($data as $i => $row) {
+    // Since headers have been added, rows start at 2.
+    $rowCount = 2;
+    foreach ($data as $row) {
       $column = 1;
+      // Required.
+      // @see https://www.drupal.org/project/xls_serialization/issues/3362321
+      $row = (array) $row;
       foreach ($row as $value) {
         $formattedValue = $this->formatValue($value);
         $valueBinder = NULL;
         if (is_string($formattedValue) && strlen($formattedValue) > 1 && $formattedValue[0] === '=') {
           $valueBinder = new StringValueBinder();
         }
-        // Since headers have been added, rows are offset here by 2.
-        $sheet->setCellValue([$column, $i + 2], $formattedValue, $valueBinder);
+        $sheet->setCellValue([$column, $rowCount], $formattedValue, $valueBinder);
         $column++;
       }
+      $rowCount++;
     }
   }
 
@@ -334,8 +365,12 @@ class Xls implements EncoderInterface {
    */
   protected function formatValue($value) {
     if ($this->stripTags) {
-      $value = Html::decodeEntities($value);
+      // Strip tags before decoding entities. The reverse order would let
+      // strip_tags() consume entity-decoded literal "<" and ">" characters
+      // in the content as if they were HTML tag delimiters, truncating
+      // strings like "low pressure, &lt;1 MPa" to "low pressure, ".
       $value = strip_tags($value);
+      $value = Html::decodeEntities($value);
     }
     if ($this->trimValues) {
       $value = trim($value);
@@ -358,6 +393,9 @@ class Xls implements EncoderInterface {
   protected function extractHeaders(array $data, array $context) {
     $headers = [];
     if ($first_row = reset($data)) {
+      // Required.
+      // @see https://www.drupal.org/project/xls_serialization/issues/3362321
+      $first_row = (array) $first_row;
       if (isset($context['header'])) {
         $headers = $context['header'];
       }

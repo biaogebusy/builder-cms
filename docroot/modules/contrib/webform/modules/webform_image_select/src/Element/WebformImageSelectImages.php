@@ -4,7 +4,7 @@ namespace Drupal\webform_image_select\Element;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\webform\Element\WebformMessage;
 use Drupal\webform\Utility\WebformElementHelper;
 
@@ -13,7 +13,7 @@ use Drupal\webform\Utility\WebformElementHelper;
  *
  * @FormElement("webform_image_select_images")
  */
-class WebformImageSelectImages extends FormElement {
+class WebformImageSelectImages extends FormElementBase {
 
   /**
    * {@inheritdoc}

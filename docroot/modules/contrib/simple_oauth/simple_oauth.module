@@ -14,6 +14,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\consumers\Entity\ConsumerInterface;
 use Drupal\simple_oauth\TokenExpiryTriggerHandlerInterface;
+use Drupal\simple_oauth\Plugin\Oauth2GrantManager;
 use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -55,7 +56,7 @@ function simple_oauth_entity_base_field_info(EntityTypeInterface $entity_type) {
       ->setTranslatable(FALSE)
       ->setRequired(TRUE)
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
-      ->setSetting('allowed_values_function', 'Drupal\simple_oauth\Plugin\Oauth2GrantManager::getAvailablePluginsAsOptions')
+      ->setSetting('allowed_values_function', 'simple_oauth_grant_types_allowed_values')
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',
@@ -353,10 +354,7 @@ function simple_oauth_form_consumer_form_alter(array &$form, FormStateInterface 
  *   The state.
  */
 function simple_oauth_form_consumer_form_validate(array &$form, FormStateInterface $form_state) {
-  $grant_types = array_map(
-    fn (array $value) => $value['value'],
-    $form_state->getValue('grant_types'),
-  );
+  $grant_types = array_keys(array_filter($form_state->getValue('grant_types') ?? []));
   $redirect_uri = $form_state->getValue(['redirect', 0, 'value']);
 
   if (in_array('authorization_code', $grant_types, TRUE) && !$redirect_uri) {
@@ -461,4 +459,16 @@ function simple_oauth_consumers_list_alter(&$data, $context) {
       $data['redirect']['data']['#items'][] = $redirect['value'];
     }
   }
+}
+
+/**
+ * Allowed values callback for the grant_types field.
+ *
+ * Wraps the static method so options_allowed_values() can resolve it
+ * via function_exists(), which does not support static class methods.
+ *
+ * @see \Drupal\simple_oauth\Plugin\Oauth2GrantManager::getAvailablePluginsAsOptions()
+ */
+function simple_oauth_grant_types_allowed_values() {
+  return Oauth2GrantManager::getAvailablePluginsAsOptions();
 }

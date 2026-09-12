@@ -2,14 +2,14 @@
 
 namespace Drupal\webform\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a render element for a section/group of form elements.
  *
  * @RenderElement("webform_section")
  */
-class WebformSection extends RenderElement {
+class WebformSection extends RenderElementBase {
 
   /**
    * {@inheritdoc}

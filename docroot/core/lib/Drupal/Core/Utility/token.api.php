@@ -25,11 +25,11 @@ use Drupal\user\Entity\User;
  * A module implementing this hook should also implement hook_token_info() in
  * order to list its available tokens on editing screens.
  *
- * @param $type
+ * @param string $type
  *   The machine-readable name of the type (group) of token being replaced, such
  *   as 'node', 'user', or another type defined by a hook_token_info()
  *   implementation.
- * @param $tokens
+ * @param array $tokens
  *   An array of tokens to be replaced. The keys are the machine-readable token
  *   names, and the values are the raw [type:token] strings that appeared in the
  *   original text.
@@ -71,7 +71,7 @@ use Drupal\user\Entity\User;
  * @see hook_token_info()
  * @see hook_tokens_alter()
  */
-function hook_tokens($type, $tokens, array $data, array $options, \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata) {
+function hook_tokens($type, $tokens, array $data, array $options, \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata): array {
   $token_service = \Drupal::token();
 
   $url_options = ['absolute' => TRUE];
@@ -105,7 +105,7 @@ function hook_tokens($type, $tokens, array $data, array $options, \Drupal\Core\R
 
         // Default values for the chained tokens handled below.
         case 'author':
-          $account = $node->getOwner() ? $node->getOwner() : User::load(0);
+          $account = $node->getOwner() ?: User::load(0);
           $replacements[$original] = $account->label();
           $bubbleable_metadata->addCacheableDependency($account);
           break;
@@ -131,16 +131,16 @@ function hook_tokens($type, $tokens, array $data, array $options, \Drupal\Core\R
 /**
  * Alter replacement values for placeholder tokens.
  *
- * @param $replacements
+ * @param array $replacements
  *   An associative array of replacements returned by hook_tokens().
- * @param $context
+ * @param array $context
  *   The context in which hook_tokens() was called. An associative array with
  *   the following keys, which have the same meaning as the corresponding
  *   parameters of hook_tokens():
- *   - 'type'
- *   - 'tokens'
- *   - 'data'
- *   - 'options'
+ *   - 'type'.
+ *   - 'tokens'.
+ *   - 'data'.
+ *   - 'options'.
  * @param \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata
  *   The bubbleable metadata. In case you alter an existing token based upon
  *   a data source that isn't in $context['data'], you must add that
@@ -208,7 +208,7 @@ function hook_tokens_alter(array &$replacements, array $context, \Drupal\Core\Re
  * @see hook_token_info_alter()
  * @see hook_tokens()
  */
-function hook_token_info() {
+function hook_token_info(): array {
   $type = [
     'name' => t('Nodes'),
     'description' => t('Tokens related to individual nodes.'),
@@ -247,7 +247,7 @@ function hook_token_info() {
 /**
  * Alter the metadata about available placeholder tokens and token types.
  *
- * @param $data
+ * @param array $data
  *   The associative array of token definitions from hook_token_info().
  *
  * @see hook_token_info()

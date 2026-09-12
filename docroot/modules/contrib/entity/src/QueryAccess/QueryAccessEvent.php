@@ -61,7 +61,7 @@ class QueryAccessEvent extends Event {
     $this->operation = $operation;
     $this->account = $account;
     if (!isset($entity_type_id)) {
-      @trigger_error('The $entity_type_id argument must be passed to QueryAccessEvent::__construct(), it is required before entity:2.0.0. See https://www.drupal.org/node/3134363.', E_USER_DEPRECATED);
+      @trigger_error('The $entity_type_id argument is deprecated in entity:8.x-1.7 and must be passed to QueryAccessEvent::__construct(), it is required before entity:2.0.0. See https://www.drupal.org/node/3134363', E_USER_DEPRECATED);
     }
     else {
       $this->entityTypeId = $entity_type_id;

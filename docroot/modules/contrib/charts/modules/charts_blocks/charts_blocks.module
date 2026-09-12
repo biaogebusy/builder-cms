@@ -5,20 +5,15 @@
  * Contains chart_block_example.module.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
  * Implements hook_help().
+ *
+ * @phpstan-ignore-next-line
  */
+#[LegacyHook]
 function charts_blocks_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    // Main module help for the charts_blocks module.
-    case 'help.page.charts_blocks':
-      $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Create Charts blocks without the need for Views.') . '</p>';
-      return $output;
-
-    default:
-  }
+  return \Drupal::service('charts_blocks.hooks')->help($route_name, $route_match);
 }

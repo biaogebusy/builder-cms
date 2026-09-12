@@ -15,7 +15,7 @@
  *
  * Callback for batch_set().
  *
- * @param $multiple_params
+ * @param array $multiple_params
  *   Additional parameters specific to the batch. These are specified in the
  *   array passed to batch_set().
  * @param array|\ArrayAccess $context
@@ -102,11 +102,11 @@ function callback_batch_operation($multiple_params, &$context) {
  * This callback may be specified in a batch to perform clean-up operations, or
  * to analyze the results of the batch operations.
  *
- * @param $success
+ * @param bool $success
  *   A boolean indicating whether the batch has completed successfully.
- * @param $results
+ * @param array $results
  *   The value set in $context['results'] by callback_batch_operation().
- * @param $operations
+ * @param array $operations
  *   If $success is FALSE, contains the operations that remained unprocessed.
  * @param string $elapsed
  *   A string representing the elapsed time for the batch process, e.g.,
@@ -201,7 +201,7 @@ function hook_ajax_render_alter(array &$data) {
  *
  * @ingroup form_api
  */
-function hook_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function hook_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
   if (isset($form['type']) && $form['type']['#value'] . '_node_settings' == $form_id) {
     $upload_enabled_types = \Drupal::config('my_module.settings')->get('upload_enabled_types');
     $form['workflow']['upload_' . $form['type']['#value']] = [
@@ -210,7 +210,8 @@ function hook_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_stat
       '#default_value' => in_array($form['type']['#value'], $upload_enabled_types) ? 1 : 0,
       '#options' => [t('Disabled'), t('Enabled')],
     ];
-    // Add a custom submit handler to save the array of types back to the config file.
+    // Add a custom submit handler to save the array of types back to the config
+    // file.
     $form['actions']['submit']['#submit'][] = 'my_module_upload_enabled_types_submit';
   }
 }
@@ -251,7 +252,7 @@ function hook_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_stat
  *
  * @ingroup form_api
  */
-function hook_form_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function hook_form_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
   // Modification for the form with the given form ID goes here. For example, if
   // FORM_ID is "user_register_form" this code would run only on the user
   // registration form.
@@ -307,7 +308,7 @@ function hook_form_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $f
  *
  * @ingroup form_api
  */
-function hook_form_BASE_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function hook_form_BASE_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
   // Modification for the form with the given BASE_FORM_ID goes here. For
   // example, if BASE_FORM_ID is "node_form", this code would run on every
   // node form, regardless of node type.
@@ -326,7 +327,7 @@ function hook_form_BASE_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterfa
  * Called by batch_process() to allow modules to alter a batch before it is
  * processed.
  *
- * @param $batch
+ * @param array $batch
  *   The associative array of batch information. See batch_set() for details on
  *   what this could contain.
  *

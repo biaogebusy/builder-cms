@@ -114,10 +114,11 @@ file.formatter.media:
       constraints:
         # @see \Drupal\file\Plugin\Field\FieldFormatter\FileMediaFormatterBase::settingsSummary()
         Choice:
-          # Multiple file display: Multiple HTML tags
-          - tags
-          # Multiple file display: One HTML tag with multiple sources
-          - sources
+          choices:
+            # Multiple file display: Multiple HTML tags
+            - tags
+            # Multiple file display: One HTML tag with multiple sources
+            - sources
 
 field.formatter.settings.file_audio:
   type: file.formatter.media
@@ -132,6 +133,10 @@ field.formatter.settings.file_video:
     muted:
       type: boolean
       label: 'Muted'
+    playsinline:
+      type: boolean
+      label: 'Plays inline'
+      requiredKey: false
     width:
       type: integer
       label: 'Width'
@@ -146,6 +151,14 @@ field.formatter.settings.file_video:
       constraints:
         Range:
           min: 1
+    poster:
+      type: machine_name
+      label: 'Poster'
+      requiredKey: false
+    poster_image_style:
+      type: machine_name
+      label: 'Poster image style'
+      requiredKey: false
 
 field.formatter.settings.file_default:
   type: mapping

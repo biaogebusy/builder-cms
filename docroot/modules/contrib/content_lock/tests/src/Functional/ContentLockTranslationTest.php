@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\content_lock\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Content lock translation tests.
  *
  * @group content_lock
  */
+#[RunTestsInSeparateProcesses]
 class ContentLockTranslationTest extends ContentLockTestBase {
 
   /**
@@ -26,19 +29,9 @@ class ContentLockTranslationTest extends ContentLockTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * {@inheritdoc}
-   */
-  public function setUp(): void {
-    $this->markTestSkipped(
-      'prefetch_catch is not D10 compatible.'
-    );
-    parent::setUp();
-  }
-
-  /**
    * Test translation integration.
    */
-  public function testTranslatedContent() {
+  public function testTranslatedContent(): void {
     $translation = $this->entity->addTranslation('de', ['name' => 'entity1 german']);
     $this->entity->save();
 
@@ -58,18 +51,18 @@ class ContentLockTranslationTest extends ContentLockTestBase {
 
     // We lock entity.
     $this->drupalLogin($this->user1);
-    // Edit a entity without saving.
+    // Edit an entity without saving.
     $this->drupalGet($this->entity->toUrl('edit-form'));
     $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
     // English form locked, german not.
-    $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), NULL, 'entity_test_mul_changed'));
-    $this->assertFalse($lockService->fetchLock($translation->id(), $translation->language()->getId(), NULL, 'entity_test_mul_changed'));
+    $this->assertNotFalse($lockService->fetchLock($this->entity));
+    $this->assertFalse($lockService->fetchLock($translation));
 
     $this->drupalLogin($this->user2);
     // Enter english form.
     $this->drupalGet($this->entity->toUrl('edit-form'));
     $assert_session->pageTextContains('This content translation is being edited by the user');
-    $this->getSession()->getPage()->clickLink('Break lock');
+    $this->getSession()->getPage()->clickLink('Break the lock.');
     $this->getSession()->getPage()->pressButton('Confirm break lock');
     $this->assertSame($this->entity->toUrl('edit-form', ['absolute' => TRUE])->toString(), $this->getUrl());
     $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
@@ -77,7 +70,7 @@ class ContentLockTranslationTest extends ContentLockTestBase {
     // Enter translation form.
     $this->drupalGet($translation->toUrl('edit-form'));
     $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
-    $this->assertNotFalse($lockService->fetchLock($translation->id(), $translation->language()->getId(), NULL, 'entity_test_mul_changed'));
+    $this->assertNotFalse($lockService->fetchLock($translation));
     $this->drupalGet($translation->toUrl('edit-form'));
     $this->submitForm([], 'Save');
 
@@ -88,7 +81,7 @@ class ContentLockTranslationTest extends ContentLockTestBase {
     $this->drupalLogin($this->user2);
     $this->drupalGet($translation->toUrl('edit-form'));
     $assert_session->pageTextContains('This content translation is being edited by the user');
-    $this->getSession()->getPage()->clickLink('Break lock');
+    $this->getSession()->getPage()->clickLink('Break the lock.');
     $this->getSession()->getPage()->pressButton('Confirm break lock');
     $this->assertSame($translation->toUrl('edit-form', ['absolute' => TRUE])->toString(), $this->getUrl());
     $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');

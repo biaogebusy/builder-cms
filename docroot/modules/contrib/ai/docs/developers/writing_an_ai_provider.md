@@ -442,5 +442,25 @@ Finally you will need to define some API defaults, which reflect the parameters 
 
 After all of this, you will be able to see your newly implemented provider in the AI Explorer of the AI module and use it like other providers.
 
+### Reporting token usage
+If your provider's API reports token usage, set it on the `ChatOutput` object returned by `chat()` using `setTokenUsage()`, passing a `Drupal\ai\Dto\TokenUsageDto`. See [Token usage](call_chat.md#token-usage) for the full property reference.
+
+```php
+use Drupal\ai\Dto\TokenUsageDto;
+
+$chat_output = new ChatOutput($message, $response, []);
+$chat_output->setTokenUsage(new TokenUsageDto(
+  input: $response['usage']['prompt_tokens'] ?? NULL,
+  output: $response['usage']['completion_tokens'] ?? NULL,
+  total: $response['usage']['total_tokens'] ?? NULL,
+  reasoning: $response['usage']['completion_tokens_details']['reasoning_tokens'] ?? NULL,
+  cached: $response['usage']['prompt_tokens_details']['cached_tokens'] ?? NULL,
+));
+```
+
+Leave a property `NULL` (the default) rather than `0` when your provider's API doesn't report that particular value.
+
+If your provider supports streaming and implements `doIterate()` on a `StreamedChatMessageIterator` subclass, you don't need to construct a `TokenUsageDto` yourself. Instead, report usage per-chunk via the setters on `StreamedChatMessage` (`setInputTokenUsage()`, `setOutputTokenUsage()`, etc.) whenever a chunk from your API includes usage data. The base iterator automatically collects these across all chunks and calls `setTokenUsage()` on the resulting `ChatOutput` once the stream is fully consumed.
+
 ### Rate Limits
 If your provider has rate limits, you can set them on the `ChatOutput` object returned by the `chat` method using `setRateLimits()`. Create a `ChatProviderLimitsDto` object and set the appropriate values, such as maximum requests, remaining requests, and reset time. This information can then be consumed through `getRateLimits()` and used by the AI module to manage and display rate limit status to users.

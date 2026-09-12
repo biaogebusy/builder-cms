@@ -61,7 +61,7 @@ class CountingStubGuardrail extends AiGuardrailPluginBase implements ContainerFa
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    protected readonly StateInterface $state,
+    protected StateInterface $state,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }

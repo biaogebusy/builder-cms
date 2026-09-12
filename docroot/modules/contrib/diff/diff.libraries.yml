@@ -5,7 +5,6 @@ diff.general:
   js:
     js/diff.js: {}
   dependencies:
-    - core/jquery
     - core/drupal
     - core/drupalSettings
     - core/once

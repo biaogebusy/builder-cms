@@ -199,7 +199,7 @@ class WebformActions extends ContainerBase {
         '#title' => $this->t('Hide @label button', $t_args),
         '#return_value' => TRUE,
       ];
-      if (strpos($name, '_prev') === FALSE && !in_array($name, ['delete', 'reset'])) {
+      if (!str_contains($name, '_prev') && !in_array($name, ['delete', 'reset'])) {
         $form[$name . '_settings'][$name . '_hide_message'] = [
           '#type' => 'webform_message',
           '#access' => TRUE,

@@ -13,13 +13,17 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\views\EntityViewsData;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity views data.
- *
- * @coversDefaultClass \Drupal\views\EntityViewsData
- * @group views
  */
+#[CoversClass(EntityViewsData::class)]
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class EntityViewsDataTest extends KernelTestBase {
 
   /**
@@ -50,10 +54,7 @@ class EntityViewsDataTest extends KernelTestBase {
    */
   protected static $modules = [
     'user',
-    'system',
-    'field',
     'text',
-    'filter',
   ];
 
   /**
@@ -89,19 +90,19 @@ class EntityViewsDataTest extends KernelTestBase {
 
     // Base fields for the test entity types.
     $this->commonBaseFields['name'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Name'))
-      ->setDescription(t('The name of the test entity.'))
+      ->setLabel('Name')
+      ->setDescription('The name of the test entity.')
       ->setTranslatable(TRUE)
       ->setSetting('max_length', 32);
 
     $this->commonBaseFields['created'] = BaseFieldDefinition::create('created')
-      ->setLabel(t('Authored on'))
-      ->setDescription(t('Time the entity was created'))
+      ->setLabel('Authored on')
+      ->setDescription('Time the entity was created')
       ->setTranslatable(TRUE);
 
     $this->commonBaseFields['user_id'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('User ID'))
-      ->setDescription(t('The ID of the associated user.'))
+      ->setLabel('User ID')
+      ->setDescription('The ID of the associated user.')
       ->setSetting('target_type', 'user')
       ->setSetting('handler', 'default')
       // Default EntityTest entities to have the root user as the owner, to
@@ -123,7 +124,7 @@ class EntityViewsDataTest extends KernelTestBase {
       ->setTranslatable(TRUE)
       ->setSetting('max_length', 255);
 
-    // A base field with cardinality > 1
+    // A base field with cardinality > 1.
     $this->commonBaseFields['string'] = BaseFieldDefinition::create('string')
       ->setLabel('Strong')
       ->setTranslatable(TRUE)
@@ -145,16 +146,16 @@ class EntityViewsDataTest extends KernelTestBase {
    * @param \Drupal\Core\Entity\EntityTypeInterface $definition
    *   An entity type definition to add to the entity type manager.
    * @param \Drupal\Core\Field\BaseFieldDefinition[] $base_fields
-   *   An array of base field definitions
+   *   An array of base field definitions.
    */
-  protected function setUpEntityType(EntityTypeInterface $definition, array $base_fields = []) {
+  protected function setUpEntityType(EntityTypeInterface $definition, array $base_fields = []): void {
     // Replace the cache backend in the entity type manager so it returns
     // our test entity type in addition to the existing ones.
     $definitions = $this->entityTypeManager->getDefinitions();
     $definitions[$definition->id()] = $definition;
 
     $cache_backend = $this->prophesize(CacheBackendInterface::class);
-    $cache_data = new \StdClass();
+    $cache_data = new \stdClass();
     $cache_data->data = $definitions;
     $cache_backend->get('entity_type')->willReturn($cache_data);
     $this->entityTypeManager->setCacheBackend($cache_backend->reveal(), 'entity_type', ['entity_types']);
@@ -428,6 +429,14 @@ class EntityViewsDataTest extends KernelTestBase {
         ],
       ],
     ], $data['entity_test__string']['table']['join']['entity_test']);
+
+    // Check the "allow empty" option for non-required fields.
+    $this->assertArrayHasKey('allow empty', $data['entity_test']['name']['filter']);
+    $this->assertTrue($data['entity_test']['name']['filter']['allow empty']);
+    // Reconfigure the field to be required.
+    $this->commonBaseFields['name']->setRequired(TRUE);
+    $data = $this->entityTypeManager->getHandler('entity_test', 'views_data')->getViewsData();
+    $this->assertArrayNotHasKey('allow empty', $data['entity_test']['name']['filter']);
   }
 
   /**
@@ -539,16 +548,16 @@ class EntityViewsDataTest extends KernelTestBase {
     $base_field_definitions['user_id']->setRevisionable(TRUE);
 
     $base_field_definitions['non_rev_field'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Non Revisionable Field'))
-      ->setDescription(t('A non-revisionable test field.'))
+      ->setLabel('Non Revisionable Field')
+      ->setDescription('A non-revisionable tes field.')
       ->setRevisionable(FALSE)
       ->setTranslatable(TRUE)
       ->setCardinality(1)
       ->setReadOnly(TRUE);
 
     $base_field_definitions['non_mul_field'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Non translatable'))
-      ->setDescription(t('A non-translatable string field'))
+      ->setLabel('Non translatable')
+      ->setDescription('A non-translatable string field')
       ->setRevisionable(TRUE);
 
     $this->setUpEntityType($entity_type, $base_field_definitions);
@@ -575,7 +584,8 @@ class EntityViewsDataTest extends KernelTestBase {
     // table.
     $this->assertFalse(isset($data['entity_test_mulrev_revision']['revision_id']));
 
-    // Also ensure that field_data only fields don't appear on the revision table.
+    // Also ensure that field_data only fields don't appear on the revision
+    // table.
     $this->assertFalse(isset($data['entity_test_mulrev_revision']['id']));
     $this->assertFalse(isset($data['entity_test_mulrev_revision']['name']));
     $this->assertFalse(isset($data['entity_test_mulrev_revision']['description']));
@@ -662,6 +672,17 @@ class EntityViewsDataTest extends KernelTestBase {
         ],
       ],
     ], $data['entity_test_mulrev_revision__string']['table']['join']['entity_test_mulrev_property_revision']);
+  }
+
+  /**
+   * Tests EntityViewsData deprecations.
+   */
+  #[IgnoreDeprecations]
+  public function testDeprecations(): void {
+    $this->baseEntityType->setHandlerClass('views_data', EntityViewsDataWithDeprecations::class);
+    $this->setUpEntityType($this->baseEntityType, $this->commonBaseFields);
+    $this->expectUserDeprecationMessage('Drupal\views\EntityViewsData::getFieldStorageDefinitions() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. No replacement is provided. See https://www.drupal.org/node/3240278');
+    $this->entityTypeManager->getHandler('entity_test', 'views_data')->getViewsData();
   }
 
   /**
@@ -827,6 +848,25 @@ class TestEntityType extends ContentEntityType {
 }
 
 /**
+ * Extend EntityViewsData as a module would do.
+ *
+ * Include calls to deprecated methods.
+ */
+class EntityViewsDataWithDeprecations extends EntityViewsData {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViewsData() {
+    // Deprecated method.
+    // @phpstan-ignore-next-line
+    $this->getFieldStorageDefinitions();
+    return [];
+  }
+
+}
+
+/**
  * Generic entity class for our test entity types.
  *
  * Allows mocked base field definitions.
@@ -852,7 +892,7 @@ class ViewsTestEntity extends ContentEntityBase {
    *   The array of base field definitions to mock. These are added to the
    *   defaults ones from the parent class.
    */
-  public static function setMockedBaseFieldDefinitions(string $entity_type_id, array $definitions) {
+  public static function setMockedBaseFieldDefinitions(string $entity_type_id, array $definitions): void {
     static::$mockedBaseFieldDefinitions[$entity_type_id] = $definitions;
   }
 

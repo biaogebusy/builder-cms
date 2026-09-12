@@ -73,8 +73,8 @@ class Display extends ViewsFormBase {
     ];
     $executable->display_handler->buildOptionsForm($form['options'], $form_state);
 
-    // The handler options form sets $form['#title'], which we need on the entire
-    // $form instead of just the ['options'] section.
+    // The handler options form sets $form['#title'], which we need on the
+    // entire $form instead of just the ['options'] section.
     $form['#title'] = $form['options']['#title'];
     unset($form['options']['#title']);
 
@@ -98,6 +98,9 @@ class Display extends ViewsFormBase {
     $view->getExecutable()->displayHandlers->get($display_id)->validateOptionsForm($form['options'], $form_state);
 
     if ($form_state->getErrors()) {
+      // Trigger a form rerender so error messages are displayed correctly in
+      // the AJAX modal.
+      // @see \Drupal\views_ui\Form\Ajax\ViewsFormBase::ajaxFormWrapper()
       $form_state->set('rerender', TRUE);
     }
   }

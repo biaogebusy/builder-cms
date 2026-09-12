@@ -7,12 +7,14 @@ namespace Drupal\Tests\taxonomy\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the loading of multiple taxonomy terms at once.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class LoadMultipleTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
@@ -21,7 +23,6 @@ class LoadMultipleTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'taxonomy',
     'user',
     'text',

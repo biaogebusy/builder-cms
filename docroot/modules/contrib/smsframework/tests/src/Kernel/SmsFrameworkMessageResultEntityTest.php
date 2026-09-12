@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
@@ -23,9 +23,6 @@ final class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
 
   use SmsFrameworkMessageResultTestTrait;
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'user',
     'sms',
@@ -35,9 +32,6 @@ final class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
     'entity_test',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('entity_test');
@@ -47,9 +41,6 @@ final class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
     $this->installEntitySchema('sms_report');
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected function createMessageResult(): SmsMessageResultInterface {
     return SmsMessageResult::create();
   }
@@ -60,8 +51,8 @@ final class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
   public function testSaveAndRetrieveResult(): void {
     /** @var \Drupal\sms\Entity\SmsMessageResult $result */
     $result = $this->createMessageResult()
-      ->setCreditsUsed(rand(5, 10))
-      ->setCreditsBalance(rand(10, 20))
+      ->setCreditsUsed(\rand(5, 10))
+      ->setCreditsBalance(\rand(10, 20))
       ->setError(SmsMessageResultStatus::INVALID_SENDER)
       ->setErrorMessage('Invalid sender ID')
       ->setReports([SmsDeliveryReport::create()->setRecipient('1234567890')]);
@@ -91,8 +82,8 @@ final class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
     $this->expectExceptionMessage('No parent SMS message specified for SMS message result');
     /** @var \Drupal\sms\Entity\SmsMessageResult $result */
     $result = $this->createMessageResult()
-      ->setCreditsUsed(rand(5, 10))
-      ->setCreditsBalance(rand(10, 20))
+      ->setCreditsUsed(\rand(5, 10))
+      ->setCreditsBalance(\rand(10, 20))
       ->setError(SmsMessageResultStatus::INVALID_SENDER)
       ->setErrorMessage('Invalid sender ID')
       ->setReports([SmsDeliveryReport::create()->setRecipient('1234567890')]);

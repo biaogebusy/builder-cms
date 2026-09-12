@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\admin_toolbar\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -40,12 +42,17 @@ class AdminToolbarSettingsFormTest extends BrowserTestBase {
       'access toolbar',
       'access administration pages',
       'administer site configuration',
+      // This permission is needed to display the user admin links to be tested.
+      'administer account settings',
     ];
     $this->adminUser = $this->drupalCreateUser($permissions);
   }
 
   /**
    * Test backend admin toolbar settings form fields and submission.
+   *
+   * Login as an admin user, go to the 'Admin Toolbar settings' form, change
+   * all the values, submit the form and check the expected values are applied.
    */
   public function testAdminToolbarSettingsForm(): void {
     /** @var \Drupal\Tests\WebAssert $assert */
@@ -53,6 +60,9 @@ class AdminToolbarSettingsFormTest extends BrowserTestBase {
 
     // Log in as an admin user to test admin pages.
     $this->drupalLogin($this->adminUser);
+
+    // Assert the account settings link under config, has the expected classes.
+    $assert->responseContains('class="toolbar-icon toolbar-icon-user-admin-index"');
 
     // Test the 'Admin Toolbar settings' page form submission and fields.
     $this->drupalGet('admin/config/user-interface/admin-toolbar');

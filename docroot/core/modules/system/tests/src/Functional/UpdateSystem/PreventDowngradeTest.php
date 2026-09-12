@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\FunctionalTests\Update\UpdatePathTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that a site on 10.4.0 is prevented from downgrading to 11.0.0.
  *
  * This tests the upgrade path when there is a pair of equivalent updates. The
  * earlier update is 10400 and the latter one is 11102.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
+#[IgnoreDeprecations]
 class PreventDowngradeTest extends UpdatePathTestBase {
 
   /**
@@ -84,7 +88,8 @@ class PreventDowngradeTest extends UpdatePathTestBase {
       ->condition('name', 'core.extension')
       ->execute();
 
-    // Set the schema for 'downgrade_prevention_test' to the update function, 11102.
+    // Set the schema for 'downgrade_prevention_test' to the update function,
+    // 11102.
     $database->update('key_value')
       ->fields([
         'value' => 'i:11102;',

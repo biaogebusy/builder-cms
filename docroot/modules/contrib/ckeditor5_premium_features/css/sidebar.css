@@ -1,0 +1,155 @@
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+.ck-editor-container .ck-sidebar-enabled > .ck-editor__main > .ck-content {
+  padding-right: 30px;
+}
+
+.ck-editor-container .ck-editor-sidebar-wrapper {
+  display: flex;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper .form-item__label {
+  margin: 0;
+  line-height: 27px;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper {
+  width: 0;
+  min-height: var(--ck-min-height);
+  max-height: calc(100vh - var(--drupal-displace-offset-top, 0px) - var(--drupal-displace-offset-bottom, 0px) - 20px);
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar {
+  min-width: 250px;
+  max-width: 350px;
+  width: 25%;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.narrowSidebar {
+  width: 56px;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.slider-off {
+  display: none;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper .form-item {
+  margin: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar .form-item {
+  max-width: calc(100% - 250px);
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.narrowSidebar .form-item {
+  max-width: calc(100% - 40px);
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.slider-off .form-item {
+  max-width: unset;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper .ck-content:not(.ck-comment__input *):not(.ck-comment__content) {
+  min-height: 120px;
+  padding-bottom: 120px;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper .ck-sidebar-wrapper:not(.prevent-scroll-out-of-view) .ck-sidebar {
+    height: 40px;
+    margin-top: -40px;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper .ck-sidebar-wrapper .ck-sidebar {
+    min-height: 10px!important;
+    transition: none;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar .ck-sidebar-wrapper .ck-sidebar:focus-within *:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.ck-editor-container .ck-editor-sidebar-wrapper.narrowSidebar .ck-sidebar-wrapper.prevent-scroll-out-of-view .ck-sidebar {
+    margin-top: 8px;
+}
+
+/*sidebar */
+.ck-editor-container .ck-editor-sidebar-wrapper.slider-off .ck-sidebar-wrapper {
+  display: none;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar .ck-sidebar-wrapper,
+.ck-editor-container .ck-editor-sidebar-wrapper.narrowSidebar .ck-sidebar-wrapper {
+  background: var(--ck-color-toolbar-background);
+  border: 1px solid var(--ck-color-base-border);
+  border-left: 0;
+  overflow: hidden;
+  overflow-y: auto;
+  width: 100%;
+}
+
+tr.draggable .ck-editor-sidebar-wrapper .ck-sidebar-wrapper {
+  margin-top: unset;
+}
+
+#block-bartik-content .ck-sidebar-wrapper.wideSidebar {
+  margin: 1.35em 0 0 0;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar .ck-sidebar-wrapper {
+  padding: 0 10px;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar .ck-sidebar-wrapper .ck-sidebar .ck-sidebar-item {
+  padding-bottom: 10px;
+}
+
+/*Toggle*/
+.ck-editor-sidebar-wrapper .ck-sidebar-auto-toggle-wrapper {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 1px;
+  background: transparent;
+  z-index: 10;
+}
+
+.ck-sidebar-auto-toggle-wrapper .ck-icon {
+  width: 20px!important;
+  height: 20px!important;
+}
+
+.ck-editor-container .ck-editor-sidebar-wrapper.inline .ck-sidebar-auto-toggle-wrapper {
+  display: none;
+}
+.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar .ck-sidebar-auto-toggle-wrapper {
+  margin-left: -10px;
+}
+
+/*Toggle Icon*/
+.ck-editor-container .ck-editor-sidebar-wrapper.narrowSidebar button svg {
+/*.ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar button svg {*/
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+/* Fullscreen mode */
+.ck-fullscreen .ck-editor-container .ck-editor-sidebar-wrapper {
+  max-height: 100%;
+}
+.ck-fullscreen .ck-editor-container .ck-editor-sidebar-wrapper.wideSidebar {
+  min-width: 350px;
+}
+
+/* Gin theme */
+.gin--dark-mode .ck {
+  --ck-color-annotation-wrapper-drop-shadow: var(--gin-shadow-l2);
+  --ck-color-annotation-wrapper-background: var(--gin-bg-layer);
+  --ck-color-comment-input-background: var(--gin-bg-layer);
+  --ck-color-comment-remove-background: var(--gin-bg-layer);
+  --ck-tabs-panels-container-background: var(--ck-color-base-background);
+  --ck-color-tabs-buttons-container-background: var(--ck-color-toolbar-background);
+
+
+  .ck.ck-sidebar--narrow .ck-annotation-counter {
+    color: var(--ck-color-text);
+  }
+  .ck.ck-sidebar--narrow .ck-annotation-counter:focus,
+  .ck.ck-sidebar--narrow .ck-annotation-counter:hover {
+    color: var(--gin-color-primary);
+  }
+
+  .ck .ck-annotation-wrapper .ck-thread {
+    background-color: var(--ck-color-annotation-wrapper-background);
+  }
+}

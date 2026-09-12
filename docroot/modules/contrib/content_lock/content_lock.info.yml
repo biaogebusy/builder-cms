@@ -2,13 +2,13 @@ name: Content Lock
 description: 'Prevents multiple users from trying to edit a content entity simultaneously to prevent edit conflicts.'
 type: module
 package: Content
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10.2 || ^11
 configure: content_lock.settings
 
 test_dependencies:
   - drupal:content_translation
 
-# Information added by Drupal.org packaging script on 2024-05-15
-version: '8.x-2.4'
+# Information added by Drupal.org packaging script on 2026-06-23
+version: '3.0.0'
 project: 'content_lock'
-datestamp: 1715783061
+datestamp: 1782214657

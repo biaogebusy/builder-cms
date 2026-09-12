@@ -1,0 +1,37 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: src/EventSubscriber/JsonApiBuildSubscriber.php
+
+		-
+			message: '#^Method Drupal\\jsonapi_extras\\Form\\JsonapiResourceConfigForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: src/Form/JsonapiResourceConfigForm.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: src/JsonapiResourceConfigListBuilder.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 2
+			path: src/Normalizer/ContentEntityDenormalizer.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: src/Plugin/Validation/Constraint/DuplicateFieldConstraintValidator.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: src/SerializerDecorator.php

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Argument validator through the UI.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class ArgumentValidatorTest extends UITestBase {
 
   /**
@@ -52,7 +54,7 @@ class ArgumentValidatorTest extends UITestBase {
    * @param bool $specify_validation
    *   The form validation.
    */
-  protected function saveArgumentHandlerWithValidationOptions($specify_validation) {
+  protected function saveArgumentHandlerWithValidationOptions($specify_validation): void {
     $options = [
       'options[validate][type]' => 'entity---node',
       'options[specify_validation]' => $specify_validation,

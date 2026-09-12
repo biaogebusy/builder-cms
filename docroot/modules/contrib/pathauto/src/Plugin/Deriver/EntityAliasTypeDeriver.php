@@ -21,6 +21,8 @@ class EntityAliasTypeDeriver extends DeriverBase implements ContainerDeriverInte
   use StringTranslationTrait;
 
   /**
+   * The entity type manager.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
@@ -33,6 +35,8 @@ class EntityAliasTypeDeriver extends DeriverBase implements ContainerDeriverInte
   protected $entityFieldManager;
 
   /**
+   * The token entity mapper.
+   *
    * @var \Drupal\token\TokenEntityMapperInterface
    */
   protected $tokenEntityMapper;

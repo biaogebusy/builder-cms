@@ -8,12 +8,14 @@ use Drupal\Core\Action\ActionInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\system\Entity\Action;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests action plugins.
- *
- * @group Action
  */
+#[Group('Action')]
+#[RunTestsInSeparateProcesses]
 class ActionTest extends KernelTestBase {
 
   /**
@@ -99,6 +101,28 @@ class ActionTest extends KernelTestBase {
       ],
     ];
     $this->assertSame($expected, $action->calculateDependencies()->getDependencies());
+  }
+
+  /**
+   * Tests no type specified action.
+   */
+  public function testNoTypeAction(): void {
+    // Create an action config entity using the action_test_no_type plugin.
+    $action = Action::create([
+      'id' => 'action_test_no_type_action',
+      'label' => 'Test Action with No Type',
+      'plugin' => 'action_test_no_type',
+    ]);
+    $action->save();
+
+    // Reload the action to ensure it's saved correctly.
+    $action = Action::load('action_test_no_type_action');
+
+    // Assert that the action was saved and loaded correctly.
+    $this->assertNotNull($action, 'The action config entity was saved and loaded correctly.');
+    $this->assertSame('action_test_no_type_action', $action->id(), 'The action ID is correct.');
+    $this->assertSame('Test Action with No Type', $action->label(), 'The action label is correct.');
+    $this->assertNull($action->getType(), 'The action type is correctly set to NULL.');
   }
 
 }

@@ -78,7 +78,7 @@ class ProcessedText extends WebformMarkupBase {
     // Copy to element so that we can render it without altering the actual
     // $element.
     $render_element = $element;
-    $html = (string) $this->renderer->renderPlain($render_element);
+    $html = (string) $this->renderer->renderInIsolation($render_element);
     $element['#markup'] = MailFormatHelper::htmlToText($html);
 
     // Must remove #type, #text, and #format.

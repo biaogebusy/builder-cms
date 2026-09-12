@@ -24,17 +24,19 @@ interface ProductVariationStorageInterface extends ContentEntityStorageInterface
   /**
    * Loads the product variation from context.
    *
-   * Uses the variation specified in the URL (?v=) if it's active and
-   * belongs to the current product.
+   * Uses the variation specified in the URL (?v=) if it is active and
+   * belongs to the current product. If no valid variation is found in the
+   * URL, falls back to the product's default variation. Returns NULL if
+   * no variation can be resolved.
    *
-   * Note: The returned variation is not guaranteed to be enabled, the caller
-   * needs to check it against the list from loadEnabled().
+   * Note: The returned variation is not guaranteed to be enabled; the caller
+   * must validate it against the list from loadEnabled().
    *
    * @param \Drupal\commerce_product\Entity\ProductInterface $product
    *   The current product.
    *
-   * @return \Drupal\commerce_product\Entity\ProductVariationInterface
-   *   The product variation.
+   * @return \Drupal\commerce_product\Entity\ProductVariationInterface|null
+   *   The product variation, or NULL if none found.
    */
   public function loadFromContext(ProductInterface $product);
 

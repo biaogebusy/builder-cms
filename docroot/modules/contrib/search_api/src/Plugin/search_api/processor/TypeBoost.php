@@ -130,9 +130,9 @@ class TypeBoost extends ProcessorPluginBase implements PluginFormInterface {
       $datasource_id = $item->getDatasourceId();
       $bundle = $item->getDatasource()->getItemBundle($item->getOriginalObject());
 
-      $item_boost = (double) ($boosts[$datasource_id]['datasource_boost'] ?? 1.0);
+      $item_boost = (float) ($boosts[$datasource_id]['datasource_boost'] ?? 1.0);
       if ($bundle && isset($boosts[$datasource_id]['bundle_boosts'][$bundle])) {
-        $item_boost = (double) $boosts[$datasource_id]['bundle_boosts'][$bundle];
+        $item_boost = (float) $boosts[$datasource_id]['bundle_boosts'][$bundle];
       }
 
       $item->setBoost($item->getBoost() * $item_boost);

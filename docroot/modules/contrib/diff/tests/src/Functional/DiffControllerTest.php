@@ -8,12 +8,14 @@ use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTestRev;
 use Drupal\entity_test_revlog\Entity\EntityTestWithRevisionLog;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the diff controller.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class DiffControllerTest extends BrowserTestBase {
 
   /**
@@ -51,13 +53,13 @@ class DiffControllerTest extends BrowserTestBase {
     $assert_session = $this->assertSession();
 
     $entity = EntityTestRev::create([
-      'name' => 'test entity 1',
+      'name' => 'test entity 1,view all revisions',
       'type' => 'entity_test_rev',
     ]);
     $entity->save();
     $vid1 = $entity->getRevisionId();
 
-    $entity->name->value = 'test entity 2';
+    $entity->name->value = 'test entity 2,view all revisions';
     $entity->setNewRevision(TRUE);
     $entity->save();
     $vi2 = $entity->getRevisionId();
@@ -76,8 +78,8 @@ class DiffControllerTest extends BrowserTestBase {
     $this->drupalLogin($account);
     $this->drupalGet($url);
     $assert_session->statusCodeEquals(200);
-    $assert_session->responseContains('<td class="diff-context diff-deletedline">test entity <span class="diffchange">1</span></td>');
-    $assert_session->responseContains('<td class="diff-context diff-addedline">test entity <span class="diffchange">2</span></td>');
+    $assert_session->responseContains('<td class="diff-context diff-deletedline">test entity <span class="diffchange">1</span>,view all revisions</td>');
+    $assert_session->responseContains('<td class="diff-context diff-addedline">test entity <span class="diffchange">2</span>,view all revisions</td>');
   }
 
   /**
@@ -85,13 +87,13 @@ class DiffControllerTest extends BrowserTestBase {
    */
   public function testControllerNullRevisionAuthor(): void {
     $entity = EntityTestWithRevisionLog::create([
-      'name' => 'view,test entity 1',
+      'name' => 'view,view all revisions,test entity 1',
       'type' => 'entity_test_revlog',
     ]);
     $entity->save();
     $vid1 = $entity->getRevisionId();
 
-    $entity->name->value = 'view,test entity 2';
+    $entity->name->value = 'view,view all revisions,test entity 2';
     $entity->setNewRevision(TRUE);
     $entity->set('revision_user', NULL);
     $entity->save();

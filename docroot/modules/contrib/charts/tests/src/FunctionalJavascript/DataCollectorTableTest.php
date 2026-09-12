@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\charts\FunctionalJavascript;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\charts\Traits\ConfigUpdateTrait;
@@ -38,7 +39,7 @@ class DataCollectorTableTest extends WebDriverTestBase {
 
   const TABLE_ROW_SELECTOR = 'table[data-drupal-selector="edit-series-data-collector-table"] tr.data-collector-table--row';
 
-  const TABLE_COLUMN_SELECTOR = 'table[data-drupal-selector="edit-series-data-collector-table"] tbody tr:nth-child(1) td:not(.data-collector-table--row--delete)';
+  const TABLE_COLUMN_SELECTOR = 'table[data-drupal-selector="edit-series-data-collector-table"] tbody tr:nth-child(1) td:not(.data-collector-table--row--delete):not(.data-collector-table--row-operations-cell)';
 
   /**
    * {@inheritdoc}
@@ -138,6 +139,51 @@ class DataCollectorTableTest extends WebDriverTestBase {
   }
 
   /**
+   * Test reorder operations.
+   */
+  public function testReorderOperations() {
+    $this->drupalGet('/charts_test/data_collector_table_test_form');
+    $page = $this->getSession()->getPage();
+
+    // Fill Row 1 and Row 2 with identifiable values.
+    $page->find('css', 'input[name="series[data_collector_table][0][0][data]"]')->setValue('A1');
+    $page->find('css', 'input[name="series[data_collector_table][1][0][data]"]')->setValue('B1');
+
+    // Move Row 1 (position 1) down.
+    $this->doTableOperation('move_down', 'row', [1]);
+
+    // Verify swap.
+    $this->assertEquals('B1', $page->find('css', 'input[name="series[data_collector_table][0][0][data]"]')->getValue());
+    $this->assertEquals('A1', $page->find('css', 'input[name="series[data_collector_table][1][0][data]"]')->getValue());
+
+    // Move Row 2 (now A1) back up (position 1).
+    $this->doTableOperation('move_up', 'row', [2]);
+
+    // Verify swap back.
+    $this->assertEquals('A1', $page->find('css', 'input[name="series[data_collector_table][0][0][data]"]')->getValue());
+    $this->assertEquals('B1', $page->find('css', 'input[name="series[data_collector_table][1][0][data]"]')->getValue());
+
+    // Test Column move.
+    // Initially: Col 1, Col 2.
+    $page->find('css', 'input[name="series[data_collector_table][0][0][data]"]')->setValue('C1');
+    $page->find('css', 'input[name="series[data_collector_table][0][1][data]"]')->setValue('D1');
+
+    // Move Col 1 (position 1) right.
+    $this->doTableOperation('move_right', 'column', [1]);
+
+    // Verify swap.
+    $this->assertEquals('D1', $page->find('css', 'input[name="series[data_collector_table][0][0][data]"]')->getValue());
+    $this->assertEquals('C1', $page->find('css', 'input[name="series[data_collector_table][0][1][data]"]')->getValue());
+
+    // Move Col 2 (now C1) back left (position 1).
+    $this->doTableOperation('move_left', 'column', [2]);
+
+    // Verify swap back.
+    $this->assertEquals('C1', $page->find('css', 'input[name="series[data_collector_table][0][0][data]"]')->getValue());
+    $this->assertEquals('D1', $page->find('css', 'input[name="series[data_collector_table][0][1][data]"]')->getValue());
+  }
+
+  /**
    * Do table operation.
    *
    * @param string $operation
@@ -148,41 +194,104 @@ class DataCollectorTableTest extends WebDriverTestBase {
    *   The position.
    */
   protected function doTableOperation(string $operation, string $on, array $positions = []) {
-    $value = ucfirst($operation) . ' ' . $on;
-
     if ($operation === 'add') {
-      $selector = static::TABLE_SELECTOR . ' input[value="' . $value . '"]';
-      $this->pressAjaxButton($selector);
+      $value = ucfirst($operation) . ' ' . $on;
+      $this->pressAjaxButton(static::TABLE_SELECTOR . ' input[value="' . $value . '"]');
+      $on === 'row' ? $this->assertRowsIncreased() : $this->assertColumnsIncreased();
+      return;
+    }
 
-      if ($on === 'row') {
-        $this->assertRowsIncreased();
-      }
-      else {
-        $this->assertColumnsIncreased();
-      }
+    $on_row = $on === 'row';
+    $counter = $on === 'row' ? DataCollectorTableTestForm::INITIAL_ROWS + 1 : DataCollectorTableTestForm::INITIAL_COLUMNS + 1;
+    foreach ($positions as $position) {
+      $this->executePositionedOperation($operation, $on, $position, $counter);
+    }
+  }
+
+  /**
+   * Executes an operation on a specific row or column position.
+   *
+   * @param string $operation
+   *   The operation type (e.g., 'delete', 'move_up', 'move_down').
+   * @param string $on
+   *   The target type: 'row' or 'column'.
+   * @param int $position
+   *   The 1-indexed position of the row or column to operate on.
+   * @param int $counter
+   *   (optional) A counter passed by reference to track the total number of
+   *   elements during deletion cycles.
+   *
+   * @throws \Behat\Mink\Exception\ElementNotFoundException
+   *   If the target container or button cannot be found.
+   */
+  protected function executePositionedOperation(string $operation, string $on, int $position, int &$counter = 0) {
+    $on_row = $on === 'row';
+    $container = $on_row ? $this->getRow($position) : $this->getColumnOperationCell($position);
+    $label = $this->getOperationLabel($operation, $on);
+
+    $container->pressButton($label);
+
+    if ($operation === 'delete') {
+      $locator = $on_row ? static::TABLE_ROW_SELECTOR : static::TABLE_COLUMN_SELECTOR;
+      $this->assertDeletionOperation($counter, $locator);
     }
     else {
-      $on_row = $on === 'row';
-      if ($on_row) {
-        $counter = DataCollectorTableTestForm::INITIAL_ROWS + 1;
-        $locator = static::TABLE_ROW_SELECTOR;
-      }
-      else {
-        $counter = DataCollectorTableTestForm::INITIAL_COLUMNS + 1;
-        $locator = static::TABLE_COLUMN_SELECTOR;
-      }
-      foreach ($positions as $position) {
-        if ($on_row) {
-          $button_selector = static::TABLE_ROW_SELECTOR . ':nth-child(' . $position . ') .data-collector-table--row--delete input[value="Delete row"]';
-        }
-        else {
-          $button_selector = static::TABLE_SELECTOR . ' .data-collector-table--column-deletes-row';
-          $button_selector .= ' .data-collector-table--column--delete:nth-child(' . $position . ') input[value="Delete column"]';
-        }
-        $this->pressAjaxButton($button_selector);
-        $this->assertDeletionOperation($counter, $locator);
-      }
+      $this->assertSession()->assertWaitOnAjaxRequest();
     }
+  }
+
+  /**
+   * Gets a specific row from the table body.
+   *
+   * @param int $position
+   *   The 1-indexed position of the row.
+   *
+   * @return \Behat\Mink\Element\NodeElement
+   *   The row element.
+   */
+  protected function getRow(int $position): NodeElement {
+    $rows = $this->getSession()->getPage()->findAll('css', static::TABLE_ROW_SELECTOR);
+    $this->assertGreaterThanOrEqual($position, count($rows), "Row $position exists.");
+    return $rows[$position - 1];
+  }
+
+  /**
+   * Gets a specific cell from the column operations row.
+   *
+   * @param int $position
+   *   The 1-indexed position of the column.
+   *
+   * @return \Behat\Mink\Element\NodeElement
+   *   The cell element containing the column operations.
+   */
+  protected function getColumnOperationCell(int $position): NodeElement {
+    $row = $this->getSession()->getPage()->find('css', static::TABLE_SELECTOR . ' .data-collector-table--column-deletes-row');
+    $this->assertNotEmpty($row, 'Column operations row exists.');
+    $cells = $row->findAll('css', 'td');
+    $this->assertGreaterThanOrEqual($position, count($cells), "Column $position operation cell exists.");
+    return $cells[$position - 1];
+  }
+
+  /**
+   * Gets the button label (title) for a specific operation.
+   *
+   * @param string $operation
+   *   The operation type.
+   * @param string $on
+   *   The target type ('row' or 'column').
+   *
+   * @return string
+   *   The button title label.
+   */
+  protected function getOperationLabel(string $operation, string $on): string {
+    return match ($operation) {
+      'delete' => $on === 'row' ? 'Delete row' : 'Delete column',
+      'move_up' => 'Move row up',
+      'move_down' => 'Move row down',
+      'move_left' => 'Move column left',
+      'move_right' => 'Move column right',
+      default => throw new \InvalidArgumentException("Unknown operation: $operation"),
+    };
   }
 
   /**
@@ -243,7 +352,7 @@ class DataCollectorTableTest extends WebDriverTestBase {
     $current_count--;
     $page = $this->getSession()->getPage();
     $targets = $page->findAll('css', $locator);
-    $this->assertTrue(count($targets) === $current_count);
+    $this->assertEquals($current_count, count($targets), "Expected $current_count elements after deletion, but found " . count($targets) . " using locator $locator");
   }
 
   /**

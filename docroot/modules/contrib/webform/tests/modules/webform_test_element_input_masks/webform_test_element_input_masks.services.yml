@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_test_element_input_masks\Hook\WebformTestElementInputMasksHooks:
+    class: Drupal\webform_test_element_input_masks\Hook\WebformTestElementInputMasksHooks
+    autowire: true

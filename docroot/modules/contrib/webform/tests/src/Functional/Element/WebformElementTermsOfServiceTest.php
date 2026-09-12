@@ -26,7 +26,7 @@ class WebformElementTermsOfServiceTest extends WebformElementBrowserTestBase {
   /**
    * Tests TermsOfService element.
    */
-  public function testTermsOfService() {
+  public function testTermsOfService(): void {
     $assert_session = $this->assertSession();
 
     // Check rendering.
@@ -34,7 +34,12 @@ class WebformElementTermsOfServiceTest extends WebformElementBrowserTestBase {
 
     // Check modal.
     $this->assertCssSelect('[data-webform-terms-of-service-type="modal"].form-item-terms-of-service-default');
-    $assert_session->responseContains('<input data-drupal-selector="edit-terms-of-service-default" type="checkbox" id="edit-terms-of-service-default" name="terms_of_service_default" value class="form-checkbox required" required="required" aria-required="true" />');
+    if (version_compare(\Drupal::VERSION, '11', '<')) {
+      $assert_session->responseContains('<input data-drupal-selector="edit-terms-of-service-default" type="checkbox" id="edit-terms-of-service-default" name="terms_of_service_default" value class="form-checkbox required" required="required" aria-required="true" />');
+    }
+    else {
+      $assert_session->responseContains('<input data-drupal-selector="edit-terms-of-service-default" type="checkbox" id="edit-terms-of-service-default" name="terms_of_service_default" value class="form-checkbox required" required="required" />');
+    }
     $assert_session->responseContains('<label for="edit-terms-of-service-default" class="option js-form-required form-required">I agree to the <a role="button" href="#terms">terms of service</a>. (default)</label>');
     $assert_session->responseContains('<div id="edit-terms-of-service-default--description" class="webform-element-description">');
     $assert_session->responseContains('<div id="webform-terms-of-service-terms_of_service_default--description" class="webform-terms-of-service-details js-hide">');
@@ -43,6 +48,9 @@ class WebformElementTermsOfServiceTest extends WebformElementBrowserTestBase {
 
     // Check slideout.
     $assert_session->responseContains('<label for="edit-terms-of-service-slideout" class="option">I agree to the <a role="button" href="#terms">terms of service</a>. (slideout)</label>');
+
+    // Check link.
+    $assert_session->responseContains('<label for="edit-terms-of-service-link" class="option">I agree to the <a href="/node/1">terms of service</a>. (link)</label>');
 
     // Check validation.
     $this->drupalGet('/webform/test_element_terms_of_service');
@@ -55,11 +63,13 @@ class WebformElementTermsOfServiceTest extends WebformElementBrowserTestBase {
       'terms_of_service_default' => TRUE,
       'terms_of_service_modal' => TRUE,
       'terms_of_service_slideout' => TRUE,
+      'terms_of_service_link' => TRUE,
     ];
     $this->submitForm($edit, 'Preview');
     $assert_session->responseContains('I agree to the terms of service. (default)');
     $assert_session->responseContains('I agree to the terms of service. (modal)');
     $assert_session->responseContains('I agree to the terms of service. (slideout)');
+    $assert_session->responseContains('I agree to the terms of service. (link)');
 
     // Check default title and auto incremented key.
     $this->drupalLogin($this->rootUser);

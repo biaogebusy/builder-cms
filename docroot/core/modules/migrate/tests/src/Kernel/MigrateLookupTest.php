@@ -6,12 +6,14 @@ namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\migrate\MigrateException;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Migrate Lookup service.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateLookupTest extends MigrateTestBase {
 
   use ContentTypeCreationTrait;

@@ -7,12 +7,14 @@ namespace Drupal\Tests\menu_link_content\Functional;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\system\Entity\Menu;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the menu link content delete UI.
- *
- * @group Menu
  */
+#[Group('Menu')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkContentDeleteFormTest extends BrowserTestBase {
 
   /**
@@ -50,7 +52,7 @@ class MenuLinkContentDeleteFormTest extends BrowserTestBase {
     $this->drupalGet($menu_link->toUrl('delete-form'));
     $this->assertSession()->pageTextContains("Are you sure you want to delete the custom menu link {$menu_link->label()}?");
     $this->assertSession()->linkExists('Cancel');
-    // Make sure cancel link points to link edit
+    // Make sure cancel link points to link edit.
     $this->assertSession()->linkByHrefExists($menu_link->toUrl('edit-form')->toString());
 
     \Drupal::service('module_installer')->install(['menu_ui']);

@@ -20,7 +20,7 @@
     window.history.replaceState(
       {},
       document.title,
-      `${window.location.pathname}?${params.toString()}`,
+      `${window.location.pathname}?${params.toString()}`
     );
   };
 })(Drupal);

@@ -13,15 +13,6 @@
         return;
       }
 
-      // The colorbox library uses jQuery.isFunction().
-      // This function was removed in jQuery 3.3.0.
-      // This is a workaround to avoid fixing the library.
-      if (!$.isFunction) {
-        $.isFunction = function (obj) {
-          return typeof obj === 'function' || false;
-        };
-      }
-
       if (settings.colorbox.mobiledetect && window.matchMedia) {
         // Disable Colorbox for small screens.
         var mq = window.matchMedia('(max-device-width: ' + settings.colorbox.mobiledevicewidth + ')');
@@ -81,6 +72,47 @@
 
         // Disallow dangerous data attributes.
         delete this.dataset.cboxIframeAttrs;
+        delete this.dataset.cboxCreateiframe;
+        delete this.dataset.cboxCreateimg;
+
+        // If cboxImgAttrs is used, limit attributes to avoid rendering HTML.
+        let imgAttrs = this.dataset.cboxImgAttrs;
+        if (imgAttrs) {
+          const allowedAttrs = [
+            'alt',
+            'width',
+            'height',
+            'title',
+            'loading',
+            'decoding',
+            'referrerpolicy',
+            'usemap',
+            'longdesc',
+            'role',
+          ];
+          const ariaPattern = /^aria-[a-z-]+$/;
+          try {
+            imgAttrs = JSON.parse(imgAttrs);
+            if (typeof imgAttrs === 'object') {
+              // Limit attributes to allow list and aria-* attributes.
+              for (const attr in imgAttrs) {
+                const lowerAttr = attr.toLowerCase();
+                if (!allowedAttrs.includes(lowerAttr) && !ariaPattern.test(lowerAttr)) {
+                  delete imgAttrs[attr];
+                }
+              }
+              this.dataset.cboxImgAttrs = JSON.stringify(imgAttrs);
+            }
+            else {
+              delete this.dataset.cboxImgAttrs;
+            }
+          }
+          catch (e) {
+            // Improper value.
+            delete this.dataset.cboxImgAttrs;
+          }
+        }
+
 
         // Sanitize other data attributes.
         var sanitizeDataList = ['cboxNext', 'cboxPrevious', 'cboxCurrent',

@@ -46,7 +46,7 @@ class SettingsTrayIntegrationTest extends SettingsTrayTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getTestThemes() {
+  protected static function getTestThemes(): array {
     // Make sure to test with Olivero first to avoid
     // https://www.drupal.org/project/quickedit/issues/3262273
     // @todo Remove when that is fixed.
@@ -84,7 +84,7 @@ class SettingsTrayIntegrationTest extends SettingsTrayTestBase {
     $page = $this->getSession()->getPage();
     $block_plugin = 'system_powered_by_block';
 
-    foreach ($this->getTestThemes() as $theme) {
+    foreach (static::getTestThemes() as $theme) {
       $this->enableTheme($theme);
 
       $block = $this->placeBlock($block_plugin, ['region' => 'header']);
@@ -153,13 +153,11 @@ class SettingsTrayIntegrationTest extends SettingsTrayTestBase {
     $page->find('css', '#block-custom .contextual button')->press();
     $links = $page->findAll('css', "#block-custom .contextual-links li a");
     $link_labels = [];
-    /** @var \Behat\Mink\Element\NodeElement $link */
+    /** @var \Behat\Mink\Element\NodeElement[] $link */
     foreach ($links as $link) {
       $link_labels[$link->getAttribute('href')] = $link->getText();
     }
     $href = array_search('Quick edit', $link_labels);
-    $this->assertEquals('', $href);
-    $href = array_search('Quick edit settings', $link_labels);
     $destination = (string) $this->loggedInUser->toUrl()->toString();
     $this->assertStringContainsString("/admin/structure/block/manage/custom/settings-tray?destination=$destination", $href);
   }

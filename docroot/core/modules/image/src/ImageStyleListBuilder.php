@@ -2,6 +2,7 @@
 
 namespace Drupal\image;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
@@ -32,14 +33,16 @@ class ImageStyleListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
     $flush = [
       'title' => $this->t('Flush'),
       'weight' => 200,
       'url' => $entity->toUrl('flush-form'),
     ];
 
-    return parent::getDefaultOperations($entity) + [
+    return parent::getDefaultOperations($entity, $cacheability) + [
       'flush' => $flush,
     ];
   }

@@ -1,0 +1,79 @@
+/**
+ * @file
+ * Status badge and flag styles.
+ */
+
+.gin-status,
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) .toolbar-badge,
+.views-field .marker,
+.gin-beta-flag,
+.gin-experimental-flag,
+.gin-new-flag {
+  display: inline-block;
+  padding: 0.125em 0.75em;
+  vertical-align: 0.125em;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-l);
+  font-size: var(--admin-font-size-2xs);
+  font-weight: var(--admin-font-weight-semibold);
+  font-variation-settings: initial;
+}
+
+.gin-status,
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) .toolbar-badge,
+.views-field .marker,
+.gin-beta-flag,
+.gin-experimental-flag,
+.pb-project-categories__item,
+.pb-module-page__categories-list-item {
+  color: light-dark(#626262, #c3cbd0);
+  background: light-dark(#eee, rgb(255, 255, 255, 0.12));
+}
+
+.gin-status--success,
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) .toolbar-badge--success,
+.gin-new-flag,
+.views-field .marker--published,
+.pb-actions .project_status-indicator {
+  color: var(--admin-color-text-success);
+  background-color: var(--admin-color-bg-success);
+}
+
+.gin-status--success .gin-status-icon {
+  background-color: currentColor;
+  mask-image: url("../../migration/media/icons/messages/status.svg");
+}
+
+.gin-status--warning,
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) .toolbar-badge--warning {
+  color: var(--admin-color-text-warning);
+  background: var(--admin-color-bg-warning);
+}
+
+.gin-status--warning .gin-status-icon,
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) .toolbar-badge--warning .gin-status-icon {
+  background-color: currentColor;
+  mask-image: url("../../migration/media/icons/messages/warning.svg");
+}
+
+.gin-status--danger,
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) .toolbar-badge--danger {
+  color: var(--admin-color-text-error);
+  background: var(--admin-color-bg-error);
+}
+
+.gin-status--danger .gin-status-icon,
+:is(#extra-specificity-hack, .gin--core-navigation [data-drupal-admin-styles]) .toolbar-badge--danger .gin-status-icon {
+  background-color: currentColor;
+  mask-image: url("../../migration/media/icons/messages/error.svg");
+}
+
+.gin-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--admin-space-2xs);
+}
+
+.gin-status-icon {
+  margin-inline-start: -0.5em;
+}

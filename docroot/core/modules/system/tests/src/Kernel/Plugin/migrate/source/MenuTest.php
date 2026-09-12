@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Kernel\Plugin\migrate\source;
 
+use Drupal\system\Plugin\migrate\source\Menu;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests menu source plugin.
- *
- * @covers Drupal\system\Plugin\migrate\source\Menu
- *
- * @group system
  */
+#[CoversClass(Menu::class)]
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class MenuTest extends MigrateSqlSourceTestBase {
 
   /**

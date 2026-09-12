@@ -2,11 +2,16 @@
 
 namespace Drupal\Tests\paragraphs\Functional\WidgetLegacy;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests the configuration of paragraphs in relation to ief.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsInlineEntityFormTest extends ParagraphsTestBase {
 
   /**

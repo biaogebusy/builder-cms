@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 use Drupal\media\Entity\Media;
+use Drupal\media_library\MediaLibraryUiBuilder;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the media library view with contextual filters.
- *
- * @covers \Drupal\media_library\MediaLibraryUiBuilder::buildMediaLibraryView
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
+#[CoversMethod(MediaLibraryUiBuilder::class, 'buildMediaLibraryView')]
 class MediaLibraryContextualFilterTest extends MediaLibraryTestBase {
 
   /**

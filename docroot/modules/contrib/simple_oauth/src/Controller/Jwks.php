@@ -26,15 +26,15 @@ class Jwks implements ContainerInjectionInterface {
   private $user;
 
   /**
-   * The configuration object.
+   * The configuration factory.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  private $config;
+  private ConfigFactoryInterface $configFactory;
 
   private function __construct(AccountProxyInterface $user, ConfigFactoryInterface $config_factory, protected ClassResolverInterface $classResolver) {
     $this->user = $user->getAccount();
-    $this->config = $config_factory->get('simple_oauth.settings');
+    $this->configFactory = $config_factory;
   }
 
   /**
@@ -44,7 +44,8 @@ class Jwks implements ContainerInjectionInterface {
    *   The response.
    */
   public function handle() {
-    if ($this->config->get('disable_openid_connect')) {
+    $config = $this->configFactory->get('simple_oauth.settings');
+    if ($config->get('disable_openid_connect')) {
       throw new NotFoundHttpException('Not Found');
     }
     return new JsonResponse(($this->classResolver->getInstanceFromDefinition(JwksEntity::class))->getKeys());

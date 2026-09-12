@@ -6,14 +6,17 @@ namespace Drupal\Tests\demo_umami\FunctionalJavascript;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\FunctionalJavascriptTests\PerformanceTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests demo_umami profile performance.
- *
- * @group OpenTelemetry
- * @group #slow
- * @requires extension apcu
  */
+#[Group('OpenTelemetry')]
+#[Group('#slow')]
+#[RequiresPhpExtension('apcu')]
+#[RunTestsInSeparateProcesses]
 class OpenTelemetryFrontPagePerformanceTest extends PerformanceTestBase {
 
   /**
@@ -34,15 +37,33 @@ class OpenTelemetryFrontPagePerformanceTest extends PerformanceTestBase {
    * Logs front page tracing data with a cold cache.
    */
   protected function testFrontPageColdCache(): void {
-    // @todo Chromedriver doesn't collect tracing performance logs for the very
-    //   first request in a test, so warm it up.
-    //   https://www.drupal.org/project/drupal/issues/3379750
-    $this->drupalGet('user/login');
-    $this->rebuildAll();
-    $this->collectPerformanceData(function () {
+    // Request the front page twice then clear caches, this allows asset
+    // aggregate requests to complete so they are excluded from the performance
+    // test itself. Including the asset aggregates would lead to
+    // a non-deterministic test since they happen in parallel and therefore post
+    // response tasks run in different orders each time.
+    $this->drupalGet('<front>');
+    $this->drupalGet('<front>');
+    sleep(2);
+    $this->clearCaches();
+    $performance_data = $this->collectPerformanceData(function () {
       $this->drupalGet('<front>');
     }, 'umamiFrontPageColdCache');
     $this->assertSession()->pageTextContains('Umami');
+
+    $expected = [
+      'QueryCount' => 184,
+      'CacheGetCount' => 237,
+      'CacheSetCount' => 241,
+      'CacheDeleteCount' => 0,
+      'CacheTagLookupQueryCount' => 24,
+      'CacheTagInvalidationCount' => 0,
+      'ScriptCount' => 1,
+      'ScriptBytes' => 12000,
+      'StylesheetCount' => 2,
+      'StylesheetBytes' => 39150,
+    ];
+    $this->assertMetrics($expected, $performance_data);
   }
 
   /**
@@ -67,17 +88,20 @@ class OpenTelemetryFrontPagePerformanceTest extends PerformanceTestBase {
     $expected_queries = [];
     $recorded_queries = $performance_data->getQueries();
     $this->assertSame($expected_queries, $recorded_queries);
-    $this->assertSame(0, $performance_data->getQueryCount());
-    $this->assertSame(1, $performance_data->getCacheGetCount());
-    $this->assertSame(0, $performance_data->getCacheSetCount());
-    $this->assertSame(0, $performance_data->getCacheDeleteCount());
-    $this->assertSame(0, $performance_data->getCacheTagChecksumCount());
-    $this->assertSame(1, $performance_data->getCacheTagIsValidCount());
-    $this->assertSame(0, $performance_data->getCacheTagInvalidationCount());
-    $this->assertSame(1, $performance_data->getScriptCount());
-    $this->assertLessThan(12000, $performance_data->getScriptBytes());
-    $this->assertSame(2, $performance_data->getStylesheetCount());
-    $this->assertLessThan(42000, $performance_data->getStylesheetBytes());
+
+    $expected = [
+      'QueryCount' => 0,
+      'CacheGetCount' => 1,
+      'CacheSetCount' => 0,
+      'CacheDeleteCount' => 0,
+      'CacheTagInvalidationCount' => 0,
+      'CacheTagLookupQueryCount' => 1,
+      'ScriptCount' => 1,
+      'ScriptBytes' => 11850,
+      'StylesheetCount' => 2,
+      'StylesheetBytes' => 38850,
+    ];
+    $this->assertMetrics($expected, $performance_data);
   }
 
   /**
@@ -89,12 +113,27 @@ class OpenTelemetryFrontPagePerformanceTest extends PerformanceTestBase {
   protected function testFrontPageCoolCache(): void {
     // First of all visit the front page to ensure the image style exists.
     $this->drupalGet('<front>');
+    sleep(2);
     $this->clearCaches();
     // Now visit a different page to warm non-route-specific caches.
     $this->drupalGet('user/login');
-    $this->collectPerformanceData(function () {
+    $performance_data = $this->collectPerformanceData(function () {
       $this->drupalGet('<front>');
     }, 'umamiFrontPageCoolCache');
+
+    $expected = [
+      'QueryCount' => 60,
+      'CacheGetCount' => 174,
+      'CacheSetCount' => 75,
+      'CacheDeleteCount' => 0,
+      'CacheTagInvalidationCount' => 0,
+      'CacheTagLookupQueryCount' => 19,
+      'ScriptCount' => 1,
+      'ScriptBytes' => 12000,
+      'StylesheetCount' => 2,
+      'StylesheetBytes' => 38850,
+    ];
+    $this->assertMetrics($expected, $performance_data);
   }
 
   /**

@@ -26,7 +26,7 @@ abstract class FieldValidationRuleFormBase extends FormBase {
   /**
    * The fieldValidationRuleSet.
    *
-   * @var \Drupal\field_validation\FieldValidationRuleSetInterface
+   * @var \Drupal\field_validation\FieldValidationRuleSetInterface|null
    */
   protected $fieldValidationRuleSet;
 
@@ -99,7 +99,7 @@ abstract class FieldValidationRuleFormBase extends FormBase {
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   * @param \Drupal\field_validation\FieldValidationRuleSetInterface $field_validation_rule_set
+   * @param \Drupal\field_validation\FieldValidationRuleSetInterface|null $field_validation_rule_set
    *   The field_validation_rule_set.
    * @param string $field_validation_rule
    *   The field_validation_rule ID.
@@ -111,7 +111,7 @@ abstract class FieldValidationRuleFormBase extends FormBase {
    *
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    */
-  public function buildForm(array $form, FormStateInterface $form_state, FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL) {
     $this->fieldValidationRuleSet = $field_validation_rule_set;
     try {
       $this->fieldValidationRule = $this->prepareFieldValidationRule($field_validation_rule);
@@ -372,8 +372,30 @@ abstract class FieldValidationRuleFormBase extends FormBase {
     }
     $field_validation_rule_data = (new FormState())->setValues($data);
     $this->fieldValidationRule->validateConfigurationForm($form, $field_validation_rule_data);
+    // Errors set on the plugin's own configuration form state are recorded
+    // on that separate FormState object, so they must be copied onto the
+    // real $form_state to actually be displayed to the user.
+    foreach ($field_validation_rule_data->getErrors() as $name => $message) {
+      $form_state->setErrorByName('data][' . $name, $message);
+    }
     // Update the original form values.
     $form_state->setValue('data', $field_validation_rule_data->getValues());
+
+    // "Direct" validate mode attaches the Symfony constraint straight to
+    // the field definition, bypassing FieldValidationConstraintValidator
+    // entirely - which is the only place role scoping and the condition
+    // check are enforced. The roles/condition fields are only hidden via
+    // #states (a client-side, JS-only affordance), not removed from the
+    // form, so a value set before switching to Direct would otherwise be
+    // silently saved and silently never enforced. Block the save instead.
+    if (($data['validate_mode'] ?? 'default') === 'direct') {
+      $roles = array_filter($form_state->getValue('roles') ?? []);
+      $condition = $form_state->getValue('condition') ?? [];
+      $condition_is_set = !empty($condition['field']) && !empty($condition['operator']);
+      if (!empty($roles) || $condition_is_set) {
+        $form_state->setErrorByName('data][validate_mode', $this->t('"Direct" validate mode does not enforce role or condition scoping - it bypasses both. Clear the selected roles and the condition, or use "Default" validate mode instead.'));
+      }
+    }
   }
 
   /**

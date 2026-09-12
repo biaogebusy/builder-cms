@@ -4,10 +4,12 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share_client\Entity\EntityImportStatusInterface;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
@@ -15,19 +17,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * General default data processor.
- *
- * @ImportProcessor(
- *   id = "default_data_processor",
- *   label = @Translation("Default data processor"),
- *   description = @Translation("Define import policy and general JSON data preparation to have Entity Share import working."),
- *   stages = {
- *     "is_entity_importable" = -10,
- *     "prepare_importable_entity_data" = -100,
- *     "post_entity_save" = 0,
- *   },
- *   locked = true,
- * )
  */
+#[ImportProcessor(
+  id: 'default_data_processor',
+  label: new TranslatableMarkup('Default data processor'),
+  description: new TranslatableMarkup('Define import policy and general JSON data preparation to have Entity Share import working.'),
+  stages: [
+    'is_entity_importable' => -10,
+    'prepare_importable_entity_data' => -100,
+    'post_entity_save' => 0,
+  ],
+  locked: TRUE,
+)]
 class DefaultDataProcessor extends ImportProcessorPluginBase implements PluginFormInterface {
 
   /**

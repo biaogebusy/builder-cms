@@ -23,7 +23,7 @@ class WidgetValidationManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/EntityBrowser/WidgetValidation', $namespaces, $module_handler, 'Drupal\entity_browser\WidgetValidationInterface', 'Drupal\entity_browser\Annotation\EntityBrowserWidgetValidation');
+    parent::__construct('Plugin/EntityBrowser/WidgetValidation', $namespaces, $module_handler, 'Drupal\entity_browser\WidgetValidationInterface', 'Drupal\entity_browser\Attribute\EntityBrowserWidgetValidation', 'Drupal\entity_browser\Annotation\EntityBrowserWidgetValidation');
 
     $this->alterInfo('entity_browser_widget_validation_info');
     $this->setCacheBackend($cache_backend, 'entity_browser_widget_validation_plugins');

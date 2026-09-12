@@ -7,7 +7,7 @@
     "require": {
         "php": "^8.0",
         "drupal/core": "^10.2 || ^11",
-        "symfony/expression-language": "^6.3",
+        "symfony/expression-language": "^6.3 || ^7",
         "symfony/intl": "^6.3"
     },
     "minimum-stability": "dev"

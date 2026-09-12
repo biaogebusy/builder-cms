@@ -38,9 +38,12 @@ abstract class BlazyStylePluginBase extends BlazyStyleBase implements BlazyStyle
   protected function buildElement(array &$element, $row, $delta) {
     $this->manager->hashtag($element);
 
+    /** @var array $settings */
     $settings = &$element['#settings'];
-    $blazies  = $this->reset($settings);
-    $_image   = $settings['image'] ?? NULL;
+
+    /** @var \Drupal\blazy\BlazySettings $blazies */
+    $blazies = $this->reset($settings);
+    $_image = $settings['image'] ?? NULL;
 
     $blazies->set('delta', $delta);
     $captions = $this->getCaption($delta, $settings, $row);
@@ -59,6 +62,7 @@ abstract class BlazyStylePluginBase extends BlazyStyleBase implements BlazyStyle
     // Supports individual grid/box image style either inline IMG, or CSS.
     $element['#delta'] = $delta;
     if ($_image || $captions) {
+      /** @var array $image */
       $image = $this->getImageRenderable($settings, $row, $delta);
       $rendered = $image['rendered'] ?? [];
       $element['#item'] = $image['raw'] ?? NULL;
@@ -140,7 +144,7 @@ abstract class BlazyStylePluginBase extends BlazyStyleBase implements BlazyStyle
   /**
    * Returns the relevant elements based on the configuration.
    *
-   * @todo remove for BlazyElementTrait if similar to field formatters.
+   * @todo deprecate and remove for BlazyElementTrait if similar to field formatters.
    */
   protected function toElement($blazies, array &$data, array $captions): void {
     $delta    = $data['#delta'] ?? 0;
@@ -251,6 +255,7 @@ abstract class BlazyStylePluginBase extends BlazyStyleBase implements BlazyStyle
           $options['classes'][$field] = $field_names[$field];
         }
 
+        /** @var bool $blazies */
         $blazies = strpos($handler['field'], 'blazy_') !== FALSE;
         if ($blazies) {
           $options['images'][$field] = $field_names[$field];
@@ -266,6 +271,7 @@ abstract class BlazyStylePluginBase extends BlazyStyleBase implements BlazyStyle
     $definition['plugin_id'] = $this->getPluginId();
     $definition['settings'] = $this->options;
     $definition['_views'] = TRUE;
+    $definition['field_api_classes'] = $this->options['field_api_classes'] ?? FALSE;
 
     // Provides the requested fields based on available $options.
     foreach ($defined_options as $key) {
@@ -308,7 +314,7 @@ abstract class BlazyStylePluginBase extends BlazyStyleBase implements BlazyStyle
   /**
    * Builds the item using theme_blazy(), if so-configured.
    *
-   * @todo remove for BlazyElementTrait if similar to field formatters.
+   * @todo deprecate and remove for BlazyElementTrait if similar to field formatters.
    */
   private function themeBlazy(array &$element, array $captions, $delta): void {
     $internal = $element;
@@ -329,7 +335,7 @@ abstract class BlazyStylePluginBase extends BlazyStyleBase implements BlazyStyle
   /**
    * Provides relevant attributes to feed into theme_blazy().
    *
-   * @todo remove for BlazyElementTrait if similar to field formatters.
+   * @todo deprecate and remove for BlazyElementTrait if similar to field formatters.
    */
   private function toBlazy(array &$data, array &$captions, $delta): array {
     // Call manager not formatter due to sub-module deviations.

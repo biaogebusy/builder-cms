@@ -97,7 +97,8 @@ class ResourceObject implements CacheableDependencyInterface, ResourceIdentifier
     $this->fields = $fields;
     $this->links = $links->withContext($this);
 
-    // If the specified language empty it falls back the same way as in the entity system
+    // If the specified language empty it falls back the same way as in the
+    // entity system.
     // @see \Drupal\Core\Entity\EntityBase::language()
     $this->language = $language ?: new Language(['id' => LanguageInterface::LANGCODE_NOT_SPECIFIED]);
   }
@@ -297,7 +298,7 @@ class ResourceObject implements CacheableDependencyInterface, ResourceIdentifier
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The config entity from which fields should be extracted.
    *
-   * @return \Drupal\Core\Field\FieldItemListInterface[]
+   * @return array<string, \Drupal\Core\Field\FieldItemListInterface<\Drupal\Core\Field\FieldItemInterface>>
    *   The fields extracted from a content entity.
    */
   protected static function extractContentEntityFields(ResourceType $resource_type, ContentEntityInterface $entity) {

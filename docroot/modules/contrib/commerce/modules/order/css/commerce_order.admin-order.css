@@ -1,0 +1,189 @@
+/**
+ * @file
+ * Commerce order admin page overrides.
+ */
+
+/* Cards */
+.commerce-admin-card .form-item {
+  margin: 0.25rem 0;
+}
+
+.commerce-admin-card .form-item:first-child {
+  margin-top: 0;
+}
+
+.order-admin__profile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 61rem) {
+  .order-admin__profile-cards {
+    flex-direction: row;
+  }
+
+  .order-admin__profile-cards > div {
+    flex: 1;
+  }
+}
+
+.order-admin__profile-cards .address {
+  margin-top: 0;
+}
+
+.order-admin__profile-cards .card {
+  height: 100%;
+  margin-bottom: 0;
+}
+
+/* Local actions */
+.order-admin__local-actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.order-admin__local-actions .local-actions__item,
+.order-admin__local-actions .local-actions__item .button {
+  margin: 0;
+}
+
+.order-admin__local-actions .local-actions__item .button::before {
+  content: none;
+}
+
+/* State fields */
+.order-admin__state-fields .field:not(:last-child) {
+  margin-bottom: 0.25rem;
+}
+
+/* Draft warning */
+.messages.messages--warning .messages__content {
+  margin-left: 0;
+}
+
+/* Footnote */
+.order-admin__footnote {
+  margin-top: 1rem;
+  margin-left: 1.5rem;
+  color: var(--commerce-color--neutral);
+  font-size: 0.875rem;
+}
+
+.order-admin__footnote-item {
+  display: block;
+}
+
+.order-admin__footnote-item:not(:last-child) {
+  margin-bottom: 0.25rem;
+}
+
+/* Dialog messages fix for forms */
+.ui-dialog-content form .messages {
+  margin-top: 1rem;
+}
+
+/* Order item title */
+.commerce-order-item-title {
+  margin-bottom: 0.5rem;
+}
+
+/* Order item inline operations */
+.commerce-order-item-inline-operations {
+  font-size: 0.875rem;
+}
+
+.commerce-order-item-inline-operations__item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.commerce-order-item-inline-operations__item:not(:last-child) {
+  margin-right: 0.25rem;
+}
+
+.commerce-order-item-inline-operations__item:not(:last-child)::after {
+  margin-left: 0.25rem;
+  content: "|";
+  color: var(--commerce-color--neutral);
+}
+
+/* Order item table */
+.view-commerce-order-item-table-admin .views-table th {
+  white-space: nowrap;
+}
+
+.view-commerce-order-item-table-admin .views-table td {
+  vertical-align: top;
+}
+
+.view-commerce-order-item-table-admin .views-table .views-field-title {
+  width: 99%;
+}
+
+/* Activity table */
+.view-commerce-activity {
+  margin-bottom: 1rem;
+}
+
+.view-commerce-activity .views-table td {
+  vertical-align: top;
+}
+
+.view-commerce-activity .views-table p {
+  margin: 0;
+}
+
+/* Order item inline form */
+.commerce-order-items-inline-form {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background-color: var(--commerce-color--light);
+  gap: 1.5rem;
+}
+
+.dialog-off-canvas-main-canvas .commerce-order-items-inline-form {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.commerce-order-items-inline-form .form-item.form-type--commerce-number {
+  margin-top: 1rem;
+}
+
+.commerce-order-items-inline-form .form-item {
+  margin: 0;
+}
+
+.commerce-order-item-inline-form__actions {
+  grid-column: 1 / -1;
+  z-index: 10;
+}
+
+/* Order items widget table */
+.commerce-order-items-widget-table th {
+  white-space: nowrap;
+}
+
+.commerce-order-items-widget-table__title {
+  width: 99%;
+}
+
+.commerce-order-items-widget-table td:has(.commerce-order-items-inline-form) {
+  padding: 0;
+}
+
+.commerce-order-items-widget-table .order-item-operations {
+  white-space: nowrap;
+}
+
+/* Inline form within widget table */
+.commerce-order-items-widget-table .commerce-order-items-inline-form .commerce-order-item-inline-form__actions {
+  text-align: right;
+}

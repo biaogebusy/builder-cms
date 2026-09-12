@@ -2,6 +2,7 @@
 
 namespace Drupal\ai_test\Hook;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -19,7 +20,7 @@ class EntityOperationHook {
    * Implements hook_entity_operation().
    */
   #[Hook('entity_operation')]
-  public function echoEntityOperation(EntityInterface $entity) {
+  public function echoEntityOperation(EntityInterface $entity, CacheableMetadata $cacheability) {
     return $entity instanceof AIMockProviderResult ? [
       'export' => [
         'title' => $this->t('Export to test'),

@@ -12,7 +12,7 @@
  * - children: (optional) The children of the element, may not be set.
  * - value: (optional) The value of the element, may not be set.
  *
- * @see template_preprocess_details()
+ * @see \Drupal\Core\Form\FormPreprocess::preprocessDetails()
  * @see olivero_preprocess_details()
  */
 #}
@@ -50,7 +50,8 @@
       </div>
     {% endif %}
     {%- if description -%}
-      <div class="olivero-details__description">{{ description }}</div>
+      {% set description_attributes = create_attribute({id: attributes['aria-describedby']}) %}
+      <div{{ description_attributes.addClass(['olivero-details__description']) }}>{{ description }}</div>
     {%- endif -%}
     {%- if children -%}
       {{ children }}

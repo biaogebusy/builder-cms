@@ -6,14 +6,18 @@ namespace Drupal\Tests\file\Kernel\Plugin\Validation\Constraint;
 
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
+use Drupal\file\Plugin\Validation\Constraint\FileIsImageConstraintValidator;
 use Drupal\Tests\file\Kernel\Validation\FileValidatorTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the FileIsImageConstraintValidator.
- *
- * @group file
- * @coversDefaultClass \Drupal\file\Plugin\Validation\Constraint\FileIsImageConstraintValidator
  */
+#[CoversClass(FileIsImageConstraintValidator::class)]
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileIsImageConstraintValidatorTest extends FileValidatorTestBase {
 
   /**
@@ -38,19 +42,17 @@ class FileIsImageConstraintValidatorTest extends FileValidatorTestBase {
 
     $this->image = File::create();
     $this->image->setFileUri('core/misc/druplicon.png');
-    /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
-    $this->image->setFilename($file_system->basename($this->image->getFileUri()));
+    $this->image->setFilename(basename($this->image->getFileUri()));
 
     $this->nonImage = File::create();
     $this->nonImage->setFileUri('core/assets/vendor/jquery/jquery.min.js');
-    $this->nonImage->setFilename($file_system->basename($this->nonImage->getFileUri()));
+    $this->nonImage->setFilename(basename($this->nonImage->getFileUri()));
   }
 
   /**
    * This ensures a specific file is actually an image.
    *
-   * @covers ::validate
+   * @legacy-covers ::validate
    */
   public function testFileIsImage(): void {
     $this->assertFileExists($this->image->getFileUri());

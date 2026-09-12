@@ -1,5 +1,4 @@
 webform_jqueryui_datepicker.element:
-  version: VERSION
   css:
     component:
       css/webform_jqueryui_datepicker.element.css: {}
@@ -8,7 +7,6 @@ webform_jqueryui_datepicker.element:
   dependencies:
     - core/drupalSettings
     - core/drupal.date
-    - core/modernizr
     - core/jquery
     - core/once
     - jquery_ui_datepicker/datepicker

@@ -3,6 +3,7 @@
 namespace Drupal\ai_automators\Plugin\FieldWidgetAction;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -11,16 +12,11 @@ use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 /**
  * The Metatag Firehose action for AI-assisted metatag generation.
  *
- * This plugin integrates with the Metatag module's metatag_firehose widget
- * to enable AI-powered generation and refinement of metatag data.
- *
- * Known limitations:
- * - The metatag_firehose widget renders in the sidebar, which may affect
- *   the AJAX response targeting and form element discovery.
- * - Metatag stores data as serialized arrays rather than typical field values,
- *   requiring special handling in saveFormValues().
- * - The widget structure uses nested fieldsets for tag groups, which differs
- *   from standard field widget patterns.
+ * Uses the legacy dispatch (custom aiAutomatorsAjax + saveFormValues) —
+ * metatag_firehose renders nested fieldsets for tag groups, stores values
+ * as serialized JSON rather than typical field properties, and renders in
+ * the sidebar region, none of which map cleanly to the generic setFormInput
+ * user-input contract.
  *
  * @see \Drupal\metatag\Plugin\Field\FieldWidget\MetatagFirehose
  */
@@ -35,36 +31,39 @@ class Metatag extends AutomatorBaseAction {
   /**
    * {@inheritdoc}
    *
-   * Metatag fields don't use a simple 'value' property. Instead, they store
-   * individual metatag values (title, description, keywords, etc.) as an
-   * associative array. We'll need to handle this differently in our methods.
+   * Opt out of submit-phase automator run — saveFormValues must modify the
+   * REBUILT form's render tree to carry new tag values into the AJAX
+   * response.
    */
-  public string $formElementProperty = 'value';
+  public function runAutomatorSubmit(array &$form, FormStateInterface $form_state): void {
+  }
 
   /**
-   * Ajax handler for Metatag Automators.
-   *
-   * This method handles the AJAX callback when an automator action is
-   * triggered on the metatag_firehose widget. Due to the sidebar placement
-   * and nested structure of the Metatag UI, special care is needed to
-   * locate and return the correct form element.
-   *
    * {@inheritdoc}
+   *
+   * No-op: Metatag delivers values via saveFormValues (form render tree),
+   * not $form_state->getUserInput().
+   */
+  protected function setFormInput(FieldableEntityInterface $entity, FormStateInterface $form_state, $form_key): void {
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Runs the automator on the rebuilt form so saveFormValues can modify
+   * the tag-group fieldsets that are about to be sent in the AJAX response.
    */
   public function aiAutomatorsAjax(array &$form, FormStateInterface $form_state) {
-    // Get the triggering element, as it contains the settings.
     $triggering_element = $form_state->getTriggeringElement();
-    // Attempt to get context directly from the triggering element properties.
     $form_key = $triggering_element['#field_widget_action_field_name'] ?? NULL;
-
-    // Fallback logic if properties are missing.
     if ($form_key === NULL) {
       $array_parents = $triggering_element['#array_parents'];
       array_pop($array_parents);
-      // Determine form key from parents (usually index 0).
-      $form_key = $array_parents[0];
+      $form_key = $array_parents[0] ?? NULL;
     }
-
+    if (!$form_key || !isset($form[$form_key])) {
+      return [];
+    }
     return $this->populateAutomatorValues($form, $form_state, $form_key, NULL);
   }
 

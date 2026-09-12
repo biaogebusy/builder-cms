@@ -1,0 +1,9 @@
+# Schema for the CKEditor 5 Source Editing Enhanced plugin configuration.
+
+ckeditor5.plugin.ckeditor5_premium_features_source_editing_enhanced__source_editing_enhanced:
+  type: mapping
+  label: 'Source Editing Enhanced settings'
+  mapping:
+    theme:
+      type: string
+      label: 'Source editor theme'

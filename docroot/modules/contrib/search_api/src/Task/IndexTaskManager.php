@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Event\SearchApiEvents;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -33,7 +34,7 @@ class IndexTaskManager implements IndexTaskManagerInterface, EventSubscriberInte
    * {@inheritdoc}
    */
   public static function getSubscribedEvents(): array {
-    $events['search_api.task.' . self::TRACK_ITEMS_TASK_TYPE][] = ['trackItems'];
+    $events[SearchApiEvents::EXECUTE_TASK_EVENT_PREFIX . self::TRACK_ITEMS_TASK_TYPE][] = ['trackItems'];
 
     return $events;
   }

@@ -1,0 +1,53 @@
+admin.comments:
+  css:
+    theme:
+      css/comments.admin.css: { }
+  dependencies:
+    - ckeditor5_premium_features_collaboration/admin.comments-archive
+
+admin.comments-archive:
+  css:
+    theme:
+      css/comments-archive.admin.css: { }
+
+admin.revision-history:
+  css:
+    theme:
+      css/revision-history.admin.css: { }
+
+admin.track-changes:
+  css:
+    theme:
+      css/track-changes.admin.css: { }
+
+revision-history-integration:
+  version: 20251230
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  css:
+      theme:
+        ../../css/revision-history.css: { }
+  js:
+    js/build/revisionHistoryAdapter.js: { minified: true }
+  dependencies:
+    - ckeditor5_premium_features/collaboration-integration-base
+    - ckeditor5_premium_features_collaboration/revision-history
+
+collaboration:
+  dependencies:
+    - ckeditor5_premium_features/collaboration-integration-base
+    - ckeditor5_premium_features_collaboration/track-changes
+    - ckeditor5_premium_features_collaboration/comments
+    - core/ckeditor5.list
+
+collaboration-integration:
+  version: 20261215
+  license:
+    name: GNU-GPL-2.0-or-later
+    url: https://raw.githubusercontent.com/ckeditor/ckeditor5/master/LICENSE.md
+    gpl-compatible: true
+  js:
+    js/build/userAdapter.js: { minified: true }
+    js/build/trackChangesAdapter.js: { minified: true }

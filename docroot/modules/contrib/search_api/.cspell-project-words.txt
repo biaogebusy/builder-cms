@@ -6,6 +6,7 @@ freeland
 geofield
 hideable
 hurlbat
+inlines
 montara
 nonspacing
 postprocesses

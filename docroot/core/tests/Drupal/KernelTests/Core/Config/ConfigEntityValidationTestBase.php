@@ -17,14 +17,12 @@ use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\Core\Validation\Plugin\Validation\Constraint\FullyValidatableConstraint;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 // cspell:ignore kthxbai
 
 /**
  * Base class for testing validation of config entities.
- *
- * @group config
- * @group Validation
  */
 abstract class ConfigEntityValidationTestBase extends KernelTestBase {
 
@@ -48,9 +46,9 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
    * strong UI presence. For example: REST resource configuration entities and
    * entity view displays.
    *
-   * @see \Drupal\Core\Entity\EntityInterface::label()
-   *
    * @var bool
+   *
+   * @see \Drupal\Core\Entity\EntityInterface::label()
    */
   protected bool $hasLabel = TRUE;
 
@@ -151,9 +149,8 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
    *   A machine name to test.
    * @param bool $is_expected_to_be_valid
    *   Whether this machine name is expected to be considered valid.
-   *
-   * @dataProvider providerInvalidMachineNameCharacters
    */
+  #[DataProvider('providerInvalidMachineNameCharacters')]
   public function testInvalidMachineNameCharacters(string $machine_name, bool $is_expected_to_be_valid): void {
     $constraints = $this->getMachineNameConstraints();
 
@@ -182,7 +179,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
   /**
    * Tests that the entity ID's length is validated if it is a machine name.
    */
-  public function testMachineNameLength(): void {
+  public function testMachineNameLength(string $prefix = ''): void {
     $constraints = $this->getMachineNameConstraints();
 
     $max_length = $constraints['Length']['max'];
@@ -195,7 +192,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
       // Config entity IDs are immutable by default.
       '' => "The '$id_key' property cannot be changed.",
     ];
-    $this->entity->set($id_key, $this->randomMachineName($max_length + 2));
+    $this->entity->set($id_key, $prefix . $this->randomMachineName($max_length + 2));
     $this->assertValidationErrors($expected_errors);
   }
 
@@ -260,7 +257,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
         ],
         [
           'dependencies.module.0' => [
-            'This value is not valid.',
+            'This value is not a valid extension name.',
             "Module 'invalid-module-name' is not installed.",
           ],
         ],
@@ -290,7 +287,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
         ],
         [
           'dependencies.theme.0' => [
-            'This value is not valid.',
+            'This value is not a valid extension name.',
             "Theme 'invalid-theme-name' is not installed.",
           ],
         ],
@@ -315,9 +312,8 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
    *   The expected validation error messages. Keys are property paths, values
    *   are the expected messages: a string if a single message is expected, an
    *   array of strings if multiple are expected.
-   *
-   * @dataProvider providerConfigDependenciesValidation
    */
+  #[DataProvider('providerConfigDependenciesValidation')]
   public function testConfigDependenciesValidation(array $dependencies, array $expected_messages): void {
     // Add the dependencies we were given to the dependencies that may already
     // exist in the entity.
@@ -472,9 +468,9 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
    */
   public function testImmutableProperties(array $valid_values = []): void {
     $constraints = $this->entity->getEntityType()->getConstraints();
-    $this->assertNotEmpty($constraints['ImmutableProperties'], 'All config entities should have at least one immutable ID property.');
+    $this->assertNotEmpty($constraints['ImmutableProperties']['properties'], 'All config entities should have at least one immutable ID property.');
 
-    foreach ($constraints['ImmutableProperties'] as $property_name) {
+    foreach ($constraints['ImmutableProperties']['properties'] as $property_name) {
       $original_value = $this->entity->get($property_name);
       $this->entity->set($property_name, $valid_values[$property_name] ?? $this->randomMachineName());
       $this->assertValidationErrors([
@@ -487,7 +483,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
   /**
    * A property that is required must have a value (i.e. not NULL).
    *
-   * @param string[]|null $additional_expected_validation_errors_when_missing
+   * @param array<string, array<string, list<string>|string>>|null $additional_expected_validation_errors_when_missing
    *   Some required config entity properties have additional validation
    *   constraints that cause additional messages to appear. Keys must be
    *   config entity properties, values must be arrays as expected by
@@ -496,6 +492,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
    * @todo Remove this optional parameter in https://www.drupal.org/project/drupal/issues/2820364#comment-15333069
    *
    * @return void
+   *   No return value.
    */
   public function testRequiredPropertyKeysMissing(?array $additional_expected_validation_errors_when_missing = NULL): void {
     $config_entity_properties = array_keys($this->entity->getEntityType()->getPropertiesToExport());
@@ -510,7 +507,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
 
     $mapping_properties = array_keys(array_filter(
       ConfigEntityAdapter::createFromEntity($this->entity)->getProperties(FALSE),
-      fn (TypedDataInterface $v) => $v instanceof Mapping
+      fn (TypedDataInterface $v): bool => $v instanceof Mapping
     ));
 
     $required_property_keys = $this->getRequiredPropertyKeys();
@@ -532,7 +529,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
   /**
    * A property that is required must have a value (i.e. not NULL).
    *
-   * @param string[]|null $additional_expected_validation_errors_when_missing
+   * @param array<string, array<string, list<string>|string>>|null $additional_expected_validation_errors_when_missing
    *   Some required config entity properties have additional validation
    *   constraints that cause additional messages to appear. Keys must be
    *   config entity properties, values must be arrays as expected by
@@ -541,6 +538,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
    * @todo Remove this optional parameter in https://www.drupal.org/project/drupal/issues/2820364#comment-15333069
    *
    * @return void
+   *   No return value.
    */
   public function testRequiredPropertyValuesMissing(?array $additional_expected_validation_errors_when_missing = NULL): void {
     $config_entity_properties = array_keys($this->entity->getEntityType()->getPropertiesToExport());
@@ -559,7 +557,7 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
 
     // Get the config entity properties that are immutable.
     // @see ::testImmutableProperties()
-    $immutable_properties = $this->entity->getEntityType()->getConstraints()['ImmutableProperties'];
+    $immutable_properties = $this->entity->getEntityType()->getConstraints()['ImmutableProperties']['properties'];
 
     // Config entity properties containing plugin collections are special cases:
     // setting them to NULL would cause them to get out of sync with the plugin
@@ -589,14 +587,27 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
       }
 
       $this->entity = clone $original_entity;
-      $this->entity->set($property, NULL);
+
+      try {
+        $this->entity->set($property, NULL);
+      }
+      catch (\TypeError) {
+        // If setting the property to NULL causes a TypeError, skip this
+        // property as validation is already enforced at the language level.
+        continue;
+      }
+
       $expected_validation_errors = in_array($property, $properties_with_optional_values, TRUE)
         ? []
         : [$property => 'This value should not be null.'];
 
       // @see `type: required_label`
       // @see \Symfony\Component\Validator\Constraints\NotBlank
-      if (!$this->isFullyValidatable() && $this->entity->getEntityType()->getKey('label') == $property) {
+      if (
+        !$this->isFullyValidatable()
+        && $this->entity->getEntityType()->getKey('label') == $property
+        && $this->entity->getTypedData()->get($property)->getDataDefinition()->getDataType() == 'required_label'
+      ) {
         $expected_validation_errors = [$property => 'This value should not be blank.'];
       }
 
@@ -631,7 +642,9 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
   /**
    * Determines the config entity mapping properties with required keys.
    *
-   * This refers only to the top-level properties of the config entity which are expected to be mappings, and of those mappings, only the ones which have required keys.
+   * This refers only to the top-level properties of the config entity which are
+   * expected to be mappings, and of those mappings, only the ones which have
+   * required keys.
    *
    * @return string[]
    *   An array of key-value pairs, with:
@@ -690,15 +703,19 @@ abstract class ConfigEntityValidationTestBase extends KernelTestBase {
     // optional, with the exception of `type: langcode` and
     // `type: required_label`.
     if (!$this->isFullyValidatable()) {
-      return array_diff($config_entity_properties, [
+      $excepted_properties = [
         // @see `type: langcode`
         // @see \Symfony\Component\Validator\Constraints\NotNull
         'langcode',
         'default_langcode',
+      ];
+      $label_property = $this->entity->getEntityType()->getKey('label');
+      if ($label_property && $this->entity->getTypedData()->get($label_property)->getDataDefinition()->getDataType() == 'required_label') {
         // @see `type: required_label`
         // @see \Symfony\Component\Validator\Constraints\NotBlank
-        $this->entity->getEntityType()->getKey('label'),
-      ]);
+        $excepted_properties[] = $label_property;
+      }
+      return array_diff($config_entity_properties, $excepted_properties);
     }
 
     // Otherwise, all properties are required except for those marked

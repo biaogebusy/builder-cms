@@ -1,0 +1,21 @@
+ckeditor5_plugin_pack_todo_document_list__todo_document_list:
+  ckeditor5:
+    plugins:
+      - list.TodoList
+  drupal:
+    label: To-do List
+    class: Drupal\ckeditor5_plugin_pack_todo_document_list\Plugin\CKEditor5Plugin\ToDoList
+    elements:
+      - <ul>
+      - <ul class>
+      - <span>
+      - <span class contenteditable>
+      - <label>
+      - <label class>
+      - <input>
+      - <input type tabindex disabled checked>
+    library: ckeditor5_plugin_pack_todo_document_list/todo_document_list
+    admin_library: ckeditor5_plugin_pack_todo_document_list/admin.todo_document_list
+    toolbar_items:
+      todoList:
+        label: To-do list

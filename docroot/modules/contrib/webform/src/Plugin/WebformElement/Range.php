@@ -53,7 +53,7 @@ class Range extends NumericBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // Set default min/max. Default step is defined via parent::prepare().
@@ -98,7 +98,7 @@ class Range extends NumericBase {
 
       // Copy custom output properties to output element.
       foreach ($element as $key => $value) {
-        if (strpos($key, '#output__') === 0) {
+        if (str_starts_with($key, '#output__')) {
           $output_key = str_replace('#output__', '#', $key);
           $output[$output_key] = $value;
         }
@@ -117,7 +117,9 @@ class Range extends NumericBase {
 
       // Calculate the output's width based on the #max number's string length.
       $output['#attributes'] += ['style' => ''];
-      $output['#attributes']['style'] .= ($output['#attributes']['style'] ? ';' : '') . 'width:' . (strlen($element['#max'] . '') + 1) . 'em';
+      $max_string_length = strlen($element['#max'] . '');
+      $max_string_length = ($max_string_length > 4) ? $max_string_length : 4;
+      $output['#attributes']['style'] .= ($output['#attributes']['style'] ? ';' : '') . 'width:' . ($max_string_length + 1.5) . 'em';
 
       // Append output element as a child.
       if ($element['#output'] === 'left') {
@@ -129,7 +131,7 @@ class Range extends NumericBase {
           ];
         }
         else {
-          $element['#field_suffix'] = [
+          $element['#field_prefix'] = [
             'output' => $output,
             'delimiter' => ['#markup' => '<span class="webform-range-output-delimiter"></span>'],
           ];
@@ -158,7 +160,7 @@ class Range extends NumericBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareElementValidateCallbacks(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  protected function prepareElementValidateCallbacks(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepareElementValidateCallbacks($element, $webform_submission);
     $element['#element_validate'][] = [get_class($this), 'validateRange'];
   }

@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Schema\EntityStorageSchemaInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionListenerInterface;
+use Drupal\Core\Plugin\CachedDiscoveryClearerInterface;
 
 /**
  * Class to update entity and field storage for ECK entities.
@@ -59,6 +60,13 @@ class EntityUpdateService {
   private $fieldStorageDefinitionListener;
 
   /**
+   * The plugin cache clearer service.
+   *
+   * @var \Drupal\Core\Plugin\CachedDiscoveryClearerInterface
+   */
+  private $pluginCacheClearer;
+
+  /**
    * Constructs a new EntityDefinitionUpdateManager.
    *
    * @param \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface $entity_definition_update_manager
@@ -73,6 +81,8 @@ class EntityUpdateService {
    *   The entity field manager service.
    * @param \Drupal\Core\Field\FieldStorageDefinitionListenerInterface $field_storage_definition_listener
    *   The field storage definition listener service.
+   * @param \Drupal\Core\Plugin\CachedDiscoveryClearerInterface $plugin_cache_clearer
+   *   The plugin cache clearer service.
    */
   public function __construct(
     EntityDefinitionUpdateManagerInterface $entity_definition_update_manager,
@@ -80,7 +90,8 @@ class EntityUpdateService {
     EntityTypeManagerInterface $entity_type_manager,
     EntityTypeListenerInterface $entity_type_listener,
     EntityFieldManagerInterface $entity_field_manager,
-    FieldStorageDefinitionListenerInterface $field_storage_definition_listener
+    FieldStorageDefinitionListenerInterface $field_storage_definition_listener,
+    CachedDiscoveryClearerInterface $plugin_cache_clearer,
   ) {
     $this->entityDefinitionUpdateManager = $entity_definition_update_manager;
     $this->entityLastInstalledSchemaRepository = $entity_last_installed_schema_repository;
@@ -88,6 +99,7 @@ class EntityUpdateService {
     $this->entityTypeListener = $entity_type_listener;
     $this->entityFieldManager = $entity_field_manager;
     $this->fieldStorageDefinitionListener = $field_storage_definition_listener;
+    $this->pluginCacheClearer = $plugin_cache_clearer;
   }
 
   /**
@@ -99,7 +111,10 @@ class EntityUpdateService {
     $reflector->setAccessible(TRUE);
     $complete_change_list = $reflector->invoke($this->entityDefinitionUpdateManager);
 
-    $eck_change_list = array_intersect_key($complete_change_list, [$eck_entity_type_id => 1, $eck_entity_type_id . '_type' => 1]);
+    $eck_change_list = array_intersect_key($complete_change_list, [
+      $eck_entity_type_id => 1,
+      $eck_entity_type_id . '_type' => 1,
+    ]);
 
     if ($eck_change_list) {
       // EntityDefinitionUpdateManagerInterface::getChangeList() only disables
@@ -107,6 +122,10 @@ class EntityUpdateService {
       // explicitly invalidate caches.
       $this->entityTypeManager->clearCachedDefinitions();
       $this->entityFieldManager->clearCachedFieldDefinitions();
+      // @todo This is a workaround for https://www.drupal.org/i/3579767,
+      //   where the static plugin cache is not automatically invalidated when
+      //   entity type definitions change. Remove once fixed in Drupal core.
+      $this->pluginCacheClearer->clearCachedDefinitions();
     }
     foreach ($eck_change_list as $entity_type_id => $change_list) {
       // Process entity type definition changes before storage definitions ones
@@ -123,8 +142,8 @@ class EntityUpdateService {
         $original_storage_definitions = $this->entityLastInstalledSchemaRepository->getLastInstalledFieldStorageDefinitions($entity_type_id);
 
         foreach ($change_list['field_storage_definitions'] as $field_name => $change) {
-          $storage_definition = isset($storage_definitions[$field_name]) ? $storage_definitions[$field_name] : NULL;
-          $original_storage_definition = isset($original_storage_definitions[$field_name]) ? $original_storage_definitions[$field_name] : NULL;
+          $storage_definition = $storage_definitions[$field_name] ?? NULL;
+          $original_storage_definition = $original_storage_definitions[$field_name] ?? NULL;
           $this->doFieldUpdate($change, $storage_definition, $original_storage_definition);
         }
       }
@@ -173,7 +192,7 @@ class EntityUpdateService {
    * @param \Drupal\Core\Field\FieldStorageDefinitionInterface|null $original_storage_definition
    *   (optional) The original field storage definition. Defaults to none.
    */
-  private function doFieldUpdate($op, FieldStorageDefinitionInterface $storage_definition = NULL, FieldStorageDefinitionInterface $original_storage_definition = NULL) {
+  private function doFieldUpdate($op, ?FieldStorageDefinitionInterface $storage_definition = NULL, ?FieldStorageDefinitionInterface $original_storage_definition = NULL) {
     switch ($op) {
       case EntityDefinitionUpdateManagerInterface::DEFINITION_CREATED:
         $this->fieldStorageDefinitionListener->onFieldStorageDefinitionCreate($storage_definition);

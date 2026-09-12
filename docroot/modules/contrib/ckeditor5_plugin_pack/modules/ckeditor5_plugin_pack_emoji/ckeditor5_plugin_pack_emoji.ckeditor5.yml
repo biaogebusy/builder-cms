@@ -1,0 +1,14 @@
+ckeditor5_plugin_pack_emoji_emoji:
+  ckeditor5:
+    plugins:
+      - mention.Mention
+      - emoji.Emoji
+  drupal:
+    label: Emoji
+    library: ckeditor5_plugin_pack_emoji/emoji
+    admin_library: ckeditor5_plugin_pack_emoji/admin.emoji
+    class: \Drupal\ckeditor5_plugin_pack_emoji\Plugin\CKEditor5Plugin\Emoji
+    elements: false
+    toolbar_items:
+      emoji:
+        label: Emoji

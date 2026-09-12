@@ -2,26 +2,18 @@
 
 /**
  * @file
- * Batch process to check the availability of remote or local po files.
  */
 
-use Drupal\Core\File\Exception\FileException;
-use Drupal\Core\File\Exception\InvalidStreamWrapperException;
-use Drupal\Core\File\FileExists;
-use Drupal\Core\Url;
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Exception\RequestException;
-use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
+use Drupal\locale\File\LocaleFile;
+use Drupal\locale\File\LocaleFileManager;
+use Drupal\locale\File\RemoteFileStatus;
+use Drupal\locale\LocaleFetch;
+use Drupal\locale\LocaleProjectChecker;
+use Drupal\locale\LocaleSource;
 
 /**
  * Load the common translation API.
  */
-// @todo Combine functions differently in files to avoid unnecessary includes.
-// Follow-up issue: https://www.drupal.org/node/1834298.
-require_once __DIR__ . '/locale.translation.inc';
 
 /**
  * Implements callback_batch_operation().
@@ -36,28 +28,17 @@ require_once __DIR__ . '/locale.translation.inc';
  *   Language code of the language for which to check the translation.
  * @param array|\ArrayAccess $context
  *   The batch context.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFetch::class)->batchVersionCheck()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function locale_translation_batch_version_check(string $project, string $langcode, array|\ArrayAccess &$context) {
-  $locale_project = \Drupal::service('locale.project')->get($project);
-
-  if (empty($locale_project)) {
-    return;
-  }
-
-  $status = \Drupal::keyValue('locale.translation_status')->get($project);
-  if (!isset($status[$langcode])) {
-    return;
-  }
-
-  if ($locale_project['version'] == $status[$langcode]->version) {
-    return;
-  }
-
+function locale_translation_batch_version_check(string $project, string $langcode, array|\ArrayAccess &$context): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFetch::class)->batchVersionCheck() instead. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
   \Drupal::moduleHandler()->loadInclude('locale', 'bulk.inc');
-  locale_translation_status_delete_projects([$project]);
-  locale_translate_delete_translation_files([$project]);
-
-  $context['message'] = t('Checked version of %project.', ['%project' => $project]);
+  \Drupal::service(LocaleFetch::class)->batchVersionCheck($project, $langcode, $context);
 }
 
 /**
@@ -78,54 +59,16 @@ function locale_translation_batch_version_check(string $project, string $langcod
  *     Optional, defaults to TRUE.
  * @param array|\ArrayAccess $context
  *   The batch context.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFetch::class)->batchStatusCheck()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function locale_translation_batch_status_check($project, $langcode, array $options, &$context) {
-  $failure = $checked = FALSE;
-  $options += [
-    'finish_feedback' => TRUE,
-    'use_remote' => TRUE,
-  ];
-  $source = locale_translation_get_status([$project], [$langcode]);
-  $source = $source[$project][$langcode];
-
-  // Check the status of local translation files.
-  if (isset($source->files[LOCALE_TRANSLATION_LOCAL])) {
-    if ($file = locale_translation_source_check_file($source)) {
-      locale_translation_status_save($source->name, $source->langcode, LOCALE_TRANSLATION_LOCAL, $file);
-    }
-    $checked = TRUE;
-  }
-
-  // Check the status of remote translation files.
-  if ($options['use_remote'] && isset($source->files[LOCALE_TRANSLATION_REMOTE])) {
-    $remote_file = $source->files[LOCALE_TRANSLATION_REMOTE];
-    if ($result = locale_translation_http_check($remote_file->uri)) {
-      // Update the file object with the result data. In case of a redirect we
-      // store the resulting uri.
-      if (isset($result['last_modified'])) {
-        $remote_file->uri = $result['location'] ?? $remote_file->uri;
-        $remote_file->timestamp = $result['last_modified'];
-        locale_translation_status_save($source->name, $source->langcode, LOCALE_TRANSLATION_REMOTE, $remote_file);
-      }
-      // @todo What to do with when the file is not found (404)? To prevent
-      //   re-checking within the TTL (1day, 1week) we can set a last_checked
-      //   timestamp or cache the result.
-      $checked = TRUE;
-    }
-    else {
-      $failure = TRUE;
-    }
-  }
-
-  // Provide user feedback and record success or failure for reporting at the
-  // end of the batch.
-  if ($options['finish_feedback'] && $checked) {
-    $context['results']['files'][] = $source->name;
-  }
-  if ($failure && !$checked) {
-    $context['results']['failed_files'][] = $source->name;
-  }
-  $context['message'] = t('Checked %langcode translation for %project.', ['%langcode' => $langcode, '%project' => $source->project]);
+function locale_translation_batch_status_check($project, $langcode, array $options, &$context): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFetch::class)->batchStatusCheck() instead. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
+  \Drupal::service(LocaleFetch::class)->batchStatusCheck($project, $langcode, $options, $context);
 }
 
 /**
@@ -137,33 +80,16 @@ function locale_translation_batch_status_check($project, $langcode, array $optio
  *   TRUE if batch successfully completed.
  * @param array $results
  *   Batch results.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleProjectChecker::class)->batchFinished()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function locale_translation_batch_status_finished($success, $results) {
-  if ($success) {
-    if (isset($results['failed_files'])) {
-      if (\Drupal::moduleHandler()->moduleExists('dblog') && \Drupal::currentUser()->hasPermission('access site reports')) {
-        $message = \Drupal::translation()->formatPlural(count($results['failed_files']), 'One translation file could not be checked. <a href=":url">See the log</a> for details.', '@count translation files could not be checked. <a href=":url">See the log</a> for details.', [':url' => Url::fromRoute('dblog.overview')->toString()]);
-      }
-      else {
-        $message = \Drupal::translation()->formatPlural(count($results['failed_files']), 'One translation files could not be checked. See the log for details.', '@count translation files could not be checked. See the log for details.');
-      }
-      \Drupal::messenger()->addError($message);
-    }
-    if (isset($results['files'])) {
-      \Drupal::messenger()->addStatus(\Drupal::translation()->formatPlural(
-        count($results['files']),
-        'Checked available interface translation updates for one project.',
-        'Checked available interface translation updates for @count projects.'
-      ));
-    }
-    if (!isset($results['failed_files']) && !isset($results['files'])) {
-      \Drupal::messenger()->addStatus(t('Nothing to check.'));
-    }
-    \Drupal::state()->set('locale.translation_last_checked', \Drupal::time()->getRequestTime());
-  }
-  else {
-    \Drupal::messenger()->addError(t('An error occurred trying to check available interface translation updates.'));
-  }
+function locale_translation_batch_status_finished($success, $results): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleProjectChecker::class)->batchFinished() instead. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
+  \Drupal::service(LocaleProjectChecker::class)->batchFinished($success, $results);
 }
 
 /**
@@ -172,29 +98,24 @@ function locale_translation_batch_status_finished($success, $results) {
  * Downloads a remote gettext file into the translations directory. When
  * successfully the translation status is updated.
  *
- * @param object $project
- *   Source object of the translatable project.
+ * @param string $project
+ *   The name of the project to import translations.
  * @param string $langcode
  *   Language code.
  * @param array $context
  *   The batch context.
  *
- * @see locale_translation_batch_fetch_import()
+ * @see \Drupal\locale\LocaleFetch::batchImport()
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFetch::class)->batchDownload()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function locale_translation_batch_fetch_download($project, $langcode, &$context) {
-  $sources = locale_translation_get_status([$project], [$langcode]);
-  if (isset($sources[$project][$langcode])) {
-    $source = $sources[$project][$langcode];
-    if (isset($source->type) && $source->type == LOCALE_TRANSLATION_REMOTE) {
-      if ($file = locale_translation_download_source($source->files[LOCALE_TRANSLATION_REMOTE], 'translations://')) {
-        $context['message'] = t('Downloaded %langcode translation for %project.', ['%langcode' => $langcode, '%project' => $source->project]);
-        locale_translation_status_save($source->name, $source->langcode, LOCALE_TRANSLATION_LOCAL, $file);
-      }
-      else {
-        $context['results']['failed_files'][] = $source->files[LOCALE_TRANSLATION_REMOTE];
-      }
-    }
-  }
+function locale_translation_batch_fetch_download($project, $langcode, &$context): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFetch::class)->batchDownload() instead. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
+  \Drupal::service(LocaleFetch::class)->batchDownload($project, $langcode, $context);
 }
 
 /**
@@ -203,8 +124,8 @@ function locale_translation_batch_fetch_download($project, $langcode, &$context)
  * Imports a gettext file from the translation directory. When successfully the
  * translation status is updated.
  *
- * @param object $project
- *   Source object of the translatable project.
+ * @param string $project
+ *   The name of the project to import translations.
  * @param string $langcode
  *   Language code.
  * @param array $options
@@ -212,38 +133,19 @@ function locale_translation_batch_fetch_download($project, $langcode, &$context)
  * @param array $context
  *   The batch context.
  *
- * @see locale_translate_batch_import_files()
- * @see locale_translation_batch_fetch_download()
+ * @see \Drupal\locale\LocaleImportBatch::buildBatch()
+ * @see \Drupal\locale\LocaleFetch::batchDownload()
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFetch::class)->batchImport()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function locale_translation_batch_fetch_import($project, $langcode, $options, &$context) {
-  $sources = locale_translation_get_status([$project], [$langcode]);
-  if (isset($sources[$project][$langcode])) {
-    $source = $sources[$project][$langcode];
-    if (isset($source->type)) {
-      if ($source->type == LOCALE_TRANSLATION_REMOTE || $source->type == LOCALE_TRANSLATION_LOCAL) {
-        $file = $source->files[LOCALE_TRANSLATION_LOCAL];
-        \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.bulk');
-        $options += [
-          'message' => t('Importing %langcode translation for %project.', ['%langcode' => $langcode, '%project' => $source->project]),
-        ];
-        // Import the translation file. For large files the batch operations is
-        // progressive and will be called repeatedly until finished.
-        locale_translate_batch_import($file, $options, $context);
-
-        // The import is finished.
-        if (isset($context['finished']) && $context['finished'] == 1) {
-          // The import is successful.
-          if (isset($context['results']['files'][$file->uri])) {
-            $context['message'] = t('Imported %langcode translation for %project.', ['%langcode' => $langcode, '%project' => $source->project]);
-
-            // Save the data of imported source into the {locale_file} table and
-            // update the current translation status.
-            locale_translation_status_save($project, $langcode, LOCALE_TRANSLATION_CURRENT, $source->files[LOCALE_TRANSLATION_LOCAL]);
-          }
-        }
-      }
-    }
-  }
+function locale_translation_batch_fetch_import($project, $langcode, $options, &$context): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFetch::class)->batchImport() instead. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
+  \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.bulk');
+  \Drupal::service(LocaleFetch::class)->batchImport($project, $langcode, $options, $context);
 }
 
 /**
@@ -255,13 +157,17 @@ function locale_translation_batch_fetch_import($project, $langcode, $options, &$
  *   TRUE if batch successfully completed.
  * @param array $results
  *   Batch results.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFetch::class)->batchFinished()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3589759
  */
-function locale_translation_batch_fetch_finished($success, $results) {
+function locale_translation_batch_fetch_finished($success, $results): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFetch::class)->batchFinished() instead. See https://www.drupal.org/node/3589759', E_USER_DEPRECATED);
   \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.bulk');
-  if ($success) {
-    \Drupal::state()->set('locale.translation_last_checked', \Drupal::time()->getRequestTime());
-  }
-  return locale_translate_batch_finished($success, $results);
+  \Drupal::service(LocaleFetch::class)->batchFinished($success, $results);
 }
 
 /**
@@ -276,50 +182,30 @@ function locale_translation_batch_fetch_finished($success, $results) {
  *   - (optional) location: The location of the translation file. Is only set
  *     when a redirect (301) has occurred.
  *   TRUE if the file is not found. FALSE if a fault occurred.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFileManager::class)checkRemoteFileStatus($uri)
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3577675
  */
 function locale_translation_http_check($uri) {
-  $logger = \Drupal::logger('locale');
-  try {
-    $actual_uri = NULL;
-    $response = \Drupal::service('http_client_factory')->fromOptions([
-      'allow_redirects' => [
-        'on_redirect' => function (RequestInterface $request, ResponseInterface $response, UriInterface $request_uri) use (&$actual_uri) {
-          $actual_uri = (string) $request_uri;
-        },
-      ],
-    ])->head($uri);
-    $result = [];
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFileManager::class)->checkRemoteFileStatus($uri) instead. See https://www.drupal.org/node/3577675', E_USER_DEPRECATED);
+  $remoteFileInfo = \Drupal::service(LocaleFileManager::class)->checkRemoteFileStatus($uri);
 
-    // Return the effective URL if it differs from the requested.
-    if ($actual_uri && $actual_uri !== $uri) {
-      $result['location'] = $actual_uri;
-    }
-
-    $result['last_modified'] = $response->hasHeader('Last-Modified') ? strtotime($response->getHeaderLine('Last-Modified')) : 0;
-    return $result;
-  }
-  catch (RequestException $e) {
-    // Handle 4xx and 5xx http responses.
-    if ($response = $e->getResponse()) {
-      if ($response->getStatusCode() == 404) {
-        // File not found occurs when a translation file is not yet available
-        // at the translation server. But also if a custom module or custom
-        // theme does not define the location of a translation file. By default
-        // the file is checked at the translation server, but it will not be
-        // found there.
-        $logger->notice('Translation file not found: @uri.', ['@uri' => $uri]);
-        return TRUE;
-      }
-      $logger->notice('HTTP request to @url failed with error: @error.', ['@url' => $uri, '@error' => $response->getStatusCode() . ' ' . $response->getReasonPhrase()]);
-    }
-  }
-  // We need to handle ConnectException separately because in Guzzle 7 it
-  // doesn't have a getResponse() method, so the above will fatal.
-  catch (ConnectException $e) {
-    $logger->notice('HTTP request to @url failed with error: @error.', ['@url' => $uri, '@error' => $e->getMessage()]);
+  if ($remoteFileInfo->status === RemoteFileStatus::Error) {
+    return FALSE;
   }
 
-  return FALSE;
+  if ($remoteFileInfo->status === RemoteFileStatus::Missing) {
+    return TRUE;
+  }
+
+  $result['last_modified'] = $remoteFileInfo->lastModified;
+  if ($remoteFileInfo->location) {
+    $result['location'] = $remoteFileInfo->location;
+  }
+  return $result;
 }
 
 /**
@@ -338,28 +224,16 @@ function locale_translation_http_check($uri) {
  *
  * @return object|false
  *   File object if download was successful. FALSE on failure.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ *   \Drupal::service(LocaleFileManager::class)
+ *   ->downloadTranslationSource($source_file, $directory) instead.
+ *
+ * @see https://www.drupal.org/node/3577675
  */
 function locale_translation_download_source($source_file, $directory = 'temporary://') {
-  try {
-    $data = (string) \Drupal::httpClient()->get($source_file->uri)->getBody();
-    /** @var \Drupal\Core\File\FileSystemInterface $fileSystem */
-    $fileSystem = \Drupal::service('file_system');
-    $filename = $fileSystem->basename($source_file->uri);
-    if ($uri = $fileSystem->saveData($data, $directory . $filename, FileExists::Replace)) {
-      $file = clone($source_file);
-      $file->type = LOCALE_TRANSLATION_LOCAL;
-      $file->uri = $uri;
-      $file->directory = $directory;
-      $file->timestamp = filemtime($uri);
-      return $file;
-    }
-  }
-  catch (ClientExceptionInterface $exception) {
-    \Drupal::messenger()->addError(t('Failed to fetch file due to error "%error"', ['%error' => $exception->getMessage()]));
-  }
-  catch (FileException | InvalidStreamWrapperException $e) {
-    \Drupal::messenger()->addError(t('Failed to save file due to error "%error"', ['%error' => $e->getMessage()]));
-  }
-  \Drupal::logger('locale')->error('Unable to download translation file @uri.', ['@uri' => $source_file->uri]);
-  return FALSE;
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(LocaleFileManager::class)->downloadTranslationSource($source_file, $directory) instead. See https://www.drupal.org/node/3577675', E_USER_DEPRECATED);
+  $hash = hash_file(LocaleSource::LOCAL_FILE_HASH_ALGO, $source_file->uri);
+  $locale_file = new LocaleFile($source_file->filename, $source_file->uri, $hash);
+  return \Drupal::service(LocaleFileManager::class)->downloadTranslationSource($locale_file, $directory);
 }

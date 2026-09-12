@@ -2,7 +2,6 @@
 
 namespace Drupal\Core\Database\Query;
 
-use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Connection;
 
 /**
@@ -28,15 +27,18 @@ class Truncate extends Query {
    *   Array of database options.
    */
   public function __construct(Connection $connection, $table, array $options = []) {
-    // @todo Remove $options['return'] in Drupal 11.
-    // @see https://www.drupal.org/project/drupal/issues/3256524
-    $options['return'] = Database::RETURN_AFFECTED;
     parent::__construct($connection, $options);
     $this->table = $table;
   }
 
   /**
    * Executes the TRUNCATE query.
+   *
+   * In most cases, TRUNCATE is not a transaction safe statement as it is a DDL
+   * statement which results in an implicit COMMIT. When we are in a
+   * transaction, fallback to the slower, but transactional, DELETE.
+   * PostgreSQL also locks the entire table for a TRUNCATE strongly reducing
+   * the concurrency with other transactions.
    *
    * @return int|null
    *   Return value is dependent on whether the executed SQL statement is a
@@ -70,11 +72,8 @@ class Truncate extends Query {
     // Create a sanitized comment string to prepend to the query.
     $comments = $this->connection->makeComment($this->comments);
 
-    // In most cases, TRUNCATE is not a transaction safe statement as it is a
-    // DDL statement which results in an implicit COMMIT. When we are in a
-    // transaction, fallback to the slower, but transactional, DELETE.
-    // PostgreSQL also locks the entire table for a TRUNCATE strongly reducing
-    // the concurrency with other transactions.
+    // The statement actually built depends on whether a transaction is active.
+    // @see ::execute()
     if ($this->connection->inTransaction()) {
       return $comments . 'DELETE FROM {' . $this->connection->escapeTable($this->table) . '}';
     }

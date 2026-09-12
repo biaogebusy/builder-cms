@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Drupal\Tests\Core\Enhancer;
 
 use Drupal\Core\Routing\Enhancer\ParamConversionEnhancer;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\Core\Routing\Enhancer\ParamConversionEnhancer
- * @group Enhancer
+ * Tests Drupal\Core\Routing\Enhancer\ParamConversionEnhancer.
  */
+#[CoversClass(ParamConversionEnhancer::class)]
+#[Group('Enhancer')]
 class ParamConversionEnhancerTest extends UnitTestCase {
 
   /**
@@ -38,7 +41,7 @@ class ParamConversionEnhancerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::enhance
+   * Tests enhance.
    */
   public function testEnhance(): void {
     $route = new Route('/test/{id}/{literal}/{null}');
@@ -58,7 +61,7 @@ class ParamConversionEnhancerTest extends UnitTestCase {
 
     $this->paramConverterManager->expects($this->once())
       ->method('convert')
-      ->with($this->isType('array'))
+      ->with($this->isArray())
       ->willReturn($expected);
 
     $result = $this->paramConversionEnhancer->enhance($defaults, new Request());
@@ -73,7 +76,7 @@ class ParamConversionEnhancerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::copyRawVariables
+   * Tests copy raw variables.
    */
   public function testCopyRawVariables(): void {
     $route = new Route('/test/{id}');
@@ -86,7 +89,7 @@ class ParamConversionEnhancerTest extends UnitTestCase {
     $defaults['bar'] = &$defaults['id'];
     $this->paramConverterManager->expects($this->any())
       ->method('convert')
-      ->with($this->isType('array'))
+      ->with($this->isArray())
       ->willReturnCallback(function ($defaults) {
         // Convert the mirrored default to another value.
         $defaults['bar'] = '2';

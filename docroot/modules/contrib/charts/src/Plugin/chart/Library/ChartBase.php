@@ -2,9 +2,12 @@
 
 namespace Drupal\charts\Plugin\chart\Library;
 
+use Drupal\charts\Form\BaseColorChanger;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -24,6 +27,13 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
   protected $moduleHandler;
 
   /**
+   * The form builder service.
+   *
+   * @var \Drupal\Core\Form\FormBuilderInterface
+   */
+  protected $formBuilder;
+
+  /**
    * Constructs a Base Chart object.
    *
    * @param array $configuration
@@ -34,8 +44,10 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
    *   The plugin implementation definition.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface|null $module_handler
    *   The module handler service.
+   * @param \Drupal\Core\Form\FormBuilderInterface|null $form_builder
+   *   The form builder service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ?ModuleHandlerInterface $module_handler = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ?ModuleHandlerInterface $module_handler = NULL, ?FormBuilderInterface $form_builder = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     if (empty($module_handler)) {
@@ -44,6 +56,13 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
       @trigger_error('Calling ChartBase::__construct() without the $module_handler as an instance of ModuleHandlerInterface is deprecated in charts:5.1.6 and is required in charts:6.0.0. See https://www.drupal.org/project/charts/issues/3518027', E_USER_DEPRECATED);
     }
     $this->moduleHandler = $module_handler;
+
+    if (empty($form_builder)) {
+      // @phpstan-ignore-next-line
+      $form_builder = \Drupal::service('form_builder');
+      @trigger_error('Calling ChartBase::__construct() without the $form_builder as an instance of FormBuilderInterface is deprecated in charts:5.1.11 and is required in charts:6.0.0. See https://www.drupal.org/project/charts/issues/3535784', E_USER_DEPRECATED);
+    }
+    $this->formBuilder = $form_builder;
   }
 
   /**
@@ -55,6 +74,7 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
       $plugin_id,
       $plugin_definition,
       $container->get('module_handler'),
+      $container->get('form_builder'),
     );
   }
 
@@ -69,11 +89,32 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
    * {@inheritdoc}
    */
   public function getSupportedChartTypes(): array {
-    $types = $this->pluginDefinition['types'];
+    $types = array_diff($this->pluginDefinition['types'], $this->getUnsupportedChartTypes());
     $chart_plugin_id = $this->getPluginId();
     $this->moduleHandler->alter('charts_plugin_supported_chart_types', $types, $chart_plugin_id);
 
-    return $types;
+    return array_values($types);
+  }
+
+  /**
+   * Gets chart types the library declares but cannot currently render.
+   *
+   * A library may add whole chart types through an optional asset (for example,
+   * a separate "heatmap" script). When that asset is disabled through the
+   * library's configuration, the types it provides should not be offered.
+   * Subclasses override this method to remove those types; the
+   * charts_plugin_supported_chart_types alter hook still runs afterwards, so
+   * this is additive rather than a replacement for the hook.
+   *
+   * Note this concerns type-*providing* libraries only. Feature libraries that
+   * merely enhance an existing type (a Pareto line, a color axis) must not be
+   * listed here: their options stay available and their assets load on demand.
+   *
+   * @return string[]
+   *   Chart type IDs to exclude from the supported types.
+   */
+  protected function getUnsupportedChartTypes(): array {
+    return [];
   }
 
   /**
@@ -199,6 +240,26 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
       '#c42525',
       '#a6c96a',
     ];
+  }
+
+  /**
+   * A form builder utility for the color changer.
+   *
+   * @param array $form_state_items
+   *   The form state items.
+   *
+   * @return array
+   *   The built form.
+   *
+   * @throws \Drupal\Core\Form\EnforcedResponseException
+   * @throws \Drupal\Core\Form\FormAjaxException
+   */
+  protected function colorChangerFormBuilder(array $form_state_items): array {
+    $form_state = new FormState();
+    foreach ($form_state_items as $item_key => $item_value) {
+      $form_state->set($item_key, $item_value);
+    }
+    return $this->formBuilder->buildForm(BaseColorChanger::class, $form_state);
   }
 
 }

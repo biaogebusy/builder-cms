@@ -8,12 +8,12 @@ use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\file_mdm\FileMetadataInterface;
 use Drupal\file_mdm\FileMetadataManagerInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests that File Metadata Manager works properly.
- *
- * @group file_mdm
  */
+#[Group('file_mdm')]
 class FileMetadataManagerTest extends FileMetadataManagerTestBase {
 
   protected static $modules = ['system', 'file_mdm', 'file_test'];

@@ -5,43 +5,6 @@
  * Installation and uninstallation functions.
  */
 
-use Drupal\Core\Url;
-use Drupal\Core\Link;
-
-/**
- * Implements hook_requirements().
- */
-function chosen_requirements($phase) {
-  $requirements = [];
-
-  switch ($phase) {
-    case 'runtime':
-      $chosen_path = _chosen_lib_get_chosen_path();
-
-      if (!$chosen_path) {
-        $url = Url::fromUri(CHOSEN_WEBSITE_URL);
-        $link = Link::fromTextAndUrl(t('Chosen JavaScript file'), $url)->toString();
-
-        $requirements['chosen_js'] = [
-          'title' => t('Chosen JavaScript file'),
-          'value' => t('Not Installed'),
-          'severity' => REQUIREMENT_ERROR,
-          'description' => t('You need to <a href="@url">download</a> the @chosen and extract the entire contents of the archive into the %path directory in your Drupal installation directory.', ['@chosen' => $link, '%path' => 'libraries/chosen', '@url' => 'https://github.com/noli42/chosen/releases/download/3.0.0/chosen-assets-v3.0.0.zip']),
-        ];
-      }
-      else {
-        $requirements['chosen_js'] = [
-          'title' => t('Chosen JavaScript file'),
-          'severity' => REQUIREMENT_OK,
-          'value' => t('Installed <br/>The chosen.js is under %path.', ['%path' => $chosen_path]),
-        ];
-      }
-      break;
-  }
-
-  return $requirements;
-}
-
 /**
  * Renames config to remove redundant 'chosen_' prefix.
  */

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\comment\Functional\Views;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Test the "approve_comment" views field for approving comments.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentApproveLinkTest extends CommentTestBase {
 
   /**

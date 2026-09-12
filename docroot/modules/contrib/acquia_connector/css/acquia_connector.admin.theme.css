@@ -1,85 +1,85 @@
 .an-start-form {
-  border: 1px solid #ccc;
-  padding: 35px 35px 10px 35px;
   min-width: 930px;
   margin-bottom: 30px;
+  padding: 35px 35px 10px;
+  border: 1px solid #ccc;
   background-color: #fff;
 }
 
 .an-info-header {
+  position: relative;
+  display: block;
   min-width: 350px;
   min-height: 50px;
-  display: block;
-  direction: ltr;
+  padding-left: 145px;
   text-indent: -9999px;
-  background-image: url('../images/logo-an-word.png');
+  direction: ltr;
+  background-image: url("../images/logo-an-word.png");
   background-repeat: no-repeat;
   background-position: 145px 0;
-  padding-left: 145px;
-  position: relative;
 }
 
-.an-info-header:before {
-  content: ' ';
-  height: 136px;
-  width: 116px;
-  background-image: url('../images/logo-an-image.png');
-  background-repeat: no-repeat;
+.an-info-header::before {
   position: absolute;
   top: -20px;
   left: 0;
+  width: 116px;
+  height: 136px;
+  content: " ";
+  background-image: url("../images/logo-an-image.png");
+  background-repeat: no-repeat;
 }
 
 .an-slogan {
+  display: block;
   min-width: 509px;
   min-height: 51px;
-  display: block;
-  direction: ltr;
+  padding-left: 145px;
   text-indent: -9999px;
-  background-image: url('../images/logo-an-slogan.png');
+  direction: ltr;
+  background-image: url("../images/logo-an-slogan.png");
   background-repeat: no-repeat;
   background-position: 145px 0;
-  padding-left: 145px;
 }
 
 .an-info-box {
   display: table;
   width: 90%;
-  table-layout: fixed;
   margin-top: 1.5em;
   margin-bottom: 1.5em;
+  table-layout: fixed;
 }
 
 .an-info-box div.cell {
   display: table-cell;
   padding-right: 2.2em;
-  vertical-align: top;
   text-align: left;
   text-align: center;
+  vertical-align: top;
 }
 
 .an-info-box div.cell .cell-title {
+  position: relative;
+  margin-bottom: 25px;
+  padding: 0 10%;
+  color: #666;
   font-size: 20px;
   font-weight: 300;
-  color: #666;
-  position: relative;
-  padding: 0 10%;
-  margin-bottom: 25px;
 }
 
 .an-info-box div.cell:first-child .cell-title {
   padding: 0 25%;
 }
 
-.an-info-box .with-arrow .cell-title:after {
-  content: ' ';
-  height: 174px;
-  width: 64px;
-  background-image: url('../images/separator-arrow.png');
-  background-repeat: no-repeat;
+.an-info-box .with-arrow .cell-title::after {
   position: absolute;
   top: 0;
   right: -40px;
+  width: 64px;
+  height: 174px;
+  content: " ";
+  background-image: url("../images/separator-arrow.png");
+  background-repeat: no-repeat;
 }
 
 .an-info-box div.cell img {
@@ -107,8 +107,8 @@
 
 .an-pg-banner {
   display: table-cell;
-  text-align: right;
   padding-left: 1em;
+  text-align: right;
 }
 
 .acquia-spi,
@@ -122,46 +122,53 @@ fieldset .fieldset-legend {
 
 .an-wrapper {
   display: table-cell;
-  vertical-align: top;
   width: 100%;
+  vertical-align: top;
 }
 
-/*========New form style=============*/
+/* ========New form style============= */
 .connector-form-wrapper {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   border: 1px solid #ccc;
 }
+
 .form-image-layout {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
 }
+
 .left-section {
   flex: 1;
   padding: 10px;
 }
+
 .right-section {
   flex: 1;
   padding: 40px;
 }
+
 .form-image {
   width: 100%;
   height: auto;
 }
+
 input[type="text"],
 input[type="password"] {
   width: 100%;
-  padding: 8px;
   margin: 5px 0;
+  padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
 .submit {
   margin-top: 20px;
 }
-@media (max-width: 768px) {
+
+@media (width <= 768px) {
   .connector-form-wrapper {
     flex-direction: column;
   }
@@ -171,6 +178,7 @@ input[type="password"] {
     display: block;
     padding: 10px;
   }
+
   .form-image-layout {
     flex-direction: column;
   }

@@ -18,6 +18,11 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Provides the payment add form.
+ *
+ * @deprecated in commerce:3.0.0 and is removed from commerce:4.0.0.
+ * Use \Drupal\commerce_payment\Form\OrderPaymentAddForm instead.
+ *
+ * @see https://www.drupal.org/project/commerce/issues/3538209
  */
 class PaymentAddForm extends FormBase implements ContainerInjectionInterface {
 

@@ -4,4 +4,4 @@ flood_control.settings:
   mapping:
     ip_white_list:
       type: string
-      label: 'List of whitelisted IP addresses and ranges'
+      label: 'List of allowed IP addresses and ranges'

@@ -24,7 +24,7 @@ class WebformStatesWizardTest extends WebformBrowserTestBase {
   /**
    * Tests webform submission conditions (#states) validator wizard cross-page conditions.
    */
-  public function testFormStatesValidatorWizard() {
+  public function testFormStatesValidatorWizard(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_states_server_wizard');

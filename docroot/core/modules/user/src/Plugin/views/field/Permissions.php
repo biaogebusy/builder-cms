@@ -8,7 +8,6 @@ use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\field\PrerenderList;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Field handler to provide a list of permissions.
@@ -56,30 +55,23 @@ class Permissions extends PrerenderList {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('module_handler'),
-      $container->get('entity_type.manager')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     $this->additional_fields['uid'] = ['table' => 'users_field_data', 'field' => 'uid'];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     $this->addAdditionalFields();
     $this->field_alias = $this->aliases['uid'];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function preRender(&$values) {
     $this->items = [];
 
@@ -114,6 +106,9 @@ class Permissions extends PrerenderList {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function render_item($count, $item) {
     return $item['permission'];
   }

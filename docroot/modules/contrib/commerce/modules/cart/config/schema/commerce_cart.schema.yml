@@ -18,6 +18,9 @@ commerce_order.commerce_order_type.*.third_party.commerce_cart:
         unit:
           type: string
           label: 'Unit'
+        anonymous_only:
+          type: boolean
+          label: 'Only for anonymous users'
     enable_cart_message:
       type: boolean
       label: 'Display a message when an item is added to the cart'

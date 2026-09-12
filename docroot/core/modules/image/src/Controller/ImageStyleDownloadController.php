@@ -11,7 +11,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\image\ImageStyleInterface;
 use Drupal\system\FileDownloadController;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -64,24 +64,18 @@ class ImageStyleDownloadController extends FileDownloadController {
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The system service.
    */
-  public function __construct(LockBackendInterface $lock, ImageFactory $image_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
+  public function __construct(
+    #[Autowire(service: 'lock')]
+    LockBackendInterface $lock,
+    ImageFactory $image_factory,
+    StreamWrapperManagerInterface $stream_wrapper_manager,
+    FileSystemInterface $file_system,
+  ) {
     parent::__construct($stream_wrapper_manager);
     $this->lock = $lock;
     $this->imageFactory = $image_factory;
     $this->logger = $this->getLogger('image');
     $this->fileSystem = $file_system;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('lock'),
-      $container->get('image.factory'),
-      $container->get('stream_wrapper_manager'),
-      $container->get('file_system')
-    );
   }
 
   /**
@@ -139,7 +133,7 @@ class ImageStyleDownloadController extends FileDownloadController {
     // The $target variable for a derivative of a style has
     // styles/<style_name>/... as structure, so we check if the $target variable
     // starts with styles/.
-    $token = $request->query->get(IMAGE_DERIVATIVE_TOKEN, '');
+    $token = $request->query->get(ImageStyleInterface::TOKEN, '');
     $token_is_valid = hash_equals($image_style->getPathToken($image_uri), $token)
       || hash_equals($image_style->getPathToken($scheme . '://' . $target), $token);
     if (!$this->config('image.settings')->get('allow_insecure_derivatives') || str_starts_with(ltrim($target, '\/'), 'styles/')) {
@@ -161,15 +155,15 @@ class ImageStyleDownloadController extends FileDownloadController {
       throw new AccessDeniedHttpException("The scheme for this image doesn't match the scheme for the original image");
     }
 
-    if ($token_is_valid) {
-      $is_public = ($scheme !== 'private');
-    }
-    else {
-      $core_schemes = ['public', 'private', 'temporary'];
-      $additional_public_schemes = array_diff(Settings::get('file_additional_public_schemes', []), $core_schemes);
-      $public_schemes = array_merge(['public'], $additional_public_schemes);
-      $is_public = in_array($derivative_scheme, $public_schemes, TRUE);
-    }
+    $additional_public_schemes = array_diff(
+      Settings::get('file_additional_public_schemes', []),
+      ['public', 'private', 'temporary'],
+    );
+    $is_public = in_array(
+      $derivative_scheme,
+      array_merge(['public'], $additional_public_schemes),
+      TRUE,
+    );
 
     $headers = [];
 
@@ -186,7 +180,10 @@ class ImageStyleDownloadController extends FileDownloadController {
         $image_uri = $converted_image_uri;
       }
       else {
-        $this->logger->notice('Source image at %source_image_path not found while trying to generate derivative image at %derivative_path.', ['%source_image_path' => $image_uri, '%derivative_path' => $derivative_uri]);
+        $this->logger->notice('Source image at %source_image_path not found while trying to generate derivative image at %derivative_path.', [
+          '%source_image_path' => $image_uri,
+          '%derivative_path' => $derivative_uri,
+        ]);
         return new Response($this->t('Error generating image, missing source file.'), 404);
       }
     }

@@ -31,7 +31,7 @@ function easy_breadcrumb_help($route_name) {
       // Adds a link to the Drupal.org documentation pages.
       $output .= t('<p>See the <a href=":documentation">documentation pages</a> on Drupal.org for more information.</p>',
         [
-          ':documentation' => 'https://www.drupal.org/docs/8/improve-the-breadcrumbs',
+          ':documentation' => 'https://www.drupal.org/docs/contributed-modules/easy-breadcrumb',
         ]);
 
       return $output;

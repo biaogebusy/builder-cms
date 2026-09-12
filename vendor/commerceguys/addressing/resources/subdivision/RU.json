@@ -240,10 +240,6 @@
 			"name": "Tyva Republits",
 			"local_name": "Республика Тыва"
 		},
-		"UD": {
-			"name": "Udmurtskaja Respublika",
-			"local_name": "Республика Удмуртия"
-		},
 		"KK": {
 			"name": "Khakasiya Republits",
 			"local_name": "Республика Хакасия"
@@ -307,6 +303,10 @@
 		"TYU": {
 			"name": "Tyumenskaya oblast'",
 			"local_name": "Тюменская область"
+		},
+		"UD": {
+			"name": "Udmurtskaja Respublika",
+			"local_name": "Удмуртская Республика"
 		},
 		"ULY": {
 			"name": "Ulyanovskaya oblast'",

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\config\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests config overrides do not appear on forms that extend ConfigFormBase.
  *
- * @group config
  * @see \Drupal\Core\Form\ConfigFormBase
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigFormOverrideTest extends BrowserTestBase {
 
   /**

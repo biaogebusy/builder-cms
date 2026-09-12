@@ -54,6 +54,9 @@
     // Drupal.behaviors.dialog will do remove of origin element on dialog close.
     $element = $element.clone(true);
 
+    // Ensure the elemnt can be interacted with.
+    $element.removeClass('js-hide');
+
     var dialog = Drupal.dialog($element, {
       autoResize: true,
       resizable: false,

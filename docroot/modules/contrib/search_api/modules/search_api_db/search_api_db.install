@@ -99,7 +99,7 @@ function search_api_db_update_8103() {
     $server->set('backend_config', $config);
     // Mark the resulting configuration as trusted data. This avoids issues
     // with future schema changes.
-    $server->save(TRUE);
+    $server->save();
   }
 
   if ($count) {
@@ -129,7 +129,7 @@ function search_api_db_update_8104(): ?PluralTranslatableMarkup {
     $server->set('backend_config', $config);
     // Mark the resulting configuration as trusted data. This avoids issues
     // with future schema changes.
-    $server->save(TRUE);
+    $server->save();
   }
 
   if ($count) {

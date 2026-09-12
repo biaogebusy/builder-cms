@@ -91,6 +91,7 @@ view:
     - core/jquery
     - core/drupal
     - core/drupalSettings
+    - core/drupal.tableselect
     - core/once
     - views/views.ajax
 

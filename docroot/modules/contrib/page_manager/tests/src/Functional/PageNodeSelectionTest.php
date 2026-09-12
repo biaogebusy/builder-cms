@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\page_manager\Functional;
 
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\page_manager\Entity\PageVariant;
 use Drupal\Tests\BrowserTestBase;
 
@@ -32,6 +33,12 @@ class PageNodeSelectionTest extends BrowserTestBase {
 
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
+    EntityViewDisplay::load('node.article.default')
+      ->setComponent('body', [
+        'type' => 'text_default',
+        'label' => 'hidden',
+      ])
+      ->save();
     $this->drupalLogin($this->drupalCreateUser(['administer pages', 'create article content', 'create page content']));
 
     $this->drupalPlaceBlock('page_title_block');

@@ -22,7 +22,7 @@ class WebformElementTest extends WebformElementBrowserTestBase {
   /**
    * Tests webform element.
    */
-  public function testWebform() {
+  public function testWebform(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('contact');

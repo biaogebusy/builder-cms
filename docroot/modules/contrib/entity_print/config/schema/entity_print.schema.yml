@@ -28,7 +28,7 @@ entity_print_engine_pdf:
       type: string
       label: 'Paper Orientation'
     dpi:
-      type: number
+      type: integer
       label: 'DPI'
     username:
       type: string

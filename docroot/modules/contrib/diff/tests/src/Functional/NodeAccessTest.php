@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\diff\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\node\NodeAccessRebuild;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the diff overview form with modules implementing node access.
- *
- * @group diff
  */
+#[Group('diff')]
+#[RunTestsInSeparateProcesses]
 class NodeAccessTest extends BrowserTestBase {
 
   /**
@@ -34,8 +38,8 @@ class NodeAccessTest extends BrowserTestBase {
     // Dummy user 1.
     $this->createUser();
 
-    // Rebuild access.
-    \node_access_rebuild();
+    // @phpstan-ignore-next-line
+    DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', static fn() => \Drupal::service(NodeAccessRebuild::class)->rebuild(), static fn() => \node_access_rebuild());
   }
 
   /**

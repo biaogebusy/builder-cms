@@ -12,6 +12,14 @@ use Drupal\migrate\Row;
 use Drupal\migrate_drupal\Plugin\MigrateFieldPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Determines the field type for a field.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ * replacement.
+ *
+ * @see https://www.drupal.org/node/3533566
+ */
 #[MigrateProcess('field_type')]
 class FieldType extends StaticMap implements ContainerFactoryPluginInterface {
 
@@ -47,6 +55,7 @@ class FieldType extends StaticMap implements ContainerFactoryPluginInterface {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->fieldPluginManager = $field_plugin_manager;
     $this->migration = $migration;
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566', E_USER_DEPRECATED);
   }
 
   /**
@@ -57,6 +66,7 @@ class FieldType extends StaticMap implements ContainerFactoryPluginInterface {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      // @phpstan-ignore getDeprecatedService.deprecated
       $container->get('plugin.manager.migrate.field'),
       $migration
     );
@@ -71,7 +81,7 @@ class FieldType extends StaticMap implements ContainerFactoryPluginInterface {
       $plugin_id = $this->fieldPluginManager->getPluginIdFromFieldType($field_type, [], $this->migration);
       return $this->fieldPluginManager->createInstance($plugin_id, [], $this->migration)->getFieldType($row);
     }
-    catch (PluginNotFoundException $e) {
+    catch (PluginNotFoundException) {
       return parent::transform($value, $migrate_executable, $row, $destination_property);
     }
   }

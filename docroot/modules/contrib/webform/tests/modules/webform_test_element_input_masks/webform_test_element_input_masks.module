@@ -2,25 +2,29 @@
 
 /**
  * @file
+ * Test module for input masks.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_test_element_input_masks\Hook\WebformTestElementInputMasksHooks;
+
+/**
+ * @file
  * Support module for webform that provides element plugin tests.
  */
 
 /**
  * Implements hook_webform_element_input_masks().
  */
+#[LegacyHook]
 function webform_test_element_input_masks_webform_element_input_masks() {
-  $input_masks = [];
-  $input_masks['999'] = [
-    'title' => t('3-digit number'),
-    'example' => '999',
-    'pattern' => '^\d\d\d$',
-  ];
-  return $input_masks;
+  return \Drupal::service(WebformTestElementInputMasksHooks::class)->webformElementInputMasks();
 }
 
 /**
  * Implements hook_webform_element_input_masks_alter().
  */
+#[LegacyHook]
 function webform_test_element_input_masks_webform_element_input_masks_alter(array &$input_masks) {
-  $input_masks['999']['title'] .= ' (' . t('Custom input mask') . ')';
+  \Drupal::service(WebformTestElementInputMasksHooks::class)->webformElementInputMasksAlter($input_masks);
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\inline_entity_form\Element;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -196,12 +197,12 @@ class InlineEntityForm extends RenderElement {
    *   The inline form handler.
    */
   public static function getInlineFormHandler($entity_type) {
-    $inline_form_handler = \Drupal::entityTypeManager()->getHandler($entity_type, 'inline_form');
-    if (empty($inline_form_handler)) {
+    try {
+      return \Drupal::entityTypeManager()->getHandler($entity_type, 'inline_form');
+    }
+    catch (InvalidPluginDefinitionException $e) {
       throw new \InvalidArgumentException(sprintf('The %s entity type has no inline form handler.', $entity_type));
     }
-
-    return $inline_form_handler;
   }
 
 }

@@ -268,6 +268,31 @@ abstract class ProviderPluginBase extends PluginBase implements ProviderPluginIn
   /**
    * {@inheritdoc}
    */
+  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE) {
+    @trigger_error('Calling renderEmbedCode() is deprecated in video_embed_field:3.1.0 and is removed from video_embed_field:3.2.0. Use \Drupal\video_embed_field\ProviderPluginInterface::renderEmbed() instead. See https://www.drupal.org/project/video_embed_field/issues/3580405', E_USER_DEPRECATED);
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderEmbed(array $options) {
+    // Delegates to the deprecated renderEmbedCode() for backward
+    // compatibility with third-party plugins that only override it.
+    // @todo Remove in 3.2.0 along with renderEmbedCode().
+    // @phpstan-ignore method.deprecated
+    return $this->renderEmbedCode(
+      $options['width'],
+      $options['height'],
+      $options['autoplay'],
+      $options['title_format'],
+      $options['use_title_fallback']
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function renderThumbnail($image_style, $link_url) {
     $output = [
       '#theme' => 'image',

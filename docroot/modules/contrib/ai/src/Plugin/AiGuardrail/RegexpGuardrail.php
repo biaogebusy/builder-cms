@@ -9,6 +9,7 @@ use Drupal\ai\Guardrail\AiGuardrailPluginBase;
 use Drupal\ai\Guardrail\Result\GuardrailResultInterface;
 use Drupal\ai\Guardrail\Result\PassResult;
 use Drupal\ai\Guardrail\Result\StopResult;
+use Drupal\ai\Guardrail\UserMessageSelectionTrait;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\ai\OperationType\Chat\ChatOutput;
@@ -35,6 +36,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 class RegexpGuardrail extends AiGuardrailPluginBase implements ConfigurableInterface, PluginFormInterface {
 
   use StringTranslationTrait;
+  use UserMessageSelectionTrait;
 
   /**
    * {@inheritdoc}
@@ -46,23 +48,24 @@ class RegexpGuardrail extends AiGuardrailPluginBase implements ConfigurableInter
       return new PassResult('Input is not a chat input, skipping topic restriction.', $this);
     }
 
-    $messages = $input->getMessages();
-    $last_message = end($messages);
-
-    if (!$last_message instanceof ChatMessage) {
-      return new PassResult('No text message found to analyze.', $this);
-    }
-
-    $text = $last_message->getText();
     $regexp_pattern = $this->configuration['regexp_pattern'] ?? '';
     if (empty($regexp_pattern)) {
       return new PassResult('No regexp pattern configured, skipping check.', $this);
     }
-    if (preg_match($regexp_pattern, $text)) {
-      $violation_message = $this->configuration['violation_message'] ?? 'The text contains invalid content matching the pattern: @pattern';
-      $violation_message = str_replace('@pattern', $regexp_pattern, $violation_message);
 
-      return new StopResult($violation_message, $this);
+    $scan_all = !empty($this->configuration['scan_all_user_messages']);
+    $user_messages = $this->selectUserMessages($input, $scan_all);
+    if ($user_messages === []) {
+      return new PassResult('No user message found to analyze.', $this);
+    }
+
+    foreach ($user_messages as $message) {
+      if (preg_match($regexp_pattern, $message->getText())) {
+        $violation_message = $this->configuration['violation_message'] ?? 'The text contains invalid content matching the pattern: @pattern';
+        $violation_message = str_replace('@pattern', $regexp_pattern, $violation_message);
+
+        return new StopResult($violation_message, $this);
+      }
     }
 
     return new PassResult('Input text passed the regexp guardrail check.', $this);
@@ -197,10 +200,15 @@ class RegexpGuardrail extends AiGuardrailPluginBase implements ConfigurableInter
       '#value_callback' => [Textarea::class, 'valueCallback'],
     ];
 
+    $form['scan_all_user_messages'] = $this->buildScanAllUserMessagesElement(
+      (string) $this->t('When enabled, every user message in the chat history is checked, not only the most recent one. Useful when conversation history may have been imported, replayed, or scanned under different rules. When disabled (default) only the latest user message is scanned, even if a tool result message is technically more recent.'),
+      !empty($this->configuration['scan_all_user_messages']),
+    );
+
     $form['violation_message'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Violation Message'),
-      '#default_value' => $this->configuration['violation_message'] ?? 'The text contains invalid content matching the pattern: @pattern',
+      '#default_value' => ($this->configuration['violation_message'] ?? '') ?: 'The text contains invalid content matching the pattern: @pattern',
       '#description' => $this->t('You can use the placeholder %placeholder to include the pattern used.', [
         '%placeholder' => '@pattern',
       ]),

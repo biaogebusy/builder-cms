@@ -12,7 +12,7 @@ trait HighlightQueryBuilderTrait {
   /**
    * Format a field option for ElasticSearch highlighting JSON.
    *
-   * @param string[] $fieldList
+   * @param mixed[] $fieldList
    *   An array of field ID strings.
    *
    * @return array<string,object>

@@ -6,13 +6,17 @@ namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore drupalmediatoolbar
 /**
  * Tests for CKEditor 5 plugins using Drupal's translation system.
  *
- * @group ckeditor5
  * @internal
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class JSTranslationTest extends CKEditor5TestBase {
 
   use MediaTypeCreationTrait;

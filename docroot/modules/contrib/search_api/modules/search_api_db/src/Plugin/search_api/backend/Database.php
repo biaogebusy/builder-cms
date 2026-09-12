@@ -1943,7 +1943,7 @@ class Database extends BackendPluginBase implements AutocompleteBackendInterface
    */
   protected function createDbQuery(QueryInterface $query, array $fields) {
     $keys = &$query->getKeys();
-    $keys_set = (boolean) $keys;
+    $keys_set = (bool) $keys;
     $tokenizer_active = $query->getIndex()->isValidProcessor('tokenizer');
     $keys = $this->prepareKeys($keys, $tokenizer_active);
 
@@ -2527,11 +2527,11 @@ class Database extends BackendPluginBase implements AutocompleteBackendInterface
         // For NULL values, we can just use the single-values table, since we
         // only need to know if there's any value at all for that field.
         if ($value === NULL || empty($field_info['multi-valued'])) {
-          if (empty($tables[NULL])) {
+          if (empty($tables[''])) {
             $table = ['table' => $db_info['index_table']];
-            $tables[NULL] = $this->getTableAlias($table, $db_query);
+            $tables[''] = $this->getTableAlias($table, $db_query);
           }
-          $column = $tables[NULL] . '.' . $field_info['column'];
+          $column = $tables[''] . '.' . $field_info['column'];
           if ($value === NULL) {
             $method = $not_equals ? 'isNotNull' : 'isNull';
             $db_condition->$method($column);

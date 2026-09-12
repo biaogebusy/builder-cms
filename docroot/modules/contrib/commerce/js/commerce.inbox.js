@@ -11,7 +11,7 @@
             if (message.classList.contains('unread')) {
               Drupal.ajax({
                 url: Drupal.url(
-                  `admin/commerce/inbox-message/${message.dataset.messageId}/read`,
+                  `admin/commerce/inbox-message/${message.dataset.messageId}/read`
                 ),
               }).execute();
             }
@@ -22,7 +22,7 @@
               e.target.closest('.inbox-message').classList.remove('opened');
             });
           }
-        },
+        }
       );
     },
   };

@@ -28,7 +28,7 @@ class WebformEntityCloseAction extends ActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     /** @var \Drupal\webform\WebformInterface $object */
     $result = $object->access('update', $account, TRUE);
     return $return_as_object ? $result : $result->isAllowed();

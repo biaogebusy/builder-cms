@@ -6,12 +6,16 @@ use Drupal\KernelTests\Core\Queue\QueueTest as CoreQueueTest;
 use Drupal\redis\Queue\RedisQueue;
 use Drupal\redis\Queue\ReliableRedisQueue;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Redis queue functions.
  *
  * @group redis
  */
+#[Group('redis')]
+#[RunTestsInSeparateProcesses]
 class RedisQueueTest extends CoreQueueTest {
 
   use RedisTestInterfaceTrait;

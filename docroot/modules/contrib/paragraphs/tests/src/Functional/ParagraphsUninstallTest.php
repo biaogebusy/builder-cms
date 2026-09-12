@@ -3,12 +3,16 @@
 namespace Drupal\Tests\paragraphs\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that Paragraphs module can be uninstalled.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsUninstallTest extends BrowserTestBase {
 
   /**

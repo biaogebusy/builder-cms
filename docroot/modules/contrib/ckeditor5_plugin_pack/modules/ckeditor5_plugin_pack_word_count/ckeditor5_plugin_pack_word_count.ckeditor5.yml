@@ -1,0 +1,10 @@
+ckeditor5_plugin_pack_word_count__word_count:
+  ckeditor5:
+    plugins:
+      - wordCount.WordCount
+      - wordCountAdapter.WordCountAdapter
+  drupal:
+    label: Word Count
+    library: ckeditor5_plugin_pack_word_count/word-count-adapter
+    class: Drupal\ckeditor5_plugin_pack_word_count\Plugin\CKEditor5Plugin\WordCount
+    elements: false

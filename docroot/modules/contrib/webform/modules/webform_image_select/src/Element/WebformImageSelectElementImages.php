@@ -5,7 +5,7 @@ namespace Drupal\webform_image_select\Element;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Url;
 use Drupal\webform\Entity\WebformOptions as WebformOptionsEntity;
 use Drupal\webform\Utility\WebformElementHelper;
@@ -19,7 +19,7 @@ use Drupal\webform\Utility\WebformFormHelper;
  *
  * @FormElement("webform_image_select_element_images")
  */
-class WebformImageSelectElementImages extends FormElement {
+class WebformImageSelectElementImages extends FormElementBase {
 
   const CUSTOM_OPTION = '';
 

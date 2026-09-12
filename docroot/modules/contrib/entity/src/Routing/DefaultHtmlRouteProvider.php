@@ -64,6 +64,7 @@ class DefaultHtmlRouteProvider extends CoreDefaultHtmlRouteProvider {
         ]);
       // Entity types with serial IDs can specify this in their route
       // requirements, improving the matching process.
+      // @phpstan-ignore method.deprecated
       if ($this->getEntityTypeIdKeyType($entity_type) === 'integer') {
         $route->setRequirement($entity_type_id, '\d+');
       }

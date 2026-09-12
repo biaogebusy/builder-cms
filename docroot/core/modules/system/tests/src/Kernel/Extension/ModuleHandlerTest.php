@@ -10,12 +10,15 @@ use Drupal\Core\Extension\ModuleUninstallValidatorException;
 use Drupal\Core\Extension\ProfileExtensionList;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests ModuleHandler functionality.
- *
- * @group Extension
  */
+#[Group('Extension')]
+#[RunTestsInSeparateProcesses]
 class ModuleHandlerTest extends KernelTestBase {
 
   /**
@@ -36,17 +39,17 @@ class ModuleHandlerTest extends KernelTestBase {
     $this->assertModuleList($module_list, 'Initial');
 
     // Try to install a new module.
-    $this->moduleInstaller()->install(['ban']);
-    $module_list[] = 'ban';
+    $this->moduleInstaller()->install(['dependency_foo_test']);
+    $module_list[] = 'dependency_foo_test';
     sort($module_list);
     $this->assertModuleList($module_list, 'After adding a module');
 
     // Try to mess with the module weights.
-    module_set_weight('ban', 20);
+    module_set_weight('dependency_foo_test', 20);
 
-    // Move ban to the end of the array.
-    unset($module_list[array_search('ban', $module_list)]);
-    $module_list[] = 'ban';
+    // Move dependency_foo_test to the end of the array.
+    unset($module_list[array_search('dependency_foo_test', $module_list)]);
+    $module_list[] = 'dependency_foo_test';
     $this->assertModuleList($module_list, 'After changing weights');
 
     // Test the fixed list feature.
@@ -105,7 +108,7 @@ class ModuleHandlerTest extends KernelTestBase {
       $result = $this->moduleInstaller()->install(['dblog']);
       $this->fail('ModuleInstaller::install() throws an exception if dependencies are missing.');
     }
-    catch (MissingDependencyException $e) {
+    catch (MissingDependencyException) {
       // Expected exception; just continue testing.
     }
 
@@ -170,7 +173,7 @@ class ModuleHandlerTest extends KernelTestBase {
   public function testUninstallProfileDependency(): void {
     $profile = 'testing_install_profile_dependencies';
     $dependency = 'dblog';
-    $non_dependency = 'ban';
+    $non_dependency = 'dependency_foo_test';
     $this->setInstallProfile($profile);
     // Prime the \Drupal\Core\Extension\ExtensionList::getPathname() static
     // cache with the location of the testing_install_profile_dependencies
@@ -179,7 +182,7 @@ class ModuleHandlerTest extends KernelTestBase {
     // @todo Remove as part of https://www.drupal.org/node/2186491
     $profile_list = \Drupal::service('extension.list.profile');
     assert($profile_list instanceof ProfileExtensionList);
-    $profile_list->setPathname($profile, 'core/profiles/' . $profile . '/' . $profile . '.info.yml');
+    $profile_list->setPathname($profile, 'core/profiles/tests/' . $profile . '/' . $profile . '.info.yml');
     $this->enableModules(['module_test', $profile]);
 
     $data = \Drupal::service('extension.list.module')->reset()->getList();
@@ -229,7 +232,7 @@ class ModuleHandlerTest extends KernelTestBase {
    */
   public function testProfileAllDependencies(): void {
     $profile = 'testing_install_profile_all_dependencies';
-    $dependencies = ['dblog', 'ban'];
+    $dependencies = ['dblog', 'dependency_foo_test'];
     $this->setInstallProfile($profile);
     // Prime the \Drupal\Core\Extension\ExtensionList::getPathname() static
     // cache with the location of the testing_install_profile_dependencies
@@ -238,7 +241,7 @@ class ModuleHandlerTest extends KernelTestBase {
     // @todo Remove as part of https://www.drupal.org/node/2186491
     $profile_list = \Drupal::service('extension.list.profile');
     assert($profile_list instanceof ProfileExtensionList);
-    $profile_list->setPathname($profile, 'core/profiles/' . $profile . '/' . $profile . '.info.yml');
+    $profile_list->setPathname($profile, 'core/profiles/tests/' . $profile . '/' . $profile . '.info.yml');
     $this->enableModules(['module_test', $profile]);
 
     $data = \Drupal::service('extension.list.module')->reset()->getList();
@@ -253,7 +256,7 @@ class ModuleHandlerTest extends KernelTestBase {
 
     // Try uninstalling the dependencies.
     $this->expectException(ModuleUninstallValidatorException::class);
-    $this->expectExceptionMessage("The following reasons prevent the modules from being uninstalled: The 'Testing install profile all dependencies' install profile requires 'Database Logging'; The 'Testing install profile all dependencies' install profile requires 'Ban'");
+    $this->expectExceptionMessage("The following reasons prevent the modules from being uninstalled: The 'Testing install profile all dependencies' install profile requires 'Database Logging'; The 'Testing install profile all dependencies' install profile requires 'Dependency foo test module'");
     $this->moduleInstaller()->uninstall($dependencies);
   }
 
@@ -288,7 +291,7 @@ class ModuleHandlerTest extends KernelTestBase {
       $this->moduleInstaller()->uninstall(['entity_test']);
       $this->fail($message);
     }
-    catch (ModuleUninstallValidatorException $e) {
+    catch (ModuleUninstallValidatorException) {
       // Expected exception; just continue testing.
     }
 
@@ -298,7 +301,7 @@ class ModuleHandlerTest extends KernelTestBase {
       $this->moduleInstaller()->uninstall(['help']);
       $this->fail($message);
     }
-    catch (ModuleUninstallValidatorException $e) {
+    catch (ModuleUninstallValidatorException) {
       // Expected exception; just continue testing.
     }
 
@@ -362,9 +365,60 @@ class ModuleHandlerTest extends KernelTestBase {
   }
 
   /**
+   * Tests procedural preprocess functions.
+   */
+  public function testProceduralPreprocess(): void {
+    $this->moduleInstaller()->install(['module_test_procedural_preprocess']);
+    $preprocess_function = [];
+    $preprocess_invoke = [];
+    $prefix = 'module_test_procedural_preprocess';
+    $hook = 'test';
+    if ($this->moduleHandler()->hasImplementations('preprocess', [$prefix], TRUE)) {
+      $function = "{$prefix}_preprocess";
+      $preprocess_function[] = $function;
+      $preprocess_invoke[$function] = ['module' => $prefix, 'hook' => 'preprocess'];
+    }
+    if ($this->moduleHandler()->hasImplementations('preprocess_' . $hook, [$prefix], TRUE)) {
+      $function = "{$prefix}_preprocess_{$hook}";
+      $preprocess_function[] = $function;
+      $preprocess_invoke[$function] = ['module' => $prefix, 'hook' => 'preprocess_' . $hook];
+    }
+
+    foreach ($preprocess_function as $function) {
+      $this->assertTrue($this->moduleHandler()->invoke(... $preprocess_invoke[$function], args: [TRUE]), 'Procedural hook_preprocess runs.');
+    }
+  }
+
+  /**
+   * Tests Oop preprocess functions.
+   */
+  public function testOopPreprocess(): void {
+    $this->moduleInstaller()->install(['module_test_oop_preprocess']);
+    $preprocess_function = [];
+    $preprocess_invoke = [];
+    $prefix = 'module_test_oop_preprocess';
+    $hook = 'test';
+    if ($this->moduleHandler()->hasImplementations('preprocess', [$prefix], TRUE)) {
+      $function = "{$prefix}_preprocess";
+      $preprocess_function[] = $function;
+      $preprocess_invoke[$function] = ['module' => $prefix, 'hook' => 'preprocess'];
+    }
+    if ($this->moduleHandler()->hasImplementations('preprocess_' . $hook, [$prefix], TRUE)) {
+      $function = "{$prefix}_preprocess_{$hook}";
+      $preprocess_function[] = $function;
+      $preprocess_invoke[$function] = ['module' => $prefix, 'hook' => 'preprocess_' . $hook];
+    }
+
+    foreach ($preprocess_function as $function) {
+      $this->assertTrue($this->moduleHandler()->invoke(... $preprocess_invoke[$function], args: [TRUE]), 'Procedural hook_preprocess runs.');
+    }
+  }
+
+  /**
    * Returns the ModuleHandler.
    *
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
+   *   The module handler service.
    */
   protected function moduleHandler() {
     return $this->container->get('module_handler');
@@ -374,9 +428,30 @@ class ModuleHandlerTest extends KernelTestBase {
    * Returns the ModuleInstaller.
    *
    * @return \Drupal\Core\Extension\ModuleInstallerInterface
+   *   The module installer service.
    */
   protected function moduleInstaller() {
     return $this->container->get('module_installer');
+  }
+
+  /**
+   * Tests autoloading .token and .view files.
+   */
+  #[IgnoreDeprecations]
+  public function testAutoloadHookInfoFiles(): void {
+    $this->expectUserDeprecationMessage('Autoloading hooks in the file (core/modules/system/tests/modules/module_test/module_test.tokens.inc) is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Move the functions in this file to either the .module file or other appropriate location. See https://www.drupal.org/node/3489765');
+    $this->moduleInstaller()->install(['module_test']);
+    $testToken = [];
+    $testToken['types']['token_info_invoked'] = [
+      'name' => 'tokens.inc test',
+      'description' => 'tokens.inc test',
+    ];
+    $testToken['tokens']['token_info_invoked']['token_test_1'] = [
+      'type' => 'text',
+      'name' => 'tokens.inc test 1',
+    ];
+    $this->assertTrue($this->moduleHandler()->hasImplementations('token_info', ['module_test']));
+    $this->assertEquals($testToken, $this->moduleHandler()->invoke('module_test', 'token_info', []));
   }
 
 }

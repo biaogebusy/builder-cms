@@ -46,3 +46,13 @@ function fpa_requirements($phase) {
 
   return $requirements;
 }
+
+/**
+ * Force install the js_cookie module.
+ */
+function fpa_update_10001(&$sandbox) {
+  /** @var \Drupal\Core\Extension\ModuleInstallerInterface $installer */
+  $installer = \Drupal::service('module_installer');
+
+  $installer->install(['js_cookie']);
+}

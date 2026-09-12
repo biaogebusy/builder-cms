@@ -3,8 +3,10 @@
 namespace Drupal\commerce_payment_test\Plugin\Commerce\PaymentGateway;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Response\NeedsRedirectException;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\Attribute\CommercePaymentGateway;
+use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use Drupal\commerce_payment_example\Plugin\Commerce\PaymentGateway\OffsiteRedirect;
 use Drupal\commerce_payment_example\PluginForm\OffsiteRedirect\PaymentOffsiteForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -53,6 +55,19 @@ class TestOffsite extends OffsiteRedirect {
    * is saved. Used by OffsiteOrderDataTest.
    */
   public function onReturn(OrderInterface $order, Request $request) {
+    // Allows tests to force onReturn() to throw, used by
+    // OrderPaymentControllerTest.
+    switch ($this->state->get('test_offsite_on_return_exception')) {
+      case 'needs_redirect':
+        throw new NeedsRedirectException('https://example.com');
+
+      case 'payment_gateway':
+        throw PaymentGatewayException::createForPayment(NULL, 'Could not process the payment.');
+
+      case 'exception':
+        throw new \RuntimeException('Unexpected error.');
+    }
+
     $order->setData('test_offsite', ['test' => TRUE]);
 
     if ($this->state->get('offsite_order_data_test_save') === 'before') {

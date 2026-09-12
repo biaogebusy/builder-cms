@@ -206,11 +206,11 @@ class FakeDataGenerator {
    * @param bool $allowDuplicates
    *   Allow elements to be picked several times. Defaults to false.
    *
-   * @throws \LengthException
-   *   When requesting more elements than provided.
-   *
    * @return array
    *   New array with $count elements from $array.
+   *
+   * @throws \LengthException
+   *   When requesting more elements than provided.
    */
   public static function randomElements(array $array = ['a', 'b', 'c'], $count = 1, $allowDuplicates = FALSE) {
     $traversables = [];

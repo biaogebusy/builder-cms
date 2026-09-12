@@ -27,6 +27,8 @@ elements: |
       404: '404 Not Found'
       405: '405 Method Not Allowed'
       500: '500 Internal Server Error'
+      RequestException: 'Guzzle RequestException'
+      ConnectException: 'Guzzle ConnectException'
     '#default_value': 200
   first_name:
     '#title': 'First name'

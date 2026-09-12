@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\path_encoded_test\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
@@ -13,6 +15,7 @@ class PathEncodedTestController {
    * Returns an HTML simple response.
    *
    * @return \Symfony\Component\HttpFoundation\Response
+   *   A simple HTML response.
    */
   public function simple() {
     return new Response('<html><body>PathEncodedTestController works</body></html>');

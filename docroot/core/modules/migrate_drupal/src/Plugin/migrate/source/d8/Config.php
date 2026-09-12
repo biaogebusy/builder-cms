@@ -2,11 +2,18 @@
 
 namespace Drupal\migrate_drupal\Plugin\migrate\source\d8;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
 
 /**
  * Drupal 8+ configuration source from database.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use
+ * \Drupal\migrate\Plugin\migrate\source\ConfigEntity instead.
+ * @see https://www.drupal.org/node/3508578
  *
  * Available configuration keys:
  * - collections: (optional) The collection of configuration storage to retrieve
@@ -57,6 +64,14 @@ class Config extends DrupalSqlBase {
   /**
    * {@inheritdoc}
    */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, StateInterface $state, EntityTypeManagerInterface $entity_type_manager) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use \Drupal\migrate\Plugin\migrate\source\ContentEntity instead. See https://www.drupal.org/node/3508578', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $migration, $state, $entity_type_manager);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     $query = $this->select('config', 'c')
       ->fields('c', ['collection', 'name', 'data']);
@@ -73,7 +88,8 @@ class Config extends DrupalSqlBase {
    * {@inheritdoc}
    */
   public function prepareRow(Row $row) {
-    $row->setSourceProperty('data', unserialize($row->getSourceProperty('data')));
+    // @see \Drupal\Core\Config\DatabaseStorage::decode()
+    $row->setSourceProperty('data', unserialize($row->getSourceProperty('data'), ['allowed_classes' => FALSE]));
     return parent::prepareRow($row);
   }
 

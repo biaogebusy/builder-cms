@@ -16,7 +16,7 @@ class WebformSettingsSerialTest extends WebformBrowserTestBase {
   /**
    * Tests webform submission serial number.
    */
-  public function testSettings() {
+  public function testSettings(): void {
     $assert_session = $this->assertSession();
 
     // Login the admin user.

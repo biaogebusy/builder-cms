@@ -9,12 +9,14 @@ use Drupal\Core\ImageToolkit\ImageToolkitInterface;
 use Drupal\image\ImageEffectManager;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\Traits\Core\Image\ToolkitTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the image toolkit.
- *
- * @group Image
  */
+#[Group('Image')]
+#[RunTestsInSeparateProcesses]
 class ToolkitTest extends KernelTestBase {
 
   use ToolkitTestTrait;
@@ -24,7 +26,6 @@ class ToolkitTest extends KernelTestBase {
    */
   protected static $modules = [
     'image_test',
-    'system',
   ];
 
   /**
@@ -144,6 +145,21 @@ class ToolkitTest extends KernelTestBase {
     $calls = $this->imageTestGetAllCalls();
     $this->assertEquals('failing', $calls['apply'][0][0]);
     $this->assertSame([], $calls['apply'][0][1]);
+  }
+
+  /**
+   * Tests calling an autowiring image operation plugin.
+   */
+  public function testAutowiringOperation(): void {
+    $this->assertTrue($this->image->apply('autowiring'));
+
+    // Check that apply was called and with the correct parameters.
+    $this->assertToolkitOperationsCalled(['apply']);
+    $calls = $this->imageTestGetAllCalls();
+    $this->assertEquals('autowiring', $calls['apply'][0][0]);
+    $this->assertSame([], $calls['apply'][0][1]);
+
+    $this->assertSame('foo', \Drupal::state()->get('image_test.autowiring_operation', []));
   }
 
 }

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\language\Kernel\Views;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field language handler.
  *
- * @group language
  * @see \Drupal\language\Plugin\views\field\Language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class FieldLanguageTest extends LanguageTestBase {
 
   /**

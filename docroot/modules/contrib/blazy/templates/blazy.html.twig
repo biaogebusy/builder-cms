@@ -62,13 +62,14 @@
  * @ingroup themeable
  */
 #}
+{% set use_player = blazies.use.player and blazies.media.embed_url %}
 {%
   set classes = [
     content ? 'media--rendered',
     blazies.namespace ? 'media--' ~ blazies.namespace|clean_class,
     blazies.media.provider ? 'media--' ~ blazies.media.provider|clean_class,
     settings.media_switch ? 'media--switch media--switch--' ~ settings.media_switch|clean_class,
-    blazies.use.player ? 'media--player',
+    use_player ? 'media--player',
     blazies.media.bundle ? 'media--bundle--' ~ blazies.media.bundle|clean_class,
     blazies.media.type ? 'media--' ~ blazies.media.type|clean_class,
     blazies.resimage.id and not content ? 'media--responsive',
@@ -78,15 +79,15 @@
     settings.classes ? settings.classes|join(' ')|clean_class,
   ]
 %}
-{% if blazies.use.player %}
+{% if use_player %}
   {% set attributes = attributes.setAttribute('aria-live', 'polite') %}
 
   {% set label = blazies.media.label %}
-  {% set play_title = 'Load and play video.'|t %}
+  {% set play_title = 'Load "@provider" and play video. Third-party cookies and data tracking may apply.'|t({'@provider': blazies.media.provider}) %}
   {% set close_title = 'Stop and close video.'|t %}
 
   {% if label %}
-    {% set play_title = 'Load and play the video "@label".'|t({'@label': label}) %}
+    {% set play_title = 'Load "@provider" and play the video "@label". Third-party cookies and data tracking may apply.'|t({'@label': label, '@provider': blazies.media.provider}) %}
     {% set close_title = 'Stop and close the video "@label".'|t({'@label': label}) %}
   {% endif %}
 
@@ -110,7 +111,7 @@
 {% endif %}
 {% set player %}
   {% block blazy_player %}
-    {% if blazies.use.player %}
+    {% if use_player %}
       <button{{ close_button_attributes }}></button>
       <button{{ play_button_attributes }}></button>
     {% else %}
@@ -136,7 +137,7 @@
 {% set blazy %}
   {%- block blazy_content %}
     {%- if media_attributes -%}<div{{- media_attributes -}}>{%- endif -%}
-      {%- if url and not blazies.use.player -%}
+      {%- if url and not use_player -%}
         <a href="{{ url }}"{{ url_attributes }}>{{- media -}}</a>
         {# Allows fieldable captions with A tag, such as social share. #}
         {%- if captions and captions.lightbox is not empty -%}

@@ -41,9 +41,6 @@ class ConfigIgnoreHookTest extends ConfigIgnoreBrowserTestBase {
    *
    * Its important import/export is called directly, if called by a browser then
    * static cache will not be present.
-   *
-   * @covers \Drupal\config_ignore\EventSubscriber\ConfigIgnoreEventSubscriber::getRules
-   * @covers \Drupal\config_ignore\EventSubscriber\ConfigIgnoreEventSubscriber::invalidateTags
    */
   public function testAlterHookStaticCache() {
     // Each of these are cloned since normally result of transformStorage

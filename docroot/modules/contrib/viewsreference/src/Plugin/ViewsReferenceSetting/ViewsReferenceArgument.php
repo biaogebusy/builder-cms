@@ -39,9 +39,15 @@ class ViewsReferenceArgument extends PluginBase implements ViewsReferenceSetting
   protected $tokenService;
 
   /**
-   * {@inheritdoc}
+   * Constructs a ViewsReferenceArgument object.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CurrentRouteMatch $current_route_match, Token $token) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    CurrentRouteMatch $current_route_match,
+    Token $token,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->routeMatch = $current_route_match;
     $this->tokenService = $token;
@@ -51,6 +57,7 @@ class ViewsReferenceArgument extends PluginBase implements ViewsReferenceSetting
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @phpstan-ignore-next-line */
     return new static(
       $configuration,
       $plugin_id,
@@ -64,6 +71,10 @@ class ViewsReferenceArgument extends PluginBase implements ViewsReferenceSetting
    * {@inheritdoc}
    */
   public function alterFormField(array &$form_field) {
+    $form_field['#description'] = $this->t(
+      'Separate contextual filter values with a "/". For example, %example.',
+      ['%example' => '40/12/10'],
+    ) . ' ' . $this->t('When using "Allow multiple values" in the view, enter multiple values per contextual filter in the form of 1+2+3 (for OR) or 1,2,3 (for AND).');
     $form_field['#weight'] = 40;
   }
 

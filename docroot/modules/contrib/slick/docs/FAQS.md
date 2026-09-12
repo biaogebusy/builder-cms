@@ -1,22 +1,9 @@
 
 ***
-## <a name="faq"></a>FAQ
+## <a name="faq"> </a>FAQ
 
 ### PROGRAMATICALLY
 [**slick.api.php**](https://git.drupalcode.org/project/slick/blob/3.0.x/slick.api.php)
-
-
-### QUICK PERFORMANCE TIPS
-* Slick lazyloads are **deprecated in 2.10**, use Blazy for anything instead.
-* Tick **Optimized** option on the top right of Slick optionset edit page.
-* Use image style with regular sizes containing effect **crop** in the name.
-  This way all images will inherit dimensions calculated once.
-* Disable core library **slick-theme.css** as it contains font **slick** which
-  may not be in use when using own icon font at:
-  **/admin/config/media/slick/ui**
-* Uninstall Slick UI at production.
-* See Slick and Blazy UI for more optimization options.
-* Enable Drupal cache, and CSS/ JS assets aggregation.
 
 
 ### OPTIONSETS
@@ -174,6 +161,8 @@ The last is the Module feature using pure `CSS Foundation` b-grid.
 The total amount of Views results must be bigger than `Visible slides`,
 otherwise broken Grid, see skin Grid above for more details.
 
+
+### Slick version 1.8.1+ problem
 **Warning!** The `rows` option is the only culprit between the supported
 versions and 1.8.1+. The value 0 vs 1 is the confusing and breaking one
 depending on the conflicting versions. Read the warning message on saving
@@ -197,19 +186,7 @@ of by the module if using the provided formatters, or Views styles.
 
 
 ### CURRENT DEVELOPMENT STATUS
-A full release should be reasonable after proper feedback from the community,
-some code cleanup, and optimization where needed. Patches are very much welcome.
-
-Alpha, Beta, DEV releases are for developers only. Beware of possible breakage.
-
-However if it is broken, unless an update is explicitly required, clearing cache
-should fix most issues during DEV phases. Prior to any update, always visit:
-
-**[/admin/config/development/performance](/admin/config/development/performance)**
-
-And hit **Clear all caches** button once the new Slick is in place.
-Regenerate CSS and JS as the latest fixes may contain changes to the assets.
-Have the latest or similar release Blazy to avoid trouble in the first place.
+A stable production release is anticipated following comprehensive community feedback, final code sanitation, and performance optimization. We maintain an open-contribution model—technical patches and audits are highly encouraged.
 
 
 ### ROADMAP

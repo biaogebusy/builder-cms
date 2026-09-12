@@ -1,0 +1,5 @@
+services:
+  Drupal\ace_editor_test\Hook\AceEditorTestHooks:
+    class: Drupal\ace_editor_test\Hook\AceEditorTestHooks
+    arguments:
+      - '@request_stack'

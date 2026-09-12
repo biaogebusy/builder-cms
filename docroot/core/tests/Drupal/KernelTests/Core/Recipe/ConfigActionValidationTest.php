@@ -11,10 +11,16 @@ use Drupal\Core\Recipe\RecipeFileException;
 use Drupal\Core\Recipe\RecipeRunner;
 use Drupal\FunctionalTests\Core\Recipe\RecipeTestTrait;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
- * @group Recipe
+ * Tests Config Action Validation.
  */
+#[Group('Recipe')]
+#[RunTestsInSeparateProcesses]
 class ConfigActionValidationTest extends KernelTestBase {
 
   use RecipeTestTrait;
@@ -26,8 +32,8 @@ class ConfigActionValidationTest extends KernelTestBase {
     'block_content',
     'link',
     'node',
-    'shortcut',
     'system',
+    'user',
   ];
 
   /**
@@ -39,20 +45,11 @@ class ConfigActionValidationTest extends KernelTestBase {
   protected $strictConfigSchema = FALSE;
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-    $this->installConfig('shortcut');
-    $this->installEntitySchema('shortcut');
-  }
-
-  /**
-   * @testWith ["block_content_type"]
-   *   ["node_type"]
-   *   ["shortcut_set"]
-   *   ["menu"]
-   */
+ * Tests config actions are validated.
+ */
+  #[TestWith(["block_content_type"])]
+  #[TestWith(["node_type"])]
+  #[TestWith(["menu"])]
   public function testConfigActionsAreValidated(string $entity_type_id): void {
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
     $storage = $this->container->get(EntityTypeManagerInterface::class)
@@ -77,7 +74,7 @@ name: Config actions making bad decisions
 config:
   actions:
     $config_name:
-      simpleConfigUpdate:
+      setProperties:
         $label_key: ''
 YAML;
 
@@ -100,11 +97,11 @@ YAML;
    * Tests that the all of the config listed in a recipe's config actions are
    * provided by extensions that will be installed by the recipe, or one of its
    * dependencies (no matter how deeply nested).
-   *
-   * @testWith ["direct_dependency"]
-   *   ["indirect_dependency_one_level_down"]
-   *   ["indirect_dependency_two_levels_down"]
    */
+  #[TestWith(["direct_dependency"])]
+  #[TestWith(["indirect_dependency_one_level_down"])]
+  #[TestWith(["indirect_dependency_two_levels_down"])]
+  #[DoesNotPerformAssertions]
   public function testConfigActionDependenciesAreValidated(string $name): void {
     Recipe::createFromDirectory("core/tests/fixtures/recipes/config_actions_dependency_validation/$name");
   }

@@ -29,7 +29,7 @@ class Credential
     /**
      * Version of the Client
      */
-    const VERSION = '1.1.5';
+    const VERSION = '1.2.5';
 
     /**
      * @var Config

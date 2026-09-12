@@ -7,18 +7,15 @@ namespace Drupal\Tests\views\Kernel;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests core view token replacement.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class TokenReplaceTest extends ViewsKernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * Views used by this test.

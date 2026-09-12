@@ -1,13 +1,13 @@
-.toolbar-bar .acquia-inactive-subscription:before {
-  background-image: url('../images/error.svg');
+.toolbar-bar .acquia-inactive-subscription::before {
+  background-image: url("../images/error.svg");
 }
 
-.toolbar-bar .acquia-active-subscription:before {
-  background-image: url('../images/check.svg');
+.toolbar-bar .acquia-active-subscription::before {
+  background-image: url("../images/check.svg");
 }
 
-.toolbar-bar .acquia-unknown-subscription:before {
-  background-image: url('../../../../core/misc/icons/e29700/warning.svg');
+.toolbar-bar .acquia-unknown-subscription::before {
+  background-image: url("../../../../core/misc/icons/e29700/warning.svg");
 }
 
 .toolbar .toolbar-bar .toolbar-tab .acquia-unknown-subscription,

@@ -6,12 +6,16 @@ namespace Drupal\Tests\comment\Kernel\Plugin\migrate\source;
 
 use Drupal\migrate\Exception\RequirementsException;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests check requirements for comment type source plugin.
- *
- * @group comment
  */
+#[Group('comment')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class CommentTypeRequirementsTest extends MigrateDrupal7TestBase {
 
   /**
@@ -28,9 +32,8 @@ class CommentTypeRequirementsTest extends MigrateDrupal7TestBase {
    *   The expected message of the RequirementsException.
    * @param string $migration_plugin_id
    *   The plugin ID of the comment type migration to test.
-   *
-   * @dataProvider providerTestCheckCommentTypeRequirements
    */
+  #[DataProvider('providerTestCheckCommentTypeRequirements')]
   public function testCheckCommentTypeRequirements(array $disabled_source_modules, string $exception_message, string $migration_plugin_id): void {
     if (!empty($disabled_source_modules)) {
       $this->sourceDatabase->update('system')

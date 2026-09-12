@@ -7,7 +7,6 @@ use Consolidation\AnnotatedCommand\CommandError;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
-use Drupal\Core\Session\UserSession;
 use Drupal\user\Entity\User;
 use Drupal\views\Views;
 use Drupal\views_data_export\BatchProcessingAdapterDrush;
@@ -135,7 +134,7 @@ class ViewsDataExportCommands extends DrushCommands {
     }
 
     if (isset($options['uid'])) {
-      $this->accountSwitcher->switchTo(new UserSession(['uid' => $options['uid']]));
+      $this->accountSwitcher->switchTo(User::load($options['uid']));
     }
 
     $result = DataExport::buildResponse($view_name, $display_id, $args, new BatchProcessingAdapterDrush());

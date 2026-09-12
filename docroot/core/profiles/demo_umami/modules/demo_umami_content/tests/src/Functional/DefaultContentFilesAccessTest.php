@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\demo_umami_content\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that files provided by demo_umami_content are not accessible.
- *
- * @group demo_umami_content
  */
+#[Group('demo_umami_content')]
+#[RunTestsInSeparateProcesses]
 class DefaultContentFilesAccessTest extends BrowserTestBase {
 
   /**

@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\layout_library\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 
@@ -10,6 +14,8 @@ use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
  *
  * @group layout_library
  */
+#[Group('layout_library')]
+#[RunTestsInSeparateProcesses]
 class LayoutSelectionTest extends BrowserTestBase {
 
   use ContentTypeCreationTrait;
@@ -148,7 +154,12 @@ class LayoutSelectionTest extends BrowserTestBase {
     $page = $this->getSession()->getPage();
     $assert = $this->assertSession();
 
-    $this->drupalGet("/admin/structure/types/manage/$node_type/display");
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet("/admin/structure/types/manage/$node_type/display/default"),
+      fn() => $this->drupalGet("/admin/structure/types/manage/$node_type/display"),
+    );
     $page->checkField('layout[enabled]');
     $page->checkField('layout[library]');
     $page->pressButton('Save');

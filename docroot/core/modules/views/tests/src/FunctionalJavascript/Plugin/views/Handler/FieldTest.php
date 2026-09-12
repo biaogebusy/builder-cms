@@ -10,12 +10,14 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field handler UI.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldTest extends WebDriverTestBase {
   use SchemaCheckTestTrait;
 
@@ -112,6 +114,9 @@ class FieldTest extends WebDriverTestBase {
     $this->assertEquals('Content', $web_assert->waitForElement('css', '.ui-dialog-title')->getText());
   }
 
+  /**
+   * Tests changing the formatter.
+   */
   public function testFormatterChanging(): void {
     $web_assert = $this->assertSession();
     $url = '/admin/structure/views/view/test_field_body';

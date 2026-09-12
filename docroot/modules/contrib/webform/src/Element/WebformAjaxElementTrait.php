@@ -64,7 +64,7 @@ trait WebformAjaxElementTrait {
    * @param array|null &$update_element
    *   The element to append the hidden Ajax submit button.
    */
-  public function buildAjaxElement($id, array &$wrapper_element, array &$trigger_element, array &$update_element = NULL) {
+  public function buildAjaxElement($id, array &$wrapper_element, array &$trigger_element, ?array &$update_element = NULL) {
     static::buildAjaxElementWrapper($id, $wrapper_element);
     static::buildAjaxElementTrigger($id, $trigger_element);
     if ($update_element) {

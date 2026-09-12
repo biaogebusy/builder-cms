@@ -28,6 +28,8 @@ class PathautoState extends TypedData {
   protected $value;
 
   /**
+   * The parent entity.
+   *
    * @var \Drupal\Core\Field\FieldItemInterface
    */
   protected $parent;
@@ -121,6 +123,7 @@ class PathautoState extends TypedData {
    * Returns the key value collection that should be used for the given entity.
    *
    * @return string
+   *   The key value collection name.
    */
   protected function getCollection() {
     return 'pathauto_state.' . $this->parent->getEntity()->getEntityTypeId();

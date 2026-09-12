@@ -19,7 +19,7 @@ class WebformMailTest extends WebformBrowserTestBase {
   /**
    * Checks the From: and Reply-to: headers.
    */
-  public function testFromAndReplyToHeader() {
+  public function testFromAndReplyToHeader(): void {
     $language = \Drupal::languageManager()->getCurrentLanguage();
 
     // Use the state system collector mail backend.

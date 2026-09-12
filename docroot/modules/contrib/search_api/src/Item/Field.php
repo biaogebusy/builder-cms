@@ -523,8 +523,10 @@ class Field implements \IteratorAggregate, FieldInterface {
    */
   public function getDataTypePlugin() {
     $data_type_manager = $this->getDataTypeManager();
-    if ($data_type_manager->hasDefinition($this->getType())) {
-      return $data_type_manager->createInstance($this->getType());
+    $type = $this->getType();
+    // To guard against incomplete field definitions, explicitly check for NULL.
+    if ($type !== NULL && $data_type_manager->hasDefinition($type)) {
+      return $data_type_manager->createInstance($type);
     }
     return NULL;
   }

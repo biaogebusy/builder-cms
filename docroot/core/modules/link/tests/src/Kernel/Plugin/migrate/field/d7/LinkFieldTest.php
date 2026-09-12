@@ -5,20 +5,21 @@ declare(strict_types=1);
 namespace Drupal\Tests\link\Kernel\Plugin\migrate\field\d7;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\link\LinkTitleVisibility;
 use Drupal\link\Plugin\migrate\field\d7\LinkField;
+use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\link\Plugin\migrate\field\d7\LinkField
- * @group link
+ * Tests Drupal\link\Plugin\migrate\field\d7\LinkField.
  */
+#[CoversClass(LinkField::class)]
+#[Group('link')]
+#[RunTestsInSeparateProcesses]
 class LinkFieldTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * @var \Drupal\migrate_drupal\Plugin\MigrateFieldInterface
@@ -53,7 +54,7 @@ class LinkFieldTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::alterFieldInstanceMigration
+   * Tests alter field instance migration.
    */
   public function testAlterFieldInstanceMigration($method = 'alterFieldInstanceMigration'): void {
     $this->plugin->$method($this->migration);
@@ -63,9 +64,9 @@ class LinkFieldTest extends KernelTestBase {
       'source' => 'settings/title',
       'bypass' => TRUE,
       'map' => [
-        'disabled' => DRUPAL_DISABLED,
-        'optional' => DRUPAL_OPTIONAL,
-        'required' => DRUPAL_REQUIRED,
+        'disabled' => LinkTitleVisibility::Disabled->value,
+        'optional' => LinkTitleVisibility::Optional->value,
+        'required' => LinkTitleVisibility::Required->value,
       ],
     ];
     $this->assertSame($expected, $this->migration->getProcess());

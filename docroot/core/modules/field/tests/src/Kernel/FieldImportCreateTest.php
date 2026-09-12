@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Site\Settings;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Create field storages and fields during config create method invocation.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldImportCreateTest extends FieldKernelTestBase {
 
   /**
@@ -35,7 +38,7 @@ class FieldImportCreateTest extends FieldKernelTestBase {
     $this->assertNull(FieldConfig::load($field_id_2b));
 
     // Create a second bundle for the 'Entity test' entity type.
-    entity_test_create_bundle('test_bundle');
+    EntityTestHelper::createBundle('test_bundle');
 
     // Enable field_test_config module and check that the field and storage
     // shipped in the module's default config were created.

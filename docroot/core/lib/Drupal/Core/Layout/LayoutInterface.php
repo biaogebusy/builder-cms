@@ -29,6 +29,7 @@ interface LayoutInterface extends PluginInspectionInterface, DerivativeInspectio
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Layout\LayoutDefinition
+   *   The layout plugin definition for this plugin.
    */
   public function getPluginDefinition();
 

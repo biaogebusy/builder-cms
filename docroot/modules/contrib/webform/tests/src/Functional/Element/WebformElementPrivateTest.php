@@ -21,7 +21,7 @@ class WebformElementPrivateTest extends WebformElementBrowserTestBase {
   /**
    * Test element access.
    */
-  public function testElementAccess() {
+  public function testElementAccess(): void {
     $assert_session = $this->assertSession();
 
     $normal_user = $this->drupalCreateUser(['view own webform submission']);

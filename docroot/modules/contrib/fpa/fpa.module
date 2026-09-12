@@ -21,6 +21,11 @@ const FPA_ATTR_SYSTEM_NAME = 'fpa-system-name';
 function fpa_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'user.admin_permissions':
+      $config = \Drupal::config('fpa.settings')->get('disabled_sections');
+      if (!empty($config) && in_array('help', $config)) {
+        return '';
+      }
+
       $output = '';
       $output .= '<p>' . t('Permissions and Module names will match on the readable or system name. The system name is provided as a togglable column.') . '</p>';
       $output .= '<p>' . t('Enter in the format of "permission@module", e.g. "admin@system" will show only permissions with the text "admin" in modules with the text "system".') . '</p>';

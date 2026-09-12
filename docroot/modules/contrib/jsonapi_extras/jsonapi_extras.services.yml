@@ -32,7 +32,7 @@ services:
   serializer.normalizer.content_entity.jsonapi_extras:
     class: Drupal\jsonapi\Normalizer\ImpostorFrom\jsonapi_extras\ContentEntityDenormalizerImpostor
     decorates: serializer.normalizer.content_entity.jsonapi
-    arguments: ['@serializer.normalizer.content_entity.jsonapi_extras.inner']
+    arguments: ['@serializer.normalizer.content_entity.jsonapi_extras.inner', '@entity_type.manager', '@entity_field.manager']
 
   serializer.normalizer.config_entity.jsonapi_extras:
     class: Drupal\jsonapi\Normalizer\ImpostorFrom\jsonapi_extras\ConfigEntityDenormalizerImpostor

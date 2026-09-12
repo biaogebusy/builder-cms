@@ -403,7 +403,9 @@ abstract class PullKernelTestBase extends KernelTestBase implements ServiceModif
   }
 
   /**
-   * Helper function to create the import config used for the test.
+   * Creates the import config used for the test.
+   *
+   * @see self::getImportConfigProcessorSettings()
    */
   protected function createImportConfig() {
     $processor_plugin_manager = $this->container->get('plugin.manager.entity_share_client_import_processor');
@@ -428,7 +430,9 @@ abstract class PullKernelTestBase extends KernelTestBase implements ServiceModif
   }
 
   /**
-   * Helper function to create the import config used for the test.
+   * Defines the import config processor settings to use for the test.
+   *
+   * Test classes should override this for their needs.
    *
    * @return array
    *   The import processors config. The 'weights' property in a configuration
@@ -566,17 +570,44 @@ abstract class PullKernelTestBase extends KernelTestBase implements ServiceModif
     // not existing or not having access.
     $this->assertNotEmpty($batch['sets']);
 
-    $batch_context = [];
-    foreach ($batch['sets'][0]['operations'] as $batch_operation) {
-      [$operation_callback, $operation_parameters] = $batch_operation;
+    // Force the batch to be non-progressive so it's processed in one go.
+    $batch['progressive'] = FALSE;
+    batch_process();
 
-      $operation_parameters[] =& $batch_context;
+    // Reset the batch, otherwise it will persist.
+    $batch = NULL;
+    // Reset the runtime import context.
+    $this->container->get('entity_share_client.import_service')->resetRuntimeImportContext();
+  }
 
-      // We don't need to check the $context for whether to re-call the
-      // operation, as no test should require more than one pass at this.
-      // @todo: Sanity check the number of entities in the test to make sure!
-      call_user_func_array($operation_callback, $operation_parameters);
-    }
+  /**
+   * Helper function to import entities by UUID.
+   *
+   * @param string $channel_id
+   *   The channel ID.
+   * @param array $source_uuids
+   *   An array of source entity UUIDs.
+   */
+  protected function pullEntities(string $channel_id, array $source_uuids) {
+    /** @var \Drupal\entity_share_client\Service\ImportServiceInterface $import_service */
+    $import_service = $this->container->get('entity_share_client.import_service');
+
+    $import_context = new ImportContext($this->remote->id(), $channel_id, 'test_import_config');
+
+    // Import the channel. This sets up a batch as it's meant to be called from
+    // a UI.
+    $import_service->importEntities($import_context, $source_uuids);
+
+    // Grab the batch, and call its operations ourselves.
+    $batch = &batch_get();
+    // Sanity check that the batch had operations set on it. If that's not the
+    // case, there's a problem with the Entity Share setup, such as the channel
+    // not existing or not having access.
+    $this->assertNotEmpty($batch['sets']);
+
+    // Force the batch to be non-progressive so it's processed in one go.
+    $batch['progressive'] = FALSE;
+    batch_process();
 
     // Reset the batch, otherwise it will persist.
     $batch = NULL;

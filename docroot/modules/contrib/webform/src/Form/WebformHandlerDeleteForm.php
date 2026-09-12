@@ -52,7 +52,7 @@ class WebformHandlerDeleteForm extends WebformDeleteFormBase {
       '#type' => 'webform_message',
       '#message_type' => 'warning',
       '#message_message' => $this->t('Are you sure you want to delete the %title handler?', $t_args) . '<br/>' .
-        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+      '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
     ];
   }
 
@@ -95,7 +95,7 @@ class WebformHandlerDeleteForm extends WebformDeleteFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $webform_handler = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $webform_handler = NULL) {
     $this->webform = $webform;
     $this->webformHandler = $this->webform->getHandler($webform_handler);
 

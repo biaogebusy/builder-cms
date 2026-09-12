@@ -9,8 +9,6 @@ use Drupal\Tests\UnitTestCase;
 
 /**
  * Base class used for testing the various LanguageNegotiation plugins.
- *
- * @group language
  */
 abstract class LanguageNegotiationTestBase extends UnitTestCase {
 
@@ -26,6 +24,7 @@ abstract class LanguageNegotiationTestBase extends UnitTestCase {
    * Creates a @LanguageNegotiation plugin using the factory ::create method.
    *
    * @return \Drupal\language\LanguageNegotiationMethodInterface
+   *   The created language negotiation plugin.
    */
   protected function createLanguageNegotiationPlugin(array $configuration = [], $plugin_definition = NULL) {
     $class = $this->getPluginClass();

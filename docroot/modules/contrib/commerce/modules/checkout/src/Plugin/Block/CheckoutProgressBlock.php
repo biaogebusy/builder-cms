@@ -2,8 +2,10 @@
 
 namespace Drupal\commerce_checkout\Plugin\Block;
 
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -22,20 +24,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CheckoutProgressBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The checkout order manager.
-   *
-   * @var \Drupal\commerce_checkout\CheckoutOrderManagerInterface
-   */
-  protected $checkoutOrderManager;
-
-  /**
-   * The current route match.
-   *
-   * @var \Drupal\Core\Routing\RouteMatchInterface
-   */
-  protected $routeMatch;
-
-  /**
    * Constructs a new CheckoutProgressBlock.
    *
    * @param array $configuration
@@ -44,16 +32,22 @@ class CheckoutProgressBlock extends BlockBase implements ContainerFactoryPluginI
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\commerce_checkout\CheckoutOrderManagerInterface $checkout_order_manager
+   * @param \Drupal\commerce_checkout\CheckoutOrderManagerInterface $checkoutOrderManager
    *   The checkout order manager.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
    *   The current route match.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CheckoutOrderManagerInterface $checkout_order_manager, RouteMatchInterface $route_match) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    protected CheckoutOrderManagerInterface $checkoutOrderManager,
+    protected RouteMatchInterface $routeMatch,
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->checkoutOrderManager = $checkout_order_manager;
-    $this->routeMatch = $route_match;
   }
 
   /**
@@ -65,7 +59,8 @@ class CheckoutProgressBlock extends BlockBase implements ContainerFactoryPluginI
       $plugin_id,
       $plugin_definition,
       $container->get('commerce_checkout.checkout_order_manager'),
-      $container->get('current_route_match')
+      $container->get('current_route_match'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -77,6 +72,13 @@ class CheckoutProgressBlock extends BlockBase implements ContainerFactoryPluginI
    */
   public function build() {
     $order = $this->routeMatch->getParameter('commerce_order');
+    if (empty($order)) {
+      return [];
+    }
+    if (!($order instanceof OrderInterface)) {
+      /** @var \Drupal\commerce_order\Entity\OrderInterface|null $order */
+      $order = $this->entityTypeManager->getStorage('commerce_order')->load($order);
+    }
     if (!$order) {
       // The block is being rendered outside of the checkout page.
       return [];

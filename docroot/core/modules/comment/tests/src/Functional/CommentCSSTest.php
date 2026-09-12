@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\comment\Functional;
 
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\comment\CommentInterface;
-use Drupal\user\RoleInterface;
 use Drupal\comment\Entity\Comment;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\Traits\Core\GeneratePermutationsTrait;
+use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests CSS classes on comments.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentCSSTest extends CommentTestBase {
 
   use GeneratePermutationsTrait;
@@ -91,11 +93,6 @@ class CommentCSSTest extends CommentTestBase {
       }
       // Request the node with the comment.
       $this->drupalGet('node/' . $node->id());
-      $settings = $this->getDrupalSettings();
-
-      // Verify the data-history-node-id attribute, which is necessary for the
-      // by-viewer class and the "new" indicator, see below.
-      $this->assertSession()->elementsCount('xpath', '//*[@data-history-node-id="' . $node->id() . '"]', 1);
 
       // Verify classes if the comment is visible for the current user.
       if ($case['comment_status'] == CommentInterface::PUBLISHED || $case['user'] == 'admin') {
@@ -132,16 +129,6 @@ class CommentCSSTest extends CommentTestBase {
       }
       else {
         $this->assertSession()->elementNotExists('xpath', $comments);
-      }
-
-      // Verify the data-comment-timestamp attribute, which is used by the
-      // drupal.comment-new-indicator library to add a "new" indicator to each
-      // comment that was created or changed after the last time the current
-      // user read the corresponding node.
-      if ($case['comment_status'] == CommentInterface::PUBLISHED || $case['user'] == 'admin') {
-        $this->assertSession()->elementsCount('xpath', '//*[contains(@class, "comment")]/*[@data-comment-timestamp="' . $comment->getChangedTime() . '"]', 1);
-        $expectedJS = ($case['user'] !== 'anonymous');
-        $this->assertSame($expectedJS, isset($settings['ajaxPageState']['libraries']) && in_array('comment/drupal.comment-new-indicator', explode(',', $settings['ajaxPageState']['libraries'])), 'drupal.comment-new-indicator library is present.');
       }
     }
   }

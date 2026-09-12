@@ -68,6 +68,7 @@ use Drupal\Core\File\FileSystemInterface;
   label_singular: new TranslatableMarkup('Paragraphs type'),
   label_plural: new TranslatableMarkup('Paragraphs types'),
   config_prefix: 'paragraphs_type',
+  static_cache: TRUE,
   entity_keys: [
     'id' => 'id',
     'label' => 'label',
@@ -82,8 +83,8 @@ use Drupal\Core\File\FileSystemInterface;
     ],
   ],
   links: [
-    'edit-form' => '/admin/structure/paragraphs_type/[paragraphs_type]',
-    'delete-form' => '/admin/structure/paragraphs_type/[paragraphs_type]/delete',
+    'edit-form' => '/admin/structure/paragraphs_type/{paragraphs_type}',
+    'delete-form' => '/admin/structure/paragraphs_type/{paragraphs_type}/delete',
     'collection' => '/admin/structure/paragraphs_type',
   ],
   admin_permission: 'administer paragraphs types',
@@ -320,11 +321,12 @@ class ParagraphsType extends ConfigEntityBundleBase implements ParagraphsTypeInt
    * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    if (!$update || $this->icon_uuid != $this->original->icon_uuid) {
+    $original = method_exists($this, 'getOriginal') ? $this->getOriginal() : ($this->original ?? NULL);
+    if (!$update || $this->icon_uuid != $original->icon_uuid) {
       // Update the file usage for the icon file.
       $new_icon_file = $this->icon_uuid ? $this->getFileByUuid($this->icon_uuid) : FALSE;
       // Update the file usage of the old icon as well if the icon was changed.
-      $old_icon_file = $update && $this->original->icon_uuid ? $this->getFileByUuid($this->original->icon_uuid) : FALSE;
+      $old_icon_file = $update && $original->icon_uuid ? $this->getFileByUuid($original->icon_uuid) : FALSE;
       $this->updateFileIconUsage($new_icon_file, $old_icon_file);
     }
 

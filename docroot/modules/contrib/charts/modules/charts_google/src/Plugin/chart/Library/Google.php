@@ -2,10 +2,11 @@
 
 namespace Drupal\charts_google\Plugin\chart\Library;
 
+use Drupal\charts\ApplyRawOptionsTrait;
 use Drupal\charts\Attribute\Chart;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
@@ -36,9 +37,26 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     "pie",
     "scatter",
     "spline",
-  ]
+    "treemap",
+  ],
+  example_route: "charts_google_api_example.display",
 )]
 class Google extends ChartBase implements ContainerFactoryPluginInterface {
+
+  use ApplyRawOptionsTrait;
+
+  /**
+   * Chart types that use Google's dedicated (non-tabular) data structures.
+   *
+   * These are routed to type-specific option/data builders rather than the
+   * standard row/column pipeline.
+   */
+  protected const SPECIAL_CHART_TYPES = [
+    'boxplot',
+    'bubble',
+    'candlestick',
+    'treemap',
+  ];
 
   /**
    * The element info manager.
@@ -69,9 +87,11 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
    *   The element info manager.
    * @param \Drupal\charts\TypeManager $chart_type_manager
    *   The chart type manager.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler, ElementInfoManagerInterface $element_info, TypeManager $chart_type_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler, ElementInfoManagerInterface $element_info, TypeManager $chart_type_manager, FormBuilderInterface $form_builder) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler, $form_builder);
     $this->elementInfo = $element_info;
     $this->chartTypeManager = $chart_type_manager;
   }
@@ -86,7 +106,8 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
       $plugin_definition,
       $container->get('module_handler'),
       $container->get('element_info'),
-      $container->get('plugin.manager.charts_type')
+      $container->get('plugin.manager.charts_type'),
+      $container->get('form_builder')
     );
   }
 
@@ -146,22 +167,40 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
    */
   public function preRender(array $element) {
     $chart_definition = [];
-    // Convert the chart renderable to a proper definition.
-    $chart_definition['visualization'] = $this->chartsGoogleVisualizationType($element['#chart_type']);
-    $chart_definition = $this->chartsGooglePopulateChartOptions($element, $chart_definition);
-    $chart_definition = $this->chartsGooglePopulateChartAxes($element, $chart_definition);
-    $chart_definition = $this->chartsGooglePopulateChartData($element, $chart_definition);
 
+    // Generate a unique ID if one is not provided.
     if (!isset($element['#id'])) {
       $element['#id'] = Html::getUniqueId('google-chart-render');
     }
 
+    // Handle dimensions (optimized to avoid empty properties).
     if (!empty($element['#height']) || !empty($element['#width'])) {
-      $element['#attributes']['style'] = 'height:' . $element['#height'] . $element['#height_units'] . ';width:' . $element['#width'] . $element['#width_units'] . ';';
+      $style = '';
+      if (!empty($element['#height'])) {
+        $style .= 'height:' . $element['#height'] . $element['#height_units'] . ';';
+      }
+      if (!empty($element['#width'])) {
+        $style .= 'width:' . $element['#width'] . $element['#width_units'] . ';';
+      }
+      if ($style) {
+        $element['#attributes']['style'] = $style;
+      }
     }
 
-    // Trim out empty options.
-    ChartElement::trimArray($chart_definition['options']);
+    // Use raw definition if provided, otherwise build from elements.
+    if (!empty($element['#chart_definition'])) {
+      $chart_definition = $element['#chart_definition'];
+    }
+    else {
+      // Convert the chart renderable to a proper definition.
+      $chart_definition['visualization'] = $this->chartsGoogleVisualizationType($element['#chart_type']);
+      $chart_definition = $this->chartsGooglePopulateChartOptions($element, $chart_definition);
+      $chart_definition = $this->chartsGooglePopulateChartAxes($element, $chart_definition);
+      $chart_definition = $this->chartsGooglePopulateChartData($element, $chart_definition);
+
+      // Trim out empty options (only for generated definitions).
+      ChartElement::trimArray($chart_definition['options']);
+    }
 
     $element['#attached']['library'][] = 'charts_google/google';
     $element['#attributes']['class'][] = 'charts-google';
@@ -170,8 +209,67 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
     // Setting global options.
     $element['#attached']['drupalSettings']['charts']['google']['global_options'] = [
       'useMaterialDesign' => !empty($this->configuration['use_material_design']) ? 'true' : 'false',
-      'chartType' => $element['#chart_type'],
+      'chartType' => $element['#chart_type'] ?? '',
     ];
+
+    // Color changer options.
+    if (!empty($element['#color_changer']) && empty($element['#in_preview_mode'])) {
+      $element = $this->applyColorChanger($element, $chart_definition);
+    }
+
+    return $element;
+  }
+
+  /**
+   * Utility to apply color changer options.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   The chart element.
+   *
+   * @throws \Drupal\Core\Form\EnforcedResponseException
+   * @throws \Drupal\Core\Form\FormAjaxException
+   */
+  private function applyColorChanger(array $element, array $chart_definition): array {
+    $chart_type = $element['#chart_type'];
+    $options = $chart_definition['options'] ?? [];
+    $data = $chart_definition['data'] ?? [];
+
+    $formatted_series = [];
+    if (in_array($chart_type, ['pie', 'donut'])) {
+      // For pie charts, we iterate over rows (skipping header at index 0).
+      $formatted_series[0]['data'] = [];
+      for ($i = 1; $i < count($data); $i++) {
+        $label = (string) $data[$i][0];
+        $formatted_series[0]['data'][$i - 1] = [
+          'name' => $label,
+          'color' => $options['slices'][$i - 1]['color'] ?? $options['colors'][$i - 1] ?? '#000000',
+        ];
+      }
+    }
+    else {
+      // For bar/line/column, we iterate over columns in the header (index 0).
+      $header = $data[0] ?? [];
+      for ($i = 1; $i < count($header); $i++) {
+        $formatted_series[$i - 1] = [
+          'name' => (string) $header[$i],
+          'color' => $options['series'][$i - 1]['color'] ?? $options['colors'][$i - 1] ?? '#000000',
+        ];
+      }
+    }
+
+    $form_state_items = [
+      'chart_series' => $formatted_series,
+      'chart_id' => $element['#id'],
+      'chart_type' => $chart_type,
+    ];
+
+    $element['#attached']['library'][] = 'charts_google/color_changer';
+    $element['#content_suffix']['color_changer'] = $this->colorChangerFormBuilder($form_state_items);
 
     return $element;
   }
@@ -195,6 +293,7 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
       'bubble' => 'BubbleChart',
       'geo' => 'GeoChart',
       'table' => 'TableChart',
+      'treemap' => 'TreeMap',
     ];
     $this->moduleHandler->alter('charts_google_visualization_types', $types);
     return $types[$renderable_type] ?? FALSE;
@@ -212,6 +311,11 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
    *   The returned chart definition.
    */
   public function chartsGooglePopulateChartOptions(array $element, array $chart_definition) {
+    // Route special chart types to dedicated methods.
+    if (in_array($element['#chart_type'], self::SPECIAL_CHART_TYPES)) {
+      return $this->chartsGooglePopulateSpecialChartOptions($element, $chart_definition);
+    }
+
     if (!empty($this->configuration['use_material_design'])) {
       $chart_definition['options']['theme'] = 'material';
       $chart_definition['options']['chart']['title'] = $element['#title'] ?? NULL;
@@ -243,6 +347,12 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
     $chart_definition['options']['legend']['position'] = $element['#legend_position'] ?? 'none';
     $chart_definition['options']['legend']['alignment'] = 'center';
     $chart_definition['options']['interpolateNulls'] = TRUE;
+
+    // Add curveType for spline charts to enable smooth curves.
+    if ($element['#chart_type'] === 'spline') {
+      $chart_definition['options']['curveType'] = 'function';
+    }
+
     if ($element['#chart_type'] === 'gauge') {
       $chart_definition['options']['redFrom'] = $element['#gauge']['red_from'];
       $chart_definition['options']['redTo'] = $element['#gauge']['red_to'];
@@ -273,15 +383,8 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
     $chart_definition['options']['animation']['duration'] = 10000;
     $chart_definition['options']['animation']['easing'] = 'out';
 
-    // Merge in chart raw options.
-    if (!empty($element['#raw_options'])) {
-      $chart_definition = NestedArray::mergeDeepArray([
-        $chart_definition,
-        $element['#raw_options'],
-      ]);
-    }
-
-    return $chart_definition;
+    // Merge in chart raw options and return the definition.
+    return $this->applyRawOptions($element, $chart_definition);
   }
 
   /**
@@ -296,6 +399,10 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
    *   Return the chart definition.
    */
   public function chartsGooglePopulateChartAxes(array $element, array $chart_definition) {
+    if ($element['#chart_type'] === 'treemap') {
+      return $chart_definition;
+    }
+
     foreach (Element::children($element) as $key) {
       if ($element[$key]['#type'] === 'chart_xaxis' || $element[$key]['#type'] === 'chart_yaxis') {
         // Make sure defaults are loaded.
@@ -330,12 +437,7 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
         $axis['viewWindow']['min'] = !empty($element[$key]['#min']) ? (int) $element[$key]['#min'] : NULL;
 
         // Merge in axis raw options.
-        if (!empty($element[$key]['#raw_options'])) {
-          $axis = NestedArray::mergeDeepArray([
-            $axis,
-            $element[$key]['#raw_options'],
-          ]);
-        }
+        $axis = $this->applyRawOptions($element[$key], $axis);
 
         // Multi-axis support only applies to the major axis in Google charts.
         $chart_type = $this->chartTypeManager->getDefinition($element['#chart_type']);
@@ -372,6 +474,47 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
    *   Return the chart definition.
    */
   public function chartsGooglePopulateChartData(array &$element, array $chart_definition) {
+    if (in_array($element['#chart_type'], self::SPECIAL_CHART_TYPES)) {
+      // Special types read #labels directly. The Views style plugin attaches a
+      // #mapped_data map (label => value) to each series; derive #labels from
+      // it (a non-op for charts build outside Views, which set #labels
+      // themselves).
+      $this->deriveLabelsFromMappedData($element);
+      return $this->chartsGooglePopulateSpecialChartData($element, $chart_definition);
+    }
+
+    return $this->chartsGooglePopulateStandardChartData($element, $chart_definition);
+  }
+
+  /**
+   * Derives series labels from View-supplied mapped data.
+   *
+   * @param array $element
+   *   The chart render element.
+   */
+  protected function deriveLabelsFromMappedData(array &$element): void {
+    foreach (Element::children($element) as $key) {
+      if (($element[$key]['#type'] ?? '') !== 'chart_data') {
+        continue;
+      }
+      if (!empty($element[$key]['#mapped_data'])) {
+        $element[$key]['#labels'] = array_keys($element[$key]['#mapped_data']);
+      }
+    }
+  }
+
+  /**
+   * Standard chart data processing.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateStandardChartData(array &$element, array $chart_definition) {
     $chart_definition['options']['series'] = [];
     $chart_type = $this->chartTypeManager->getDefinition($element['#chart_type']);
     $series_number = 0;
@@ -501,13 +644,8 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
           $series['type'] = $data_chart_type;
         }
 
-        // Merge in point raw options.
-        if (!empty($data_item['#raw_options'])) {
-          $series = NestedArray::mergeDeepArray([
-            $series,
-            $data_item['#raw_options'],
-          ]);
-        }
+        // Merge in series raw options.
+        $series = $this->applyRawOptions($element[$key], $series);
 
         // Add the series to the main chart definition.
         ChartElement::trimArray($series);
@@ -532,12 +670,7 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
             $chart_definition['_data'][$sub_key + 1][$series_number + 1]['tooltip'] = $data_item['#title'];
 
             // Merge in data point raw options.
-            if (!empty($data_item['#raw_options'])) {
-              $chart_definition['_data'][$sub_key + 1][$series_number + 1] = NestedArray::mergeDeepArray([
-                $chart_definition['_data'][$sub_key + 1][$series_number + 1],
-                $data_item['#raw_options'],
-              ]);
-            }
+            $chart_definition['_data'][$sub_key + 1][$series_number + 1] = $this->applyRawOptions($data_item, $chart_definition['_data'][$sub_key + 1][$series_number + 1]);
 
             ChartElement::trimArray($chart_definition['_data'][$sub_key + 1][$series_number + 1]);
           }
@@ -551,7 +684,12 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
     // Once complete, normalize the chart data to ensure a full 2D structure.
     $data = $chart_definition['data'];
 
-    if (in_array($element['#chart_type'], ['pie', 'donut', 'scatter'])) {
+    if (in_array($element['#chart_type'], [
+      'pie',
+      'donut',
+      'scatter',
+      'treemap',
+    ])) {
       // Populate the 0th row with the same number of values as the 1st row.
       $data[0] = array_fill(0, count($data[1]), $element[$key]['#title'] ?? '');
     }
@@ -626,6 +764,413 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
     }
 
     $chart_definition['data'] = $new_data;
+
+    return $chart_definition;
+  }
+
+  /**
+   * Utility to populate options for special chart types.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateSpecialChartOptions(array $element, array $chart_definition) {
+    switch ($element['#chart_type']) {
+      case 'boxplot':
+        return $this->chartsGooglePopulateBoxplotOptions($element, $chart_definition);
+
+      case 'bubble':
+        return $this->chartsGooglePopulateBubbleOptions($element, $chart_definition);
+
+      case 'candlestick':
+        return $this->chartsGooglePopulateCandlestickOptions($element, $chart_definition);
+
+      case 'treemap':
+        return $this->chartsGooglePopulateTreeMapOptions($element, $chart_definition);
+    }
+
+    return $chart_definition;
+  }
+
+  /**
+   * Utility to populate data for special chart types.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateSpecialChartData(array &$element, array $chart_definition) {
+    switch ($element['#chart_type']) {
+      case 'boxplot':
+        return $this->chartsGooglePopulateBoxplotData($element, $chart_definition);
+
+      case 'bubble':
+        return $this->chartsGooglePopulateBubbleData($element, $chart_definition);
+
+      case 'candlestick':
+        return $this->chartsGooglePopulateCandlestickData($element, $chart_definition);
+
+      case 'treemap':
+        return $this->chartsGooglePopulateTreeMapData($element, $chart_definition);
+    }
+
+    return $chart_definition;
+  }
+
+  /**
+   * Apply common chart options that work across multiple chart types.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   The chart definition with common options applied.
+   */
+  protected function applyCommonChartOptions(array $element, array $chart_definition) {
+    $title = $element['#title'] ?? '';
+    if ($title && !empty($element['#subtitle'])) {
+      $title .= ': ' . $element['#subtitle'];
+    }
+    $chart_definition['options']['title'] = $title;
+    $chart_definition['options']['titleTextStyle']['color'] = $element['#title_color'];
+    $chart_definition['options']['titleTextStyle']['bold'] = $element['#title_font_weight'] === 'bold';
+    $chart_definition['options']['titleTextStyle']['italic'] = $element['#title_font_style'] === 'italic';
+    $chart_definition['options']['titleTextStyle']['fontSize'] = $element['#title_font_size'];
+    $chart_definition['options']['fontName'] = $element['#font'];
+    $chart_definition['options']['fontSize'] = $element['#font_size'];
+    $chart_definition['options']['backgroundColor']['fill'] = $element['#background'];
+    $chart_definition['options']['tooltip']['trigger'] = $element['#tooltips'] ? 'focus' : 'none';
+    $chart_definition['options']['tooltip']['isHtml'] = (bool) $element['#tooltips_use_html'];
+    $chart_definition['options']['legend']['position'] = $element['#legend_position'] ?? 'none';
+
+    return $chart_definition;
+  }
+
+  /**
+   * TreeMap-specific options.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateTreeMapOptions(array $element, array $chart_definition) {
+    $chart_definition = $this->applyCommonChartOptions($element, $chart_definition);
+
+    // @todo Use the library+chart type options for this.
+    $chart_definition['options']['minColor'] = $element['#treemap']['min_color'] ?? '#009688';
+    $chart_definition['options']['midColor'] = $element['#treemap']['mid_color'] ?? '#f7f7f7';
+    $chart_definition['options']['maxColor'] = $element['#treemap']['max_color'] ?? '#ee8100';
+
+    // Merge in chart raw options.
+    return $this->applyRawOptions($element, $chart_definition);
+  }
+
+  /**
+   * TreeMap-specific data handling.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateTreeMapData(array &$element, array $chart_definition) {
+    // TreeMap data structure: [ID, Parent, Value, Color Value].
+    $chart_definition['data'] = [
+      [
+        $this->t('ID'),
+        $this->t('Parent'),
+        $this->t('Value'),
+        $this->t('Color Value'),
+      ],
+    ];
+
+    // Get the first series to use as root, or use chart title.
+    $root_title = $element['#title'] ?? $this->t('Root');
+    $has_root = FALSE;
+
+    foreach (Element::children($element) as $key) {
+      if ($element[$key]['#type'] !== 'chart_data') {
+        continue;
+      }
+
+      // Make sure defaults are loaded.
+      if (empty($element[$key]['#defaults_loaded'])) {
+        $element[$key] += $this->elementInfo->getInfo($element[$key]['#type']);
+      }
+
+      $series_title = $element[$key]['#title'] ?? $root_title;
+
+      // Add root node only once, using the first series title or chart title.
+      if (!$has_root) {
+        $chart_definition['data'][] = [
+          $series_title,
+          NULL,
+          0,
+          0,
+        ];
+        $root_title = $series_title;
+        $has_root = TRUE;
+      }
+
+      // Process data points with proper labels.
+      foreach ($element[$key]['#data'] as $index => $data_value) {
+        // Handle different data formats.
+        if (is_array($data_value)) {
+          $value = $data_value[1] ?? 0;
+          $chart_definition['data'][] = [
+            $data_value[0] ?? $this->t('Item @index', ['@index' => $index]),
+            $root_title,
+            (float) $value,
+            (float) $data_value[2] ?? $value,
+          ];
+          continue;
+        }
+
+        // With simple data, generate labels from x-axis or use index.
+        if (!empty($element[$key]['#labels'][$index])) {
+          $label = $element[$key]['#labels'][$index];
+        }
+        // Try to get labels from x-axis if available.
+        elseif (!empty($element['x_axis']['#labels'][$index])) {
+          $label = $element['x_axis']['#labels'][$index];
+        }
+        else {
+          $label = $this->t('Item @index', ['@index' => $index]);
+        }
+
+        // Add data point with series as parent.
+        $chart_definition['data'][] = [
+          $label,
+          $root_title,
+          (float) $data_value,
+          (float) $data_value,
+        ];
+      }
+    }
+
+    return $chart_definition;
+  }
+
+  /**
+   * BoxPlot-specific options.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateBoxplotOptions(array $element, array $chart_definition) {
+    $chart_definition = $this->applyCommonChartOptions($element, $chart_definition);
+    $chart_definition['options']['pointSize'] = 0;
+    $chart_definition['options']['lineWidth'] = 1;
+    $chart_definition['options']['intervals'] = ['style' => 'boxes'];
+
+    // Merge in chart raw options.
+    return $this->applyRawOptions($element, $chart_definition);
+  }
+
+  /**
+   * BoxPlot-specific data handling.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateBoxplotData(array &$element, array $chart_definition) {
+    // JavaScript expects: [Category, Min, Q1, Median, Q3, Max].
+    $chart_definition['data'] = [
+      [
+        $this->t('Category'),
+        $this->t('Min'),
+        $this->t('First Quartile'),
+        $this->t('Median'),
+        $this->t('Third Quartile'),
+        $this->t('Max'),
+      ],
+    ];
+
+    foreach (Element::children($element) as $key) {
+      if ($element[$key]['#type'] !== 'chart_data') {
+        continue;
+      }
+
+      if (empty($element[$key]['#defaults_loaded'])) {
+        $element[$key] += $this->elementInfo->getInfo($element[$key]['#type']);
+      }
+
+      foreach ($element[$key]['#data'] as $index => $data_value) {
+        $label = $element[$key]['#labels'][$index] ?? $this->t('Category @index', ['@index' => $index]);
+
+        if (is_array($data_value) && count($data_value) >= 5) {
+          $chart_definition['data'][] = [
+            $label,
+            (float) $data_value[0],
+            (float) $data_value[1],
+            (float) $data_value[2],
+            (float) $data_value[3],
+            (float) $data_value[4],
+          ];
+        }
+      }
+    }
+
+    return $chart_definition;
+  }
+
+  /**
+   * Bubble-specific options.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateBubbleOptions(array $element, array $chart_definition) {
+    $chart_definition = $this->applyCommonChartOptions($element, $chart_definition);
+    $chart_definition['options']['bubble']['textStyle']['fontSize'] = 11;
+
+    // Merge in chart raw options.
+    return $this->applyRawOptions($element, $chart_definition);
+  }
+
+  /**
+   * Bubble-specific data handling.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateBubbleData(array &$element, array $chart_definition) {
+    $chart_definition['data'] = [
+      [
+        $this->t('ID'),
+        $this->t('X Axis'),
+        $this->t('Y Axis'),
+        $this->t('Color Value'),
+        $this->t('Size Value'),
+      ],
+    ];
+
+    foreach (Element::children($element) as $key) {
+      if ($element[$key]['#type'] !== 'chart_data') {
+        continue;
+      }
+
+      if (empty($element[$key]['#defaults_loaded'])) {
+        $element[$key] += $this->elementInfo->getInfo($element[$key]['#type']);
+      }
+
+      foreach ($element[$key]['#data'] as $index => $data_value) {
+        if (is_array($data_value) && count($data_value) >= 3) {
+          $label = $element[$key]['#labels'][$index] ?? $this->t('Point @index', ['@index' => $index]);
+          $chart_definition['data'][] = [
+            $label,
+            (float) $data_value[0],
+            (float) $data_value[1],
+            (float) ($data_value[3] ?? $data_value[2]),
+            (float) $data_value[2],
+          ];
+        }
+      }
+    }
+
+    return $chart_definition;
+  }
+
+  /**
+   * Candlestick-specific options.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateCandlestickOptions(array $element, array $chart_definition) {
+    $chart_definition = $this->applyCommonChartOptions($element, $chart_definition);
+
+    // Merge in chart raw options.
+    return $this->applyRawOptions($element, $chart_definition);
+  }
+
+  /**
+   * Candlestick-specific data handling.
+   *
+   * @param array $element
+   *   The element.
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   Return the chart definition.
+   */
+  protected function chartsGooglePopulateCandlestickData(array &$element, array $chart_definition) {
+    $chart_definition['data'] = [
+      [
+        $this->t('Date'),
+        $this->t('Low'),
+        $this->t('Open'),
+        $this->t('Close'),
+        $this->t('High'),
+      ],
+    ];
+
+    foreach (Element::children($element) as $key) {
+      if ($element[$key]['#type'] !== 'chart_data') {
+        continue;
+      }
+
+      if (empty($element[$key]['#defaults_loaded'])) {
+        $element[$key] += $this->elementInfo->getInfo($element[$key]['#type']);
+      }
+
+      foreach ($element[$key]['#data'] as $index => $data_value) {
+        if (is_array($data_value) && count($data_value) >= 4) {
+          $label = $element[$key]['#labels'][$index] ?? $this->t('Period @index', ['@index' => $index]);
+          $chart_definition['data'][] = [
+            $label,
+            (float) $data_value[0],
+            (float) $data_value[1],
+            (float) $data_value[2],
+            (float) $data_value[3],
+          ];
+        }
+      }
+    }
 
     return $chart_definition;
   }

@@ -8,12 +8,15 @@ use Drupal\Core\PrivateKey;
 use Drupal\Core\Routing\RequestContext;
 use Drupal\media\IFrameUrlHelper;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\media\IFrameUrlHelper
- *
- * @group media
+ * Tests Drupal\media\IFrameUrlHelper.
  */
+#[CoversClass(IFrameUrlHelper::class)]
+#[Group('media')]
 class IFrameUrlHelperTest extends UnitTestCase {
 
   /**
@@ -22,6 +25,7 @@ class IFrameUrlHelperTest extends UnitTestCase {
    * @see ::testIsSecure()
    *
    * @return array
+   *   An array of test data.
    */
   public static function providerIsSecure() {
     return [
@@ -72,11 +76,8 @@ class IFrameUrlHelperTest extends UnitTestCase {
    *   The base URL to compare $url against.
    * @param bool $secure
    *   The expected result of isSecure().
-   *
-   * @covers ::isSecure
-   *
-   * @dataProvider providerIsSecure
    */
+  #[DataProvider('providerIsSecure')]
   public function testIsSecure($url, $base_url, $secure): void {
     $request_context = $this->createMock(RequestContext::class);
     $request_context->expects($this->any())

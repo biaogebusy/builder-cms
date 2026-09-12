@@ -10,6 +10,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\user\Plugin\Validation\Constraint\UserNameConstraint;
 
 /**
  * Tests the checkout of an order.
@@ -46,6 +47,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     'commerce_checkout',
     'commerce_checkout_test',
     'commerce_product',
+    'commerce_log',
     'views_ui',
   ];
 
@@ -171,17 +173,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
 
     $this->submitForm([], 'Continue as Guest');
     $this->assertCheckoutProgressStep('Order information');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => 'John',
-      'billing_information[profile][address][0][address][family_name]' => 'Smith',
-      'billing_information[profile][address][0][address][organization]' => 'Centarro',
-      'billing_information[profile][address][0][address][address_line1]' => '9 Drupal Ave',
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation();
     $this->assertCheckoutProgressStep('Review');
     $this->assertSession()->elementsCount('css', '.block-commerce-checkout-progress li.checkout-progress--step > a', 2);
     $this->assertSession()->pageTextContains('Contact information');
@@ -323,17 +315,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     $this->assertCheckoutProgressStep('Log in');
     $this->submitForm([], 'Continue as Guest');
     $this->assertCheckoutProgressStep('Order information');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][family_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][organization]' => $this->randomString(),
-      'billing_information[profile][address][0][address][address_line1]' => $this->randomString(),
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation(TRUE);
     $this->assertCheckoutProgressStep('Review');
     $this->assertSession()->pageTextContains('Contact information');
     $this->assertSession()->pageTextContains('Billing information');
@@ -426,13 +408,14 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     ], 'Create new account and continue');
     $this->assertSession()->pageTextContains('The email address guest@example.com is already taken.');
 
+    $user_name_constraint = new UserNameConstraint();
     $this->submitForm([
       'login[register][name]' => 'User @#.``^ ù % name invalid',
       'login[register][mail]' => 'guest2@example.com',
       'login[register][password][pass1]' => 'pass',
       'login[register][password][pass2]' => 'pass',
     ], 'Create new account and continue');
-    $this->assertSession()->pageTextContains('The username contains an illegal character.');
+    $this->assertSession()->pageTextContains($user_name_constraint->illegalMessage ?? $user_name_constraint->invalidMessage);
 
     $this->submitForm([
       'login[register][name]' => 'User name',
@@ -518,17 +501,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     $this->assertCheckoutProgressStep('Log in');
     $this->submitForm([], 'Continue as Guest');
     $this->assertCheckoutProgressStep('Order information');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][family_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][organization]' => $this->randomString(),
-      'billing_information[profile][address][0][address][address_line1]' => $this->randomString(),
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation(TRUE);
     $this->assertCheckoutProgressStep('Review');
     $this->assertSession()->pageTextContains('Contact information');
     $this->assertSession()->pageTextContains('Billing information');
@@ -595,12 +568,13 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     ], 'Create account');
     $this->assertSession()->pageTextContains('Password field is required.');
 
+    $user_name_constraint = new UserNameConstraint();
     $this->submitForm([
       'completion_register[name]' => 'User @#.``^ ù % name invalid',
       'completion_register[pass][pass1]' => 'pass',
       'completion_register[pass][pass2]' => 'pass',
     ], 'Create account');
-    $this->assertSession()->pageTextContains('The username contains an illegal character.');
+    $this->assertSession()->pageTextContains($user_name_constraint->illegalMessage ?? $user_name_constraint->invalidMessage);
 
     $this->submitForm([
       'completion_register[name]' => 'User name',
@@ -644,17 +618,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     $this->assertCheckoutProgressStep('Log in');
     $this->submitForm([], 'Continue as Guest');
     $this->assertCheckoutProgressStep('Order information');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][family_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][organization]' => $this->randomString(),
-      'billing_information[profile][address][0][address][address_line1]' => $this->randomString(),
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation(TRUE);
     $this->assertCheckoutProgressStep('Review');
     $this->assertSession()->pageTextContains('Contact information');
     $this->assertSession()->pageTextContains('Billing information');
@@ -703,17 +667,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     $this->assertCheckoutProgressStep('Log in');
     $this->submitForm([], 'Continue as Guest');
     $this->assertCheckoutProgressStep('Order information');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][family_name]' => $this->randomString(),
-      'billing_information[profile][address][0][address][organization]' => $this->randomString(),
-      'billing_information[profile][address][0][address][address_line1]' => $this->randomString(),
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation(TRUE);
     $this->assertCheckoutProgressStep('Review');
     $this->assertSession()->pageTextContains('Contact information');
     $this->assertSession()->pageTextContains('Billing information');
@@ -864,17 +818,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     $this->submitForm([], 'Checkout');
 
     $this->submitForm([], 'Continue as Guest');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => 'John',
-      'billing_information[profile][address][0][address][family_name]' => 'Smith',
-      'billing_information[profile][address][0][address][organization]' => 'Centarro',
-      'billing_information[profile][address][0][address][address_line1]' => '9 Drupal Ave',
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation();
     $this->submitForm([], 'Complete checkout');
 
     $expected_order_url = Url::fromRoute('entity.commerce_order.user_view', [
@@ -940,17 +884,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     $this->submitForm([], 'Checkout');
 
     $this->submitForm([], 'Continue as Guest');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => 'John',
-      'billing_information[profile][address][0][address][family_name]' => 'Smith',
-      'billing_information[profile][address][0][address][organization]' => 'Centarro',
-      'billing_information[profile][address][0][address][address_line1]' => '9 Drupal Ave',
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation();
     $this->submitForm([], 'Complete checkout');
 
     $order = Order::load(1);
@@ -976,17 +910,7 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
     $this->submitForm([], 'Checkout');
 
     $this->submitForm([], 'Continue as Guest');
-    $this->submitForm([
-      'contact_information[email]' => 'guest@example.com',
-      'contact_information[email_confirm]' => 'guest@example.com',
-      'billing_information[profile][address][0][address][given_name]' => 'John',
-      'billing_information[profile][address][0][address][family_name]' => 'Smith',
-      'billing_information[profile][address][0][address][organization]' => 'Centarro',
-      'billing_information[profile][address][0][address][address_line1]' => '9 Drupal Ave',
-      'billing_information[profile][address][0][address][postal_code]' => '94043',
-      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
-      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
-    ], 'Continue to review');
+    $this->submitOrderInformation();
     $this->submitForm([], 'Complete checkout');
 
     $order = Order::load(1);
@@ -1040,6 +964,110 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
   }
 
   /**
+   * Tests checkout with customer comments.
+   */
+  public function testCheckoutCustomerComments() {
+    // Add "Comments" pane in the checkout flow.
+    $config = \Drupal::configFactory()->getEditable('commerce_checkout.commerce_checkout_flow.default');
+    $panes = $config->get('configuration.panes');
+    $panes['customer_comments'] = [
+      'step' => 'review',
+      'weight' => 10,
+    ];
+    $config->set('configuration.panes', $panes)->save();
+
+    // Add product to the cart.
+    $this->drupalLogout();
+    $this->drupalGet($this->product->toUrl());
+    $this->submitForm([], 'Add to cart');
+    $this->getSession()->getPage()->findLink('your cart')->click();
+
+    // Go through checkout to the comment pane.
+    $this->submitForm([], 'Checkout');
+    $this->assertCheckoutProgressStep('Log in');
+    $this->submitForm([], 'Continue as Guest');
+    $this->assertCheckoutProgressStep('Order information');
+    $this->submitOrderInformation();
+    $this->assertCheckoutProgressStep('Review');
+
+    // Confirm that comments section is available.
+    $this->assertSession()->pageTextContains('Contact information');
+    $this->assertSession()->pageTextContains('Billing information');
+    $this->assertSession()->pageTextContains('Order summary');
+    $this->assertSession()->pageTextContains('Comments');
+
+    $comment = "Customer's comment <br/><script>alert('Hello!')</script>";
+    $this->submitForm([
+      'customer_comments[comments]' => $comment,
+    ], 'Complete checkout');
+
+    $this->assertSession()->pageTextContains("Customer's comment");
+    $this->assertSession()->pageTextContains("<br/>");
+    $this->assertSession()->pageTextContains("alert('Hello!')");
+    $this->assertSession()->pageTextContains("<script>alert('Hello!')</script>");
+    $this->assertSession()->responseNotContains("<script>alert('Hello!')</script>");
+
+    // Confirm that comment is not filtered on input in the log.
+    $order = Order::load(1);
+    /** @var \Drupal\commerce_log\LogStorageInterface $log_storage */
+    $log_storage = $this->container->get('entity_type.manager')->getStorage('commerce_log');
+    /** @var \Drupal\commerce_log\Entity\LogInterface[] $logs */
+    $logs = $log_storage->loadByProperties([
+      'template_id' => 'commerce_order_from_customer_comment',
+      'source_entity_type' => 'commerce_order',
+      'source_entity_id' => $order->id(),
+    ]);
+    $this->assertCount(1, $logs);
+    $log = reset($logs);
+    $params = $log->getParams();
+    $this->assertStringContainsString($comment, $params['comment']);
+
+    // Check comment on the order view page.
+    $admin_user = $this->drupalCreateUser([
+      'administer commerce_order',
+      'access commerce administration pages',
+    ]);
+    $this->drupalLogin($admin_user);
+    $this->drupalGet($order->toUrl());
+    $order_info = $this->getSession()->getPage()->find('css', '#order-details');
+    $this->assertStringContainsString('Customer comments', $order_info->getText());
+    $this->assertStringContainsString($comment, $order_info->getText());
+    $commerce_logs = $this->getSession()->getPage()->find('css', '.view-id-commerce_activity');
+    $this->assertStringContainsString('From customer:', $commerce_logs->getText());
+    $this->assertStringContainsString($comment, $commerce_logs->getText());
+    $html = $this->getSession()->getPage()->getHtml();
+    $this->assertStringContainsString("Customer's comment &lt;br/&gt;&lt;script&gt;alert('Hello!')&lt;/script&gt;", $html);
+
+    // Move the "Comments" pane to the order information step.
+    $config = \Drupal::configFactory()->getEditable('commerce_checkout.commerce_checkout_flow.default');
+    $panes = $config->get('configuration.panes');
+    $panes['customer_comments'] = [
+      'step' => 'order_information',
+      'weight' => 10,
+    ];
+    $config->set('configuration.panes', $panes)->save();
+
+    // Add product to the cart.
+    $this->drupalLogout();
+    $this->drupalGet($this->product->toUrl());
+    $this->submitForm([], 'Add to cart');
+    $this->getSession()->getPage()->findLink('your cart')->click();
+
+    // Go through checkout to the comment pane.
+    $this->submitForm([], 'Checkout');
+    $this->assertCheckoutProgressStep('Log in');
+    $this->submitForm([], 'Continue as Guest');
+    $this->assertCheckoutProgressStep('Order information');
+    $this->submitOrderInformation(FALSE, [
+      'customer_comments[comments]' => $comment,
+    ]);
+    $this->assertCheckoutProgressStep('Review');
+    $this->clickLink('Go back');
+    $html = $this->getSession()->getPage()->getHtml();
+    $this->assertStringContainsString("Customer's comment &lt;br/&gt;&lt;script&gt;alert('Hello!')&lt;/script&gt;", $html);
+  }
+
+  /**
    * Asserts the current step in the checkout progress block.
    *
    * @param string $expected
@@ -1048,6 +1076,28 @@ class CheckoutOrderTest extends CommerceBrowserTestBase {
   protected function assertCheckoutProgressStep(string $expected) {
     $current_step = $this->getSession()->getPage()->find('css', '.checkout-progress--step__current')->getText();
     $this->assertEquals($expected, $current_step);
+  }
+
+  /**
+   * Submits the Order information pane.
+   *
+   * @param bool $random
+   *   Whether the random stings should be used.
+   * @param array $edit
+   *   Field data in an associative array.
+   */
+  protected function submitOrderInformation(bool $random = FALSE, array $edit = []): void {
+    $this->submitForm($edit + [
+      'contact_information[email]' => 'guest@example.com',
+      'contact_information[email_confirm]' => 'guest@example.com',
+      'billing_information[profile][address][0][address][given_name]' => $random ? $this->randomString() : 'John',
+      'billing_information[profile][address][0][address][family_name]' => $random ? $this->randomString() : 'Smith',
+      'billing_information[profile][address][0][address][organization]' => $random ? $this->randomString() : 'Centarro',
+      'billing_information[profile][address][0][address][address_line1]' => $random ? $this->randomString() : '9 Drupal Ave',
+      'billing_information[profile][address][0][address][postal_code]' => '94043',
+      'billing_information[profile][address][0][address][locality]' => 'Mountain View',
+      'billing_information[profile][address][0][address][administrative_area]' => 'CA',
+    ], 'Continue to review');
   }
 
 }

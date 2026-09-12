@@ -2,8 +2,8 @@
 
 namespace Drupal\webform_options_custom;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\Core\Serialization\Yaml;
 
 /**
  * Storage controller class for "webform_options_custom" configuration entities.

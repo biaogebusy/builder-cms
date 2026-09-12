@@ -5,22 +5,24 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\File;
 
 use Drupal\Core\File\Exception\NotRegularFileException;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the unmanaged file delete function.
- *
- * @group File
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class FileDeleteTest extends FileTestBase {
 
   /**
    * Delete a normal file.
    */
   public function testNormal(): void {
-    // Create a file for testing
+    // Create a file for testing.
     $uri = $this->createUri();
 
-    // Delete a regular file
+    // Delete a regular file.
     $this->assertTrue(\Drupal::service('file_system')->delete($uri), 'Deleted worked.');
     $this->assertFileDoesNotExist($uri);
   }
@@ -29,7 +31,7 @@ class FileDeleteTest extends FileTestBase {
    * Try deleting a missing file.
    */
   public function testMissing(): void {
-    // Try to delete a non-existing file
+    // Try to delete a non-existing file.
     $this->assertTrue(\Drupal::service('file_system')->delete('public://' . $this->randomMachineName()), 'Returns true when deleting a non-existent file.');
   }
 
@@ -45,7 +47,7 @@ class FileDeleteTest extends FileTestBase {
       \Drupal::service('file_system')->delete($directory);
       $this->fail('Expected NotRegularFileException');
     }
-    catch (NotRegularFileException $e) {
+    catch (NotRegularFileException) {
       // Ignore.
     }
     $this->assertDirectoryExists($directory);

@@ -9,29 +9,32 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Database\Database;
 use Drupal\node\Entity\NodeType;
 use Drupal\user\Entity\User;
-use Drupal\views\Entity\View;
-use Drupal\views\Views;
-use Drupal\views\ViewExecutable;
-use Drupal\views\ViewExecutableFactory;
 use Drupal\views\DisplayPluginCollection;
+use Drupal\views\Entity\View;
 use Drupal\views\Plugin\views\display\DefaultDisplay;
 use Drupal\views\Plugin\views\display\Page;
-use Drupal\views\Plugin\views\style\DefaultStyle;
-use Drupal\views\Plugin\views\style\Grid;
-use Drupal\views\Plugin\views\row\Fields;
-use Drupal\views\Plugin\views\query\Sql;
 use Drupal\views\Plugin\views\pager\PagerPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\views\Plugin\views\query\Sql;
+use Drupal\views\Plugin\views\row\Fields;
+use Drupal\views\Plugin\views\style\DefaultStyle;
+use Drupal\views\Plugin\views\style\Grid;
+use Drupal\views\ViewExecutable;
+use Drupal\views\ViewExecutableFactory;
+use Drupal\views\Views;
 use Drupal\views_test_data\Plugin\views\display\DisplayTest;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Tests the ViewExecutable class.
  *
- * @group views
- * @group #slow
  * @see \Drupal\views\ViewExecutable
  */
+#[Group('views')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class ViewExecutableTest extends ViewsKernelTestBase {
 
   use CommentTestTrait;
@@ -40,10 +43,8 @@ class ViewExecutableTest extends ViewsKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'node',
     'comment',
-    'user',
     'filter',
     'field',
     'text',
@@ -92,7 +93,10 @@ class ViewExecutableTest extends ViewsKernelTestBase {
     'parent_views',
   ];
 
-  protected function setUpFixtures() {
+  /**
+   * Sets up the necessary fixtures for the test environment.
+   */
+  protected function setUpFixtures(): void {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('comment');
@@ -207,6 +211,9 @@ class ViewExecutableTest extends ViewsKernelTestBase {
     $this->assertEquals([], $view->getExposedInput());
   }
 
+  /**
+   * Tests setting a display with an invalid display ID.
+   */
   public function testSetDisplayWithInvalidDisplay(): void {
     \Drupal::service('module_installer')->install(['dblog']);
     $view = Views::getView('test_executable_displays');

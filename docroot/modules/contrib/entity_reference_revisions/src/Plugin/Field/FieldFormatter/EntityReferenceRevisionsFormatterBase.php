@@ -2,6 +2,7 @@
 
 namespace Drupal\entity_reference_revisions\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
 
 /**
@@ -13,16 +14,19 @@ abstract class EntityReferenceRevisionsFormatterBase extends EntityReferenceForm
    * {@inheritdoc}
    */
   public function prepareView(array $entities_items) {
-    // Entity revision loading currently has no static/persistent cache and no
-    // multiload. As entity reference checks _loaded, while we don't want to
-    // indicate a loaded entity, when there is none, as it could cause errors,
-    // we actually load the entity and set the flag.
-    foreach ($entities_items as $items) {
-      foreach ($items as $item) {
 
-        if ($item->entity) {
-          $item->_loaded = TRUE;
-        }
+    // Unlike the parent, do not optimize to load across multiple entities.
+    // that is a rare case and would require to duplicate the logic in
+    // \Drupal\entity_reference_revisions\EntityReferenceRevisionsFieldItemList::referencedEntities().
+    // That uses entity revision caching on Drupal 11.3+ and bulk loads default revisions first in Drupal 11.2
+    // and older.
+    foreach ($entities_items as $items) {
+      assert($items instanceof EntityReferenceFieldItemListInterface);
+      $revisions = $items->referencedEntities();
+
+      foreach ($revisions as $delta => $revision) {
+        $items[$delta]->entity = $revision;
+        $items[$delta]->_loaded = TRUE;
       }
     }
   }

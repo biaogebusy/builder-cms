@@ -102,8 +102,8 @@ class AliasUniquifier implements AliasUniquifierInterface {
     // Check if this alias already exists.
     if ($existing_source = $this->aliasManager->getPathByAlias($alias, $langcode)) {
       if ($existing_source != $alias) {
-        // If it is an alias for the provided source, it is allowed to keep using
-        // it. If not, then it is reserved.
+        // If it is an alias for the provided source, it is allowed to keep
+        // using it. If not, then it is reserved.
         return $existing_source != $source;
       }
 

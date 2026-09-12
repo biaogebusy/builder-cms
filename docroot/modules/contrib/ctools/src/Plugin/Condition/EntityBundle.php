@@ -6,16 +6,17 @@ use Drupal\Core\Entity\Plugin\Condition\EntityBundle as CoreEntityBundle;
 use Drupal\ctools\ConstraintConditionInterface;
 
 /**
- * Entity Bundle Constraints
+ * Entity Bundle Constraints.
  *
  * Adds constraints to Drupal\Core\Entity\Plugin\Condition\EntityBundle.
  */
 class EntityBundle extends CoreEntityBundle implements ConstraintConditionInterface {
 
   /**
-   * {@inheritdoc}
+   * Apply the constraints.
    *
    * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
+   *   The contexts.
    */
   public function applyConstraints(array $contexts = []) {
     // Nullify any bundle constraints on contexts we care about.
@@ -28,9 +29,10 @@ class EntityBundle extends CoreEntityBundle implements ConstraintConditionInterf
   }
 
   /**
-   * {@inheritdoc}
+   * Remove the constraints.
    *
    * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
+   *   The contexts.
    */
   public function removeConstraints(array $contexts = []) {
     // Reset the bundle constraint for any context we've mapped.
@@ -40,4 +42,5 @@ class EntityBundle extends CoreEntityBundle implements ConstraintConditionInterf
       $contexts[$context_id]->getContextDefinition()->setConstraints($constraints);
     }
   }
+
 }

@@ -6,12 +6,15 @@ namespace Drupal\Tests\image\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validation functions such as min/max dimensions.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageFieldValidateTest extends ImageFieldTestBase {
 
   use TestFileCreationTrait {
@@ -218,9 +221,8 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
    *
    * This is tested first with edit access to the image field allowed, and then
    * with it forbidden.
-   *
-   * @dataProvider providerTestEmpty
    */
+  #[DataProvider('providerTestEmpty')]
   public function testEmpty($field_name, $required, $cardinality, $form_element_name, $expected_page_text_when_edit_access_allowed, $expected_page_text_when_edit_access_forbidden): void {
     $this->createImageField($field_name, 'node', 'article', ['cardinality' => $cardinality], ['required' => $required]);
 
@@ -252,14 +254,56 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
    */
   public static function providerTestEmpty() {
     return [
-      'optional-single' => ['field_image', FALSE, 1, 'files[field_image_0]', 'Article Article with edit-access-allowed image field has been created.', 'Article Article with edit-access-forbidden image field has been created.'],
-      'optional-unlimited' => ['field_image', FALSE, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED, 'files[field_image_0][]', 'Article Article with edit-access-allowed image field has been created.', 'Article Article with edit-access-forbidden image field has been created.'],
-      'optional-multiple-limited' => ['field_image', FALSE, 2, 'files[field_image_0][]', 'Article Article with edit-access-allowed image field has been created.', 'Article Article with edit-access-forbidden image field has been created.'],
-      'required-single' => ['field_image', TRUE, 1, 'files[field_image_0]', 'field_image field is required.', 'field_image field is required.'],
-      'required-unlimited' => ['field_image', TRUE, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED, 'files[field_image_0][]', 'field_image field is required.', 'field_image field is required.'],
+      'optional-single' => [
+        'field_image',
+        FALSE,
+        1,
+        'files[field_image_0]',
+        'Article Article with edit-access-allowed image field has been created.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
+      'optional-unlimited' => [
+        'field_image',
+        FALSE,
+        FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'files[field_image_0][]',
+        'Article Article with edit-access-allowed image field has been created.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
+      'optional-multiple-limited' => [
+        'field_image',
+        FALSE,
+        2,
+        'files[field_image_0][]',
+        'Article Article with edit-access-allowed image field has been created.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
+      'required-single' => [
+        'field_image',
+        TRUE,
+        1,
+        'files[field_image_0]',
+        'field_image field is required.',
+        'field_image field is required.',
+      ],
+      'required-unlimited' => [
+        'field_image',
+        TRUE,
+        FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'files[field_image_0][]',
+        'field_image field is required.',
+        'field_image field is required.',
+      ],
 
       // @todo Fix this discrepancy in https://www.drupal.org/project/drupal/issues/3011744.
-      'required-multiple-limited' => ['field_image', TRUE, 2, 'files[field_image_0][]', 'This value should not be null.', 'Article Article with edit-access-forbidden image field has been created.'],
+      'required-multiple-limited' => [
+        'field_image',
+        TRUE,
+        2,
+        'files[field_image_0][]',
+        'This value should not be null.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
     ];
   }
 
@@ -272,8 +316,9 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
    *   The maximum width and height setting.
    *
    * @return array
+   *   List of field settings.
    */
-  protected function getFieldSettings($min_resolution, $max_resolution) {
+  protected function getFieldSettings($min_resolution, $max_resolution): array {
     return [
       'max_resolution' => $max_resolution['width'] . 'x' . $max_resolution['height'],
       'min_resolution' => $min_resolution['width'] . 'x' . $min_resolution['height'],

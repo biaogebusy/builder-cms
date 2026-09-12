@@ -5,6 +5,9 @@ namespace Drupal\entity;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 
+/**
+ * Bundle entity duplicator.
+ */
 class BundleEntityDuplicator implements BundleEntityDuplicatorInterface {
 
   /**

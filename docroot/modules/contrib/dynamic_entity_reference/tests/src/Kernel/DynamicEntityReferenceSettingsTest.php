@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
@@ -13,6 +17,8 @@ use Drupal\taxonomy\Entity\Vocabulary;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceSettingsTest extends KernelTestBase {
 
   /**
@@ -74,7 +80,7 @@ class DynamicEntityReferenceSettingsTest extends KernelTestBase {
 
     // Create a custom bundle.
     $this->customBundle = 'test_bundle_' . mb_strtolower($this->randomMachineName());
-    entity_test_create_bundle($this->customBundle, NULL, 'entity_test');
+    EntityTestHelper::createBundle($this->customBundle, NULL, 'entity_test');
   }
 
   /**
@@ -174,7 +180,7 @@ class DynamicEntityReferenceSettingsTest extends KernelTestBase {
     $this->assertEquals($handler_settings, $actual_handler_settings);
 
     // Delete the custom bundle.
-    entity_test_delete_bundle($this->customBundle, 'entity_test');
+    EntityTestHelper::deleteBundle($this->customBundle, 'entity_test');
 
     // Check that the deleted bundle is no longer present in the
     // 'target_bundles' field setting.

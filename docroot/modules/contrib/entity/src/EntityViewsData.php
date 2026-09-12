@@ -4,6 +4,7 @@ namespace Drupal\entity;
 
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\Sql\TableMappingInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -13,8 +14,9 @@ use Drupal\views\EntityViewsData as CoreEntityViewsData;
  * Provides improvements to core's generic views integration for entities.
  *
  * Contains special handling for the following base field types:
- * - datetime
- * - list_float, list_integer, list_string
+ *   - datetime
+ *   - list_float, list_integer, list_string.
+ *
  * Workaround for core issue #2337515.
  *
  * Provides views data for bundle plugin fields,
@@ -39,6 +41,11 @@ class EntityViewsData extends CoreEntityViewsData {
   protected $tableMapping;
 
   /**
+   * The entity_type.bundle.info service.
+   */
+  protected ?EntityTypeBundleInfo $entityTypeBundleInfo = NULL;
+
+  /**
    * {@inheritdoc}
    */
   public function getViewsData() {
@@ -52,7 +59,7 @@ class EntityViewsData extends CoreEntityViewsData {
       $data[$revision_table]['table']['entity revision'] = TRUE;
     }
     // Add missing reverse relationships. Workaround for core issue #2706431.
-    $base_fields = $this->getEntityFieldManager()->getBaseFieldDefinitions($entity_type_id);
+    $base_fields = $this->entityFieldManager->getBaseFieldDefinitions($entity_type_id);
     $entity_reference_fields = array_filter($base_fields, function (BaseFieldDefinition $field) {
       return !$field->hasCustomStorage() && $field->getType() == 'entity_reference';
     });
@@ -62,7 +69,7 @@ class EntityViewsData extends CoreEntityViewsData {
     if ($this->entityType->hasHandlerClass('bundle_plugin')) {
       $bundles = $this->getEntityTypeBundleInfo()->getBundleInfo($entity_type_id);
       foreach (array_keys($bundles) as $bundle) {
-        $field_definitions = $this->getEntityFieldManager()->getFieldDefinitions($entity_type_id, $bundle);
+        $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
         foreach ($field_definitions as $field_definition) {
           if ($field_definition instanceof BundleFieldDefinition) {
             $this->addBundleFieldData($data, $field_definition);
@@ -166,7 +173,7 @@ class EntityViewsData extends CoreEntityViewsData {
    */
   protected function mapFieldDefinition($table, $field_name, FieldDefinitionInterface $field_definition, TableMappingInterface $table_mapping, &$table_data) {
     $field_column_mapping = $table_mapping->getColumnNames($field_name);
-    $field_storage = $this->getFieldStorageDefinitions()[$field_name];
+    $field_storage = $this->entityFieldManager->getFieldStorageDefinitions($this->entityType->id())[$field_name];
     $field_schema = $field_storage->getSchema();
 
     $field_definition_type = $field_definition->getType();
@@ -204,7 +211,10 @@ class EntityViewsData extends CoreEntityViewsData {
       $label = $field_definition->getLabel();
 
       $table_data['delta'] = [
-        'title' => $this->t('@label (@name:delta)', ['@label' => $label, '@name' => $field_name]),
+        'title' => $this->t('@label (@name:delta)', [
+          '@label' => $label,
+          '@name' => $field_name,
+        ]),
         'title short' => $this->t('@label:delta', ['@label' => $label]),
       ];
       $table_data['delta']['field'] = [
@@ -334,7 +344,7 @@ class EntityViewsData extends CoreEntityViewsData {
 
     foreach ($fields as $field) {
       $target_entity_type_id = $field->getSettings()['target_type'];
-      $target_entity_type = $this->getEntityTypeManager()->getDefinition($target_entity_type_id);
+      $target_entity_type = $this->entityTypeManager->getDefinition($target_entity_type_id);
       if (!($target_entity_type instanceof ContentEntityType)) {
         continue;
       }
@@ -396,13 +406,14 @@ class EntityViewsData extends CoreEntityViewsData {
   /**
    * Gets the entity field manager.
    *
-   * @todo Remove when support for Drupal 8.7 is dropped.
+   * @todo Remove in Entity API 2.x
    *
    * @return \Drupal\Core\Entity\EntityFieldManagerInterface
    *   The entity field manager.
    */
   protected function getEntityFieldManager() {
     if (!isset($this->entityFieldManager)) {
+      // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
       return \Drupal::service('entity_field.manager');
     }
     return $this->entityFieldManager;
@@ -411,13 +422,14 @@ class EntityViewsData extends CoreEntityViewsData {
   /**
    * Gets the entity type bundle info.
    *
-   * @todo Remove when support for Drupal 8.7 is dropped.
+   * @todo Remove in Entity API 2.x
    *
    * @return \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    *   The entity type bundle info.
    */
   protected function getEntityTypeBundleInfo() {
     if (!isset($this->entityTypeBundleInfo)) {
+      // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
       return \Drupal::service('entity_type.bundle.info');
     }
     return $this->entityTypeBundleInfo;
@@ -426,13 +438,14 @@ class EntityViewsData extends CoreEntityViewsData {
   /**
    * Gets the entity type manager.
    *
-   * @todo Remove when support for Drupal 8.7 is dropped.
+   * @todo Remove in Entity API 2.x
    *
    * @return \Drupal\Core\Entity\EntityTypeManagerInterface
    *   The entity type manager.
    */
   protected function getEntityTypeManager() {
     if (!isset($this->entityTypeManager)) {
+      // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
       return \Drupal::entityTypeManager();
     }
     return $this->entityTypeManager;

@@ -58,7 +58,7 @@ class WebformAutocomplete extends TextField {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     $has_items = !empty($element['#autocomplete_items']);

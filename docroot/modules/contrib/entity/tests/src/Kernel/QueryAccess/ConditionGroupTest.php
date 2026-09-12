@@ -18,10 +18,10 @@ use Drupal\KernelTests\KernelTestBase;
 class ConditionGroupTest extends KernelTestBase {
 
   /**
-   * ::covers getConjunction
-   * ::covers addCondition
-   * ::covers getConditions
-   * ::covers count.
+   * @covers ::getConjunction
+   * @covers ::addCondition
+   * @covers ::getConditions
+   * @covers ::count
    */
   public function testGetters() {
     $condition_group = new ConditionGroup();

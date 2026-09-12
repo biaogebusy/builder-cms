@@ -3,7 +3,7 @@
 namespace Drupal\ai_validations\Plugin\Validation\Constraint;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\OperationType\GenericType\ImageFile;
 use Drupal\ai\OperationType\ImageClassification\ImageClassificationInput;
@@ -35,10 +35,10 @@ final class AiImageClassificationConstraintValidator extends ConstraintValidator
    *
    * @param \Drupal\ai\AiProviderPluginManager $aiPluginManager
    *   The ai provider.
-   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(AiProviderPluginManager $aiPluginManager, EntityTypeManager $entityTypeManager) {
+  public function __construct(AiProviderPluginManager $aiPluginManager, EntityTypeManagerInterface $entityTypeManager) {
     $this->aiPluginManager = $aiPluginManager;
     $this->entityTypeManager = $entityTypeManager;
   }

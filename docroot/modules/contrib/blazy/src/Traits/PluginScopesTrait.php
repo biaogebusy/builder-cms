@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Traits;
 
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazySettings;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Utility\Arrays;
-use Drupal\blazy\internals\Internals;
 
 /**
  * A Trait for plugins, common for Blazy, Splide, Slick, etc.
@@ -17,9 +17,16 @@ trait PluginScopesTrait {
 
   /**
    * Converts old plugin scopes array into BlazySettings object to interop.
+   *
+   * @param array $scopes
+   *   The scopes being passed.
+   *
+   * @return \Drupal\blazy\BlazySettings
+   *   The BlazySettings instance.
    */
-  protected function toPluginScopes(array $scopes = []) {
-    $definitions = $current = [];
+  protected function toPluginScopes(array $scopes = []): BlazySettings {
+    $current = [];
+    $definitions = [];
 
     if (empty($scopes)) {
       return Internals::settings($definitions);
@@ -59,17 +66,17 @@ trait PluginScopesTrait {
       }
       else {
         if (is_bool($value)) {
-          $group = Blazy::has($key, '_form') ? 'form' : 'is';
+          $group = Internals::has($key, '_form') ? 'form' : 'is';
           $key = str_replace('_form', '', $key);
           $definitions[$group][$key] = $value;
         }
         else {
           // @todo recheck and remove for blazies: field, and entity.
-          if (Blazy::has($key, 'field_')) {
+          if (Internals::has($key, 'field_')) {
             $key = str_replace('field_', '', $key);
             $definitions['field'][$key] = $value;
           }
-          elseif (Blazy::has($key, 'entity_')) {
+          elseif (Internals::has($key, 'entity_')) {
             $key = str_replace('entity_', '', $key);
             $definitions['entity'][$key] = $value;
           }
@@ -84,6 +91,11 @@ trait PluginScopesTrait {
 
   /**
    * Modifies the specific plugin settings.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The blazies instance.
+   * @param array $settings
+   *   The settings being modified.
    */
   protected function pluginSettings(&$blazies, array &$settings): void {
     if ($settings['namespace'] == 'blazy') {

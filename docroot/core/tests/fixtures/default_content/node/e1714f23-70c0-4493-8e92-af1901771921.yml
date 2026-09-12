@@ -20,9 +20,6 @@ default:
   title:
     -
       value: 'Test Article'
-  created:
-    -
-      value: 1711476803
   promote:
     -
       value: true
@@ -36,11 +33,19 @@ default:
     -
       alias: /test-article
       langcode: en
+  content_translation_source:
+    -
+      value: und
+  content_translation_outdated:
+    -
+      value: false
   body:
     -
       value: 'Crikey it works!'
       format: plain_text
-      summary: ''
   field_tags:
     -
       entity: 550f86ad-aa11-4047-953f-636d42889f85
+  moderation_state:
+    -
+      value: published

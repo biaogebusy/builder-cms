@@ -7,12 +7,12 @@ use Drupal\Core\Render\Element\Button;
 use Drupal\Core\Render\Element\Form;
 use Drupal\Core\Render\Element\Html;
 use Drupal\Core\Url;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests element info pages and links.
- *
- * @group devel
  */
+#[Group('devel')]
 class DevelElementInfoTest extends DevelBrowserTestBase {
 
   /**

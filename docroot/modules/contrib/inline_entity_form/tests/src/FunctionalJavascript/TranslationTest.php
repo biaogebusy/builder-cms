@@ -1,8 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\inline_entity_form\FunctionalJavascript;
 
 use Drupal\node\Entity\Node;
+
+// cspell:ignore animaux haus haut kangourou kann maison nguru peut sautent
+// cspell:ignore sauter springen tous
 
 /**
  * Tests translating inline entities.

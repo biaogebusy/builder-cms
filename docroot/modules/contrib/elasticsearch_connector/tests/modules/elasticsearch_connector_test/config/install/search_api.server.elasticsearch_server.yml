@@ -17,4 +17,5 @@ backend_config:
     prefix: ''
     suffix: ''
     synonyms:
-      - ''
+      - 'test => check'
+      - 'hello, hi'

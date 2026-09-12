@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
  * The content menu contains a "Create" section, along with links to other
  * overview pages for different entity types.
  *
- * @internal The navigation module is experimental.
+ * @internal
  */
 final class NavigationContentLinks implements ContainerInjectionInterface {
 
@@ -36,7 +36,7 @@ final class NavigationContentLinks implements ContainerInjectionInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('router.route_provider'),
       $container->get('entity_type.manager')
@@ -55,12 +55,12 @@ final class NavigationContentLinks implements ContainerInjectionInterface {
     // array keys.
     $content_links = [
       'navigation.create' => [
-        'route_name' => 'node.add_page',
+        'route_name' => 'entity.node.add_page',
         'title' => $this->t('Create'),
         'weight' => -10,
       ],
       'navigation.content' => [
-        'route_name' => 'view.content.page_1',
+        'route_name' => 'system.admin_content',
         'title' => $this->t('Content'),
       ],
       'navigation.files' => [
@@ -68,11 +68,11 @@ final class NavigationContentLinks implements ContainerInjectionInterface {
         'title' => $this->t('Files'),
       ],
       'navigation.media' => [
-        'route_name' => 'view.media.media_page_list',
+        'route_name' => 'entity.media.collection',
         'title' => $this->t('Media'),
       ],
       'navigation.blocks' => [
-        'route_name' => 'view.block_content.page_1',
+        'route_name' => 'entity.block_content.collection',
         'title' => $this->t('Blocks'),
       ],
     ];
@@ -81,47 +81,8 @@ final class NavigationContentLinks implements ContainerInjectionInterface {
       $this->addLink($link_name, $link, $links);
     }
 
-    // Add supported add links under the Create button.
-    $this->addCreateEntityLinks('node_type', 'node.add', $links);
-    $this->addCreateEntityLinks('media_type', 'entity.media.add_form', $links, ['document', 'image']);
-
-    // Finally, add the bundleless User link and pin it to the bottom.
-    $this->addLink('navigation.create.user', [
-      'route_name' => 'user.admin_create',
-      'title' => $this->t('User'),
-      'parent' => 'navigation.create',
-      'weight' => 100,
-    ], $links);
-  }
-
-  /**
-   * Remove the admin/content link, and any direct children.
-   *
-   * @param array $links
-   *   The array of links being altered.
-   */
-  public function removeAdminContentLink(array &$links): void {
-    unset($links['system.admin_content']);
-
-    // Also remove any links that have set admin/content as their parent link.
-    // They are unsupported by the Navigation module.
-    foreach ($links as $link_name => $link) {
-      if (isset($link['parent']) && $link['parent'] === 'system.admin_content') {
-        // @todo Do we need to make this recursive, and unset children of these
-        // links too?
-        unset($links[$link_name]);
-      }
-    }
-  }
-
-  /**
-   * Remove the help link as render it outside any menu.
-   *
-   * @param array $links
-   *   The array of links being altered.
-   */
-  public function removeHelpLink(array &$links): void {
-    unset($links['help.main']);
+    // Add supported node add links under the Create button.
+    $this->addCreateEntityLinks('node_type', 'entity.node.add_form', $links);
   }
 
   /**
@@ -197,7 +158,7 @@ final class NavigationContentLinks implements ContainerInjectionInterface {
       $this->routeProvider->getRouteByName($link['route_name']);
       $links[$link_name] = $link + ['menu_name' => 'content', 'provider' => 'navigation'];
     }
-    catch (RouteNotFoundException $e) {
+    catch (RouteNotFoundException) {
       // The module isn't installed, or the route (such as provided by a view)
       // has been deleted.
     }

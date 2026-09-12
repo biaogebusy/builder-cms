@@ -87,6 +87,21 @@ recommended to use composer to achieve this.
     3. Select which AI Assistant to use.
     4. Provide an initial statement to use shown to the user.
 
+### Token-based avatars
+The **Default Avatar** field in the chatbot block settings accepts Drupal tokens,
+allowing you to dynamically resolve the avatar image for each user. For example:
+
+- `[current-user:user_picture]` — uses the user's picture field.
+- `[current-user:profile_type:field_name]` — uses an image field from a Profile
+  entity (requires the [Profile](https://www.drupal.org/project/profile) module).
+  Replace `profile_type` with the machine name of the profile type and
+  `field_name` with the image field name, e.g.
+  `[current-user:admin_profile:field_profile_image:entity:url]`.
+
+When a token resolves to an `<img>` HTML tag, the `src` URL is automatically
+extracted. If the token produces no result, the block falls back to the user's
+`user_picture` field. If that is also empty, no avatar is displayed.
+
 ### How to use the AI Chatbot
 When an AI Chatbot block is placed on a page, it will display its label to the
 user. If the user clicks it, it will open a form to allow the user to pass

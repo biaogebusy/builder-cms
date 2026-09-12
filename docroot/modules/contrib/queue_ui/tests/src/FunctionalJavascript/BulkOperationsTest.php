@@ -10,6 +10,7 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  *
  * @package Drupal\Tests\queue_ui\FunctionalJavascript
  * @group queue_ui
+ * @runTestsInSeparateProcesses
  */
 class BulkOperationsTest extends WebDriverTestBase {
 

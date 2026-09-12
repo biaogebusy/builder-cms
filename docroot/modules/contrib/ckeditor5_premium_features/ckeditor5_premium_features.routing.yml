@@ -1,0 +1,72 @@
+ckeditor5_premium_features.form.settings:
+  path: '/admin/config/ckeditor5-premium-features'
+  defaults:
+    _title: 'CKEditor 5 Premium Features'
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+ckeditor5_premium_features.form.settings_general:
+  path: '/admin/config/ckeditor5-premium-features/settings'
+  defaults:
+    _title: 'CKEditor 5 Premium Features - Settings'
+    _form: 'Drupal\ckeditor5_premium_features\Form\SettingsForm'
+  requirements:
+    # TODO: It may be more granullar - TBD if there is a need for dedicated permission.
+    _permission: 'administer site configuration'
+
+ckeditor5_premium_features.endpoint.jwt_token:
+  path: '/ckeditor5-premium-features/token'
+  defaults:
+    _controller: '\Drupal\ckeditor5_premium_features\Controller\EndpointController::jwtToken'
+  requirements:
+    _permission: 'use ckeditor5 access token'
+  options:
+    no_cache: 'TRUE'
+
+ckeditor5_premium_features.media_tags:
+  path: '/ck5/api/media-tags/{format}'
+  defaults:
+    _controller: 'Drupal\ckeditor5_premium_features\Controller\MediaTagConverterController::decodeMediaTags'
+  methods:  [POST]
+  requirements:
+    _permission: 'use ckeditor5 exporters endpoints'
+    _format: json
+
+ckeditor5_premium_features.base64_image_converter:
+  path: '/ck5/api/base64-image-converter'
+  defaults:
+    _controller: 'Drupal\ckeditor5_premium_features\Controller\Base64ImageConverterController::convertImages'
+  methods:  [POST]
+  requirements:
+    _permission: 'use ckeditor5 exporters endpoints'
+    _format: json
+
+ckeditor5_premium_features.drupal_version:
+  path: '/ckeditor5-premium-features/drupal-version/{editor}'
+  defaults:
+    _title: 'Drupal Version'
+    _controller: '\Drupal\ckeditor5_premium_features\Controller\DrupalVersion::currentVersion'
+  requirements:
+    _custom_access: '\Drupal\ckeditor5_premium_features\Controller\DrupalVersion::access'
+  options:
+    parameters:
+      editor:
+        type: entity:editor
+
+ckeditor5_premium_features.dependency_install:
+  path: '/ckeditor5-premium-features/dependency-install'
+  defaults:
+    _title: 'Dependency install'
+    _controller: '\Drupal\ckeditor5_premium_features\Controller\InstallerController::install'
+  requirements:
+    _permission: 'administer modules'
+
+ckeditor5_premium_features.caption_filter:
+  path: '/ck5/api/caption-filter'
+  defaults:
+    _controller: 'Drupal\ckeditor5_premium_features\Controller\CaptionFilterController::applyFilter'
+  methods:  [POST]
+  requirements:
+    _permission: 'access content'
+    _format: json

@@ -2,8 +2,9 @@
 
 namespace Drupal\paragraphs\Element;
 
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a render element for a paragraphs actions.
@@ -27,7 +28,8 @@ use Drupal\Core\Render\Element\RenderElement;
  *
  * @FormElement("paragraphs_actions")
  */
-class ParagraphsActions extends RenderElement {
+#[FormElement('paragraphs_actions')]
+class ParagraphsActions extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -59,7 +61,7 @@ class ParagraphsActions extends RenderElement {
       foreach (Element::children($element['dropdown_actions']) as $key) {
         $dropdown_action = &$element['dropdown_actions'][$key];
         if (isset($dropdown_action['#ajax'])) {
-          $dropdown_action = RenderElement::preRenderAjaxForm($dropdown_action);
+          $dropdown_action = RenderElementBase::preRenderAjaxForm($dropdown_action);
         }
         if (empty($dropdown_action['#attributes'])) {
           $dropdown_action['#attributes'] = ['class' => ['paragraphs-dropdown-action']];

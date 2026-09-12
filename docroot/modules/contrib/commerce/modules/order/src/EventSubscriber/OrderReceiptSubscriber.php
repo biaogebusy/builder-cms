@@ -59,7 +59,13 @@ class OrderReceiptSubscriber implements EventSubscriberInterface {
     $order_type_storage = $this->entityTypeManager->getStorage('commerce_order_type');
     /** @var \Drupal\commerce_order\Entity\OrderTypeInterface $order_type */
     $order_type = $order_type_storage->load($order->bundle());
-    if ($order_type->shouldSendReceipt()) {
+    // The "skip_order_receipt" flag is set by the state transition confirm form
+    // when an admin opts out of the receipt while placing the order. It is not
+    // unset afterwards: the "place" transition only runs once, nothing else
+    // reads the flag, and clearing it would require an unsafe re-save from
+    // within this post-transition subscriber. The "resend receipt" operation
+    // deliberately ignores it.
+    if ($order_type->shouldSendReceipt() && !$order->getData('skip_order_receipt', FALSE)) {
       $this->orderReceiptMail->send($order, $order->getEmail(), $order_type->getReceiptBcc());
     }
   }

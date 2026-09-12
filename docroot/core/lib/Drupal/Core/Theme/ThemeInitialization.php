@@ -6,6 +6,9 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
+use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
 
 /**
  * Provides the theme initialization logic.
@@ -58,8 +61,19 @@ class ThemeInitialization implements ThemeInitializationInterface {
    *   The cache backend.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler to use to load modules.
+   * @param \Psr\Container\ContainerInterface $themeEngines
+   *   The theme engines.
    */
-  public function __construct($root, ThemeHandlerInterface $theme_handler, CacheBackendInterface $cache, ModuleHandlerInterface $module_handler) {
+  public function __construct(
+    #[Autowire(param: 'app.root')]
+    $root,
+    ThemeHandlerInterface $theme_handler,
+    #[Autowire(service: 'cache.bootstrap')]
+    CacheBackendInterface $cache,
+    ModuleHandlerInterface $module_handler,
+    #[AutowireLocator('theme_engine', 'engine_name')]
+    private ContainerInterface $themeEngines,
+  ) {
     $this->root = $root;
     $this->themeHandler = $theme_handler;
     $this->cache = $cache;
@@ -128,26 +142,16 @@ class ThemeInitialization implements ThemeInitializationInterface {
    */
   public function loadActiveTheme(ActiveTheme $active_theme) {
     // Initialize the theme.
-    if ($active_theme->getEngine()) {
-      // Include the engine.
-      include_once $this->root . '/' . $active_theme->getOwner();
+    if ($engine = $active_theme->getEngine()) {
+      if (!$this->themeEngines->has($engine) && $active_theme->getOwner() && file_exists($this->root . '/' . $active_theme->getOwner())) {
+        @trigger_error(sprintf('Using .engine files for theme engines is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Convert %s.engine to a service. See https://www.drupal.org/node/3547356', $engine), E_USER_DEPRECATED);
+        // Include the engine.
+        include_once $this->root . '/' . $active_theme->getOwner();
+      }
       foreach (array_reverse($active_theme->getBaseThemeExtensions()) as $base) {
         $base->load();
       }
       $active_theme->getExtension()->load();
-    }
-    else {
-      // Include non-engine theme files
-      foreach (array_reverse($active_theme->getBaseThemeExtensions()) as $base) {
-        // Include the theme file or the engine.
-        if ($base->owner) {
-          include_once $this->root . '/' . $base->owner;
-        }
-      }
-      // And our theme gets one too.
-      if ($active_theme->getOwner()) {
-        include_once $this->root . '/' . $active_theme->getOwner();
-      }
     }
 
     // Always include Twig as the default theme engine.
@@ -222,10 +226,10 @@ class ThemeInitialization implements ThemeInitializationInterface {
       }
     }
 
-    // Do basically the same as the above for libraries
+    // Do basically the same as the above for libraries.
     $values['libraries'] = [];
 
-    // Grab libraries from base theme
+    // Grab libraries from base theme.
     foreach ($base_themes as $base) {
       if (!empty($base->libraries)) {
         foreach ($base->libraries as $library) {
@@ -262,38 +266,13 @@ class ThemeInitialization implements ThemeInitializationInterface {
    * Gets all extensions.
    *
    * @return array
+   *   An associative array whose keys are the names of the extensions.
    */
   protected function getExtensions() {
     if (!isset($this->extensions)) {
       $this->extensions = array_merge($this->moduleHandler->getModuleList(), $this->themeHandler->listInfo());
     }
     return $this->extensions;
-  }
-
-  /**
-   * Gets CSS file where tokens have been resolved.
-   *
-   * @param string $css_file
-   *   CSS file which may contain tokens.
-   *
-   * @return string
-   *   CSS file where placeholders are replaced.
-   *
-   * @todo Remove in Drupal 9.0.x.
-   */
-  protected function resolveStyleSheetPlaceholders($css_file) {
-    $token_candidate = explode('/', $css_file)[0];
-    if (!preg_match('/@[A-z0-9_-]+/', $token_candidate)) {
-      return $css_file;
-    }
-
-    $token = substr($token_candidate, 1);
-
-    // Prime extensions.
-    $extensions = $this->getExtensions();
-    if (isset($extensions[$token])) {
-      return str_replace($token_candidate, $extensions[$token]->getPath(), $css_file);
-    }
   }
 
 }

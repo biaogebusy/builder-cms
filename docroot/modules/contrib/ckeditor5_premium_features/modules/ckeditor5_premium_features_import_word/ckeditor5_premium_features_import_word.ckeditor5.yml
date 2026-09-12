@@ -1,0 +1,19 @@
+ckeditor5_premium_features_import_word__import_word:
+  ckeditor5:
+    plugins:
+      - cloudServices.CloudServices
+      - importWordAdapter.importWordAdapter
+      - importWord.ImportWord
+  drupal:
+    label: Import from Word
+    library: ckeditor5_premium_features_import_word/import-word.adapter
+    admin_library: ckeditor5_premium_features_import_word/admin.import_word
+    class: Drupal\ckeditor5_premium_features_import_word\Plugin\CKEditor5Plugin\ImportWord
+    toolbar_items:
+      importWord:
+        label: Import from Word
+    elements: false
+    conditions:
+      toolbarItem: importWord
+      plugins:
+        - ckeditor5_premium_features__cloud_services

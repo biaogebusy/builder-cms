@@ -92,6 +92,8 @@ trait MockTrait
     {
         self::$mockQueue = [];
         self::$mock      = null;
+        // Clear in place so history middleware references stay valid.
+        array_splice(self::$history, 0);
     }
 
     /**

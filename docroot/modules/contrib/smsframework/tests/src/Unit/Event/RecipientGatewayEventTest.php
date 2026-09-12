@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Unit\Event;
 
-use Drupal\Tests\UnitTestCase;
-use Drupal\Tests\sms\Functional\SmsFrameworkTestTrait;
-use Drupal\sms\Event\RecipientGatewayEvent;
 use Drupal\sms\Entity\SmsGatewayInterface;
+use Drupal\sms\Event\RecipientGatewayEvent;
+use Drupal\Tests\sms\Functional\SmsFrameworkTestTrait;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Unit Tests for SmsMessage.

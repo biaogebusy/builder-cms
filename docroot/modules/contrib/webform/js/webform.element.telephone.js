@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, drupalSettings, once) {
-
-  'use strict';
-
   // @see https://github.com/jackocnr/intl-tel-input#options
   Drupal.webform = Drupal.webform || {};
   Drupal.webform.intlTelInput = Drupal.webform.intlTelInput || {};
@@ -47,6 +44,12 @@
         }
 
         options = $.extend(options, Drupal.webform.intlTelInput.options);
+
+        // Allow custom options.
+        if ($telephone.attr('data-options')) {
+          options = $.extend(true, options, JSON.parse($telephone.attr('data-options')));
+        }
+
         $telephone.intlTelInput(options);
 
         var reset = function () {
@@ -55,22 +58,7 @@
         };
 
         var validate = function () {
-          if ($.trim($telephone.val())) {
-            if (!$telephone.intlTelInput('isValidNumber')) {
-              $telephone.addClass('error');
-              var placeholder = $telephone.attr('placeholder');
-              var message;
-              if (placeholder) {
-                message = Drupal.t('The phone number is not valid. (e.g. @example)', {'@example': placeholder});
-              }
-              else {
-                message = Drupal.t('The phone number is not valid.');
-              }
-              $error.html(message).show();
-              return false;
-            }
-          }
-          return true;
+          return Drupal.webformTelephoneInternationalValidate($telephone, $error);
         };
 
         $telephone.on('blur', function () {
@@ -97,6 +85,35 @@
         });
       });
     }
+  };
+
+  /**
+   * Validates a given telephone number within a webform.
+   *
+   * @param {jQuery} $telephone
+   *   A telephone element.
+   * @param {jQuery} $error
+   *   A error element.
+   *
+   * @returns {boolean}
+   *   Returns true if the telephone number is valid; otherwise, false.
+   */
+  Drupal.webformTelephoneInternationalValidate = function ($telephone, $error) {
+    if (!$telephone.val().trim() || $telephone.intlTelInput('isValidNumber') !== false) {
+      return true;
+    }
+
+    $telephone.addClass('error');
+    var placeholder = $telephone.attr('placeholder');
+    var message;
+    if (placeholder) {
+      message = Drupal.t('The phone number is not valid. (e.g. @example)', {'@example': placeholder});
+    }
+    else {
+      message = Drupal.t('The phone number is not valid.');
+    }
+    $error.html(message).show();
+    return false;
   };
 
 })(jQuery, Drupal, drupalSettings, once);

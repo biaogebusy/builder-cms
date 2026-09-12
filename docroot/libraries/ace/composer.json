@@ -1,0 +1,30 @@
+{
+  "name": "vardot/ace",
+  "description": "Ace (Ajax.org Cloud9 Editor) minified no-conflict build, packaged as a Drupal library",
+  "homepage": "https://github.com/Vardot/ace",
+  "type": "drupal-library",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "ace",
+    "editor",
+    "code editor",
+    "Drupal",
+    "drupal-library"
+  ],
+  "authors": [
+    {
+      "name": "Ajax.org B.V.",
+      "homepage": "https://github.com/ajaxorg",
+      "role": "Upstream author"
+    },
+    {
+      "name": "Vardot",
+      "homepage": "https://github.com/vardot",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/ace_editor",
+    "source": "https://github.com/Vardot/ace"
+  }
+}

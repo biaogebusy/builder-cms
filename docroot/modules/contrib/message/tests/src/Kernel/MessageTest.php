@@ -175,6 +175,9 @@ class MessageTest extends KernelTestBase {
    * Tests for getText argument handling.
    *
    * @covers ::getText
+   * @covers ::processArguments
+   * @covers ::setArguments
+   * @covers ::getArguments
    */
   public function testGetTextArgumentProcessing() {
     $this->messageTemplate->setSettings([
@@ -194,24 +197,34 @@ class MessageTest extends KernelTestBase {
       ],
     ]);
     $this->messageTemplate->save();
+
     /** @var \Drupal\message\Entity\Message $message */
     $message = $this->entityTypeManager->getStorage('message')->create([
       'template' => $this->messageTemplate->id(),
-      'arguments' => [
-        [
-          '@foo' => 'bar',
-          '@replace' => [
-            'pass message' => TRUE,
-            'arguments' => [
-              // When pass message is false, we'll use this text.
-              'bar_replacement',
-            ],
-            'callback' => [static::class, 'argumentCallback'],
-          ],
+    ]);
+    // Use the documented map-field shape (flat placeholder keys).
+    $message->setArguments([
+      '@foo' => 'bar',
+      '@replace' => [
+        'pass message' => TRUE,
+        'arguments' => [
+          'bar_replacement',
         ],
+        'callback' => [static::class, 'argumentCallback'],
       ],
     ]);
     $message->save();
+    $this->assertEquals([
+      '@foo' => 'bar',
+      '@replace' => [
+        'pass message' => TRUE,
+        'arguments' => [
+          'bar_replacement',
+        ],
+        'callback' => [static::class, 'argumentCallback'],
+      ],
+    ], $message->getArguments());
+
     $text = $message->getText();
     $this->assertEquals(2, count($text));
     $this->assertEquals('<p>bar bar_replacement_' . $message->id() . ' and @no_replace</p>' . "\n", (string) $text[0]);
@@ -221,18 +234,15 @@ class MessageTest extends KernelTestBase {
     /** @var \Drupal\message\Entity\Message $message */
     $message = $this->entityTypeManager->getStorage('message')->create([
       'template' => $this->messageTemplate->id(),
-      'arguments' => [
-        [
-          '@foo' => 'bar',
-          '@replace' => [
-            'pass message' => FALSE,
-            'arguments' => [
-              // When pass message is false, we'll use this text.
-              'bar_replacement',
-            ],
-            'callback' => [static::class, 'argumentCallback'],
-          ],
+    ]);
+    $message->setArguments([
+      '@foo' => 'bar',
+      '@replace' => [
+        'pass message' => FALSE,
+        'arguments' => [
+          'bar_replacement',
         ],
+        'callback' => [static::class, 'argumentCallback'],
       ],
     ]);
     $message->save();
@@ -262,6 +272,65 @@ class MessageTest extends KernelTestBase {
       $text = $arg_1;
     }
     return $text;
+  }
+
+  /**
+   * Tests template setter and created-time accessors.
+   *
+   * @covers ::setTemplate
+   * @covers ::getCreatedTime
+   * @covers ::setCreatedTime
+   * @covers ::getUuid
+   */
+  public function testTemplateAndTimestamps(): void {
+    $message = Message::create(['template' => $this->messageTemplate->id()]);
+    $message->setTemplate($this->messageTemplate);
+    $this->assertEquals($this->messageTemplate->id(), $message->getTemplate()->id());
+
+    $timestamp = 1700000000;
+    $message->setCreatedTime($timestamp);
+    $this->assertEquals($timestamp, $message->getCreatedTime());
+
+    $message->save();
+    $this->assertNotEmpty($message->getUuid());
+  }
+
+  /**
+   * Tests querying and labeling messages.
+   *
+   * @covers ::queryByTemplate
+   * @covers ::label
+   */
+  public function testQueryByTemplateAndLabel(): void {
+    $this->assertEquals([], Message::queryByTemplate($this->messageTemplate->id()));
+
+    $message = Message::create(['template' => $this->messageTemplate->id()]);
+    $message->save();
+
+    $this->assertEquals([$message->id() => $message->id()], Message::queryByTemplate($this->messageTemplate->id()));
+    $label = (string) $message->label();
+    $this->assertStringContainsString('Message ID ' . $message->id(), $label);
+    $this->assertStringContainsString('template:', $label);
+  }
+
+  /**
+   * Tests the deprecated deleteMultiple helper.
+   *
+   * @covers ::deleteMultiple
+   *
+   * @group legacy
+   */
+  public function testDeleteMultiple(): void {
+    $message_one = Message::create(['template' => $this->messageTemplate->id()]);
+    $message_one->save();
+    $message_two = Message::create(['template' => $this->messageTemplate->id()]);
+    $message_two->save();
+
+    $this->expectDeprecation('\Drupal\message\Entity\Message::deleteMultiple is deprecated in message:1.2.0 and is removed from message:2.0.0. Instead, each entity should call the ::delete() method explicitly. See https://www.drupal.org/project/message/issues/3091343');
+    Message::deleteMultiple([$message_one->id(), $message_two->id()]);
+
+    $this->assertNull(Message::load($message_one->id()));
+    $this->assertNull(Message::load($message_two->id()));
   }
 
 }

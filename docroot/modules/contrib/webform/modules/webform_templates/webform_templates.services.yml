@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_templates\Hook\WebformTemplatesHooks:
+    class: Drupal\webform_templates\Hook\WebformTemplatesHooks
+    autowire: true

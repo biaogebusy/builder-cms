@@ -1,0 +1,5 @@
+charts_chartjs_api_example.display:
+  title: 'Chart.js API Example'
+  description: 'Charts API demonstrations rendered with Chart.js.'
+  parent: charts_api_example.display
+  route_name: charts_chartjs_api_example.display

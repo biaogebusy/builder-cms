@@ -9,14 +9,20 @@ use Drupal\Core\Plugin\DefaultLazyPluginCollection;
  */
 class VariantPluginCollection extends DefaultLazyPluginCollection {
 
+  // The override exists solely to narrow the documented return type.
+  // phpcs:disable Generic.CodeAnalysis.UselessOverridingMethod.Found
+
   /**
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Display\VariantInterface
+   *   The variant plugin.
    */
   public function &get($instance_id) {
     return parent::get($instance_id);
   }
+
+  // phpcs:enable Generic.CodeAnalysis.UselessOverridingMethod.Found
 
   /**
    * {@inheritdoc}

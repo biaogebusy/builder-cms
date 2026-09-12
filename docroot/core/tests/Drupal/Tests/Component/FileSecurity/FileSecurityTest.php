@@ -6,18 +6,19 @@ namespace Drupal\Tests\Component\FileSecurity;
 
 use Drupal\Component\FileSecurity\FileSecurity;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the file security component.
- *
- * @coversDefaultClass \Drupal\Component\FileSecurity\FileSecurity
- * @group FileSecurity
  */
+#[CoversClass(FileSecurity::class)]
+#[Group('FileSecurity')]
 class FileSecurityTest extends TestCase {
 
   /**
-   * @covers ::writeHtaccess
+   * Tests write htaccess private.
    */
   public function testWriteHtaccessPrivate(): void {
     vfsStream::setup('root');
@@ -30,7 +31,7 @@ class FileSecurityTest extends TestCase {
   }
 
   /**
-   * @covers ::writeHtaccess
+   * Tests write htaccess public.
    */
   public function testWriteHtaccessPublic(): void {
     vfsStream::setup('root');
@@ -43,7 +44,7 @@ class FileSecurityTest extends TestCase {
   }
 
   /**
-   * @covers ::writeHtaccess
+   * Tests write htaccess force overwrite.
    */
   public function testWriteHtaccessForceOverwrite(): void {
     vfsStream::setup('root');
@@ -56,43 +57,11 @@ class FileSecurityTest extends TestCase {
   }
 
   /**
-   * @covers ::writeHtaccess
+   * Tests write htaccess failure.
    */
   public function testWriteHtaccessFailure(): void {
     vfsStream::setup('root');
     $this->assertFalse(FileSecurity::writeHtaccess(vfsStream::url('root') . '/foo'));
-  }
-
-  /**
-   * @covers ::writeWebConfig
-   */
-  public function testWriteWebConfig(): void {
-    vfsStream::setup('root');
-    $this->assertTrue(FileSecurity::writeWebConfig(vfsStream::url('root')));
-    $web_config_file = vfsStream::url('root') . '/web.config';
-    $this->assertFileExists($web_config_file);
-    $this->assertEquals('0444', substr(sprintf('%o', fileperms($web_config_file)), -4));
-  }
-
-  /**
-   * @covers ::writeWebConfig
-   */
-  public function testWriteWebConfigForceOverwrite(): void {
-    vfsStream::setup('root');
-    $web_config_file = vfsStream::url('root') . '/web.config';
-    file_put_contents($web_config_file, "foo");
-    $this->assertTrue(FileSecurity::writeWebConfig(vfsStream::url('root'), TRUE));
-    $this->assertFileExists($web_config_file);
-    $this->assertEquals('0444', substr(sprintf('%o', fileperms($web_config_file)), -4));
-    $this->assertStringNotContainsString("foo", $web_config_file);
-  }
-
-  /**
-   * @covers ::writeWebConfig
-   */
-  public function testWriteWebConfigFailure(): void {
-    vfsStream::setup('root');
-    $this->assertFalse(FileSecurity::writeWebConfig(vfsStream::url('root') . '/foo'));
   }
 
 }

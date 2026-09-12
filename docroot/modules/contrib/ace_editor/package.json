@@ -1,0 +1,44 @@
+{
+  "name": "ace_editor",
+  "description": "Integrates the Ace code editor into Drupal as a text editor, field formatter and text filter.",
+  "license": "GPL-2.0-or-later",
+  "private": true,
+  "engines": {
+    "yarn": ">= 4.9.3",
+    "node": ">= 20.0"
+  },
+  "packageManager": "yarn@4.9.3",
+  "keywords": [
+    "Drupal",
+    "ACE",
+    "Editor"
+  ],
+  "author": "Vardot",
+  "scripts": {
+    "lint:yaml": "node ./node_modules/eslint/bin/eslint.js --no-eslintrc --config=.eslintrc-yaml.json --ext .yml .",
+    "spellcheck": "cspell lint .",
+    "test": "cucumber-js --config cucumber.js",
+    "test:chromium": "BROWSER=chromium cucumber-js --config cucumber.js",
+    "test:firefox": "BROWSER=firefox cucumber-js --config cucumber.js",
+    "test:webkit": "BROWSER=webkit cucumber-js --config cucumber.js",
+    "generate-reports": "generate-reports"
+  },
+  "dependencies": {
+    "@vardot/varbase-e2e": "~2.0.1",
+    "@cucumber/cucumber": "10.0.1",
+    "@cucumber/pretty-formatter": "1.0.0",
+    "playwright": "1.60.0",
+    "tsx": "4.22.1"
+  },
+  "resolutions": {
+    "@cucumber/cucumber": "10.0.1",
+    "@cucumber/pretty-formatter": "1.0.0",
+    "playwright": "1.60.0"
+  },
+  "devDependencies": {
+    "cspell": "^8.16.1",
+    "eslint": "^8.57.1",
+    "eslint-plugin-yml": "^1.19.0",
+    "prettier": "^3.6.2"
+  }
+}

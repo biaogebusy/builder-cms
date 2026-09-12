@@ -2,8 +2,6 @@
 
 namespace Drupal\migrate;
 
-use Drupal\Component\Utility\Bytes;
-use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\Utility\Error;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\migrate\Event\MigrateEvents;
@@ -41,20 +39,6 @@ class MigrateExecutable implements MigrateExecutableInterface {
   protected $sourceRowStatus;
 
   /**
-   * The ratio of the memory limit at which an operation will be interrupted.
-   *
-   * @var float
-   */
-  protected $memoryThreshold = 0.85;
-
-  /**
-   * The PHP memory_limit expressed in bytes.
-   *
-   * @var int
-   */
-  protected $memoryLimit;
-
-  /**
    * The configuration values of the source.
    *
    * @var array
@@ -85,14 +69,14 @@ class MigrateExecutable implements MigrateExecutableInterface {
   /**
    * Migration message service.
    *
-   * @todo https://www.drupal.org/node/2822663 Make this protected.
-   *
    * @var \Drupal\migrate\MigrateMessageInterface
+   *
+   * @todo https://www.drupal.org/node/2822663 Make this protected.
    */
   public $message;
 
   /**
-   * Constructs a MigrateExecutable and verifies and sets the memory limit.
+   * Constructs a MigrateExecutable.
    *
    * @param \Drupal\migrate\Plugin\MigrationInterface $migration
    *   The migration to run.
@@ -106,14 +90,6 @@ class MigrateExecutable implements MigrateExecutableInterface {
     $this->message = $message ?: new MigrateMessage();
     $this->getIdMap()->setMessage($this->message);
     $this->eventDispatcher = $event_dispatcher;
-    // Record the memory limit in bytes
-    $limit = trim(ini_get('memory_limit'));
-    if ($limit == '-1') {
-      $this->memoryLimit = PHP_INT_MAX;
-    }
-    else {
-      $this->memoryLimit = Bytes::toNumber($limit);
-    }
   }
 
   /**
@@ -135,6 +111,7 @@ class MigrateExecutable implements MigrateExecutableInterface {
    * Gets the event dispatcher.
    *
    * @return \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   *   The event dispatcher service.
    */
   protected function getEventDispatcher() {
     if (!$this->eventDispatcher) {
@@ -152,6 +129,7 @@ class MigrateExecutable implements MigrateExecutableInterface {
       $this->message->display($this->t('Migration @id is busy with another operation: @status',
         [
           '@id' => $this->migration->id(),
+          // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
           '@status' => $this->t($this->migration->getStatusLabel()),
         ]), 'error');
       return MigrationInterface::RESULT_FAILED;
@@ -276,11 +254,6 @@ class MigrateExecutable implements MigrateExecutableInterface {
 
         $this->sourceRowStatus = MigrateIdMapInterface::STATUS_IMPORTED;
 
-        // Check for memory exhaustion.
-        if (($return = $this->checkStatus()) != MigrationInterface::RESULT_COMPLETED) {
-          break;
-        }
-
         // If anyone has requested we stop, return the requested result.
         if ($this->migration->getStatus() == MigrationInterface::STATUS_STOPPING) {
           $return = $this->migration->getInterruptionResult();
@@ -315,15 +288,19 @@ class MigrateExecutable implements MigrateExecutableInterface {
   public function rollback() {
     // Only begin the rollback operation if the migration is currently idle.
     if ($this->migration->getStatus() !== MigrationInterface::STATUS_IDLE) {
-      $this->message->display($this->t('Migration @id is busy with another operation: @status', ['@id' => $this->migration->id(), '@status' => $this->t($this->migration->getStatusLabel())]), 'error');
+      $this->message->display($this->t('Migration @id is busy with another operation: @status', [
+        '@id' => $this->migration->id(),
+        // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
+        '@status' => $this->t($this->migration->getStatusLabel()),
+      ]), 'error');
       return MigrationInterface::RESULT_FAILED;
     }
 
     // Announce that rollback is about to happen.
     $this->getEventDispatcher()->dispatch(new MigrateRollbackEvent($this->migration), MigrateEvents::PRE_ROLLBACK);
 
-    // Optimistically assume things are going to work out; if not, $return will be
-    // updated to some other status.
+    // Optimistically assume things are going to work out; if not, $return will
+    // be updated to some other status.
     $return = MigrationInterface::RESULT_COMPLETED;
 
     $this->migration->setStatus(MigrationInterface::STATUS_ROLLING_BACK);
@@ -353,11 +330,6 @@ class MigrateExecutable implements MigrateExecutableInterface {
         $id_map->delete($source_key);
       }
       $id_map->next();
-
-      // Check for memory exhaustion.
-      if (($return = $this->checkStatus()) != MigrationInterface::RESULT_COMPLETED) {
-        break;
-      }
 
       // If anyone has requested we stop, return the requested result.
       if ($this->migration->getStatus() == MigrationInterface::STATUS_STOPPING) {
@@ -452,7 +424,7 @@ class MigrateExecutable implements MigrateExecutableInterface {
         try {
           $value = $plugin->transform($value, $this, $row, $destination);
         }
-        catch (MigrateSkipProcessException $e) {
+        catch (MigrateSkipProcessException) {
           $value = NULL;
           break;
         }
@@ -513,131 +485,6 @@ class MigrateExecutable implements MigrateExecutableInterface {
       $this->saveMessage($message);
     }
     $this->message->display($message, 'error');
-  }
-
-  /**
-   * Checks for exceptional conditions, and display feedback.
-   */
-  protected function checkStatus() {
-    if ($this->memoryExceeded()) {
-      return MigrationInterface::RESULT_INCOMPLETE;
-    }
-    return MigrationInterface::RESULT_COMPLETED;
-  }
-
-  /**
-   * Tests whether we've exceeded the desired memory threshold.
-   *
-   * If so, output a message.
-   *
-   * @return bool
-   *   TRUE if the threshold is exceeded, otherwise FALSE.
-   */
-  protected function memoryExceeded() {
-    $usage = $this->getMemoryUsage();
-    $pct_memory = $usage / $this->memoryLimit;
-    if (!$threshold = $this->memoryThreshold) {
-      return FALSE;
-    }
-    if ($pct_memory > $threshold) {
-      $this->message->display(
-        $this->t(
-          'Memory usage is @usage (@pct% of limit @limit), reclaiming memory.',
-          [
-            '@pct' => round($pct_memory * 100),
-            '@usage' => ByteSizeMarkup::create($usage, NULL, $this->stringTranslation),
-            '@limit' => ByteSizeMarkup::create($this->memoryLimit, NULL, $this->stringTranslation),
-          ]
-        ),
-        'warning'
-      );
-      $usage = $this->attemptMemoryReclaim();
-      $pct_memory = $usage / $this->memoryLimit;
-      // Use a lower threshold - we don't want to be in a situation where we keep
-      // coming back here and trimming a tiny amount
-      if ($pct_memory > (0.90 * $threshold)) {
-        $this->message->display(
-          $this->t(
-            'Memory usage is now @usage (@pct% of limit @limit), not enough reclaimed, starting new batch',
-            [
-              '@pct' => round($pct_memory * 100),
-              '@usage' => ByteSizeMarkup::create($usage, NULL, $this->stringTranslation),
-              '@limit' => ByteSizeMarkup::create($this->memoryLimit, NULL, $this->stringTranslation),
-            ]
-          ),
-          'warning'
-        );
-        return TRUE;
-      }
-      else {
-        $this->message->display(
-          $this->t(
-            'Memory usage is now @usage (@pct% of limit @limit), reclaimed enough, continuing',
-            [
-              '@pct' => round($pct_memory * 100),
-              '@usage' => ByteSizeMarkup::create($usage, NULL, $this->stringTranslation),
-              '@limit' => ByteSizeMarkup::create($this->memoryLimit, NULL, $this->stringTranslation),
-            ]
-          ),
-          'warning');
-        return FALSE;
-      }
-    }
-    else {
-      return FALSE;
-    }
-  }
-
-  /**
-   * Returns the memory usage so far.
-   *
-   * @return int
-   *   The memory usage.
-   */
-  protected function getMemoryUsage() {
-    return memory_get_usage();
-  }
-
-  /**
-   * Tries to reclaim memory.
-   *
-   * @return int
-   *   The memory usage after reclaim.
-   */
-  protected function attemptMemoryReclaim() {
-    // First, try resetting Drupal's static storage - this frequently releases
-    // plenty of memory to continue.
-    drupal_static_reset();
-
-    // Entity storage can blow up with caches, so clear it out.
-    \Drupal::service('entity.memory_cache')->deleteAll();
-
-    // @todo Explore resetting the container.
-
-    // Run garbage collector to further reduce memory.
-    gc_collect_cycles();
-
-    return memory_get_usage();
-  }
-
-  /**
-   * Generates a string representation for the given byte count.
-   *
-   * @param int $size
-   *   A size in bytes.
-   *
-   * @return string
-   *   A translated string representation of the size.
-   *
-   * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use
-   *   \Drupal\Core\StringTranslation\ByteSizeMarkup::create($size, $langcode)
-   *   instead.
-   *
-   * @see https://www.drupal.org/node/2999981
-   */
-  protected function formatSize($size) {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\StringTranslation\ByteSizeMarkup::create($size, $langcode) instead. See https://www.drupal.org/node/2999981', E_USER_DEPRECATED);
-    return format_size($size);
   }
 
 }

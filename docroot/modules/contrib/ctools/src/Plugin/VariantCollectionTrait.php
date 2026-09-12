@@ -15,6 +15,8 @@ trait VariantCollectionTrait {
   protected $variantCollection;
 
   /**
+   * Adds a new variant to the collection.
+   *
    * @see \Drupal\ctools\Plugin\VariantCollectionInterface::addVariant()
    */
   public function addVariant(array $configuration) {
@@ -24,6 +26,8 @@ trait VariantCollectionTrait {
   }
 
   /**
+   * Gets a variant from the collection.
+   *
    * @see \Drupal\ctools\Plugin\VariantCollectionInterface::getVariant()
    */
   public function getVariant($variant_id) {
@@ -31,6 +35,8 @@ trait VariantCollectionTrait {
   }
 
   /**
+   * Removes a variant from the collection.
+   *
    * @see \Drupal\ctools\Plugin\VariantCollectionInterface::removeVariant()
    */
   public function removeVariant($variant_id) {
@@ -39,6 +45,8 @@ trait VariantCollectionTrait {
   }
 
   /**
+   * Gets all variants in the collection.
+   *
    * @see \Drupal\ctools\Plugin\VariantCollectionInterface::getVariants()
    */
   public function getVariants() {
@@ -61,6 +69,7 @@ trait VariantCollectionTrait {
    * Returns the UUID generator.
    *
    * @return \Drupal\Component\Uuid\UuidInterface
+   *   The UUID generator.
    */
   abstract protected function uuidGenerator();
 

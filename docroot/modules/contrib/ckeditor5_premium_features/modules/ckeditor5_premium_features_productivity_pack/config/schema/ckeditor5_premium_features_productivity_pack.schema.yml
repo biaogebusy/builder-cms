@@ -1,0 +1,56 @@
+ckeditor5_premium_features_productivity_pack.ckeditor5_template.*:
+  type: config_entity
+  label: CKEditor5 Content Template
+  mapping:
+    id:
+      type: string
+      label: ID
+    uuid:
+      type: string
+    label:
+      type: label
+      label: Title
+    description:
+      type: text
+      label: Description
+    icon:
+      type: string
+      label: Icon
+    data:
+      type: text
+      label: HTML code
+    textFormats:
+      type: sequence
+      label: Available for
+      sequence:
+        type: string
+        label: Text Format
+    weight:
+      type: integer
+      label: Weight
+    status:
+      type: boolean
+      label: Enabled
+
+ckeditor5.plugin.ckeditor5_premium_features_productivity_pack_base:
+  type: mapping
+  label: 'Productivity Pack'
+  mapping:
+    document_outline_enabled:
+      type: boolean
+      label: 'Document Outline Enabled'
+    slash_command_enabled:
+      type: boolean
+      label: 'Slash Command Enabled'
+    paste_from_office_enhanced_enabled:
+      type: boolean
+      label: 'Paste from Office Enhanced Enabled'
+
+
+ckeditor5.plugin.ckeditor5_premium_features_productivity_pack_case_change:
+  type: mapping
+  label: 'Case Change'
+  mapping:
+    title_case_exclude_words:
+      type: string
+      label: 'Title Case Excluded words'

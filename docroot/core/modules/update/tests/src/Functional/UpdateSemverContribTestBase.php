@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\update\Functional;
 
 /**
- * Base class for Update manager semantic versioning tests of contrib projects.
+ * Base class for Update Status semantic versioning tests of contrib projects.
  *
  * This wires up the protected data from UpdateSemverTestBase for a contrib
  * module with semantic version releases.
  */
-class UpdateSemverContribTestBase extends UpdateSemverTestBase {
+abstract class UpdateSemverContribTestBase extends UpdateSemverTestBase {
 
   /**
    * {@inheritdoc}
@@ -92,7 +92,7 @@ class UpdateSemverContribTestBase extends UpdateSemverTestBase {
             // it is the latest full release for that major.
             // @todo Determine if both 8.0.0 and 8.0.1 should be expected as
             // "Also available" releases in
-            // https://www.drupal.org/project/node/3100115.
+            // https://www.drupal.org/node/2990476.
             $this->assertVersionUpdateLinks('Also available:', "$semver_major.1.0");
             if ($installed_version === "8.x-$legacy_major.1") {
               $this->assertUpdateTableTextContains('Up to date');

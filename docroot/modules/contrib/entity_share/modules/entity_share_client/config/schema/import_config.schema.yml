@@ -92,6 +92,9 @@ entity_share_client.plugin.import_processor_configuration.revision:
     translation_affected:
       type: boolean
       label: 'Enforce translation affected'
+    revision_log_message:
+      type: string
+      label: 'Revision log message format'
 
 entity_share_client.plugin.import_processor_configuration.skip_imported:
   type: entity_share_client.plugin.import_processor_configuration

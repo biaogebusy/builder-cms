@@ -5,6 +5,9 @@
  * Installation and uninstallation functions.
  */
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
+
 /**
  * Implements hook_requirements().
  */
@@ -19,14 +22,14 @@ function charts_google_requirements($phase) {
         $requirements['charts_google_js'] = [
           'title' => t('Google Charts Library'),
           'value' => t('Not Installed'),
-          'severity' => REQUIREMENT_WARNING,
+          'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::Warning, fn() => REQUIREMENT_WARNING),
           'description' => t('You are missing the Google Charts library in your Drupal installation directory. Please see the README file inside charts_google for instructions to install the library.'),
         ];
       }
       else {
         $requirements['charts_google_js'] = [
           'title' => t('Google Charts Library'),
-          'severity' => REQUIREMENT_OK,
+          'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::OK, fn() => REQUIREMENT_OK),
           'value' => t('Installed'),
         ];
       }

@@ -240,17 +240,21 @@ function simple_oauth_update_8603() {
   $update_field_definitions['confidential'] = $entity_definition_update_manager->getFieldStorageDefinition('confidential', $entity_type_id);
   $update_field_definitions['confidential']->setTranslatable(FALSE);
   $database = \Drupal::database();
-  $redirect_values = $database->select('consumer_field_data', 'c')
-    ->fields('c', ['id', 'redirect', 'langcode'])
-    ->isNotNull('c.redirect')
-    ->execute()
-    ->fetchAll();
+  $redirect_values = [];
 
-  if (!empty($redirect_values)) {
-    // Remove data from the storage.
-    $database->update('consumer_field_data')
-      ->fields(['redirect' => NULL])
-      ->execute();
+  if ($database->schema()->fieldExists('consumer_field_data', 'redirect')) {
+    $redirect_values = $database->select('consumer_field_data', 'c')
+      ->fields('c', ['id', 'redirect', 'langcode'])
+      ->isNotNull('c.redirect')
+      ->execute()
+      ->fetchAll();
+
+    if (!empty($redirect_values)) {
+      // Remove data from the storage.
+      $database->update('consumer_field_data')
+        ->fields(['redirect' => NULL])
+        ->execute();
+    }
   }
 
   $update_field_definitions['redirect'] = $entity_definition_update_manager->getFieldStorageDefinition('redirect', $entity_type_id);
@@ -269,20 +273,22 @@ function simple_oauth_update_8603() {
   }
 
   // Migrate redirect values.
-  $insert_query = $database->insert('consumer__redirect')
-    ->fields(['bundle', 'deleted', 'entity_id', 'revision_id', 'langcode', 'delta', 'redirect_value']);
-  foreach ($redirect_values as $redirect_value) {
-    $insert_query->values([
-      'consumer',
-      0,
-      $redirect_value->id,
-      $redirect_value->id,
-      $redirect_value->langcode,
-      0,
-      $redirect_value->redirect,
-    ]);
+  if (!empty($redirect_values)) {
+    $insert_query = $database->insert('consumer__redirect')
+      ->fields(['bundle', 'deleted', 'entity_id', 'revision_id', 'langcode', 'delta', 'redirect_value']);
+    foreach ($redirect_values as $redirect_value) {
+      $insert_query->values([
+        'consumer',
+        0,
+        $redirect_value->id,
+        $redirect_value->id,
+        $redirect_value->langcode,
+        0,
+        $redirect_value->redirect,
+      ]);
+    }
+    $insert_query->execute();
   }
-  $insert_query->execute();
 }
 
 /**
@@ -299,19 +305,12 @@ function simple_oauth_update_8604() {
   $grant_types = array_keys(Oauth2GrantManager::getAvailablePluginsAsOptions());
   $config = \Drupal::configFactory()->get('simple_oauth.settings');
 
-  $database = \Drupal::database();
-  $role_values = $database->select('consumer__roles', 'r')
-    ->fields('r', ['entity_id', 'roles_target_id', 'langcode', 'delta', 'roles_target_id'])
-    ->execute()
-    ->fetchAll();
+  /** @var \Drupal\user\RoleInterface $roles */
+  $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
 
-  foreach ($role_values as $role_value) {
-    /** @var \Drupal\user\RoleInterface $role */
-    $role = \Drupal::entityTypeManager()->getStorage('user_role')->load($role_value->roles_target_id);
-    // Role doesn't exist, so don't do anything.
-    if (!$role) {
-      continue;
-    }
+  // Selecting scopes for consumers is optional,
+  // which is why we need to create oauth2_scope entities for all roles.
+  foreach ($roles as $role) {
     // Scope already exist.
     if (\Drupal::entityTypeManager()->getStorage('oauth2_scope')->load($role->id())) {
       continue;
@@ -326,30 +325,50 @@ function simple_oauth_update_8604() {
         'client_credentials' => ['status' => TRUE],
         'refresh_token' => ['status' => TRUE],
       ],
-      'granularity' => Oauth2ScopeInterface::GRANULARITY_ROLE,
-      'role' => $role->id(),
+      'granularity_id' => Oauth2ScopeInterface::GRANULARITY_ROLE,
+      'granularity_configuration' => [
+        Oauth2ScopeInterface::GRANULARITY_ROLE => $role->id(),
+      ],
     ])->save();
+  }
 
-    $insert_query = $database->insert('consumer__scopes')
-      ->fields([
-        'bundle',
-        'deleted',
-        'entity_id',
-        'revision_id',
-        'langcode',
-        'delta',
-        'scopes_scope_id',
+  $database = \Drupal::database();
+  $role_values = $database->select('consumer__roles', 'r')
+    ->fields('r', ['entity_id', 'langcode', 'delta', 'roles_target_id'])
+    ->execute()
+    ->fetchAll();
+
+  foreach ($role_values as $role_value) {
+    // Check if the scope already exists.
+    $exist = $database->select('consumer__scopes', 'r')
+      ->condition('entity_id', $role_value->entity_id)
+      ->condition('langcode', $role_value->langcode)
+      ->condition('scopes_scope_id', $role_value->roles_target_id)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+    if ((int) $exist === 0) {
+      $insert_query = $database->insert('consumer__scopes')
+        ->fields([
+          'bundle',
+          'deleted',
+          'entity_id',
+          'revision_id',
+          'langcode',
+          'delta',
+          'scopes_scope_id',
+        ]);
+      $insert_query->values([
+        'consumer',
+        0,
+        $role_value->entity_id,
+        $role_value->entity_id,
+        $role_value->langcode,
+        $role_value->delta,
+        $role_value->roles_target_id,
       ]);
-    $insert_query->values([
-      'consumer',
-      0,
-      $role_value->entity_id,
-      $role_value->entity_id,
-      $role_value->langcode,
-      $role_value->delta,
-      $role->id(),
-    ]);
-    $insert_query->execute();
+      $insert_query->execute();
+    }
   }
 
   foreach ($consumers as $consumer) {
@@ -426,6 +445,19 @@ function simple_oauth_update_8605() {
     ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
     ->setTranslatable(FALSE);
   $entity_definition_update_manager->installFieldStorageDefinition($field_name, $entity_type_id, $provider, $field_definition);
+
+  // Starting with version 6.0, it is possible to determine the grant type
+  // from access tokens. Because this information is not available in
+  // earlier versions, existing tokens must be removed.
+  /** @var \Drupal\simple_oauth\ExpiredCollector $collector */
+  $collector = \Drupal::service('simple_oauth.expired_collector');
+
+  do {
+    $expired_tokens = $collector->collect(300);
+    if (!empty($expired_tokens)) {
+      $collector->deleteMultipleTokens($expired_tokens);
+    }
+  } while (!empty($expired_tokens));
 }
 
 /**
@@ -452,15 +484,20 @@ function simple_oauth_update_8607() {
     $config = $config_factory->getEditable($config_name);
 
     $granularity_id = $config->get('granularity');
-    $config->set('granularity_id', $granularity_id);
+    if ($granularity_id) {
+      $config->set('granularity_id', $granularity_id);
+    }
     $config->clear('granularity');
 
-    $config->set('granularity_configuration', []);
-    if ($granularity_id === 'permission') {
-      $config->set('granularity_configuration.permission', $config->get('permission'));
+    $permission_id = $config->get('permission');
+    $role_id = $config->get('role');
+    if ($granularity_id === 'permission' && $permission_id) {
+      $config->set('granularity_configuration', []);
+      $config->set('granularity_configuration.permission', $permission_id);
     }
-    elseif ($granularity_id === 'role') {
-      $config->set('granularity_configuration.role', $config->get('role'));
+    elseif ($granularity_id === 'role' && $role_id) {
+      $config->set('granularity_configuration', []);
+      $config->set('granularity_configuration.role', $role_id);
     }
     $config->clear('permission');
     $config->clear('role');

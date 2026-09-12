@@ -35,6 +35,11 @@ elements: |
     '#terms_type': slideout
     '#terms_title': terms_of_service_slideout
     '#terms_content': 'These are the terms of service.'
+  terms_of_service_link:
+    '#type': webform_terms_of_service
+    '#title': 'I agree to the {terms of service}. (link)'
+    '#terms_type': link
+    '#terms_link': /node/1
 css: ''
 javascript: ''
 settings:

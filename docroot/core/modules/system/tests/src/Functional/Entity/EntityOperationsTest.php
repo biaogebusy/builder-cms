@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Functional\Entity;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that operations can be injected from the hook.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityOperationsTest extends BrowserTestBase {
 
   /**
@@ -46,21 +47,8 @@ class EntityOperationsTest extends BrowserTestBase {
     $roles = Role::loadMultiple();
     foreach ($roles as $role) {
       $this->assertSession()->linkByHrefExists($role->toUrl()->toString() . '/test_operation');
-      $this->assertSession()->linkExists(new FormattableMarkup('Test Operation: @label', ['@label' => $role->label()]));
+      $this->assertSession()->linkExists('Test Operation: ' . $role->label());
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function createRole(array $permissions, $rid = NULL, $name = NULL, $weight = NULL) {
-    // The parent method uses random strings by default, which may include HTML
-    // entities for the entity label. Since in this test the entity label is
-    // used to generate a link, and AssertContentTrait::assertLink() is not
-    // designed to deal with links potentially containing HTML entities this
-    // causes random failures. Use a random HTML safe string instead.
-    $name = $name ?: $this->randomMachineName();
-    return parent::createRole($permissions, $rid, $name, $weight);
   }
 
 }

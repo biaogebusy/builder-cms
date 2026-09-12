@@ -154,10 +154,6 @@
 }
 
 .gin--classic-toolbar {
-  .page-wrapper__node-edit-form .layout-region-node-secondary {
-    padding-block-start: var(--gin-toolbar-y-offset); // 39px;
-  }
-
   table.sticky-header {
     @include mq(large) {
       margin-block-start: 0;

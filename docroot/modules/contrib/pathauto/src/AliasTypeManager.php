@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\pathauto\Attribute\AliasType;
 
 /**
  * Manages pathauto alias type plugins.
@@ -24,7 +25,7 @@ class AliasTypeManager extends DefaultPluginManager implements FallbackPluginMan
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/pathauto/AliasType', $namespaces, $module_handler, 'Drupal\pathauto\AliasTypeInterface', 'Drupal\pathauto\Annotation\AliasType');
+    parent::__construct('Plugin/pathauto/AliasType', $namespaces, $module_handler, AliasTypeInterface::class, AliasType::class, 'Drupal\pathauto\Annotation\AliasType');
     $this->alterInfo('pathauto_alias_types');
     $this->setCacheBackend($cache_backend, 'pathauto_alias_types');
   }

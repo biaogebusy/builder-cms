@@ -5,7 +5,9 @@
   "type": "drupal-module",
   "require": {},
   "require-dev": {
-    "drupal/token": "^1.14"
+    "brianium/paratest": "^7.3",
+    "drupal/token": "^1.14",
+    "drush/drush": ">=12"
   },
   "minimum-stability": "dev"
 }

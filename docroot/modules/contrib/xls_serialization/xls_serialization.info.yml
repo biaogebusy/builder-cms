@@ -7,7 +7,7 @@ dependencies:
   - drupal:rest
   - drupal:serialization
 
-# Information added by Drupal.org packaging script on 2025-01-26
-version: '2.0.3'
+# Information added by Drupal.org packaging script on 2026-08-14
+version: '2.1.2'
 project: 'xls_serialization'
-datestamp: 1737917852
+datestamp: 1786714035

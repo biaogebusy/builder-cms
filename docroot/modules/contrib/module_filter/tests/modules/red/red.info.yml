@@ -5,7 +5,7 @@ package: Testing
 dependencies:
   - module_filter:module_filter
 
-# Information added by Drupal.org packaging script on 2025-06-23
-version: '5.0.4'
+# Information added by Drupal.org packaging script on 2026-06-14
+version: '5.0.5'
 project: 'module_filter'
-datestamp: 1750704822
+datestamp: 1781405915

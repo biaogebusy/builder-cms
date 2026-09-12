@@ -2,6 +2,7 @@
 
 namespace Drupal\advancedqueue\Plugin\views\field;
 
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 
@@ -12,6 +13,7 @@ use Drupal\views\ResultRow;
  *
  * @ViewsField("advancedqueue_job_type")
  */
+#[ViewsField("advancedqueue_job_type")]
 class JobType extends FieldPluginBase {
 
   /**

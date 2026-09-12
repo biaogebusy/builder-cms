@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\dynamic_entity_reference\Functional;
+
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\dynamic_entity_reference\Plugin\Field\FieldType\DynamicEntityReferenceItem;
 use Drupal\entity_test\Entity\EntityTest;
@@ -20,7 +26,10 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceTest extends BrowserTestBase {
+  use StringTranslationTrait;
 
   /**
    * The admin user.
@@ -128,7 +137,7 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
     $excluded_entity_type_ids = $this->excludedEntities;
     $bundled_entities_type_ids = $this->bundleAbleEntities;
     $labels = $this->container->get('entity_type.repository')->getEntityTypeLabels(TRUE);
-    foreach ($labels[(string) t('Content', [], ['context' => 'Entity type group'])] as $entity_type_id => $entity_type_label) {
+    foreach ($labels[(string) $this->t('Content', [], ['context' => 'Entity type group'])] as $entity_type_id => $entity_type_label) {
       if (!in_array($entity_type_id, $excluded_entity_type_ids, TRUE)) {
         if (!in_array($entity_type_id, array_keys($bundled_entities_type_ids, TRUE))) {
           $edit["settings[$entity_type_id][handler_settings][target_bundles][$entity_type_id]"] = TRUE;
@@ -139,34 +148,18 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
       }
     }
     $additions = [];
-    if (version_compare(\Drupal::VERSION, '10.2-dev', '>=')) {
-      $this->submitForm([
-        'new_storage_type' => 'reference',
-      ], 'Continue');
-      $this->submitForm([
-        'group_field_options_wrapper' => 'dynamic_entity_reference',
-        'label' => 'Foobar',
-        'field_name' => 'foobar',
-      ], 'Continue');
-      $field_name = 'field_storage[subform][settings][entity_type_ids][]';
-      $button_label = 'Save settings';
-      $cardinality_field = 'field_storage[subform][cardinality]';
-      $additions += $edit;
-      $edit_path = 'entity_test/structure/entity_test/fields/entity_test.entity_test.field_foobar';
-      $exclude_field_name = 'field_storage[subform][settings][exclude_entity_types]';
-    }
-    else {
-      $edit_path = 'entity_test/structure/entity_test/fields/entity_test.entity_test.field_foobar/storage';
-      $this->submitForm([
-        'label' => 'Foobar',
-        'field_name' => 'foobar',
-        'new_storage_type' => 'dynamic_entity_reference',
-      ], 'Save and continue');
-      $field_name = 'settings[entity_type_ids][]';
-      $button_label = 'Save field settings';
-      $cardinality_field = 'cardinality';
-      $exclude_field_name = 'settings[exclude_entity_types]';
-    }
+    $this->clickLink('Reference');
+    $this->submitForm([
+      'field_options_wrapper' => 'dynamic_entity_reference',
+      'label' => 'Foobar',
+      'field_name' => 'foobar',
+    ], 'Continue');
+    $field_name = 'field_storage[subform][settings][entity_type_ids][]';
+    $button_label = 'Save';
+    $cardinality_field = 'field_storage[subform][cardinality]';
+    $additions += $edit;
+    $edit_path = 'entity_test/structure/entity_test/fields/entity_test.entity_test.field_foobar';
+    $exclude_field_name = 'field_storage[subform][settings][exclude_entity_types]';
     $assert_session->optionNotExists($field_name, 'settings[entity_test_no_id][handler_settings][target_bundles][entity_test_no_id]');
     $assert_session->optionNotExists($field_name, 'settings[entity_test_no_id][handler_settings][target_bundles][entity_test_string_id]');
     $assert_session->fieldExists($cardinality_field)->setValue(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
@@ -195,7 +188,7 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
       $field_name => [],
     ], $button_label);
     $assert_session->pageTextContains('Select at least one entity type ID.');
-    $options = array_filter(array_keys($labels[(string) t('Content', [], ['context' => 'Entity type group'])]), function ($entity_type_id) {
+    $options = array_filter(array_keys($labels[(string) $this->t('Content', [], ['context' => 'Entity type group'])]), function ($entity_type_id) {
       return DynamicEntityReferenceItem::entityHasIntegerId($entity_type_id);
     });
     $this->submitForm([
@@ -250,29 +243,15 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
     $this->drupalLogin($this->adminUser);
     // Add a new dynamic entity reference field.
     $this->drupalGet('entity_test/structure/entity_test/fields/add-field');
-    if (version_compare(\Drupal::VERSION, '10.2-dev', '>=')) {
-      $this->submitForm([
-        'new_storage_type' => 'reference',
-      ], 'Continue');
-      $this->submitForm([
-        'group_field_options_wrapper' => 'dynamic_entity_reference',
-        'label' => 'Foobar',
-        'field_name' => 'foobar',
-      ], 'Continue');
-      $field_name = 'field_storage[subform][settings][entity_type_ids][]';
-      $button_label = 'Save settings';
-      $cardinality_field = 'field_storage[subform][cardinality]';
-    }
-    else {
-      $this->submitForm([
-        'label' => 'Foobar',
-        'field_name' => 'foobar',
-        'new_storage_type' => 'dynamic_entity_reference',
-      ], 'Save and continue');
-      $field_name = 'settings[entity_type_ids][]';
-      $button_label = 'Save field settings';
-      $cardinality_field = 'cardinality';
-    }
+    $this->clickLink('Reference');
+    $this->submitForm([
+      'field_options_wrapper' => 'dynamic_entity_reference',
+      'label' => 'Foobar',
+      'field_name' => 'foobar',
+    ], 'Continue');
+    $field_name = 'field_storage[subform][settings][entity_type_ids][]';
+    $button_label = 'Save';
+    $cardinality_field = 'field_storage[subform][cardinality]';
     $assert_session->optionNotExists($field_name, 'settings[entity_test_no_id][handler_settings][target_bundles][entity_test_no_id]');
     $assert_session->optionNotExists($field_name, 'settings[entity_test_no_id][handler_settings][target_bundles][entity_test_string_id]');
     $this->submitForm([
@@ -285,7 +264,7 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
     $excluded_entity_type_ids = array_combine($this->excludedEntities, $this->excludedEntities);
     unset($excluded_entity_type_ids['entity_test_label']);
     $bundled_entities_type_ids = $this->bundleAbleEntities;
-    foreach ($labels[(string) t('Content', [], ['context' => 'Entity type group'])] as $entity_type_id => $entity_type_label) {
+    foreach ($labels[(string) $this->t('Content', [], ['context' => 'Entity type group'])] as $entity_type_id => $entity_type_label) {
       if (!in_array($entity_type_id, $excluded_entity_type_ids, TRUE)) {
         if (!in_array($entity_type_id, array_keys($bundled_entities_type_ids, TRUE))) {
           $edit["settings[$entity_type_id][handler_settings][target_bundles][$entity_type_id]"] = TRUE;
@@ -295,7 +274,7 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
         }
       }
     }
-    $this->submitForm($edit, 'Save settings');
+    $this->submitForm($edit, $button_label);
     $assert_session->pageTextContains('Saved Foobar configuration');
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
 
@@ -498,39 +477,22 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
       'settings[taxonomy_term][handler_settings][target_bundles][' . $vocabulary->id() . ']' => $vocabulary->id(),
       'settings[taxonomy_term][handler_settings][auto_create]' => TRUE,
     ];
-    $additional = [];
-    if (version_compare(\Drupal::VERSION, '10.2-dev', '>=')) {
-      $additional = $edit;
-      $this->submitForm([
-        'new_storage_type' => 'reference',
-      ], 'Continue');
-      $this->submitForm([
-        'group_field_options_wrapper' => 'dynamic_entity_reference',
-        'label' => 'Foobar',
-        'field_name' => 'foobar',
-      ], 'Continue');
-      $field_name = 'field_storage[subform][settings][entity_type_ids][]';
-      $button_label = 'Save settings';
-      $cardinality_field = 'field_storage[subform][cardinality]';
-      $exclude_field_name = 'field_storage[subform][settings][exclude_entity_types]';
-    }
-    else {
-      $this->submitForm([
-        'label' => 'Foobar',
-        'field_name' => 'foobar',
-        'new_storage_type' => 'dynamic_entity_reference',
-      ], 'Save and continue');
-      $field_name = 'settings[entity_type_ids][]';
-      $button_label = 'Save field settings';
-      $cardinality_field = 'cardinality';
-      $exclude_field_name = 'settings[exclude_entity_types]';
-    }
+    $this->clickLink('Reference');
+    $this->submitForm([
+      'field_options_wrapper' => 'dynamic_entity_reference',
+      'label' => 'Foobar',
+      'field_name' => 'foobar',
+    ], 'Continue');
+    $field_name = 'field_storage[subform][settings][entity_type_ids][]';
+    $button_label = 'Save';
+    $cardinality_field = 'field_storage[subform][cardinality]';
+    $exclude_field_name = 'field_storage[subform][settings][exclude_entity_types]';
     $assert_session->fieldExists($field_name)->setValue(['taxonomy_term', 'user']);
     $assert_session->fieldExists($exclude_field_name)->uncheck();
     $assert_session->buttonExists('Update settings')->click();
     $this->submitForm([
       $cardinality_field => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-    ] + $additional, $button_label);
+    ] + $edit, $button_label);
     $this->drupalGet('entity_test/structure/entity_test/fields/entity_test.entity_test.field_foobar');
     $this->submitForm($edit, $button_label);
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
@@ -608,40 +570,23 @@ class DynamicEntityReferenceTest extends BrowserTestBase {
       'settings[taxonomy_term][handler_settings][target_bundles][' . $vocabulary->id() . ']' => $vocabulary->id(),
       'settings[taxonomy_term][handler_settings][auto_create]' => TRUE,
     ];
-    $additional = [];
     $this->drupalGet('admin/structure/types/manage/article/fields/add-field');
-    if (version_compare(\Drupal::VERSION, '10.2-dev', '>=')) {
-      $this->submitForm([
-        'new_storage_type' => 'reference',
-      ], 'Continue');
-      $this->submitForm([
-        'group_field_options_wrapper' => 'dynamic_entity_reference',
-        'label' => 'Foobar',
-        'field_name' => 'der',
-      ], 'Continue');
-      $field_name = 'field_storage[subform][settings][entity_type_ids][]';
-      $button_label = 'Save settings';
-      $cardinality_field = 'field_storage[subform][cardinality]';
-      $exclude_field_name = 'field_storage[subform][settings][exclude_entity_types]';
-      $additional = $edit;
-    }
-    else {
-      $this->submitForm([
-        'label' => 'Foobar',
-        'field_name' => 'der',
-        'new_storage_type' => 'dynamic_entity_reference',
-      ], 'Save and continue');
-      $field_name = 'settings[entity_type_ids][]';
-      $button_label = 'Save field settings';
-      $cardinality_field = 'cardinality';
-      $exclude_field_name = 'settings[exclude_entity_types]';
-    }
+    $this->clickLink('Reference');
+    $this->submitForm([
+      'field_options_wrapper' => 'dynamic_entity_reference',
+      'label' => 'Foobar',
+      'field_name' => 'der',
+    ], 'Continue');
+    $field_name = 'field_storage[subform][settings][entity_type_ids][]';
+    $button_label = 'Save';
+    $cardinality_field = 'field_storage[subform][cardinality]';
+    $exclude_field_name = 'field_storage[subform][settings][exclude_entity_types]';
     $assert_session->fieldExists($field_name)->setValue(['taxonomy_term', 'user']);
     $assert_session->fieldExists($exclude_field_name)->uncheck();
     $assert_session->buttonExists('Update settings')->click();
     $this->submitForm([
       $cardinality_field => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-    ] + $additional, $button_label);
+    ] + $edit, $button_label);
     $this->drupalGet('/admin/structure/types/manage/article/fields/node.article.field_der');
     $this->submitForm($edit, $button_label);
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();

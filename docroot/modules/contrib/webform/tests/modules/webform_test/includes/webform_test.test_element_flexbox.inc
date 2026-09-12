@@ -5,7 +5,7 @@
  * Generate test elements with Flexbox wrappers.
  */
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 
 /**
  * Generate test elements with Flexbox wrappers.

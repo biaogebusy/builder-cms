@@ -6,13 +6,13 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\blazy\Media\BlazyImage;
-use Drupal\blazy\Media\BlazyResponsiveImage;
+use Drupal\blazy\Internals\Internals;
+use Drupal\blazy\Media\Image;
+use Drupal\blazy\Media\ResponsiveImage;
 use Drupal\blazy\Media\Placeholder;
 use Drupal\blazy\Media\Ratio;
 use Drupal\blazy\Utility\Arrays;
-use Drupal\blazy\Utility\Check;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Internals\Check;
 
 /**
  * Provides non-reusable blazy attribute static methods.
@@ -25,10 +25,15 @@ class Attributes {
 
   /**
    * Provides attachments when not using the provided API.
+   *
+   * @param array $variables
+   *   The variables being modified.
+   * @param array $settings
+   *   The settings.
    */
   public static function attach(array &$variables, array $settings = []): void {
-    if ($blazy = Internals::service('blazy.manager')) {
-      $attachments = $blazy->attach($settings) ?: [];
+    if ($manager = Internals::blazy()) {
+      $attachments = $manager->attach($settings) ?: [];
       $variables['#attached'] = Arrays::merge($attachments, $variables, '#attached');
     }
   }
@@ -39,8 +44,14 @@ class Attributes {
    * Relevant for JS lookups, lightbox galleries, also to accommodate
    * block__no_wrapper, views__no_wrapper, etc. with helpful CSS classes, useful
    * for DOM diets.
+   *
+   * @param array $attributes
+   *   The attributes being modified.
+   * @param array $settings
+   *   The settings.
    */
   public static function container(array &$attributes, array $settings): void {
+    /** @var \Drupal\blazy\BlazySettings $blazies */
     $blazies = Internals::verify($settings);
 
     if ($attrs = $blazies->get('container.attributes', [])) {
@@ -49,10 +60,10 @@ class Attributes {
 
     $classes  = (array) ($attributes['class'] ?? []);
     $data     = $blazies->get('data.blazy');
-    $switcher = $blazies->get('lightbox.name') ?: $settings['media_switch'] ?? NULL;
+    $switcher = $blazies->get('lightbox.name') ?: ($settings['media_switch'] ?? NULL);
 
     // Might be by-passed due to minimal settings, or outside the workflow.
-    // See \Drupal\blazy\Theme\BlazyViews::preprocessViewsView().
+    // See \Drupal\blazy\Hook\ViewsHooks::preprocessViewsView().
     if ($switcher && !$blazies->was('lightbox')) {
       Check::lightboxes($settings);
     }
@@ -78,7 +89,7 @@ class Attributes {
       }
     }
 
-    // @todo remove when nativegrid masonry no longer needs this.
+    // @todo deprecate and remove when nativegrid masonry no longer needs this.
     if ($blazies->is('grid')) {
       $count = $blazies->get('view.count', 0);
       if (!empty($settings['caption']) ||
@@ -87,7 +98,7 @@ class Attributes {
       }
     }
 
-    // @todo remove, hardly used as identifier.
+    // @todo deprecate and remove, hardly used as identifier.
     // if ($blazies->use('ajax')) {
     // $classes[] = 'is-b-ajax';
     // }
@@ -100,11 +111,17 @@ class Attributes {
 
   /**
    * Modifies container attributes with aspect ratio for iframe, image, etc.
+   *
+   * @param array $variables
+   *   The variables being modified.
    */
   public static function finalize(array &$variables): void {
+    /** @var array $attributes */
     $attributes = &$variables['attributes'];
-    $settings   = &$variables['settings'];
-    $blazies    = $settings['blazies'];
+
+    /** @var array $settings */
+    $settings = &$variables['settings'];
+    $blazies  = Internals::getBlazies($settings);
 
     // Aspect ratio to fix layout reflow with lazyloaded images responsively.
     // This is outside 'lazy' to allow non-lazyloaded iframe/content use it too.
@@ -130,14 +147,18 @@ class Attributes {
 
     // Since 2.17, lazy load HTML content if so-configured.
     if ($blazies->get('lazy.html')) {
-      $unlazy = Internals::isUnlazy($blazies);
+      $unlazy = $blazies->is('static');
 
       if (!$unlazy && $html = $blazies->get('media.encoded.content')) {
         if (!$blazies->get('bgs')) {
           $attributes['data-src'] = '';
         }
+
         $attributes['data-b-html'] = Internals::DATA_TEXT . $html;
         $attributes['class'][] = 'b-lazy';
+
+        // @fixme recheck against lightbox whether to load it in supported
+        // lightboxes or direct render here.
         $attributes['class'][] = 'b-html';
 
         // @todo recheck and remove, already checked upstream.
@@ -152,7 +173,7 @@ class Attributes {
       $attributes['data-b-token'] = $token;
     }
 
-    // @todo remove BC at 3.x:
+    // @todo deprecate and remove BC at 3.x:
     $player = $blazies->use('player') || $blazies->is('player');
     $blazies->set('use.player', $player);
 
@@ -161,9 +182,16 @@ class Attributes {
 
   /**
    * Provides the media container classes.
+   *
+   * @param array $variables
+   *   The variables being modified.
+   * @param array $attributes
+   *   The attributes being modified.
+   * @param array $settings
+   *   The settings being modified.
    */
   public static function finalizeAnyway(array &$variables, array &$attributes, array $settings): void {
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $provider = $blazies->get('media.provider');
 
     if ($provider == 'local') {
@@ -194,8 +222,9 @@ class Attributes {
    *   The variables being modified.
    */
   public static function buildIframe(array &$variables): void {
+    /** @var array $settings */
     $settings = &$variables['settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
 
     // Only provide iframe if not for lightboxes, identified by URL.
     if (empty($variables['url'])) {
@@ -222,9 +251,12 @@ class Attributes {
    *   The variables being modified.
    */
   public static function buildMedia(array &$variables): void {
+    /** @var array $settings */
+    $settings = &$variables['settings'];
+
+    /** @var array $attributes */
     $attributes  = &$variables['attributes'];
-    $settings    = &$variables['settings'];
-    $blazies     = $settings['blazies'];
+    $blazies     = Internals::getBlazies($settings);
     $local_video = $blazies->is('video_file') && !$blazies->is('lightbox');
     $bgs         = [];
 
@@ -313,7 +345,7 @@ class Attributes {
    *   The iframe attributes.
    */
   public static function iframe(array &$settings): array {
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
     $attributes = ['allowfullscreen' => TRUE];
 
     // Already escaped upstream for core, except for contribs.
@@ -331,7 +363,7 @@ class Attributes {
     // Native lazyload just loads the URL directly.
     // With many videos like carousels on the page may chaos, but we provide a
     // solution: use `Image to iframe` for GDPR, swipe and best performance.
-    if (Internals::isUnlazy($blazies)) {
+    if (Internals::isUndata($blazies)) {
       $attributes['src'] = $embed_url;
 
       // Inside CKEditor must disable interactive elements.
@@ -367,8 +399,13 @@ class Attributes {
 
   /**
    * Modifies inline style to not nullify others.
+   *
+   * @param array $attributes
+   *   The attributes being modified.
+   * @param string $css
+   *   The css value.
    */
-  public static function inlineStyle(array &$attributes, $css): void {
+  public static function inlineStyle(array &$attributes, string $css): void {
     $attributes['style'] = ($attributes['style'] ?? '') . $css;
   }
 
@@ -382,31 +419,39 @@ class Attributes {
    *
    * @param array $attributes
    *   The attributes being modified.
-   * @param object $blazies
+   * @param \Drupal\blazy\BlazySettings $blazies
    *   The given $blazies.
    * @param bool $bg
    *   If a background image.
    */
-  public static function lazy(array &$attributes, $blazies, $bg = FALSE): void {
-    $trusted = $blazies->get('image.trusted');
+  public static function lazy(array &$attributes, $blazies, bool $bg = FALSE): void {
     if ($url = $blazies->get('image.url')) {
+      $trusted = $blazies->get('image.trusted');
       $url = $trusted ? $url : UrlHelper::stripDangerousProtocols($url);
       $unlazy = Internals::isUnlazy($blazies);
-
-      // Native, or unlazy, has .blazy--nojs at container to fix issues, if any.
-      if (!$unlazy) {
-        // @todo put it back up above if any issues.
-        $attributes['class'][] = $blazies->get('lazy.class', 'b-lazy');
-        $attribute = $blazies->get('lazy.attribute', 'src');
-        $attributes['data-' . $attribute] = $url;
-      }
+      $unlazy_bg = Internals::isUnlazyBg($blazies);
 
       // Makes query selector easier for filter.
       if ($blazies->get('filter')) {
         $attributes['class'][] = 'b-filter';
       }
 
-      if ($bg && $unlazy) {
+      // Required by ratio, or to fix broken 404 data URI Views rewrite.
+      // Can be refined for BG, Audio, Video, HTML beyond IMG/IFRAME, but not
+      // worth the effort, and inevitable complexity: AMP, sandboxed, lazy, etc.
+      // If No Javascript enabled, heavy lifting is taken care of by Native lazy
+      // except for things it doesn't solve: BG, Audio, Video, HTML.
+      $attributes['class'][] = $blazies->get('lazy.class', 'b-lazy');
+
+      // Native, or unlazy, has .blazy--nojs at container to fix issues, if any.
+      // BG is not supported by Native lazyload, enforce lazy.
+      if (!$unlazy || $bg) {
+        $attribute = $blazies->get('lazy.attribute', 'src');
+        $attributes['data-' . $attribute] = $url;
+      }
+
+      // If BG in static AMP, sandboxed, or hero.
+      if ($bg && $unlazy_bg) {
         self::inlineStyle($attributes, 'background-image: url(' . $url . ');');
       }
     }
@@ -414,6 +459,14 @@ class Attributes {
 
   /**
    * Return the image alt and title, also accounts for multimedia and UGC.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The given $blazies.
+   * @param object|null $item
+   *   If a background image.
+   *
+   * @return array
+   *   The al and title array.
    */
   public static function altTitle($blazies, $item = NULL): array {
     [
@@ -467,8 +520,16 @@ class Attributes {
 
   /**
    * Return the escaped string.
+   *
+   * @param string|null $text
+   *   The text to escape.
+   * @param bool $strip
+   *   Whether stripped.
+   *
+   * @return string|null
+   *   The escaped text or empty.
    */
-  public static function escape($text, $strip = FALSE): ?string {
+  public static function escape($text, bool $strip = FALSE): ?string {
     if ($text) {
       if ($strip) {
         $text = strip_tags($text);
@@ -484,6 +545,11 @@ class Attributes {
 
   /**
    * Return the raw image alt and title, normally for captions, not attributes.
+   *
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The given $blazies.
+   * @param object|null $item
+   *   If a background image.
    */
   private static function altTitleRaw($blazies, $item = NULL): array {
     // Ensures no double processes.
@@ -498,7 +564,7 @@ class Attributes {
       : $blazies->get('media.label');
     $alt = $blazies->get('image.alt');
 
-    // @todo remove this item check at 3.x, once they are all in blazies.image.
+    // @todo deprecate and remove this item check at 3.x, once they are all in blazies.image.
     if ($item) {
       // Title from fake item might be just file name, except from BlazyFilter.
       // Needed by thumbnails if any image item, fake or real, no biggies.
@@ -540,21 +606,57 @@ class Attributes {
   }
 
   /**
-   * Provide common attributes for IMG, IFRAME, VIDEO, etc. elements.
+   * Provide common attributes for IMG and IFRAME/VIDEO elements.
+   *
+   * @param array $attributes
+   *   The attributes being modified.
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The given $blazies.
+   *
+   * @todo at 2022/2 core has no loading Responsive.
    */
   private static function common(array &$attributes, $blazies): void {
     $attributes['class'][] = 'media__element';
     $loading = $blazies->get('image.loading', 'lazy');
+    $heroes = in_array($loading, ['slider', 'unlazy']);
 
-    // @todo at 2022/2 core has no loading Responsive.
-    $excludes = in_array($loading, ['slider', 'unlazy']);
-    if ($blazies->get('image.width') && !$excludes) {
-      $attributes['loading'] = $loading;
+    // The fetchpriority is mostly relevant with slider architecture, and
+    // applicable to limited media: IMG and IFRAME. Just a hint, not mandatory.
+    // This option is limited to CWV:LCP hero image, and can be applied to
+    // non-slider hero image with `unlazy` option. Major browser supports are
+    // massive as per 2026/1/3.
+    // Slick/Splide can also display a single hero image.
+    // Only one image can have fetchpriority=high on a page. That is why it is
+    // limited only to the designated LCP as a hero image.
+    // See https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/fetchpriority
+    if ($heroes) {
+      // A hero image needs a high priority. Hidden images should be deferred.
+      // It is the modern "turbo" button that signals to the browser to
+      // prioritize this asset over non-critical CSS or JavaScript.
+      $attributes['fetchpriority'] = $blazies->is('lcp') ? 'high' : 'low';
+
+      // Only if Heroes, prevents from aggressive hijacks by global "Auto-lazy"
+      // scripts or browser data-saver heuristics which might ruin LCP scores
+      // using explicit `eager`, safer than negligible byte shaver.
+      $loading = $blazies->is('lcp') ? 'eager' : 'lazy';
     }
+
+    // Sets the loading attributes; dimensions should be no longer a concern
+    // with most use cases, even with careless text editors, already taken care
+    // of by Core for text editors, or Blazy for the fields. Except negligible
+    // external URLs.
+    $attributes['loading'] = $loading;
   }
 
   /**
    * Modifies $variables to provide background (Responsive) image attributes.
+   *
+   * @param array $attributes
+   *   The attributes being modified.
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The given $blazies.
+   * @param \stdClass $bgs
+   *   The background images.
    */
   private static function background(array &$attributes, $blazies, $bgs): void {
     $str = Json::encode($bgs);
@@ -575,12 +677,16 @@ class Attributes {
 
   /**
    * Modifies $variables to provide optional (Responsive) image attributes.
+   *
+   * @param array $variables
+   *   The variables being modified.
    */
   private static function image(array &$variables): void {
+    /** @var array $settings */
     $settings   = &$variables['settings'];
     $image      = &$variables['image'];
     $attributes = &$variables['item_attributes'];
-    $blazies    = $settings['blazies'];
+    $blazies    = Internals::getBlazies($settings);
 
     // Sticks to blazy.api.php design to avoid issues with image styles, etc.
     if ($attrs = $blazies->get('image.attributes', [])) {
@@ -595,8 +701,27 @@ class Attributes {
       $attributes['title'] = $title;
     }
 
+    // LCP images should be sync or without decoding.
+    // The Danger of async for LCP: decoding="async" tells the browser it can
+    // delay the painting of the image to keep the main thread free for other
+    // tasks (like JS). For an LCP image, this is the opposite. We want the
+    // pixels on the screen as fast as possible to comply with Core Web Vitals.
+    // The Problem with sync for LC: While decoding="sync" forces the browser
+    // to paint the image immediately, it can technically block the main thread.
+    // However, the most important point is that browsers already default to the
+    // most efficient decoding path for high-priority images.
+    // By omitting the attribute for LCP:
+    // * Save the bytes, even if negligible.
+    // * Allow the browser's engine to make the optimal choice based on current
+    // CPU/GPU load.
+    // * Avoid the risk of async accidentally pushing the LCP paint to a later
+    // frame.
+    // Never use decoding="async" on a Hero image, as it gives the browser
+    // permission to delay the very pixels our LCP score depends on.
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/decode.
-    $attributes['decoding'] = 'async';
+    if (!$blazies->is('lcp')) {
+      $attributes['decoding'] = 'async';
+    }
 
     // Preserves UUID for sub-module lookups, relevant for BlazyFilter.
     if ($uuid = $blazies->get('entity.uuid')) {
@@ -629,16 +754,19 @@ class Attributes {
 
     // Provides [data-(src|lazy)] for (Responsive) image, after noscript.
     self::lazy($image['#attributes'], $blazies);
-    self::unloading($image['#attributes'], $blazies);
   }
 
   /**
    * Modifies variables for blazy (non-)lazyloaded image.
+   *
+   * @param array $variables
+   *   The variables being modified.
    */
   private static function buildImage(array &$variables): void {
-    $attributes  = &$variables['attributes'];
+    /** @var array $settings */
     $settings    = &$variables['settings'];
-    $blazies     = $settings['blazies'];
+    $attributes  = &$variables['attributes'];
+    $blazies     = Internals::getBlazies($settings);
     $url         = $blazies->get('image.url');
     $placeholder = $blazies->get('placeholder.url') ?: Placeholder::generate();
 
@@ -659,7 +787,7 @@ class Attributes {
       $data = $settings;
       $data['width'] = $width;
       $data['height'] = $blazies->get('image.height');
-      $blazies->set('bgs.' . $width, BlazyImage::background($data, $style));
+      $blazies->set('bgs.' . $width, Image::background($data, $style));
       self::lazy($attributes, $blazies, TRUE);
     }
     else {
@@ -672,10 +800,14 @@ class Attributes {
 
   /**
    * Provides (Responsive) image noscript if so configured.
+   *
+   * @param array $variables
+   *   The variables being modified.
    */
   private static function buildNoscriptImage(array &$variables): void {
+    /** @var array $settings */
     $settings = $variables['settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
     $noscript = $variables['image'];
 
     $noscript['#uri'] = $blazies->get('resimage.id')
@@ -707,13 +839,14 @@ class Attributes {
    *   The variables being modified.
    */
   private static function buildResponsiveImage(array &$variables): void {
+    /** @var array $settings */
     $settings = &$variables['settings'];
-    $blazies  = $settings['blazies'];
+    $blazies  = Internals::getBlazies($settings);
 
     if ($blazies->use('bg')) {
       // Attach BG data attributes to a DIV container.
       $attributes = &$variables['attributes'];
-      BlazyResponsiveImage::background($attributes, $settings);
+      ResponsiveImage::background($attributes, $settings);
     }
     else {
       $image = &$variables['image'];
@@ -733,6 +866,13 @@ class Attributes {
 
   /**
    * Returns the classes applicable only to the first, not nested containers.
+   *
+   * @param array $attributes
+   *   The attributes being modified.
+   * @param \Drupal\blazy\BlazySettings $blazies
+   *   The given $blazies.
+   * @param array $options
+   *   The options.
    */
   private static function firstClasses(array &$attributes, $blazies, array $options): array {
     [
@@ -749,7 +889,7 @@ class Attributes {
       $classes[] = 'blazy--nojs';
     }
 
-    if ($blazies->is('bg')) {
+    if ($blazies->use('bg')) {
       $classes[] = 'is-b-bg';
     }
 
@@ -778,7 +918,7 @@ class Attributes {
       }
     }
 
-    // @todo remove the last -- for - at 3.x.
+    // @todo deprecate and remove the last -- for - at 3.x.
     if ($add_class) {
       foreach (['field', 'view'] as $key) {
         if ($name = $blazies->get($key . '.name')) {
@@ -805,19 +945,15 @@ class Attributes {
 
   /**
    * Return the image title.
+   *
+   * @param array $translation
+   *   The translation array.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The translatable markup.
    */
   private static function mediaTitle(array $translation): TranslatableMarkup {
     return new TranslatableMarkup('Preview image for the @bundle "@label".', $translation);
-  }
-
-  /**
-   * Removes loading attributes if so configured.
-   */
-  private static function unloading(array &$attributes, $blazies): void {
-    // @todo recheck the last condition.
-    if ($blazies->is('unloading') || Internals::isUnlazy($blazies)) {
-      $attributes['data-b-unloading'] = TRUE;
-    }
   }
 
 }

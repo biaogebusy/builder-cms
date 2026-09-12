@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Contains procedural hook implementations.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_test_hook().
+ *
+ * This implementation is modified in
+ * \Drupal\aaa_hook_order_test\Hook\AHooks::testHookAfterB() to be before the
+ * implementations in module aaa_hook_order_test.
+ *
+ * @see \Drupal\aaa_hook_order_test\Hook\AHooks::testHookAfterB()
+ */
+function bbb_hook_order_test_test_hook(): string {
+  return __FUNCTION__;
+}
+
+/**
+ * Implements hook_procedural_alter().
+ *
+ * This implementation has no ordering modifications.
+ */
+function bbb_hook_order_test_procedural_alter(array &$calls): void {
+  $calls[] = __FUNCTION__;
+}
+
+/**
+ * Implements hook_procedural_subtype_alter().
+ *
+ * This implementation has no ordering modifications.
+ */
+function bbb_hook_order_test_procedural_subtype_alter(array &$calls): void {
+  $calls[] = __FUNCTION__;
+}
+
+/**
+ * Implements hook_test_procedural_reorder().
+ *
+ * The order of this implementation is modified in
+ * \Drupal\aaa_hook_order_test\Hook\AHooks::testProceduralReorder() to be first.
+ */
+function bbb_hook_order_test_test_procedural_reorder(): string {
+  return __FUNCTION__;
+}

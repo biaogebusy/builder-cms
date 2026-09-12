@@ -27,7 +27,7 @@ abstract class PluginManagerBase implements PluginManagerInterface {
   protected $factory;
 
   /**
-   * The object that returns the preconfigured plugin instance appropriate for a particular runtime condition.
+   * The preconfigured plugin instance for a particular runtime condition.
    *
    * @var \Drupal\Component\Plugin\Mapper\MapperInterface|null
    */
@@ -37,6 +37,7 @@ abstract class PluginManagerBase implements PluginManagerInterface {
    * Gets the plugin discovery.
    *
    * @return \Drupal\Component\Plugin\Discovery\DiscoveryInterface
+   *   The plugin discovery.
    */
   protected function getDiscovery() {
     return $this->discovery;
@@ -46,6 +47,7 @@ abstract class PluginManagerBase implements PluginManagerInterface {
    * Gets the plugin factory.
    *
    * @return \Drupal\Component\Plugin\Factory\FactoryInterface
+   *   The plugin factory.
    */
   protected function getFactory() {
     return $this->factory;
@@ -75,7 +77,7 @@ abstract class PluginManagerBase implements PluginManagerInterface {
       try {
         return $this->getFactory()->createInstance($plugin_id, $configuration);
       }
-      catch (PluginNotFoundException $e) {
+      catch (PluginNotFoundException) {
         return $this->handlePluginNotFound($plugin_id, $configuration);
       }
     }
@@ -118,6 +120,7 @@ abstract class PluginManagerBase implements PluginManagerInterface {
    * @param array $configuration
    *   An array of configuration relevant to the plugin instance.
    *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.InvalidNoReturn
    * @return string
    *   The id of an existing plugin to use when the plugin does not exist.
    *

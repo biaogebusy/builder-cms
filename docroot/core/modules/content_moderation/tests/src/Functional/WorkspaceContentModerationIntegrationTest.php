@@ -6,13 +6,15 @@ namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\Tests\workspaces\Functional\WorkspaceTestUtilities;
 use Drupal\workspaces\Entity\Workspace;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Workspaces together with Content Moderation.
- *
- * @group content_moderation
- * @group workspaces
  */
+#[Group('content_moderation')]
+#[Group('workspaces')]
+#[RunTestsInSeparateProcesses]
 class WorkspaceContentModerationIntegrationTest extends ModerationStateTestBase {
 
   use WorkspaceTestUtilities;
@@ -20,15 +22,7 @@ class WorkspaceContentModerationIntegrationTest extends ModerationStateTestBase 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'workspaces'];
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo Remove and fix test to not rely on super user.
-   * @see https://www.drupal.org/project/drupal/issues/3437620
-   */
-  protected bool $usesSuperUserAccessPolicy = TRUE;
+  protected static $modules = ['node', 'workspaces', 'workspaces_ui'];
 
   /**
    * {@inheritdoc}
@@ -38,15 +32,27 @@ class WorkspaceContentModerationIntegrationTest extends ModerationStateTestBase 
   /**
    * {@inheritdoc}
    */
+  protected function getAdministratorPermissions(): array {
+    return array_merge($this->permissions, [
+      'bypass node access',
+      'administer workspaces',
+    ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
 
-    $this->drupalLogin($this->rootUser);
+    $this->adminUser = $this->drupalCreateUser($this->getAdministratorPermissions());
+    $this->drupalLogin($this->adminUser);
 
     // Enable moderation on Article node type.
     $this->createContentTypeFromUi('Article', 'article', TRUE);
 
     $this->setupWorkspaceSwitcherBlock();
+    $this->createWorkspaceThroughUi('Stage', 'stage');
   }
 
   /**

@@ -19,17 +19,18 @@
 
 ### Installation with repository entry:
 
-  Add the following entry in the "repositories" section of your main composer.json file.
+  Add the following entry in the "repositories" section of your main
+  composer.json file.
 
 ```
 {
     "type": "package",
     "package": {
         "name": "noli42/chosen",
-        "version": "3.0.0",
+        "version": "3.1.4",
         "type": "drupal-library",
         "dist": {
-            "url": "https://github.com/noli42/chosen/releases/download/3.0.0/chosen-assets-v3.0.0.zip",
+            "url": "https://github.com/noli42/chosen/releases/download/3.1.4/chosen-assets-v3.1.4.zip",
             "type": "zip"
         }
     }
@@ -39,18 +40,20 @@
   Now you can run the following command to install chosen in the right folder:
 
 ```
-composer require noli42/chosen:3.0.0
+composer require noli42/chosen:3.1.4
 ```
 
 ### Installation with merge plugin:
 
   The Chosen Drupal module is shipped with a "composer.libraries.json" file
-  which contains information about the chosen library, required by the module itself.
+  which contains information about the chosen library, required by the module
+  itself.
 
   This file should be merged with the project's main composer.json by the aid
-  of the Composer Merge Plugin available on GitHub. The advantage of this approach is
-  that the version of the library is defined by the module, and so if the module
-  updates the version, it will be automatically pulled by composer.
+  of the Composer Merge Plugin available on GitHub. The advantage of this
+  approach is that the version of the library is defined by the module, and so
+  if the module updates the version, it will be automatically pulled by
+  composer.
 
   Inside the project directory, open a terminal and run:
 
@@ -104,6 +107,23 @@ composer require drupal/chosen
 
   If you are using Composer to manage your site's dependencies,
   then the Chosen plugin will automatically be downloaded to `libraries/chosen`.
+
+## ADDING TO A CUSTOM FORM
+
+  To add a chosen select element to a custom form, simply set the #type to
+  'select', and add the class 'chosen-select'.
+
+  For example:
+  ```
+  $form['target_entity'] = [
+    '#type' => 'select',
+    '#title' => $this->t('My great title'),
+    '#options' => $options,
+    '#attributes' => [
+      'class' => ['chosen-select']
+    ],
+  ];
+  ```
 
 ## TROUBLE SHOOTING
 

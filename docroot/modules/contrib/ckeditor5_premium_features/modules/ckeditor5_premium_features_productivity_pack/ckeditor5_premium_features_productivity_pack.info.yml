@@ -1,0 +1,15 @@
+name: CKEditor 5 Premium Features Productivity Pack
+type: module
+description: "Provides a Productivity Pack plugins."
+package: CKEditor 5 Premium Features
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - drupal:editor
+  - ckeditor5:ckeditor5
+  - ckeditor5_premium_features:ckeditor5_premium_features
+  - ckeditor5_premium_features:ckeditor5_premium_features_mentions
+
+# Information added by Drupal.org packaging script on 2026-07-29
+version: '1.8.3'
+project: 'ckeditor5_premium_features'
+datestamp: 1785318957

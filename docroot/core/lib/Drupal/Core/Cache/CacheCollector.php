@@ -3,7 +3,6 @@
 namespace Drupal\Core\Cache;
 
 use Drupal\Component\Assertion\Inspector;
-use Drupal\Component\Utility\Crypt;
 use Drupal\Core\DestructableInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 
@@ -123,6 +122,7 @@ abstract class CacheCollector implements CacheCollectorInterface, DestructableIn
    * Gets the cache ID.
    *
    * @return string
+   *   The cache ID.
    */
   protected function getCid() {
     return $this->cid;
@@ -284,32 +284,6 @@ abstract class CacheCollector implements CacheCollectorInterface, DestructableIn
   }
 
   /**
-   * Normalizes a cache ID in order to comply with database limitations.
-   *
-   * @param string $cid
-   *   The passed in cache ID.
-   *
-   * @return string
-   *   An ASCII-encoded cache ID that is at most 255 characters long.
-   */
-  protected function normalizeLockName($cid) {
-    @trigger_error(sprintf('%s is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. The lock service is responsible for normalizing the lock name. See https://www.drupal.org/node/3436961', __METHOD__), E_USER_DEPRECATED);
-
-    // Nothing to do if the ID is a US ASCII string of 255 characters or less.
-    $cid_is_ascii = mb_check_encoding($cid, 'ASCII');
-    if (strlen($cid) <= 255 && $cid_is_ascii) {
-      return $cid;
-    }
-    // Return a string that uses as much as possible of the original cache ID
-    // with the hash appended.
-    $hash = Crypt::hashBase64($cid);
-    if (!$cid_is_ascii) {
-      return $hash;
-    }
-    return substr($cid, 0, 255 - strlen($hash)) . $hash;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function reset() {
@@ -337,6 +311,7 @@ abstract class CacheCollector implements CacheCollectorInterface, DestructableIn
    */
   public function destruct() {
     $this->updateCache();
+    $this->reset();
   }
 
   /**

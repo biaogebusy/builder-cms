@@ -437,4 +437,102 @@ class PromotionOrderProcessorTest extends OrderKernelTestBase {
     $this->assertFalse($coupon2->available($this->order), "Second coupon from the same promotion should not be available when allow_multiple_coupons is FALSE.");
   }
 
+  /**
+   * Tests promotion behavior with sequence.
+   *
+   * @dataProvider promotionDataParameters
+   */
+  public function testPromotionApplyingSequence(
+    array $plugin_ids,
+    array $weights,
+    Price $expected_order_total,
+    bool $enforce_weight_ordering = FALSE,
+  ) {
+    $this->config('commerce_promotion.settings')
+      ->set('enforce_weight_ordering', $enforce_weight_ordering)
+      ->save();
+
+    // Create promotions and coupons.
+    $coupon_promotion = Promotion::create([
+      'name' => $this->randomString(),
+      'order_types' => [$this->order->bundle()],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'weight' => $weights[0] ?? 0,
+      'offer' => [
+        'target_plugin_id' => $plugin_ids[0] ?? 'order_item_percentage_off',
+        'target_plugin_configuration' => [
+          'percentage' => '0.15',
+        ],
+      ],
+    ]);
+    $coupon_promotion->save();
+    $promotion = Promotion::create([
+      'name' => $this->randomString(),
+      'order_types' => [$this->order->bundle()],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'weight' => $weights[1] ?? 0,
+      'offer' => [
+        'target_plugin_id' => $plugin_ids[1] ?? 'order_item_fixed_amount_off',
+        'target_plugin_configuration' => [
+          'amount' => [
+            'number' => '10.00',
+            'currency_code' => 'USD',
+          ],
+        ],
+      ],
+    ]);
+    $promotion->save();
+    $coupon = Coupon::create([
+      'code' => 'SAVE_15_PERCENT',
+      'promotion_id' => $coupon_promotion->id(),
+      'status' => TRUE,
+    ]);
+    $coupon->save();
+    $this->order->get('coupons')->appendItem($coupon);
+
+    // Add order items to the order and save it.
+    $order_item = OrderItem::create([
+      'type' => 'test',
+      'quantity' => 2,
+      'unit_price' => [
+        'number' => '50.00',
+        'currency_code' => 'USD',
+      ],
+    ]);
+    $order_item->save();
+    $this->order->addItem($order_item);
+    $this->order->save();
+    $this->assertTrue($this->order->getTotalPrice()->equals(new Price('100.00', 'USD')));
+    $this->container->get('commerce_order.order_refresh')->refresh($this->order);
+    $this->order->recalculateTotalPrice();
+    $this->assertTrue($this->order->getTotalPrice()->equals($expected_order_total));
+  }
+
+  /**
+   * Data provider for ::testPromotionApplyingSequence.
+   *
+   * @return \Generator
+   *   The test data.
+   */
+  public static function promotionDataParameters(): \Generator {
+    yield [[NULL, NULL], [0, 1], new Price('65.00', 'USD')];
+    yield [[NULL, NULL], [0, 1], new Price('65.00', 'USD'), TRUE];
+    yield [[NULL, NULL], [1, 0], new Price('65.00', 'USD')];
+    yield [[NULL, NULL], [1, 0], new Price('68.00', 'USD'), TRUE];
+    yield [['order_percentage_off', NULL], [0, 1], new Price('65.00', 'USD')];
+    yield [['order_percentage_off', NULL], [0, 1], new Price('65.00', 'USD'), TRUE];
+    yield [['order_percentage_off', NULL], [1, 0], new Price('65.00', 'USD')];
+    yield [['order_percentage_off', NULL], [1, 0], new Price('68.00', 'USD'), TRUE];
+    yield [[NULL, 'order_fixed_amount_off'], [0, 1], new Price('75.00', 'USD')];
+    yield [[NULL, 'order_fixed_amount_off'], [0, 1], new Price('75.00', 'USD'), TRUE];
+    yield [[NULL, 'order_fixed_amount_off'], [1, 0], new Price('75.00', 'USD')];
+    yield [[NULL, 'order_fixed_amount_off'], [1, 0], new Price('75.00', 'USD'), TRUE];
+    yield [['order_percentage_off', 'order_fixed_amount_off'], [0, 1], new Price('75.00', 'USD')];
+    yield [['order_percentage_off', 'order_fixed_amount_off'], [0, 1], new Price('75.00', 'USD'), TRUE];
+    yield [['order_percentage_off', 'order_fixed_amount_off'], [1, 0], new Price('75.00', 'USD')];
+    yield [['order_percentage_off', 'order_fixed_amount_off'], [1, 0], new Price('75.00', 'USD'), TRUE];
+  }
+
 }

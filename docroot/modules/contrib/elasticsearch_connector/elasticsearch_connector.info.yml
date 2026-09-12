@@ -7,7 +7,7 @@ type: module
 dependencies:
   - search_api:search_api
 
-# Information added by Drupal.org packaging script on 2025-09-29
-version: '8.0.0-alpha5'
+# Information added by Drupal.org packaging script on 2026-04-28
+version: '8.0.0-alpha7'
 project: 'elasticsearch_connector'
-datestamp: 1759189829
+datestamp: 1777393326

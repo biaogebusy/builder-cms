@@ -23,23 +23,23 @@
 
 input.form-color.form-color-small {
   width: 16px;
-  height: 16px;
   min-width: 16px;
+  height: 16px;
   min-height: 16px;
   font-size: smaller;
 }
 
 input.form-color.form-color-medium {
   width: 24px;
-  height: 24px;
   min-width: 24px;
+  height: 24px;
   min-height: 24px;
 }
 
 input.form-color.form-color-large {
   width: 36px;
-  height: 36px;
   min-width: 36px;
+  height: 36px;
   min-height: 36px;
 }
 

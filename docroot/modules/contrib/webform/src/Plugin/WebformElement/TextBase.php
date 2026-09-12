@@ -45,7 +45,7 @@ abstract class TextBase extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     // Counter.
@@ -327,7 +327,7 @@ abstract class TextBase extends WebformElementBase {
     $properties = $this->getConfigurationFormProperties($form, $form_state);
 
     // Validate #pattern's regular expression.
-    // @see \Drupal\Core\Render\Element\FormElement::validatePattern
+    // @see \Drupal\Core\Render\Element\FormElementBase::validatePattern
     // @see http://stackoverflow.com/questions/4440626/how-can-i-validate-regex
     if (!empty($properties['#pattern'])) {
       set_error_handler('_webform_entity_element_validate_rendering_error_handler');
@@ -337,7 +337,7 @@ abstract class TextBase extends WebformElementBase {
       // @see https://bytefreaks.net/programming-2/php-programming-2/php-convert-javascript-escaped-unicode-characters-to-html-hex-references
       $pcre_pattern = preg_replace('/\\\\u([a-fA-F0-9]{4})/', '\\x{\\1}', $properties['#pattern']);
 
-      if (preg_match('{^(?:' . $pcre_pattern . ')$}u', NULL) === FALSE) {
+      if (preg_match('{^(?:' . $pcre_pattern . ')$}u', '') === FALSE) {
         $form_state->setErrorByName('pattern', $this->t('Pattern %pattern is not a valid regular expression.', ['%pattern' => $properties['#pattern']]));
       }
 
@@ -360,7 +360,7 @@ abstract class TextBase extends WebformElementBase {
    *
    * @return array
    *   An associative array keyed my input mask contain input mask title,
-   *   example, and patterh.
+   *   example, and pattern.
    */
   protected function getInputMasks() {
     $input_masks = [
@@ -447,6 +447,10 @@ abstract class TextBase extends WebformElementBase {
       "'casing': 'lower'" => [
         'title' => $this->t('Lowercase'),
         'example' => 'lowercase',
+      ],
+      "'casing': 'title'" => [
+        'title' => $this->t('Title case'),
+        'example' => 'Main Title',
       ],
     ];
 

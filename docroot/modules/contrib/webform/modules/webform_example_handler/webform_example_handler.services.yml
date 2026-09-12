@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_example_handler\Hook\WebformExampleHandlerHooks:
+    class: Drupal\webform_example_handler\Hook\WebformExampleHandlerHooks
+    autowire: true

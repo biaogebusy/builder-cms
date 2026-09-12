@@ -4,12 +4,18 @@ namespace Drupal\ai_automators\Plugin\FieldWidgetAction;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
 
 /**
  * The Text to Audio Media Library action.
+ *
+ * Uses the legacy dispatch (custom aiAutomatorsAjax + saveFormValues):
+ * the media_library_widget requires a bespoke AjaxResponse that triggers
+ * its client-side selection update — a generic widget-replacement
+ * response is not enough.
  */
 #[FieldWidgetAction(
   id: 'text_to_audio_media_library',
@@ -21,8 +27,23 @@ class TextToAudioMediaLibrary extends AutomatorBaseAction {
 
   /**
    * {@inheritdoc}
+   *
+   * Opt out of submit-phase automator run — saveFormValues must stash
+   * #ai_automator_media_ids on the REBUILT form's widget so the custom
+   * aiAutomatorsAjax can read it when building the AjaxResponse.
    */
-  public string $formElementProperty = 'target_id';
+  public function runAutomatorSubmit(array &$form, FormStateInterface $form_state): void {
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * No-op: media_library_widget tracks selections via its own hidden
+   * input + update-trigger button. Writing user input is not how values
+   * get into this widget.
+   */
+  protected function setFormInput(FieldableEntityInterface $entity, FormStateInterface $form_state, $form_key): void {
+  }
 
   /**
    * {@inheritdoc}

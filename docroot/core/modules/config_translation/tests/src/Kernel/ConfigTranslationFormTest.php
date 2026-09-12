@@ -8,12 +8,14 @@ use Drupal\config_translation\Form\ConfigTranslationAddForm;
 use Drupal\config_translation\Form\ConfigTranslationEditForm;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for altering configuration translation forms.
- *
- * @group config_translation
  */
+#[Group('config_translation')]
+#[RunTestsInSeparateProcesses]
 class ConfigTranslationFormTest extends KernelTestBase {
 
   /**

@@ -35,22 +35,21 @@ class Url extends FormElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#size' => 60,
       '#maxlength' => 255,
       '#autocomplete_route_name' => FALSE,
       '#process' => [
-        [$class, 'processAutocomplete'],
-        [$class, 'processAjaxForm'],
-        [$class, 'processPattern'],
+        [static::class, 'processAutocomplete'],
+        [static::class, 'processAjaxForm'],
+        [static::class, 'processPattern'],
       ],
       '#element_validate' => [
-        [$class, 'validateUrl'],
+        [static::class, 'validateUrl'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderUrl'],
+        [static::class, 'preRenderUrl'],
       ],
       '#theme' => 'input__url',
       '#theme_wrappers' => ['form_element'],
@@ -60,7 +59,8 @@ class Url extends FormElementBase {
   /**
    * Form element validation handler for #type 'url'.
    *
-   * Note that #maxlength and #required is validated by _form_validate() already.
+   * Note that #maxlength and #required is validated by _form_validate()
+   * already.
    */
   public static function validateUrl(&$element, FormStateInterface $form_state, &$complete_form) {
     $value = trim($element['#value']);

@@ -7,12 +7,14 @@ namespace Drupal\Tests\views_ui\Functional;
 use Drupal\Core\Database\Database;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests some general functionality of editing views, like deleting a view.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class ViewEditTest extends UITestBase {
 
   /**
@@ -85,7 +87,7 @@ class ViewEditTest extends UITestBase {
     $machine_name_edit_url = 'admin/structure/views/nojs/display/test_view/test_1/display_id';
     $error_text = 'Display machine name must contain only lowercase letters, numbers, or underscores.';
 
-    // Test that potential invalid display ID requests are detected
+    // Test that potential invalid display ID requests are detected.
     $this->drupalGet('admin/structure/views/ajax/handler/test_view/fake_display_name/filter/title');
     $arguments = [
       '@display_id' => 'fake_display_name',
@@ -270,6 +272,18 @@ class ViewEditTest extends UITestBase {
     $edit = [];
     $this->drupalGet('admin/structure/views/nojs/handler/test_groupwise_term_ui/default/relationship/tid_representative');
     $this->submitForm($edit, 'Apply');
+  }
+
+  /**
+   * Tests the edit form HTML.
+   */
+  public function testEditForm(): void {
+    $this->drupalGet('admin/structure/views/view/test_view');
+
+    // Assert that the third column is a DIV.
+    $this->assertSession()->elementExists('xpath', '//div[contains(@class, "views-display-column first")]');
+    $this->assertSession()->elementExists('xpath', '//div[contains(@class, "views-display-column second")]');
+    $this->assertSession()->elementExists('xpath', '//div[contains(@class, "views-display-column third")]');
   }
 
 }

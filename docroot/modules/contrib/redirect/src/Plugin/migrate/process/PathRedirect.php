@@ -2,6 +2,7 @@
 
 namespace Drupal\redirect\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -11,6 +12,7 @@ use Drupal\migrate\Row;
  *   id = "d6_path_redirect"
  * )
  */
+#[MigrateProcess(id: 'd6_path_redirect')]
 class PathRedirect extends ProcessPluginBase {
 
   /**

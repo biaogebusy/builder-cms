@@ -21,6 +21,8 @@ function hook_filter_info_alter(&$info) {
   $info['filter_url']['default_settings'] = [
     'filter_url_length' => 100,
   ];
+  // Override the default implementation of the entity_links filter.
+  $info['entity_links']['class'] = 'Drupal\MY_MODULE\CustomizedEntityLinks';
 }
 
 /**
@@ -51,7 +53,7 @@ function hook_filter_secure_image_alter(&$image) {
  * @param \Drupal\filter\FilterFormatInterface $format
  *   The format object of the format being disabled.
  */
-function hook_filter_format_disable($format) {
+function hook_filter_format_disable($format): void {
   my_module_cache_rebuild();
 }
 

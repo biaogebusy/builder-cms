@@ -17,16 +17,6 @@ class Insert extends QueryInsert {
   /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $connection, string $table, array $options = []) {
-    // @todo Remove the __construct in Drupal 11.
-    // @see https://www.drupal.org/project/drupal/issues/3256524
-    parent::__construct($connection, $table, $options);
-    unset($this->queryOptions['return']);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function execute() {
     if (!$this->preExecute()) {
       return NULL;
@@ -75,6 +65,7 @@ class Insert extends QueryInsert {
             $this->connection->exceptionHandler()->handleExecutionException($e, $stmt, $insert_values, $this->queryOptions);
           }
         }
+        $transaction->commitOrRelease();
       }
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = [];

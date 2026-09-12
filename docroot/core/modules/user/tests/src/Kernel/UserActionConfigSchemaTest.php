@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\user\Kernel;
 
-use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the config schema is valid when roles are added or removed.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserActionConfigSchemaTest extends KernelTestBase {
 
   use SchemaCheckTestTrait;

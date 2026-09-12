@@ -1,7 +1,10 @@
+parameters:
+  pathauto.skip_procedural_hook_scan: true
+
 services:
   pathauto.generator:
     class: Drupal\pathauto\PathautoGenerator
-    arguments: ['@config.factory', '@module_handler', '@token', '@pathauto.alias_cleaner', '@pathauto.alias_storage_helper', '@pathauto.alias_uniquifier', '@pathauto.verbose_messenger', '@string_translation', '@token.entity_mapper', '@entity_type.manager', '@plugin.manager.alias_type']
+    arguments: ['@config.factory', '@module_handler', '@token', '@pathauto.alias_cleaner', '@pathauto.alias_storage_helper', '@pathauto.alias_uniquifier', '@pathauto.verbose_messenger', '@string_translation', '@token.entity_mapper', '@entity_type.manager', '@plugin.manager.alias_type', '@language_manager']
   Drupal\pathauto\PathautoGeneratorInterface: '@pathauto.generator'
   pathauto.alias_cleaner:
     class: Drupal\pathauto\AliasCleaner
@@ -29,3 +32,15 @@ services:
     arguments: ['@entity_field.manager', '@plugin.manager.alias_type']
     tags:
       - { name: event_subscriber }
+
+  Drupal\pathauto\Hook\PathautoHooks:
+    class: Drupal\pathauto\Hook\PathautoHooks
+    autowire: true
+
+  Drupal\pathauto\Hook\PathautoEntityHooks:
+    class: Drupal\pathauto\Hook\PathautoEntityHooks
+    autowire: true
+
+  Drupal\pathauto\Hook\PathautoTokensHooks:
+    class: Drupal\pathauto\Hook\PathautoTokensHooks
+    autowire: true

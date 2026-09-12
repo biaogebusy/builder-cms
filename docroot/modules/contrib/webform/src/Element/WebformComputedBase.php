@@ -5,7 +5,7 @@ namespace Drupal\webform\Element;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Template\Attribute;
 use Drupal\webform\Entity\WebformSubmission;
 use Drupal\webform\Utility\WebformElementHelper;
@@ -18,7 +18,7 @@ use Drupal\webform\WebformSubmissionInterface;
 /**
  * Provides a base class for 'webform_computed' elements.
  */
-abstract class WebformComputedBase extends FormElement implements WebformComputedInterface {
+abstract class WebformComputedBase extends FormElementBase implements WebformComputedInterface {
 
   /**
    * Cache of submissions being processed.
@@ -42,7 +42,7 @@ abstract class WebformComputedBase extends FormElement implements WebformCompute
       '#hide_empty' => FALSE,
       // Note: Computed elements do not use the default #ajax wrapper, which is
       // why we can use #ajax as a boolean.
-      // @see \Drupal\Core\Render\Element\RenderElement::preRenderAjaxForm
+      // @see \Drupal\Core\Render\Element\RenderElementBase::preRenderAjaxForm
       '#ajax' => FALSE,
       '#webform_submission' => NULL,
       '#theme_wrappers' => ['form_element'],
@@ -204,7 +204,7 @@ abstract class WebformComputedBase extends FormElement implements WebformCompute
    * Determine if the current request is using Ajax.
    */
   protected static function isAjax() {
-    // return (\Drupal::request()->get(MainContentViewSubscriber::WRAPPER_FORMAT) === 'drupal_ajax');
+    // Return (\Drupal::request()->get(MainContentViewSubscriber::WRAPPER_FORMAT) === 'drupal_ajax');
     //
     // ISSUE:
     // For nodes with computed elements there is a duplicate
@@ -213,7 +213,7 @@ abstract class WebformComputedBase extends FormElement implements WebformCompute
     // WORKAROUND:
     // See if _wrapper_format=drupal_ajax is being appended to the query string.
     $querystring = \Drupal::request()->getQueryString();
-    return (strpos($querystring, MainContentViewSubscriber::WRAPPER_FORMAT . '=drupal_ajax') !== FALSE);
+    return str_contains($querystring, MainContentViewSubscriber::WRAPPER_FORMAT . '=drupal_ajax');
   }
 
   /**

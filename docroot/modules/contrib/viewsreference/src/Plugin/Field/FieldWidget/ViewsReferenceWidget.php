@@ -29,6 +29,17 @@ class ViewsReferenceWidget extends EntityReferenceAutocompleteWidget {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $element = parent::formElement($items, $delta, $element, $form, $form_state);
     $element = $this->fieldElement($items, $delta, $element, $form, $form_state);
+
+    // Add handler for limiting selectable views to a preselected list.
+    $preselect_views = $this->getFieldSetting('preselect_views');
+    if (!empty($preselect_views)) {
+      $element['target_id']['#selection_handler'] = 'viewsreference:view';
+      $preselected_list = array_filter($this->getFieldSetting('preselect_views'), function ($view_name) {
+        return !empty($view_name);
+      });
+      $element['target_id']['#selection_settings']['options'] = ['preselected_list' => $preselected_list];
+    }
+
     $form['#validate'][] = [$this, 'elementValidate'];
     return $element;
   }

@@ -20,6 +20,7 @@ class ProviderSetupListTest extends BrowserTestBase {
     'system',
     'user',
     'ai',
+    'file',
   ];
 
   /**

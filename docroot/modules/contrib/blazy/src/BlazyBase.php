@@ -11,13 +11,29 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\blazy\Asset\LibrariesInterface;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Theme\Grid;
 use Drupal\blazy\Utility\Arrays;
-use Drupal\blazy\internals\Internals;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides common non-media/ generic methods across Blazy ecosystem to DRY.
+ * Transitional base class for 3.x backward compatibility.
+ *
+ * In 3.x, most shared functionality lived in this base class and exposed
+ * many shortcut methods (renderer(), entityTypeManager(), etc.).
+ *
+ * In 4.x, these responsibilities were moved to BlazyContext (facade) and
+ * Blazy (infrastructure layer). This class will only proxy to the
+ * context service to avoid breaking existing subclasses.
+ *
+ * This class exists solely as a migration bridge and MUST NOT gain new
+ * responsibilities.
+ *
+ * In 5.x, classes should inject only the specific services they require
+ * (BlazyInterface, MediaContextInterface, ThemeContextInterface)
+ * instead of extending this base class.
+ *
+ * @todo deprecated in 4.x and is removed in 5.x.
  */
 abstract class BlazyBase implements BlazyInterface {
 
@@ -193,11 +209,11 @@ abstract class BlazyBase implements BlazyInterface {
    */
   public function renderInIsolation(array &$elements) {
     // @todo call directly ::renderInIsolation() when min D10.3.
-    return Blazy::backwardsCompatibleCall(
+    return Internals::backwardsCompatibleCall(
       deprecatedVersion: '10.3',
-      // @phpstan-ignore-next-line
+      /** @phpstan-ignore-next-line */
       currentCallable: fn() => $this->renderer->renderInIsolation($elements),
-      // @phpstan-ignore-next-line
+      /** @phpstan-ignore-next-line */
       deprecatedCallable: fn() => $this->renderer->renderPlain($elements),
     );
   }
@@ -247,26 +263,12 @@ abstract class BlazyBase implements BlazyInterface {
   /**
    * {@inheritdoc}
    */
-  public function myConfig($key = NULL) {
-    return $this->config($key, static::$namespace . '.settings');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function myConfigMultiple(): array {
-    return $this->configMultiple(static::$namespace . '.settings');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function configSchemaInfoAlter(
     array &$definitions,
     $formatter = 'blazy_base',
     array $settings = [],
   ): void {
-    BlazyAlter::configSchemaInfoAlter($definitions, $formatter, $settings);
+    Internals::configSchemaInfoAlter($definitions, $formatter, $settings);
   }
 
   /**
@@ -373,52 +375,8 @@ abstract class BlazyBase implements BlazyInterface {
   /**
    * {@inheritdoc}
    */
-  public function gridAttributes(array &$attrs, array $settings): void {
-    Grid::attributes($attrs, $settings);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function gridCheckAttributes(
-    array &$attrs,
-    array &$content_attrs,
-    $blazies,
-    $root = FALSE,
-  ): void {
-    Grid::checkAttributes($attrs, $content_attrs, $blazies, $root);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function gridItemAttributes(
-    array &$attrs,
-    array &$content_attrs,
-    array $settings,
-  ): void {
-    Grid::itemAttributes($attrs, $content_attrs, $settings);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function import(array $options): void {
-    $this->libraries->import($options);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function initGrid(array $options): array {
-    return Grid::initGrid($options);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function load($id, $type = 'image_style') {
-    if (strpos($type, '.settings') !== FALSE) {
+    if (is_string($id) && strpos($type, '.settings') !== FALSE) {
       return $this->config($id, $type);
     }
     return $this->getStorage($type)->load($id);
@@ -442,6 +400,8 @@ abstract class BlazyBase implements BlazyInterface {
     $condition = 'IN',
   ): array {
     $storage = $this->getStorage($type);
+
+    /** @var \Drupal\Core\Entity\Query\QueryInterface $query */
     $query = $storage->getQuery($conjunction);
 
     $query->accessCheck($access);
@@ -466,7 +426,21 @@ abstract class BlazyBase implements BlazyInterface {
    * {@inheritdoc}
    */
   public function loadByUuid($uuid, $type = 'file'): ?object {
-    return $this->entityRepository->loadEntityByUuid($type, $uuid);
+    $entity = NULL;
+    try {
+      $entity = $this->entityRepository->loadEntityByUuid($type, $uuid);
+
+      if (
+        $entity instanceof EntityInterface &&
+        !$entity->access('view')
+      ) {
+        return NULL;
+      }
+    }
+    catch (\Exception $ignore) {
+      // Do nothing, likely broken file.
+    }
+    return $entity;
   }
 
   /**
@@ -514,20 +488,6 @@ abstract class BlazyBase implements BlazyInterface {
   /**
    * {@inheritdoc}
    */
-  public function toGrid($items, array $settings): array {
-    return Grid::build($items, $settings);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function toHtml($content, $tag = 'div', $class = NULL): array {
-    return Internals::toHtml($content, $tag, $class);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function toOptions(array $options): array {
     return $this->libraries->toOptions($options);
   }
@@ -570,7 +530,135 @@ abstract class BlazyBase implements BlazyInterface {
   }
 
   /**
+   * Allows Blazy add return type hint to its attach() method after sub-modules.
+   */
+  protected function attachments(array &$load, array $attach, $blazies): void {
+    // Do nothing for sub-modules to use.
+  }
+
+  /**
+   * Builds an entity query.
+   */
+  private function buildPropertyQuery($query, array $values, string $condition = 'IN'): void {
+    foreach ($values as $name => $value) {
+      // Cast scalars to array so we can consistently use an IN condition.
+      /** @var \Drupal\Core\Entity\Query\QueryInterface $query */
+      $query->condition($name, (array) $value, $condition);
+    }
+  }
+
+  /**
    * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function myConfig($key = NULL) {
+    return $this->config($key, static::$namespace . '.settings');
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function myConfigMultiple(): array {
+    return $this->configMultiple(static::$namespace . '.settings');
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function gridAttributes(array &$attrs, array $settings): void {
+    Grid::attributes($attrs, $settings);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function gridCheckAttributes(
+    array &$attrs,
+    array &$content_attrs,
+    $blazies,
+    $root = FALSE,
+  ): void {
+    Grid::checkAttributes($attrs, $content_attrs, $blazies, $root);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function gridItemAttributes(
+    array &$attrs,
+    array &$content_attrs,
+    array $settings,
+  ): void {
+    Grid::itemAttributes($attrs, $content_attrs, $settings);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function import(array $options): void {
+    $this->libraries->import($options);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function initGrid(array $options): array {
+    return Grid::initGrid($options);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function hashtag(array &$data, $key = 'settings', $unset = FALSE): void {
+    Internals::hashtag($data, $key, $unset);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function toHashtag(array $data, $key = 'settings', $default = []) {
+    return Internals::toHashtag($data, $key, $default);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function toGrid($items, array $settings): array {
+    return Grid::build($items, $settings);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
+   */
+  public function toHtml($content, $tag = 'div', $class = NULL): array {
+    return Internals::toHtml($content, $tag, $class);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
    */
   public function view(array $data): array {
     $access   = $data['#access'] ?? FALSE;
@@ -601,7 +689,7 @@ abstract class BlazyBase implements BlazyInterface {
       else {
         // If module implements own {entity_type}_view.
         // The "paragraphs_type" entity type did not specify a view_builder.
-        // @todo remove due to being deprecated at D8.7, and after paragraphs.
+        // @todo deprecate and remove due to being deprecated at D8.7, and after paragraphs.
         // See https://www.drupal.org/node/3033656.
         $view_hook = $type . '_view';
         if (is_callable($view_hook)) {
@@ -614,40 +702,11 @@ abstract class BlazyBase implements BlazyInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @todo deprecated in 3.x and is removed from 4.x.
    */
   public function withHashtag(array $data): array {
     return array_filter($data, fn($k) => strpos($k, '#') !== FALSE, ARRAY_FILTER_USE_KEY);
-  }
-
-  /**
-   * Allows Blazy add return type hint to its attach() method after sub-modules.
-   */
-  protected function attachments(array &$load, array $attach, $blazies): void {
-    // Do nothing for sub-modules to use.
-  }
-
-  /**
-   * Builds an entity query.
-   */
-  private function buildPropertyQuery($query, array $values, $condition = 'IN'): void {
-    foreach ($values as $name => $value) {
-      // Cast scalars to array so we can consistently use an IN condition.
-      $query->condition($name, (array) $value, $condition);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hashtag(array &$data, $key = 'settings', $unset = FALSE): void {
-    Internals::hashtag($data, $key, $unset);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function toHashtag(array $data, $key = 'settings', $default = []) {
-    return Internals::toHashtag($data, $key, $default);
   }
 
 }

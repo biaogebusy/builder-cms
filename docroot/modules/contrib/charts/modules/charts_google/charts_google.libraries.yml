@@ -1,7 +1,7 @@
 charts_google:
   version: 1.x
   js:
-    js/charts_google.js: { weight: -1 }
+    js/charts_google.js: { }
   dependencies:
     - core/drupal
     - core/drupalSettings
@@ -17,6 +17,15 @@ google:
   cdn:
     /libraries/google_charts/: https://www.gstatic.com/charts/
   js:
-    /libraries/google_charts/loader.js: {  }
+    /libraries/google_charts/loader.js: { }
   dependencies:
     - charts_google/charts_google
+
+color_changer:
+  version: VERSION
+  js:
+    js/color_changer.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - charts_google/google

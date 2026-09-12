@@ -6,7 +6,12 @@ services:
       - { name: access_check, applies_to: _eck_entity_create_access }
   eck.entity_type.bundle.info:
     class: Drupal\eck\EckEntityTypeBundleInfo
-    arguments: ['@entity_type.manager', '@language_manager', '@module_handler', '@typed_data_manager', '@cache.discovery']
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@module_handler'
+      - '@typed_data_manager'
+      - '@cache.discovery'
   eck.admin_path.route_subscriber:
     class: Drupal\eck\EventSubscriber\EckEntityAdminRouteSubscriber
     arguments: ['@config.factory']
@@ -22,3 +27,4 @@ services:
       - '@entity_type.listener'
       - '@entity_field.manager'
       - '@field_storage_definition.listener'
+      - '@plugin.cache_clearer'

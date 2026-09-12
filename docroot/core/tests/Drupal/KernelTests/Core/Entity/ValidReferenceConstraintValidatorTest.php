@@ -14,12 +14,14 @@ use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validation constraints for ValidReferenceConstraintValidator.
- *
- * @group Validation
  */
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class ValidReferenceConstraintValidatorTest extends EntityKernelTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -30,7 +32,7 @@ class ValidReferenceConstraintValidatorTest extends EntityKernelTestBase {
    *
    * @var \Drupal\Core\TypedData\TypedDataManager
    */
-  protected $typedData;
+  protected $typedDataManager;
 
   /**
    * {@inheritdoc}
@@ -45,7 +47,7 @@ class ValidReferenceConstraintValidatorTest extends EntityKernelTestBase {
     $this->installSchema('user', ['users_data']);
     $this->installSchema('node', ['node_access']);
     $this->installConfig('node');
-    $this->typedData = $this->container->get('typed_data_manager');
+    $this->typedDataManager = $this->container->get('typed_data_manager');
 
     $this->createContentType(['type' => 'article', 'name' => 'Article']);
     $this->createContentType(['type' => 'page', 'name' => 'Basic page']);
@@ -61,16 +63,16 @@ class ValidReferenceConstraintValidatorTest extends EntityKernelTestBase {
     $definition = BaseFieldDefinition::create('entity_reference')
       ->setSettings(['target_type' => 'user']);
 
-    $typed_data = $this->typedData->create($definition, ['target_id' => $entity->id()]);
+    $typed_data = $this->typedDataManager->create($definition, ['target_id' => $entity->id()]);
     $violations = $typed_data->validate();
     $this->assertEquals(0, $violations->count(), 'Validation passed for correct value.');
 
     // NULL is also considered a valid reference.
-    $typed_data = $this->typedData->create($definition, ['target_id' => NULL]);
+    $typed_data = $this->typedDataManager->create($definition, ['target_id' => NULL]);
     $violations = $typed_data->validate();
     $this->assertEquals(0, $violations->count(), 'Validation passed for correct value.');
 
-    $typed_data = $this->typedData->create($definition, ['target_id' => $entity->id()]);
+    $typed_data = $this->typedDataManager->create($definition, ['target_id' => $entity->id()]);
     // Delete the referenced entity.
     $entity->delete();
     $violations = $typed_data->validate();
@@ -99,8 +101,10 @@ class ValidReferenceConstraintValidatorTest extends EntityKernelTestBase {
     $role_without_access->grantPermission('access content');
     $role_without_access->save();
 
-    $user_with_access = User::create(['roles' => ['role_with_access']]);
-    $user_without_access = User::create(['roles' => ['role_without_access']]);
+    $user_with_access = User::create(['name' => $this->randomString(), 'roles' => ['role_with_access']]);
+    $user_with_access->save();
+    $user_without_access = User::create(['name' => $this->randomString(), 'roles' => ['role_without_access']]);
+    $user_without_access->save();
 
     // Add an entity reference field.
     $this->createEntityReferenceField(
@@ -175,8 +179,15 @@ class ValidReferenceConstraintValidatorTest extends EntityKernelTestBase {
 
     $this->container->get('account_switcher')->switchTo($user_with_access);
 
+    // We check if the referencing entity was loaded by checking
+    // if it was added to the memory cache.
+    // This requires an empty memory cache for the test to be reliable.
+    $this->container->get('entity.memory_cache')->reset();
     $violations = $referencing_entity->field_test->validate();
     $this->assertCount(0, $violations);
+
+    // No invalid target was found, so the referencing entity was not reloaded.
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:' . $referencing_entity->getEntityTypeId() . ':' . $referencing_entity->id()));
 
     // Check that users without access are able pass the validation for fields
     // with pre-existing content.
@@ -197,16 +208,20 @@ class ValidReferenceConstraintValidatorTest extends EntityKernelTestBase {
     $violations = $referencing_entity->field_test->validate();
     $this->assertCount(0, $violations);
 
-    // Remove one of the referenceable bundles and check that a pre-existing node
-    // of that bundle can not be referenced anymore.
+    // Remove one of the referenceable bundles and check that a pre-existing
+    // node of that bundle can not be referenced anymore.
     $field = FieldConfig::loadByName('entity_test', 'entity_test', 'field_test');
     $field->setSetting('handler_settings', ['target_bundles' => ['article']]);
     $field->save();
     $referencing_entity = $this->reloadEntity($referencing_entity);
 
+    $this->container->get('entity.memory_cache')->reset();
     $violations = $referencing_entity->field_test->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals(sprintf('This entity (node: %s) cannot be referenced.', $different_bundle_node->id()), $violations[0]->getMessage());
+
+    // An invalid target was found, so the referencing entity had to be reloaded.
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:' . $referencing_entity->getEntityTypeId() . ':' . $referencing_entity->id()));
 
     // Delete the last node and check that the pre-existing reference is not
     // valid anymore.

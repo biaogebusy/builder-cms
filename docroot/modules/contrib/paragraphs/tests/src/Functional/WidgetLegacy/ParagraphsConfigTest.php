@@ -4,12 +4,16 @@ namespace Drupal\Tests\paragraphs\Functional\WidgetLegacy;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests paragraphs configuration.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsConfigTest extends ParagraphsTestBase {
 
   /**
@@ -125,12 +129,18 @@ class ParagraphsConfigTest extends ParagraphsTestBase {
 
     // Check a not paragraphs translatable field does not display the message.
     $this->drupalGet('admin/structure/types/manage/paragraphed_test/fields/add-field');
-    $selected_group = [
-      'new_storage_type' => 'reference',
-    ];
-    $this->submitForm($selected_group, $this->coreVersion('10.3') ? 'Continue' : 'Change field group');
+    if ($this->coreVersion('11.2')) {
+      $this->clickLink('Reference');
+    }
+    else {
+      $selected_group = [
+        'new_storage_type' => 'reference',
+      ];
+      $this->submitForm($selected_group, 'Continue');
+    }
+
     $edit = [
-      'group_field_options_wrapper' => 'field_ui:entity_reference:node',
+      $this->coreVersion('11.2') ? 'field_options_wrapper' : 'group_field_options_wrapper' => 'field_ui:entity_reference:node',
       'label' => 'new_no_field_paragraphs',
       'field_name' => 'new_no_field_paragraphs',
     ];

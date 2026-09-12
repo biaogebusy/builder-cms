@@ -1,1 +1,4 @@
+entityreference
 genc
+pymdownx
+superfences

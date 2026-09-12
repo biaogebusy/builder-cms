@@ -8,6 +8,8 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\Utility\Error;
 use Psr\Log\LoggerInterface;
 
+// cspell:ignore differring
+
 /**
  * Default implementation of the workspace merger.
  *
@@ -15,67 +17,7 @@ use Psr\Log\LoggerInterface;
  */
 class WorkspaceMerger implements WorkspaceMergerInterface {
 
-  /**
-   * The source workspace entity.
-   *
-   * @var \Drupal\workspaces\WorkspaceInterface
-   */
-  protected $sourceWorkspace;
-
-  /**
-   * The target workspace entity.
-   *
-   * @var \Drupal\workspaces\WorkspaceInterface
-   */
-  protected $targetWorkspace;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
-
-  /**
-   * The workspace association service.
-   *
-   * @var \Drupal\workspaces\WorkspaceAssociationInterface
-   */
-  protected $workspaceAssociation;
-
-  /**
-   * Constructs a new WorkspaceMerger.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Database\Connection $database
-   *   Database connection.
-   * @param \Drupal\workspaces\WorkspaceAssociationInterface $workspace_association
-   *   The workspace association service.
-   * @param \Drupal\workspaces\WorkspaceInterface $source
-   *   The source workspace.
-   * @param \Drupal\workspaces\WorkspaceInterface $target
-   *   The target workspace.
-   * @param \Psr\Log\LoggerInterface|null $logger
-   *   The logger.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Connection $database, WorkspaceAssociationInterface $workspace_association, WorkspaceInterface $source, WorkspaceInterface $target, protected ?LoggerInterface $logger = NULL) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->database = $database;
-    $this->workspaceAssociation = $workspace_association;
-    $this->sourceWorkspace = $source;
-    $this->targetWorkspace = $target;
-    if ($this->logger === NULL) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $logger argument is deprecated in drupal:10.1.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/2932520', E_USER_DEPRECATED);
-      $this->logger = \Drupal::service('logger.channel.workspaces');
-    }
+  public function __construct(protected EntityTypeManagerInterface $entityTypeManager, protected Connection $database, protected WorkspaceTrackerInterface $workspaceTracker, protected WorkspaceInterface $sourceWorkspace, protected WorkspaceInterface $targetWorkspace, protected LoggerInterface $logger) {
   }
 
   /**
@@ -101,12 +43,15 @@ class WorkspaceMerger implements WorkspaceMergerInterface {
         $revisions_on_source = $this->entityTypeManager->getStorage($entity_type_id)
           ->loadMultipleRevisions(array_keys($revision_difference));
 
+        // Clear the tracked entities of the source workspace.
+        $this->workspaceTracker->deleteTrackedEntities($this->sourceWorkspace->id(), $entity_type_id, $revision_difference, array_keys($revision_difference));
+
         /** @var \Drupal\Core\Entity\ContentEntityInterface $revision */
         foreach ($revisions_on_source as $revision) {
-          // Track all the differing revisions from the source workspace in
-          // the context of the target workspace. This will automatically
-          // update all the descendants of the target workspace as well.
-          $this->workspaceAssociation->trackEntity($revision, $this->targetWorkspace);
+          // Track all the different revisions from the source workspace in the
+          // context of the target workspace. This will automatically update all
+          // the descendants of the target workspace as well.
+          $this->workspaceTracker->trackEntity($this->targetWorkspace->id(), $revision);
 
           // Set the workspace in which the revision was merged.
           $field_name = $entity_type->getRevisionMetadataKey('workspace');
@@ -118,13 +63,14 @@ class WorkspaceMerger implements WorkspaceMergerInterface {
           // Extend the execution time in order to allow processing workspaces
           // that contain a large number of items.
           if ((int) ($counter / $step_size) >= 1) {
-            set_time_limit($max_execution_time);
+            set_time_limit((int) $max_execution_time);
             $counter = 0;
           }
         }
       }
+      $transaction->commitOrRelease();
     }
-    catch (\Exception $e) {
+    catch (\Throwable $e) {
       if (isset($transaction)) {
         $transaction->rollBack();
       }
@@ -162,8 +108,8 @@ class WorkspaceMerger implements WorkspaceMergerInterface {
   public function getDifferringRevisionIdsOnTarget() {
     $target_revision_difference = [];
 
-    $tracked_entities_on_source = $this->workspaceAssociation->getTrackedEntities($this->sourceWorkspace->id());
-    $tracked_entities_on_target = $this->workspaceAssociation->getTrackedEntities($this->targetWorkspace->id());
+    $tracked_entities_on_source = $this->workspaceTracker->getTrackedEntities($this->sourceWorkspace->id());
+    $tracked_entities_on_target = $this->workspaceTracker->getTrackedEntities($this->targetWorkspace->id());
     foreach ($tracked_entities_on_target as $entity_type_id => $tracked_revisions) {
       // Now we compare the revision IDs which are tracked by the target
       // workspace to those that are tracked by the source workspace, and the
@@ -186,8 +132,8 @@ class WorkspaceMerger implements WorkspaceMergerInterface {
   public function getDifferringRevisionIdsOnSource() {
     $source_revision_difference = [];
 
-    $tracked_entities_on_source = $this->workspaceAssociation->getTrackedEntities($this->sourceWorkspace->id());
-    $tracked_entities_on_target = $this->workspaceAssociation->getTrackedEntities($this->targetWorkspace->id());
+    $tracked_entities_on_source = $this->workspaceTracker->getTrackedEntities($this->sourceWorkspace->id());
+    $tracked_entities_on_target = $this->workspaceTracker->getTrackedEntities($this->targetWorkspace->id());
     foreach ($tracked_entities_on_source as $entity_type_id => $tracked_revisions) {
       // Now we compare the revision IDs which are tracked by the source
       // workspace to those that are tracked by the target workspace, and the

@@ -92,7 +92,7 @@ function ai_eca_update_11001(): TranslatableMarkup {
   // 1. Old submodule is not enabled -> we have nothing to do.
   // 2. Old submodule is enabled:
   //   1. New module exists but is not yet installed -> install it.
-  //   2. New module does not exist and is therefor not installed -> Tell
+  //   2. New module does not exist and is therefore not installed -> Tell
   //      the user to composer require it and retry the update hook.
   //   3. New module exists and is installed (yet the old is still enabled,
   //      see (1)) -> Since the new module should uninstall the old, this

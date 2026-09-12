@@ -1,34 +1,70 @@
+parameters:
+  workspaces.skip_procedural_hook_scan: true
+  workspaces.moved_classes:
+    'Drupal\workspaces\Form\SwitchToLiveForm':
+      class: 'Drupal\workspaces_ui\Form\SwitchToLiveForm'
+    'Drupal\workspaces\Form\WorkspaceActivateForm':
+      class: 'Drupal\workspaces_ui\Form\WorkspaceActivateForm'
+    'Drupal\workspaces\Form\WorkspaceDeleteForm':
+      class: 'Drupal\workspaces_ui\Form\WorkspaceDeleteForm'
+    'Drupal\workspaces\Form\WorkspaceForm':
+      class: 'Drupal\workspaces_ui\Form\WorkspaceForm'
+    'Drupal\workspaces\Form\WorkspaceMergeForm':
+      class: 'Drupal\workspaces_ui\Form\WorkspaceMergeForm'
+    'Drupal\workspaces\Form\WorkspacePublishForm':
+      class: 'Drupal\workspaces_ui\Form\WorkspacePublishForm'
+    'Drupal\workspaces\Form\WorkspaceSwitcherForm':
+      class: 'Drupal\workspaces_ui\Form\WorkspaceSwitcherForm'
+    'Drupal\workspaces\WorkspaceViewBuilder':
+      class: 'Drupal\workspaces_ui\WorkspaceViewBuilder'
+    'Drupal\workspaces\WorkspaceListBuilder':
+      class: 'Drupal\workspaces_ui\WorkspaceListBuilder'
+    'Drupal\workspaces\WorkspacesLazyBuilders':
+      class: 'Drupal\workspaces_ui\WorkspacesUiLazyBuilders'
+    'Drupal\workspaces\Plugin\Block\WorkspaceSwitcherBlock':
+      class: 'Drupal\workspaces_ui\Plugin\Block\WorkspaceSwitcherBlock'
+
 services:
   _defaults:
     autoconfigure: true
   workspaces.manager:
     class: Drupal\workspaces\WorkspaceManager
-    arguments: ['@request_stack', '@entity_type.manager', '@entity.memory_cache', '@current_user', '@state', '@logger.channel.workspaces', '@class_resolver', '@workspaces.association', '@workspaces.information']
+    autowire: true
     tags:
-      - { name: service_id_collector, tag: workspace_negotiator }
+      - { name: service_collector, call: addNegotiator, tag: workspace_negotiator }
   Drupal\workspaces\WorkspaceManagerInterface: '@workspaces.manager'
   workspaces.information:
     class: Drupal\workspaces\WorkspaceInformation
-    arguments: [ '@entity_type.manager', '@workspaces.association' ]
+    autowire: true
   Drupal\workspaces\WorkspaceInformationInterface: '@workspaces.information'
   workspaces.operation_factory:
     class: Drupal\workspaces\WorkspaceOperationFactory
-    arguments: ['@entity_type.manager', '@database', '@workspaces.manager', '@workspaces.association', '@event_dispatcher', '@logger.channel.workspaces']
+    autowire: true
   Drupal\workspaces\WorkspaceOperationFactory: '@workspaces.operation_factory'
   workspaces.association:
     class: Drupal\workspaces\WorkspaceAssociation
-    arguments: ['@database', '@entity_type.manager', '@workspaces.repository', '@logger.channel.workspaces']
+    arguments: ['@workspaces.tracker']
+    deprecated: The "%service_id%" service is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use the 'workspaces.tracker' service instead. See https://www.drupal.org/node/3551450
+  Drupal\workspaces\WorkspaceAssociationInterface: '@workspaces.association'
+  workspaces.tracker:
+    class: Drupal\workspaces\WorkspaceTracker
+    autowire: true
     tags:
       - { name: backend_overridable }
-  Drupal\workspaces\WorkspaceAssociationInterface: '@workspaces.association'
+  Drupal\workspaces\WorkspaceTrackerInterface: '@workspaces.tracker'
   workspaces.repository:
     class: Drupal\workspaces\WorkspaceRepository
     arguments: ['@entity_type.manager', '@cache.default']
   Drupal\workspaces\WorkspaceRepositoryInterface: '@workspaces.repository'
 
+  Drupal\workspaces\Provider\WorkspaceProviderCollector:
+    autowire: true
+  Drupal\workspaces\Provider\DefaultWorkspaceProvider:
+    autowire: true
+
   workspaces.negotiator.session:
     class: Drupal\workspaces\Negotiator\SessionWorkspaceNegotiator
-    arguments: ['@current_user', '@session', '@entity_type.manager']
+    autowire: true
     tags:
       - { name: workspace_negotiator, priority: 50 }
   workspaces.negotiator.query_parameter:
@@ -49,6 +85,8 @@ services:
   workspaces.workspace_subscriber:
     class: Drupal\workspaces\EventSubscriber\WorkspaceRequestSubscriber
     arguments: ['@router.route_provider', '@workspaces.manager']
+  Drupal\workspaces\EventSubscriber\WorkspaceSwitchSubscriber:
+    autowire: true
 
   cache_context.workspace:
     class: Drupal\workspaces\WorkspaceCacheContext
@@ -59,10 +97,11 @@ services:
     parent: logger.channel_base
     arguments: ['workspaces']
 
-  workspaces.lazy_builders:
-    class: Drupal\workspaces\WorkspacesLazyBuilders
-    arguments: [ '@workspaces.manager', '@plugin.manager.element_info' ]
-  Drupal\workspaces\WorkspacesLazyBuilders: '@workspaces.lazy_builders'
+  workspaces.entity.repository:
+    decorates: entity.repository
+    class: Drupal\workspaces\WorkspacesEntityRepository
+    arguments: ['@.inner', '@workspaces.manager']
+    public: false
 
   workspaces.entity.query.sql:
     decorates: entity.query.sql
@@ -72,17 +111,11 @@ services:
     decoration_priority: 50
     tags:
       - { name: backend_overridable }
-  pgsql.workspaces.entity.query.sql:
-    decorates: pgsql.entity.query.sql
-    class: Drupal\workspaces\EntityQuery\PgsqlQueryFactory
-    arguments: ['@database', '@workspaces.manager', '@workspaces.information']
-    public: false
-    decoration_priority: 50
 
   workspaces.menu.tree_storage:
     decorates: menu.tree_storage
     class: Drupal\workspaces\WorkspacesMenuTreeStorage
-    arguments: ['@workspaces.manager', '@workspaces.association', '@entity_type.manager', '@database', '@cache.menu', '@cache_tags.invalidator', 'menu_tree']
+    arguments: ['@workspaces.manager', '@workspaces.tracker', '@entity_type.manager', '@database', '@cache.menu', '@cache_tags.invalidator', 'menu_tree']
     public: false
     decoration_priority: 50
     tags:
@@ -96,3 +129,9 @@ services:
     public: false
     arguments: ['@.inner', '@workspaces.manager', '@workspaces.information', '@typed_data_manager']
   Drupal\workspaces\Controller\WorkspacesHtmlEntityFormController: '@workspaces.controller.entity_form'
+
+  Drupal\workspaces\WorkspacesCron:
+    decorates: cron
+    decoration_priority: -100
+    autowire: true
+    public: false

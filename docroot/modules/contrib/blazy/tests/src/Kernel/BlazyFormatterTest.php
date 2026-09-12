@@ -1,19 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\blazy\Kernel;
 
 // @todo use Drupal\Core\Render\Element;
 use Drupal\Core\Form\FormState;
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyApi;
+use Drupal\blazy\Internals\Internals;
 use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Tests the Blazy image formatter.
- *
- * @coversDefaultClass \Drupal\blazy\Plugin\Field\FieldFormatter\BlazyImageFormatter
- *
- * @group blazy
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class BlazyFormatterTest extends BlazyKernelTestBase {
 
   /**
@@ -22,6 +33,7 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $data = [];
     $data['fields'] = [
       // 'field_video' => 'image',
       'field_image_multiple' => 'image',
@@ -46,9 +58,9 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
    */
   public function testBlazyFormatterCache() {
     // Tests type definition.
-    $this->typeDefinition = $this->blazyAdminFormatter
-      ->getTypedConfig()
-      ->getDefinition('blazy.settings');
+    /** @var \Drupal\Core\Config\TypedConfigManagerInterface $type_config */
+    $type_config = $this->blazyAdminFormatter->getTypedConfig();
+    $this->typeDefinition = $type_config->getDefinition('blazy.settings');
 
     $this->assertEquals('Blazy settings', $this->typeDefinition['label']);
 
@@ -57,10 +69,11 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
     $build = $this->display->build($entity);
 
     $this->assertInstanceOf('\Drupal\Core\Field\FieldItemListInterface', $this->testItems, 'Field implements interface.');
+    /** @phpstan-ignore-next-line */
     $this->assertInstanceOf('\Drupal\blazy\BlazyManagerInterface', $this->formatterInstance->blazyManager(), 'BlazyManager implements interface.');
 
     // Tests cache tags matching entity ::getCacheTags().
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $item = $entity->get($this->testFieldName);
     $field = $build[$this->testFieldName];
 
@@ -75,15 +88,15 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
     $this->assertArrayNotHasKey('#build', $field);
 
     $settings0 = $this->blazyManager->toHashtag($field[0]['#build']);
-    $blazies0 = $settings0['blazies'];
-    $file0 = $item[0]->entity;
+    $blazies0 = Internals::getBlazies($settings0);
+    $file0 = $item[0]->entity ?? NULL;
     $tag0 = $blazies0->get('cache.metadata.tags');
     $this->assertContains($file0->getCacheTags()[0], $tag0, 'First image cache tags is as expected');
 
     /*
     // @fixme empty $tag1 since 2.19, only on tests, not real life.
     $settings1 = $this->blazyManager->toHashtag($field[1]['#build']);
-    $blazies1 = $settings1['blazies'];
+    $blazies1 = Internals::getBlazies($settings1);
     $file1 = $item[1]->entity;
     $tag1 = $blazies1->get('cache.metadata.tags');
     $this->assertContains($file1->getCacheTags()[0], $tag1, 'Second image cache
@@ -91,7 +104,7 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
 
     foreach (Element::children($field) as $key) {
     $settings = $this->blazyManager->toHashtag($field[$key]['#build']);
-    $blazies = $settings['blazies']->reset($settings);
+    $blazies = Internals::getBlazies($settings1)->reset($settings);
     $file = $item[$key]->entity;
     $tags = $blazies->get('cache.metadata.tags');
     $this->assertContains($file->getCacheTags()[0], $tags, 'Image cache tags is
@@ -100,8 +113,13 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
      */
 
     $render = $this->blazyManager->renderer()->renderRoot($build);
+
+    // Render API sanity.
     $this->assertNotEmpty($render);
-    $this->assertStringContainsString('data-blazy', $render);
+
+    // HTML contract ensures data-blazy is present in the field container.
+    $html = (string) $render;
+    $this->assertStringContainsString('data-blazy', $html);
   }
 
   /**
@@ -122,10 +140,12 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
    * Tests the Blazy formatter view display.
    */
   public function testFormatterViewDisplay() {
-    $formatter_settings = $this->formatterInstance->buildSettings();
+    $build['#settings'] = BlazyApi::init();
+
+    $formatter_settings = $this->formatterInstance->buildSettings($build, NULL);
     $this->assertArrayHasKey('blazies', $formatter_settings);
 
-    $blazies = $formatter_settings['blazies'];
+    $blazies = Internals::getBlazies($formatter_settings);
 
     $this->assertArrayHasKey('field', $blazies->storage());
     $this->assertEquals($this->testPluginId, $blazies->get('field.plugin_id'));
@@ -133,7 +153,7 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
     // 1. Tests formatter settings.
     $build = $this->display->build($this->entity);
 
-    /* @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     $result = $this->entity->get($this->testFieldName)
       ->view(['type' => 'blazy']);
 
@@ -146,11 +166,12 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
 
     $format['#settings'] = array_merge($this->getFormatterSettings(), $formatter_settings);
 
+    /** @var array $settings */
     $settings = &$format['#settings'];
 
     $this->assertArrayHasKey('blazies', $settings);
 
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
 
     // 2. Test theme_field(), no grid.
     $settings['grid']            = 0;
@@ -204,7 +225,6 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
    * @param bool $expected
    *   The expected output.
    *
-   * @covers ::view
    * @dataProvider providerTestBlazyMedia
    */
   public function testBlazyMedia($input_url, $expected) {
@@ -219,13 +239,14 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
 
       $entity = $this->entity;
 
+      /** @var array $settings */
       $settings = [
         'view_mode'       => 'default',
         'thumbnail_style' => 'thumbnail',
         'uri'             => $this->uri,
-      ] + Blazy::init();
+      ] + BlazyApi::init();
 
-      $blazies = $settings['blazies'];
+      $blazies = BlazyApi::getBlazies($settings);
       $info = [
         'bundle'       => $this->bundle,
         'input_url'    => $input_url,
@@ -234,7 +255,7 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
         'view_mode'    => 'default',
       ];
 
-      $blazies->set('media', $info)
+      $blazies->set('media', $info, TRUE)
         ->set('image.uri', $this->uri);
 
       $build = $this->display->build($entity);
@@ -269,9 +290,9 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
    */
   public static function providerTestBlazyMedia() {
     return [
-      ['', TRUE],
+      ['', FALSE],
       ['https://xyz123.com/x/123', FALSE],
-      ['user', TRUE],
+      ['https://www.youtube.com/watch?v=6G5_70PqodU', TRUE],
     ];
   }
 

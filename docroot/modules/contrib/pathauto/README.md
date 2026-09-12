@@ -1,18 +1,4 @@
-CONTENTS OF THIS FILE
----------------------
-
- * Introduction
- * Requirements
- * Recommended Modules
- * Installation
- * Configuration
- * Notices
- * Troubleshooting
- * Maintainers
-
-
-INTRODUCTION
-------------
+# Pathauto
 
 The Pathauto module provides support functions for other modules to
 automatically generate aliases based on appropriate criteria and tokens, with a
@@ -28,53 +14,59 @@ Delete aliases.
 Pathauto is beneficial for search engine optimization (SEO) and for ease-of-use
 for visitors.
 
- * For a full description of the module, visit the project page:
-   https://www.drupal.org/project/pathauto
+- For a full description of the module, visit the project page:
+  [Project Page](https://www.drupal.org/project/pathauto).
 
- * To submit bug reports and feature suggestions, or track changes:
-   https://www.drupal.org/project/issues/pathauto
+- To submit bug reports and feature suggestions, or track changes:
+  [Issue Queue](https://www.drupal.org/project/issues/pathauto).
 
 
-REQUIREMENTS
-------------
+## Contents of this file
+
+- Requirements
+- Recommended modules
+- Installation
+- Configuration
+- Notices
+- Troubleshooting
+- Maintainers
+
+
+## Requirements
 
 This module requires the following module:
 
- * Token - https://www.drupal.org/project/token
+- [Token](https://www.drupal.org/project/token/)
 
 
-RECOMMENDED MODULES
--------------------
+## Recommended modules
 
- * Redirect - https://www.drupal.org/project/redirect
- * Sub-pathauto (Sub-path URL Aliases) -
-   https://www.drupal.org/project/subpathauto
+- [Redirect](https://www.drupal.org/project/redirect)
+- [Sub-pathauto](https://www.drupal.org/project/subpathauto) - Sub-path URL aliases
 
 
-INSTALLATION
-------------
+## Installation
 
- * Install as you would normally install a contributed Drupal module. Visit
-   https://www.drupal.org/node/1897420 for further information.
-
-
-CONFIGURATION
--------------
-
- 1. Configure the module at Administration > Configuration > Search and metadata
-    > URL aliases > Patterns (admin/config/search/path/patterns). Add a new
-    pattern by clicking "Add Pathauto pattern".
- 2. Select the entity type for "Pattern Type", and provide an administrative
-    label.
- 2. Fill out "Path pattern" with a token replacement pattern, such as
-    [node:title]. Use the "Browse available tokens" link to view available
-    variables to construct a URL alias pattern.
- 3. Click "Save" to save your pattern. When you save new content from now on, it
-    will automatically be assigned the pathauto-configured URL alias.
+Install as you would normally install a contributed Drupal module. For further
+information, see
+[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
 
 
-NOTICES
--------
+## Configuration
+
+1. Configure the module at Administration > Configuration > Search and metadata
+   > URL aliases > Patterns (admin/config/search/path/patterns). Add a new
+   pattern by clicking "Add Pathauto pattern".
+1. Select the entity type for "Pattern Type", and provide an administrative
+   label.
+1. Fill out "Path pattern" with a token replacement pattern, such as
+   `[node:title]`. Use the "Browse available tokens" link to view available
+   variables to construct a URL alias pattern.
+1. Click "Save" to save your pattern. When you save new content from now on, it
+   will automatically be assigned the pathauto-configured URL alias.
+
+
+## Notices
 
 Pathauto adds URL aliases to content, users, and taxonomy terms. Because the
 patterns are an alias, the standard Drupal URL (for example node/123 or
@@ -91,28 +83,28 @@ If you use the "system path" (i.e. node/10) for menu items and settings, Drupal
 will replace it with the URL alias.
 
 
-TROUBLESHOOTING
----------------
+## Troubleshooting & FAQ
 
-Q: Why are URLs not getting replaced with aliases?
-A: Only URLs passed through the Drupal URL and Link APIs will be replaced
-   with their aliases during page output. If a module or a template contains
-   hardcoded links (such as 'href="node/$node->nid"'), those will not get
-   replaced with their corresponding aliases.
+**Q: Why are URLs not getting replaced with aliases?**
 
-Q: How do you disable Pathauto for a specific content type (or taxonomy)?
-A: When the pattern for a content type is left blank, the default pattern will
-   be used. If the default pattern is also blank, Pathauto will be disabled
-   for that content type.
+**A:** Only URLs passed through the Drupal URL and Link APIs will be replaced
+with their aliases during page output. If a module or a template contains
+hardcoded links (such as `href="node/$node->nid"`), those will not get
+replaced with their corresponding aliases.
+
+**Q: How do you disable Pathauto for a specific content type (or taxonomy)?**
+
+**A:** When the pattern for a content type is left blank, the default pattern will
+be used. If the default pattern is also blank, Pathauto will be disabled
+for that content type.
 
 
-MAINTAINERS
------------
+## Maintainers
 
-Current maintainers:
-
- * Dave Reid - http://www.davereid.net
- * Sascha Grossenbacher - https://www.drupal.org/u/berdir
+- Dave Reid - [Dave Reid](https://www.drupal.org/u/dave-reid)
+- Sascha Grossenbacher - [Berdir](https://www.drupal.org/u/berdir)
+- Greg Knaddison - [greggles](https://www.drupal.org/u/greggles)
+- Freso - [Freso](https://www.drupal.org/u/freso)
 
 The original Pathauto release combined the functionality of Mike Ryan's autopath
 with Tommy Sundstrom's path_automatic. Significant enhancements were contributed

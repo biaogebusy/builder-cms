@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Unit\SecurityAdvisories;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\system\SecurityAdvisories\SecurityAdvisory;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\system\SecurityAdvisories\SecurityAdvisory
- *
- * @group system
+ * Tests Drupal\system\SecurityAdvisories\SecurityAdvisory.
  */
+#[CoversClass(SecurityAdvisory::class)]
+#[Group('system')]
 class SecurityAdvisoryTest extends UnitTestCase {
 
   /**
@@ -22,12 +25,11 @@ class SecurityAdvisoryTest extends UnitTestCase {
    * @param mixed[] $expected
    *   The expected changes for the object methods.
    *
-   * @covers ::createFromArray
-   * @covers ::isCoreAdvisory
-   * @covers ::isPsa
-   *
-   * @dataProvider providerCreateFromArray
+   * @legacy-covers ::createFromArray
+   * @legacy-covers ::isCoreAdvisory
+   * @legacy-covers ::isPsa
    */
+  #[DataProvider('providerCreateFromArray')]
   public function testCreateFromArray(array $changes, array $expected = []): void {
     $data = $changes;
     $data += $this->getValidData();
@@ -92,11 +94,8 @@ class SecurityAdvisoryTest extends UnitTestCase {
    *
    * @param string $missing_field
    *   The field to test.
-   *
-   * @covers ::createFromArray
-   *
-   * @dataProvider providerCreateFromArrayMissingField
    */
+  #[DataProvider('providerCreateFromArrayMissingField')]
   public function testCreateFromArrayMissingField(string $missing_field): void {
     $data = $this->getValidData();
     unset($data[$missing_field]);
@@ -128,11 +127,8 @@ class SecurityAdvisoryTest extends UnitTestCase {
    *   The field to test for an invalid value.
    * @param string $expected_type_message
    *   The expected message for the field.
-   *
-   * @covers ::createFromArray
-   *
-   * @dataProvider providerCreateFromArrayInvalidField
    */
+  #[DataProvider('providerCreateFromArrayInvalidField')]
   public function testCreateFromArrayInvalidField(string $invalid_field, string $expected_type_message): void {
     $data = $this->getValidData();
     // Set the field a value that is not valid for any of the fields in the
@@ -168,7 +164,7 @@ class SecurityAdvisoryTest extends UnitTestCase {
   protected function getValidData(): array {
     return [
       'title' => 'Generic Module1 Test - Moderately critical - Access bypass - SA-CONTRIB-2019-02-02',
-      'link' => 'https://www.drupal.org/SA-CONTRIB-2019-02-02',
+      'link' => 'https://www.drupal.org/sa-contrib-2019-002',
       'project' => 'generic_module1_test',
       'type' => 'module',
       'is_psa' => FALSE,

@@ -4,6 +4,7 @@ namespace PhpOffice\PhpSpreadsheet;
 
 use JsonSerializable;
 use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
+use PhpOffice\PhpSpreadsheet\Cell\IValueBinder;
 use PhpOffice\PhpSpreadsheet\Document\Properties;
 use PhpOffice\PhpSpreadsheet\Document\Security;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -169,6 +170,8 @@ class Spreadsheet implements JsonSerializable
     private int $tabRatio = 600;
 
     private Theme $theme;
+
+    private ?IValueBinder $valueBinder = null;
 
     public function getTheme(): Theme
     {
@@ -450,6 +453,7 @@ class Spreadsheet implements JsonSerializable
             unset($worksheet);
         }
         $this->workSheetCollection = [];
+        $this->activeSheetIndex = -1;
     }
 
     /**
@@ -521,6 +525,15 @@ class Spreadsheet implements JsonSerializable
     public function sheetNameExists(string $worksheetName): bool
     {
         return $this->getSheetByName($worksheetName) !== null;
+    }
+
+    public function duplicateWorksheetByTitle(string $title): Worksheet
+    {
+        $original = $this->getSheetByNameOrThrow($title);
+        $index = $this->getIndex($original) + 1;
+        $clone = clone $original;
+
+        return $this->addSheet($clone, $index, true);
     }
 
     /**
@@ -668,9 +681,8 @@ class Spreadsheet implements JsonSerializable
      */
     public function getIndex(Worksheet $worksheet, bool $noThrow = false): int
     {
-        $wsHash = $worksheet->getHashInt();
         foreach ($this->workSheetCollection as $key => $value) {
-            if ($value->getHashInt() === $wsHash) {
+            if ($value === $worksheet) {
                 return $key;
             }
         }
@@ -1074,6 +1086,11 @@ class Spreadsheet implements JsonSerializable
     public function getCellXfByIndex(int $cellStyleIndex): Style
     {
         return $this->cellXfCollection[$cellStyleIndex];
+    }
+
+    public function getCellXfByIndexOrNull(?int $cellStyleIndex): ?Style
+    {
+        return ($cellStyleIndex === null) ? null : ($this->cellXfCollection[$cellStyleIndex] ?? null);
     }
 
     /**
@@ -1575,5 +1592,48 @@ class Spreadsheet implements JsonSerializable
     public function getExcelCalendar(): int
     {
         return $this->excelCalendar;
+    }
+
+    public function deleteLegacyDrawing(Worksheet $worksheet): void
+    {
+        unset($this->unparsedLoadedData['sheets'][$worksheet->getCodeName()]['legacyDrawing']);
+    }
+
+    public function getLegacyDrawing(Worksheet $worksheet): ?string
+    {
+        return $this->unparsedLoadedData['sheets'][$worksheet->getCodeName()]['legacyDrawing'] ?? null;
+    }
+
+    public function getValueBinder(): ?IValueBinder
+    {
+        return $this->valueBinder;
+    }
+
+    public function setValueBinder(?IValueBinder $valueBinder): self
+    {
+        $this->valueBinder = $valueBinder;
+
+        return $this;
+    }
+
+    /** @var string[] */
+    private $domainWhiteList = [];
+
+    /**
+     * Currently used only by WEBSERVICE function.
+     *
+     * @param string[] $domainWhiteList
+     */
+    public function setDomainWhiteList(array $domainWhiteList): self
+    {
+        $this->domainWhiteList = $domainWhiteList;
+
+        return $this;
+    }
+
+    /** @return string[] */
+    public function getDomainWhiteList(): array
+    {
+        return $this->domainWhiteList;
     }
 }

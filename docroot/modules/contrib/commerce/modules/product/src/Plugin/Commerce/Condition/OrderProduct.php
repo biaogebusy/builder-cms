@@ -44,7 +44,7 @@ class OrderProduct extends ConditionBase implements ContainerFactoryPluginInterf
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, EntityUuidMapperInterface $entity_uuid_mapper) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    $this->productStorage = $entity_type_manager->getStorage('commerce_product');
+    $this->entityTypeManager = $entity_type_manager;
     $this->entityUuidMapper = $entity_uuid_mapper;
   }
 

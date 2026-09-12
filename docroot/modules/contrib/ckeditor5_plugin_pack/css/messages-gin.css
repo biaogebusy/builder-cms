@@ -1,0 +1,13 @@
+.messages.messages--ckeditor5_plugin_pack {
+  color: #C9FF43!important;
+  background: rgb(0,18,52);
+  background: linear-gradient(180deg, rgba(0,18,52,1) 0%, rgba(113,42,230,1) 100%);
+}
+
+.messages.messages--ckeditor5_plugin_pack .messages__header:before {
+  content: '';
+  background: url(../img/ck-logo.png) no-repeat center left;
+  background-size: 24px;
+  display: inline-block;
+  margin-right: 10px;
+}

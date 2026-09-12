@@ -6,15 +6,18 @@ namespace Drupal\Tests\comment\Kernel;
 
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Extension\ModuleUninstallValidatorException;
+use Drupal\Core\Field\FieldPurger;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment module uninstall.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentUninstallTest extends KernelTestBase {
 
   use CommentTestTrait;
@@ -37,6 +40,7 @@ class CommentUninstallTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installEntitySchema('node');
     $this->installEntitySchema('comment');
     $this->installConfig(['comment']);
     $this->installSchema('user', ['users_data']);
@@ -90,7 +94,7 @@ class CommentUninstallTest extends KernelTestBase {
     $field_storage = FieldStorageConfig::loadByName('node', 'comment');
     $this->assertNull($field_storage);
 
-    field_purge_batch(10);
+    \Drupal::service(FieldPurger::class)->purgeBatch(10);
     // Ensure that uninstall succeeds even if the field has already been deleted
     // manually beforehand.
     $this->container->get('module_installer')->uninstall(['comment']);

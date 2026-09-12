@@ -44,7 +44,7 @@ include:
 #
 # These are the variables provided to the Run Pipeline form that a user may want to override.
 #
-# Docs at https://git.drupalcode.org/project/gitlab_templates/-/blob/1.0.x/includes/include.drupalci.variables.yml
+# Docs at https://git.drupalcode.org/project/gitlab_templates/-/blob/main/includes/include.drupalci.variables.yml
 ################
 # variables:
 #   SKIP_ESLINT: '1'
@@ -53,7 +53,11 @@ variables:
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
   _PHPUNIT_CONCURRENT: 1
 
-
+# Test on the supported branch rather than the tagged version as
+# \Drupal\Tests\redirect\Functional\GlobalRedirectTest does not pass on 11.3.2.
+composer:
+  variables:
+    DRUPAL_CORE: $CORE_SUPPORTED
 cspell:
   allow_failure: false
 eslint:

@@ -61,13 +61,7 @@
   border: 2px solid var(--gin-color-primary);
   border-inline-end: 2px dotted transparent;
   border-radius: 50%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .ui-dialog .ajax-progress-throbber::before,
-  .contextual-links .ajax-progress-throbber::before {
-    animation: gin-throbber .75s linear infinite;
-  }
+  animation: gin-throbber .75s linear infinite;
 }
 
 .gin--dark-mode .ui-dialog .ajax-progress,

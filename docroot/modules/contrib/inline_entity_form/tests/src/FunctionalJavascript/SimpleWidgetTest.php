@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\inline_entity_form\FunctionalJavascript;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -182,14 +184,14 @@ class SimpleWidgetTest extends InlineEntityFormTestBase {
 
     // Check that nodes were created correctly.
     $host_node = $this->getNodeByTitle($host_node_title);
-    $this->assertNotNull($host_node, 'Host node created.');
+    $this->assertNotFalse($host_node, 'Host node created.');
     if (isset($host_node)) {
       // Assert that address is the canonical page after node add.
       $this->assertSession()
         ->addressEquals($host_node->toUrl('canonical', ['absolute' => TRUE])
           ->toString());
       $child_node = $this->getNodeByTitle($child_title);
-      $this->assertNotNull($child_node);
+      $this->assertNotFalse($child_node);
       if (isset($child_node)) {
         $this->assertSame($host_node->single[0]->target_id, $child_node->id(), 'Child node is referenced');
         $this->assertSame($child_node->positive_int[0]->value, '1', 'Child node int field correct.');

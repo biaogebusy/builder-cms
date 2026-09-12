@@ -151,6 +151,17 @@ class Rels extends WriterPart
             ++$i; //increment i if needed for an another relation
         }
 
+        // Metadata needed for Dynamic Arrays
+        if ($this->getParentWriter()->useDynamicArrays()) {
+            $this->writeRelationShip(
+                $objWriter,
+                ($i + 1 + 3),
+                Namespaces::RELATIONSHIPS_METADATA,
+                'metadata.xml'
+            );
+            ++$i; //increment i if needed for an another relation
+        }
+
         $objWriter->endElement();
 
         return $objWriter->getData();
@@ -206,7 +217,7 @@ class Rels extends WriterPart
             // (! synchronize with \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Worksheet::writeDrawings)
             reset($drawingOriginalIds);
             $relPath = key($drawingOriginalIds);
-            if (isset($drawingOriginalIds[$relPath])) {
+            if (isset($relPath, $drawingOriginalIds[$relPath])) {
                 $rId = (int) (substr($drawingOriginalIds[$relPath], 3));
             }
 

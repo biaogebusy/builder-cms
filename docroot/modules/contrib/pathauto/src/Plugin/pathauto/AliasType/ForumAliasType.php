@@ -9,6 +9,9 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\pathauto\Attribute\AliasType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,6 +27,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   }
  * )
  */
+#[AliasType(
+  id: 'forum',
+  label: new TranslatableMarkup('Forum'),
+  types: ['term'],
+  provider: 'forum',
+  context_definitions: [
+    'taxonomy_term' => new EntityContextDefinition("entity:taxonomy_term"),
+  ],
+)]
 class ForumAliasType extends EntityAliasTypeBase implements ContainerFactoryPluginInterface {
 
   /**

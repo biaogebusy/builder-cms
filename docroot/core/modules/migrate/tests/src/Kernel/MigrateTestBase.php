@@ -175,7 +175,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
       $this->migration = $migration;
     }
     if ($this instanceof MigrateDumpAlterInterface) {
-      static::migrateDumpAlter($this);
+      $this->migrateDumpAlter($this);
     }
 
     $this->prepareMigration($this->migration);
@@ -203,7 +203,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
       $this->migrateMessages[$type][] = $message;
     }
     else {
-      $this->assertEquals('status', $type, $message);
+      $this->assertEquals('status', $type, (string) $message);
     }
   }
 
@@ -251,7 +251,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
   /**
    * Gets the migration plugin.
    *
-   * @param $plugin_id
+   * @param string $plugin_id
    *   The plugin ID of the migration to get.
    *
    * @return \Drupal\migrate\Plugin\Migration

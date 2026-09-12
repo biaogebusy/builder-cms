@@ -11,21 +11,24 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\Core\Config\StorageCopyTrait
- * @group Config
+ * Tests Drupal\Core\Config\StorageCopyTrait.
  */
+#[CoversClass(StorageCopyTrait::class)]
+#[Group('Config')]
 class StorageCopyTraitTest extends UnitTestCase {
 
   use StorageCopyTrait;
 
   /**
-   * @covers ::replaceStorageContents
-   *
-   * @dataProvider providerTestReplaceStorageContents
+   * Tests replace storage contents.
    */
+  #[DataProvider('providerTestReplaceStorageContents')]
   public function testReplaceStorageContents($source_collections, $target_collections): void {
     $source = new MemoryStorage();
     $target = new MemoryStorage();
@@ -85,6 +88,7 @@ class StorageCopyTraitTest extends UnitTestCase {
    *   The config storage to extract the data from.
    *
    * @return array
+   *   The config data as an array.
    */
   protected static function toArray(MemoryStorage $storage) {
     $reflection = new \ReflectionObject($storage);
@@ -101,7 +105,7 @@ class StorageCopyTraitTest extends UnitTestCase {
    * @param bool $collections
    *   Add random collections or not.
    */
-  protected function generateRandomData(StorageInterface $storage, $collections = TRUE) {
+  protected function generateRandomData(StorageInterface $storage, $collections = TRUE): void {
     $generator = $this->getRandomGenerator();
     for ($i = 0; $i < rand(2, 10); $i++) {
       $storage->write($this->randomMachineName(), (array) $generator->object());
@@ -119,7 +123,7 @@ class StorageCopyTraitTest extends UnitTestCase {
   /**
    * Tests replaceStorageContents() with config with an invalid configuration.
    *
-   * @covers ::replaceStorageContents
+   * @legacy-covers ::replaceStorageContents
    */
   public function testWithInvalidConfiguration(): void {
     $source = new TestStorage();
@@ -179,7 +183,7 @@ class TestStorage extends MemoryStorage {
    * This method allows us to create invalid configurations. The method
    * ::write() only allows values of the type array.
    */
-  public function setValue($name, $value) {
+  public function setValue($name, $value): void {
     $this->config[$this->collection][$name] = $value;
   }
 

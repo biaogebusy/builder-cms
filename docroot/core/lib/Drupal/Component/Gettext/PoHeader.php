@@ -183,7 +183,7 @@ class PoHeader {
    * @param string $plural_forms
    *   The Plural-Forms entry value.
    *
-   * @return array|bool
+   * @return array|false
    *   An indexed array of parsed plural formula data. Containing:
    *   - 'nplurals': The number of plural forms defined by the plural formula.
    *   - 'plurals': Array of plural positions keyed by plural value.
@@ -271,13 +271,31 @@ class PoHeader {
    * @param string $string
    *   A string containing the arithmetic formula.
    *
-   * @return array|bool
+   * @return array|false
    *   A stack of values and operations to be evaluated. False if the formula
    *   could not be parsed.
    */
   private function parseArithmetic($string) {
     // Operator precedence table.
-    $precedence = ["(" => -1, ")" => -1, "?" => 1, ":" => 1, "||" => 3, "&&" => 4, "==" => 5, "!=" => 5, "<" => 6, ">" => 6, "<=" => 6, ">=" => 6, "+" => 7, "-" => 7, "*" => 8, "/" => 8, "%" => 8];
+    $precedence = [
+      "(" => -1,
+      ")" => -1,
+      "?" => 1,
+      ":" => 1,
+      "||" => 3,
+      "&&" => 4,
+      "==" => 5,
+      "!=" => 5,
+      "<" => 6,
+      ">" => 6,
+      "<=" => 6,
+      ">=" => 6,
+      "+" => 7,
+      "-" => 7,
+      "*" => 8,
+      "/" => 8,
+      "%" => 8,
+    ];
     // Right associativity.
     $right_associativity = ["?" => 1, ":" => 1];
 
@@ -440,20 +458,24 @@ class PoHeader {
    * An example of plural formula parting and evaluation:
    *   Plural formula: 'n!=1'
    * This formula is parsed by parseArithmetic() to a stack (array) of elements:
-   *   array(
+   * @code
+   *   [
    *     0 => '$n',
    *     1 => '1',
    *     2 => '!=',
-   *   );
+   *   ];
+   * @endcode
    * The evaluatePlural() method evaluates the $element_stack using the plural
    * value $n. Before the actual evaluation, the '$n' in the array is replaced
    * by the value of $n.
    *   For example: $n = 2 results in:
-   *   array(
+   * @code
+   *   [
    *     0 => '2',
    *     1 => '1',
    *     2 => '!=',
-   *   );
+   *   ]
+   * @endcode
    * The stack is processed until only one element is (the result) is left. In
    * every iteration the top elements of the stack, up until the first operator,
    * are evaluated. After evaluation the arguments and the operator itself are
@@ -462,9 +484,11 @@ class PoHeader {
    *   Because the operator is '!=' the example stack is evaluated as:
    *   $f = (int) 2 != 1;
    *   The resulting stack is:
-   *   array(
+   * @code
+   *   [
    *     0 => 1,
-   *   );
+   *   ]
+   * @endcode
    * With only one element left in the stack (the final result) the loop is
    * terminated and the result is returned.
    *

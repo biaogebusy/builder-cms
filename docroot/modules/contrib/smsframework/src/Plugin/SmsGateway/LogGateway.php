@@ -1,19 +1,19 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Plugin\SmsGateway;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\sms\Message\SmsDeliveryReport;
+use Drupal\sms\Message\SmsMessageInterface;
+use Drupal\sms\Message\SmsMessageReportStatus;
+use Drupal\sms\Message\SmsMessageResult;
+use Drupal\sms\Plugin\SmsGatewayPluginBase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\sms\Message\SmsDeliveryReport;
-use Drupal\sms\Message\SmsMessageReportStatus;
-use Drupal\sms\Plugin\SmsGatewayPluginBase;
-use Drupal\sms\Message\SmsMessageInterface;
-use Drupal\sms\Message\SmsMessageResult;
 
 /**
  * Defines a logger gateway for testing and debugging.
@@ -79,7 +79,7 @@ class LogGateway extends SmsGatewayPluginBase implements ContainerFactoryPluginI
    */
   public function send(SmsMessageInterface $sms) {
     $this->logger->notice('SMS message sent to %number with the text: @message', [
-      '%number' => implode(', ', $sms->getRecipients()),
+      '%number' => \implode(', ', $sms->getRecipients()),
       '@message' => $sms->getMessage(),
     ]);
 

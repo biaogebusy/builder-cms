@@ -5,32 +5,38 @@ namespace Drupal\Tests\entity_reference_revisions\Kernel\Plugin\Derivative;
 use Drupal\entity_reference_revisions\Plugin\migrate\destination\EntityReferenceRevisions;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\migrate\Plugin\MigrateDestinationPluginManager;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the migration deriver.
  *
- * @coversDefaultClass \Drupal\entity_reference_revisions\Plugin\Derivative\MigrateEntityReferenceRevisions
  * @group entity_reference_revisions
  */
+#[RunTestsInSeparateProcesses]
+#[Group('entity_reference_revisions')]
 class EntityReferenceRevisionsDeriverTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['migrate', 'entity_reference_revisions', 'entity_composite_relationship_test'];
+  protected static $modules = [
+    'migrate',
+    'entity_reference_revisions',
+    'user',
+    'entity_test',
+    'entity_composite_relationship_test',
+  ];
 
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installConfig(static::$modules);
   }
 
   /**
    * Tests deriver.
-   *
-   * @covers ::getDerivativeDefinitions
    */
   public function testDestinationDeriver() {
     /** @var MigrateDestinationPluginManager $migrationDestinationManager */

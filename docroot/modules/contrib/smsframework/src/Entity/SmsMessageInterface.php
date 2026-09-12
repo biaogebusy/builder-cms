@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\sms\Message\SmsMessageInterface as PlainSmsMessageInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\sms\Message\SmsMessageInterface as PlainSmsMessageInterface;
 
 /**
  * Interface for SMS message entity.

@@ -32,7 +32,7 @@ trait AssertPageCacheContextsAndTagsTrait {
    * @return string[]
    *   The header value, potentially exploded by spaces.
    */
-  protected function getCacheHeaderValues($header_name) {
+  protected function getCacheHeaderValues($header_name): array {
     $header_value = $this->getSession()->getResponseHeader($header_name);
     return empty($header_value) ? [] : explode(' ', $header_value);
   }
@@ -129,7 +129,7 @@ trait AssertPageCacheContextsAndTagsTrait {
    * @return bool
    *   Always returns TRUE.
    */
-  protected function assertCacheContexts(array $expected_contexts, $message = NULL, $include_default_contexts = TRUE) {
+  protected function assertCacheContexts(array $expected_contexts, $message = NULL, $include_default_contexts = TRUE): bool {
     if ($include_default_contexts) {
       $default_contexts = ['languages:language_interface', 'theme'];
       // Add the user based contexts to the list of default contexts except when
@@ -141,7 +141,7 @@ trait AssertPageCacheContextsAndTagsTrait {
           // The system_page_attachments() hook is only called when dealing with
           // the HtmlRenderer, so check the Content-Type header.
           // @see \Drupal\Core\Render\MainContent\HtmlRenderer::invokePageAttachmentHooks()
-          if ($this->getSession()->getResponseHeader('Content-Type') === 'text/html; charset=UTF-8') {
+          if ($this->getSession()->getResponseHeader('Content-Type') === 'text/html; charset=utf-8') {
             $default_contexts[] = 'user.roles:authenticated';
           }
         }

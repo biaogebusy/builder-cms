@@ -21,7 +21,11 @@ use Symfony\Component\Validator\Tests\IcuCompatibilityTrait;
  */
 class LessThanOrEqualValidatorTest extends AbstractComparisonValidatorTestCase
 {
+    use CompareWithNullValueAtPropertyAtTestTrait;
     use IcuCompatibilityTrait;
+    use InvalidComparisonToValueTestTrait;
+    use ThrowsOnInvalidStringDatesTestTrait;
+    use ValidComparisonToValueTrait;
 
     protected function createValidator(): LessThanOrEqualValidator
     {
@@ -30,7 +34,11 @@ class LessThanOrEqualValidatorTest extends AbstractComparisonValidatorTestCase
 
     protected static function createConstraint(?array $options = null): Constraint
     {
-        return new LessThanOrEqual($options);
+        if (null !== $options) {
+            return new LessThanOrEqual(...$options);
+        }
+
+        return new LessThanOrEqual();
     }
 
     protected function getErrorCode(): ?string

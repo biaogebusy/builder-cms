@@ -34,7 +34,7 @@ class ExampleWebformVariant extends WebformVariantBase {
    */
   public function isApplicable(WebformInterface $webform) {
     // Only allow variant to be applicable to webform_example_variant_ webforms.
-    return (strpos($webform->id(), 'webform_example_variant_') === 0);
+    return (str_starts_with($webform->id(), 'webform_example_variant_'));
   }
 
   /**
@@ -85,7 +85,7 @@ class ExampleWebformVariant extends WebformVariantBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $this->configuration = $form_state->getValues();
-    $this->configuration['debug'] = (boolean) $this->configuration['debug'];
+    $this->configuration['debug'] = (bool) $this->configuration['debug'];
   }
 
   /**

@@ -25,13 +25,6 @@ class EntityDuplicateTest extends BrowserTestBase {
   protected $account;
 
   /**
-   * The entity_test_enhanced storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storage;
-
-  /**
    * {@inheritdoc}
    */
   protected static $modules = ['entity_module_test', 'user', 'entity', 'block', 'views'];
@@ -56,7 +49,6 @@ class EntityDuplicateTest extends BrowserTestBase {
     ]);
     $this->drupalLogin($this->account);
 
-    $this->storage = $this->container->get('entity_type.manager')->getStorage('entity_test_enhanced');
   }
 
   /**
@@ -74,7 +66,7 @@ class EntityDuplicateTest extends BrowserTestBase {
     $this->submitForm(['name[0][value]' => 'Test2'], 'Save');
     $this->assertSession()->pageTextContains('Saved the Test2 enhanced entity.');
 
-    $this->storage->resetCache();
+    $this->container->get('entity_type.manager')->getStorage('entity_test_enhanced')->resetCache();
     $entity = EnhancedEntity::load('1');
     $this->assertEquals('Test', $entity->label());
 

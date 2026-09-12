@@ -7,7 +7,7 @@ configure: entity.field_validation_rule_set.collection
 dependencies:
   - drupal:field
 
-# Information added by Drupal.org packaging script on 2025-10-07
-version: '3.0.0-beta6'
+# Information added by Drupal.org packaging script on 2026-09-09
+version: '3.0.0-rc1'
 project: 'field_validation'
-datestamp: 1759823513
+datestamp: 1788966221

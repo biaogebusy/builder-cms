@@ -93,15 +93,24 @@ final class ConsoleInputCollector implements InputCollectorInterface {
     $method = $settings['method'];
     $arguments = $settings['arguments'] ?? [];
 
-    // Most of the input-collecting methods of StyleInterface have a `default`
-    // parameter.
-    $arguments += [
-      'default' => $default_value,
-    ];
+    if ($method !== 'askHidden') {
+      // Most of the input-collecting methods of StyleInterface have a `default`
+      // parameter.
+      $arguments += [
+        'default' => $default_value,
+      ];
+    }
+
     // We don't support using Symfony Console's inline validation; instead,
     // input definitions should define constraints.
     unset($arguments['validator']);
 
+    // \Symfony\Component\Console\Style\StyleInterface::ask expects the default
+    // value to be a string or NULL. Therefore, let's cast it to a string if
+    // necessary.
+    if (isset($arguments['default']) && !is_string($arguments['default']) && $method === 'ask') {
+      $arguments['default'] = (string) $arguments['default'];
+    }
     return $this->io->$method(...$arguments);
   }
 

@@ -9,6 +9,8 @@ use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
+ * Tests the basic revision UI.
+ *
  * @group entity
  */
 class RevisionBasicUITest extends KernelTestBase {
@@ -121,6 +123,9 @@ class RevisionBasicUITest extends KernelTestBase {
     $this->assertTrue(strpos($response->getContent(), 'entity_test_enhanced/1/revisions/1/revert') !== FALSE);
   }
 
+  /**
+   * Test ability to view revisions.
+   */
   public function testRevisionView() {
     $entity = EnhancedEntity::create([
       'name' => 'rev 1',
@@ -180,6 +185,9 @@ class RevisionBasicUITest extends KernelTestBase {
     $this->assertStringContainsString('rev 2', $response->getContent());
   }
 
+  /**
+   * Test ability to revert revisions.
+   */
   public function testRevisionRevert() {
     $entity = EnhancedEntity::create([
       'name' => 'rev 1',

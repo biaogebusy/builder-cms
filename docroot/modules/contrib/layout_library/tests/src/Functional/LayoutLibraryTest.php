@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\layout_library\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 
@@ -10,6 +14,8 @@ use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
  *
  * @group layout_library
  */
+#[Group('layout_library')]
+#[RunTestsInSeparateProcesses]
 class LayoutLibraryTest extends BrowserTestBase {
 
   use ContentTypeCreationTrait;
@@ -51,13 +57,20 @@ class LayoutLibraryTest extends BrowserTestBase {
       'edit own dogs content',
       'administer node display',
     ]));
-    // Enabling layout_builder_expose_all_field_blocks from 10.3.0
-    // as this has been introduced in drupal core as new module
-    // https://www.drupal.org/node/3416592.
-    if (version_compare(\Drupal::VERSION, '10.3.0', '>=')) {
-      $this->container->get('module_installer')->install(['layout_builder_expose_all_field_blocks']);
-    }
+    // Enable defaults and overrides for the display.
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet('admin/structure/types/manage/dogs/display/default'),
+      fn() => $this->drupalGet('admin/structure/types/manage/dogs/display'),
+    );
+    $page = $this->getSession()->getPage();
 
+    $page->checkField('layout[enabled]');
+    $page->checkField('layout[library]');
+    $page->pressButton('Save');
+    $page->checkField('layout[allow_custom]');
+    $page->pressButton('Save');
   }
 
   /**
@@ -96,15 +109,13 @@ class LayoutLibraryTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $page->pressButton('Save layout');
 
-    // Enable defaults and overrides for the display.
-    $this->drupalGet('admin/structure/types/manage/dogs/display');
-    $page->checkField('layout[enabled]');
-    $page->checkField('layout[library]');
-    $page->pressButton('Save');
-    $page->checkField('layout[allow_custom]');
-    $page->pressButton('Save');
-
     // Customize the default layout so we can tell it from the others.
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.4',
+      fn() => $this->drupalGet('admin/structure/types/manage/dogs/display/default'),
+      fn() => $this->drupalGet('admin/structure/types/manage/dogs/display'),
+    );
     $page->clickLink('Manage layout');
     $page->clickLink('Add section');
     $page->clickLink('One column');

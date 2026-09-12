@@ -25,7 +25,7 @@ class WebformOptionsLimitEntityReferenceTest extends WebformBrowserTestBase {
   /**
    * Test options limit.
    */
-  public function testOptionsLimit() {
+  public function testOptionsLimit(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_handler_options_limit_ent');
@@ -47,9 +47,9 @@ class WebformOptionsLimitEntityReferenceTest extends WebformBrowserTestBase {
     // Check the entity select options are now populated.
     $this->drupalGet('/webform/test_handler_options_limit_ent');
     $assert_session->responseNotContains('options_limits_entity_select is not available');
-    $assert_session->responseContains('<option value="' . $node_1->id() . '">');
-    $assert_session->responseContains('<option value="' . $node_2->id() . '">');
-    $assert_session->responseContains('<option value="' . $node_3->id() . '">');
+    $assert_session->optionExists('options_limits_entity_select[]', $node_1->id());
+    $assert_session->optionExists('options_limits_entity_select[]', $node_2->id());
+    $assert_session->optionExists('options_limits_entity_select[]', $node_3->id());
 
     // Select node 1 three times.
     $this->postSubmission($webform, ['options_limits_entity_select' => [$node_1->id()]]);

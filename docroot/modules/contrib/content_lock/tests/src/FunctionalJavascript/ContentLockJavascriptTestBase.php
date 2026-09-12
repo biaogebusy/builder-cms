@@ -6,12 +6,13 @@ namespace Drupal\Tests\content_lock\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\content_lock\Functional\ContentLockTestTrait;
+use Drupal\Tests\content_lock\Tools\LogoutTrait;
 
 /**
- * Base class for content lock JS tests.
+ * Base class for content lock tests.
  */
 abstract class ContentLockJavascriptTestBase extends WebDriverTestBase {
-
+  use LogoutTrait;
   use ContentLockTestTrait;
 
   /**

@@ -8,12 +8,14 @@ use Drupal\Core\Test\AssertMailTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user administration page functionality.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserAdminTest extends BrowserTestBase {
 
   use AssertMailTrait {
@@ -135,17 +137,17 @@ class UserAdminTest extends BrowserTestBase {
     $this->submitForm($edit, 'Apply to selected items');
     $site_name = $this->config('system.site')->get('name');
     $this->assertMailString('body', 'Your account on ' . $site_name . ' has been blocked.', 1, 'Blocked message found in the mail sent to user C.');
-    $user_storage->resetCache([$user_c->id()]);
     $account = $user_storage->load($user_c->id());
     $this->assertTrue($account->isBlocked(), 'User C blocked');
 
-    // Test filtering on admin page for blocked users
+    // Test filtering on admin page for blocked users.
     $this->drupalGet('admin/people', ['query' => ['status' => 2]]);
     $this->assertSession()->elementNotExists('xpath', static::getLinkSelectorForUser($user_a));
     $this->assertSession()->elementNotExists('xpath', static::getLinkSelectorForUser($user_b));
     $this->assertSession()->elementExists('xpath', static::getLinkSelectorForUser($user_c));
 
-    // Test unblocking of a user from /admin/people page and sending of activation mail
+    // Test unblocking of a user from /admin/people page and sending of
+    // activation mail.
     $edit_unblock = [];
     $edit_unblock['action'] = 'user_unblock_user_action';
     $edit_unblock['user_bulk_form[4]'] = TRUE;
@@ -155,23 +157,20 @@ class UserAdminTest extends BrowserTestBase {
       'query' => ['order' => 'name', 'sort' => 'asc'],
     ]);
     $this->submitForm($edit_unblock, 'Apply to selected items');
-    $user_storage->resetCache([$user_c->id()]);
     $account = $user_storage->load($user_c->id());
     $this->assertTrue($account->isActive(), 'User C unblocked');
     $this->assertMail("to", $account->getEmail(), "Activation mail sent to user C");
 
-    // Test blocking and unblocking another user from /user/[uid]/edit form and sending of activation mail
+    // Test blocking and unblocking another user from /user/[uid]/edit form and
+    // sending of activation mail.
     $user_d = $this->drupalCreateUser([]);
-    $user_storage->resetCache([$user_d->id()]);
     $account1 = $user_storage->load($user_d->id());
     $this->drupalGet('user/' . $account1->id() . '/edit');
     $this->submitForm(['status' => 0], 'Save');
-    $user_storage->resetCache([$user_d->id()]);
     $account1 = $user_storage->load($user_d->id());
     $this->assertTrue($account1->isBlocked(), 'User D blocked');
     $this->drupalGet('user/' . $account1->id() . '/edit');
     $this->submitForm(['status' => TRUE], 'Save');
-    $user_storage->resetCache([$user_d->id()]);
     $account1 = $user_storage->load($user_d->id());
     $this->assertTrue($account1->isActive(), 'User D unblocked');
     $this->assertMail("to", $account1->getEmail(), "Activation mail sent to user D");

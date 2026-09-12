@@ -12,12 +12,14 @@ use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for the administrative UI.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceAdminTest extends BrowserTestBase {
 
   use FieldUiTestTrait;
@@ -133,7 +135,7 @@ class EntityReferenceAdminTest extends BrowserTestBase {
       'required' => FALSE,
       'settings[handler_settings][view][view_and_display]' => 'node_test_view:entity_reference_1',
     ];
-    $this->submitForm($edit, 'Save settings');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->statusMessageContains("Saved Test Entity Reference Field configuration.", MessengerInterface::TYPE_STATUS);
     $this->assertFieldExistsOnOverview('Test Entity Reference Field');
 
@@ -192,7 +194,7 @@ class EntityReferenceAdminTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('Multiple content items match this reference;');
     $this->assertSession()->pageTextContains($node1->getTitle() . ' (' . $node1->id() . ')');
     $this->assertSession()->pageTextContains($node2->getTitle() . ' (' . $node2->id() . ')');
-    $this->assertSession()->pageTextContains('Specify the one you want by appending the id in parentheses, like "' . $node2->getTitle() . ' (' . $node2->id() . ')' . '".');
+    $this->assertSession()->pageTextContains('Specify the one you want by appending the id in parentheses, like "' . $node2->getTitle() . ' (' . $node2->id() . ')".');
 
     $edit = [
       'title[0][value]' => 'Test',
@@ -277,7 +279,7 @@ class EntityReferenceAdminTest extends BrowserTestBase {
     $date_format_field_name = $this->createEntityReferenceField('date_format');
 
     // Display all newly created Entity Reference configuration.
-    $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display');
+    $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display/default');
 
     // Check for Taxonomy Term select box values.
     // Test if Taxonomy Term Entity Reference Field has the correct formatters.
@@ -384,7 +386,7 @@ class EntityReferenceAdminTest extends BrowserTestBase {
    * Creates a new Entity Reference fields with a given target type.
    *
    * @param string $target_type
-   *   The name of the target type
+   *   The name of the target type.
    * @param string[] $bundles
    *   A list of bundle IDs. Defaults to [].
    *

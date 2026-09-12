@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\field\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\field\Plugin\migrate\source\d6\FieldInstancePerViewMode;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D6 fields per view mode source plugin.
- *
- * @covers \Drupal\field\Plugin\migrate\source\d6\FieldInstancePerViewMode
- * @group field
  */
+#[CoversClass(FieldInstancePerViewMode::class)]
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldInstancePerViewModeTest extends MigrateSqlSourceTestBase {
 
   /**

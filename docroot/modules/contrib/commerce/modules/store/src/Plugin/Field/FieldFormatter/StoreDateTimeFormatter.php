@@ -6,7 +6,6 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\Attribute\FieldFormatter;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -36,59 +35,23 @@ class StoreDateTimeFormatter extends FormatterBase implements ContainerFactoryPl
    *
    * @var \Drupal\commerce_store\CurrentStoreInterface
    */
-  protected $currentStore;
+  protected CurrentStoreInterface $currentStore;
 
   /**
-   * The date format storage.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $dateFormatStorage;
-
-  /**
-   * Constructs a new StoreDateTimeFormatter.
-   *
-   * @param string $plugin_id
-   *   The plugin_id for the formatter.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
-   *   The definition of the field to which the formatter is associated.
-   * @param array $settings
-   *   The formatter settings.
-   * @param string $label
-   *   The formatter label display setting.
-   * @param string $view_mode
-   *   The view mode.
-   * @param array $third_party_settings
-   *   Third party settings.
-   * @param \Drupal\commerce_store\CurrentStoreInterface $current_store
-   *   The current store.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, CurrentStoreInterface $current_store, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
-
-    $this->currentStore = $current_store;
-    $this->dateFormatStorage = $entity_type_manager->getStorage('date_format');
-  }
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['label'],
-      $configuration['view_mode'],
-      $configuration['third_party_settings'],
-      $container->get('commerce_store.current_store'),
-      $container->get('entity_type.manager')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->currentStore = $container->get('commerce_store.current_store');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    return $instance;
   }
 
   /**
@@ -107,8 +70,9 @@ class StoreDateTimeFormatter extends FormatterBase implements ContainerFactoryPl
     $form = parent::settingsForm($form, $form_state);
 
     $date = new DrupalDateTime('now', $this->getTimezone());
+    $date_format_storage = $this->entityTypeManager->getStorage('date_format');
     /** @var \Drupal\Core\Datetime\DateFormatInterface[] $date_formats */
-    $date_formats = $this->dateFormatStorage->loadMultiple();
+    $date_formats = $date_format_storage->loadMultiple();
     $options = [];
     foreach ($date_formats as $type => $date_format) {
       $example = $date->format($date_format->getPattern());
@@ -192,11 +156,12 @@ class StoreDateTimeFormatter extends FormatterBase implements ContainerFactoryPl
    *   The date format.
    */
   protected function getDateFormat() {
+    $date_format_storage = $this->entityTypeManager->getStorage('date_format');
     /** @var \Drupal\Core\Datetime\DateFormatInterface $date_format */
-    $date_format = $this->dateFormatStorage->load($this->getSetting('date_format'));
+    $date_format = $date_format_storage->load($this->getSetting('date_format'));
     if (!$date_format) {
       // Guard against missing/deleted date formats.
-      $date_format = $this->dateFormatStorage->load('fallback');
+      $date_format = $date_format_storage->load('fallback');
     }
 
     return $date_format;

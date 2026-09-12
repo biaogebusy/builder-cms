@@ -6,12 +6,14 @@ namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Extension\ModuleUninstallValidatorException;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that an install profile can require modules.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallProfileDependenciesTest extends BrowserTestBase {
 
   /**
@@ -32,7 +34,7 @@ class InstallProfileDependenciesTest extends BrowserTestBase {
     $this->drupalLogin($user);
     $this->drupalGet('admin/modules/uninstall');
     $this->assertSession()->fieldDisabled('uninstall[dblog]');
-    $this->getSession()->getPage()->checkField('uninstall[ban]');
+    $this->getSession()->getPage()->checkField('uninstall[dependency_foo_test]');
     $this->click('#edit-submit');
     // Click the confirm button.
     $this->click('#edit-submit');
@@ -40,7 +42,7 @@ class InstallProfileDependenciesTest extends BrowserTestBase {
     // We've uninstalled a module therefore we need to rebuild the container in
     // the test runner.
     $this->rebuildContainer();
-    $this->assertFalse($this->container->get('module_handler')->moduleExists('ban'));
+    $this->assertFalse($this->container->get('module_handler')->moduleExists('dependency_foo_test'));
     try {
       $this->container->get('module_installer')->uninstall(['dblog']);
       $this->fail('Uninstalled dblog module.');

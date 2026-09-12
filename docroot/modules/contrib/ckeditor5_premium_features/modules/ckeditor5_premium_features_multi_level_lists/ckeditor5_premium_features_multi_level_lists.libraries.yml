@@ -1,0 +1,10 @@
+multi_level_list:
+  version: 20240527
+  dependencies:
+    - core/ckeditor5.list
+    - ckeditor5_premium_features_multi_level_lists/list-multi-level
+admin.multi_level_list:
+  version: 20240212
+  css:
+    theme:
+      css/multi-level-list.admin.css: { }

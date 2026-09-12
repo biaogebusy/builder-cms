@@ -6,14 +6,16 @@ namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests fields style functionality.
  *
- * @group views
- *
  * @see \Drupal\views\Plugin\views\row\Fields.
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class StyleFieldsTest extends ViewsKernelTestBase {
 
   /**

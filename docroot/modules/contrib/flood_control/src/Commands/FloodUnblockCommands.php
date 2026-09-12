@@ -40,6 +40,10 @@ class FloodUnblockCommands extends DrushCommands {
     $events = $this->manager->getEvents();
     foreach ($events as $key => $event) {
       $fids = $this->manager->getEventIds($key, $ip);
+      if (empty($fids)) {
+        $this->output()->writeln("No flood entries found for event {$key} and IP address {$ip}");
+        continue;
+      }
       foreach ($fids as $fid) {
         $this->manager->floodUnblockClearEvent($fid);
       }
@@ -57,6 +61,11 @@ class FloodUnblockCommands extends DrushCommands {
     $events = $this->manager->getEvents();
     foreach ($events as $key => $event) {
       $fids = $this->manager->getEventIds($key);
+      if (empty($fids)) {
+        $label = $event['label'];
+        $this->output()->writeln("No flood entries found for {$label} events");
+        continue;
+      }
       foreach ($fids as $fid) {
         $this->manager->floodUnblockClearEvent($fid);
       }

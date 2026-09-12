@@ -5,6 +5,8 @@ namespace Drupal\entity_reference_revisions\Plugin\migrate\destination;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\TypedData\TranslatableInterface;
+use Drupal\entity_reference_revisions\Plugin\Derivative\MigrateEntityReferenceRevisions;
+use Drupal\migrate\Attribute\MigrateDestination;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\Plugin\migrate\destination\EntityRevision;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
@@ -25,6 +27,10 @@ use Drupal\migrate\Row;
  *   deriver = "Drupal\entity_reference_revisions\Plugin\Derivative\MigrateEntityReferenceRevisions"
  * )
  */
+#[MigrateDestination(
+  id: 'entity_reference_revisions',
+  deriver: MigrateEntityReferenceRevisions::class,
+)]
 class EntityReferenceRevisions extends EntityRevision implements ConfigurableInterface {
 
   /**

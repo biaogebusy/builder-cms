@@ -25,9 +25,9 @@ use Drupal\dynamic_entity_reference\DataDynamicReferenceDefinition;
  * - exclude_entity_types: Allow user to include or exclude entity_types.
  * - entity_type_ids: The entity type ids that can or cannot be referenced.
  *
- * @property int target_id
- * @property string target_type
- * @property \Drupal\Core\Entity\ContentEntityInterface entity
+ * @property int $target_id
+ * @property string $target_type
+ * @property \Drupal\Core\Entity\ContentEntityInterface $entity
  *
  * @FieldType(
  *   id = "dynamic_entity_reference",

@@ -96,7 +96,7 @@ class DataTypeHelper implements DataTypeHelperInterface {
           'boolean',
         ],
         // Types we know about but want/have to ignore.
-        NULL => [
+        '' => [
           'language',
         ],
       ];
@@ -127,7 +127,7 @@ class DataTypeHelper implements DataTypeHelperInterface {
    */
   public function getDataTypeFallbackMapping(IndexInterface $index) {
     // Check the cache first.
-    $indexId = $index->id();
+    $indexId = (string) $index->id();
     if (empty($this->dataTypeFallbackMapping[$indexId])) {
       $server = NULL;
       try {

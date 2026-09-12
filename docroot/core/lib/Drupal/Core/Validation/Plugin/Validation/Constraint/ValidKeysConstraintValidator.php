@@ -20,7 +20,7 @@ class ValidKeysConstraintValidator extends ConstraintValidator {
   /**
    * {@inheritdoc}
    */
-  public function validate(mixed $value, Constraint $constraint) {
+  public function validate(mixed $value, Constraint $constraint): void {
     assert($constraint instanceof ValidKeysConstraint);
 
     if (!is_array($value)) {
@@ -67,8 +67,8 @@ class ValidKeysConstraintValidator extends ConstraintValidator {
     // the statically valid keys).
     // @see \Drupal\Core\Config\Schema\Mapping::getDynamicallyValidKeys()
     if (!empty($all_dynamically_valid_keys)) {
-      // For example, `block.block.*:settings` has the following dynamically valid
-      // keys when the block plugin is `system_branding_block`:
+      // For example, `block.block.*:settings` has the following dynamically
+      // valid keys when the block plugin is `system_branding_block`:
       // - use_site_logo
       // - use_site_name
       // - use_site_slogan
@@ -181,7 +181,8 @@ class ValidKeysConstraintValidator extends ConstraintValidator {
    *   An array containing the following message parameters:
    *   - '@unresolved_dynamic_type': unresolved dynamic type
    *   - '@resolved_dynamic_type': resolved dynamic type
-   *   - '@dynamic_type_property_path': (relative) property path of the condition
+   *   - '@dynamic_type_property_path': (relative) property path of the
+   *      condition
    *   - '@dynamic_type_property_value': value of the condition
    *
    * @see \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint::$dynamicInvalidKeyMessage
@@ -232,7 +233,8 @@ class ValidKeysConstraintValidator extends ConstraintValidator {
     assert($result === 1);
     // @see \Drupal\Core\Config\TypedConfigManager::replaceExpression()
     $expression = $matches[1];
-    // From the expression, extract the instructions for where to retrieve a value.
+    // From the expression, extract the instructions for where to retrieve a
+    // value.
     $instructions = explode('.', $expression);
 
     // Determine the property path to the configuration key that has determined

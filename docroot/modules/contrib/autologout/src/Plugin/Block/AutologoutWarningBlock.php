@@ -138,6 +138,11 @@ class AutologoutWarningBlock extends BlockBase implements ContainerFactoryPlugin
     return [
       '#type' => 'markup',
       '#markup' => $markup,
+      '#cache' => [
+        'tags' => [
+          'config:autologout.settings',
+        ],
+      ],
     ];
   }
 

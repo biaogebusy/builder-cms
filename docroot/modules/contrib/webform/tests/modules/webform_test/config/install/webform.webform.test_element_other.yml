@@ -30,6 +30,16 @@ elements: |
           Two: Two
         Three: Three
       '#default_value': Four
+    select_other_conditional:
+      '#type': webform_select_other
+      '#title': 'Select other conditionally visible'
+      '#options':
+        One: One
+        Two: Two
+      '#states':
+        visible:
+          ':input[name="select_other_basic[other]"]':
+            value: 'Four'
     select_other_advanced:
       '#type': webform_select_other
       '#title': 'Select other advanced'
@@ -72,6 +82,12 @@ elements: |
         Two: Two
         Three: Three
       '#default_value': 0
+    computed_select_other_conditional_value:
+      '#type': webform_computed_token
+      '#title': 'Computed conditionally visible select other value'
+      '#mode': text
+      '#template': '[webform_submission:values:select_other_conditional]'
+      '#store': true
   checkboxes_other:
     '#type': details
     '#title': 'Checkboxes other (checkboxes_other)'

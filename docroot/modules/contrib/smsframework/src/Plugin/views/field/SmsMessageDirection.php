@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Plugin\views\field;
 
+use Drupal\sms\Direction;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
-use Drupal\sms\Direction;
 
 /**
  * Field handler to show SMS message direction.

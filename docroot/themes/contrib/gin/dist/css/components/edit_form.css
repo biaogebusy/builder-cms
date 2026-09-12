@@ -21,7 +21,7 @@
   }
 }
 
-.gin--edit-form [data-drupal-link-system-path*="/delete"] {
+.gin--edit-form .tabs [data-drupal-link-system-path*="/delete"] {
   display: none;
 }
 

@@ -22,20 +22,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class CacheWarmerAggregate implements CacheWarmerInterface
 {
-    private iterable $warmers;
-    private bool $debug;
-    private ?string $deprecationLogsFilepath;
     private bool $optionalsEnabled = false;
     private bool $onlyOptionalsEnabled = false;
 
     /**
      * @param iterable<mixed, CacheWarmerInterface> $warmers
      */
-    public function __construct(iterable $warmers = [], bool $debug = false, ?string $deprecationLogsFilepath = null)
-    {
-        $this->warmers = $warmers;
-        $this->debug = $debug;
-        $this->deprecationLogsFilepath = $deprecationLogsFilepath;
+    public function __construct(
+        private iterable $warmers = [],
+        private bool $debug = false,
+        private ?string $deprecationLogsFilepath = null,
+    ) {
     }
 
     public function enableOptionalWarmers(): void
@@ -48,17 +45,8 @@ class CacheWarmerAggregate implements CacheWarmerInterface
         $this->onlyOptionalsEnabled = $this->optionalsEnabled = true;
     }
 
-    /**
-     * @param string|null $buildDir
-     */
-    public function warmUp(string $cacheDir, string|SymfonyStyle|null $buildDir = null, ?SymfonyStyle $io = null): array
+    public function warmUp(string $cacheDir, ?string $buildDir = null, ?SymfonyStyle $io = null): array
     {
-        if ($buildDir instanceof SymfonyStyle) {
-            trigger_deprecation('symfony/http-kernel', '6.4', 'Passing a "%s" as second argument of "%s()" is deprecated, pass it as third argument instead, after the build directory.', SymfonyStyle::class, __METHOD__);
-            $io = $buildDir;
-            $buildDir = null;
-        }
-
         if ($collectDeprecations = $this->debug && !\defined('PHPUNIT_COMPOSER_INSTALL')) {
             $collectedLogs = [];
             $previousHandler = set_error_handler(static function ($type, $message, $file, $line) use (&$collectedLogs, &$previousHandler) {
@@ -105,7 +93,7 @@ class CacheWarmerAggregate implements CacheWarmerInterface
                 }
 
                 $start = microtime(true);
-                foreach ((array) $warmer->warmUp($cacheDir, $buildDir) as $item) {
+                foreach ($warmer->warmUp($cacheDir, $buildDir) as $item) {
                     if (is_dir($item) || (str_starts_with($item, \dirname($cacheDir)) && !is_file($item)) || ($buildDir && str_starts_with($item, \dirname($buildDir)) && !is_file($item))) {
                         throw new \LogicException(\sprintf('"%s::warmUp()" should return a list of files or classes but "%s" is none of them.', $warmer::class, $item));
                     }
@@ -120,14 +108,27 @@ class CacheWarmerAggregate implements CacheWarmerInterface
             if ($collectDeprecations) {
                 restore_error_handler();
 
-                if (is_file($this->deprecationLogsFilepath)) {
-                    $previousLogs = unserialize(file_get_contents($this->deprecationLogsFilepath));
+                if ($h = fopen($this->deprecationLogsFilepath, 'c+')) {
+                    flock($h, \LOCK_EX);
+
+                    set_error_handler(static fn () => true);
+                    try {
+                        $previousLogs = unserialize(stream_get_contents($h), ['allowed_classes' => false]);
+                    } finally {
+                        restore_error_handler();
+                    }
                     if (\is_array($previousLogs)) {
                         $collectedLogs = array_merge($previousLogs, $collectedLogs);
                     }
-                }
 
-                file_put_contents($this->deprecationLogsFilepath, serialize(array_values($collectedLogs)));
+                    $serializedLogs = serialize(array_values($collectedLogs));
+
+                    ftruncate($h, 0);
+                    rewind($h);
+                    fwrite($h, $serializedLogs);
+                    flock($h, \LOCK_UN);
+                    fclose($h);
+                }
             }
         }
 

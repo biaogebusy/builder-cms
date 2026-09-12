@@ -6,12 +6,14 @@ namespace Drupal\FunctionalTests\HttpKernel;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Content-Length set by Drupal.
- *
- * @group Http
  */
+#[Group('Http')]
+#[RunTestsInSeparateProcesses]
 class ContentLengthTest extends BrowserTestBase {
 
   /**

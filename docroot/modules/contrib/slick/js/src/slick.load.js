@@ -62,7 +62,7 @@
      * The event must be bound prior to slick being called.
      */
     function beforeSlick() {
-      if (o.randomize && !t.hasClass('slick-initiliazed')) {
+      if (o.randomize && !t.hasClass('slick-initialized')) {
         randomize();
       }
 

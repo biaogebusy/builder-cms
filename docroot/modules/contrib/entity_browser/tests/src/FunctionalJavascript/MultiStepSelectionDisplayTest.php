@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Component\Utility\NestedArray;
 
 /**
@@ -11,6 +13,8 @@ use Drupal\Component\Utility\NestedArray;
  *
  * @package Drupal\Tests\entity_browser\FunctionalJavascript
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class MultiStepSelectionDisplayTest extends EntityBrowserWebDriverTestBase {
 
   /**
@@ -246,6 +250,24 @@ class MultiStepSelectionDisplayTest extends EntityBrowserWebDriverTestBase {
     // Check that there are 2 entities in selection list after closing of EB.
     $this->assertSession()
       ->elementsCount('xpath', '//div[contains(@class, "entities-list")]/*', 2);
+
+    // Testing the select all checkbox.
+    $widget_configurations = [
+      // View widget configuration: We need to set the auto_select to FALSE so
+      // the checkboxes are present and the select all checkbox is available.
+      '774798f1-5ec5-4b63-84bd-124cd51ec07d' => [
+        'settings' => [
+          'view' => 'files_entity_browser',
+          'auto_select' => FALSE,
+        ],
+      ],
+    ];
+    $this->getEntityBrowser('test_entity_browser_file', 'iframe', 'tabs', 'multi_step_display', [], [], [], $widget_configurations);
+    $this->drupalGet('node/add/article');
+    $this->openEntityBrowser();
+
+    $checkbox = $this->getSession()->getPage()->find('css', 'th.select-all input');
+    $this->assertNotNull($checkbox);
   }
 
 }

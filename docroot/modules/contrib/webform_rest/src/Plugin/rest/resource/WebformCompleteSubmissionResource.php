@@ -2,8 +2,9 @@
 
 namespace Drupal\webform_rest\Plugin\rest\resource;
 
-use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ModifiedResourceResponse;
+use Drupal\rest\Plugin\ResourceBase;
+use Drupal\rest\Plugin\Type\ResourcePluginManager;
 use Drupal\webform\Entity\Webform;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -27,12 +28,15 @@ class WebformCompleteSubmissionResource extends ResourceBase {
    */
   protected $entityTypeManager;
 
+  protected ResourcePluginManager $resourcePluginManager;
+
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->resourcePluginManager = $container->get('plugin.manager.rest');
     return $instance;
   }
 
@@ -74,7 +78,7 @@ class WebformCompleteSubmissionResource extends ResourceBase {
     $submissionData = $webform_submission->getData();
 
     // Get webform fields/structure from Webform Fields Resource.
-    $webformFieldsResource = new WebformFieldsResource($this->configuration, 'webform_rest_fields', $this->pluginDefinition, $this->serializerFormats, $this->logger);
+    $webformFieldsResource = $this->resourcePluginManager->createInstance('webform_rest_fields', $this->configuration);
     $fields = $webformFieldsResource->get($webform_id);
     $fieldsData = $fields->getResponseData();
 

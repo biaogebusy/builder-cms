@@ -28,7 +28,7 @@ class WebformVariantExcludedTest extends WebformBrowserTestBase {
   /**
    * Test variant element.
    */
-  public function testVariantExcluded() {
+  public function testVariantExcluded(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -36,8 +36,8 @@ class WebformVariantExcludedTest extends WebformBrowserTestBase {
     // Check that the test variant plugin is available to 'test_variant_*'
     // webforms.
     $this->drupalGet('/admin/structure/webform/manage/test_variant_multiple/element/add/webform_variant');
-    $assert_session->responseContains('<option value="override">Override</option>');
-    $assert_session->responseContains('<option value="test">Test</option>');
+    $this->assertEquals('override', $assert_session->optionExists('properties[variant]', 'Override')->getValue());
+    $this->assertEquals('test', $assert_session->optionExists('properties[variant]', 'Test')->getValue());
 
     // Exclude the test variant plugin.
     \Drupal::configFactory()
@@ -47,8 +47,8 @@ class WebformVariantExcludedTest extends WebformBrowserTestBase {
 
     // Check that the test variant plugin is now excluded.
     $this->drupalGet('/admin/structure/webform/manage/test_variant_multiple/element/add/webform_variant');
-    $assert_session->responseContains('<option value="override">Override</option>');
-    $assert_session->responseNotContains('<option value="test">Test</option>');
+    $this->assertEquals('override', $assert_session->optionExists('properties[variant]', 'Override')->getValue());
+    $assert_session->optionNotExists('properties[variant]', 'Test');
   }
 
 }

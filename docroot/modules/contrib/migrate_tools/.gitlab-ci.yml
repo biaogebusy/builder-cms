@@ -76,6 +76,9 @@ phpcs:
 phpstan:
   allow_failure: false
 
+phpstan (previous major):
+  allow_failure: true
+
 phpstan (next major):
   allow_failure: true
 

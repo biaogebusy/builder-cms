@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
@@ -8,10 +8,10 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsDeliveryReport;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Entity\SmsMessageInterface;
 use Drupal\sms\Entity\SmsMessageResult;
 use Drupal\sms\Message\SmsMessage as StandardSmsMessage;
-use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Message\SmsMessageResultInterface;
 use Drupal\Tests\sms\Functional\SmsFrameworkMessageTestTrait;
 use Drupal\Tests\sms\Functional\SmsFrameworkTestTrait;
@@ -32,18 +32,12 @@ final class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
     testUid as originalUid;
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms', 'sms_test_gateway', 'telephone', 'dynamic_entity_reference', 'user',
     'sms_test_time',
     'entity_test',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('sms');
@@ -71,12 +65,9 @@ final class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
    */
   public function testMessageEmpty(): void {
     $sms_message = $this->createSmsMessage();
-    static::assertTrue(in_array('message', $sms_message->validate()->getFieldNames()));
+    static::assertTrue(\in_array('message', $sms_message->validate()->getFieldNames()));
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function testUid(): void {
     // User must exist or setUid will throw an exception.
     User::create(['uid' => 22, 'name' => 'user'])
@@ -112,7 +103,7 @@ final class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
   public function testDirectionEntityValidation(): void {
     // Check for validation violation for missing direction.
     $sms_message1 = $this->createSmsMessage();
-    static::assertTrue(in_array('direction', $sms_message1->validate()->getFieldNames()));
+    static::assertTrue(\in_array('direction', $sms_message1->validate()->getFieldNames()));
   }
 
   /**
@@ -124,7 +115,7 @@ final class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
   public function testGateway(): void {
     // Check for validation violation for missing gateway.
     $sms_message1 = $this->createSmsMessage();
-    static::assertTrue(in_array('gateway', $sms_message1->validate()->getFieldNames()));
+    static::assertTrue(\in_array('gateway', $sms_message1->validate()->getFieldNames()));
 
     $gateway = $this->createMemoryGateway();
     $sms_message2 = $this->createSmsMessage();
@@ -280,7 +271,7 @@ final class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
     static::assertEquals($original->getOption('bar'), $sms_message->getOption('bar'));
     static::assertEquals($original->getGateway(), $sms_message->getGateway());
     static::assertEquals($original->getResult()->getErrorMessage(), $sms_message->getResult()->getErrorMessage());
-    static::assertCount(count($original->getReports()), $sms_message->getReports());
+    static::assertCount(\count($original->getReports()), $sms_message->getReports());
     static::assertEquals($original->getReport('123123123')->getRecipient(),
       $sms_message->getReport('123123123')->getRecipient());
     static::assertEquals($original->getReport('456456456')->getRecipient(),
@@ -324,7 +315,7 @@ final class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
     static::assertEquals($sms_message->getDirection(), $saved->getDirection());
     static::assertEquals($sms_message->getRecipients(), $saved->getRecipients());
     static::assertEquals($sms_message->getResult()->getErrorMessage(), $saved->getResult()->getErrorMessage());
-    static::assertCount(count($sms_message->getReports()), $saved->getReports());
+    static::assertCount(\count($sms_message->getReports()), $saved->getReports());
     static::assertCount(2, $sms_message->getReports());
   }
 
@@ -358,7 +349,7 @@ final class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
 
     static::assertInstanceOf(SmsMessageResultInterface::class, $sms_message->getResult());
     static::assertInstanceOf(SmsMessageInterface::class, SmsMessage::load($sms_message->id()));
-    static::assertCount(count($sms_reports), SmsDeliveryReport::loadMultiple());
+    static::assertCount(\count($sms_reports), SmsDeliveryReport::loadMultiple());
 
     // Delete the message and confirm that all has been removed.
     $sms_message->delete();

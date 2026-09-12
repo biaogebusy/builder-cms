@@ -6,12 +6,14 @@ namespace Drupal\Tests\system\Kernel\Common;
 
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests scanning system directories in drupal_system_listing().
- *
- * @group Common
  */
+#[Group('Common')]
+#[RunTestsInSeparateProcesses]
 class SystemListingTest extends KernelTestBase {
 
   /**
@@ -24,7 +26,7 @@ class SystemListingTest extends KernelTestBase {
       // When both copies of the module are compatible with Drupal core, the
       // copy in the profile directory takes precedence.
       'drupal_system_listing_compatible_test' => [
-        'core/profiles/testing/modules',
+        'core/profiles/tests/testing/modules',
         'core/modules/system/tests/modules',
       ],
     ];
@@ -42,7 +44,7 @@ class SystemListingTest extends KernelTestBase {
     // Now scan the directories and check that the files take precedence as
     // expected.
     $listing = new ExtensionDiscovery($this->root);
-    $listing->setProfileDirectories(['core/profiles/testing']);
+    $listing->setProfileDirectories(['core/profiles/tests/testing']);
     $files = $listing->scan('module');
     foreach ($expected_directories as $module => $directories) {
       $expected_directory = array_shift($directories);
@@ -57,7 +59,7 @@ class SystemListingTest extends KernelTestBase {
    */
   public function testFileScanIgnoreDirectory(): void {
     $listing = new ExtensionDiscovery($this->root, FALSE);
-    $listing->setProfileDirectories(['core/profiles/testing']);
+    $listing->setProfileDirectories(['core/profiles/tests/testing']);
     $files = $listing->scan('module');
     $this->assertArrayHasKey('drupal_system_listing_compatible_test', $files);
 
@@ -68,7 +70,7 @@ class SystemListingTest extends KernelTestBase {
 
     $this->setSetting('file_scan_ignore_directories', ['drupal_system_listing_compatible_test']);
     $listing = new ExtensionDiscovery($this->root, FALSE);
-    $listing->setProfileDirectories(['core/profiles/testing']);
+    $listing->setProfileDirectories(['core/profiles/tests/testing']);
     $files = $listing->scan('module');
     $this->assertArrayNotHasKey('drupal_system_listing_compatible_test', $files);
   }

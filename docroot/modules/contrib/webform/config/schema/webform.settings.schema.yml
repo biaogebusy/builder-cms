@@ -95,6 +95,9 @@ webform.settings:
         default_form_file_limit:
           type: string
           label: 'Default file upload limit per form'
+        default_form_file_limit_message:
+          type: text
+          label: 'Default file upload limit per form message'
         default_wizard_prev_button_label:
           type: label
           label: 'Default wizard previous page button label'

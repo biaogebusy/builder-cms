@@ -37,7 +37,7 @@ class WebformAccessGroupStorage extends ConfigEntityStorage implements WebformAc
   /**
    * {@inheritdoc}
    */
-  protected function doLoadMultiple(array $ids = NULL) {
+  protected function doLoadMultiple(?array $ids = NULL) {
     /** @var \Drupal\webform_access\WebformAccessGroupInterface[] $webform_access_groups */
     $webform_access_groups = parent::doLoadMultiple($ids);
 
@@ -167,7 +167,7 @@ class WebformAccessGroupStorage extends ConfigEntityStorage implements WebformAc
   /**
    * {@inheritdoc}
    */
-  public function loadByEntities(WebformInterface $webform = NULL, EntityInterface $source_entity = NULL, AccountInterface $account = NULL, $type = NULL) {
+  public function loadByEntities(?WebformInterface $webform = NULL, ?EntityInterface $source_entity = NULL, ?AccountInterface $account = NULL, $type = NULL) {
     $query = $this->database->select('webform_access_group_entity', 'ge');
     $query->fields('ge', ['group_id']);
 

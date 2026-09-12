@@ -1,5 +1,4 @@
 webform_options_custom.element:
-  version: VERSION
   css:
     component:
       css/webform_options_custom.element.css: {}

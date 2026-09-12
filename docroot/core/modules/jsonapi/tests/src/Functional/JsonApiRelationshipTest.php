@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Url;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API resource tests.
  *
- * @group jsonapi
- *
  * @internal
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class JsonApiRelationshipTest extends JsonApiFunctionalTestBase {
 
   /**
@@ -48,7 +51,7 @@ class JsonApiRelationshipTest extends JsonApiFunctionalTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    entity_test_create_bundle($this->bundle, 'Parent', $this->entityTypeId);
+    EntityTestHelper::createBundle($this->bundle, 'Parent', $this->entityTypeId);
 
     FieldStorageConfig::create([
       'field_name' => $this->fieldName,
@@ -79,7 +82,7 @@ class JsonApiRelationshipTest extends JsonApiFunctionalTestBase {
    * @see https://www.drupal.org/project/drupal/issues/3476224
    */
   public function testPatchHandleUUIDPropertyReferenceFieldIssue3127883(): void {
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
     $user = $this->drupalCreateUser([
       'administer entity_test content',
       'view test entity',

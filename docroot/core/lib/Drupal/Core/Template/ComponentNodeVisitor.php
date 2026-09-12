@@ -9,6 +9,7 @@ use Drupal\Core\Render\Component\Exception\ComponentNotFoundException;
 use Drupal\Core\Render\Component\Exception\InvalidComponentException;
 use Drupal\Core\Theme\ComponentPluginManager;
 use Twig\Environment;
+use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Node\Nodes;
 use Twig\TwigFunction;
 use Twig\Node\Expression\ConstantExpression;
@@ -55,6 +56,11 @@ class ComponentNodeVisitor implements NodeVisitorInterface {
     $emoji = static::emojiForString($component_id);
     if ($env->isDebug()) {
       $print_nodes[] = new PrintNode(new ConstantExpression(sprintf('<!-- %s Component start: %s -->', $emoji, $component_id), $line), $line);
+      if (!empty($component->metadata->variants)) {
+        $print_nodes[] = new PrintNode(new ConstantExpression(sprintf('<!--     with variant: "'), $line), $line);
+        $print_nodes[] = new PrintNode(new ContextVariable('variant', $line), $line);
+        $print_nodes[] = new PrintNode(new ConstantExpression('" -->', $line), $line);
+      }
     }
     $print_nodes[] = new PrintNode(new FunctionExpression(
       new TwigFunction('attach_library', [$env->getExtension(TwigExtension::class), 'attachLibrary']),
@@ -62,7 +68,10 @@ class ComponentNodeVisitor implements NodeVisitorInterface {
       $line
     ), $line);
     $print_nodes[] = new PrintNode(new FunctionExpression(
-      new TwigFunction('add_component_context', [$env->getExtension(ComponentsTwigExtension::class), 'addAdditionalContext'], ['needs_context' => TRUE]),
+      new TwigFunction('add_component_context', [
+        $env->getExtension(ComponentsTwigExtension::class),
+        'addAdditionalContext',
+      ], ['needs_context' => TRUE]),
       new Nodes([new ConstantExpression($component_id, $line)]),
       $line
     ), $line);
@@ -114,7 +123,7 @@ class ComponentNodeVisitor implements NodeVisitorInterface {
     try {
       return $this->pluginManager->find($component_id);
     }
-    catch (ComponentNotFoundException $e) {
+    catch (ComponentNotFoundException) {
       return NULL;
     }
   }
@@ -149,7 +158,7 @@ class ComponentNodeVisitor implements NodeVisitorInterface {
     try {
       $it = $node->getIterator();
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return;
     }
     if ($it instanceof \SeekableIterator) {

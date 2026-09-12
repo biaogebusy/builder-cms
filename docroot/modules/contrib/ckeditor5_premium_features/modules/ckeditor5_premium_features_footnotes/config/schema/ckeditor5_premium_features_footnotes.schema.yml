@@ -1,0 +1,18 @@
+# Schema for the CKEditor 5 Footnotes plugin configuration.
+
+ckeditor5.plugin.ckeditor5_premium_features_footnotes__footnotes:
+  type: mapping
+  label: 'Footnotes plugin settings'
+  mapping:
+    multi_block:
+      type: boolean
+      label: 'Allow multi block footnotes'
+    allow_properties:
+      type: boolean
+      label: 'Allow change of footnote properties'
+    list_style:
+      type: string
+      label: 'Default numbering style'
+    start_index:
+      type: integer
+      label: 'Default starting index'

@@ -18,6 +18,23 @@ manage ai prompts:
   title: 'Create, Edit, and Delete AI Prompts'
   description: 'Create, Edit, and Delete individual AI prompts'
   restrict access: true
+access ai files overview:
+  title: 'Access Overview of AI Files'
+  description: 'Access to AI Files listing overview.'
+  restrict access: true
+view own ai files:
+  title: 'View own AI Files'
+  description: 'View AI Files owned by the user.'
+view any ai file:
+  title: 'View any AI File'
+  description: 'Allows viewing all AI Files regardless of ownership.'
+delete own ai file:
+  title: 'Delete own AI File'
+  description: 'Delete AI Files owned by the user.'
+delete any ai file:
+  title: 'Delete any AI File'
+  description: 'Delete AI Files regardless of ownership.'
+  restrict access: true
 administer guardrail sets:
   title: 'Administer Guardrail Sets'
   description: 'Create, Edit, and Delete AI Guardrail Sets'

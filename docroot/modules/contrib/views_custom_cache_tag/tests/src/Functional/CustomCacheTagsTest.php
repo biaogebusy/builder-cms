@@ -126,7 +126,6 @@ class CustomCacheTagsTest extends BrowserTestBase {
 
     // Check the cache tags in the views.
     $this->assertPageCacheContextsAndTags(Url::fromRoute('view.view_node_type_ab.page_1', ['arg_0' => 'node_type_a']), $cache_contexts, [
-      'config:filter.format.plain_text',
       'config:views.view.view_node_type_ab',
       'config:user.role.anonymous',
       'http_response',
@@ -138,7 +137,6 @@ class CustomCacheTagsTest extends BrowserTestBase {
       'user_view',
     ]);
     $this->assertPageCacheContextsAndTags(Url::fromRoute('view.view_node_type_ab.page_1', ['arg_0' => 'node_type_b']), $cache_contexts, [
-      'config:filter.format.plain_text',
       'config:views.view.view_node_type_ab',
       'config:user.role.anonymous',
       'http_response',
@@ -187,7 +185,6 @@ class CustomCacheTagsTest extends BrowserTestBase {
     $this->verifyPageCache(Url::fromRoute('view.view_node_type_ab_rest.rest_export_1', ['arg_0' => 'node_type_a'], ['query' => ['_format' => 'json']]), 'HIT');
     // Ensure cache tags invalidation in node type B view.
     $this->assertPageCacheContextsAndTags(Url::fromRoute('view.view_node_type_ab.page_1', ['arg_0' => 'node_type_b']), $cache_contexts, [
-      'config:filter.format.plain_text',
       'config:views.view.view_node_type_ab',
       'config:user.role.anonymous',
       'http_response',

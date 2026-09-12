@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,6 +30,7 @@ class ProcessForker extends AbstractListener
     private $up;
     private bool $sigintHandlerInstalled = false;
     private bool $restoreStty = false;
+    private ?string $originalStty = null;
 
     public const PCNTL_FUNCTIONS = [
         'pcntl_fork',
@@ -177,12 +178,14 @@ class ProcessForker extends AbstractListener
 
                 if ($n === false) {
                     $err = \error_get_last();
-                    if (!isset($err['message']) || \stripos($err['message'], 'interrupted system call') === false) {
-                        $msg = $err['message'] ?
-                            \sprintf('Error waiting for execution loop: %s', $err['message']) :
-                            'Error waiting for execution loop';
-                        throw new \RuntimeException($msg);
+                    $errMessage = \is_array($err) ? ($err['message'] ?? null) : null;
+
+                    // If there's no error message, or it's an interrupted system call, just retry
+                    if ($errMessage === null || \stripos($errMessage, 'interrupted system call') !== false) {
+                        continue;
                     }
+
+                    throw new \RuntimeException(\sprintf('Error waiting for execution loop: %s', $errMessage));
                 }
             } while ($n < 1);
 
@@ -223,6 +226,11 @@ class ProcessForker extends AbstractListener
 
         // Save this; we'll need to close it in `afterRun`
         $this->up = $up;
+
+        // Save original stty state so we can restore on exit
+        if (@\posix_isatty(\STDIN)) {
+            $this->originalStty = @\shell_exec('stty -g 2>/dev/null');
+        }
     }
 
     /**
@@ -304,6 +312,15 @@ class ProcessForker extends AbstractListener
             @\fwrite($this->up, $data);
             @\fclose($this->up);
 
+            // Restore original terminal state before exiting.
+            //
+            // We set `stty isig` during execution, so Ctrl-C can interrupt, and
+            // `stty -isig` after, so readline can handle it at the prompt.
+            // Let's put things back the way we found them.
+            if ($this->originalStty !== null) {
+                @\shell_exec('stty '.\escapeshellarg(\trim($this->originalStty)).' 2>/dev/null');
+            }
+
             \posix_kill(\posix_getpid(), \SIGKILL);
         }
     }
@@ -333,6 +350,7 @@ class ProcessForker extends AbstractListener
             }
 
             // worker didn't exit cleanly, we'll need to have another go
+            // @phan-suppress-next-line PhanPossiblyInfiniteRecursionSameParams - recursion exits via posix_kill above
             $this->createSavegame();
         }
     }
@@ -387,7 +405,7 @@ class ProcessForker extends AbstractListener
                 continue;
             }
 
-            if (\version_compare(\PHP_VERSION, '8.1', '>=') && $value instanceof \UnitEnum) {
+            if (\PHP_VERSION_ID >= 80100 && $value instanceof \UnitEnum) {
                 // Enums defined in the REPL session can't be unserialized.
                 $ref = new \ReflectionObject($value);
                 if (\strpos($ref->getFileName(), ": eval()'d code") !== false) {

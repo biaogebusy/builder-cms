@@ -13,12 +13,12 @@ use lsolesen\pel\PelEntryAscii;
 use lsolesen\pel\PelEntryRational;
 use lsolesen\pel\PelEntryShort;
 use lsolesen\pel\PelEntrySRational;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests that File Metadata EXIF plugin works properly.
- *
- * @group file_mdm
  */
+#[Group('file_mdm')]
 class FileMetadataExifTest extends FileMetadataManagerTestBase {
 
   protected static $modules = [
@@ -381,7 +381,7 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     $this->assertEquals([8, 8, 8, 8], $file_metadata->getMetadata('exif', 'BitsPerSample')['value']);
     $data['BitsPerSample'] = [7, 6, 5, 4];
     $bps_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('BitsPerSample');
-    $bps = new PelEntryShort($bps_tag['tag'], $data['BitsPerSample']);
+    $bps = new PelEntryShort($bps_tag['tag'], ...$data['BitsPerSample']);
     $this->assertTrue($file_metadata->setMetadata('exif', 'BitsPerSample', $bps));
     $this->assertEquals($data['BitsPerSample'], $file_metadata->getMetadata('exif', 'BitsPerSample')['value']);
 

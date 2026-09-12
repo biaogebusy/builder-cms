@@ -15,7 +15,7 @@ class PathautoBulkUpdateTest extends BrowserTestBase {
 
   use PathautoTestHelperTrait;
 
- /**
+  /**
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
@@ -72,6 +72,9 @@ class PathautoBulkUpdateTest extends BrowserTestBase {
     $this->patterns['forum'] = $this->createPattern('forum', '/forums/[term:name]');
   }
 
+  /**
+   * Tests the bulk update functionality for URL aliases.
+   */
   public function testBulkUpdate() {
     // Create some nodes.
     $this->nodes = [];

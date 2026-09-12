@@ -14,3 +14,7 @@ services:
     arguments: ['@module_handler']
     tags:
       - { name: event_subscriber }
+
+  Drupal\webform_submission_log\Hook\WebformSubmissionLogHooks:
+    class: Drupal\webform_submission_log\Hook\WebformSubmissionLogHooks
+    autowire: true

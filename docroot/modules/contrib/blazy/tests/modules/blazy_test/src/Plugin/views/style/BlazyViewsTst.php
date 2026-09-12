@@ -4,11 +4,11 @@ namespace Drupal\blazy_test\Plugin\views\style;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Views\BlazyStylePluginBase;
-use Drupal\blazy\internals\Internals;
 
 /**
- * Blazy Views Test style plugin.
+ * Blazy Views Test style plugin, see 3395575.
  *
  * @ingroup views_style_plugins
  *
@@ -96,8 +96,9 @@ class BlazyViewsTst extends BlazyStylePluginBase {
    * Overrides StylePluginBase::render().
    */
   public function render() {
+    /** @var array $settings */
     $settings = $this->buildSettings() + BlazyDefault::entitySettings();
-    $blazies = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
 
     $settings['caption']   = array_filter($settings['caption']);
     $settings['namespace'] = 'blazy';

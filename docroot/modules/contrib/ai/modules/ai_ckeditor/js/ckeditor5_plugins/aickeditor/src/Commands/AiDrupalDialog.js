@@ -16,7 +16,7 @@ export default class AiDrupalDialog extends Command {
     }
 
     const selected = this.editor.editing.model.getSelectedContent(this.editor.model.document.selection);
-    const selectedText = this.editor.data.stringify(selected) ?? 'No text selected';
+    const selectedText = this.editor.data.stringify(selected) ?? '';
 
     dialogSettings.title = dialogSettings.title + ' - ' + plugin_label;
 

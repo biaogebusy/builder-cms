@@ -1,0 +1,10 @@
+services:
+  ckeditor5_premium_features_productivity_pack.element.text_format:
+    class: Drupal\ckeditor5_premium_features_productivity_pack\Element\TextFormat
+    arguments:
+      - '@ckeditor5_premium_features.storage_handler.editor'
+  ckeditor5_premium_features_productivity_pack.route_subscriber:
+    class: Drupal\ckeditor5_premium_features_productivity_pack\EventSubscriber\RouteSubscriber
+    arguments: ['@module_handler']
+    tags:
+      - { name: event_subscriber }

@@ -10,8 +10,8 @@ namespace Drupal\Core\StreamWrapper;
  * "sites/default/files/example.txt" and then PHP filesystem functions are
  * invoked.
  *
- * Drupal\Core\StreamWrapper\LocalStream implementations need to implement at least the
- * getDirectoryPath() and getExternalUrl() methods.
+ * Drupal\Core\StreamWrapper\LocalStream implementations need to implement at
+ * least the getDirectoryPath() and getExternalUrl() methods.
  */
 abstract class LocalStream implements StreamWrapperInterface {
   /**
@@ -78,7 +78,7 @@ abstract class LocalStream implements StreamWrapperInterface {
    * @param string $uri
    *   Optional URI.
    *
-   * @return string|bool
+   * @return string|false
    *   Returns a string representing a location suitable for writing of a file,
    *   or FALSE if unable to write to the file such as with read-only streams.
    */
@@ -107,7 +107,7 @@ abstract class LocalStream implements StreamWrapperInterface {
    *   (optional) The stream wrapper URI to be converted to a canonical
    *   absolute path. This may point to a directory or another type of file.
    *
-   * @return string|bool
+   * @return string|false
    *   If $uri is not set, returns the canonical absolute path of the URI
    *   previously set by the
    *   Drupal\Core\StreamWrapper\StreamWrapperInterface::setUri() function.
@@ -132,7 +132,7 @@ abstract class LocalStream implements StreamWrapperInterface {
     $realpath = realpath($path);
     if (!$realpath) {
       // This file does not yet exist.
-      $realpath = realpath(dirname($path)) . '/' . \Drupal::service('file_system')->basename($path);
+      $realpath = realpath(dirname($path)) . '/' . basename($path);
     }
     $directory = realpath($this->getDirectoryPath());
     if (!$realpath || !$directory || !str_starts_with($realpath, $directory)) {
@@ -235,7 +235,7 @@ abstract class LocalStream implements StreamWrapperInterface {
    * {@inheritdoc}
    */
   public function stream_cast($cast_as) {
-    return $this->handle ? $this->handle : FALSE;
+    return $this->handle ?: FALSE;
   }
 
   /**

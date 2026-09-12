@@ -9,14 +9,15 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search\SearchIndexInterface;
 use Drupal\search\SearchQuery;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore cillum dolore enim veniam
-
 /**
  * Indexes content and queries it.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchMatchTest extends KernelTestBase {
 
   // The search index can contain different types of content. Typically the type
@@ -48,9 +49,60 @@ class SearchMatchTest extends KernelTestBase {
   }
 
   /**
+   * Tests HTML tags with whitespace characters are parsed correctly.
+   */
+  public function testHTMLTagsWithWhitespace(): void {
+    $this->config('search.settings')->set('index.minimum_word_size', 3)->save();
+
+    $search_index = \Drupal::service('search.index');
+    assert($search_index instanceof SearchIndexInterface);
+    $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
+
+    // Test case 1: inline anchor tag.
+    $search_index->index(static::SEARCH_TYPE, 101, $langcode,
+      '<a href="https://example.com/">Drupal Rocks</a>');
+
+    // Test case 2: anchor tag with newlines.
+    $search_index->index(static::SEARCH_TYPE, 102, $langcode,
+      '<a' . "\n" . '  href="https://example.com/"' . "\n" . '>Drupal Rocks</a>');
+
+    // Test case 3: anchor tag with tab character.
+    $search_index->index(static::SEARCH_TYPE, 103, $langcode,
+      '<a' . "\t" . 'href="https://example.com/">Drupal Rocks</a>');
+
+    // Test case 4: no tag (control).
+    $search_index->index(static::SEARCH_TYPE, 104, $langcode, 'Drupal Rocks');
+
+    // Perform search for 'rocks'.
+    $connection = Database::getConnection();
+    $result = $connection->select('search_index', 'i')
+      ->extend(SearchQuery::class)
+      ->searchExpression('rocks', static::SEARCH_TYPE)
+      ->execute();
+
+    $set = $result ? $result->fetchAll() : [];
+
+    // Build scores map.
+    $scores = [];
+    foreach ($set as $item) {
+      $scores[$item->sid] = $item->calculated_score;
+    }
+
+    // Verify all items found.
+    $this->assertCount(4, $scores);
+
+    // Items with anchor tags should have same score.
+    $this->assertEquals($scores[101], $scores[102]);
+    $this->assertEquals($scores[101], $scores[103]);
+
+    // Anchor tag items should score higher than no-tag item.
+    $this->assertGreaterThan($scores[104], $scores[101]);
+  }
+
+  /**
    * Set up a small index of items to test against.
    */
-  public function _setup() {
+  public function _setup(): void {
     $this->config('search.settings')->set('index.minimum_word_size', 3)->save();
 
     $search_index = \Drupal::service('search.index');
@@ -72,7 +124,7 @@ class SearchMatchTest extends KernelTestBase {
   }
 
   /**
-   * _test_: Helper method for generating snippets of content.
+   * Helper to generate lorem ipsum snippets of content.
    *
    * Generated items to test against:
    *   1  ipsum
@@ -81,7 +133,7 @@ class SearchMatchTest extends KernelTestBase {
    *   4  am ut enim am
    *   5  ut enim am minim veniam
    *   6  enim am minim veniam es cillum
-   *   7  am minim veniam es cillum dolore eu
+   *   7  am minim veniam es cillum dolore eu.
    */
   public function getText($n) {
     $words = explode(' ', "Ipsum dolore sit am. Ut enim am minim veniam. Es cillum dolore eu.");
@@ -89,14 +141,14 @@ class SearchMatchTest extends KernelTestBase {
   }
 
   /**
-   * _test2_: Helper method for generating snippets of content.
+   * Helper to generate English language snippets of content.
    *
    * Generated items to test against:
    *   8  dear
    *   9  king philip
    *   10 philip came over
    *   11 came over from germany
-   *   12 over from germany swimming
+   *   12 over from germany swimming.
    */
   public function getText2($n) {
     $words = explode(' ', "Dear King Philip came over from Germany swimming.");
@@ -106,7 +158,7 @@ class SearchMatchTest extends KernelTestBase {
   /**
    * Run predefine queries looking for indexed terms.
    */
-  public function _testQueries() {
+  public function _testQueries(): void {
     // Note: OR queries that include short words in OR groups are only accepted
     // if the ORed terms are ANDed with at least one long word in the rest of
     // the query. Examples:
@@ -225,7 +277,7 @@ class SearchMatchTest extends KernelTestBase {
    *
    * Verify if a query produces the correct results.
    */
-  public function _testQueryMatching($query, $set, $results) {
+  public function _testQueryMatching($query, $set, $results): void {
     // Get result IDs.
     $found = [];
     foreach ($set as $item) {
@@ -243,7 +295,7 @@ class SearchMatchTest extends KernelTestBase {
    *
    * Verify if a query produces normalized, monotonous scores.
    */
-  public function _testQueryScores($query, $set, $results) {
+  public function _testQueryScores($query, $set, $results): void {
     // Get result scores.
     $scores = [];
     foreach ($set as $item) {

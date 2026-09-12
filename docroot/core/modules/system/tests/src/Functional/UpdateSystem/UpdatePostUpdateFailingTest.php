@@ -7,12 +7,14 @@ namespace Drupal\Tests\system\Functional\UpdateSystem;
 use Drupal\Core\Database\Database;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests hook_post_update() when there are failing update hooks.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class UpdatePostUpdateFailingTest extends BrowserTestBase {
   use UpdatePathTestTrait;
 
@@ -68,7 +70,7 @@ class UpdatePostUpdateFailingTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function doSelectionTest() {
+  protected function doSelectionTest(): void {
     // First update, should not be run since this module's update hooks fail.
     $this->assertSession()->responseContains('8001 - This update will fail.');
     $this->assertSession()->responseContains('8002 - A further update');

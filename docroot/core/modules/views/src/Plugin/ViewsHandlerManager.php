@@ -7,14 +7,20 @@ use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\Core\Plugin\PreWarmablePluginManagerTrait;
+use Drupal\Core\PreWarm\PreWarmableInterface;
+use Drupal\views\Plugin\views\HandlerBase;
+use Drupal\views\Plugin\views\join\JoinPluginInterface;
+use Drupal\views\Plugin\views\ViewsHandlerInterface;
 use Drupal\views\ViewsData;
 use Symfony\Component\DependencyInjection\Container;
-use Drupal\views\Plugin\views\HandlerBase;
 
 /**
  * Plugin type manager for all views handlers.
  */
-class ViewsHandlerManager extends DefaultPluginManager implements FallbackPluginManagerInterface {
+class ViewsHandlerManager extends DefaultPluginManager implements FallbackPluginManagerInterface, PreWarmableInterface {
+
+  use PreWarmablePluginManagerTrait;
 
   /**
    * The views data cache.
@@ -39,7 +45,7 @@ class ViewsHandlerManager extends DefaultPluginManager implements FallbackPlugin
    *   The plugin type, for example filter.
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations,
+   *   keyed by the corresponding namespace to look for plugin implementations.
    * @param \Drupal\views\ViewsData $views_data
    *   The views data cache.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
@@ -52,9 +58,9 @@ class ViewsHandlerManager extends DefaultPluginManager implements FallbackPlugin
     // Special handling until all views plugins have attribute classes.
     $attribute_name_candidate = 'Drupal\views\Attribute\Views' . Container::camelize($handler_type);
     $plugin_definition_attribute_name = class_exists($attribute_name_candidate) ? $attribute_name_candidate : Plugin::class;
-    $plugin_interface = 'Drupal\views\Plugin\views\ViewsHandlerInterface';
+    $plugin_interface = ViewsHandlerInterface::class;
     if ($handler_type == 'join') {
-      $plugin_interface = 'Drupal\views\Plugin\views\join\JoinPluginInterface';
+      $plugin_interface = JoinPluginInterface::class;
     }
     parent::__construct("Plugin/views/$handler_type", $namespaces, $module_handler, $plugin_interface, $plugin_definition_attribute_name, $plugin_definition_annotation_name);
 
@@ -75,14 +81,15 @@ class ViewsHandlerManager extends DefaultPluginManager implements FallbackPlugin
    *   An associative array representing the handler to be retrieved:
    *   - table: The name of the table containing the handler.
    *   - field: The name of the field the handler represents.
-   * @param string|null $override
-   *   (optional) Override the actual handler object with this plugin ID. Used for
-   *   aggregation when the handler is redirected to the aggregation handler.
+   * @param string|null $override_plugin_id
+   *   (optional) Override the actual handler object with this plugin ID. Used
+   *   for aggregation when the handler is redirected to the aggregation
+   *   handler.
    *
    * @return \Drupal\views\Plugin\views\ViewsHandlerInterface
    *   An instance of a handler object. May be a broken handler instance.
    */
-  public function getHandler($item, $override = NULL) {
+  public function getHandler(array $item, ?string $override_plugin_id = NULL): ViewsHandlerInterface {
     $table = $item['table'];
     $field = $item['field'];
     // Get the plugin manager for this type.
@@ -90,7 +97,17 @@ class ViewsHandlerManager extends DefaultPluginManager implements FallbackPlugin
 
     if (isset($data[$field][$this->handlerType])) {
       $definition = $data[$field][$this->handlerType];
-      foreach (['group', 'title', 'title short', 'label', 'help', 'real field', 'real table', 'entity type', 'entity field'] as $key) {
+      foreach ([
+        'group',
+        'title',
+        'title short',
+        'label',
+        'help',
+        'real field',
+        'real table',
+        'entity type',
+        'entity field',
+      ] as $key) {
         if (!isset($definition[$key])) {
           // First check the field level.
           if (!empty($data[$field][$key])) {
@@ -104,11 +121,17 @@ class ViewsHandlerManager extends DefaultPluginManager implements FallbackPlugin
         }
       }
 
-      // @todo This is crazy. Find a way to remove the override functionality.
-      $plugin_id = $override ?: $definition['id'];
+      // When aggregation is enabled, particular plugins need to be
+      // replaced in order to override the query with a query that
+      // can run the aggregate counts, sums, or averages for example.
+      // @see Drupal\views\Plugin\views\query\Sql::getAggregationInfo()
+      // for example which aggressively overrides any filter used
+      // by a number of mathematical-type queries regardless of the
+      // original filter.
+      $plugin_id = $override_plugin_id ?: $definition['id'];
       // Try to use the overridden handler.
       $handler = $this->createInstance($plugin_id, $definition);
-      if ($override && method_exists($handler, 'broken') && $handler->broken()) {
+      if ($override_plugin_id && method_exists($handler, 'broken') && $handler->broken()) {
         $handler = $this->createInstance($definition['id'], $definition);
       }
       return $handler;

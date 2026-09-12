@@ -43,7 +43,7 @@ class WebformHtmlHelper {
    * @return \Drupal\Component\Render\MarkupInterface|string
    *   Safe HTML markup or a plain text string.
    */
-  public static function toHtmlMarkup($string, array $html_tags = NULL) {
+  public static function toHtmlMarkup($string, ?array $html_tags = NULL) {
     $html_tags = $html_tags ?: WebformHtmlEditor::getAllowedTags();
     if (static::containsHtml($string)) {
       return Markup::create(Xss::filter($string, $html_tags));

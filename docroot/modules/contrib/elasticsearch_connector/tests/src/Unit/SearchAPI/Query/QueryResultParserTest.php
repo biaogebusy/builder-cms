@@ -90,7 +90,7 @@ class QueryResultParserTest extends UnitTestCase {
 
     $results = $parser->parseResult($query->reveal(), $response);
 
-    $this->assertNotNull($results);
+    $this->assertNotEmpty($results);
     $this->assertEquals($response, $results->getExtraData("elasticsearch_response"));
     $this->assertEquals(2, $results->getResultCount());
 
@@ -101,7 +101,7 @@ class QueryResultParserTest extends UnitTestCase {
     $foundFields1 = $foundItem1->getFields(FALSE);
     $this->assertCount(1, $foundFields1);
 
-    $this->assertNotNull($foundFields1[$field1Id]);
+    $this->assertNotEmpty($foundFields1[$field1Id]);
 
     $foundField1 = $foundFields1[$field1Id];
     $values1 = $foundField1->getValues();

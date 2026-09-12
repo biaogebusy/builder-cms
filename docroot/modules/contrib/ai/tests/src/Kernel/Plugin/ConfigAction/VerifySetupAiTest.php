@@ -38,11 +38,21 @@ class VerifySetupAiTest extends KernelTestBase {
   protected $action;
 
   /**
+   * The flag to install test_mysql vdb provider module conditionally.
+   *
+   * @var bool
+   */
+  protected bool $installTestMysqlProvider = FALSE;
+
+  /**
    * Setup the test.
    */
   protected function setUp(): void {
     parent::setUp();
-
+    if ($this->installTestMysqlProvider) {
+      $this->enableModules(['test_ai_vdb_provider_mysql']);
+      $this->installConfig(['test_ai_vdb_provider_mysql']);
+    }
     // Set up the action.
     $this->action = \Drupal::service('plugin.manager.config_action')->createInstance('verifySetupAi');
   }
@@ -173,23 +183,6 @@ class VerifySetupAiTest extends KernelTestBase {
   }
 
   /**
-   * Test if a vdb server is set up.
-   */
-  public function testVdbServerSetup(): void {
-    // Flush the caches to ensure the settings are reloaded.
-    \Drupal::service('cache.render')->deleteAll();
-    \Drupal::service('cache.discovery')->deleteAll();
-    \Drupal::service('cache.config')->deleteAll();
-    // This should not throw an error because the vdb server is set up.
-    $this->action->apply('ai.settings', [
-      'vdb_provider_is_setup' => [
-        'echo_db',
-      ],
-    ]);
-    $this->assertTrue(TRUE, 'The vdb server is set up and the action did not throw an error.');
-  }
-
-  /**
    * Test if a vdb server is not set up.
    */
   public function testVdbServerNotSetup(): void {
@@ -197,10 +190,30 @@ class VerifySetupAiTest extends KernelTestBase {
     $this->expectException(\InvalidArgumentException::class);
     $this->action->apply('ai.settings', [
       'vdb_provider_is_setup' => [
-        'echo_db_something_else',
+        'echo_db',
       ],
     ]);
     $this->assertTrue(TRUE, 'The action threw an error as expected when the vdb server is not set up.');
+  }
+
+  /**
+   * Test if a vdb server is set up.
+   */
+  public function testVdbServerSetup(): void {
+    // Flush the caches to ensure the settings are reloaded.
+    \Drupal::service('cache.render')->deleteAll();
+    \Drupal::service('cache.discovery')->deleteAll();
+    \Drupal::service('cache.config')->deleteAll();
+    // Now let's install another Vdb provider that is properly setup.
+    $this->installTestMysqlProvider = TRUE;
+    $this->setUp();
+    // This should not throw an error because the vdb server is set up.
+    $this->action->apply('ai.settings', [
+      'vdb_provider_is_setup' => [
+        'test_mysql',
+      ],
+    ]);
+    $this->assertTrue(TRUE, 'The vdb server is set up and the action did not throw an error.');
   }
 
 }

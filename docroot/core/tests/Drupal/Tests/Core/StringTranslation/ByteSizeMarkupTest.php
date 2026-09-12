@@ -9,17 +9,23 @@ use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\StringTranslation\ByteSizeMarkup
- * @group StringTranslation
+ * Tests Drupal\Core\StringTranslation\ByteSizeMarkup.
  */
+#[CoversClass(ByteSizeMarkup::class)]
+#[Group('StringTranslation')]
 class ByteSizeMarkupTest extends UnitTestCase {
 
   /**
-   * @covers ::create
-   * @dataProvider providerTestCommonFormatSize
+   * Tests common format size.
+   *
+   * @legacy-covers ::create
    */
+  #[DataProvider('providerTestCommonFormatSize')]
   public function testCommonFormatSize($expected, $input): void {
     $size = ByteSizeMarkup::create($input, NULL, $this->getStringTranslationStub());
     $this->assertInstanceOf(TranslatableMarkup::class, $size);
@@ -29,7 +35,7 @@ class ByteSizeMarkupTest extends UnitTestCase {
   /**
    * Provides a list of byte size to test.
    */
-  public static function providerTestCommonFormatSize() {
+  public static function providerTestCommonFormatSize(): array {
     $kb = Bytes::KILOBYTE;
     return [
       ['0 bytes', 0],
@@ -51,21 +57,23 @@ class ByteSizeMarkupTest extends UnitTestCase {
       ['1 ZB', pow($kb, 7)],
       ['1 YB', pow($kb, 8)],
       ['1024 YB', pow($kb, 9)],
-      // Rounded to 1 MB - not 1000 or 1024 kilobytes
+      // Rounded to 1 MB - not 1000 or 1024 kilobytes.
       ['1 MB', ($kb * $kb) - 1],
       ['-1 MB', -(($kb * $kb) - 1)],
-      // Decimal Megabytes
+      // Decimal Megabytes.
       ['3.46 MB', 3623651],
       ['3.77 GB', 4053371676],
-      // Decimal Petabytes
+      // Decimal Petabytes.
       ['59.72 PB', 67234178751368124],
-      // Decimal Yottabytes
+      // Decimal Yottabytes.
       ['194.67 YB', 235346823821125814962843827],
     ];
   }
 
   /**
-   * @covers ::create
+   * Tests translatable markup object.
+   *
+   * @legacy-covers ::create
    */
   public function testTranslatableMarkupObject(): void {
     $result = ByteSizeMarkup::create(1, NULL, $this->getStringTranslationStub());

@@ -108,7 +108,7 @@ class WebformUiElementDeleteForm extends WebformDeleteFormBase {
       '#type' => 'webform_message',
       '#message_type' => 'warning',
       '#message_message' => $this->t('Are you sure you want to delete the %title element?', $t_args) . '<br/>' .
-        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+      '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
     ];
   }
 
@@ -176,7 +176,7 @@ class WebformUiElementDeleteForm extends WebformDeleteFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WebformInterface $webform = NULL, $key = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WebformInterface $webform = NULL, $key = NULL) {
     $this->webform = $webform;
     $this->key = $key;
     $this->element = $webform->getElement($key);

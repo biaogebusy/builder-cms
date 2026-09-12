@@ -7,12 +7,14 @@ namespace Drupal\Tests\field_ui\Functional;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Field UI "Manage fields" screen.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
 
   /**
@@ -38,11 +40,11 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
    * @param string $type
    *   (optional) The name of a content type.
    */
-  protected function manageFieldsPage($type = '') {
+  protected function manageFieldsPage($type = ''): void {
     $type = empty($type) ? $this->contentType : $type;
     $this->drupalGet('admin/structure/types/manage/' . $type . '/fields');
     // Check all table columns.
-    $table_headers = ['Label', 'Machine name', 'Field type', 'Operations'];
+    $table_headers = ['Field', 'Field type', 'Operations'];
     foreach ($table_headers as $table_header) {
       // We check that the label appear in the table headings.
       $this->assertSession()->responseContains($table_header . '</th>');
@@ -80,7 +82,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
    * @todo Assert properties can be set in the form and read back in
    * $field_storage and $fields.
    */
-  protected function createField() {
+  protected function createField(): void {
     // Create a test field.
     $this->fieldUIAddNewField('admin/structure/types/manage/' . $this->contentType, $this->fieldNameInput, $this->fieldLabel);
   }
@@ -88,7 +90,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
   /**
    * Tests editing an existing field.
    */
-  protected function updateField() {
+  protected function updateField(): void {
     $field_id = 'node.' . $this->contentType . '.' . $this->fieldName;
     // Go to the field edit page.
     $this->drupalGet('admin/structure/types/manage/' . $this->contentType . '/fields/' . $field_id);
@@ -113,7 +115,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
   /**
    * Tests adding an existing field in another content type.
    */
-  protected function addExistingField() {
+  protected function addExistingField(): void {
     // Check "Re-use existing field" appears.
     $this->drupalGet('admin/structure/types/manage/page/fields');
     $this->assertSession()->pageTextContains('Re-use an existing field');
@@ -134,7 +136,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
    * We do not test if the number can be submitted with anything else than a
    * numeric value. That is tested already in FormTest::testNumber().
    */
-  protected function cardinalitySettings() {
+  protected function cardinalitySettings(): void {
     $field_edit_path = 'admin/structure/types/manage/article/fields/node.article.body';
 
     // Assert the cardinality other field cannot be empty when cardinality is
@@ -174,7 +176,12 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
     $this->assertSession()->pageTextContains("There is 1 entity with 2 or more values in this field");
 
     // Create a second entity with three values.
-    $edit = ['title[0][value]' => 'Cardinality 3', 'body[0][value]' => 'Body 1', 'body[1][value]' => 'Body 2', 'body[2][value]' => 'Body 3'];
+    $edit = [
+      'title[0][value]' => 'Cardinality 3',
+      'body[0][value]' => 'Body 1',
+      'body[1][value]' => 'Body 2',
+      'body[2][value]' => 'Body 3',
+    ];
     $this->drupalGet('node/add/article');
     $this->submitForm($edit, 'Save');
 
@@ -217,7 +224,8 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
 
     // Test the cardinality validation is not access sensitive.
 
-    // Remove the cardinality limit 4 so we can add a node the user doesn't have access to.
+    // Remove the cardinality limit 4 so we can add a node the user doesn't have
+    // access to.
     $edit = [
       'field_storage[subform][cardinality]' => (string) FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
     ];
@@ -264,7 +272,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
   /**
    * Tests deleting a field from the field edit form.
    */
-  protected function deleteField() {
+  protected function deleteField(): void {
     // Delete the field.
     $field_id = 'node.' . $this->contentType . '.' . $this->fieldName;
     $this->drupalGet('admin/structure/types/manage/' . $this->contentType . '/fields/' . $field_id);
@@ -275,7 +283,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
   /**
    * Tests that persistent field storage appears in the field UI.
    */
-  protected function addPersistentFieldStorage() {
+  protected function addPersistentFieldStorage(): void {
     $field_storage = FieldStorageConfig::loadByName('node', $this->fieldName);
     // Persist the field storage even if there are no fields.
     $field_storage->set('persist_with_no_fields', TRUE)->save();
@@ -291,7 +299,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
     $this->assertSession()->pageTextContains('Re-use an existing field');
 
     // Ensure that we test with a label that contains HTML.
-    $label = $this->randomString(4) . '<br/>' . $this->randomString(4);
+    $label = $this->randomMachineName(4) . '<br/>' . $this->randomMachineName(4);
     // Add a new field for the orphaned storage.
     $this->fieldUIAddExistingField("admin/structure/types/manage/page", $this->fieldName, $label);
   }
@@ -323,7 +331,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
   /**
    * Tests that the field list administration page operates correctly.
    */
-  protected function fieldListAdminPage() {
+  protected function fieldListAdminPage(): void {
     $this->drupalGet('admin/reports/fields');
     $this->assertSession()->pageTextContains($this->fieldName);
     $this->assertSession()->linkByHrefExists('admin/structure/types/manage/' . $this->contentType . '/fields');

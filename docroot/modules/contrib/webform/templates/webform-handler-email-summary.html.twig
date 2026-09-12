@@ -21,3 +21,4 @@
 <b>{{ 'Settings:'|t }}</b> {{ settings.html ? 'HTML' : 'Plain text'|t }} {{ settings.html and settings.attachments ? '/' : '' }} {{ settings.attachments ? 'Attachments'|t : '' }} {{ settings.twig ? '(Twig)'|t : '' }}<br />
 <b>{{ 'Sent when:'|t }}</b> {% if settings.states %}{{ settings.states|join('; ') }}{% else %}{{ 'Custom'|t }}{% endif %}<br />
 {% if settings.theme_name %}<b>{{ 'Theme:'|t }}</b> {{ settings.theme_name }}<br />{% endif %}
+{% if settings.langcode %}<b>{{ 'Language:'|t }}</b> {{ settings.langcode }}<br />{% endif %}

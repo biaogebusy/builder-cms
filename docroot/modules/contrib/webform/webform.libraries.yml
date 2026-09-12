@@ -1,7 +1,6 @@
 # Admin.
 
 webform.admin:
-  version: VERSION
   css:
     theme:
       css/webform.admin.css: {}
@@ -15,7 +14,6 @@ webform.admin:
     - webform/webform.admin.dropbutton
 
 webform.filter:
-  version: VERSION
   css:
     theme:
       css/webform.filter.css: {}
@@ -28,7 +26,6 @@ webform.filter:
     - core/drupal.debounce
 
 webform.admin.composite:
-  version: VERSION
   css:
     theme:
       css/webform.admin.composite.css: {}
@@ -36,7 +33,6 @@ webform.admin.composite:
 # Used preload libraries required by (modal) dialogs.
 # @see js/webform.element.codemirror.js
 webform.admin.dialog:
-  version: VERSION
   css:
     theme:
       css/webform.admin.css: {}
@@ -56,7 +52,6 @@ webform.admin.dialog:
     - webform/webform.element.select2
 
 webform.admin.dropbutton:
-  version: VERSION
   css:
     theme:
       css/webform.admin.dropbutton.css: {}
@@ -65,8 +60,13 @@ webform.admin.dropbutton:
   dependencies:
     - core/drupal.dropbutton
 
+webform.admin.machine-name:
+  js:
+    js/webform.admin.machine-name.js: {}
+  dependencies:
+    - core/drupal.machine-name
+
 webform.admin.off_canvas:
-  version: VERSION
   js:
     js/webform.admin.off-canvas.js: {}
   dependencies:
@@ -74,13 +74,11 @@ webform.admin.off_canvas:
     - core/drupal.dialog.off_canvas
 
 webform.admin.settings:
-  version: VERSION
   css:
     theme:
       css/webform.admin.settings.css: {}
 
 webform.admin.tabledrag:
-  version: VERSION
   css:
     theme:
       css/webform.admin.tabledrag.css: {}
@@ -90,34 +88,18 @@ webform.admin.tabledrag:
     - core/drupal.tabledrag
 
 webform.admin.toolbar:
-  version: VERSION
   css:
     theme:
       css/webform.admin.toolbar.css: {}
 
 webform.admin.translation:
-  version: VERSION
   css:
     theme:
       css/webform.admin.translation.css: {}
 
-# Add-ons.
-
-webform.addons:
-  version: VERSION
-  css:
-    theme:
-      css/webform.addons.css: {}
-  dependencies:
-    - webform/webform.ajax
-    - webform/webform.element.details.toggle
-    - webform/webform.element.details.save
-    - webform/webform.promotions
-
 # Ajax.
 
 webform.ajax:
-  version: VERSION
   css:
     theme:
       css/webform.ajax.css: {}
@@ -130,12 +112,12 @@ webform.ajax:
     - core/drupal.announce
     - core/jquery
     - core/once
+    - core/tabbable
     - webform/webform.scroll
 
 # Announce.
 
 webform.announce:
-  version: VERSION
   js:
     js/webform.announce.js: {}
   dependencies:
@@ -148,14 +130,12 @@ webform.announce:
 # Behaviors.
 
 webform.behaviors:
-  version: VERSION
   js:
     js/webform.behaviors.js: {}
 
 # Block.
 
 webform.block:
-  version: VERSION
   js:
     js/webform.block.js: {}
   dependencies:
@@ -163,7 +143,6 @@ webform.block:
     - webform/webform.element.select2
 
 webform.block.submission_limit:
-  version: VERSION
   css:
     component:
       css/webform.block.submission_limit.css: {}
@@ -171,13 +150,11 @@ webform.block.submission_limit:
 # Confirmation
 
 webform.confirmation:
-  version: VERSION
   css:
     theme:
       css/webform.confirmation.css: {}
 
 webform.confirmation.modal:
-  version: VERSION
   js:
     js/webform.confirmation.modal.js: {}
   dependencies:
@@ -191,7 +168,6 @@ webform.confirmation.modal:
 # Contextual
 
 webform.contextual:
-  version: VERSION
   js:
     js/webform.contextual.js: {}
   dependencies:
@@ -201,7 +177,6 @@ webform.contextual:
 # Dialog.
 
 webform.dialog:
-  version: VERSION
   js:
     js/webform.dialog.js: {}
   dependencies:
@@ -209,16 +184,15 @@ webform.dialog:
     - webform/drupal.dialog
 
 drupal.dialog:
-  version: VERSION
   js:
     js/webform.drupal.dialog.js: {}
   dependencies:
     - core/drupal.dialog
+    - core/tabbable
 
 # Help.
 
 webform.help:
-  version: VERSION
   css:
     theme:
       css/webform.help.css: {}
@@ -226,7 +200,6 @@ webform.help:
     js/webform.help.js: {}
 
 webform.help.support:
-  version: VERSION
   css:
     theme:
       css/webform.help.support.css: {}
@@ -234,7 +207,6 @@ webform.help.support:
 # More.
 
 webform.element.more:
-  version: VERSION
   css:
     component:
       css/webform.element.more.css: {}
@@ -248,7 +220,6 @@ webform.element.more:
 # Navigation.
 
 webform.navigation:
-  version: VERSION
   css:
     component:
       css/webform.navigation.css: {}
@@ -256,19 +227,16 @@ webform.navigation:
 # Progress.
 
 webform.progress:
-  version: VERSION
   css:
     component:
       css/webform.progress.css: {}
 
 webform.progress.bar:
-  version: VERSION
   css:
     component:
       css/webform.progress.bar.css: {}
 
 webform.progress.tracker:
-  version: VERSION
   css:
     component:
       css/webform.progress.tracker.css: {}
@@ -278,7 +246,6 @@ webform.progress.tracker:
 # Off canvas.
 
 webform.off_canvas:
-  version: VERSION
   css:
     component:
       css/webform.off-canvas.css: {}
@@ -286,7 +253,6 @@ webform.off_canvas:
 # Promotions.
 
 webform.promotions:
-  version: VERSION
   css:
     component:
       css/webform.promotions.css: {}
@@ -294,7 +260,6 @@ webform.promotions:
 # Scroll.
 
 webform.scroll:
-  version: VERSION
   js:
     js/webform.scroll.js: {}
   dependencies:
@@ -304,7 +269,6 @@ webform.scroll:
 # States.
 
 webform.states:
-  version: VERSION
   js:
     js/webform.states.js: {}
   dependencies:
@@ -314,7 +278,6 @@ webform.states:
 # Token.
 
 webform.token:
-  version: VERSION
   css:
     component:
       css/webform.token.css: {}
@@ -324,7 +287,6 @@ webform.token:
 # Tooltip.
 
 webform.tooltip:
-  version: VERSION
   js:
     js/webform.tooltip.js: {}
   dependencies:
@@ -336,37 +298,31 @@ webform.tooltip:
 # Theme
 
 webform.theme.claro:
-  version: VERSION
   css:
     theme:
       css/webform.theme.claro.css: {}
 
 webform.theme.classy:
-  version: VERSION
   css:
     theme:
       css/webform.theme.classy.css: {}
 
 webform.theme.bartik:
-  version: VERSION
   css:
     theme:
       css/webform.theme.bartik.css: {}
 
 webform.theme.gin:
-  version: VERSION
   css:
     theme:
       css/webform.theme.gin.css: {}
 
 webform.theme.olivero:
-  version: VERSION
   css:
     theme:
       css/webform.theme.olivero.css: {}
 
 webform.theme.seven:
-  version: VERSION
   css:
     theme:
       css/webform.theme.seven.css: {}
@@ -374,7 +330,6 @@ webform.theme.seven:
 # Form.
 
 webform.form:
-  version: VERSION
   css:
     component:
       css/webform.form.css: {}
@@ -388,30 +343,26 @@ webform.form:
     - webform/webform.states
 
 webform.form.auto_focus:
-  version: VERSION
   header: true
   js:
-    js/webform.form.auto_focus.js: { preprocess: false }
+    js/webform.form.auto_focus.js: { preprocess: false, minified: true }
   dependencies:
     - core/drupal
     - core/jquery
 
 webform.form.disable_back:
-  version: VERSION
   header: true
   js:
-    js/webform.form.disable_back.js: { preprocess: false }
+    js/webform.form.disable_back.js: { preprocess: false, minified: true }
 
 webform.form.submit_back:
-  version: VERSION
   header: true
   js:
-    js/webform.form.submit_back.js: { preprocess: false }
+    js/webform.form.submit_back.js: { preprocess: false, minified: true }
   dependencies:
     - core/jquery
 
 webform.form.submit_once:
-  version: VERSION
   js:
     js/webform.form.submit_once.js: {}
   dependencies:
@@ -422,7 +373,6 @@ webform.form.submit_once:
     - system/base
 
 webform.form.tabs:
-  version: VERSION
   css:
     component:
       css/webform.form.tabs.css: {}
@@ -435,7 +385,6 @@ webform.form.tabs:
     - webform/libraries.tabby
 
 webform.form.unsaved:
-  version: VERSION
   js:
     js/webform.form.unsaved.js: {}
   dependencies:
@@ -444,7 +393,6 @@ webform.form.unsaved:
     - core/drupal
 
 webform.wizard.pages:
-  version: VERSION
   css:
     component:
       css/webform.wizard.pages.css: {}
@@ -456,7 +404,6 @@ webform.wizard.pages:
     - core/drupal
 
 webform.wizard.track:
-  version: VERSION
   js:
     js/webform.wizard.track.js: {}
   dependencies:
@@ -467,7 +414,6 @@ webform.wizard.track:
 # Element.
 
 webform.element.ajax:
-  version: VERSION
   js:
     js/webform.element.ajax.js: {}
   dependencies:
@@ -476,7 +422,6 @@ webform.element.ajax:
     - core/once
 
 webform.element.checkboxes:
-  version: VERSION
   js:
     js/webform.element.checkboxes.js: {}
   dependencies:
@@ -485,13 +430,11 @@ webform.element.checkboxes:
     - core/once
 
 webform.element.checkbox_value:
-  version: VERSION
   css:
     component:
       css/webform.element.checkbox_value.css: {}
 
 webform.element.choices:
-  version: VERSION
   css:
     component:
       css/webform.element.choices.css: {}
@@ -504,7 +447,6 @@ webform.element.choices:
     - webform/libraries.choices
 
 webform.element.chosen:
-  version: VERSION
   js:
     js/webform.element.chosen.js: {}
   dependencies:
@@ -513,99 +455,65 @@ webform.element.chosen:
     - core/once
     - webform/libraries.jquery.chosen
 
-webform.element.codemirror.text:
-  version: VERSION
+webform.element.codemirror:
   css:
     component:
       css/webform.element.codemirror.css: {}
   js:
     js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - core/tabbable
+
+webform.element.codemirror.text:
+  dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.text
 
 webform.element.codemirror.yaml:
-  version: VERSION
-  css:
-    component:
-      css/webform.element.codemirror.css: {}
-  js:
-    js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.yaml
 
 webform.element.codemirror.html:
-  version: VERSION
-  css:
-    component:
-      css/webform.element.codemirror.css: {}
-  js:
-    js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.html
 
 webform.element.codemirror.htmlmixed:
-  version: VERSION
-  css:
-    component:
-      css/webform.element.codemirror.css: {}
-  js:
-    js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.htmlmixed
 
 webform.element.codemirror.css:
-  version: VERSION
-  css:
-    component:
-      css/webform.element.codemirror.css: {}
-  js:
-    js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.css
 
 webform.element.codemirror.javascript:
-  version: VERSION
-  css:
-    component:
-      css/webform.element.codemirror.css: {}
-  js:
-    js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.javascript
 
 webform.element.codemirror.php:
-  version: VERSION
-  css:
-    component:
-      css/webform.element.codemirror.css: {}
-  js:
-    js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.php
 
 webform.element.codemirror.twig:
-  version: VERSION
-  css:
-    component:
-      css/webform.element.codemirror.css: {}
-  js:
-    js/webform.element.codemirror.js: { weight: -1 }
   dependencies:
+    - webform/webform.element.codemirror
     - webform/libraries.codemirror.twig
 
 webform.element.color:
-  version: VERSION
   css:
     component:
       css/webform.element.color.css: {}
   js:
     js/webform.element.color.js: {}
   dependencies:
-    - core/modernizr
     - webform/webform.element.inputmask
 
 webform.element.composite:
-  version: VERSION
   css:
     component:
       css/webform.element.composite.css: {}
@@ -617,7 +525,6 @@ webform.element.composite:
     - core/once
 
 webform.element.computed:
-  version: VERSION
   css:
     component:
       css/webform.element.computed.css: {}
@@ -629,7 +536,6 @@ webform.element.computed:
     - webform/webform.announce
 
 webform.element.counter:
-  version: VERSION
   css:
     component:
       css/webform.element.counter.css: {}
@@ -642,19 +548,16 @@ webform.element.counter:
     - webform/libraries.jquery.textcounter
 
 webform.element.date:
-  version: VERSION
   css:
     component:
       css/webform.element.date.css: {}
 
 webform.element.datelist:
-  version: VERSION
   css:
     component:
       css/webform.element.datelist.css: {}
 
 webform.element.details:
-  version: VERSION
   js:
     js/webform.element.details.js: {}
   dependencies:
@@ -663,7 +566,6 @@ webform.element.details:
     - core/once
 
 webform.element.details.save:
-  version: VERSION
   js:
     js/webform.element.details.save.js: {}
   dependencies:
@@ -672,7 +574,6 @@ webform.element.details.save:
     - core/once
 
 webform.element.details.toggle:
-  version: VERSION
   css:
     component:
       css/webform.element.details.toggle.css: {}
@@ -685,7 +586,6 @@ webform.element.details.toggle:
     - core/once
 
 webform.element.excluded_elements:
-  version: VERSION
   css:
     component:
       css/webform.element.excluded_elements.css: {}
@@ -697,19 +597,16 @@ webform.element.excluded_elements:
     - core/once
 
 webform.element.file.button:
-  version: VERSION
   css:
     component:
       css/webform.element.file.button.css: {}
 
 webform.element.flexbox:
-  version: VERSION
   css:
     layout:
       css/webform.element.flexbox.css: {}
 
 webform.element.help:
-  version: VERSION
   css:
     component:
       css/webform.element.help.css: {}
@@ -722,25 +619,21 @@ webform.element.help:
     - webform/libraries.tippyjs
 
 webform.element.html_editor:
-  version: VERSION
   css:
     component:
       css/webform.element.html_editor.css: {}
 
 webform.element.horizontal_rule:
-  version: VERSION
   css:
     component:
       css/webform.element.horizontal_rule.css: {}
 
 webform.element.image_file:
-  version: VERSION
   css:
     component:
       css/webform.element.image_file.css: {}
 
 webform.element.image_file.modal:
-  version: VERSION
   js:
     js/webform.element.image_file.modal.js: {}
   dependencies:
@@ -751,7 +644,6 @@ webform.element.image_file.modal:
     - core/once
 
 webform.element.inputmask:
-  version: VERSION
   js:
     js/webform.element.inputmask.js: {}
   dependencies:
@@ -761,7 +653,6 @@ webform.element.inputmask:
     - webform/libraries.jquery.inputmask
 
 webform.element.inputhide:
-  version: VERSION
   js:
     js/webform.element.inputhide.js: {}
   dependencies:
@@ -770,7 +661,6 @@ webform.element.inputhide:
     - core/once
 
 webform.element.likert:
-  version: VERSION
   js:
     js/webform.element.likert.js: {}
   css:
@@ -778,7 +668,6 @@ webform.element.likert:
       css/webform.element.likert.css: {}
 
 webform.element.managed_file:
-  version: VERSION
   css:
     component:
       css/webform.element.managed_file.css: {}
@@ -791,13 +680,11 @@ webform.element.managed_file:
     - file/drupal.file
 
 webform.element.mapping:
-  version: VERSION
   css:
     component:
       css/webform.element.mapping.css: {}
 
 webform.element.message:
-  version: VERSION
   css:
     component:
       css/webform.element.message.css: {}
@@ -809,13 +696,11 @@ webform.element.message:
     - core/once
 
 webform.element.message.info:
-  version: VERSION
   css:
     component:
       css/webform.element.message.info.css: {}
 
 webform.element.multiple:
-  version: VERSION
   css:
     component:
       css/webform.element.multiple.css: {}
@@ -823,7 +708,6 @@ webform.element.multiple:
     js/webform.element.multiple.js: {}
 
 webform.element.options:
-  version: VERSION
   css:
     component:
       css/webform.element.options.css: {}
@@ -831,7 +715,6 @@ webform.element.options:
     js/webform.element.options.js: {}
 
 webform.element.options.admin:
-  version: VERSION
   css:
     component:
       css/webform.form.css: {}
@@ -843,7 +726,6 @@ webform.element.options.admin:
     - core/once
 
 webform.element.other:
-  version: VERSION
   css:
     component:
       css/webform.element.other.css: {}
@@ -855,17 +737,13 @@ webform.element.other:
     - core/once
 
 webform.element.range:
-  version: VERSION
   css:
     component:
       css/webform.element.range.css: {}
   js:
     js/webform.element.range.js: {}
-  dependencies:
-    - core/modernizr
 
 webform.element.rating:
-  version: VERSION
   css:
     component:
       css/webform.element.rating.css: {}
@@ -875,7 +753,6 @@ webform.element.rating:
     - webform/libraries.jquery.rateit
 
 webform.element.roles:
-  version: VERSION
   js:
     js/webform.element.roles.js: {}
   dependencies:
@@ -884,13 +761,11 @@ webform.element.roles:
     - core/once
 
 webform.element.scale:
-  version: VERSION
   css:
     component:
       css/webform.element.scale.css: {}
 
 webform.element.select:
-  version: VERSION
   js:
     js/webform.element.select.js: {}
   dependencies:
@@ -899,7 +774,6 @@ webform.element.select:
     - core/once
 
 webform.element.select2:
-  version: VERSION
   css:
     component:
       css/webform.element.select2.css: {}
@@ -912,7 +786,6 @@ webform.element.select2:
     - webform/libraries.jquery.select2
 
 webform.element.signature:
-  version: VERSION
   css:
     component:
       css/webform.element.signature.css: {}
@@ -924,7 +797,6 @@ webform.element.signature:
     - webform/libraries.signature_pad
 
 webform.element.states:
-  version: VERSION
   css:
     component:
       css/webform.element.states.css: {}
@@ -937,7 +809,6 @@ webform.element.states:
     - core/once
 
 webform.element.telephone:
-  version: VERSION
   js:
     js/webform.element.telephone.js: {}
   dependencies:
@@ -947,13 +818,11 @@ webform.element.telephone:
     - webform/libraries.jquery.intl-tel-input
 
 webform.element.term_checkboxes:
-  version: VERSION
   css:
     component:
       css/webform.element.term_checkboxes.css: {}
 
 webform.element.terms_of_service:
-  version: VERSION
   css:
     component:
       css/webform.element.terms_of_service.css: {}
@@ -966,7 +835,6 @@ webform.element.terms_of_service:
     - core/once
 
 webform.element.text_format:
-  version: VERSION
   css:
     component:
       css/webform.element.text_format.css: {}
@@ -974,13 +842,11 @@ webform.element.text_format:
     js/webform.element.text_format.js: {}
 
 webform.element.table:
-  version: VERSION
   css:
     component:
       css/webform.element.table.css: {}
 
 webform.element.tableselect:
-  version: VERSION
   js:
     js/webform.element.tableselect.js: {}
   css:
@@ -988,22 +854,18 @@ webform.element.tableselect:
       css/webform.element.tableselect.css: {}
 
 webform.element.tableselect_sort:
-  version: VERSION
   css:
     component:
       css/webform.element.tableselect_sort.css: {}
 
 webform.element.time:
-  version: VERSION
   js:
     js/webform.element.time.js: {}
   dependencies:
     - core/drupal
-    - core/modernizr
     - webform/libraries.jquery.timepicker
 
 webform.element.video_file:
-  version: VERSION
   css:
     component:
       css/webform.element.video_file.css: {}
@@ -1011,13 +873,11 @@ webform.element.video_file:
 # Composite.
 
 webform.composite:
-  version: VERSION
   css:
     component:
       css/webform.composite.css: {}
 
 webform.composite.telephone:
-  version: VERSION
   css:
     component:
       css/webform.composite.telephone.css: {}
@@ -1027,7 +887,6 @@ webform.composite.telephone:
 # Contrib Module.
 
 imce.input:
-  version: VERSION
   js:
     js/webform.imce.js: {}
   dependencies:
@@ -1038,21 +897,20 @@ imce.input:
 
 libraries.choices:
   remote: https://github.com/Choices-js/Choices
-  version: '9.0.1'
+  version: '11.0.2'
   license:
     name: MIT
     url: https://github.com/Choices-js/Choices/blob/master/LICENSE
     gpl-compatible: true
   directory: choices
   cdn:
-    /libraries/choices/: https://cdn.jsdelivr.net/gh/Choices-js/Choices@v9.0.1/
+    /libraries/choices/: https://cdn.jsdelivr.net/gh/Choices-js/Choices@v11.0.2/
   css:
     component:
       css/webform.choices.base.css: {  }
       /libraries/choices/public/assets/styles/choices.min.css: { minified: true }
   js:
     /libraries/choices/public/assets/scripts/choices.min.js: { minified: true }
-    'https://polyfill-fastly.io/v3/polyfill.min.js?features=es5%2Ces6%2CArray.prototype.includes%2Cfetch%2CCustomEvent%2CElement.prototype.closest%2CElement.prototype.classList': { weight: -1, browsers: { IE: 'lte IE 11'} }
 
 libraries.codemirror.text:
   remote: https://github.com/codemirror/codemirror
@@ -1151,14 +1009,14 @@ libraries.codemirror.twig:
 
 libraries.jquery.inputmask:
   remote: https://github.com/RobinHerbots/jquery.inputmask
-  version: '5.0.8'
+  version: '5.0.9'
   license:
     name: MIT
     url: http://opensource.org/licenses/mit-license.php
     gpl-compatible: true
   directory: jquery.inputmask
   cdn:
-    /libraries/jquery.inputmask/: https://cdn.jsdelivr.net/gh/RobinHerbots/Inputmask@5.0.8/
+    /libraries/jquery.inputmask/: https://cdn.jsdelivr.net/gh/RobinHerbots/Inputmask@5.0.9/
   js:
     /libraries/jquery.inputmask/dist/jquery.inputmask.min.js: { minified: true }
   dependencies:

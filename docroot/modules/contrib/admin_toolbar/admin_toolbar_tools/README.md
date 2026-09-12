@@ -7,29 +7,23 @@ each content type by default or menu links to Manage fields on each entity
 types. That's the purpose of Admin Toolbar Extra Tools to add them.
 
 For a full description of the module, visit the
-[project page](https://www.drupal.org/project/admin_toolbar).
+[project page][1].
 
 Submit bug reports and feature suggestions, or track changes in the
-[issue queue](https://www.drupal.org/project/issues/search/admin_toolbar).
+[issue queue][2].
 
 ## Table of contents
 
-- Requirements
-- Installation
-- Configuration
-- Maintainers
+[[_TOC_]]
 
 ## Requirements
 
-This module requires the following modules:
-
-- [Admin Toolbar](https://www.drupal.org/project/admin_toolbar)
+No requirement: This module requires no module other than Drupal core.
 
 ## Installation
 
-Install as you would normally install a contributed Drupal module. For further
-information, see
-[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
+Install as you would normally install a contributed Drupal module.\
+For further information, see [Installing Drupal Modules][3].
 
 ## Configuration
 
@@ -54,3 +48,7 @@ Supporting organizations:
 - [Drupiter](https://www.drupal.org/drupiter) Sponsored the module development
 - [Dropteam](https://www.drupal.org/dropteam) Sponsored the module development
 - [Alliance of Digital Builders (AODB)](https://www.drupal.org/alliance-of-digital-builders-aodb) Sponsored the module development
+
+[1]: https://www.drupal.org/project/admin_toolbar
+[2]: https://www.drupal.org/project/issues/search/admin_toolbar
+[3]: https://www.drupal.org/docs/extending-drupal/installing-modules

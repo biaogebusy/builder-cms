@@ -7,18 +7,23 @@ namespace Drupal\Tests\field\Kernel\KernelString;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestLabel;
 use Drupal\entity_test\Entity\EntityTestRev;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
+use Symfony\Component\DomCrawler\Crawler;
 
 /**
  * Tests the creation of text fields.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class StringFormatterTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -28,10 +33,8 @@ class StringFormatterTest extends KernelTestBase {
    */
   protected static $modules = [
     'field',
-    'text',
     'entity_test',
     'system',
-    'filter',
     'user',
   ];
 
@@ -172,6 +175,7 @@ class StringFormatterTest extends KernelTestBase {
     /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage('entity_test_rev');
     $entity_new_revision = $storage->loadRevision($old_revision_id);
+    $this->assertInstanceOf(EntityTestRev::class, $entity_new_revision);
 
     $this->renderEntityFields($entity, $this->display);
     $this->assertLink($value2, 0);
@@ -198,7 +202,9 @@ class StringFormatterTest extends KernelTestBase {
   /**
    * Test "link_to_entity" feature on fields which are added to config entity.
    */
-  public function testLinkToContentForEntitiesWithNoCanonicalPath(): void {
+  #[TestWith(['canonical'])]
+  #[TestWith(['edit-form'])]
+  public function testLinkToContentForEntitiesWithMissingLinkTemplate(string $link_rel): void {
     $this->enableModules(['entity_test']);
     $this->installEntitySchema('entity_test_label');
     $field_name = 'test_field_name';
@@ -224,6 +230,7 @@ class StringFormatterTest extends KernelTestBase {
         'type' => 'string',
         'settings' => [
           'link_to_entity' => TRUE,
+          'link_rel' => $link_rel,
         ],
         'region' => 'content',
       ]);
@@ -231,11 +238,65 @@ class StringFormatterTest extends KernelTestBase {
 
     $value = $this->randomMachineName();
     $entity = EntityTestLabel::create(['name' => 'test']);
+    // To prevent this test from falsely passing, ensure that there is, in fact,
+    // no link template.
+    $this->assertFalse($entity->getEntityType()->hasLinkTemplate($link_rel));
     $entity->{$field_name}->value = $value;
     $entity->save();
 
     $this->renderEntityFields($entity, $display);
     $this->assertRaw($value);
+    // No links should appear in the main content, since this entity type has no
+    // link templates.
+    $crawler = new Crawler($this->getRawContent());
+    $this->assertCount(0, $crawler->filter('main a'));
+  }
+
+  /**
+   * Test linking to an entity's edit form.
+   */
+  public function testLinkToEntityEditForm(): void {
+    $this->installEntitySchema('entity_test');
+    $field_name = 'test_field_name';
+    $entity_type = $bundle = 'entity_test';
+
+    $field_storage = FieldStorageConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'type' => 'string',
+    ]);
+    $field_storage->save();
+
+    $instance = FieldConfig::create([
+      'field_storage' => $field_storage,
+      'bundle' => $entity_type,
+      'label' => $this->randomMachineName(),
+    ]);
+    $instance->save();
+
+    $display = \Drupal::service('entity_display.repository')
+      ->getViewDisplay($entity_type, $bundle)
+      ->setComponent($field_name, [
+        'type' => 'string',
+        'settings' => [
+          'link_to_entity' => TRUE,
+          'link_rel' => 'edit-form',
+        ],
+        'region' => 'content',
+      ]);
+    $display->save();
+
+    $value = $this->randomMachineName();
+    $entity = EntityTest::create([
+      'name' => 'test',
+      $field_name => $value,
+    ]);
+    $entity->save();
+
+    $this->assertStringContainsString(
+      (string) $entity->toLink($value, 'edit-form')->toString(),
+      $this->renderEntityFields($entity, $display),
+    );
   }
 
 }

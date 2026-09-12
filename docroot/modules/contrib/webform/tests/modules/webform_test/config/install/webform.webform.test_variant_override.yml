@@ -221,6 +221,21 @@ handlers:
       format: yaml
       submission: false
 variants:
+  properties:
+    id: override
+    label: Properties
+    notes: 'Change title'
+    variant_id: properties
+    element_key: variant
+    status: true
+    weight: 0
+    settings:
+      properties:
+        title: 'Overridden title'
+      settings: {  }
+      elements: ''
+      handlers: {  }
+      debug: true
   settings:
     id: override
     label: Settings

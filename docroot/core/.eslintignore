@@ -2,7 +2,7 @@ assets/vendor/**/*
 node_modules/**/*
 **/js_test_files/**/*
 **/build/**/*
-modules/locale/tests/locale_test.js
+modules/locale/tests/js/locale_test.js
 misc/jquery.form.js
 
 # Ignore deliberately malformed YAML files.
@@ -18,6 +18,7 @@ modules/system/tests/themes/sdc_theme_test/components/bar/bar.component.yml
 scripts/**/*
 modules/ckeditor5/webpack.config.js
 misc/jquery.form.js
+themes/default_admin/migration/js/*.js
 
 # Temporary until they are moved into assets/vendor
 modules/navigation/assets/vendor/**/*

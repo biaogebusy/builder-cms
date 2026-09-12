@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\workspaces\Functional;
 
 use Drupal\Tests\BrowserTestBase;
-use Drupal\workspaces\Entity\Workspace;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity deletions with workspaces.
- *
- * @group workspaces
  */
+#[Group('workspaces')]
+#[RunTestsInSeparateProcesses]
 class WorkspaceEntityDeleteTest extends BrowserTestBase {
 
   use WorkspaceTestUtilities;
@@ -19,7 +20,7 @@ class WorkspaceEntityDeleteTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'node', 'user', 'workspaces'];
+  protected static $modules = ['block', 'node', 'user', 'workspaces', 'workspaces_ui'];
 
   /**
    * {@inheritdoc}
@@ -56,7 +57,7 @@ class WorkspaceEntityDeleteTest extends BrowserTestBase {
     $this->drupalLogin($editor);
 
     // Create a Dev workspace as a child of Stage.
-    $stage = Workspace::load('stage');
+    $stage = $this->createWorkspaceThroughUi('Stage', 'stage');
     $dev = $this->createWorkspaceThroughUi('Dev', 'dev', 'stage');
 
     // Create a published and an unpublished node in Live.
@@ -141,8 +142,7 @@ class WorkspaceEntityDeleteTest extends BrowserTestBase {
     // Create a published node in Live.
     $published_live = $this->createNodeThroughUi('Test 1 published - live', 'article');
 
-    $stage = Workspace::load('stage');
-    $this->switchToWorkspace($stage);
+    $this->createAndActivateWorkspaceThroughUi('Stage', 'stage');
 
     // A user with the 'bypass node access' permission will be able to see the
     // 'Delete' operation button, but it shouldn't be able to perform the

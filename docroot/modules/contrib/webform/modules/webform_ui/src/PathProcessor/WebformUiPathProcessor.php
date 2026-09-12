@@ -14,7 +14,7 @@ class WebformUiPathProcessor implements OutboundPathProcessorInterface {
   /**
    * {@inheritdoc}
    */
-  public function processOutbound($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function processOutbound($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
 
     $is_webform_path = (!empty($path) && str_contains($path, '/webform/'));
     $has_query_string = (!empty($request) && !empty($request->getQueryString()));

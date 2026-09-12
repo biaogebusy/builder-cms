@@ -94,7 +94,7 @@ class EmbedDialogTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $page->fillField('Video Embed WYSIWYG', TRUE);
     $page->pressButton('Save configuration');
-    $this->assertSession()->pageTextContains("The text format {$this->formatName} has been updated.");
+    $this->assertTrue($this->assertSession()->waitForText("The text format {$this->formatName} has been updated."));
 
     // Visit the modal again.
     $this->drupalGet('/video-embed-wysiwyg/dialog/' . $this->formatName);
@@ -136,12 +136,12 @@ class EmbedDialogTest extends WebDriverTestBase {
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->fillField('Title', 'Video Embed Field');
     $this->getSession()->getPage()->pressButton('Save');
-    $this->assertSession()->pageTextContains('Video Embed Field');
+    $this->assertTrue($this->assertSession()->waitForText('Video Embed Field'));
     $this->drupalGet('/node/1/edit');
     // View the source of the ckeditor and find the output.
     $this->find('.ck-source-editing-button')->click();
     $base_path = \Drupal::request()->getBasePath();
-    $expected = '<p>{"preview_thumbnail":"' . rtrim($base_path, '/') . '/' . $this->publicFilesDirectory . '/styles/video_embed_wysiwyg_preview/public/video_thumbnails/iaf3Sl2r3jE.jpg","video_url":"https://www.youtube.com/watch?v=iaf3Sl2r3jE&amp;t=1553s","settings":{"responsive":1,"width":"854","height":"480","autoplay":1,"title_format":"@provider | @title","title_fallback":1},"settings_summary":["Embedded Video (Responsive, autoplaying)."]}</p>';
+    $expected = '<p>{"preview_thumbnail":"' . rtrim($base_path, '/') . '/' . $this->publicFilesDirectory . '/styles/video_embed_wysiwyg_preview/public/video_thumbnails/iaf3Sl2r3jE.jpg","video_url":"https://www.youtube.com/watch?v=iaf3Sl2r3jE&amp;t=1553s","settings":{"responsive":1,"width":"854","height":"480","autoplay":1,"title_format":"@provider | @title","title_fallback":1,"loading":"lazy"},"settings_summary":["Embedded Video (Responsive, autoplaying)."]}</p>';
     $this->assertEquals($expected, $this->find('textarea[name="body[0][value]"]')->getValue());
   }
 
@@ -150,7 +150,7 @@ class EmbedDialogTest extends WebDriverTestBase {
    */
   public function testNestedMarkup() {
     $nested_content = '<div class="nested-content">
-<p>{"preview_thumbnail":"/thumb.jpg","video_url":"https://www.youtube.com/watch?v=iaf3Sl2r3jE","settings":{"responsive":1,"width":"854","height":"480","autoplay":1,"title_format":"@provider | @title","title_fallback":1},"settings_summary":["Embedded Video (Responsive, autoplaying)."]}</p>
+<p>{"preview_thumbnail":"/thumb.jpg","video_url":"https://www.youtube.com/watch?v=iaf3Sl2r3jE","settings":{"responsive":1,"width":"854","height":"480","autoplay":1,"title_format":"@provider | @title","title_fallback":1,"loading":"lazy"},"settings_summary":["Embedded Video (Responsive, autoplaying)."]}</p>
 </div>';
     $node = $this->createNode([
       'type' => 'page',

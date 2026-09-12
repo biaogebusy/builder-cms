@@ -3,6 +3,7 @@
 namespace Drupal\views;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\views\Plugin\views\HandlerBase;
 use Drupal\views\Plugin\views\ViewsHandlerInterface;
 
@@ -21,12 +22,14 @@ use Drupal\views\Plugin\views\ViewsHandlerInterface;
  */
 class ManyToOneHelper {
 
+  use StringTranslationTrait;
+
   /**
    * Should the field use formula or alias.
    *
-   * @see \Drupal\views\Plugin\views\argument\StringArgument::query()
-   *
    * @var bool
+   *
+   * @see \Drupal\views\Plugin\views\argument\StringArgument::query()
    */
   public bool $formula = FALSE;
 
@@ -46,8 +49,8 @@ class ManyToOneHelper {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     $form['reduce_duplicates'] = [
       '#type' => 'checkbox',
-      '#title' => t('Reduce duplicates'),
-      '#description' => t("This filter can cause items that have more than one of the selected options to appear as duplicate results. If this filter causes duplicate results to occur, this checkbox can reduce those duplicates; however, the more terms it has to search for, the less performant the query will be, so use this with caution. Shouldn't be set on single-value fields, as it may cause values to disappear from display, if used on an incompatible field."),
+      '#title' => $this->t('Reduce duplicates'),
+      '#description' => $this->t("This filter can cause items that have more than one of the selected options to appear as duplicate results. If this filter causes duplicate results to occur, this checkbox can reduce those duplicates; however, the more terms it has to search for, the less performant the query will be, so use this with caution. Shouldn't be set on single-value fields, as it may cause values to disappear from display, if used on an incompatible field."),
       '#default_value' => !empty($this->handler->options['reduce_duplicates']),
       '#weight' => 4,
     ];
@@ -56,8 +59,8 @@ class ManyToOneHelper {
   /**
    * Get the field via formula or build it using alias and field name.
    *
-   * Sometimes the handler might want us to use some kind of formula, so give
-   * it that option. If it wants us to do this, it must set $helper->formula = TRUE
+   * Sometimes the handler might want us to use some kind of formula, so give it
+   * that option. If it wants us to do this, it must set $helper->formula = TRUE
    * and implement handler->getFormula().
    */
   public function getField() {
@@ -72,10 +75,10 @@ class ManyToOneHelper {
   /**
    * Add a table to the query.
    *
-   * This is an advanced concept; not only does it add a new instance of the table,
-   * but it follows the relationship path all the way down to the relationship
-   * link point and adds *that* as a new relationship and then adds the table to
-   * the relationship, if necessary.
+   * This is an advanced concept; not only does it add a new instance of the
+   * table, but it follows the relationship path all the way down to the
+   * relationship link point and adds *that* as a new relationship and then adds
+   * the table to the relationship, if necessary.
    */
   public function addTable($join = NULL, $alias = NULL) {
     // This is used for lookups in the many_to_one table.
@@ -85,12 +88,12 @@ class ManyToOneHelper {
       $join = $this->getJoin();
     }
 
-    // See if there's a chain between us and the base relationship. If so, we need
-    // to create a new relationship to use.
+    // See if there's a chain between us and the base relationship. If so, we
+    // need to create a new relationship to use.
     $relationship = $this->handler->relationship;
 
-    // Determine the primary table to seek
-    if (empty($this->handler->query->relationships[$relationship])) {
+    // Determine the primary table to seek.
+    if (!isset($relationship, $this->handler->query->relationships[$relationship]['base'])) {
       $base_table = $this->handler->view->storage->get('base_table');
     }
     else {
@@ -137,7 +140,7 @@ class ManyToOneHelper {
     $field = $this->handler->relationship . '_' . $this->handler->table . '.' . $this->handler->field;
     $join = $this->getJoin();
 
-    // Shortcuts
+    // Shortcuts.
     $options = $this->handler->options;
     $view = $this->handler->view;
     $query = $this->handler->query;

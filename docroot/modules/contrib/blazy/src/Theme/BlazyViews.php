@@ -2,11 +2,9 @@
 
 namespace Drupal\blazy\Theme;
 
-use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\Utility\Arrays;
-use Drupal\blazy\Views\BlazyStylePluginInterface;
-use Drupal\blazy\internals\Internals;
+use Drupal\blazy\Hook\ViewsHooks;
+use Drupal\blazy\Internals\Internals;
 
 /**
  * Provides optional Views integration.
@@ -16,70 +14,6 @@ use Drupal\blazy\internals\Internals;
  *   blazy-related code in Blazy module.
  */
 class BlazyViews {
-
-  /**
-   * Returns one of the Blazy Views fields, if available.
-   */
-  public static function viewsField($view) {
-    foreach (['file', 'media'] as $entity) {
-      if (isset($view->field['blazy_' . $entity])) {
-        return $view->field['blazy_' . $entity];
-      }
-    }
-    return NULL;
-  }
-
-  /**
-   * Checks if Blazy is applicable in a view.
-   */
-  public static function isApplicable(array &$variables): array {
-    $view      = $variables['view'];
-    $blazy     = self::viewsField($view);
-    $css_class = $variables['css_class'] ?? NULL;
-
-    return [
-      'css' => $css_class && strpos($css_class, 'blazy--') !== FALSE,
-      'field' => $view->ajaxEnabled() || !empty($blazy),
-    ];
-  }
-
-  /**
-   * Implements hook_preprocess_views_view().
-   */
-  public static function preprocessViewsView(array &$variables): void {
-    $check = self::isApplicable($variables);
-    $valid = FALSE;
-    if ($check['css']) {
-      $valid = self::withViewsView($variables);
-    }
-
-    if ($check['field']) {
-      $valid = self::withViewsField($variables) ?: $valid;
-    }
-
-    if ($view = $variables['view'] ?? NULL) {
-      if ($fields = $view->field) {
-        foreach ($fields as $field) {
-          if (isset($field->options['settings']['media_switch'])) {
-            $valid = TRUE;
-            break;
-          }
-        }
-      }
-
-      if ($style = $view->style_plugin) {
-        if ($style instanceof BlazyStylePluginInterface) {
-          $valid = TRUE;
-        }
-      }
-    }
-
-    // Add own CSS class to fix theme compat like Olivero Grid surprises.
-    // Adding `view--blazy` under Advanced > Other > CSS class should also work.
-    if ($valid) {
-      $variables['attributes']['class'][] = 'view--blazy';
-    }
-  }
 
   /**
    * Provides common views-related settings.
@@ -144,87 +78,24 @@ class BlazyViews {
   }
 
   /**
-   * Implements hook_preprocess_views_view().
+   * Returns one of the Blazy Views fields, if available.
    */
-  private static function withViewsView(array &$variables): bool {
-    $lightboxes = \blazy()->getLightboxes();
-
-    preg_match('~blazy--(.*?)-gallery~', $variables['css_class'], $matches);
-    $lightbox = $matches[1] ? str_replace('-', '_', $matches[1]) : FALSE;
-
-    // Given blazy--photoswipe-gallery, adds the [data-photoswipe-gallery], etc.
-    if ($lightbox && in_array($lightbox, $lightboxes)) {
-      $view = $variables['view'];
-      $data = [
-        'namespace' => 'blazy',
-        'media_switch' => $lightbox,
-      ];
-
-      $settings = Blazy::init($data);
-
-      $settings[$lightbox] = $lightbox;
-
-      $blazies = $settings['blazies'];
-      $count = count($view->result);
-      $blazies->set('count', $count)
-        ->set('total', $count)
-        ->set('use.ajax', $view->ajaxEnabled());
-
-      \blazy()->moduleHandler()->alter('blazy_is_view', $settings, $variables);
-
-      Attributes::container($variables['attributes'], $settings);
-      $variables['blazy'] = $settings;
-      return TRUE;
+  public static function viewsField($view) {
+    foreach (['file', 'media'] as $entity) {
+      if (isset($view->field['blazy_' . $entity])) {
+        return $view->field['blazy_' . $entity];
+      }
     }
-    return FALSE;
+    return NULL;
   }
 
   /**
    * Implements hook_preprocess_views_view().
+   *
+   * @todo delete this when min D11.
    */
-  private static function withViewsField(array &$variables): bool {
-    $view  = $variables['view'];
-    $loads = [];
-    $ajax  = $view->ajaxEnabled();
-    $valid = FALSE;
-
-    // At least, less aggressive than sitewide hook_library_info_alter().
-    // @todo remove when VIS alike added `Drupal.detachBehaviors()` to their JS.
-    if ($ajax) {
-      $loads['library'][] = 'blazy/bio.ajax';
-    }
-
-    // Load Blazy library once, not per field, if any Blazy Views field found.
-    if ($blazy = self::viewsField($view)) {
-      $manager   = \blazy();
-      $plugin_id = $view->getStyle()->getPluginId();
-      $settings  = $blazy->mergedSettings ?: $blazy->mergedViewsSettings();
-
-      if ($blazies = $settings['blazies'] ?? NULL) {
-        $blazies->set('unlazy', FALSE);
-      }
-
-      $load  = $manager->attach($settings);
-      $loads = $manager->merge($load, $loads);
-      $grid  = $plugin_id == 'blazy';
-
-      if ($options = $view->getStyle()->options) {
-        $grid = empty($options['grid']) ? $grid : TRUE;
-      }
-
-      // Prevents dup [data-LIGHTBOX-gallery] if the Views style supports Grid.
-      if (!$grid) {
-        $manager->moduleHandler()->alter('blazy_is_view', $settings, $variables);
-        Attributes::container($variables['attributes'], $settings);
-      }
-
-      $valid = TRUE;
-    }
-
-    if ($loads) {
-      $variables['#attached'] = Arrays::merge($loads, $variables, '#attached');
-    }
-    return $valid;
+  public static function preprocessViewsView(array &$variables): void {
+    ViewsHooks::preprocessViewsView($variables);
   }
 
 }

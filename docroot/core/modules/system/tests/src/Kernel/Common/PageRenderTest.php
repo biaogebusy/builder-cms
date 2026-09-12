@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\Tests\system\Kernel\Common;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Test page rendering hooks.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class PageRenderTest extends KernelTestBase {
 
   /**

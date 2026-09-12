@@ -337,30 +337,40 @@ class AiProviderConfiguration extends FormElementBase {
         '#weight' => 10,
       ];
 
-      // Load configuration fields if provider/model is selected.
+      // Resolve the provider/model to load configuration for, if any is
+      // selected (or resolvable as the site-wide default). Left empty when
+      // nothing is selected, e.g. no option chosen and no default provider
+      // configured for this operation type.
+      $config_provider_id = '';
+      $config_model_id = '';
       if (!empty($selected_value)) {
-        // Get default config from element's #default_value if available.
-        $default_config = [];
-        if (is_array($default_value) && isset($default_value['config']) && is_array($default_value['config'])) {
-          $default_config = $default_value['config'];
-        }
-
         if ($is_default) {
           $default_operation_type = $pseudo_operation_type ? $pseudo_operation_type['actual_type'] : $operation_type;
           $default = $provider_manager->getDefaultProviderForOperationType($default_operation_type);
           if (!empty($default['provider_id']) && !empty($default['model_id'])) {
-            static::loadConfigurationFields($element['config'], $default['provider_id'], $default['model_id'], $actual_operation_type, $default_config, $provider_manager);
+            $config_provider_id = $default['provider_id'];
+            $config_model_id = $default['model_id'];
           }
         }
         else {
           $parts = explode('__', $selected_value);
           if (count($parts) === 2) {
-            $provider_id = $parts[0];
-            $model_id = $parts[1];
-            static::loadConfigurationFields($element['config'], $provider_id, $model_id, $actual_operation_type, $default_config, $provider_manager);
+            $config_provider_id = $parts[0];
+            $config_model_id = $parts[1];
           }
         }
       }
+
+      // Get default config from element's #default_value if available.
+      $default_config = [];
+      if (is_array($default_value) && isset($default_value['config']) && is_array($default_value['config'])) {
+        $default_config = $default_value['config'];
+      }
+
+      // Always run this: it populates the fields when a provider/model
+      // resolved above, or collapses the wrapper to an empty container
+      // when nothing did (see loadConfigurationFields()).
+      static::loadConfigurationFields($element['config'], $config_provider_id, $config_model_id, $actual_operation_type, $default_config, $provider_manager);
     }
 
     return $element;
@@ -447,27 +457,36 @@ class AiProviderConfiguration extends FormElementBase {
       '#open' => $config_open,
     ];
 
-    // Load configuration if provider/model is selected.
+    // Resolve the provider/model to load configuration for, if any is
+    // selected (or resolvable as the site-wide default). Left empty when
+    // nothing is selected, e.g. the user picked the empty option.
     /** @var \Drupal\ai\AiProviderPluginManager $provider_manager */
     $provider_manager = \Drupal::service('ai.provider');
+    $config_provider_id = '';
+    $config_model_id = '';
     if (!empty($selected_value)) {
       if ($is_default) {
         $pseudo_operation_type = static::getPseudoOperationType($element, $operation_type);
         $default_operation_type = $pseudo_operation_type ? $pseudo_operation_type['actual_type'] : $operation_type;
         $default = $provider_manager->getDefaultProviderForOperationType($default_operation_type);
         if (!empty($default['provider_id']) && !empty($default['model_id'])) {
-          static::loadConfigurationFields($config_element, $default['provider_id'], $default['model_id'], $actual_operation_type, $default_config, $provider_manager);
+          $config_provider_id = $default['provider_id'];
+          $config_model_id = $default['model_id'];
         }
       }
       else {
         $parts = explode('__', $selected_value);
         if (count($parts) === 2) {
-          $provider_id = $parts[0];
-          $model_id = $parts[1];
-          static::loadConfigurationFields($config_element, $provider_id, $model_id, $actual_operation_type, $default_config, $provider_manager);
+          $config_provider_id = $parts[0];
+          $config_model_id = $parts[1];
         }
       }
     }
+
+    // Always run this: it populates the fields when a provider/model
+    // resolved above, or collapses the wrapper to an empty container when
+    // nothing did (see loadConfigurationFields()).
+    static::loadConfigurationFields($config_element, $config_provider_id, $config_model_id, $actual_operation_type, $default_config, $provider_manager);
 
     // Update the form array directly with the new config element.
     NestedArray::setValue($form, $config_parents_in_form, $config_element);
@@ -477,14 +496,38 @@ class AiProviderConfiguration extends FormElementBase {
   }
 
   /**
+   * Collapse the 'Configuration' details wrapper to an empty container.
+   *
+   * Used whenever there is nothing to show in the wrapper, so we don't
+   * render an empty "Configuration" details box. Keeps the AJAX wrapper
+   * (#id) intact for when a configurable provider is selected later.
+   *
+   * @param array $container
+   *   The config wrapper element, passed by reference.
+   */
+  protected static function collapseConfigContainer(array &$container): void {
+    $container['#type'] = 'container';
+    // A 'container' element only copies #id into #attributes['id'] when
+    // #array_parents is set (see
+    // \Drupal\Core\Theme\ThemePreprocess::preprocessContainer()), which is
+    // not the case for the element built from scratch in ajaxCallback().
+    // Without this, the #ajax 'wrapper' target would silently disappear
+    // from the DOM, breaking any subsequent AJAX rebuild of this element.
+    if (isset($container['#id'])) {
+      $container['#attributes']['id'] = $container['#id'];
+    }
+    unset($container['#title'], $container['#open']);
+  }
+
+  /**
    * Load configuration fields for a provider/model.
    *
    * @param array $container
    *   The container element to populate.
    * @param string $provider_id
-   *   The provider ID.
+   *   The provider ID. Empty string if no provider/model is selected.
    * @param string $model_id
-   *   The model ID.
+   *   The model ID. Empty string if no provider/model is selected.
    * @param string $operation_type
    *   The actual operation type.
    * @param array $default_config
@@ -493,6 +536,14 @@ class AiProviderConfiguration extends FormElementBase {
    *   Optional provider manager service. If not provided, will be loaded.
    */
   protected static function loadConfigurationFields(array &$container, string $provider_id, string $model_id, string $operation_type, array $default_config = [], ?AiProviderPluginManager $provider_manager = NULL): void {
+    if ($provider_id === '' || $model_id === '') {
+      // Nothing is selected (and no default provider resolved for this
+      // operation type). Collapse the wrapper to an empty container instead
+      // of rendering an empty "Configuration" details box.
+      static::collapseConfigContainer($container);
+      return;
+    }
+
     try {
       if ($provider_manager === NULL) {
         /** @var \Drupal\ai\AiProviderPluginManager $provider_manager */
@@ -502,6 +553,11 @@ class AiProviderConfiguration extends FormElementBase {
       $schema = $provider->getAvailableConfiguration($operation_type, $model_id);
 
       if (empty($schema)) {
+        // The provider has no configuration options for this operation type.
+        // Collapse the wrapper to an empty container so we do not render an
+        // empty "Configuration" details box, while keeping the AJAX wrapper
+        // (#id) intact for when a configurable provider is selected later.
+        static::collapseConfigContainer($container);
         return;
       }
 
@@ -543,7 +599,11 @@ class AiProviderConfiguration extends FormElementBase {
       }
     }
     catch (\Exception $e) {
-      // If provider/model is not available, don't load configuration.
+      // If provider/model is not available, don't load configuration and
+      // collapse the wrapper so no empty "Configuration" details box is
+      // rendered, e.g. when a stale default provider points to an
+      // uninstalled provider module.
+      static::collapseConfigContainer($container);
       \Drupal::logger('ai')->error('Failed to load configuration fields for provider @provider, model @model, operation type @operation_type: @message', [
         '@provider' => $provider_id,
         '@model' => $model_id,

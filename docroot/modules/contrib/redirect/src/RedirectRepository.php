@@ -44,7 +44,12 @@ class RedirectRepository {
   protected RequestStack $requestStack;
 
   /**
-   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber object.
+   * The prefix list service.
+   */
+  protected RedirectPrefixList $prefixList;
+
+  /**
+   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $manager
    *   The entity type manager.
@@ -54,8 +59,10 @@ class RedirectRepository {
    *   The config factory.
    * @param \Symfony\Component\HttpFoundation\RequestStack|null $request_stack
    *   The request stack.
+   * @param \Drupal\redirect\RedirectPrefixList|null $prefix_list
+   *   The prefix list service.
    */
-  public function __construct(EntityTypeManagerInterface $manager, Connection $connection, ConfigFactoryInterface $config_factory, ?RequestStack $request_stack = NULL) {
+  public function __construct(EntityTypeManagerInterface $manager, Connection $connection, ConfigFactoryInterface $config_factory, ?RequestStack $request_stack = NULL, ?RedirectPrefixList $prefix_list = NULL) {
     $this->manager = $manager;
     $this->connection = $connection;
     $this->config = $config_factory->get('redirect.settings');
@@ -65,6 +72,12 @@ class RedirectRepository {
       $request_stack = \Drupal::requestStack();
     }
     $this->requestStack = $request_stack;
+    if (!$prefix_list) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $prefix_list argument is deprecated in redirect:1.12.0 and it will be required in redirect:2.0.0. See https://www.drupal.org/project/redirect/issues/3451531', E_USER_DEPRECATED);
+      // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
+      $prefix_list = \Drupal::service('redirect.prefix_list');
+    }
+    $this->prefixList = $prefix_list;
   }
 
   /**
@@ -86,6 +99,15 @@ class RedirectRepository {
    */
   public function findMatchingRedirect($source_path, array $query = [], $language = Language::LANGCODE_NOT_SPECIFIED, ?CacheableMetadata $cacheable_metadata = NULL) {
     $source_path = ltrim($source_path, '/');
+
+    // If the source path has at least two path components, check if the
+    // first part does have any redirects. This saves a lot of lookups for sites
+    // that don't have any redirects on common prefixes such as /node or
+    // /admin.
+    if ($this->prefixList && !$this->prefixList->hasRedirectsWithPrefix($source_path)) {
+      return NULL;
+    }
+
     $hashes = [Redirect::generateHash($source_path, $query, $language)];
     if ($language != Language::LANGCODE_NOT_SPECIFIED) {
       $hashes[] = Redirect::generateHash($source_path, $query, Language::LANGCODE_NOT_SPECIFIED);
@@ -114,9 +136,13 @@ class RedirectRepository {
       if (in_array($rid, $this->foundRedirects)) {
         throw new RedirectLoopException('/' . $source_path, $rid);
       }
-      $this->foundRedirects[] = $rid;
-
       $redirect = $this->load($rid);
+      // The redirect could be found by the direct db query in ::findByHash(),
+      // but other modules (e.g. Trash) might prevent it from being loaded.
+      if (!$redirect instanceof Redirect) {
+        return NULL;
+      }
+      $this->foundRedirects[] = $rid;
       if ($cacheable_metadata) {
         $cacheable_metadata->addCacheableDependency($redirect);
       }
@@ -149,11 +175,17 @@ class RedirectRepository {
   protected function findByRedirect(Redirect $redirect, $language, ?CacheableMetadata $cacheable_metadata = NULL) {
     $uri = $redirect->getRedirectUrl();
     $base_url = $this->requestStack->getCurrentRequest()->getBaseUrl();
-    $generated_url = $uri->toString(TRUE);
-    $path = ltrim(substr($generated_url->getGeneratedUrl(), strlen($base_url)), '/');
+    if ($uri->isRouted()) {
+      $path = $uri->getInternalPath();
+    }
+    else {
+      $generated_url = $uri->toString(TRUE);
+      $path = ltrim(substr($generated_url->getGeneratedUrl(), strlen($base_url)), '/');
+      $cacheable_metadata?->addCacheableDependency($generated_url);
+
+    }
     $query = $uri->getOption('query') ?: [];
-    $return_value = $this->findMatchingRedirect($path, $query, $language, $cacheable_metadata);
-    return $return_value ? $return_value->addCacheableDependency($generated_url) : $return_value;
+    return $this->findMatchingRedirect($path, $query, $language, $cacheable_metadata);
   }
 
   /**
@@ -199,8 +231,8 @@ class RedirectRepository {
    * @param int $redirect_id
    *   The redirect id.
    *
-   * @return \Drupal\redirect\Entity\Redirect
-   *   The redirect entity.
+   * @return \Drupal\redirect\Entity\Redirect|null
+   *   The redirect entity or NULL if no redirect was found.
    */
   public function load($redirect_id) {
     return $this->manager->getStorage('redirect')->load($redirect_id);

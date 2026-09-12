@@ -4,7 +4,10 @@
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "require": {
-        "drupal/webform": "^6.1"
+        "drupal/webform": "^6.3@alpha"
+    },
+    "require-dev": {
+        "drupal/hal": "^2.0"
     },
     "authors": [
         {
@@ -28,11 +31,5 @@
     "support": {
         "issues": "https://www.drupal.org/project/issues/webform_rest",
         "source": "https://git.drupalcode.org/project/webform_rest"
-    },
-    "repositories": {
-        "drupal": {
-            "type": "composer",
-            "url": "https://packages.drupal.org/8"
-        }
     }
 }

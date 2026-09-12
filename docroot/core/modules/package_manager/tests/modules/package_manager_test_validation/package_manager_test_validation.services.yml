@@ -1,0 +1,18 @@
+services:
+  package_manager_test_validation.subscriber:
+    class: Drupal\package_manager_test_validation\EventSubscriber\TestSubscriber
+    arguments:
+      - '@state'
+    tags:
+      - { name: event_subscriber }
+  package_manager.validator.collect_paths_to_exclude_fail:
+    class: Drupal\package_manager_test_validation\CollectPathsToExcludeFailValidator
+    autowire: true
+    tags:
+      - { name: event_subscriber }
+  Drupal\package_manager_test_validation\TestExecutableFinder:
+    public: false
+    arguments:
+      - '@.inner'
+      - '@keyvalue'
+    decorates: 'PhpTuf\ComposerStager\API\Finder\Service\ExecutableFinderInterface'

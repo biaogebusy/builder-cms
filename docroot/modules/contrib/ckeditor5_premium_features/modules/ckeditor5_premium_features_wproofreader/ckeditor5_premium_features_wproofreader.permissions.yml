@@ -1,0 +1,33 @@
+ckeditor5 wproofreader user dictionary:
+  title: 'User-level custom dictionary'
+  description: 'Allow users to manage their dictionary, including saving and deleting added words from the settings dialog.'
+
+ckeditor5 wproofreader add word:
+  title: 'Add words to WProofreader'
+  description: 'Allow users to add words to the dictionary. This permission acts independently of the user-level dictionary and adds words to the session if the user level dictionary is not present.'
+
+ckeditor5 wproofreader ignore all:
+  title: 'Ignoring WProofreader suggestions'
+  description: 'Allow users to ignore WProofreader suggestions.'
+
+ckeditor5 wproofreader user language:
+  title: 'Language'
+  description: "Allow users to change the language for text checking in the language section of the settings dialog."
+
+ckeditor5 wproofreader user general settings:
+  title: 'General check types'
+  description: "Allow users to manage enabled check types in the General section of the settings dialog."
+
+ckeditor5 wproofreader user ignore settings:
+  title: 'Spelling ignore options'
+  description: "Allow users to manage spelling ignore cases in the Ignore options section of the settings dialog."
+
+ckeditor5 wproofreader toggle proofreading:
+  title: 'Turning WProofreader on/off'
+  description: 'Allow users to turn on/off spelling and grammar checker.'
+
+ckeditor5 webspellchecker proxy access:
+  title: 'Access to the CKEditor 5 WProofreader proxy API'
+
+administer ckeditor5 wproofreader configuration:
+  title: 'Administer WProofreader configuration'

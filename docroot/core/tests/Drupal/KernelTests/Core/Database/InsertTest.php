@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\IntegrityConstraintViolationException;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the insert builder.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class InsertTest extends DatabaseTestBase {
 
   /**
@@ -168,7 +170,7 @@ class InsertTest extends DatabaseTestBase {
     // INSERT INTO test (age, name, job)
     // SELECT tp.age AS age, tp.name AS name, tp.job AS job
     // FROM test_people tp
-    // WHERE tp.name = 'Meredith'
+    // WHERE tp.name = 'Meredith'.
     $this->connection->insert('test')
       ->from($query)
       ->execute();
@@ -189,7 +191,7 @@ class InsertTest extends DatabaseTestBase {
     // INSERT INTO test_people_copy
     // SELECT *
     // FROM test_people tp
-    // WHERE tp.name = 'Meredith'
+    // WHERE tp.name = 'Meredith'.
     $this->connection->insert('test_people_copy')
       ->from($query)
       ->execute();

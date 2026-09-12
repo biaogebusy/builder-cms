@@ -2,6 +2,7 @@
 
 namespace Drupal\workspaces\Entity;
 
+use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -9,62 +10,47 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\EntityOwnerTrait;
+use Drupal\views\EntityViewsData;
+use Drupal\workspaces\Entity\Handler\IgnoredWorkspaceHandler;
+use Drupal\workspaces\Hook\WorkspacesHooks;
+use Drupal\workspaces\Provider\DefaultWorkspaceProvider;
+use Drupal\workspaces\Provider\WorkspaceProviderCollector;
+use Drupal\workspaces\Provider\WorkspaceProviderInterface;
+use Drupal\workspaces\WorkspaceAccessControlHandler;
 use Drupal\workspaces\WorkspaceInterface;
 
 /**
  * The workspace entity class.
- *
- * @ContentEntityType(
- *   id = "workspace",
- *   label = @Translation("Workspace"),
- *   label_collection = @Translation("Workspaces"),
- *   label_singular = @Translation("workspace"),
- *   label_plural = @Translation("workspaces"),
- *   label_count = @PluralTranslation(
- *     singular = "@count workspace",
- *     plural = "@count workspaces"
- *   ),
- *   handlers = {
- *     "list_builder" = "\Drupal\workspaces\WorkspaceListBuilder",
- *     "view_builder" = "Drupal\workspaces\WorkspaceViewBuilder",
- *     "access" = "Drupal\workspaces\WorkspaceAccessControlHandler",
- *     "views_data" = "Drupal\views\EntityViewsData",
- *     "route_provider" = {
- *       "html" = "\Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
- *     },
- *     "form" = {
- *       "default" = "\Drupal\workspaces\Form\WorkspaceForm",
- *       "add" = "\Drupal\workspaces\Form\WorkspaceForm",
- *       "edit" = "\Drupal\workspaces\Form\WorkspaceForm",
- *       "delete" = "\Drupal\workspaces\Form\WorkspaceDeleteForm",
- *       "activate" = "\Drupal\workspaces\Form\WorkspaceActivateForm",
- *     },
- *     "workspace" = "\Drupal\workspaces\Entity\Handler\IgnoredWorkspaceHandler",
- *   },
- *   admin_permission = "administer workspaces",
- *   base_table = "workspace",
- *   revision_table = "workspace_revision",
- *   data_table = "workspace_field_data",
- *   revision_data_table = "workspace_field_revision",
- *   field_ui_base_route = "entity.workspace.collection",
- *   entity_keys = {
- *     "id" = "id",
- *     "revision" = "revision_id",
- *     "uuid" = "uuid",
- *     "label" = "label",
- *     "uid" = "uid",
- *     "owner" = "uid",
- *   },
- *   links = {
- *     "canonical" = "/admin/config/workflow/workspaces/manage/{workspace}",
- *     "add-form" = "/admin/config/workflow/workspaces/add",
- *     "edit-form" = "/admin/config/workflow/workspaces/manage/{workspace}/edit",
- *     "delete-form" = "/admin/config/workflow/workspaces/manage/{workspace}/delete",
- *     "activate-form" = "/admin/config/workflow/workspaces/manage/{workspace}/activate",
- *     "collection" = "/admin/config/workflow/workspaces",
- *   },
- * )
  */
+#[ContentEntityType(
+  id: 'workspace',
+  label: new TranslatableMarkup('Workspace'),
+  label_collection: new TranslatableMarkup('Workspaces'),
+  label_singular: new TranslatableMarkup('workspace'),
+  label_plural: new TranslatableMarkup('workspaces'),
+  entity_keys: [
+    'id' => 'id',
+    'revision' => 'revision_id',
+    'uuid' => 'uuid',
+    'label' => 'label',
+    'uid' => 'uid',
+    'owner' => 'uid',
+  ],
+  handlers: [
+    'access' => WorkspaceAccessControlHandler::class,
+    'views_data' => EntityViewsData::class,
+    'workspace' => IgnoredWorkspaceHandler::class,
+  ],
+  admin_permission: 'administer workspaces',
+  base_table: 'workspace',
+  data_table: 'workspace_field_data',
+  revision_table: 'workspace_revision',
+  revision_data_table: 'workspace_field_revision',
+  label_count: [
+    'singular' => '@count workspace',
+    'plural' => '@count workspaces',
+  ],
+)]
 class Workspace extends ContentEntityBase implements WorkspaceInterface {
 
   use EntityChangedTrait;
@@ -113,6 +99,16 @@ class Workspace extends ContentEntityBase implements WorkspaceInterface {
         'weight' => 10,
       ]);
 
+    $fields['provider'] = BaseFieldDefinition::create('string')
+      ->setLabel(new TranslatableMarkup('Provider'))
+      ->setDescription(new TranslatableMarkup('The workspace provider.'))
+      ->setSetting('max_length', 128)
+      ->setRequired(TRUE)
+      ->setReadOnly(TRUE)
+      ->setDefaultValue(DefaultWorkspaceProvider::getId())
+      ->setDisplayConfigurable('form', FALSE)
+      ->setDisplayConfigurable('view', FALSE);
+
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(new TranslatableMarkup('Changed'))
       ->setDescription(new TranslatableMarkup('The time that the workspace was last edited.'))
@@ -156,6 +152,29 @@ class Workspace extends ContentEntityBase implements WorkspaceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getProvider(): WorkspaceProviderInterface {
+    /** @var \Drupal\workspaces\Provider\WorkspaceProviderCollector $provider_collector */
+    $provider_collector = \Drupal::service(WorkspaceProviderCollector::class);
+    return $provider_collector->getProvider($this->get('provider')->value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE): void {
+    parent::postSave($storage, $update);
+
+    // When a new workspace has been saved, we need to copy all the associations
+    // of its parent.
+    if (!$update && $this->hasParent()) {
+      \Drupal::service('workspaces.tracker')->initializeWorkspace($this);
+    }
+    \Drupal::service('workspaces.repository')->resetCache();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
     parent::preDelete($storage, $entities);
 
@@ -177,25 +196,39 @@ class Workspace extends ContentEntityBase implements WorkspaceInterface {
 
     /** @var \Drupal\workspaces\WorkspaceManagerInterface $workspace_manager */
     $workspace_manager = \Drupal::service('workspaces.manager');
+    /** @var \Drupal\workspaces\WorkspaceTrackerInterface $workspace_tracker */
+    $workspace_tracker = \Drupal::service('workspaces.tracker');
+
+    // Gather the list of deleted workspace IDs, since the passed-in array is
+    // not required to be keyed by them.
+    $workspaces_ids = array_map(fn($entity) => $entity->id(), $entities);
+
     // Disable the currently active workspace if it has been deleted.
     if ($workspace_manager->hasActiveWorkspace()
-      && in_array($workspace_manager->getActiveWorkspace()->id(), array_keys($entities), TRUE)) {
+      && in_array($workspace_manager->getActiveWorkspace()->id(), $workspaces_ids, TRUE)
+    ) {
       $workspace_manager->switchToLive();
     }
 
-    // Ensure that workspace batch purging does not happen inside a workspace.
-    $workspace_manager->executeOutsideWorkspace(function () use ($workspace_manager, $entities) {
-      // Add the IDs of the deleted workspaces to the list of workspaces that will
-      // be purged on cron.
+    // Non-empty workspaces will have to go through the revision purging process
+    // from \Drupal\workspaces\Hook\WorkspacesHooks::cron().
+    $workspace_ids_to_purge = [];
+    foreach ($workspaces_ids as $workspace_id) {
+      if ($workspace_tracker->getTrackedEntities($workspace_id)) {
+        $workspace_ids_to_purge[$workspace_id] = $workspace_id;
+      }
+    }
+    if ($workspace_ids_to_purge) {
       $state = \Drupal::state();
       $deleted_workspace_ids = $state->get('workspace.deleted', []);
-      $deleted_workspace_ids += array_combine(array_keys($entities), array_keys($entities));
-      $state->set('workspace.deleted', $deleted_workspace_ids);
+      $state->set('workspace.deleted', $deleted_workspace_ids + $workspace_ids_to_purge);
 
-      // Trigger a batch purge to allow empty workspaces to be deleted
-      // immediately.
-      $workspace_manager->purgeDeletedWorkspacesBatch();
-    });
+      // Trigger a batch purge to allow workspaces with few revisions to be
+      // deleted immediately.
+      // @todo This is temporary until batch purging is converted to use queues.
+      // @see https://www.drupal.org/i/3553654
+      \Drupal::service(WorkspacesHooks::class)->cron();
+    }
   }
 
 }

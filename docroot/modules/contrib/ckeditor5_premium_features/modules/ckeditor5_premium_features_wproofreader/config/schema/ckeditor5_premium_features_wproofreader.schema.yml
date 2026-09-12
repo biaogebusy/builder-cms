@@ -1,0 +1,28 @@
+ckeditor5_premium_features_wproofreader.settings:
+  type: config_entity
+  label: CKEditor5 WProofreader
+  mapping:
+    src_url:
+      type: string
+      label: Src Url
+    lang_code:
+      type: string
+      label: LangCode
+    service_id:
+      type: string
+      label: Service ID
+    service_type:
+      type: string
+      label: Service Type
+    service_protocol:
+      type: string
+      label: Service Protocol
+    service_host:
+      type: string
+      label: Service Host
+    service_port:
+      type: string
+      label: Service Port
+    service_path:
+      type: string
+      label: Service Path

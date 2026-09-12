@@ -2,6 +2,7 @@
 
 namespace Drupal\advancedqueue;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -63,9 +64,9 @@ class QueueListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
+  public function getDefaultOperations(EntityInterface $entity, ?CacheableMetadata $cacheability = NULL) {
     /** @var \Drupal\advancedqueue\Entity\QueueInterface $entity */
-    $operations = parent::getDefaultOperations($entity);
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     if ($entity->getBackendId() === 'database' && $this->router->getRouteCollection()->get('view.advancedqueue_jobs.page_1')) {
       $operations['jobs'] = [

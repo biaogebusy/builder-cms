@@ -7,13 +7,15 @@ namespace Drupal\Tests\views_ui\Functional;
 use Drupal\Component\Utility\Unicode;
 use Drupal\views\Entity\View;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the display UI.
- *
- * @group views_ui
- * @group #slow
  */
+#[Group('views_ui')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class DisplayTest extends UITestBase {
 
   /**
@@ -37,7 +39,7 @@ class DisplayTest extends UITestBase {
    * Tests adding a display.
    */
   public function testAddDisplay(): void {
-    $view = $this->randomView();
+    $this->randomView();
     $this->assertSession()->elementNotExists('xpath', '//li[@data-drupal-selector="edit-displays-top-tabs-block-1"]');
     $this->assertSession()->elementNotExists('xpath', '//li[@data-drupal-selector="edit-displays-top-tabs-block-2"]');
     $this->assertSession()->pageTextMatchesCount(0, '/Block name:/');
@@ -114,7 +116,7 @@ class DisplayTest extends UITestBase {
    * Tests views_ui_views_plugins_display_alter is altering plugin definitions.
    */
   public function testDisplayPluginsAlter(): void {
-    $definitions = Views::pluginManager('display')->getDefinitions();
+    $definitions = \Drupal::service('plugin.manager.views.display')->getDefinitions();
 
     $expected = [
       'route_name' => 'entity.view.edit_form',
@@ -131,9 +133,6 @@ class DisplayTest extends UITestBase {
    * Tests display areas.
    */
   public function testDisplayAreas(): void {
-    // Show the advanced column.
-    $this->config('views.settings')->set('ui.show.advanced_column', TRUE)->save();
-
     // Add a new data display to the view.
     $view = Views::getView('test_display');
     $view->storage->addDisplay('display_no_area_test');
@@ -161,7 +160,7 @@ class DisplayTest extends UITestBase {
     $path = 'admin/structure/views/view/test_display/edit/block_1';
     $link_display_path = 'admin/structure/views/nojs/display/test_display/block_1/link_display';
 
-    // Test the link text displays 'None' and not 'Block 1'
+    // Test the link text displays 'None' and not 'Block 1'.
     $this->drupalGet($path);
     $this->assertSession()->elementTextEquals('xpath', "//a[contains(@href, '{$link_display_path}')]", 'None');
 
@@ -187,7 +186,7 @@ class DisplayTest extends UITestBase {
 
     $this->assertSession()->linkExists('Custom URL', 0, 'The link option has custom URL as summary.');
 
-    // Test the default link_url value for new display
+    // Test the default link_url value for new display.
     $this->submitForm([], 'Add Block');
     $this->assertSession()->addressEquals('admin/structure/views/view/test_display/edit/block_2');
     $this->clickLink('Custom URL');

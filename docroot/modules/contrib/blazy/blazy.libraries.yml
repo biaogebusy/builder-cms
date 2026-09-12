@@ -55,15 +55,18 @@ bio.media:
     - blazy/bio
 
 # Drupal-related base.
-base:
+css:
   css:
     component:
       css/blazy.css: {}
+
+base:
   js:
     js/base/blazy.base.min.js: { minified: true, weight: -5.8 }
   dependencies:
     # @todo watch out for core namespace change.
     - core/drupal.debounce
+    - blazy/css
     - blazy/dblazy
 
 # Shared drupal-related methods normally driven by Drupal UI options.
@@ -154,7 +157,14 @@ ratio:
     component:
       css/components/blazy.ratio.css: {}
   dependencies:
-    - blazy/base
+    - blazy/css
+
+ratio.modern:
+  css:
+    component:
+      css/components/blazy.ratio-modern.css: {}
+  dependencies:
+    - blazy/ratio
 
 # CSS grids.
 style:
@@ -162,7 +172,7 @@ style:
     component:
       css/components/blazy.style.css: {}
   dependencies:
-    - blazy/base
+    - blazy/css
 
 column:
   css:
@@ -211,7 +221,7 @@ grid:
     component:
       css/components/grid/blazy.grid.css: {}
   dependencies:
-    - blazy/base
+    - blazy/css
 
 nativegrid:
   css:

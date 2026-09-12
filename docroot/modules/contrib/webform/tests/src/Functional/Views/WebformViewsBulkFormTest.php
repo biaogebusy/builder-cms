@@ -23,7 +23,7 @@ class WebformViewsBulkFormTest extends WebformBrowserTestBase {
   /**
    * Tests the webform views bulk form.
    */
-  public function testViewsBulkForm() {
+  public function testViewsBulkForm(): void {
     $assert_session = $this->assertSession();
 
     $admin_submission_user = $this->drupalCreateUser([

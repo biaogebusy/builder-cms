@@ -1,0 +1,245 @@
+<?php
+
+/*
+ * Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see https://ckeditor.com/legal/ckeditor-oss-license
+ */
+
+use Drupal\ckeditor5_plugin_pack\Utility\LibraryDefinitionItem;
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Render\Markup;
+
+/**
+ * Implements hook_install().
+ */
+function ckeditor5_plugin_pack_install($is_syncing): void {
+  ckeditor5_plugin_pack_display_trial_info_message();
+}
+
+/**
+ * @param array $libraries
+ * @return array
+ */
+function ckeditor5_plugin_pack_library_loader(array $libraries): array {
+  /** @var \Drupal\ckeditor5_plugin_pack\Config\SettingsConfigHandlerInterface $config_handler */
+  $config_handler = \Drupal::service('ckeditor5_plugin_pack.config_handler.settings');
+  $definitions = [];
+  foreach ($libraries as $library) {
+    $isLocalPath = FALSE;
+    $baseDir = $config_handler->getRemoteDllLocation();
+    $dllLocations = $config_handler->getDllLocations();
+    foreach ($dllLocations as $location) {
+      $path = './' . $location . '/' . $library . '/' . $library . '.js';
+      if (realpath($path)) {
+        $baseDir = $location;
+        $isLocalPath = TRUE;
+        break;
+      }
+    }
+
+    $definition = new LibraryDefinitionItem($library, $baseDir);
+    if ($isLocalPath) {
+      $definition->addLocalJs($definition->id());
+    }
+    elseif (!$config_handler->isCdnBlocked()) {
+      $definition->addRemoteJs($definition->id());
+    }
+    else {
+      continue;
+    }
+
+    $definitions[$definition->id()] = $definition->getDefinition();
+  }
+
+  return $definitions;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ckeditor5_plugin_pack_form_filter_format_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
+  if (ckeditor5_plugin_pack_check_premium_key()) {
+    return;
+  }
+
+  $form['editor']['premium'] = [
+    '#type' => 'container',
+    '#weight' => -9,
+    '#states' => [
+      'visible' => [
+        ':input[name="editor[editor]"]' => ['value' => 'ckeditor5'],
+      ],
+    ],
+    'msg' => [
+      '#markup' => ckeditor5_plugin_pack_premium_info_message(),
+    ],
+  ];
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function ckeditor5_plugin_pack_module_implements_alter(&$implementations, $hook) {
+  if (isset($implementations['ckeditor5_plugin_pack'])) {
+    $val = $implementations['ckeditor5_plugin_pack'];
+    unset($implementations['ckeditor5_plugin_pack']);
+    $implementations['ckeditor5_plugin_pack'] = $val;
+  }
+}
+
+/**
+ * Returns a message with information about the premium features trial.
+ *
+ * @return MarkupInterface
+ */
+function ckeditor5_plugin_pack_premium_info_message(): MarkupInterface {
+  return Markup::create('If you’d like to explore the full potential of CKEditor 5 Premium Features, <a href="https://portal.ckeditor.com/signup" target="_blank">sign up for the 14-day free trial</a>');
+}
+
+/**
+ * Returns a message with uninstall survey info.
+ *
+ * @return MarkupInterface
+ */
+function ckeditor5_plugin_pack_uninstall_message(): MarkupInterface {
+  return Markup::create("<p>Help us improve Plugin Pack! Your feedback helps us fix issues, add the right features, and make our module better for everyone - it's only 2 short questions.</p>
+    <p><a href=\"https://c6wj48kez1y.typeform.com/to/pxfqyFLl\" target=\"_blank\">Click here to share your feedback</a></p>
+    <p>Thank you!</p>
+  ");
+}
+
+/**
+ * Displays a warning message about plugin being disabled due to too old CKEditor 5 version.
+ *
+ * @param string $plugin
+ *  The plugin name.
+ */
+function ckeditor5_plugin_pack_old_version_warning_message(string $plugin): void {
+  \Drupal::messenger()->addWarning(t('The "%plugin" CKEditor 5 plugin has been disabled because current CKEditor 5 library version does not support it. You can either update Drupal core or use <a href="https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/ckeditor-5-premium-features/configuration-guide#s-ckeditor-5-version-override" target="_blank">CKEditor 5 Version Override module</a> to use a newer version of CKEditor 5.', ['%plugin' => $plugin]));
+}
+
+/**
+ * Checks if the premium key is set.
+ *
+ * @return bool
+ */
+function ckeditor5_plugin_pack_check_premium_key(): bool {
+  if (\Drupal::moduleHandler()->moduleExists('ckeditor5_premium_features')) {
+    return !empty(\Drupal::config('ckeditor5_premium_features.settings')->get('license_key'));
+  }
+  return FALSE;
+}
+
+/**
+ * Displays a message with information about premium features trial.
+ */
+function ckeditor5_plugin_pack_display_trial_info_message(): void {
+  if (ckeditor5_plugin_pack_check_premium_key()) {
+    return;
+  }
+  $message = ckeditor5_plugin_pack_premium_info_message();
+  \Drupal::messenger()->addMessage($message, 'ckeditor5_plugin_pack', FALSE);
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function ckeditor5_plugin_pack_preprocess_status_messages(&$variables) {
+  if (!isset($variables['message_list']['ckeditor5_plugin_pack'])) {
+    return;
+  }
+  // Ensure CKEditor 5 message is displayed last.
+  $ckeditor5_message = $variables['message_list']['ckeditor5_plugin_pack'];
+  unset($variables['message_list']['ckeditor5_plugin_pack']);
+  $variables['message_list']['ckeditor5_plugin_pack'] = $ckeditor5_message;
+  $variables['status_headings']['ckeditor5_plugin_pack'] = t('Congratulations! You’ve successfully installed the CKEditor 5 Plugin Pack') . ' 🎉';
+
+  $variables['#attached']['library'][] = 'ckeditor5_plugin_pack/messages';
+}
+
+/**
+ * Implements hook_library_info_build().
+ */
+function ckeditor5_plugin_pack_library_info_build(): array {
+  $libraries = [];
+  $admin_theme = \Drupal::config('system.theme')->get('admin');
+  $filename = $admin_theme === 'gin' ? 'messages-gin.css' : 'messages.css';
+  $libraries['messages'] = [
+    'css' => [
+      'theme' => [
+        'css/' . $filename => []
+      ],
+    ],
+  ];
+  return $libraries;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function ckeditor5_plugin_pack_uninstall($is_syncing): void {
+  $message = ckeditor5_plugin_pack_uninstall_message();
+  \Drupal::messenger()->addMessage($message, 'status', FALSE);
+}
+
+/**
+ * Removes the specified CKEditor plugins from toolbar of all CKEditor 5 text formats.
+ *
+ * @param array $items
+ *   An array of toolbar item ids to be removed.
+ *
+ * @param array $plugin_configs
+ *  (optional) An array of plugin configuration names to be removed.
+ */
+function ckeditor5_plugin_pack_remove_ckeditor_plugins(array $toolbar_items, array $plugin_configs = []): void {
+  try {
+    $editors = \Drupal::entityTypeManager()
+      ->getStorage('editor')
+      ->loadByProperties(['editor' => 'ckeditor5']);
+  } catch (\Exception $e) {
+    return;
+  }
+
+  if (empty($editors)) {
+    return;
+  }
+
+  foreach ($editors as $editor) {
+    $settings = $editor->getSettings();
+    $modified = FALSE;
+    foreach ($toolbar_items as $item) {
+      $key = array_search($item, $settings['toolbar']['items']);
+      if ($key !== FALSE) {
+        unset($settings['toolbar']['items'][$key]);
+        // Reindex the array to avoid breaking the field value.
+        $settings['toolbar']['items'] = array_values($settings['toolbar']['items']);
+        $modified = TRUE;
+      }
+    }
+
+    foreach ($plugin_configs as $config) {
+      if (isset($settings['plugins'][$config])) {
+        unset($settings['plugins'][$config]);
+        $modified = TRUE;
+      }
+    }
+
+    if ($modified) {
+      try {
+        $editor->setSettings($settings);
+        $editor->save();
+      }
+      catch (\Exception $e) {
+        // Do nothing.
+      }
+    }
+  }
+
+}
+
+function ckeditor5_plugin_pack_get_error_severity() {
+  if (version_compare(\Drupal::VERSION, '11.2.0', '>=')) {
+    return \Drupal\Core\Extension\Requirement\RequirementSeverity::Error;
+  }
+  return REQUIREMENT_ERROR;
+}

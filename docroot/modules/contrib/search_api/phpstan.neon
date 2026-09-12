@@ -13,6 +13,11 @@ parameters:
     - .
 
   excludePaths:
+    - # This triggers an "implements unknown interface" error against Drupal
+      # versions earlier than 11.2, which cannot be ignored. We therefore need
+      # to exclude the whole file.
+      # @todo Remove once we depend on Drupal 11.2+.
+      modules/search_api_db/search_api_db_defaults/src/Install/Requirements/SearchApiDbDefaultsInstallRequirements.php
     - search_api.behat.inc
 
   ignoreErrors:
@@ -32,8 +37,18 @@ parameters:
 
     - # The enum was newly introduced in Drupal 11.2.
       # @todo Remove once we depend on Drupal 11.2+.
-      message: "#^Access to constant Error on an unknown class Drupal\\\\Core\\\\Extension\\\\Requirement\\\\RequirementSeverity\\.#"
-      path: modules/search_api_db/search_api_db_defaults/search_api_db_defaults.install
+      message: "#^Access to constant (Error|Warning) on an unknown class Drupal\\\\Core\\\\Extension\\\\Requirement\\\\RequirementSeverity\\.#"
+      paths:
+        - modules/search_api_db/search_api_db_defaults/search_api_db_defaults.install
+        - src/Hook/SearchApiHooks.php
+      reportUnmatched: false
+
+    - # The LegacyRequirementsHook attribute was added in Drupal 11.3.
+      # @todo Remove once we depend on Drupal 11.3+.
+      message: "#^Attribute class Drupal\\\\Core\\\\Hook\\\\Attribute\\\\LegacyRequirementsHook does not exist\\.$#"
+      paths:
+        - modules/search_api_db/search_api_db_defaults/search_api_db_defaults.install
+        - search_api.install
       reportUnmatched: false
 
     - # OOP hooks were not introduced until Drupal 11.1.
@@ -77,6 +92,14 @@ parameters:
       message: "#^Class Drupal\\\\external_entities\\\\Entity\\\\Query\\\\External\\\\Query not found.#"
       count: 1
       path: src/Plugin/search_api/datasource/ContentEntity.php
+
+    - # Class is only available in Drupal 10.4+.
+      # @todo Remove once we depend on Drupal 10.4+.
+      message: "#^Class Drupal\\\\node\\\\NodeGrantsHelper not found\\.#"
+      paths:
+        - src/Plugin/search_api/processor/ContentAccess.php
+        - tests/src/Kernel/Processor/ContentAccessTest.php
+      reportUnmatched: false
 
     - # Method will never be called in the context of that class.
       message: "#^Call to an undefined method Drupal\\\\search_api\\\\Plugin\\\\views\\\\filter\\\\SearchApiBoolean::operatorValues\\(\\).$#"
@@ -124,6 +147,13 @@ parameters:
       paths:
         - tests/src/Functional/ExampleContentTrait.php
         - tests/src/Kernel/Index/IndexChangesTest.php
+      reportUnmatched: false
+
+    - # Class is only available in Drupal 10.4+.
+      # @todo Remove once we depend on Drupal 10.4+.
+      message: "#^Class Drupal\\\\filter\\\\FilterFormatRepositoryInterface not found\\.#"
+      identifier: class.notFound
+      path: tests/src/Functional/IntegrationTest.php
       reportUnmatched: false
 
     - # No idea what's happening there, why it can't find the trait it is

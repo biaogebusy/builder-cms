@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms_user\Kernel;
 
-use Drupal\Tests\sms\Kernel\SmsFrameworkKernelBase;
-use Drupal\sms\Entity\SmsMessage;
-use Drupal\sms\Entity\PhoneNumberSettings;
 use Drupal\sms\Direction;
+use Drupal\sms\Entity\PhoneNumberSettings;
+use Drupal\sms\Entity\SmsMessage;
+use Drupal\Tests\sms\Kernel\SmsFrameworkKernelBase;
 
 /**
  * General tests for SMS User.
@@ -16,9 +16,6 @@ use Drupal\sms\Direction;
  */
 class SmsFrameworkUserTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'system',
     'sms',
@@ -44,9 +41,6 @@ class SmsFrameworkUserTest extends SmsFrameworkKernelBase {
    */
   protected $gateway;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->installSchema('system', ['sequences']);
@@ -81,7 +75,7 @@ class SmsFrameworkUserTest extends SmsFrameworkKernelBase {
     $incoming->setResult($this->createMessageResult($incoming));
     $this->smsProvider->queue($incoming);
 
-    static::assertEquals($message, sms_test_gateway_get_incoming()['message']);
+    static::assertEquals($message, \sms_test_gateway_get_incoming()['message']);
     // Make sure the phone number settings does not exist, in case it makes its
     // way into this test in the future.
     static::assertNull(PhoneNumberSettings::load('user.user'), 'No phone numbser settings for user.user.');

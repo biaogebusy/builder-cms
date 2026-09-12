@@ -1,6 +1,8 @@
 <?php
 
-namespace Drupal\driver_test\Driver\Database\DrivertestMysqlDeprecatedVersion;
+declare(strict_types=1);
+
+namespace Drupal\driver_test\Driver\Database\DriverTestMysqlDeprecatedVersion;
 
 use Drupal\mysql\Driver\Database\mysql\Connection as CoreConnection;
 
@@ -22,7 +24,7 @@ class Connection extends CoreConnection {
    * {@inheritdoc}
    */
   public function driver() {
-    return 'DrivertestMysqlDeprecatedVersion';
+    return 'DriverTestMysqlDeprecatedVersion';
   }
 
   /**

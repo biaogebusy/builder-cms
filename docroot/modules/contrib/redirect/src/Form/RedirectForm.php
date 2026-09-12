@@ -5,14 +5,21 @@ namespace Drupal\redirect\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Routing\AccessAwareRouterInterface;
+use Drupal\Core\Routing\LocalAwareRedirectResponseTrait;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Redirect entity form.
  */
 class RedirectForm extends ContentEntityForm {
+
+  // Provide a way to test isLocal() for url strings.
+  use LocalAwareRedirectResponseTrait;
 
   /**
    * The language manager.
@@ -22,11 +29,19 @@ class RedirectForm extends ContentEntityForm {
   protected $languageManager;
 
   /**
+   * The router.
+   *
+   * @var \Drupal\Core\Routing\AccessAwareRouterInterface
+   */
+  protected AccessAwareRouterInterface $router;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     $form = parent::create($container);
     $form->languageManager = $container->get('language_manager');
+    $form->router = $container->get('router');
     return $form;
   }
 
@@ -135,6 +150,42 @@ class RedirectForm extends ContentEntityForm {
     }
     catch (\InvalidArgumentException) {
       // Do nothing, we want to only compare the resulting URLs.
+    }
+
+    // If creating a new Redirect and the source path is an existing path,
+    // recommend an alias instead.
+    if ($this->entity->isNew()
+        && $source['path']
+        && ($form_state->get('redirect_source_warning')) !== $source['path']
+        && !$form_state->hasAnyErrors()
+        && isset($redirect_url)
+        && $this->isLocal($redirect_url->toString())
+    ) {
+      $existing_path = FALSE;
+      // Warning about creating a redirect from a valid path.
+      // @todo Exception driven logic. Find a better way to determine if we have
+      //   a valid path.
+      try {
+        $this->router->match('/' . $source['path']);
+        $existing_path = TRUE;
+      }
+      catch (AccessDeniedHttpException) {
+        $existing_path = TRUE;
+      }
+      catch (ResourceNotFoundException) {
+        // Do nothing, expected behavior.
+      }
+
+      if ($existing_path) {
+        $form_state->set('redirect_source_warning', $source['path']);
+        $form_state->setRebuild();
+        $this->messenger()
+          ->addWarning($this->t('The source path %path appears to be a valid path. It is preferred to <a href="@url-alias">create URL aliases</a> for existing paths rather than redirects.', [
+            '%path' => trim($source['path']),
+            '@url-alias' => Url::fromRoute('entity.path_alias.add_form')
+              ->toString(),
+          ]));
+      }
     }
 
     return $entity;

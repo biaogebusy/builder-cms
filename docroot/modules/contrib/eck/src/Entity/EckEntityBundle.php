@@ -38,26 +38,30 @@ use Drupal\eck\EckEntityBundleInterface;
 class EckEntityBundle extends ConfigEntityBundleBase implements EckEntityBundleInterface {
 
   /**
-   * @var string
    * The machine name of this ECK entity bundle.
+   *
+   * @var string
    */
   public $type;
 
   /**
-   * @var string
    * The human-readable name of the ECK entity type.
+   *
+   * @var string
    */
   public $name;
 
   /**
-   * @var string
    * A brief description of this ECK bundle.
+   *
+   * @var string
    */
   public $description;
 
   /**
-   * @var string
    * Help information shown to the user when creating an Entity of this bundle.
+   *
+   * @var string
    */
   public $help;
 
@@ -120,13 +124,13 @@ class EckEntityBundle extends ConfigEntityBundleBase implements EckEntityBundleI
    */
   public function isLocked() {
     $locked = \Drupal::state()->get('eck_entity.type.locked');
-    return isset($locked[$this->id()]) ? $locked[$this->id()] : FALSE;
+    return $locked[$this->id()] ?? FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function loadMultiple(array $ids = NULL) {
+  public static function loadMultiple(?array $ids = NULL) {
     // Because we use a single class for multiple entity bundles we need to
     // parse all entity types and load the bundles.
     $entity_manager = \Drupal::entityTypeManager();
@@ -158,7 +162,10 @@ class EckEntityBundle extends ConfigEntityBundleBase implements EckEntityBundleI
   }
 
   /**
+   * Gets the machine name of the associated ECK entity type.
+   *
    * @return null|string
+   *   The machine name of the ECK entity type or NULL if not available.
    */
   public function getEckEntityTypeMachineName() {
     return $this->getEntityType()->getBundleOf();

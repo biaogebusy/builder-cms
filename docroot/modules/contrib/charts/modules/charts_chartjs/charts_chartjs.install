@@ -5,6 +5,9 @@
  * Installation and uninstallation functions.
  */
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
+
 /**
  * Implements hook_requirements().
  */
@@ -22,7 +25,7 @@ function charts_chartjs_requirements($phase) {
           $requirements['charts_chartjs_js'] = [
             'title' => t('Chart.js Library'),
             'value' => t('Available through a CDN'),
-            'severity' => REQUIREMENT_WARNING,
+            'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::Warning, fn() => REQUIREMENT_WARNING),
             'description' => t('You are using the Chart.js library via a content delivery network. It is generally considered better practice to install the library files locally. Please see the README file inside charts_chartjs for instructions to install the library.'),
           ];
         }
@@ -30,7 +33,7 @@ function charts_chartjs_requirements($phase) {
           $requirements['charts_chartjs_js'] = [
             'title' => t('Chart.js Library'),
             'value' => t('Not Installed'),
-            'severity' => REQUIREMENT_ERROR,
+            'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::Error, fn() => REQUIREMENT_ERROR),
             'description' => t('You are missing the Chart.js library in your Drupal installation directory and you have opted not to use a CDN. Please either enable use of the CDN in the Chart Settings under the Advanced tab or see the README file inside charts_chartjs for instructions to install the library.'),
           ];
         }
@@ -41,7 +44,7 @@ function charts_chartjs_requirements($phase) {
           $requirements['charts_chartjs_js'] = [
             'title' => t('Chart.js Library'),
             'value' => t('Installed'),
-            'severity' => REQUIREMENT_WARNING,
+            'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::Warning, fn() => REQUIREMENT_WARNING),
             'description' => t('You have installed the Chart.js library in your Drupal installation directory, but it contains additional files that are not required and may be harmful. Please delete everything except the files listed in charts_chartjs.libraries.yml. We have included a suggested post-install/post-update script in the README file.'),
           ];
         }
@@ -49,7 +52,7 @@ function charts_chartjs_requirements($phase) {
           $requirements['charts_chartjs_js'] = [
             'title' => t('Chart.js Library'),
             'value' => t('Installed'),
-            'severity' => REQUIREMENT_OK,
+            'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::OK, fn() => REQUIREMENT_OK),
             'description' => t('You have installed the Chart.js library in your Drupal installation directory.'),
           ];
         }

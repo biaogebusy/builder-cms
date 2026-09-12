@@ -7,9 +7,9 @@ namespace Drupal\Tests\eck\Unit {
   use Drupal\Core\Entity\EntityTypeInterface;
   use Drupal\Core\Entity\EntityTypeManagerInterface;
   use Drupal\Core\Entity\EntityTypeRepositoryInterface;
-  use Drupal\eck\Entity\EckEntityType;
-  use Drupal\Tests\eck\Unit\TestDoubles\FieldTypePluginManagerMock;
   use Drupal\Tests\UnitTestCase;
+  use Drupal\Tests\eck\Unit\TestDoubles\FieldTypePluginManagerMock;
+  use Drupal\eck\Entity\EckEntityType;
 
   /**
    * Base class for unit tests.
@@ -48,11 +48,7 @@ namespace Drupal\Tests\eck\Unit {
      */
     private function prepareContainer() {
       $container_class = 'Drupal\Core\DependencyInjection\Container';
-      $methods = get_class_methods($container_class);
-      $container = $this->getMockBuilder($container_class)
-        ->disableOriginalConstructor()
-        ->onlyMethods($methods)
-        ->getMock();
+      $container = $this->createMock($container_class);
       \Drupal::setContainer($container);
 
       $container->method('get')->willReturnCallback([
@@ -65,7 +61,7 @@ namespace Drupal\Tests\eck\Unit {
      * Retrieves the entity storage mock.
      */
     private function getEntityStorageMock() {
-      $entity_storage = $this->getMockForAbstractClass('\Drupal\Core\Entity\EntityStorageInterface');
+      $entity_storage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
       $entity_storage->method('loadMultiple')->willReturnCallback([
         $this,
         'entityStorageLoadMultiple',
@@ -79,27 +75,13 @@ namespace Drupal\Tests\eck\Unit {
     }
 
     /**
-     * Retrieves the entity manager mock.
-     */
-    private function getEntityManagerMock() {
-      $entity_storage = $this->getEntityStorageMock();
-      $definition = $this->getMockForAbstractClass(EntityTypeInterface::class);
-
-      $entity_manager = $this->getMockForAbstractClass(EntityTypeManagerInterface::class);
-      $entity_manager->method('getStorage')->willReturn($entity_storage);
-      $entity_manager->method('getDefinition')->willReturn($definition);
-
-      return $entity_manager;
-    }
-
-    /**
      * Retrieves the entity type manager mock.
      */
     private function getEntityTypeManagerMock() {
       $entity_storage = $this->getEntityStorageMock();
-      $definition = $this->getMockForAbstractClass(EntityTypeInterface::class);
+      $definition = $this->createMock(EntityTypeInterface::class);
 
-      $entity_type_manager = $this->getMockForAbstractClass(EntityTypeManagerInterface::class);
+      $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
       $entity_type_manager->method('getStorage')->willReturn($entity_storage);
       $entity_type_manager->method('getDefinition')->willReturn($definition);
 
@@ -110,7 +92,7 @@ namespace Drupal\Tests\eck\Unit {
      * Retrieves the entity type repository mock.
      */
     private function getEntityTypeRepositoryMock() {
-      $entity_type_repository = $this->getMockForAbstractClass(EntityTypeRepositoryInterface::class);
+      $entity_type_repository = $this->createMock(EntityTypeRepositoryInterface::class);
       $entity_type_repository->method('getEntityTypeFromClass')
         ->willReturn('eck_entity_type');
       return $entity_type_repository;
@@ -136,7 +118,7 @@ namespace Drupal\Tests\eck\Unit {
      *   The mocked user.
      */
     private function getNewUserMock() {
-      $user_mock = $this->getMockForAbstractClass('\Drupal\Core\Session\AccountProxyInterface');
+      $user_mock = $this->createMock('\Drupal\Core\Session\AccountProxyInterface');
       $user_mock->method('id')->willReturn(1);
       return $user_mock;
     }
@@ -162,10 +144,10 @@ namespace Drupal\Tests\eck\Unit {
      * Creates the language manager mock.
      */
     protected function createLanguageManagerMock() {
-      $current_language_mock = $this->getMockForAbstractClass('\Drupal\Core\Language\LanguageInterface');
+      $current_language_mock = $this->createMock('\Drupal\Core\Language\LanguageInterface');
       $current_language_mock->method('getId')->willReturn('en');
 
-      $mock = $this->getMockForAbstractClass('\Drupal\Core\Language\LanguageManagerInterface');
+      $mock = $this->createMock('\Drupal\Core\Language\LanguageManagerInterface');
       $mock->method('getCurrentLanguage')->willReturn($current_language_mock);
 
       return $mock;

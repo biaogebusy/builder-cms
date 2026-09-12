@@ -1,0 +1,16 @@
+ckeditor5_plugin_pack_highlight__highlight:
+  ckeditor5:
+    plugins:
+      - highlightAdapter.HighlightAdapter
+      - highlight.Highlight
+  drupal:
+    label: Highlight
+    library: ckeditor5_plugin_pack_highlight/highlight_adapter
+    class: Drupal\ckeditor5_plugin_pack_highlight\Plugin\CKEditor5Plugin\Highlight
+    admin_library: ckeditor5_plugin_pack_highlight/admin.highlight
+    toolbar_items:
+      highlight:
+        label: Highlight
+    elements:
+      - <mark>
+      - <mark class>

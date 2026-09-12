@@ -11,6 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\Test\RefreshVariablesTrait;
 use Drupal\Core\Url;
+use Drupal\user\OneTimeAuthentication;
 use Symfony\Component\CssSelector\CssSelectorConverter;
 
 /**
@@ -72,15 +73,19 @@ trait UiHelperTrait {
    */
   protected function submitForm(array $edit, $submit, $form_html_id = NULL) {
     $assert_session = $this->assertSession();
-
+    $submit_button = $assert_session->buttonExists($submit);
+    // Check if button has a form attribute set.
+    if ($form_id = $submit_button->getAttribute('form')) {
+      $form = $assert_session->elementExists('xpath', "//form[@id='$form_id']");
+      $action = $form->getAttribute('action');
+    }
     // Get the form.
-    if (isset($form_html_id)) {
+    elseif (isset($form_html_id)) {
       $form = $assert_session->elementExists('xpath', "//form[@id='$form_html_id']");
       $submit_button = $assert_session->buttonExists($submit, $form);
       $action = $form->getAttribute('action');
     }
     else {
-      $submit_button = $assert_session->buttonExists($submit);
       $form = $assert_session->elementExists('xpath', './ancestor::form', $submit_button);
       $action = $form->getAttribute('action');
     }
@@ -166,7 +171,10 @@ trait UiHelperTrait {
       $storage = \Drupal::entityTypeManager()->getStorage('user');
       /** @var \Drupal\user\UserInterface $accountUnchanged */
       $accountUnchanged = $storage->loadUnchanged($account->id());
-      $login = user_pass_reset_url($accountUnchanged) . '/login?destination=user/' . $account->id();
+      $login = \Drupal::service(OneTimeAuthentication::class)
+        ->generateOneTimeLoginUrl($accountUnchanged, immediate: TRUE)
+        ->mergeOptions(['query' => ['destination' => 'user/' . $account->id()]])
+        ->toString();
       $this->drupalGet($login);
     }
     else {
@@ -260,13 +268,11 @@ trait UiHelperTrait {
     $this->prepareRequest();
     foreach ($headers as $header_name => $header_value) {
       if (is_int($header_name)) {
-        // @todo Trigger deprecation in
-        //   https://www.drupal.org/project/drupal/issues/3421105.
+        @trigger_error('Passing an integer as header name to ' . __METHOD__ . '() is deprecated in drupal:11.1.0 and will be removed from drupal:12.0.0. Update the calling code to pass the header name as a key. See https://www.drupal.org/node/3456178', E_USER_DEPRECATED);
         [$header_name, $header_value] = explode(':', $header_value);
       }
       if (is_null($header_value)) {
-        // @todo Trigger deprecation in
-        //   https://www.drupal.org/project/drupal/issues/3421105.
+        @trigger_error('Using null as a header value to ' . __METHOD__ . '() is deprecated in drupal:11.1.0 and will be removed from drupal:12.0.0. Use an empty string instead. See https://www.drupal.org/node/3456233', E_USER_DEPRECATED);
         $header_value = '';
       }
       $session->setRequestHeader($header_name, $header_value);
@@ -403,7 +409,7 @@ trait UiHelperTrait {
    * @return bool
    *   Return TRUE if the user is logged in, FALSE otherwise.
    */
-  protected function drupalUserIsLoggedIn(AccountInterface $account) {
+  protected function drupalUserIsLoggedIn(AccountInterface $account): bool {
     $logged_in = FALSE;
 
     if (isset($account->sessionId)) {
@@ -536,7 +542,7 @@ trait UiHelperTrait {
    * @return bool
    *   TRUE if test is using DrupalTestBrowser.
    */
-  protected function isTestUsingGuzzleClient() {
+  protected function isTestUsingGuzzleClient(): bool {
     $driver = $this->getSession()->getDriver();
     if ($driver instanceof BrowserKitDriver) {
       return $driver->getClient() instanceof DrupalTestBrowser;

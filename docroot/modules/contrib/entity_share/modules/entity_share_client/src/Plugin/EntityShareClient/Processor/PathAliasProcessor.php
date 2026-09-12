@@ -4,24 +4,24 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
+use Drupal\entity_share_client\Attribute\ImportProcessor;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Path alias processor.
- *
- * @ImportProcessor(
- *   id = "path_alias_processor",
- *   label = @Translation("Path alias processor"),
- *   description = @Translation("Prepares entity with the right path alias information."),
- *   stages = {
- *     "prepare_importable_entity_data" = -100,
- *   },
- *   locked = false,
- * )
  */
+#[ImportProcessor(
+  id: 'path_alias_processor',
+  label: new TranslatableMarkup('Path alias processor'),
+  description: new TranslatableMarkup('Prepares entity with the right path alias information.'),
+  stages: [
+    'prepare_importable_entity_data' => -100,
+  ],
+)]
 class PathAliasProcessor extends ImportProcessorPluginBase {
 
   /**

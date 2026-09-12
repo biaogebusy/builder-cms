@@ -17,10 +17,10 @@ use Drupal\jsonapi\ResourceType\ResourceType;
  * reference items to the same entity. Here, these are termed "parallel"
  * relationships (as in "parallel edges" of a graph).
  *
- * This class adds a concept of an @code arity @endcode member under each its
- * @code meta @endcode object. The value of this member is an integer that is
- * incremented by 1 (starting from 0) for each repeated resource identifier
- * sharing a common @code type @endcode and @code id @endcode.
+ * This class adds a concept of an "arity" member under each its "meta" object.
+ * The value of this member is an integer that is incremented by 1 (starting
+ * from 0) for each repeated resource identifier sharing a common "type" and
+ * "id".
  *
  * There are a number of helper methods to process the logic of dealing with
  * resource identifies with and without arity.
@@ -31,7 +31,7 @@ use Drupal\jsonapi\ResourceType\ResourceType;
  * @see https://www.drupal.org/project/drupal/issues/3032787
  * @see jsonapi.api.php
  *
- * @see http://jsonapi.org/format/#document-resource-object-relationships
+ * @see https://jsonapi.org/format/#document-resource-object-relationships
  * @see https://github.com/json-api/json-api/pull/1156#issuecomment-325377995
  * @see https://www.drupal.org/project/drupal/issues/2864680
  */
@@ -123,7 +123,7 @@ class ResourceIdentifier implements ResourceIdentifierInterface {
   /**
    * Whether this ResourceIdentifier has an arity.
    *
-   * @return int
+   * @return bool
    *   TRUE if the ResourceIdentifier has an arity, FALSE otherwise.
    */
   public function hasArity() {
@@ -203,7 +203,7 @@ class ResourceIdentifier implements ResourceIdentifierInterface {
    *
    * @return bool
    *   TRUE if both relationships reference the same resource, even when they
-   *   have differing arity values, FALSE otherwise.
+   *   have different arity values, FALSE otherwise.
    */
   public static function isParallel(ResourceIdentifier $a, ResourceIdentifier $b) {
     return static::compare($a->withArity(0), $b->withArity(0)) === 0;
@@ -390,7 +390,7 @@ class ResourceIdentifier implements ResourceIdentifierInterface {
    *   The entity reference item for which to determine the entity property
    *   name.
    *
-   * @return string
+   * @return string|null
    *   The property name which has an entity as its value.
    */
   protected static function getDataReferencePropertyName(EntityReferenceItem $item) {
@@ -399,6 +399,7 @@ class ResourceIdentifier implements ResourceIdentifierInterface {
         return $property_name;
       }
     }
+    return NULL;
   }
 
   /**

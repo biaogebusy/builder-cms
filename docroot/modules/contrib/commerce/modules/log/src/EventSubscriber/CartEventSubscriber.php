@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_log\EventSubscriber;
 
+use Drupal\commerce_log\LogStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_cart\Event\CartEntityAddEvent;
 use Drupal\commerce_cart\Event\CartEvents;
@@ -11,20 +12,14 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class CartEventSubscriber implements EventSubscriberInterface {
 
   /**
-   * The log storage.
-   *
-   * @var \Drupal\commerce_log\LogStorageInterface
-   */
-  protected $logStorage;
-
-  /**
    * Constructs a new CartEventSubscriber object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->logStorage = $entity_type_manager->getStorage('commerce_log');
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
   }
 
   /**
@@ -44,9 +39,11 @@ class CartEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\commerce_cart\Event\CartEntityAddEvent $event
    *   The cart event.
    */
-  public function onCartEntityAdd(CartEntityAddEvent $event) {
+  public function onCartEntityAdd(CartEntityAddEvent $event): void {
     $cart = $event->getCart();
-    $this->logStorage->generate($cart, 'cart_entity_added', [
+    $log_storage = $this->entityTypeManager->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    $log_storage->generate($cart, 'cart_entity_added', [
       'purchased_entity_label' => $event->getOrderItem()->label(),
     ])->save();
   }
@@ -57,9 +54,11 @@ class CartEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\commerce_cart\Event\CartOrderItemRemoveEvent $event
    *   The cart event.
    */
-  public function onCartOrderItemRemove(CartOrderItemRemoveEvent $event) {
+  public function onCartOrderItemRemove(CartOrderItemRemoveEvent $event): void {
     $cart = $event->getCart();
-    $this->logStorage->generate($cart, 'cart_item_removed', [
+    $log_storage = $this->entityTypeManager->getStorage('commerce_log');
+    assert($log_storage instanceof LogStorageInterface);
+    $log_storage->generate($cart, 'cart_item_removed', [
       'purchased_entity_label' => $event->getOrderItem()->label(),
     ])->save();
   }

@@ -264,6 +264,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
     entity_autocomplete_tags:
@@ -273,6 +274,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
       '#tags': true
@@ -283,6 +285,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
       '#multiple': true
@@ -293,6 +296,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
       '#options':
@@ -305,6 +309,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
       '#options':
@@ -317,6 +322,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
     webform_entity_select_multiple:
@@ -326,6 +332,7 @@ elements: |
       '#selection_handler': 'default:user'
       '#selection_settings':
         include_anonymous: true
+        target_bundles: null
         filter:
           type: _none
       '#multiple': true

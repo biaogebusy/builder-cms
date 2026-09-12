@@ -19,7 +19,7 @@ class WebformElementFieldsetTest extends WebformElementBrowserTestBase {
   /**
    * Test fieldset element.
    */
-  public function testFieldset() {
+  public function testFieldset(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_fieldset');
@@ -41,6 +41,9 @@ class WebformElementFieldsetTest extends WebformElementBrowserTestBase {
     // Check fieldset title_display: none.
     $assert_session->responseContains('<legend style="display:none">');
     $assert_session->responseContains('<span class="fieldset-legend"></span>');
+
+    // Check fieldset title_attributes.
+    $assert_session->responseContains('<legend class="custom-class">');
 
     // Check fieldset description_display: before.
     $assert_session->responseContains('<div class="description"><div id="edit-fieldset-description-before--description" data-drupal-field-elements="description" class="webform-element-description">This is a description before.</div>');

@@ -15,6 +15,7 @@ gin_base:
   dependencies:
     - gin/tabs
     - gin/gin_dialog
+    - gin/status
 
 # Legacy
 
@@ -34,6 +35,8 @@ top_bar:
   css:
     component:
       dist/css/components/top_bar.css: { minified: false }
+  dependencies:
+    - gin/status
 
 # Navigation
 
@@ -63,9 +66,6 @@ navigation:
 
 core_navigation:
   css:
-    component:
-      dist/css/components/toolbar.css: { minified: false }
-      dist/css/components/toolbar_secondary.css: { minified: false }
     theme:
       dist/css/layout/core_navigation.css: { minified: false }
   js:
@@ -79,6 +79,12 @@ core_navigation:
     - gin/breadcrumb
     - gin/settings_tray
     - gin/settings_tray_edit
+
+core_navigation_without_topbar:
+  css:
+    component:
+      dist/css/components/toolbar.css: { minified: false }
+      dist/css/components/toolbar_secondary.css: { minified: false }
 
 gin_toolbar:
   css:
@@ -274,6 +280,11 @@ tooltip:
   dependencies:
     - gin/floating-ui
     - core/once
+
+status:
+  css:
+    component:
+      dist/css/components/status.css: { minified: false }
 
 more_actions:
   js:

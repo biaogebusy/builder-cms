@@ -8,11 +8,13 @@ use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\Core\Update\UpdateHookRegistry;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Simulates a hook_update_N function.
  */
-function under_test_update_3000() {
+function under_test_update_3000(): void {
 
 }
 
@@ -21,14 +23,14 @@ function under_test_update_3000() {
  *
  * When filtered this will be rejected.
  */
-function bad_3() {
+function bad_3(): void {
 
 }
 
 /**
  * Simulates a hook_update_N function.
  */
-function under_test_update_1() {
+function under_test_update_1(): void {
 
 }
 
@@ -37,14 +39,14 @@ function under_test_update_1() {
  *
  * When filtered this will be rejected.
  */
-function failed_22_update() {
+function failed_22_update(): void {
 
 }
 
 /**
  * Simulates a hook_update_N function.
  */
-function under_test_update_20() {
+function under_test_update_20(): void {
 
 }
 
@@ -53,14 +55,15 @@ function under_test_update_20() {
  *
  * When filtered this will be rejected.
  */
-function under_test_update_1234_failed() {
+function under_test_update_1234_failed(): void {
 
 }
 
 /**
- * @coversDefaultClass \Drupal\Core\Update\UpdateHookRegistry
- * @group Update
+ * Tests Drupal\Core\Update\UpdateHookRegistry.
  */
+#[CoversClass(UpdateHookRegistry::class)]
+#[Group('Update')]
 class UpdateHookRegistryTest extends UnitTestCase {
 
   /**
@@ -96,7 +99,9 @@ class UpdateHookRegistryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getAvailableUpdates
+   * Tests get versions.
+   *
+   * @legacy-covers ::getAvailableUpdates
    */
   public function testGetVersions(): void {
     $module_name = 'drupal\tests\core\update\under_test';
@@ -111,10 +116,12 @@ class UpdateHookRegistryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getInstalledVersion
-   * @covers ::getAllInstalledVersions
-   * @covers ::setInstalledVersion
-   * @covers ::deleteInstalledVersion
+   * Tests get installed version.
+   *
+   * @legacy-covers ::getInstalledVersion
+   * @legacy-covers ::getAllInstalledVersions
+   * @legacy-covers ::setInstalledVersion
+   * @legacy-covers ::deleteInstalledVersion
    */
   public function testGetInstalledVersion(): void {
     $versions = [
@@ -135,12 +142,12 @@ class UpdateHookRegistryTest extends UnitTestCase {
       });
     $this->keyValueStore
       ->method('delete')
-      ->willReturnCallback(static function ($key) use (&$versions) {
+      ->willReturnCallback(static function ($key) use (&$versions): void {
         $versions[$key] = UpdateHookRegistry::SCHEMA_UNINSTALLED;
       });
     $this->keyValueStore
       ->method('set')
-      ->willReturnCallback(static function ($key, $value) use (&$versions) {
+      ->willReturnCallback(static function ($key, $value) use (&$versions): void {
         $versions[$key] = $value;
       });
 

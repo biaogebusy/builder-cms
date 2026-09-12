@@ -190,8 +190,8 @@ References
     # Functional test.
     php ../../vendor/phpunit/phpunit/phpunit --printer="\Drupal\Tests\Listeners\HtmlOutputPrinter" ../modules/sandbox/webform/tests/src/Functional/WebformExampleFunctionalTest.php
 
-    # Kernal test.
-    php ../../vendor/phpunit/phpunit/phpunit --printer="\Drupal\Tests\Listeners\HtmlOutputPrinter" ../modules/sandbox/webform/tests/src/Kernal/Utility/WebformDialogHelperTest.php
+    # Kernel test.
+    php ../../vendor/phpunit/phpunit/phpunit --printer="\Drupal\Tests\Listeners\HtmlOutputPrinter" ../modules/sandbox/webform/tests/src/Kernel/Utility/WebformDialogHelperTest.php
 
     # Unit test.
     php ../../vendor/phpunit/phpunit/phpunit --printer="\Drupal\Tests\Listeners\HtmlOutputPrinter" ../modules/sandbox/webform/tests/src/Unit/Utility/WebformYamlTest.php
@@ -228,7 +228,7 @@ References
 7. Tag and create a hotfix release
 ----------------------------------
 
-    # Creete hotfix branch
+    # Create hotfix branch
     git checkout 6.2.LATEST-VERSION
     git checkout -b 6.2.NEXT-VERSION-hotfix
     git push -u origin 6.2.NEXT-VERSION-hotfix

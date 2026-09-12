@@ -26,8 +26,6 @@ use GuzzleHttp\RequestOptions;
  *
  * For a full list, refer to the methods of this class.
  *
- * @group decoupled_menus
- *
  * @see https://tools.ietf.org/html/draft-ietf-httpapi-linkset-00
  */
 abstract class LinksetControllerTestBase extends BrowserTestBase {
@@ -144,7 +142,7 @@ abstract class LinksetControllerTestBase extends BrowserTestBase {
   protected function enableEndpoint(bool $enabled) {
     $this->config('system.feature_flags')
       ->set('linkset_endpoint', $enabled)
-      ->save(TRUE);
+      ->save();
     // Using rebuildIfNeeded here to implicitly test that router is only rebuilt
     // when necessary.
     \Drupal::service('router.builder')->rebuildIfNeeded();

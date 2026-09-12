@@ -106,12 +106,10 @@ class ModulesUninstallForm extends FormBase {
     include_once DRUPAL_ROOT . '/core/includes/install.inc';
 
     // Get a list of all available modules that can be uninstalled.
-    $uninstallable = array_filter($this->moduleExtensionList->getList(), function ($module) {
+    $modules = $this->moduleExtensionList->getList();
+    $uninstallable = array_filter($modules, function ($module) {
        return empty($module->info['required']) && $module->status;
     });
-
-    // Include system.admin.inc so we can use the sort callbacks.
-    $this->moduleHandler->loadInclude('system', 'inc', 'system.admin');
 
     $form['filters'] = [
       '#type' => 'container',
@@ -137,7 +135,7 @@ class ModulesUninstallForm extends FormBase {
     $form['modules'] = [];
 
     // Only build the rest of the form if there are any modules available to
-    // uninstall;
+    // uninstall.
     if (empty($uninstallable)) {
       return $form;
     }
@@ -165,6 +163,7 @@ class ModulesUninstallForm extends FormBase {
       $name = $module->info['name'] ?: $module->getName();
       $form['modules'][$module->getName()]['#module_name'] = $name;
       $form['modules'][$module->getName()]['name']['#markup'] = $name;
+      // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
       $form['modules'][$module->getName()]['description']['#markup'] = $this->t($module->info['description']);
 
       $lifecycle = $module->info[ExtensionLifecycle::LIFECYCLE_IDENTIFIER];
@@ -198,7 +197,13 @@ class ModulesUninstallForm extends FormBase {
       // we can allow this module to be uninstalled.
       foreach (array_keys($module->required_by) as $dependent) {
         if ($this->updateRegistry->getInstalledVersion($dependent) !== $this->updateRegistry::SCHEMA_UNINSTALLED) {
-          $form['modules'][$module->getName()]['#required_by'][] = $dependent;
+          $module_name = $modules[$dependent]->info['name'];
+          if ($dependent != strtolower(str_replace(' ', '_', $module_name))) {
+            $form['modules'][$module->getName()]['#required_by'][] = $module_name . " (" . $dependent . ")";
+          }
+          else {
+            $form['modules'][$module->getName()]['#required_by'][] = $module_name;
+          }
           $form['uninstall'][$module->getName()]['#disabled'] = TRUE;
         }
       }

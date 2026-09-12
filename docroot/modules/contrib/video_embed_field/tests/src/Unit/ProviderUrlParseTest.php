@@ -238,6 +238,11 @@ class ProviderUrlParseTest extends UnitTestCase {
         'https://player.vimeo.com/video/193517656',
         '193517656',
       ],
+      'Vimeo: Query strings' => [
+        'Drupal\video_embed_field\Plugin\video_embed_field\Provider\Vimeo',
+        'https://player.vimeo.com/video/193517656?fl=pl&fe=vl',
+        '193517656',
+      ],
       // Vimeo failing cases.
       'Vimeo: Malformed String' => [
         'Drupal\video_embed_field\Plugin\video_embed_field\Provider\Vimeo',
@@ -264,13 +269,14 @@ class ProviderUrlParseTest extends UnitTestCase {
     ], '', [
       'title' => 'YouTube',
     ], $this->httpClient, $file_system);
-    $embed = $provider->renderEmbedCode(
-      100,
-      100,
-      TRUE,
-      '@provider | @title',
-      TRUE
-    );
+    $embed = $provider->renderEmbed([
+      'width' => 100,
+      'height' => 100,
+      'autoplay' => TRUE,
+      'title_format' => '@provider | @title',
+      'use_title_fallback' => TRUE,
+      'loading' => 'lazy',
+    ]);
     $language = $embed['#query']['cc_lang_pref'] ?? FALSE;
     $this->assertEquals($expected, $language);
   }
@@ -314,13 +320,14 @@ class ProviderUrlParseTest extends UnitTestCase {
     ], '', [
       'title' => 'YouTube',
     ], $this->httpClient, $file_system);
-    $embed = $provider->renderEmbedCode(
-      100,
-      100,
-      TRUE,
-      '@provider | @title',
-      TRUE
-    );
+    $embed = $provider->renderEmbed([
+      'width' => 100,
+      'height' => 100,
+      'autoplay' => TRUE,
+      'title_format' => '@provider | @title',
+      'use_title_fallback' => TRUE,
+      'loading' => 'lazy',
+    ]);
     $this->assertEquals($expected, $embed['#query']['start']);
   }
 
@@ -385,13 +392,14 @@ class ProviderUrlParseTest extends UnitTestCase {
     $this->assertEquals($exception_expected, $exception_triggered);
 
     if (!$exception_triggered) {
-      $embed = $provider->renderEmbedCode(
-        100,
-        100,
-        TRUE,
-        '@provider | @title',
-        TRUE
-      );
+      $embed = $provider->renderEmbed([
+        'width' => 100,
+        'height' => 100,
+        'autoplay' => TRUE,
+        'title_format' => '@provider | @title',
+        'use_title_fallback' => TRUE,
+        'loading' => 'lazy',
+      ]);
       $this->assertEquals($expected, $embed['#fragment'] ?? FALSE);
     }
   }

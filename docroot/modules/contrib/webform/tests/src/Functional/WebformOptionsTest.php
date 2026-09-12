@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\webform\Entity\WebformOptions;
 
 /**
@@ -29,7 +29,7 @@ class WebformOptionsTest extends WebformBrowserTestBase {
   /**
    * Tests webform options entity.
    */
-  public function testWebformOptions() {
+  public function testWebformOptions(): void {
     $assert_session = $this->assertSession();
 
     $normal_user = $this->drupalCreateUser();
@@ -87,8 +87,13 @@ class WebformOptionsTest extends WebformBrowserTestBase {
     // Check hook_webform_options_alter() && hook_webform_options_WEBFORM_OPTIONS_ID_alter().
     // Check that the default value can be set from the alter hook.
     $this->drupalGet('/webform/test_options');
-    $assert_session->responseContains('<select data-drupal-selector="edit-custom" id="edit-custom" name="custom" class="form-select"><option value="">- None -</option><option value="one" selected="selected">One</option><option value="two">Two</option><option value="three">Three</option></select>');
-    $assert_session->responseContains('<select data-drupal-selector="edit-test" id="edit-test" name="test" class="form-select"><option value="" selected="selected">- None -</option><option value="four">Four</option><option value="five">Five</option><option value="six">Six</option></select>');
+    $assert_session->optionExists('custom', 'One');
+    $assert_session->optionExists('custom', 'Two');
+    $assert_session->optionExists('custom', 'Three');
+
+    $assert_session->optionExists('test', 'Four');
+    $assert_session->optionExists('test', 'Five');
+    $assert_session->optionExists('test', 'Six');
 
     // Check hook_webform_options_WEBFORM_OPTIONS_ID_alter() is not executed
     // when options are altered.
@@ -97,12 +102,14 @@ class WebformOptionsTest extends WebformBrowserTestBase {
     $webform_test_options->save();
     $this->debug($webform_test_options->getOptions());
 
-    $this->drupalGet('/webform/test_options');
-    $assert_session->responseContains('<select data-drupal-selector="edit-test" id="edit-test" name="test" class="form-select"><option value="" selected="selected">- None -</option><option value="red">Red</option><option value="white">White</option><option value="blue">Blue</option><option value="four">Four</option><option value="five">Five</option><option value="six">Six</option></select>');
-
     // Check custom options set via alter hook().
     $this->drupalGet('/webform/test_options');
-    $assert_session->responseContains('<select data-drupal-selector="edit-test" id="edit-test" name="test" class="form-select"><option value="" selected="selected">- None -</option><option value="red">Red</option><option value="white">White</option><option value="blue">Blue</option><option value="four">Four</option><option value="five">Five</option><option value="six">Six</option></select>');
+    $assert_session->optionExists('test', 'Red');
+    $assert_session->optionExists('test', 'White');
+    $assert_session->optionExists('test', 'Blue');
+    $assert_session->optionExists('test', 'Four');
+    $assert_session->optionExists('test', 'Five');
+    $assert_session->optionExists('test', 'Six');
 
     // Check that 'Afghanistan' is the first option.
     $element = ['#options' => 'country_names'];

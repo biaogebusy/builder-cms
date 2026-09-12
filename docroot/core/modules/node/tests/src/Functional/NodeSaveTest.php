@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests $node->save() for saving content.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeSaveTest extends NodeTestBase {
 
   /**
@@ -36,7 +38,8 @@ class NodeSaveTest extends NodeTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    // Create a user that is allowed to post; we'll use this to test the submission.
+    // Create a user that is allowed to post; we'll use this to test the
+    // submission.
     $web_user = $this->drupalCreateUser(['create article content']);
     $this->drupalLogin($web_user);
     $this->webUser = $web_user;
@@ -48,7 +51,7 @@ class NodeSaveTest extends NodeTestBase {
    * Workflow:
    *  - first create a piece of content
    *  - save the content
-   *  - check if node exists
+   *  - check if node exists.
    */
   public function testImport(): void {
     // Node ID must be a number that is not in the database.

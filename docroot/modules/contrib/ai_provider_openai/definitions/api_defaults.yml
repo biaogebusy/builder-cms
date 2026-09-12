@@ -82,27 +82,19 @@ text_to_image:
       constraints:
         min: 1
         max: 10
-    response_format:
-      label: 'Response Format'
-      description: 'The format in which the generated images are returned.'
-      type: 'string'
-      default: 'url'
-      required: false
-      constraints:
-        options:
-          - url
-          - b64_json
     size:
       label: 'Size'
       description: 'The size of the images that will be generated.'
       type: 'string'
-      default: '256x256'
+      default: '1024x1024'
       required: false
       constraints:
         options:
-          - '256x256'
-          - '512x512'
           - '1024x1024'
+          - '1024x1536'
+          - '1536x1024'
+          - '1024x1792'
+          - '1792x1024'
 text_to_speech:
   input:
     description: 'Textual representation of the speech.'

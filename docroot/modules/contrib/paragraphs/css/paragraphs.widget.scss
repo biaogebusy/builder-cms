@@ -3,21 +3,20 @@
 // Stable paragraphs widget CSS.
 //
 
-@import "variables";
-@import "summary";
+@use "sass:map";
+@use "variables" as *;
+@use "summary";
 
 .paragraphs {
   // Paragraphs state information icons.
   &-icon {
     display: inline-block;
-    height: $info-size;
     width: $info-size;
+    height: $info-size;
+    vertical-align: middle;
     background: no-repeat center;
     background-size: $info-icon-size $info-icon-size;
-    vertical-align: middle;
-
-    $icons: view edit-info edit-disabled delete delete-disabled lock changed collapse warning error;
-    @each $icon in $icons {
+    @each $icon in (view edit-info edit-disabled delete delete-disabled lock changed collapse warning error) {
       &-#{$icon} {
         background-image: url('../icons/icon-#{$icon}.svg');
       }
@@ -26,21 +25,19 @@
 }
 
 // Paragraphs button icon support for small screens.
-@media (max-width: map-get($grid-breakpoints, 'md')) {
+@media (max-width: map.get($grid-breakpoints, 'md')) {
   .button.paragraphs-icon-button {
-    padding: 0;
     width: $action-size-big !important;
     height: $action-size-big;
+    padding: 0;
+    text-indent: -9999em;
+    border-radius: $action-border-radius;
+    background-repeat: no-repeat !important;
     // We need important flag here to easily override many specific rules from
     // seven buttons.css.
     background-position: center !important;
-    background-repeat: no-repeat !important;
     background-size: $action-icon-size $action-icon-size;
-    border-radius: $action-border-radius;
-    text-indent: -9999em;
-
-    $icons: collapse edit;
-    @each $icon in $icons {
+    @each $icon in (collapse edit) {
       &-#{$icon},
       &-#{$icon}:active,
       &-#{$icon}:hover,
@@ -65,18 +62,18 @@
 
 .paragraph-bullet {
   text-align: center;
-  &:after {
-    content: "\25cf";
+  &::after {
     padding: 0 10px;
+    content: "\25cf";
     color: #777;
     font-size: 0.75em;
     line-height: 3.5em;
   }
 }
 
-@media (min-width: map-get($grid-breakpoints, 'md')) {
+@media (min-width: map.get($grid-breakpoints, 'md')) {
   .paragraph-bullet {
-    &:after {
+    &::after {
       line-height: 2.5em;
     }
   }
@@ -144,22 +141,21 @@
     }
 
     .field-multiple-drag {
-      vertical-align: middle;
       min-width: 40px;
+      vertical-align: middle;
     }
 
     .draggable .tabledrag-handle {
-      margin-left: 0;
-      margin-top: 3px;
-      padding-right: .25em;
       width: 23px;
-      vertical-align: baseline;
+      margin-top: 3px;
+      margin-left: 0;
+      padding-right: .25em;
 
       // Fix active focus.
       &:focus {
         &::before {
-          margin-left: .1em;
           margin-right: .1em;
+          margin-left: .1em;
         }
       }
 
@@ -167,7 +163,6 @@
       &::after {
         margin-left: 0;
         padding: .5rem;
-        margin-top: 0.9375rem;
       }
 
       // Scale the icon on hover.
@@ -182,8 +177,8 @@
 
     .tabledrag-handle .handle {
       height: 22px;
-      margin-left: 0;
       margin-right: 0;
+      margin-left: 0;
     }
 
     .delta-order {
@@ -194,59 +189,45 @@
 
   .paragraph-top {
     display: grid;
-    grid-template-columns: 100px auto 1fr auto;
     grid-template-rows: auto auto;
+    grid-template-columns: 100px auto 1fr auto;
     grid-gap: 0 $gutter-top;
     align-items: baseline;
 
-    @media (min-width: map-get($grid-breakpoints, 'lg')) {
-      grid-template-columns: 150px auto 1fr auto;
-    }
-
     .paragraph-type {
-      grid-column: 1 / 2;
-      // PostCSS autoprefixer does not support -ms-grid-column and some other
-      // attributes that we need. This support will not be improved so we need
-      // to do it manually for IE.
-      -ms-grid-column: 1;
       grid-row: 1 / span 1;
+      grid-column: 1 / 2;
     }
 
     .paragraph-info {
-      grid-column: 2 / 3;
-      -ms-grid-column: 2;
       grid-row: 1 / span 1;
+      grid-column: 2 / 3;
     }
 
     .paragraph-summary {
-      grid-column: 1 / 5;
-      -ms-grid-column: 1;
-      -ms-grid-column-span: 5;
-      grid-row: 2 / span 1;
       overflow: hidden;
+      grid-row: 2 / span 1;
+      grid-column: 1 / 5;
       white-space: nowrap;
 
-      @media (min-width: map-get($grid-breakpoints, 'sm')) {
-        grid-column: 3 / 4;
-        -ms-grid-column: 3;
-        -ms-grid-column-span: 1;
+      @media (min-width: map.get($grid-breakpoints, 'sm')) {
         grid-row: 1 / span 2;
+        grid-column: 3 / 4;
       }
     }
 
     .paragraphs-actions {
-      grid-column: 3 / 5;
-      -ms-grid-column: 3;
-      -ms-grid-column-span: 2;
       grid-row: 1 / span 1;
+      grid-column: 3 / 5;
       justify-self: end;
-      -ms-grid-column-align: end;
 
-      @media (min-width: map-get($grid-breakpoints, 'sm')) {
+      @media (min-width: map.get($grid-breakpoints, 'sm')) {
         grid-column: 4 / 5;
-        -ms-grid-column: 4;
-        -ms-grid-column-span: 1;
       }
+    }
+
+    @media (min-width: map.get($grid-breakpoints, 'lg')) {
+      grid-template-columns: 150px auto 1fr auto;
     }
   }
 
@@ -275,9 +256,9 @@
   }
 
   .paragraph-type {
-    text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    text-overflow: ellipsis;
     &-title {
       display: flex;
       flex-basis: 100px;
@@ -285,22 +266,16 @@
     }
 
     &-icon {
-      padding-right: $gutter-top;
-      height: $info-icon-size;
       width: $info-icon-size;
+      height: $info-icon-size;
+      padding-right: $gutter-top;
       vertical-align: middle;
     }
 
     &-label {
-      text-overflow: ellipsis;
-      white-space: nowrap;
       overflow: hidden;
-    }
-  }
-
-  @media (min-width: map-get($grid-breakpoints, 'sm')) {
-    .paragraph-type-add-modal {
-      display: inline-block;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
 
@@ -309,12 +284,18 @@
   }
 
   .paragraph-type-add-modal-button:hover {
-    color: #ffffff;
+    color: #fff;
     background: #057ec7 none;
   }
 
   .paragraphs-convert-button {
     margin-left: 0;
+  }
+
+  @media (min-width: map.get($grid-breakpoints, 'sm')) {
+    .paragraph-type-add-modal {
+      display: inline-block;
+    }
   }
 }
 
@@ -350,24 +331,27 @@
   background-color: $paragraph-hover-bg;
 }
 
-@media (min-width: map-get($grid-breakpoints, 'md')) {
-  /* Basic node form sticky paragraph tabs implementation. */
+// Sticky paragraph tabs - mobile first approach.
+.is-horizontal .paragraphs-tabs:first-of-type {
+  position: sticky;
+  // Toolbar bar minimum z-index is 490 so we need to be lower.
+  z-index: 489;
+  top: 0;
+  // Force horizontal layout on all screen sizes.
+  flex-direction: row;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+// Use same breakpoint value as in core navigation top-bar.css.
+// Only use --drupal-displace-offset-top on larger screens where it's reliable.
+@media (min-width: 64rem) {
   .is-horizontal .paragraphs-tabs:first-of-type {
-    position: sticky;
-    top: 0;
-    margin-top: 0;
-    padding-top: 5px !important;
-    /* Toolbar bar minimum z-index is 501 so we need to be lower, other way
-       our sticky tabs will be on top of toolbar menu. */
-    z-index: 500;
-    background-color: rgba(255, 255, 255, 0.9);
+    top: var(--drupal-displace-offset-top, 0);
   }
+}
 
-  .toolbar-fixed .is-horizontal .paragraphs-tabs:first-of-type {
-    top: 39px;
-  }
-
-  .toolbar-fixed.toolbar-horizontal.toolbar-tray-open .is-horizontal .paragraphs-tabs:first-of-type {
-    top: 79px;
-  }
+// When in dialog we need to adjust top and compensate for dialog top vertical
+// padding.
+.ui-dialog > .ui-dialog-content .is-horizontal .paragraphs-tabs:first-of-type {
+  top: calc(-1 * var(--space-m));
 }

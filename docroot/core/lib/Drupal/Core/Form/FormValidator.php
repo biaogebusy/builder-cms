@@ -7,6 +7,7 @@ use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Utility\CallableResolver;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -46,25 +47,28 @@ class FormValidator implements FormValidatorInterface {
   protected $formErrorHandler;
 
   /**
-   * Constructs a new FormValidator.
-   *
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
-   *   The string translation service.
-   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token
-   *   The CSRF token generator.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   A logger instance.
-   * @param \Drupal\Core\Form\FormErrorHandlerInterface $form_error_handler
-   *   The form error handler.
+   * The callable resolver.
    */
-  public function __construct(RequestStack $request_stack, TranslationInterface $string_translation, CsrfTokenGenerator $csrf_token, LoggerInterface $logger, FormErrorHandlerInterface $form_error_handler) {
+  protected CallableResolver $callableResolver;
+
+  public function __construct(
+    RequestStack $request_stack,
+    TranslationInterface $string_translation,
+    CsrfTokenGenerator $csrf_token,
+    LoggerInterface $logger,
+    FormErrorHandlerInterface $form_error_handler,
+    ?CallableResolver $callableResolver = NULL,
+  ) {
     $this->requestStack = $request_stack;
     $this->stringTranslation = $string_translation;
     $this->csrfToken = $csrf_token;
     $this->logger = $logger;
     $this->formErrorHandler = $form_error_handler;
+    if (!$callableResolver) {
+      @trigger_error(sprintf('Calling %s() without the $callableResolver param is deprecated in drupal:11.3.0 and is required in drupal:12.0.0. See https://www.drupal.org/node/3548821', __METHOD__), E_USER_DEPRECATED);
+      $callableResolver = \Drupal::service(CallableResolver::class);
+    }
+    $this->callableResolver = $callableResolver;
   }
 
   /**
@@ -79,7 +83,8 @@ class FormValidator implements FormValidatorInterface {
     }
 
     foreach ($handlers as $callback) {
-      call_user_func_array($form_state->prepareCallback($callback), [&$form, &$form_state]);
+      $callable = $this->callableResolver->getCallableFromDefinition($form_state->prepareCallback($callback));
+      $callable($form, $form_state);
     }
   }
 
@@ -142,8 +147,9 @@ class FormValidator implements FormValidatorInterface {
    *   The unique string identifying the form.
    */
   protected function handleErrorsWithLimitedValidation(&$form, FormStateInterface &$form_state, $form_id) {
-    // If validation errors are limited then remove any non validated form values,
-    // so that only values that passed validation are left for submit callbacks.
+    // If validation errors are limited then remove any non validated form
+    // values, so that only values that passed validation are left for submit
+    // callbacks.
     $triggering_element = $form_state->getTriggeringElement();
     if (isset($triggering_element['#limit_validation_errors']) && $triggering_element['#limit_validation_errors'] !== FALSE) {
       $values = [];
@@ -209,7 +215,7 @@ class FormValidator implements FormValidatorInterface {
    * and selected options were in the list of options given to the user. Then
    * calls user-defined validators.
    *
-   * @param $elements
+   * @param array $elements
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form. The current user-submitted data is stored
@@ -221,7 +227,7 @@ class FormValidator implements FormValidatorInterface {
    *   This technique is useful when validation requires file parsing,
    *   web service requests, or other expensive requests that should
    *   not be repeated in the submission step.
-   * @param $form_id
+   * @param string $form_id
    *   A unique string identifying the form for validation, submission,
    *   theming, and hook_form_alter functions. Is only present on the initial
    *   call to the method, which receives the entire form array as the $element,
@@ -278,7 +284,8 @@ class FormValidator implements FormValidatorInterface {
       elseif (isset($elements['#element_validate'])) {
         foreach ($elements['#element_validate'] as $callback) {
           $complete_form = &$form_state->getCompleteForm();
-          call_user_func_array($form_state->prepareCallback($callback), [&$elements, &$form_state, &$complete_form]);
+          $callable = $this->callableResolver->getCallableFromDefinition($form_state->prepareCallback($callback));
+          $callable($elements, $form_state, $complete_form);
         }
       }
 
@@ -330,7 +337,11 @@ class FormValidator implements FormValidatorInterface {
   protected function performRequiredValidation(&$elements, FormStateInterface &$form_state) {
     // Verify that the value is not longer than #maxlength.
     if (isset($elements['#maxlength']) && mb_strlen($elements['#value']) > $elements['#maxlength']) {
-      $form_state->setError($elements, $this->t('@name cannot be longer than %max characters but is currently %length characters long.', ['@name' => empty($elements['#title']) ? $elements['#parents'][0] : $elements['#title'], '%max' => $elements['#maxlength'], '%length' => mb_strlen($elements['#value'])]));
+      $form_state->setError($elements, $this->t('@name cannot be longer than %max characters but is currently %length characters long.', [
+        '@name' => empty($elements['#title']) ? $elements['#parents'][0] : $elements['#title'],
+        '%max' => $elements['#maxlength'],
+        '%length' => mb_strlen($elements['#value']),
+      ]));
     }
 
     if (isset($elements['#options']) && isset($elements['#value'])) {
@@ -386,6 +397,8 @@ class FormValidator implements FormValidatorInterface {
    *   The current state of the form.
    *
    * @return array|null
+   *   An array of validation errors for the triggering element. Defaults to
+   *   NULL, which turns off error suppression.
    */
   protected function determineLimitValidationErrors(FormStateInterface &$form_state) {
     // While this element is being validated, it may be desired that some

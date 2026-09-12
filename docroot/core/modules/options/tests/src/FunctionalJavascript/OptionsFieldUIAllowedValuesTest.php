@@ -8,13 +8,16 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiJSTestTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Options field allowed values UI functionality.
- *
- * @group options
- * @group #slow
  */
+#[Group('options')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class OptionsFieldUIAllowedValuesTest extends WebDriverTestBase {
 
   use FieldUiJSTestTrait;
@@ -26,6 +29,7 @@ class OptionsFieldUIAllowedValuesTest extends WebDriverTestBase {
     'node',
     'options',
     'field_ui',
+    'block',
   ];
 
   /**
@@ -66,6 +70,7 @@ class OptionsFieldUIAllowedValuesTest extends WebDriverTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->drupalPlaceBlock('local_actions_block');
 
     // Create test user.
     $admin_user = $this->drupalCreateUser([
@@ -82,9 +87,8 @@ class OptionsFieldUIAllowedValuesTest extends WebDriverTestBase {
 
   /**
    * Tests option types allowed values.
-   *
-   * @dataProvider providerTestOptionsAllowedValues
    */
+  #[DataProvider('providerTestOptionsAllowedValues')]
   public function testOptionsAllowedValues($option_type, $options, $is_string_option, string $add_row_method): void {
     $assert = $this->assertSession();
     $this->fieldName = 'field_options_text';
@@ -170,44 +174,50 @@ class OptionsFieldUIAllowedValuesTest extends WebDriverTestBase {
       $this->assertHasFocusByAttribute('name', $key_element_name);
       $this->assertAllowValuesRowCount($expected_rows);
     }
-    $page->pressButton('Save');
+    $page->pressButton('Save settings');
+    $this->assertTrue($this->assertSession()->waitForText('Saved field_options_text configuration.'));
+
+    $option_labels = array_values($options);
+    $this->assertCount(3, $option_labels);
 
     // Test the order of the option list on node form.
     $this->drupalGet($this->nodeFormPath);
-    $this->assertNodeFormOrder(['- None -', 'First', 'Second', 'Third']);
+    $this->assertNodeFormOrder(['- None -', $option_labels[0], $option_labels[1], $option_labels[2]]);
 
     // Test the order of the option list on admin path.
     $this->drupalGet($this->adminPath);
-    $this->assertOrder(['First', 'Second', 'Third', ''], $is_string_option);
+    $this->assertOrder([$option_labels[0], $option_labels[1], $option_labels[2], ''], $is_string_option);
     $drag_handle = $page->find('css', '[data-drupal-selector="edit-field-storage-subform-settings-allowed-values-table-0"] .tabledrag-handle');
     $target = $page->find('css', '[data-drupal-selector="edit-field-storage-subform-settings-allowed-values-table-2"]');
 
     // Change the order the items appear.
     $drag_handle->dragTo($target);
-    $this->assertOrder(['Second', 'Third', 'First', ''], $is_string_option);
-    $page->pressButton('Save');
+    $this->assertOrder([$option_labels[1], $option_labels[2], $option_labels[0], ''], $is_string_option);
+    $page->pressButton('Save settings');
+    $this->assertTrue($this->assertSession()->waitForText('Saved field_options_text configuration.'));
 
     $this->drupalGet($this->nodeFormPath);
-    $this->assertNodeFormOrder(['- None -', 'Second', 'Third', 'First']);
+    $this->assertNodeFormOrder(['- None -', $option_labels[1], $option_labels[2], $option_labels[0]]);
 
     $this->drupalGet($this->adminPath);
 
     // Confirm the change in order was saved.
-    $this->assertOrder(['Second', 'Third', 'First', ''], $is_string_option);
+    $this->assertOrder([$option_labels[1], $option_labels[2], $option_labels[0], ''], $is_string_option);
 
     // Delete an item.
     $page->pressButton('remove_row_button__1');
     $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertOrder(['Second', 'First', ''], $is_string_option);
-    $page->pressButton('Save');
+    $this->assertOrder([$option_labels[1], $option_labels[0], ''], $is_string_option);
+    $page->pressButton('Save settings');
+    $this->assertTrue($this->assertSession()->waitForText('Saved field_options_text configuration.'));
 
     $this->drupalGet($this->nodeFormPath);
-    $this->assertNodeFormOrder(['- None -', 'Second', 'First']);
+    $this->assertNodeFormOrder(['- None -', $option_labels[1], $option_labels[0]]);
 
     $this->drupalGet($this->adminPath);
 
     // Confirm the item removal was saved.
-    $this->assertOrder(['Second', 'First', ''], $is_string_option);
+    $this->assertOrder([$option_labels[1], $option_labels[0], ''], $is_string_option);
   }
 
   /**
@@ -313,7 +323,7 @@ JS;
       ],
       'List string' => [
         'list_string',
-        ['first' => 'First', 'second' => 'Second', 'third' => 'Third'],
+        ['0' => '0', '1' => '1', 'two' => 'two'],
         TRUE,
       ],
     ];

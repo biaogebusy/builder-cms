@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\EventSubscriber;
 
+use Drupal\Core\EventSubscriber\ModuleRouteSubscriber;
 use Drupal\Core\Routing\RouteBuildEvent;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\EventSubscriber\ModuleRouteSubscriber;
-use Symfony\Component\Routing\RouteCollection;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @coversDefaultClass \Drupal\Core\EventSubscriber\ModuleRouteSubscriber
- * @group EventSubscriber
+ * Tests Drupal\Core\EventSubscriber\ModuleRouteSubscriber.
  */
+#[CoversClass(ModuleRouteSubscriber::class)]
+#[Group('EventSubscriber')]
 class ModuleRouteSubscriberTest extends UnitTestCase {
 
   /**
@@ -44,16 +48,16 @@ class ModuleRouteSubscriberTest extends UnitTestCase {
   /**
    * Tests that removeRoute() removes routes when the module is not enabled.
    *
-   * @dataProvider providerTestRemoveRoute
-   * @covers ::onAlterRoutes
-   *
    * @param string $route_name
    *   The machine name for the route.
    * @param array $requirements
    *   An array of requirements to use for the route.
    * @param bool $removed
    *   Whether or not the route is expected to be removed from the collection.
+   *
+   * @legacy-covers ::onAlterRoutes
    */
+  #[DataProvider('providerTestRemoveRoute')]
   public function testRemoveRoute($route_name, array $requirements, $removed): void {
     $collection = new RouteCollection();
     $route = new Route('', [], $requirements);
@@ -74,7 +78,7 @@ class ModuleRouteSubscriberTest extends UnitTestCase {
   /**
    * Data provider for testRemoveRoute().
    */
-  public static function providerTestRemoveRoute() {
+  public static function providerTestRemoveRoute(): array {
     return [
       ['enabled', ['_module_dependencies' => 'enabled'], FALSE],
       ['disabled', ['_module_dependencies' => 'disabled'], TRUE],

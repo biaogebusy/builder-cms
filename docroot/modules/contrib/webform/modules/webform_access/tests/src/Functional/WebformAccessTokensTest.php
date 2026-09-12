@@ -14,7 +14,7 @@ class WebformAccessTokensTest extends WebformAccessBrowserTestBase {
   /**
    * Tests webform access tokens.
    */
-  public function testWebformAccessTokens() {
+  public function testWebformAccessTokens(): void {
     // Add both users to employee group.
     foreach ($this->users as $account) {
       $this->groups['employee']->addUserId($account->id());

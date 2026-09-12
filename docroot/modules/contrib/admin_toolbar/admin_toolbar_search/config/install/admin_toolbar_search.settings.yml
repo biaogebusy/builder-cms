@@ -1,2 +1,7 @@
+# Default configuration for the Admin Toolbar Search module.
+
+# The search field is displayed directly in the toolbar by default.
 display_menu_item: false
+
+# Search field keyboard shortcut is enabled by default (Alt + a).
 enable_keyboard_shortcut: true

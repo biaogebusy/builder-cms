@@ -168,17 +168,25 @@ class ChatTranslationProvider extends AiProviderClientBase implements
    */
   public function translateText(TranslateTextInput $input, string $model_id, array $options = []): TranslateTextOutput {
     $text = $input->getText();
+    $input_target_language = $input->getTargetLanguage();
 
     // We can guess source, but not target language.
     /** @var \Drupal\language\Entity\ConfigurableLanguage $targetLanguage */
-    $targetLanguage = $this->entityTypeManager->getStorage('configurable_language')->load($input->getTargetLanguage());
+    $targetLanguage = $this->entityTypeManager->getStorage('configurable_language')->load($input_target_language);
     if (!$targetLanguage) {
       // @todo TranslateText-specific exception, documented in
       // TranslateTextInterface::translateText() docblock.
       $this->loggerFactory->get('ai_translate')->warning(
         $this->t('Unable to guess target language, code @langcode',
-          ['@langcode' => $input->getTargetLanguage()]));
-      return new TranslateTextOutput('', '', '');
+          ['@langcode' => $input_target_language]));
+      return new TranslateTextOutput(
+        '',
+        '',
+        $this->t(
+          'The target language (@language) is not installed. Please install the language in Drupal first.',
+          ['@language' => $input_target_language]
+        )
+      );
     }
 
     $aiConfig = $this->configFactory->get('ai_translate.settings')->get('language_settings') ?? [];
@@ -236,7 +244,7 @@ class ChatTranslationProvider extends AiProviderClientBase implements
       // Error handling for the API call.
       $this->loggerFactory->get('ai_translate')
         ->warning($exception->getMessage());
-      return new TranslateTextOutput('', '', '');
+      return new TranslateTextOutput('', '', $exception->getMessage());
     }
 
     return new TranslateTextOutput($message->getNormalized()->getText(),

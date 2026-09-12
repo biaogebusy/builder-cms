@@ -222,19 +222,20 @@ class LibraryItem extends EditorialContentEntityBase implements LibraryItemInter
   public function preSaveRevision(EntityStorageInterface $storage, \stdClass $record) {
     parent::preSaveRevision($storage, $record);
 
-    if (!$this->isNewRevision() && isset($this->original) && (!isset($record->revision_log) || $record->revision_log === '')) {
-      $record->revision_log = $this->original->revision_log->value;
+    $original = method_exists($this, 'getOriginal') ? $this->getOriginal() : $this->original;
+    if (!$this->isNewRevision() && $original && (!isset($record->revision_log) || $record->revision_log === '')) {
+      $record->revision_log = $original->revision_log->value;
     }
 
     // @todo Remove when https://www.drupal.org/project/drupal/issues/2869056 is
     // fixed.
     $new_revision = $this->isNewRevision();
-    if (!$new_revision && isset($this->original) && (!isset($record->revision_log) || $record->revision_log === '')) {
+    if (!$new_revision && $original && (!isset($record->revision_log) || $record->revision_log === '')) {
       // If we are updating an existing library item without adding a new
       // revision, we need to make sure $entity->revision_log is reset whenever
       // it is empty. Therefore, this code allows us to avoid clobbering an
       // existing log entry with an empty one.
-      $record->revision_log = $this->original->getRevisionLogMessage();
+      $record->revision_log = $original->getRevisionLogMessage();
     }
 
     if ($new_revision && (!isset($record->revision_created) || empty($record->revision_created))) {

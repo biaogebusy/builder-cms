@@ -7,7 +7,6 @@ use Drupal\Core\Render\Component\Exception\ComponentNotFoundException;
 use Drupal\Core\Render\Component\Exception\InvalidComponentException;
 use Drupal\Core\Theme\Component\ComponentValidator;
 use Drupal\Core\Theme\ComponentPluginManager;
-use Twig\DeprecatedCallableInfo;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -45,12 +44,6 @@ final class ComponentsTwigExtension extends AbstractExtension {
     return [
       new TwigFunction('add_component_context', [$this, 'addAdditionalContext'], ['needs_context' => TRUE]),
       new TwigFunction('validate_component_props', [$this, 'validateProps'], ['needs_context' => TRUE]),
-      // @todo remove in drupal:11.0.0.
-      // @see https://www.drupal.org/project/drupal/issues/3409456.
-      // Start of BC layer.
-      new TwigFunction('sdc_additional_context', [$this, 'addAdditionalContext'], ['needs_context' => TRUE, 'deprecation_info' => new DeprecatedCallableInfo('drupal/core', '10.3.0', 'add_component_context')]),
-      new TwigFunction('sdc_validate_props', [$this, 'validateProps'], ['needs_context' => TRUE, 'deprecation_info' => new DeprecatedCallableInfo('drupal/core', '10.3.0', 'validate_component_props')]),
-      // End of BC layer.
     ];
   }
 
@@ -85,6 +78,9 @@ final class ComponentsTwigExtension extends AbstractExtension {
   protected function mergeAdditionalRenderContext(Component $component, array $context): array {
     $context['componentMetadata'] = $component->metadata->normalize();
     $component_attributes = ['data-component-id' => $component->getPluginId()];
+    if (!empty($context['variant'])) {
+      $component_attributes['data-component-variant'] = $context['variant'];
+    }
     if (!isset($context['attributes'])) {
       $context['attributes'] = new Attribute($component_attributes);
     }

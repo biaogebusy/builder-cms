@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace Drupal\Tests\Core\Condition;
 
 use Drupal\Component\Plugin\Exception\ContextException;
+use Drupal\Core\Condition\ConditionAccessResolverTrait;
+use Drupal\Core\Condition\ConditionInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
- * @coversDefaultClass \Drupal\Core\Condition\ConditionAccessResolverTrait
- * @group Condition
+ * Tests Drupal\Core\Condition\ConditionAccessResolverTrait.
  */
+#[CoversClass(ConditionAccessResolverTrait::class)]
+#[Group('Condition')]
 class ConditionAccessResolverTraitTest extends UnitTestCase {
 
   /**
    * Tests the resolveConditions() method.
-   *
-   * @covers ::resolveConditions
-   *
-   * @dataProvider providerTestResolveConditions
    */
+  #[DataProvider('providerTestResolveConditions')]
   public function testResolveConditions($conditions, $logic, $expected): void {
     $mocks['true'] = $this->createMock('Drupal\Core\Condition\ConditionInterface');
     $mocks['true']->expects($this->any())
@@ -44,7 +48,7 @@ class ConditionAccessResolverTraitTest extends UnitTestCase {
       ->method('isNegated')
       ->willReturn(TRUE);
 
-    $conditions = array_map(fn($id) => $mocks[$id], $conditions);
+    $conditions = array_map(fn($id): ConditionInterface&MockObject => $mocks[$id], $conditions);
 
     $trait_object = new TestConditionAccessResolverTrait();
     $this->assertEquals($expected, $trait_object->resolveConditions($conditions, $logic));
@@ -77,8 +81,11 @@ class ConditionAccessResolverTraitTest extends UnitTestCase {
 
 }
 
+/**
+ * Stub class for testing trait.
+ */
 class TestConditionAccessResolverTrait {
-  use \Drupal\Core\Condition\ConditionAccessResolverTrait {
+  use ConditionAccessResolverTrait {
     resolveConditions as public;
   }
 

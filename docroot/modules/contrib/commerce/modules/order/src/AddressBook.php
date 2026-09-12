@@ -10,38 +10,17 @@ use Drupal\user\UserInterface;
 class AddressBook implements AddressBookInterface {
 
   /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfo
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * The profile storage.
-   *
-   * @var \Drupal\profile\ProfileStorageInterface
-   */
-  protected $profileStorage;
-
-  /**
-   * The profile type storage.
-   *
-   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
-   */
-  protected $profileTypeStorage;
-
-  /**
    * Constructs a new AddressBook object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfo $entity_type_bundle_info
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfo $entityTypeBundleInfo
    *   The entity type bundle info.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager) {
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    $this->profileStorage = $entity_type_manager->getStorage('profile');
-    $this->profileTypeStorage = $entity_type_manager->getStorage('profile_type');
+  public function __construct(
+    protected EntityTypeBundleInfo $entityTypeBundleInfo,
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
   }
 
   /**
@@ -78,8 +57,9 @@ class AddressBook implements AddressBookInterface {
    * {@inheritdoc}
    */
   public function loadTypes() {
+    $profile_type_storage = $this->entityTypeManager->getStorage('profile_type');
     /** @var \Drupal\profile\Entity\ProfileTypeInterface[] $profile_types */
-    $profile_types = $this->profileTypeStorage->loadByProperties([
+    $profile_types = $profile_type_storage->loadByProperties([
       'third_party_settings.commerce_order.customer_profile_type' => TRUE,
     ]);
     return $profile_types;
@@ -93,7 +73,9 @@ class AddressBook implements AddressBookInterface {
       return [];
     }
 
-    $profiles = $this->profileStorage->loadMultipleByUser($customer, $profile_type_id, TRUE);
+    /** @var \Drupal\profile\ProfileStorageInterface $profile_storage */
+    $profile_storage = $this->entityTypeManager->getStorage('profile');
+    $profiles = $profile_storage->loadMultipleByUser($customer, $profile_type_id, TRUE);
     // Filter out profiles with unavailable countries.
     foreach ($profiles as $profile_id => $profile) {
       if (!$this->isAvailable($profile, $available_countries)) {
@@ -112,7 +94,9 @@ class AddressBook implements AddressBookInterface {
       return NULL;
     }
 
-    $profile = $this->profileStorage->loadByUser($customer, $profile_type_id);
+    /** @var \Drupal\profile\ProfileStorageInterface $profile_storage */
+    $profile_storage = $this->entityTypeManager->getStorage('profile');
+    $profile = $profile_storage->loadByUser($customer, $profile_type_id);
     if ($profile && !$this->isAvailable($profile, $available_countries)) {
       $profile = NULL;
     }
@@ -142,8 +126,10 @@ class AddressBook implements AddressBookInterface {
     $address_book_profile = NULL;
     $address_book_profile_id = $profile->getData('address_book_profile_id');
     if ($address_book_profile_id) {
+      /** @var \Drupal\profile\ProfileStorageInterface $profile_storage */
+      $profile_storage = $this->entityTypeManager->getStorage('profile');
       /** @var \Drupal\profile\Entity\ProfileInterface $address_book_profile */
-      $address_book_profile = $this->profileStorage->load($address_book_profile_id);
+      $address_book_profile = $profile_storage->load($address_book_profile_id);
     }
     if (!$address_book_profile && !$this->allowsMultiple($profile->bundle())) {
       $address_book_profile = $this->load($customer, $profile->bundle());

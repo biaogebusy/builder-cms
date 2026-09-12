@@ -8,23 +8,14 @@
  * something else than lock and cache.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\redis\Hook\RedisHooks;
 
 /**
  * Implements hook_help().
  */
+#[LegacyHook]
 function redis_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.redis':
-
-      $factory = \Drupal::service('redis.factory');
-
-      if ($factory->hasClient()) {
-        $messages = '<p><strong>' . t("Current connected client uses the <em>@name</em> library.", ['@name' => $factory->getClientName()]) . '</strong></p>';
-      }
-      else {
-        $messages = '<p><strong>' . t('No redis connection configured.') . '</strong></p>';
-      }
-      return $messages;
-  }
+  return \Drupal::service(RedisHooks::class)->help($route_name, $route_match);
 }

@@ -3,6 +3,8 @@
 namespace Drupal\Tests\paragraphs\Functional\WidgetStable;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\CssSelector\CssSelectorConverter;
 
 /**
@@ -10,6 +12,8 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsHeaderActionsTest extends ParagraphsTestBase {
 
   /**

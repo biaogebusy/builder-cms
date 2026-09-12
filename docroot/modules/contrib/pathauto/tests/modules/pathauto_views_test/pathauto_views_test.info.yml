@@ -5,7 +5,7 @@ package: Testing
 dependencies:
   - drupal:views
 
-# Information added by Drupal.org packaging script on 2025-10-07
-version: '8.x-1.14'
+# Information added by Drupal.org packaging script on 2026-05-04
+version: '8.x-1.15'
 project: 'pathauto'
-datestamp: 1759838099
+datestamp: 1777931042

@@ -92,13 +92,12 @@ class BoxShadow extends StylePluginBase {
     $classes = [];
     if (isset($storage['box_shadow']['class'])) {
       $classes[] = $storage['box_shadow']['class'];
+      // Add the classes to the build.
+      $build = $this->addClassesToBuild($build, $classes, $theme_wrapper);
+
+      // Attach bs-classes to the build.
+      $build['#attached']['library'][] = 'bootstrap_styles/plugin.box_shadow.build';
     }
-
-    // Add the classes to the build.
-    $build = $this->addClassesToBuild($build, $classes, $theme_wrapper);
-
-    // Attach bs-classes to the build.
-    $build['#attached']['library'][] = 'bootstrap_styles/plugin.box_shadow.build';
 
     return $build;
   }

@@ -7,12 +7,14 @@ namespace Drupal\Tests\views\Kernel\Plugin;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests pager-related APIs.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class PagerKernelTest extends ViewsKernelTestBase {
 
   /**

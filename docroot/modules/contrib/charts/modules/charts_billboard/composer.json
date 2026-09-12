@@ -9,7 +9,7 @@
     "license": "GPL-2.0+",
     "require": {
         "billboardjs/billboard": "3.10.3",
-        "d3/d3": "7.8.5"
+        "d3/d3": "7.9.0"
     },
     "repositories": [
         {
@@ -31,13 +31,13 @@
             "type": "package",
             "package": {
                 "name": "d3/d3",
-                "version": "7.8.5",
+                "version": "7.9.0",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "d3"
                 },
                 "dist": {
-                    "url": "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js",
+                    "url": "https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js",
                     "type": "file"
                 },
                 "require": {

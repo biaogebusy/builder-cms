@@ -79,7 +79,18 @@ class LinkCollectionNormalizer extends NormalizerBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Normalizes data into a set of arrays/scalars.
+   *
+   * @param \Drupal\jsonapi\JsonApiResource\LinkCollection $object
+   *   Data to normalize.
+   * @param string|null $format
+   *   Format the normalization result will be encoded as.
+   * @param array<string, mixed> $context
+   *   Context options for the normalizer.
+   *
+   * @return array|string|int|float|bool|\ArrayObject<mixed, mixed>|null
+   *   \ArrayObject is used to make sure an empty object is encoded as an
+   *   object not an array.
    */
   public function normalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
     assert($object instanceof LinkCollection);
@@ -143,15 +154,6 @@ class LinkCollectionNormalizer extends NormalizerBase {
     // Remove any dashes and underscores from the base64 hash and then return
     // the first 7 characters.
     return substr(str_replace(['-', '_'], '', $b64_hash), 0, 7);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasCacheableSupportsMethod(): bool {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-
-    return TRUE;
   }
 
   /**

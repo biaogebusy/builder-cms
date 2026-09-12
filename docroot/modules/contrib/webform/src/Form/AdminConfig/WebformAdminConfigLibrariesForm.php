@@ -2,6 +2,7 @@
 
 namespace Drupal\webform\Form\AdminConfig;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\webform\Element\WebformMessage;
@@ -66,7 +67,7 @@ class WebformAdminConfigLibrariesForm extends WebformAdminConfigBaseForm {
       '#mode' => 'css',
       '#title' => $this->t('CSS'),
       '#description' => $this->t('Enter custom CSS to be attached to all webforms.') . '<br/>' .
-        $this->t("To customize only webform specific elements, you should use the '.webform-submission-form' selector"),
+      $this->t("To customize only webform specific elements, you should use the '.webform-submission-form' selector"),
       '#default_value' => $config->get('assets.css'),
     ];
     $form['assets']['javascript'] = [
@@ -82,7 +83,7 @@ class WebformAdminConfigLibrariesForm extends WebformAdminConfigBaseForm {
       '#type' => 'details',
       '#title' => $this->t('External optional libraries'),
       '#description' => $this->t('Uncheck the below optional external libraries that you do not want to be used by any webforms.') . '</br>' .
-        '<em>' . $this->t('Please note, you can also exclude element types that are dependent on specific libraries.') . '</em>',
+      '<em>' . $this->t('Please note, you can also exclude element types that are dependent on specific libraries.') . '</em>',
       '#open' => TRUE,
     ];
     $libraries_header = [
@@ -232,7 +233,12 @@ class WebformAdminConfigLibrariesForm extends WebformAdminConfigBaseForm {
 
     // Reset libraries cache.
     // @see webform_library_info_build()
-    \Drupal::service('library.discovery')->clearCachedDefinitions();
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '11.1',
+      currentCallable: fn() => \Drupal::service('library.discovery')->clear(),
+      deprecatedCallable: fn() => \Drupal::service('library.discovery')->clearCachedDefinitions(),
+    );
   }
 
 }

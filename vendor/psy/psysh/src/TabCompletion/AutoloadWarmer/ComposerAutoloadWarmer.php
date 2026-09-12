@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -71,7 +71,10 @@ class ComposerAutoloadWarmer implements AutoloadWarmerInterface
 
     private const KNOWN_BAD_NAMESPACES = [
         'Psy\\Readline\\Hoa\\',
-        'Composer\\', // Autoloading Composer classes breaks Composer autoloading :grimacing:
+        // Autoloading Composer classes breaks Composer autoloading :grimacing:
+        'Composer\\',
+        // DI is an optional Symfony Console dependency; prevent explosion
+        'Symfony\\Component\\Console\\DependencyInjection\\',
     ];
 
     /**
@@ -193,7 +196,7 @@ class ComposerAutoloadWarmer implements AutoloadWarmerInterface
     {
         // If we found a project vendor dir, try to register their autoloader (if it hasn't been already)
         // Skip if vendor dir is inside a PHAR (don't re-require the PHAR's autoloader)
-        if ($this->vendorDir !== null && !\str_starts_with($this->vendorDir, 'phar://')) {
+        if ($this->vendorDir !== null && \substr($this->vendorDir, 0, 7) !== 'phar://') {
             $projectAutoload = $this->vendorDir.'/autoload.php';
             if (\file_exists($projectAutoload)) {
                 try {
@@ -370,9 +373,7 @@ class ComposerAutoloadWarmer implements AutoloadWarmerInterface
      */
     private function normalizeNamespaces(array $namespaces): array
     {
-        return \array_map(function ($namespace) {
-            return \trim($namespace, '\\').'\\';
-        }, $namespaces);
+        return \array_map(fn ($namespace) => \trim($namespace, '\\').'\\', $namespaces);
     }
 
     /**

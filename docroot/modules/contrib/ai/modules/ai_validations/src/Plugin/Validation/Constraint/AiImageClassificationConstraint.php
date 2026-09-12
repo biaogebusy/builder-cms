@@ -2,17 +2,18 @@
 
 namespace Drupal\ai_validations\Plugin\Validation\Constraint;
 
-use Symfony\Component\Validator\Constraint;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 
 /**
  * Ai classification check constraint.
- *
- * @Constraint(
- *   id = "AiImageClassification",
- *   label = @Translation("AI Image Classification Check", context = "Validation"),
- * )
  */
-class AiImageClassificationConstraint extends Constraint {
+#[Constraint(
+  id: 'AiImageClassification',
+  label: new TranslatableMarkup('AI Image Classification Check', [], ['context' => 'Validation']),
+)]
+class AiImageClassificationConstraint extends SymfonyConstraint {
 
   /**
    * The message that will be shown if the constraint is violated.

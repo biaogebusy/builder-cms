@@ -3,8 +3,12 @@
 namespace Drupal\content_lock\ContentLock;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\content_lock\Event\ContentLockLockedEvent;
+use Drupal\content_lock\Event\ContentLockReleaseEvent;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\ConditionInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -15,7 +19,11 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -28,149 +36,71 @@ class ContentLock implements ContentLockInterface {
   use StringTranslationTrait;
 
   /**
-   * The database service.
-   *
-   * @var \Drupal\Core\Database\Connection
-   *   The database service.
-   */
-  protected $database;
-
-  /**
-   * The module_handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandler
-   *   The module_handler service.
-   */
-  protected $moduleHandler;
-
-  /**
-   * The date.formatter service.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatter
-   *   The date.formatter service.
-   */
-  protected $dateFormatter;
-
-  /**
-   * The current_user service.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   *   The current_user service.
-   */
-  protected $currentUser;
-
-  /**
-   * The config.factory service.
-   *
-   * @var \Drupal\Core\Config\Config
-   *   The config settings.
-   */
-  protected $config;
-
-  /**
-   * The redirect.destination service.
+   * The current request.
    *
    * @var \Symfony\Component\HttpFoundation\Request
-   *   The current request.
    */
-  protected $currentRequest;
+  protected Request $currentRequest;
 
-  /**
-   * The entity_type.manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   *   The entity_type.manager service.
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The messenger service.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
-  /**
-   * The time service.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
-
-  /**
-   * The lock service.
-   *
-   * @var \Drupal\Core\Lock\LockBackendInterface
-   */
-  protected LockBackendInterface $lock;
-
-  /**
-   * Constructor.
-   *
-   * @param \Drupal\Core\Database\Connection $database
-   *   The database connection.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
-   *   The module Handler service.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
-   *   The date.formatter service.
-   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
-   *   The current_user service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   The config.factory service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
-   *   The request stack service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity_type.manager service.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger service.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time service.
-   * @param \Drupal\Core\Lock\LockBackendInterface $lock
-   *   The lock service.
-   */
   public function __construct(
-    Connection $database,
-    ModuleHandlerInterface $moduleHandler,
-    DateFormatterInterface $dateFormatter,
-    AccountProxyInterface $currentUser,
-    ConfigFactoryInterface $configFactory,
+    protected Connection $database,
+    protected ModuleHandlerInterface $moduleHandler,
+    protected DateFormatterInterface $dateFormatter,
+    protected AccountProxyInterface $currentUser,
+    protected ConfigFactoryInterface $configFactory,
     RequestStack $requestStack,
-    EntityTypeManagerInterface $entityTypeManager,
-    MessengerInterface $messenger,
-    TimeInterface $time,
-    LockBackendInterface $lock
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected TimeInterface $time,
+    #[Autowire(service: 'lock')]
+    protected LockBackendInterface $lock,
+    protected EventDispatcherInterface $eventDispatcher,
   ) {
-    $this->database = $database;
-    $this->moduleHandler = $moduleHandler;
-    $this->dateFormatter = $dateFormatter;
-    $this->currentUser = $currentUser;
-    $this->config = $configFactory->get('content_lock.settings');
     $this->currentRequest = $requestStack->getCurrentRequest();
-    $this->entityTypeManager = $entityTypeManager;
-    $this->messenger = $messenger;
-    $this->time = $time;
-    $this->lock = $lock;
+  }
+
+  /**
+   * Returns the current content_lock settings config.
+   *
+   * This method reads the config fresh each time rather than caching
+   * it at construction time. This avoids stale config when the
+   * settings change during the same request (e.g. during module
+   * installation or config import), which would otherwise cause the
+   * dynamic route callback to miss routes that should be generated.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   The content_lock.settings config object.
+   */
+  protected function config(): ImmutableConfig {
+    return $this->configFactory->get('content_lock.settings');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function fetchLock($entity_id, $langcode, $form_op = NULL, $entity_type = 'node') {
-    if (!$this->isTranslationLockEnabled($entity_type)) {
+  public function fetchLock(EntityInterface $entity, ?string $form_op = NULL, bool $include_stale_locks = FALSE): object|false {
+    $langcode = $entity->language()->getId();
+    if (!$this->isTranslationLockEnabled($entity->getEntityTypeId())) {
       $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
     }
-    if (!$this->isFormOperationLockEnabled($entity_type)) {
+    if (!$this->isFormOperationLockEnabled($entity->getEntityTypeId())) {
       $form_op = '*';
     }
     $query = $this->database->select('content_lock', 'c');
     $query->leftJoin('users_field_data', 'u', '%alias.uid = c.uid');
     $query->fields('c')
       ->fields('u', ['name'])
-      ->condition('c.entity_type', $entity_type)
-      ->condition('c.entity_id', $entity_id)
+      ->condition('c.entity_type', $entity->getEntityTypeId())
+      ->condition('c.entity_id', $entity->id())
       ->condition('c.langcode', $langcode);
     if (isset($form_op)) {
       $query->condition('c.form_op', $form_op);
+    }
+    if ($include_stale_locks === FALSE) {
+      // Respect timeouts.
+      $timeout = $this->config()->get('timeout');
+      if ($timeout > 0) {
+        $query->condition('timestamp', $this->time->getCurrentTime() - $timeout, '>=');
+      }
     }
 
     return $query->execute()->fetchObject();
@@ -179,20 +109,20 @@ class ContentLock implements ContentLockInterface {
   /**
    * {@inheritdoc}
    */
-  public function displayLockOwner($lock, $translation_lock) {
+  public function displayLockOwner(object $lock, bool $translation_lock): string|TranslatableMarkup {
     $username = $this->entityTypeManager->getStorage('user')->load($lock->uid);
-    $date = $this->dateFormatter->formatInterval($this->time->getRequestTime() - $lock->timestamp);
+    $age = $this->dateFormatter->formatTimeDiffSince($lock->timestamp, ['granularity' => 1]);
 
     if ($translation_lock) {
-      $message = $this->t('This content translation is being edited by the user @name and is therefore locked to prevent other users changes. This lock is in place since @date.', [
-        '@name' => $username->getDisplayName(),
-        '@date' => $date,
+      $message = $this->t('This content translation is being edited by the user %name and is therefore locked to prevent changes by other users. This lock has been active for @age.', [
+        '%name' => $username?->getDisplayName() ?? $lock->uid,
+        '@age' => $age,
       ]);
     }
     else {
-      $message = $this->t('This content is being edited by the user @name and is therefore locked to prevent other users changes. This lock is in place since @date.', [
-        '@name' => $username->getDisplayName(),
-        '@date' => $date,
+      $message = $this->t('This content is being edited by the user %name and is therefore locked to prevent changes by other users. This lock has been active for @age.', [
+        '%name' => $username?->getDisplayName() ?? $lock->uid,
+        '@age' => $age,
       ]);
     }
     return $message;
@@ -201,21 +131,28 @@ class ContentLock implements ContentLockInterface {
   /**
    * {@inheritdoc}
    */
-  public function isLockedBy($entity_id, $langcode, $form_op, $uid, $entity_type = 'node') {
-    if (!$this->isTranslationLockEnabled($entity_type)) {
+  public function isLockedBy(EntityInterface $entity, string $form_op, int $uid): bool {
+    $langcode = $entity->language()->getId();
+    if (!$this->isTranslationLockEnabled($entity->getEntityTypeId())) {
       $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
     }
-    if (!$this->isFormOperationLockEnabled($entity_type)) {
+    if (!$this->isFormOperationLockEnabled($entity->getEntityTypeId())) {
       $form_op = '*';
     }
     /** @var \Drupal\Core\Database\Query\SelectInterface $query */
     $query = $this->database->select('content_lock', 'c')
       ->fields('c')
-      ->condition('entity_id', $entity_id)
+      ->condition('entity_id', $entity->id())
       ->condition('uid', $uid)
-      ->condition('entity_type', $entity_type)
+      ->condition('entity_type', $entity->getEntityTypeId())
       ->condition('langcode', $langcode)
       ->condition('form_op', $form_op);
+
+    // Respect timeouts.
+    $timeout = $this->config()->get('timeout');
+    if ($timeout > 0) {
+      $query->condition('timestamp', $this->time->getCurrentTime() - $timeout, '>=');
+    }
     $num_rows = $query->countQuery()->execute()->fetchField();
     return (bool) $num_rows;
   }
@@ -223,102 +160,152 @@ class ContentLock implements ContentLockInterface {
   /**
    * {@inheritdoc}
    */
-  public function release($entity_id, $langcode, $form_op = NULL, $uid = NULL, $entity_type = 'node') {
-    if (!$this->isTranslationLockEnabled($entity_type)) {
+  public function release(EntityInterface $entity, ?string $form_op = NULL, ?int $uid = NULL): void {
+    $langcode = $entity->language()->getId();
+    if (!$this->isTranslationLockEnabled($entity->getEntityTypeId())) {
       $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
     }
-    if (!$this->isFormOperationLockEnabled($entity_type)) {
+    if (!$this->isFormOperationLockEnabled($entity->getEntityTypeId())) {
       $form_op = '*';
     }
     // Delete locking item from database.
-    $this->lockingDelete($entity_id, $langcode, $form_op, $uid, $entity_type);
+    $this->lockingDelete($entity, $form_op, $uid);
 
-    $this->moduleHandler->invokeAll(
-      'content_lock_release',
-      [$entity_id, $langcode, $form_op, $entity_type]
-    );
+    $event = ContentLockReleaseEvent::createFromEntity($entity, $langcode, $form_op);
+    $this->eventDispatcher->dispatch($event);
+  }
+
+  /**
+   * Release all locks using a condition to select the locks to release.
+   *
+   * @param \Drupal\Core\Database\Query\ConditionInterface $condition
+   *   The condition used to select the locks.
+   *
+   * @return int
+   *   The number of locks released.
+   */
+  protected function releaseUsingCondition(ConditionInterface $condition): int {
+    $transaction = $this->database->startTransaction();
+    $rows = $this->database
+      ->select('content_lock')
+      ->fields('content_lock')
+      ->condition($condition)
+      ->execute()
+      ->fetchAll();
+
+    // There is nothing to do.
+    if (empty($rows)) {
+      return 0;
+    }
+
+    // Delete locking item from database.
+    $row_count = $this->database
+      ->delete('content_lock')
+      ->condition($condition)
+      ->execute();
+
+    // Commit the change.
+    // @phpstan-ignore isset.variable
+    if (isset($transaction)) {
+      $transaction = NULL;
+    }
+
+    $event = ContentLockReleaseEvent::createFromQueryResult($rows);
+    $this->eventDispatcher->dispatch($event);
+
+    return $row_count;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function releaseAllUserLocks($uid) {
-    $this->database->delete('content_lock')
-      ->condition('uid', $uid)
-      ->execute();
+  public function releaseAllUserLocks(int $uid): void {
+    $condition = $this->database->condition('AND')->condition('uid', $uid);
+    $this->releaseUsingCondition($condition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function releaseExpiredLocks(): int {
+    $timeout = $this->config()->get('timeout');
+    if ($timeout < 1) {
+      return 0;
+    }
+
+    $last_valid_time = $this->time->getCurrentTime() - $timeout;
+
+    $condition = $this->database->condition('AND')->condition('timestamp', $last_valid_time, '<');
+    return $this->releaseUsingCondition($condition);
   }
 
   /**
    * Save locking into database.
    *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language of the entity.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param string $form_op
    *   The entity form operation.
    * @param int $uid
    *   The user uid.
-   * @param string $entity_type
-   *   The entity type.
    *
-   * @return bool
-   *   The result of the merge query.
+   * @return int|null
+   *   One of the following values:
+   *   - Merge::STATUS_INSERT: If the entry does not already exist,
+   *     and an INSERT query is executed.
+   *   - Merge::STATUS_UPDATE: If the entry already exists,
+   *     and an UPDATE query is executed.
    */
-  protected function lockingSave($entity_id, $langcode, $form_op, $uid, $entity_type = 'node') {
-    if (!$this->isTranslationLockEnabled($entity_type)) {
+  protected function lockingSave(EntityInterface $entity, string $form_op, int $uid): ?int {
+    $langcode = $entity->language()->getId();
+    if (!$this->isTranslationLockEnabled($entity->getEntityTypeId())) {
       $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
     }
-    if (!$this->isFormOperationLockEnabled($entity_type)) {
+    if (!$this->isFormOperationLockEnabled($entity->getEntityTypeId())) {
       $form_op = '*';
     }
-    $result = $this->database->merge('content_lock')
+    return $this->database->merge('content_lock')
       ->keys([
-        'entity_id' => $entity_id,
-        'entity_type' => $entity_type,
+        'entity_id' => $entity->id(),
+        'entity_type' => $entity->getEntityTypeId(),
         'langcode' => $langcode,
         'form_op' => $form_op,
       ])
       ->fields([
-        'entity_id' => $entity_id,
-        'entity_type' => $entity_type,
+        'entity_id' => $entity->id(),
+        'entity_type' => $entity->getEntityTypeId(),
         'langcode' => $langcode,
         'form_op' => $form_op,
         'uid' => $uid,
         'timestamp' => $this->time->getRequestTime(),
       ])
       ->execute();
-
-    return $result;
   }
 
   /**
    * Delete locking item from database.
    *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language of the entity.
-   * @param string $form_op
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   * @param string|null $form_op
    *   (optional) The entity form operation.
-   * @param int $uid
-   *   The user uid.
-   * @param string $entity_type
-   *   The entity type.
+   * @param int|null $uid
+   *   (optional) The user uid.
    *
-   * @return bool
-   *   The result of the delete query.
+   * @return int
+   *   The number of rows affected by the delete query.
    */
-  protected function lockingDelete($entity_id, $langcode, $form_op = NULL, $uid = NULL, $entity_type = 'node') {
-    if (!$this->isTranslationLockEnabled($entity_type)) {
+  protected function lockingDelete(EntityInterface $entity, ?string $form_op = NULL, ?int $uid = NULL): int {
+    $langcode = $entity->language()->getId();
+    if (!$this->isTranslationLockEnabled($entity->getEntityTypeId())) {
       $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
     }
-    if (!$this->isFormOperationLockEnabled($entity_type)) {
+    if (!$this->isFormOperationLockEnabled($entity->getEntityTypeId())) {
       $form_op = '*';
     }
     $query = $this->database->delete('content_lock')
-      ->condition('entity_type', $entity_type)
-      ->condition('entity_id', $entity_id)
+      ->condition('entity_type', $entity->getEntityTypeId())
+      ->condition('entity_id', $entity->id())
       ->condition('langcode', $langcode);
     if (isset($form_op)) {
       $query->condition('form_op', $form_op);
@@ -327,34 +314,33 @@ class ContentLock implements ContentLockInterface {
       $query->condition('uid', $uid);
     }
 
-    $result = $query->execute();
-
-    return $result;
+    return $query->execute();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function verbose() {
-    return $this->config->get('verbose');
+  public function verbose(): bool {
+    return $this->config()->get('verbose');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function locking($entity_id, $langcode, $form_op, $uid, $entity_type = 'node', $quiet = FALSE, $destination = NULL) {
-    $translation_lock = $this->isTranslationLockEnabled($entity_type);
+  public function locking(EntityInterface $entity, string $form_op, int $uid, bool $quiet = FALSE, ?string $destination = NULL, ?array &$messages = NULL): bool {
+    $translation_lock = $this->isTranslationLockEnabled($entity->getEntityTypeId());
+    $langcode = $entity->language()->getId();
     if (!$translation_lock) {
       $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
     }
-    if (!$this->isFormOperationLockEnabled($entity_type)) {
+    if (!$this->isFormOperationLockEnabled($entity->getEntityTypeId())) {
       $form_op = '*';
     }
 
     // Acquire a lock from the lock service to prevent a race condition when
     // checking if a lock exists and update the content lock table with the new
     // information.
-    $lock_service_name = "content_lock:$entity_type:$entity_id";
+    $lock_service_name = "content_lock:{$entity->getEntityTypeId()}:{$entity->id()}";
     $lock_service_acquired = $this->lock->acquire($lock_service_name);
     if (!$lock_service_acquired) {
       $this->lock->wait($lock_service_name, 5);
@@ -362,72 +348,70 @@ class ContentLock implements ContentLockInterface {
     }
 
     // Check locking status.
-    $lock = $this->fetchLock($entity_id, $langcode, $form_op, $entity_type);
+    $lock = $this->fetchLock($entity, $form_op, TRUE);
 
     // No lock yet.
-    if ($lock_service_acquired && ($lock === FALSE || !is_object($lock))) {
+    if ($lock_service_acquired && $lock === FALSE) {
       // Save locking into database.
-      $this->lockingSave($entity_id, $langcode, $form_op, $uid, $entity_type);
+      $this->lockingSave($entity, $form_op, $uid);
 
       if ($this->verbose() && !$quiet) {
         if ($translation_lock) {
-          $this->messenger->addStatus($this->t('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.'));
+          $messages[MessengerInterface::TYPE_STATUS][] = $this->t('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
         }
         else {
-          $this->messenger->addStatus($this->t('This content is now locked against simultaneous editing. This content will remain locked if you navigate away from this page without saving or unlocking it.'));
+          $messages[MessengerInterface::TYPE_STATUS][] = $this->t('This content is now locked against simultaneous editing. This content will remain locked if you navigate away from this page without saving or unlocking it.');
         }
       }
       // Post locking hook.
-      $this->moduleHandler->invokeAll('content_lock_locked', [
-        $entity_id,
-        $langcode,
-        $form_op,
-        $uid,
-        $entity_type,
-      ]);
+      $event = new ContentLockLockedEvent($entity->id(), $langcode, $form_op, $uid, $entity->getEntityTypeId());
+      $this->eventDispatcher->dispatch($event);
 
       // Send success flag.
       $return = TRUE;
     }
     else {
       // Currently locking by other user.
-      if (is_object($lock) && $lock->uid != $uid) {
+      if (is_object($lock) && $lock->uid != $uid && !$this->lockIsStale($lock)) {
         // Send message.
-        $message = $this->displayLockOwner($lock, $translation_lock);
-        $this->messenger->addWarning($message);
+        $messages[MessengerInterface::TYPE_WARNING][] = $this->displayLockOwner($lock, $translation_lock);
 
         // Higher permission user can unblock.
         if ($this->currentUser->hasPermission('break content lock')) {
 
           $link = Link::createFromRoute(
-            $this->t('Break lock'),
-            'content_lock.break_lock.' . $entity_type,
+            $this->t('Break the lock.'),
+            'content_lock.break_lock.' . $entity->getEntityTypeId(),
             [
-              'entity' => $entity_id,
+              'entity' => $entity->id(),
               'langcode' => $langcode,
               'form_op' => $form_op,
             ],
-            ['query' => ['destination' => isset($destination) ? $destination : $this->currentRequest->getRequestUri()]]
+            ['query' => ['destination' => $destination ?? $this->currentRequest->getRequestUri()]]
           )->toString();
 
           // Let user break lock.
-          $this->messenger->addWarning($this->t('Click here to @link', ['@link' => $link]));
+          $messages[MessengerInterface::TYPE_WARNING][] = $link;
         }
 
         // Return FALSE flag.
         $return = FALSE;
       }
       elseif ($lock_service_acquired) {
+        // There is a stale lock. Release it.
+        if (is_object($lock) && $lock->uid != $uid) {
+          $this->release($entity, $form_op, $lock->uid);
+        }
         // Save locking into database.
-        $this->lockingSave($entity_id, $langcode, $form_op, $uid, $entity_type);
+        $this->lockingSave($entity, $form_op, $uid);
 
         // Locked by current user.
         if ($this->verbose() && !$quiet) {
           if ($translation_lock) {
-            $this->messenger->addStatus($this->t('This content translation is now locked by you against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.'));
+            $messages[MessengerInterface::TYPE_STATUS][] = $this->t('This content translation is now locked by you against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
           }
           else {
-            $this->messenger->addStatus($this->t('This content is now locked by you against simultaneous editing. This content will remain locked if you navigate away from this page without saving or unlocking it.'));
+            $messages[MessengerInterface::TYPE_STATUS][] = $this->t('This content is now locked by you against simultaneous editing. This content will remain locked if you navigate away from this page without saving or unlocking it.');
           }
         }
 
@@ -435,7 +419,7 @@ class ContentLock implements ContentLockInterface {
         $return = TRUE;
       }
       else {
-        $this->messenger->addWarning('This content is being edited by another user.');
+        $messages[MessengerInterface::TYPE_WARNING][] = $this->t('This content is being edited by another user.');
         // Return FALSE flag.
         $return = FALSE;
       }
@@ -447,13 +431,28 @@ class ContentLock implements ContentLockInterface {
   }
 
   /**
+   * Determines if a lock is stale.
+   *
+   * @param \StdClass $lock
+   *   The lock information.
+   *
+   * @return bool
+   *   TRUE if the lock is stale, FALSE if not.
+   */
+  private function lockIsStale(\StdClass $lock): bool {
+    $timeout = $this->config()->get('timeout');
+
+    return $timeout >= 1 && $lock->timestamp < $this->time->getCurrentTime() - $timeout;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function isLockable(EntityInterface $entity, $form_op = NULL) {
+  public function isLockable(EntityInterface $entity, ?string $form_op = NULL): bool {
     $entity_type = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
 
-    $config = $this->config->get("types.$entity_type");
+    $config = $this->config()->get("types.$entity_type") ?? [];
 
     $allowed = TRUE;
     $this->moduleHandler->invokeAllWith('content_lock_entity_lockable', function (callable $hook) use (&$allowed, $entity, $config, $form_op) {
@@ -462,15 +461,15 @@ class ContentLock implements ContentLockInterface {
       }
     });
 
-    if ($allowed && is_array($config) && (in_array($bundle, $config) || in_array('*', $config))) {
+    if ($allowed && (in_array($bundle, $config, TRUE) || in_array('*', $config, TRUE))) {
       if (isset($form_op) && $this->isFormOperationLockEnabled($entity_type)) {
-        $mode = $this->config->get("form_op_lock.$entity_type.mode");
-        $values = $this->config->get("form_op_lock.$entity_type.values");
+        $mode = $this->config()->get("form_op_lock.$entity_type.mode");
+        $values = $this->config()->get("form_op_lock.$entity_type.values");
 
-        if ($mode == self::FORM_OP_MODE_BLACKLIST) {
+        if ($mode == self::FORM_OP_MODE_DENYLIST) {
           return !in_array($form_op, $values);
         }
-        elseif ($mode == self::FORM_OP_MODE_WHITELIST) {
+        elseif ($mode == self::FORM_OP_MODE_ALLOWLIST) {
           return in_array($form_op, $values);
         }
       }
@@ -484,22 +483,15 @@ class ContentLock implements ContentLockInterface {
   /**
    * {@inheritdoc}
    */
-  public function isJsLock($entity_type_id) {
-    return in_array($entity_type_id, $this->config->get("types_js_lock") ?: []);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function unlockButton($entity_type, $entity_id, $langcode, $form_op, $destination) {
+  public function unlockButton(EntityInterface $entity, ?string $form_op, ?string $destination): array {
     $unlock_url_options = [];
     if ($destination) {
       $unlock_url_options['query'] = ['destination' => $destination];
     }
     $route_parameters = [
-      'entity' => $entity_id,
-      'langcode' => $this->isTranslationLockEnabled($entity_type) ? $langcode : LanguageInterface::LANGCODE_NOT_SPECIFIED,
-      'form_op' => $this->isFormOperationLockEnabled($entity_type) ? $form_op : '*',
+      'entity' => $entity->id(),
+      'langcode' => $this->isTranslationLockEnabled($entity->getEntityTypeId()) ? $entity->language()->getId() : LanguageInterface::LANGCODE_NOT_SPECIFIED,
+      'form_op' => $this->isFormOperationLockEnabled($entity->getEntityTypeId()) ? $form_op : '*',
     ];
     return [
       '#type' => 'link',
@@ -508,30 +500,31 @@ class ContentLock implements ContentLockInterface {
       '#attributes' => [
         'class' => ['button'],
       ],
-      '#url' => Url::fromRoute('content_lock.break_lock.' . $entity_type, $route_parameters, $unlock_url_options),
+      '#url' => Url::fromRoute('content_lock.break_lock.' . $entity->getEntityTypeId(), $route_parameters, $unlock_url_options),
       '#weight' => 99,
+      '#gin_action_item' => TRUE,
     ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isTranslationLockEnabled($entity_type_id) {
-    return $this->moduleHandler->moduleExists('conflict') && in_array($entity_type_id, $this->config->get("types_translation_lock"));
+  public function isTranslationLockEnabled(string $entity_type_id): bool {
+    return $this->moduleHandler->moduleExists('conflict') && in_array($entity_type_id, $this->config()->get("types_translation_lock"));
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasLockEnabled(string $entity_type_id): bool {
-    return !empty($this->config->get("types")[$entity_type_id]);
+    return !empty($this->config()->get("types")[$entity_type_id]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isFormOperationLockEnabled($entity_type_id) {
-    return $this->config->get("form_op_lock.$entity_type_id.mode") != self::FORM_OP_MODE_DISABLED;
+  public function isFormOperationLockEnabled(string $entity_type_id): bool {
+    return $this->config()->get("form_op_lock.$entity_type_id.mode") != self::FORM_OP_MODE_DISABLED;
   }
 
 }

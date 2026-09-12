@@ -2,14 +2,28 @@
 
 namespace Drupal\media\Entity;
 
+use Drupal\Core\Entity\Attribute\ContentEntityType;
+use Drupal\Core\Entity\ContentEntityDeleteForm;
+use Drupal\Core\Entity\EntityViewBuilder;
+use Drupal\Core\Entity\Form\DeleteMultipleForm;
+use Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider;
+use Drupal\Core\Entity\Form\RevisionRevertForm;
+use Drupal\Core\Entity\Form\RevisionDeleteForm;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\media\MediaAccessControlHandler;
+use Drupal\media\MediaForm;
 use Drupal\media\MediaInterface;
+use Drupal\media\MediaListBuilder;
 use Drupal\media\MediaSourceEntityConstraintsInterface;
 use Drupal\media\MediaSourceFieldConstraintsInterface;
+use Drupal\media\MediaStorage;
+use Drupal\media\MediaViewsData;
+use Drupal\media\Routing\MediaRouteProvider;
 use Drupal\user\EntityOwnerTrait;
 
 /**
@@ -17,78 +31,81 @@ use Drupal\user\EntityOwnerTrait;
  *
  * @todo Remove default/fallback entity form operation when #2006348 is done.
  * @see https://www.drupal.org/node/2006348.
- *
- * @ContentEntityType(
- *   id = "media",
- *   label = @Translation("Media"),
- *   label_singular = @Translation("media item"),
- *   label_plural = @Translation("media items"),
- *   label_count = @PluralTranslation(
- *     singular = "@count media item",
- *     plural = "@count media items"
- *   ),
- *   bundle_label = @Translation("Media type"),
- *   handlers = {
- *     "storage" = "Drupal\media\MediaStorage",
- *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
- *     "list_builder" = "Drupal\media\MediaListBuilder",
- *     "access" = "Drupal\media\MediaAccessControlHandler",
- *     "form" = {
- *       "default" = "Drupal\media\MediaForm",
- *       "add" = "Drupal\media\MediaForm",
- *       "edit" = "Drupal\media\MediaForm",
- *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
- *       "delete-multiple-confirm" = "Drupal\Core\Entity\Form\DeleteMultipleForm",
- *       "revision-delete" = \Drupal\Core\Entity\Form\RevisionDeleteForm::class,
- *       "revision-revert" = \Drupal\Core\Entity\Form\RevisionRevertForm::class,
- *     },
- *     "views_data" = "Drupal\media\MediaViewsData",
- *     "route_provider" = {
- *       "html" = "Drupal\media\Routing\MediaRouteProvider",
- *       "revision" = \Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider::class,
- *     }
- *   },
- *   base_table = "media",
- *   data_table = "media_field_data",
- *   revision_table = "media_revision",
- *   revision_data_table = "media_field_revision",
- *   translatable = TRUE,
- *   show_revision_ui = TRUE,
- *   entity_keys = {
- *     "id" = "mid",
- *     "revision" = "vid",
- *     "bundle" = "bundle",
- *     "label" = "name",
- *     "langcode" = "langcode",
- *     "uuid" = "uuid",
- *     "published" = "status",
- *     "owner" = "uid",
- *   },
- *   revision_metadata_keys = {
- *     "revision_user" = "revision_user",
- *     "revision_created" = "revision_created",
- *     "revision_log_message" = "revision_log_message",
- *   },
- *   bundle_entity_type = "media_type",
- *   permission_granularity = "bundle",
- *   admin_permission = "administer media",
- *   field_ui_base_route = "entity.media_type.edit_form",
- *   common_reference_target = TRUE,
- *   links = {
- *     "add-page" = "/media/add",
- *     "add-form" = "/media/add/{media_type}",
- *     "canonical" = "/media/{media}/edit",
- *     "collection" = "/admin/content/media",
- *     "delete-form" = "/media/{media}/delete",
- *     "delete-multiple-form" = "/media/delete",
- *     "edit-form" = "/media/{media}/edit",
- *     "revision" = "/media/{media}/revisions/{media_revision}/view",
- *     "revision-delete-form" = "/media/{media}/revision/{media_revision}/delete",
- *     "revision-revert-form" = "/media/{media}/revision/{media_revision}/revert",
- *     "version-history" = "/media/{media}/revisions",
- *   }
- * )
  */
+#[ContentEntityType(
+  id: 'media',
+  label: new TranslatableMarkup('Media'),
+  label_singular: new TranslatableMarkup('media item'),
+  label_plural: new TranslatableMarkup('media items'),
+  entity_keys: [
+    'id' => 'mid',
+    'revision' => 'vid',
+    'bundle' => 'bundle',
+    'label' => 'name',
+    'langcode' => 'langcode',
+    'uuid' => 'uuid',
+    'published' => 'status',
+    'owner' => 'uid',
+  ],
+  handlers: [
+    'storage' => MediaStorage::class,
+    'view_builder' => EntityViewBuilder::class,
+    'list_builder' => MediaListBuilder::class,
+    'access' => MediaAccessControlHandler::class,
+    'form' => [
+      'default' => MediaForm::class,
+      'add' => MediaForm::class,
+      'edit' => MediaForm::class,
+      'delete' => ContentEntityDeleteForm::class,
+      'delete-multiple-confirm' => DeleteMultipleForm::class,
+      'revision-delete' => RevisionDeleteForm::class,
+      'revision-revert' => RevisionRevertForm::class,
+    ],
+    'views_data' => MediaViewsData::class,
+    'route_provider' => [
+      'html' => MediaRouteProvider::class,
+      'revision' => RevisionHtmlRouteProvider::class,
+    ],
+    'link_target' => [
+      'view' => MediaLinkTargetStandaloneWhenAvailable::class,
+      'download' => MediaLinkTarget::class,
+    ],
+  ],
+  links: [
+    'add-page' => '/media/add',
+    'add-form' => '/media/add/{media_type}',
+    'canonical' => '/media/{media}/edit',
+    'collection' => '/admin/content/media',
+    'delete-form' => '/media/{media}/delete',
+    'delete-multiple-form' => '/media/delete',
+    'edit-form' => '/media/{media}/edit',
+    'revision' => '/media/{media}/revisions/{media_revision}/view',
+    'revision-delete-form' => '/media/{media}/revision/{media_revision}/delete',
+    'revision-revert-form' => '/media/{media}/revision/{media_revision}/revert',
+    'version-history' => '/media/{media}/revisions',
+  ],
+  admin_permission: 'administer media',
+  permission_granularity: 'bundle',
+  bundle_entity_type: 'media_type',
+  bundle_label: new TranslatableMarkup('Media type'),
+  base_table: 'media',
+  data_table: 'media_field_data',
+  revision_table: 'media_revision',
+  revision_data_table: 'media_field_revision',
+  translatable: TRUE,
+  show_revision_ui: TRUE,
+  label_count: [
+    'singular' => '@count media item',
+    'plural' => '@count media items',
+  ],
+  field_ui_base_route: 'entity.media_type.edit_form',
+  common_reference_target: TRUE,
+  revision_metadata_keys: [
+    'revision_user' => 'revision_user',
+    'revision_created' => 'revision_created',
+    'revision_log_message' => 'revision_log_message',
+  ],
+  )]
 class Media extends EditorialContentEntityBase implements MediaInterface {
 
   use EntityOwnerTrait;
@@ -331,7 +348,7 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
    */
   protected function hasSourceFieldChanged() {
     $source = $this->getSource();
-    return isset($this->original) && $source->getSourceFieldValue($this) !== $source->getSourceFieldValue($this->original);
+    return $this->getOriginal() && $source->getSourceFieldValue($this) !== $source->getSourceFieldValue($this->getOriginal());
   }
 
   /**
@@ -387,13 +404,13 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
   public function preSaveRevision(EntityStorageInterface $storage, \stdClass $record) {
     parent::preSaveRevision($storage, $record);
 
-    if (!$this->isNewRevision() && isset($this->original) && empty($record->revision_log_message)) {
+    if (!$this->isNewRevision() && $this->getOriginal() && empty($record->revision_log_message)) {
       // If we are updating an existing media item without adding a
       // new revision, we need to make sure $entity->revision_log_message is
       // reset whenever it is empty.
       // Therefore, this code allows us to avoid clobbering an existing log
       // entry with an empty one.
-      $this->setRevisionLogMessage($this->original->getRevisionLogMessage());
+      $this->setRevisionLogMessage($this->getOriginal()->getRevisionLogMessage());
     }
   }
 
@@ -416,13 +433,14 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
     // operations during entity save. See
     // https://www.drupal.org/project/drupal/issues/2976875 for more.
 
-    // In order for metadata to be mapped correctly, $this->original must be
+    // In order for metadata to be mapped correctly, the original entity must be
     // set. However, that is only set once parent::save() is called, so work
     // around that by setting it here.
-    if (!isset($this->original) && $id = $this->id()) {
-      $this->original = $this->entityTypeManager()
+    if (!$this->getOriginal() && $id = $this->id()) {
+      $this->setOriginal($this->entityTypeManager()
         ->getStorage('media')
-        ->loadUnchanged($id);
+        ->loadUnchanged($id)
+      );
     }
 
     $media_source = $this->getSource();
@@ -431,10 +449,31 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
         $translation = $this->getTranslation($langcode);
         // Try to set fields provided by the media source and mapped in
         // media type config.
+        $original = $this->getOriginal();
         foreach ($translation->bundle->entity->getFieldMap() as $metadata_attribute_name => $entity_field_name) {
-          // Only save value in the entity if the field is empty or if the
-          // source field changed.
-          if ($translation->hasField($entity_field_name) && ($translation->get($entity_field_name)->isEmpty() || $translation->hasSourceFieldChanged())) {
+          if (!$translation->hasField($entity_field_name)) {
+            continue;
+          }
+          $set_metadata = FALSE;
+          // Only save value in the entity if the field is empty, or if the
+          // source field changed from one non-empty value to another non-empty
+          // value.
+          // 1st scenario: field is empty, safely store metadata there.
+          if ($translation->get($entity_field_name)->isEmpty()) {
+            $set_metadata = TRUE;
+          }
+          else {
+            // 2nd scenario: field is not empty, but the source field has
+            // changed between two non-empty values.
+            $original_source_field_empty = ($original instanceof MediaInterface) && $media_source->getSourceFieldValue($original) === NULL;
+            $new_source_field_empty = $media_source->getSourceFieldValue($translation) === NULL;
+            if (!$original_source_field_empty &&
+                !$new_source_field_empty &&
+                $translation->hasSourceFieldChanged()) {
+              $set_metadata = TRUE;
+            }
+          }
+          if ($set_metadata) {
             $translation->set($entity_field_name, $media_source->getMetadata($translation, $metadata_attribute_name));
           }
         }
@@ -460,13 +499,19 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
 
     if ($media_source instanceof MediaSourceEntityConstraintsInterface) {
       $entity_constraints = $media_source->getEntityConstraints();
-      $this->getTypedData()->getDataDefinition()->setConstraints($entity_constraints);
+      $dataDefinition = $this->getTypedData()->getDataDefinition();
+      foreach ($entity_constraints as $constraint_id => $constraint_options) {
+        $dataDefinition->addConstraint($constraint_id, $constraint_options);
+      }
     }
 
     if ($media_source instanceof MediaSourceFieldConstraintsInterface) {
       $source_field_name = $media_source->getConfiguration()['source_field'];
       $source_field_constraints = $media_source->getSourceFieldConstraints();
-      $this->get($source_field_name)->getDataDefinition()->setConstraints($source_field_constraints);
+      $fieldDefinition = $this->get($source_field_name)->getDataDefinition();
+      foreach ($source_field_constraints as $constraint_id => $constraint_options) {
+        $fieldDefinition->addConstraint($constraint_id, $constraint_options);
+      }
     }
 
     return parent::validate();

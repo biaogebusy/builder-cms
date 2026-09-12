@@ -1,0 +1,31 @@
+ckeditor5_plugin_pack_templates.ckeditor5_template.*:
+  type: config_entity
+  label: 'CKEditor5 Template'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    description:
+      type: text
+      label: 'Description'
+    status:
+      type: boolean
+      label: 'Status'
+    data:
+      type: text
+      label: 'HTML Code'
+    icon:
+      type: string
+      label: 'SVG Icon Code'
+    textFormats:
+      type: sequence
+      label: 'Available Text Formats'
+      sequence:
+        type: string
+        label: 'Text Format'
+    weight:
+      type: integer
+      label: 'Weight'

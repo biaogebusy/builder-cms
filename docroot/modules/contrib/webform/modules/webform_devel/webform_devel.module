@@ -5,39 +5,26 @@
  * Provides development tools Webform module.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\webform_devel\Hook\WebformDevelHooks;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\Utility\WebformYaml;
 
 /**
  * Implements hook_webform_help_info().
  */
+#[LegacyHook]
 function webform_devel_webform_help_info() {
-  $help = [];
-  $help['webform_devel_form_api_export'] = [
-    'group' => 'forms',
-    'title' => t('Form API Export'),
-    'content' => t("The <strong>Form API export</strong> page demonstrates how a webform's elements may be used to create custom configuration forms."),
-    'routes' => [
-      // @see /admin/structure/webform/manage/{webform}/fapi
-      'entity.webform.fapi_export_form',
-    ],
-  ];
-  return $help;
+  return \Drupal::service(WebformDevelHooks::class)->webformHelpInfo();
 }
 
 /**
  * Implements hook_entity_type_alter().
  */
+#[LegacyHook]
 function webform_devel_entity_type_alter(array &$entity_types) {
-  if (isset($entity_types['webform'])) {
-    /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
-    $entity_type = $entity_types['webform'];
-    $handlers = $entity_type->getHandlerClasses();
-    $handlers['form']['fapi_export'] = 'Drupal\webform_devel\Form\WebformDevelEntityFormApiExportForm';
-    $handlers['form']['fapi_test'] = 'Drupal\webform_devel\Form\WebformDevelEntityFormApiTestForm';
-    $entity_type->setHandlerClass('form', $handlers['form']);
-  }
+  \Drupal::service(WebformDevelHooks::class)->entityTypeAlter($entity_types);
 }
 
 /**
@@ -70,7 +57,7 @@ function _webform_devel_form_config_single_export_form_update_export($form, Form
   $value = Yaml::encode(\Drupal::service('config.storage')->read($name));
 
   // Tidy all only Webform exported configuration…for now.
-  if (strpos($name, 'webform') === 0) {
+  if (str_starts_with($name, 'webform')) {
     $value = WebformYaml::tidy($value);
   }
 

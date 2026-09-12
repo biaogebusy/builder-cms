@@ -47,7 +47,7 @@ abstract class WebformEntitySettingsBaseForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    parent::save($form, $form_state);
+    $status = parent::save($form, $form_state);
 
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = $this->getEntity();
@@ -59,6 +59,8 @@ abstract class WebformEntitySettingsBaseForm extends EntityForm {
     $this->logger('webform')->notice('Webform settings @label has been saved.', $context);
 
     $this->messenger()->addStatus($this->t('Webform settings %label has been saved.', ['%label' => $webform->label()]));
+
+    return $status;
   }
 
   /**

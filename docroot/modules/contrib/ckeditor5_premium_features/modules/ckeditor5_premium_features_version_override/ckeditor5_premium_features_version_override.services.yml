@@ -1,0 +1,6 @@
+services:
+   ckeditor5_premium_features_version_override.override_handler:
+    class: Drupal\ckeditor5_premium_features_version_override\Utility\OverrideHandler
+    arguments:
+      - '@extension.list.module'
+      - '@config.factory'

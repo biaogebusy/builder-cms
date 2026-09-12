@@ -5,12 +5,14 @@
  * Contains install and update hooks.
  */
 
+declare(strict_types=1);
+
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 
 /**
  * Implements hook_install().
  */
-function contact_storage_test_install() {
+function contact_storage_test_install(): void {
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
   $original = $entity_definition_update_manager->getEntityType('contact_message');

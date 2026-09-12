@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_user;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\sms\Entity\SmsMessageInterface;
 use Drupal\user\UserInterface;
-use Drupal\Core\Datetime\DrupalDateTime;
 
 /**
  * Defines the user active hours service.
@@ -110,7 +110,7 @@ class ActiveHours implements ActiveHoursInterface {
     // Sort so nearest date is closest.
     // Can't do this in build() since computed relative dates can be different
     // per timezone.
-    usort($dates, static function ($a, $b) {
+    \usort($dates, static function ($a, $b) {
       if ($a->getStartDate() == $b->getStartDate()) {
         return 0;
       }

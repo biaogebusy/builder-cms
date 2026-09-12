@@ -1,22 +1,22 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_test_gateway\Plugin\SmsGateway;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Random;
-use Drupal\sms\Message\SmsDeliveryReport;
-use Drupal\sms\Message\SmsMessageResultInterface;
-use Drupal\sms\Plugin\SmsGatewayPluginBase;
-use Drupal\sms\Plugin\SmsGateway\SmsIncomingEventProcessorInterface;
-use Drupal\sms\Event\SmsMessageEvent;
-use Drupal\sms\Message\SmsMessageInterface;
-use Drupal\sms\Message\SmsMessageResult;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\sms\Event\SmsMessageEvent;
+use Drupal\sms\Message\SmsDeliveryReport;
+use Drupal\sms\Message\SmsMessageInterface;
+use Drupal\sms\Message\SmsMessageReportStatus;
+use Drupal\sms\Message\SmsMessageResult;
+use Drupal\sms\Message\SmsMessageResultInterface;
+use Drupal\sms\Plugin\SmsGateway\SmsIncomingEventProcessorInterface;
+use Drupal\sms\Plugin\SmsGatewayPluginBase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\sms\Message\SmsMessageReportStatus;
 
 /**
  * Defines a gateway storing transmitted SMS in memory.
@@ -54,8 +54,8 @@ class Memory extends SmsGatewayPluginBase implements SmsIncomingEventProcessorIn
 
     $form['widget'] = [
       '#type' => 'textfield',
-      '#title' => t('Widget'),
-      '#description' => t('Enter a widget.'),
+      '#title' => \t('Widget'),
+      '#description' => \t('Enter a widget.'),
       '#default_value' => $config['widget'],
     ];
 
@@ -69,9 +69,6 @@ class Memory extends SmsGatewayPluginBase implements SmsIncomingEventProcessorIn
     $this->configuration['widget'] = $form_state->getValue('widget');
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function send(SmsMessageInterface $sms_message): SmsMessageResultInterface {
     $gateway_id = $this->configuration['gateway_id'];
 
@@ -84,7 +81,7 @@ class Memory extends SmsGatewayPluginBase implements SmsIncomingEventProcessorIn
     $reports = \Drupal::state()->get('sms_test_gateway.memory.report', []);
     $gateway_reports = $reports[$gateway_id] ?? [];
     $new_reports = $this->randomDeliveryReports($sms_message);
-    $reports[$gateway_id] = array_merge($gateway_reports, $new_reports);
+    $reports[$gateway_id] = \array_merge($gateway_reports, $new_reports);
     \Drupal::state()->set('sms_test_gateway.memory.report', $reports);
 
     return (new SmsMessageResult())
@@ -173,14 +170,11 @@ class Memory extends SmsGatewayPluginBase implements SmsIncomingEventProcessorIn
         ->setStatusTime($request_time)
         ->setStatusMessage('Sent to memory gateway')
         ->setTimeQueued($request_time)
-        ->setTimeDelivered($request_time + rand(0, 10));
+        ->setTimeDelivered($request_time + \rand(0, 10));
     }
     return $reports;
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function getCreditsBalance(): ?float {
     return 13.36;
   }

@@ -11,16 +11,19 @@ use Drupal\navigation\Plugin\Block\NavigationMenuBlock;
 use Drupal\system\Entity\Menu;
 use Drupal\system\Tests\Routing\MockRouteProvider;
 use Drupal\Tests\Core\Menu\MenuLinkMock;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Tests \Drupal\navigation\Plugin\Block\NavigationMenuBlock.
  *
- * @group navigation
  * @see \Drupal\navigation\Plugin\Derivative\SystemMenuNavigationBlock
  * @see \Drupal\navigation\Plugin\Block\NavigationMenuBlock
  */
+#[Group('navigation')]
+#[RunTestsInSeparateProcesses]
 class NavigationMenuMarkupTest extends KernelTestBase {
 
   /**
@@ -31,8 +34,6 @@ class NavigationMenuMarkupTest extends KernelTestBase {
     'navigation',
     'menu_test',
     'menu_link_content',
-    'field',
-    'block',
     'user',
     'link',
     'layout_builder',
@@ -116,9 +117,9 @@ class NavigationMenuMarkupTest extends KernelTestBase {
     //   - 3
     // phpcs:disable
     $links = [
-      1 => MenuLinkMock::create(['id' => 'test.example1', 'route_name' => 'example1', 'title' => 'title 1', 'parent' => '', 'weight' => 0]),
-      2 => MenuLinkMock::create(['id' => 'test.example2', 'route_name' => 'example2', 'title' => 'Another title', 'parent' => '', 'route_parameters' => ['foo' => 'bar'], 'weight' => 1]),
-      3 => MenuLinkMock::create(['id' => 'test.example3', 'route_name' => 'example3', 'title' => 'Nested menu link', 'parent' => 'test.example2', 'weight' => 2]),
+      1 => MenuLinkMock::createMock(['id' => 'test.example1', 'route_name' => 'example1', 'title' => 'title 1', 'parent' => '', 'weight' => 0]),
+      2 => MenuLinkMock::createMock(['id' => 'test.example2', 'route_name' => 'example2', 'title' => 'Another title', 'parent' => '', 'route_parameters' => ['foo' => 'bar'], 'weight' => 1]),
+      3 => MenuLinkMock::createMock(['id' => 'test.example3', 'route_name' => 'example3', 'title' => 'Nested menu link', 'parent' => 'test.example2', 'weight' => 2]),
     ];
     // phpcs:enable
     foreach ($links as $instance) {
@@ -140,8 +141,13 @@ class NavigationMenuMarkupTest extends KernelTestBase {
     $block_build = $block->build();
     $render = \Drupal::service('renderer')->renderRoot($block_build);
 
+    // The error flags need to be added to avoid errors when parsing HTML5 tags,
+    // like nav. This trick could be replaced with
+    // Dom\HTMLDocument::createFromString(), introduced in PHP 8.4 once PHP 8.3
+    // support is dropped.
     $dom = new \DOMDocument();
-    $dom->loadHTML((string) $render);
+    // cspell:disable-next-line
+    $dom->loadHTML((string) $render, LIBXML_NOWARNING | LIBXML_NOERROR);
     $xpath = new \DOMXPath($dom);
 
     $items_query = [

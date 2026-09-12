@@ -4,3 +4,11 @@ services:
     arguments: ['@string_translation']
     tags:
       - { name: breadcrumb_builder, priority: 1003 }
+
+  Drupal\webform_access\Hook\WebformAccessHooks:
+    class: Drupal\webform_access\Hook\WebformAccessHooks
+    autowire: true
+
+  Drupal\webform_access\Hook\WebformAccessTokensHooks:
+    class: Drupal\webform_access\Hook\WebformAccessTokensHooks
+    autowire: true

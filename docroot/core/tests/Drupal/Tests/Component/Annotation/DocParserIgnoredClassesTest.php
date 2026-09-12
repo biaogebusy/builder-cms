@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\Component\Annotation;
 
 use Drupal\Component\Annotation\Doctrine\DocParser;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \Drupal\Component\Annotation\Doctrine\DocParser
- *
- * @group Annotation
+ * Tests Drupal\Component\Annotation\Doctrine\DocParser.
  */
+#[CoversClass(DocParser::class)]
+#[Group('Annotation')]
 class DocParserIgnoredClassesTest extends TestCase {
 
   /**
@@ -28,7 +30,7 @@ class DocParserIgnoredClassesTest extends TestCase {
 
     // Register our class loader which will fail if the parser tries to
     // autoload disallowed annotations.
-    $autoloader = function ($class_name) use ($annotation) {
+    $autoloader = function ($class_name) use ($annotation): void {
       $name_array = explode('\\', $class_name);
       $name = array_pop($name_array);
       if ($name == $annotation) {

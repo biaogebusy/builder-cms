@@ -34,7 +34,7 @@ class Shortcode {
     if (stristr($string, "[$item") !== FALSE) {
       $string = self::process($string, $item);
 
-      // @todo remove into self::replace().
+      // @todo deprecate and remove into self::replace().
       $string = str_replace("<p><$item>", "<$item>", $string);
       $string = str_replace("<p><$item ", "<$item ", $string);
       $string = str_replace("</$item></p>", "</$item>", $string);
@@ -42,7 +42,7 @@ class Shortcode {
 
     $text = self::process($string, $container);
 
-    // @todo remove into self::replace().
+    // @todo deprecate and remove into self::replace().
     $text = str_replace("<p><$container>", "<$container>", $text);
     $text = str_replace("<p><$container ", "<$container ", $text);
     $text = str_replace("</$container></p>", "</$container>", $text);
@@ -114,7 +114,7 @@ class Shortcode {
    * @see https://www.drupal.org/node/3103018
    */
   public static function unwrap($string, $container = 'blazy', $item = 'item'): string {
-    // @todo @trigger_error('unwrap is deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use self::parse() instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
+    // @todo @trigger_error('unwrap is deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use self::parse() instead. See https://www.drupal.org/node/3575429', E_USER_DEPRECATED);
     return self::parse($string, $container, $item);
   }
 

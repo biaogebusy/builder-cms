@@ -6,12 +6,14 @@ namespace Drupal\Tests\image\Functional;
 
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests flushing of image styles.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageStyleFlushTest extends ImageFieldTestBase {
 
   use TestFileCreationTrait {

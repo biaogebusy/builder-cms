@@ -12,6 +12,8 @@ use Drupal\Core\TypedData\ListInterface;
 use Drupal\ctools\Plugin\RelationshipBase;
 
 /**
+ * Provides a relationship for typed data.
+ *
  * @Relationship(
  *   id = "typed_data_relationship",
  *   deriver = "\Drupal\ctools\Plugin\Deriver\TypedDataRelationshipDeriver"
@@ -48,14 +50,14 @@ class TypedDataRelationship extends RelationshipBase {
   }
 
   /**
-   *
+   * Gets the relationship name.
    */
   public function getName() {
     return $this->getPluginDefinition()['property_name'];
   }
 
   /**
-   *
+   * Gets data from a context.
    */
   protected function getData(ContextInterface $context) {
     /** @var \Drupal\Core\TypedData\ComplexDataInterface $base */
@@ -73,16 +75,22 @@ class TypedDataRelationship extends RelationshipBase {
   }
 
   /**
-   *
+   * Gets the main property name from field data.
    */
   protected function getMainPropertyName(FieldItemInterface $data) {
     return $data->getFieldDefinition()->getFieldStorageDefinition()->getMainPropertyName();
   }
 
   /**
+   * Gets the value of the relationship's main property.
    *
+   * @todo This method is broken: getMainPropertyName() requires a
+   *   FieldItemInterface argument and nothing is returned. It is retained only
+   *   for backwards compatibility and should be deprecated and removed in a
+   *   future major release.
    */
   public function getRelationshipValue() {
+    // @phpstan-ignore-next-line
     $property = $this->getMainPropertyName();
     /** @var \Drupal\Core\TypedData\ComplexDataInterface $data */
     $data = $this->getRelationship()->getContextData();

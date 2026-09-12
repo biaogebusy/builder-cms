@@ -37,7 +37,7 @@ class PathautoPatternListBuilder extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /* @var \Drupal\pathauto\PathautoPatternInterface $entity */
+    /** @var \Drupal\pathauto\PathautoPatternInterface $entity */
     $row['label'] = $entity->label();
     $row['pattern']['#markup'] = $entity->getPattern();
     $row['type']['#markup'] = $entity->getAliasType()->getLabel();

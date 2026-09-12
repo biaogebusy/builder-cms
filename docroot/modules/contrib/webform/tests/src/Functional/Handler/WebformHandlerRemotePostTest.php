@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Handler;
 
-use Drupal\file\Entity\File;
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
+use Drupal\file\Entity\File;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
 
@@ -37,7 +37,7 @@ class WebformHandlerRemotePostTest extends WebformBrowserTestBase {
   /**
    * Test remote post handler.
    */
-  public function testRemotePostHandler() {
+  public function testRemotePostHandler(): void {
     global $base_url;
 
     $assert_session = $this->assertSession();
@@ -148,6 +148,19 @@ options:
     $assert_session->responseContains("sid: &#039;$sid&#039;");
     $assert_session->responseNotContains('Unable to process this submission. Please contact the site administrator.');
 
+    // Check elements are displayed (a.k.a. '#access': false).
+    $webform->getHandler('remote_post')
+      ->setSetting('excluded_data', [])
+      ->setSetting('check_access', TRUE);
+    $webform->setElementProperties(
+      'last_name',
+      ['#access' => FALSE] + $webform->getElement('last_name'),
+    );
+    $webform->save();
+    $sid = $this->postSubmission($webform);
+    $assert_session->responseContains('first_name: John');
+    $assert_session->responseNotContains('last_name: Smith');
+
     // Check 200 Success Error.
     $this->postSubmission($webform, ['response_type' => 200]);
     $assert_session->responseContains('This is a custom 200 success message.');
@@ -157,6 +170,18 @@ options:
     $this->postSubmission($webform, ['response_type' => '500']);
     $assert_session->responseNotContains('Processed completed request.');
     $assert_session->responseContains('Failed to process completed request.');
+    $assert_session->responseContains('Unable to process this submission. Please contact the site administrator.');
+
+    // Check RequestException.
+    $this->postSubmission($webform, ['response_type' => 'RequestException']);
+    $assert_session->responseContains('This is a RequestException message.');
+    $assert_session->responseNotContains('Processed completed request.');
+    $assert_session->responseContains('Unable to process this submission. Please contact the site administrator.');
+
+    // Check ConnectException.
+    $this->postSubmission($webform, ['response_type' => 'ConnectException']);
+    $assert_session->responseContains('This is a ConnectException message.');
+    $assert_session->responseNotContains('Processed completed request.');
     $assert_session->responseContains('Unable to process this submission. Please contact the site administrator.');
 
     // Check default custom response message.
@@ -338,9 +363,7 @@ options:
 
     $this->postSubmission($webform);
 
-    // @todo Remove once Drupal 10.0.x is only supported.
-    if (floatval(\Drupal::VERSION) >= 10) {
-      $assert_session->responseContains("form_params:
+    $assert_session->responseContains("form_params:
   boolean_true: true
   integer: 100
   float: 100.01
@@ -352,21 +375,6 @@ options:
       textfield: &#039;&#039;
       number: 0.0
       checkbox: false");
-    }
-    else {
-      $assert_session->responseContains("form_params:
-  boolean_true: true
-  integer: 100
-  float: 100.01
-  checkbox: false
-  number: &#039;&#039;
-  number_multiple: {  }
-  custom_composite:
-    -
-      textfield: &#039;&#039;
-      number: !!float 0
-      checkbox: false");
-    }
 
     $edit = [
       'checkbox' => TRUE,
@@ -377,9 +385,7 @@ options:
       'custom_composite[items][0][number]' => '20.5',
     ];
     $this->postSubmission($webform, $edit);
-    // @todo Remove once Drupal 10.0.x is only supported.
-    if (floatval(\Drupal::VERSION) >= 10) {
-      $assert_session->responseContains("form_params:
+    $assert_session->responseContains("form_params:
   boolean_true: true
   integer: 100
   float: 100.01
@@ -392,22 +398,6 @@ options:
       textfield: text
       checkbox: true
       number: 20.5");
-    }
-    else {
-      $assert_session->responseContains("form_params:
-  boolean_true: true
-  integer: 100
-  float: 100.01
-  checkbox: true
-  number: !!float 10
-  number_multiple:
-    - 10.5
-  custom_composite:
-    -
-      textfield: text
-      checkbox: true
-      number: 20.5");
-    }
 
     /* ********************************************************************** */
     // POST error.

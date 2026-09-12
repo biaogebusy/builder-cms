@@ -1,7 +1,12 @@
-
 global:
   version: VERSION
   js:
     js/charts.js: {}
   dependencies:
     - core/drupal
+
+data_collector_table:
+  version: VERSION
+  css:
+    component:
+      css/charts.data-collector-table.css: {}

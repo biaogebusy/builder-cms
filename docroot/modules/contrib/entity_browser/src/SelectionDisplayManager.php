@@ -23,7 +23,7 @@ class SelectionDisplayManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/EntityBrowser/SelectionDisplay', $namespaces, $module_handler, 'Drupal\entity_browser\SelectionDisplayInterface', 'Drupal\entity_browser\Annotation\EntityBrowserSelectionDisplay');
+    parent::__construct('Plugin/EntityBrowser/SelectionDisplay', $namespaces, $module_handler, 'Drupal\entity_browser\SelectionDisplayInterface', 'Drupal\entity_browser\Attribute\EntityBrowserSelectionDisplay', 'Drupal\entity_browser\Annotation\EntityBrowserSelectionDisplay');
 
     $this->alterInfo('entity_browser_selection_display_info');
     $this->setCacheBackend($cache_backend, 'entity_browser_selection_display_plugins');

@@ -6,12 +6,14 @@ namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Set a user time zone and verify that dates are displayed in local time.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserTimeZoneTest extends BrowserTestBase {
 
   /**

@@ -43,6 +43,15 @@ class MockProvider implements ProviderPluginInterface {
   /**
    * {@inheritdoc}
    */
+  public function renderEmbed(array $options) {
+    return [
+      '#markup' => 'Mock provider embed code.',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRemoteThumbnailUrl() {
     return '';
   }

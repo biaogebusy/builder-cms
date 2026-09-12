@@ -4,3 +4,7 @@ services:
     arguments: ['@module_handler']
     tags:
       - { name: event_subscriber }
+
+  Drupal\webform_options_limit\Hook\WebformOptionsLimitHooks:
+    class: Drupal\webform_options_limit\Hook\WebformOptionsLimitHooks
+    autowire: true

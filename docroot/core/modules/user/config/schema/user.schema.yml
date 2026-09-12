@@ -3,6 +3,8 @@
 user.settings:
   type: config_object
   label: 'User settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     anonymous:
       type: required_label
@@ -41,12 +43,27 @@ user.settings:
     register:
       type: string
       label: 'Who can register accounts?'
+      # Choices are derived from the constants.
+      # @see \Drupal\user\UserInterface::REGISTER_*
+      # @todo Convert to use Enum in https://www.drupal.org/project/drupal/issues/3450782
+      constraints:
+        Choice:
+          choices:
+            - 'visitors'
+            - 'admin_only'
+            - 'visitors_admin_approval'
     cancel_method:
       type: string
       label: 'When cancelling a user account'
+      constraints:
+        UserCancelMethod: []
     password_reset_timeout:
       type: integer
       label: 'Password reset timeout'
+      # @todo Increase min in https://www.drupal.org/i/3441772
+      constraints:
+        Range:
+          min: 1
     password_strength:
       type: boolean
       label: 'Enable password strength indicator'
@@ -54,6 +71,8 @@ user.settings:
 user.mail:
   type: config_object
   label: 'Email settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     cancel_confirm:
       type: mail
@@ -86,6 +105,8 @@ user.mail:
 user.flood:
   type: config_object
   label: 'User flood settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     uid_only:
       type: boolean
@@ -93,19 +114,28 @@ user.flood:
     ip_limit:
       type: integer
       label: 'IP limit'
+      constraints:
+        PositiveOrZero: ~
     ip_window:
       type: integer
       label: 'IP window'
+      constraints:
+        PositiveOrZero: ~
     user_limit:
       type: integer
       label: 'User limit'
+      constraints:
+        PositiveOrZero: ~
     user_window:
       type: integer
       label: 'User window'
-
+      constraints:
+        PositiveOrZero: ~
 user.role.*:
   type: config_entity
   label: 'User role settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     id:
       type: machine_name
@@ -126,14 +156,21 @@ user.role.*:
       sequence:
         type: string
         label: 'Permission'
+        constraints:
+          Callback:
+            callback: [\Drupal\user\Entity\Role, getAllValidPermissions]
 
 action.configuration.user_add_role_action:
   type: mapping
   label: 'Configuration for the add role action'
+  constraints:
+    FullyValidatable: ~
   mapping:
     rid:
       type: string
       label: 'The ID of the role to add'
+      constraints:
+        RoleExists: ~
 
 action.configuration.user_block_user_action:
   type: action_configuration_default
@@ -146,10 +183,14 @@ action.configuration.user_cancel_user_action:
 action.configuration.user_remove_role_action:
   type: mapping
   label: 'Configuration for the remove role action'
+  constraints:
+    FullyValidatable: ~
   mapping:
     rid:
       type: string
       label: 'The ID of the role to remove'
+      constraints:
+        RoleExists: ~
 
 action.configuration.user_unblock_user_action:
   type: action_configuration_default

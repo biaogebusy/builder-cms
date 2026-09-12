@@ -1,10 +1,11 @@
 commerce_order_test.customer_profile_test_form:
-  path: '/commerce_order_test/customer_profile_test_form/{profile}/{admin}'
+  path: '/commerce_order_test/customer_profile_test_form/{profile}/{admin}/{save}'
   defaults:
     _form: '\Drupal\commerce_order_test\Form\CustomerProfileTestForm'
     _title: 'Customer profile test form'
     profile: NULL
     admin: FALSE
+    save: FALSE
   options:
     parameters:
       profile:

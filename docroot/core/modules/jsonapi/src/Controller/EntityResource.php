@@ -31,6 +31,7 @@ use Drupal\jsonapi\CacheableResourceResponse;
 use Drupal\jsonapi\Context\FieldResolver;
 use Drupal\jsonapi\Entity\EntityValidationTrait;
 use Drupal\jsonapi\Access\TemporaryQueryGuard;
+use Drupal\jsonapi\Events\CollectRelationshipMetaEvent;
 use Drupal\jsonapi\Exception\EntityAccessDeniedHttpException;
 use Drupal\jsonapi\IncludeResolver;
 use Drupal\jsonapi\JsonApiResource\IncludedData;
@@ -52,6 +53,7 @@ use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\jsonapi\ResourceType\ResourceTypeField;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi\Revisions\ResourceVersionRouteEnhancer;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Drupal\Core\Http\Exception\CacheableBadRequestHttpException;
@@ -152,6 +154,13 @@ class EntityResource {
   protected $user;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected EventDispatcherInterface $eventDispatcher;
+
+  /**
    * Instantiates an EntityResource object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -176,8 +185,10 @@ class EntityResource {
    *   The time service.
    * @param \Drupal\Core\Session\AccountInterface $user
    *   The current user account.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The event dispatcher.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $field_manager, ResourceTypeRepositoryInterface $resource_type_repository, RendererInterface $renderer, EntityRepositoryInterface $entity_repository, IncludeResolver $include_resolver, EntityAccessChecker $entity_access_checker, FieldResolver $field_resolver, SerializerInterface $serializer, TimeInterface $time, AccountInterface $user) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $field_manager, ResourceTypeRepositoryInterface $resource_type_repository, RendererInterface $renderer, EntityRepositoryInterface $entity_repository, IncludeResolver $include_resolver, EntityAccessChecker $entity_access_checker, FieldResolver $field_resolver, SerializerInterface $serializer, TimeInterface $time, AccountInterface $user, ?EventDispatcherInterface $event_dispatcher = NULL) {
     $this->entityTypeManager = $entity_type_manager;
     $this->fieldManager = $field_manager;
     $this->resourceTypeRepository = $resource_type_repository;
@@ -189,6 +200,12 @@ class EntityResource {
     $this->serializer = $serializer;
     $this->time = $time;
     $this->user = $user;
+
+    if (!isset($event_dispatcher)) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $event_dispatcher argument is deprecated in drupal:11.2.0 and will be required in drupal:12.0.0. See https://www.drupal.org/node/3280569', E_USER_DEPRECATED);
+      $event_dispatcher = \Drupal::service('event_dispatcher');
+    }
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -265,7 +282,7 @@ class EntityResource {
     static::validate($parsed_entity);
 
     // Return a 409 Conflict response in accordance with the JSON:API spec. See
-    // http://jsonapi.org/format/#crud-creating-responses-409.
+    // https://jsonapi.org/format/#crud-creating-responses-409.
     if ($this->entityExists($parsed_entity)) {
       throw new ConflictHttpException('Conflict: Entity already exists.');
     }
@@ -414,7 +431,7 @@ class EntityResource {
     $query = $this->getCollectionQuery($resource_type, $params, $query_cacheability);
 
     // If the request is for the latest revision, toggle it on entity query.
-    if ($request->get(ResourceVersionRouteEnhancer::WORKING_COPIES_REQUESTED, FALSE)) {
+    if ($request->attributes->get(ResourceVersionRouteEnhancer::WORKING_COPIES_REQUESTED, FALSE)) {
       $query->latestRevision();
     }
 
@@ -450,7 +467,7 @@ class EntityResource {
     }
     // Each item of the collection data contains an array with 'entity' and
     // 'access' elements.
-    $collection_data = $this->loadEntitiesWithAccess($storage, $results, $request->get(ResourceVersionRouteEnhancer::WORKING_COPIES_REQUESTED, FALSE));
+    $collection_data = $this->loadEntitiesWithAccess($storage, $results, $request->attributes->get(ResourceVersionRouteEnhancer::WORKING_COPIES_REQUESTED, FALSE));
     $primary_data = new ResourceObjectData($collection_data);
     $primary_data->setHasNextPage($has_next_page);
 
@@ -585,12 +602,21 @@ class EntityResource {
     // Access will have already been checked by the RelationshipRouteAccessCheck
     // service, so we don't need to call ::getAccessCheckedResourceObject().
     $resource_object = ResourceObject::createFromEntity($resource_type, $entity);
-    $relationship = Relationship::createFromEntityReferenceField($resource_object, $field_list);
+
+    $collect_meta_event = new CollectRelationshipMetaEvent($resource_object, $related);
+    $this->eventDispatcher->dispatch($collect_meta_event);
+
+    $relationship = Relationship::createFromEntityReferenceField(context: $resource_object, field: $field_list, meta: $collect_meta_event->getMeta());
     $response = $this->buildWrappedResponse($relationship, $request, $this->getIncludes($request, $resource_object), $response_code);
     // Add the host entity as a cacheable dependency.
     if ($response instanceof CacheableResponseInterface) {
       $response->addCacheableDependency($entity);
+
+      // Cacheability from the classes subscribed to
+      // CollectRelationshipMetaEvent is added to the response.
+      $response->addCacheableDependency($collect_meta_event);
     }
+
     return $response;
   }
 
@@ -633,6 +659,10 @@ class EntityResource {
       throw new ConflictHttpException(sprintf('You can only POST to to-many relationships. %s is a to-one relationship.', $related));
     }
 
+    // @todo Inject the plugin manager service.
+    $definition = \Drupal::service('plugin.manager.field.field_type')->getDefinition($field_definition->getType());
+    $serialized_property_names = $definition['serialized_property_names'] ?? [];
+
     $original_resource_identifiers = ResourceIdentifier::toResourceIdentifiersWithArityRequired($field_list);
     $new_resource_identifiers = array_udiff(
       ResourceIdentifier::deduplicate(array_merge($original_resource_identifiers, $resource_identifiers)),
@@ -652,7 +682,16 @@ class EntityResource {
       $new_field_value = ['entity' => $this->getEntityFromResourceIdentifier($new_resource_identifier)];
       // Remove `arity` from the received extra properties, otherwise this
       // will fail field validation.
-      $new_field_value += array_diff_key($new_resource_identifier->getMeta(), array_flip([ResourceIdentifier::ARITY_KEY]));
+      $meta = array_diff_key($new_resource_identifier->getMeta(), array_flip([ResourceIdentifier::ARITY_KEY]));
+      foreach ($serialized_property_names as $property_name) {
+        if (isset($meta[$property_name]) && is_string($meta[$property_name])) {
+          throw new BadRequestHttpException(sprintf(
+            'The relationship meta field "%s" cannot accept a serialized string value.',
+            $property_name,
+          ));
+        }
+      }
+      $new_field_value += $meta;
       $field_list->appendItem($new_field_value);
     }
 
@@ -690,6 +729,7 @@ class EntityResource {
     $internal_relationship_field_name = $resource_type->getInternalName($related);
     // According to the specification, PATCH works a little bit different if the
     // relationship is to-one or to-many.
+    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $field_list */
     $field_list = $entity->{$internal_relationship_field_name};
     $field_definition = $field_list->getFieldDefinition();
@@ -735,13 +775,26 @@ class EntityResource {
    *   The field definition of the entity field to be updated.
    */
   protected function doPatchMultipleRelationship(EntityInterface $entity, array $resource_identifiers, FieldDefinitionInterface $field_definition) {
-    $entity->{$field_definition->getName()} = array_map(function (ResourceIdentifier $resource_identifier) {
+    // @todo Inject the plugin manager service.
+    $definition = \Drupal::service('plugin.manager.field.field_type')->getDefinition($field_definition->getType());
+    $serialized_property_names = $definition['serialized_property_names'] ?? [];
+
+    $entity->{$field_definition->getName()} = array_map(function (ResourceIdentifier $resource_identifier) use ($serialized_property_names) {
       // We assume all entity reference fields have an 'entity' computed
       // property that can be used to assign the needed values.
       $field_properties = ['entity' => $this->getEntityFromResourceIdentifier($resource_identifier)];
       // Remove `arity` from the received extra properties, otherwise this
       // will fail field validation.
-      $field_properties += array_diff_key($resource_identifier->getMeta(), array_flip([ResourceIdentifier::ARITY_KEY]));
+      $meta = array_diff_key($resource_identifier->getMeta(), array_flip([ResourceIdentifier::ARITY_KEY]));
+      foreach ($serialized_property_names as $property_name) {
+        if (isset($meta[$property_name]) && is_string($meta[$property_name])) {
+          throw new BadRequestHttpException(sprintf(
+            'The relationship meta field "%s" cannot accept a serialized string value.',
+            $property_name,
+          ));
+        }
+      }
+      $field_properties += $meta;
       return $field_properties;
     }, $resource_identifiers);
   }
@@ -771,6 +824,7 @@ class EntityResource {
   public function removeFromRelationshipData(ResourceType $resource_type, EntityInterface $entity, $related, Request $request) {
     $resource_identifiers = $this->deserialize($resource_type, $request, ResourceIdentifier::class, $related);
     $internal_relationship_field_name = $resource_type->getInternalName($related);
+    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $field_list */
     $field_list = $entity->{$internal_relationship_field_name};
     $is_multiple = $field_list->getFieldDefinition()
@@ -782,7 +836,11 @@ class EntityResource {
 
     // Compute the list of current values and remove the ones in the payload.
     $original_resource_identifiers = ResourceIdentifier::toResourceIdentifiersWithArityRequired($field_list);
-    $removed_resource_identifiers = array_uintersect($resource_identifiers, $original_resource_identifiers, [ResourceIdentifier::class, 'compare']);
+    $removed_resource_identifiers = array_uintersect(
+      $resource_identifiers,
+      $original_resource_identifiers,
+      [ResourceIdentifier::class, 'compare']
+    );
     $deltas_to_be_removed = [];
     foreach ($removed_resource_identifiers as $removed_resource_identifier) {
       foreach ($original_resource_identifiers as $delta => $existing_resource_identifier) {
@@ -988,7 +1046,11 @@ class EntityResource {
    *   client-sent data.
    */
   protected static function relationshipResponseRequiresBody(array $received_resource_identifiers, array $final_resource_identifiers) {
-    return !empty(array_udiff($final_resource_identifiers, $received_resource_identifiers, [ResourceIdentifier::class, 'compare']));
+    return !empty(array_udiff(
+      $final_resource_identifiers,
+      $received_resource_identifiers,
+      [ResourceIdentifier::class, 'compare']
+    ));
   }
 
   /**
@@ -1246,7 +1308,12 @@ class EntityResource {
       $params[OffsetPage::KEY_NAME] = OffsetPage::createFromQueryParameter($request->query->all('page'));
     }
     else {
-      $params[OffsetPage::KEY_NAME] = OffsetPage::createFromQueryParameter(['page' => ['offset' => OffsetPage::DEFAULT_OFFSET, 'limit' => OffsetPage::SIZE_MAX]]);
+      $params[OffsetPage::KEY_NAME] = OffsetPage::createFromQueryParameter([
+        'page' => [
+          'offset' => OffsetPage::DEFAULT_OFFSET,
+          'limit' => OffsetPage::SIZE_MAX,
+        ],
+      ]);
     }
     return $params;
   }

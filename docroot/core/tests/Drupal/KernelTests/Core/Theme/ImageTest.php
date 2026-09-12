@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Theme;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * Tests built-in image theme functions.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class ImageTest extends KernelTestBase {
 
   /**
@@ -53,7 +55,7 @@ class ImageTest extends KernelTestBase {
 
     $this->testImages = [
       'core/misc/druplicon.png',
-      'core/misc/loading.gif',
+      'core/misc/loading.svg',
     ];
   }
 

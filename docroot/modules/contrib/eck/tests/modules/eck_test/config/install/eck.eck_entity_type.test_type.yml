@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies: {}
+id: test_type
+label: Test type
+uid: true
+created: true
+changed: true
+title: true

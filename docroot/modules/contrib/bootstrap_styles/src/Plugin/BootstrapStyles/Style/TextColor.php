@@ -93,7 +93,9 @@ class TextColor extends StylePluginBase {
     $build = $this->addClassesToBuild($build, $classes, $theme_wrapper);
 
     // Attach bs-classes to the build.
-    $build['#attached']['library'][] = 'bootstrap_styles/plugin.text_color.build';
+    if (isset($storage['text_color']['class']) && $storage['text_color']['class'] !== '_none') {
+      $build['#attached']['library'][] = 'bootstrap_styles/plugin.text_color.build';
+    }
 
     return $build;
   }

@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\media_library_test\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\node\NodeForm;
+use Drupal\node\Form\NodeForm;
 
 /**
  * Override NodeForm to test media library form submission semantics.

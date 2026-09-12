@@ -3,3 +3,21 @@ services:
     class: Drupal\elasticsearch_connector_test\EventSubscriber\ElasticSearchEventSubscribers
     tags:
       - { name: event_subscriber }
+
+  # An event subscriber to define an analyzer and assign analyzers to fields.
+  elasticsearch_connector_test.analyzer_assignment_subscriber:
+    class: Drupal\elasticsearch_connector_test\EventSubscriber\AnalyzerAssignmentSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  # Alter a search query's filters before a search query is built.
+  elasticsearch_connector_test.search_query_filter_subscriber:
+    class: Drupal\elasticsearch_connector_test\EventSubscriber\SearchQueryFilterSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  # Alter search query parameters before the query is run.
+  elasticsearch_connector_test.search_query_event_subscriber:
+    class: Drupal\elasticsearch_connector_test\EventSubscriber\SearchQueryEventSubscriber
+    tags:
+      - { name: event_subscriber }

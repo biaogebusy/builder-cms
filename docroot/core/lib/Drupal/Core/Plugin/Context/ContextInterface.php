@@ -17,6 +17,7 @@ interface ContextInterface extends ComponentContextInterface, CacheableDependenc
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Plugin\Context\ContextDefinitionInterface
+   *   The defining characteristic representation of the context.
    */
   public function getContextDefinition();
 
@@ -24,6 +25,7 @@ interface ContextInterface extends ComponentContextInterface, CacheableDependenc
    * Gets the context value as typed data object.
    *
    * @return \Drupal\Core\TypedData\TypedDataInterface
+   *   The typed data object associated with the context.
    */
   public function getContextData();
 

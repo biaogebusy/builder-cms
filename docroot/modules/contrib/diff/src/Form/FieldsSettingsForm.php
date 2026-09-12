@@ -8,6 +8,7 @@ use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -37,6 +38,7 @@ class FieldsSettingsForm extends ConfigFormBase {
     protected DiffBuilderManager $diffBuilderManager,
     protected EntityTypeManagerInterface $entityTypeManager,
     protected EntityFieldManagerInterface $entityFieldManager,
+    protected EntityTypeBundleInfoInterface $bundleInfo,
   ) {
     parent::__construct($config_factory, $typedConfigManager);
   }
@@ -52,6 +54,7 @@ class FieldsSettingsForm extends ConfigFormBase {
       $container->get('plugin.manager.diff.builder'),
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
+      $container->get('entity_type.bundle.info'),
     );
   }
 
@@ -160,7 +163,7 @@ class FieldsSettingsForm extends ConfigFormBase {
     $field_row['entity_type'] = [
       '#markup' => $entity_type_label,
     ];
-    $labels = \_diff_field_label($entity_type->id(), $field_name);
+    $labels = $this->getFieldLabels($entity_type->id(), $field_name);
     $field_row['field_label'] = [
       '#markup' => \array_shift($labels),
     ];
@@ -363,6 +366,42 @@ class FieldsSettingsForm extends ConfigFormBase {
     }
     // Return the whole table.
     return $form['fields'];
+  }
+
+  /**
+   * Returns the label of a certain field.
+   *
+   * Therefore it looks up in all bundles to find the most used field.
+   *
+   * @param string $entity_type
+   *   The entity type id.
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return array
+   *   Array of labels used for the field sorted by the most used.
+   */
+  protected function getFieldLabels(string $entity_type, string $field_name): array {
+    $labels = [];
+    // Count the amount of instances of each label per field storage.
+    $bundles = $this->bundleInfo->getBundleInfo($entity_type);
+    foreach (\array_keys($bundles) as $bundle) {
+      $bundle_instances = $this->entityFieldManager->getFieldDefinitions($entity_type, $bundle);
+      if (isset($bundle_instances[$field_name])) {
+        $instance = $bundle_instances[$field_name];
+        $label = (string) $instance->getLabel();
+        $labels[$label] = isset($labels[$label]) ? ++$labels[$label] : 1;
+      }
+    }
+
+    if (\count($labels) === 0) {
+      // Return the original field name if there is no other label found.
+      return [$field_name];
+    }
+
+    // Return the labels sorted by the most used.
+    \arsort($labels);
+    return \array_keys($labels);
   }
 
   /**

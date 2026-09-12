@@ -7,12 +7,16 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\Entity\ParagraphsType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests \Drupal\Paragraphs\Entity\Paragraph::isChanged().
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsIsChangedTest extends KernelTestBase {
 
   /**
@@ -34,7 +38,6 @@ class ParagraphsIsChangedTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('paragraph');
-    $this->installSchema('system', ['sequences']);
     \Drupal::moduleHandler()->loadInclude('paragraphs', 'install');
 
     // Create a text paragraph type.

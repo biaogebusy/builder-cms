@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\field\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -38,9 +37,9 @@ abstract class FieldKernelTestBase extends KernelTestBase {
    * - $this->fieldTestData->field[suffix]
    * - $this->fieldTestData->field_definition[suffix]
    *
-   * @see \Drupal\field\Tests\FieldUnitTestBase::createFieldWithStorage()
-   *
    * @var \ArrayObject
+   *
+   * @see \Drupal\field\Tests\FieldUnitTestBase::createFieldWithStorage()
    */
   protected $fieldTestData;
 
@@ -139,7 +138,7 @@ abstract class FieldKernelTestBase extends KernelTestBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The entity, freshly reloaded from storage.
    */
-  protected function entitySaveReload(EntityInterface $entity) {
+  protected function entitySaveReload(EntityInterface $entity): EntityInterface {
     $entity->save();
     $controller = $this->container->get('entity_type.manager')->getStorage($entity->getEntityTypeId());
     $controller->resetCache();
@@ -165,7 +164,7 @@ abstract class FieldKernelTestBase extends KernelTestBase {
   /**
    * Generate random values for a field_test field.
    *
-   * @param $cardinality
+   * @param int $cardinality
    *   Number of values to generate.
    *
    * @return array
@@ -187,14 +186,14 @@ abstract class FieldKernelTestBase extends KernelTestBase {
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to test.
-   * @param $field_name
-   *   The name of the field to test
-   * @param $expected_values
+   * @param string $field_name
+   *   The name of the field to test.
+   * @param array $expected_values
    *   The array of expected values.
-   * @param $langcode
+   * @param string $langcode
    *   (Optional) The language code for the values. Defaults to
    *   \Drupal\Core\Language\LanguageInterface::LANGCODE_NOT_SPECIFIED.
-   * @param $column
+   * @param string $column
    *   (Optional) The name of the column to check. Defaults to 'value'.
    */
   protected function assertFieldValues(EntityInterface $entity, $field_name, $expected_values, $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED, $column = 'value') {
@@ -212,7 +211,7 @@ abstract class FieldKernelTestBase extends KernelTestBase {
     $values = $field->getValue();
     $this->assertCount($expected_values_count, $values, 'Expected number of values were saved.');
     foreach ($expected_values as $key => $value) {
-      $this->assertEquals($value, $values[$key][$column], new FormattableMarkup('Value @value was saved correctly.', ['@value' => $value]));
+      $this->assertEquals($value, $values[$key][$column], "Value $value was saved correctly.");
     }
   }
 

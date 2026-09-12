@@ -6,12 +6,14 @@ namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Vocabulary entity form display migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateVocabularyEntityFormDisplayTest extends MigrateDrupal6TestBase {
 
   /**
@@ -47,7 +49,18 @@ class MigrateVocabularyEntityFormDisplayTest extends MigrateDrupal6TestBase {
     $this->assertSame('options_select', $component['type']);
     $this->assertSame(20, $component['weight']);
     // Test the Id map.
-    $this->assertSame([['node', 'article', 'default', 'field_tags']], $this->getMigration('d6_vocabulary_entity_form_display')->getIdMap()->lookupDestinationIds([4, 'article']));
+    $this->assertSame([
+      [
+        'node',
+        'article',
+        'default',
+        'field_tags',
+      ],
+    ],
+    $this->getMigration('d6_vocabulary_entity_form_display')
+      ->getIdMap()
+      ->lookupDestinationIds([4, 'article'])
+    );
 
     // Test the term widget tags setting.
     $entity_form_display = EntityFormDisplay::load('node.story.default');

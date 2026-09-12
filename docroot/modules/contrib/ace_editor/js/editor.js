@@ -36,23 +36,63 @@
 
             // Creating new editor, setting syntax and theme.
             var current_editor = editors[ace_editor_id] = ace.edit(ace_editor_id);
-            var theme = format.editorSettings["theme"];
-            var mode = format.editorSettings["syntax"];
+            // Core delivers the format over AJAX when the text format select
+            // changes, and a text format whose stored settings are empty
+            // arrives with editorSettings set to null. Fall back to defaults
+            // so the editor still attaches instead of throwing.
+            var settings = format.editorSettings || {};
+            var theme = settings["theme"] || "chrome";
+            var mode = settings["syntax"] || "html";
             editors[ace_editor_id].setTheme("ace/theme/"+theme);
             editors[ace_editor_id].getSession().setMode("ace/mode/"+mode);
 
             // Setting ace_editor styles.
-            $("#"+ace_editor_id).height(format.editorSettings.height).width(format.editorSettings.width);
+            $("#"+ace_editor_id).height(settings.height || "300px").width(settings.width || "100%");
+            // The configuration key is `print_margins`; older inline <ace> tags
+            // use the `print-margin` attribute (normalised to `print_margin`).
+            // Honour whichever is present so both paths show the print margin.
+            var showPrintMargin = settings.print_margins;
+            if (showPrintMargin === undefined) {
+              showPrintMargin = settings.print_margin;
+            }
             editors[ace_editor_id].setOptions({
-                fontSize: format.editorSettings.font_size ? format.editorSettings.font_size : '12pt',
-                showLineNumbers: format.editorSettings.line_numbers ? true : false,
-                showPrintMargin: format.editorSettings.print_margin ? true: false,
-                showInvisibles: format.editorSettings.show_invisibles ? true: false,
-                enableBasicAutocompletion: format.editorSettings.auto_complete ? true: false
+                fontSize: settings.font_size ? settings.font_size : '12pt',
+                showLineNumbers: settings.line_numbers ? true : false,
+                showPrintMargin: showPrintMargin ? true: false,
+                showInvisibles: settings.show_invisibles ? true: false,
+                enableBasicAutocompletion: settings.auto_complete ? true: false
             });
 
-            if (format.editorSettings.use_wrap_mode) {
+            // Free the Tab key and add the Esc escape, so a keyboard user is
+            // not trapped in the editor (WCAG 2.1.2). Older Ace builds do not
+            // know the option; setting it is harmless there.
+            try {
+                editors[ace_editor_id].setOption('enableKeyboardAccessibility', true);
+            } catch (e) {}
+
+            // Carry the field's label to the editor, and mark it required when
+            // the original textarea was, so assistive technology names and
+            // announces the replacement the same way.
+            try {
+                var labelText = $("label[for='" + element_id + "']").first().text().trim();
+                if (labelText) {
+                    editors[ace_editor_id].setOption('textInputAriaLabel', labelText);
+                }
+                if (requiredElements.has(element_id)) {
+                    editors[ace_editor_id].textInput.getElement().setAttribute('aria-required', 'true');
+                }
+            } catch (e) {}
+
+            if (settings.use_wrap_mode) {
               editors[ace_editor_id].getSession().setUseWrapMode(true);
+            }
+
+            // A form can disable a field, and Drupal renders that as a
+            // disabled or readonly textarea. Ace hides the textarea and takes
+            // over the editing, so without this the field stays editable
+            // through the editor (issue #3046914).
+            if (element.disabled || element.readOnly) {
+              current_editor.setReadOnly(true);
             }
 
             return !!current_editor;
@@ -79,6 +119,9 @@
                 }
                 $element.show().css('visibility', 'visible');
                 //element.removeAttribute('contentEditable');
+                // Drop the destroyed editor from the registry, so it is not
+                // held in memory for the life of the page.
+                delete editors[ace_editor_id];
             }
             return !!current_editor;
 

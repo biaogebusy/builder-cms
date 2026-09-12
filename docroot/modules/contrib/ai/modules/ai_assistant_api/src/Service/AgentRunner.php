@@ -3,11 +3,12 @@
 namespace Drupal\ai_assistant_api\Service;
 
 use Drupal\ai_assistant_api\Event\AiAssistantPassContextToAgentEvent;
+use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
-use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\ai\OperationType\Chat\ChatOutput;
+use Drupal\ai_agents\PluginInterfaces\ConfigAiAgentInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -32,8 +33,8 @@ class AgentRunner {
   /**
    * Constructor.
    *
-   * @param \Drupal\ai\AiProviderPluginManager $aiProvider
-   *   The AI provider.
+   * @param \Drupal\Component\Plugin\PluginManagerInterface $aiProvider
+   *   The AI provider plugin manager.
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $tempStore
    *   The private temp store.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
@@ -42,7 +43,7 @@ class AgentRunner {
    *   The AI agent plugin manager if it exists.
    */
   public function __construct(
-    public AiProviderPluginManager $aiProvider,
+    public PluginManagerInterface $aiProvider,
     protected PrivateTempStoreFactory $tempStore,
     protected EventDispatcherInterface $eventDispatcher,
     protected mixed $aiAgentPluginManager = NULL,
@@ -72,6 +73,24 @@ class AgentRunner {
     $this->jobId = $job_id;
     /** @var \Drupal\ai_agents\PluginInterfaces\ConfigAiAgentInterface $agent */
     $agent = $this->aiAgentPluginManager->createInstance($assistant_id);
+
+    // An ai_agent config entity whose machine name collides with a
+    // code-defined AiAgent plugin is silently dropped from plugin discovery
+    // in AiAgentManager::findDefinitions(), so createInstance() returns the
+    // code-plugin instance instead. That instance only implements
+    // AiAgentInterface, not ConfigAiAgentInterface, and the rest of this
+    // method calls into the config-only contract (fromArray/toArray/
+    // isFinished/setProgressThreadId/setLooped/getChatHistory). Fail early
+    // with an actionable message rather than a fatal undefined-method error.
+    if (!$agent instanceof ConfigAiAgentInterface) {
+      throw new \InvalidArgumentException(sprintf(
+        'AI Assistant references agent "%s", but plugin.manager.ai_agents resolved it to %s, which does not implement %s. This usually means an ai_agent config entity shares its machine name with a code-defined AiAgent plugin; rename the config entity to a non-colliding ID (for example, "%s_config") and update the assistant.',
+        $assistant_id,
+        $agent::class,
+        ConfigAiAgentInterface::class,
+        $assistant_id,
+      ));
+    }
 
     // Set a stable IDs so the agent identity persists across turns.
     // This allows event subscribers to use the ID as a consistent

@@ -37,6 +37,7 @@ class Date extends DateBase {
       'placeholder' => '',
       'step' => '',
       'size' => '',
+      'autocomplete' => 'on',
     ] + parent::defineDefaultProperties();
     return $properties;
   }
@@ -46,7 +47,7 @@ class Date extends DateBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     // Unset custom date format which is only used by the
     // webform_jqueryui_datepicker.module.
     $has_datepicker = isset($element['#datepicker']) && $this->moduleHandler->moduleExists('webform_jqueryui_datepicker');

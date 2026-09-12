@@ -1,12 +1,14 @@
-name: 'Webform Bootstrap'
+name: 'Webform Bootstrap (3.x)'
 type: module
-description: 'Helps support Webform to Bootstrap integration.'
-package: Webform
-core_version_requirement: ^10.2
+description: 'Note: This is only to be used with the Drupal Bootstrap Theme, NOT with other Bootstrap Framework related Themes (like Radix).'
+package: 'Webform [DEPRECATED]'
+core_version_requirement: ^10.3 || ^11.0
 dependencies:
   - 'webform:webform'
+lifecycle: deprecated
+lifecycle_link: 'https://www.drupal.org/docs/8/modules/webform/webform-frequently-asked-questions/what-to-do-about-deprecated-external-libraries-in-webform-6x#s-webform-bootstrap-3x'
 
-# Information added by Drupal.org packaging script on 2024-12-10
-version: '6.2.9'
+# Information added by Drupal.org packaging script on 2026-07-07
+version: '6.3.0'
 project: 'webform'
-datestamp: 1733851071
+datestamp: 1783438707

@@ -21,6 +21,7 @@ elements: |
     '#type': managed_file
     '#title': managed_file_01
     '#file_extensions': txt
+    '#max_filesize': '.5'
   managed_file_02:
     '#type': managed_file
     '#title': managed_file_02

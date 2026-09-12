@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Hooks for entity_module_test.
+ */
+
+/**
  * Implements hook_entity_bundle_info().
  */
 function entity_module_test_entity_bundle_info() {

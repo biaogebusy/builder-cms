@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalJavascriptTests;
 
-use Behat\Mink\Exception\DriverException;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Tests\BrowserTestBase;
-use PHPUnit\Runner\BaseTestRunner;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use PHPUnit\Framework\Attributes\PostCondition;
 
 /**
  * Runs a browser test using a driver that supports JavaScript.
+ *
+ * Module tests extending WebDriverTestBase must exist in the
+ * Drupal\Tests\your_module\FunctionalJavascript namespace and live in the
+ * modules/your_module/tests/src/FunctionalJavascript directory.
+ *
+ * Tests for core/lib/Drupal classes extending WebDriverTestBase must exist in
+ * the \Drupal\FunctionalJavascriptTests\Core namespace and live in the
+ * core/tests/Drupal/FunctionalJavascriptTests directory.
  *
  * Base class for testing browser interaction implemented in JavaScript.
  *
@@ -53,16 +60,12 @@ abstract class WebDriverTestBase extends BrowserTestBase {
     try {
       return parent::initMink();
     }
-    catch (DriverException $e) {
-      if ($this->minkDefaultDriverClass === DrupalSelenium2Driver::class) {
-        $this->markTestSkipped("The test wasn't able to connect to your webdriver instance. For more information read core/tests/README.md.\n\nThe original message while starting Mink: {$e->getMessage()}");
-      }
-      else {
-        throw $e;
-      }
-    }
     catch (\Exception $e) {
-      $this->markTestSkipped('An unexpected error occurred while starting Mink: ' . $e->getMessage());
+      // If it's not possible to get a mink connection ensure that mink's own
+      // destructor is called immediately, to avoid it being called in
+      // ::tearDown(), then rethrow the exception.
+      $this->mink = NULL;
+      throw $e;
     }
   }
 
@@ -73,7 +76,6 @@ abstract class WebDriverTestBase extends BrowserTestBase {
     self::$modules = [
       'js_testing_ajax_request_test',
       'js_testing_log_test',
-      'jquery_keyevent_polyfill_test',
     ];
     if ($this->disableCssAnimations) {
       self::$modules[] = 'css_disable_transitions_test';
@@ -96,11 +98,6 @@ abstract class WebDriverTestBase extends BrowserTestBase {
    */
   protected function tearDown(): void {
     if ($this->mink) {
-      $status = $this->getStatus();
-      if ($status === BaseTestRunner::STATUS_ERROR || $status === BaseTestRunner::STATUS_WARNING || $status === BaseTestRunner::STATUS_FAILURE) {
-        // Ensure we capture the output at point of failure.
-        @$this->htmlOutput();
-      }
       // Wait for all requests to finish. It is possible that an AJAX request is
       // still on-going.
       $result = $this->getSession()->wait(5000, 'window.drupalActiveXhrCount === 0 || typeof window.drupalActiveXhrCount === "undefined"');
@@ -112,14 +109,6 @@ abstract class WebDriverTestBase extends BrowserTestBase {
         // explaining what the problem is.
         throw new \RuntimeException('Unfinished AJAX requests while tearing down a test');
       }
-
-      $warnings = $this->getSession()->evaluateScript("JSON.parse(sessionStorage.getItem('js_testing_log_test.warnings') || JSON.stringify([]))");
-      foreach ($warnings as $warning) {
-        if (str_starts_with($warning, '[Deprecation]')) {
-          // phpcs:ignore Drupal.Semantics.FunctionTriggerError
-          @trigger_error('Javascript Deprecation:' . substr($warning, 13), E_USER_DEPRECATED);
-        }
-      }
     }
     parent::tearDown();
   }
@@ -128,9 +117,8 @@ abstract class WebDriverTestBase extends BrowserTestBase {
    * Triggers a test failure if a JavaScript error was encountered.
    *
    * @throws \PHPUnit\Framework\AssertionFailedError
-   *
-   * @postCondition
    */
+  #[PostCondition]
   protected function failOnJavaScriptErrors(): void {
     if ($this->failOnJavascriptConsoleErrors) {
       $errors = $this->getSession()->evaluateScript("JSON.parse(sessionStorage.getItem('js_testing_log_test.errors') || JSON.stringify([]))");
@@ -148,14 +136,8 @@ abstract class WebDriverTestBase extends BrowserTestBase {
       $json = getenv('MINK_DRIVER_ARGS_WEBDRIVER') ?: parent::getMinkDriverArgs();
       if (!($json === FALSE || $json === '')) {
         $args = json_decode($json, TRUE);
-        if (isset($args[1]['chromeOptions'])) {
-          @trigger_error('The "chromeOptions" array key is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use "goog:chromeOptions instead. See https://www.drupal.org/node/3422624', E_USER_DEPRECATED);
-          $args[1]['goog:chromeOptions'] = $args[1]['chromeOptions'];
-          unset($args[1]['chromeOptions']);
-        }
-        if (isset($args[0]) && $args[0] === 'chrome' && !isset($args[1]['goog:chromeOptions']['w3c'])) {
-          // @todo https://www.drupal.org/project/drupal/issues/3421202
-          //   Deprecate defaulting behavior and require w3c to be set.
+        if (isset($args[0]) && $args[0] === 'chrome' && empty($args[1]['goog:chromeOptions']['w3c'])) {
+          @trigger_error('The "w3c" option for Chrome is deprecated in drupal:11.4.0 and will be forced to TRUE in drupal:12.0.0. See https://www.drupal.org/node/3460567', E_USER_DEPRECATED);
           $args[1]['goog:chromeOptions']['w3c'] = FALSE;
         }
         $json = json_encode($args);
@@ -211,10 +193,33 @@ abstract class WebDriverTestBase extends BrowserTestBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Returns WebAssert object.
+   *
+   * @param string $name
+   *   (optional) Name of the session. Defaults to the active session.
+   *
+   * @return \Drupal\FunctionalJavascriptTests\WebDriverWebAssert
+   *   A new web-assert option for asserting the presence of elements with.
    */
   public function assertSession($name = NULL) {
     return new WebDriverWebAssert($this->getSession($name), $this->baseUrl);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function drupalGet($path, array $options = [], array $headers = []) {
+    $result = parent::drupalGet($path, $options, $headers);
+
+    // Wait for all requests to finish.
+    $this->getSession()->wait(5000, 'window.drupalActiveXhrCount === 0 || typeof window.drupalActiveXhrCount === "undefined"');
+
+    // Process Javascript deprecations.
+    $driver = $this->getSession()->getDriver();
+    assert($driver instanceof DrupalSelenium2Driver);
+    $driver->processJavascriptDeprecations();
+
+    return $result;
   }
 
   /**

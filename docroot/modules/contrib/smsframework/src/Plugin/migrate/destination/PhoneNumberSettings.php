@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms\Plugin\migrate\destination;
 
@@ -29,7 +29,7 @@ class PhoneNumberSettings extends EntityConfigBase {
       // After successful import of the phone_number_setting, the phone number
       // field should be created and attached to the user entity type.
       /** @var \Drupal\sms\Entity\PhoneNumberSettingsInterface $phone_number_setting */
-      $phone_number_setting = $this->storage->load(reset($return));
+      $phone_number_setting = $this->storage->load(\reset($return));
       $this->createPhoneNumberField($phone_number_setting);
     }
     return $return;
@@ -40,7 +40,7 @@ class PhoneNumberSettings extends EntityConfigBase {
    */
   public function rollback(array $destination_identifier) {
     /** @var \Drupal\sms\Entity\PhoneNumberSettingsInterface $phone_number_settings */
-    $phone_number_settings = $this->storage->load(reset($destination_identifier));
+    $phone_number_settings = $this->storage->load(\reset($destination_identifier));
 
     $entity_type_id = $phone_number_settings->getPhoneNumberEntityTypeId();
     $bundle = $phone_number_settings->getPhoneNumberBundle();

@@ -19,7 +19,7 @@ class WebformNodeTranslationTest extends WebformNodeBrowserTestBase {
   /**
    * Tests webform node translation.
    */
-  public function testNodeTranslation() {
+  public function testNodeTranslation(): void {
     $assert_session = $this->assertSession();
 
     $node = $this->createWebformNode('webform_node_test_translation', ['title' => 'English node']);

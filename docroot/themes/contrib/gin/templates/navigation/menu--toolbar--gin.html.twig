@@ -40,7 +40,7 @@
       {%
         set classes = [
           'menu-item',
-          item.is_expanded ? 'menu-item--expanded',
+          item.is_expanded and item.below ? 'menu-item--expanded',
           item.is_collapsed ? 'menu-item--collapsed',
           item.in_active_trail ? 'menu-item--active-trail',
           item.gin_id ? 'menu-item__' ~ item.gin_id

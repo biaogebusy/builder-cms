@@ -32,20 +32,21 @@ trait EntityViewTrait {
    *   the current content language.
    *
    * @return array
+   *   The fully built render array of the entity.
    *
    * @see \Drupal\Core\Render\RendererInterface::render()
    */
   protected function buildEntityView(EntityInterface $entity, $view_mode = 'full', $langcode = NULL) {
-    $ensure_fully_built = function (&$elements) use (&$ensure_fully_built) {
-      // If the default values for this element have not been loaded yet, populate
-      // them.
+    $ensure_fully_built = function (&$elements) use (&$ensure_fully_built): void {
+      // If the default values for this element have not been loaded yet,
+      // populate them.
       if (isset($elements['#type']) && empty($elements['#defaults_loaded'])) {
         $elements += \Drupal::service('element_info')->getInfo($elements['#type']);
       }
 
       // Make any final changes to the element before it is rendered. This means
-      // that the $element or the children can be altered or corrected before the
-      // element is rendered into the final text.
+      // that the $element or the children can be altered or corrected before
+      // the element is rendered into the final text.
       if (isset($elements['#pre_render'])) {
         foreach ($elements['#pre_render'] as $callable) {
           $elements = call_user_func($callable, $elements);
@@ -62,6 +63,15 @@ trait EntityViewTrait {
     $render_controller = $this->container->get('entity_type.manager')->getViewBuilder($entity->getEntityTypeId());
     $build = $render_controller->view($entity, $view_mode, $langcode);
     $ensure_fully_built($build);
+
+    // EntityViewBuilder adds a #pre_render hook that tracks entity render array
+    // to prevent recursive rendering. Since the #pre_render hooks were called
+    // manually here without rendering actually taking place, unset the tracking
+    // for the render array so that when it is rendered, it does not trigger
+    // the recursive protection.
+    if (method_exists($render_controller, 'unsetRecursiveRenderProtection')) {
+      $render_controller->unsetRecursiveRenderProtection('', $build);
+    }
 
     return $build;
   }

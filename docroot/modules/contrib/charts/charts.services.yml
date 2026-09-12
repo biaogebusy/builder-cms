@@ -20,3 +20,19 @@ services:
     arguments: ['@plugin.manager.charts', '@plugin.manager.charts_type']
     tags:
       - { name: event_subscriber }
+
+  charts.hooks:
+    class: Drupal\charts\Hook\ChartsHooks
+    arguments:
+      - '@request_stack'
+      - '@config.factory'
+      - '@extension.path.resolver'
+      - '@module_handler'
+    tags:
+      - { name: hook }
+  Drupal\charts\Hook\ChartsHooks:
+    alias: charts.hooks
+
+  charts.table_builder:
+    class: Drupal\charts\Service\ChartTableBuilder
+    arguments: ['@string_translation', '@plugin.manager.charts_type']

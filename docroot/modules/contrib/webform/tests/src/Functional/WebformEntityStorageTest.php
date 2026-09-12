@@ -12,7 +12,7 @@ class WebformEntityStorageTest extends WebformBrowserTestBase {
   /**
    * Test webform storage.
    */
-  public function testWebformEntityStorage() {
+  public function testWebformEntityStorage(): void {
     // Check webform entity storage caching.
     // @see \Drupal\webform\WebformEntityStorage::load
     /** @var \Drupal\webform\WebformEntityStorage $storage */

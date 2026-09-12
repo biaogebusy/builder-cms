@@ -130,6 +130,11 @@ class NumericArrayField extends FieldPluginBase implements ContainerFactoryPlugi
       $array_length = $input['array_length'];
     }
 
+    // @todo Remove before Drupal 13.
+    if (!function_exists('views_ui_build_form_url')) {
+      $this->moduleHandler->loadInclude('views_ui', 'inc', 'admin');
+    }
+
     // Add a select element for array length with AJAX.
     $form['array_length'] = [
       '#type' => 'select',

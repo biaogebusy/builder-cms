@@ -87,7 +87,7 @@ pre.webform-codemirror-runmode {
  *
  * @see Drupal.behaviors.dialog.prepareDialogButtons
  */
-.webform-ui-dialog .form-actions input[type=submit],
+.webform-ui-dialog .form-actions input[type="submit"],
 .webform-ui-dialog .form-actions a.button {
   display: none !important;
 }

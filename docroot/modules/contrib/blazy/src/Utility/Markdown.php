@@ -4,6 +4,10 @@ namespace Drupal\blazy\Utility;
 
 use Drupal\Component\Utility\Xss;
 use League\CommonMark\CommonMarkConverter;
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\Table\TableExtension;
+use League\CommonMark\MarkdownConverter;
 use Michelf\MarkdownExtra;
 
 /**
@@ -13,7 +17,7 @@ use Michelf\MarkdownExtra;
  *   This is an internal part of the Blazy system and should only be used by
  *   blazy-related code in Blazy module. Please use the public method instead.
  */
-class Markdown {
+final class Markdown {
 
   /**
    * Processes Markdown text, and convert into HTML suitable for the help text.
@@ -34,21 +38,33 @@ class Markdown {
       return $help ? '<pre>' . $text . '</pre>' : $text;
     }
 
-    if (class_exists('League\CommonMark\CommonMarkConverter')) {
-      $converter = new CommonMarkConverter();
+    // Fixed for invisible characters and linebreaks.
+    $text = preg_replace('/\x{00A0}/u', ' ', $text);
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
 
-      if (method_exists($converter, 'convert')) {
-        $text = (string) $converter->convert($text);
+    if (class_exists(CommonMarkConverter::class)) {
+      if (class_exists(Environment::class)
+        && class_exists(CommonMarkCoreExtension::class)
+        && class_exists(TableExtension::class)
+        && class_exists(MarkdownConverter::class)) {
+        $environment = new Environment();
+        $environment->addExtension(new CommonMarkCoreExtension());
+        $environment->addExtension(new TableExtension());
+
+        $converter = new MarkdownConverter($environment);
       }
       else {
-        // Deprecated since 2.2.
-        $method = 'convertToHtml';
-        if (is_callable([$converter, $method])) {
-          $text = (string) $converter->{$method}($text);
-        }
+        $converter = new CommonMarkConverter();
+      }
+
+      // @todo figure out the best solution, not crucial for being optional.
+      /** @phpstan-ignore-next-line */
+      if (method_exists($converter, 'convert')) {
+        /** @phpstan-ignore-next-line */
+        $text = (string) $converter->convert($text);
       }
     }
-    elseif (class_exists('Michelf\MarkdownExtra')) {
+    elseif (class_exists(MarkdownExtra::class)) {
       $text = (string) MarkdownExtra::defaultTransform($text);
     }
 
@@ -60,8 +76,8 @@ class Markdown {
    * Checks if we have the needed classes.
    */
   private static function isApplicable(): bool {
-    return class_exists('League\CommonMark\CommonMarkConverter')
-      || class_exists('Michelf\MarkdownExtra');
+    return class_exists(CommonMarkConverter::class)
+      || class_exists(MarkdownExtra::class);
   }
 
 }

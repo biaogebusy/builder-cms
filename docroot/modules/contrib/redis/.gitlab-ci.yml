@@ -51,6 +51,13 @@ variables:
   before_script:
     - composer require --dev predis/predis --no-update
 
+phpstan:
+  allow_failure: false
+phpstan (previous major):
+  rules:
+    # We are only interested in PHPStan on the current version.
+    - when: never
+
 # For now, use Predis by default as this avoids issues with packages.
 .phpunit-base:
   variables:

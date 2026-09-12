@@ -10,12 +10,14 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the boolean formatter.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class BooleanFormatterTest extends KernelTestBase {
 
   /**
@@ -23,7 +25,6 @@ class BooleanFormatterTest extends KernelTestBase {
    */
   protected static $modules = [
     'field',
-    'text',
     'entity_test',
     'user',
     'system',

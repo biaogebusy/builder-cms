@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_number_pattern\Kernel;
 
+use Drupal\commerce_number_pattern\Hook\CommerceNumberPatternTokenHooks;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
@@ -52,7 +53,9 @@ abstract class NumberPatternKernelTestBase extends CommerceKernelTestBase {
     $mock_time = $this->prophesize(TimeInterface::class);
     $mock_time->getCurrentTime()->willReturn($new_time);
     $mock_time->getRequestTime()->willReturn($new_time);
-    $this->container->set('datetime.time', $mock_time->reveal());
+    $time_service = $mock_time->reveal();
+    $this->container->set('datetime.time', $time_service);
+    \Drupal::service(CommerceNumberPatternTokenHooks::class)->setTimeService($time_service);
   }
 
 }

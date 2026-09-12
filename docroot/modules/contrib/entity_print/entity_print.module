@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\entity_print\Renderer\ContentEntityRenderer;
@@ -75,19 +76,26 @@ function entity_print_entity_view_alter(array &$build, EntityInterface $entity, 
   foreach ($export_types as $export_type => $definition) {
     $key = 'entity_print_view_' . $export_type;
     if ($component = $display->getComponent($key)) {
+      $route_name = 'entity_print.view';
       $route_params = [
         'entity_type' => $entity->getEntityTypeId(),
         'entity_id' => $entity->id(),
         'export_type' => trim($export_type, '_engine'),
       ];
-
+      if ($entity instanceof RevisionableInterface && !$entity->isDefaultRevision()) {
+        $revision_id = $entity->getRevisionId();
+        if ($revision_id !== NULL) {
+          $route_name = 'entity_print.revision.view';
+          $route_params['revision_id'] = $revision_id;
+        }
+      }
       $build[$key] = [
         '#type' => 'print_link',
         '#title' => $display->getThirdPartySetting('entity_print', $export_type . '_label', t('View @label', ['@label' => $definition['label']])),
         '#export_type' => $export_type,
-        '#url' => Url::fromRoute('entity_print.view', $route_params),
         '#weight' => $component['weight'] ?? 0,
-        '#access' => $access_manager->checkNamedRoute('entity_print.view', $route_params, NULL, TRUE),
+        '#access' => $access_manager->checkNamedRoute($route_name, $route_params, NULL, TRUE),
+        '#url' => Url::fromRoute($route_name, $route_params),
       ];
     }
   }

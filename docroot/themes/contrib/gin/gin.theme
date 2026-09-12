@@ -5,11 +5,32 @@
  * gin.theme
  */
 
+use Composer\Autoload\ClassLoader;
+
 /**
  * Load include files which contain additional theming logic.
  */
-foreach (glob(\Drupal::service('extension.list.theme')->getPath('gin') . '/includes/*.theme') as $file) {
-  include $file;
+_gin_include_theme_includes();
+
+/**
+ * Helper function to include all theme includes.
+ *
+ * We know, this is ugly, but we need to load all theme includes to make sure
+ * they are registered.
+ *
+ * @see https://www.drupal.org/project/gin/issues/3554265
+ */
+function _gin_include_theme_includes(): void {
+  static $included;
+  if (!isset($included)) {
+    $included = TRUE;
+    $loader = new ClassLoader();
+    $loader->addPsr4("Drupal\\gin\\", __DIR__ . "/src");
+    $loader->register();
+    foreach (glob(__DIR__ . '/includes/*.theme') as $file) {
+      include_once $file;
+    }
+  }
 }
 
 /**

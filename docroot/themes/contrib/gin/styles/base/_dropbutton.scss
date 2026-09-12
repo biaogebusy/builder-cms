@@ -24,7 +24,7 @@ html.js {
   // Offset for select button on first item
   &--multiple > .dropbutton__item:first-of-type {
     height: 100%;
-    margin-inline-end: var(--gin-spacing-xxl);
+    margin-inline-end: calc(var(--dropbutton-extrasmall-toggle-size) + var(--dropbutton-toggle-size-spacing) + -2px) !important;
     border-inline-end: 1px solid var(--gin-color-primary-light-active);
 
     input {
@@ -49,6 +49,7 @@ html.js {
   }
 
   &-wrapper {
+    position: relative;
     box-shadow: none;
   }
 
@@ -95,7 +96,7 @@ html.js {
     }
   }
 
-  & &__items {
+  .dropbutton__items {
     position: absolute;
     inset-inline-end: 0;
     list-style: none;
@@ -116,7 +117,7 @@ html.js {
     }
   }
 
-  & > &__items > .dropbutton__item:first-of-type {
+  > .dropbutton__items > .dropbutton__item:first-of-type {
     > a,
     > input,
     > .button {
@@ -131,8 +132,8 @@ html.js {
 
   // The ugly part: make it work for all different dropbutton versions out there
   &:not(.dropbutton--gin) > .dropbutton__item ~ .dropbutton__item,
-  & &__items > .dropbutton__item,
-  & &__items > .dropbutton__item ~ .dropbutton__item {
+  .dropbutton__items > .dropbutton__item,
+  .dropbutton__items > .dropbutton__item ~ .dropbutton__item {
     background-color: var(--gin-bg-app);
     border: 0 none;
     box-shadow: none;
@@ -197,7 +198,7 @@ html.js {
     }
   }
 
-  & &__items > .dropbutton__item {
+  .dropbutton__items > .dropbutton__item {
     border-radius: var(--gin-border-s);
   }
 
@@ -207,8 +208,8 @@ html.js {
   }
 
   &:not(.dropbutton--gin) > .dropbutton__item:not(:first-of-type),
-  & &__items > .dropbutton__item,
-  & > &__items > .dropbutton__item ~ .dropbutton__item {
+  .dropbutton__items > .dropbutton__item,
+  > .dropbutton__items > .dropbutton__item ~ .dropbutton__item {
     > a,
     > input,
     > .button {

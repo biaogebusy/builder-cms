@@ -1,11 +1,10 @@
 name: Diff
 type: module
 description: Shows changes between content revisions.
-php: 8.1
-core_version_requirement: ^10.2 || ^11
+core_version_requirement: ^10.5 || ^11 || ^12
 configure: diff.general_settings
 
-# Information added by Drupal.org packaging script on 2025-06-02
-version: '2.0.0-beta4'
+# Information added by Drupal.org packaging script on 2026-08-11
+version: '2.1.1'
 project: 'diff'
-datestamp: 1748842107
+datestamp: 1786491231

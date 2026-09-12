@@ -169,7 +169,7 @@ interface FieldStorageDefinitionInterface extends CacheableDependencyInterface {
    * @return \Drupal\Core\TypedData\DataDefinitionInterface|null
    *   The definition of the property or NULL if the property does not exist.
    */
-  public function getPropertyDefinition($name);
+  public function getPropertyDefinition(/* string */ $name);
 
   /**
    * Gets an array of property definitions of contained properties.
@@ -200,8 +200,8 @@ interface FieldStorageDefinitionInterface extends CacheableDependencyInterface {
    * Returns the name of the main property, if any.
    *
    * Some field items consist mainly of one main property, e.g. the value of a
-   * text field or the @code target_id @endcode of an entity reference. If the
-   * field item has no main property, the method returns NULL.
+   * text field or the "target_id" of an entity reference. If the field item has
+   * no main property, the method returns NULL.
    *
    * @return string|null
    *   The name of the value property, or NULL if there is none.
@@ -326,6 +326,7 @@ interface FieldStorageDefinitionInterface extends CacheableDependencyInterface {
    * Returns a unique identifier for the field storage.
    *
    * @return string
+   *   A unique identifier for the field storage.
    */
   public function getUniqueStorageIdentifier();
 

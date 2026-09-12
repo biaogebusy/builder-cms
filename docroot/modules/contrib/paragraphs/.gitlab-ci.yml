@@ -55,20 +55,23 @@ variables:
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
   OPT_IN_TEST_PREVIOUS_MINOR: 1
   OPT_IN_TEST_NEXT_MINOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 1
+  _LENIENT_ALLOW_LIST: "field_group,entity_browser,replicate,search_api,feeds,inline_entity_form,diff,block_field"
+
+# We are only interested in PHPStan on the current version.
+phpstan (previous major):
+  rules:
+    - when: never
+phpstan (next minor):
+  rules:
+    - when: never
+phpstan (next major):
+  rules:
+    - when: never
 
 phpcs:
   before_script:
     - cp $_WEB_ROOT/core/phpcs.xml.dist ./core.phpcs.xml.dist
-
-composer (10.2):
-  extends: .composer-base
-  variables:
-    DRUPAL_CORE: "10.2.12"
-
-phpunit (10.2):
-  extends: phpunit
-  needs:
-    - "composer (10.2)"
 
 ###################################################################################
 #

@@ -4,38 +4,27 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Plugin\Fixtures;
 
-use Drupal\Component\Plugin\ConfigurableInterface;
-use Drupal\Component\Plugin\DependentPluginInterface;
-use Drupal\Component\Plugin\PluginBase;
+use Drupal\Core\Plugin\ConfigurablePluginBase;
+use Drupal\Core\Plugin\RemovableDependentPluginInterface;
+use Drupal\Core\Plugin\RemovableDependentPluginReturn;
 
-class TestConfigurablePlugin extends PluginBase implements ConfigurableInterface, DependentPluginInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getConfiguration() {
-    return $this->configuration;
-  }
+/**
+ * A configurable plugin implementation used for testing.
+ */
+class TestConfigurablePlugin extends ConfigurablePluginBase implements RemovableDependentPluginInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function setConfiguration(array $configuration) {
-    $this->configuration = $configuration;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function defaultConfiguration() {
+  public function calculateDependencies(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function calculateDependencies() {
-    return [];
+  public function onCollectionDependencyRemoval(array $dependencies): RemovableDependentPluginReturn {
+    return RemovableDependentPluginReturn::Unchanged;
   }
 
 }

@@ -2,10 +2,10 @@
 
 namespace Drupal\webform_test_handler\Plugin\WebformHandler;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

@@ -2,7 +2,8 @@
 
 namespace Drupal\comment\Plugin\Field\FieldFormatter;
 
-use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\comment\CommentingStatus;
+use Drupal\comment\FormLocation;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
@@ -15,7 +16,6 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a default comment formatter.
@@ -80,26 +80,6 @@ class CommentDefaultFormatter extends FormatterBase {
   protected $routeMatch;
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['label'],
-      $configuration['view_mode'],
-      $configuration['third_party_settings'],
-      $container->get('current_user'),
-      $container->get('entity_type.manager'),
-      $container->get('entity.form_builder'),
-      $container->get('current_route_match'),
-      $container->get('entity_display.repository')
-    );
-  }
-
-  /**
    * Constructs a new CommentDefaultFormatter.
    *
    * @param string $plugin_id
@@ -147,9 +127,9 @@ class CommentDefaultFormatter extends FormatterBase {
     $field_name = $this->fieldDefinition->getName();
     $entity = $items->getEntity();
 
-    $status = $items->status;
+    $status = CommentingStatus::tryFrom((int) $items->status);
 
-    if ($status != CommentItemInterface::HIDDEN && empty($entity->in_preview) &&
+    if ($status != CommentingStatus::Hidden && empty($entity->in_preview) &&
       // Comments are added to the search results and search index by
       // comment_node_update_index() instead of by this formatter, so don't
       // return anything if the view mode is search_index or search_result.
@@ -172,9 +152,9 @@ class CommentDefaultFormatter extends FormatterBase {
             $build = $this->viewBuilder->viewMultiple($comments, $this->getSetting('view_mode'));
             $build['pager']['#type'] = 'pager';
             // CommentController::commentPermalink() calculates the page number
-            // where a specific comment appears and does a subrequest pointing to
-            // that page, we need to pass that subrequest route to our pager to
-            // keep the pager working.
+            // where a specific comment appears and does a subrequest pointing
+            // to that page, we need to pass that subrequest route to our pager
+            // to keep the pager working.
             $build['pager']['#route_name'] = $this->routeMatch->getRouteName();
             $build['pager']['#route_parameters'] = $this->routeMatch->getRawParameters()->all();
             if ($this->getSetting('pager_id')) {
@@ -187,7 +167,8 @@ class CommentDefaultFormatter extends FormatterBase {
 
       // Append comment form if the comments are open and the form is set to
       // display below the entity. Do not show the form for the print view mode.
-      if ($status == CommentItemInterface::OPEN && $comment_settings['form_location'] == CommentItemInterface::FORM_BELOW && $this->viewMode != 'print') {
+      $form_location = FormLocation::tryFrom($comment_settings['form_location']);
+      if ($status == CommentingStatus::Open && $form_location == FormLocation::Below && $this->viewMode != 'print') {
         // Only show the add comment form if the user has permission.
         $elements['#cache']['contexts'][] = 'user.roles';
         if ($this->currentUser->hasPermission('post comments')) {

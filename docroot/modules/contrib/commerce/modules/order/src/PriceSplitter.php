@@ -11,30 +11,17 @@ use Drupal\commerce_price\RounderInterface;
 class PriceSplitter implements PriceSplitterInterface {
 
   /**
-   * The currency storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $currencyStorage;
-
-  /**
-   * The rounder.
-   *
-   * @var \Drupal\commerce_price\RounderInterface
-   */
-  protected $rounder;
-
-  /**
    * Constructs a new PriceSplitter object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\commerce_price\RounderInterface $rounder
    *   The rounder.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RounderInterface $rounder) {
-    $this->currencyStorage = $entity_type_manager->getStorage('commerce_currency');
-    $this->rounder = $rounder;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected RounderInterface $rounder,
+  ) {
   }
 
   /**
@@ -80,7 +67,7 @@ class PriceSplitter implements PriceSplitterInterface {
     // the reminder among them.
     if (!$amount->isZero()) {
       /** @var \Drupal\commerce_price\Entity\CurrencyInterface $currency */
-      $currency = $this->currencyStorage->load($amount->getCurrencyCode());
+      $currency = $this->entityTypeManager->getStorage('commerce_currency')->load($amount->getCurrencyCode());
       $precision = $currency->getFractionDigits();
       // Use the smallest rounded currency amount (e.g. '0.01' for USD).
       $smallest_number = Calculator::divide('1', 10 ** $precision, $precision);

@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\webform\Functional\Wizard;
 
-use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -22,7 +21,7 @@ class WebformWizardBasicTest extends WebformWizardTestBase {
   /**
    * Test webform basic wizard.
    */
-  public function testBasicWizard() {
+  public function testBasicWizard(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($this->rootUser);
@@ -48,18 +47,8 @@ class WebformWizardBasicTest extends WebformWizardTestBase {
     $assert_session->statusCodeEquals(200);
 
     // Check that page 1 and 2 are displayed.
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.3',
-      currentCallable: fn() => $assert_session->responseContains('<summary role="button" aria-controls="edit-page-1" aria-expanded="false">Page 1</summary>'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<summary role="button" aria-controls="edit-page-1" aria-expanded="false" aria-pressed="false">Page 1</summary>'),
-    );
-    DeprecationHelper::backwardsCompatibleCall(
-      currentVersion: \Drupal::VERSION,
-      deprecatedVersion: '10.3',
-      currentCallable: fn() => $assert_session->responseContains('<summary role="button" aria-controls="edit-page-2" aria-expanded="false">Page 2</summary>'),
-      deprecatedCallable: fn() => $assert_session->responseContains('<summary role="button" aria-controls="edit-page-2" aria-expanded="false" aria-pressed="false">Page 2</summary>'),
-    );
+    $assert_session->responseContains('<summary role="button" aria-controls="edit-page-1" aria-expanded="false">Page 1</summary>');
+    $assert_session->responseContains('<summary role="button" aria-controls="edit-page-2" aria-expanded="false">Page 2</summary>');
 
     // Create a contact form submission.
     $contact_webform = Webform::load('contact');

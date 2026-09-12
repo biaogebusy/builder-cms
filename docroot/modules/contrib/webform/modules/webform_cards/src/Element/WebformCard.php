@@ -2,14 +2,14 @@
 
 namespace Drupal\webform_cards\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a render element for a card container.
  *
  * @RenderElement("webform_card")
  */
-class WebformCard extends RenderElement {
+class WebformCard extends RenderElementBase {
 
   /**
    * {@inheritdoc}

@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\Group;
+
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\field\Entity\FieldConfig;
@@ -14,6 +18,8 @@ use Drupal\Tests\SchemaCheckTestTrait;
  *
  * @group dynamic_entity_reference
  */
+#[Group('dynamic_entity_reference')]
+#[RunTestsInSeparateProcesses]
 class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
   use SchemaCheckTestTrait;
 
@@ -137,7 +143,7 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     $entity->{$this->fieldName}->target_id = 9999;
     $violations = $entity->{$this->fieldName}->validate();
     $this->assertEquals($violations->count(), 1, 'Validation throws a violation.');
-    $this->assertEquals($violations[0]->getMessage(), t('The referenced entity (%type: %id) does not exist.', [
+    $this->assertEquals((string) $violations[0]->getMessage(), (string) new TranslatableMarkup('The referenced entity (%type: %id) does not exist.', [
       '%type' => $this->referencedEntityType,
       '%id' => 9999,
     ]));
@@ -153,7 +159,7 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     $entity->{$this->fieldName}->target_id = $referenced_entity->id();
     $violations = $entity->{$this->fieldName}->validate();
     $this->assertEquals($violations->count(), 1, 'Validation throws a violation.');
-    $this->assertEquals($violations[0]->getMessage(), t('The referenced entity type (%type) is not allowed for this field.', ['%type' => $this->entityType]));
+    $this->assertEquals((string) $violations[0]->getMessage(), (string) new TranslatableMarkup('The referenced entity type (%type) is not allowed for this field.', ['%type' => $this->entityType]));
 
     // Test an invalid entity.
     $entity = $entity_type_manager
@@ -165,7 +171,7 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     $entity->{$this->fieldName}->entity = $entity;
     $violations = $entity->{$this->fieldName}->validate();
     $this->assertEquals($violations->count(), 1, 'Validation throws a violation.');
-    $this->assertEquals($violations[0]->getMessage(), t('The referenced entity type (%type) is not allowed for this field.', ['%type' => $entity->getEntityTypeId()]));
+    $this->assertEquals((string) $violations[0]->getMessage(), (string) new TranslatableMarkup('The referenced entity type (%type) is not allowed for this field.', ['%type' => $entity->getEntityTypeId()]));
 
     // Test bundle validation with empty array. Empty array means no bundle is
     // allowed.
@@ -192,7 +198,7 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     $entity->{$this->fieldName}->target_id = $referenced_entity->id();
     $violations = $entity->{$this->fieldName}->validate();
     $this->assertEquals($violations->count(), 1, 'Validation throws a violation.');
-    $this->assertEquals($violations[0]->getMessage(), t('No bundle is allowed for (%type)', ['%type' => $this->referencedEntityType]));
+    $this->assertEquals((string) $violations[0]->getMessage(), (string) new TranslatableMarkup('No bundle is allowed for (%type)', ['%type' => $this->referencedEntityType]));
 
     // Test with wrong bundle.
     $bundle = EntityTestBundle::create([
@@ -224,7 +230,7 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     $entity->{$this->fieldName}->target_id = $referenced_entity->id();
     $violations = $entity->{$this->fieldName}->validate();
     $this->assertEquals($violations->count(), 1, 'Validation throws a violation.');
-    $this->assertEquals($violations[0]->getMessage(), t('Referenced entity %label does not belong to one of the supported bundles (%bundles).', [
+    $this->assertEquals((string) $violations[0]->getMessage(), (string) new TranslatableMarkup('Referenced entity %label does not belong to one of the supported bundles (%bundles).', [
       '%label' => $referenced_entity->label(),
       '%bundles' => 'newbundle',
     ]));

@@ -95,18 +95,37 @@ class Views {
    *   The plugin type, for example filter.
    *
    * @return \Drupal\views\Plugin\ViewsPluginManager
+   *   The Views plugin manager service.
+   *
+   * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+   *   \Drupal::service('plugin.manager.views.{type}') for specific types or
+   *   \Drupal::service('views.plugin_managers')->get($type) for dynamic.
+   *
+   * @see https://www.drupal.org/node/3566982
    */
   public static function pluginManager($type) {
-    return \Drupal::service('plugin.manager.views.' . $type);
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(\'plugin.manager.views.{type}\') for specific plugin types or \Drupal::service(\'views.plugin_managers\')->get($type) for dynamic types. See https://www.drupal.org/node/3566982', E_USER_DEPRECATED);
+    return \Drupal::service('views.plugin_managers')->get($type);
   }
 
   /**
    * Returns the plugin manager for a certain views handler type.
    *
+   * @param string $type
+   *   The handler type, for example relationship, field, or filter.
+   *
    * @return \Drupal\views\Plugin\ViewsHandlerManager
+   *   The Views plugin manager service.
+   *
+   * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+   *   \Drupal::service('plugin.manager.views.{type}') for specific types or
+   *   \Drupal::service('views.plugin_managers')->get($type) for dynamic.
+   *
+   * @see https://www.drupal.org/node/3566982
    */
   public static function handlerManager($type) {
-    return \Drupal::service('plugin.manager.views.' . $type);
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal::service(\'plugin.manager.views.{type}\') for specific handler types or \Drupal::service(\'views.plugin_managers\')->get($type) for dynamic types. See https://www.drupal.org/node/3566982', E_USER_DEPRECATED);
+    return \Drupal::service('views.plugin_managers')->get($type);
   }
 
   /**
@@ -127,7 +146,7 @@ class Views {
   }
 
   /**
-   * Fetches a list of all base tables available.
+   * Fetches a list of plugin names for a given type.
    *
    * @param string $type
    *   Either 'display', 'style' or 'row'.
@@ -138,10 +157,11 @@ class Views {
    *   An array of possible base tables.
    *
    * @return array
-   *   A keyed array of in the form of 'base_table' => 'Description'.
+   *   A sorted associative array of in the form 'plugin_id' => 'Plugin title'.
+   *   If no plugins are found, an empty array is returned.
    */
   public static function fetchPluginNames($type, $key = NULL, array $base = []) {
-    $definitions = static::pluginManager($type)->getDefinitions();
+    $definitions = \Drupal::service('views.plugin_managers')->get($type)->getDefinitions();
     $plugins = [];
 
     foreach ($definitions as $id => $plugin) {
@@ -156,8 +176,9 @@ class Views {
     }
 
     if (!empty($plugins)) {
-      asort($plugins);
-      return $plugins;
+      uasort($plugins, static function ($a, $b) {
+        return strcmp((string) $a, (string) $b);
+      });
     }
 
     return $plugins;
@@ -171,8 +192,9 @@ class Views {
    */
   public static function getPluginDefinitions() {
     $plugins = [];
+    $pluginManagers = \Drupal::service('views.plugin_managers');
     foreach (ViewExecutable::getPluginTypes() as $plugin_type) {
-      $plugins[$plugin_type] = static::pluginManager($plugin_type)->getDefinitions();
+      $plugins[$plugin_type] = $pluginManagers->get($plugin_type)->getDefinitions();
     }
 
     return $plugins;
@@ -208,7 +230,7 @@ class Views {
    */
   public static function getApplicableViews($type) {
     // Get all display plugins which provides the type.
-    $display_plugins = static::pluginManager('display')->getDefinitions();
+    $display_plugins = \Drupal::service('plugin.manager.views.display')->getDefinitions();
 
     $plugin_ids = [];
     foreach ($display_plugins as $id => $definition) {
@@ -286,16 +308,16 @@ class Views {
    *   If TRUE, only return views, not displays.
    * @param string $filter
    *   Filters the views on status. Can either be 'all' (default), 'enabled' or
-   *   'disabled'
+   *   'disabled'.
    * @param \Drupal\views\ViewExecutable|string $exclude_view
    *   View or current display to exclude.
    *   Either a:
-   *   - Views executable object
-   *   - views name, for example 'my_view'
-   *   - views name and display ID separated by ':', for example 'my_view:page'
+   *   - Views executable object.
+   *   - views name, for example 'my_view'.
+   *   - views name and display ID separated by ':', for example 'my_view:page'.
    * @param bool $optgroup
-   *   If TRUE, returns an array with optgroups for each view (will be ignored for
-   *   $views_only = TRUE). Can be used by select
+   *   If TRUE, returns an array with optgroups for each view (will be ignored
+   *   for $views_only = TRUE). Can be used by select.
    * @param bool $sort
    *   If TRUE, the list of views is sorted ascending.
    *
@@ -328,8 +350,8 @@ class Views {
       $exclude_view_display = $exclude_view->current_display;
     }
     else {
-      // Append a ':' to the $exclude_view string so we always have more than one
-      // item to explode.
+      // Append a ':' to the $exclude_view string so we always have more than
+      // one item to explode.
       [$exclude_view_name, $exclude_view_display] = explode(':', "$exclude_view:");
     }
 
@@ -345,10 +367,16 @@ class Views {
         foreach ($view->get('display') as $display_id => $display) {
           if (!($id == $exclude_view_name && $display_id == $exclude_view_display)) {
             if ($optgroup) {
-              $options[$id][$id . ':' . $display['id']] = t('@view : @display', ['@view' => $id, '@display' => $display['id']]);
+              $options[$id][$id . ':' . $display['id']] = t('@view : @display', [
+                '@view' => $id,
+                '@display' => $display['id'],
+              ]);
             }
             else {
-              $options[$id . ':' . $display['id']] = t('View: @view - Display: @display', ['@view' => $id, '@display' => $display['id']]);
+              $options[$id . ':' . $display['id']] = t('View: @view - Display: @display', [
+                '@view' => $id,
+                '@display' => $display['id'],
+              ]);
             }
           }
         }
@@ -432,13 +460,13 @@ class Views {
     if (!isset(static::$handlerTypes)) {
       static::$handlerTypes = [
         'field' => [
-          // Title
+          // Title.
           'title' => static::t('Fields'),
           // Lowercase title for mid-sentence.
           'ltitle' => static::t('fields'),
           // Singular title.
           'stitle' => static::t('Field'),
-          // Singular lowercase title for mid sentence
+          // Singular lowercase title for mid sentence.
           'lstitle' => static::t('field'),
           'plural' => 'fields',
         ],
@@ -535,6 +563,44 @@ class Views {
     }
 
     return static::$translationManager->translate($string, $args, $options);
+  }
+
+  /**
+   * Get the result of a view.
+   *
+   * @param string $name
+   *   The name of the view to retrieve the data from.
+   * @param string|null $display_id
+   *   The display ID. On the edit page for the view in question, you'll find a
+   *   list of displays at the left side of the control area. "Default" will be
+   *   at the top of that list. Hover your cursor over the name of the display
+   *   you want to use. A URL will appear in the status bar of your browser.
+   *   This is usually at the bottom of the window, in the chrome. Everything
+   *   after #views-tab- is the display ID, e.g. page_1.
+   * @param mixed ...$args
+   *   Any additional parameters will be passed as arguments.
+   *
+   * @return array
+   *   An array containing an object for each view item.
+   */
+  public static function getViewResult(string $name, string|null $display_id = NULL, mixed ...$args): array {
+    $view = static::getView($name);
+    if (is_object($view)) {
+      if (is_array($args)) {
+        $view->setArguments($args);
+      }
+      if (is_string($display_id)) {
+        $view->setDisplay($display_id);
+      }
+      else {
+        $view->initDisplay();
+      }
+      $view->preExecute();
+      $view->execute();
+      return $view->result;
+    }
+
+    return [];
   }
 
 }

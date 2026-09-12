@@ -1,0 +1,5 @@
+
+services:
+  Drupal\webform_example_composite\Hook\WebformExampleCompositeHooks:
+    class: Drupal\webform_example_composite\Hook\WebformExampleCompositeHooks
+    autowire: true

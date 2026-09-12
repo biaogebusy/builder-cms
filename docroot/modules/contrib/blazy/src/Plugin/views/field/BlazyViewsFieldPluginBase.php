@@ -3,14 +3,14 @@
 namespace Drupal\blazy\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyApi;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\BlazyEntityInterface;
 use Drupal\blazy\BlazyManager;
+use Drupal\blazy\Internals\Internals;
 use Drupal\blazy\Theme\BlazyViews;
 use Drupal\blazy\Traits\PluginScopesTrait;
 use Drupal\blazy\Utility\Arrays;
-use Drupal\blazy\internals\Internals;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -114,7 +114,7 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
   /**
    * Returns the blazy manager.
    *
-   * @todo remove, hardly called outside the formatters.
+   * @todo deprecate and remove, hardly called outside the formatters.
    */
   public function blazyManager() {
     return $this->blazyManager;
@@ -191,6 +191,7 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
    * Merges the settings.
    */
   public function mergedViewsSettings(array $data = [], $entity = NULL) {
+    /** @var array $settings */
     $settings = BlazyDefault::entitySettings();
     $config   = [];
     $view     = $this->view;
@@ -215,8 +216,9 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
       ],
     ];
 
+    /** @var array $settings */
     $settings = BlazyViews::settings($view, $settings, $info);
-    $blazies  = $settings['blazies'];
+    $blazies = Internals::getBlazies($settings);
 
     $blazies->set('item.id', static::$itemId)
       ->set('item.prefix', static::$itemPrefix)
@@ -251,9 +253,12 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
    * Since 2.10 sub-modules can forget this, and use self::getPluginScopes().
    */
   public function getScopedFormElements() {
-    $scopes   = $this->getPluginScopes();
-    $scopes  += Blazy::init();
-    $blazies  = $scopes['blazies'];
+    /** @var array $scopes */
+    $scopes = $this->getPluginScopes();
+    $scopes += BlazyApi::init();
+    $blazies = Internals::getBlazies($scopes);
+
+    /** @var array $settings */
     $settings = $this->options;
 
     // Mimick field formatters for consistency.
@@ -268,7 +273,7 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
       }
     }
 
-    // @todo remove `$scopes +` at Blazy 3.x.
+    // @todo deprecate and remove `$scopes +` at Blazy 3.x.
     $definitions = $scopes;
     $definitions['scopes'] = $this->toPluginScopes($scopes);
     $definitions['settings'] = $settings;

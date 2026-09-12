@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\paragraphs\FunctionalJavascript;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
@@ -23,7 +25,6 @@ trait ParagraphsTestBaseTrait {
    * @var \Drupal\workflows\WorkflowInterface
    */
   protected $workflow;
-
 
   /**
    * Adds a content type with a Paragraphs field.
@@ -70,7 +71,7 @@ trait ParagraphsTestBaseTrait {
         'field_name' => $paragraphs_field_name,
         'entity_type' => $entity_type,
         'type' => 'entity_reference_revisions',
-        'cardinality' => '-1',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
         'settings' => [
           'target_type' => 'paragraph',
         ],
@@ -128,7 +129,7 @@ trait ParagraphsTestBaseTrait {
     // reference the same file.
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
-    $copy_uri = $file_system->copy($uri, 'public://' . $file_system->basename($uri));
+    $copy_uri = $file_system->copy($uri, 'public://' . DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.3.0', fn() => basename($uri), fn() => $file_system->basename($uri)));
 
     // Create a new file entity.
     $file_entity = File::create([
@@ -158,14 +159,17 @@ trait ParagraphsTestBaseTrait {
    */
   protected function addFieldtoParagraphType($paragraph_type_id, $field_name, $field_type, array $storage_settings = []) {
     // Add a paragraphs field.
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => $field_name,
-      'entity_type' => 'paragraph',
-      'type' => $field_type,
-      'cardinality' => 1,
-      'settings' => $storage_settings,
-    ]);
-    $field_storage->save();
+    $field_storage = FieldStorageConfig::loadByName('paragraph', $field_name);
+    if (!$field_storage) {
+      $field_storage = FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'paragraph',
+        'type' => $field_type,
+        'cardinality' => 1,
+        'settings' => $storage_settings,
+      ]);
+      $field_storage->save();
+    }
     $field = FieldConfig::create([
       'field_storage' => $field_storage,
       'bundle' => $paragraph_type_id,
@@ -201,7 +205,7 @@ trait ParagraphsTestBaseTrait {
    *   (optional) Machine name of the content entity type that the bundle
    *   belongs to. Defaults to "node".
    */
-    protected function setParagraphsWidgetSettings($bundle, $paragraphs_field, array $settings, $field_widget = NULL, $entity_type = 'node') {
+  protected function setParagraphsWidgetSettings($bundle, $paragraphs_field, array $settings, $field_widget = NULL, $entity_type = 'node') {
     /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $default_form_display */
     $default_form_display = \Drupal::entityTypeManager()
       ->getStorage('entity_form_display')
@@ -318,7 +322,7 @@ trait ParagraphsTestBaseTrait {
    * @return bool
    *   Whether the core version is higher than the requested one.
    */
-  protected  function coreVersion(string $version): bool {
+  protected function coreVersion(string $version): bool {
     return version_compare(\Drupal::VERSION, $version, '>=');
   }
 

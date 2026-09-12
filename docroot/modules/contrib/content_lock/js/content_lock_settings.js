@@ -3,7 +3,7 @@
  * Defines Javascript behaviors for the content lock module.
  */
 
-(function ($, Drupal, once) {
+(function (Drupal, once) {
   /**
    * Behaviors for the content lock settings form.
    *
@@ -20,16 +20,22 @@
         context,
       ).forEach(function (elem) {
         // Init
-        Drupal.behaviors.contentLockSettings.toggleBundles;
+        Drupal.behaviors.contentLockSettings.toggleBundles.call(elem);
         // Change
-        $(elem).change(Drupal.behaviors.contentLockSettings.toggleBundles);
+        elem.addEventListener(
+          'change',
+          Drupal.behaviors.contentLockSettings.toggleBundles,
+        );
       });
       once(
         'content-lock-settings',
         '.content-lock-entity-types input',
         context,
       ).forEach(function (elem) {
-        $(elem).change(Drupal.behaviors.contentLockSettings.toggleEntityType);
+        elem.addEventListener(
+          'change',
+          Drupal.behaviors.contentLockSettings.toggleEntityType,
+        );
       });
     },
 
@@ -37,23 +43,27 @@
      * Toggle the bundle rows if all option is changed.
      */
     toggleBundles() {
-      const all_bundles_selected = this.checked;
-      $(this)
-        .closest('tbody')
-        .find('.bundle-settings')
-        .each(function () {
+      const allBundlesSelected = this.checked;
+      this.closest('tbody')
+        .querySelectorAll('.bundle-settings')
+        .forEach((bundleSettings) => {
           // If the "All bundles" checkbox is checked then uncheck and disable
           // all other options.
-          const $checkbox = $('[type="checkbox"]', this);
-          if (all_bundles_selected) {
-            $checkbox
-              .prop('disabled', true)
-              .prop('checked', false)
-              .addClass('is-disabled');
-            $(this).hide();
+          const checkboxes =
+            bundleSettings.querySelectorAll('[type="checkbox"]');
+          if (allBundlesSelected) {
+            checkboxes.forEach((checkbox) => {
+              checkbox.disabled = true;
+              checkbox.checked = false;
+              checkbox.classList.add('is-disabled');
+            });
+            bundleSettings.classList.add('hidden');
           } else {
-            $checkbox.prop('disabled', false).removeClass('is-disabled');
-            $(this).show();
+            checkboxes.forEach((checkbox) => {
+              checkbox.disabled = false;
+              checkbox.classList.remove('is-disabled');
+            });
+            bundleSettings.classList.remove('hidden');
           }
         });
     },
@@ -62,17 +72,23 @@
      * Remove all selected bundles or auto select all when changing an entity type.
      */
     toggleEntityType() {
-      const entity_type_id = $(this).val();
+      const entityTypeId = this.value;
       if (this.checked) {
-        $(`.${entity_type_id} .content-lock-entity-settings[value="*"]`)
-          .prop('checked', true)
-          .trigger('change');
+        document
+          .querySelectorAll(
+            `.${entityTypeId} .content-lock-entity-settings[value="*"]`,
+          )
+          .forEach((checkbox) => {
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change'));
+          });
       } else {
-        $(`.${entity_type_id} .content-lock-entity-settings`).prop(
-          'checked',
-          false,
-        );
+        document
+          .querySelectorAll(`.${entityTypeId} .content-lock-entity-settings`)
+          .forEach((checkbox) => {
+            checkbox.checked = false;
+          });
       }
     },
   };
-})(jQuery, Drupal, once);
+})(Drupal, once);

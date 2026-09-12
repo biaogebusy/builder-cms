@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\navigation\Functional;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\file\Entity\File;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for \Drupal\navigation\Form\SettingsForm.
- *
- * @group navigation
  */
+#[Group('navigation')]
+#[RunTestsInSeparateProcesses]
 class NavigationLogoTest extends BrowserTestBase {
 
+  use StringTranslationTrait;
   use TestFileCreationTrait;
 
   /**
@@ -77,7 +81,7 @@ class NavigationLogoTest extends BrowserTestBase {
     $edit = [
       'logo_provider' => 'hide',
     ];
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     $this->assertSession()->pageTextContains('The configuration options have been saved.');
     $this->assertSession()->elementNotExists('css', 'a.admin-toolbar__logo');
 
@@ -91,7 +95,7 @@ class NavigationLogoTest extends BrowserTestBase {
       'logo_provider' => 'custom',
       'logo_path' => $logo_file->getFileUri(),
     ];
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     // Refresh the page to verify custom logo is placed.
     $this->drupalGet('/admin/config/user-interface/navigation/settings');
     $this->assertSession()->elementExists('css', 'a.admin-toolbar__logo > img');
@@ -102,7 +106,7 @@ class NavigationLogoTest extends BrowserTestBase {
       'logo_provider' => 'custom',
       'logo_path' => 'core/misc/logo/drupal-logo.svg',
     ];
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     // Refresh the page to verify custom logo is placed.
     $this->drupalGet('/admin/config/user-interface/navigation/settings');
     $this->assertSession()->elementExists('css', 'a.admin-toolbar__logo > img');
@@ -114,7 +118,7 @@ class NavigationLogoTest extends BrowserTestBase {
       'logo_provider' => 'custom',
       'files[logo_upload]' => $this->fileSystem->realpath($file->uri),
     ];
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     $this->assertSession()->statusMessageContains('The image was resized to fit within the navigation logo expected dimensions of 40x40 pixels. The new dimensions of the resized image are 40x27 pixels.');
     // Refresh the page to verify custom logo is placed.
     $this->drupalGet('/admin/config/user-interface/navigation/settings');

@@ -47,6 +47,7 @@ class VideoEmbedWysiwyg extends CKEditor5PluginDefault implements CKEditor5Plugi
           'autoplay' => TRUE,
           'title_format' => '@provider | @title',
           'title_fallback' => TRUE,
+          'loading' => Video::defaultSettings()['loading'],
         ],
       ],
     ];

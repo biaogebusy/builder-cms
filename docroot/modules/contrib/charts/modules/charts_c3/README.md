@@ -1,4 +1,38 @@
-#Installation Using Composer (recommended)
+# Installation
+
+## Using npm (new)
+
+If you are using npm for JavaScript assets and have a build step that would
+run `npm install` (for example), then you can add a package.json file to your
+site root that looks like this:
+
+        {
+            "name": "my_site",
+            "private": true,
+            "scripts": {
+                "postinstall": "npm run libraries:copy --workspaces --if-present"
+            },
+            "workspaces": [
+                "web/modules/contrib/charts/modules/charts_c3"
+            ]
+        }
+
+Please note: C3.js has not been updated since 2019 or 2020, and it relies on
+an outdated (insecure) version of d3.js. This module brings in a secure
+version of d3.js, but it relies on a shim file to work properly. We strongly
+recommend using Billboard.js over C3.js. Billboard.js is a fork of C3.js
+that has continued to receive updates.
+
+If you already have a package.json file present in your site root, then edit
+it to include the "postinstall" script and the "workspaces".
+
+`npm install` will then add your JS files to the appropriate library
+directories (e.g. web/libraries/c3).
+
+This assumes that you are using the "web" directory and the charts module
+is in a directory like "web/modules/contrib/charts".
+
+## Using Composer
 
 If you use Composer to manage dependencies, edit your site's "composer.json"
 file as follows.

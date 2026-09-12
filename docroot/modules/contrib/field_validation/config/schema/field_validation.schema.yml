@@ -100,6 +100,9 @@ field_validation.rule.regex_constraint_rule:
     message:
       type: string
       label: 'Message'
+    match:
+      type: boolean
+      label: 'Value must match the pattern to be valid'
 
 field_validation.rule.email_constraint_rule:
   type: mapping

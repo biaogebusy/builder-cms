@@ -1,6 +1,10 @@
+parameters:
+  field_ui.skip_procedural_hook_scan: true
+
 services:
   _defaults:
     autoconfigure: true
+  Drupal\field_ui\Controller\EntityViewDisplayOverviewController: ~
   field_ui.subscriber:
     class: Drupal\field_ui\Routing\RouteSubscriber
     arguments: ['@entity_type.manager']

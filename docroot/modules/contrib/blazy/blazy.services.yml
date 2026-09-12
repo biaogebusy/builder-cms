@@ -1,9 +1,5 @@
 services:
-  blazy.base:
-    abstract: true
-    class: Drupal\blazy\BlazyBase
-    arguments: ['@blazy.libraries', '@entity.repository', '@entity_type.manager', '@renderer', '@language_manager']
-
+  # @todo remove parent, make it final and hold core architectural services.
   blazy:
     class: Drupal\blazy\Blazy
     parent: blazy.base
@@ -22,43 +18,18 @@ services:
     class: Drupal\blazy\BlazyFormatter
     parent: blazy.manager
 
-  blazy.media:
-    class: Drupal\blazy\Media\BlazyMedia
-    arguments: ['@blazy.manager', '@http_client', '@media.oembed.iframe_url_helper']
-
-  blazy.oembed:
-    class: Drupal\blazy\Media\BlazyOEmbed
-    arguments: ['@blazy.media', '@media.oembed.resource_fetcher', '@media.oembed.url_resolver']
-
-  blazy.entity:
-    class: Drupal\blazy\BlazyEntity
-    arguments: ['@blazy.oembed']
-
-  blazy.config:
-    class: Drupal\blazy\Config\Config
-    # @todo recheck deprecated at D10: '@request_stack',
-    arguments: ['%app.root%', '@cache.default', '@config.factory', '@module_handler', '@current_route_match']
-
   blazy.libraries:
     class: Drupal\blazy\Asset\Libraries
     parent: blazy.config
     calls:
-      - [setDiscovery, ['@library.discovery']]
-      - [setFinder, ['@library.libraries_directory_file_finder']]
-
-  blazy.file:
-    class: Drupal\blazy\Media\BlazyFile
-    arguments: ['@file_system', '@file.repository', '@image.factory', '@logger.factory']
-
-  blazy.svg:
-    class: Drupal\blazy\Media\Svg\Svg
-    parent: blazy.file
+      - [setDiscovery, ["@library.discovery"]]
+      - [setFinder, ["@library.libraries_directory_file_finder"]]
 
   blazy.skin.base:
     abstract: true
     class: Drupal\blazy\Skin\SkinManagerBase
     parent: default_plugin_manager
-    arguments: ['@blazy']
+    arguments: ["@blazy"]
 
   blazy.skin:
     class: Drupal\blazy\Skin\SkinManager
@@ -67,7 +38,13 @@ services:
   blazy.admin.base:
     abstract: true
     class: Drupal\blazy\Form\BlazyAdminBase
-    arguments: ['@entity_display.repository', '@config.typed', '@date.formatter', '@blazy.manager']
+    arguments:
+      [
+        "@entity_display.repository",
+        "@config.typed",
+        "@date.formatter",
+        "@blazy.manager",
+      ]
 
   blazy.admin.formatter:
     class: Drupal\blazy\Form\BlazyAdminFormatter
@@ -80,6 +57,68 @@ services:
   blazy.csp_subscriber:
     class: Drupal\blazy\EventSubscriber\CspSubscriber
     arguments:
-      - '@library.dependency_resolver'
+      - "@library.dependency_resolver"
     tags:
       - { name: event_subscriber }
+
+  # Deprecated services marked in 3.0.18 for smooth 4.x upgrade.
+  # Media component services are deprecated in 3.x, and is removed in 4.x.
+  # Public access in 4.x is available via @blazy.media_render as coordinator.
+  # @todo enable public: false and trigger errors in 4.x.
+  blazy.file:
+    class: Drupal\blazy\Media\BlazyFile
+    arguments:
+      ["@file_system", "@file.repository", "@image.factory", "@logger.factory"]
+    # public: false
+
+  blazy.svg:
+    class: Drupal\blazy\Media\Svg\Svg
+    parent: blazy.file
+    # public: false
+
+  blazy.media:
+    class: Drupal\blazy\Media\BlazyMedia
+    arguments:
+      ["@blazy.manager", "@http_client", "@media.oembed.iframe_url_helper"]
+    # public: false
+
+  blazy.oembed:
+    class: Drupal\blazy\Media\BlazyOEmbed
+    arguments:
+      [
+        "@blazy.media",
+        "@media.oembed.resource_fetcher",
+        "@media.oembed.url_resolver",
+      ]
+    # public: false
+
+  blazy.entity:
+    class: Drupal\blazy\BlazyEntity
+    arguments: ["@blazy.oembed"]
+    # public: false
+
+  blazy.config:
+    class: Drupal\blazy\Config\Config
+    arguments:
+      [
+        "%app.root%",
+        "@cache.default",
+        "@config.factory",
+        "@module_handler",
+        "@current_route_match",
+      ]
+
+  # @todo marked as deprecated in 3.0.18 and will be removed in 5.0.0. Use
+  # @blazy.manager.base instead.
+  blazy.base:
+    abstract: true
+    class: Drupal\blazy\BlazyBase
+    # public: false
+    arguments:
+      [
+        "@blazy.libraries",
+        "@entity.repository",
+        "@entity_type.manager",
+        "@renderer",
+        "@language_manager",
+      ]

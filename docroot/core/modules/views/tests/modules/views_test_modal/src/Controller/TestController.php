@@ -1,11 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_modal\Controller;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 
+/**
+ * Controller for testing page that renders a View in a modal.
+ */
 class TestController extends ControllerBase {
 
   /**

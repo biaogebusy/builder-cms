@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\commerce_promotion\Functional;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\Promotion;
@@ -69,15 +71,32 @@ class CouponTest extends CommerceBrowserTestBase {
   public function testCreateCoupon() {
     $this->drupalGet('/promotion/' . $this->promotion->id() . '/coupons');
     $this->getSession()->getPage()->clickLink('Add coupon');
+    $start_date = new DrupalDateTime();
+    $start_date->setTime($start_date->format('H'), '00', '00');
+    $end_date = (clone $start_date)->modify('+1 month');
+    $date_format = DateFormat::load('html_date')->getPattern();
+    $time_format = DateFormat::load('html_time')->getPattern();
+    $medium_format = DateFormat::load('medium')->getPattern();
 
     // Check the integrity of the form.
     $this->assertSession()->fieldExists('code[0][value]');
-    $code = $this->randomMachineName(8);
+    $code = $this->randomMachineName();
     $this->getSession()->getPage()->fillField('code[0][value]', $code);
+    $this->getSession()->getPage()->fillField('start_date[0][container][value][date]', $start_date->format($date_format));
+    $this->getSession()->getPage()->fillField('start_date[0][container][value][time]', $start_date->format($time_format));
+    $this->getSession()->getPage()->checkField('Provide an end date');
+    $this->getSession()->getPage()->fillField('end_date[0][container][value][date]', $end_date->format($date_format));
+    $this->getSession()->getPage()->fillField('end_date[0][container][value][time]', $end_date->format($time_format));
     $this->submitForm([], (string) $this->t('Save'));
     $this->assertSession()->pageTextContains("Saved the $code coupon.");
     $coupon_count = $this->getSession()->getPage()->findAll('xpath', "//table/tbody/tr/td[text()[contains(., '$code')]]");
     $this->assertEquals(count($coupon_count), 1, 'Coupon exists in the table.');
+    $this->assertSession()
+      ->elementTextEquals('css', 'table tbody tr:first-child td.views-field-status', 'Enabled');
+    $this->assertSession()
+      ->elementTextEquals('css', 'table tbody tr:first-child td.views-field-start-date', $start_date->format($medium_format));
+    $this->assertSession()
+      ->elementTextEquals('css', 'table tbody tr:first-child td.views-field-end-date', $end_date->format($medium_format));
 
     $coupon = Coupon::load(1);
     $this->assertEquals($this->promotion->id(), $coupon->getPromotionId());

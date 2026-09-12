@@ -2,6 +2,8 @@
 
 namespace Drupal\entity_reference_revisions\Plugin\diff\Field;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\FieldDiffBuilder;
 use Drupal\diff\FieldDiffBuilderBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\diff\FieldReferenceInterface;
@@ -17,6 +19,11 @@ use Drupal\diff\FieldReferenceInterface;
  *   },
  * )
  */
+#[FieldDiffBuilder(
+  id: 'entity_reference_revisions_field_diff_builder',
+  label: new TranslatableMarkup('Field Diff for Paragraphs'),
+  field_types: ['entity_reference_revisions'],
+)]
 class EntityReferenceRevisionsFieldDiffBuilder extends FieldDiffBuilderBase implements FieldReferenceInterface {
 
   /**

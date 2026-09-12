@@ -4,25 +4,31 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\navigation\Functional;
 
+use Behat\Mink\Element\NodeElement;
+use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Url;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
-use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\system\Functional\Cache\PageCacheTagsTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the top bar functionality.
- *
- * @group navigation
  */
-class NavigationTopBarTest extends BrowserTestBase {
+#[Group('navigation')]
+#[RunTestsInSeparateProcesses]
+class NavigationTopBarTest extends PageCacheTagsTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
     'navigation',
+    'navigation_test_top_bar',
     'node',
     'layout_builder',
-    'field_ui',
-    'file',
+    'test_page_test',
+    'navigation_test',
   ];
 
   /**
@@ -55,6 +61,7 @@ class NavigationTopBarTest extends BrowserTestBase {
       'access administration pages',
       'access navigation',
       'bypass node access',
+      'configure any layout',
     ]);
     $this->drupalLogin($this->adminUser);
 
@@ -76,28 +83,35 @@ class NavigationTopBarTest extends BrowserTestBase {
    * Tests the top bar visibility.
    */
   public function testTopBarVisibility(): void {
-    $this->drupalGet($this->node->toUrl());
+    // Test page does not include the Top Bar.
+    $test_page_url = Url::fromRoute('test_page_test.test_page');
+    $this->verifyDynamicPageCache($test_page_url, 'MISS');
+    $this->verifyDynamicPageCache($test_page_url, 'HIT');
+    $this->assertSession()->elementNotExists('xpath', "//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/button");
 
-    // Top Bar is not visible if the feature flag module is disabled.
-    $this->assertSession()->elementNotExists('xpath', "//div[contains(@class, 'top-bar__content')]/button/span");
-    $this->assertSession()->elementExists('xpath', '//div[@id="block-tabs"]');
+    // Top Bar is visible on node pages.
+    $this->verifyDynamicPageCache($this->node->toUrl(), 'MISS');
+    $this->verifyDynamicPageCache($this->node->toUrl(), 'HIT');
+    $this->assertSession()->elementExists('xpath', "(//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/button)[1]");
+    $this->assertSession()->elementTextEquals('xpath', "//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/a[contains(@class, 'toolbar-button--icon--pencil')]", "Edit");
+    $this->assertSession()->elementAttributeContains('xpath', "(//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/button)[1]", 'class', 'toolbar-button--icon--dots');
 
-    \Drupal::service('module_installer')->install(['navigation_top_bar']);
-
-    // Top Bar is visible once the feature flag module is enabled.
-    $this->drupalGet($this->node->toUrl());
-    $this->assertSession()->elementExists('xpath', "//div[contains(@class, 'top-bar__content')]/button/span");
-    $this->assertSession()->elementTextEquals('xpath', "//div[contains(@class, 'top-bar__content')]/button/span", 'More actions');
-    $this->assertSession()->elementNotExists('xpath', '//div[@id="block-tabs"]');
+    // Verify that the action link contains an extra attribute.
+    $this->assertSession()->elementTextEquals('xpath', "//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/a[contains(@class, 'toolbar-button--icon--database')]", "Test link");
+    $this->assertSession()->elementAttributeContains('xpath', "//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/a[contains(@class, 'toolbar-button--icon--database')]", 'data-dialog-type', 'modal');
 
     // Find all the dropdown links and check if the top bar is there as well.
-    $toolbar_links = $this->mink->getSession()->getPage()->find('xpath', '//*[@id="admin-local-tasks"]/ul');
+    $toolbar_links = $this->mink->getSession()->getPage()->find('xpath', '//*[@id="top-bar-page-actions"]/ul');
 
     foreach ($toolbar_links->findAll('css', 'li') as $toolbar_link) {
       $this->clickLink($toolbar_link->getText());
-      $this->assertSession()->elementExists('xpath', "//div[contains(@class, 'top-bar__content')]/button/span");
-      $this->assertSession()->elementTextEquals('xpath', "//div[contains(@class, 'top-bar__content')]/button/span", 'More actions');
-      $this->assertSession()->elementNotExists('xpath', '//div[@id="block-tabs"]');
+      $this->assertSession()->elementExists('xpath', "(//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/button)[1]");
+      $this->assertSession()->elementAttributeContains('xpath', "(//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/button)[1]", 'class', 'toolbar-button--icon--dots');
+      // Ensure that link to current page is not included in the dropdown.
+      $url = $this->getSession()->getCurrentUrl();
+      $this->assertSession()->linkByHrefNotExistsExact(parse_url($url, PHP_URL_PATH));
+      // Ensure that the actions are displayed in the correct order.
+      $this->assertActionsWeight($toolbar_links);
     }
 
     // Regular tabs are visible for user that cannot access to navigation.
@@ -106,8 +120,81 @@ class NavigationTopBarTest extends BrowserTestBase {
     ]));
 
     $this->drupalGet($this->node->toUrl());
-    $this->assertSession()->elementNotExists('xpath', "//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/button/span");
+    $this->assertSession()->elementNotExists('xpath', "//div[contains(@class, 'top-bar__content')]/div[contains(@class, 'top-bar__actions')]/button");
     $this->assertSession()->elementExists('xpath', '//div[@id="block-tabs"]');
+  }
+
+  /**
+   * Asserts that top bar actions respect local tasks weights.
+   *
+   * @param \Behat\Mink\Element\NodeElement $toolbar_links
+   *   Action links to assert.
+   */
+  protected function assertActionsWeight(NodeElement $toolbar_links): void {
+    // Displayed action links in the top bar.
+    $displayed_links = array_map(
+      fn($link) => $link->getText(),
+      $toolbar_links->findAll('css', 'li')
+    );
+
+    // Extract the route name from the URL.
+    $current_url = $this->getSession()->getCurrentUrl();
+    // Convert alias to system path.
+    $path = parse_url($current_url, PHP_URL_PATH);
+
+    if ($GLOBALS['base_path'] !== '/') {
+      $path = str_replace($GLOBALS['base_path'], '/', $path);
+    }
+
+    // Get local tasks for the current route.
+    $entity_local_tasks = \Drupal::service('plugin.manager.menu.local_task')->getLocalTasks(Url::fromUserInput($path)->getRouteName());
+
+    // Sort order of tabs based on their weights.
+    uasort($entity_local_tasks['tabs'], [SortArray::class, 'sortByWeightProperty']);
+
+    // Extract the expected order based on sorted weights.
+    $expected_order = array_values(array_map(fn($task) => $task['#link']['title'], $entity_local_tasks['tabs']));
+
+    // Filter out elements not in displayed_links.
+    $expected_order = array_values(array_filter($expected_order, fn($title) => in_array($title, $displayed_links, TRUE)));
+
+    // Ensure that the displayed links match the expected order.
+    $this->assertSame($expected_order, $displayed_links, 'Local tasks are displayed in the correct order based on their weights.');
+  }
+
+  /**
+   * Tests the plugin weights in the top bar.
+   */
+  public function testTopBarPluginWeights(): void {
+
+    $this->drupalGet($this->node->toUrl());
+
+    // Select only the test plugins by their known data-plugin-id attributes.
+    $selectors = [
+      '[data-plugin-id="test_item_low"]',
+      '[data-plugin-id="test_item_zero"]',
+      '[data-plugin-id="test_item_high"]',
+    ];
+    $elements = [];
+
+    foreach ($selectors as $selector) {
+      $element = $this->getSession()->getPage()->find('css', $selector);
+      if ($element) {
+        $elements[] = $element;
+      }
+    }
+
+    // Capture text values in the order they appear in the DOM.
+    $labels = array_map(fn($element) => trim($element->getText()), $elements);
+
+    // Expected order based on weights: low (-10), zero (0), high (10).
+    $expected = [
+      'Low Weight',
+      'Zero Weight',
+      'High Weight',
+    ];
+
+    $this->assertSame($expected, $labels, 'Top bar test plugins are rendered in the correct order.');
   }
 
 }

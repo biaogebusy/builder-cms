@@ -1,0 +1,6 @@
+ckeditor5_premium_features_version_override.form.settings:
+  title: CKEditor 5 Version Override
+  route_name: ckeditor5_premium_features_version_override.form.settings
+  parent: ckeditor5_premium_features.form.settings
+  description: 'Provides ability to override CKEditor 5 version to the newer one than available in Drupal core.'
+  weight: 140

@@ -42,13 +42,6 @@ class WebformAdminConfigFormsForm extends WebformAdminConfigBaseForm {
   protected $thirdPartySettingsManager;
 
   /**
-   * The webform add-ons manager.
-   *
-   * @var \Drupal\webform\WebformAddonsManagerInterface
-   */
-  protected $addonsManager;
-
-  /**
    * The webform theme manager.
    *
    * @var \Drupal\webform\WebformThemeManagerInterface
@@ -71,7 +64,6 @@ class WebformAdminConfigFormsForm extends WebformAdminConfigBaseForm {
     $instance->moduleHandler = $container->get('module_handler');
     $instance->tokenManager = $container->get('webform.token_manager');
     $instance->thirdPartySettingsManager = $container->get('webform.third_party_settings_manager');
-    $instance->addonsManager = $container->get('webform.addons_manager');
     $instance->themeManager = $container->get('webform.theme_manager');
     return $instance;
   }
@@ -150,7 +142,7 @@ class WebformAdminConfigFormsForm extends WebformAdminConfigBaseForm {
       '#type' => 'textfield',
       '#title' => $this->t('Default base path for webform URLs'),
       '#description' => $this->t('Leave blank to disable the automatic generation of URL aliases for all webforms.')
-        . ' ' . $this->t('The base path has to start with a slash and cannot end with a slash.'),
+      . ' ' . $this->t('The base path has to start with a slash and cannot end with a slash.'),
       '#pattern' => '^/.+(?<!/)$',
       '#default_value' => $settings['default_page_base_path'],
     ];
@@ -281,7 +273,7 @@ class WebformAdminConfigFormsForm extends WebformAdminConfigBaseForm {
       'default_form_submit_back' => [
         'group' => $this->t('Navigation'),
         'title' => $this->t('Submit previous page when browser back button is clicked for all webforms'),
-        'description' => $this->t("If checked, the browser back button will submit the previous page and navigate back emulating the behaviour of user clicking a wizard or preview page's back button."),
+        'description' => $this->t("If checked, the browser back button will submit the previous page and navigate back emulating the behavior of user clicking a wizard or preview page's back button."),
       ],
       'default_form_unsaved' => [
         'group' => $this->t('Navigation'),
@@ -632,8 +624,8 @@ class WebformAdminConfigFormsForm extends WebformAdminConfigBaseForm {
       '#type' => 'checkbox',
       '#title' => $this->t('Enable site-wide dialog support'),
       '#description' => $this->t('If checked, the webform dialog library will be added to every page on your website, this allows any webform to be opened in a modal dialog.')
-        . '<br /><br />'
-        . $this->t('Webform specific dialog links will be included on all webform settings form.'),
+      . '<br /><br />'
+      . $this->t('Webform specific dialog links will be included on all webform settings form.'),
       '#return_value' => TRUE,
       '#default_value' => $settings['dialog'],
     ];
@@ -699,17 +691,6 @@ class WebformAdminConfigFormsForm extends WebformAdminConfigBaseForm {
         '#type' => 'webform_message',
         '#message_message' => $this->t('There are no third party settings available. Please install a contributed module that integrates with the Webform module.'),
         '#message_type' => 'info',
-      ];
-      $form['third_party_settings']['supported'] = [
-        'title' => [
-          '#markup' => $this->t('Supported modules'),
-          '#prefix' => '<h3>',
-          '#suffix' => '</h3>',
-        ],
-        'modules' => [
-          '#theme' => 'admin_block_content',
-          '#content' => $this->addonsManager->getThirdPartySettings(),
-        ],
       ];
     }
     else {

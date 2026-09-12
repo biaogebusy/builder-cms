@@ -1,12 +1,11 @@
 name: 'Webform Cards test'
 type: module
 description: 'Support module for webform cards testing.'
-package: 'Webform Testing'
-core_version_requirement: ^10.2
+package: Testing
 dependencies:
   - 'webform:webform_cards'
 
-# Information added by Drupal.org packaging script on 2024-12-10
-version: '6.2.9'
+# Information added by Drupal.org packaging script on 2026-07-07
+version: '6.3.0'
 project: 'webform'
-datestamp: 1733851071
+datestamp: 1783438707

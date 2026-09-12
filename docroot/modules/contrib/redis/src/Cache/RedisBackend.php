@@ -69,18 +69,29 @@ class RedisBackend implements CacheBackendInterface {
   public function __construct(protected string $bin, protected ClientInterface $client, protected CacheTagsChecksumInterface $checksumProvider, protected SerializationInterface $serializer) {
     $this->setPermTtl();
 
-    // Exclude bins that should not be kept in memory
-    $this->client->addIgnorePattern($this->getKey('*'));
+    // Exclude bins that should not be kept in memory.
+    if (!$this->isPermanentBin()) {
+      $this->client->addIgnorePattern($this->getKey('*'));
+    }
   }
 
   /**
-   * Returns whether this cache bin should be kept in memory.
+   * Returns whether this bin is small and should be considered permanent.
+   *
+   * Values in this bin by default do not get a TTL and will not be evicted
+   * when using a volatile eviction policy.
+   *
+   * It is critical that these bins are small and guaranteed to fit into
+   * the available memory.
+   *
+   * This used to be relay specific setting, and is also used to keep those
+   * in memory.
    *
    * @return bool
-   *   TRUE if the Relay memory cache should be used.
+   *   TRUE if this is a persistent bin.
    */
-  protected function keepBinInMemory(): bool {
-    $in_memory_bins = Settings::get('redis_relay_memory_bins', ['container', 'bootstrap', 'config', 'discovery']);
+  protected function isPermanentBin(): bool {
+    $in_memory_bins = Settings::get('redis_permanent_bins', Settings::get('redis_relay_memory_bins', ['container', 'bootstrap', 'config', 'discovery']));
     return in_array($this->bin, $in_memory_bins);
   }
 
@@ -121,21 +132,70 @@ class RedisBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function setMultiple(array $items) {
-    // Register cache tags of each item for preloading.
-    if (method_exists($this->checksumProvider, 'registerCacheTagsForPreload')) {
-      $tags_for_preload = [];
-      foreach ($items as $item) {
-        if (!empty($item['tags'])) {
-          assert(Inspector::assertAllStrings($item['tags']), 'Cache Tags must be strings.');
-          $tags_for_preload[] = $item['tags'];
-        }
-      }
-      $this->checksumProvider->registerCacheTagsForPreload(array_merge(...$tags_for_preload));
+    $tags = [];
+    // Always add a cache tag for the current bin, so that we can use that for
+    // invalidateAll().
+    if (Settings::get('redis_invalidate_all_as_delete', TRUE) === FALSE) {
+      $tags[] = [$this->getTagForBin()];
     }
 
+    // Prepare items and delete already expired ones outside the pipeline,
+    // preload all cache tags outside the pipeline.
     foreach ($items as $cid => $item) {
-      $this->set($cid, $item['data'], isset($item['expire']) ? $item['expire'] : CacheBackendInterface::CACHE_PERMANENT, isset($item['tags']) ? $item['tags'] : []);
+      $item += [
+        'expire' => CacheBackendInterface::CACHE_PERMANENT,
+        'tags' => [],
+      ];
+
+      $item['ttl'] = $this->getExpiration($item['expire']);
+
+      // If the item is already expired, delete it.
+      if (isset($item['ttl']) && $item['ttl'] <= 0) {
+        $key = $this->getKey($cid);
+        $this->delete($key);
+        unset($items[$cid]);
+      }
+
+      if (!empty($item['tags'])) {
+        assert(Inspector::assertAllStrings($item['tags']), 'Cache Tags must be strings.');
+        $tags[] = $item['tags'];
+      }
+
+      $items[$cid] = $item;
     }
+
+    if ($tags) {
+      // Preload all cache tags outside the pipeline.
+      $this->checksumProvider->getCurrentChecksum(array_merge(...$tags));
+    }
+
+    // It is not possible to have multiple pipelines, prepare the hash entries
+    // to avoid that anything during serialization may trigger another pipeline
+    // due to a fiber, or nested cache read or write while this is within a
+    // pipeline.
+    $ttls = [];
+    $entries = [];
+    foreach ($items as $cid => $item) {
+      $key = $this->getKey($cid);
+      $ttls[$key] = $item['ttl'];
+
+      // Build the cache item and save it as a hash array.
+      $entries[$key] = $this->createEntryHash($cid, $item['data'], $item['expire'], $item['tags']);
+    }
+
+    if (!$entries) {
+      return;
+    }
+
+    // Write the hash sets with the respective expiration.
+    $this->client->pipeline();
+    foreach ($entries as $key => $entry) {
+      $this->client->hMset($key, $entry);
+      if (isset($ttls[$key])) {
+        $this->client->expire($key, $ttls[$key]);
+      }
+    }
+    $this->client->exec();
   }
 
   /**
@@ -232,22 +292,13 @@ class RedisBackend implements CacheBackendInterface {
       return;
     }
 
-    $ttl = $this->getExpiration($expire);
-
-    $key = $this->getKey($cid);
-
-    // If the item is already expired, delete it.
-    if ($ttl <= 0) {
-      $this->delete($key);
-    }
-
-    // Build the cache item and save it as a hash array.
-    $entry = $this->createEntryHash($cid, $data, $expire, $tags);
-
-    $this->client->pipeline();
-    $this->client->hMset($key, $entry);
-    $this->client->expire($key, $ttl);
-    $this->client->exec();
+    $this->setMultiple([
+      $cid => [
+        'data' => $data,
+        'expire' => $expire,
+        'tags' => $tags,
+      ],
+    ]);
   }
 
   /**
@@ -298,21 +349,22 @@ class RedisBackend implements CacheBackendInterface {
    * @param int $expire
    *   The expiration time provided for the cache set.
    *
-   * @return int
+   * @return int|null
    *   The default TTL if expire is PERMANENT or higher than the default.
    *   Otherwise, the adjusted lifetime of the cache if setting
    *   redis_ttl_offset is set >= 0. May return negative values if the item
-   *   is already expired.
+   *   is already expired. May return NULL if the item should not have expire
+   *   at all, typically because this is a permanent bin.
    */
-  protected function getExpiration($expire) {
-    $redis_ttl_offset = Settings::get('redis_ttl_offset', NULL);
+  protected function getExpiration($expire): int|null {
+    $redis_ttl_offset = Settings::get('redis_ttl_offset', 3600);
     if ($expire == Cache::PERMANENT || $redis_ttl_offset === NULL) {
-      return $this->permTtl;
+      return $this->permTtl === Cache::PERMANENT ? NULL : $this->permTtl;
     }
 
     /** @phpstan-ignore-next-line */
     $expire_ttl = $expire - \Drupal::time()->getRequestTime();
-    if ($expire_ttl > $this->permTtl) {
+    if ($this->permTtl != self::CACHE_PERMANENT && $expire_ttl > $this->permTtl) {
       return $this->permTtl;
     }
 
@@ -329,7 +381,7 @@ class RedisBackend implements CacheBackendInterface {
   /**
    * Set the permanent TTL.
    */
-  public function setPermTtl($ttl = NULL) {
+  public function setPermTtl(?int $ttl = NULL) {
     if (isset($ttl)) {
       $this->permTtl = $ttl;
     }
@@ -339,9 +391,12 @@ class RedisBackend implements CacheBackendInterface {
       if ($ttl === NULL) {
         $ttl = Settings::get('redis.settings', [])['perm_ttl_' . $this->bin] ?? NULL;
       }
+      if ($ttl === NULL && $this->isPermanentBin()) {
+        $ttl = CacheBackendInterface::CACHE_PERMANENT;
+      }
       if ($ttl) {
         if ($ttl === (int) $ttl) {
-          $this->permTtl = $ttl;
+          $this->permTtl = (int) $ttl;
         }
         else {
           if ($iv = DateInterval::createFromDateString($ttl)) {
@@ -400,7 +455,7 @@ class RedisBackend implements CacheBackendInterface {
         $cache->valid = FALSE;
       }
 
-      if (Settings::get('redis_invalidate_all_as_delete', FALSE) === FALSE) {
+      if (Settings::get('redis_invalidate_all_as_delete', TRUE) === FALSE) {
         // Remove the bin cache tag to not expose that, otherwise it is reused
         // by the fast backend in the FastChained implementation.
         $cache->tags = array_diff($cache->tags, [$this->getTagForBin()]);
@@ -409,7 +464,7 @@ class RedisBackend implements CacheBackendInterface {
 
     // Ensure the entry does not predate the last delete all time.
     $last_delete_timestamp = $this->getLastDeleteAll();
-    if ($last_delete_timestamp && ((float)$values['created']) < $last_delete_timestamp) {
+    if ($last_delete_timestamp && ((float) $values['created']) < $last_delete_timestamp) {
       return FALSE;
     }
 
@@ -446,10 +501,9 @@ class RedisBackend implements CacheBackendInterface {
   protected function createEntryHash($cid, $data, $expire, array $tags) {
     // Always add a cache tag for the current bin, so that we can use that for
     // invalidateAll().
-    if (Settings::get('redis_invalidate_all_as_delete', FALSE) === FALSE) {
+    if (Settings::get('redis_invalidate_all_as_delete', TRUE) === FALSE) {
       $tags[] = $this->getTagForBin();
     }
-    assert(Inspector::assertAllStrings($tags), 'Cache Tags must be strings.');
     $hash = [
       'cid' => $cid,
       'created' => round(microtime(TRUE), 3),
@@ -459,7 +513,7 @@ class RedisBackend implements CacheBackendInterface {
       'checksum' => $this->checksumProvider->getCurrentChecksum($tags),
     ];
 
-    // Let Redis handle the data types itself.
+    // Encode anything that is not a strong.
     if (!is_string($data)) {
       $hash['data'] = $this->serializer->encode($data);
       $hash['serialized'] = 1;
@@ -469,13 +523,14 @@ class RedisBackend implements CacheBackendInterface {
       $hash['serialized'] = 0;
     }
 
-    if (Settings::get('redis_compress_length', 0) && strlen($hash['data']) > Settings::get('redis_compress_length', 0)) {
+    if (Settings::get('redis_compress_length', 1000) && strlen($hash['data']) > Settings::get('redis_compress_length', 1000)) {
       $hash['data'] = @gzcompress($hash['data'], Settings::get('redis_compress_level', 1));
       $hash['gz'] = TRUE;
     }
 
     return $hash;
   }
+
   /**
    * {@inheritdoc}
    */
@@ -495,7 +550,7 @@ class RedisBackend implements CacheBackendInterface {
    */
   public function invalidateAll() {
     @trigger_error("CacheBackendInterface::invalidateAll() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use CacheBackendInterface::deleteAll() or cache tag invalidation instead. See https://www.drupal.org/node/3500622", E_USER_DEPRECATED);
-    if (Settings::get('redis_invalidate_all_as_delete', FALSE) === FALSE) {
+    if (Settings::get('redis_invalidate_all_as_delete', TRUE) === FALSE) {
       // To invalidate the whole bin, we invalidate a special tag for this bin.
       $this->checksumProvider->invalidateTags([$this->getTagForBin()]);
     }
@@ -510,11 +565,11 @@ class RedisBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function garbageCollection() {
-    // @todo Do we need to do anything here?
+    // Garbage collection is handled by Redis.
   }
 
   /**
-   *  Returns the last delete all timestamp.
+   * Returns the last delete all timestamp.
    *
    * @return float
    *   The last delete timestamp as a timestamp with a millisecond precision.

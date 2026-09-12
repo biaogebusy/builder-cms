@@ -1,0 +1,11 @@
+admin.highlight:
+  css:
+    theme:
+      css/highlight.admin.css: {}
+
+highlight_adapter:
+  version: 20240313
+  js:
+    js/build/highlightAdapter.js: { minified: true }
+  dependencies:
+    - ckeditor5_plugin_pack_highlight/highlight

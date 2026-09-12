@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms\Kernel;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\Token;
 use Drupal\sms\Message\SmsMessage;
-use Drupal\Component\Utility\Html;
 
 /**
  * Tests SMS Framework tokens.
@@ -16,9 +16,6 @@ use Drupal\Component\Utility\Html;
  */
 final class SmsFrameworkTokenTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'system', 'sms', 'entity_test', 'user', 'field', 'telephone',
     'dynamic_entity_reference',
@@ -31,9 +28,6 @@ final class SmsFrameworkTokenTest extends SmsFrameworkKernelBase {
    */
   private Token $tokenService;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->tokenService = $this->container->get('token');

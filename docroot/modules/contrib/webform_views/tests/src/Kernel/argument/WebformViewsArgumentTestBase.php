@@ -3,6 +3,7 @@
 namespace Drupal\Tests\webform_views\Kernel\argument;
 
 use Drupal\Tests\webform_views\Kernel\WebformViewsTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Reasonable starting point for testing webform views argument handlers.
@@ -17,14 +18,13 @@ abstract class WebformViewsArgumentTestBase extends WebformViewsTestBase {
    * @param array $expected
    *   Expected output from $this->renderView() for the specified above
    *   argument.
-   *
-   * @dataProvider providerArgument()
    */
-  public function testArgument($argument, $expected) {
-    $this->webform = $this->createWebform($this->webform_elements);
-    $this->createWebformSubmissions($this->webform_submissions_data, $this->webform);
+  #[DataProvider('providerArgument')]
+  public function testArgument($argument, $expected): void {
+    $this->webform = $this->createWebform(static::$webform_elements);
+    $this->createWebformSubmissions(static::$webform_submissions_data, $this->webform);
 
-    $this->view = $this->initView($this->webform, $this->view_handlers);
+    $this->view = $this->initView($this->webform, static::$view_handlers);
 
     $rendered_cells = $this->renderView($this->view, [$argument]);
 
@@ -37,10 +37,10 @@ abstract class WebformViewsArgumentTestBase extends WebformViewsTestBase {
    * You might want to override this method with more specific cases in a child
    * class.
    */
-  public function providerArgument() {
+  public static function providerArgument(): array {
     $tests = [];
 
-    foreach ($this->webform_submissions_data as $submission) {
+    foreach (static::$webform_submissions_data as $submission) {
       $element = array_keys($submission);
       $element = reset($element);
 

@@ -6,6 +6,7 @@ namespace Drupal\Core\Config\Plugin\Validation\Constraint;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Attribute\HasNamedArguments;
 use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 
 /**
@@ -18,13 +19,6 @@ use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 class RequiredConfigDependenciesConstraint extends SymfonyConstraint {
 
   /**
-   * The error message.
-   *
-   * @var string
-   */
-  public string $message = 'This @entity_type requires a @dependency_type.';
-
-  /**
    * The IDs of entity types that need to exist in config dependencies.
    *
    * For example, if an entity requires a filter format in its config
@@ -34,17 +28,29 @@ class RequiredConfigDependenciesConstraint extends SymfonyConstraint {
    */
   public array $entityTypes = [];
 
+  #[HasNamedArguments]
+  public function __construct(
+    mixed $options = NULL,
+    ?array $entityTypes = NULL,
+    public string $message = 'This @entity_type requires a @dependency_type.',
+    ?array $groups = NULL,
+    mixed $payload = NULL,
+  ) {
+    parent::__construct($options, $groups, $payload);
+    $this->entityTypes = $entityTypes ?? $this->entityTypes;
+  }
+
   /**
    * {@inheritdoc}
    */
-  public function getRequiredOptions() {
+  public function getRequiredOptions(): array {
     return ['entityTypes'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOption() {
+  public function getDefaultOption(): ?string {
     return 'entityTypes';
   }
 

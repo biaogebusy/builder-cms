@@ -445,7 +445,7 @@ class DeepChatApi extends ControllerBase {
           'alt' => $this->t('Structured results'),
           'title' => $this->t('Structured results'),
         ];
-        $results .= '<div class="structured-results-dump"><pre>' . Yaml::dump($structured, 10) . "</pre></div>";
+        $results .= '<div class="structured-results-dump"><pre>' . Xss::filter(Yaml::dump($structured, 10)) . "</pre></div>";
       }
     }
     return $results;

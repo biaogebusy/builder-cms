@@ -6,14 +6,15 @@ namespace Drupal\Tests\Core\Routing;
 
 use Drupal\accept_header_routing_test\Routing\AcceptHeaderMatcher;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
 /**
  * Confirm that the mime types partial matcher is functioning properly.
- *
- * @group Routing
  */
+#[Group('Routing')]
 class AcceptHeaderMatcherTest extends UnitTestCase {
 
   /**
@@ -45,7 +46,7 @@ class AcceptHeaderMatcherTest extends UnitTestCase {
    *
    * @see Drupal\Tests\Core\Routing\AcceptHeaderMatcherTest::testAcceptFiltering()
    */
-  public static function acceptFilterProvider() {
+  public static function acceptFilterProvider(): array {
     return [
       // Check that JSON routes get filtered and prioritized correctly.
       ['application/json, text/xml;q=0.9', 'json', 'route_c', 'route_e'],
@@ -67,9 +68,8 @@ class AcceptHeaderMatcherTest extends UnitTestCase {
    *   The route name that should survive the filter and be ranked first.
    * @param string $excluded_route
    *   The route name that should be filtered out during matching.
-   *
-   * @dataProvider acceptFilterProvider
    */
+  #[DataProvider('acceptFilterProvider')]
   public function testAcceptFiltering($accept_header, $format, $included_route, $excluded_route): void {
     $collection = $this->fixtures->sampleRouteCollection();
 

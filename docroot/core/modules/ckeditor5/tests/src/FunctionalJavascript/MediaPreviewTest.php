@@ -4,16 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
+use Drupal\ckeditor5\Plugin\CKEditor5Plugin\Media;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\filter\Entity\FilterFormat;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore drupalmediaediting
 /**
- * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Media
- * @group ckeditor5
- * @group #slow
+ * Tests Drupal\ckeditor5\Plugin\CKEditor5Plugin\Media.
+ *
  * @internal
  */
+#[CoversClass(Media::class)]
+#[Group('ckeditor5')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class MediaPreviewTest extends MediaTestBase {
 
   /**
@@ -63,9 +72,9 @@ class MediaPreviewTest extends MediaTestBase {
     $this->waitForEditor();
     $this->assertNotEmpty($assert_session->waitForElement('css', '.ck-widget.drupal-media .this-error-message-is-themeable'));
 
-    // Test when using the starterkit_theme theme, an additional class is added
-    // to the error, which is supported by
-    // stable9/templates/content/media-embed-error.html.twig.
+    // Test when using the starterkit_theme theme, the source media embed error
+    // template from ./core/modules/media/templates/media-embed-error.html.twig
+    // still adds the expected class.
     $this->assertTrue($this->container->get('theme_installer')->install(['starterkit_theme']));
     $this->config('system.theme')
       ->set('default', 'starterkit_theme')
@@ -88,11 +97,6 @@ class MediaPreviewTest extends MediaTestBase {
    * The CKEditor Widget must load a preview generated using the default theme.
    */
   public function testPreviewUsesDefaultThemeAndIsClientCacheable(): void {
-    // Make the node edit form use the admin theme, like on most Drupal sites.
-    $this->config('node.settings')
-      ->set('use_admin_theme', TRUE)
-      ->save();
-
     // Allow the test user to view the admin theme.
     $this->adminUser
       ->addRole($this->drupalCreateRole(['view the administration theme']))
@@ -100,7 +104,7 @@ class MediaPreviewTest extends MediaTestBase {
 
     // Configure a different default and admin theme, like on most Drupal sites.
     $this->config('system.theme')
-      ->set('default', 'stable9')
+      ->set('default', 'stark')
       ->set('admin', 'starterkit_theme')
       ->save();
 
@@ -112,7 +116,7 @@ class MediaPreviewTest extends MediaTestBase {
     $assert_session = $this->assertSession();
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', 'img[src*="image-test.png"]'));
     $element = $assert_session->elementExists('css', '[data-media-embed-test-active-theme]');
-    $this->assertSame('stable9', $element->getAttribute('data-media-embed-test-active-theme'));
+    $this->assertSame('stark', $element->getAttribute('data-media-embed-test-active-theme'));
     // Assert that the first preview request transferred >500 B over the wire.
     // Then toggle source mode on and off. This causes the CKEditor widget to be
     // destroyed and then reconstructed. Assert that during this reconstruction,
@@ -141,9 +145,8 @@ class MediaPreviewTest extends MediaTestBase {
    *   Whether to test with media_embed filter enabled on the text format.
    * @param bool $can_use_format
    *   Whether the logged in user is allowed to use the text format.
-   *
-   * @dataProvider previewAccessProvider
    */
+  #[DataProvider('previewAccessProvider')]
   public function testEmbedPreviewAccess($media_embed_enabled, $can_use_format): void {
     // Reconfigure the host entity's text format to suit our needs.
     /** @var \Drupal\filter\FilterFormatInterface $format */

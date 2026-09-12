@@ -24,16 +24,9 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 class CartManager implements CartManagerInterface {
 
   /**
-   * The order item storage.
-   *
-   * @var \Drupal\commerce_order\OrderItemStorageInterface
-   */
-  protected $orderItemStorage;
-
-  /**
    * Constructs a new CartManager object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\commerce_cart\OrderItemMatcherInterface $orderItemMatcher
    *   The order item matcher.
@@ -41,11 +34,10 @@ class CartManager implements CartManagerInterface {
    *   The event dispatcher.
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected OrderItemMatcherInterface $orderItemMatcher,
     protected EventDispatcherInterface $eventDispatcher,
   ) {
-    $this->orderItemStorage = $entity_type_manager->getStorage('commerce_order_item');
   }
 
   /**
@@ -79,9 +71,12 @@ class CartManager implements CartManagerInterface {
    * {@inheritdoc}
    */
   public function createOrderItem(PurchasableEntityInterface $entity, $quantity = '1') {
-    $order_item = $this->orderItemStorage->createFromPurchasableEntity($entity, [
+    /** @var \Drupal\commerce_order\OrderItemStorageInterface $order_item_storage */
+    $order_item_storage = $this->entityTypeManager->getStorage('commerce_order_item');
+    $order_item = $order_item_storage->createFromPurchasableEntity($entity, [
       'quantity' => $quantity,
     ]);
+    assert($order_item instanceof OrderItemInterface);
 
     return $order_item;
   }
@@ -128,8 +123,10 @@ class CartManager implements CartManagerInterface {
    * {@inheritdoc}
    */
   public function updateOrderItem(OrderInterface $cart, OrderItemInterface $order_item, $save_cart = TRUE) {
+    /** @var \Drupal\commerce_order\OrderItemStorageInterface $order_item_storage */
+    $order_item_storage = $this->entityTypeManager->getStorage('commerce_order_item');
     /** @var \Drupal\commerce_order\Entity\OrderItemInterface $original_order_item */
-    $original_order_item = $this->orderItemStorage->loadUnchanged($order_item->id());
+    $original_order_item = $order_item_storage->loadUnchanged($order_item->id());
     $order_item->save();
     $event = new CartOrderItemUpdateEvent($cart, $order_item, $original_order_item);
     $this->eventDispatcher->dispatch($event, CartEvents::CART_ORDER_ITEM_UPDATE);

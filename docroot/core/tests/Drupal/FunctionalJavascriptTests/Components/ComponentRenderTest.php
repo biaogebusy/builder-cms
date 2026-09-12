@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\FunctionalJavascriptTests\Components;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the correct rendering of components.
- *
- * @group sdc
  */
+#[Group('sdc')]
+#[RunTestsInSeparateProcesses]
 class ComponentRenderTest extends WebDriverTestBase {
 
   /**

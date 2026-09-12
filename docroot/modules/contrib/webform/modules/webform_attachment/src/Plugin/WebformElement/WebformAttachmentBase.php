@@ -87,10 +87,10 @@ abstract class WebformAttachmentBase extends WebformElementBase implements Webfo
     $attachment_element = $this->getFormElementClassDefinition();
     $format = $this->getItemFormat($element);
     switch ($format) {
-      case 'name';
+      case 'name':
         return $attachment_element::getFileName($element, $webform_submission);
 
-      case 'url';
+      case 'url':
         return $attachment_element::getFileUrl($element, $webform_submission)->toString();
 
       default:
@@ -108,12 +108,12 @@ abstract class WebformAttachmentBase extends WebformElementBase implements Webfo
 
     $format = $this->getItemFormat($element);
     switch ($format) {
-      case 'name';
+      case 'name':
         return $attachment_element::getFileName($element, $webform_submission);
 
       default:
-      case 'link';
-      case 'url';
+      case 'link':
+      case 'url':
         $fileUrl = $attachment_element::getFileUrl($element, $webform_submission);
         return $fileUrl ? $fileUrl->toString() : '';
     }

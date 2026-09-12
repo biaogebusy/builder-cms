@@ -39,6 +39,7 @@ display:
           id: job
           relationship: none
           table: views_test_data
+          element_label_colon: true
           plugin_id: string
         job_1:
           field: job
@@ -62,6 +63,7 @@ display:
         type: table
         options:
           grouping: {  }
+          class: ''
           row_class: ''
           default_row_class: true
           override: true

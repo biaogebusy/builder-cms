@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\inline_entity_form\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -101,12 +103,12 @@ abstract class InlineEntityFormTestBase extends WebDriverTestBase {
    *
    * @param string $title
    *   Node title to check.
-   * @param string $content_type
+   * @param string|null $content_type
    *   The content type to check.
    * @param string $message
    *   Message to display.
    */
-  protected function assertNodeByTitle(string $title, $content_type = NULL, $message = '') {
+  protected function assertNodeByTitle(string $title, ?string $content_type = NULL, $message = '') {
     if (!$message) {
       $message = "Node with title found: $title";
     }
@@ -122,12 +124,12 @@ abstract class InlineEntityFormTestBase extends WebDriverTestBase {
    *
    * @param string $label
    *   The label of the entity.
-   * @param string $entity_type_id
+   * @param string|null $entity_type_id
    *   The entity type ID.
-   * @param string $bundle
+   * @param string|null $bundle
    *   (optional) The bundle this entity should have.
    */
-  protected function assertEntityByLabel(string $label, $entity_type_id = 'node', $bundle = NULL) {
+  protected function assertEntityByLabel(string $label, ?string $entity_type_id = 'node', ?string $bundle = NULL) {
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_type = $entity_type_manager->getDefinition($entity_type_id);
     $label_key = $entity_type->getKey('label');

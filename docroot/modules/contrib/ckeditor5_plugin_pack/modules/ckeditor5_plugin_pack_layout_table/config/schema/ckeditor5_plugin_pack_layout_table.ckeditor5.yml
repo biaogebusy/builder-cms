@@ -1,0 +1,109 @@
+ckeditor5.plugin.ckeditor5_plugin_pack_layout_table__table_properties:
+  type: mapping
+  label: 'Layout Table'
+  mapping:
+    use_default_colors:
+      type: boolean
+      label: 'Use default colors'
+    use_hex_colors:
+      type: boolean
+      label: 'Use HEX color definitions'
+    default_table_properties:
+      type: mapping
+      label: 'Default table properties'
+      mapping:
+        border_style:
+          type: string
+          label: 'Default border style'
+        color_picker:
+          type: string
+          label: 'Color picker type'
+        use_default_border_color:
+          type: boolean
+          label: 'Use default border color'
+        border_color:
+          type: string
+          label: 'Default border color'
+        border_width:
+          type: string
+          label: 'Default border width'
+        use_default_bg_color:
+          type: boolean
+          label: 'Use default background color'
+        bg_color:
+          type: string
+          label: 'Default background color'
+        width:
+          type: string
+          label: 'Default width'
+        height:
+          type: string
+          label: 'Default height'
+        alignment:
+          type: string
+          label: 'Default alignment'
+    default_table_cell_properties:
+      type: mapping
+      label: 'Default table properties'
+      mapping:
+        border_style:
+          type: string
+          label: 'Default border style'
+        color_picker:
+          type: string
+          label: 'Color picker type'
+        use_default_border_color:
+          type: boolean
+          label: 'Use default border color'
+        border_color:
+          type: string
+          label: 'Default border color'
+        border_width:
+          type: string
+          label: 'Default border width'
+        use_default_bg_color:
+          type: boolean
+          label: 'Use default background color'
+        bg_color:
+          type: string
+          label: 'Default background color'
+        width:
+          type: string
+          label: 'Default width'
+        height:
+          type: string
+          label: 'Default height'
+        text_alignment:
+          type: string
+          label: 'Default text alignment'
+        padding:
+          type: string
+          label: 'Default padding'
+        vertical_alignment:
+          type: string
+          label: 'Default vertical alignment'
+    colors:
+      type: sequence
+      label: 'Colors'
+      sequence:
+        type: mapping
+        label: 'Color'
+        mapping:
+          label:
+            type: string
+          color:
+            type: string
+          color_type:
+            type: mapping
+            mapping:
+              table_bg:
+                type: string|integer
+              table_border:
+                type: string|integer
+              table_cell_bg:
+                type: string|integer
+              table_cell_border:
+                type: string|integer
+    disable_properties:
+      type: boolean
+      label: 'Disable properties'

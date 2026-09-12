@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\shortcut\Functional;
 
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Url;
 use Drupal\shortcut\Entity\Shortcut;
 use Drupal\shortcut\Entity\ShortcutSet;
@@ -13,12 +12,14 @@ use Drupal\Tests\system\Functional\Entity\EntityCacheTagsTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Shortcut entity's cache tags.
- *
- * @group shortcut
  */
+#[Group('shortcut')]
+#[RunTestsInSeparateProcesses]
 class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
   use AssertPageCacheContextsAndTagsTrait;
 
@@ -83,29 +84,6 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
   }
 
   /**
-   * Tests that when creating a shortcut, the shortcut set tag is invalidated.
-   */
-  public function testEntityCreation(): void {
-    $cache_bin = $this->getRenderCacheBackend();
-
-    // Create a cache entry that is tagged with a shortcut set cache tag.
-    $cache_tags = ['config:shortcut.set.default'];
-
-    $cacheability = new CacheableMetadata();
-    $cacheability->addCacheTags($cache_tags);
-    $cache_bin->set(['foo'], 'bar', $cacheability, $cacheability);
-
-    // Verify a cache hit.
-    $this->verifyRenderCache(['foo'], $cache_tags, $cacheability);
-
-    // Now create a shortcut entity in that shortcut set.
-    $this->createEntity();
-
-    // Verify a cache miss.
-    $this->assertFalse($cache_bin->get(['foo'], $cacheability), 'Creating a new shortcut invalidates the cache tag of the shortcut set.');
-  }
-
-  /**
    * Tests visibility and cacheability of shortcuts in the toolbar.
    */
   public function testToolbar(): void {
@@ -120,9 +98,8 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('admin/config/system/cron');
     $expected_cache_tags = [
-      'block_view',
-      'config:block.block.title',
       'config:block_list',
+      'config:system.cron',
       'config:shortcut.set.default',
       'config:system.menu.admin',
       'config:system.theme',
@@ -134,7 +111,7 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
     \Drupal::configFactory()
       ->getEditable('stark.settings')
       ->set('third_party_settings.shortcut.module_link', TRUE)
-      ->save(TRUE);
+      ->save();
 
     // Add cron to the default shortcut set, now the shortcut list cache tag
     // is expected.
@@ -296,10 +273,8 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
     $this->drupalGet('admin/config/system/cron');
     $expected_cache_tags = [
       'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form',
-      'block_view',
-      'config:block.block.shortcuts',
-      'config:block.block.title',
       'config:block_list',
+      'config:system.cron',
       'config:shortcut.set.default',
       'config:system.menu.admin',
       'config:system.theme',
@@ -310,7 +285,7 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
     \Drupal::configFactory()
       ->getEditable('stark.settings')
       ->set('third_party_settings.shortcut.module_link', TRUE)
-      ->save(TRUE);
+      ->save();
 
     // Add cron to the default shortcut set, now the shortcut list cache tag
     // is expected.

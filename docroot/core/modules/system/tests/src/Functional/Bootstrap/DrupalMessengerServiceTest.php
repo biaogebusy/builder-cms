@@ -7,12 +7,14 @@ namespace Drupal\Tests\system\Functional\Bootstrap;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use PHPUnit\Framework\AssertionFailedError;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Messenger service.
- *
- * @group Bootstrap
  */
+#[Group('Bootstrap')]
+#[RunTestsInSeparateProcesses]
 class DrupalMessengerServiceTest extends BrowserTestBase {
 
   /**
@@ -113,7 +115,7 @@ class DrupalMessengerServiceTest extends BrowserTestBase {
     try {
       $this->assertSession()->statusMessageContains('This message is not real');
     }
-    catch (AssertionFailedError $e) {
+    catch (AssertionFailedError) {
       $expected_failure_occurred = TRUE;
     }
     $this->assertTrue($expected_failure_occurred, 'WebAssert::statusMessageContains() did not fail when it should have failed.');
@@ -122,7 +124,7 @@ class DrupalMessengerServiceTest extends BrowserTestBase {
     try {
       $this->assertSession()->statusMessageNotContains('markup');
     }
-    catch (AssertionFailedError $e) {
+    catch (AssertionFailedError) {
       $expected_failure_occurred = TRUE;
     }
     $this->assertTrue($expected_failure_occurred, 'WebAssert::statusMessageNotContains() did not fail when it should have failed.');
@@ -131,7 +133,7 @@ class DrupalMessengerServiceTest extends BrowserTestBase {
     try {
       $this->assertSession()->statusMessageExists('error');
     }
-    catch (AssertionFailedError $e) {
+    catch (AssertionFailedError) {
       $expected_failure_occurred = TRUE;
     }
     $this->assertTrue($expected_failure_occurred, 'WebAssert::statusMessageExists() did not fail when it should have failed.');
@@ -140,7 +142,7 @@ class DrupalMessengerServiceTest extends BrowserTestBase {
     try {
       $this->assertSession()->statusMessageNotExists();
     }
-    catch (AssertionFailedError $e) {
+    catch (AssertionFailedError) {
       $expected_failure_occurred = TRUE;
     }
     $this->assertTrue($expected_failure_occurred, 'WebAssert::statusMessageNotExists() did not fail when it should have failed.');

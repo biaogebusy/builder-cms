@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\ckeditor5\Traits\CKEditor5TestTrait;
 
@@ -12,6 +14,8 @@ use Drupal\Tests\ckeditor5\Traits\CKEditor5TestTrait;
  *
  * @package Drupal\Tests\entity_browser\FunctionalJavascript
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityEmbedTest extends WebDriverTestBase {
 
   use CKEditor5TestTrait;

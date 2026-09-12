@@ -4,6 +4,8 @@ namespace Drupal\Tests\paragraphs_library\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\paragraphs\Functional\WidgetStable\ParagraphsTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests paragraphs library multilingual functionality.
@@ -11,6 +13,8 @@ use Drupal\Tests\paragraphs\Functional\WidgetStable\ParagraphsTestBase;
  * @package Drupal\paragraphs_library\Tests
  * @group paragraphs_library
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs_library')]
 class MultilingualBehaviorTest extends ParagraphsTestBase {
 
   /**

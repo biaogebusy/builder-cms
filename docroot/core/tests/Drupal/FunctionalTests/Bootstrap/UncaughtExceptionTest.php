@@ -6,12 +6,14 @@ namespace Drupal\FunctionalTests\Bootstrap;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests kernel panic when things are really messed up.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class UncaughtExceptionTest extends BrowserTestBase {
 
   /**
@@ -95,14 +97,14 @@ class UncaughtExceptionTest extends BrowserTestBase {
     if (PHP_VERSION_ID >= 80400) {
       $fatal_error = [
         '%type' => 'TypeError',
-        '@message' => 'Drupal\error_test\Controller\ErrorTestController::{closure:Drupal\error_test\Controller\ErrorTestController::generateFatalErrors():62}(): Argument #1 ($test) must be of type array, string given, called in ' . \Drupal::root() . '/core/modules/system/tests/modules/error_test/src/Controller/ErrorTestController.php on line 65',
-        '%function' => 'Drupal\error_test\Controller\ErrorTestController->{closure:Drupal\error_test\Controller\ErrorTestController::generateFatalErrors():62}()',
+        '@message' => 'Drupal\error_test\Controller\ErrorTestController::{closure:Drupal\error_test\Controller\ErrorTestController::generateFatalErrors():64}(): Argument #1 ($test) must be of type array, string given, called in ' . \Drupal::root() . '/core/modules/system/tests/modules/error_test/src/Controller/ErrorTestController.php on line 67',
+        '%function' => 'Drupal\error_test\Controller\ErrorTestController->{closure:Drupal\error_test\Controller\ErrorTestController::generateFatalErrors():64}()',
       ];
     }
     else {
       $fatal_error = [
         '%type' => 'TypeError',
-        '@message' => 'Drupal\error_test\Controller\ErrorTestController::Drupal\error_test\Controller\{closure}(): Argument #1 ($test) must be of type array, string given, called in ' . \Drupal::root() . '/core/modules/system/tests/modules/error_test/src/Controller/ErrorTestController.php on line 65',
+        '@message' => 'Drupal\error_test\Controller\ErrorTestController::Drupal\error_test\Controller\{closure}(): Argument #1 ($test) must be of type array, string given, called in ' . \Drupal::root() . '/core/modules/system/tests/modules/error_test/src/Controller/ErrorTestController.php on line 67',
         '%function' => 'Drupal\error_test\Controller\ErrorTestController->Drupal\error_test\Controller\{closure}()',
       ];
     }
@@ -203,6 +205,7 @@ class UncaughtExceptionTest extends BrowserTestBase {
     switch ($this->container->get('database')->driver()) {
       case 'pgsql':
       case 'mysql':
+      case 'mysqli':
         $this->expectedExceptionMessage = $incorrect_username;
         break;
 
@@ -245,13 +248,13 @@ class UncaughtExceptionTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('The website encountered an unexpected error. Try again later.');
     $this->assertSession()->pageTextContains($this->expectedExceptionMessage);
 
-    // Find fatal error logged to the error.log
+    // Find fatal error logged to the error.log.
     $errors = file(\Drupal::root() . '/' . $this->siteDirectory . '/error.log');
-    $this->assertCount(10, $errors, 'The error + the error that the logging service is broken has been written to the error log.');
+    $this->assertCount(16, $errors, 'The error + the error that the logging service is broken has been written to the error log.');
     $this->assertStringContainsString('Failed to log error', $errors[0], 'The error handling logs when an error could not be logged to the logger.');
 
     $expected_path = \Drupal::root() . '/core/modules/system/tests/modules/error_service_test/src/MonkeysInTheControlRoom.php';
-    $expected_line = 67;
+    $expected_line = 69;
     $expected_entry = "Failed to log error: Exception: Deforestation in Drupal\\error_service_test\\MonkeysInTheControlRoom->handle() (line {$expected_line} of {$expected_path})";
     $this->assertStringContainsString($expected_entry, $errors[0], 'Original error logged to the PHP error log when an exception is thrown by a logger');
 

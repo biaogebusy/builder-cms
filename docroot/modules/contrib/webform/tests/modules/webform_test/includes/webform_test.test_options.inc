@@ -5,7 +5,7 @@
  * Generate test options example.
  */
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\webform\Entity\WebformOptions;
 
 /**
@@ -55,7 +55,7 @@ function webform_test_test_options() {
     }
 
     $title = $webform_option->label() . ' (' . $id . ')';
-    if (strpos($id, 'likert') === 0) {
+    if (str_starts_with($id, 'likert')) {
       $data['likert_options'][$id] = [
         '#type' => 'webform_likert',
         '#title' => $title,

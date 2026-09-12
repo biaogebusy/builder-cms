@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\big_pipe_regression_test;
 
 use Drupal\big_pipe\Render\BigPipeMarkup;
 use Drupal\Component\Utility\Random;
 use Drupal\Core\Security\TrustedCallbackInterface;
 
+/**
+ * Controller for BigPipe regression tests.
+ */
 class BigPipeRegressionTestController implements TrustedCallbackInterface {
 
   const MARKER_2678662 = '<script>var hitsTheFloor = "</body>";</script>';
 
-  const PLACEHOLDER_COUNT = 3000;
+  const PLACEHOLDER_COUNT = 2000;
 
   /**
    * @see \Drupal\Tests\big_pipe\FunctionalJavascript\BigPipeRegressionTest::testMultipleBodies_2678662()
@@ -67,6 +72,16 @@ class BigPipeRegressionTestController implements TrustedCallbackInterface {
   }
 
   /**
+   * A page with an inline script.
+   */
+  public function inlineScriptContent(): array {
+    return [
+      '#lazy_builder' => [static::class . '::inlineScript', []],
+      '#create_placeholder' => TRUE,
+    ];
+  }
+
+  /**
    * Renders large content.
    *
    * @see \Drupal\Tests\big_pipe\FunctionalJavascript\BigPipeRegressionTest::testBigPipeLargeContent
@@ -79,9 +94,12 @@ class BigPipeRegressionTestController implements TrustedCallbackInterface {
   }
 
   /**
-   * #lazy_builder callback; builds <time> markup with current time.
+   * Render API callback: Builds <time> markup with current time.
+   *
+   * This function is assigned as a #lazy_builder callback.
    *
    * @return array
+   *   Render array with a <time> markup with current time and cache settings.
    */
   public static function currentTime() {
     return [
@@ -104,10 +122,25 @@ class BigPipeRegressionTestController implements TrustedCallbackInterface {
   }
 
   /**
+   * Renders an inline script element between other markup tags.
+   *
+   * @return array
+   *   Render array.
+   */
+  public static function inlineScript(): array {
+    return [
+      '#cache' => ['max-age' => 0],
+      '#markup' => BigPipeMarkup::create(
+        '<div class="container-before">First</div><script>document.body.classList.add("inline-script-fires");</script><div class="container-after">Second</div>'
+      ),
+    ];
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function trustedCallbacks() {
-    return ['currentTime', 'largeContentBuilder', 'renderRandomSentence'];
+    return ['currentTime', 'largeContentBuilder', 'renderRandomSentence', 'inlineScript'];
   }
 
 }

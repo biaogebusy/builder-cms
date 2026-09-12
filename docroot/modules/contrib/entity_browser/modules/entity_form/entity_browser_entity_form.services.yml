@@ -1,0 +1,5 @@
+
+services:
+  Drupal\entity_browser_entity_form\Hook\EntityBrowserEntityFormHooks:
+    class: Drupal\entity_browser_entity_form\Hook\EntityBrowserEntityFormHooks
+    autowire: true

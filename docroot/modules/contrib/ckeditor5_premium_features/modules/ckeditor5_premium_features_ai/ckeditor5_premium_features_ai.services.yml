@@ -1,0 +1,27 @@
+services:
+  ckeditor5_premium_features_ai.element.text_format:
+    class: Drupal\ckeditor5_premium_features_ai\Element\TextFormat
+    arguments:
+      - '@ckeditor5_premium_features.storage_handler.editor'
+      - '@entity_type.manager'
+
+  ckeditor5_premium_features_ai.api_adapter:
+    class: Drupal\ckeditor5_premium_features_ai\Utility\ApiAdapter
+    arguments:
+      - '@ckeditor5_premium_features.config_handler.settings'
+      - '@http_client'
+      - '@current_user'
+      - '@config.factory'
+      - '@cache.default'
+      - '@ckeditor5_premium_features_ai.ai_config_handler'
+
+  ckeditor5_premium_features_ai.permission_helper:
+    class: Drupal\ckeditor5_premium_features_ai\Utility\PermissionHelper
+    arguments:
+      - '@current_user'
+      - '@module_handler'
+
+  ckeditor5_premium_features_ai.ai_config_handler:
+    class: Drupal\ckeditor5_premium_features_ai\Service\AiConfigHandler
+    arguments:
+      - '@config.factory'

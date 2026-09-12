@@ -26,7 +26,7 @@ class WebformElementViewTest extends WebformElementBrowserTestBase {
   /**
    * Test view element.
    */
-  public function testView() {
+  public function testView(): void {
     $assert_session = $this->assertSession();
 
     // Check that embedded view is render.

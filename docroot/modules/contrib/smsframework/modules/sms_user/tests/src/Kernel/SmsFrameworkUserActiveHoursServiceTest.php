@@ -1,14 +1,14 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\sms_user\Kernel;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsMessage;
 use Drupal\Tests\sms\Kernel\SmsFrameworkKernelBase;
 use Drupal\user\Entity\User;
-use Drupal\sms\Direction;
 
 /**
  * Tests active hours service.
@@ -20,9 +20,6 @@ use Drupal\sms\Direction;
  */
 class SmsFrameworkUserActiveHoursServiceTest extends SmsFrameworkKernelBase {
 
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms',
     'sms_user',
@@ -45,9 +42,6 @@ class SmsFrameworkUserActiveHoursServiceTest extends SmsFrameworkKernelBase {
    */
   protected $smsProvider;
 
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->activeHoursService = $this->container->get('sms_user.active_hours');

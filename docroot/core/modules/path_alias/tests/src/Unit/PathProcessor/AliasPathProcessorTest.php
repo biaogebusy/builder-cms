@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Drupal\Tests\path_alias\Unit\PathProcessor;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\path_alias\PathProcessor\AliasPathProcessor;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\path_alias\PathProcessor\AliasPathProcessor;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\path_alias\PathProcessor\AliasPathProcessor
- * @group PathProcessor
- * @group path_alias
+ * Tests Drupal\path_alias\PathProcessor\AliasPathProcessor.
  */
+#[CoversClass(AliasPathProcessor::class)]
+#[Group('PathProcessor')]
+#[Group('path_alias')]
 class AliasPathProcessorTest extends UnitTestCase {
 
   /**
@@ -61,10 +65,9 @@ class AliasPathProcessorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::processOutbound
-   *
-   * @dataProvider providerTestProcessOutbound
+   * Tests process outbound.
    */
+  #[DataProvider('providerTestProcessOutbound')]
   public function testProcessOutbound($path, array $options, $expected_path): void {
     $this->aliasManager->expects($this->any())
       ->method('getAliasByPath')
@@ -81,7 +84,10 @@ class AliasPathProcessorTest extends UnitTestCase {
   }
 
   /**
+   * Provides data for testing outbound processing.
+   *
    * @return array
+   *   The data provider for testProcessOutbound.
    */
   public static function providerTestProcessOutbound() {
     return [

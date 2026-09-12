@@ -49,7 +49,8 @@ class LanguageServiceProvider extends ServiceProviderBase {
       ->addArgument(new Reference('config.factory'))
       ->addArgument(new Reference('module_handler'))
       ->addArgument(new Reference('language.config_factory_override'))
-      ->addArgument(new Reference('request_stack'));
+      ->addArgument(new Reference('request_stack'))
+      ->addArgument(new Reference('cache.bootstrap'));
     if ($default_language_values = $this->getDefaultLanguageValues()) {
       $container->setParameter('language.default_values', $default_language_values);
     }
@@ -79,7 +80,7 @@ class LanguageServiceProvider extends ServiceProviderBase {
   /**
    * Gets the default language values.
    *
-   * @return array|bool
+   * @return array|false
    *   Returns the default language values for the language configured in
    *   system.site:default_langcode if the corresponding configuration entity
    *   exists, otherwise FALSE.

@@ -64,7 +64,7 @@ abstract class WebformConfigEntityDeleteFormBase extends EntityForm implements W
       '#type' => 'webform_message',
       '#message_type' => 'warning',
       '#message_message' => $this->t('Are you sure you want to delete the %label @entity-type?', $t_args) . '<br/>' .
-        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+      '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
     ];
   }
 
@@ -183,7 +183,9 @@ abstract class WebformConfigEntityDeleteFormBase extends EntityForm implements W
    *
    * Confirmation forms should override submitForm() instead for their logic.
    */
-  public function save(array $form, FormStateInterface $form_state) {}
+  public function save(array $form, FormStateInterface $form_state) {
+    return NULL;
+  }
 
   /**
    * {@inheritdoc}

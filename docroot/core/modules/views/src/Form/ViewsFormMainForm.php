@@ -13,6 +13,9 @@ use Drupal\views\Render\ViewsRenderPipelineMarkup;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
+/**
+ * Provides a default main form class for Views forms.
+ */
 class ViewsFormMainForm implements FormInterface, TrustedCallbackInterface {
 
   use StringTranslationTrait;
@@ -21,6 +24,7 @@ class ViewsFormMainForm implements FormInterface, TrustedCallbackInterface {
    * {@inheritdoc}
    */
   public function getFormId() {
+    return '';
   }
 
   /**
@@ -81,8 +85,8 @@ class ViewsFormMainForm implements FormInterface, TrustedCallbackInterface {
 
     $form['#pre_render'][] = [static::class, 'preRenderViewsForm'];
 
-    // Add the output markup to the form array so that it's included when the form
-    // array is passed to the theme function.
+    // Add the output markup to the form array so that it's included when the
+    // form array is passed to the theme function.
     $form['output'] = $output;
     // This way any additional form elements will go before the view
     // (below the exposed widgets).

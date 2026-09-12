@@ -6,13 +6,17 @@ namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\field\Numeric handler.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\field\Numeric
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldNumericTest extends ViewsKernelTestBase {
 
   /**
@@ -24,9 +28,8 @@ class FieldNumericTest extends ViewsKernelTestBase {
 
   /**
    * Tests the Numeric handler with different settings.
-   *
-   * @dataProvider providerTestFieldNumeric
    */
+  #[DataProvider('providerTestFieldNumeric')]
   public function testFieldNumeric($field_settings, $values, $expected_values): void {
     $view = Views::getView('test_view');
     $view->setDisplay();

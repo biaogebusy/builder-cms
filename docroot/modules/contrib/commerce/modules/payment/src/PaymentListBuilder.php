@@ -2,13 +2,10 @@
 
 namespace Drupal\commerce_payment;
 
-use CommerceGuys\Intl\Formatter\CurrencyFormatterInterface;
-use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -56,38 +53,14 @@ class PaymentListBuilder extends EntityListBuilder {
   protected $order;
 
   /**
-   * Constructs a new PaymentListBuilder object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   *   The entity storage class.
-   * @param \CommerceGuys\Intl\Formatter\CurrencyFormatterInterface $currency_formatter
-   *   The currency formatter.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The current route match.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
-   *   The date formatter.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, CurrencyFormatterInterface $currency_formatter, RouteMatchInterface $route_match, DateFormatterInterface $date_formatter) {
-    parent::__construct($entity_type, $storage);
-
-    $this->currencyFormatter = $currency_formatter;
-    $this->routeMatch = $route_match;
-    $this->dateFormatter = $date_formatter;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('commerce_price.currency_formatter'),
-      $container->get('current_route_match'),
-      $container->get('date.formatter')
-    );
+    $instance = parent::createInstance($container, $entity_type);
+    $instance->currencyFormatter = $container->get('commerce_price.currency_formatter');
+    $instance->routeMatch = $container->get('current_route_match');
+    $instance->dateFormatter = $container->get('date.formatter');
+    return $instance;
   }
 
   /**
@@ -102,13 +75,14 @@ class PaymentListBuilder extends EntityListBuilder {
    */
   public function load() {
     $this->order = $this->routeMatch->getParameter('commerce_order');
-    return $this->storage->loadMultipleByOrder($this->order);
+    return $this->getStorage()->loadMultipleByOrder($this->order);
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
+  public function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $cacheability = func_num_args() > 1 ? func_get_arg(1) : NULL;
     $operations = [];
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface $entity */
     $payment_gateway = $entity->getPaymentGateway();
@@ -130,8 +104,12 @@ class PaymentListBuilder extends EntityListBuilder {
         $operations[$operation_id] = $operation;
       }
     }
+    $delete_access = $entity->access('delete', NULL, TRUE);
+    if ($cacheability instanceof CacheableMetadata) {
+      $cacheability->addCacheableDependency($delete_access);
+    }
     // Add the non-gateway-specific operations.
-    if ($entity->access('delete')) {
+    if ($delete_access->isAllowed()) {
       $operations['delete'] = [
         'title' => $this->t('Delete'),
         'weight' => 100,

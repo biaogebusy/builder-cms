@@ -6,17 +6,20 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\paragraphs\Entity\ParagraphsType;
 use Drupal\Tests\paragraphs\Traits\ParagraphsCoreVersionUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test paragraphs user interface.
  *
  * @group paragraphs
  */
+#[RunTestsInSeparateProcesses]
+#[Group('paragraphs')]
 class ParagraphsStableEditPerspectivesUiTest extends WebDriverTestBase {
 
   use LoginAdminTrait;
   use ParagraphsTestBaseTrait;
-  use ParagraphsCoreVersionUiTestTrait;
 
   /**
    * Modules to enable.
@@ -37,20 +40,23 @@ class ParagraphsStableEditPerspectivesUiTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'stark';
+  protected $defaultTheme = 'claro';
 
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->placeDefaultBlocks();
   }
 
   /**
    * Tests visibility of elements when switching perspectives.
    */
   public function testEditPerspectives() {
+    if (!$this->coreVersion('11.1')) {
+      $this->markTestSkipped('This test only works on W3C compatible JS test.');
+    }
+
     $this->loginAsAdmin([
       'edit behavior plugin settings'
     ]);
@@ -69,13 +75,13 @@ class ParagraphsStableEditPerspectivesUiTest extends WebDriverTestBase {
 
     $this->drupalGet('node/add/testcontent');
     $this->clickLink('Behavior');
-    $style_selector = $page->find('css', '.form-item-field-testparagraphfield-0-behavior-plugins-test-text-color-text-color');
+    $style_selector = $page->find('css', '.form-item--field-testparagraphfield-0-behavior-plugins-test-text-color-text-color');
     $this->assertTrue($style_selector->isVisible());
     $this->clickLink('Content');
     $this->assertFalse($style_selector->isVisible());
 
     // Assert scroll position when switching tabs.
-    $this->getSession()->resizeWindow(800, 450);
+    $this->getSession()->resizeWindow(1100, 600);
     $this->drupalGet('node/add/testcontent');
     $button = $this->getSession ()->getPage()->findButton('Add TestPlugin');
     $button->press();
@@ -85,14 +91,26 @@ class ParagraphsStableEditPerspectivesUiTest extends WebDriverTestBase {
     $button->press();
     $this->assertSession()->assertWaitOnAjaxRequest();
 
+    // Assist in debugging.
+    $this->getSession()->getPage()->fillField('field_testparagraphfield[0][subform][body][0][value]', '1');
+    $this->getSession()->getPage()->fillField('field_testparagraphfield[1][subform][body][0][value]', '2');
+    $this->getSession()->getPage()->fillField('field_testparagraphfield[2][subform][body][0][value]', '3');
+    $this->getSession()->getPage()->fillField('field_testparagraphfield[3][subform][body][0][value]', '4');
+
     // First move to the last paragraph, assert that the tabs are
     // still visible, then move back up to the second.
     $this->getSession()->getPage()->find('css', '.field--widget-paragraphs tbody > tr:nth-child(4)')->mouseOver();
     $this->assertSession()->assertVisibleInViewport('css', '.paragraphs-tabs');
-    $this->getSession()->getPage()->find('css', '.field--widget-paragraphs tbody > tr:nth-child(2)')->mouseOver();
-    $this->getSession()->evaluateScript('window.scrollBy(0, -10);');
+    $script = <<<JS
+        document.querySelector('.field--widget-paragraphs tbody > tr:nth-child(2)').scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
+    JS;
+    $this->getSession()->executeScript($script);
 
     // As a result, only paragraph 2 and 3 are fully visible on the content tab.
+    $this->createScreenshot('foo.png');
+    if ($this->htmlOutputEnabled) {
+      $this->htmlOutput();
+    }
     $this->assertSession()->assertNotVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:first-child');
     $this->assertSession()->assertVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:nth-child(2)');
     $this->assertSession()->assertVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:nth-child(3)');
@@ -100,15 +118,26 @@ class ParagraphsStableEditPerspectivesUiTest extends WebDriverTestBase {
     $this->assertSession()->assertNotVisibleInViewport('css', '.field-add-more-submit');
 
     // When clicking the Behavior tab, paragraph 2, 3 and 4 are in the viewport
-    // because the behavior settings take less space.
-    $this->clickLink('Behavior');
+    // because the behavior settings take less space. Click directly using JS
+    // to bypass scrolling behavior by the Selenium driver.
+    $script = <<<JS
+        document.querySelector('.paragraphs_behavior_tab a').click();
+    JS;
+    $this->getSession()->executeScript($script);
+    // Manual correction as there is a slight offset that means the second
+    // paragraph is apparently just outside of the viewport.
+    $this->getSession()->evaluateScript('window.scrollBy(0, -100);');
     $this->assertSession()->assertVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:nth-child(2)');
     $this->assertSession()->assertVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:nth-child(3)');
     $this->assertSession()->assertVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:nth-child(4)');
 
     // When we switch back to the Content tab, we should stay on the same
     // scroll position as before.
-    $this->clickLink('Content');
+    $script = <<<JS
+        document.querySelector('.paragraphs_content_tab a').click();
+    JS;
+    $this->getSession()->executeScript($script);
+    $this->getSession()->evaluateScript('window.scrollBy(0, 100);');
     $this->assertSession()->assertNotVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:first-child');
     $this->assertSession()->assertVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:nth-child(2)');
     $this->assertSession()->assertVisibleInViewport('css', '.field--widget-paragraphs tbody > tr:nth-child(3)');
@@ -187,27 +216,7 @@ class ParagraphsStableEditPerspectivesUiTest extends WebDriverTestBase {
     $page->fillField('id', 'testplugin');
     $page->pressButton('Save and manage fields');
 
-    $this->drupalGet('admin/structure/types/add');
-    $page->fillField('name', 'TestContent');
-    $this->assertSession()->waitForElementVisible('css', '#edit-name-machine-name-suffix .link');
-    $page->pressButton('Edit');
-    $page->fillField('type', 'testcontent');
-    $page->pressButton('Save and manage fields');
-
-    $this->drupalGet('admin/structure/types/manage/testcontent/fields/add-field');
-    $page->selectFieldOption('new_storage_type', 'field_ui:entity_reference_revisions:paragraph');
-    if ($this->coreVersion('10.3')) {
-      $page->pressButton('Continue');
-    }
-    $page->fillField('label', 'testparagraphfield');
-    $this->assertSession()->waitForElementVisible('css', '#edit-name-machine-name-suffix .link');
-    $page->pressButton('Edit');
-    $page->fillField('field_name', 'testparagraphfield');
-    $page->pressButton('Continue');
-    $edit = [
-      'field_storage[subform][settings][target_type]' => 'paragraph',
-    ];
-    $this->submitForm($edit, 'Save settings');
+    $this->addParagraphedContentType('testcontent', 'field_testparagraphfield');
 
     $this->drupalGet('node/add/testcontent');
     $style_selector = $page->find('css', '.paragraphs-tabs');

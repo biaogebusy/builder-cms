@@ -11,18 +11,28 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the uninstallation of modules.
- *
- * @group Module
  */
+#[Group('Module')]
+#[RunTestsInSeparateProcesses]
 class UninstallTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['module_test', 'user', 'views', 'node'];
+  protected static $modules = [
+    'ckeditor5',
+    'filter',
+    'module_test',
+    'node',
+    'user',
+    'views',
+    'views_ui',
+  ];
 
   /**
    * {@inheritdoc}
@@ -118,6 +128,13 @@ class UninstallTest extends BrowserTestBase {
     // Delete the node to allow node to be uninstalled.
     $node->delete();
 
+    // Ensure dependent module full names are shown.
+    $this->assertSession()->pageTextContains('Required by: Views UI');
+    // Ensure matching machine names do not display.
+    $this->assertSession()->pageTextNotContains('Required by: Views UI (views_ui)');
+    // Ensure machine names that do not match do display.
+    $this->assertSession()->pageTextContains('Text Editor (editor)');
+
     // Uninstall module_test.
     $edit = [];
     $edit['uninstall[module_test]'] = TRUE;
@@ -196,7 +213,7 @@ class UninstallTest extends BrowserTestBase {
       $this->container->get('module_installer')->install(['module_installer_config_test']);
       $this->fail($message);
     }
-    catch (EntityMalformedException $e) {
+    catch (EntityMalformedException) {
       // Expected exception; just continue testing.
     }
 

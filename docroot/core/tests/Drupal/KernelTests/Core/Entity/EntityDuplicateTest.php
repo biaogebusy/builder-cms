@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\entity_test\Entity\EntityTestRev;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test entity duplication.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityDuplicateTest extends EntityKernelTestBase {
 
   /**
+   * The entity storage.
+   *
    * @var \Drupal\Core\Entity\ContentEntityStorageInterface
    */
   protected $entityTestRevStorage;

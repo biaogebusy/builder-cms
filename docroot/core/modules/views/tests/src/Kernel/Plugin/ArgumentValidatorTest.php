@@ -7,12 +7,14 @@ namespace Drupal\Tests\views\Kernel\Plugin;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
 use Drupal\views_test_data\Plugin\views\argument_validator\ArgumentValidatorTest as ArgumentValidatorTestPlugin;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Views argument validators.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ArgumentValidatorTest extends ViewsKernelTestBase {
 
   /**
@@ -22,6 +24,9 @@ class ArgumentValidatorTest extends ViewsKernelTestBase {
    */
   public static $testViews = ['test_view_argument_validate_numeric', 'test_view'];
 
+  /**
+   * Tests numeric argument validation in a view.
+   */
   public function testArgumentValidateNumeric(): void {
     $view = Views::getView('test_view_argument_validate_numeric');
     $view->initHandlers();

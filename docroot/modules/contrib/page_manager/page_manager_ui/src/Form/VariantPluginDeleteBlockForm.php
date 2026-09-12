@@ -4,6 +4,8 @@ namespace Drupal\page_manager_ui\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for deleting an access condition.
@@ -25,6 +27,31 @@ class VariantPluginDeleteBlockForm extends ConfirmFormBase {
   protected $block;
 
   /**
+   * The shared tempstore factory.
+   *
+   * @var \Drupal\Core\TempStore\SharedTempStoreFactory|null
+   */
+  protected $tempstoreFactory;
+
+  /**
+   * Constructs a new VariantPluginDeleteBlockForm.
+   *
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory|null $tempstore_factory
+   *   (optional) The shared tempstore factory. Defaults to the factory from
+   *   the service container when not provided.
+   */
+  public function __construct(?SharedTempStoreFactory $tempstore_factory = NULL) {
+    $this->tempstoreFactory = $tempstore_factory;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static($container->get('tempstore.shared'));
+  }
+
+  /**
    * Get the tempstore id.
    *
    * @return string
@@ -41,7 +68,13 @@ class VariantPluginDeleteBlockForm extends ConfirmFormBase {
    *   The shared temp store.
    */
   protected function getTempstore() {
-    return \Drupal::service('tempstore.shared')->get($this->getTempstoreId());
+    if (!isset($this->tempstoreFactory)) {
+      // Fallback for subclasses that override ::create() without passing the
+      // factory along.
+      // @phpstan-ignore-next-line
+      $this->tempstoreFactory = \Drupal::service('tempstore.shared');
+    }
+    return $this->tempstoreFactory->get($this->getTempstoreId());
   }
 
   /**
@@ -62,7 +95,7 @@ class VariantPluginDeleteBlockForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return \Drupal::request()->attributes->get('destination');
+    return $this->getRequest()->attributes->get('destination');
   }
 
   /**

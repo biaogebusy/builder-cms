@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\DependencyInjection;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
  * Tests services _defaults definition.
- *
- * @group DependencyInjection
  */
+#[Group('DependencyInjection')]
+#[RunTestsInSeparateProcesses]
 class ServicesDefaultsTest extends KernelTestBase {
 
   /**

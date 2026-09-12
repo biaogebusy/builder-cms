@@ -104,7 +104,9 @@ abstract class DisplayBase extends PluginBase implements DisplayInterface, Conta
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return [];
+    return [
+      'use_admin_theme' => FALSE,
+    ];
   }
 
   /**
@@ -178,6 +180,22 @@ abstract class DisplayBase extends PluginBase implements DisplayInterface, Conta
   public function selectionCompleted(array $entities) {
     $this->entities = $entities;
     $this->eventDispatcher->addListener(KernelEvents::RESPONSE, [$this, 'propagateSelection']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $configuration = $this->getConfiguration();
+
+    $form['use_admin_theme'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use the administration theme.'),
+      '#default_value' => $configuration['use_admin_theme'] ?? FALSE,
+      '#weight' => 50,
+    ];
+
+    return $form;
   }
 
 }

@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Config;
 
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Confirm that language overrides work.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigLanguageOverrideTest extends KernelTestBase {
 
   /**
@@ -21,8 +23,6 @@ class ConfigLanguageOverrideTest extends KernelTestBase {
     'user',
     'language',
     'config_test',
-    'system',
-    'field',
   ];
 
   /**
@@ -38,8 +38,8 @@ class ConfigLanguageOverrideTest extends KernelTestBase {
    */
   public function testConfigLanguageOverride(): void {
     // The language module implements a config factory override object that
-    // overrides configuration when the Language module is enabled. This test ensures that
-    // English overrides work.
+    // overrides configuration when the Language module is enabled. This test
+    // ensures that English overrides work.
     \Drupal::languageManager()->setConfigOverrideLanguage(\Drupal::languageManager()->getLanguage('en'));
     $config = \Drupal::config('config_test.system');
     $this->assertSame('en bar', $config->get('foo'));

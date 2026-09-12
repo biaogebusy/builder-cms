@@ -3,20 +3,22 @@
 namespace Drupal\Tests\devel\Unit;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Tests\UnitTestCase;
 use Drupal\devel\Element\ClientSideFilterTable;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests ClientSideFilterTable element.
- *
- * @coversDefaultClass \Drupal\devel\Element\ClientSideFilterTable
- * @group devel
  */
+#[CoversClass(ClientSideFilterTable::class)]
+#[CoversMethod(ClientSideFilterTable::class, 'getInfo')]
+#[CoversMethod(ClientSideFilterTable::class, 'preRenderTable')]
+#[Group('devel')]
 class DevelClientSideFilterTableTest extends UnitTestCase {
 
-  /**
-   * @covers ::getInfo
-   */
   public function testGetInfo(): void {
     $translation = $this->getStringTranslationStub();
 
@@ -40,10 +42,7 @@ class DevelClientSideFilterTableTest extends UnitTestCase {
     $this->assertEquals($expected_info, $table->getInfo());
   }
 
-  /**
-   * @covers ::preRenderTable
-   * @dataProvider providerPreRenderTable
-   */
+  #[DataProvider('providerPreRenderTable')]
   public function testPreRenderTable($element, $expected): void {
     $result = ClientSideFilterTable::preRenderTable($element);
     $this->assertEquals($expected, $result);

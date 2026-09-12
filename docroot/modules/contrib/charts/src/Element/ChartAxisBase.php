@@ -43,6 +43,8 @@ abstract class ChartAxisBase extends RenderElementBase {
       '#min' => NULL,
       // Display axis on opposite normal side.
       '#opposite' => FALSE,
+      // Allows properties or options not coded in the Charts module.
+      '#raw_options' => [],
     ];
   }
 

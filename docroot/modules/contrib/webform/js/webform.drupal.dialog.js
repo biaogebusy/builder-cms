@@ -3,10 +3,7 @@
  * JavaScript behaviors to fix jQuery UI dialogs.
  */
 
-(function ($, Drupal, once) {
-
-  'use strict';
-
+(function ($, Drupal, once, tabbable) {
   /**
    * Ensure that ckeditor has focus when displayed inside of jquery-ui dialog widget
    *
@@ -36,10 +33,18 @@
         $(window).on({
           'dialog:aftercreate': function (event, dialog, $element, settings) {
             setTimeout(function () {
-              var hasFocus = $element.find('[autofocus]:tabbable');
+              const tabbableElements = tabbable.tabbable($element.get(0));
+              var hasFocus = $element.find("[autofocus]");
               if (!hasFocus.length) {
                 // Move focus to first input which is not a button.
-                hasFocus = $element.find(':input:tabbable:not(:button)');
+                hasFocus = tabbableElements.filter((element) => {
+                  // Check if the element is an <input> tag and not a <button> tag
+                  return (
+                    element.tagName.toLowerCase() === "input" &&
+                    element.type !== "button"
+                  );
+                });
+                hasFocus = $(hasFocus);
               }
               if (!hasFocus.length) {
                 // Move focus to close dialog button.
@@ -53,4 +58,4 @@
     }
   };
 
-})(jQuery, Drupal, once);
+})(jQuery, Drupal, once, tabbable);

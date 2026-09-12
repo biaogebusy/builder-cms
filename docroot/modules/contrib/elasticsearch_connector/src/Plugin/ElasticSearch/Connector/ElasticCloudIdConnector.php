@@ -12,6 +12,7 @@ use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
 use Elastic\Transport\Exception\CloudIdParseException;
 use Elastic\Transport\TransportBuilder;
+use Psr\Http\Client\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,6 +25,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class ElasticCloudIdConnector extends PluginBase implements ElasticSearchConnectorInterface, ContainerFactoryPluginInterface {
+
+  /**
+   * Drupal's HTTP Client, which might be configured to use a proxy.
+   *
+   * @var \Psr\Http\Client\ClientInterface
+   */
+  protected ClientInterface $httpClient;
 
   /**
    * A repository for Key configuration entities.
@@ -48,6 +56,7 @@ class ElasticCloudIdConnector extends PluginBase implements ElasticSearchConnect
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->httpClient = $container->get('http_client');
     $instance->logger = $container->get('logger.channel.elasticsearch_connector_client');
 
     // If the key module is installed, then a 'key.repository' service will be
@@ -107,6 +116,7 @@ class ElasticCloudIdConnector extends PluginBase implements ElasticSearchConnect
    */
   public function getClient(): Client {
     $clientBuilder = ClientBuilder::create()
+      ->setHttpClient($this->httpClient)
       ->setElasticCloudId($this->configuration['elastic_cloud_id']);
 
     if ($this->keyRepositoryIsValid()) {

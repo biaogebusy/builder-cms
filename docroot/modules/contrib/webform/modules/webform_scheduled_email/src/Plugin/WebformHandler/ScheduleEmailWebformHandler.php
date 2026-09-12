@@ -474,7 +474,7 @@ class ScheduleEmailWebformHandler extends EmailWebformHandler {
         '#wrapper_attributes' => ['class' => ['container-inline'], 'style' => 'margin: 0'],
         '#weight' => -10,
       ];
-      $this->messenger()->addWarning($this->renderer->renderPlain($debug_message), TRUE);
+      $this->messenger()->addWarning($this->renderer->renderInIsolation($debug_message), TRUE);
     }
 
     return $status;

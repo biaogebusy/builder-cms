@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search_api\Kernel\Datasource;
 
+use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
@@ -206,6 +207,14 @@ class ContentEntityDatasourceTest extends KernelTestBase {
         [$builder, 'build'],
       ],
     ];
+    // The change in recursive render protection added one additional pre and
+    // post render callback each.
+    // @todo Combine once we depend on Drupal 11.4+.
+    $new_render_protection = method_exists(EntityViewBuilder::class, 'setRecursiveRenderProtection');
+    if ($new_render_protection) {
+      array_unshift($expected['#pre_render'], [$builder, 'setRecursiveRenderProtection']);
+      $expected['#post_render'][] = [$builder, 'unsetRecursiveRenderProtection'];
+    }
     $this->assertEquals($expected, $build);
 
     $build = $this->datasource->viewMultipleItems($loaded_items, 'foobar');
@@ -230,6 +239,11 @@ class ContentEntityDatasourceTest extends KernelTestBase {
           'max-age' => -1,
         ],
       ];
+      // @todo Combine once we depend on Drupal 11.4+.
+      if ($new_render_protection) {
+        $expected['#pre_render'][] = [$builder, 'setRecursiveRenderProtection'];
+        $expected['#post_render'][] = [$builder, 'unsetRecursiveRenderProtection'];
+      }
       $this->assertArrayHasKey('#weight', $build[$item_id]);
       unset($build[$item_id]['#weight']);
       $this->assertEquals($expected, $build[$item_id]);

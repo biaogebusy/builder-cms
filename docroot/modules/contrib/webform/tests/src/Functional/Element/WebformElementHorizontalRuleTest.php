@@ -19,7 +19,7 @@ class WebformElementHorizontalRuleTest extends WebformElementBrowserTestBase {
   /**
    * Test horizontal rule element.
    */
-  public function testHorizontalRule() {
+  public function testHorizontalRule(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('/webform/test_element_horizontal_rule');

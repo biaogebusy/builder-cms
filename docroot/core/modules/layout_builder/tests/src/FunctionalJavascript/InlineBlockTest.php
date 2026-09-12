@@ -6,13 +6,16 @@ namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the inline block feature works correctly.
- *
- * @group layout_builder
- * @group #slow
  */
+#[Group('layout_builder')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class InlineBlockTest extends InlineBlockTestBase {
 
   /**
@@ -25,6 +28,7 @@ class InlineBlockTest extends InlineBlockTestBase {
    */
   protected static $modules = [
     'field_ui',
+    'navigation',
   ];
 
   /**
@@ -112,9 +116,8 @@ class InlineBlockTest extends InlineBlockTestBase {
 
   /**
    * Tests adding a new entity block and then not saving the layout.
-   *
-   * @dataProvider layoutNoSaveProvider
    */
+  #[DataProvider('layoutNoSaveProvider')]
   public function testNoLayoutSave($operation, $no_save_button_text, $confirm_button_text): void {
     $this->drupalLogin($this->drupalCreateUser([
       'access contextual links',
@@ -199,73 +202,6 @@ class InlineBlockTest extends InlineBlockTestBase {
         'Revert',
       ],
     ];
-  }
-
-  /**
-   * Tests entity blocks revisioning.
-   */
-  public function testInlineBlocksRevisioning(): void {
-    $assert_session = $this->assertSession();
-    $page = $this->getSession()->getPage();
-
-    $this->drupalLogin($this->drupalCreateUser([
-      'access contextual links',
-      'configure any layout',
-      'administer node display',
-      'administer node fields',
-      'administer nodes',
-      'bypass node access',
-      'create and edit custom blocks',
-    ]));
-    // Enable layout builder and overrides.
-    $this->drupalGet(static::FIELD_UI_PREFIX . '/display/default');
-    $this->submitForm(['layout[enabled]' => TRUE, 'layout[allow_custom]' => TRUE], 'Save');
-    $this->drupalGet('node/1/layout');
-
-    // Add an inline block.
-    $this->addInlineBlockToLayout('Block title', 'The DEFAULT block body');
-    $this->assertSaveLayout();
-    $this->drupalGet('node/1');
-
-    $assert_session->pageTextContains('The DEFAULT block body');
-
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
-    $original_revision_id = $node_storage->getLatestRevisionId(1);
-
-    // Create a new revision.
-    $this->drupalGet('node/1/edit');
-    $page->findField('title[0][value]')->setValue('Node updated');
-    $page->pressButton('Save');
-
-    $this->drupalGet('node/1');
-    $assert_session->pageTextContains('The DEFAULT block body');
-
-    $assert_session->linkExists('Revisions');
-
-    // Update the block.
-    $this->drupalGet('node/1/layout');
-    $this->configureInlineBlock('The DEFAULT block body', 'The NEW block body');
-    $this->assertSaveLayout();
-    $this->drupalGet('node/1');
-    $assert_session->pageTextContains('The NEW block body');
-    $assert_session->pageTextNotContains('The DEFAULT block body');
-
-    $revision_url = "node/1/revisions/$original_revision_id";
-
-    // Ensure viewing the previous revision shows the previous block revision.
-    $this->drupalGet("$revision_url/view");
-    $assert_session->pageTextContains('The DEFAULT block body');
-    $assert_session->pageTextNotContains('The NEW block body');
-
-    // Revert to first revision.
-    $revision_url = "$revision_url/revert";
-    $this->drupalGet($revision_url);
-    $page->pressButton('Revert');
-
-    $this->drupalGet('node/1');
-    $assert_session->pageTextContains('The DEFAULT block body');
-    $assert_session->pageTextNotContains('The NEW block body');
   }
 
   /**
@@ -508,22 +444,12 @@ class InlineBlockTest extends InlineBlockTestBase {
     $this->assertSaveLayout();
     $node_1_block_id = $this->getLatestBlockEntityId();
 
-    $this->drupalGet("block/$node_1_block_id");
-    $assert_session->pageTextNotContains('You are not authorized to access this page');
-
-    $this->drupalLogout();
-    $this->drupalLogin($this->drupalCreateUser([
-      'administer nodes',
-    ]));
-
-    $this->drupalGet("block/$node_1_block_id");
+    // Inline blocks cannot be edited via normal block_content routes.
+    $blockContent = $this->blockStorage->load($node_1_block_id);
+    $this->drupalGet($blockContent->toUrl());
     $assert_session->pageTextContains('You are not authorized to access this page');
-
-    $this->drupalLogin($this->drupalCreateUser([
-      'create and edit custom blocks',
-    ]));
-    $this->drupalGet("block/$node_1_block_id");
-    $assert_session->pageTextNotContains('You are not authorized to access this page');
+    // The block should still be editable (e.g via layout builder).
+    $this->assertTrue($blockContent->access('update'));
   }
 
   /**
@@ -546,6 +472,7 @@ class InlineBlockTest extends InlineBlockTestBase {
       'administer node display',
       'administer node fields',
       'create and edit custom blocks',
+      'configure navigation layout',
     ]));
 
     // Enable layout builder and overrides.
@@ -578,8 +505,8 @@ class InlineBlockTest extends InlineBlockTestBase {
     $this->drupalGet($layout_default_path);
     // Add a basic block with the body field set.
     $page->clickLink('Add block');
-    // Confirm that, when more than 1 type exists, "Create content block" shows a
-    // list of block types.
+    // Confirm that, when more than 1 type exists, "Create content block" shows
+    // a list of block types.
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkNotExists('Basic block');
     $assert_session->linkNotExists('Advanced block');
@@ -592,6 +519,23 @@ class InlineBlockTest extends InlineBlockTestBase {
     $this->clickLink('Advanced block');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->fieldExists('Title');
+
+    // Confirm that Create Content block opt out logic works for Navigation.
+    $this->drupalGet('/admin/config/user-interface/navigation-block');
+    $this->getSession()->getPage()->pressButton('Enable edit mode');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $page->clickLink('Add block');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->pageTextContains('Choose a block');
+    $assert_session->linkNotExists('Create content block');
+
+    // Confirm that internal routes for adding blocks are not accessible when
+    // inline block creation is disabled.
+    $this->drupalGet('/admin/config/user-interface/navigation-block');
+    $this->drupalGet('/layout_builder/choose/inline-block/navigation/navigation.block_layout/0/content');
+    $assert_session->pageTextContains('You are not authorized to access this page');
+    $this->drupalGet('/layout_builder/add/block/navigation/navigation.block_layout/0/content/inline_block%3Abanner_block');
+    $assert_session->pageTextContains('You are not authorized to access this page');
   }
 
   /**

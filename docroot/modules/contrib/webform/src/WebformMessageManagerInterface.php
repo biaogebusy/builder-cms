@@ -177,7 +177,7 @@ interface WebformMessageManagerInterface {
    * @param \Drupal\webform\WebformSubmissionInterface $webform_submission
    *   A webform submission.
    */
-  public function setWebformSubmission(WebformSubmissionInterface $webform_submission = NULL);
+  public function setWebformSubmission(?WebformSubmissionInterface $webform_submission = NULL);
 
   /**
    * Set the webform used for custom messages and token replacement.
@@ -185,7 +185,7 @@ interface WebformMessageManagerInterface {
    * @param \Drupal\webform\WebformInterface $webform
    *   A webform.
    */
-  public function setWebform(WebformInterface $webform = NULL);
+  public function setWebform(?WebformInterface $webform = NULL);
 
   /**
    * Set the webform source entity whose submissions are being exported.
@@ -193,7 +193,7 @@ interface WebformMessageManagerInterface {
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   An entity.
    */
-  public function setSourceEntity(EntityInterface $entity = NULL);
+  public function setSourceEntity(?EntityInterface $entity = NULL);
 
   /**
    * Get message.

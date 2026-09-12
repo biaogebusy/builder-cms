@@ -5,7 +5,7 @@ namespace Drupal\Tests\quickedit\FunctionalJavascript;
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Symfony\Component\Validator\ConstraintViolation;
 
 /**
@@ -16,7 +16,7 @@ use Symfony\Component\Validator\ConstraintViolation;
  */
 class CKEditor5IntegrationTest extends QuickEditJavascriptTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * {@inheritdoc}

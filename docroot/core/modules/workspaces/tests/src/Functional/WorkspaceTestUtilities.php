@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\workspaces\Functional;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
 use Drupal\workspaces\Entity\Handler\IgnoredWorkspaceHandler;
 use Drupal\workspaces\Entity\Workspace;
@@ -18,6 +19,11 @@ trait WorkspaceTestUtilities {
 
   use BlockCreationTrait;
 
+  /**
+   * Signifies that the switcher block is configured.
+   *
+   * @var bool
+   */
   protected $switcherBlockConfigured = FALSE;
 
   /**
@@ -34,7 +40,7 @@ trait WorkspaceTestUtilities {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The entity.
    */
-  protected function getOneEntityByLabel($type, $label) {
+  protected function getOneEntityByLabel($type, $label): EntityInterface {
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
     $entity_type_manager = \Drupal::service('entity_type.manager');
     $property = $entity_type_manager->getDefinition($type)->getKey('label');
@@ -50,9 +56,9 @@ trait WorkspaceTestUtilities {
   /**
    * Creates and activates a new Workspace through the UI.
    *
-   * @param string $label
+   * @param string|null $label
    *   The label of the workspace to create.
-   * @param string $id
+   * @param string|null $id
    *   The ID of the workspace to create.
    * @param string $parent
    *   (optional) The ID of the parent workspace. Defaults to '_none'.
@@ -60,7 +66,10 @@ trait WorkspaceTestUtilities {
    * @return \Drupal\workspaces\WorkspaceInterface
    *   The workspace that was just created.
    */
-  protected function createAndActivateWorkspaceThroughUi(string $label, string $id, string $parent = '_none'): WorkspaceInterface {
+  protected function createAndActivateWorkspaceThroughUi(?string $label = NULL, ?string $id = NULL, string $parent = '_none'): WorkspaceInterface {
+    $id ??= $this->randomMachineName();
+    $label ??= $this->randomString();
+
     $this->drupalGet('/admin/config/workflow/workspaces/add');
     $this->submitForm([
       'id' => $id,
@@ -70,15 +79,19 @@ trait WorkspaceTestUtilities {
 
     $this->getSession()->getPage()->hasContent("$label ($id)");
 
-    return Workspace::load($id);
+    // Keep the test runner in sync with the system under test.
+    $workspace = Workspace::load($id);
+    \Drupal::service('workspaces.manager')->setActiveWorkspace($workspace);
+
+    return $workspace;
   }
 
   /**
    * Creates a new Workspace through the UI.
    *
-   * @param string $label
+   * @param string|null $label
    *   The label of the workspace to create.
-   * @param string $id
+   * @param string|null $id
    *   The ID of the workspace to create.
    * @param string $parent
    *   (optional) The ID of the parent workspace. Defaults to '_none'.
@@ -86,7 +99,10 @@ trait WorkspaceTestUtilities {
    * @return \Drupal\workspaces\WorkspaceInterface
    *   The workspace that was just created.
    */
-  protected function createWorkspaceThroughUi($label, $id, $parent = '_none') {
+  protected function createWorkspaceThroughUi(?string $label = NULL, ?string $id = NULL, string $parent = '_none') {
+    $id ??= $this->randomMachineName();
+    $label ??= $this->randomString();
+
     $this->drupalGet('/admin/config/workflow/workspaces/add');
     $this->submitForm([
       'id' => $id,

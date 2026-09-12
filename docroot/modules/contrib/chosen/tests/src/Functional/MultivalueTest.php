@@ -2,19 +2,23 @@
 
 namespace Drupal\Tests\chosen\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
-use Drupal\Tests\BrowserTestBase;
-use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that multivalue select fields are handled properly.
  *
  * @group chosen
  */
+#[RunTestsInSeparateProcesses]
+#[Group('chosen')]
 class MultivalueTest extends BrowserTestBase {
 
   use ContentTypeCreationTrait;
@@ -28,7 +32,7 @@ class MultivalueTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['chosen', 'options', 'node'];
+  protected static $modules = ['chosen', 'options', 'node', 'chosen_test'];
 
   /**
    * {@inheritdoc}
@@ -69,11 +73,11 @@ class MultivalueTest extends BrowserTestBase {
     $field->save();
 
     // Try loading the entity from configuration.
-    $entity_form_display = EntityFormDisplay::load('node' . '.' . 'article' . '.' . 'default');
+    $entity_form_display = EntityFormDisplay::load('node.article.default');
 
     // If not found, create a fresh entity object. We do not preemptively create
-    // new entity form display configuration entries for each existing entity type
-    // and bundle whenever a new form mode becomes available. Instead,
+    // new entity form display configuration entries for each existing entity
+    // type and bundle whenever a new form mode becomes available. Instead,
     // configuration entries are only created when an entity form display is
     // explicitly configured and saved.
     if (!$entity_form_display) {
@@ -85,7 +89,9 @@ class MultivalueTest extends BrowserTestBase {
       ]);
     }
 
-    $entity_form_display->setComponent('test_multiselect', ['type' => 'options_select'])
+    $entity_form_display
+      ->setComponent('test_multiselect', ['type' => 'options_select'])
+      ->setComponent('chosen_test_base_field', ['type' => 'options_select'])
       ->save();
   }
 
@@ -95,6 +101,15 @@ class MultivalueTest extends BrowserTestBase {
   public function testNoneOption() {
     $this->drupalGet('node/add/article');
     $this->assertSession()->responseNotContains('_none');
+  }
+
+  /**
+   * Tests that base field cardinality is added to multivalue selects.
+   */
+  public function testBaseFieldCardinality() {
+    $this->drupalGet('node/add/article');
+    $this->assertSession()->elementExists('css', '#edit-chosen-test-base-field');
+    $this->assertSession()->elementAttributeContains('css', '#edit-chosen-test-base-field', 'data-cardinality', '3');
   }
 
 }

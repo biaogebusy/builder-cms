@@ -3,6 +3,8 @@ core_version_requirement: ^8.7.7 || ^9 || ^10 || ^11
 dependencies:
   - views_custom_cache_tag:views_custom_cache_tag
   - drupal:node
+  - drupal:field
+  - drupal:text
   - drupal:menu_ui
   - drupal:views
   - drupal:rest
@@ -12,7 +14,7 @@ name: Views custom cache tags demo
 package: views_custom_cache_tag
 type: module
 
-# Information added by Drupal.org packaging script on 2025-02-08
-version: '8.x-1.4'
+# Information added by Drupal.org packaging script on 2026-03-03
+version: '8.x-1.5'
 project: 'views_custom_cache_tag'
-datestamp: 1739000547
+datestamp: 1772572224

@@ -1,0 +1,217 @@
+@import "../base/media-queries.pcss.css";
+
+/**
+ * @file
+ * Button styles.
+ */
+
+/**
+ * Base button styles.
+ *
+ * These styles have been duplicated to dropbutton.css and action-links.css
+ * since those components inherits most of these design elements. Whenever
+ * making changes to this file, remember to check if that needs to be applied to
+ * dropbutton.css or action-links.css as well.
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  color: var(--admin-color-primary);
+  border: 2px solid var(--admin-color-primary);
+  border-radius: var(--admin-radius-m);
+  background-color: transparent;
+  box-shadow: 0 1px 2px var(--admin-color-primary-soft);
+  font-size: var(--admin-font-size-s);
+  font-weight: var(--admin-font-weight-semibold);
+  line-height: 1;
+  margin-block: var(--admin-space-m);
+  margin-inline: 0 var(--admin-space-s);
+  padding-block: calc(var(--admin-space-s) - 2px);
+  padding-inline: var(--admin-space-m);
+  appearance: none;
+
+  &:hover {
+    text-decoration: none;
+    color: var(--admin-color-text-on-primary);
+    border-color: var(--admin-color-primary-hover);
+    background-color: var(--admin-color-primary-hover);
+  }
+
+  &:active {
+    color: var(--admin-color-text-on-primary);
+    border-color: var(--admin-color-primary-active);
+    background-color: var(--admin-color-primary-active);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: var(--admin-transition);
+  }
+}
+
+.form-actions .button {
+  margin-inline-end: var(--admin-space-xs);
+}
+
+/* Common styles for small buttons. */
+.no-touchevents {
+  & .button--small {
+    min-height: 2rem;
+    font-size: var(--admin-font-size-xs);
+    margin-block: var(--admin-space-s);
+    margin-inline: 0 var(--admin-space-xs);
+    padding-block: var(--admin-space-xs);
+    padding-inline: var(--admin-space-s);
+  }
+
+  /* Common styles for extra small buttons. */
+  & .button--extrasmall {
+    min-height: 1.5rem;
+    font-size: var(--admin-font-size-2xs);
+    margin-block: var(--admin-space-xs);
+    margin-inline: 0 var(--admin-space-xs);
+    padding-block: var(--admin-space-2xs);
+    padding-inline: var(--admin-space-xs);
+  }
+}
+
+.button.button--small {
+  border-radius: var(--admin-radius-s);
+  font-size: var(--admin-font-size-2xs);
+  padding-block: calc(var(--admin-space-2xs) + 2px);
+  padding-inline: var(--admin-space-s);
+}
+
+/* Common styles for extra small buttons. */
+.button.button--extrasmall {
+  border-radius: var(--admin-radius-s);
+  font-size: var(--admin-font-size-2xs);
+  padding-block: var(--admin-space-2xs);
+  padding-inline: var(--admin-space-s);
+}
+
+/* Styles for action link buttons. */
+.button--action {
+  margin: 0;
+
+  &::before {
+    margin-inline: -0.25em 0;
+    padding-inline: 0 0.25em;
+    content: "+";
+    font-weight: 900;
+  }
+}
+
+/*
+ * Primary button styles.
+ */
+
+/* @todo the .toolbar-button--primary styling needs to be moved to the
+   Navigation module after Drupal core supports dark mode. */
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .top-bar__actions .toolbar-button--primary,
+#edit-submit.form-submit,
+.button--primary,
+.button--primary:not(:focus),
+.ief-entity-submit {
+  background: var(--admin-color-primary);
+  box-shadow: 0.1em 0.25em 0.5em var(--admin-color-primary-soft);
+
+  &:hover {
+    color: var(--admin-color-text-on-primary);
+    background-color: var(--admin-color-primary-hover);
+  }
+
+  &:active {
+    color: var(--admin-color-text-on-primary);
+    background-color: var(--admin-color-primary-active);
+  }
+
+  &,
+  &:hover,
+  &:active {
+    color: var(--admin-color-text-on-primary);
+  }
+}
+
+/* Danger button styles */
+.button--danger {
+  color: var(--button-fg-color--danger);
+  border-color: transparent;
+
+  &:is(:hover, :active) {
+    color: var(--button-fg-color--danger);
+    border-color: var(--admin-color-error);
+    background-color: var(--button--hover-bg-color--danger);
+  }
+}
+
+a.button:hover,
+a.button:active {
+  color: var(--admin-color-text-on-primary);
+}
+
+a.button--primary:hover,
+a.button--primary:active {
+  .gin--dark-mode & {
+    color: var(--admin-color-bg);
+  }
+}
+
+/**
+ * Disabled state styles as last.
+ *
+ * Overrides every definitions before, including variants.
+ */
+.button.button:disabled,
+.button.button.is-disabled {
+  &,
+  &:hover,
+  &:active {
+    color: var(--admin-color-text-disabled);
+    border: 2px solid var(--admin-color-border-disabled) !important;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Make disabled <link> behave like a [disabled] <input> or <button>. */
+  &.is-disabled {
+    user-select: none;
+    pointer-events: none;
+  }
+}
+
+.button.button--primary:disabled,
+.button.button--primary.is-disabled {
+  &,
+  &:hover,
+  &:active {
+    color: var(--admin-color-text-disabled);
+    background-color: var(--admin-color-bg-disabled);
+  }
+}
+
+/**
+ * Style a clickable/tappable element as a link. Duplicates the base style for
+ * the <a> tag, plus a reset for padding, borders and background.
+ */
+.link {
+  display: inline;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  border: 0;
+  background: none;
+  appearance: none;
+}
+
+/* Autocomplete field remove button. */
+.multiple-fields-remove-button.button {
+  border: 0 none !important;
+  mask-image: var(--admin-icon-remove);
+  mask-size: 16px 16px;
+  mask-repeat: no-repeat;
+  mask-position: center center;
+}

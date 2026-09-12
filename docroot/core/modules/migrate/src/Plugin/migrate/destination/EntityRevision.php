@@ -5,6 +5,7 @@ namespace Drupal\migrate\Plugin\migrate\destination;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -116,11 +117,11 @@ class EntityRevision extends EntityContentBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, EntityStorageInterface $storage, array $bundles, EntityFieldManagerInterface $entity_field_manager, FieldTypePluginManagerInterface $field_type_manager, AccountSwitcherInterface $account_switcher) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, EntityStorageInterface $storage, array $bundles, EntityFieldManagerInterface $entity_field_manager, FieldTypePluginManagerInterface $field_type_manager, AccountSwitcherInterface $account_switcher, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
     $plugin_definition += [
       'label' => new TranslatableMarkup('@entity_type revisions', ['@entity_type' => $storage->getEntityType()->getSingularLabel()]),
     ];
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $migration, $storage, $bundles, $entity_field_manager, $field_type_manager, $account_switcher);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $migration, $storage, $bundles, $entity_field_manager, $field_type_manager, $account_switcher, $entity_type_bundle_info);
   }
 
   /**
@@ -147,6 +148,11 @@ class EntityRevision extends EntityContentBase {
       }
     }
     if ($entity === NULL) {
+      // If the entity could not be loaded by revision then the given
+      // revision does not yet exist. Load the current default revision and
+      // prepare to save it as a new non-default revision. setNewRevision()
+      // will unset the current revision ID and the entity is then updated
+      // with the source revision ID and saved as that.
       $entity_id = $row->getDestinationProperty($this->getKey('id'));
       $entity = $this->storage->load($entity_id);
 
@@ -158,11 +164,11 @@ class EntityRevision extends EntityContentBase {
 
       $entity->enforceIsNew(FALSE);
       $entity->setNewRevision(TRUE);
+      $entity->isDefaultRevision(FALSE);
     }
     // We need to update the entity, so that the destination row IDs are
     // correct.
     $entity = $this->updateEntity($entity, $row);
-    $entity->isDefaultRevision(FALSE);
     return $entity;
   }
 

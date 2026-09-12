@@ -2,10 +2,31 @@
 
 namespace Drupal\Core\FileTransfer;
 
+use FTP\Connection;
+
 /**
  * Defines a file transfer class using the PHP FTP extension.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement. Use composer to manage the code for your site.
+ *
+ * @see https://www.drupal.org/node/3512364
  */
 class FTPExtension extends FTP implements ChmodInterface {
+
+  /**
+   * The FTP connection.
+   */
+  protected Connection|false $connection;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($jail, $username, #[\SensitiveParameter] $password, $hostname, $port) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+
+    parent::__construct($jail, $username, $password, $hostname, $port);
+  }
 
   /**
    * {@inheritdoc}
@@ -26,7 +47,10 @@ class FTPExtension extends FTP implements ChmodInterface {
    */
   protected function copyFileJailed($source, $destination) {
     if (!@ftp_put($this->connection, $destination, $source, FTP_BINARY)) {
-      throw new FileTransferException("Cannot move @source to @destination", 0, ["@source" => $source, "@destination" => $destination]);
+      throw new FileTransferException("Cannot move @source to @destination", 0, [
+        "@source" => $source,
+        "@destination" => $destination,
+      ]);
     }
   }
 
@@ -108,7 +132,7 @@ class FTPExtension extends FTP implements ChmodInterface {
     if ($this->isDirectory($path) && $recursive) {
       $file_list = @ftp_nlist($this->connection, $path);
       if (!$file_list) {
-        // Empty directory - returns false
+        // Empty directory - returns false.
         return;
       }
       foreach ($file_list as $file) {

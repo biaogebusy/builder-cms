@@ -16,13 +16,6 @@ use Drupal\profile\Entity\Profile;
 class FilterPromotionsEventTest extends OrderKernelTestBase {
 
   /**
-   * The promotion storage.
-   *
-   * @var \Drupal\commerce_promotion\PromotionStorageInterface
-   */
-  protected PromotionStorageInterface $storage;
-
-  /**
    * Modules to enable.
    *
    * @var array
@@ -39,7 +32,6 @@ class FilterPromotionsEventTest extends OrderKernelTestBase {
     parent::setUp();
 
     $this->installEntitySchema('commerce_promotion');
-    $this->storage = $this->container->get('entity_type.manager')->getStorage('commerce_promotion');
   }
 
   /**
@@ -80,7 +72,9 @@ class FilterPromotionsEventTest extends OrderKernelTestBase {
     ]);
     $order->save();
 
-    $available_promotions = $this->storage->loadAvailable($order);
+    $promotion_storage = $this->entityTypeManager->getStorage('commerce_promotion');
+    assert($promotion_storage instanceof PromotionStorageInterface);
+    $available_promotions = $promotion_storage->loadAvailable($order);
     $this->assertEquals(2, count($available_promotions));
     $promotion = array_shift($available_promotions);
     $this->assertEquals($promotion_example->label(), $promotion->label());
@@ -89,7 +83,7 @@ class FilterPromotionsEventTest extends OrderKernelTestBase {
 
     $order->setData('excluded_promotions', [$promotion_filtered->id()]);
 
-    $available_promotions = $this->storage->loadAvailable($order);
+    $available_promotions = $promotion_storage->loadAvailable($order);
     $this->assertEquals(1, count($available_promotions));
     $promotion = array_shift($available_promotions);
     $this->assertEquals($promotion_example->label(), $promotion->label());

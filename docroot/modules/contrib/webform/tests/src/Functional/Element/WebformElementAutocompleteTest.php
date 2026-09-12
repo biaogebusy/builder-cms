@@ -14,12 +14,12 @@ class WebformElementAutocompleteTest extends WebformElementBrowserTestBase {
    *
    * @var array
    */
-  protected static $testWebforms = ['test_element_autocomplete'];
+  protected static $testWebforms = ['test_element_autocomplete', 'test_element_starts_with'];
 
   /**
-   * Tests autocomplete element.
+   * Tests CONTAINS autocomplete element.
    */
-  public function testAutocomplete() {
+  public function testAutocompleteContains(): void {
     global $base_path;
 
     $assert_session = $this->assertSession();
@@ -91,6 +91,40 @@ class WebformElementAutocompleteTest extends WebformElementBrowserTestBase {
     $this->drupalGet('/webform/test_element_autocomplete/autocomplete/autocomplete_both', ['query' => ['q' => 'Item']]);
     $assert_session->responseNotContains('[]');
     $assert_session->responseContains('[{"value":"Example Item","label":"Example Item"},{"value":"Existing Item","label":"Existing Item"}]');
+  }
+
+  /**
+   * Tests STARTS_WITH autocomplete element.
+   */
+  public function testAutocompleteStartsWith(): void {
+    $assert_session = $this->assertSession();
+
+    // Log in as an admin to access the webform page.
+    $this->drupalLogin($this->rootUser);
+
+    /* Test #autocomplete_items using STARTS_WITH */
+
+    // Navigate to the webform page to check the autocomplete field.
+    $this->drupalGet('/webform/test_element_starts_with');
+
+    // Check for partial match with "South" - only countries starting with "South" should appear.
+    $this->drupalGet('/webform/test_element_starts_with/autocomplete/autocomplete_items', ['query' => ['q' => 'South']]);
+    $assert_session->responseContains('[{"value":"South Africa","label":"South Africa"},{"value":"South Georgia \u0026 South Sandwich Islands","label":"South Georgia \u0026 South Sandwich Islands"},{"value":"South Korea","label":"South Korea"},{"value":"South Sudan","label":"South Sudan"}]');
+    $assert_session->responseNotContains('North Korea');
+
+    // Check for partial match with "Sudan" - only "Sudan" should appear.
+    $this->drupalGet('/webform/test_element_starts_with/autocomplete/autocomplete_items', ['query' => ['q' => 'Sudan']]);
+    $assert_session->responseContains('[{"value":"Sudan","label":"Sudan"}]');
+    $assert_session->responseNotContains('South Sudan');
+
+    // Check for exact match with "South Sudan" - only "South Sudan" should appear.
+    $this->drupalGet('/webform/test_element_starts_with/autocomplete/autocomplete_items', ['query' => ['q' => 'South Sudan']]);
+    $assert_session->responseContains('[{"value":"South Sudan","label":"South Sudan"}]');
+    $assert_session->responseNotContains('[{"value":"Sudan","label":"Sudan"}]');
+
+    // Check with input that doesn’t match any items, e.g., "xyz" - should return an empty array.
+    $this->drupalGet('/webform/test_element_starts_with/autocomplete/autocomplete_items', ['query' => ['q' => 'xyz']]);
+    $assert_session->responseContains('[]');
   }
 
 }

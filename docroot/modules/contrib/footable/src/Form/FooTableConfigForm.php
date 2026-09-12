@@ -28,6 +28,8 @@ class FooTableConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $config = $this->config('footable.settings');
+
     $form['config'] = [
       '#type' => 'vertical_tabs',
       '#default_tab' => 'edit-plugin',
@@ -39,24 +41,24 @@ class FooTableConfigForm extends ConfigFormBase {
       '#group' => 'config',
     ];
 
-    $form['plugin']['footable_plugin_type'] = [
+    $form['plugin']['plugin_type'] = [
       '#type' => 'radios',
       '#title' => $this->t('Type'),
       '#options' => [
         'standalone' => $this->t('Standalone'),
         'bootstrap' => $this->t('Bootstrap'),
       ],
-      '#default_value' => $this->config('footable.settings')->get('footable_plugin_type'),
+      '#default_value' => $config->get('plugin_type'),
     ];
 
-    $form['plugin']['footable_plugin_compression'] = [
+    $form['plugin']['plugin_compression'] = [
       '#type' => 'radios',
       '#title' => $this->t('Compression level'),
       '#options' => [
         'minified' => $this->t('Production (minified)'),
         'source' => $this->t('Development (uncompressed)'),
       ],
-      '#default_value' => $this->config('footable.settings')->get('footable_plugin_compression'),
+      '#default_value' => $config->get('plugin_compression'),
     ];
 
     return parent::buildForm($form, $form_state);
@@ -67,8 +69,8 @@ class FooTableConfigForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('footable.settings');
-    $config->set('footable_plugin_type', $form_state->getValue('footable_plugin_type'));
-    $config->set('footable_plugin_compression', $form_state->getValue('footable_plugin_compression'));
+    $config->set('plugin_type', $form_state->getValue('plugin_type'));
+    $config->set('plugin_compression', $form_state->getValue('plugin_compression'));
     $config->save();
 
     parent::submitForm($form, $form_state);

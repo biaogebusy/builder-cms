@@ -135,7 +135,7 @@ class WebformCardsManager implements WebformCardsManagerInterface {
    *
    * @see \Drupal\webform\Entity\Webform::getPages
    */
-  public function applyConditions(array $pages, WebformSubmissionInterface $webform_submission = NULL) {
+  public function applyConditions(array $pages, ?WebformSubmissionInterface $webform_submission = NULL) {
     if ($webform_submission && $webform_submission->getWebform()->getSetting('wizard_progress_states')) {
       return $this->conditionsValidator->buildPages($pages, $webform_submission);
     }

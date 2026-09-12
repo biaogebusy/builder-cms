@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Render\Element;
 
+use Drupal\Core\Render\Element\HtmlTag;
 use Drupal\Core\Render\Markup;
 use Drupal\Tests\Core\Render\RendererTestBase;
-use Drupal\Core\Render\Element\HtmlTag;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Render\Element\HtmlTag
- * @group Render
+ * Tests Drupal\Core\Render\Element\HtmlTag.
  */
+#[CoversClass(HtmlTag::class)]
+#[Group('Render')]
 class HtmlTagTest extends RendererTestBase {
 
   /**
-   * @covers ::getInfo
+   * Tests get info.
    */
   public function testGetInfo(): void {
     $htmlTag = new HtmlTag([], 'test', 'test');
@@ -26,9 +30,9 @@ class HtmlTagTest extends RendererTestBase {
   }
 
   /**
-   * @covers ::preRenderHtmlTag
-   * @dataProvider providerPreRenderHtmlTag
+   * Tests pre render html tag.
    */
+  #[DataProvider('providerPreRenderHtmlTag')]
   public function testPreRenderHtmlTag($element, $expected): void {
     $result = HtmlTag::preRenderHtmlTag($element);
     foreach ($result as &$child) {
@@ -42,7 +46,7 @@ class HtmlTagTest extends RendererTestBase {
   /**
    * Data provider for preRenderHtmlTag test.
    */
-  public static function providerPreRenderHtmlTag() {
+  public static function providerPreRenderHtmlTag(): array {
     $tags = [];
 
     // Value prefix/suffix.
@@ -82,7 +86,10 @@ class HtmlTagTest extends RendererTestBase {
       '#tag' => 'p><script>alert()</script><p',
       '#value' => 'value',
     ];
-    $tags['sanitized-tag'] = [$element, "<p&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p>value</p&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p>\n"];
+    $tags['sanitized-tag'] = [
+      $element,
+      "<p&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p>value</p&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p>\n",
+    ];
 
     // Ensure that #value is not filtered if it is marked as safe.
     $element = [
@@ -170,7 +177,10 @@ class HtmlTagTest extends RendererTestBase {
         'stroke-width' => 3,
       ],
     ];
-    $tags['path'] = [$element, '<path d="M 100 100 L 300 100 L 200 300 z" fill="orange" stroke="black" stroke-width="3" />' . "\n"];
+    $tags['path'] = [
+      $element,
+      '<path d="M 100 100 L 300 100 L 200 300 z" fill="orange" stroke="black" stroke-width="3" />' . "\n",
+    ];
 
     $element = [
       '#tag' => 'stop',
@@ -202,7 +212,10 @@ class HtmlTagTest extends RendererTestBase {
         ],
       ],
     ];
-    $tags['linearGradient'] = [$element, '<linearGradient><stop offset="5%" stop-color="#F60" />' . "\n" . '<stop offset="95%" stop-color="#FF6" />' . "\n" . '</linearGradient>' . "\n"];
+    $tags['linearGradient'] = [
+      $element,
+      '<linearGradient><stop offset="5%" stop-color="#F60" />' . "\n" . '<stop offset="95%" stop-color="#FF6" />' . "\n" . '</linearGradient>' . "\n",
+    ];
 
     // Simple link.
     $element = [

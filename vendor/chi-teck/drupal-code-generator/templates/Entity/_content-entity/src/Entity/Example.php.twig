@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Drupal\{{ machine_name }}\Entity;
 
 {% apply sort_namespaces %}
-  {% if not revisionable %}
-use Drupal\Core\Entity\ContentEntityBase;
-  {% endif %}
+use Drupal\Core\Entity\Attribute\ContentEntityType;
+use Drupal\Core\Entity\ContentEntityDeleteForm;
+use Drupal\views\EntityViewsData;
+use Drupal\Core\Entity\Form\DeleteMultipleForm;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\{{ machine_name }}\{{ class }}ListBuilder;
+use Drupal\{{ machine_name }}\Form\{{ class }}Form;
   {% if author_base_field %}
 use Drupal\Core\Entity\EntityStorageInterface;
   {% endif %}
@@ -15,8 +19,14 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
   {% endif %}
+  {% if not revisionable %}
+use Drupal\Core\Entity\ContentEntityBase;
+  {% endif %}
   {% if revisionable %}
-use Drupal\Core\Entity\RevisionableContentEntityBase;
+use Drupal\Core\Entity\EditorialContentEntityBase;
+use Drupal\Core\Entity\Form\RevisionDeleteForm;
+use Drupal\Core\Entity\Form\RevisionRevertForm;
+use Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider;
   {% endif %}
 use Drupal\{{ machine_name }}\{{ class }}Interface;
   {% if author_base_field %}
@@ -25,126 +35,134 @@ use Drupal\user\EntityOwnerTrait;
   {% if changed_base_field %}
 use Drupal\Core\Entity\EntityChangedTrait;
   {% endif %}
+  {% if canonical %}
+use Drupal\Core\Entity\Routing\AdminHtmlRouteProvider;
+  {% else %}
+use Drupal\{{ machine_name }}\Routing\{{ class }}HtmlRouteProvider;
+  {% endif %}
+  {% if access_controller %}
+use Drupal\{{ machine_name }}\{{ class }}AccessControlHandler;
+  {% endif %}
 {% endapply %}
 
 /**
  * Defines the {{ entity_type_label|lower }} entity class.
- *
- * @ContentEntityType(
- *   id = "{{ entity_type_id }}",
- *   label = @Translation("{{ entity_type_label }}"),
- *   label_collection = @Translation("{{ entity_type_label|pluralize }}"),
- *   label_singular = @Translation("{{ entity_type_label|lower }}"),
- *   label_plural = @Translation("{{ entity_type_label|pluralize|lower }}"),
- *   label_count = @PluralTranslation(
- *     singular = "@count {{ entity_type_label|pluralize|lower }}",
- *     plural = "@count {{ entity_type_label|pluralize|lower }}",
- *   ),
-{% if bundle %}
- *   bundle_label = @Translation("{{ entity_type_label }} type"),
-{% endif %}
- *   handlers = {
- *     "list_builder" = "Drupal\{{ machine_name }}\{{ class }}ListBuilder",
- *     "views_data" = "Drupal\views\EntityViewsData",
-{% if access_controller %}
- *     "access" = "Drupal\{{ machine_name }}\{{ class }}AccessControlHandler",
-{% endif %}
- *     "form" = {
- *       "add" = "Drupal\{{ machine_name }}\Form\{{ class }}Form",
- *       "edit" = "Drupal\{{ machine_name }}\Form\{{ class }}Form",
- *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
- *       "delete-multiple-confirm" = "Drupal\Core\Entity\Form\DeleteMultipleForm",
+ */
+#[ContentEntityType(
+  id: '{{ entity_type_id }}',
+  label: new TranslatableMarkup('{{ entity_type_label }}'),
+  label_collection: new TranslatableMarkup('{{ entity_type_label|pluralize }}'),
+  label_singular: new TranslatableMarkup('{{ entity_type_label|lower }}'),
+  label_plural: new TranslatableMarkup('{{ entity_type_label|pluralize|lower }}'),
+  entity_keys: [
+    'id' => 'id',
 {% if revisionable %}
- *       "revision-delete" = \Drupal\Core\Entity\Form\RevisionDeleteForm::class,
- *       "revision-revert" = \Drupal\Core\Entity\Form\RevisionRevertForm::class,
+    'revision' => 'revision_id',
 {% endif %}
- *     },
- *     "route_provider" = {
-{% if canonical %}
- *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
-{% else %}
- *       "html" = "Drupal\{{ machine_name }}\Routing\{{ class }}HtmlRouteProvider",
-{% endif %}
-{% if revisionable %}
- *       "revision" = \Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider::class,
-{% endif %}
- *     },
- *   },
- *   base_table = "{{ entity_type_id }}",
 {% if translatable %}
- *   data_table = "{{ entity_type_id }}_field_data",
+    'langcode' => 'langcode',
+{% endif %}
+{% if bundle %}
+    'bundle' => 'bundle',
+{% endif %}
+    'label' => '{{ label_base_field ? 'label' : 'id' }}',
+{% if author_base_field %}
+    'owner' => 'uid',
+{% endif %}
+{% if status_base_field %}
+    'published' => 'status',
+{% endif %}
+    'uuid' => 'uuid',
+  ],
+  handlers: [
+    'list_builder' => {{ class }}ListBuilder::class,
+    'views_data' => EntityViewsData::class,
+{% if access_controller %}
+    'access' => {{ class }}AccessControlHandler::class,
+{% endif %}
+    'form' => [
+      'add' => {{ class }}Form::class,
+      'edit' => {{ class }}Form::class,
+      'delete' => ContentEntityDeleteForm::class,
+      'delete-multiple-confirm' => DeleteMultipleForm::class,
+{% if revisionable %}
+      'revision-delete' => RevisionDeleteForm::class,
+      'revision-revert' => RevisionRevertForm::class,
+{% endif %}
+    ],
+    'route_provider' => [
+{% if canonical %}
+      'html' => AdminHtmlRouteProvider::class,
+{% else %}
+      'html' => {{ class }}HtmlRouteProvider::class,
 {% endif %}
 {% if revisionable %}
- *   revision_table = "{{ entity_type_id }}_revision",
+      'revision' => RevisionHtmlRouteProvider::class,
+{% endif %}
+    ],
+  ],
+  links: [
+    'collection' => '/admin/content/{{ entity_type_id_short|u2h }}',
+{% if bundle %}
+    'add-form' => '{{ entity_base_path }}/add/{{ '{' }}{{ entity_type_id }}{{ '_type}' }}',
+    'add-page' => '{{ entity_base_path }}/add',
+{% else %}
+    'add-form' => '{{ entity_base_path }}/add',
+{% endif %}
+    'canonical' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}',
+{% if canonical %}
+    'edit-form' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/edit',
+{% else %}
+    'edit-form' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}',
+{% endif %}
+    'delete-form' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/delete',
+    'delete-multiple-form' => '/admin/content/{{ entity_type_id_short|u2h }}/delete-multiple',
+{% if revisionable %}
+    'revision' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revision/{{ '{' }}{{ entity_type_id ~ '_revision' }}{{ '}' }}/view',
+    'revision-delete-form' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revision/{{ '{' }}{{ entity_type_id ~ '_revision' }}{{ '}' }}/delete',
+    'revision-revert-form' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revision/{{ '{' }}{{ entity_type_id ~ '_revision' }}{{ '}' }}/revert',
+    'version-history' => '{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revisions',
+{% endif %}
+  ],
+  admin_permission: '{{ permissions.administer }}',
+{% if bundle %}
+  bundle_entity_type: '{{ entity_type_id }}_type',
+  bundle_label: new TranslatableMarkup('{{ entity_type_label }} type'),
+{% endif %}
+  base_table: '{{ entity_type_id }}',
+{% if translatable %}
+  data_table: '{{ entity_type_id }}_field_data',
+{% endif %}
+{% if revisionable %}
+  revision_table: '{{ entity_type_id }}_revision',
 {% endif %}
 {% if revisionable and translatable %}
- *   revision_data_table = "{{ entity_type_id }}_field_revision",
-{% endif %}
-{% if revisionable %}
- *   show_revision_ui = TRUE,
+  revision_data_table: '{{ entity_type_id }}_field_revision',
 {% endif %}
 {% if translatable %}
- *   translatable = TRUE,
+  translatable: TRUE,
 {% endif %}
- *   admin_permission = "{{ permissions.administer }}",
- *   entity_keys = {
- *     "id" = "id",
 {% if revisionable %}
- *     "revision" = "revision_id",
+  show_revision_ui: TRUE,
 {% endif %}
-{% if translatable %}
- *     "langcode" = "langcode",
-{% endif %}
+  label_count: [
+    'singular' => '@count {{ entity_type_label|pluralize|lower }}',
+    'plural' => '@count {{ entity_type_label|pluralize|lower }}',
+  ],
 {% if bundle %}
- *     "bundle" = "bundle",
-{% endif %}
- *     "label" = "{{ label_base_field ? 'label' : 'id' }}",
-{% if author_base_field %}
- *     "uuid" = "uuid",
- *     "owner" = "uid",
-{% else %}
- *     "uuid" = "uuid",
-{% endif %}
- *   },
-{% if revisionable %}
- *   revision_metadata_keys = {
- *     "revision_user" = "revision_uid",
- *     "revision_created" = "revision_timestamp",
- *     "revision_log_message" = "revision_log",
- *   },
-{% endif %}
- *   links = {
- *     "collection" = "/admin/content/{{ entity_type_id_short|u2h }}",
-{% if bundle %}
- *     "add-form" = "{{ entity_base_path }}/add/{{ '{' }}{{ entity_type_id }}{{ '_type}' }}",
- *     "add-page" = "{{ entity_base_path }}/add",
-{% else %}
- *     "add-form" = "{{ entity_base_path }}/add",
-{% endif %}
- *     "canonical" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}",
-{% if canonical %}
- *     "edit-form" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/edit",
-{% else %}
- *     "edit-form" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}",
-{% endif %}
- *     "delete-form" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/delete",
- *     "delete-multiple-form" = "/admin/content/{{ entity_type_id_short|u2h }}/delete-multiple",
-{% if revisionable %}
- *     "revision" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revision/{{ '{' }}{{ entity_type_id ~ '_revision' }}{{ '}' }}/view",
- *     "revision-delete-form" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revision/{{ '{' }}{{ entity_type_id ~ '_revision' }}{{ '}' }}/delete",
- *     "revision-revert-form" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revision/{{ '{' }}{{ entity_type_id ~ '_revision' }}{{ '}' }}/revert",
- *     "version-history" = "{{ entity_base_path }}/{{ '{' }}{{ entity_type_id }}{{ '}' }}/revisions",
-{% endif %}
- *   },
-{% if bundle %}
- *   bundle_entity_type = "{{ entity_type_id }}_type",
- *   field_ui_base_route = "entity.{{ entity_type_id }}_type.edit_form",
+  field_ui_base_route: 'entity.{{ entity_type_id }}_type.edit_form',
 {% elseif fieldable %}
- *   field_ui_base_route = "entity.{{ entity_type_id }}.settings",
+  field_ui_base_route: 'entity.{{ entity_type_id }}.settings',
 {% endif %}
- * )
- */
-final class {{ class }} extends {% if revisionable %}Revisionable{% endif %}ContentEntityBase implements {{ class }}Interface {
+{% if revisionable %}
+  revision_metadata_keys: [
+    'revision_user' => 'revision_uid',
+    'revision_created' => 'revision_timestamp',
+    'revision_log_message' => 'revision_log',
+  ],
+{% endif %}
+)]
+class {{ class }} extends {% if revisionable %}Editorial{% endif %}ContentEntityBase implements {{ class }}Interface {
 
 {% if changed_base_field or author_base_field %}
   {% if changed_base_field %}

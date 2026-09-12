@@ -1,0 +1,6 @@
+services:
+  ckeditor5_premium_features_cloud_services.element.text_format:
+    class: Drupal\ckeditor5_premium_features_cloud_services\Element\TextFormat
+    arguments:
+      - '@entity_type.manager'
+      - '@ckeditor5_premium_features.storage_handler.editor'

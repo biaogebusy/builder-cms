@@ -28,6 +28,13 @@ class PageGeneralForm extends FormBase {
   protected $pageStorage;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a new PageGeneralForm.
    *
    * @param \Drupal\Core\Display\VariantManager $variant_manager
@@ -38,6 +45,7 @@ class PageGeneralForm extends FormBase {
   public function __construct(VariantManager $variant_manager, EntityTypeManagerInterface $entity_type_manager) {
     $this->variantManager = $variant_manager;
     $this->pageStorage = $entity_type_manager->getStorage('page');
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -137,6 +145,7 @@ class PageGeneralForm extends FormBase {
         '#description' => $this->t('Check any optional features you need to be presented with forms for configuring them. If you do not check them here you will still be able to utilize these features once the new page is created. If you are not sure, leave these unchecked.'),
         '#options' => [
           'access' => $this->t('Page access'),
+          'menu' => $this->t('Menu item'),
           'contexts' => $this->t('Variant contexts'),
           'selection' => $this->t('Variant selection criteria'),
         ],
@@ -169,7 +178,7 @@ class PageGeneralForm extends FormBase {
       if (empty($cached_values['variant_plugin_id'])) {
         $variant_plugin_id = $cached_values['variant_plugin_id'] = $form_state->getValue('variant_plugin_id');
         /** @var \Drupal\page_manager\PageVariantInterface $page_variant */
-        $page_variant = \Drupal::entityTypeManager()
+        $page_variant = $this->entityTypeManager
           ->getStorage('page_variant')
           ->create([
             'variant' => $form_state->getValue('variant_plugin_id'),
@@ -195,7 +204,12 @@ class PageGeneralForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Helper function to validate the 'path' form element.
+   *
+   * @param array $element
+   *   The form element to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
    */
   public function validatePath(&$element, FormStateInterface $form_state) {
     $cached_values = $form_state->getTemporaryValue('wizard');

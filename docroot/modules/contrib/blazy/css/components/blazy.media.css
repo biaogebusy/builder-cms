@@ -148,10 +148,16 @@ button.media__icon--close {
 .media--switch.is-playing img.media__element,
 .media--switch.is-playing .media__icon--play,
 .media--switch.is-playing:hover .media__icon--play {
-  position: absolute;
+  /* Prevents aspect-ratio overrides during playing. */
+  position: absolute !important;
   z-index: -1;
   visibility: hidden;
   opacity: 0;
+}
+
+.media--switch.is-playing img.media__element {
+  top: 0;
+  left: 0;
 }
 
 /** Prevents potential dimmed iframes when being played. */

@@ -17,6 +17,8 @@ use Symfony\Component\Routing\Route;
 class EntityRevisionRouteAccessChecker implements AccessInterface {
 
   /**
+   * The entity type manager.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
@@ -57,7 +59,7 @@ class EntityRevisionRouteAccessChecker implements AccessInterface {
     }
 
     $operation = $route->getRequirement('_entity_access_revision');
-    list($entity_type_id, $operation) = explode('.', $operation, 2);
+    [$entity_type_id, $operation] = explode('.', $operation, 2);
 
     if ($operation === 'list') {
       $_entity = $route_match->getParameter($entity_type_id);
@@ -129,7 +131,8 @@ class EntityRevisionRouteAccessChecker implements AccessInterface {
         $this->accessCache[$cid] = TRUE;
       }
       else {
-        // Entity access handlers are generally not aware of the "list" operation.
+        // Entity access handlers are generally not aware of the "list"
+        // operation.
         $operation = $operation == 'list' ? 'view' : $operation;
         // First check the access to the default revision and finally, if the
         // node passed in is not the default revision then access to that, too.

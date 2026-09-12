@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\form_test\Form;
 
 use Drupal\Core\Form\FormBase;
@@ -45,6 +47,11 @@ class FormTestGroupDetailsForm extends FormBase {
       '#summary_attributes' => [
         'data-summary-attribute' => 'test',
       ],
+    ];
+    $form['description_attributes'] = [
+      '#type' => 'details',
+      '#title' => 'Details element with description',
+      '#description' => 'I am a details description',
     ];
     return $form;
   }

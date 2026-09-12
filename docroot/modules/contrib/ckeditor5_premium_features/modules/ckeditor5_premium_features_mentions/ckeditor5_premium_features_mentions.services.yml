@@ -1,0 +1,23 @@
+services:
+
+  ckeditor5_premium_features_mentions.element.mentions_integration:
+    class: Drupal\ckeditor5_premium_features_mentions\Element\MentionsIntegration
+    arguments:
+      - '@current_user'
+      - '@ckeditor5_premium_features_mentions.mention_settings'
+
+  ckeditor5_premium_features_mentions.mention_settings:
+    class: Drupal\ckeditor5_premium_features_mentions\Utility\MentionSettings
+    arguments:
+      - '@config.factory'
+
+  ckeditor5_premium_features_mentions.data_provider.mentions:
+    class: Drupal\ckeditor5_premium_features_mentions\DataProvider\MentionDataProvider
+    arguments:
+      - '@entity_type.manager'
+      - '@ckeditor5_premium_features_mentions.mention_settings'
+
+  ckeditor5_premium_features_mentions.mentions_helper:
+    class: Drupal\ckeditor5_premium_features_mentions\Utility\MentionsHelper
+    arguments:
+      - '@ckeditor5_premium_features_mentions.mention_settings'

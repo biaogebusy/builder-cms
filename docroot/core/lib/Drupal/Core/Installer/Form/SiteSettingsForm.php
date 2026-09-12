@@ -88,18 +88,19 @@ class SiteSettingsForm extends FormBase {
     if (isset($input['driver'])) {
       $default_driver = $input['driver'];
       // In case of database connection info from settings.php, as well as for a
-      // programmed form submission (non-interactive installer), the table prefix
-      // information is usually normalized into an array already, but the form
-      // element only allows to configure one default prefix for all tables.
+      // programmed form submission (non-interactive installer), the table
+      // prefix information is usually normalized into an array already, but the
+      // form element only allows to configure one default prefix for all
+      // tables.
       $prefix = &$input[$default_driver]['prefix'];
       if (isset($prefix) && is_array($prefix)) {
         $prefix = $prefix['default'];
       }
       $default_options = $input[$default_driver];
     }
-    // If there is no database information yet, suggest the first available driver
-    // as default value, so that its settings form is made visible via #states
-    // when JavaScript is enabled (see below).
+    // If there is no database information yet, suggest the first available
+    // driver as default value, so that its settings form is made visible via
+    // #states when JavaScript is enabled (see below).
     else {
       $default_driver = current($drivers_keys);
       $default_options = [];
@@ -254,7 +255,7 @@ class SiteSettingsForm extends FormBase {
     // configure one.
     if (empty(Settings::get('config_sync_directory'))) {
       if (empty($install_state['config_install_path'])) {
-        // Add a randomized config directory name to settings.php
+        // Add a randomized config directory name to settings.php.
         $config_sync_directory = $this->createRandomConfigDirectory();
       }
       else {

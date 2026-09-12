@@ -12,14 +12,14 @@ use Drupal\Core\Logger\RfcLogLevel;
 /**
  * Clear caches to discover service changes.
  */
-function file_mdm_update_8200() {
+function file_mdm_update_8200(): void {
   // Empty function.
 }
 
 /**
  * Set a default for the 'Log level to use if a file does not exist' setting.
  */
-function file_mdm_update_8201() {
+function file_mdm_update_8201(): void {
   $config = \Drupal::configFactory()->getEditable('file_mdm.settings');
   if ($config->get('missing_file_log_level') !== NULL) {
     return;

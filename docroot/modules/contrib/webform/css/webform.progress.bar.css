@@ -83,8 +83,8 @@ li.webform-progress-bar__page--current > b {
   font-weight: bold;
 }
 
-li.webform-progress-bar__page > b:after,
-li.webform-progress-bar__page > b:before {
+li.webform-progress-bar__page > b::after,
+li.webform-progress-bar__page > b::before {
   position: absolute;
   top: 0;
   left: 0;
@@ -97,23 +97,23 @@ li.webform-progress-bar__page > b:before {
   border-left-color: #ededed;
 }
 
-li.webform-progress-bar__page > b:after {
+li.webform-progress-bar__page > b::after {
   z-index: 1;
   top: -5px;
   border-width: 20px;
   border-left-color: white;
 }
 
-li.webform-progress-bar__page > b:before {
+li.webform-progress-bar__page > b::before {
   z-index: 2;
 }
 
-li.webform-progress-bar__page--done + li > b:before {
+li.webform-progress-bar__page--done + li > b::before {
   border-left-color: #dbdbdb;
 }
 
-li.webform-progress-bar__page:first-child > b:after,
-li:first-child > b:before {
+li.webform-progress-bar__page:first-child > b::after,
+li:first-child > b::before {
   display: none;
 }
 

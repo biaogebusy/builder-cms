@@ -1,0 +1,5 @@
+services:
+  charts_blocks.hooks:
+    class: Drupal\charts_blocks\Hook\ChartsBlocksHooks
+    tags:
+      - { name: hook }

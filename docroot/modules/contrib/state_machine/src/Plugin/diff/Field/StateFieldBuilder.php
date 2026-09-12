@@ -21,13 +21,20 @@ class StateFieldBuilder extends CoreFieldBuilder {
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): array {
     $result = [];
 
     foreach ($field_items as $field_key => $field_item) {
       if (!$field_item->isEmpty()) {
         $value = $field_item->view(['label' => 'hidden', 'type' => 'default']);
-        $rendered_value = $this->renderer->renderPlain($value);
+
+        // @todo Update this when D9 support is dropped.
+        if (method_exists($this->renderer, 'renderInIsolation')) {
+          $rendered_value = $this->renderer->renderInIsolation($value);
+        }
+        else {
+          $rendered_value = $this->renderer->renderPlain($value);
+        }
         $result[$field_key][] = $rendered_value;
       }
     }

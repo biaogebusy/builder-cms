@@ -12,14 +12,16 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\Core\Database\DriverSpecificKernelTestBase;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * Tests for the database dump commands.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class DbDumpTest extends DriverSpecificKernelTestBase {
 
   use PathAliasTestTrait;
@@ -28,10 +30,6 @@ class DbDumpTest extends DriverSpecificKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    // @todo system can be removed from this test once
-    //   https://www.drupal.org/project/drupal/issues/2851705 is committed.
-    'system',
-    'config',
     'dblog',
     'menu_link_content',
     'link',
@@ -74,7 +72,7 @@ class DbDumpTest extends DriverSpecificKernelTestBase {
    *
    * Register a database cache backend rather than memory-based.
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
     $container->register('cache_factory', 'Drupal\Core\Cache\DatabaseBackendFactory')
       ->addArgument(new Reference('database'))
@@ -223,7 +221,7 @@ class DbDumpTest extends DriverSpecificKernelTestBase {
    * @return array
    *   Array keyed by field name, with the values being the field type.
    */
-  protected function getTableSchema($table) {
+  protected function getTableSchema($table): array {
     // Verify the field type on the data column in the cache table.
     // @todo this is MySQL specific.
     $query = Database::getConnection()->query("SHOW COLUMNS FROM {" . $table . "}");
@@ -244,7 +242,7 @@ class DbDumpTest extends DriverSpecificKernelTestBase {
    *   The 'primary key', 'unique keys', and 'indexes' portion of the Drupal
    *   table schema.
    */
-  protected function getTableIndexes($table) {
+  protected function getTableIndexes($table): array {
     $query = Database::getConnection()->query("SHOW INDEX FROM {" . $table . "}");
     $definition = [];
     while ($row = $query->fetchAssoc()) {

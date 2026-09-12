@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\rest_test\Plugin\rest\resource;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -25,6 +27,7 @@ class NoSerializationClassTestResource extends ResourceBase {
    *   An array with the payload.
    *
    * @return \Drupal\rest\ResourceResponse
+   *   The HTTP response object.
    */
   public function post(array $data) {
     return new ResourceResponse($data);

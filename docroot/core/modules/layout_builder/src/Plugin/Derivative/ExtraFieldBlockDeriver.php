@@ -132,7 +132,7 @@ class ExtraFieldBlockDeriver extends DeriverBase implements ContainerDeriverInte
           $derivative['admin_label'] = $extra_field['label'];
 
           $context_definition = EntityContextDefinition::fromEntityType($entity_type)
-            ->addConstraint('Bundle', [$bundle_id]);
+            ->addConstraint('Bundle', ['bundle' => [$bundle_id]]);
           $derivative['context_definitions'] = [
             'entity' => $context_definition,
           ];
@@ -146,7 +146,7 @@ class ExtraFieldBlockDeriver extends DeriverBase implements ContainerDeriverInte
   }
 
   /**
-   * Gets a list of entity type and bundle tuples that have layout builder enabled.
+   * Gets the list of entity type and bundle tuples with layout builder enabled.
    *
    * @return array
    *   A structured array with entity type as first key, bundle as second.

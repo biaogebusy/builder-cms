@@ -4,6 +4,8 @@ namespace Drupal\blazy\Plugin\Field\FieldFormatter;
 
 /**
  * A Trait common for all blazy entity formatters.
+ *
+ * @todo refactor to avoid nullable ::$manager.
  */
 trait BlazyFormatterEntityTrait {
 
@@ -17,6 +19,11 @@ trait BlazyFormatterEntityTrait {
     $target_type = '',
     $exclude = TRUE,
   ): array {
+    // Might not initialized at LB AJAX with Blazy Layout for some reason.
+    if (!$this->manager) {
+      return [];
+    }
+
     $options = [];
 
     // Fix for Views UI not recognizing Media bundles, unlike Formatters.
@@ -75,7 +82,10 @@ trait BlazyFormatterEntityTrait {
       $excludes['field_' . $exclude] = 'field_' . $exclude;
     }
 
-    $this->manager->moduleHandler()->alter('blazy_excluded_field_options', $excludes);
+    // Might not initialized at LB AJAX with Blazy Layout for some reason.
+    if ($this->manager) {
+      $this->manager->moduleHandler()->alter('blazy_excluded_field_options', $excludes);
+    }
     return $excludes;
   }
 

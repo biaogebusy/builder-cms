@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Plugin;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests that derivative plugins are correctly discovered.
- *
- * @group Plugin
  */
+#[Group('Plugin')]
+#[RunTestsInSeparateProcesses]
 class DerivativeTest extends PluginTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['node', 'user'];
 
   /**
    * Tests getDefinitions() and getDefinition() with a derivativeDecorator.

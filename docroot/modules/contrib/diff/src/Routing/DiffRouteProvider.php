@@ -42,7 +42,7 @@ class DiffRouteProvider implements EntityRouteProviderInterface {
         'filter' => 'split_fields',
       ]);
       $route->addRequirements([
-        '_entity_access' => $entity_type->id() . '.view',
+        '_entity_access' => $entity_type->id() . '.view all revisions',
       ]);
       $route->setOption('parameters', [
         $entity_type->id() => ['type' => 'entity:' . $entity_type->id()],

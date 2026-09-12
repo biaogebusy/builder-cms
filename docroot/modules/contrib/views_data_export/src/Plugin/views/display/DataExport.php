@@ -13,6 +13,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Session\UserSession;
+use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Core\Url;
 use Drupal\facets\FacetSource\FacetSourcePluginManager;
@@ -288,7 +289,7 @@ class DataExport extends RestExport {
 
     // Set download, file storage and redirect defaults.
     $options['automatic_download']['default'] = FALSE;
-    $options['store_in_public_file_directory']['default'] = FALSE;
+    $options['export_filesystem']['default'] = 'private';
     $options['custom_redirect_path']['default'] = FALSE;
 
     // Redirect to views display option.
@@ -463,21 +464,24 @@ class DataExport extends RestExport {
           '#fieldset' => 'file_fieldset',
         ];
 
-        // Check if the private file system is ready to use.
-        if ($this->streamWrapperManager->isValidScheme('private')) {
-          $form['store_in_public_file_directory'] = [
-            '#type' => 'checkbox',
-            '#title' => $this->t("Store file in public files directory"),
-            '#description' => $this->t("Check this if you want to store the export files in the public:// files directory instead of the private:// files directory."),
-            '#default_value' => $this->options['store_in_public_file_directory'],
+        // Any visible, writable wrapper can potentially be used for the files
+        // directory, including a remote file system that integrates with a CDN.
+        $options = $this->streamWrapperManager->getDescriptions(StreamWrapperInterface::WRITE_VISIBLE);
+        if (!empty($options)) {
+          $form['export_filesystem'] = [
+            '#type' => 'radios',
+            '#title' => t('Exported file storage location'),
+            '#default_value' => $this->options['export_filesystem'],
+            '#options' => $options,
+            '#description' => t("Select where exported files should be stored. Note that using 'Public' does not provide any access control. 'Private' is almost always what you want to select."),
             '#fieldset' => 'file_fieldset',
           ];
         }
         else {
-          $form['store_in_public_file_directory'] = [
-            '#type' => 'markup',
-            '#markup' => $this->t('<strong>The private:// file system is not configured so the exported files will be stored in the public:// files directory. Click <a href="@link" target="_blank">here</a> for instructions on configuring the private files in the settings.php file.</strong>', ['@link' => 'https://www.drupal.org/docs/8/modules/skilling/installation/set-up-a-private-file-path']),
-            '#fieldset' => 'file_fieldset',
+          // There are no writeable stream wrappers available on this system.
+          $form['export_filesystem'] = [
+            '#type' => 'value',
+            '#value' => $this->options['export_filesystem'],
           ];
         }
 
@@ -668,7 +672,7 @@ class DataExport extends RestExport {
       case 'path':
         $this->setOption('filename', $form_state->getValue('filename'));
         $this->setOption('automatic_download', $form_state->getValue('automatic_download'));
-        $this->setOption('store_in_public_file_directory', $form_state->getValue('store_in_public_file_directory'));
+        $this->setOption('export_filesystem', $form_state->getValue('export_filesystem'));
 
         // Adds slash if not in the redirect path if custom path is chosen.
         if ($form_state->getValue('custom_redirect_path')) {
@@ -892,6 +896,7 @@ class DataExport extends RestExport {
     }
 
     // Workaround for XLS/XLSX.
+    // @todo move this code to the xls_serialization module somehow.
     if ($context['sandbox']['progress'] != 0 && ($output_format == 'xls' || $output_format == 'xlsx')) {
       $vdeFileRealPath = \Drupal::service('file_system')->realpath($context['sandbox']['vde_file']);
       $previousExcel = IOFactory::load($vdeFileRealPath);
@@ -914,6 +919,12 @@ class DataExport extends RestExport {
 
       $objWriter = IOFactory::createWriter($previousExcel, ucfirst($output_format));
       $objWriter->save($vdeFileRealPath);
+
+      // Break circular references so PHP's garbage collector can reclaim memory
+      // between batch iterations.
+      $currentExcel->disconnectWorksheets();
+      $previousExcel->disconnectWorksheets();
+      unset($currentExcel, $previousExcel, $objWriter);
     }
     // Write rendered rows to output file.
     elseif (file_put_contents($context['sandbox']['vde_file'], $string, FILE_APPEND) === FALSE) {
@@ -1033,21 +1044,14 @@ class DataExport extends RestExport {
     $user_dir = $user_ID ? "$user_ID-$timestamp" : $timestamp;
     $view_dir = $view_id . '_' . $display_id;
 
-    // Determine if the export file should be stored in the public or private
-    // file system.
-    $store_in_public_file_directory = TRUE;
+    // Determine which filesystem the export file should be stored in.
+    /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager */
     $streamWrapperManager = \Drupal::service('stream_wrapper_manager');
-    // Check if the private file system is ready to use.
-    if ($streamWrapperManager->isValidScheme('private')) {
-      $store_in_public_file_directory = $view->getDisplay()->getOption('store_in_public_file_directory');
+    $export_filesystem = $view->getDisplay()->getOption('export_filesystem');
+    if (empty($export_filesystem) || !$streamWrapperManager->isValidScheme($export_filesystem)) {
+      throw new InvalidStreamWrapperException(sprintf('The filesystem scheme "%s" is not valid or available. Ensure the export filesystem is configured correctly on the view display.', $export_filesystem));
     }
-
-    if ($store_in_public_file_directory === TRUE) {
-      $directory = "public://views_data_export/$view_dir/$user_dir/";
-    }
-    else {
-      $directory = "private://views_data_export/$view_dir/$user_dir/";
-    }
+    $directory = "$export_filesystem://views_data_export/$view_dir/$user_dir/";
 
     $fileSystem = \Drupal::service('file_system');
     $fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
@@ -1109,6 +1113,16 @@ class DataExport extends RestExport {
       if (!in_array($this->getType(), $plugin_definition['display_types'])) {
         $errors[] = $this->t('Display "@display" does not use a valid row plugin.', ['@display' => $this->display['display_title']]);
       }
+    }
+
+    // Validate that the selected export filesystem scheme exists.
+    $export_filesystem = $this->getOption('export_filesystem');
+    $stream_wrapper_manager = $this->streamWrapperManager ?: \Drupal::service('stream_wrapper_manager');
+    if (empty($export_filesystem) || !$stream_wrapper_manager->isValidScheme($export_filesystem)) {
+      $errors[] = $this->t('Display "@display" has an invalid export filesystem scheme: "%scheme".', [
+        '@display' => $this->display['display_title'],
+        '%scheme' => $export_filesystem ?? 'none',
+      ]);
     }
 
     return $errors;

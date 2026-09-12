@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
-use Drupal\file\Entity\File;
 use Drupal\Tests\TestFileCreationTrait;
+use Drupal\file\Entity\File;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
 
@@ -49,15 +49,18 @@ class WebformElementTextFormatTest extends WebformElementBrowserTestBase {
   /**
    * Test text format element.
    */
-  public function testTextFormat() {
+  public function testTextFormat(): void {
     $assert_session = $this->assertSession();
 
     $webform = Webform::load('test_element_text_format');
 
-    // Check that formats and tips are removed and/or hidden.
     $this->drupalGet('/webform/test_element_text_format');
-    $assert_session->responseContains('<div class="js-filter-wrapper js-form-wrapper form-wrapper" data-drupal-selector="edit-text-format-format" style="display: none" data-webform-states-no-clear id="edit-text-format-format">');
-    $assert_session->responseContains('<div data-drupal-selector="edit-text-format-format-help" style="display: none" id="edit-text-format-format-help" class="js-form-wrapper form-wrapper">');
+    // Filter tips are removed in 11.4.0.
+    if (version_compare(\Drupal::VERSION, '11.3', '<=')) {
+      // Check that formats and tips are removed and/or hidden.
+      $assert_session->responseContains('<div class="js-filter-wrapper js-form-wrapper form-wrapper" data-drupal-selector="edit-text-format-format" style="display: none" data-webform-states-no-clear id="edit-text-format-format">');
+      $assert_session->responseContains('<div data-drupal-selector="edit-text-format-format-help" style="display: none" id="edit-text-format-format-help" class="js-form-wrapper form-wrapper">');
+    }
 
     // Check description + more.
     $assert_session->responseContains('<div data-drupal-selector="edit-text-format-description-more" id="edit-text-format-description-more--description"><div class="webform-element-description">This is a description</div>');
@@ -82,7 +85,7 @@ class WebformElementTextFormatTest extends WebformElementBrowserTestBase {
   /**
    * Tests webform text format element files.
    */
-  public function testTextFormatFiles() {
+  public function testTextFormatFiles(): void {
     $this->createFilters();
 
     $webform = Webform::load('test_element_text_format');

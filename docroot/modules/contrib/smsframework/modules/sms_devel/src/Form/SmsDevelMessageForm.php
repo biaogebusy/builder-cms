@@ -1,22 +1,22 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\sms_devel\Form;
 
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\sms\Entity\SmsGateway;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\sms\Provider\SmsProviderInterface;
-use Drupal\sms\Entity\SmsMessage;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsGateway;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Exception\SmsException;
-use Drupal\sms\Message\SmsMessageResultInterface;
 use Drupal\sms\Message\SmsDeliveryReport;
 use Drupal\sms\Message\SmsMessageResult;
+use Drupal\sms\Message\SmsMessageResultInterface;
+use Drupal\sms\Provider\SmsProviderInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Simulate a message being sent or received.
@@ -45,7 +45,10 @@ class SmsDevelMessageForm extends FormBase {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(SmsProviderInterface $sms_provider, MessengerInterface $messenger) {
+  public function __construct(
+    SmsProviderInterface $sms_provider,
+    MessengerInterface $messenger,
+  ) {
     $this->smsProvider = $sms_provider;
     $this->setMessenger($messenger);
   }
@@ -74,7 +77,7 @@ class SmsDevelMessageForm extends FormBase {
     $results = $form_state->getTemporaryValue('results');
 
     if ($results) {
-      $form = array_merge($form, $this->verboseResults($results));
+      $form = \array_merge($form, $this->verboseResults($results));
     }
 
     $form['number'] = [
@@ -272,7 +275,7 @@ class SmsDevelMessageForm extends FormBase {
         '@message' => $status_message,
       ]));
     }
-    elseif ($report_count = count($result->getReports())) {
+    elseif ($report_count = \count($result->getReports())) {
       $this->messenger()->addMessage($this->t('Message was processed, @count delivery reports were generated.', [
         '@count' => $report_count,
       ]));
@@ -365,7 +368,7 @@ class SmsDevelMessageForm extends FormBase {
 
       $render['results'][][] = [
         '#wrapper_attributes' => [
-          'colspan' => count($render['results']['#header']),
+          'colspan' => \count($render['results']['#header']),
         ],
         'data' => $reports_cell,
       ];

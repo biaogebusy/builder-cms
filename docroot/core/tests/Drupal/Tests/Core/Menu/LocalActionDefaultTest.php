@@ -7,12 +7,15 @@ namespace Drupal\Tests\Core\Menu;
 use Drupal\Core\Menu\LocalActionDefault;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\Core\Menu\LocalActionDefault
- * @group Menu
+ * Tests Drupal\Core\Menu\LocalActionDefault.
  */
+#[CoversClass(LocalActionDefault::class)]
+#[Group('Menu')]
 class LocalActionDefaultTest extends UnitTestCase {
 
   /**
@@ -72,7 +75,7 @@ class LocalActionDefaultTest extends UnitTestCase {
   /**
    * Setups the local action default.
    */
-  protected function setupLocalActionDefault() {
+  protected function setupLocalActionDefault(): void {
     $this->localActionDefault = new LocalActionDefault($this->config, $this->pluginId, $this->pluginDefinition, $this->routeProvider);
   }
 

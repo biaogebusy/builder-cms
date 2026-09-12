@@ -6,13 +6,15 @@ namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
  * Modules can introduce new dependencies and enable them in update hooks.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class UpdatePathNewDependencyTest extends BrowserTestBase {
   use UpdatePathTestTrait;
 
@@ -32,7 +34,7 @@ class UpdatePathNewDependencyTest extends BrowserTestBase {
     $extension_config
       ->set('module.new_dependency_test', 0)
       ->set('module', module_config_sort($extension_config->get('module')))
-      ->save(TRUE);
+      ->save();
     \Drupal::service('update.update_hook_registry')->setInstalledVersion('new_dependency_test', \Drupal::CORE_MINIMUM_SCHEMA_VERSION);
 
     // Rebuild the container and test that the service with the optional unmet

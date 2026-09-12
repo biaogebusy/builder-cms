@@ -3,10 +3,11 @@
 namespace Drupal\eck\Form\EntityBundle;
 
 use Drupal\Core\Entity\EntityDeleteForm;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
  * Provides a form for ECK entity bundle deletion.
@@ -23,21 +24,32 @@ class EckEntityBundleDeleteConfirm extends EntityDeleteForm {
   protected $entityTypeManager;
 
   /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * Constructs a new EckEntityBundleDeleteConfirm object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, MessengerInterface $messenger) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->messenger = $messenger;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  final public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('messenger')
     );
   }
 
@@ -88,7 +100,7 @@ class EckEntityBundleDeleteConfirm extends EntityDeleteForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->entity->delete();
     $t_args = ['%name' => $this->entity->label()];
-    \Drupal::messenger()->addMessage($this->t('The entity bundle %name has been deleted', $t_args));
+    $this->messenger->addMessage($this->t('The entity bundle %name has been deleted', $t_args));
     $this->logger($this->entity->getEntityType()->getBundleOf())
       ->notice('Delete entity type %name', $t_args);
 

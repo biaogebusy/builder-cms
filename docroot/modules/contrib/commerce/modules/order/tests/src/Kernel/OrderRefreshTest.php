@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_order\Kernel;
 
+use Drupal\commerce_order\OrderItemStorageInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\commerce_order\Entity\Order;
@@ -51,13 +52,6 @@ class OrderRefreshTest extends OrderKernelTestBase {
   protected $variation2;
 
   /**
-   * The order item storage.
-   *
-   * @var \Drupal\commerce_order\OrderItemStorageInterface
-   */
-  protected $orderItemStorage;
-
-  /**
    * Modules to enable.
    *
    * @var array
@@ -74,8 +68,6 @@ class OrderRefreshTest extends OrderKernelTestBase {
 
     $user = $this->createUser();
     $this->user = $this->reloadEntity($user);
-
-    $this->orderItemStorage = $this->container->get('entity_type.manager')->getStorage('commerce_order_item');
 
     // Turn off title generation to allow explicit values to be used.
     $variation_type = ProductVariationType::load('default');
@@ -196,7 +188,7 @@ class OrderRefreshTest extends OrderKernelTestBase {
    */
   public function testOrderItemRefresh() {
     $order_refresh = $this->createOrderRefresh();
-    $order_item = $this->orderItemStorage->createFromPurchasableEntity($this->variation2);
+    $order_item = $this->getOrderItemStorage()->createFromPurchasableEntity($this->variation2);
     $order_item->save();
     $this->order->addItem($order_item);
     $this->order->setRefreshState(Order::REFRESH_SKIP);
@@ -241,9 +233,10 @@ class OrderRefreshTest extends OrderKernelTestBase {
    */
   public function testAvailabilityOrderRefresh() {
     $order_refresh = $this->createOrderRefresh();
-    $order_item = $this->orderItemStorage->createFromPurchasableEntity($this->variation1);
+    $order_item_storage = $this->getOrderItemStorage();
+    $order_item = $order_item_storage->createFromPurchasableEntity($this->variation1);
     $order_item->save();
-    $another_order_item = $this->orderItemStorage->createFromPurchasableEntity($this->variation2);
+    $another_order_item = $order_item_storage->createFromPurchasableEntity($this->variation2);
     $another_order_item->save();
 
     $this->order->setItems([$order_item, $another_order_item]);
@@ -260,9 +253,10 @@ class OrderRefreshTest extends OrderKernelTestBase {
    */
   public function testStorage() {
     // Confirm that REFRESH_ON_SAVE happens by default.
-    $order_item = $this->orderItemStorage->createFromPurchasableEntity($this->variation1);
+    $order_item_storage = $this->getOrderItemStorage();
+    $order_item = $order_item_storage->createFromPurchasableEntity($this->variation1);
     $order_item->save();
-    $another_order_item = $this->orderItemStorage->createFromPurchasableEntity($this->variation2);
+    $another_order_item = $order_item_storage->createFromPurchasableEntity($this->variation2);
     $another_order_item->save();
     $this->order->setItems([$order_item, $another_order_item]);
     $this->order->save();
@@ -309,6 +303,18 @@ class OrderRefreshTest extends OrderKernelTestBase {
     $order_refresh->addProcessor($this->container->get('commerce_order.availability_order_processor'));
 
     return $order_refresh;
+  }
+
+  /**
+   * Gets the order item storage.
+   *
+   * @return \Drupal\commerce_order\OrderItemStorageInterface
+   *   The order item storage.
+   */
+  protected function getOrderItemStorage(): OrderItemStorageInterface {
+    $order_item_storage = $this->entityTypeManager->getStorage('commerce_order_item');
+    assert($order_item_storage instanceof OrderItemStorageInterface);
+    return $order_item_storage;
   }
 
 }

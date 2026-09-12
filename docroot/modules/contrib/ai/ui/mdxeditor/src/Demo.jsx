@@ -46,6 +46,12 @@ export default function Demo() {
           displayValue: "Node: url",
           description: "",
         },
+        {
+          value: "[ai_agent:agent_instructions]",
+          displayValue: "AI agent: Agent instructions",
+          description:
+            "Underscores are escaped by the markdown serializer; keep a token like this in the demo so the round-trip stays covered.",
+        },
       ],
     },
     {

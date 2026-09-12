@@ -12,11 +12,19 @@ use PHPUnit\Framework\Exception as UnitException;
 
 /**
  * Tests creation, loading, updating, deleting of Slick optionsets.
- *
- * @coversDefaultClass \Drupal\slick\Entity\Slick
- *
- * @group slick
  */
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[Group('blazy')]
+/**
+ * A D12 compat, please update or ignore.
+ *
+ * @phpstan-ignore-next-line
+ */
+#[RunTestsInSeparateProcesses]
 class SlickCrudTest extends BlazyKernelTestBase {
 
   use SlickUnitTestTrait;

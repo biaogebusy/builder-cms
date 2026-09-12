@@ -240,6 +240,7 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
 
     // Confirm that the verification result can be viewed.
     $this->clickLink('123');
+    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($date_formatter->format($verification_timestamp, 'long', '', $this->order->getStore()->getTimezone()));
     $this->assertSession()->pageTextContains('Centarro LLC');
 
@@ -265,6 +266,7 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
 
     // Confirm that the verification result can be viewed.
     $this->clickLink('124');
+    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($date_formatter->format($verification_timestamp, 'long', '', $this->order->getStore()->getTimezone()));
     $this->assertSession()->pageTextContains('Google LLC');
 
@@ -290,7 +292,7 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
 
     // Confirm that the verification result can be viewed.
     $this->clickLink('125');
-
+    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($date_formatter->format($verification_timestamp, 'long', '', $this->order->getStore()->getTimezone()));
     $this->assertSession()->pageTextContains('Too many requests.');
 

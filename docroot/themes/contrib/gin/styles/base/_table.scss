@@ -5,6 +5,10 @@
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   margin-block-start: calc(var(--gin-spacing-xs) * -1);
+
+  &:has(.dropbutton-wrapper.open) {
+    overflow: visible;
+  }
 }
 
 table.gin--sticky-table-header {

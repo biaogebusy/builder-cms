@@ -1,0 +1,3 @@
+page_manager_page:
+  class: Drupal\Core\Menu\LocalTaskDefault
+  deriver: \Drupal\page_manager\Plugin\Derivative\PageManagerLocalTask

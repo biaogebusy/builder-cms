@@ -96,6 +96,13 @@ final class SpellFix extends AiCKEditorPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function getNoSelectedTextMessage(): TranslatableMarkup {
+    return $this->t('You must select some text before you can fix the spelling.');
+  }
+
+  /**
    * Generate text callback.
    *
    * @param array $form

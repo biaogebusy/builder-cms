@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\Controller\EntityViewController;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\RendererInterface;
@@ -92,7 +93,7 @@ class NodeController extends ControllerBase implements ContainerInjectionInterfa
     // Bypass the node/add listing if only one content type is available.
     if (count($content) == 1) {
       $type = array_shift($content);
-      return $this->redirect('node.add', ['node_type' => $type->id()]);
+      return $this->redirect('entity.node.add_form', ['node_type' => $type->id()]);
     }
 
     $build['#content'] = $content;
@@ -110,26 +111,10 @@ class NodeController extends ControllerBase implements ContainerInjectionInterfa
    *   An array suitable for \Drupal\Core\Render\RendererInterface::render().
    */
   public function revisionShow(NodeInterface $node_revision) {
-    $node_view_controller = new NodeViewController($this->entityTypeManager(), $this->renderer, $this->currentUser(), $this->entityRepository);
+    $node_view_controller = new EntityViewController($this->entityTypeManager(), $this->renderer);
     $page = $node_view_controller->view($node_revision);
     unset($page['nodes'][$node_revision->id()]['#cache']);
     return $page;
-  }
-
-  /**
-   * Page title callback for a node revision.
-   *
-   * @param \Drupal\node\NodeInterface $node_revision
-   *   The node revision.
-   *
-   * @return string
-   *   The page title.
-   */
-  public function revisionPageTitle(NodeInterface $node_revision) {
-    return $this->t('Revision of %title from %date', [
-      '%title' => $node_revision->label(),
-      '%date' => $this->dateFormatter->format($node_revision->getRevisionCreationTime()),
-    ]);
   }
 
   /**
@@ -153,7 +138,9 @@ class NodeController extends ControllerBase implements ContainerInjectionInterfa
     $has_translations = (count($languages) > 1);
     $node_storage = $this->entityTypeManager()->getStorage('node');
 
-    $build['#title'] = $has_translations ? $this->t('@language_name revisions for %title', ['@language_name' => $language_name, '%title' => $node->label()]) : $this->t('Revisions for %title', ['%title' => $node->label()]);
+    $build['#title'] = $has_translations
+      ? $this->t('@language_name revisions for %title', ['@language_name' => $language_name, '%title' => $node->label()])
+      : $this->t('Revisions for %title', ['%title' => $node->label()]);
     $header = [$this->t('Revision'), $this->t('Operations')];
 
     $rows = [];
@@ -162,87 +149,95 @@ class NodeController extends ControllerBase implements ContainerInjectionInterfa
     foreach ($this->getRevisionIds($node, $node_storage) as $vid) {
       /** @var \Drupal\node\NodeInterface $revision */
       $revision = $node_storage->loadRevision($vid);
-      // Only show revisions that are affected by the language that is being
-      // displayed.
-      if ($revision->hasTranslation($langcode) && $revision->getTranslation($langcode)->isRevisionTranslationAffected()) {
-        $username = [
-          '#theme' => 'username',
-          '#account' => $revision->getRevisionUser(),
-        ];
+      $username = [
+        '#theme' => 'username',
+        '#account' => $revision->getRevisionUser(),
+      ];
 
-        // Use revision link to link to revisions that are not active.
-        $date = $this->dateFormatter->format($revision->revision_timestamp->value, 'short');
+      // Use revision link to link to revisions that are not active.
+      $date = $this->dateFormatter->format($revision->revision_timestamp->value, 'short');
 
-        // We treat also the latest translation-affecting revision as current
-        // revision, if it was the default revision, as its values for the
-        // current language will be the same of the current default revision in
-        // this case.
-        $is_current_revision = $revision->isDefaultRevision() || (!$current_revision_displayed && $revision->wasDefaultRevision());
-        if (!$is_current_revision) {
-          $link = Link::fromTextAndUrl($date, new Url('entity.node.revision', ['node' => $node->id(), 'node_revision' => $vid]))->toString();
-        }
-        else {
-          $link = $node->toLink($date)->toString();
-          $current_revision_displayed = TRUE;
-        }
+      // We treat also the latest translation-affecting revision as current
+      // revision, if it was the default revision, as its values for the
+      // current language will be the same of the current default revision in
+      // this case.
+      $is_current_revision = $revision->isDefaultRevision() || (!$current_revision_displayed && $revision->wasDefaultRevision());
+      if ($is_current_revision) {
+        $link = $node->toLink($date)->toString();
+        $current_revision_displayed = TRUE;
+      }
+      else {
+        $link = Link::fromTextAndUrl($date, new Url('entity.node.revision', [
+          'node' => $node->id(),
+          'node_revision' => $vid,
+        ]))->toString();
+      }
 
-        $row = [];
-        $column = [
+      $row = [];
+      $column = [
+        'data' => [
+          '#type' => 'inline_template',
+          '#template' => '{% trans %}{{ date }} by {{ username }}{% endtrans %}{% if message %}<p class="revision-log">{{ message }}</p>{% endif %}',
+          '#context' => [
+            'date' => $link,
+            'username' => $username,
+            'message' => ['#markup' => $revision->revision_log->value, '#allowed_tags' => Xss::getHtmlTagList()],
+          ],
+          // @todo Fix this properly in https://www.drupal.org/project/drupal/issues/3227637.
+          '#cache' => [
+            'max-age' => 0,
+          ],
+        ],
+      ];
+      $row[] = $column;
+
+      if ($is_current_revision) {
+        $row[] = [
           'data' => [
-            '#type' => 'inline_template',
-            '#template' => '{% trans %}{{ date }} by {{ username }}{% endtrans %}{% if message %}<p class="revision-log">{{ message }}</p>{% endif %}',
-            '#context' => [
-              'date' => $link,
-              'username' => $this->renderer->renderInIsolation($username),
-              'message' => ['#markup' => $revision->revision_log->value, '#allowed_tags' => Xss::getHtmlTagList()],
-            ],
+            '#prefix' => '<em>',
+            '#markup' => $this->t('Current revision'),
+            '#suffix' => '</em>',
           ],
         ];
-        // @todo Simplify once https://www.drupal.org/node/2334319 lands.
-        $this->renderer->addCacheableDependency($column['data'], $username);
-        $row[] = $column;
 
-        if ($is_current_revision) {
-          $row[] = [
-            'data' => [
-              '#prefix' => '<em>',
-              '#markup' => $this->t('Current revision'),
-              '#suffix' => '</em>',
-            ],
-          ];
-
-          $rows[] = [
-            'data' => $row,
-            'class' => ['revision-current'],
+        $rows[] = [
+          'data' => $row,
+          'class' => ['revision-current'],
+        ];
+      }
+      else {
+        $links = [];
+        if ($revision->access('revert revision')) {
+          $links['revert'] = [
+            'title' => $vid < $node->getRevisionId() ? $this->t('Revert') : $this->t('Set as current revision'),
+            'url' => $has_translations
+              ? Url::fromRoute('node.revision_revert_translation_confirm', [
+                'node' => $node->id(),
+                'node_revision' => $vid,
+                'langcode' => $langcode,
+              ])
+              : Url::fromRoute('node.revision_revert_confirm', [
+                'node' => $node->id(),
+                'node_revision' => $vid,
+              ]),
           ];
         }
-        else {
-          $links = [];
-          if ($revision->access('revert revision')) {
-            $links['revert'] = [
-              'title' => $vid < $node->getRevisionId() ? $this->t('Revert') : $this->t('Set as current revision'),
-              'url' => $has_translations ?
-              Url::fromRoute('node.revision_revert_translation_confirm', ['node' => $node->id(), 'node_revision' => $vid, 'langcode' => $langcode]) :
-              Url::fromRoute('node.revision_revert_confirm', ['node' => $node->id(), 'node_revision' => $vid]),
-            ];
-          }
 
-          if ($revision->access('delete revision')) {
-            $links['delete'] = [
-              'title' => $this->t('Delete'),
-              'url' => Url::fromRoute('node.revision_delete_confirm', ['node' => $node->id(), 'node_revision' => $vid]),
-            ];
-          }
-
-          $row[] = [
-            'data' => [
-              '#type' => 'operations',
-              '#links' => $links,
-            ],
+        if ($revision->access('delete revision')) {
+          $links['delete'] = [
+            'title' => $this->t('Delete'),
+            'url' => Url::fromRoute('node.revision_delete_confirm', ['node' => $node->id(), 'node_revision' => $vid]),
           ];
-
-          $rows[] = $row;
         }
+
+        $row[] = [
+          'data' => [
+            '#type' => 'operations',
+            '#links' => $links,
+          ],
+        ];
+
+        $rows[] = $row;
       }
     }
 
@@ -277,6 +272,8 @@ class NodeController extends ControllerBase implements ContainerInjectionInterfa
   /**
    * Gets a list of node revision IDs for a specific node.
    *
+   * Only returns revisions that are affected by the $node language.
+   *
    * @param \Drupal\node\NodeInterface $node
    *   The node entity.
    * @param \Drupal\node\NodeStorageInterface $node_storage
@@ -286,11 +283,14 @@ class NodeController extends ControllerBase implements ContainerInjectionInterfa
    *   Node revision IDs (in descending order).
    */
   protected function getRevisionIds(NodeInterface $node, NodeStorageInterface $node_storage) {
+    $entityType = $node->getEntityType();
     $result = $node_storage->getQuery()
       ->accessCheck(TRUE)
       ->allRevisions()
-      ->condition($node->getEntityType()->getKey('id'), $node->id())
-      ->sort($node->getEntityType()->getKey('revision'), 'DESC')
+      ->condition($entityType->getKey('langcode'), $node->language()->getId())
+      ->condition($entityType->getKey('revision_translation_affected'), '1')
+      ->condition($entityType->getKey('id'), $node->id())
+      ->sort($entityType->getKey('revision'), 'DESC')
       ->pager(50)
       ->execute();
     return array_keys($result);

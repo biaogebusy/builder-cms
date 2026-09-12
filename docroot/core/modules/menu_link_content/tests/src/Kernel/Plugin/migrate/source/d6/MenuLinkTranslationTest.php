@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\menu_link_content\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\menu_link_content\Plugin\migrate\source\d6\MenuLinkTranslation;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore mlid objectid objectindex plid
-
 /**
  * Tests menu link translation source plugin.
- *
- * @covers \Drupal\menu_link_content\Plugin\migrate\source\d6\MenuLinkTranslation
- * @group menu_link_content
  */
+#[CoversClass(MenuLinkTranslation::class)]
+#[Group('menu_link_content')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkTranslationTest extends MigrateSqlSourceTestBase {
 
   /**

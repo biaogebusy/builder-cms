@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\Validator\Constraints;
 
+use Symfony\Component\Validator\Attribute\HasNamedArguments;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Exception\ConstraintDefinitionException;
 
@@ -22,9 +23,10 @@ use Symfony\Component\Validator\Exception\ConstraintDefinitionException;
 abstract class Compound extends Composite
 {
     /** @var Constraint[] */
-    public $constraints = [];
+    public array $constraints = [];
 
-    public function __construct(mixed $options = null)
+    #[HasNamedArguments]
+    public function __construct(mixed $options = null, ?array $groups = null, mixed $payload = null)
     {
         if (isset($options[$this->getCompositeOption()])) {
             throw new ConstraintDefinitionException(\sprintf('You can\'t redefine the "%s" option. Use the "%s::getConstraints()" method instead.', $this->getCompositeOption(), __CLASS__));
@@ -32,7 +34,16 @@ abstract class Compound extends Composite
 
         $this->constraints = $this->getConstraints($this->normalizeOptions($options));
 
-        parent::__construct($options);
+        if (null !== $groups) {
+            // reset nested groups so that Composite::__construct() does not run its subset check
+            self::resetNestedConstraintsGroups($this->constraints);
+        }
+
+        parent::__construct($options, $groups, $payload);
+
+        if (null !== $groups) {
+            self::propagateGroupsToNestedConstraints($this->constraints, $this->groups);
+        }
     }
 
     final protected function getCompositeOption(): string
@@ -46,7 +57,42 @@ abstract class Compound extends Composite
     }
 
     /**
+     * @param array<string, mixed> $options
+     *
      * @return Constraint[]
      */
     abstract protected function getConstraints(array $options): array;
+
+    private static function resetNestedConstraintsGroups(array $constraints): void
+    {
+        foreach ($constraints as $constraint) {
+            if (!$constraint instanceof Constraint) {
+                continue;
+            }
+            if ($constraint instanceof Composite) {
+                // skip Composites with explicit groups: their subset check is the user's contract
+                if ([Constraint::DEFAULT_GROUP] !== $constraint->groups) {
+                    continue;
+                }
+                self::resetNestedConstraintsGroups($constraint->getNestedConstraints());
+            }
+            unset($constraint->groups);
+        }
+    }
+
+    private static function propagateGroupsToNestedConstraints(array $constraints, array $groups): void
+    {
+        foreach ($constraints as $constraint) {
+            if (!$constraint instanceof Constraint) {
+                continue;
+            }
+            if ($constraint instanceof Composite && $groups !== $constraint->groups) {
+                continue;
+            }
+            $constraint->groups = $groups;
+            if ($constraint instanceof Composite) {
+                self::propagateGroupsToNestedConstraints($constraint->getNestedConstraints(), $groups);
+            }
+        }
+    }
 }

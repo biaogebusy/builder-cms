@@ -6,12 +6,14 @@ namespace Drupal\Tests\filter\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests hooks for text formats insert/update/disable.
- *
- * @group filter
  */
+#[Group('filter')]
+#[RunTestsInSeparateProcesses]
 class FilterHooksTest extends BrowserTestBase {
 
   /**

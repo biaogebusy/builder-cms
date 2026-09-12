@@ -2,15 +2,14 @@
 
 namespace Drupal\commerce_order\Form;
 
-use Drupal\Core\Entity\ContentEntityForm;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_order\Entity\OrderItemType;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form controller for the commerce_order entity edit forms.
  */
-class OrderForm extends ContentEntityForm {
+class OrderForm extends OrderFormBase {
 
   /**
    * The date formatter.
@@ -56,6 +55,7 @@ class OrderForm extends ContentEntityForm {
 
     $form['#tree'] = TRUE;
     $form['#theme'] = 'commerce_order_edit_form';
+    $form['#attached']['library'][] = 'commerce_order/admin-order';
     // Changed must be sent to the client, for later overwrite error checking.
     $form['changed'] = [
       '#type' => 'hidden',
@@ -167,6 +167,29 @@ class OrderForm extends ContentEntityForm {
       '#title' => $label,
       '#markup' => $value,
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = parent::validateForm($form, $form_state);
+    $currency_code = NULL;
+    foreach ($order->getItems() as $order_item) {
+      $unit_price = $order_item->getUnitPrice();
+      if (empty($currency_code)) {
+        $currency_code = $unit_price?->getCurrencyCode();
+        continue;
+      }
+
+      if ($currency_code !== $unit_price?->getCurrencyCode()) {
+        $form_state->setErrorByName('order_items', $this->t('This order contains items in different currencies. Please ensure all items use the same currency.'));
+        break;
+      }
+    }
+
+    return $order;
   }
 
   /**

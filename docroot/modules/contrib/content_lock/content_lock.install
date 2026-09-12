@@ -11,7 +11,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 /**
  * Implements hook_schema().
  */
-function content_lock_schema() {
+function content_lock_schema(): array {
   $schema['content_lock'] = [
     'description' => 'content lock module table.',
     'fields' => [
@@ -75,7 +75,7 @@ function content_lock_schema() {
 /**
  * Reinstall database schema.
  */
-function content_lock_update_8001(&$sandbox) {
+function content_lock_update_8001(&$sandbox): void {
   // Uninstall table.
   $table = 'content_lock';
   $schema = \Drupal::database()->schema();
@@ -92,7 +92,7 @@ function content_lock_update_8001(&$sandbox) {
 /**
  * Use boolean instead of content_lock_field views field plugin.
  */
-function content_lock_update_8002(&$sandbox) {
+function content_lock_update_8002(&$sandbox): void {
   $config_factory = \Drupal::configFactory();
   // Find all views configs.
   foreach ($config_factory->listAll('views.view.') as $view_config_name) {
@@ -114,4 +114,11 @@ function content_lock_update_8002(&$sandbox) {
     }
     $view->save(TRUE);
   }
+}
+
+/**
+ * Remove JS Content Lock settings.
+ */
+function content_lock_update_30001(): void {
+  \Drupal::configFactory()->getEditable('content_lock.settings')->clear('types_js_lock')->save(TRUE);
 }

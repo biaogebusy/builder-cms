@@ -96,6 +96,7 @@ class WebformSubmissionAccessControlHandler extends EntityAccessControlHandler i
         // Check for 'create' or 'update' access.
         return WebformAccessResult::allowedIf($entity->access('create', $account) || $entity->access('update', $account));
 
+      case 'notes':
       case 'resend':
         // Check for 'update any submission' access.
         return WebformAccessResult::allowedIf($entity->getWebform()->access('submission_update_any', $account));

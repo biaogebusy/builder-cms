@@ -17,94 +17,155 @@
  * @ingroup themeable
  */
 #}
-
-{{ attach_library('commerce/admin-layout') }}
-{% set order_state = order_entity.getState.getLabel %}
-
-<div class="layout-order-admin layout-commerce-admin">
-  <div class="layout-region layout-region--commerce-main">
-    <div class="layout-region__content">
-      {{ order.order_items }}
-      {{ order.total_price }}
-
+{% set is_completed = order_entity.getState.getId == 'completed' %}
+{% set is_draft = order_entity.getState.getId == 'draft' %}
+{% set is_canceled = order_entity.getState.getId == 'canceled' %}
+{% set is_paid = order_entity.isPaid %}
+{{ attach_library('commerce_order/admin-order') }}
+<div class="order-admin layout-commerce-admin">
+  <div class="layout-region layout-region--commerce-main order-admin__main">
+    <div class="layout-region__content order-admin__content">
+      {{ draft_warning }}
+      <div class="order-admin__profile-cards">
+        {% if order.billing_profile %}
+          <div class="order-admin__billing">
+            {{ order.billing_profile.0 }}
+          </div>
+        {% endif %}
+        {% if order.shipments %}
+          <div class="order-admin__shipments">
+            {{ order.shipments.0 }}
+          </div>
+        {% elseif order.shipping_information %}
+          <div class="order-admin__shipping">
+            {% include 'commerce:commerce-admin-card' with {
+              id: 'shipping-information-admin-card',
+              title: 'Shipping information'|t,
+              content: order.shipping_information,
+            } %}
+          </div>
+        {% endif %}
+      </div>
+      <div class="order-admin__order-items">
+        {{ order.order_items }}
+      </div>
+      <div class="order-admin__total">
+        {{ order.total_price }}
+      </div>
       {% if order.activity %}
-        <h2>{% trans %}Order activity{% endtrans %}</h2>
-        {{ order.activity }}
+        <div class="order-admin__activity">
+          <h2 class="order-admin__activity-title">{% trans %}Order activity{% endtrans %}</h2>
+          <div class="order-admin__activity-content">
+            {{ order.activity }}
+          </div>
+        </div>
       {% endif %}
     </div>
   </div>
-  <div class="layout-region layout-region--commerce-secondary">
-    <div class="entity-meta">
-      <div class="entity-meta__header">
-        <h3 class="entity-meta__title">
-          {{ order_state }}
-        </h3>
-        {% for key in ['completed', 'placed', 'changed'] %}
-          {% if order[key] %}
-            <div class="form-item">
-              {{ order[key] }}
-            </div>
+  <div class="layout-region layout-region--commerce-secondary order-admin__sidebar">
+    <div class="order-admin__state-card">
+      {% set order_state_badge %}
+        {% if not is_canceled %}
+          {% if is_cart %}
+            {% include 'commerce:commerce-status-badge' with {
+              text: "Cart"|t,
+              variant: 'neutral',
+              } %}
+          {% elseif not is_draft %}
+            {% include 'commerce:commerce-status-badge' with {
+              text: is_paid ? "Paid"|t : "Unpaid"|t,
+              variant: is_paid ? 'success' : 'neutral',
+              } %}
           {% endif %}
-        {% endfor %}
-        {% if stores_count > 1 and order.store_id %}
-          <div class="form-item">
-            {{ order.store_id }}
-          </div>
         {% endif %}
-        {% if order.balance %}
-          <div class="form-item">
-            {{ order.balance }}
-          </div>
+      {% endset %}
+      {% set order_title %}
+        {% if is_canceled %}
+          {{ 'Canceled order'|t }}
+        {% elseif is_draft %}
+          {{ 'Draft order'|t }}
+        {% else %}
+          {{ 'Placed order'|t }}
         {% endif %}
-        {# If the order has possible transitions, render the field for transition buttons. #}
-        {% if order_entity.getState.getTransitions is not empty %}
-          {{ order.state }}
-        {% endif %}
-      </div>
-      <details open class="claro-details">
-        <summary role="button" class="claro-details__summary">
-          {{ 'Customer Information'|t }}
-        </summary>
-        <div class="details-wrapper claro-details__wrapper">
-          {% for key in ['uid', 'mail', 'ip_address'] %}
-            {% if order[key] %}
-              <div class="form-item">
-                {{ order[key] }}
+      {% endset %}
+      {% embed 'commerce:commerce-admin-card' with {
+        id: 'order-state',
+        title: order_title,
+        title_tag: 'h4',
+        badge: order_state_badge,
+      } %}
+        {% block card_content %}
+          <div class="order-admin__state-fields">
+            {% if is_draft %}
+              {{ order.created }}
+            {% endif %}
+            {{ order.placed }}
+            <div class="field order-admin__state-field field--label-inline">
+              <div class="field__label">{{ 'State'|t }}</div>
+              <div class="field__item">
+                {% if is_completed and order_entity.getCompletedTime %}
+                  <span class="commerce-help-text" title="{{ order_entity.getCompletedTime|format_date('short') }}">{{ order_entity.getState.getLabel }}</span>
+                {% else %}
+                  {{ order_entity.getState.getLabel }}
+                {% endif %}
+              </div>
+            </div>
+            {% if stores_count > 1 and order.store_id %}
+              <div class="form-item order-admin__state-field order-admin__state-field--store">
+                {{ order.store_id }}
               </div>
             {% endif %}
-          {% endfor %}
-        </div>
-      </details>
-      {% if order.billing_information %}
-        <details open class="claro-details">
-          <summary role="button" class="claro-details__summary">
-            {{ 'Billing information'|t }}
-          </summary>
-          <div class="details-wrapper claro-details__wrapper">
-            {{ order.billing_information }}
+            {{ order.uid }}
+            {{ order.ip_address }}
           </div>
-        </details>
-      {% endif %}
-      {% if order.shipping_information %}
-        <details open class="claro-details">
-          <summary role="button" class="claro-details__summary">
-            {{ 'Shipping information'|t }}
-          </summary>
-          <div class="details-wrapper claro-details__wrapper">
-            {{ order.shipping_information }}
-          </div>
-        </details>
-      {% endif %}
-      {% if additional_order_fields %}
-        <details open class="claro-details">
-          <summary role="button" class="claro-details__summary">
-            {{ 'Other'|t }}
-          </summary>
-          {# Show fields that are not shown elsewhere. #}
-          <div class="details-wrapper claro-details__wrapper">
+        {% endblock %}
+      {% endembed %}
+    </div>
+    <div class="order-admin__actions-card">
+      {% embed 'commerce:commerce-admin-card' with {
+        id: 'order-actions'
+      } %}
+        {% block card_content %}
+          {% if order_entity.getState.getTransitions is not empty %}
+            <div class="commerce-actions__actions order-admin__state-transitions">
+              {{ order.state }}
+            </div>
+          {% else %}
+            {{ 'No transitions available.'|t }}
+          {% endif %}
+        {% endblock %}
+      {% endembed %}
+    </div>
+    <div class="order-admin__details-card">
+      {% embed 'commerce:commerce-admin-card' with {
+        id: 'order-details',
+        title: 'Order details'|t,
+        title_tag: 'h4',
+        badge: edit_order_modal_link|default(''),
+      } %}
+        {% block card_content %}
+          <div class="order-admin__details-fields">
+            {{ order_details_fields }}
             {{ additional_order_fields }}
           </div>
-        </details>
+        {% endblock %}
+      {% endembed %}
+    </div>
+    <div class="order-admin__footnote">
+      {% if order.created.0 %}
+        <span class="order-admin__footnote-item">
+          {{ 'Created'|t }} {{ order.created.0 }}
+        </span>
+      {% endif %}
+      {% if order.changed.0 %}
+        <span class="order-admin__footnote-item">
+          {{ 'Updated'|t }} {{ order.changed.0 }}
+        </span>
+      {% endif %}
+      {% if order.completed.0 %}
+        <span class="order-admin__footnote-item">
+          {{ 'Completed'|t }} {{ order.completed.0 }}
+        </span>
       {% endif %}
     </div>
   </div>

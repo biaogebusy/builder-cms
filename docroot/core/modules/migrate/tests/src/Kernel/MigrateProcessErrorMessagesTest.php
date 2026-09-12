@@ -12,41 +12,41 @@ use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigratePluginManagerInterface;
 use Drupal\migrate\Plugin\MigrateProcessInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;
 
 /**
  * Tests the format of messages from process plugin exceptions.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateProcessErrorMessagesTest extends MigrateTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'migrate_events_test',
-    'migrate',
   ];
 
   /**
-   * A prophesized Process Plugin Manager.
+   * A mock Process Plugin Manager.
    *
    * @var \Prophecy\Prophecy\ObjectProphecy
    */
   protected ObjectProphecy $processPluginManager;
 
   /**
-   * A prophesized ID Map Plugin Manager.
+   * A mock ID Map Plugin Manager.
    *
    * @var \Prophecy\Prophecy\ObjectProphecy
    */
   protected ObjectProphecy $idMapPluginManager;
 
   /**
-   * A prophesized ID Map.
+   * A mock ID Map.
    *
    * @var \Prophecy\Prophecy\ObjectProphecy
    */
@@ -148,7 +148,7 @@ class MigrateProcessErrorMessagesTest extends MigrateTestBase {
   /**
    * Prepares and sets the prophesized plugin managers.
    */
-  protected function setPluginManagers() {
+  protected function setPluginManagers(): void {
     $error_plugin_prophecy = $this->prophesize(MigrateProcessInterface::class);
     $error_plugin_prophecy->getPluginDefinition()->willReturn(['plugin_id' => 'test_error']);
     $error_plugin_prophecy->getPluginId()->willReturn('test_error');

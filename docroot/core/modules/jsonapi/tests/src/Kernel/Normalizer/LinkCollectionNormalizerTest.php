@@ -15,13 +15,19 @@ use Drupal\jsonapi\Normalizer\Value\CacheableNormalization;
 use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\jsonapi\Normalizer\LinkCollectionNormalizer
- * @group jsonapi
+ * Tests Drupal\jsonapi\Normalizer\LinkCollectionNormalizer.
  *
  * @internal
  */
+#[CoversClass(LinkCollectionNormalizer::class)]
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class LinkCollectionNormalizerTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -54,7 +60,6 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
     'file',
     'jsonapi',
     'serialization',
-    'system',
     'user',
   ];
 
@@ -107,9 +112,8 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
 
   /**
    * Tests the link collection normalizer.
-   *
-   * @dataProvider linkAccessTestData
    */
+  #[DataProvider('linkAccessTestData')]
   public function testLinkAccess($current_user_id, $edit_form_uid, $expected_link_keys, $expected_cache_contexts): void {
     // Get the current user and an edit-form URL.
     foreach ($this->testUsers as $user) {
@@ -169,6 +173,7 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
    * Provides test cases for testing link access checking.
    *
    * @return array[]
+   *   An array of test cases for testLinkAccess().
    */
   public static function linkAccessTestData() {
     return [

@@ -27,6 +27,7 @@
   var MIME_WEBP = 'image/webp';
   var SOURCE = 'source';
   var FN_PF = _win.picturefill;
+  var SRCSET_CACHE = {};
 
   function isSupported() {
     var support = true;
@@ -48,93 +49,164 @@
     return support;
   }
 
-  function markup(img, webps, nowebps, dataset) {
-    if (!$.isElm(img)) {
+  // Check final .webp extension
+  function isFinalWebp(url) {
+    return /\.webp(\?|#|$)/i.test((url || '').trim().split(/\s+/)[0]);
+  }
+
+  function parseSrcsetCached(img) {
+    var id = $.attr(img, 'id');
+    if (!id) {
+      id = 'bwebp-' + Math.random().toString(36).slice(2); $.attr(img, 'id', id);
+    }
+
+    if (SRCSET_CACHE[id]) {
+      return SRCSET_CACHE[id];
+    }
+
+    var dataset = $.attr(img, DATA_SRCSET);
+    var srcset = $.attr(img, 'srcset');
+    srcset = srcset && srcset.length ? srcset : dataset;
+
+    var webps = [];
+    var nowebps = [];
+
+    if (srcset && srcset.length) {
+      var candidates = srcset.split(',');
+
+      $.each(candidates, function (src) {
+        src = src.trim();
+        var url = src.split(/\s+/)[0];
+
+        if (isFinalWebp(url)) {
+          webps.push(src);
+        }
+        else {
+          nowebps.push(src);
+        }
+      });
+    }
+
+    var result = {
+      webps: webps,
+      nowebps: nowebps
+    };
+
+    SRCSET_CACHE[id] = result;
+    return result;
+  }
+
+  // Clear cache for single element or all.
+  function clearCache(img) {
+    if (img) {
+      var id = $.attr(img, 'id');
+
+      if (id && SRCSET_CACHE[id]) {
+        delete SRCSET_CACHE[id];
+      }
+    }
+    else {
+      SRCSET_CACHE = {};
+    }
+  }
+
+  // Convert <img> -> <picture>.
+  function convert(el, refresh) {
+    if (!$.isElm(el)) {
       return false;
     }
+
+    if (refresh) {
+      clearCache(el);
+    }
+
+    var img = _doc.importNode(el, true);
+    var parsed = parseSrcsetCached(img);
+    var webps = parsed.webps;
+    var nowebps = parsed.nowebps;
+
+    if (!webps.length || !nowebps.length) {
+      return false;
+    }
+
     var picture = $.create(PICTURE);
     var source = $.create(SOURCE);
-    var sizes = $.attr(img, 'sizes');
-    var webpSrc = webps.join(',').trim();
-    var nowebpSrc = nowebps.join(',').trim();
-    var check = $.find(picture, SOURCE);
 
-    if (!$.isElm(check)) {
-      if (dataset) {
-        $.attr(source, DATA_SRCSET, webpSrc);
-        $.attr(img, DATA_SRCSET, nowebpSrc);
-      }
-      else {
-        source.srcset = webpSrc;
-        img.srcset = nowebpSrc;
-      }
+    var dataset = $.attr(img, DATA_SRCSET);
 
-      if (sizes) {
-        source.sizes = sizes;
-      }
-
-      source.type = MIME_WEBP;
-
-      $.append(picture, source);
-      $.append(picture, img);
+    if (dataset) {
+      $.attr(source, DATA_SRCSET, webps.join(',').trim());
+      $.attr(img, DATA_SRCSET, nowebps.join(',').trim());
     }
+    else {
+      source.srcset = webps.join(',').trim();
+      img.srcset = nowebps.join(',').trim();
+    }
+
+    var sizes = $.attr(img, 'sizes');
+    if (sizes) {
+      source.sizes = sizes;
+    }
+
+    source.type = MIME_WEBP;
+
+    $.append(picture, source);
+    $.append(picture, img);
 
     return picture;
   }
 
-  function convert(el) {
-    var img = _doc.importNode(el, true);
-    var webps = [];
-    var nowebps = [];
-    var dataset = $.attr(img, DATA_SRCSET);
-    var scrset = $.attr(img, 'srcset');
-
-    if (scrset.length || dataset.length) {
-      scrset = scrset.length ? scrset : dataset;
-
-      if (scrset.length) {
-        $.each(scrset.split(','), function (src) {
-          if ($.contains(src, '.webp')) {
-            webps.push(src);
-          }
-          else {
-            nowebps.push(src);
-          }
-        });
-
-        if (webps.length) {
-          return markup(img, webps, nowebps, dataset.length);
-        }
-      }
+  function run(elms) {
+    if (isSupported() || !elms.length) {
+      return;
     }
-    return false;
-  }
 
-  $.webp = {
-    isSupported: isSupported,
-
-    run: function (elms) {
-      if (isSupported() || !elms.length) {
+    $.each(elms, function (el) {
+      if (!$.equal(el, 'img')) {
         return;
       }
 
-      $.each(elms, function (el) {
-        var isImg = $.equal(el, 'img');
-        var pic = $.closest(el, PICTURE);
+      if ($.isElm($.closest(el, PICTURE))) {
+        return;
+      }
 
-        if (isImg && $.isNull(pic)) {
-          var parent = $.closest(el, '.media') || el.parentNode;
-          var picture = convert(el, true);
+      var parent = $.closest(el, '.media') || el.parentNode;
+      var picture = convert(el);
 
-          if (picture) {
-            // Cannot use parent.replaceWith because this is for old browsers.
-            // Nor parent.replaceChild(picture, el); due to various features.
-            $.append(parent, picture);
-            $.remove(el);
-          }
-        }
-      });
+      if (picture) {
+        // Cannot use parent.replaceWith because this is for old browsers.
+        // Nor parent.replaceChild(picture, el); due to various features.
+        $.append(parent, picture);
+        $.remove(el);
+      }
+    });
+  }
+
+  // Prefilter caller.
+  function init(me) {
+    if (isSupported()) {
+      return;
     }
+
+    var sel = function (prefix) {
+      prefix = prefix || '';
+      return $.selector(me.options, '[' + prefix + 'srcset*=".webp"]');
+    };
+
+    var elms = $.findAll(_doc, sel());
+    if (!elms.length) {
+      elms = $.findAll(_doc, sel('data-'));
+    }
+
+    if (elms.length) {
+      run(elms);
+    }
+  }
+
+  $.webp = {
+    clearCache: clearCache,
+    isSupported: isSupported,
+    init: init
   };
 
 })(dBlazy, this, this.document);

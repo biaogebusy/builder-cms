@@ -1,0 +1,9 @@
+ckeditor5_plugin_pack_paste_markdown__paste_markdown:
+  ckeditor5:
+    plugins:
+      - markdownGfm.PasteFromMarkdownExperimental
+  drupal:
+    label: Paste Markdown
+    class: Drupal\ckeditor5_plugin_pack_paste_markdown\Plugin\CKEditor5Plugin\PasteMarkdown
+    elements: false
+    library: ckeditor5_plugin_pack_paste_markdown/markdown-gfm

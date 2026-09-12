@@ -9,17 +9,19 @@ use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\views\Plugin\views\filter\NumericFilter;
-use Drupal\views\ViewExecutable;
-use Drupal\views\Plugin\views\HandlerBase;
-use Drupal\views\Plugin\views\filter\InOperator;
 use Drupal\views\Entity\View;
+use Drupal\views\Plugin\views\filter\InOperator;
+use Drupal\views\Plugin\views\filter\NumericFilter;
+use Drupal\views\Plugin\views\HandlerBase;
+use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests instances of all handlers.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class HandlerAllTest extends ViewsKernelTestBase {
 
   use CommentTestTrait;
@@ -28,27 +30,16 @@ class HandlerAllTest extends ViewsKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'block',
     'comment',
-    'contact',
     'dblog',
     'field',
-    'filter',
     'file',
-    'forum',
-    'history',
     'image',
     'language',
-    'locale',
     'media',
     'node',
-    'search',
-    'system',
-    'options',
     'taxonomy',
     'text',
-    'tracker',
-    'user',
   ];
 
   /**
@@ -67,9 +58,7 @@ class HandlerAllTest extends ViewsKernelTestBase {
     $this->installEntitySchema('taxonomy_term');
     $this->installEntitySchema('user');
     $this->installSchema('file', ['file_usage']);
-    $this->installSchema('forum', ['forum_index']);
     $this->installSchema('dblog', ['watchdog']);
-    $this->installSchema('tracker', ['tracker_user']);
     // Create the comment body field storage.
     FieldStorageConfig::create([
       'type' => 'text_long',

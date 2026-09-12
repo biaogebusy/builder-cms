@@ -8,15 +8,18 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Site\Settings;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity reference selection handler.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class SelectionTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -70,7 +73,7 @@ class SelectionTest extends BrowserTestBase {
 
     // Ensure the bundle to which the field is attached actually exists, or we
     // will get config validation errors.
-    entity_test_create_bundle('test_bundle');
+    EntityTestHelper::createBundle('test_bundle');
 
     // Create an entity reference field.
     $handler_settings = [

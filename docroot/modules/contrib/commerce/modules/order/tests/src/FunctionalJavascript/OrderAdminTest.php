@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\commerce_order\FunctionalJavascript;
 
+use Drupal\commerce_order\Entity\OrderType;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Test\AssertMailTrait;
 use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\Order;
@@ -91,6 +93,20 @@ class OrderAdminTest extends OrderWebDriverTestBase {
       'customer_type' => 'existing',
     ];
     $this->submitForm($edit, 'Create');
+    $order = Order::load(1);
+
+    $this->assertSession()->addressEquals($order->toUrl('canonical', ['absolute' => TRUE])->toString());
+    $page = $this->getSession()->getPage();
+    $this->assertSession()->linkExists('Add billing information');
+    $page->clickLink('Add billing information');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->buttonExists('Cancel');
+    $this->assertRenderedAddress($this->defaultAddress, 'billing_profile[0][profile]');
+    $this->getSession()->getPage()->pressButton('Cancel');
+
+    $this->assertSession()->linkExists('Add order items');
+
+    $this->drupalGet($order->toUrl('edit-form'));
 
     $this->getSession()->getPage()->pressButton('add_billing_information');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -105,14 +121,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     // Test creating order items.
     $page = $this->getSession()->getPage();
 
-    $page->fillField('order_items[add_new_item][entity_selector][purchasable_entity]', $this->variation->getSku());
-    $this->assertSession()->waitOnAutocomplete();
-    $this->assertSession()->pageTextContains($this->variation->getSku());
-    $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
-    $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
-    $page->pressButton('Add new order item');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    // First item with overriding the price.
+    $this->addOrderItemFromVariation($this->variation);
     $this->getSession()->getPage()->checkField('Override the unit price');
     $this->assertSession()->fieldValueEquals('order_items[form][0][purchased_entity][0][target_id]', sprintf('%s (%s)', $this->variation->label(), $this->variation->id()));
 
@@ -125,13 +134,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     $this->assertSession()->pageTextContains($this->variation->getSku());
 
     // Second item without overriding the price.
-    $page->fillField('order_items[add_new_item][entity_selector][purchasable_entity]', $this->secondVariation->getSku());
-    $this->assertSession()->waitOnAutocomplete();
-    $this->assertSession()->pageTextContains($this->variation->getSku());
-    $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
-    $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
-    $this->getSession()->getPage()->pressButton('Add new order item');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->addOrderItemFromVariation($this->secondVariation);
     $page->fillField('order_items[form][1][quantity][0][value]', '1');
     $this->getSession()->getPage()->pressButton('Create order item');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -146,7 +149,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     $this->assertSession()->assertWaitOnAjaxRequest();
     $page->fillField('order_items[form][order_item_inline_form][0][form][quantity][0][value]', '3');
     $page->fillField('order_items[form][order_item_inline_form][0][form][unit_price][0][amount][number]', '1.11');
-    $this->getSession()->getPage()->pressButton('Update order item');
+    $this->getSession()->getPage()->pressButton('oiw_order_items-edit-submit-0');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('1.11');
 
@@ -373,6 +376,33 @@ class OrderAdminTest extends OrderWebDriverTestBase {
   }
 
   /**
+   * Tests skipping the order receipt when placing an order from the admin UI.
+   */
+  public function testPlaceOrderSkipReceipt() {
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'mail' => $this->loggedInUser->getEmail(),
+      'uid' => $this->loggedInUser,
+      'store_id' => $this->store,
+      'state' => 'draft',
+    ]);
+
+    $this->drupalGet($order->toUrl());
+    $this->click('a.button#edit-place');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $checkbox = $this->assertSession()->fieldExists('Email the customer an order receipt');
+    $this->assertTrue($checkbox->isChecked());
+    $checkbox->uncheck();
+    $this->click('button:contains("Confirm")');
+    $this->assertSession()->linkNotExists('Place order');
+
+    $this->assertCount(0, $this->getMails());
+    $order = $this->reloadEntity($order);
+    $this->assertEquals('completed', $order->getState()->getId());
+  }
+
+  /**
    * Tests resending the order receipt.
    */
   public function testResendReceipt() {
@@ -496,6 +526,368 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     ];
     $this->submitForm($edit, (string) $this->t('Create'));
     $this->assertSession()->pageTextContains('The email address guest@example.com is already taken.');
+  }
+
+  /**
+   * Tests adding new order items to the order on the order view page.
+   */
+  public function testAddingOrderItems() {
+    // Start from an order without any order items.
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'store_id' => $this->store->id(),
+      'mail' => $this->loggedInUser->getEmail(),
+      'state' => 'draft',
+      'uid' => $this->loggedInUser,
+    ]);
+    $this->drupalGet($order->toUrl()->toString());
+
+    // Confirm that the order item table is showing the empty text.
+    $this->assertSession()->pageTextContains('There are no order items yet.');
+    $this->assertSession()->pageTextNotContains('Subtotal');
+
+    // Confirm that the "Add Item(s) to Order" link is shown.
+    $this->assertSession()->linkExists('Add order items');
+
+    // Open modal to add new items.
+    $this->getSession()->getPage()->clickLink('Add order items');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->buttonExists('Next');
+    $this->assertSession()->buttonExists('Save');
+    $this->assertSession()->buttonExists('Cancel');
+
+    // Create a new order item.
+    $button = $this->assertSession()->buttonExists('Next');
+    $this->assertTrue($button->hasAttribute('disabled'));
+    $this->getSession()->getPage()->fillField('order_items[add_new_item][entity_selector][purchasable_entity]', $this->variation->getSku());
+    $this->assertSession()->waitOnAutocomplete();
+    $this->assertSession()->pageTextContains($this->variation->getSku());
+    $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
+    $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
+    $button = $this->assertSession()->buttonExists('Next');
+    $this->assertFalse($button->hasAttribute('disabled'));
+    $this->getSession()->getPage()->pressButton('Next');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->pressButton('Add');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains($this->variation->label());
+    $this->assertSession()->pageTextContains($this->variation->getSku());
+    $this->assertSession()->pageTextContains('$999.00');
+
+    // Confirm that after submission page is reloaded and item added to order.
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->pressButton('Save');
+    $this->assertSession()->pageTextContains($this->variation->label());
+    $this->assertSession()->pageTextContains('Subtotal $999.00');
+
+    // Confirm that modal does not contain existing order items.
+    $this->getSession()->getPage()->clickLink('Add order items');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->elementNotContains('css', '#drupal-modal', $this->variation->getSku());
+
+    // Create second order item.
+    $button = $this->assertSession()->buttonExists('Next');
+    $this->assertTrue($button->hasAttribute('disabled'));
+    $this->getSession()->getPage()->fillField('order_items[add_new_item][entity_selector][purchasable_entity]', $this->secondVariation->getSku());
+    $this->assertSession()->waitOnAutocomplete();
+    $this->assertSession()->pageTextContains($this->secondVariation->getSku());
+    $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
+    $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
+    $button = $this->assertSession()->buttonExists('Next');
+    $this->assertFalse($button->hasAttribute('disabled'));
+    $this->getSession()->getPage()->pressButton('Next');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->pressButton('Add');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $button = $this->assertSession()->buttonExists('Add another');
+    $this->assertTrue($button->hasAttribute('disabled'));
+    $this->assertSession()->pageTextContains($this->secondVariation->label());
+    $this->assertSession()->pageTextContains($this->secondVariation->getSku());
+    $this->assertSession()->pageTextContains('$5.55');
+
+    // Confirm that after submission page is reloaded and item added to order.
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->pressButton('Save');
+    $this->assertSession()->pageTextContains($this->variation->label());
+    $this->assertSession()->pageTextContains($this->secondVariation->label());
+    $this->assertSession()->pageTextContains('Subtotal $1,004.55');
+  }
+
+  /**
+   * Tests non-existing "Add order items" for new order type.
+   */
+  public function testAddingOrderItemsForNewOrderType() {
+    // Create order type without any order item types.
+    $this->createEntity('commerce_order_type', [
+      'id' => 'no_order_items',
+      'label' => 'No order items',
+      'workflow' => 'order_default',
+    ]);
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'no_order_items',
+      'store_id' => $this->store->id(),
+      'mail' => $this->loggedInUser->getEmail(),
+      'state' => 'draft',
+      'uid' => $this->loggedInUser,
+    ]);
+    $this->drupalGet($order->toUrl()->toString());
+
+    // Confirm that the "Add Item(s) to Order" link doesn't show.
+    $this->assertSession()->linkNotExists('Add order items');
+  }
+
+  /**
+   * Tests order item editing in the modal form.
+   */
+  public function testOrderItemEditingModals() {
+    // Create order with one order item.
+    /** @var \Drupal\commerce_order\Entity\OrderItemInterface $order_item */
+    $order_item = $this->createEntity('commerce_order_item', [
+      'type' => 'default',
+      'quantity' => 1,
+      'purchased_entity' => $this->variation,
+      'unit_price' => $this->variation->getPrice(),
+    ]);
+
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'store_id' => $this->store->id(),
+      'mail' => $this->loggedInUser->getEmail(),
+      'state' => 'draft',
+      'uid' => $this->loggedInUser,
+      'order_items' => [$order_item],
+    ]);
+    $order_item = $this->reloadEntity($order_item);
+    $order_item_edit_link = $order_item->toUrl('edit-form')->toString();
+    // Confirm that order item added and "Edit" link is available.
+    $this->drupalGet($order->toUrl()->toString());
+    $this->assertSession()->pageTextContains($this->variation->label());
+    $this->assertSession()->pageTextContains('Subtotal $999.00');
+    $this->assertSession()->linkByHrefExists(sprintf($order_item_edit_link, $order->id()));
+
+    // Open the edit order item modal and confirm it contains correct data.
+    $this->getSession()->getPage()->find('css', sprintf('a[href="%s"]', $order_item_edit_link))->click();
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->elementTextContains('css', '.ui-dialog .ui-dialog-title', 'Edit ' . $order_item->label());
+    $this->assertSession()->elementTextContains('css', '.ui-dialog .form-item-purchased-entity-info', $this->variation->label());
+    $this->assertSession()->fieldValueEquals('unit_price[0][amount][number]', '999.00');
+    $this->assertSession()->fieldValueEquals('quantity[0][value]', '1');
+    $this->assertSession()->elementTextContains('css', '.ui-dialog #estimated_price', 'Estimated Price: $999.00');
+
+    // Check that estimated price is updated by ajax.
+    $this->getSession()->getPage()->checkField('Override the unit price');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->fillField('unit_price[0][amount][number]', '125.00');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->elementTextContains('css', '.ui-dialog #estimated_price', 'Estimated Price: $125.00');
+    $this->getSession()->getPage()->fillField('quantity[0][value]', '3');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->elementTextContains('css', '.ui-dialog #estimated_price', 'Estimated Price: $375.00');
+
+    // Confirm that order totals recalculated after modal form submission.
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->pressButton('Save');
+    $this->assertSession()->pageTextContains($this->variation->label());
+    $this->assertSession()->pageTextContains('Subtotal $375.00');
+  }
+
+  /**
+   * Tests Billing information on the order view page.
+   */
+  public function testOrderViewBillingInformation() {
+    /** @var \Drupal\commerce_order\Entity\OrderItemInterface $order_item */
+    $order_item = $this->createEntity('commerce_order_item', [
+      'type' => 'default',
+      'quantity' => 1,
+      'purchased_entity' => $this->variation,
+      'unit_price' => $this->variation->getPrice(),
+    ]);
+
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'store_id' => $this->store->id(),
+      'mail' => $this->loggedInUser->getEmail(),
+      'state' => 'draft',
+      'uid' => $this->loggedInUser,
+      'order_items' => [$order_item],
+      'billing_profile' => $this->defaultProfile,
+    ]);
+
+    $paymentGateway = $this->createEntity('commerce_payment_gateway', [
+      'id' => 'manual',
+      'label' => 'Manual example',
+      'plugin' => 'manual',
+    ]);
+
+    $paymentGateway->save();
+
+    $payment = $this->createEntity('commerce_payment', [
+      'payment_gateway' => $paymentGateway->id(),
+      'order_id' => $order->id(),
+      'amount' => new Price('10', 'USD'),
+    ]);
+
+    $paymentGateway->getPlugin()->createPayment($payment);
+
+    $this->drupalGet($order->toUrl()->toString());
+
+    $this->assertSession()->pageTextContains('Billing information');
+    $this->assertSession()->pageTextContains('Bryan Centarro');
+    $this->assertSession()->pageTextContains('9 Drupal Ave');
+    $this->assertSession()->pageTextContains('Greenville, SC 29616');
+    $this->assertSession()->pageTextContains('United States');
+    $this->assertSession()->pageTextContains('Last payment $10.00 (Pending)');
+  }
+
+  /**
+   * Tests the Order "cards".
+   */
+  public function testOrderCards(): void {
+    /** @var \Drupal\commerce_order\Entity\OrderItemInterface $order_item */
+    $order_item = $this->createEntity('commerce_order_item', [
+      'type' => 'default',
+      'quantity' => 1,
+      'purchased_entity' => $this->variation,
+      'unit_price' => $this->variation->getPrice(),
+    ]);
+
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'store_id' => $this->store->id(),
+      'mail' => $this->loggedInUser->getEmail(),
+      'state' => 'draft',
+      'uid' => $this->loggedInUser,
+      'order_items' => [$order_item],
+      'billing_profile' => $this->defaultProfile,
+    ]);
+    $old_email = $order->getEmail();
+
+    // Confirm that a new section is visible on order view page.
+    $this->drupalGet($order->toUrl()->toString());
+    $this->assertSession()->pageTextContains('Order details');
+    $this->assertSession()->pageTextContains(sprintf('IP address %s', $order->getIpAddress()));
+    $this->assertSession()->pageTextContains(sprintf('Customer %s', $order->getCustomer()->getDisplayName()));
+    $this->assertSession()->pageTextContains(sprintf('Contact email %s', $old_email));
+    $edit_link = $this->getSession()->getPage()->find('css', '#order-details .card__header')->findLink('Edit');
+    $this->assertNotNull($edit_link);
+
+    // Confirm that a new "Order details" modal form is available.
+    $edit_link->click();
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->elementTextContains('css', '.ui-dialog .ui-dialog-title', 'Order details');
+    $this->getSession()->getPage()->hasField('mail[0][value]');
+    $new_mail = sprintf('%s@example.com', $this->randomMachineName());
+    $this->getSession()->getPage()->fillField('mail[0][value]', $new_mail);
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->findButton('Save');
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->pressButton('Save');
+
+    // Confirm that the contact email is updated for the "draft" order.
+    $this->drupalGet($order->toUrl()->toString());
+    $this->assertSession()->pageTextNotContains(sprintf('Contact email %s', $old_email));
+    $this->assertSession()->pageTextContains(sprintf('Contact email %s', $new_mail));
+
+    // Place the order.
+    $order = $this->reloadEntity($order);
+    $order->getState()->applyTransitionById('place');
+    $order->save();
+    $this->drupalGet($order->toUrl()->toString());
+    $this->assertSession()->pageTextContains('Completed');
+
+    // Confirm that the contact email is updated for the "completed" order.
+    $this->getSession()->getPage()->find('css', '#order-details .card__header')->findLink('Edit')->click();
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->fillField('mail[0][value]', $new_mail);
+    $this->getSession()->getPage()->find('css', '.ui-dialog .ui-dialog-buttonpane')->pressButton('Save');
+    $this->drupalGet($order->toUrl()->toString());
+    $this->assertSession()->pageTextNotContains(sprintf('Contact email %s', $old_email));
+    $this->assertSession()->pageTextContains(sprintf('Contact email %s', $new_mail));
+  }
+
+  /**
+   * Tests that the order edit links are hidden if configured to do so.
+   */
+  public function testOrderEditLinks(): void {
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'mail' => $this->loggedInUser->getEmail(),
+      'order_number' => '11111',
+      'uid' => $this->loggedInUser,
+      'store_id' => $this->store,
+    ]);
+    $this->drupalGet($order->toUrl()->toString());
+    $order_edit_form_url = $order->toUrl('edit-form')->toString();
+    $this->assertSession()->linkByHrefNotExists($order_edit_form_url);
+    $this->drupalGet($order->toUrl('collection')->toString());
+    $this->assertSession()->linkByHrefNotExists($order_edit_form_url);
+    $order_type = OrderType::load($order->bundle());
+    $this->drupalGet($order_type->toUrl('edit-form')->toString());
+    $this->getSession()->getPage()->checkField('showOrderEditLinks');
+    $this->submitForm([], 'Save');
+
+    $this->drupalGet($order->toUrl()->toString());
+    $this->assertSession()->linkByHrefExists($order_edit_form_url);
+    $this->drupalGet($order->toUrl('collection')->toString());
+    $this->assertSession()->linkByHrefExists($order_edit_form_url);
+  }
+
+  /**
+   * Tests error message when order items added with different currencies.
+   */
+  public function testOrderCreationWithDifferentCurrencies(): void {
+    // Create one more currency.
+    $this->createEntity('commerce_currency', [
+      'currencyCode' => 'EUR',
+      'name' => 'Euro',
+      'numericCode' => '978',
+      'symbol' => '€',
+      'fractionDigits' => 2,
+    ]);
+
+    // Create order for test.
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'mail' => $this->loggedInUser->getEmail(),
+      'uid' => $this->loggedInUser,
+      'store_id' => $this->store,
+    ]);
+
+    // Update second variation to use different currency.
+    $this->secondVariation->setPrice(new Price('4.44', 'EUR'));
+    $this->secondVariation->save();
+
+    $this->drupalGet($order->toUrl('edit-form'));
+
+    // Add first variation with "USD" currency.
+    $this->addOrderItemFromVariation($this->variation);
+    $this->getSession()->getPage()->pressButton('Create order item');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+
+    // Add second variation with "CHF" currency.
+    $this->addOrderItemFromVariation($this->secondVariation);
+    $this->getSession()->getPage()->pressButton('Create order item');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+
+    // Confirm that validation message is shown.
+    $this->submitForm([], 'Save');
+    $this->assertSession()->pageTextContains('This order contains items in different currencies. Please ensure all items use the same currency.');
+  }
+
+  /**
+   * Creates order item based on variation on the order form.
+   *
+   * @param \Drupal\commerce_product\Entity\ProductVariationInterface $variation
+   *   The variation entity.
+   */
+  private function addOrderItemFromVariation(ProductVariationInterface $variation): void {
+    $page = $this->getSession()->getPage();
+    $page->fillField('order_items[add_new_item][entity_selector][purchasable_entity]', $variation->getSku());
+    $this->assertSession()->waitOnAutocomplete();
+    $this->assertSession()->pageTextContains($variation->getSku());
+    $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
+    $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
+    $page->pressButton('Add new order item');
+    $this->assertSession()->assertWaitOnAjaxRequest();
   }
 
 }
