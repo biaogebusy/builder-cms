@@ -172,6 +172,31 @@ xinshi_api.v3.landingPage.drafts.create:
     _auth: [ 'oauth2', 'cookie' ]
     no_cache: TRUE
 
+xinshi_api.v3.landingPage.drafts.read:
+  path: '/api/v3/landingPage/drafts/page/{page_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PageDraftController::readDraft'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    page_id: '[1-9][0-9]*'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
+xinshi_api.v3.landingPage.drafts.change:
+  path: '/api/v3/landingPage/drafts/{execution_id}/change'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PageDraftController::changeDraft'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+    execution_id: '[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}'
+  methods: [ POST ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
 xinshi_api.v3.landingPage.drafts.find:
   path: '/api/v3/landingPage/drafts/{execution_id}'
   defaults:

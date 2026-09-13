@@ -2,7 +2,7 @@
 
 namespace Drupal\xinshi_api;
 
-/** An expected refusal. Only input and permission refusals confirm no new write. */
+/** Expected refusal; controllers distinguish rolled-back writes from uncertain failures. */
 final class PageDraftException extends \RuntimeException {
 
   public function __construct(public readonly string $reason, public readonly int $httpStatus) {

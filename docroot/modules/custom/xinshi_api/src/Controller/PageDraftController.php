@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
-/** Authenticated draft creation and read-only operation lookup. */
+/** Authenticated draft operations and read-only page/receipt lookup. */
 final class PageDraftController extends ControllerBase {
 
   public function __construct(private readonly PageDraftService $drafts) {}
@@ -21,11 +21,31 @@ final class PageDraftController extends ControllerBase {
   public function capabilities(): JsonResponse {
     return $this->response([
       'uid' => (string) $this->currentUser()->id(),
-      'permissions' => $this->drafts->canCreate() ? ['pages.create_draft'] : [],
+      'permissions' => $this->drafts->capabilities(),
     ]);
   }
 
   public function createDraft(string $execution_id, Request $request): JsonResponse {
+    return $this->write($execution_id, $request, 'createDraft');
+  }
+
+  public function changeDraft(string $execution_id, Request $request): JsonResponse {
+    return $this->write($execution_id, $request, 'changeDraft');
+  }
+
+  public function readDraft(string $page_id): JsonResponse {
+    try {
+      return $this->response($this->drafts->readDraft($page_id));
+    }
+    catch (PageDraftException $e) {
+      return $this->response(['code' => $e->reason], $e->httpStatus);
+    }
+    catch (\Throwable $e) {
+      return $this->response(['code' => 'operation_unavailable'], 503);
+    }
+  }
+
+  private function write(string $execution_id, Request $request, string $method): JsonResponse {
     try {
       if (strlen($request->getContent()) > 1048576) {
         throw new PageDraftException('invalid_input', 422);
@@ -36,11 +56,12 @@ final class PageDraftController extends ControllerBase {
       catch (\JsonException $e) {
         throw new PageDraftException('invalid_input', 422);
       }
-      return $this->response($this->drafts->createDraft($execution_id, $input));
+      return $this->response($this->drafts->{$method}($execution_id, $input));
     }
     catch (PageDraftException $e) {
       $body = ['executionId' => $execution_id, 'code' => $e->reason];
-      if (in_array($e->reason, ['invalid_input', 'permission_denied'], TRUE)) {
+      if (in_array($e->reason, ['invalid_input', 'permission_denied', 'page_not_found',
+        'not_draft', 'version_conflict', 'draft_not_supported'], TRUE)) {
         $body['outcome'] = 'not_written';
       }
       return $this->response($body, $e->httpStatus);
