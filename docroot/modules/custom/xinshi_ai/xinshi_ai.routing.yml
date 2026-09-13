@@ -21,6 +21,17 @@ xinshi_ai.harness.settings:
   requirements:
     _user_is_logged_in: 'TRUE'
 
+xinshi_ai.product_documents.mcp:
+  path: '/api/v3/ai/mcp/product-documents'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ProductDocumentsMcpController::handle'
+  methods: [GET, POST, DELETE]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 # 模型注册中心管理 API(新增 / 更新 / 启停)— 供管理前台调用(详见模块文档 §5)。
 xinshi_ai.models.manage:
   path: '/api/v3/ai/manage/models'

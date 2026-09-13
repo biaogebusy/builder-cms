@@ -11,6 +11,7 @@ final class HarnessSettings {
 
   public const DEFAULTS = [
     'tools' => ['pages_enabled' => FALSE, 'disabled' => []],
+    'mcp' => ['product_documents' => ['enabled' => FALSE, 'content_types' => []]],
     'task_limits' => ['max_model_calls' => 40, 'max_tokens' => 200000],
   ];
 
@@ -32,6 +33,9 @@ final class HarnessSettings {
       'create_page' => '创建草稿', 'get_page' => '读取本人草稿',
       'apply_widget' => '追加组件', 'delete_page' => '删除本人草稿',
     ]],
+    'product_documents' => ['label' => '产品资料（MCP）', 'tools' => [
+      'search_product_documents' => '搜索产品资料', 'get_product_document' => '读取产品资料正文',
+    ]],
   ];
 
   public static function toolNames(): array {
@@ -51,6 +55,14 @@ final class HarnessSettings {
     if (is_array($tools) && is_array($tools['disabled'] ?? NULL)) {
       $result['tools']['disabled'] = array_values(array_intersect(self::toolNames(),
         array_filter($tools['disabled'], 'is_string')));
+    }
+    $documents = is_array($value['mcp'] ?? NULL) ? ($value['mcp']['product_documents'] ?? NULL) : NULL;
+    if (is_array($documents)) {
+      $result['mcp']['product_documents']['enabled'] = ($documents['enabled'] ?? FALSE) === TRUE;
+      if (is_array($documents['content_types'] ?? NULL)) {
+        $result['mcp']['product_documents']['content_types'] = array_values(array_unique(array_filter(
+          $documents['content_types'], static fn($type) => is_string($type) && preg_match('/^[a-z][a-z0-9_]{0,31}$/', $type))));
+      }
     }
     $limits = $value['task_limits'] ?? NULL;
     if (is_array($limits)) {

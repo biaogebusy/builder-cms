@@ -1,4 +1,8 @@
 services:
+  xinshi_ai.product_documents:
+    class: Drupal\xinshi_ai\Service\ProductDocuments
+    arguments: ['@config.factory', '@entity_type.manager', '@entity_field.manager', '@current_user', '@language_manager']
+
   logger.channel.xinshi_ai:
     parent: logger.channel_base
     arguments: ['xinshi_ai']

@@ -20,6 +20,7 @@ use Drupal\user\Access\PermissionAccessCheck;
 use Drupal\xinshi_ai\Controller\HarnessSettingsController;
 use Drupal\xinshi_ai\Form\SettingsForm;
 use Drupal\xinshi_ai\Service\HarnessSettings;
+use Drupal\xinshi_ai\Service\ProductDocuments;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -52,6 +53,9 @@ final class HarnessSettingsTest extends TestCase {
     $container->set('string_translation', $translation);
     $container->set('messenger', $this->createMock(MessengerInterface::class));
     $container->set('cache_tags.invalidator', $this->createMock(CacheTagsInvalidatorInterface::class));
+    $documents = $this->createMock(ProductDocuments::class);
+    $documents->method('availableContentTypes')->willReturn(['product' => '产品资料', 'article' => '文章']);
+    $container->set('xinshi_ai.product_documents', $documents);
     \Drupal::setContainer($container);
     $this->form = new SettingsForm($this->factory, $typed);
   }
@@ -83,6 +87,7 @@ final class HarnessSettingsTest extends TestCase {
     $response = (new HarnessSettingsController())->read();
     $this->assertSame([
       'version' => 1, 'tools' => ['pages_enabled' => TRUE, 'disabled' => []],
+      'mcp' => ['product_documents' => ['enabled' => FALSE, 'content_types' => []]],
       'task_limits' => ['max_model_calls' => 9, 'max_tokens' => 1200],
     ], json_decode($response->getContent(), TRUE));
     $this->assertTrue($response->headers->hasCacheControlDirective('no-store'));
@@ -116,6 +121,7 @@ final class HarnessSettingsTest extends TestCase {
     $stored = $this->storage->read('xinshi_ai.settings');
     $this->assertSame([
       'tools' => ['pages_enabled' => TRUE, 'disabled' => []],
+      'mcp' => ['product_documents' => ['enabled' => FALSE, 'content_types' => []]],
       'task_limits' => ['max_model_calls' => 7, 'max_tokens' => 1500],
     ], $stored['harness']);
     $this->assertSame('secret-key', $stored['gateway']['api_key']);
@@ -168,7 +174,7 @@ final class HarnessSettingsTest extends TestCase {
       $this->assertSame(array_values(array_diff(array_keys($group['tools']), ['get_assets', 'create_page'])),
         $element['#default_value']);
     }
-    $this->assertCount(16, HarnessSettings::toolNames());
+    $this->assertCount(18, HarnessSettings::toolNames());
   }
 
   public function testDisabledToolsSurviveSaveReloadAndReenable(): void {
@@ -190,6 +196,25 @@ final class HarnessSettingsTest extends TestCase {
       $this->assertSame('secret-key', $stored['gateway']['api_key']);
       $this->assertSame($disabled, $stored['harness']['tools']['disabled']);
     }
+  }
+
+  public function testProductSourceSavesOnlyAvailableTypesAndRequiresASelection(): void {
+    $state = (new FormState())->setValues(['harness' => [
+      'mcp' => ['product_documents' => ['enabled' => 1, 'content_types' => [
+        'product' => 'product', 'article' => 0, 'private_type' => 'private_type',
+      ]]],
+      'task_limits' => ['max_model_calls' => 10, 'max_tokens' => 20000],
+    ]]);
+    $this->selectTools($state, []);
+    $form = $this->form->buildForm([], $state);
+    $this->assertSame(['product' => '产品资料', 'article' => '文章'],
+      $form['harness']['mcp']['product_documents']['content_types']['#options']);
+    $this->form->submitForm($form, $state);
+    $response = json_decode((new HarnessSettingsController())->read()->getContent(), TRUE);
+    $this->assertSame(['product_documents' => ['enabled' => TRUE, 'content_types' => ['product']]], $response['mcp']);
+    $state->setValue(['harness', 'mcp', 'product_documents', 'content_types'], []);
+    $this->form->validateForm($form, $state);
+    $this->assertArrayHasKey('harness][mcp][product_documents][content_types', $state->getErrors());
   }
 
   #[DataProvider('limits')]

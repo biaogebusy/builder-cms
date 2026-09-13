@@ -39,6 +39,23 @@ xinshi_ai.settings:
               sequence:
                 type: string
                 label: '工具名称'
+        mcp:
+          type: mapping
+          label: 'MCP 资料来源'
+          mapping:
+            product_documents:
+              type: mapping
+              label: '产品资料'
+              mapping:
+                enabled:
+                  type: boolean
+                  label: '启用产品资料读取'
+                content_types:
+                  type: sequence
+                  label: '允许读取的内容类型'
+                  sequence:
+                    type: string
+                    label: '内容类型 ID'
         task_limits:
           type: mapping
           label: '任务限制'

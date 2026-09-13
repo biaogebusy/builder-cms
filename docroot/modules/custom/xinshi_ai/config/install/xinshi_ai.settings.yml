@@ -8,6 +8,10 @@ harness:
   tools:
     pages_enabled: false
     disabled: []
+  mcp:
+    product_documents:
+      enabled: false
+      content_types: []
   task_limits:
     max_model_calls: 40
     max_tokens: 200000

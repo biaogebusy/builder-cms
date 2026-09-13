@@ -96,6 +96,22 @@ final class SettingsForm extends ConfigFormBase {
         '#default_value' => array_values(array_diff(array_keys($group['tools']), $harness['tools']['disabled'])),
       ];
     }
+    $documentTypes = \Drupal::service('xinshi_ai.product_documents')->availableContentTypes();
+    $documents = $harness['mcp']['product_documents'];
+    $form['harness']['mcp'] = ['#type' => 'container'];
+    $form['harness']['mcp']['product_documents'] = [
+      '#type' => 'fieldset', '#title' => $this->t('产品资料来源（MCP）'),
+      '#description' => $this->t('使用本站已发布内容生成页面。只读取所选内容类型的标题和正文，并检查当前用户的查看权限。资料读取不会创建或发布页面。'),
+      'enabled' => [
+        '#type' => 'checkbox', '#title' => $this->t('启用产品资料读取'),
+        '#default_value' => $documents['enabled'],
+      ],
+      'content_types' => [
+        '#type' => 'checkboxes', '#title' => $this->t('允许作为资料的内容类型'),
+        '#description' => $this->t('仅列出具有文本正文 body 字段的类型。可选择产品介绍、文章、案例或文档；不读取未发布修订、附件或其他字段。'),
+        '#options' => $documentTypes, '#default_value' => $documents['content_types'],
+      ],
+    ];
     $form['harness']['task_limits'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('任务限制'),
@@ -184,6 +200,14 @@ final class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    parent::validateForm($form, $form_state);
+    if ($form_state->getValue(['harness', 'mcp', 'product_documents', 'enabled']) &&
+        !array_filter($form_state->getValue(['harness', 'mcp', 'product_documents', 'content_types'], []))) {
+      $form_state->setErrorByName('harness][mcp][product_documents][content_types', $this->t('启用产品资料读取时，请至少选择一种资料内容类型。'));
+    }
+  }
+
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $enabled = [];
     foreach (HarnessSettings::TOOL_GROUPS as $id => $group) {
@@ -194,6 +218,9 @@ final class SettingsForm extends ConfigFormBase {
         }
       }
     }
+    $types = \Drupal::service('xinshi_ai.product_documents')->availableContentTypes();
+    $selected = $form_state->getValue(['harness', 'mcp', 'product_documents', 'content_types'], []);
+    $documentTypes = array_values(array_filter(array_keys($types), static fn($type) => ($selected[$type] ?? NULL) === $type));
     $this->config(self::CONFIG_NAME)
       ->set('gateway.base_url', $form_state->getValue('base_url'))
       ->set('gateway.api_key', $form_state->getValue('api_key'))
@@ -205,6 +232,8 @@ final class SettingsForm extends ConfigFormBase {
       ->set('sse.max_lifetime_seconds', (int) $form_state->getValue('max_lifetime_seconds'))
       ->set('harness.tools.pages_enabled', (bool) $form_state->getValue(['harness', 'tools', 'pages_enabled']))
       ->set('harness.tools.disabled', array_values(array_diff(HarnessSettings::toolNames(), $enabled)))
+      ->set('harness.mcp.product_documents.enabled', (bool) $form_state->getValue(['harness', 'mcp', 'product_documents', 'enabled']))
+      ->set('harness.mcp.product_documents.content_types', $documentTypes)
       ->set('harness.task_limits.max_model_calls', (int) $form_state->getValue(['harness', 'task_limits', 'max_model_calls']))
       ->set('harness.task_limits.max_tokens', (int) $form_state->getValue(['harness', 'task_limits', 'max_tokens']))
       ->save();
