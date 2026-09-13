@@ -33,6 +33,12 @@ xinshi_ai.settings:
             pages_enabled:
               type: boolean
               label: '启用页面草稿工具'
+            disabled:
+              type: sequence
+              label: '停用的工具'
+              sequence:
+                type: string
+                label: '工具名称'
         task_limits:
           type: mapping
           label: '任务限制'

@@ -83,6 +83,19 @@ final class SettingsForm extends ConfigFormBase {
       '#description' => $this->t('允许 AI 读取、创建、追加组件和删除本人草稿；仍需相应页面权限，写入仍需用户确认。关闭后仍可核验已提交操作。对应 CHAT_CREATE_PAGE_ENABLED。'),
       '#default_value' => $harness['tools']['pages_enabled'],
     ];
+    $form['harness']['tools']['enabled'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('允许使用的工具'),
+      '#description' => $this->t('取消勾选即可停用工具。勾选后仍需用户权限，页面草稿工具还需开启上方总开关，写入仍需确认。停用不会妨碍核验已提交操作。'),
+    ];
+    foreach (HarnessSettings::TOOL_GROUPS as $id => $group) {
+      $form['harness']['tools']['enabled'][$id] = [
+        '#type' => 'checkboxes',
+        '#title' => $this->t($group['label']),
+        '#options' => array_map(fn($label) => $this->t($label), $group['tools']),
+        '#default_value' => array_values(array_diff(array_keys($group['tools']), $harness['tools']['disabled'])),
+      ];
+    }
     $form['harness']['task_limits'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('任务限制'),
@@ -172,6 +185,15 @@ final class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $enabled = [];
+    foreach (HarnessSettings::TOOL_GROUPS as $id => $group) {
+      $values = $form_state->getValue(['harness', 'tools', 'enabled', $id], []);
+      foreach (array_keys($group['tools']) as $name) {
+        if (($values[$name] ?? NULL) === $name) {
+          $enabled[] = $name;
+        }
+      }
+    }
     $this->config(self::CONFIG_NAME)
       ->set('gateway.base_url', $form_state->getValue('base_url'))
       ->set('gateway.api_key', $form_state->getValue('api_key'))
@@ -182,6 +204,7 @@ final class SettingsForm extends ConfigFormBase {
       ->set('sse.heartbeat_seconds', (int) $form_state->getValue('heartbeat_seconds'))
       ->set('sse.max_lifetime_seconds', (int) $form_state->getValue('max_lifetime_seconds'))
       ->set('harness.tools.pages_enabled', (bool) $form_state->getValue(['harness', 'tools', 'pages_enabled']))
+      ->set('harness.tools.disabled', array_values(array_diff(HarnessSettings::toolNames(), $enabled)))
       ->set('harness.task_limits.max_model_calls', (int) $form_state->getValue(['harness', 'task_limits', 'max_model_calls']))
       ->set('harness.task_limits.max_tokens', (int) $form_state->getValue(['harness', 'task_limits', 'max_tokens']))
       ->save();

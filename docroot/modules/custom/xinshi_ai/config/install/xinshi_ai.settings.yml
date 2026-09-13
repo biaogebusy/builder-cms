@@ -7,6 +7,7 @@ image:
 harness:
   tools:
     pages_enabled: false
+    disabled: []
   task_limits:
     max_model_calls: 40
     max_tokens: 200000

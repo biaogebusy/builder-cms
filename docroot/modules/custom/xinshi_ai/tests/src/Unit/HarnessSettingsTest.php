@@ -82,7 +82,7 @@ final class HarnessSettingsTest extends TestCase {
     ])->save();
     $response = (new HarnessSettingsController())->read();
     $this->assertSame([
-      'version' => 1, 'tools' => ['pages_enabled' => TRUE],
+      'version' => 1, 'tools' => ['pages_enabled' => TRUE, 'disabled' => []],
       'task_limits' => ['max_model_calls' => 9, 'max_tokens' => 1200],
     ], json_decode($response->getContent(), TRUE));
     $this->assertTrue($response->headers->hasCacheControlDirective('no-store'));
@@ -111,10 +111,11 @@ final class HarnessSettingsTest extends TestCase {
     ]);
     $form = $this->form->buildForm([], $state);
     $this->assertTrue($form['harness']['#tree']);
+    $this->selectTools($state, []);
     $this->form->submitForm($form, $state);
     $stored = $this->storage->read('xinshi_ai.settings');
     $this->assertSame([
-      'tools' => ['pages_enabled' => TRUE],
+      'tools' => ['pages_enabled' => TRUE, 'disabled' => []],
       'task_limits' => ['max_model_calls' => 7, 'max_tokens' => 1500],
     ], $stored['harness']);
     $this->assertSame('secret-key', $stored['gateway']['api_key']);
@@ -132,6 +133,63 @@ final class HarnessSettingsTest extends TestCase {
       [HarnessSettings::MAX_LIMIT + 1, FALSE],
       [1, TRUE], ['200000', TRUE], [(string) HarnessSettings::MAX_LIMIT, TRUE],
     ];
+  }
+
+  private function selectTools(FormState $state, array $disabled): void {
+    foreach (HarnessSettings::TOOL_GROUPS as $id => $group) {
+      $values = [];
+      foreach (array_keys($group['tools']) as $name) {
+        $values[$name] = in_array($name, $disabled, TRUE) ? 0 : $name;
+      }
+      $state->setValue(['harness', 'tools', 'enabled', $id], $values);
+    }
+  }
+
+  public function testToolConfigurationOnlyReturnsRegisteredNames(): void {
+    $this->factory->getEditable('xinshi_ai.settings')->set('harness.tools', [
+      'pages_enabled' => TRUE,
+      'disabled' => ['create_page', 'get_assets', 'get_assets', 'unknown_tool', FALSE, ['invalid']],
+      'enabled' => ['unknown_tool'], 'endpoint' => 'https://example.invalid',
+    ])->save();
+    $tools = json_decode((new HarnessSettingsController())->read()->getContent(), TRUE)['tools'];
+    $this->assertSame(['pages_enabled' => TRUE, 'disabled' => ['get_assets', 'create_page']], $tools);
+  }
+
+  public function testToolCheckboxesReflectSavedRestrictionsWithoutEnablingPageWrites(): void {
+    $this->factory->getEditable('xinshi_ai.settings')
+      ->set('harness.tools.disabled', ['get_assets', 'create_page'])->save();
+    $form = $this->form->buildForm([], new FormState());
+    $this->assertFalse($form['harness']['tools']['pages_enabled']['#default_value']);
+    foreach (HarnessSettings::TOOL_GROUPS as $id => $group) {
+      $element = $form['harness']['tools']['enabled'][$id];
+      $this->assertSame('checkboxes', $element['#type']);
+      $this->assertNotEmpty((string) $element['#title']);
+      $this->assertSame(array_keys($group['tools']), array_keys($element['#options']));
+      $this->assertSame(array_values(array_diff(array_keys($group['tools']), ['get_assets', 'create_page'])),
+        $element['#default_value']);
+    }
+    $this->assertCount(16, HarnessSettings::toolNames());
+  }
+
+  public function testDisabledToolsSurviveSaveReloadAndReenable(): void {
+    $state = (new FormState())->setValues([
+      'base_url' => 'https://example.test', 'api_key' => 'secret-key', 'request_timeout' => 180,
+      'harness' => ['tools' => ['pages_enabled' => 0],
+        'task_limits' => ['max_model_calls' => 3, 'max_tokens' => 10000]],
+    ]);
+    foreach ([['get_assets', 'create_page'], HarnessSettings::toolNames(), []] as $disabled) {
+      $this->selectTools($state, $disabled);
+      $state->setValue(['harness', 'tools', 'enabled', 'pages', 'unknown_tool'], 'unknown_tool');
+      $form = $this->form->buildForm([], $state);
+      $this->form->submitForm($form, $state);
+      $settings = json_decode((new HarnessSettingsController())->read()->getContent(), TRUE);
+      $this->assertSame(['pages_enabled' => FALSE, 'disabled' => $disabled], $settings['tools']);
+      $this->assertSame(['max_model_calls' => 3, 'max_tokens' => 10000], $settings['task_limits']);
+      $stored = $this->storage->read('xinshi_ai.settings');
+      $this->assertSame(['ingest_token_env' => 'SECRET_TOKEN_ENV'], $stored['observability']);
+      $this->assertSame('secret-key', $stored['gateway']['api_key']);
+      $this->assertSame($disabled, $stored['harness']['tools']['disabled']);
+    }
   }
 
   #[DataProvider('limits')]
