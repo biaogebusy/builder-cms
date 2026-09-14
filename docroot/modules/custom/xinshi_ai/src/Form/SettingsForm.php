@@ -101,14 +101,14 @@ final class SettingsForm extends ConfigFormBase {
     $form['harness']['mcp'] = ['#type' => 'container'];
     $form['harness']['mcp']['product_documents'] = [
       '#type' => 'fieldset', '#title' => $this->t('产品资料来源（MCP）'),
-      '#description' => $this->t('使用本站已发布内容生成页面。只读取所选内容类型的标题和正文，并检查当前用户的查看权限。资料读取不会创建或发布页面。'),
+      '#description' => $this->t('使用本站已发布资料生成页面，并检查当前用户的查看权限。启用 Xinshi Knowledge 模块后，通过 Search API 检索正文和已解析的知识库附件。资料读取不会创建或发布页面。'),
       'enabled' => [
         '#type' => 'checkbox', '#title' => $this->t('启用产品资料读取'),
         '#default_value' => $documents['enabled'],
       ],
       'content_types' => [
         '#type' => 'checkboxes', '#title' => $this->t('允许作为资料的内容类型'),
-        '#description' => $this->t('仅列出具有文本正文 body 字段的类型。可选择产品介绍、文章、案例或文档；不读取未发布修订、附件或其他字段。'),
+        '#description' => $this->t('仅列出具有文本正文 body 字段的类型。可选择知识库、产品介绍、文章或案例；附件只从知识库专用字段读取，不读取未发布修订。更改资料范围后，等待 Search API 后台索引完成。'),
         '#options' => $documentTypes, '#default_value' => $documents['content_types'],
       ],
     ];

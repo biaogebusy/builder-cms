@@ -1,0 +1,16 @@
+name: 'Xinshi Knowledge'
+type: module
+description: '知识库、私有文档后台解析和 Search API 全文检索。'
+package: Xinshi
+core_version_requirement: ^11
+configure: xinshi_knowledge.settings
+dependencies:
+  - drupal:node
+  - drupal:text
+  - drupal:media_library
+  - drupal:file
+  - drupal:taxonomy
+  - drupal:language
+  - drupal:content_translation
+  - search_api:search_api
+  - search_api:search_api_db

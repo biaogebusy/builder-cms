@@ -1,0 +1,5 @@
+xinshi_knowledge.settings:
+  title: '知识库文档解析'
+  description: '配置知识库附件的解析服务。'
+  route_name: xinshi_knowledge.settings
+  parent: system.admin_config_content

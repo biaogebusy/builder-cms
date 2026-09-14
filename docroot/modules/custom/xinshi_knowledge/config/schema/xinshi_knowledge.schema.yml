@@ -1,0 +1,11 @@
+xinshi_knowledge.settings:
+  type: config_object
+  label: 'Knowledge document extraction'
+  mapping:
+    tika_url:
+      type: string
+      label: 'Internal Apache Tika server URL'
+
+plugin.plugin_configuration.search_api_processor.xinshi_knowledge_text:
+  type: search_api.fields_processor_configuration
+  label: 'Knowledge text and source snapshot'

@@ -1,0 +1,5 @@
+xinshi_knowledge.document_status:
+  route_name: xinshi_knowledge.document_status
+  base_route: entity.node.canonical
+  title: '附件解析'
+  weight: 20

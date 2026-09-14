@@ -1,0 +1,19 @@
+xinshi_knowledge.settings:
+  path: '/admin/config/content/xinshi-knowledge'
+  defaults:
+    _form: '\Drupal\xinshi_knowledge\Form\SettingsForm'
+    _title: '知识库文档解析'
+  requirements:
+    _permission: 'administer xinshi knowledge'
+xinshi_knowledge.document_status:
+  path: '/node/{node}/knowledge-status'
+  defaults:
+    _form: '\Drupal\xinshi_knowledge\Form\DocumentStatusForm'
+    _title: '附件解析状态'
+  requirements:
+    _custom_access: '\Drupal\xinshi_knowledge\Form\DocumentStatusForm::access'
+  options:
+    _admin_route: true
+    parameters:
+      node:
+        type: entity:node

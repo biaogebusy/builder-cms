@@ -1,0 +1,183 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Knowledge derivatives are private operational data, not public entity fields.
+ */
+
+/** Implements hook_schema(). */
+function xinshi_knowledge_schema(): array {
+  return ['xinshi_knowledge_extraction' => [
+    'description' => 'Current default Media revision extraction and queue state.',
+    'fields' => [
+      'mid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'source_key' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'generation' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'fid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'status' => ['type' => 'varchar', 'length' => 16, 'not null' => TRUE],
+      'attempts' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'error' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => ''],
+      'file_hash' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => ''],
+      'segments' => ['type' => 'blob', 'size' => 'big', 'not null' => FALSE],
+      'updated' => ['type' => 'int', 'not null' => TRUE],
+    ],
+    'primary key' => ['mid'],
+    'indexes' => ['file' => ['fid']],
+  ]];
+}
+
+/** Implements hook_install(). */
+function xinshi_knowledge_install(): void {
+  xinshi_knowledge_install_model();
+  xinshi_knowledge_install_index();
+  // No reader/editor roles are granted automatically.
+  \Drupal::service('xinshi_knowledge.documents')->syncContentTypes();
+}
+
+/** Creates the owned bundles without replacing a site's shared body storage. */
+function xinshi_knowledge_install_model(): void {
+  $owned = ['enforced' => ['module' => ['xinshi_knowledge']]];
+  $node = \Drupal\node\Entity\NodeType::create([
+    'type' => 'xinshi_knowledge', 'name' => '知识库',
+    'description' => '用于检索和生成页面的资料正文及私有文档附件。',
+    'new_revision' => TRUE, 'display_submitted' => FALSE, 'dependencies' => $owned,
+  ]);
+  $node->save();
+  $bodyStorage = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'body');
+  if (!$bodyStorage) {
+    $bodyStorage = \Drupal\field\Entity\FieldStorageConfig::create([
+      'entity_type' => 'node', 'field_name' => 'body', 'type' => 'text_with_summary',
+      'cardinality' => 1, 'translatable' => TRUE,
+    ]);
+    $bodyStorage->save();
+  }
+  \Drupal\field\Entity\FieldConfig::create([
+    'field_storage' => $bodyStorage, 'bundle' => $node->id(), 'label' => '简介与正文',
+    'translatable' => TRUE, 'settings' => ['display_summary' => TRUE, 'allowed_formats' => []],
+  ])->save();
+  \Drupal\taxonomy\Entity\Vocabulary::create([
+    'vid' => 'xinshi_knowledge_category', 'name' => '知识库分类', 'dependencies' => $owned,
+  ])->save();
+  \Drupal\media\Entity\MediaType::create([
+    'id' => 'xinshi_knowledge_document', 'label' => '知识库文档',
+    'description' => 'Word、Excel、PDF 或 TXT 私有附件。', 'source' => 'file',
+    'new_revision' => TRUE, 'queue_thumbnail_downloads' => FALSE,
+    'source_configuration' => ['source_field' => 'field_knowledge_file'],
+    'field_map' => ['name' => 'name'], 'dependencies' => $owned,
+  ])->save();
+  $fields = [
+    ['media', 'xinshi_knowledge_document', 'field_knowledge_file', 'file', '文档', 1,
+      ['target_type' => 'file', 'display_field' => FALSE, 'display_default' => FALSE, 'uri_scheme' => 'private'],
+      ['handler' => 'default:file', 'handler_settings' => [],
+        'file_directory' => 'xinshi-knowledge/[date:custom:Y]-[date:custom:m]',
+        'file_extensions' => 'txt doc docx xls xlsx pdf', 'max_filesize' => '20 MB',
+        'description_field' => FALSE], TRUE, FALSE],
+    ['node', 'xinshi_knowledge', 'field_knowledge_documents', 'entity_reference', '文档附件', 10,
+      ['target_type' => 'media'],
+      ['handler' => 'default:media', 'handler_settings' => [
+        'target_bundles' => ['xinshi_knowledge_document' => 'xinshi_knowledge_document'],
+        'auto_create' => FALSE]], FALSE, TRUE],
+    ['node', 'xinshi_knowledge', 'field_knowledge_category', 'entity_reference', '分类', -1,
+      ['target_type' => 'taxonomy_term'],
+      ['handler' => 'default:taxonomy_term', 'handler_settings' => [
+        'target_bundles' => ['xinshi_knowledge_category' => 'xinshi_knowledge_category'],
+        'auto_create' => FALSE]], FALSE, TRUE],
+  ];
+  foreach ($fields as [$entity, $bundle, $name, $type, $label, $cardinality, $storage, $settings, $required, $translatable]) {
+    \Drupal\field\Entity\FieldStorageConfig::create([
+      'entity_type' => $entity, 'field_name' => $name, 'type' => $type,
+      'cardinality' => $cardinality, 'settings' => $storage, 'dependencies' => $owned,
+    ])->save();
+    \Drupal\field\Entity\FieldConfig::create([
+      'entity_type' => $entity, 'bundle' => $bundle, 'field_name' => $name,
+      'label' => $label, 'settings' => $settings, 'required' => $required,
+      'translatable' => $translatable, 'dependencies' => $owned,
+    ])->save();
+  }
+  $display = \Drupal::service('entity_display.repository');
+  $display->getFormDisplay('node', 'xinshi_knowledge')
+    ->setComponent('title', ['type' => 'string_textfield', 'weight' => 0])
+    ->setComponent('body', ['type' => 'text_textarea_with_summary', 'weight' => 1])
+    ->setComponent('field_knowledge_documents', ['type' => 'media_library_widget', 'weight' => 2,
+      'settings' => ['media_types' => ['xinshi_knowledge_document']]])
+    ->setComponent('field_knowledge_category', ['type' => 'entity_reference_autocomplete', 'weight' => 3])
+    ->setComponent('langcode', ['type' => 'language_select', 'weight' => 4])
+    ->setComponent('status', ['type' => 'boolean_checkbox', 'weight' => 10])->save();
+  $display->getViewDisplay('node', 'xinshi_knowledge')
+    ->setComponent('body', ['type' => 'text_default', 'label' => 'hidden', 'weight' => 0])
+    ->setComponent('field_knowledge_documents', ['type' => 'entity_reference_entity_view',
+      'label' => 'above', 'weight' => 1, 'settings' => ['view_mode' => 'default', 'link' => FALSE]])
+    ->setComponent('field_knowledge_category', ['type' => 'entity_reference_label',
+      'label' => 'above', 'weight' => 2, 'settings' => ['link' => FALSE]])->save();
+  $display->getFormDisplay('media', 'xinshi_knowledge_document')
+    ->setComponent('field_knowledge_file', ['type' => 'file_generic', 'weight' => 0])
+    ->setComponent('status', ['type' => 'boolean_checkbox', 'weight' => 1])
+    ->removeComponent('name')->save();
+  $display->getFormDisplay('media', 'xinshi_knowledge_document', 'media_library')
+    ->removeComponent('field_knowledge_file')->removeComponent('name')
+    ->removeComponent('status')->removeComponent('uid')->removeComponent('created')->save();
+  $display->getViewDisplay('media', 'xinshi_knowledge_document')
+    ->setComponent('field_knowledge_file', ['type' => 'file_default', 'label' => 'hidden', 'weight' => 0])
+    ->removeComponent('thumbnail')->removeComponent('name')->removeComponent('uid')->removeComponent('created')->save();
+  $display->getViewDisplay('media', 'xinshi_knowledge_document', 'media_library')
+    ->setComponent('thumbnail', ['type' => 'image', 'label' => 'hidden', 'weight' => 0,
+      'settings' => ['image_style' => 'thumbnail', 'image_link' => '']])
+    ->removeComponent('field_knowledge_file')->removeComponent('name')
+    ->removeComponent('uid')->removeComponent('created')->save();
+  \Drupal\language\Entity\ContentLanguageSettings::loadByEntityTypeBundle('node', 'xinshi_knowledge')
+    ->setDefaultLangcode('current_interface')->setLanguageAlterable(TRUE)
+    ->setThirdPartySetting('content_translation', 'enabled', TRUE)->save();
+}
+
+/** Own a database index, leaving existing search servers and indexes alone. */
+function xinshi_knowledge_install_index(): void {
+  \Drupal\search_api\Entity\Server::create([
+    'id' => 'xinshi_knowledge', 'name' => '知识库全文检索', 'status' => TRUE,
+    'backend' => 'search_api_db', 'backend_config' => [
+      'database' => 'default:default', 'min_chars' => 2, 'matching' => 'words', 'phrase' => 'bigram',
+    ], 'dependencies' => ['enforced' => ['module' => ['xinshi_knowledge']]],
+  ])->save();
+  $fields = [];
+  foreach (['title' => 'text', 'type' => 'string', 'status' => 'boolean', 'changed' => 'date', 'uid' => 'integer'] as $name => $type) {
+    $fields[$name] = ['label' => $name, 'type' => $type, 'datasource_id' => 'entity:node', 'property_path' => $name];
+  }
+  $fields['title']['boost'] = 5;
+  foreach (['document_text' => ['text', 'xinshi_document_text'], 'snapshot' => ['string', 'xinshi_document_snapshot'],
+    'node_grants' => ['string', 'search_api_node_grants']] as $name => [$type, $path]) {
+    $fields[$name] = ['label' => $name, 'type' => $type, 'property_path' => $path];
+  }
+  \Drupal\search_api\Entity\Index::create([
+    'id' => 'xinshi_knowledge', 'name' => '知识库与产品资料', 'status' => TRUE,
+    'read_only' => FALSE, 'server' => 'xinshi_knowledge', 'field_settings' => $fields,
+    'datasource_settings' => ['entity:node' => [
+      'bundles' => ['default' => FALSE, 'selected' => ['xinshi_knowledge']],
+      'languages' => ['default' => TRUE, 'selected' => []],
+    ]],
+    'processor_settings' => [
+      'xinshi_knowledge_text' => [], 'content_access' => [],
+      'ignorecase' => ['fields' => ['title', 'document_text']],
+      'tokenizer' => ['fields' => ['title', 'document_text'], 'spaces' => '',
+        'overlap_cjk' => 1, 'minimum_word_size' => 2],
+    ],
+    'tracker_settings' => ['default' => ['indexing_order' => 'fifo']],
+    'options' => ['cron_limit' => 25, 'index_directly' => FALSE],
+    'dependencies' => ['enforced' => ['module' => ['xinshi_knowledge']]],
+  ])->save();
+}
+
+/** Implements hook_requirements(). */
+function xinshi_knowledge_requirements(string $phase): array {
+  if ($phase !== 'runtime') {
+    return [];
+  }
+  $private = (bool) \Drupal\Core\Site\Settings::get('file_private_path');
+  $tika = (bool) \Drupal::config('xinshi_knowledge.settings')->get('tika_url');
+  return ['xinshi_knowledge' => [
+    'title' => t('知识库文档解析'),
+    'value' => $private && $tika ? t('已配置') : t('需要配置'),
+    'severity' => $private && $tika ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => t('知识库附件使用私有文件目录；Word、Excel 和 PDF 需要内部 Apache Tika 服务。配置完成后通过 cron 处理解析和索引队列。'),
+  ]];
+}

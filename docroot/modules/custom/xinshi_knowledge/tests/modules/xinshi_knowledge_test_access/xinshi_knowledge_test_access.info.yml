@@ -1,0 +1,7 @@
+name: 'Knowledge access test fixture'
+type: module
+package: Testing
+core_version_requirement: ^11
+hidden: true
+dependencies:
+  - xinshi_knowledge:xinshi_knowledge

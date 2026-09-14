@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/** Implements hook_entity_field_access(). */
+function xinshi_knowledge_test_access_entity_field_access(string $operation, FieldDefinitionInterface $field,
+  AccountInterface $account, ?FieldItemListInterface $items = NULL): AccessResult {
+  $denied = \Drupal::state()->get('knowledge_test.denied_field');
+  return ($operation === 'view' && $denied === [$field->getTargetEntityTypeId(), $field->getName()]
+    ? AccessResult::forbidden() : AccessResult::neutral())->setCacheMaxAge(0);
+}
+
+/** Implements hook_entity_access(). */
+function xinshi_knowledge_test_access_entity_access(EntityInterface $entity, string $operation,
+  AccountInterface $account): AccessResult {
+  $denied = $operation === 'view' && $entity->getEntityTypeId() === 'node' &&
+    (string) \Drupal::state()->get('knowledge_test.denied_node') === (string) $entity->id();
+  return ($denied ? AccessResult::forbidden() : AccessResult::neutral())->setCacheMaxAge(0);
+}
+
+/** Implements hook_file_download(). */
+function xinshi_knowledge_test_access_file_download(string $uri): ?int {
+  return $uri === \Drupal::state()->get('knowledge_test.denied_file') ? -1 : NULL;
+}

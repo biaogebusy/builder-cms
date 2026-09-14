@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
+use Drupal\xinshi_knowledge\Service\DocumentRepository;
 
 /** Reads selected published node bodies, with entity and field access checks. */
 class ProductDocuments {
@@ -24,6 +25,7 @@ class ProductDocuments {
     private readonly EntityFieldManagerInterface $fieldManager,
     private readonly AccountInterface $account,
     private readonly LanguageManagerInterface $languageManager,
+    private readonly ?DocumentRepository $documentIndex = NULL,
   ) {}
 
   /** Only node bundles with a normal text body can supply product documents. */
@@ -52,7 +54,7 @@ class ProductDocuments {
       throw new \DomainException('disabled');
     }
     $search = $name === 'search_product_documents';
-    $allowed = $search ? ['query', 'page', 'language'] : ['id', 'offset', 'revision', 'language'];
+    $allowed = $search ? ['query', 'page', 'language'] : ['id', 'offset', 'revision', 'snapshot', 'language'];
     if (array_diff(array_keys($arguments), $allowed)) {
       throw new \InvalidArgumentException('invalid_input');
     }
@@ -79,6 +81,12 @@ class ProductDocuments {
         !is_int($page) || $page < 0 || $page > 1000) {
       throw new \InvalidArgumentException('invalid_input');
     }
+    if ($this->documentIndex) {
+      $found = $this->documentIndex->search(trim($needle), $language, $this->contentTypes(), $page, $this->account);
+      return ['documents' => array_map(fn(array $match): array => $this->metadata($match['node']) +
+        ['snapshot' => $match['snapshot'], 'excerpt' => $match['excerpt']], $found['matches']),
+        'nextPage' => $found['nextPage']];
+    }
     $storage = $this->entityTypeManager->getStorage('node');
     $query = $storage->getQuery()->accessCheck(TRUE)
       ->condition('type', $this->contentTypes(), 'IN')
@@ -104,10 +112,12 @@ class ProductDocuments {
     $id = $arguments['id'] ?? NULL;
     $offset = $arguments['offset'] ?? 0;
     $revision = $arguments['revision'] ?? NULL;
+    $snapshot = $arguments['snapshot'] ?? NULL;
     if (!is_string($id) || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id) ||
         !is_int($offset) || $offset < 0 || $offset > 10000000 ||
         ($revision !== NULL && (!is_string($revision) || !preg_match('/^\d{1,32}$/', $revision))) ||
-        ($offset > 0 && $revision === NULL)) {
+        ($snapshot !== NULL && (!is_string($snapshot) || !preg_match('/^[a-f0-9]{64}$/', $snapshot))) ||
+        ($offset > 0 && ($revision === NULL || ($this->documentIndex && $snapshot === NULL)))) {
       throw new \InvalidArgumentException('invalid_input');
     }
     $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
@@ -121,13 +131,17 @@ class ProductDocuments {
     if ($revision !== NULL && $revision !== (string) $translation->getRevisionId()) {
       throw new \DomainException('changed');
     }
-    $body = $this->body($translation);
+    $source = $this->documentIndex?->content($translation, $this->account);
+    if ($snapshot !== NULL && (!$source || !hash_equals($source['snapshot'], $snapshot))) {
+      throw new \DomainException('changed');
+    }
+    $body = $source['content'] ?? $this->body($translation);
     $length = mb_strlen($body);
     if ($offset > $length) {
       throw new \InvalidArgumentException('invalid_input');
     }
     return [
-      'document' => $this->metadata($translation),
+      'document' => $this->metadata($translation) + ($source ? ['snapshot' => $source['snapshot']] : []),
       'content' => mb_substr($body, $offset, self::CHUNK_LENGTH),
       'offset' => $offset, 'totalCharacters' => $length,
       'nextOffset' => $offset + self::CHUNK_LENGTH < $length ? $offset + self::CHUNK_LENGTH : NULL,

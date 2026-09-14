@@ -1,0 +1,16 @@
+{
+  "server": {
+    "maxRequestSizeBytes": 20971520,
+    "allowPipes": false,
+    "allowPerRequestConfig": false
+  },
+  "parse-context": {
+    "skip-embedded-document-selector": {},
+    "pdf-parser": {
+      "ocr": { "strategy": "NO_OCR" }
+    },
+    "tesseract-ocr-parser": {
+      "skipOcr": true
+    }
+  }
+}

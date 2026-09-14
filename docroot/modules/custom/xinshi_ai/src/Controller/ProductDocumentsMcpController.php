@@ -112,7 +112,7 @@ final class ProductDocumentsMcpController extends ControllerBase {
           $failed = TRUE;
         }
         catch (\DomainException $error) {
-          $value = ['code' => in_array($error->getMessage(), ['disabled', 'not_found', 'changed'], TRUE)
+          $value = ['code' => in_array($error->getMessage(), ['disabled', 'not_found', 'changed', 'processing', 'parse_failed'], TRUE)
             ? $error->getMessage() : 'unavailable'];
           $failed = TRUE;
         }
@@ -135,7 +135,7 @@ final class ProductDocumentsMcpController extends ControllerBase {
     return [
       'name' => $name,
       'description' => $search ? 'Search permitted published product documents in the requested language.'
-        : 'Read a published product document. Continue with nextOffset and the same revisionId.',
+        : 'Read published source text and parsed attachments. Continue with nextOffset, revisionId and snapshot when provided.',
       'annotations' => ['readOnlyHint' => TRUE, 'destructiveHint' => FALSE, 'openWorldHint' => FALSE],
       'inputSchema' => [
         'type' => 'object', 'additionalProperties' => FALSE,
@@ -146,6 +146,7 @@ final class ProductDocumentsMcpController extends ControllerBase {
           'id' => ['type' => 'string', 'format' => 'uuid'],
           'offset' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 10000000],
           'revision' => ['type' => 'string', 'pattern' => '^\\d{1,32}$'],
+          'snapshot' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
         ]) + ['language' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 35]],
         'required' => $search ? ['query', 'language'] : ['id', 'language'],
       ],

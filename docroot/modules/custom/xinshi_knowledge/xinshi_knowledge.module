@@ -1,0 +1,91 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Source lifecycle and private knowledge access.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\file\FileInterface;
+use Drupal\media\MediaInterface;
+use Drupal\node\NodeInterface;
+use Drupal\xinshi_knowledge\Knowledge;
+
+/** Implements hook_entity_insert(). */
+function xinshi_knowledge_entity_insert(EntityInterface $entity): void {
+  xinshi_knowledge_entity_update($entity);
+}
+
+/** Implements hook_entity_update(). */
+function xinshi_knowledge_entity_update(EntityInterface $entity): void {
+  $extraction = \Drupal::service('xinshi_knowledge.extraction');
+  if ($entity instanceof MediaInterface && $entity->bundle() === Knowledge::MEDIA) {
+    $extraction->schedule($entity);
+  }
+  elseif ($entity instanceof FileInterface) {
+    $extraction->fileChanged($entity);
+  }
+  elseif ($entity instanceof NodeInterface && $entity->bundle() === Knowledge::NODE && $entity->isDefaultRevision()) {
+    foreach ($entity->getTranslationLanguages() as $language) {
+      foreach ($entity->getTranslation($language->getId())->get(Knowledge::ATTACHMENTS) as $item) {
+        if ($item->entity instanceof MediaInterface) {
+          $extraction->schedule($item->entity);
+        }
+      }
+    }
+  }
+}
+
+/** Implements hook_entity_delete(). */
+function xinshi_knowledge_entity_delete(EntityInterface $entity): void {
+  if ($entity instanceof MediaInterface && $entity->bundle() === Knowledge::MEDIA) {
+    \Drupal::service('xinshi_knowledge.extraction')->forget((int) $entity->id());
+  }
+  elseif ($entity instanceof FileInterface) {
+    \Drupal::service('xinshi_knowledge.extraction')->fileChanged($entity, TRUE);
+  }
+}
+
+/** Implements hook_entity_access(). */
+function xinshi_knowledge_entity_access(EntityInterface $entity, string $operation, AccountInterface $account): AccessResult {
+  $knowledgeNode = $entity instanceof NodeInterface && $entity->bundle() === Knowledge::NODE;
+  $knowledgeMedia = $entity instanceof MediaInterface && $entity->bundle() === Knowledge::MEDIA;
+  if ((!$knowledgeNode && !$knowledgeMedia) || !str_starts_with($operation, 'view')) {
+    return AccessResult::neutral();
+  }
+  if (!$account->isAuthenticated() || !$account->hasPermission('view xinshi knowledge')) {
+    return AccessResult::forbidden()->cachePerPermissions()->cachePerUser();
+  }
+  if (!$knowledgeMedia || $account->hasPermission('administer media') ||
+      ($entity->getOwnerId() == $account->id() && $account->hasPermission('create ' . Knowledge::MEDIA . ' media'))) {
+    return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
+  }
+  // Media's generic "view media" permission must not bypass its parent document.
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $ids = $storage->getQuery()->accessCheck(FALSE)->condition('type', Knowledge::NODE)
+    ->condition(Knowledge::ATTACHMENTS . '.target_id', $entity->id())->execute();
+  foreach ($storage->loadMultiple($ids) as $node) {
+    foreach ($node->getTranslationLanguages() as $language) {
+      $translation = $node->getTranslation($language->getId());
+      $references = array_map('strval', array_column($translation->get(Knowledge::ATTACHMENTS)->getValue(), 'target_id'));
+      if (in_array((string) $entity->id(), $references, TRUE) &&
+          $translation->access('view', $account) && $translation->get(Knowledge::ATTACHMENTS)->access('view', $account)) {
+        return AccessResult::neutral()->setCacheMaxAge(0);
+      }
+    }
+  }
+  return AccessResult::forbidden()->setCacheMaxAge(0);
+}
+
+/** Implements hook_file_download(). */
+function xinshi_knowledge_file_download(string $uri): ?int {
+  if (str_starts_with($uri, 'private://xinshi-knowledge/') &&
+      (!\Drupal::currentUser()->isAuthenticated() || !\Drupal::currentUser()->hasPermission('view xinshi knowledge'))) {
+    return -1;
+  }
+  return NULL;
+}

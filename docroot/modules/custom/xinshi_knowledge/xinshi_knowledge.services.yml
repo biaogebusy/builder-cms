@@ -1,0 +1,18 @@
+services:
+  logger.channel.xinshi_knowledge:
+    parent: logger.channel_base
+    arguments: ['xinshi_knowledge']
+  xinshi_knowledge.parser:
+    class: Drupal\xinshi_knowledge\Service\AttachmentParser
+    arguments: ['@http_client', '@config.factory']
+  xinshi_knowledge.extraction:
+    class: Drupal\xinshi_knowledge\Service\AttachmentExtraction
+    arguments: ['@database', '@entity_type.manager', '@queue', '@xinshi_knowledge.parser', '@datetime.time', '@logger.channel.xinshi_knowledge']
+  xinshi_knowledge.documents:
+    class: Drupal\xinshi_knowledge\Service\DocumentRepository
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@config.factory', '@xinshi_knowledge.extraction', '@module_handler', '@plugin.manager.search_api.parse_mode']
+  xinshi_knowledge.source_settings_subscriber:
+    class: Drupal\xinshi_knowledge\EventSubscriber\SourceSettingsSubscriber
+    arguments: ['@xinshi_knowledge.documents']
+    tags:
+      - { name: event_subscriber }

@@ -1,0 +1,6 @@
+view xinshi knowledge:
+  title: '查看知识库和文档附件'
+  description: '仍需内容、Media 和字段的查看权限；不会公开私有文件。'
+administer xinshi knowledge:
+  title: '管理知识库解析设置'
+  restrict access: true
