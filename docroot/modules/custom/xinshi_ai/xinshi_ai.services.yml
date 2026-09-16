@@ -1,4 +1,12 @@
 services:
+  xinshi_ai.figma_vault:
+    class: Drupal\xinshi_ai\Service\FigmaVault
+    arguments: ['@keyvalue', '@private_key']
+
+  xinshi_ai.figma:
+    class: Drupal\xinshi_ai\Service\FigmaConnector
+    arguments: ['@config.factory', '@current_user', '@xinshi_ai.figma_vault', '@http_client', '@lock', '@datetime.time']
+
   xinshi_ai.product_documents:
     class: Drupal\xinshi_ai\Service\ProductDocuments
     arguments: ['@config.factory', '@entity_type.manager', '@entity_field.manager', '@current_user', '@language_manager', '@?xinshi_knowledge.documents']

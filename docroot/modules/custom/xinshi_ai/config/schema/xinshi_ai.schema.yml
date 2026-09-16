@@ -43,6 +43,19 @@ xinshi_ai.settings:
           type: mapping
           label: 'MCP 资料来源'
           mapping:
+            figma:
+              type: mapping
+              label: 'Figma 设计稿'
+              mapping:
+                enabled:
+                  type: boolean
+                  label: '启用 Figma 设计稿读取'
+                client_id:
+                  type: string
+                  label: 'Figma OAuth Client ID'
+                redirect_uri:
+                  type: string
+                  label: 'Figma OAuth 回调地址'
             product_documents:
               type: mapping
               label: '产品资料'

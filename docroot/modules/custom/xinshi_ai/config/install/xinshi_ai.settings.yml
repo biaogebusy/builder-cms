@@ -9,6 +9,10 @@ harness:
     pages_enabled: false
     disabled: []
   mcp:
+    figma:
+      enabled: false
+      client_id: ''
+      redirect_uri: ''
     product_documents:
       enabled: false
       content_types: []

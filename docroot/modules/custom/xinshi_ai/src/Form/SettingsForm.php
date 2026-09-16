@@ -6,6 +6,7 @@ namespace Drupal\xinshi_ai\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\xinshi_ai\Service\FigmaConnector;
 use Drupal\xinshi_ai\Service\HarnessSettings;
 
 /**
@@ -112,6 +113,32 @@ final class SettingsForm extends ConfigFormBase {
         '#options' => $documentTypes, '#default_value' => $documents['content_types'],
       ],
     ];
+    $figma = $config->get('harness.mcp.figma') ?? [];
+    $form['harness']['mcp']['figma'] = [
+      '#type' => 'fieldset', '#title' => $this->t('Figma 设计稿'),
+      '#description' => $this->t('在此统一配置 Figma OAuth 应用。用户通过 Figma 登录授权自己的账号，再从对话生成页面或组件。应用密钥和用户令牌仅由 Drupal 保存和使用，不需要在 Node 配置 Figma 密钥。'),
+      'enabled' => [
+        '#type' => 'checkbox', '#title' => $this->t('启用 Figma 设计稿读取'),
+        '#default_value' => $figma['enabled'] ?? FALSE,
+      ],
+      'client_id' => [
+        '#type' => 'textfield', '#title' => $this->t('Figma Client ID'),
+        '#maxlength' => 512, '#default_value' => $figma['client_id'] ?? '',
+      ],
+      'client_secret' => [
+        '#type' => 'password', '#title' => $this->t('Figma Client Secret'), '#maxlength' => 4096,
+        '#description' => $this->t('留空保留已保存密钥。密钥加密保存在 Drupal，不进入配置导出。Figma 应用需启用 file_content:read 和 current_user:read 权限。'),
+      ],
+      'clear_secret' => [
+        '#type' => 'checkbox', '#title' => $this->t('清除已保存的 Figma Client Secret'),
+        '#description' => $this->t('清除密钥时需同时关闭 Figma 读取，或填写新密钥。'),
+      ],
+      'redirect_uri' => [
+        '#type' => 'url', '#title' => $this->t('Figma OAuth 回调地址'), '#maxlength' => 2048,
+        '#default_value' => $figma['redirect_uri'] ?? '',
+        '#description' => $this->t('用户访问的信使源地址加 /chat/figma/callback，与 Figma OAuth App 登记值完全一致。正式环境使用 HTTPS；localhost 和 127.0.0.1 开发环境允许 HTTP。'),
+      ],
+    ];
     $form['harness']['task_limits'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('任务限制'),
@@ -206,6 +233,20 @@ final class SettingsForm extends ConfigFormBase {
         !array_filter($form_state->getValue(['harness', 'mcp', 'product_documents', 'content_types'], []))) {
       $form_state->setErrorByName('harness][mcp][product_documents][content_types', $this->t('启用产品资料读取时，请至少选择一种资料内容类型。'));
     }
+    $figma = $form_state->getValue(['harness', 'mcp', 'figma'], []);
+    if (!empty($figma['enabled'])) {
+      if (trim((string) ($figma['client_id'] ?? '')) === '') {
+        $form_state->setErrorByName('harness][mcp][figma][client_id', $this->t('启用 Figma 时需要填写 Client ID。'));
+      }
+      if (trim((string) ($figma['client_secret'] ?? '')) === '' &&
+          (!empty($figma['clear_secret']) || !\Drupal::service('xinshi_ai.figma_vault')->has('client_secret'))) {
+        $form_state->setErrorByName('harness][mcp][figma][client_secret', $this->t('启用 Figma 时需要保存 Client Secret。'));
+      }
+    }
+    $uri = trim((string) ($figma['redirect_uri'] ?? ''));
+    if (($uri !== '' || !empty($figma['enabled'])) && !FigmaConnector::origin($uri)) {
+      $form_state->setErrorByName('harness][mcp][figma][redirect_uri', $this->t('填写有效的 HTTPS 信使回调地址，路径必须是 /chat/figma/callback，不能包含用户信息、查询参数或片段。'));
+    }
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state): void {
@@ -221,6 +262,22 @@ final class SettingsForm extends ConfigFormBase {
     $types = \Drupal::service('xinshi_ai.product_documents')->availableContentTypes();
     $selected = $form_state->getValue(['harness', 'mcp', 'product_documents', 'content_types'], []);
     $documentTypes = array_values(array_filter(array_keys($types), static fn($type) => ($selected[$type] ?? NULL) === $type));
+    $figma = $form_state->getValue(['harness', 'mcp', 'figma']);
+    if (is_array($figma)) {
+      $vault = \Drupal::service('xinshi_ai.figma_vault');
+      $secret = trim((string) ($figma['client_secret'] ?? ''));
+      if ($secret !== '') {
+        $vault->set('client_secret', ['value' => $secret]);
+      }
+      elseif (!empty($figma['clear_secret'])) {
+        $vault->delete('client_secret');
+      }
+      $this->config(self::CONFIG_NAME)->set('harness.mcp.figma', [
+        'enabled' => (bool) ($figma['enabled'] ?? FALSE),
+        'client_id' => trim((string) ($figma['client_id'] ?? '')),
+        'redirect_uri' => trim((string) ($figma['redirect_uri'] ?? '')),
+      ]);
+    }
     $this->config(self::CONFIG_NAME)
       ->set('gateway.base_url', $form_state->getValue('base_url'))
       ->set('gateway.api_key', $form_state->getValue('api_key'))

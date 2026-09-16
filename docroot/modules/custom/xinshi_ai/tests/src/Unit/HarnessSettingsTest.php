@@ -69,7 +69,7 @@ final class HarnessSettingsTest extends TestCase {
     $response = (new HarnessSettingsController())->read();
     $this->assertSame(['version' => 1, ...HarnessSettings::DEFAULTS], json_decode($response->getContent(), TRUE));
     $installed = Yaml::parseFile(dirname(__DIR__, 3) . '/config/install/xinshi_ai.settings.yml');
-    $this->assertSame(HarnessSettings::DEFAULTS, $installed['harness']);
+    $this->assertSame(HarnessSettings::DEFAULTS, HarnessSettings::normalize($installed['harness']));
     // Merely reading defaults does not write the site's configuration.
     $this->assertArrayNotHasKey('harness', $this->storage->read('xinshi_ai.settings'));
     $form = $this->form->buildForm([], new FormState());

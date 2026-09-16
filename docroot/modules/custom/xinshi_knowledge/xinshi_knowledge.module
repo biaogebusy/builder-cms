@@ -15,6 +15,13 @@ use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_knowledge\Knowledge;
 
+/** Implements hook_menu_links_discovered_alter(). */
+function xinshi_knowledge_menu_links_discovered_alter(array &$links): void {
+  if (isset($links['xinshi_knowledge.settings']) && !isset($links['xinshi_manage.admin.config'])) {
+    $links['xinshi_knowledge.settings']['parent'] = 'system.admin_config_content';
+  }
+}
+
 /** Implements hook_entity_insert(). */
 function xinshi_knowledge_entity_insert(EntityInterface $entity): void {
   xinshi_knowledge_entity_update($entity);
