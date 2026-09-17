@@ -26,6 +26,7 @@
 /.idea
 .DS_Store
 /.vscode
+/logs
 
 # node modules
 **/node_modules/
