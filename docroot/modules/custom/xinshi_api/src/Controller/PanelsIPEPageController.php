@@ -314,8 +314,31 @@ class PanelsIPEPageController extends ControllerBase {
         /** @var \Drupal\layout_builder\Section $section */
         $section = $item->section;
         foreach ($section->getComponents() as $component) {
-          $rev_id = $component->get('configuration')['block_revision_id'] ?? NULL;
-          $block = $rev_id ? $storage->loadRevision($rev_id) : NULL;
+          $configuration = $component->get('configuration');
+          $plugin_id = $configuration['id'] ?? '';
+          $shared = str_starts_with($plugin_id, 'block_content:');
+          $inline = str_starts_with($plugin_id, 'inline_block:');
+          if (!$shared && !$inline) {
+            continue;
+          }
+          $uuid = $shared ? substr($plugin_id, strlen('block_content:')) : NULL;
+          $has_revision = isset($configuration['block_revision_id']) || isset($configuration['vid']);
+          $rev_id = $configuration['block_revision_id'] ?? $configuration['vid'] ?? NULL;
+          $block = NULL;
+          if ($has_revision) {
+            if (ctype_digit((string) $rev_id) && (int) $rev_id > 0) {
+              $block = $storage->loadRevision($rev_id);
+            }
+            // A missing or unrelated pinned revision must not use current data.
+            if ($block && (($shared && $block->uuid() !== $uuid)
+              || ($inline && $block->bundle() !== substr($plugin_id, strlen('inline_block:'))))) {
+              $block = NULL;
+            }
+          }
+          elseif ($shared) {
+            $matches = $storage->loadByProperties(['uuid' => $uuid]);
+            $block = $matches ? reset($matches) : NULL;
+          }
           if ($block) {
             $blocks[] = $this->getBlockTranslation($block);
           }
@@ -820,19 +843,23 @@ class PanelsIPEPageController extends ControllerBase {
     $blocks = [];
     // 尝试多种方式获得 sections：优先使用对象方法，其次读取 third_party_settings
     $builder =  $json->getLayoutBuilder()->build($node);
-    foreach ($builder['_layout_builder'] as $section_id => $section) {
+    foreach ($builder['_layout_builder'] ?? [] as $section_id => $section) {
       if (!is_numeric($section_id)) {
         continue;
       }
       $weight = 0;
-      foreach ($section['content'] as $block_id => $component) {
-        if ($component['content']['#entity_type'] == 'block_content') {
-          $block = $component['content']['#block_content'];
-          if ($block->hasTranslation($this->currentLanguageId())) {
-            $block = $block->getTranslation($this->currentLanguageId());
-          }
-          $blocks[] = $block;
+      foreach ($section['content'] ?? [] as $block_id => $component) {
+        if (($component['content']['#entity_type'] ?? NULL) !== 'block_content') {
+          continue;
         }
+        $block = $component['content']['#block_content'] ?? NULL;
+        if (!$block instanceof BlockContent) {
+          continue;
+        }
+        if ($block->hasTranslation($this->currentLanguageId())) {
+          $block = $block->getTranslation($this->currentLanguageId());
+        }
+        $blocks[] = $block;
       }
     }
     return $blocks;
