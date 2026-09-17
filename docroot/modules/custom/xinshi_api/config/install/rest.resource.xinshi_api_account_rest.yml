@@ -1,0 +1,11 @@
+id: xinshi_api_account_rest
+plugin_id: xinshi_api_account_rest
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - json
+  authentication:
+    - oauth2
+    - cookie
