@@ -40,10 +40,10 @@ class NodeJson extends EntityJsonBase {
     if ($this->isLayoutBuilder()) {
       $builder =  $this->layoutBuilder->build($this->entity);
       $weight = 0;
-      foreach ($builder['_layout_builder'] as $section) {
+      foreach (($builder['_layout_builder'] ?? []) as $section) {
         /** @var SectionComponent $component */
         foreach (($section['content'] ?? []) as $component) {
-          if ($component['content']['#entity_type'] == 'block_content') {
+          if (($component['content']['#entity_type'] ?? null) == 'block_content') {
             $entityJson = new EntityJsonBase($component['content']['#block_content']);
             $widgets[] = [
               'weight' => $weight,

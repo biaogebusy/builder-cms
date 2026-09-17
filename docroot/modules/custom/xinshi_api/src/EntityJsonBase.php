@@ -272,7 +272,7 @@ class EntityJsonBase implements EntityJsonInterface {
       /** @var SectionComponent $component */
       foreach ($section->getComponents() as $component) {
         $configuration = $component->get('configuration');
-        if ($configuration['provider'] == 'views') {
+        if (($configuration['provider'] ?? null) == 'views') {
           $id = explode(':', $configuration['id'])[1];
           $view_name = explode('-', $id)[0];
           $display_id = explode('-', $id)[1];
