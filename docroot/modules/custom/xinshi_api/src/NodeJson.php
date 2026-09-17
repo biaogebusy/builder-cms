@@ -42,7 +42,7 @@ class NodeJson extends EntityJsonBase {
       $weight = 0;
       foreach ($builder['_layout_builder'] as $section) {
         /** @var SectionComponent $component */
-        foreach ($section['content'] as $component) {
+        foreach (($section['content'] ?? []) as $component) {
           if ($component['content']['#entity_type'] == 'block_content') {
             $entityJson = new EntityJsonBase($component['content']['#block_content']);
             $widgets[] = [
