@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "source_database": "builder_migration_source",
+  "target_database": "builder_migration_target",
+  "environment": "local",
+  "accepted_source_exceptions": [],
+  "oauth_signing": {
+    "mode": "local_generated"
+  }
+}
