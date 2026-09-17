@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Records ownership of rows written by a single migration batch.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function xinshi_migrate_schema(): array {
+  return [
+    'xinshi_migrate_rows' => [
+      'description' => 'Row ownership and content hashes for repeatable snapshot imports.',
+      'fields' => [
+        'table_name' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
+        'row_key' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+        'dataset' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+        'target_key' => ['type' => 'blob', 'size' => 'big', 'not null' => TRUE],
+        'checksum' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      ],
+      'primary key' => ['table_name', 'row_key'],
+    ],
+  ];
+}

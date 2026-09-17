@@ -1,0 +1,200 @@
+/**
+* @file media_library.module.css
+*/
+
+.media-library-item img {
+  width: 100%;
+}
+
+.xinshi-media-library > .fieldset-wrapper > .media-library-open-button {
+  margin-bottom: 0;
+}
+
+@media screen and (min-width: 77em) {
+  .xinshi-media-library-selection.media-library-selection-col-12 > .media-library-item--grid {
+    width: 8.33%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .xinshi-media-library-selection.media-library-selection-col-12 > .media-library-widget-modal .media-library-item--grid,
+  .xinshi-media-library-selection.media-library-selection-col-12 .media-library-item--grid {
+    width: 8.33%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .xinshi-media-library-selection.media-library-selection-col-12 > .media-library-add-form__selected-media .media-library-item--small {
+    width: 8.33%;
+  }
+
+  .xinshi-media-library-selection.media-library-selection-col-10 > .media-library-item--grid {
+    width: 10%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .xinshi-media-library-selection.media-library-selection-col-10 > .media-library-widget-modal .media-library-item--grid,
+  .xinshi-media-library-selection.media-library-selection-col-10 .media-library-item--grid {
+    width: 10%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .xinshi-media-library-selection.media-library-selection-col-10 > .media-library-add-form__selected-media .media-library-item--small {
+    width: 10%;
+  }
+
+  .xinshi-media-library-selection.media-library-selection-col-6 > .media-library-item--grid {
+    width: 16.6%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .xinshi-media-library-selection.media-library-selection-col-6 > .media-library-widget-modal .media-library-item--grid,
+  .xinshi-media-library-selection.media-library-selection-col-6 .media-library-item--grid {
+    width: 16.6%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .xinshi-media-library-selection.media-library-selection-col-6 > .media-library-add-form__selected-media .media-library-item--small {
+    width: 16.6%;
+  }
+
+  .xinshi-media-library-selection.media-library-selection-col-5 > .media-library-item--grid {
+    width: 20%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .xinshi-media-library-selection.media-library-selection-col-5 > .media-library-widget-modal .media-library-item--grid,
+  .xinshi-media-library-selection.media-library-selection-col-5 .media-library-item--grid {
+    width: 20%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .xinshi-media-library-selection.media-library-selection-col-5 > .media-library-add-form__selected-media .media-library-item--small {
+    width: 20%;
+  }
+
+  .xinshi-media-library-selection.media-library-selection-col-3 > .media-library-item--grid {
+    width: 33.3%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .xinshi-media-library-selection.media-library-selection-col-3 > .media-library-widget-modal .media-library-item--grid,
+  .xinshi-media-library-selection.media-library-selection-col-3 .media-library-item--grid {
+    width: 33.3%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .xinshi-media-library-selection.media-library-selection-col-3 > .media-library-add-form__selected-media .media-library-item--small {
+    width: 33.3%;
+  }
+
+  .xinshi-media-library-selection.media-library-selection-col-2 > .media-library-item--grid {
+    width: 50%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .xinshi-media-library-selection.media-library-selection-col-2 > .media-library-widget-modal .media-library-item--grid,
+  .xinshi-media-library-selection.media-library-selection-col-2 .media-library-item--grid {
+    width: 50%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .xinshi-media-library-selection.media-library-selection-col-2 > .media-library-add-form__selected-media .media-library-item--small {
+    width: 50%;
+  }
+
+  .xinshi-media-library-selection.media-library-selection-col-1 > .media-library-item--grid {
+    width: 100%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .xinshi-media-library-selection.media-library-selection-col-1 > .media-library-widget-modal .media-library-item--grid,
+  .xinshi-media-library-selection.media-library-selection-col-1 .media-library-item--grid {
+    width: 100%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .xinshi-media-library-selection.media-library-selection-col-1 > .media-library-add-form__selected-media .media-library-item--small {
+    width: 100%;
+  }
+}
+
+.media-library-selection.xinshi-media-library-selection.media-library-selection-widget .media-library-item__attributes,
+.xinshi-media-library-selection.media-library-selection-widget .form-item {
+  display: none;
+}
+
+.media-library-selection.xinshi-media-library-selection .media-library-item__preview {
+  padding-bottom: 0;
+}
+
+.xinshi-media-library-selection .ajax-progress {
+  position: absolute;
+  z-index: 9999;
+  top: 15px;
+}
+
+.media-library-selection-border {
+  border: 1px solid #bfbfbf;
+}
+
+.media-library-selection.xinshi-media-library-selection .media-library-item__remove, .media-library-selection.xinshi-media-library-selection .media-library-item__edit {
+  display: none;
+}
+
+.media-library-selection-widget .media-library-item > .form-wrapper:hover > .media-library-item__remove {
+  display: block;
+}
+
+.media-library-selection-widget .media-library-item:hover > .media-library-item__remove, .media-library-selection-widget .media-library-item:hover > .media-library-item__edit {
+  display: block;
+}
+
+.xinshi-media-library legend {
+  margin-bottom: 0px;
+}
+
+.xinshi-media-library.form-item {
+  margin: 0;
+}
+
+.xinshi-media-library.xinshi-media-library-hidden-title > legend {
+  display: none;
+}
+
+.xinshi-media-library.xinshi-media-library-hidden-title.required .media-library-open-button {
+  color: #ff0000;
+}
+
+.xinshi-media-library .media-library-item__edit.button, .xinshi-media-library media-library-item__edit.button:hover, .xinshi-media-library media-library-item__edit.button:focus {
+  position: absolute;
+  z-index: 1;
+  margin: 5px;
+  padding: 0;
+  transition: 0.2s border-color;
+  color: transparent;
+  border: 2px solid #ccc;
+  border-radius: 20px;
+  background: url(../icons/pencil.svg) #fff center no-repeat;
+  background-size: 16px 16px;
+  text-shadow: none;
+  box-sizing: border-box;
+}
+
+.ipe-form .xinshi-media-library .media-library-item__edit.button, .ipe-form .xinshi-media-library media-library-item__edit.button:hover, .ipe-form .xinshi-media-library media-library-item__edit.button:focus {
+  margin: 0.75rem;
+}
+
+
+.button.media-library-item__edit:hover {
+  border-color: #40b6ff;
+}
+
+.media-library-edit__modal::before {
+  content: '';
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}

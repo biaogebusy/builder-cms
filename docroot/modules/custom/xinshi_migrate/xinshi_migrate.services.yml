@@ -1,0 +1,4 @@
+services:
+  xinshi_migrate.plan:
+    class: Drupal\xinshi_migrate\SnapshotPlan
+    arguments: ['@database', '@config.factory']

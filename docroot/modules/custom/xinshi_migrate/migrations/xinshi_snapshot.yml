@@ -1,0 +1,12 @@
+id: xinshi_snapshot
+label: Xinshi selective snapshot
+deriver: Drupal\xinshi_migrate\Plugin\Derivative\SnapshotMigrations
+migration_tags:
+  - xinshi_snapshot
+source:
+  plugin: xinshi_snapshot
+  ignore_map: true
+process:
+  record: record
+destination:
+  plugin: xinshi_snapshot

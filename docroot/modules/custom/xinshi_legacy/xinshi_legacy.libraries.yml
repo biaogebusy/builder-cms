@@ -1,0 +1,4 @@
+media_library_widget:
+  css:
+    component:
+      css/media_library.css: {}

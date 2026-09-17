@@ -1,0 +1,9 @@
+name: Xinshi legacy content compatibility
+type: module
+description: Preserves migrated editing widgets and existing account bindings.
+package: XINSHI
+core_version_requirement: ^11
+dependencies:
+  - drupal:user
+  - drupal:media_library
+  - drupal:content_moderation

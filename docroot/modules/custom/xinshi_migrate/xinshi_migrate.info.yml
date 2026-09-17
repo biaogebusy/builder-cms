@@ -1,0 +1,7 @@
+name: Xinshi snapshot migration
+type: module
+description: Selective Drupal 11 snapshot migration with preserved revisions and verified row ownership.
+package: XINSHI
+core_version_requirement: ^11
+dependencies:
+  - drupal:migrate

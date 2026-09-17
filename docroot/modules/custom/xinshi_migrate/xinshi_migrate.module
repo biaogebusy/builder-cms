@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Compatibility for command-line-only migrations.
+ */
+
+use Drupal\Core\Extension\Extension;
+
+/**
+ * Implements hook_system_info_alter().
+ */
+function xinshi_migrate_system_info_alter(array &$info, Extension $extension, string $type): void {
+  // Migrate Tools advertises a configure route that requires optional Migrate Plus.
+  if ($type === 'module' && $extension->getName() === 'migrate_tools'
+    && !\Drupal::moduleHandler()->moduleExists('migrate_plus')) {
+    unset($info['configure']);
+  }
+}
