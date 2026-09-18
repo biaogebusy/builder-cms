@@ -1,0 +1,4 @@
+services:
+  image_captcha.render_service:
+    class: Drupal\image_captcha\Service\ImageCaptchaRenderService
+    arguments: [ '@config.factory', '@database', '@file_system']

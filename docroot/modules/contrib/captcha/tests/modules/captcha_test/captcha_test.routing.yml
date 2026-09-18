@@ -1,0 +1,7 @@
+captcha_test.test:
+  path: '/captcha-test/test'
+  defaults:
+    _title: 'Test'
+    _form: 'Drupal\captcha_test\Form\TestForm'
+  requirements:
+    _permission: 'access content'

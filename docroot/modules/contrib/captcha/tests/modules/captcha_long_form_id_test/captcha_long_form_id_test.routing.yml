@@ -1,0 +1,8 @@
+captcha_long_form_id_test.this_formid_is_intentionally_longer_than_64_characters_to_test_captcha:
+  path: 'captcha/test_form/long_id'
+  defaults:
+    _form: '\Drupal\captcha_long_form_id_test\Form\LongIdForm'
+    _title: 'LongIdForm'
+  requirements:
+    # for testing only, can be open
+    _access: 'TRUE'

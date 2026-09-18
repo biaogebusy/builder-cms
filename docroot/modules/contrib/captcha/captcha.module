@@ -1,0 +1,790 @@
+<?php
+
+/**
+ * @file
+ * This module enables basic CAPTCHA functionality.
+ *
+ * Administrators can add a CAPTCHA to desired forms that users without
+ * the 'skip CAPTCHA' permission (typically anonymous visitors) have
+ * to solve.
+ */
+
+use Drupal\Core\Database\Database;
+use Drupal\Core\Form\BaseFormIdInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
+use Drupal\captcha\Constants\CaptchaConstants;
+use Drupal\captcha\Element\Captcha;
+use Drupal\captcha\Entity\CaptchaPoint;
+
+/**
+ * Implements hook_help().
+ */
+function captcha_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.captcha':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('"CAPTCHA" is an acronym for "Completely Automated Public Turing test to tell Computers and Humans Apart". It is typically a challenge-response test to determine whether the user is human. The CAPTCHA module is a tool to fight automated submission by malicious users (spamming) of for example comments forms, user registration forms, guestbook forms, etc. You can extend the desired forms with an additional challenge, which should be easy for a human to solve correctly, but hard enough to keep automated scripts and spam bots out.') . '</p>';
+      $output .= '<p>' . t('Note that the CAPTCHA module interacts with page caching (see <a href=":performancesettings">performance settings</a>). Because the challenge should be unique for each generated form, the caching of the page it appears on is prevented. Make sure that these forms do not appear on too many pages or you will lose much caching efficiency. For example, if you put a CAPTCHA on the user login block, which typically appears on each page for anonymous visitors, caching will practically be disabled. The comment submission forms are another example. In this case you should set the <em>Location of comment submission form</em> to <em>Display on separate page</em> in the comment settings of the relevant <a href=":contenttypes">content types</a> for better caching efficiency.', [
+        ':performancesettings' => Url::fromRoute('system.performance_settings')->toString(),
+        ':contenttypes' => \Drupal::moduleHandler()->moduleExists('node') ? Url::fromRoute('entity.node_type.collection')->toString() : '#',
+      ]) . '</p>';
+      $output .= '<p>' . t('CAPTCHA is a trademark of Carnegie Mellon University.') . '</p>';
+      return ['#markup' => $output];
+
+    case 'captcha_settings':
+      $output = '<p>' . t('A CAPTCHA can be added to virtually any Drupal form, through adding an affiliated <em>CAPTCHA Point</em>. Some default <em>CAPTCHA Points</em> are already provided in the <em>CAPTCHA Point</em> section, but arbitrary forms can be easily added and managed.') . '</p>';
+      $output .= '<p>' . t('Users with the <em>Skip CAPTCHA</em> <a href=":perm">permission</a> won\'t be offered a challenge. Be sure to grant this permission to the trusted users (e.g. site administrators). If you want to test a protected form, be sure to do it as a user without the <em>Skip CAPTCHA</em> permission (e.g. as anonymous user).', [
+        ':perm' => Url::fromRoute('user.admin_permissions')->toString(),
+      ]) . '</p>';
+      $output .= '<p><b>' . t('Note that the CAPTCHA module disables <a href=":performancesettings">page caching</a> of pages that include a CAPTCHA challenge.', [
+        ':performancesettings' => Url::fromRoute('system.performance_settings')->toString(),
+      ]) . '</b></p>';
+      return ['#markup' => $output];
+  }
+}
+
+/**
+ * Loader for Captcha Point entity.
+ *
+ * @param string $id
+ *   Form id string.
+ *
+ * @return \Drupal\Core\Entity\EntityInterface
+ *   An instance of an captcha_point entity.
+ */
+function captcha_point_load($id) {
+  return CaptchaPoint::load($id);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function captcha_theme() {
+  $path = \Drupal::service('extension.list.module')->getPath('captcha');
+  return [
+    'captcha' => [
+      'render element' => 'element',
+      'template' => 'captcha',
+      'path' => $path . '/templates',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function captcha_theme_suggestions_captcha(array $variables) {
+  $suggestions = [];
+  $suggestions[] = 'captcha__' . strtolower($variables['element']['#captcha_type_challenge']);
+  return $suggestions;
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Remove old entries from captcha_sessions table.
+ */
+function captcha_cron() {
+  // Get request time.
+  $request_time = \Drupal::time()->getRequestTime();
+
+  // Remove challenges older than PHP's session.gc_maxlifetime value.
+  $connection = Database::getConnection();
+  $connection->delete('captcha_sessions')
+    ->condition('timestamp', $request_time - ini_get('session.gc_maxlifetime'), '<')
+    ->execute();
+}
+
+/**
+ * Theme function for a CAPTCHA element.
+ *
+ * Render it in a section element if a description of the CAPTCHA
+ * is available. Render it as is otherwise.
+ */
+function template_preprocess_captcha(&$variables, $hook, $info) {
+  $variables['title'] = _captcha_get_title();
+  $variables['description'] = _captcha_get_description();
+
+  // Add an indicator, if the captcha widget is visible, to
+  // account for _captcha_required_for_user().
+  // See Captcha::preRenderProcess().
+  // If the CAPTCHA was solved, hidden inputs have to be preserved to the form
+  // but the CAPTCHA and its wrappers are not visible.
+  // This variable exposed this to the theme layer transparently:
+  $variables['is_visible'] = isset($variables['element']['captcha_widgets']);
+  // Attach library:
+  $variables['#attached']['library'][] = 'captcha/base';
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * This function adds a CAPTCHA to forms for untrusted users
+ * if needed and adds. CAPTCHA administration links for site
+ * administrators if this option is enabled.
+ */
+function captcha_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $account = \Drupal::currentUser();
+  $config = \Drupal::config('captcha.settings');
+  $captchaService = \Drupal::service('captcha.helper');
+  $adminContext = \Drupal::service('router.admin_context');
+  $captcha_point = NULL;
+
+  \Drupal::moduleHandler()->loadInclude('captcha', 'inc');
+
+  // If the user does not have the "skip CAPTCHA" permission render
+  // it "normally":
+  if (!$account->hasPermission('skip CAPTCHA')) {
+    $query = \Drupal::entityQuery('captcha_point');
+    $query->condition('label', $form_id);
+    $entity_ids = $query->execute();
+
+    // If empty, see if it is a form provided by default config.
+    if (empty($entity_ids)) {
+      $query = \Drupal::entityQuery('captcha_point');
+      $query->condition('formId', $form_id);
+      $entity_ids = $query->execute();
+    }
+
+    if (!empty($entity_ids) && is_array($entity_ids)) {
+      $captcha_point_id = array_pop($entity_ids);
+      /** @var \Drupal\captcha\CaptchaPointInterface $captcha_point */
+      $captcha_point = \Drupal::entityTypeManager()
+        ->getStorage('captcha_point')
+        ->load($captcha_point_id);
+    }
+
+    // If there is no CaptchaPoint for the form_id, try to use the base_form_id.
+    if (empty($captcha_point) || !$captcha_point->status()) {
+      $form_object = $form_state->getFormObject();
+      if ($form_object instanceof BaseFormIdInterface) {
+        $base_form_id = $form_object->getBaseFormId();
+        if (!empty($base_form_id) && $base_form_id != $form_id) {
+          /** @var \Drupal\captcha\CaptchaPointInterface $captcha_point */
+          $captcha_point = \Drupal::entityTypeManager()
+            ->getStorage('captcha_point')
+            ->load($base_form_id);
+        }
+      }
+    }
+
+    // If there is no CaptchaPoint at all, but we want to add a captcha globally
+    // for every form do that here:
+    if (empty($captcha_point) && !empty($config->get('enable_globally'))) {
+      // Only add this captcha on non admin routes or if
+      // "enable_globally_on_admin_routes" is enabled, also on admin routes:
+      if (
+      !$adminContext->isAdminRoute()
+      ||
+      ($adminContext->isAdminRoute() && !empty($config->get('enable_globally_on_admin_routes')))
+      ) {
+        // Create captcha point without saving.
+        /** @var \Drupal\captcha\CaptchaPointInterface $captcha_point */
+        $captcha_point = new CaptchaPoint([
+          'formId' => $form_id,
+          'captchaType' => $config->get('default_challenge'),
+        ], 'captcha_point');
+        $captcha_point->enable();
+      }
+    }
+    if (!empty($captcha_point) && $captcha_point->status()) {
+      // Checking if user's ip is whitelisted.
+      if (captcha_whitelist_ip_whitelisted()) {
+        // If form is setup to have captcha, but user's ip is whitelisted, then
+        // we still have to disable form caching to prevent showing cached form
+        // for users with not whitelisted ips.
+        $form['#cache'] = ['max-age' => 0];
+        \Drupal::service('page_cache_kill_switch')->trigger();
+      }
+      else {
+        // Build CAPTCHA form element.
+        $captcha_element = [
+          '#type' => 'captcha',
+          '#captcha_type' => $captcha_point->getCaptchaType(),
+        ];
+
+        // Get placement in form and insert in form.
+        $captcha_placement = _captcha_get_captcha_placement($form_id, $form);
+        $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
+      }
+    }
+  }
+  // If the user has the "skip CAPTCHA" permission, check, if it should be
+  // rendered in "administration_mode", which adds administrative informations
+  // to the captcha:
+  elseif (!empty($config->get('administration_mode')) && $account->hasPermission('administer CAPTCHA settings')) {
+    // Add informations if it isn't an admin route OR if
+    // "administration_mode_on_admin_routes" is set and the current route is
+    // and admin route:
+    if (
+      !$adminContext->isAdminRoute()
+      ||
+      ($config->get('administration_mode_on_admin_routes') && $adminContext->isAdminRoute())
+      ) {
+      // Add CAPTCHA administration tools.
+      /** @var \Drupal\captcha\CaptchaPointInterface $captcha_point */
+      $captcha_point = CaptchaPoint::load($form_id);
+
+      // Add admin information to the captcha:
+      $captcha_element = [
+        '#type' => 'details',
+        '#title' => t('CAPTCHA'),
+        '#attributes' => [
+          'class' => ['captcha-admin-links'],
+        ],
+        '#open' => TRUE,
+      ];
+
+      if ($captcha_point !== NULL && $captcha_point->getCaptchaType()) {
+        $captcha_element['#title'] = $captcha_point->status() ? t('CAPTCHA: challenge "@type" enabled', ['@type' => $captcha_point->getCaptchaType()]) : t('CAPTCHA: challenge "@type" disabled', ['@type' => $captcha_point->getCaptchaType()]);
+        $captcha_point->status() ? $captchaElementDescription = t('Users without the "skip CAPTCHA" permission will see a CAPTCHA here.') : $captchaElementDescription = t("CAPTCHA disabled, Untrusted users won't see the captcha.");
+        $captcha_element['#description'] = $captchaElementDescription;
+        $captcha_element['settings_link'] = [
+          '#markup' => Link::fromTextAndUrl(
+            t('general CAPTCHA settings'),
+            Url::fromRoute('captcha_settings')
+          )->toString(),
+        ];
+        $captcha_element['challenge'] = [
+          '#type' => 'item',
+          '#title' => t('Enabled challenge'),
+          '#markup' => $captcha_point->toLink(t('change'), 'edit-form', [
+            'query' => \Drupal::destination()
+              ->getAsArray(),
+          ])->toString(),
+        ];
+      }
+      else {
+        $captcha_element['#title'] = t('CAPTCHA: no challenge enabled');
+        $captcha_element['add_captcha'] = [
+          '#markup' => Link::fromTextAndUrl(
+        t('Place a CAPTCHA here for untrusted users.'),
+        Url::fromRoute('captcha_point.add', [], [
+          'query' => \Drupal::destination()
+            ->getAsArray() + ['form_id' => $form_id],
+        ])
+          )->toString(),
+        ];
+      }
+
+      // Get placement in form and insert in form.
+      $captcha_placement = _captcha_get_captcha_placement($form_id, $form);
+      $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
+    }
+    // If the user has the "skip Captcha" permission, but the
+    // administration_mode is not enabled, simply do nothing and therefore
+    // "skip" the CAPTCHA.
+  }
+
+  // Add a warning about caching on the Performance settings page.
+  if ($form_id == 'system_performance_settings') {
+    $form['caching']['captcha'] = [
+      '#type' => 'item',
+      '#title' => t('CAPTCHA'),
+      '#markup' => '<div class="messages messages--warning">' . t('Most CAPTCHA methods will disable the caching of pages that contain a CAPTCHA element. Check the different implementations to know more about how it affects caching.') . '</div>',
+    ];
+  }
+
+  // Disable captcha if override is set.
+  if (Settings::get('disable_captcha', FALSE) === TRUE) {
+    $override_notice = [
+      '#type' => 'html_tag',
+      '#tag' => 'strong',
+      '#value' => t('Captcha is currently disabled via settings.php.'),
+    ];
+    if (isset($form['elements']['captcha'])) {
+      $form['elements']['captcha'] = $override_notice;
+    }
+    if (isset($form['captcha'])) {
+      $form['captcha'] = $override_notice;
+    }
+  }
+}
+
+/**
+ * CAPTCHA validation function to tests strict equality.
+ *
+ * @param string $solution
+ *   The solution of the test.
+ * @param string $response
+ *   The response to the test.
+ *
+ * @return bool
+ *   TRUE when case insensitive equal, FALSE otherwise.
+ */
+function captcha_validate_strict_equality($solution, $response) {
+  return $solution === $response;
+}
+
+/**
+ * CAPTCHA validation function to tests case insensitive equality.
+ *
+ * @param string $solution
+ *   The solution of the test.
+ * @param string $response
+ *   The response to the test.
+ *
+ * @return bool
+ *   TRUE when case insensitive equal, FALSE otherwise.
+ */
+function captcha_validate_case_insensitive_equality($solution, $response) {
+  if ($solution == NULL || $response == NULL) {
+    // mb_strtolower wouldn't work on NULL and NULL is never a valid solution.
+    return FALSE;
+  }
+  return mb_strtolower($solution ?: '') === mb_strtolower($response ?: '');
+}
+
+/**
+ * CAPTCHA validation function to tests equality while ignoring spaces.
+ *
+ * @param string $solution
+ *   The solution of the test.
+ * @param string $response
+ *   The response to the test.
+ *
+ * @return bool
+ *   TRUE when equal (ignoring spaces), FALSE otherwise.
+ */
+function captcha_validate_ignore_spaces($solution, $response) {
+  if ($solution == NULL || $response == NULL) {
+    // preg_replace wouldn't work on NULL and NULL is never a valid solution.
+    return FALSE;
+  }
+  return preg_replace('/\s/', '', $solution) === preg_replace('/\s/', '', $response);
+}
+
+/**
+ * Validation function to tests case insensitive equality while ignoring spaces.
+ *
+ * @param string $solution
+ *   The solution of the test.
+ * @param string $response
+ *   The response to the test.
+ *
+ * @return bool
+ *   TRUE when equal (ignoring spaces), FALSE otherwise.
+ */
+function captcha_validate_case_insensitive_ignore_spaces($solution, $response) {
+  if ($solution == NULL || $response == NULL) {
+    // preg_replace wouldn't work on NULL and NULL is never a valid solution.
+    return FALSE;
+  }
+  return preg_replace('/\s/', '', mb_strtolower($solution ?: '')) === preg_replace('/\s/', '', mb_strtolower($response ?: ''));
+}
+
+/**
+ * Helper function for getting the posted CAPTCHA info.
+ *
+ * This function hides the form processing mess for several use cases an
+ * browser bug workarounds.
+ * For example: $element['#post'] can typically be used to get the posted
+ * form_id and captcha_sid, but in the case of node preview situations
+ * (with correct CAPTCHA response) that does not work and we can get them from
+ * $form_state['clicked_button']['#post'].
+ * However with Internet Explorer 7, the latter does not work either when
+ * submitting the forms (with only one text field) with the enter key
+ * (see http://drupal.org/node/534168), in which case we also have to check
+ * $form_state['buttons']['button']['0']['#post'].
+ *
+ * @param array $element
+ *   The CAPTCHA element.
+ * @param Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state structure to extract the info from.
+ * @param string $this_form_id
+ *   The form ID of the form we are currently processing
+ *   (which is not necessarily the form that was posted).
+ *
+ * @return array
+ *   Array with $posted_form_id and $post_captcha_sid (with NULL values
+ *   if the values could not be found, e.g. for a fresh form).
+ */
+function _captcha_get_posted_captcha_info(array $element, FormStateInterface $form_state, $this_form_id) {
+  if ($form_state->has('captcha_info')) {
+    // We are handling (or rebuilding) an already submitted form,
+    // so we already determined the posted form ID and CAPTCHA session ID
+    // for this form (from before submitting). Reuse this info.
+    $posted_form_id = $form_state->get('captcha_info')['posted_form_id'];
+    $posted_captcha_sid = $form_state->get('captcha_info')['captcha_sid'];
+  }
+  else {
+    // We have to determine the posted form ID and CAPTCHA session ID
+    // from the post data.
+    // Because we possibly use raw post data here,
+    // we should be extra cautious and filter this data.
+    $input = &$form_state->getUserInput();
+    $posted_form_id = isset($input['form_id']) ?
+      preg_replace("/[^a-z0-9_-]/", "", (string) $input['form_id'])
+      : NULL;
+    $posted_captcha_sid = isset($input['captcha_sid']) ?
+      (int) $input['captcha_sid']
+      : NULL;
+    $posted_captcha_token = isset($input['captcha_token']) ?
+      preg_replace("/[^a-zA-Z0-9-_]/", "", (string) $input['captcha_token'])
+      : NULL;
+
+    if ($posted_form_id == $this_form_id) {
+      // Check if the posted CAPTCHA token is valid for the posted CAPTCHA
+      // session ID. Note that we could just check the validity of the CAPTCHA
+      // token and extract the CAPTCHA session ID from that (without looking at
+      // the actual posted CAPTCHA session ID). However, here we check both
+      // the posted CAPTCHA token and session ID: it is a bit more stringent
+      // and the database query should also be more efficient (because there is
+      // an index on the CAPTCHA session ID).
+      if ($posted_captcha_sid != NULL) {
+        $expected_captcha_token = \Drupal::database()
+          ->select('captcha_sessions', 'cs')
+          ->fields('cs', ['token'])
+          ->condition('csid', $posted_captcha_sid)
+          ->execute()
+          ->fetchField();
+
+        // If we do have a CAPTCHA token mismatch then log it.
+        try {
+          if (($expected_captcha_token !== $posted_captcha_token) && empty($input['captcha_cacheable'])) {
+            throw new \UnexpectedValueException('CAPTCHA session reuse attack detected.');
+          }
+        }
+        catch (\Exception $e) {
+          \Drupal::logger('captcha')->debug(
+            'CAPTCHA session reuse attack detected on %form_id. Posted CAPTCHA token: %posted_captcha_token. Expected captcha token: %expected_captcha_token',
+            [
+              '%form_id' => $this_form_id,
+              '%expected_captcha_token' => var_export($expected_captcha_token, TRUE),
+              '%posted_captcha_token' => var_export($posted_captcha_token, TRUE),
+            ]
+          );
+          // Invalidate the CAPTCHA session.
+          $posted_captcha_sid = NULL;
+        }
+      }
+    }
+    else {
+      // The CAPTCHA session ID is specific to the posted form.
+      // Return NULL, so a new session will be generated for this other form.
+      $posted_captcha_sid = NULL;
+    }
+  }
+  return [$posted_form_id, $posted_captcha_sid];
+}
+
+/**
+ * CAPTCHA validation handler.
+ *
+ * This function is placed in the main captcha.module file to make sure that
+ * it is available (even for cached forms, which don't fire
+ * captcha_form_alter(), and subsequently don't include additional include
+ * files).
+ */
+function captcha_validate($element, FormStateInterface &$form_state) {
+
+  $captcha_info = $form_state->get('captcha_info');
+  $form_id = $captcha_info['this_form_id'];
+
+  // Get CAPTCHA response.
+  $captcha_response = $form_state->getValue('captcha_response');
+
+  // Get CAPTCHA session from CAPTCHA info.
+  // @todo is this correct in all cases: see comments in previous revisions?
+  $csid = $captcha_info['captcha_sid'];
+
+  // Bypass captcha validation if access attribute value is false.
+  if (empty($captcha_info['access'])) {
+    return FALSE;
+  }
+
+  // If the form is cacheable where all solution validation is handed off or if
+  // we found a session with a solution then continue with validation.
+  $is_cacheable = (bool) $form_state->getValue('captcha_cacheable', FALSE);
+
+  if ($is_cacheable) {
+    // Completely ignore the captcha_sessions table,
+    // since the captcha_sid can get reused by the cache.
+    $solution = FALSE;
+    $captcha_validate = $element['#captcha_validate'];
+    if (!function_exists($captcha_validate)) {
+      // Cacheable CAPTCHAs must provide their own validation function.
+      $form_state->setErrorByName('captcha', t('CAPTCHA configuration error: Contact the site administrator.'));
+      \Drupal::logger('CAPTCHA')->error(
+        'CAPTCHA configuration error: cacheable CAPTCHA type %challenge did not provide a validation function.',
+        ['%challenge' => $captcha_info['captcha_type']]);
+    }
+    // Check the response with the CAPTCHA validation function.
+    // Apart from the traditional expected $solution and received $response,
+    // we also provide the CAPTCHA $element and $form_state
+    // arrays for more advanced use cases.
+    if (!$captcha_validate($solution, $captcha_response, $element, $form_state)) {
+      // Wrong answer.
+      $form_state->setErrorByName('captcha_response', _captcha_get_error_message());
+      // Update wrong response counter.
+      if (\Drupal::config('captcha.settings')->get('enable_stats', FALSE)) {
+        Drupal::state()->set('captcha.wrong_response_counter', Drupal::state()
+          ->get('captcha.wrong_response_counter', 0) + 1);
+      }
+
+      if (\Drupal::config('captcha.settings')
+        ->get('log_wrong_responses', FALSE)
+      ) {
+        \Drupal::logger('CAPTCHA')->notice(
+          '%form_id post blocked by CAPTCHA module: challenge %challenge (by module %module).',
+          [
+            '%form_id' => $form_id,
+            '%challenge' => $captcha_info['captcha_type'],
+            '%module' => $captcha_info['module'],
+          ]);
+      }
+    }
+  }
+  else {
+    // Retrieve the solution for the CAPTCHA session.
+    // @see https://www.drupal.org/project/captcha/issues/3558256
+    $captcha_persistence = \Drupal::config('captcha.settings')
+      ->get('persistence');
+    $query = \Drupal::database()
+      ->select('captcha_sessions', 'cs')
+      ->fields('cs', ['solution'])
+      ->condition('csid', $csid);
+    // For non-"show always" persistence, prevent retrieval of solutions for
+    // solved sessions to block replay attacks. Once a CAPTCHA is solved, its
+    // solution can no longer be retrieved, requiring each form submission to
+    // solve a fresh CAPTCHA. For "show always", the session must remain
+    // readable since the CAPTCHA is shown on every form submission.
+    if ($captcha_persistence != CaptchaConstants::CAPTCHA_PERSISTENCE_SHOW_ALWAYS) {
+      $query->condition('status', CaptchaConstants::CAPTCHA_STATUS_SOLVED, '<>');
+    }
+    $solution = $query->execute()->fetchField();
+
+    if ($solution !== FALSE) {
+      // Get CAPTCHA validate function or fall back on strict equality.
+      $captcha_validate = $element['#captcha_validate'];
+      if (!function_exists($captcha_validate)) {
+        $captcha_validate = 'captcha_validate_strict_equality';
+      }
+      // Check the response with the CAPTCHA validation function.
+      // Apart from the traditional expected $solution and received $response,
+      // we also provide the CAPTCHA $element and $form_state
+      // arrays for more advanced use cases.
+      if ($captcha_validate($solution, $captcha_response, $element, $form_state)) {
+
+        if (in_array($captcha_persistence,
+          [
+            CaptchaConstants::CAPTCHA_PERSISTENCE_SKIP_ONCE_SUCCESSFUL,
+            CaptchaConstants::CAPTCHA_PERSISTENCE_SKIP_ONCE_SUCCESSFUL_PER_FORM_TYPE,
+          ])) {
+          // Only save the success in $_SESSION if it is actually needed for
+          // further validation in _captcha_required_for_user(). Setting
+          // this kills the page cache so let's not be cavalier about it.
+          $_SESSION['captcha_success_form_ids'][$form_id] = $form_id;
+        }
+
+        // Record success and invalidate token to prevent replay attacks.
+        // @see https://www.drupal.org/project/captcha/issues/3558256
+        \Drupal::database()->update('captcha_sessions')
+          ->condition('csid', $csid)
+          ->fields([
+            'status' => CaptchaConstants::CAPTCHA_STATUS_SOLVED,
+            'token' => NULL,
+          ])
+          ->expression('attempts', 'attempts + 1')
+          ->execute();
+      }
+      else {
+        // Wrong answer.
+        \Drupal::database()->update('captcha_sessions')
+          ->condition('csid', $csid)
+          ->expression('attempts', 'attempts + 1')
+          ->execute();
+
+        $form_state->setErrorByName('captcha_response', _captcha_get_error_message());
+        // Update wrong response counter.
+        if (\Drupal::config('captcha.settings')->get('enable_stats', FALSE)) {
+          Drupal::state()->set('captcha.wrong_response_counter', Drupal::state()
+            ->get('captcha.wrong_response_counter', 0) + 1);
+        }
+
+        if (\Drupal::config('captcha.settings')
+          ->get('log_wrong_responses', FALSE)
+        ) {
+          \Drupal::logger('CAPTCHA')->notice(
+            '%form_id post blocked by CAPTCHA module: challenge %challenge (by module %module), user answered "@response", but the solution was "@solution".',
+            [
+              '%form_id' => $form_id,
+              '@response' => $captcha_response,
+              '@solution' => $solution,
+              '%challenge' => $captcha_info['captcha_type'],
+              '%module' => $captcha_info['module'],
+            ]);
+        }
+      }
+    }
+    else {
+      // If the session is gone and we can't confirm a solution error.
+      // Note: _captcha_get_posted_captcha_info() validates and triggers session
+      // rebuilds for re-use attacks during element processing so this should be
+      // rare if it ever happens.
+      $form_state->setErrorByName('captcha', t('CAPTCHA validation error: unknown CAPTCHA session ID. Contact the site administrator if this problem persists.'));
+      \Drupal::logger('CAPTCHA')->warning(
+        'CAPTCHA validation error: unknown CAPTCHA session ID (%csid).',
+        ['%csid' => var_export($csid, TRUE)]);
+    }
+  }
+}
+
+/**
+ * Pre-render callback for additional processing of a CAPTCHA form element.
+ *
+ * This encompasses tasks that should happen after the general FAPI processing
+ * (building, submission and validation) but before rendering
+ * (e.g. storing the solution).
+ *
+ * @param array $element
+ *   The CAPTCHA form element.
+ *
+ * @return array
+ *   The manipulated element.
+ *
+ * @deprecated in captcha:8.x-1.0 and is removed from captcha:8.x-2.0.
+ *   Use \Drupal\captcha\Element\Captcha::preRenderProcess() instead.
+ * @see https://www.drupal.org/project/captcha/issues/1949682
+ */
+function captcha_pre_render_process(array $element) {
+  return Captcha::preRenderProcess($element);
+}
+
+/**
+ * Default implementation of hook_captcha().
+ */
+function captcha_captcha($op, $captcha_type = '') {
+  switch ($op) {
+    case 'list':
+      return ['Math'];
+
+    case 'generate':
+      if ($captcha_type == 'Math') {
+        $result = [];
+        $answer = mt_rand(1, 20);
+        $x = mt_rand(1, $answer);
+        $y = $answer - $x;
+        $result['solution'] = "$answer";
+        // Build challenge widget.
+        // Note that we also use t() for the math challenge itself. This makes
+        // it possible to 'rephrase' the challenge a bit through localization
+        // or string overrides.
+        $result['form']['captcha_response'] = [
+          '#type' => 'textfield',
+          '#title' => t('Math question (@x + @y =)', ['@x' => $x, '@y' => $y]),
+          '#description' => t('Solve this simple math problem and enter the result. E.g. for 1+3, enter 4.'),
+          '#size' => 4,
+          '#maxlength' => 2,
+          '#required' => TRUE,
+          '#attributes' => [
+            'autocomplete' => 'off',
+          ],
+          '#cache' => ['max-age' => 0],
+        ];
+        \Drupal::service('page_cache_kill_switch')->trigger();
+
+        return $result;
+      }
+      elseif ($captcha_type == 'Test') {
+        // This challenge is not visible through the administrative interface
+        // as it is not listed in captcha_captcha('list'),
+        // but it is meant for debugging and testing purposes.
+        // @todo for Drupal 7 version: This should be done with a mock module,
+        // but Drupal 6 does not support this (mock modules can not be hidden).
+        $result = [
+          'solution' => 'Test 123',
+          'form' => [],
+        ];
+        $result['form']['captcha_response'] = [
+          '#type' => 'textfield',
+          '#title' => t('Test one two three'),
+          '#required' => TRUE,
+          '#cache' => ['max-age' => 0],
+        ];
+        \Drupal::service('page_cache_kill_switch')->trigger();
+
+        return $result;
+      }
+      break;
+  }
+}
+
+/**
+ * Parse values of whitelist ip addresses and ranges.
+ *
+ * @param string|null $whitelist_ips_value
+ *   Contains list of ip addresses and ranges set one per line.
+ *
+ * @return array
+ *   Array of parsed ip addresses and ranges.
+ */
+function captcha_whitelist_ips_parse_values($whitelist_ips_value) {
+  $whitelist_ips = [
+    CaptchaConstants::CAPTCHA_WHITELIST_IP_RANGE => [],
+    CaptchaConstants::CAPTCHA_WHITELIST_IP_ADDRESS => [],
+  ];
+
+  // Ensure the IPs value is trimmed before moving onward.
+  $whitelist_ips_value = trim($whitelist_ips_value ?? "");
+
+  if (empty($whitelist_ips_value)) {
+    return $whitelist_ips;
+  }
+
+  $value_rows = explode("\n", $whitelist_ips_value);
+  foreach ($value_rows as $value_row) {
+    $value_row = trim($value_row);
+    if (!empty($value_row) && strpos($value_row, '-') !== FALSE) {
+      $whitelist_ips[CaptchaConstants::CAPTCHA_WHITELIST_IP_RANGE][] = $value_row;
+    }
+    else {
+      $whitelist_ips[CaptchaConstants::CAPTCHA_WHITELIST_IP_ADDRESS][] = $value_row;
+    }
+  }
+
+  return $whitelist_ips;
+}
+
+/**
+ * Check if ip address is whitelisted.
+ *
+ * @param string $ip_address
+ *   Optional. IP address to be checked if it is in whitelist. If no ip value
+ *   provided user's current ip will be used to be verified.
+ *
+ * @return bool
+ *   TRUE if requested IP address is whitelisted, FALSE if it is not.
+ */
+function captcha_whitelist_ip_whitelisted($ip_address = '') {
+  if (empty($ip_address)) {
+    $ip_address = Drupal::request()->getClientIp();
+  }
+
+  $config = \Drupal::config('captcha.settings');
+  $whitelist_ips_value = $config->get('whitelist_ips');
+  $whitelist_ips = captcha_whitelist_ips_parse_values($whitelist_ips_value);
+
+  if (in_array($ip_address, $whitelist_ips[CaptchaConstants::CAPTCHA_WHITELIST_IP_ADDRESS])) {
+    return TRUE;
+  }
+  elseif (empty($whitelist_ips[CaptchaConstants::CAPTCHA_WHITELIST_IP_RANGE])) {
+    return FALSE;
+  }
+
+  foreach ($whitelist_ips[CaptchaConstants::CAPTCHA_WHITELIST_IP_RANGE] as $ip_range) {
+    [$ip_lower, $ip_upper] = explode('-', $ip_range, 2);
+    $ip_lower_dec = (float) sprintf("%u", ip2long($ip_lower));
+    $ip_upper_dec = (float) sprintf("%u", ip2long($ip_upper));
+    $ip_address_dec = (float) sprintf("%u", ip2long($ip_address));
+    if (($ip_address_dec >= $ip_lower_dec) && ($ip_address_dec <= $ip_upper_dec)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}

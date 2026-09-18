@@ -1,0 +1,38 @@
+/* Show "Get new captcha"-link as simple icon */
+.reload-captcha {
+  display: block;
+  width: var(--reload-icon-size);
+  height: var(--reload-icon-size);
+  background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 56 56' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cg transform='matrix(1,0,0,1,-344.937,-314.119)'%3E%3Cpath d='M399.28,314.12L390.155,321.37C385.356,317.346 379.193,314.901 372.499,314.901C357.37,314.901 344.937,327.335 344.937,342.463C344.937,357.591 357.371,369.744 372.499,369.744C384.359,369.744 394.551,362.29 398.405,351.775L388.53,349.369C385.887,355.601 379.763,359.9 372.499,359.9C362.775,359.9 355.061,352.187 355.061,342.462C355.061,332.737 362.774,324.743 372.499,324.743C376.107,324.743 379.422,325.86 382.186,327.743L373.155,334.931L399.28,339.774L399.28,314.118L399.28,314.12Z' style='fill-rule:nonzero;'/%3E%3C/g%3E%3C/svg%3E%0A");
+  background-repeat: no-repeat;
+  font-size: 0px;
+  text-align: left;
+  opacity: 0.7;
+  transition-property: opacity;
+  transition-duration: 150ms;
+  transition-timing-function: linear;
+}
+
+.reload-captcha:hover {
+  opacity: 1;
+}
+
+/* Ensure the reload button spins around once at minimum when clicked */
+.reload-captcha:focus:not(:focus-visible) {
+  animation: image_captcha_refresh_spin 500ms linear 1;
+}
+
+/* Loading Formatter: Rotate refresh button while loading new CAPTCHA image */
+.captcha--loading .reload-captcha {
+  animation: image_captcha_refresh_spin 500ms linear infinite;
+}
+
+@keyframes image_captcha_refresh_spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

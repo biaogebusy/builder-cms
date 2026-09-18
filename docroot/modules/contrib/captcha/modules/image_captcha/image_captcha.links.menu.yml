@@ -1,0 +1,6 @@
+image_captcha.settings:
+  title: 'Image Captcha'
+  route_name: image_captcha.settings
+  description: 'Configure Image Captcha Settings.'
+  parent: captcha.settings
+  weight: -1

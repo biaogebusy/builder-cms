@@ -1,0 +1,10 @@
+name: captcha long form id test module
+type: module
+description: 'Test module for testing captchas added to forms with ids longer than 64 characters'
+package: Testing
+hidden: true
+
+# Information added by Drupal.org packaging script on 2026-02-09
+version: '2.0.10'
+project: 'captcha'
+datestamp: 1770647538

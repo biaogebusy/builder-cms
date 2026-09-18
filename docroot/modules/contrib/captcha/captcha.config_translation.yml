@@ -1,0 +1,5 @@
+captcha.settings:
+  title: 'CAPTCHA'
+  base_route_name: captcha_settings
+  names:
+    - captcha.settings

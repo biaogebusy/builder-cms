@@ -1,0 +1,28 @@
+base:
+  css:
+    theme:
+      css/image_captcha.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+image-captcha-refresh:
+  js:
+    js/image_captcha_refresh.js: {}
+  css:
+    theme:
+      css/image_captcha_refresh.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - image_captcha/base
+
+admin:
+  js:
+    js/admin.image_captcha.js: {}
+  css:
+    theme:
+      css/admin.image_captcha.css: {}
+  dependencies:
+    - image_captcha/base

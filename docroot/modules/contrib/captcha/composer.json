@@ -1,0 +1,16 @@
+{
+  "name": "drupal/captcha",
+  "description": "The CAPTCHA module provides this feature to virtually any user facing web form on a Drupal site.",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://www.drupal.org/project/captcha",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/captcha",
+    "source": "https://git.drupalcode.org/project/captcha"
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-8.x-1.x": "1.x-dev"
+    }
+  }
+}

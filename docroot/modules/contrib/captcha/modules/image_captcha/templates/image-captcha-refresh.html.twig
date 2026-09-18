@@ -1,0 +1,19 @@
+{#
+/**
+ * @file
+ * Custom theme implementation for custom field type defined.
+ *
+ * Available variables:
+ * - uri: An optional URL the image can be linked to.
+ * - title: An optional Title value which will be shown as text.
+ * - link_value: Value used to open the link in new or same tab.
+ *
+ * @see template_preprocess_custom_zipang_link_formatter()
+ *
+ * @ingroup themeable
+ */
+#}
+{{ attach_library('image_captcha/image-captcha-refresh') }}
+<div class="reload-captcha-wrapper" title="{{ 'Generate new CAPTCHA image'|t }}">
+    {{captcha_refresh_link}}
+</div>

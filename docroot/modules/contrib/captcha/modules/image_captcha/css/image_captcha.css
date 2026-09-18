@@ -1,0 +1,38 @@
+.captcha-type-challenge--image {
+  --image-width: 150px;
+  --reload-icon-size: 16px;
+  --gap-h: 1rem;
+  --gap-v: .35rem;
+  position: relative;
+}
+
+/* Show Image next to the text input */
+.captcha-type-challenge--image .captcha__element {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-start;
+  gap: var(--gap-v) var(--gap-h);
+}
+
+.captcha-type-challenge--image .captcha__element>.form-item {
+  flex: 1 1 calc(100% - var(--image-width) - var(--gap-h));
+  min-width: 13em;
+  margin: 0;
+}
+
+.captcha-type-challenge--image .captcha__element>.form-item>label {
+  margin-top: 0;
+}
+
+.captcha__image-wrapper {
+  position: relative;
+  flex: 0 0 var(--image-width);
+}
+
+.captcha__image-wrapper img {
+  display: block;
+  max-width: 100%;
+  border: 1px solid #eee;
+  padding: .35rem;
+  margin-bottom: .5rem;
+}

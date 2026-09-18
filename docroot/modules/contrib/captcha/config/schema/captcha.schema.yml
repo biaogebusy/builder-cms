@@ -1,0 +1,60 @@
+captcha.captcha_point.*:
+  type: config_entity
+  label: 'CAPTCHA point'
+  mapping:
+    formId:
+      type: string
+      label: 'Form ID'
+    captchaType:
+      type: string
+      label: 'Captcha Type'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+      label: 'UUID'
+
+captcha.settings:
+  type: config_object
+  label: 'CAPTCHA Settings'
+  mapping:
+    enable_globally:
+      type: integer
+      label: 'Add captcha to all forms.'
+    enable_globally_on_admin_routes:
+      type: boolean
+      label: 'Additionally add captcha to admin forms.'
+    default_challenge:
+      type: string
+      label: 'The default challenge for captcha.'
+    description:
+      type: label
+      label: 'The default captcha description.'
+    title:
+      type: label
+      label: 'The default captcha title.'
+    administration_mode:
+      type: boolean
+      label: 'Add CAPTCHA administration links to forms'
+    administration_mode_on_admin_routes:
+      type: boolean
+      label: 'Additionally add administration links on admin pages'
+    whitelist_ips:
+      type: string
+      label: 'IP addresses list'
+    wrong_captcha_response_message:
+      type: label
+      label: 'The error message when a user has entered an incorrect CAPTCHA answer.'
+    default_validation:
+      type: integer
+      label: 'Default CAPTCHA validation'
+    persistence:
+      type: integer
+      label: 'CAPTCHA Persistence'
+    enable_stats:
+      type: boolean
+      label: 'Enable statistics'
+    log_wrong_responses:
+      type: boolean
+      label: 'Log wrong responses'

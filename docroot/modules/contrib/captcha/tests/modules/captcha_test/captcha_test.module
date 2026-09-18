@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the Captcha Test module.
+ */
+
+/**
+ * Implements hook_captcha().
+ */
+function captcha_test_captcha($op, $captcha_type = '') {
+  switch ($op) {
+    case 'list':
+      return [];
+
+    case 'generate':
+      if ($captcha_type === 'TestCacheable') {
+        // A cacheable Captcha type.
+        $result = [
+          'cacheable' => TRUE,
+          // Cacheable captcha types need to provide a custom validation
+          // callback that doesn't care about the solution, because a form can
+          // be shown containing a cached CSID that has since been deleted
+          // from the {captcha_sessions} table.
+          'captcha_validate' => 'captcha_test_captcha_captcha_validation',
+          'solution' => 'Test 123',
+          'form' => [],
+        ];
+        $result['form']['captcha_response'] = [
+          '#type' => 'textfield',
+          '#title' => t('Test one two three'),
+          '#required' => TRUE,
+        ];
+
+        return $result;
+      }
+  }
+}
+
+/**
+ * Validation callback.
+ */
+function captcha_test_captcha_captcha_validation() {
+  return TRUE;
+}

@@ -1,0 +1,5 @@
+image_captcha.settings:
+  title: 'Image Captcha'
+  route_name: image_captcha.settings
+  base_route: captcha_settings
+  weight: -1

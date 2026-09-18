@@ -1,0 +1,14 @@
+captcha_settings:
+  route_name: captcha_settings
+  title: 'CAPTCHA Settings'
+  base_route: captcha_settings
+
+captcha_examples:
+  route_name: captcha_examples
+  title: 'CAPTCHA Examples'
+  base_route: captcha_settings
+
+captcha_points.list:
+  route_name: captcha_point.list
+  title: 'Captcha Points'
+  base_route: captcha_settings

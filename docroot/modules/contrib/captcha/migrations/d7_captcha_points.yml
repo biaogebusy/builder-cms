@@ -1,0 +1,18 @@
+id: d7_captcha_points
+label: 'Captcha Points Table'
+migration_tags:
+  - Drupal 7
+  - Configuration
+source:
+  plugin: d7_captcha_points
+process:
+  formId: form_id
+  label: form_id
+  captchaType:
+    plugin: captcha_type_formatter
+    source: captcha_type
+  status:
+    plugin: default_value
+    default_value: TRUE
+destination:
+  plugin: entity:captcha_point

@@ -1,0 +1,13 @@
+captcha.settings:
+  title: 'CAPTCHA settings'
+  description: 'Administer CAPTCHA settings'
+  route_name: captcha_settings
+  parent: user.admin_index
+  weight: -1
+
+captcha.examples:
+  title: 'CAPTCHA examples'
+  description: Overview of the available CAPTCHA challenge types with examples'
+  route_name: captcha_examples
+  parent: captcha.settings
+  weight: 0

@@ -1,0 +1,6 @@
+finished:
+  7:
+    captcha: captcha
+not_finished:
+  6:
+    captcha: captcha
