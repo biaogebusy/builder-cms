@@ -159,7 +159,7 @@ class CommonUtil {
       $res['uuid'] = $entity->uuid();
       $res['uid'] = $entity->id();
       if ($file = $entity->get('user_picture')->entity) {
-        $res['avatar'] = CommonUtil::removeBaseUrl(file_create_url($file->getFileUri()));
+        $res['avatar'] = CommonUtil::removeBaseUrl(\Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri()));
       } elseif (\Drupal::moduleHandler()->moduleExists('wechat')) {
         /** @var WechatUser[] $entity */
         $wechat_user = \Drupal::entityTypeManager()->getStorage('wechat_user')->loadByProperties(['uid' => $uid]);
