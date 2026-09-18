@@ -1,0 +1,5 @@
+services:
+  xinshi_api.entity_fix_commands:
+    class: Drupal\xinshi_api\Commands\EntityFixCommands
+    tags:
+      - { name: drush.command }
