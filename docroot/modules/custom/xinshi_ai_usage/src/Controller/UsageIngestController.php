@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * POST /internal/ai-metering/v1/events — usage event ingest for registered producers.
+ * POST /api/v3/ai/metering/events — usage event ingest for registered producers.
  *
  * Batch errors use `{ code, message, request_id, retryable }`; per-event
  * results use `{ results: [{ event_id, status, code? }] }`. Only `accepted`

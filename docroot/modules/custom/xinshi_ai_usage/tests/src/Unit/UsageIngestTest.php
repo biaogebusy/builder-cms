@@ -25,7 +25,7 @@ use Symfony\Component\Yaml\Yaml;
 final class UsageIngestTest extends TestCase {
 
   private const SECRET = 'test-secret';
-  private const PATH = '/internal/ai-metering/v1/events';
+  private const PATH = '/api/v3/ai/metering/events';
 
   private Connection $database;
   private UsageIngestService $ingest;
@@ -183,7 +183,7 @@ final class UsageIngestTest extends TestCase {
       'stale timestamp' => $this->signed($body, timestamp: (string) ($this->now - 301)),
       'future timestamp' => $this->signed($body, timestamp: (string) ($this->now + 301)),
       'body changed after signing' => $this->signed($body, sentBody: $body . ' '),
-      'other path' => $this->signed($body, path: '/internal/ai-metering/v1/other'),
+      'other path' => $this->signed($body, path: '/api/v3/ai/metering/other'),
       'malformed nonce' => $this->signed($body, nonce: 'short'),
     ];
     foreach ($refused as $label => $request) {
