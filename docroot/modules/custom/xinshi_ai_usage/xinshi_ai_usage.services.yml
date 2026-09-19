@@ -1,0 +1,12 @@
+services:
+  logger.channel.xinshi_ai_usage:
+    parent: logger.channel_base
+    arguments: ['xinshi_ai_usage']
+
+  xinshi_ai_usage.producer_identity:
+    class: Drupal\xinshi_ai_usage\Service\ProducerIdentity
+    arguments: ['@settings', '@keyvalue.expirable', '@datetime.time']
+
+  xinshi_ai_usage.ingest:
+    class: Drupal\xinshi_ai_usage\Service\UsageIngestService
+    arguments: ['@database', '@datetime.time', '@logger.channel.xinshi_ai_usage']

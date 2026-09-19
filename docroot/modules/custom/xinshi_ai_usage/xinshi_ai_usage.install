@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @file
+ * Schema for immutable AI usage facts (UB1.1 / UB1.4).
+ *
+ * The tables live in their own module so uninstalling the task runner
+ * (xinshi_ai) never drops financial facts.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ */
+function xinshi_ai_usage_schema(): array {
+  $schema['ai_usage_event'] = [
+    'description' => 'Append-only usage events received from registered producers.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'producer_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'event_id' => ['type' => 'varchar_ascii', 'length' => 191, 'not null' => TRUE],
+      'event_type' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+      'schema_version' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'operation_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'attempt_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'observation_revision' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'payload_hash' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      // Milliseconds since the Unix epoch, UTC; the same precision the Node producer uses.
+      'occurred_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      'received_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      // NULL until the aggregation consumer (UB1.6) has applied the event.
+      'processed_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'payload_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'dedup' => ['site_id', 'producer_id', 'event_id'],
+    ],
+    'indexes' => [
+      'attempt' => ['site_id', 'attempt_id', 'event_type', 'observation_revision'],
+      'operation' => ['site_id', 'operation_id'],
+      'pending' => ['processed_at', 'id'],
+    ],
+  ];
+  return $schema;
+}

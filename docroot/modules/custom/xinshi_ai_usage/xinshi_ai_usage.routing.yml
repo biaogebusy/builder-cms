@@ -1,0 +1,12 @@
+# Internal ingest for usage events. Access is decided by the producer signature inside the
+# controller, never by a user session; see docs "Drupal 事件 ingest 与服务身份".
+xinshi_ai_usage.ingest:
+  path: '/internal/ai-metering/v1/events'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageIngestController::ingest'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+  requirements:
+    _access: 'TRUE'
