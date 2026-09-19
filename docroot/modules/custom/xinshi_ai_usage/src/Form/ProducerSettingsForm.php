@@ -117,7 +117,7 @@ final class ProducerSettingsForm extends FormBase {
     $form['register']['site_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('站点标识'),
-      '#description' => $this->t('与 Node 的 METERING_SITE_ID 一致；Node 默认使用其 apiUrl 的主机名，与本站域名相同时无需另行设置。'),
+      '#description' => $this->t('逻辑站点标签，用于标记和隔离事件，不是地址。必须与 Node 的 METERING_SITE_ID 完全一致，登记后不要再改。Node 未设置该变量时默认取其 apiUrl 的主机名；前端与后端域名不同时，建议两边都显式填写前端产品域名。'),
       '#default_value' => $request?->getHost() ?: '',
       '#maxlength' => 128,
       '#required' => TRUE,
