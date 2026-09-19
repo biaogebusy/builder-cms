@@ -12,7 +12,9 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Verifies the HMAC service identity of a registered usage producer.
  *
- * Producers are declared in settings.php, never in exportable configuration:
+ * Producers are registered in the admin UI (encrypted, see ProducerVault) or
+ * declared in settings.php for scripted deployments, never in exportable
+ * configuration. A settings.php entry overrides a vault entry with the same ID:
  * @code
  * $settings['xinshi_ai_usage.producers'] = [
  *   'chat-node' => ['secret' => getenv('METERING_INGEST_SECRET'), 'site_id' => 'example.test'],
@@ -39,6 +41,7 @@ final class ProducerIdentity {
     private readonly Settings $settings,
     private readonly KeyValueExpirableFactoryInterface $keyValue,
     private readonly TimeInterface $time,
+    private readonly ?ProducerVault $vault = NULL,
   ) {}
 
   /**
@@ -87,9 +90,10 @@ final class ProducerIdentity {
     return hash_hmac('sha256', $material, $secret);
   }
 
+  /** Deployment settings win over the admin registry for the same producer ID. */
   private function producers(): array {
-    $producers = $this->settings->get('xinshi_ai_usage.producers', []);
-    return is_array($producers) ? $producers : [];
+    $configured = $this->settings->get('xinshi_ai_usage.producers', []);
+    return (is_array($configured) ? $configured : []) + ($this->vault?->all() ?? []);
   }
 
 }

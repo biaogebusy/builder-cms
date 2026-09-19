@@ -1,0 +1,4 @@
+administer xinshi ai usage:
+  title: '管理 AI 用量计量生产者'
+  description: '登记、轮换和删除上报用量事件的服务密钥。'
+  restrict access: true

@@ -3,5 +3,6 @@ type: module
 description: 'AI 用量事实:接收 Node / Drupal 生产者的计量事件,保存不可变事实供成本、报表与计费使用。'
 package: 'Xinshi'
 core_version_requirement: ^10.3 || ^11
+configure: xinshi_ai_usage.settings
 dependencies:
   - drupal:user

@@ -3,9 +3,13 @@ services:
     parent: logger.channel_base
     arguments: ['xinshi_ai_usage']
 
+  xinshi_ai_usage.producer_vault:
+    class: Drupal\xinshi_ai_usage\Service\ProducerVault
+    arguments: ['@keyvalue', '@private_key']
+
   xinshi_ai_usage.producer_identity:
     class: Drupal\xinshi_ai_usage\Service\ProducerIdentity
-    arguments: ['@settings', '@keyvalue.expirable', '@datetime.time']
+    arguments: ['@settings', '@keyvalue.expirable', '@datetime.time', '@xinshi_ai_usage.producer_vault']
 
   xinshi_ai_usage.ingest:
     class: Drupal\xinshi_ai_usage\Service\UsageIngestService

@@ -11,3 +11,14 @@ xinshi_ai_usage.ingest:
     no_cache: TRUE
   requirements:
     _access: 'TRUE'
+
+# Producer registry: generates and rotates the secrets the ingest verifies.
+xinshi_ai_usage.settings:
+  path: '/admin/config/xinshi/ai/usage'
+  defaults:
+    _form: '\Drupal\xinshi_ai_usage\Form\ProducerSettingsForm'
+    _title: 'AI 用量计量'
+  requirements:
+    _permission: 'administer xinshi ai usage'
+  options:
+    _admin_route: TRUE

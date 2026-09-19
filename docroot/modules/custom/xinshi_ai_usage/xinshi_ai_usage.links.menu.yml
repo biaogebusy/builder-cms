@@ -1,0 +1,6 @@
+xinshi_ai_usage.settings:
+  title: 'AI 用量计量'
+  description: '登记上报 AI 用量事件的服务及其密钥。'
+  route_name: xinshi_ai_usage.settings
+  parent: system.admin_config_services
+  weight: 11
