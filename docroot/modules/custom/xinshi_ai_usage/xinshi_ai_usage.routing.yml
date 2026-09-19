@@ -22,3 +22,14 @@ xinshi_ai_usage.settings:
     _permission: 'administer xinshi ai usage'
   options:
     _admin_route: TRUE
+
+# Purchasing price book management.
+xinshi_ai_usage.price_book:
+  path: '/admin/config/xinshi/ai/usage/pricing'
+  defaults:
+    _form: '\Drupal\xinshi_ai_usage\Form\PriceBookForm'
+    _title: '采购价卡'
+  requirements:
+    _permission: 'administer xinshi ai pricing'
+  options:
+    _admin_route: TRUE

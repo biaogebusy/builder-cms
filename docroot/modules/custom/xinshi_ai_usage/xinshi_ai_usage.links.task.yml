@@ -1,6 +1,11 @@
-# Shown as a tab of the Xinshi AI settings page when that module is installed.
 xinshi_ai_usage.settings.tab:
   title: '用量计量'
   route_name: xinshi_ai_usage.settings
   base_route: xinshi_ai.settings
   weight: 20
+
+xinshi_ai_usage.price_book.tab:
+  title: '采购价卡'
+  route_name: xinshi_ai_usage.price_book
+  base_route: xinshi_ai.settings
+  weight: 30

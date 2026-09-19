@@ -2,3 +2,13 @@ administer xinshi ai usage:
   title: '管理 AI 用量计量生产者'
   description: '登记、轮换和删除上报用量事件的服务密钥。'
   restrict access: true
+
+administer xinshi ai pricing:
+  title: '管理 AI 采购价卡'
+  description: '维护供应商采购价卡版本、启用和停用价格。'
+  restrict access: true
+
+view ai supplier costs:
+  title: '查看 AI 采购成本'
+  description: '查看按模型和账号统计的采购成本与未定价调用。'
+  restrict access: true

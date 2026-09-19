@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Schema for immutable AI usage facts (UB1.1 / UB1.4).
+ * Schema for immutable AI usage facts and purchasing cost rating (UB1.1 / UB1.4 / UB1.5).
  *
  * The tables live in their own module so uninstalling the task runner
  * (xinshi_ai) never drops financial facts.
@@ -44,5 +44,74 @@ function xinshi_ai_usage_schema(): array {
       'pending' => ['processed_at', 'id'],
     ],
   ];
+
+  $schema['ai_price_book_version'] = [
+    'description' => 'Versioned purchasing price books. Active version supplies rates for cost rating.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'book_kind' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE,
+        'description' => 'E.g. supplier_chat; different kinds have different rate structures.'],
+      'version' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE,
+        'description' => 'Human-readable version label, unique per site + kind.'],
+      'currency' => ['type' => 'varchar_ascii', 'length' => 8, 'not null' => TRUE,
+        'description' => 'ISO 4217 code, e.g. CNY, USD.'],
+      'rates_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE,
+        'description' => 'Structured rates keyed by provider account ref and model id.'],
+      'rounding_policy' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE, 'default' => 'half_up',
+        'description' => 'Rounding applied when converting token * per-million rate to micros.'],
+      'status' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE, 'default' => 'draft',
+        'description' => 'draft or active; only one active version per site + kind at a time.'],
+      'source_ref' => ['type' => 'varchar', 'length' => 255, 'not null' => FALSE,
+        'description' => 'Optional reference to supplier quote, invoice or contract.'],
+      'effective_from' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE,
+        'description' => 'Milliseconds since epoch; cost rating matches by attempt occurred_at.'],
+      'effective_to' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE,
+        'description' => 'NULL means open-ended; new version replaces active atomically.'],
+      'created_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      'created_by' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'version' => ['site_id', 'book_kind', 'version'],
+    ],
+    'indexes' => [
+      'active' => ['site_id', 'book_kind', 'status', 'effective_from'],
+    ],
+  ];
+
+  $schema['ai_usage_cost_entry'] = [
+    'description' => 'Supplier cost computed for one observed attempt revision. Append-only.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'attempt_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'observation_revision' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'price_version_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE,
+        'description' => 'NULL when valuation_state is unpriced.'],
+      'currency' => ['type' => 'varchar_ascii', 'length' => 8, 'not null' => TRUE],
+      'input_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'cache_read_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'cache_write_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'output_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'total_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'valuation_state' => ['type' => 'varchar_ascii', 'length' => 24, 'not null' => TRUE,
+        'description' => 'unpriced, rated_estimate, reconciled. Unpriced means no matching rate was found.'],
+      'unpriced_reason' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE,
+        'description' => 'Short code explaining why cost is unpriced, e.g. unknown_model.'],
+      'source_kind' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE, 'default' => 'price_book',
+        'description' => 'price_book or supplier_reconciliation.'],
+      'computed_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'attempt_revision' => ['site_id', 'attempt_id', 'observation_revision', 'source_kind'],
+    ],
+    'indexes' => [
+      'operation_lookup' => ['site_id', 'attempt_id'],
+      'valuation' => ['site_id', 'valuation_state'],
+    ],
+  ];
+
   return $schema;
 }
