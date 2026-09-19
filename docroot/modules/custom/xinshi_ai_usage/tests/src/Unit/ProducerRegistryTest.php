@@ -113,21 +113,21 @@ final class ProducerRegistryTest extends TestCase {
 
   public function testIdentityAcceptsRegistryProducersAndLetsSettingsOverrideThem(): void {
     $body = '{"events":[]}';
-    $this->assertSame(401, $this->status($body, 'chat-node', 'ui-secret'));
+    $this->assertSame(401, $this->authStatus($body, 'chat-node', 'ui-secret'));
     $this->vault->set('chat-node', 'ui-secret', 'site-a', $this->now);
     $this->assertSame(['producer_id' => 'chat-node', 'site_id' => 'site-a'],
       $this->identity->authenticate($this->signed($body, 'chat-node', 'ui-secret')));
     // settings.php keeps working and wins for a duplicated ID, so a UI entry cannot hijack it.
     $this->assertSame('deploy-site', $this->identity->authenticate($this->signed($body, 'deploy-node', 'deploy-secret'))['site_id']);
     $this->vault->set('deploy-node', 'ui-secret', 'site-b', $this->now);
-    $this->assertSame(401, $this->status($body, 'deploy-node', 'ui-secret'));
+    $this->assertSame(401, $this->authStatus($body, 'deploy-node', 'ui-secret'));
     $this->assertSame('deploy-site', $this->identity->authenticate($this->signed($body, 'deploy-node', 'deploy-secret'))['site_id']);
     // Rotation and deletion take effect immediately.
     $this->vault->set('chat-node', 'rotated', 'site-a', $this->now);
-    $this->assertSame(401, $this->status($body, 'chat-node', 'ui-secret'));
-    $this->assertSame(200, $this->status($body, 'chat-node', 'rotated'));
+    $this->assertSame(401, $this->authStatus($body, 'chat-node', 'ui-secret'));
+    $this->assertSame(200, $this->authStatus($body, 'chat-node', 'rotated'));
     $this->vault->delete('chat-node');
-    $this->assertSame(401, $this->status($body, 'chat-node', 'rotated'));
+    $this->assertSame(401, $this->authStatus($body, 'chat-node', 'rotated'));
   }
 
   public function testFormShowsTheSecretOnceAndRotatesOrDeletesEntries(): void {
@@ -220,7 +220,7 @@ final class ProducerRegistryTest extends TestCase {
     ], $body);
   }
 
-  private function status(string $body, string $producer, string $secret): int {
+  private function authStatus(string $body, string $producer, string $secret): int {
     try {
       $this->identity->authenticate($this->signed($body, $producer, $secret));
       return 200;

@@ -34,8 +34,8 @@ final class ProducerIdentity {
   public const HEADER_SIGNATURE = 'X-Xinshi-Signature';
   public const MAX_SKEW_SECONDS = 300;
   private const NONCE_COLLECTION = 'xinshi_ai_usage.nonce';
-  private const NONCE_PATTERN = '/^[A-Za-z0-9_-]{16,64}$/';
-  private const PRODUCER_PATTERN = '/^[A-Za-z0-9_.-]{1,64}$/';
+  private const NONCE_PATTERN = '/^[A-Za-z0-9_-]{16,64}\z/';
+  private const PRODUCER_PATTERN = '/^[A-Za-z0-9_.-]{1,64}\z/';
 
   public function __construct(
     private readonly Settings $settings,
@@ -55,7 +55,7 @@ final class ProducerIdentity {
     $nonce = (string) $request->headers->get(self::HEADER_NONCE, '');
     $signature = (string) $request->headers->get(self::HEADER_SIGNATURE, '');
     if (!preg_match(self::PRODUCER_PATTERN, $producer) || !preg_match(self::NONCE_PATTERN, $nonce)
-      || !preg_match('/^\d{1,12}$/', $timestamp) || !preg_match('/^[0-9a-f]{64}$/', $signature)) {
+      || !preg_match('/^\d{1,12}\z/', $timestamp) || !preg_match('/^[0-9a-f]{64}\z/', $signature)) {
       throw new ServiceAuthException('unauthenticated', 'missing or malformed producer signature');
     }
     $registered = $this->producers()[$producer] ?? NULL;

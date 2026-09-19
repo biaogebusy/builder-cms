@@ -19,8 +19,8 @@ use Drupal\Core\Site\Settings;
  */
 final class ProducerVault {
 
-  public const PRODUCER_PATTERN = '/^[A-Za-z0-9_.-]{1,64}$/';
-  public const SITE_PATTERN = '/^[\x21-\x7E]{1,128}$/';
+  public const PRODUCER_PATTERN = '/^[A-Za-z0-9_.-]{1,64}\z/';
+  public const SITE_PATTERN = '/^[\x21-\x7E]{1,128}\z/';
   private const COLLECTION = 'xinshi_ai_usage.producers';
 
   private KeyValueStoreInterface $values;

@@ -28,10 +28,13 @@ final class ProducerSettingsForm extends FormBase {
   public function __construct(
     private readonly ProducerVault $vault,
     private readonly Settings $settings,
-    private readonly RequestStack $requestStack,
+    RequestStack $requestStack,
     private readonly TimeInterface $time,
     private readonly DateFormatterInterface $dateFormatter,
-  ) {}
+  ) {
+    // FormBase already declares $requestStack; promoting it again is fatal.
+    $this->requestStack = $requestStack;
+  }
 
   /**
    * {@inheritdoc}
@@ -96,7 +99,7 @@ final class ProducerSettingsForm extends FormBase {
       ];
     }
 
-    $request = $this->requestStack->getCurrentRequest();
+    $request = $this->getRequest();
     $form['register'] = [
       '#type' => 'details',
       '#title' => $this->t('登记或轮换生产者密钥'),
