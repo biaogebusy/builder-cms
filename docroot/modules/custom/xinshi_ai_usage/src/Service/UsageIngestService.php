@@ -90,8 +90,22 @@ final class UsageIngestService {
         return ['event_id' => $event['event_id'], 'status' => 'accepted'];
       }
       catch (IntegrityConstraintViolationException) {
-        // A concurrent delivery of the same event won the insert; compare with it.
+        // A concurrent delivery won either the event-id or attempt-revision
+        // uniqueness race; compare the durable row before returning a receipt.
         $existing = $this->existingHash($siteId, $producerId, $event['event_id']);
+        if ($existing === NULL && $this->attemptRevisionExists(
+          $siteId,
+          $event['attempt_id'],
+          $event['event_type'],
+          $event['observation_revision'],
+        )) {
+          $this->logger->error('Usage attempt revision @attempt/@type/@revision arrived with a different event ID', [
+            '@attempt' => $event['attempt_id'],
+            '@type' => $event['event_type'],
+            '@revision' => $event['observation_revision'],
+          ]);
+          return ['event_id' => $event['event_id'], 'status' => 'rejected', 'code' => 'attempt_revision_conflict'];
+        }
       }
     }
     if ($existing === $hash) {
@@ -112,6 +126,19 @@ final class UsageIngestService {
       ->execute()
       ->fetchField();
     return $hash === FALSE ? NULL : (string) $hash;
+  }
+
+  private function attemptRevisionExists(string $siteId, string $attemptId, string $eventType,
+    int $observationRevision): bool {
+    return (bool) $this->database->select(self::TABLE, 'e')
+      ->fields('e', ['id'])
+      ->condition('site_id', $siteId)
+      ->condition('attempt_id', $attemptId)
+      ->condition('event_type', $eventType)
+      ->condition('observation_revision', $observationRevision)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
   }
 
 }

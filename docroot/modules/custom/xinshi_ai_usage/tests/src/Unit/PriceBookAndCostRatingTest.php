@@ -39,9 +39,9 @@ final class PriceBookAndCostRatingTest extends TestCase {
     foreach ($schema as $tableName => $tableSpec) {
       $this->database->schema()->createTable($tableName, $tableSpec);
     }
-    $this->priceBook = new PriceBookService($this->database);
     $time = $this->createMock(TimeInterface::class);
     $time->method('getCurrentMicroTime')->willReturnCallback(fn() => $this->now + 0.25);
+    $this->priceBook = new PriceBookService($this->database, $time);
     $this->costRating = new CostRatingService($this->database, $this->priceBook, $time);
   }
 
@@ -68,9 +68,32 @@ final class PriceBookAndCostRatingTest extends TestCase {
 
     // v1 was activated at $now-2s and closed when v2 was activated.
     // Loading at $now-2s (its effective_from) should still return v1.
-    $atV1Start = ($this->now - 2) * 1000;
+    $atV1Start = $this->nowMs() - 2000;
     $this->assertSame('v1',
       $this->priceBook->loadActive(self::SITE, self::KIND, $atV1Start)['version']);
+  }
+
+  public function testActivatingAnOldDraftDoesNotRewriteEarlierHistory(): void {
+    $first = $this->seedRate('history-v1', 'CNY', $this->sampleRates(1, 0, 0, 1));
+    $this->priceBook->activate($first, self::SITE, self::KIND);
+
+    $this->now += 1;
+    $draftCreatedAt = $this->nowMs();
+    $second = $this->seedRate('history-v2', 'CNY', $this->sampleRates(2, 0, 0, 2));
+    $this->now += 1;
+    $this->priceBook->activate($second, self::SITE, self::KIND);
+
+    $beforeActivation = $this->priceBook->loadActive(
+      self::SITE,
+      self::KIND,
+      $draftCreatedAt + 500,
+    );
+    $this->assertSame('history-v1', $beforeActivation['version']);
+    $this->assertSame('history-v2', $this->priceBook->loadActive(
+      self::SITE,
+      self::KIND,
+      $this->nowMs(),
+    )['version']);
   }
 
   public function testDuplicateVersionLabelIsRejected(): void {
@@ -80,14 +103,31 @@ final class PriceBookAndCostRatingTest extends TestCase {
     $this->seedRate('v1', 'USD', $this->sampleRates(1, 0, 0, 1));
   }
 
+  public function testDraftStoresAuditFields(): void {
+    $json = json_encode($this->sampleRates(1, 0, 0, 1));
+    $id = $this->priceBook->createDraft(self::SITE, self::KIND, 'audited', 'cny', $json,
+      $this->nowMs(), ' quote-2026-09 ', '42');
+    $row = $this->database->select(PriceBookService::TABLE, 'p')
+      ->fields('p', ['currency', 'source_ref', 'created_by', 'created_at', 'status'])
+      ->condition('id', $id)->execute()->fetchAssoc();
+    $this->assertSame('CNY', $row['currency']);
+    $this->assertSame('quote-2026-09', $row['source_ref']);
+    $this->assertSame('42', $row['created_by']);
+    $this->assertSame($this->nowMs(), (int) $row['created_at']);
+    $this->assertSame(PriceBookService::STATUS_DRAFT, $row['status']);
+  }
+
   public function testRatesValidationRejectsMalformedEntries(): void {
     $cases = [
       'missing accounts' => ['{}', 'invalid_rates'],
       'accounts not an object' => ['{"accounts": "nope"}', 'invalid_rates'],
       'model not an object' => ['{"accounts":{"xinshi":{"models":{"m1":"nope"}}}', 'invalid_rates'],
-      'negative rate string' => ['{"accounts":{"xinshi":{"models":{"m1":{"per_million_input":"-1"}}}}', 'invalid_rate'],
-      'empty rate defaults to zero' => ['{"accounts":{"xinshi":{"models":{"m1":{}}}}', NULL],
-      'integer rate works' => ['{"accounts":{"xinshi":{"models":{"m1":{"per_million_input":42}}}}', NULL],
+      'negative rate string' => ['{"accounts":{"xinshi":{"models":{"m1":{"per_million_input":"-1",
+        "per_million_cache_read":0,"per_million_cache_write":0,"per_million_output":0}}}}}', 'invalid_rate'],
+      'missing rate is invalid' => ['{"accounts":{"xinshi":{"models":{"m1":{}}}}', 'invalid_rates'],
+      'all integer rates work' => ['{"accounts":{"xinshi":{"models":{"m1":{
+        "per_million_input":42,"per_million_cache_read":0,"per_million_cache_write":0,
+        "per_million_output":1}}}}}', NULL],
     ];
     foreach ($cases as $label => [$json, $expectedCode]) {
       if ($expectedCode !== NULL) {
@@ -154,7 +194,8 @@ final class PriceBookAndCostRatingTest extends TestCase {
       'input_tokens_total' => '400000', 'input_tokens_cache_read' => null,
       'input_tokens_cache_write' => null, 'output_tokens_total' => '0',
       'output_tokens_reasoning' => null, 'provider_total_tokens' => '400000'];
-    $usageHigh = $usageLow + ['input_tokens_total' => '500000', 'provider_total_tokens' => '500000'];
+    $usageHigh = array_replace($usageLow,
+      ['input_tokens_total' => '500000', 'provider_total_tokens' => '500000']);
 
     $low = $this->costRating->computeRate(self::SITE, $provider, $usageLow, $this->nowMs());
     $high = $this->costRating->computeRate(self::SITE, $provider, $usageHigh, $this->nowMs());
@@ -175,7 +216,7 @@ final class PriceBookAndCostRatingTest extends TestCase {
     $unknown = $this->costRating->computeRate(self::SITE, $provider, $usage, $this->nowMs());
     $this->assertSame(CostRatingService::STATE_UNPRICED, $unknown['valuation_state']);
     $this->assertSame('unknown_model', $unknown['unpriced_reason']);
-    $this->assertSame(0, $unknown['total_cost_micros']);
+    $this->assertNull($unknown['total_cost_micros']);
 
     $realModel = ['account_ref' => 'xinshi', 'requested_model' => 'doc-model'];
     $missing = $this->costRating->computeRate(self::SITE, $realModel, NULL, $this->nowMs());
@@ -187,6 +228,56 @@ final class PriceBookAndCostRatingTest extends TestCase {
     $result = $this->costRating->computeRate(self::SITE, $realModel, $invalid, $this->nowMs());
     $this->assertSame(CostRatingService::STATE_UNPRICED, $result['valuation_state']);
     $this->assertSame('invalid_usage', $result['unpriced_reason']);
+    $this->assertNull($result['total_cost_micros']);
+  }
+
+  public function testInvalidReportedContainmentIsUnpriced(): void {
+    $version = $this->seedRate('v1', 'CNY', $this->sampleRates(1, 1, 0, 1));
+    $this->priceBook->activate($version, self::SITE, self::KIND);
+    $provider = ['account_ref' => 'xinshi', 'requested_model' => 'doc-model'];
+    $usage = ['quality' => 'reported', 'normalizer_version' => 'v1',
+      'input_tokens_total' => '10', 'input_tokens_cache_read' => '11',
+      'input_tokens_cache_write' => NULL, 'output_tokens_total' => '1',
+      'output_tokens_reasoning' => '2', 'provider_total_tokens' => '11'];
+
+    $result = $this->costRating->computeRate(self::SITE, $provider, $usage, $this->nowMs());
+    $this->assertSame(CostRatingService::STATE_UNPRICED, $result['valuation_state']);
+    $this->assertSame('invalid_usage', $result['unpriced_reason']);
+    $this->assertNull($result['total_cost_micros']);
+  }
+
+  public function testResolvedModelControlsPriceSelection(): void {
+    $rates = ['accounts' => ['xinshi' => ['models' => [
+      'requested-model' => ['per_million_input' => 1, 'per_million_cache_read' => 0,
+        'per_million_cache_write' => 0, 'per_million_output' => 0],
+      'resolved-model' => ['per_million_input' => 2, 'per_million_cache_read' => 0,
+        'per_million_cache_write' => 0, 'per_million_output' => 0],
+    ]]]];
+    $version = $this->seedRate('resolved', 'CNY', $rates);
+    $this->priceBook->activate($version, self::SITE, self::KIND);
+    $provider = ['account_ref' => 'xinshi', 'requested_model' => 'requested-model',
+      'resolved_model' => 'resolved-model'];
+    $usage = ['quality' => 'reported', 'normalizer_version' => 'v1',
+      'input_tokens_total' => '1000000', 'input_tokens_cache_read' => NULL,
+      'input_tokens_cache_write' => NULL, 'output_tokens_total' => '0',
+      'output_tokens_reasoning' => NULL, 'provider_total_tokens' => '1000000'];
+
+    $result = $this->costRating->computeRate(self::SITE, $provider, $usage, $this->nowMs());
+    $this->assertSame(2, $result['total_cost_micros']);
+  }
+
+  public function testTotalRoundsAfterAccumulatingAllComponents(): void {
+    $version = $this->seedRate('aggregate-rounding', 'CNY',
+      $this->sampleRates(400_000, 400_000, 0, 0));
+    $this->priceBook->activate($version, self::SITE, self::KIND);
+    $provider = ['account_ref' => 'xinshi', 'requested_model' => 'doc-model'];
+    $usage = ['quality' => 'reported', 'normalizer_version' => 'v1',
+      'input_tokens_total' => '2', 'input_tokens_cache_read' => '1',
+      'input_tokens_cache_write' => NULL, 'output_tokens_total' => '0',
+      'output_tokens_reasoning' => NULL, 'provider_total_tokens' => '2'];
+
+    $result = $this->costRating->computeRate(self::SITE, $provider, $usage, $this->nowMs());
+    $this->assertSame(1, $result['total_cost_micros']);
   }
 
   public function testRateAttemptWritesAndUpsertsCostEntry(): void {
@@ -205,7 +296,7 @@ final class PriceBookAndCostRatingTest extends TestCase {
       ->countQuery()->execute()->fetchField();
     $this->assertSame(1, $rowCount);
 
-    // Same key -> upsert, not insert duplicate.
+    // Same key and same result -> idempotent no-op, not a second row.
     $second = $this->costRating->rateAttempt(self::SITE, 'att-1', 1, $provider, $usage, $this->nowMs());
     $this->assertSame($first['total_cost_micros'], $second['total_cost_micros']);
     $rowCount = (int) $this->database->select(CostRatingService::TABLE, 'c')
@@ -229,7 +320,7 @@ final class PriceBookAndCostRatingTest extends TestCase {
     $result = $this->costRating->rateAttempt(self::SITE, 'att-x', 1, $provider, $usage, $this->nowMs());
     $this->assertSame(CostRatingService::STATE_UNPRICED, $result['valuation_state']);
     $this->assertSame('no_price_book', $result['unpriced_reason']);
-    $this->assertSame(0, $result['total_cost_micros']);
+    $this->assertNull($result['total_cost_micros']);
   }
 
   public function testCustomerKeyAccountIsUnpricedWhenAbsentFromBook(): void {
@@ -245,6 +336,25 @@ final class PriceBookAndCostRatingTest extends TestCase {
     $result = $this->costRating->computeRate(self::SITE, $provider, $usage, $this->nowMs());
     $this->assertSame(CostRatingService::STATE_UNPRICED, $result['valuation_state']);
     $this->assertSame('unknown_model', $result['unpriced_reason']);
+  }
+
+  public function testDifferentResultCannotOverwriteImmutableCostEntry(): void {
+    $version = $this->seedRate('immutable', 'CNY', $this->sampleRates(1, 0, 0, 0));
+    $this->priceBook->activate($version, self::SITE, self::KIND);
+    $provider = ['account_ref' => 'xinshi', 'requested_model' => 'doc-model'];
+    $firstUsage = ['quality' => 'reported', 'normalizer_version' => 'v1',
+      'input_tokens_total' => '1', 'input_tokens_cache_read' => NULL,
+      'input_tokens_cache_write' => NULL, 'output_tokens_total' => '0',
+      'output_tokens_reasoning' => NULL, 'provider_total_tokens' => '1'];
+    $secondUsage = $firstUsage;
+    $secondUsage['input_tokens_total'] = '1000000';
+
+    $this->costRating->rateAttempt(self::SITE, 'att-immutable', 1, $provider,
+      $firstUsage, $this->nowMs());
+    $this->expectException(PriceBookException::class);
+    $this->expectExceptionMessageMatches('/cost_conflict/');
+    $this->costRating->rateAttempt(self::SITE, 'att-immutable', 1, $provider,
+      $secondUsage, $this->nowMs());
   }
 
   private function seedRate(string $version, string $currency, array $rates): int {
@@ -270,8 +380,9 @@ final class PriceBookAndCostRatingTest extends TestCase {
     ];
   }
 
+  /** The same instant the mocked TimeInterface reports, so "now" matches the services. */
   private function nowMs(): int {
-    return $this->now * 1000;
+    return (int) round(($this->now + 0.25) * 1000);
   }
 
 }

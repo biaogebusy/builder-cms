@@ -10,6 +10,9 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Utility\UpdateException;
+
 /**
  * Implements hook_schema().
  */
@@ -37,6 +40,7 @@ function xinshi_ai_usage_schema(): array {
     'primary key' => ['id'],
     'unique keys' => [
       'dedup' => ['site_id', 'producer_id', 'event_id'],
+      'attempt_revision' => ['site_id', 'attempt_id', 'event_type', 'observation_revision'],
     ],
     'indexes' => [
       'attempt' => ['site_id', 'attempt_id', 'event_type', 'observation_revision'],
@@ -89,17 +93,17 @@ function xinshi_ai_usage_schema(): array {
       'observation_revision' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
       'price_version_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE,
         'description' => 'NULL when valuation_state is unpriced.'],
-      'currency' => ['type' => 'varchar_ascii', 'length' => 8, 'not null' => TRUE],
-      'input_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
-      'cache_read_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
-      'cache_write_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
-      'output_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
-      'total_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'currency' => ['type' => 'varchar_ascii', 'length' => 8, 'not null' => FALSE],
+      'input_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'cache_read_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'cache_write_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'output_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'total_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'valuation_state' => ['type' => 'varchar_ascii', 'length' => 24, 'not null' => TRUE,
         'description' => 'unpriced, rated_estimate, reconciled. Unpriced means no matching rate was found.'],
       'unpriced_reason' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE,
         'description' => 'Short code explaining why cost is unpriced, e.g. unknown_model.'],
-      'source_kind' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE, 'default' => 'price_book',
+      'source_kind' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE, 'default' => 'price_book',
         'description' => 'price_book or supplier_reconciliation.'],
       'computed_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
     ],
@@ -114,4 +118,81 @@ function xinshi_ai_usage_schema(): array {
   ];
 
   return $schema;
+}
+
+/**
+ * Add the price book and cost entry tables to sites that already installed the module.
+ *
+ * The module was deployed with only ai_usage_event before UB1.5. Updating
+ * hook_schema() does not create tables on an installed Drupal module, so this
+ * update is intentionally idempotent and checks existing event facts before
+ * adding the new attempt-level uniqueness constraint.
+ */
+function xinshi_ai_usage_update_10001(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
+}
+
+/**
+ * Brings an existing installation up to the current hook_schema() definition.
+ *
+ * Kept separate from the update hook so the upgrade path can be exercised
+ * against a real database in unit tests without a bootstrapped container.
+ * Safe to run more than once.
+ *
+ * @throws \Drupal\Core\Update\UpdateException
+ *   When existing facts would violate the attempt-level unique key.
+ */
+function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
+  $schema = $database->schema();
+  $definitions = xinshi_ai_usage_schema();
+
+  $costEntryExisted = $schema->tableExists('ai_usage_cost_entry');
+  foreach (['ai_price_book_version', 'ai_usage_cost_entry'] as $table) {
+    if (!$schema->tableExists($table)) {
+      $schema->createTable($table, $definitions[$table]);
+    }
+  }
+
+  // Early UB1.5 deployments sized source_kind for 'price_book' only.
+  if ($costEntryExisted && $schema->fieldExists('ai_usage_cost_entry', 'source_kind')) {
+    $schema->changeField(
+      'ai_usage_cost_entry',
+      'source_kind',
+      'source_kind',
+      $definitions['ai_usage_cost_entry']['fields']['source_kind'],
+    );
+  }
+
+  if (!$schema->tableExists('ai_usage_event')
+    || $schema->indexExists('ai_usage_event', 'attempt_revision')) {
+    return;
+  }
+
+  $duplicate = $database->select('ai_usage_event', 'e')
+    ->fields('e', ['site_id', 'attempt_id', 'event_type', 'observation_revision'])
+    ->addExpression('COUNT(*)', 'row_count')
+    ->groupBy('site_id')
+    ->groupBy('attempt_id')
+    ->groupBy('event_type')
+    ->groupBy('observation_revision')
+    ->having('COUNT(*) > 1')
+    ->range(0, 1)
+    ->execute()
+    ->fetchAssoc();
+  if ($duplicate) {
+    throw new UpdateException(sprintf(
+      'Cannot add the attempt_revision unique key: duplicate facts exist for %s / %s / %s / %s.',
+      $duplicate['site_id'],
+      $duplicate['attempt_id'],
+      $duplicate['event_type'],
+      $duplicate['observation_revision'],
+    ));
+  }
+
+  $schema->addUniqueKey('ai_usage_event', 'attempt_revision', [
+    'site_id',
+    'attempt_id',
+    'event_type',
+    'observation_revision',
+  ]);
 }

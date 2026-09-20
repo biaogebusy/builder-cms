@@ -17,7 +17,7 @@ services:
 
   xinshi_ai_usage.price_book:
     class: Drupal\xinshi_ai_usage\Service\PriceBookService
-    arguments: ['@database']
+    arguments: ['@database', '@datetime.time']
 
   xinshi_ai_usage.cost_rating:
     class: Drupal\xinshi_ai_usage\Service\CostRatingService

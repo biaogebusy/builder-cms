@@ -6,6 +6,7 @@ namespace Drupal\xinshi_ai_usage\Service;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Loads the active purchasing price book for a site + book kind.
@@ -49,6 +50,7 @@ final class PriceBookService {
 
   public function __construct(
     private readonly Connection $database,
+    private readonly TimeInterface $time,
   ) {}
 
   /**
@@ -64,7 +66,7 @@ final class PriceBookService {
    * @return array{id:int,version:string,currency:string,rates_json:string,rounding_policy:string,effective_from:int,effective_to:int|null}|null
    */
   public function loadActive(string $siteId, string $kind, ?int $asOfMs = NULL): ?array {
-    $now = $asOfMs ?? (int) (microtime(TRUE) * 1000);
+    $now = $asOfMs ?? $this->nowMs();
     $row = $this->database->select(self::TABLE, 'p')
       ->fields('p', ['id', 'version', 'currency', 'rates_json', 'rounding_policy',
         'effective_from', 'effective_to'])
@@ -115,12 +117,15 @@ final class PriceBookService {
       throw new PriceBookException('invalid_rates', 'price book rates must contain an accounts map');
     }
     $cleanAccounts = [];
+    if ($accounts === []) {
+      throw new PriceBookException('invalid_rates', 'price book must contain at least one account');
+    }
     foreach ($accounts as $accountId => $account) {
       if (!is_string($accountId) || $accountId === '' || !is_array($account)) {
         throw new PriceBookException('invalid_rates', 'each price book account must be a named object');
       }
       $models = $account['models'] ?? NULL;
-      if (!is_array($models)) {
+      if (!is_array($models) || $models === []) {
         throw new PriceBookException('invalid_rates', 'each price book account must have a models map');
       }
       $cleanModels = [];
@@ -128,11 +133,18 @@ final class PriceBookService {
         if (!is_string($modelId) || $modelId === '' || !is_array($rates)) {
           throw new PriceBookException('invalid_rates', 'each model rate entry must be a named object');
         }
+        foreach (['per_million_input', 'per_million_cache_read',
+          'per_million_cache_write', 'per_million_output'] as $rateKey) {
+          if (!array_key_exists($rateKey, $rates)) {
+            throw new PriceBookException('invalid_rates',
+              "model {$modelId} is missing {$rateKey}");
+          }
+        }
         $cleanModels[$modelId] = [
-          'per_million_input' => self::asMicros($rates['per_million_input'] ?? 0),
-          'per_million_cache_read' => self::asMicros($rates['per_million_cache_read'] ?? 0),
-          'per_million_cache_write' => self::asMicros($rates['per_million_cache_write'] ?? 0),
-          'per_million_output' => self::asMicros($rates['per_million_output'] ?? 0),
+          'per_million_input' => self::asMicros($rates['per_million_input']),
+          'per_million_cache_read' => self::asMicros($rates['per_million_cache_read']),
+          'per_million_cache_write' => self::asMicros($rates['per_million_cache_write']),
+          'per_million_output' => self::asMicros($rates['per_million_output']),
         ];
       }
       $cleanAccounts[$accountId] = ['models' => $cleanModels];
@@ -170,7 +182,11 @@ final class PriceBookService {
    * @param string $ratesJson
    *   Validated rates JSON.
    * @param int $effectiveFromMs
-   *   Milliseconds since epoch.
+   *   Milliseconds since epoch; activation never moves this earlier.
+   * @param string|null $sourceRef
+   *   Optional supplier quote, invoice or contract reference for audit.
+   * @param string|null $createdBy
+   *   Optional identifier of the admin who created the draft.
    *
    * @return int
    *   The new version id.
@@ -179,7 +195,29 @@ final class PriceBookService {
    *   When the version label already exists.
    */
   public function createDraft(string $siteId, string $kind, string $version, string $currency,
-    string $ratesJson, int $effectiveFromMs): int {
+    string $ratesJson, int $effectiveFromMs, ?string $sourceRef = NULL,
+    ?string $createdBy = NULL): int {
+    $version = trim($version);
+    $currency = strtoupper(trim($currency));
+    $sourceRef = $sourceRef === NULL ? NULL : trim($sourceRef);
+    if ($sourceRef === '') {
+      $sourceRef = NULL;
+    }
+    if ($sourceRef !== NULL && strlen($sourceRef) > 255) {
+      throw new PriceBookException('invalid_source_ref', 'source_ref must be at most 255 characters');
+    }
+    if ($version === '' || strlen($version) > 64) {
+      throw new PriceBookException('invalid_version', 'price book version must be 1-64 characters');
+    }
+    if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+      throw new PriceBookException('invalid_currency', 'currency must be a three-letter ISO 4217 code');
+    }
+    if ($effectiveFromMs < 0) {
+      throw new PriceBookException('invalid_effective_from', 'effective_from must be non-negative');
+    }
+    // Validate at the service boundary as well as in the form. Other callers
+    // must not be able to create a draft that can later be activated blindly.
+    $this->parseRates($ratesJson);
     try {
       $id = $this->database->insert(self::TABLE)->fields([
         'site_id' => $siteId,
@@ -189,9 +227,11 @@ final class PriceBookService {
         'rates_json' => $ratesJson,
         'rounding_policy' => self::ROUNDING_HALF_UP,
         'status' => self::STATUS_DRAFT,
+        'source_ref' => $sourceRef,
         'effective_from' => $effectiveFromMs,
         'effective_to' => NULL,
-        'created_at' => (int) (microtime(TRUE) * 1000),
+        'created_at' => $this->nowMs(),
+        'created_by' => $createdBy === NULL || $createdBy === '' ? NULL : substr($createdBy, 0, 128),
       ])->execute();
       return (int) $id;
     }
@@ -218,24 +258,57 @@ final class PriceBookService {
   public function activate(int $versionId, string $siteId, string $kind): void {
     $tx = $this->database->startTransaction();
     try {
-      $current = $this->loadActive($siteId, $kind);
-      if ($current !== NULL) {
-        $this->database->update(self::TABLE)
-          ->fields(['effective_to' => (int) (microtime(TRUE) * 1000)])
-          ->condition('id', $current['id'])
-          ->execute();
+      $target = $this->database->select(self::TABLE, 'p')
+        ->fields('p', ['id', 'effective_from', 'effective_to', 'rates_json', 'currency'])
+        ->condition('p.id', $versionId)
+        ->condition('p.site_id', $siteId)
+        ->condition('p.book_kind', $kind)
+        ->condition('p.status', self::STATUS_DRAFT)
+        ->forUpdate()
+        ->execute()
+        ->fetchAssoc();
+      if ($target === FALSE) {
+        throw new PriceBookException('version_not_found',
+          "draft price book version {$versionId} not found for site {$siteId} / {$kind}");
       }
-      $updated = $this->database->update(self::TABLE)
-        ->fields(['status' => self::STATUS_ACTIVE])
+
+      $this->parseRates((string) $target['rates_json']);
+      $now = $this->nowMs();
+      // A draft created in the past must not be applied retroactively. A
+      // future effective date remains scheduled, while the previous active
+      // interval ends exactly at that date.
+      $effectiveFrom = max((int) $target['effective_from'], $now);
+      $active = $this->database->select(self::TABLE, 'p')
+        ->fields('p', ['id', 'effective_from', 'effective_to'])
+        ->condition('p.site_id', $siteId)
+        ->condition('p.book_kind', $kind)
+        ->condition('p.status', self::STATUS_ACTIVE)
+        ->condition('p.id', $versionId, '<>')
+        ->forUpdate()
+        ->execute();
+      foreach ($active as $row) {
+        $rowFrom = (int) $row->effective_from;
+        $rowTo = $row->effective_to === NULL ? NULL : (int) $row->effective_to;
+        if ($rowFrom >= $effectiveFrom) {
+          throw new PriceBookException('overlapping_version',
+            'an active price book is already scheduled at or after the requested effective time');
+        }
+        if ($rowTo === NULL || $rowTo > $effectiveFrom) {
+          $this->database->update(self::TABLE)
+            ->fields(['effective_to' => $effectiveFrom])
+            ->condition('id', (int) $row->id)
+            ->execute();
+        }
+      }
+
+      $this->database->update(self::TABLE)
+        ->fields(['status' => self::STATUS_ACTIVE, 'effective_from' => $effectiveFrom,
+          'effective_to' => NULL])
         ->condition('id', $versionId)
         ->condition('site_id', $siteId)
         ->condition('book_kind', $kind)
         ->condition('status', self::STATUS_DRAFT)
         ->execute();
-      if ($updated === 0) {
-        throw new PriceBookException('version_not_found',
-          "draft price book version {$versionId} not found for site {$siteId} / {$kind}");
-      }
     }
     catch (\Throwable $e) {
       $tx->rollBack();
@@ -256,9 +329,19 @@ final class PriceBookService {
       return $value;
     }
     if (is_string($value) && preg_match('/^\d+$/', $value)) {
-      return (int) $value;
+      $max = (string) PHP_INT_MAX;
+      $normalized = ltrim($value, '0') ?: '0';
+      if (strlen($normalized) > strlen($max)
+        || (strlen($normalized) === strlen($max) && strcmp($normalized, $max) > 0)) {
+        throw new PriceBookException('invalid_rate', 'price book rate exceeds the supported integer range');
+      }
+      return (int) $normalized;
     }
     throw new PriceBookException('invalid_rate', 'price book rate values must be non-negative integers');
+  }
+
+  private function nowMs(): int {
+    return (int) round($this->time->getCurrentMicroTime() * 1000);
   }
 
 }

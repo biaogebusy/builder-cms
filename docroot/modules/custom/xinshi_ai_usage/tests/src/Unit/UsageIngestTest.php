@@ -138,6 +138,12 @@ final class UsageIngestTest extends TestCase {
     $edited = ['error_code' => 'tampered'] + $event;
     $this->assertSame([['event_id' => $event['event_id'], 'status' => 'rejected', 'code' => 'payload_conflict']],
       $this->ingest->ingest([$edited], 'chat-node', 'site-a'));
+    // A new event ID cannot create a second fact for the same attempt revision.
+    $rekeyed = $event;
+    $rekeyed['event_id'] = 'att-1:observed:1-rekeyed';
+    $this->assertSame([
+      ['event_id' => $rekeyed['event_id'], 'status' => 'rejected', 'code' => 'attempt_revision_conflict'],
+    ], $this->ingest->ingest([$rekeyed], 'chat-node', 'site-a'));
     $stored = $this->database->select(UsageIngestService::TABLE, 'e')->fields('e', ['payload_json'])->execute()->fetchCol();
     $this->assertCount(1, $stored);
     $this->assertSame($event, json_decode($stored[0], TRUE));

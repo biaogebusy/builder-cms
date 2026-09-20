@@ -114,6 +114,12 @@ final class PriceBookForm extends FormBase {
         JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
       '#required' => TRUE,
     ];
+    $form['create']['source_ref'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('来源凭证'),
+      '#description' => $this->t('可选。供应商报价单、发票或合同编号，便于对账时追溯费率来源。'),
+      '#maxlength' => 255,
+    ];
 
     $form['create']['actions'] = ['#type' => 'actions'];
     $form['create']['actions']['save'] = [
@@ -159,10 +165,12 @@ final class PriceBookForm extends FormBase {
     $version = (string) $form_state->getValue('version');
     $currency = strtoupper((string) $form_state->getValue('currency'));
     $ratesJson = (string) $form_state->getValue('rates_json');
+    $sourceRef = (string) $form_state->getValue('source_ref');
     $now = (int) (microtime(TRUE) * 1000);
 
     try {
-      $id = $this->priceBook->createDraft($siteId, $kind, $version, $currency, $ratesJson, $now);
+      $id = $this->priceBook->createDraft($siteId, $kind, $version, $currency, $ratesJson, $now,
+        $sourceRef, (string) $this->currentUser()->id());
     }
     catch (PriceBookException $e) {
       $this->messenger()->addError($e->getMessage());
