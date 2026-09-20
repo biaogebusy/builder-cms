@@ -4,21 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\xinshi_ai_usage\Form;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\xinshi_ai_usage\Service\CostRatingService;
+use Drupal\xinshi_ai_usage\Contract\UsageEventValidator;
 use Drupal\xinshi_ai_usage\Service\PriceBookException;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
+use Drupal\xinshi_ai_usage\Service\ProducerVault;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Admin form for viewing and creating purchasing price book versions.
+ * Admin form for viewing, creating and activating purchasing price book versions.
  *
- * The form shows the currently active version (if any), a table of recent
- * versions, and a create-draft section. Activating a version closes the
- * previous active one atomically via PriceBookService.
+ * Price books are keyed by the same logical site id that usage events carry,
+ * which is the site id registered with each producer (or the
+ * `xinshi_ai_usage.site_id` setting). The request host is only a last resort
+ * before any producer exists, because the CMS host usually differs from the
+ * frontend host the producer reports.
  *
  * This is a first-pass admin UI: rates are edited as JSON textarea so that
  * arbitrarily complex rate structures can be entered without building dozens
@@ -29,9 +33,10 @@ final class PriceBookForm extends FormBase {
 
   public function __construct(
     private readonly PriceBookService $priceBook,
-    private readonly CostRatingService $costRating,
+    private readonly ProducerVault $vault,
     RequestStack $requestStack,
     private readonly Settings $settings,
+    private readonly TimeInterface $time,
   ) {
     $this->requestStack = $requestStack;
   }
@@ -42,9 +47,10 @@ final class PriceBookForm extends FormBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('xinshi_ai_usage.price_book'),
-      $container->get('xinshi_ai_usage.cost_rating'),
+      $container->get('xinshi_ai_usage.producer_vault'),
       $container->get('request_stack'),
       $container->get('settings'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -59,36 +65,87 @@ final class PriceBookForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
-    $siteId = $this->siteId();
     $kind = PriceBookService::KIND_SUPPLIER_CHAT;
-    $active = $this->priceBook->loadActive($siteId, $kind);
+    $sites = $this->siteIds();
+    $registered = $sites['registered'];
+    $siteIds = $sites['ids'];
 
     $form['overview'] = [
       '#type' => 'details',
       '#title' => $this->t('当前生效版本'),
       '#open' => TRUE,
     ];
-    if ($active === NULL) {
-      $form['overview']['none'] = [
-        '#markup' => '<p>' . $this->t('当前没有生效的采购价卡，所有模型调用都会标记为未定价（unpriced）。') . '</p>',
+    if (!$registered) {
+      $form['overview']['unregistered'] = [
+        '#markup' => '<p>' . $this->t('尚未登记任何用量生产者，价卡暂时按当前后台域名 @site 保存。请先在“用量计量”标签登记生产者，价卡会按登记的站点标识匹配事件。', ['@site' => $siteIds[0]]) . '</p>',
       ];
     }
-    else {
-      $form['overview']['summary'] = [
-        '#theme' => 'item_list',
-        '#items' => [
-          $this->t('版本：@version', ['@version' => $active['version']]),
-          $this->t('币种：@currency', ['@currency' => $active['currency']]),
-          $this->t('生效开始：@from', ['@from' => date('Y-m-d H:i:s', (int) ($active['effective_from'] / 1000))]),
-        ],
+    $rows = [];
+    foreach ($siteIds as $siteId) {
+      $active = $this->priceBook->loadActive($siteId, $kind);
+      $rows[] = [
+        $siteId,
+        $active === NULL ? $this->t('无（所有调用标记为未定价）') : $active['version'],
+        $active === NULL ? '' : $active['currency'],
+        $active === NULL ? '' : $this->formatMs($active['effective_from']),
       ];
+    }
+    $form['overview']['active'] = [
+      '#type' => 'table',
+      '#header' => [$this->t('站点标识'), $this->t('生效版本'), $this->t('币种'), $this->t('生效开始')],
+      '#rows' => $rows,
+    ];
+
+    $form['versions'] = [
+      '#type' => 'details',
+      '#title' => $this->t('版本列表'),
+      '#open' => TRUE,
+      '#description' => $this->t('草稿可在此设为生效；切换从激活时刻起生效并关闭当前版本，不回溯已发生的调用。'),
+    ];
+    $form['versions']['table'] = [
+      '#type' => 'table',
+      '#header' => [$this->t('站点标识'), $this->t('版本'), $this->t('币种'), $this->t('状态'),
+        $this->t('生效区间'), $this->t('来源凭证'), $this->t('操作')],
+      '#empty' => $this->t('还没有任何版本。'),
+    ];
+    foreach ($siteIds as $siteId) {
+      foreach ($this->priceBook->listVersions($siteId, $kind) as $version) {
+        $row = &$form['versions']['table'][$siteId . ':' . $version['id']];
+        $row['site'] = ['#plain_text' => $siteId];
+        $row['version'] = ['#plain_text' => $version['version']];
+        $row['currency'] = ['#plain_text' => $version['currency']];
+        $row['status'] = ['#plain_text' => $this->statusLabel($version)];
+        $row['range'] = ['#plain_text' => $version['status'] === PriceBookService::STATUS_ACTIVE
+          ? $this->formatMs($version['effective_from']) . ' – '
+            . ($version['effective_to'] === NULL ? $this->t('至今') : $this->formatMs($version['effective_to']))
+          : ''];
+        $row['source_ref'] = ['#plain_text' => $version['source_ref'] ?? ''];
+        $row['activate'] = $version['status'] === PriceBookService::STATUS_DRAFT ? [
+          '#type' => 'submit',
+          '#value' => $this->t('设为生效'),
+          '#name' => 'activate:' . $siteId . ':' . $version['id'],
+          '#version_id' => $version['id'],
+          '#site_id' => $siteId,
+          '#submit' => ['::activateVersion'],
+          '#limit_validation_errors' => [],
+        ] : ['#plain_text' => ''];
+        unset($row);
+      }
     }
 
     $form['create'] = [
       '#type' => 'details',
       '#title' => $this->t('新建草稿版本'),
-      '#open' => $active === NULL,
-      '#description' => $this->t('新建一个版本后会保持草稿状态，确认无误后再点底部的“设为生效版本”切换。切换会立即关闭当前生效版本。'),
+      '#open' => TRUE,
+      '#description' => $this->t('新建的版本保持草稿状态，确认无误后在版本列表点“设为生效”，或直接点“保存并设为生效版本”。'),
+    ];
+    $form['create']['site_id'] = [
+      '#type' => 'select',
+      '#title' => $this->t('站点标识'),
+      '#description' => $this->t('与“用量计量”标签登记生产者时填写的站点标识一致；事件按此值匹配价卡。'),
+      '#options' => array_combine($siteIds, $siteIds),
+      '#default_value' => $siteIds[0],
+      '#required' => TRUE,
     ];
     $form['create']['version'] = [
       '#type' => 'textfield',
@@ -108,9 +165,9 @@ final class PriceBookForm extends FormBase {
     $form['create']['rates_json'] = [
       '#type' => 'textarea',
       '#title' => $this->t('费率 JSON'),
-      '#description' => $this->t('按 accounts → models → per_million_* 结构填写；数值为每百万 token 的 micros。详见架构文档第 5.2 节。'),
+      '#description' => $this->t('按 accounts → models → per_million_* 结构填写；数值为每百万 token 的 micros。预填内容只是格式示例，必须按供应商报价改成真实费率后才能保存；显式填 0 表示该项免费。详见架构文档第 5.2 节。'),
       '#rows' => 20,
-      '#default_value' => json_encode($this->seedRates(),
+      '#default_value' => json_encode(self::seedRates(),
         JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
       '#required' => TRUE,
     ];
@@ -147,6 +204,12 @@ final class PriceBookForm extends FormBase {
       $form_state->setErrorByName('rates_json', $this->t('费率 JSON 格式错误。'));
       return;
     }
+    // The pre-filled example must not become a real price book: an unedited
+    // submit would rate the example model at made-up prices.
+    if (UsageEventValidator::canonicalJson($decoded) === UsageEventValidator::canonicalJson(self::seedRates())) {
+      $form_state->setErrorByName('rates_json', $this->t('费率 JSON 仍是预填的示例，请按供应商报价填写真实费率。'));
+      return;
+    }
     try {
       $this->priceBook->parseRates($json);
     }
@@ -160,13 +223,18 @@ final class PriceBookForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $siteId = $this->siteId();
+    $siteId = (string) $form_state->getValue('site_id');
+    if (!in_array($siteId, $this->siteIds()['ids'], TRUE)) {
+      $this->messenger()->addError($this->t('站点标识 @site 未登记。', ['@site' => $siteId]));
+      return;
+    }
     $kind = PriceBookService::KIND_SUPPLIER_CHAT;
     $version = (string) $form_state->getValue('version');
     $currency = strtoupper((string) $form_state->getValue('currency'));
     $ratesJson = (string) $form_state->getValue('rates_json');
     $sourceRef = (string) $form_state->getValue('source_ref');
-    $now = (int) (microtime(TRUE) * 1000);
+    // Same clock as PriceBookService, so activation and lookup agree on "now".
+    $now = (int) round($this->time->getCurrentMicroTime() * 1000);
 
     try {
       $id = $this->priceBook->createDraft($siteId, $kind, $version, $currency, $ratesJson, $now,
@@ -193,36 +261,82 @@ final class PriceBookForm extends FormBase {
   }
 
   /**
-   * Returns the logical site id the price book belongs to.
-   *
-   * A single-site deployment can leave this as the request host; multi-site
-   * deployments should set it in settings.php under
-   * $settings['xinshi_ai_usage.site_id'].
+   * Submit handler of the per-row "activate" buttons in the version list.
    */
-  private function siteId(): string {
-    $configured = $this->settings->get('xinshi_ai_usage.site_id');
-    if (is_string($configured) && $configured !== '') {
-      return $configured;
+  public function activateVersion(array &$form, FormStateInterface $form_state): void {
+    $trigger = $form_state->getTriggeringElement();
+    $versionId = (int) ($trigger['#version_id'] ?? 0);
+    $siteId = (string) ($trigger['#site_id'] ?? '');
+    if ($versionId <= 0 || !in_array($siteId, $this->siteIds()['ids'], TRUE)) {
+      $this->messenger()->addError($this->t('无法识别要启用的版本。'));
+      return;
     }
-    $request = $this->requestStack->getCurrentRequest();
-    return $request?->getHost() ?: 'default';
+    try {
+      $this->priceBook->activate($versionId, $siteId, PriceBookService::KIND_SUPPLIER_CHAT);
+      $this->messenger()->addStatus($this->t('版本已设为生效。'));
+    }
+    catch (PriceBookException $e) {
+      $this->messenger()->addError($this->t('启用失败：@message', ['@message' => $e->getMessage()]));
+    }
   }
 
   /**
-   * Returns a small seed rate structure so the JSON textarea is usable.
+   * Site ids price books can be created for, in display order.
    *
-   * These are example values, not real prices; the admin must replace them.
+   * Explicit `xinshi_ai_usage.site_id` wins; otherwise the distinct site ids of
+   * the registered producers (settings.php entries and the admin registry).
+   * With no producer at all the request host is used and the form says so.
+   *
+   * @return array{ids:list<string>,registered:bool}
    */
-  private function seedRates(): array {
+  private function siteIds(): array {
+    $configured = $this->settings->get('xinshi_ai_usage.site_id');
+    if (is_string($configured) && $configured !== '') {
+      return ['ids' => [$configured], 'registered' => TRUE];
+    }
+    $ids = [];
+    $producers = $this->settings->get('xinshi_ai_usage.producers', []);
+    $producers = (is_array($producers) ? $producers : []) + $this->vault->all();
+    foreach ($producers as $producer) {
+      $siteId = is_array($producer) ? ($producer['site_id'] ?? NULL) : NULL;
+      if (is_string($siteId) && $siteId !== '') {
+        $ids[$siteId] = $siteId;
+      }
+    }
+    if ($ids) {
+      return ['ids' => array_values($ids), 'registered' => TRUE];
+    }
+    $request = $this->requestStack->getCurrentRequest();
+    return ['ids' => [$request?->getHost() ?: 'default'], 'registered' => FALSE];
+  }
+
+  private function statusLabel(array $version): string {
+    if ($version['status'] !== PriceBookService::STATUS_ACTIVE) {
+      return (string) $this->t('草稿');
+    }
+    return (string) ($version['effective_to'] === NULL ? $this->t('生效中') : $this->t('已关闭'));
+  }
+
+  private function formatMs(int $ms): string {
+    return gmdate('Y-m-d H:i:s', intdiv($ms, 1000)) . ' UTC';
+  }
+
+  /**
+   * Format example only; validateForm() refuses to save it unchanged.
+   *
+   * Values follow the architecture document's rate example so the admin sees
+   * realistic magnitudes (micros per million tokens), not zeros.
+   */
+  public static function seedRates(): array {
     return [
       'accounts' => [
         'xinshi' => [
           'models' => [
-            'deepseek-v4-flash' => [
-              'per_million_input' => 0,
-              'per_million_cache_read' => 0,
-              'per_million_cache_write' => 0,
-              'per_million_output' => 0,
+            'example-model' => [
+              'per_million_input' => 2_000_000,
+              'per_million_cache_read' => 200_000,
+              'per_million_cache_write' => 1_000_000,
+              'per_million_output' => 8_000_000,
             ],
           ],
         ],

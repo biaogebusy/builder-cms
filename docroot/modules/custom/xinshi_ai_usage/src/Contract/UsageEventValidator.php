@@ -24,6 +24,8 @@ final class UsageEventValidator {
 
   private const ID_MAX_LENGTH = 128;
   private const EVENT_ID_MAX_LENGTH = 191;
+  private const REQUEST_ID_MAX_LENGTH = 191;
+  private const LABEL_MAX_LENGTH = 64;
   private const TIMESTAMP_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/';
 
   /**
@@ -57,16 +59,16 @@ final class UsageEventValidator {
       'site_id' => self::id($value, 'site_id'),
       'event_type' => self::oneOf(self::text($value, 'event_type'), self::EVENT_TYPES, 'event_type'),
       'operation_id' => self::id($value, 'operation_id'),
-      'authorization_id' => self::optionalText($value, 'authorization_id'),
+      'authorization_id' => self::optionalId($value, 'authorization_id'),
       'attempt_id' => self::id($value, 'attempt_id'),
-      'logical_call_id' => self::text($value, 'logical_call_id'),
+      'logical_call_id' => self::id($value, 'logical_call_id'),
       'observation_revision' => $revision,
       'occurred_at' => self::timestamp($value, 'occurred_at'),
       'context' => [
-        'billing_account_id' => self::optionalText($context, 'billing_account_id'),
-        'actor_user_id' => self::optionalText($context, 'actor_user_id'),
-        'feature' => self::text($context, 'feature'),
-        'stage' => self::text($context, 'stage'),
+        'billing_account_id' => self::optionalId($context, 'billing_account_id'),
+        'actor_user_id' => self::optionalId($context, 'actor_user_id'),
+        'feature' => self::id($context, 'feature', self::LABEL_MAX_LENGTH),
+        'stage' => self::id($context, 'stage', self::LABEL_MAX_LENGTH),
         'attempt_no' => $attemptNo,
         'payer' => self::oneOf(self::text($context, 'payer'), self::PAYERS, 'context.payer'),
         'chat_run_id' => self::optionalText($context, 'chat_run_id'),
@@ -74,15 +76,15 @@ final class UsageEventValidator {
         'chat_id' => self::optionalText($context, 'chat_id'),
       ],
       'provider' => [
-        'account_ref' => self::text($provider, 'account_ref'),
-        'requested_model' => self::text($provider, 'requested_model'),
-        'resolved_model' => self::optionalText($provider, 'resolved_model'),
-        'gateway_request_id' => self::optionalText($provider, 'gateway_request_id'),
-        'provider_request_id' => self::optionalText($provider, 'provider_request_id'),
+        'account_ref' => self::id($provider, 'account_ref'),
+        'requested_model' => self::id($provider, 'requested_model'),
+        'resolved_model' => self::optionalId($provider, 'resolved_model'),
+        'gateway_request_id' => self::optionalId($provider, 'gateway_request_id', self::REQUEST_ID_MAX_LENGTH),
+        'provider_request_id' => self::optionalId($provider, 'provider_request_id', self::REQUEST_ID_MAX_LENGTH),
       ],
       'dispatch_state' => self::oneOf(self::text($value, 'dispatch_state'), self::DISPATCH_STATES, 'dispatch_state'),
       'outcome' => $outcome === NULL ? NULL : self::oneOf($outcome, self::OUTCOMES, 'outcome'),
-      'error_code' => self::optionalText($value, 'error_code'),
+      'error_code' => self::optionalId($value, 'error_code', self::LABEL_MAX_LENGTH),
       'usage' => self::usage($value['usage'] ?? NULL),
       'timing' => [
         'started_at' => self::timestamp($timing, 'started_at'),
@@ -203,6 +205,9 @@ final class UsageEventValidator {
 
   /**
    * Identifiers are stored in indexed ASCII columns, so they are bounded here.
+   *
+   * Every label the projection copies into a varchar_ascii column goes through
+   * this check, so an accepted event can always be applied later.
    */
   private static function id(array $source, string $key, int $maxLength = self::ID_MAX_LENGTH): string {
     $field = self::text($source, $key);
@@ -210,6 +215,13 @@ final class UsageEventValidator {
       throw new UsageContractException('invalid_field', "$key must be printable ASCII up to $maxLength bytes");
     }
     return $field;
+  }
+
+  private static function optionalId(array $source, string $key, int $maxLength = self::ID_MAX_LENGTH): ?string {
+    if (($source[$key] ?? NULL) === NULL) {
+      return NULL;
+    }
+    return self::id($source, $key, $maxLength);
   }
 
   private static function optionalText(array $source, string $key): ?string {

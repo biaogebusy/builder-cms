@@ -11,6 +11,7 @@ use Drupal\Core\Utility\UpdateException;
 use Drupal\xinshi_ai_usage\Service\CostRatingService;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\UsageIngestService;
+use Drupal\xinshi_ai_usage\Service\UsageProjectionService;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -31,9 +32,12 @@ final class SchemaUpgradeTest extends TestCase {
       'namespace' => 'Drupal\\sqlite\\Driver\\Database\\sqlite',
     ]);
     $this->database = Database::getConnection('default', 'upgrade_test');
-    // The UB1.4 deployment: only the event table, without the attempt key.
+    // The UB1.4 deployment: only the event table, without the attempt key and
+    // without the UB1.6 consumer bookkeeping columns.
     $legacy = xinshi_ai_usage_schema()[UsageIngestService::TABLE];
     unset($legacy['unique keys']['attempt_revision']);
+    unset($legacy['fields']['failure_count'], $legacy['fields']['last_error'], $legacy['fields']['quarantined_at']);
+    $legacy['indexes']['pending'] = ['processed_at', 'id'];
     $this->database->schema()->createTable(UsageIngestService::TABLE, $legacy);
   }
 
@@ -51,7 +55,17 @@ final class SchemaUpgradeTest extends TestCase {
 
     $this->assertTrue($schema->tableExists(PriceBookService::TABLE));
     $this->assertTrue($schema->tableExists(CostRatingService::TABLE));
+    $this->assertTrue($schema->tableExists(UsageProjectionService::ATTEMPT_TABLE));
+    $this->assertTrue($schema->tableExists(UsageProjectionService::ROLLUP_TABLE));
+    $this->assertTrue($schema->tableExists(UsageProjectionService::WATERMARK_TABLE));
     $this->assertTrue($schema->indexExists(UsageIngestService::TABLE, 'attempt_revision'));
+    foreach (['failure_count', 'last_error', 'quarantined_at'] as $field) {
+      $this->assertTrue($schema->fieldExists(UsageIngestService::TABLE, $field), $field);
+    }
+    $this->assertTrue($schema->indexExists(UsageIngestService::TABLE, 'pending'));
+    // Existing rows get the bookkeeping defaults.
+    $this->assertSame(0, (int) $this->database->select(UsageIngestService::TABLE, 'e')
+      ->fields('e', ['failure_count'])->range(0, 1)->execute()->fetchField());
     // Existing facts survive the upgrade.
     $this->assertSame(2, (int) $this->database->select(UsageIngestService::TABLE)
       ->countQuery()->execute()->fetchField());

@@ -95,6 +95,35 @@ final class PriceBookService {
   }
 
   /**
+   * Recent versions of a site and kind, newest first, for the admin listing.
+   *
+   * @return list<array{id:int,version:string,currency:string,status:string,source_ref:string|null,effective_from:int,effective_to:int|null,created_at:int,created_by:string|null}>
+   */
+  public function listVersions(string $siteId, string $kind, int $limit = 20): array {
+    $rows = $this->database->select(self::TABLE, 'p')
+      ->fields('p', ['id', 'version', 'currency', 'status', 'source_ref', 'effective_from',
+        'effective_to', 'created_at', 'created_by'])
+      ->condition('p.site_id', $siteId)
+      ->condition('p.book_kind', $kind)
+      ->orderBy('p.created_at', 'DESC')
+      ->orderBy('p.id', 'DESC')
+      ->range(0, max(1, $limit))
+      ->execute()
+      ->fetchAll(\PDO::FETCH_ASSOC);
+    return array_map(static fn(array $row): array => [
+      'id' => (int) $row['id'],
+      'version' => (string) $row['version'],
+      'currency' => (string) $row['currency'],
+      'status' => (string) $row['status'],
+      'source_ref' => $row['source_ref'] === NULL ? NULL : (string) $row['source_ref'],
+      'effective_from' => (int) $row['effective_from'],
+      'effective_to' => $row['effective_to'] === NULL ? NULL : (int) $row['effective_to'],
+      'created_at' => (int) $row['created_at'],
+      'created_by' => $row['created_by'] === NULL ? NULL : (string) $row['created_by'],
+    ], $rows);
+  }
+
+  /**
    * Parses the rates JSON of a version into a structured array.
    *
    * Throws on malformed JSON or missing required top-level keys, so a bad

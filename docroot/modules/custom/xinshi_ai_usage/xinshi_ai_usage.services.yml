@@ -22,3 +22,7 @@ services:
   xinshi_ai_usage.cost_rating:
     class: Drupal\xinshi_ai_usage\Service\CostRatingService
     arguments: ['@database', '@xinshi_ai_usage.price_book', '@datetime.time']
+
+  xinshi_ai_usage.projection:
+    class: Drupal\xinshi_ai_usage\Service\UsageProjectionService
+    arguments: ['@database', '@xinshi_ai_usage.cost_rating', '@lock', '@datetime.time', '@logger.channel.xinshi_ai_usage']

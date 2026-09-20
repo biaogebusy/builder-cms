@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Cron fallback for the usage projection consumer.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_cron().
+ *
+ * Keeps the projection moving on deployments without a scheduled Drush run.
+ * The service takes its own lock, so an overlapping manual command is safe.
+ */
+function xinshi_ai_usage_cron(): void {
+  try {
+    $stats = \Drupal::service('xinshi_ai_usage.projection')->process(NULL, 500);
+    if ($stats['failed'] > 0 || $stats['quarantined'] > 0) {
+      \Drupal::logger('xinshi_ai_usage')->error('Usage projection cron: @failed event(s) failed, @quarantined quarantined; run drush xinshi-ai-usage:release-quarantined after fixing the cause.', [
+        '@failed' => $stats['failed'], '@quarantined' => $stats['quarantined'],
+      ]);
+    }
+  }
+  catch (\Throwable $e) {
+    \Drupal::logger('xinshi_ai_usage')->error('Usage projection cron failed: @message', [
+      '@message' => $e->getMessage(),
+    ]);
+  }
+}

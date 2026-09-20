@@ -92,6 +92,14 @@ final class UsageIngestTest extends TestCase {
       [['timing' => ['started_at' => 'yesterday'] + $event['timing']], 'invalid_field'],
       [['event_id' => str_repeat('x', 192)], 'invalid_field'],
       [['attempt_id' => "att\n1"], 'invalid_field'],
+      // Labels copied into varchar_ascii projection columns are bounded too.
+      [['context' => ['feature' => str_repeat('f', 65)] + $event['context']], 'invalid_field'],
+      [['context' => ['stage' => '分类'] + $event['context']], 'invalid_field'],
+      [['context' => ['actor_user_id' => str_repeat('9', 129)] + $event['context']], 'invalid_field'],
+      [['logical_call_id' => 'lc 1'], 'invalid_field'],
+      [['provider' => ['requested_model' => 'deepseek/模型'] + $event['provider']], 'invalid_field'],
+      [['provider' => ['gateway_request_id' => str_repeat('g', 192)] + $event['provider']], 'invalid_field'],
+      [['error_code' => str_repeat('e', 65)], 'invalid_field'],
     ];
     foreach ($cases as [$override, $code]) {
       try {

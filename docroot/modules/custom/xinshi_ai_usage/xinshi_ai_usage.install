@@ -35,6 +35,11 @@ function xinshi_ai_usage_schema(): array {
       'received_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
       // NULL until the aggregation consumer (UB1.6) has applied the event.
       'processed_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      // Consumer bookkeeping: repeated failures quarantine the event so it stops
+      // blocking the batch; the fact itself is never modified.
+      'failure_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'last_error' => ['type' => 'varchar', 'length' => 255, 'not null' => FALSE],
+      'quarantined_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'payload_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
     ],
     'primary key' => ['id'],
@@ -45,7 +50,7 @@ function xinshi_ai_usage_schema(): array {
     'indexes' => [
       'attempt' => ['site_id', 'attempt_id', 'event_type', 'observation_revision'],
       'operation' => ['site_id', 'operation_id'],
-      'pending' => ['processed_at', 'id'],
+      'pending' => ['processed_at', 'quarantined_at', 'id'],
     ],
   ];
 
@@ -117,7 +122,153 @@ function xinshi_ai_usage_schema(): array {
     ],
   ];
 
+  $schema['ai_provider_attempt'] = [
+    'description' => 'Current projection of one provider attempt, rebuilt from ai_usage_event by the consumer (UB1.6).',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'attempt_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'operation_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'logical_call_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'attempt_no' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'producer_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'feature' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'stage' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'payer' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+      'actor_user_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+      'billing_account_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+      'provider_account_ref' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'requested_model' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'resolved_model' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+      'model_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE,
+        'description' => 'resolved_model, falling back to requested_model; the rollup model dimension.'],
+      'gateway_request_id' => ['type' => 'varchar_ascii', 'length' => 191, 'not null' => FALSE],
+      'provider_request_id' => ['type' => 'varchar_ascii', 'length' => 191, 'not null' => FALSE],
+      'state' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE,
+        'description' => 'prepared, in_flight, succeeded, failed, unknown, not_sent.'],
+      'dispatch_state' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+      'outcome' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => FALSE],
+      'error_code' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'usage_revision' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE,
+        'description' => 'Highest applied observation_revision; 0 while only prepared.'],
+      'usage_quality' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => FALSE,
+        'description' => 'reported, missing or invalid; NULL when no usage block was observed.'],
+      'usage_json' => ['type' => 'text', 'size' => 'big', 'not null' => FALSE],
+      'input_tokens_total' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'input_tokens_cache_read' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'input_tokens_cache_write' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'output_tokens_total' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'output_tokens_reasoning' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      // Copy of the immutable cost entry for usage_revision, so a rollup cell is
+      // a pure function of the projection rows it covers (no join at rollup time).
+      'cost_valuation_state' => ['type' => 'varchar_ascii', 'length' => 24, 'not null' => FALSE],
+      'cost_unpriced_reason' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+      'cost_currency' => ['type' => 'varchar_ascii', 'length' => 8, 'not null' => FALSE],
+      'cost_total_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'started_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      'first_token_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'finished_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'bucket_start' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE,
+        'description' => 'UTC hour of started_at in milliseconds; the rollup bucket of this attempt.'],
+      'occurred_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE,
+        'description' => 'occurred_at of the applied event.'],
+      'last_event_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE,
+        'description' => 'ai_usage_event.id of the applied event.'],
+      'projection_version' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'updated_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'attempt' => ['site_id', 'attempt_id'],
+      'logical_call' => ['site_id', 'operation_id', 'logical_call_id', 'attempt_no'],
+    ],
+    'indexes' => [
+      'operation_stage' => ['site_id', 'operation_id', 'stage', 'attempt_no'],
+      'supplier' => ['site_id', 'provider_account_ref', 'started_at'],
+      'gateway_request' => ['site_id', 'gateway_request_id'],
+      'rollup_cell' => ['site_id', 'bucket_start', 'feature', 'stage', 'payer', 'provider_account_ref',
+        'model_id'],
+    ],
+  ];
+
+  $schema['ai_usage_rollup_hour'] = [
+    'description' => 'Hourly attempt rollup recomputed per cell from ai_provider_attempt. Rebuildable; never authorizes balances.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'bucket_start' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE,
+        'description' => 'UTC hour start in milliseconds since epoch.'],
+      'feature' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'stage' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'payer' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+      'provider_account_ref' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'model_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'actor_user_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE,
+        'description' => 'Sentinel "-" when the attempt had no actor.'],
+      'currency' => ['type' => 'varchar_ascii', 'length' => 8, 'not null' => TRUE,
+        'description' => 'Cost entry currency; sentinel "-" when the attempt has no cost entry.'],
+      'attempt_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'open_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'succeeded_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'failed_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'unknown_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'not_sent_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'usage_reported_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'usage_missing_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0,
+        'description' => 'Finished attempts whose usage is missing or invalid; never counted as zero tokens.'],
+      'input_tokens_total' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'input_tokens_cache_read' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'input_tokens_cache_write' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'output_tokens_total' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'output_tokens_reasoning' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'cost_rated_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'cost_unpriced_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+      'cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'projection_version' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'data_as_of' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE,
+        'description' => 'Latest occurred_at applied to any attempt in this cell.'],
+      'updated_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'cell' => ['site_id', 'bucket_start', 'feature', 'stage', 'payer', 'provider_account_ref',
+        'model_id', 'actor_user_id', 'currency'],
+    ],
+    'indexes' => [
+      'bucket' => ['site_id', 'bucket_start'],
+    ],
+  ];
+
+  $schema['ai_usage_watermark'] = [
+    'description' => 'Per-site consumer watermark, advanced in the same transaction as each acknowledged event.',
+    'fields' => [
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'projection' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+      'projection_version' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'last_event_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE,
+        'description' => 'Highest ai_usage_event.id acknowledged so far.'],
+      'processed_count' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'data_as_of' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      'updated_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['site_id', 'projection'],
+  ];
+
   return $schema;
+}
+
+/**
+ * Add the attempt projection, hourly rollup and watermark tables for the usage consumer (UB1.6).
+ */
+function xinshi_ai_usage_update_10002(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
+}
+
+/**
+ * Add consumer failure bookkeeping (failure_count, last_error, quarantined_at) to ai_usage_event.
+ */
+function xinshi_ai_usage_update_10003(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
 }
 
 /**
@@ -147,7 +298,8 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
   $definitions = xinshi_ai_usage_schema();
 
   $costEntryExisted = $schema->tableExists('ai_usage_cost_entry');
-  foreach (['ai_price_book_version', 'ai_usage_cost_entry'] as $table) {
+  foreach (['ai_price_book_version', 'ai_usage_cost_entry', 'ai_provider_attempt',
+    'ai_usage_rollup_hour', 'ai_usage_watermark'] as $table) {
     if (!$schema->tableExists($table)) {
       $schema->createTable($table, $definitions[$table]);
     }
@@ -163,14 +315,38 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
     );
   }
 
-  if (!$schema->tableExists('ai_usage_event')
-    || $schema->indexExists('ai_usage_event', 'attempt_revision')) {
+  if (!$schema->tableExists('ai_usage_event')) {
     return;
   }
 
-  $duplicate = $database->select('ai_usage_event', 'e')
-    ->fields('e', ['site_id', 'attempt_id', 'event_type', 'observation_revision'])
-    ->addExpression('COUNT(*)', 'row_count')
+  // UB1.6 consumer bookkeeping columns on the event table. The pending index
+  // gains quarantined_at at the same time, so it is rebuilt only then.
+  $eventFields = $definitions['ai_usage_event']['fields'];
+  $addedBookkeeping = FALSE;
+  foreach (['failure_count', 'last_error', 'quarantined_at'] as $field) {
+    if (!$schema->fieldExists('ai_usage_event', $field)) {
+      $schema->addField('ai_usage_event', $field, $eventFields[$field]);
+      $addedBookkeeping = TRUE;
+    }
+  }
+  if ($addedBookkeeping && $schema->indexExists('ai_usage_event', 'pending')) {
+    $schema->dropIndex('ai_usage_event', 'pending');
+  }
+  if (!$schema->indexExists('ai_usage_event', 'pending')) {
+    $schema->addIndex('ai_usage_event', 'pending',
+      $definitions['ai_usage_event']['indexes']['pending'], $definitions['ai_usage_event']);
+  }
+
+  if ($schema->indexExists('ai_usage_event', 'attempt_revision')) {
+    return;
+  }
+
+  // addExpression() returns the alias, not the query, so the query is built
+  // step by step instead of in one chain.
+  $query = $database->select('ai_usage_event', 'e')
+    ->fields('e', ['site_id', 'attempt_id', 'event_type', 'observation_revision']);
+  $query->addExpression('COUNT(*)', 'row_count');
+  $duplicate = $query
     ->groupBy('site_id')
     ->groupBy('attempt_id')
     ->groupBy('event_type')
