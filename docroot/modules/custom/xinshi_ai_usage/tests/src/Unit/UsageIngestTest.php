@@ -100,6 +100,7 @@ final class UsageIngestTest extends TestCase {
       [['provider' => ['requested_model' => 'deepseek/模型'] + $event['provider']], 'invalid_field'],
       [['provider' => ['gateway_request_id' => str_repeat('g', 192)] + $event['provider']], 'invalid_field'],
       [['error_code' => str_repeat('e', 65)], 'invalid_field'],
+      [['context' => ['billing_role' => 'free'] + $event['context']], 'invalid_field'],
     ];
     foreach ($cases as [$override, $code]) {
       try {
@@ -111,6 +112,10 @@ final class UsageIngestTest extends TestCase {
       }
     }
     $this->assertNull(UsageEventValidator::validate(['usage' => NULL] + $event)['usage']);
+    // billing_role is optional for events recorded before UB2.1 and validated when present.
+    $this->assertNull(UsageEventValidator::validate($event)['context']['billing_role']);
+    $this->assertSame('repair', UsageEventValidator::validate(
+      ['context' => ['billing_role' => 'repair'] + $event['context']] + $event)['context']['billing_role']);
   }
 
   public function testCanonicalHashIgnoresKeyOrderButNotContent(): void {

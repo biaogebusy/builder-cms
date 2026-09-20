@@ -21,6 +21,8 @@ final class UsageEventValidator {
   public const OUTCOMES = ['succeeded', 'failed', 'aborted', 'unknown', 'not_sent'];
   public const DISPATCH_STATES = ['not_sent', 'sent', 'unknown'];
   public const QUALITIES = ['reported', 'missing', 'invalid'];
+  /** primary = may become the billing basis; auxiliary = platform help; repair = never charged. */
+  public const BILLING_ROLES = ['primary', 'auxiliary', 'repair'];
 
   private const ID_MAX_LENGTH = 128;
   private const EVENT_ID_MAX_LENGTH = 191;
@@ -52,6 +54,7 @@ final class UsageEventValidator {
       throw new UsageContractException('invalid_field', 'context.attempt_no must be a positive integer');
     }
     $outcome = self::optionalText($value, 'outcome');
+    $billingRole = self::optionalText($context, 'billing_role');
     return [
       'schema_version' => self::SCHEMA_VERSION,
       'event_id' => self::id($value, 'event_id', self::EVENT_ID_MAX_LENGTH),
@@ -71,6 +74,9 @@ final class UsageEventValidator {
         'stage' => self::id($context, 'stage', self::LABEL_MAX_LENGTH),
         'attempt_no' => $attemptNo,
         'payer' => self::oneOf(self::text($context, 'payer'), self::PAYERS, 'context.payer'),
+        // Absent on events recorded before UB2.1; the projection keeps NULL for those.
+        'billing_role' => $billingRole === NULL ? NULL
+          : self::oneOf($billingRole, self::BILLING_ROLES, 'context.billing_role'),
         'chat_run_id' => self::optionalText($context, 'chat_run_id'),
         'task_id' => self::optionalText($context, 'task_id'),
         'chat_id' => self::optionalText($context, 'chat_id'),

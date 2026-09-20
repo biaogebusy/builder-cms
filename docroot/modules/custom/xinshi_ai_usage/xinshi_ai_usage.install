@@ -135,6 +135,8 @@ function xinshi_ai_usage_schema(): array {
       'feature' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
       'stage' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
       'payer' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+      'billing_role' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => FALSE,
+        'description' => 'primary, auxiliary or repair; NULL for events recorded before UB2.1.'],
       'actor_user_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
       'billing_account_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
       'provider_account_ref' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
@@ -187,7 +189,7 @@ function xinshi_ai_usage_schema(): array {
       'supplier' => ['site_id', 'provider_account_ref', 'started_at'],
       'gateway_request' => ['site_id', 'gateway_request_id'],
       'rollup_cell' => ['site_id', 'bucket_start', 'feature', 'stage', 'payer', 'provider_account_ref',
-        'model_id'],
+        'model_id', 'billing_role'],
     ],
   ];
 
@@ -201,6 +203,8 @@ function xinshi_ai_usage_schema(): array {
       'feature' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
       'stage' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
       'payer' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+      'billing_role' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE, 'default' => '-',
+        'description' => 'primary, auxiliary, repair; sentinel "-" for attempts without a role.'],
       'provider_account_ref' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
       'model_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
       'actor_user_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE,
@@ -231,8 +235,8 @@ function xinshi_ai_usage_schema(): array {
     ],
     'primary key' => ['id'],
     'unique keys' => [
-      'cell' => ['site_id', 'bucket_start', 'feature', 'stage', 'payer', 'provider_account_ref',
-        'model_id', 'actor_user_id', 'currency'],
+      'cell' => ['site_id', 'bucket_start', 'feature', 'stage', 'payer', 'billing_role',
+        'provider_account_ref', 'model_id', 'actor_user_id', 'currency'],
     ],
     'indexes' => [
       'bucket' => ['site_id', 'bucket_start'],
@@ -268,6 +272,13 @@ function xinshi_ai_usage_update_10002(): void {
  * Add consumer failure bookkeeping (failure_count, last_error, quarantined_at) to ai_usage_event.
  */
 function xinshi_ai_usage_update_10003(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
+}
+
+/**
+ * Add billing_role to the attempt projection and the hourly rollup (UB2.1), then rebuild rollups.
+ */
+function xinshi_ai_usage_update_10004(): void {
   xinshi_ai_usage_apply_schema_updates(\Drupal::database());
 }
 
@@ -335,6 +346,31 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
   if (!$schema->indexExists('ai_usage_event', 'pending')) {
     $schema->addIndex('ai_usage_event', 'pending',
       $definitions['ai_usage_event']['indexes']['pending'], $definitions['ai_usage_event']);
+  }
+
+  // UB2.1: billing_role becomes a projection column and a rollup dimension. The
+  // rollup is a rebuildable cache, so its rows are dropped and the unique key is
+  // recreated with the new column; the next consumer run recomputes them.
+  if (!$schema->fieldExists('ai_provider_attempt', 'billing_role')) {
+    $schema->addField('ai_provider_attempt', 'billing_role',
+      $definitions['ai_provider_attempt']['fields']['billing_role']);
+    if ($schema->indexExists('ai_provider_attempt', 'rollup_cell')) {
+      $schema->dropIndex('ai_provider_attempt', 'rollup_cell');
+    }
+    $schema->addIndex('ai_provider_attempt', 'rollup_cell',
+      $definitions['ai_provider_attempt']['indexes']['rollup_cell'], $definitions['ai_provider_attempt']);
+  }
+  if (!$schema->fieldExists('ai_usage_rollup_hour', 'billing_role')) {
+    $database->delete('ai_usage_rollup_hour')->execute();
+    $database->delete('ai_usage_watermark')->execute();
+    $database->update('ai_usage_event')->fields(['processed_at' => NULL])->execute();
+    if ($schema->indexExists('ai_usage_rollup_hour', 'cell')) {
+      $schema->dropUniqueKey('ai_usage_rollup_hour', 'cell');
+    }
+    $schema->addField('ai_usage_rollup_hour', 'billing_role',
+      $definitions['ai_usage_rollup_hour']['fields']['billing_role']);
+    $schema->addUniqueKey('ai_usage_rollup_hour', 'cell',
+      $definitions['ai_usage_rollup_hour']['unique keys']['cell']);
   }
 
   if ($schema->indexExists('ai_usage_event', 'attempt_revision')) {

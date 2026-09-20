@@ -45,7 +45,7 @@ final class UsageProjectionService {
 
   private const OPEN_STATES = ['prepared', 'in_flight'];
   private const FINISHED_STATES = ['succeeded', 'failed', 'unknown'];
-  private const CELL_DIMENSIONS = ['bucket_start', 'feature', 'stage', 'payer',
+  private const CELL_DIMENSIONS = ['bucket_start', 'feature', 'stage', 'payer', 'billing_role',
     'provider_account_ref', 'model_id', 'actor_user_id', 'currency'];
 
   public function __construct(
@@ -396,6 +396,7 @@ final class UsageProjectionService {
       'feature' => $context['feature'],
       'stage' => $context['stage'],
       'payer' => $context['payer'],
+      'billing_role' => $context['billing_role'],
       'actor_user_id' => $context['actor_user_id'],
       'billing_account_id' => $context['billing_account_id'],
       'provider_account_ref' => $provider['account_ref'],
@@ -442,6 +443,8 @@ final class UsageProjectionService {
       'feature' => (string) $row['feature'],
       'stage' => (string) $row['stage'],
       'payer' => (string) $row['payer'],
+      'billing_role' => $row['billing_role'] === NULL || $row['billing_role'] === ''
+        ? self::NONE : (string) $row['billing_role'],
       'provider_account_ref' => (string) $row['provider_account_ref'],
       'model_id' => (string) $row['model_id'],
       'actor_user_id' => $row['actor_user_id'] === NULL || $row['actor_user_id'] === ''
@@ -467,6 +470,12 @@ final class UsageProjectionService {
       ->condition('a.payer', $cell['payer'])
       ->condition('a.provider_account_ref', $cell['provider_account_ref'])
       ->condition('a.model_id', $cell['model_id']);
+    if ($cell['billing_role'] === self::NONE) {
+      $query->isNull('a.billing_role');
+    }
+    else {
+      $query->condition('a.billing_role', $cell['billing_role']);
+    }
     if ($cell['actor_user_id'] === self::NONE) {
       $query->isNull('a.actor_user_id');
     }

@@ -102,6 +102,8 @@ final class UsageProjectionTest extends TestCase {
     $this->assertSame(1, (int) $cell['cost_rated_count']);
     $this->assertSame('7', $cell['actor_user_id']);
     $this->assertSame('CNY', $cell['currency']);
+    $this->assertSame('auxiliary', $cell['billing_role']);
+    $this->assertSame('auxiliary', $attempt['billing_role']);
 
     $watermark = $this->projection->watermark(self::SITE);
     $this->assertSame(2, $watermark['last_event_id']);
@@ -313,6 +315,32 @@ final class UsageProjectionTest extends TestCase {
     $this->assertSame(0, $stats['quarantined']);
   }
 
+  public function testBillingRoleSeparatesRollupCellsAndOldEventsGetTheSentinel(): void {
+    $this->activatePriceBook();
+    // Same hour, feature, model and actor: only the role differs, so the primary answer
+    // and its repair must land in separate cells and never merge into one charge basis.
+    $this->ingestAll([
+      $this->observed('att-1', 1, [], ['context' => ['stage' => 'common', 'billing_role' => 'primary']]),
+      $this->observed('att-2', 1, [], ['logical_call_id' => 'lc-2',
+        'context' => ['stage' => 'repair', 'billing_role' => 'repair']]),
+      $this->observed('att-3', 1, [], ['logical_call_id' => 'lc-3',
+        'context' => ['stage' => 'common', 'billing_role' => 'primary']]),
+    ]);
+    // An event recorded before the field existed still projects, with no role.
+    $legacy = $this->observed('att-4', 1, [], ['logical_call_id' => 'lc-4',
+      'context' => ['stage' => 'common']]);
+    unset($legacy['context']['billing_role']);
+    $this->ingestAll([$legacy]);
+    $this->projection->process(self::SITE);
+
+    $this->assertNull($this->attempt('att-4')['billing_role']);
+    $byRole = [];
+    foreach ($this->rollup() as $cell) {
+      $byRole[$cell['billing_role']] = (int) $cell['attempt_count'];
+    }
+    $this->assertSame(['primary' => 2, 'repair' => 1, UsageProjectionService::NONE => 1], $byRole);
+  }
+
   private function projectionWith(LockBackendInterface $lock): UsageProjectionService {
     return new UsageProjectionService($this->database, $this->costRating, $lock, $this->time, new NullLogger());
   }
@@ -417,7 +445,7 @@ final class UsageProjectionTest extends TestCase {
       'observation_revision' => 1,
       'occurred_at' => '2023-11-14T22:13:24.120Z',
       'context' => ['billing_account_id' => NULL, 'actor_user_id' => '7', 'feature' => 'common',
-        'stage' => 'classifier', 'attempt_no' => 1, 'payer' => 'platform',
+        'stage' => 'classifier', 'attempt_no' => 1, 'payer' => 'platform', 'billing_role' => 'auxiliary',
         'chat_run_id' => 'run-1', 'task_id' => 'task-1', 'chat_id' => 'chat-1'],
       'provider' => ['account_ref' => 'xinshi', 'requested_model' => 'model-a',
         'resolved_model' => 'model-a', 'gateway_request_id' => 'gw-1', 'provider_request_id' => NULL],

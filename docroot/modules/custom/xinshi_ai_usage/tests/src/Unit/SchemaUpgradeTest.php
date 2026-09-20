@@ -92,6 +92,62 @@ final class SchemaUpgradeTest extends TestCase {
     xinshi_ai_usage_apply_schema_updates($this->database);
   }
 
+  public function testUpgradeAddsBillingRoleAndResetsTheRollupForRecomputation(): void {
+    $schema = $this->database->schema();
+    $definitions = xinshi_ai_usage_schema();
+    // The UB1.6 deployment: projection and rollup without billing_role.
+    $attempt = $definitions[UsageProjectionService::ATTEMPT_TABLE];
+    unset($attempt['fields']['billing_role']);
+    $attempt['indexes']['rollup_cell'] = array_values(array_diff($attempt['indexes']['rollup_cell'], ['billing_role']));
+    $rollup = $definitions[UsageProjectionService::ROLLUP_TABLE];
+    unset($rollup['fields']['billing_role']);
+    $rollup['unique keys']['cell'] = array_values(array_diff($rollup['unique keys']['cell'], ['billing_role']));
+    $schema->createTable(UsageProjectionService::ATTEMPT_TABLE, $attempt);
+    $schema->createTable(UsageProjectionService::ROLLUP_TABLE, $rollup);
+    $schema->createTable(UsageProjectionService::WATERMARK_TABLE, $definitions[UsageProjectionService::WATERMARK_TABLE]);
+    $this->insertEvent('att-1:observed:1', 'att-1', 1);
+    $this->database->update(UsageIngestService::TABLE)->fields(['processed_at' => 5])->execute();
+    $this->database->insert(UsageProjectionService::ROLLUP_TABLE)->fields([
+      'site_id' => 'site-a', 'bucket_start' => 0, 'feature' => 'common', 'stage' => 'common',
+      'payer' => 'platform', 'provider_account_ref' => 'xinshi', 'model_id' => 'model-a',
+      'actor_user_id' => '-', 'currency' => '-', 'attempt_count' => 1, 'projection_version' => 1,
+      'data_as_of' => 1, 'updated_at' => 1,
+    ])->execute();
+    $this->database->insert(UsageProjectionService::WATERMARK_TABLE)->fields([
+      'site_id' => 'site-a', 'projection' => 'attempt', 'projection_version' => 1,
+      'last_event_id' => 1, 'processed_count' => 1, 'data_as_of' => 1, 'updated_at' => 1,
+    ])->execute();
+
+    xinshi_ai_usage_apply_schema_updates($this->database);
+
+    $this->assertTrue($schema->fieldExists(UsageProjectionService::ATTEMPT_TABLE, 'billing_role'));
+    $this->assertTrue($schema->fieldExists(UsageProjectionService::ROLLUP_TABLE, 'billing_role'));
+    // The rollup is a cache: it is emptied and the events are queued again so the
+    // consumer recomputes every cell with the new dimension.
+    $this->assertSame(0, (int) $this->database->select(UsageProjectionService::ROLLUP_TABLE)
+      ->countQuery()->execute()->fetchField());
+    $this->assertSame(0, (int) $this->database->select(UsageProjectionService::WATERMARK_TABLE)
+      ->countQuery()->execute()->fetchField());
+    $this->assertNull($this->database->select(UsageIngestService::TABLE, 'e')
+      ->fields('e', ['processed_at'])->execute()->fetchField() ?: NULL);
+    // The new unique key includes the role: two rows differing only by role coexist.
+    foreach (['primary', 'repair'] as $role) {
+      $this->database->insert(UsageProjectionService::ROLLUP_TABLE)->fields([
+        'site_id' => 'site-a', 'bucket_start' => 0, 'feature' => 'common', 'stage' => 'common',
+        'payer' => 'platform', 'billing_role' => $role, 'provider_account_ref' => 'xinshi',
+        'model_id' => 'model-a', 'actor_user_id' => '-', 'currency' => '-', 'attempt_count' => 1,
+        'projection_version' => 1, 'data_as_of' => 1, 'updated_at' => 1,
+      ])->execute();
+    }
+    $this->assertSame(2, (int) $this->database->select(UsageProjectionService::ROLLUP_TABLE)
+      ->countQuery()->execute()->fetchField());
+
+    // Idempotent: a second run leaves the recomputed rows alone.
+    xinshi_ai_usage_apply_schema_updates($this->database);
+    $this->assertSame(2, (int) $this->database->select(UsageProjectionService::ROLLUP_TABLE)
+      ->countQuery()->execute()->fetchField());
+  }
+
   private function insertEvent(string $eventId, string $attemptId, int $revision): void {
     $this->database->insert(UsageIngestService::TABLE)->fields([
       'site_id' => 'site-a',
