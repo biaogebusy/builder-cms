@@ -66,7 +66,6 @@ final class PriceBookForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
-    $kind = PriceBookService::KIND_SUPPLIER_CHAT;
     $sites = $this->siteIds();
     $registered = $sites['registered'];
     $siteIds = $sites['ids'];
@@ -83,17 +82,21 @@ final class PriceBookForm extends FormBase {
     }
     $rows = [];
     foreach ($siteIds as $siteId) {
-      $active = $this->priceBook->loadActive($siteId, $kind);
-      $rows[] = [
-        $siteId,
-        $active === NULL ? $this->t('无（所有调用标记为未定价）') : $active['version'],
-        $active === NULL ? '' : $active['currency'],
-        $active === NULL ? '' : $this->formatMs($active['effective_from']),
-      ];
+      foreach (PriceBookService::KINDS as $kind) {
+        $active = $this->priceBook->loadActive($siteId, $kind);
+        $rows[] = [
+          $siteId,
+          $this->kindLabel($kind),
+          $active === NULL ? $this->t('无（该类调用全部标记为未定价）') : $active['version'],
+          $active === NULL ? '' : $active['currency'],
+          $active === NULL ? '' : $this->formatMs($active['effective_from']),
+        ];
+      }
     }
     $form['overview']['active'] = [
       '#type' => 'table',
-      '#header' => [$this->t('站点标识'), $this->t('生效版本'), $this->t('币种'), $this->t('生效开始')],
+      '#header' => [$this->t('站点标识'), $this->t('价卡类型'), $this->t('生效版本'), $this->t('币种'),
+        $this->t('生效开始')],
       '#rows' => $rows,
     ];
 
@@ -105,32 +108,36 @@ final class PriceBookForm extends FormBase {
     ];
     $form['versions']['table'] = [
       '#type' => 'table',
-      '#header' => [$this->t('站点标识'), $this->t('版本'), $this->t('币种'), $this->t('状态'),
-        $this->t('生效区间'), $this->t('来源凭证'), $this->t('操作')],
+      '#header' => [$this->t('站点标识'), $this->t('价卡类型'), $this->t('版本'), $this->t('币种'),
+        $this->t('状态'), $this->t('生效区间'), $this->t('来源凭证'), $this->t('操作')],
       '#empty' => $this->t('还没有任何版本。'),
     ];
     foreach ($siteIds as $siteId) {
-      foreach ($this->priceBook->listVersions($siteId, $kind) as $version) {
-        $row = &$form['versions']['table'][$siteId . ':' . $version['id']];
-        $row['site'] = ['#plain_text' => $siteId];
-        $row['version'] = ['#plain_text' => $version['version']];
-        $row['currency'] = ['#plain_text' => $version['currency']];
-        $row['status'] = ['#plain_text' => $this->statusLabel($version)];
-        $row['range'] = ['#plain_text' => $version['status'] === PriceBookService::STATUS_ACTIVE
-          ? $this->formatMs($version['effective_from']) . ' – '
-            . ($version['effective_to'] === NULL ? $this->t('至今') : $this->formatMs($version['effective_to']))
-          : ''];
-        $row['source_ref'] = ['#plain_text' => $version['source_ref'] ?? ''];
-        $row['activate'] = $version['status'] === PriceBookService::STATUS_DRAFT ? [
-          '#type' => 'submit',
-          '#value' => $this->t('设为生效'),
-          '#name' => 'activate:' . $siteId . ':' . $version['id'],
-          '#version_id' => $version['id'],
-          '#site_id' => $siteId,
-          '#submit' => ['::activateVersion'],
-          '#limit_validation_errors' => [],
-        ] : ['#plain_text' => ''];
-        unset($row);
+      foreach (PriceBookService::KINDS as $kind) {
+        foreach ($this->priceBook->listVersions($siteId, $kind) as $version) {
+          $row = &$form['versions']['table'][$siteId . ':' . $version['id']];
+          $row['site'] = ['#plain_text' => $siteId];
+          $row['kind'] = ['#plain_text' => $this->kindLabel($kind)];
+          $row['version'] = ['#plain_text' => $version['version']];
+          $row['currency'] = ['#plain_text' => $version['currency']];
+          $row['status'] = ['#plain_text' => $this->statusLabel($version)];
+          $row['range'] = ['#plain_text' => $version['status'] === PriceBookService::STATUS_ACTIVE
+            ? $this->formatMs($version['effective_from']) . ' – '
+              . ($version['effective_to'] === NULL ? $this->t('至今') : $this->formatMs($version['effective_to']))
+            : ''];
+          $row['source_ref'] = ['#plain_text' => $version['source_ref'] ?? ''];
+          $row['activate'] = $version['status'] === PriceBookService::STATUS_DRAFT ? [
+            '#type' => 'submit',
+            '#value' => $this->t('设为生效'),
+            '#name' => 'activate:' . $siteId . ':' . $version['id'],
+            '#version_id' => $version['id'],
+            '#site_id' => $siteId,
+            '#book_kind' => $kind,
+            '#submit' => ['::activateVersion'],
+            '#limit_validation_errors' => [],
+          ] : ['#plain_text' => ''];
+          unset($row);
+        }
       }
     }
 
@@ -148,6 +155,17 @@ final class PriceBookForm extends FormBase {
       '#default_value' => $siteIds[0],
       '#required' => TRUE,
     ];
+    $form['create']['book_kind'] = [
+      '#type' => 'select',
+      '#title' => $this->t('价卡类型'),
+      '#description' => $this->t('对话价卡按 token 计价（对话、规划、修复等所有文本调用）；图片价卡按张计价（Drupal 图片任务），两类各自独立版本化。'),
+      '#options' => [
+        PriceBookService::KIND_SUPPLIER_CHAT => $this->kindLabel(PriceBookService::KIND_SUPPLIER_CHAT),
+        PriceBookService::KIND_SUPPLIER_IMAGE => $this->kindLabel(PriceBookService::KIND_SUPPLIER_IMAGE),
+      ],
+      '#default_value' => PriceBookService::KIND_SUPPLIER_CHAT,
+      '#required' => TRUE,
+    ];
     $form['create']['version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('版本号'),
@@ -163,10 +181,13 @@ final class PriceBookForm extends FormBase {
       '#maxlength' => 8,
       '#required' => TRUE,
     ];
+    $imageExample = json_encode(self::seedRates(PriceBookService::KIND_SUPPLIER_IMAGE),
+      JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $form['create']['rates_json'] = [
       '#type' => 'textarea',
       '#title' => $this->t('费率 JSON'),
-      '#description' => $this->t('按 accounts → models → per_million_* 结构填写；数值为每百万 token 的 micros。预填内容只是格式示例，必须按供应商报价改成真实费率后才能保存；显式填 0 表示该项免费。详见架构文档第 5.2 节。'),
+      '#description' => $this->t('按 accounts → models 结构填写。对话价卡每个模型填 per_million_* 四项（每百万 token 的 micros）；图片价卡每个模型填 per_image（每张图的 micros），模型另计 token 时再加 per_million_input / per_million_output，例如 @example。预填内容只是格式示例，必须按供应商报价改成真实费率后才能保存；显式填 0 表示该项免费。详见架构文档第 5.2 节。',
+        ['@example' => $imageExample]),
       '#rows' => 20,
       '#default_value' => json_encode(self::seedRates(),
         JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
@@ -199,6 +220,11 @@ final class PriceBookForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $kind = (string) $form_state->getValue('book_kind');
+    if (!in_array($kind, PriceBookService::KINDS, TRUE)) {
+      $form_state->setErrorByName('book_kind', $this->t('价卡类型无效。'));
+      return;
+    }
     $json = (string) $form_state->getValue('rates_json');
     $decoded = json_decode($json, TRUE);
     if (!is_array($decoded)) {
@@ -207,12 +233,14 @@ final class PriceBookForm extends FormBase {
     }
     // The pre-filled example must not become a real price book: an unedited
     // submit would rate the example model at made-up prices.
-    if (UsageEventValidator::canonicalJson($decoded) === UsageEventValidator::canonicalJson(self::seedRates())) {
-      $form_state->setErrorByName('rates_json', $this->t('费率 JSON 仍是预填的示例，请按供应商报价填写真实费率。'));
-      return;
+    foreach (PriceBookService::KINDS as $seedKind) {
+      if (UsageEventValidator::canonicalJson($decoded) === UsageEventValidator::canonicalJson(self::seedRates($seedKind))) {
+        $form_state->setErrorByName('rates_json', $this->t('费率 JSON 仍是预填的示例，请按供应商报价填写真实费率。'));
+        return;
+      }
     }
     try {
-      $this->priceBook->parseRates($json);
+      $this->priceBook->parseRates($json, $kind);
     }
     catch (PriceBookException $e) {
       $form_state->setErrorByName('rates_json',
@@ -229,7 +257,7 @@ final class PriceBookForm extends FormBase {
       $this->messenger()->addError($this->t('站点标识 @site 未登记。', ['@site' => $siteId]));
       return;
     }
-    $kind = PriceBookService::KIND_SUPPLIER_CHAT;
+    $kind = (string) $form_state->getValue('book_kind');
     $version = (string) $form_state->getValue('version');
     $currency = strtoupper((string) $form_state->getValue('currency'));
     $ratesJson = (string) $form_state->getValue('rates_json');
@@ -268,12 +296,14 @@ final class PriceBookForm extends FormBase {
     $trigger = $form_state->getTriggeringElement();
     $versionId = (int) ($trigger['#version_id'] ?? 0);
     $siteId = (string) ($trigger['#site_id'] ?? '');
-    if ($versionId <= 0 || !in_array($siteId, $this->siteIds()['ids'], TRUE)) {
+    $kind = (string) ($trigger['#book_kind'] ?? PriceBookService::KIND_SUPPLIER_CHAT);
+    if ($versionId <= 0 || !in_array($siteId, $this->siteIds()['ids'], TRUE)
+      || !in_array($kind, PriceBookService::KINDS, TRUE)) {
       $this->messenger()->addError($this->t('无法识别要启用的版本。'));
       return;
     }
     try {
-      $this->priceBook->activate($versionId, $siteId, PriceBookService::KIND_SUPPLIER_CHAT);
+      $this->priceBook->activate($versionId, $siteId, $kind);
       $this->messenger()->addStatus($this->t('版本已设为生效。'));
     }
     catch (PriceBookException $e) {
@@ -306,6 +336,11 @@ final class PriceBookForm extends FormBase {
     return (string) ($version['effective_to'] === NULL ? $this->t('生效中') : $this->t('已关闭'));
   }
 
+  private function kindLabel(string $kind): string {
+    return (string) ($kind === PriceBookService::KIND_SUPPLIER_IMAGE
+      ? $this->t('图片（按张）') : $this->t('对话（按 token）'));
+  }
+
   private function formatMs(int $ms): string {
     return gmdate('Y-m-d H:i:s', intdiv($ms, 1000)) . ' UTC';
   }
@@ -314,9 +349,26 @@ final class PriceBookForm extends FormBase {
    * Format example only; validateForm() refuses to save it unchanged.
    *
    * Values follow the architecture document's rate example so the admin sees
-   * realistic magnitudes (micros per million tokens), not zeros.
+   * realistic magnitudes (micros per million tokens, micros per image), not
+   * zeros.
    */
-  public static function seedRates(): array {
+  public static function seedRates(string $kind = PriceBookService::KIND_SUPPLIER_CHAT): array {
+    if ($kind === PriceBookService::KIND_SUPPLIER_IMAGE) {
+      return [
+        'accounts' => [
+          'xinshi' => [
+            'models' => [
+              'example-image-model' => ['per_image' => 200_000],
+              'example-token-image-model' => [
+                'per_image' => 0,
+                'per_million_input' => 5_000_000,
+                'per_million_output' => 40_000_000,
+              ],
+            ],
+          ],
+        ],
+      ];
+    }
     return [
       'accounts' => [
         'xinshi' => [

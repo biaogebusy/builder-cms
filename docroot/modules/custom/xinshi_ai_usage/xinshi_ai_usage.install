@@ -103,6 +103,8 @@ function xinshi_ai_usage_schema(): array {
       'cache_read_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'cache_write_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'output_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'image_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE,
+        'description' => 'Per-image component of an image attempt (supplier_image book); NULL for chat attempts.'],
       'total_cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'valuation_state' => ['type' => 'varchar_ascii', 'length' => 24, 'not null' => TRUE,
         'description' => 'unpriced, rated_estimate, reconciled. Unpriced means no matching rate was found.'],
@@ -293,6 +295,13 @@ function xinshi_ai_usage_schema(): array {
 }
 
 /**
+ * Add image_cost_micros to cost entries for the image price book (UB2 image pricing).
+ */
+function xinshi_ai_usage_update_10006(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
+}
+
+/**
  * Add the delivery fact table and images_generated to the projection and rollup (UB2.4), then rebuild rollups.
  */
 function xinshi_ai_usage_update_10005(): void {
@@ -362,6 +371,13 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
       'source_kind',
       $definitions['ai_usage_cost_entry']['fields']['source_kind'],
     );
+  }
+  // Image price book: the per-image component gets its own column. Existing
+  // entries are immutable and stay NULL; image attempts rated before the
+  // column existed were unpriced anyway.
+  if (!$schema->fieldExists('ai_usage_cost_entry', 'image_cost_micros')) {
+    $schema->addField('ai_usage_cost_entry', 'image_cost_micros',
+      $definitions['ai_usage_cost_entry']['fields']['image_cost_micros']);
   }
 
   if (!$schema->tableExists('ai_usage_event')) {

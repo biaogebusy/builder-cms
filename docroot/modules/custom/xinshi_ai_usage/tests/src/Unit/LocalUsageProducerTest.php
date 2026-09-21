@@ -353,7 +353,7 @@ final class LocalUsageProducerTest extends TestCase {
     $this->assertCount(2, $committed);
   }
 
-  public function testTheChatPriceBookNeverRatesImages(): void {
+  public function testImagesAreRatedFromTheImageBookNotTheChatBook(): void {
     $this->activateChatPriceBook();
     $id = $this->producer->prepare($this->intent())['attempt_id'];
     $this->producer->observe($id, ['outcome' => 'succeeded', 'dispatch_state' => 'sent',
@@ -363,10 +363,10 @@ final class LocalUsageProducerTest extends TestCase {
     $this->projection->process(self::SITE);
 
     $attempt = $this->attempt($id);
-    // A chat rate exists for this account and model and the token figures are
-    // reported; images are priced per image, so the attempt stays unpriced.
+    // A chat rate exists for this account and model, but images are priced by
+    // the image book; without one the attempt stays unpriced.
     $this->assertSame(CostRatingService::STATE_UNPRICED, $attempt['cost_valuation_state']);
-    $this->assertSame('image_rate_pending', $attempt['cost_unpriced_reason']);
+    $this->assertSame('no_price_book', $attempt['cost_unpriced_reason']);
     $this->assertNull($attempt['cost_total_micros']);
     $this->assertSame(100, (int) $attempt['input_tokens_total']);
     $this->assertSame(1, (int) $attempt['images_generated']);
@@ -374,11 +374,40 @@ final class LocalUsageProducerTest extends TestCase {
     $this->assertSame(0, (int) $cell['cost_micros']);
     $this->assertSame(1, (int) $cell['cost_unpriced_count']);
     $this->assertSame(0, (int) $cell['cost_rated_count']);
+
+    // With an image book the next observation revision is rated: 1 image at
+    // 0.2 CNY plus the reported tokens at their rates.
+    $this->activateImagePriceBook();
+    $this->producer->observe($id, ['outcome' => 'succeeded', 'dispatch_state' => 'sent',
+      'usage' => ImageUsageNormalizer::normalize(['data' => [['url' => 'a']],
+        'usage' => ['total_tokens' => 1100, 'input_tokens' => 100, 'output_tokens' => 1000]]),
+      'error_code' => NULL, 'resolved_model' => 'qwen-image', 'gateway_request_id' => 'req-2']);
+    $this->projection->process(self::SITE);
+    $attempt = $this->attempt($id);
+    $this->assertSame(CostRatingService::STATE_RATED_ESTIMATE, $attempt['cost_valuation_state']);
+    $this->assertSame('CNY', $attempt['cost_currency']);
+    // 200_000 + 100 * 5 + 1000 * 40 = 240_500 micros.
+    $this->assertSame(240_500, (int) $attempt['cost_total_micros']);
+    $cell = $this->rollup()[0];
+    $this->assertSame(240_500, (int) $cell['cost_micros']);
+    $this->assertSame(1, (int) $cell['cost_rated_count']);
+    $this->assertSame(0, (int) $cell['cost_unpriced_count']);
   }
 
   private function producerWith(Settings $settings): LocalUsageProducer {
     return new LocalUsageProducer($this->database, $this->ingest, $this->vault, $settings, $this->time,
       $this->uuid, new NullLogger());
+  }
+
+  private function activateImagePriceBook(): void {
+    $rates = json_encode(['accounts' => ['xinshi' => ['models' => ['qwen-image' => [
+      'per_image' => 200_000, 'per_million_input' => 5_000_000, 'per_million_output' => 40_000_000,
+    ]]]]]);
+    $version = $this->priceBook->createDraft(self::SITE, PriceBookService::KIND_SUPPLIER_IMAGE, 'img-v1', 'CNY',
+      $rates, 1_600_000_000_000);
+    $this->now = 1_600_000_000;
+    $this->priceBook->activate($version, self::SITE, PriceBookService::KIND_SUPPLIER_IMAGE);
+    $this->now = 1_700_000_000;
   }
 
   private function activateChatPriceBook(): void {

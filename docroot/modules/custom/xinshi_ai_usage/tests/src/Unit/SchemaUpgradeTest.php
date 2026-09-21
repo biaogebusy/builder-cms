@@ -207,6 +207,29 @@ final class SchemaUpgradeTest extends TestCase {
     $this->assertTrue($schema->fieldExists(UsageProjectionService::ROLLUP_TABLE, 'images_generated'));
   }
 
+  public function testUpgradeAddsTheImageCostColumnToExistingEntries(): void {
+    $schema = $this->database->schema();
+    $definitions = xinshi_ai_usage_schema();
+    // The UB2.7 deployment: cost entries without the per-image component.
+    $entries = $definitions[CostRatingService::TABLE];
+    unset($entries['fields']['image_cost_micros']);
+    $schema->createTable(CostRatingService::TABLE, $entries);
+    $this->database->insert(CostRatingService::TABLE)->fields([
+      'site_id' => 'site-a', 'attempt_id' => 'att-1', 'observation_revision' => 1, 'total_cost_micros' => 7,
+      'valuation_state' => 'rated_estimate', 'source_kind' => 'price_book', 'computed_at' => 1,
+    ])->execute();
+
+    xinshi_ai_usage_apply_schema_updates($this->database);
+
+    $this->assertTrue($schema->fieldExists(CostRatingService::TABLE, 'image_cost_micros'));
+    // Existing entries are immutable: the new column is NULL, the total untouched.
+    $row = $this->database->select(CostRatingService::TABLE, 'c')->fields('c')->execute()->fetchAssoc();
+    $this->assertNull($row['image_cost_micros']);
+    $this->assertSame(7, (int) $row['total_cost_micros']);
+    xinshi_ai_usage_apply_schema_updates($this->database);
+    $this->assertSame(1, (int) $this->database->select(CostRatingService::TABLE)->countQuery()->execute()->fetchField());
+  }
+
   private function insertEvent(string $eventId, string $attemptId, int $revision): void {
     $this->database->insert(UsageIngestService::TABLE)->fields([
       'site_id' => 'site-a',

@@ -108,21 +108,81 @@ final class PriceBookFormTest extends TestCase {
     $form = $this->form();
     $built = $form->buildForm([], new FormState());
     $state = (new FormState())->setValues([
-      'site_id' => 'app.example', 'version' => 'v1', 'currency' => 'CNY',
+      'site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'v1', 'currency' => 'CNY',
       'rates_json' => $built['create']['rates_json']['#default_value'],
     ]);
     $form->validateForm($built, $state);
     $this->assertArrayHasKey('rates_json', $state->getErrors());
     $this->assertStringContainsString('示例', (string) $state->getErrors()['rates_json']);
 
+    // The image example is refused too, whichever kind is selected.
+    $state = (new FormState())->setValues([
+      'site_id' => 'app.example', 'book_kind' => PriceBookService::KIND_SUPPLIER_IMAGE, 'version' => 'v1',
+      'currency' => 'CNY', 'rates_json' => json_encode(PriceBookForm::seedRates(PriceBookService::KIND_SUPPLIER_IMAGE)),
+    ]);
+    $form->validateForm($built, $state);
+    $this->assertStringContainsString('示例', (string) $state->getErrors()['rates_json']);
+
     // Editing the example (even to explicit zeros) is accepted.
     $rates = PriceBookForm::seedRates();
     $rates['accounts']['xinshi']['models'] = ['free-model' => ['per_million_input' => 0,
       'per_million_cache_read' => 0, 'per_million_cache_write' => 0, 'per_million_output' => 0]];
-    $state = (new FormState())->setValues(['site_id' => 'app.example', 'version' => 'v1',
+    $state = (new FormState())->setValues(['site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'v1',
       'currency' => 'CNY', 'rates_json' => json_encode($rates)]);
     $form->validateForm($built, $state);
     $this->assertSame([], $state->getErrors());
+
+    // The rates are validated against the selected kind: chat rates are not an image book.
+    $state = (new FormState())->setValues(['site_id' => 'app.example',
+      'book_kind' => PriceBookService::KIND_SUPPLIER_IMAGE, 'version' => 'v1', 'currency' => 'CNY',
+      'rates_json' => json_encode($rates)]);
+    $form->validateForm($built, $state);
+    $this->assertStringContainsString('per_image', (string) $state->getErrors()['rates_json']);
+    $state = (new FormState())->setValues(['site_id' => 'app.example', 'book_kind' => 'supplier_video',
+      'version' => 'v1', 'currency' => 'CNY', 'rates_json' => json_encode($rates)]);
+    $form->validateForm($built, $state);
+    $this->assertArrayHasKey('book_kind', $state->getErrors());
+  }
+
+  public function testImageBooksAreSavedListedAndActivatedSeparatelyFromChatBooks(): void {
+    $this->vault->set('chat-node', 'secret', 'app.example', $this->now);
+    $form = $this->form();
+    $built = $form->buildForm([], new FormState());
+    $this->assertSame([self::KIND, PriceBookService::KIND_SUPPLIER_IMAGE],
+      array_keys($built['create']['book_kind']['#options']));
+
+    $rates = ['accounts' => ['xinshi' => ['models' => ['qwen-image-plus' => ['per_image' => 200_000]]]]];
+    $state = (new FormState())->setValues(['site_id' => 'app.example',
+      'book_kind' => PriceBookService::KIND_SUPPLIER_IMAGE, 'version' => 'img-v1', 'currency' => 'CNY',
+      'rates_json' => json_encode($rates)]);
+    $state->setTriggeringElement(['#name' => 'save_and_activate']);
+    $form->submitForm($built, $state);
+    $this->assertSame('addStatus', end($this->messages)[0]);
+    $this->assertSame('img-v1', $this->priceBook->loadActive('app.example', PriceBookService::KIND_SUPPLIER_IMAGE)['version']);
+    $this->assertNull($this->priceBook->loadActive('app.example', self::KIND), 'the chat book is untouched');
+
+    // Overview and list show both kinds; a chat draft activates under its own kind.
+    $built = $form->buildForm([], new FormState());
+    $overview = array_map(fn(array $row): array => [$row[0], (string) $row[1], (string) $row[2]],
+      $built['overview']['active']['#rows']);
+    $this->assertSame([['app.example', '对话（按 token）', '无（该类调用全部标记为未定价）'],
+      ['app.example', '图片（按张）', 'img-v1']], $overview);
+    $chatRates = PriceBookForm::seedRates();
+    $chatRates['accounts']['xinshi']['models'] = ['real-model' => $chatRates['accounts']['xinshi']['models']['example-model']];
+    $state = (new FormState())->setValues(['site_id' => 'app.example', 'book_kind' => self::KIND,
+      'version' => 'chat-v1', 'currency' => 'CNY', 'rates_json' => json_encode($chatRates)]);
+    $state->setTriggeringElement(['#name' => 'save_draft']);
+    $form->submitForm($built, $state);
+    $built = $form->buildForm([], new FormState());
+    $draft = $this->priceBook->listVersions('app.example', self::KIND)[0];
+    $row = $built['versions']['table']['app.example:' . $draft['id']];
+    $this->assertSame('对话（按 token）', $row['kind']['#plain_text']);
+    $this->assertSame(self::KIND, $row['activate']['#book_kind']);
+    $activate = new FormState();
+    $activate->setTriggeringElement($row['activate']);
+    $form->activateVersion($built, $activate);
+    $this->assertSame('chat-v1', $this->priceBook->loadActive('app.example', self::KIND)['version']);
+    $this->assertSame('img-v1', $this->priceBook->loadActive('app.example', PriceBookService::KIND_SUPPLIER_IMAGE)['version']);
   }
 
   public function testDraftsAreListedAndCanBeActivatedLater(): void {
@@ -132,7 +192,7 @@ final class PriceBookFormTest extends TestCase {
     $rates = PriceBookForm::seedRates();
     $rates['accounts']['xinshi']['models']['real-model'] = $rates['accounts']['xinshi']['models']['example-model'];
     unset($rates['accounts']['xinshi']['models']['example-model']);
-    $state = (new FormState())->setValues(['site_id' => 'app.example', 'version' => 'v1',
+    $state = (new FormState())->setValues(['site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'v1',
       'currency' => 'CNY', 'rates_json' => json_encode($rates), 'source_ref' => 'quote-1']);
     $state->setTriggeringElement(['#name' => 'save_draft']);
     $form->submitForm($built, $state);
@@ -159,7 +219,7 @@ final class PriceBookFormTest extends TestCase {
     $this->assertArrayNotHasKey('#type', $row['activate']);
 
     // A site that is not registered cannot receive a price book.
-    $state = (new FormState())->setValues(['site_id' => 'other.example', 'version' => 'v2',
+    $state = (new FormState())->setValues(['site_id' => 'other.example', 'book_kind' => self::KIND, 'version' => 'v2',
       'currency' => 'CNY', 'rates_json' => json_encode($rates)]);
     $state->setTriggeringElement(['#name' => 'save_draft']);
     $form->submitForm($built, $state);

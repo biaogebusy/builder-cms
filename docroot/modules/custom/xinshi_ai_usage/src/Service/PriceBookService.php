@@ -39,14 +39,35 @@ use Drupal\Component\Datetime\TimeInterface;
  * Amounts are in micros of the version's currency (1 currency unit = 1,000,000
  * micros). Unknown models are rated as unpriced; they are never silently
  * treated as free.
+ *
+ * book_kind = 'supplier_image' (UB2 image price book) uses the same accounts
+ * / models nesting with per-image rates; token rates are optional and only
+ * needed for models that bill tokens on top (GPT image models):
+ * @code
+ * {
+ *   "accounts": {
+ *     "xinshi": {
+ *       "models": {
+ *         "qwen-image-plus": { "per_image": 200000 },
+ *         "gpt-image-2": { "per_image": 0, "per_million_input": 5000000, "per_million_output": 40000000 }
+ *       }
+ *     }
+ *   }
+ * }
+ * @endcode
  */
 final class PriceBookService {
 
   public const TABLE = 'ai_price_book_version';
   public const KIND_SUPPLIER_CHAT = 'supplier_chat';
+  public const KIND_SUPPLIER_IMAGE = 'supplier_image';
+  public const KINDS = [self::KIND_SUPPLIER_CHAT, self::KIND_SUPPLIER_IMAGE];
   public const STATUS_DRAFT = 'draft';
   public const STATUS_ACTIVE = 'active';
   public const ROUNDING_HALF_UP = 'half_up';
+  private const CHAT_RATE_KEYS = ['per_million_input', 'per_million_cache_read', 'per_million_cache_write',
+    'per_million_output'];
+  private const IMAGE_TOKEN_RATE_KEYS = ['per_million_input', 'per_million_output'];
 
   public function __construct(
     private readonly Connection $database,
@@ -126,17 +147,25 @@ final class PriceBookService {
   /**
    * Parses the rates JSON of a version into a structured array.
    *
-   * Throws on malformed JSON or missing required top-level keys, so a bad
-   * admin save cannot silently produce zero-cost ratings.
+   * Throws on malformed JSON or missing required keys, so a bad admin save
+   * cannot silently produce zero-cost ratings. Chat models need all four
+   * per-million rates; image models need `per_image` and may carry
+   * `per_million_input` / `per_million_output` (NULL when absent, meaning the
+   * model is not expected to report tokens).
    *
    * @param string $ratesJson
    *   The stored rates_json string.
+   * @param string $kind
+   *   The price book kind the rates belong to.
    *
-   * @return array{accounts:array<string,array{models:array<string,array{per_million_input:int,per_million_cache_read:int,per_million_cache_write:int,per_million_output:int}>}>}
+   * @return array{accounts:array<string,array{models:array<string,array<string,int|null>>}>}
    *
    * @throws \Drupal\xinshi_ai_usage\Service\PriceBookException
    */
-  public function parseRates(string $ratesJson): array {
+  public function parseRates(string $ratesJson, string $kind = self::KIND_SUPPLIER_CHAT): array {
+    if (!in_array($kind, self::KINDS, TRUE)) {
+      throw new PriceBookException('invalid_kind', "unsupported price book kind {$kind}");
+    }
     $decoded = json_decode($ratesJson, TRUE);
     if (!is_array($decoded)) {
       throw new PriceBookException('invalid_rates', 'price book rates_json is not valid JSON');
@@ -162,23 +191,42 @@ final class PriceBookService {
         if (!is_string($modelId) || $modelId === '' || !is_array($rates)) {
           throw new PriceBookException('invalid_rates', 'each model rate entry must be a named object');
         }
-        foreach (['per_million_input', 'per_million_cache_read',
-          'per_million_cache_write', 'per_million_output'] as $rateKey) {
-          if (!array_key_exists($rateKey, $rates)) {
-            throw new PriceBookException('invalid_rates',
-              "model {$modelId} is missing {$rateKey}");
-          }
-        }
-        $cleanModels[$modelId] = [
-          'per_million_input' => self::asMicros($rates['per_million_input']),
-          'per_million_cache_read' => self::asMicros($rates['per_million_cache_read']),
-          'per_million_cache_write' => self::asMicros($rates['per_million_cache_write']),
-          'per_million_output' => self::asMicros($rates['per_million_output']),
-        ];
+        $cleanModels[$modelId] = $kind === self::KIND_SUPPLIER_IMAGE
+          ? self::imageModelRate($modelId, $rates)
+          : self::chatModelRate($modelId, $rates);
       }
       $cleanAccounts[$accountId] = ['models' => $cleanModels];
     }
     return ['accounts' => $cleanAccounts];
+  }
+
+  /**
+   * @return array{per_million_input:int,per_million_cache_read:int,per_million_cache_write:int,per_million_output:int}
+   */
+  private static function chatModelRate(string $modelId, array $rates): array {
+    $clean = [];
+    foreach (self::CHAT_RATE_KEYS as $rateKey) {
+      if (!array_key_exists($rateKey, $rates)) {
+        throw new PriceBookException('invalid_rates', "model {$modelId} is missing {$rateKey}");
+      }
+      $clean[$rateKey] = self::asMicros($rates[$rateKey]);
+    }
+    return $clean;
+  }
+
+  /**
+   * @return array{per_image:int,per_million_input:int|null,per_million_output:int|null}
+   */
+  private static function imageModelRate(string $modelId, array $rates): array {
+    if (!array_key_exists('per_image', $rates)) {
+      throw new PriceBookException('invalid_rates', "model {$modelId} is missing per_image");
+    }
+    $clean = ['per_image' => self::asMicros($rates['per_image'])];
+    foreach (self::IMAGE_TOKEN_RATE_KEYS as $rateKey) {
+      $clean[$rateKey] = array_key_exists($rateKey, $rates) && $rates[$rateKey] !== NULL
+        ? self::asMicros($rates[$rateKey]) : NULL;
+    }
+    return $clean;
   }
 
   /**
@@ -191,7 +239,7 @@ final class PriceBookService {
    * @param string $modelId
    *   The requested model identifier.
    *
-   * @return array{per_million_input:int,per_million_cache_read:int,per_million_cache_write:int,per_million_output:int}|null
+   * @return array<string,int|null>|null
    */
   public function findModelRate(array $rates, string $accountRef, string $modelId): ?array {
     return $rates['accounts'][$accountRef]['models'][$modelId] ?? NULL;
@@ -246,7 +294,7 @@ final class PriceBookService {
     }
     // Validate at the service boundary as well as in the form. Other callers
     // must not be able to create a draft that can later be activated blindly.
-    $this->parseRates($ratesJson);
+    $this->parseRates($ratesJson, $kind);
     try {
       $id = $this->database->insert(self::TABLE)->fields([
         'site_id' => $siteId,
@@ -301,7 +349,7 @@ final class PriceBookService {
           "draft price book version {$versionId} not found for site {$siteId} / {$kind}");
       }
 
-      $this->parseRates((string) $target['rates_json']);
+      $this->parseRates((string) $target['rates_json'], $kind);
       $now = $this->nowMs();
       // A draft created in the past must not be applied retroactively. A
       // future effective date remains scheduled, while the previous active

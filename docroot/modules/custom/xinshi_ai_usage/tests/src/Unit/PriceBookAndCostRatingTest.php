@@ -323,11 +323,12 @@ final class PriceBookAndCostRatingTest extends TestCase {
     $this->assertNull($result['total_cost_micros']);
   }
 
-  public function testCustomerKeyAccountIsUnpricedWhenAbsentFromBook(): void {
+  public function testCustomerKeyCallsAreNeverPlatformCost(): void {
     $version = $this->seedRate('v1', 'CNY',
       $this->sampleRates(1, 0, 0, 1));
     $this->priceBook->activate($version, self::SITE, self::KIND);
-    $provider = ['account_ref' => 'customer_key', 'requested_model' => 'some-model'];
+    // Even a book entry under that account ref does not make it a purchase.
+    $provider = ['account_ref' => 'customer_key', 'requested_model' => 'doc-model'];
     $usage = ['quality' => 'reported', 'normalizer_version' => 'v1',
       'input_tokens_total' => '100', 'input_tokens_cache_read' => null,
       'input_tokens_cache_write' => null, 'output_tokens_total' => '50',
@@ -335,7 +336,149 @@ final class PriceBookAndCostRatingTest extends TestCase {
 
     $result = $this->costRating->computeRate(self::SITE, $provider, $usage, $this->nowMs());
     $this->assertSame(CostRatingService::STATE_UNPRICED, $result['valuation_state']);
+    $this->assertSame('customer_key', $result['unpriced_reason']);
+    $this->assertNull($result['price_version_id']);
+    $this->assertNull($result['total_cost_micros']);
+    // Without any book the reason is still the payer, not the missing book.
+    $this->assertSame('customer_key', $this->costRating->computeRate('other-site', $provider, $usage,
+      $this->nowMs())['unpriced_reason']);
+  }
+
+  public function testImageRatesRequirePerImageAndKeepTokenRatesOptional(): void {
+    $image = PriceBookService::KIND_SUPPLIER_IMAGE;
+    $parsed = $this->priceBook->parseRates(json_encode(['accounts' => ['xinshi' => ['models' => [
+      'qwen-image' => ['per_image' => 200_000],
+      'gpt-image' => ['per_image' => 0, 'per_million_input' => '5000000', 'per_million_output' => 40_000_000],
+    ]]]]), $image);
+    $this->assertSame(['per_image' => 200_000, 'per_million_input' => NULL, 'per_million_output' => NULL],
+      $parsed['accounts']['xinshi']['models']['qwen-image']);
+    $this->assertSame(['per_image' => 0, 'per_million_input' => 5_000_000, 'per_million_output' => 40_000_000],
+      $parsed['accounts']['xinshi']['models']['gpt-image']);
+
+    $cases = [
+      'missing per_image' => ['{"accounts":{"xinshi":{"models":{"m":{"per_million_input":1}}}}}', 'invalid_rates'],
+      'negative per_image' => ['{"accounts":{"xinshi":{"models":{"m":{"per_image":-1}}}}}', 'invalid_rate'],
+      'bad token rate' => ['{"accounts":{"xinshi":{"models":{"m":{"per_image":1,"per_million_input":"x"}}}}}', 'invalid_rate'],
+    ];
+    foreach ($cases as $label => [$json, $code]) {
+      try {
+        $this->priceBook->parseRates($json, $image);
+        $this->fail("expected rejection for {$label}");
+      }
+      catch (PriceBookException $e) {
+        $this->assertSame($code, $e->priceCode, $label);
+      }
+    }
+    // A chat book is not an image book: the chat shape fails image parsing and vice versa.
+    try {
+      $this->priceBook->parseRates(json_encode($this->sampleRates(1, 0, 0, 1)), $image);
+      $this->fail('chat rates must not parse as image rates');
+    }
+    catch (PriceBookException $e) {
+      $this->assertSame('invalid_rates', $e->priceCode);
+    }
+    try {
+      $this->priceBook->parseRates('{"accounts":{"xinshi":{"models":{"m":{"per_image":1}}}}}');
+      $this->fail('image rates must not parse as chat rates');
+    }
+    catch (PriceBookException $e) {
+      $this->assertSame('invalid_rates', $e->priceCode);
+    }
+    try {
+      $this->priceBook->parseRates('{}', 'supplier_video');
+      $this->fail('unknown kinds are rejected');
+    }
+    catch (PriceBookException $e) {
+      $this->assertSame('invalid_kind', $e->priceCode);
+    }
+  }
+
+  public function testImageAttemptsAreRatedPerImageFromTheImageBook(): void {
+    // A chat book alone does not price images.
+    $chat = $this->seedRate('chat-v1', 'CNY', $this->sampleRates(1, 0, 0, 1));
+    $this->priceBook->activate($chat, self::SITE, self::KIND);
+    $provider = ['account_ref' => 'xinshi', 'requested_model' => 'qwen-image'];
+    $fourImages = $this->imageUsage(4);
+    $result = $this->costRating->computeRate(self::SITE, $provider, $fourImages, $this->nowMs());
+    $this->assertSame('no_price_book', $result['unpriced_reason']);
+
+    $this->now += 1;
+    $book = $this->priceBook->createDraft(self::SITE, PriceBookService::KIND_SUPPLIER_IMAGE, 'img-v1', 'CNY',
+      json_encode(['accounts' => ['xinshi' => ['models' => [
+        'qwen-image' => ['per_image' => 200_000],
+        'gpt-image' => ['per_image' => 0, 'per_million_input' => 5_000_000, 'per_million_output' => 40_000_000],
+        'hybrid-image' => ['per_image' => 100_000, 'per_million_input' => 1_000_000],
+      ]]]]), $this->nowMs());
+    $this->priceBook->activate($book, self::SITE, PriceBookService::KIND_SUPPLIER_IMAGE);
+    $this->now += 1;
+
+    // 4 images * 0.2 CNY = 800_000 micros; no tokens reported, none charged.
+    $result = $this->costRating->computeRate(self::SITE, $provider, $fourImages, $this->nowMs());
+    $this->assertSame(CostRatingService::STATE_RATED_ESTIMATE, $result['valuation_state']);
+    $this->assertSame('CNY', $result['currency']);
+    $this->assertSame(800_000, $result['image_cost_micros']);
+    $this->assertSame(0, $result['input_cost_micros']);
+    $this->assertSame(0, $result['output_cost_micros']);
+    $this->assertNull($result['cache_read_cost_micros']);
+    $this->assertSame(800_000, $result['total_cost_micros']);
+
+    // Zero images (the supplier returned an empty list) is a rated zero, not unpriced.
+    $this->assertSame(0, $this->costRating->computeRate(self::SITE, $provider, $this->imageUsage(0),
+      $this->nowMs())['total_cost_micros']);
+
+    // Token-billed image model: 1 image at 0 + 1000 input * 5 + 5000 output * 40 per million.
+    $gpt = ['account_ref' => 'xinshi', 'requested_model' => 'gpt-image'];
+    $result = $this->costRating->computeRate(self::SITE, $gpt, $this->imageUsage(1, 1000, 5000), $this->nowMs());
+    $this->assertSame(0, $result['image_cost_micros']);
+    $this->assertSame(5_000, $result['input_cost_micros']);
+    $this->assertSame(200_000, $result['output_cost_micros']);
+    $this->assertSame(205_000, $result['total_cost_micros']);
+
+    // The image count is the billing unit even when it exceeds the request.
+    // 3 images at 0.1 + 500 input tokens at 1 per million = 300_000 + 500.
+    $hybrid = ['account_ref' => 'xinshi', 'requested_model' => 'hybrid-image'];
+    $result = $this->costRating->computeRate(self::SITE, $hybrid, $this->imageUsage(3, 500), $this->nowMs());
+    $this->assertSame(300_500, $result['total_cost_micros']);
+
+    // Tokens reported for a model whose book entry has no token rate: unpriced, never "just the images".
+    $result = $this->costRating->computeRate(self::SITE, $provider, $this->imageUsage(2, 100, 200), $this->nowMs());
+    $this->assertSame(CostRatingService::STATE_UNPRICED, $result['valuation_state']);
+    $this->assertSame('token_rate_missing', $result['unpriced_reason']);
+    $result = $this->costRating->computeRate(self::SITE, $hybrid, $this->imageUsage(1, 100, 200), $this->nowMs());
+    $this->assertSame('token_rate_missing', $result['unpriced_reason']);
+
+    // Unknown image model, and an image book does not price chat attempts.
+    $result = $this->costRating->computeRate(self::SITE, ['account_ref' => 'xinshi', 'requested_model' => 'nope'],
+      $fourImages, $this->nowMs());
     $this->assertSame('unknown_model', $result['unpriced_reason']);
+    $chatUsage = ['quality' => 'reported', 'normalizer_version' => 'chat-completions-inclusive-v1',
+      'input_tokens_total' => '10', 'input_tokens_cache_read' => NULL, 'input_tokens_cache_write' => NULL,
+      'output_tokens_total' => '10', 'output_tokens_reasoning' => NULL, 'provider_total_tokens' => '20'];
+    $this->assertSame('unknown_model', $this->costRating->computeRate(self::SITE, $provider, $chatUsage,
+      $this->nowMs())['unpriced_reason'], 'qwen-image is only in the image book');
+  }
+
+  public function testImageCostEntriesCarryTheImageComponent(): void {
+    $book = $this->priceBook->createDraft(self::SITE, PriceBookService::KIND_SUPPLIER_IMAGE, 'img-v1', 'CNY',
+      json_encode(['accounts' => ['xinshi' => ['models' => ['qwen-image' => ['per_image' => 250_000]]]]]),
+      $this->nowMs());
+    $this->priceBook->activate($book, self::SITE, PriceBookService::KIND_SUPPLIER_IMAGE);
+    $provider = ['account_ref' => 'xinshi', 'requested_model' => 'qwen-image'];
+
+    $this->costRating->rateAttempt(self::SITE, 'att-img', 1, $provider, $this->imageUsage(2), $this->nowMs());
+    $row = $this->database->select(CostRatingService::TABLE, 'c')->fields('c')
+      ->condition('attempt_id', 'att-img')->execute()->fetchAssoc();
+    $this->assertSame(500_000, (int) $row['image_cost_micros']);
+    $this->assertSame(500_000, (int) $row['total_cost_micros']);
+    $this->assertNull($row['cache_read_cost_micros']);
+    $this->assertSame(CostRatingService::STATE_RATED_ESTIMATE, $row['valuation_state']);
+
+    // Same revision, same result: idempotent. A different image count would be a conflict.
+    $this->costRating->rateAttempt(self::SITE, 'att-img', 1, $provider, $this->imageUsage(2), $this->nowMs());
+    $this->assertSame(1, (int) $this->database->select(CostRatingService::TABLE)->countQuery()->execute()->fetchField());
+    $this->expectException(PriceBookException::class);
+    $this->expectExceptionMessageMatches('/cost_conflict/');
+    $this->costRating->rateAttempt(self::SITE, 'att-img', 1, $provider, $this->imageUsage(3), $this->nowMs());
   }
 
   public function testDifferentResultCannotOverwriteImmutableCostEntry(): void {
@@ -360,6 +503,20 @@ final class PriceBookAndCostRatingTest extends TestCase {
   private function seedRate(string $version, string $currency, array $rates): int {
     $json = json_encode($rates, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     return $this->priceBook->createDraft(self::SITE, self::KIND, $version, $currency, $json, $this->nowMs());
+  }
+
+  /**
+   * A reported image usage block as ImageUsageNormalizer produces it.
+   */
+  private function imageUsage(int $images, ?int $inputTokens = NULL, ?int $outputTokens = NULL): array {
+    return [
+      'quality' => 'reported', 'normalizer_version' => 'images-openai-v1',
+      'input_tokens_total' => $inputTokens === NULL ? NULL : (string) $inputTokens,
+      'input_tokens_cache_read' => NULL, 'input_tokens_cache_write' => NULL,
+      'output_tokens_total' => $outputTokens === NULL ? NULL : (string) $outputTokens,
+      'output_tokens_reasoning' => NULL, 'provider_total_tokens' => NULL,
+      'images_generated' => (string) $images,
+    ];
   }
 
   private function sampleRates(int $perMillionInput, int $perMillionCacheRead,
