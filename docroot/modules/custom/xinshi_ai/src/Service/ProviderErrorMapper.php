@@ -8,6 +8,7 @@ use Drupal\ai\Exception\AiQuotaException;
 use Drupal\ai\Exception\AiRateLimitException;
 use Drupal\ai\Exception\AiSetupFailureException;
 use Drupal\ai\Exception\AiUnsafePromptException;
+use Drupal\xinshi_ai\Exception\MissingCredentialsException;
 use Drupal\xinshi_ai\Exception\ProviderUnavailableException;
 use OpenAI\Exceptions\ErrorException as OpenAiErrorException;
 use OpenAI\Exceptions\TransporterException;
@@ -38,6 +39,10 @@ final class ProviderErrorMapper {
     }
     if ($e instanceof ProviderUnavailableException) {
       return 'provider_unavailable';
+    }
+    // The customer's key is gone (expired or cleaned up); a retry cannot bring it back.
+    if ($e instanceof MissingCredentialsException) {
+      return 'unauthorized';
     }
     if ($e instanceof AiSetupFailureException) {
       return 'unauthorized';

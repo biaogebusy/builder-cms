@@ -7,6 +7,7 @@ namespace Drupal\xinshi_ai\Service;
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\node\NodeInterface;
+use Drupal\xinshi_ai\Exception\MissingCredentialsException;
 use Drupal\xinshi_ai\Exception\ProviderUnavailableException;
 use GuzzleHttp\HandlerStack;
 
@@ -14,7 +15,8 @@ use GuzzleHttp\HandlerStack;
  * 按 job 的 field_platform 解析出已配置好的 drupal/ai Provider。
  *
  * - xinshi:走信使网关(New API),网关根据 model id 自动转协议(含阿里通义千问)。
- * - custom:用户运行时提交的 endpoint/api_key 经 setConfiguration 注入,不持久化。
+ * - custom:用户提交的 endpoint/api_key 存在加密 vault(UB2.7),执行时按任务 uuid 取出
+ *   经 setConfiguration 注入;任务实体、事件和日志里没有它们。
  */
 final class ProviderResolver {
 
@@ -31,6 +33,7 @@ final class ProviderResolver {
     private readonly AiProviderPluginManager $aiProviderManager,
     private readonly ConfigFactoryInterface $configFactory,
     private readonly HandlerStack $handlerStack,
+    private readonly ImageJobCredentialVault $credentials,
   ) {}
 
   /**
@@ -47,6 +50,7 @@ final class ProviderResolver {
    *   drupal/ai 的 ProviderProxy(行为等同 AiProviderInterface)。
    *
    * @throws \Drupal\xinshi_ai\Exception\ProviderUnavailableException
+   * @throws \Drupal\xinshi_ai\Exception\MissingCredentialsException
    */
   public function resolve(NodeInterface $job, array $genConfig, string $operationType,
     ?ProviderRequestTrace $trace = NULL): object {
@@ -71,9 +75,14 @@ final class ProviderResolver {
 
     $config = $genConfig;
     if ($platform === 'custom') {
-      $params = json_decode((string) ($job->get('field_params')->value ?? ''), TRUE) ?: [];
-      $config['endpoint'] = (string) ($params['endpoint'] ?? '');
-      $config['api_key'] = (string) ($params['api_key'] ?? '');
+      $secrets = $this->credentials->get($job->uuid());
+      if ($secrets === NULL) {
+        throw new MissingCredentialsException(sprintf(
+          'No stored credentials for custom image job %s (expired or already cleaned up); submit the job again.',
+          $job->uuid()));
+      }
+      $config['endpoint'] = $secrets['endpoint'];
+      $config['api_key'] = $secrets['api_key'];
     }
     $provider->setConfiguration($config);
 

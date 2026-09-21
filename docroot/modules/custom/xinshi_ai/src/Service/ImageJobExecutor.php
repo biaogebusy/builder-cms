@@ -43,6 +43,7 @@ final class ImageJobExecutor {
     private readonly ImageJobRuns $runs,
     private readonly ImageUsageRecorder $usageRecorder,
     private readonly LoggerInterface $logger,
+    private readonly ImageJobCredentialVault $credentials,
   ) {}
 
   /**
@@ -63,6 +64,7 @@ final class ImageJobExecutor {
         '@u' => $uuid,
         '@s' => $job->get('field_status')->value,
       ]);
+      $this->credentials->delete($uuid);
       return;
     }
     $run = $this->runs->claim($uuid, $queueAttempt);
@@ -73,13 +75,17 @@ final class ImageJobExecutor {
       return;
     }
     try {
-      if ($run->previous() !== NULL && !$this->recover($job, $run)) {
-        return;
+      if ($run->previous() === NULL || $this->recover($job, $run)) {
+        $this->execute($job, $run, $queueAttempt);
       }
-      $this->execute($job, $run, $queueAttempt);
     }
     finally {
       $run->release();
+    }
+    // A job that ended (any outcome) no longer needs its customer key; one
+    // that was re-queued for a retry keeps it until that retry ends.
+    if ($this->isTerminal($job)) {
+      $this->credentials->delete($uuid);
     }
   }
 
@@ -102,8 +108,13 @@ final class ImageJobExecutor {
       $recovered++;
       try {
         $job = $this->lifecycle->loadJobByUuid($uuid);
-        if ($job === NULL || $this->isTerminal($job) || $run->previous() === NULL) {
-          // Deleted, or finished by its worker right before it died.
+        if ($job === NULL) {
+          $this->credentials->delete($uuid);
+          continue;
+        }
+        if ($this->isTerminal($job) || $run->previous() === NULL) {
+          // Finished by its worker right before it died.
+          $this->credentials->delete($uuid);
           continue;
         }
         if ($this->recover($job, $run)) {
@@ -113,6 +124,9 @@ final class ImageJobExecutor {
             'jobUuid' => $uuid,
             'attempt' => (int) $run->previous()['queue_attempt'],
           ]);
+        }
+        else {
+          $this->credentials->delete($uuid);
         }
       }
       finally {
@@ -186,8 +200,12 @@ final class ImageJobExecutor {
 
   /**
    * Re-queues a retryable failure or records the terminal failure.
+   *
+   * The message is stored on the job and logged, so the customer's key is
+   * removed from it first: a provider error may echo the request it rejected.
    */
   private function handleFailure(NodeInterface $job, string $uuid, string $code, string $message, int $attempt): void {
+    $message = $this->credentials->redact($uuid, $message);
     if ($this->isTerminal($job)) {
       // Cancelled (or otherwise closed) while the call was running: that
       // decision stands, the failure is neither retried nor recorded over it.

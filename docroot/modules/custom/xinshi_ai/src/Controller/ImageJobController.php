@@ -10,6 +10,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\xinshi_ai\AiTaskManager;
 use Drupal\xinshi_ai\Exception\TaskNotFoundException;
 use Drupal\xinshi_ai\Service\EventTicketServiceInterface;
+use Drupal\xinshi_ai\Service\ImageJobCredentialVault;
 use Drupal\xinshi_ai\Service\ImmediateJobRunner;
 use Drupal\xinshi_ai\Service\JobLifecycleServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,6 +32,7 @@ final class ImageJobController extends ControllerBase {
     private readonly QueueFactory $queueFactory,
     private readonly AccountInterface $account,
     private readonly ImmediateJobRunner $immediateRunner,
+    private readonly ImageJobCredentialVault $credentials,
   ) {}
 
   /**
@@ -44,11 +46,16 @@ final class ImageJobController extends ControllerBase {
       $container->get('queue'),
       $container->get('current_user'),
       $container->get('xinshi_ai.immediate_job_runner'),
+      $container->get('xinshi_ai.image_job_credentials'),
     );
   }
 
   /**
    * POST /api/v3/image-jobs。
+   *
+   * custom 平台的连接凭据放在顶层 `credentials: { endpoint, apiKey }`(UB2.7);
+   * 它们只进加密 vault,不进任务实体、事件或日志。旧客户端放在 params 里的
+   * endpoint / api_key 同样被剥离后入 vault。
    */
   public function submit(Request $request): JsonResponse {
     $payload = json_decode($request->getContent(), TRUE);
@@ -56,13 +63,16 @@ final class ImageJobController extends ControllerBase {
       return new JsonResponse(['error' => 'Invalid JSON body.'], 400);
     }
 
+    $params = is_array($payload['params'] ?? NULL) ? $payload['params'] : [];
+    $platform = (string) ($payload['platform'] ?? '');
+    $credentials = ImageJobCredentialVault::fromPayload($payload, $params);
     $input = [
       'jobKind' => $payload['jobKind'] ?? 'text_to_image',
       'platform' => $payload['platform'] ?? NULL,
       'model' => $payload['model'] ?? NULL,
       'prompt' => $payload['prompt'] ?? '',
       'negativePrompt' => $payload['negativePrompt'] ?? NULL,
-      'params' => is_array($payload['params'] ?? NULL) ? $payload['params'] : [],
+      'params' => $params,
       'nRequested' => $payload['params']['n'] ?? $payload['n'] ?? NULL,
       'inputImage' => $payload['inputImage'] ?? NULL,
       'parentJob' => $payload['parentJob'] ?? NULL,
@@ -77,12 +87,29 @@ final class ImageJobController extends ControllerBase {
     }
 
     $errors = $task->validate($input, $this->account);
+    $credentialError = ImageJobCredentialVault::validate($credentials, $platform);
+    if ($credentialError !== NULL) {
+      $errors['credentials'] = $credentialError;
+    }
     if ($errors) {
       return new JsonResponse(['errors' => $errors], 422);
     }
 
     $job = $this->lifecycle->createQueued($input, $this->account);
     $uuid = $job->uuid();
+    if ($platform === 'custom') {
+      try {
+        $this->credentials->store($uuid, (string) $credentials['endpoint'], (string) $credentials['api_key']);
+      }
+      catch (\Throwable $e) {
+        // Without its key the job could never run; do not leave it queued.
+        $job->delete();
+        $this->getLogger('xinshi_ai')->error('Image job credentials could not be stored: @message', [
+          '@message' => $e->getMessage(),
+        ]);
+        return new JsonResponse(['error' => 'Credentials could not be stored; try again later.'], 503);
+      }
+    }
     $ticket = $this->eventTicket->issue($uuid, (int) $this->account->id());
     $this->queueFactory->get(self::QUEUE)->createItem([
       'jobUuid' => $uuid,
@@ -124,6 +151,11 @@ final class ImageJobController extends ControllerBase {
 
     $task = $this->taskManager->getByKind($job->get('field_job_kind')->value);
     $task->cancel($job);
+    // The key is not needed once the job ended; a worker still running the
+    // call already loaded it.
+    if (in_array($job->get('field_status')->value, self::TERMINAL, TRUE)) {
+      $this->credentials->delete($uuid);
+    }
     // A job that finished while the cancel was on its way keeps its outcome;
     // the response reports the stored status rather than a cancel that did
     // not take effect.

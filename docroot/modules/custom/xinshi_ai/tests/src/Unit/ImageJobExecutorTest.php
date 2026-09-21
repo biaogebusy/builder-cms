@@ -15,6 +15,7 @@ use Drupal\xinshi_ai\AiTaskInterface;
 use Drupal\xinshi_ai\AiTaskManagerInterface;
 use Drupal\xinshi_ai\Exception\TaskExecutionException;
 use Drupal\xinshi_ai\Service\EventStreamServiceInterface;
+use Drupal\xinshi_ai\Service\ImageJobCredentialVault;
 use Drupal\xinshi_ai\Service\ImageJobExecutor;
 use Drupal\xinshi_ai\Service\ImageJobRun;
 use Drupal\xinshi_ai\Service\ImageJobRuns;
@@ -46,8 +47,11 @@ final class ImageJobExecutorTest extends TestCase {
   private EventStreamServiceInterface&MockObject $events;
   private ImageUsageRecorder&MockObject $usage;
   private LoggerInterface&MockObject $logger;
+  private ImageJobCredentialVault&MockObject $credentials;
   private ImageJobExecutor $executor;
   private int $now = 1_700_000_000_000;
+  /** @var list<string> */
+  private array $deletedCredentials = [];
   /** What the lifecycle service reports as the stored status of any job. */
   private ?string $storedStatus = 'queued';
   /** Per-job stored status, taking precedence over $storedStatus. */
@@ -98,8 +102,13 @@ final class ImageJobExecutorTest extends TestCase {
     });
     $this->usage = $this->createMock(ImageUsageRecorder::class);
     $this->logger = $this->createMock(LoggerInterface::class);
+    $this->credentials = $this->createMock(ImageJobCredentialVault::class);
+    $this->credentials->method('redact')->willReturnCallback(fn(string $uuid, string $text): string => $text);
+    $this->credentials->method('delete')->willReturnCallback(function (string $uuid): void {
+      $this->deletedCredentials[] = $uuid;
+    });
     $this->executor = new ImageJobExecutor($manager, $this->lifecycle, new ProviderErrorMapper(), $queues,
-      $this->events, $this->runs, $this->usage, $this->logger);
+      $this->events, $this->runs, $this->usage, $this->logger, $this->credentials);
   }
 
   protected function tearDown(): void {
@@ -134,6 +143,46 @@ final class ImageJobExecutorTest extends TestCase {
     $this->executor->run(['jobUuid' => self::JOB]);
 
     $this->assertNull($this->runs->row(self::JOB), 'no lease is taken for a finished job');
+    $this->assertSame([self::JOB], $this->deletedCredentials, 'a finished job keeps no customer key');
+  }
+
+  public function testTheCustomerKeyIsKeptForARetryAndDroppedWhenTheJobEnds(): void {
+    $job = $this->jobNode(self::JOB, ['field_status' => 'running']);
+    $this->storedStatus = 'running';
+    $this->lifecycle->method('loadJobByUuid')->willReturn($job);
+    $this->task->method('execute')->willThrowException(new TaskExecutionException('503', 'provider_5xx'));
+
+    $this->executor->run(['jobUuid' => self::JOB, 'attempt' => 0]);
+    $this->assertSame([], $this->deletedCredentials, 'the re-queued retry still needs the key');
+
+    // The last retry fails for good.
+    $this->lifecycle->method('markFailed')->willReturnCallback(function (NodeInterface $job): bool {
+      $this->storedStatus = 'failed';
+      $job->set('field_status', 'failed');
+      return TRUE;
+    });
+    $this->executor->run(['jobUuid' => self::JOB, 'attempt' => 2]);
+    $this->assertSame([self::JOB], $this->deletedCredentials);
+  }
+
+  public function testTheCustomerKeyIsRedactedFromStoredFailureReasons(): void {
+    $job = $this->jobNode(self::JOB, ['field_status' => 'running']);
+    $this->storedStatus = 'running';
+    $this->lifecycle->method('loadJobByUuid')->willReturn($job);
+    $this->task->method('execute')
+      ->willThrowException(new TaskExecutionException('401 for key sk-secret-key-1234', 'unauthorized'));
+    $credentials = $this->createMock(ImageJobCredentialVault::class);
+    $credentials->method('redact')->willReturnCallback(
+      fn(string $uuid, string $text): string => str_replace('sk-secret-key-1234', '[redacted]', $text));
+    $this->lifecycle->expects($this->once())->method('markFailed')
+      ->with($job, '401 for key [redacted]', 'unauthorized')->willReturn(TRUE);
+    $manager = $this->createMock(AiTaskManagerInterface::class);
+    $manager->method('getByKind')->willReturn($this->task);
+    $executor = new ImageJobExecutor($manager, $this->lifecycle, new ProviderErrorMapper(),
+      $this->createMock(QueueFactory::class), $this->events, $this->runs, $this->usage, $this->logger, $credentials);
+    $executor->run(['jobUuid' => self::JOB]);
+
+    $this->assertSame('401 for key [redacted]', $this->published[0][1]['statusReason']);
   }
 
   public function testAJobCancelledWhileQueuedIsDropped(): void {
@@ -319,6 +368,8 @@ final class ImageJobExecutorTest extends TestCase {
       $this->assertSame(ImageJobRuns::STATE_FINISHED, $this->runs->row($uuid)['state'], $uuid);
     }
     $this->assertSame(ImageJobRuns::STATE_RUNNING, $this->runs->row('job-live')['state']);
+    // Closed jobs drop their customer key; the re-queued one keeps it for the rerun.
+    $this->assertSame(['job-finished', 'job-gone', 'job-in-flight'], $this->deletedCredentials);
     $this->assertSame(0, $this->executor->recoverExpired(), 'a second pass finds nothing');
   }
 

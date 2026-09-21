@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\Exception\JobAlreadyTerminalException;
@@ -36,6 +37,8 @@ final class JobLifecycleServiceTest extends TestCase {
   private array $lockCalls = [];
   private int $created = 0;
   private bool $deleted = FALSE;
+  /** @var list<array<string,mixed>> */
+  private array $createdJobs = [];
 
   protected function setUp(): void {
     parent::setUp();
@@ -49,6 +52,10 @@ final class JobLifecycleServiceTest extends TestCase {
     $storage->method('load')->with(1)->willReturnCallback(fn(): ?NodeInterface => $this->deleted ? NULL : $this->stored);
     $storage->method('create')->willReturnCallback(function (array $values): NodeInterface {
       $this->created++;
+      if ($values['type'] === 'image_job') {
+        $this->createdJobs[] = $values;
+        return $this->jobNode('job-new', ['field_status' => 'queued']);
+      }
       $asset = $this->createMock(NodeInterface::class);
       $asset->method('id')->willReturn(100 + $this->created);
       $asset->method('uuid')->willReturn('asset-' . $this->created);
@@ -70,6 +77,22 @@ final class JobLifecycleServiceTest extends TestCase {
     });
     $this->lifecycle = new JobLifecycleService($manager, $time,
       $this->createMock(EntityRepositoryInterface::class), $this->lock);
+  }
+
+  public function testCreateQueuedNeverStoresConnectionSecrets(): void {
+    $owner = $this->createMock(AccountInterface::class);
+    $owner->method('id')->willReturn(7);
+    // A legacy client that still puts the connection fields into params.
+    $this->lifecycle->createQueued([
+      'jobKind' => 'text_to_image', 'platform' => 'custom', 'model' => 'dall-e-3', 'prompt' => 'a cat',
+      'params' => ['n' => 2, 'model' => 'dall-e-3', 'endpoint' => 'https://api.example/v1', 'api_key' => 'sk-1',
+        'apiKey' => 'sk-1', 'baseURL' => 'https://api.example'],
+    ], $owner);
+
+    $this->assertCount(1, $this->createdJobs);
+    $this->assertSame('{"n":2,"model":"dall-e-3"}', $this->createdJobs[0]['field_params']);
+    $this->assertSame('custom', $this->createdJobs[0]['field_platform']);
+    $this->assertSame(2, $this->createdJobs[0]['field_n_requested']);
   }
 
   public function testTransitionsRunUnderTheJobLockAndSyncTheWorkerCopy(): void {

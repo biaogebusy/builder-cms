@@ -27,7 +27,12 @@ services:
 
   xinshi_ai.provider_resolver:
     class: Drupal\xinshi_ai\Service\ProviderResolver
-    arguments: ['@ai.provider', '@config.factory', '@http_handler_stack']
+    arguments: ['@ai.provider', '@config.factory', '@http_handler_stack', '@xinshi_ai.image_job_credentials']
+
+  # Encrypted, expiring store for the connection secrets of custom-platform jobs (UB2.7).
+  xinshi_ai.image_job_credentials:
+    class: Drupal\xinshi_ai\Service\ImageJobCredentialVault
+    arguments: ['@keyvalue.expirable', '@private_key']
 
   # Usage attempts and delivery facts of image jobs (UB2.4).
   xinshi_ai.image_usage_recorder:
@@ -48,7 +53,7 @@ services:
 
   xinshi_ai.image_job_executor:
     class: Drupal\xinshi_ai\Service\ImageJobExecutor
-    arguments: ['@plugin.manager.xinshi_ai_task', '@xinshi_ai.job_lifecycle', '@xinshi_ai.provider_error_mapper', '@queue', '@xinshi_ai.event_stream', '@xinshi_ai.image_job_runs', '@xinshi_ai.image_usage_recorder', '@logger.channel.xinshi_ai']
+    arguments: ['@plugin.manager.xinshi_ai_task', '@xinshi_ai.job_lifecycle', '@xinshi_ai.provider_error_mapper', '@queue', '@xinshi_ai.event_stream', '@xinshi_ai.image_job_runs', '@xinshi_ai.image_usage_recorder', '@logger.channel.xinshi_ai', '@xinshi_ai.image_job_credentials']
 
   xinshi_ai.media_upload:
     class: Drupal\xinshi_ai\Service\MediaUploadService

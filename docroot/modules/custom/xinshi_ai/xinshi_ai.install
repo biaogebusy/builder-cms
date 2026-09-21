@@ -103,6 +103,84 @@ function xinshi_ai_update_10003(): void {
 }
 
 /**
+ * Remove custom-platform endpoints and API keys stored in image_job params (UB2.7).
+ */
+function xinshi_ai_update_10004(array &$sandbox): string {
+  $database = \Drupal::database();
+  if (!isset($sandbox['tables'])) {
+    $sandbox['tables'] = array_values(array_filter(['node__field_params', 'node_revision__field_params'],
+      fn(string $table): bool => $database->schema()->tableExists($table)));
+    $sandbox['last_revision'] = 0;
+    $sandbox['updated'] = 0;
+  }
+  while ($sandbox['tables'] !== []) {
+    $result = xinshi_ai_scrub_credentials_batch($database, $sandbox['tables'][0], (int) $sandbox['last_revision'], 200);
+    $sandbox['updated'] += $result['updated'];
+    $sandbox['last_revision'] = $result['last_revision'];
+    if (!$result['done']) {
+      $sandbox['#finished'] = 0.5;
+      return sprintf('Scrubbing %s; %d rows cleaned so far.', $sandbox['tables'][0], $sandbox['updated']);
+    }
+    array_shift($sandbox['tables']);
+    $sandbox['last_revision'] = 0;
+  }
+  $sandbox['#finished'] = 1;
+  return sprintf('Removed stored credentials from %d image_job params rows.', $sandbox['updated']);
+}
+
+/**
+ * Strips connection secrets from one batch of image_job params rows.
+ *
+ * Works on the field data and field revision tables alike, walking them by
+ * revision_id so a run interrupted half-way resumes where it stopped. Kept
+ * separate from the update hook so it can be exercised against a real
+ * database in unit tests.
+ *
+ * @return array{last_revision: int, updated: int, done: bool}
+ */
+function xinshi_ai_scrub_credentials_batch(Connection $database, string $table, int $lastRevision, int $limit): array {
+  $secretKeys = ['endpoint', 'api_key', 'apiKey', 'baseURL'];
+  $revisions = $database->select($table, 'p')
+    ->fields('p', ['revision_id'])
+    ->condition('p.bundle', 'image_job')
+    ->condition('p.revision_id', $lastRevision, '>')
+    ->orderBy('p.revision_id')
+    ->distinct()
+    ->range(0, max(1, $limit))
+    ->execute()
+    ->fetchCol();
+  if ($revisions === []) {
+    return ['last_revision' => $lastRevision, 'updated' => 0, 'done' => TRUE];
+  }
+  $updated = 0;
+  $rows = $database->select($table, 'p')
+    ->fields('p', ['entity_id', 'revision_id', 'deleted', 'delta', 'langcode', 'field_params_value'])
+    ->condition('p.bundle', 'image_job')
+    ->condition('p.revision_id', array_map('intval', $revisions), 'IN')
+    ->execute()
+    ->fetchAll(\PDO::FETCH_ASSOC);
+  foreach ($rows as $row) {
+    $params = json_decode((string) $row['field_params_value'], TRUE);
+    if (!is_array($params) || array_intersect_key($params, array_flip($secretKeys)) === []) {
+      continue;
+    }
+    foreach ($secretKeys as $key) {
+      unset($params[$key]);
+    }
+    $database->update($table)
+      ->fields(['field_params_value' => json_encode($params, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)])
+      ->condition('entity_id', (int) $row['entity_id'])
+      ->condition('revision_id', (int) $row['revision_id'])
+      ->condition('deleted', (int) $row['deleted'])
+      ->condition('delta', (int) $row['delta'])
+      ->condition('langcode', (string) $row['langcode'])
+      ->execute();
+    $updated++;
+  }
+  return ['last_revision' => (int) max($revisions), 'updated' => $updated, 'done' => count($revisions) < max(1, $limit)];
+}
+
+/**
  * Brings an installed site up to the current hook_schema(); safe to run repeatedly.
  *
  * Kept separate from the update hook so the upgrade path can be exercised

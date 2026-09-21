@@ -47,7 +47,12 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
    */
   public function createQueued(array $input, AccountInterface $owner): NodeInterface {
     $prompt = (string) ($input['prompt'] ?? '');
-    $params = $input['params'] ?? [];
+    $params = is_array($input['params'] ?? NULL) ? $input['params'] : [];
+    // Connection secrets of custom-platform jobs live in the credential vault
+    // (UB2.7); the entity, its revisions and every read path stay without them.
+    foreach (ImageJobCredentialVault::SECRET_PARAM_KEYS as $key) {
+      unset($params[$key]);
+    }
     $nRequested = (int) ($input['nRequested'] ?? ($params['n'] ?? 4));
 
     $values = [

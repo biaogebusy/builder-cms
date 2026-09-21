@@ -10,6 +10,8 @@
 
 declare(strict_types=1);
 
+use Drupal\node\NodeInterface;
+
 /**
  * Implements hook_cron().
  *
@@ -20,4 +22,18 @@ declare(strict_types=1);
  */
 function xinshi_ai_cron(): void {
   \Drupal::service('xinshi_ai.image_job_executor')->recoverExpired();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for node entities.
+ *
+ * Deleting an image job removes the customer key stored for it (UB2.7). The
+ * usage facts of the job live in xinshi_ai_usage, keyed by UUID without a
+ * foreign key, and are deliberately left alone: deleting content never
+ * deletes what was consumed or billed.
+ */
+function xinshi_ai_node_delete(NodeInterface $node): void {
+  if ($node->bundle() === 'image_job') {
+    \Drupal::service('xinshi_ai.image_job_credentials')->delete($node->uuid());
+  }
 }
