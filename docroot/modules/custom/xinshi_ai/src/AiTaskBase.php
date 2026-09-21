@@ -9,10 +9,12 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\Service\EventStreamServiceInterface;
+use Drupal\xinshi_ai\Service\ImageUsageRecorder;
 use Drupal\xinshi_ai\Service\JobLifecycleServiceInterface;
 use Drupal\xinshi_ai\Service\MediaUploadServiceInterface;
 use Drupal\xinshi_ai\Service\ModelRegistryServiceInterface;
 use Drupal\xinshi_ai\Service\ProviderErrorMapper;
+use Drupal\xinshi_ai\Service\ProviderRequestTrace;
 use Drupal\xinshi_ai\Service\ProviderResolver;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,6 +33,7 @@ abstract class AiTaskBase extends PluginBase implements AiTaskInterface, Contain
   protected EventStreamServiceInterface $eventStream;
   protected ModelRegistryServiceInterface $registry;
   protected ProviderErrorMapper $errorMapper;
+  protected ImageUsageRecorder $usageRecorder;
   protected LoggerInterface $logger;
 
   /**
@@ -44,6 +47,7 @@ abstract class AiTaskBase extends PluginBase implements AiTaskInterface, Contain
     $instance->eventStream = $container->get('xinshi_ai.event_stream');
     $instance->registry = $container->get('xinshi_ai.model_registry');
     $instance->errorMapper = $container->get('xinshi_ai.provider_error_mapper');
+    $instance->usageRecorder = $container->get('xinshi_ai.image_usage_recorder');
     $instance->logger = $container->get('logger.channel.xinshi_ai');
     return $instance;
   }
@@ -74,14 +78,19 @@ abstract class AiTaskBase extends PluginBase implements AiTaskInterface, Contain
    *
    * @param array $genConfig
    *   生成参数(n / size / response_format / user 等),不含 endpoint/api_key。
+   * @param string $operationType
+   *   drupal/ai 操作类型。
+   * @param \Drupal\xinshi_ai\Service\ProviderRequestTrace|null $trace
+   *   Optional transport trace for metering the provider request.
    *
    * @return object
    *   ProviderProxy(行为等同 AiProviderInterface)。
    *
    * @throws \Drupal\xinshi_ai\Exception\ProviderUnavailableException
    */
-  protected function getProvider(NodeInterface $job, array $genConfig, string $operationType): object {
-    return $this->providerResolver->resolve($job, $genConfig, $operationType);
+  protected function getProvider(NodeInterface $job, array $genConfig, string $operationType,
+    ?ProviderRequestTrace $trace = NULL): object {
+    return $this->providerResolver->resolve($job, $genConfig, $operationType, $trace);
   }
 
   /**

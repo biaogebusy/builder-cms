@@ -26,3 +26,8 @@ services:
   xinshi_ai_usage.projection:
     class: Drupal\xinshi_ai_usage\Service\UsageProjectionService
     arguments: ['@database', '@xinshi_ai_usage.cost_rating', '@lock', '@datetime.time', '@logger.channel.xinshi_ai_usage']
+
+  # Usage facts for model calls this installation makes itself (image jobs, UB2.4).
+  xinshi_ai_usage.local_producer:
+    class: Drupal\xinshi_ai_usage\Service\LocalUsageProducer
+    arguments: ['@database', '@xinshi_ai_usage.ingest', '@xinshi_ai_usage.producer_vault', '@settings', '@datetime.time', '@uuid', '@logger.channel.xinshi_ai_usage']

@@ -7,6 +7,7 @@ namespace Drupal\xinshi_ai;
 use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\Exception\TaskExecutionException;
+use Drupal\xinshi_ai\Service\ProviderRequestTrace;
 
 /**
  * 图片类任务基类(文生图 / 图生图共享同一条落地管线)。
@@ -37,19 +38,36 @@ abstract class AiImageTaskBase extends AiTaskBase {
     $this->eventStream->publish($uuid, 'status', ['status' => 'running']);
 
     $prompt = (string) $job->get('field_prompt')->value;
+    $trace = new ProviderRequestTrace();
+    $attempt = NULL;
 
     try {
-      $provider = $this->getProvider($job, $genConfig, $operationType);
+      // The usage intent is durable before any provider I/O (UB2.4). In enforce
+      // mode a failed write ends the job here, before anything can be charged.
+      $attempt = $this->usageRecorder->begin([
+        'operation_id' => $uuid,
+        'kind' => (string) $job->get('field_job_kind')->value,
+        'platform' => (string) $job->get('field_platform')->value,
+        'model' => $this->effectiveModel($job),
+        'actor_user_id' => (string) $job->getOwnerId(),
+        'task_id' => $job->get('field_task_id')->value,
+      ]);
+      $provider = $this->getProvider($job, $genConfig, $operationType, $trace);
       $output = $invoke($provider, $this->effectiveModel($job));
 
       $raw = $output->getRawOutput();
-      $this->captureProviderMeta($job, $raw);
+      // Observed from the raw body before any image is saved or dropped: the
+      // supplier charged for this response even if persistence fails below.
+      $attempt?->succeeded($raw, $trace);
+      $this->captureProviderMeta($job, $raw, $trace->requestId());
 
       /** @var \Drupal\ai\OperationType\GenericType\ImageFile[] $images */
       $images = $output->getNormalized();
       foreach ($images as $i => $image) {
         $media = $this->mediaUpload->fromImageFile($image, (int) $job->getOwnerId(), $prompt);
+        $attempt?->persisted((int) $i, $media->uuid());
         $asset = $this->lifecycle->createAsset($job, $this->imageMeta($raw, (int) $i), $media);
+        $attempt?->committed((int) $i, $asset->uuid());
         $this->eventStream->publish($uuid, 'asset_ready', $this->serializeAsset($asset, $media));
       }
 
@@ -61,6 +79,11 @@ abstract class AiImageTaskBase extends AiTaskBase {
     }
     catch (\Throwable $e) {
       $code = $this->errorMapper->mapToCode($e);
+      // A failure after the provider answered keeps the succeeded observation:
+      // the cost exists whether or not the images were saved.
+      if ($attempt !== NULL && !$attempt->isObserved()) {
+        $attempt->failed($code, $trace);
+      }
       // 不在此 markFailed:重试 vs 终态由 worker 决定。携带归一码抛出。
       throw new TaskExecutionException($e->getMessage(), $code, $e);
     }
@@ -110,13 +133,16 @@ abstract class AiImageTaskBase extends AiTaskBase {
 
   /**
    * 把 provider request id / revised prompt 回填到 job(观测字段)。
+   *
+   * Images API 响应通常没有顶层 id;没有时退回网关响应头里的 request id。
    */
-  protected function captureProviderMeta(NodeInterface $job, mixed $raw): void {
+  protected function captureProviderMeta(NodeInterface $job, mixed $raw, ?string $headerRequestId = NULL): void {
     if (!is_array($raw)) {
       return;
     }
-    if (!empty($raw['id'])) {
-      $job->set('field_provider_request_id', mb_substr((string) $raw['id'], 0, 255));
+    $requestId = !empty($raw['id']) ? (string) $raw['id'] : $headerRequestId;
+    if ($requestId !== NULL && $requestId !== '') {
+      $job->set('field_provider_request_id', mb_substr($requestId, 0, 255));
     }
     $revised = $raw['data'][0]['revised_prompt'] ?? NULL;
     if ($revised) {

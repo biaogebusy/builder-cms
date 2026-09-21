@@ -9,6 +9,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
 use Drupal\Core\Utility\UpdateException;
 use Drupal\xinshi_ai_usage\Service\CostRatingService;
+use Drupal\xinshi_ai_usage\Service\LocalUsageProducer;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\UsageIngestService;
 use Drupal\xinshi_ai_usage\Service\UsageProjectionService;
@@ -146,6 +147,64 @@ final class SchemaUpgradeTest extends TestCase {
     xinshi_ai_usage_apply_schema_updates($this->database);
     $this->assertSame(2, (int) $this->database->select(UsageProjectionService::ROLLUP_TABLE)
       ->countQuery()->execute()->fetchField());
+  }
+
+  public function testUpgradeAddsImageCountsAndTheDeliveryTableAndResetsTheRollup(): void {
+    $schema = $this->database->schema();
+    $definitions = xinshi_ai_usage_schema();
+    // The UB2.1 deployment: projection and rollup with billing_role but without
+    // images_generated, and no delivery table yet.
+    $attempt = $definitions[UsageProjectionService::ATTEMPT_TABLE];
+    unset($attempt['fields']['images_generated']);
+    $rollup = $definitions[UsageProjectionService::ROLLUP_TABLE];
+    unset($rollup['fields']['images_generated']);
+    $schema->createTable(UsageProjectionService::ATTEMPT_TABLE, $attempt);
+    $schema->createTable(UsageProjectionService::ROLLUP_TABLE, $rollup);
+    $schema->createTable(UsageProjectionService::WATERMARK_TABLE, $definitions[UsageProjectionService::WATERMARK_TABLE]);
+    $this->insertEvent('att-1:observed:1', 'att-1', 1);
+    $this->database->update(UsageIngestService::TABLE)->fields(['processed_at' => 5])->execute();
+    $this->database->insert(UsageProjectionService::ROLLUP_TABLE)->fields([
+      'site_id' => 'site-a', 'bucket_start' => 0, 'feature' => 'common', 'stage' => 'common',
+      'payer' => 'platform', 'billing_role' => 'primary', 'provider_account_ref' => 'xinshi',
+      'model_id' => 'model-a', 'actor_user_id' => '-', 'currency' => '-', 'attempt_count' => 1,
+      'projection_version' => 1, 'data_as_of' => 1, 'updated_at' => 1,
+    ])->execute();
+    $this->database->insert(UsageProjectionService::WATERMARK_TABLE)->fields([
+      'site_id' => 'site-a', 'projection' => 'attempt', 'projection_version' => 1,
+      'last_event_id' => 1, 'processed_count' => 1, 'data_as_of' => 1, 'updated_at' => 1,
+    ])->execute();
+
+    xinshi_ai_usage_apply_schema_updates($this->database);
+
+    $this->assertTrue($schema->tableExists(LocalUsageProducer::DELIVERY_TABLE));
+    $this->assertTrue($schema->fieldExists(UsageProjectionService::ATTEMPT_TABLE, 'images_generated'));
+    $this->assertTrue($schema->fieldExists(UsageProjectionService::ROLLUP_TABLE, 'images_generated'));
+    // The rollup is a cache: emptied and the events queued again so every cell
+    // is recomputed with the image column.
+    $this->assertSame(0, (int) $this->database->select(UsageProjectionService::ROLLUP_TABLE)
+      ->countQuery()->execute()->fetchField());
+    $this->assertSame(0, (int) $this->database->select(UsageProjectionService::WATERMARK_TABLE)
+      ->countQuery()->execute()->fetchField());
+    $this->assertNull($this->database->select(UsageIngestService::TABLE, 'e')
+      ->fields('e', ['processed_at'])->execute()->fetchField() ?: NULL);
+
+    // One row per artifact of an attempt: a replayed save is rejected by the key.
+    $delivery = ['site_id' => 'site-a', 'operation_id' => 'job-1', 'attempt_id' => 'att-1', 'output_index' => 0,
+      'artifact_kind' => 'image_asset', 'artifact_ref' => 'asset-0', 'state' => 'committed', 'delivered_at' => 1];
+    $this->database->insert(LocalUsageProducer::DELIVERY_TABLE)->fields($delivery)->execute();
+    try {
+      $this->database->insert(LocalUsageProducer::DELIVERY_TABLE)->fields($delivery)->execute();
+      $this->fail('expected the artifact unique key to reject the row');
+    }
+    catch (IntegrityConstraintViolationException) {
+      $this->addToAssertionCount(1);
+    }
+
+    // Idempotent: a second run keeps the delivery fact and adds nothing.
+    xinshi_ai_usage_apply_schema_updates($this->database);
+    $this->assertSame(1, (int) $this->database->select(LocalUsageProducer::DELIVERY_TABLE)
+      ->countQuery()->execute()->fetchField());
+    $this->assertTrue($schema->fieldExists(UsageProjectionService::ROLLUP_TABLE, 'images_generated'));
   }
 
   private function insertEvent(string $eventId, string $attemptId, int $revision): void {

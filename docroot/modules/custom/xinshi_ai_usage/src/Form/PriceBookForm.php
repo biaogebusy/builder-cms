@@ -12,6 +12,7 @@ use Drupal\xinshi_ai_usage\Contract\UsageEventValidator;
 use Drupal\xinshi_ai_usage\Service\PriceBookException;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
+use Drupal\xinshi_ai_usage\Service\RegisteredSites;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -290,21 +291,9 @@ final class PriceBookForm extends FormBase {
    * @return array{ids:list<string>,registered:bool}
    */
   private function siteIds(): array {
-    $configured = $this->settings->get('xinshi_ai_usage.site_id');
-    if (is_string($configured) && $configured !== '') {
-      return ['ids' => [$configured], 'registered' => TRUE];
-    }
-    $ids = [];
-    $producers = $this->settings->get('xinshi_ai_usage.producers', []);
-    $producers = (is_array($producers) ? $producers : []) + $this->vault->all();
-    foreach ($producers as $producer) {
-      $siteId = is_array($producer) ? ($producer['site_id'] ?? NULL) : NULL;
-      if (is_string($siteId) && $siteId !== '') {
-        $ids[$siteId] = $siteId;
-      }
-    }
+    $ids = RegisteredSites::list($this->settings, $this->vault);
     if ($ids) {
-      return ['ids' => array_values($ids), 'registered' => TRUE];
+      return ['ids' => $ids, 'registered' => TRUE];
     }
     $request = $this->requestStack->getCurrentRequest();
     return ['ids' => [$request?->getHost() ?: 'default'], 'registered' => FALSE];

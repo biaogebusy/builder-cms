@@ -109,6 +109,13 @@ final class UsageEventValidator {
   }
 
   /**
+   * The contract's UTC ISO 8601 form (millisecond precision) of an epoch value.
+   */
+  public static function fromMilliseconds(int $milliseconds): string {
+    return gmdate('Y-m-d\TH:i:s', intdiv($milliseconds, 1000)) . sprintf('.%03dZ', $milliseconds % 1000);
+  }
+
+  /**
    * Deterministic JSON: objects sorted by key, so equal payloads hash equally.
    *
    * Decoded JSON objects become associative arrays; a list keeps its order.

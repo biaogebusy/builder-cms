@@ -37,6 +37,8 @@ final class CostRatingService {
   public const SOURCE_PRICE_BOOK = 'price_book';
   public const SOURCE_SUPPLIER_RECONCILIATION = 'supplier_reconciliation';
   public const MILLION = 1_000_000;
+  /** Normalizer versions of image attempts; see ImageUsageNormalizer::VERSION. */
+  public const IMAGE_NORMALIZER_PREFIX = 'images-';
 
   public function __construct(
     private readonly Connection $database,
@@ -149,6 +151,13 @@ final class CostRatingService {
       };
       return ['valuation_state' => self::STATE_UNPRICED, 'price_version_id' => $version['id'],
         'currency' => $currency, 'unpriced_reason' => $reason] + $unpriced;
+    }
+    // Image attempts are billed per image, size and quality by the supplier; the
+    // chat token book cannot price them. They stay unpriced with their own
+    // reason until an image price book exists, never rated as free.
+    if (str_starts_with((string) ($usage['normalizer_version'] ?? ''), self::IMAGE_NORMALIZER_PREFIX)) {
+      return ['valuation_state' => self::STATE_UNPRICED, 'price_version_id' => $version['id'],
+        'currency' => $currency, 'unpriced_reason' => 'image_rate_pending'] + $unpriced;
     }
     $accountRef = (string) ($provider['account_ref'] ?? '');
     $modelId = (string) ($provider['resolved_model'] ?? '');

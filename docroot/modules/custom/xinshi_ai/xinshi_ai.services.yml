@@ -27,7 +27,12 @@ services:
 
   xinshi_ai.provider_resolver:
     class: Drupal\xinshi_ai\Service\ProviderResolver
-    arguments: ['@ai.provider', '@config.factory']
+    arguments: ['@ai.provider', '@config.factory', '@http_handler_stack']
+
+  # Usage attempts and delivery facts of image jobs (UB2.4).
+  xinshi_ai.image_usage_recorder:
+    class: Drupal\xinshi_ai\Service\ImageUsageRecorder
+    arguments: ['@xinshi_ai_usage.local_producer', '@logger.channel.xinshi_ai']
 
   xinshi_ai.provider_error_mapper:
     class: Drupal\xinshi_ai\Service\ProviderErrorMapper

@@ -19,3 +19,4 @@ dependencies:
   - drupal:xinshi_views
   - ai:ai
   - ai_provider_openai:ai_provider_openai
+  - xinshi_ai_usage:xinshi_ai_usage

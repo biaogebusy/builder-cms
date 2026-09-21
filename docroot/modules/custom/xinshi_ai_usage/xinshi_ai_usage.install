@@ -161,6 +161,8 @@ function xinshi_ai_usage_schema(): array {
       'input_tokens_cache_write' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'output_tokens_total' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'output_tokens_reasoning' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'images_generated' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE,
+        'description' => 'Images the upstream returned for an image attempt (UB2.4); NULL for chat attempts.'],
       // Copy of the immutable cost entry for usage_revision, so a rollup cell is
       // a pure function of the projection rows it covers (no join at rollup time).
       'cost_valuation_state' => ['type' => 'varchar_ascii', 'length' => 24, 'not null' => FALSE],
@@ -225,6 +227,8 @@ function xinshi_ai_usage_schema(): array {
       'input_tokens_cache_write' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
       'output_tokens_total' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
       'output_tokens_reasoning' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      'images_generated' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0,
+        'description' => 'Sum of upstream-returned images of the image attempts in this cell (UB2.4).'],
       'cost_rated_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
       'cost_unpriced_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
       'cost_micros' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
@@ -258,7 +262,41 @@ function xinshi_ai_usage_schema(): array {
     'primary key' => ['site_id', 'projection'],
   ];
 
+  $schema['ai_usage_delivery'] = [
+    'description' => 'Append-only delivery facts: one row per persisted or committed artifact of an attempt (UB2.4).',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'operation_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'attempt_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'output_index' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE,
+        'description' => 'Stable index of the artifact in the provider response of the attempt.'],
+      'artifact_kind' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE,
+        'description' => 'media (file persisted) or image_asset (committed, readable by the user).'],
+      'artifact_ref' => ['type' => 'varchar_ascii', 'length' => 191, 'not null' => TRUE,
+        'description' => 'Entity UUID of the artifact.'],
+      'artifact_version' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'state' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE,
+        'description' => 'persisted or committed.'],
+      'delivered_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'artifact' => ['site_id', 'attempt_id', 'output_index', 'artifact_kind'],
+    ],
+    'indexes' => [
+      'operation' => ['site_id', 'operation_id'],
+    ],
+  ];
+
   return $schema;
+}
+
+/**
+ * Add the delivery fact table and images_generated to the projection and rollup (UB2.4), then rebuild rollups.
+ */
+function xinshi_ai_usage_update_10005(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
 }
 
 /**
@@ -310,7 +348,7 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
 
   $costEntryExisted = $schema->tableExists('ai_usage_cost_entry');
   foreach (['ai_price_book_version', 'ai_usage_cost_entry', 'ai_provider_attempt',
-    'ai_usage_rollup_hour', 'ai_usage_watermark'] as $table) {
+    'ai_usage_rollup_hour', 'ai_usage_watermark', 'ai_usage_delivery'] as $table) {
     if (!$schema->tableExists($table)) {
       $schema->createTable($table, $definitions[$table]);
     }
@@ -371,6 +409,21 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
       $definitions['ai_usage_rollup_hour']['fields']['billing_role']);
     $schema->addUniqueKey('ai_usage_rollup_hour', 'cell',
       $definitions['ai_usage_rollup_hour']['unique keys']['cell']);
+  }
+
+  // UB2.4: images_generated is projected per attempt and summed per rollup cell.
+  // Existing cells would keep 0 forever without a recompute, so the rollup is
+  // reset the same way as for billing_role.
+  if (!$schema->fieldExists('ai_provider_attempt', 'images_generated')) {
+    $schema->addField('ai_provider_attempt', 'images_generated',
+      $definitions['ai_provider_attempt']['fields']['images_generated']);
+  }
+  if (!$schema->fieldExists('ai_usage_rollup_hour', 'images_generated')) {
+    $database->delete('ai_usage_rollup_hour')->execute();
+    $database->delete('ai_usage_watermark')->execute();
+    $database->update('ai_usage_event')->fields(['processed_at' => NULL])->execute();
+    $schema->addField('ai_usage_rollup_hour', 'images_generated',
+      $definitions['ai_usage_rollup_hour']['fields']['images_generated']);
   }
 
   if ($schema->indexExists('ai_usage_event', 'attempt_revision')) {

@@ -417,6 +417,7 @@ final class UsageProjectionService {
       'input_tokens_cache_write' => $reported ? self::count($usage['input_tokens_cache_write']) : NULL,
       'output_tokens_total' => $reported ? self::count($usage['output_tokens_total']) : NULL,
       'output_tokens_reasoning' => $reported ? self::count($usage['output_tokens_reasoning']) : NULL,
+      'images_generated' => $reported ? self::count($usage['images_generated']) : NULL,
       'cost_valuation_state' => $cost['valuation_state'] ?? NULL,
       'cost_unpriced_reason' => $cost['unpriced_reason'] ?? NULL,
       'cost_currency' => $cost['currency'] ?? NULL,
@@ -501,7 +502,7 @@ final class UsageProjectionService {
       "$finished AND (a.usage_quality IS NULL OR a.usage_quality <> 'reported')"),
       'usage_missing_count');
     foreach (['input_tokens_total', 'input_tokens_cache_read', 'input_tokens_cache_write',
-      'output_tokens_total', 'output_tokens_reasoning'] as $column) {
+      'output_tokens_total', 'output_tokens_reasoning', 'images_generated'] as $column) {
       $query->addExpression("SUM(COALESCE(a.$column, 0))", $column);
     }
     $query->addExpression(self::countWhere(
@@ -524,8 +525,8 @@ final class UsageProjectionService {
     foreach (['attempt_count', 'open_count', 'succeeded_count', 'failed_count', 'unknown_count',
       'not_sent_count', 'usage_reported_count', 'usage_missing_count', 'input_tokens_total',
       'input_tokens_cache_read', 'input_tokens_cache_write', 'output_tokens_total',
-      'output_tokens_reasoning', 'cost_rated_count', 'cost_unpriced_count', 'cost_micros',
-      'data_as_of'] as $column) {
+      'output_tokens_reasoning', 'images_generated', 'cost_rated_count', 'cost_unpriced_count',
+      'cost_micros', 'data_as_of'] as $column) {
       $values[$column] = (int) $sums[$column];
     }
     $values['projection_version'] = self::PROJECTION_VERSION;

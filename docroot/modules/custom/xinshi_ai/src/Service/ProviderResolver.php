@@ -8,6 +8,7 @@ use Drupal\ai\AiProviderPluginManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\Exception\ProviderUnavailableException;
+use GuzzleHttp\HandlerStack;
 
 /**
  * 按 job 的 field_platform 解析出已配置好的 drupal/ai Provider。
@@ -29,6 +30,7 @@ final class ProviderResolver {
   public function __construct(
     private readonly AiProviderPluginManager $aiProviderManager,
     private readonly ConfigFactoryInterface $configFactory,
+    private readonly HandlerStack $handlerStack,
   ) {}
 
   /**
@@ -38,21 +40,33 @@ final class ProviderResolver {
    *   生成参数(n / size / response_format / user 等);**不含** endpoint/api_key。
    * @param string $operationType
    *   drupal/ai operation type,如 'text_to_image',用于 isUsable 能力校验。
+   * @param \Drupal\xinshi_ai\Service\ProviderRequestTrace|null $trace
+   *   Records dispatch and response facts of the image request for metering.
    *
    * @return object
    *   drupal/ai 的 ProviderProxy(行为等同 AiProviderInterface)。
    *
    * @throws \Drupal\xinshi_ai\Exception\ProviderUnavailableException
    */
-  public function resolve(NodeInterface $job, array $genConfig, string $operationType): object {
+  public function resolve(NodeInterface $job, array $genConfig, string $operationType,
+    ?ProviderRequestTrace $trace = NULL): object {
     $platform = (string) $job->get('field_platform')->value;
     $providerId = self::PLATFORM_TO_PROVIDER[$platform] ?? $platform;
     // 超时必须在 createInstance 阶段注入:Provider 的 Guzzle client 在构造时就锁定
     // timeout,之后的 setConfiguration() 改不到它。缺省取 ai 模块的 request_timeout
     // 行为(60s)远低于上游生图耗时,故用本模块的 gateway.request_timeout 覆盖。
     $timeout = (int) ($this->configFactory->get('xinshi_ai.settings')->get('gateway.request_timeout') ?: self::DEFAULT_TIMEOUT);
+    $clientOptions = ['timeout' => $timeout];
+    if ($trace !== NULL) {
+      // The site's handler stack (with any contrib middleware) plus the trace,
+      // innermost so it sees the raw response before http_errors turns it into
+      // an exception.
+      $stack = clone $this->handlerStack;
+      $stack->push($trace->middleware(), ProviderRequestTrace::MIDDLEWARE);
+      $clientOptions['handler'] = $stack;
+    }
     $provider = $this->aiProviderManager->createInstance($providerId, [
-      'http_client_options' => ['timeout' => $timeout],
+      'http_client_options' => $clientOptions,
     ]);
 
     $config = $genConfig;
