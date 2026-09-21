@@ -205,6 +205,54 @@ final class LocalUsageProducerTest extends TestCase {
     $this->assertSame('unknown', $this->attempt($open['attempt_id'])['dispatch_state']);
   }
 
+  public function testAnIntentWithEvidenceThatNothingLeftBecomesNotSent(): void {
+    $open = $this->producer->prepare($this->intent());
+
+    // The execution lease of the dead worker (UB2.5) showed no dispatch mark.
+    $this->assertSame([$open['attempt_id']], $this->producer->interruptOpenAttempts('job-1', 'not_sent'));
+
+    $event = $this->event($open['attempt_id'], 'attempt.observed', 1);
+    $this->assertSame('not_sent', $event['outcome']);
+    $this->assertSame('not_sent', $event['dispatch_state']);
+    $this->assertSame(LocalUsageProducer::INTERRUPTED, $event['error_code']);
+    $this->projection->process(self::SITE);
+    $attempt = $this->attempt($open['attempt_id']);
+    $this->assertSame('not_sent', $attempt['state']);
+    $this->assertSame('not_sent', $attempt['dispatch_state']);
+    // Nothing was sent, so nothing is rated.
+    $this->assertNull($attempt['cost_valuation_state']);
+
+    // A response mark on the lease: the request was answered, only the usage is lost.
+    $answered = $this->producer->prepare($this->intent(['operation_id' => 'job-2']));
+    $this->assertSame([$answered['attempt_id']], $this->producer->interruptOpenAttempts('job-2', 'sent'));
+    $event = $this->event($answered['attempt_id'], 'attempt.observed', 1);
+    $this->assertSame('unknown', $event['outcome']);
+    $this->assertSame('sent', $event['dispatch_state']);
+
+    try {
+      $this->producer->interruptOpenAttempts('job-3', 'aborted');
+      $this->fail('expected LocalUsageException');
+    }
+    catch (LocalUsageException $e) {
+      $this->assertSame('invalid_field', $e->usageCode);
+    }
+  }
+
+  public function testPreparedAndLatestObservationAreScopedToLocalAttempts(): void {
+    $id = $this->producer->prepare($this->intent())['attempt_id'];
+    $this->assertSame('attempt.prepared', $this->producer->prepared($id)['event_type']);
+    $this->assertNull($this->producer->latestObservation($id));
+    $this->producer->observe($id, ['outcome' => 'unknown', 'dispatch_state' => 'unknown', 'usage' => NULL,
+      'error_code' => 'timeout']);
+    $this->producer->observe($id, ['outcome' => 'succeeded', 'dispatch_state' => 'sent', 'usage' => NULL,
+      'error_code' => NULL]);
+    $latest = $this->producer->latestObservation($id);
+    $this->assertSame(2, $latest['observation_revision']);
+    $this->assertSame('succeeded', $latest['outcome']);
+    $this->assertNull($this->producer->prepared('att_node'));
+    $this->assertNull($this->producer->latestObservation('att_node'));
+  }
+
   public function testDeliveryFactsAreAppendOnlyAndReplaySafe(): void {
     $id = $this->producer->prepare($this->intent())['attempt_id'];
     $this->producer->recordDelivery(self::SITE, 'job-1', $id, 0, 'media', 'media-0', NULL,

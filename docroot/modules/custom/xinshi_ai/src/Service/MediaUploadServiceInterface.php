@@ -21,7 +21,9 @@ interface MediaUploadServiceInterface {
    *   归属用户。
    * @param string $alt
    *   可选 alt 文本。
+   * @param bool $published
+   *   FALSE 时 media 以未发布状态保存:任务结束后迟到的图片留作核验证据,不对用户开放。
    */
-  public function fromImageFile(ImageFile $image, int $uid, string $alt = ''): MediaInterface;
+  public function fromImageFile(ImageFile $image, int $uid, string $alt = '', bool $published = TRUE): MediaInterface;
 
 }

@@ -2,10 +2,47 @@
 
 /**
  * @file
- * Install / uninstall hooks for Xinshi AI.
+ * Install / update hooks and schema for Xinshi AI.
  */
 
 declare(strict_types=1);
+
+use Drupal\Core\Database\Connection;
+
+/**
+ * Implements hook_schema().
+ */
+function xinshi_ai_schema(): array {
+  $schema['xinshi_ai_image_job_run'] = [
+    'description' => 'Execution lease of one image job: at most one worker runs a job at a time (UB2.5).',
+    'fields' => [
+      'job_uuid' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'run_token' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE,
+        'description' => 'Identifies the worker run holding the lease; renewals and releases must present it.'],
+      'queue_attempt' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0,
+        'description' => 'Retry counter of the queue item that started this run.'],
+      'worker' => ['type' => 'varchar', 'length' => 191, 'not null' => FALSE,
+        'description' => 'host:pid of the holder, for diagnostics only.'],
+      'usage_attempt_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE,
+        'description' => 'The metering attempt opened by this run, when usage recording is available.'],
+      'state' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE,
+        'description' => 'running or finished.'],
+      'claimed_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      'lease_until' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE,
+        'description' => 'Milliseconds; a running row past this instant belongs to a dead worker.'],
+      'dispatched_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE,
+        'description' => 'The image request left the process; NULL means the provider was never called.'],
+      'responded_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE,
+        'description' => 'The provider answered; the supplier cost exists from here on.'],
+      'finished_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+    ],
+    'primary key' => ['job_uuid'],
+    'indexes' => [
+      'expired' => ['state', 'lease_until'],
+    ],
+  ];
+  return $schema;
+}
 
 /**
  * Implements hook_install().
@@ -55,5 +92,27 @@ function xinshi_ai_update_10002(): void {
   $defaults = array_filter($seed, static fn(string $id): bool => isset($existing[$id]));
   if ($defaults !== []) {
     $config->set('defaults', $defaults)->save();
+  }
+}
+
+/**
+ * Add the image job execution lease table (UB2.5).
+ */
+function xinshi_ai_update_10003(): void {
+  xinshi_ai_apply_schema_updates(\Drupal::database());
+}
+
+/**
+ * Brings an installed site up to the current hook_schema(); safe to run repeatedly.
+ *
+ * Kept separate from the update hook so the upgrade path can be exercised
+ * against a real database in unit tests without a bootstrapped container.
+ */
+function xinshi_ai_apply_schema_updates(Connection $database): void {
+  $schema = $database->schema();
+  foreach (xinshi_ai_schema() as $table => $definition) {
+    if (!$schema->tableExists($table)) {
+      $schema->createTable($table, $definition);
+    }
   }
 }

@@ -16,6 +16,13 @@ use Psr\Http\Message\ResponseInterface;
  * dispatched at all, the HTTP status of a response that came back, and the
  * gateway request id header. Only `/images/` endpoints count; a moderation
  * call before the image request is not the metered request.
+ *
+ * Two optional hooks serve the execution lease (UB2.5): `onDispatch` runs
+ * right before the image request is handed to the transport, so a dead
+ * worker's lease row tells whether the request may have reached the
+ * supplier; `onProgress` is installed as the Guzzle `progress` option and
+ * runs while the transfer is under way, so the worker can renew its lease
+ * during a provider call that outlasts the queue lease.
  */
 final class ProviderRequestTrace {
 
@@ -25,6 +32,13 @@ final class ProviderRequestTrace {
   private bool $dispatched = FALSE;
   private ?int $statusCode = NULL;
   private ?string $requestId = NULL;
+  private ?\Closure $onDispatch;
+  private ?\Closure $onProgress;
+
+  public function __construct(?callable $onDispatch = NULL, ?callable $onProgress = NULL) {
+    $this->onDispatch = $onDispatch === NULL ? NULL : $onDispatch(...);
+    $this->onProgress = $onProgress === NULL ? NULL : $onProgress(...);
+  }
 
   /**
    * The middleware to push onto a Guzzle handler stack.
@@ -36,6 +50,19 @@ final class ProviderRequestTrace {
           return $handler($request, $options);
         }
         $this->dispatched = TRUE;
+        if ($this->onDispatch !== NULL) {
+          ($this->onDispatch)();
+        }
+        if ($this->onProgress !== NULL) {
+          $heartbeat = $this->onProgress;
+          $existing = $options['progress'] ?? NULL;
+          $options['progress'] = static function (...$args) use ($heartbeat, $existing): void {
+            $heartbeat();
+            if ($existing !== NULL) {
+              $existing(...$args);
+            }
+          };
+        }
         return $handler($request, $options)->then(function (ResponseInterface $response): ResponseInterface {
           $this->statusCode = $response->getStatusCode();
           $header = trim($response->getHeaderLine(self::REQUEST_ID_HEADER));

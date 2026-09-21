@@ -9,3 +9,15 @@
  */
 
 declare(strict_types=1);
+
+/**
+ * Implements hook_cron().
+ *
+ * Image jobs whose worker died keep a running lease row past its expiry. A
+ * queue item redelivered while that lease still looks live is dropped, so the
+ * queue alone would leave such a job running forever. Cron closes them from
+ * the recorded evidence, never by calling the model again (UB2.5).
+ */
+function xinshi_ai_cron(): void {
+  \Drupal::service('xinshi_ai.image_job_executor')->recoverExpired();
+}

@@ -79,6 +79,85 @@ final class ProviderRequestTraceTest extends TestCase {
     $this->assertNull($trace->requestId());
   }
 
+  public function testTheDispatchHookRunsBeforeTheImageRequestIsSent(): void {
+    $order = [];
+    $trace = new ProviderRequestTrace(function () use (&$order): void {
+      $order[] = 'dispatch';
+    });
+    $handler = new MockHandler([
+      function () use (&$order): Response {
+        $order[] = 'transport';
+        return new Response(200, [], '{}');
+      },
+      function () use (&$order): Response {
+        $order[] = 'transport';
+        return new Response(200, [], '{}');
+      },
+    ]);
+    $stack = HandlerStack::create($handler);
+    $stack->push($trace->middleware(), ProviderRequestTrace::MIDDLEWARE);
+    $client = new Client(['handler' => $stack]);
+
+    // The moderation call is not an image request: no dispatch mark.
+    $client->post('https://gateway.example/v1/moderations');
+    $client->post('https://gateway.example/v1/images/generations');
+
+    $this->assertSame(['transport', 'dispatch', 'transport'], $order);
+  }
+
+  public function testTheProgressHookIsInstalledOnImageRequestsOnly(): void {
+    $beats = 0;
+    $trace = new ProviderRequestTrace(NULL, function () use (&$beats): void {
+      $beats++;
+    });
+    $handler = new MockHandler([
+      function (Request $request, array $options): Response {
+        // The mock transport does not report progress; drive the option the
+        // way curl would during a long transfer.
+        if (isset($options['progress'])) {
+          $options['progress'](0, 0, 0, 0);
+          $options['progress'](10, 5, 0, 0);
+        }
+        return new Response(200, [], '{}');
+      },
+      function (Request $request, array $options): Response {
+        $this->assertArrayNotHasKey('progress', $options, 'a moderation request gets no heartbeat');
+        return new Response(200, [], '{}');
+      },
+    ]);
+    $stack = HandlerStack::create($handler);
+    $stack->push($trace->middleware(), ProviderRequestTrace::MIDDLEWARE);
+    $client = new Client(['handler' => $stack]);
+
+    $client->post('https://gateway.example/v1/images/generations');
+    $this->assertSame(2, $beats);
+    $client->post('https://gateway.example/v1/moderations');
+    $this->assertSame(2, $beats);
+  }
+
+  public function testAnExistingProgressOptionStillRuns(): void {
+    $beats = 0;
+    $existing = 0;
+    $trace = new ProviderRequestTrace(NULL, function () use (&$beats): void {
+      $beats++;
+    });
+    $handler = new MockHandler([
+      function (Request $request, array $options): Response {
+        $options['progress'](1, 1, 0, 0);
+        return new Response(200, [], '{}');
+      },
+    ]);
+    $stack = HandlerStack::create($handler);
+    $stack->push($trace->middleware(), ProviderRequestTrace::MIDDLEWARE);
+    (new Client(['handler' => $stack]))->post('https://gateway.example/v1/images/generations', [
+      'progress' => function () use (&$existing): void {
+        $existing++;
+      },
+    ]);
+    $this->assertSame(1, $beats);
+    $this->assertSame(1, $existing);
+  }
+
   /**
    * Builds the stack the way ProviderResolver does: default middleware, trace innermost.
    */

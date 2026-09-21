@@ -13,7 +13,7 @@ use Drupal\xinshi_ai\Exception\TaskNotFoundException;
 /**
  * AI 任务插件管理器(发现 Plugin/AiTask 下的 #[AiTask] 类)。
  */
-final class AiTaskManager extends DefaultPluginManager {
+final class AiTaskManager extends DefaultPluginManager implements AiTaskManagerInterface {
 
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache, ModuleHandlerInterface $moduleHandler) {
     parent::__construct(
@@ -28,9 +28,7 @@ final class AiTaskManager extends DefaultPluginManager {
   }
 
   /**
-   * 按 field_job_kind 取任务实例。
-   *
-   * @throws \Drupal\xinshi_ai\Exception\TaskNotFoundException
+   * {@inheritdoc}
    */
   public function getByKind(string $kind): AiTaskInterface {
     foreach ($this->getDefinitions() as $id => $def) {

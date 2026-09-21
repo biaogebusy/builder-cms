@@ -39,7 +39,16 @@ services:
 
   xinshi_ai.job_lifecycle:
     class: Drupal\xinshi_ai\Service\JobLifecycleService
-    arguments: ['@entity_type.manager', '@datetime.time', '@entity.repository']
+    arguments: ['@entity_type.manager', '@datetime.time', '@entity.repository', '@lock']
+
+  # Execution leases and queue decisions of image jobs (UB2.5).
+  xinshi_ai.image_job_runs:
+    class: Drupal\xinshi_ai\Service\ImageJobRuns
+    arguments: ['@database', '@datetime.time', '@uuid']
+
+  xinshi_ai.image_job_executor:
+    class: Drupal\xinshi_ai\Service\ImageJobExecutor
+    arguments: ['@plugin.manager.xinshi_ai_task', '@xinshi_ai.job_lifecycle', '@xinshi_ai.provider_error_mapper', '@queue', '@xinshi_ai.event_stream', '@xinshi_ai.image_job_runs', '@xinshi_ai.image_usage_recorder', '@logger.channel.xinshi_ai']
 
   xinshi_ai.media_upload:
     class: Drupal\xinshi_ai\Service\MediaUploadService

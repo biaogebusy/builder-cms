@@ -10,6 +10,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\AiImageTaskBase;
 use Drupal\xinshi_ai\Attribute\AiTask;
+use Drupal\xinshi_ai\Service\ImageJobRun;
 
 /**
  * 图生图 / 图片编辑任务:image(+prompt) → image,经 Provider 调网关 /v1/images/edits。
@@ -41,7 +42,7 @@ final class ImageEditTask extends AiImageTaskBase {
   /**
    * {@inheritdoc}
    */
-  public function execute(NodeInterface $job): void {
+  public function execute(NodeInterface $job, ?ImageJobRun $run = NULL): void {
     $genConfig = $this->buildGenConfig($job, ['size', 'response_format', 'quality', 'output_format']);
     $prompt = (string) $job->get('field_prompt')->value;
     $imageInput = $this->buildImageInput($job, $prompt);
@@ -51,6 +52,7 @@ final class ImageEditTask extends AiImageTaskBase {
       $genConfig,
       'image_to_image',
       fn (object $provider, string $model) => $provider->imageToImage($imageInput, $model, ['xinshi_ai']),
+      $run,
     );
   }
 

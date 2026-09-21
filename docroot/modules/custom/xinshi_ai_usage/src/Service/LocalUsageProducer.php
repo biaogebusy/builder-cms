@@ -186,21 +186,35 @@ class LocalUsageProducer {
   }
 
   /**
-   * Marks intents of an operation that never got an observation as unknown.
+   * Marks intents of an operation that never got an observation as closed.
    *
-   * Called before a job runs again: a previous worker may have died between
-   * dispatch and observation, and the upstream may have charged for that
-   * request. A late observation from the earlier worker still lands as a
-   * higher revision, so nothing is lost either way.
+   * Called before a job runs again or when a dead worker's job is recovered:
+   * a previous worker may have died between dispatch and observation, and the
+   * upstream may have charged for that request. A late observation from the
+   * earlier worker still lands as a higher revision, so nothing is lost
+   * either way.
+   *
+   * @param string $dispatchState
+   *   What the caller knows about the request of the open intent: `unknown`
+   *   (default) when it is not known whether it left the process; `sent` when
+   *   the provider answered but the outcome was never observed (UB2.5 lease
+   *   row with a response mark); `not_sent` when there is evidence it never
+   *   left (lease row without a dispatch mark). The first two become
+   *   `unknown` attempts that wait for reconciliation; the last becomes
+   *   `not_sent`, no cost is expected and the job may run again.
    *
    * @return list<string>
-   *   The attempt ids that were interrupted.
+   *   The attempt ids that were closed.
    */
-  public function interruptOpenAttempts(string $operationId): array {
+  public function interruptOpenAttempts(string $operationId, string $dispatchState = 'unknown'): array {
     $siteId = $this->siteId();
     if ($siteId === NULL) {
       return [];
     }
+    if (!in_array($dispatchState, ['unknown', 'sent', 'not_sent'], TRUE)) {
+      throw new LocalUsageException('invalid_field', "Unsupported dispatch state $dispatchState");
+    }
+    $notSent = $dispatchState === 'not_sent';
     $observed = $this->database->select(UsageIngestService::TABLE, 'o')
       ->fields('o', ['attempt_id'])
       ->condition('o.site_id', $siteId)
@@ -218,14 +232,42 @@ class LocalUsageProducer {
     $interrupted = [];
     foreach ($query->execute()->fetchCol() as $attemptId) {
       $this->observe((string) $attemptId, [
-        'outcome' => 'unknown',
-        'dispatch_state' => 'unknown',
+        'outcome' => $notSent ? 'not_sent' : 'unknown',
+        'dispatch_state' => $dispatchState,
         'usage' => NULL,
         'error_code' => self::INTERRUPTED,
       ]);
       $interrupted[] = (string) $attemptId;
     }
     return $interrupted;
+  }
+
+  /**
+   * The prepared event of a local attempt, or NULL for attempts of other producers.
+   *
+   * @return array<string,mixed>|null
+   */
+  public function prepared(string $attemptId): ?array {
+    return $this->preparedEvent($attemptId);
+  }
+
+  /**
+   * The highest observation revision of a local attempt, or NULL while it is only prepared.
+   *
+   * @return array<string,mixed>|null
+   */
+  public function latestObservation(string $attemptId): ?array {
+    $json = $this->database->select(UsageIngestService::TABLE, 'e')
+      ->fields('e', ['payload_json'])
+      ->condition('e.producer_id', self::PRODUCER_ID)
+      ->condition('e.attempt_id', $attemptId)
+      ->condition('e.event_type', 'attempt.observed')
+      ->orderBy('e.observation_revision', 'DESC')
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+    $decoded = $json === FALSE ? NULL : json_decode((string) $json, TRUE);
+    return is_array($decoded) ? $decoded : NULL;
   }
 
   /**

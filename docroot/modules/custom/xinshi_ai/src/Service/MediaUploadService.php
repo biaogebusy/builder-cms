@@ -30,7 +30,7 @@ final class MediaUploadService implements MediaUploadServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function fromImageFile(ImageFile $image, int $uid, string $alt = ''): MediaInterface {
+  public function fromImageFile(ImageFile $image, int $uid, string $alt = '', bool $published = TRUE): MediaInterface {
     $dir = 'public://xinshi_ai/' . date('Y-m');
     $this->fileSystem->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
 
@@ -45,6 +45,7 @@ final class MediaUploadService implements MediaUploadServiceInterface {
     $media = $this->mediaStorage()->create([
       'bundle' => self::MEDIA_BUNDLE,
       'uid' => $uid,
+      'status' => $published ? 1 : 0,
       'name' => $file->getFilename(),
       self::SOURCE_FIELD => [
         'target_id' => $file->id(),

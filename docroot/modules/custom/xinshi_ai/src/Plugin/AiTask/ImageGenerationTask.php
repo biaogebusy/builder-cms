@@ -8,6 +8,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\AiImageTaskBase;
 use Drupal\xinshi_ai\Attribute\AiTask;
+use Drupal\xinshi_ai\Service\ImageJobRun;
 
 /**
  * 文生图任务:text → image,经 drupal/ai Provider 调网关,落 media:image。
@@ -36,7 +37,7 @@ final class ImageGenerationTask extends AiImageTaskBase {
   /**
    * {@inheritdoc}
    */
-  public function execute(NodeInterface $job): void {
+  public function execute(NodeInterface $job, ?ImageJobRun $run = NULL): void {
     $genConfig = $this->buildGenConfig($job, ['size', 'response_format', 'quality', 'output_format']);
     $prompt = (string) $job->get('field_prompt')->value;
 
@@ -45,6 +46,7 @@ final class ImageGenerationTask extends AiImageTaskBase {
       $genConfig,
       'text_to_image',
       fn (object $provider, string $model) => $provider->textToImage($prompt, $model, ['xinshi_ai']),
+      $run,
     );
   }
 

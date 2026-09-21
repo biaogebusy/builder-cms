@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
  * before any provider I/O. In `observe` mode a write failure is logged and the
  * job runs unmetered; in `enforce` mode the job fails before the call.
  */
-final class ImageUsageRecorder {
+class ImageUsageRecorder {
 
   public const STAGE = 'image';
   public const LOGICAL_CALL = 'image';
@@ -71,6 +71,31 @@ final class ImageUsageRecorder {
     }
     return new ImageAttempt($this->producer, $this->logger, $prepared['site_id'], $operationId,
       $prepared['attempt_id'], $prepared['attempt_no']);
+  }
+
+  /**
+   * Closes the intents a dead worker left open on a job (UB2.5).
+   *
+   * The lease row of the dead run says how far the request got: `not_sent`
+   * when it never left the process (nothing was charged, the job may run
+   * again), `sent` when the provider answered before the worker died, and
+   * `unknown` in between (the supplier may have charged). The last two wait
+   * for reconciliation. Bookkeeping only, so a failure is logged and never
+   * stops the recovery.
+   *
+   * @return list<string>
+   *   The attempt ids that were closed.
+   */
+  public function abandonOpenAttempts(string $operationId, string $dispatchState): array {
+    try {
+      return $this->producer->interruptOpenAttempts($operationId, $dispatchState);
+    }
+    catch (\Throwable $e) {
+      $this->logger->error('Open usage intents of image job @job could not be closed as @state: @message', [
+        '@job' => $operationId, '@state' => $dispatchState, '@message' => $e->getMessage(),
+      ]);
+      return [];
+    }
   }
 
 }

@@ -31,3 +31,8 @@ services:
   xinshi_ai_usage.local_producer:
     class: Drupal\xinshi_ai_usage\Service\LocalUsageProducer
     arguments: ['@database', '@xinshi_ai_usage.ingest', '@xinshi_ai_usage.producer_vault', '@settings', '@datetime.time', '@uuid', '@logger.channel.xinshi_ai_usage']
+
+  # Operator verdicts on local attempts whose provider outcome is unknown (UB2.5).
+  xinshi_ai_usage.reconcile:
+    class: Drupal\xinshi_ai_usage\Service\AttemptReconcileService
+    arguments: ['@database', '@xinshi_ai_usage.local_producer', '@xinshi_ai_usage.projection', '@logger.channel.xinshi_ai_usage']

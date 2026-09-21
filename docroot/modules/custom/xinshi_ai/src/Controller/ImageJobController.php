@@ -124,7 +124,10 @@ final class ImageJobController extends ControllerBase {
 
     $task = $this->taskManager->getByKind($job->get('field_job_kind')->value);
     $task->cancel($job);
-    return new JsonResponse(['uuid' => $uuid, 'status' => 'cancelled'], 200);
+    // A job that finished while the cancel was on its way keeps its outcome;
+    // the response reports the stored status rather than a cancel that did
+    // not take effect.
+    return new JsonResponse(['uuid' => $uuid, 'status' => $job->get('field_status')->value], 200);
   }
 
 }

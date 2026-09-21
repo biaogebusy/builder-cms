@@ -6,6 +6,7 @@ namespace Drupal\xinshi_ai;
 
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
+use Drupal\xinshi_ai\Service\ImageJobRun;
 
 /**
  * 一类 AI 任务的契约(图片生成 / 图编辑 / 视频 / ...)。
@@ -39,11 +40,17 @@ interface AiTaskInterface {
 
   /**
    * 执行 pipeline(由 QueueWorker 调用,已脱离 HTTP 上下文)。
+   *
+   * @param \Drupal\xinshi_ai\Service\ImageJobRun|null $run
+   *   本次执行持有的租约(UB2.5):传输层用它记录请求已发出并在长调用期间续租。
    */
-  public function execute(NodeInterface $job): void;
+  public function execute(NodeInterface $job, ?ImageJobRun $run = NULL): void;
 
   /**
-   * 软取消(打 cancelled 标记 + 丢弃后续事件;不中断上游)。
+   * 软取消(打 cancelled 标记;不中断上游)。
+   *
+   * 已经结束的任务不会被改回 cancelled;运行中的调用返回后,其结果按任务的存储状态
+   * 处理:迟到的图片只留证据,不成为交付。
    */
   public function cancel(NodeInterface $job): void;
 
