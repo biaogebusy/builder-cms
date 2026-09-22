@@ -84,3 +84,57 @@ xinshi_ai_usage.report.operation:
   requirements:
     _user_is_logged_in: 'TRUE'
     operation: '[A-Za-z0-9_.:-]{1,128}'
+
+# Site-wide admin usage reports (UB3.3). The site is fixed by registration;
+# a `site` query parameter is refused. Quantity endpoints need
+# `view site ai usage`; costs additionally need `view ai supplier costs`.
+# In `_permission` a comma joins with AND and `+` with OR (PermissionAccessCheck).
+xinshi_ai_usage.admin.summary:
+  path: '/api/v3/ai/admin/reports/summary'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::summary'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+
+xinshi_ai_usage.admin.timeseries:
+  path: '/api/v3/ai/admin/reports/timeseries'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::timeseries'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+
+xinshi_ai_usage.admin.breakdown:
+  path: '/api/v3/ai/admin/reports/breakdown/{dimension}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::breakdown'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+    dimension: 'users|features|models|channels|roles'
+
+xinshi_ai_usage.admin.costs:
+  path: '/api/v3/ai/admin/reports/costs/{dimension}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::costs'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage,view ai supplier costs'
+    dimension: 'users|features|models|channels|roles'

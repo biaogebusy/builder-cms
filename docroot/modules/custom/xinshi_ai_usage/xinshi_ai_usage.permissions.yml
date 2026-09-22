@@ -12,3 +12,8 @@ view ai supplier costs:
   title: '查看 AI 采购成本'
   description: '查看按模型和账号统计的采购成本与未定价调用。'
   restrict access: true
+
+view site ai usage:
+  title: '查看 AI 全站用量'
+  description: '查看所有用户的 AI 用量统计，按用户、功能、模型、渠道拆分。'
+  restrict access: true

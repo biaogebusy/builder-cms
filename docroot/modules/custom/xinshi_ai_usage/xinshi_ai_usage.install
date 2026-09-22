@@ -194,6 +194,10 @@ function xinshi_ai_usage_schema(): array {
       'gateway_request' => ['site_id', 'gateway_request_id'],
       'rollup_cell' => ['site_id', 'bucket_start', 'feature', 'stage', 'payer', 'provider_account_ref',
         'model_id', 'billing_role'],
+      // For user reports: site + actor + started_at scans.
+      'actor_started' => ['site_id', 'actor_user_id', 'started_at'],
+      // For admin/site-wide reports: site + started_at scans.
+      'started' => ['site_id', 'started_at'],
     ],
   ];
 
@@ -292,6 +296,13 @@ function xinshi_ai_usage_schema(): array {
   ];
 
   return $schema;
+}
+
+/**
+ * Add started_at indexes on the attempt projection for user and admin reports (UB3.3).
+ */
+function xinshi_ai_usage_update_10007(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
 }
 
 /**
@@ -440,6 +451,18 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
     $database->update('ai_usage_event')->fields(['processed_at' => NULL])->execute();
     $schema->addField('ai_usage_rollup_hour', 'images_generated',
       $definitions['ai_usage_rollup_hour']['fields']['images_generated']);
+  }
+
+  // UB3.3: indexes for user and admin usage report time-window scans.
+  if (!$schema->indexExists('ai_provider_attempt', 'actor_started')) {
+    $schema->addIndex('ai_provider_attempt', 'actor_started',
+      $definitions['ai_provider_attempt']['indexes']['actor_started'],
+      $definitions['ai_provider_attempt']);
+  }
+  if (!$schema->indexExists('ai_provider_attempt', 'started')) {
+    $schema->addIndex('ai_provider_attempt', 'started',
+      $definitions['ai_provider_attempt']['indexes']['started'],
+      $definitions['ai_provider_attempt']);
   }
 
   if ($schema->indexExists('ai_usage_event', 'attempt_revision')) {

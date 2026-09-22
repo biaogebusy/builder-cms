@@ -33,7 +33,7 @@ final class UsageReportService {
   public const MAX_ATTEMPTS = 20_000;
   public const DEFAULT_LIMIT = 50;
   public const MAX_LIMIT = 100;
-  public const GRANULARITIES = ['hour', 'day'];
+  public const GRANULARITIES = ReportTime::GRANULARITIES;
   public const STATUSES = ['running', 'unknown', 'succeeded', 'failed', 'not_sent'];
   private const OPEN = ['prepared', 'in_flight'];
   private const FINISHED = ['succeeded', 'failed', 'unknown'];
@@ -42,6 +42,10 @@ final class UsageReportService {
   private const LABEL = '/^[A-Za-z0-9_.:-]{1,64}\z/';
   private const ISO = '/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?)?(?:Z|[+-]\d{2}:\d{2})?\z/';
   private const IN_CHUNK = 500;
+  /** Allowed billing_role values in admin filters. */
+  public const ROLES = ['primary', 'auxiliary', 'repair'];
+  /** Allowed payer values in admin filters. */
+  public const PAYERS = ['platform', 'customer_key'];
 
   public function __construct(
     private readonly Connection $database,
@@ -124,22 +128,17 @@ final class UsageReportService {
     }
     $rows = $this->attempts($siteId, $actorUserId, $filter);
     $tz = $filter['timezone'];
-    $format = $granularity === 'hour' ? 'Y-m-d\TH:00:00P' : 'Y-m-d\T00:00:00P';
+    $format = ReportTime::bucketFormat($granularity);
     $grouped = [];
     foreach ($rows as $row) {
-      $key = self::at((int) $row['started_at'], $tz)->format($format);
-      $grouped[$key][] = $row;
+      $grouped[ReportTime::at((int) $row['started_at'], $tz)->format($format)][] = $row;
     }
     $buckets = [];
-    $cursor = self::floor(self::at($filter['from'], $tz), $granularity);
-    $end = self::at($filter['to'], $tz);
-    while ($cursor < $end) {
-      $key = $cursor->format($format);
-      $bucketRows = $grouped[$key] ?? [];
-      $buckets[] = ['bucket_start' => $key, 'empty' => $bucketRows === [],
+    foreach (ReportTime::bucketLabels($filter['from'], $filter['to'], $tz, $granularity) as $label) {
+      $bucketRows = $grouped[$label] ?? [];
+      $buckets[] = ['bucket_start' => $label, 'empty' => $bucketRows === [],
         'operations' => count(array_unique(array_column($bucketRows, 'operation_id')))]
         + self::aggregate($bucketRows);
-      $cursor = $cursor->modify($granularity === 'hour' ? '+1 hour' : '+1 day');
     }
     return [
       'filter' => $this->describeFilter($filter) + ['granularity' => $granularity],
@@ -228,7 +227,7 @@ final class UsageReportService {
         'artifact_kind' => $d['artifact_kind'],
         'artifact_ref' => $d['artifact_ref'],
         'state' => $d['state'],
-        'delivered_at' => self::iso((int) $d['delivered_at'], $tz),
+        'delivered_at' => ReportTime::iso((int) $d['delivered_at'], $tz),
       ], $deliveries),
       // No sales price book or ledger exists yet (UB4); nothing was charged.
       'charges' => ['status' => 'not_enabled'],
@@ -366,8 +365,8 @@ final class UsageReportService {
     $updatedAt = $rows === [] ? NULL : max(array_map('intval', array_column($rows, 'occurred_at')));
     return [
       'operation_id' => $id,
-      'created_at' => $startedAt === NULL ? NULL : self::iso($startedAt, $tz),
-      'updated_at' => $updatedAt === NULL ? NULL : self::iso($updatedAt, $tz),
+      'created_at' => $startedAt === NULL ? NULL : ReportTime::iso($startedAt, $tz),
+      'updated_at' => $updatedAt === NULL ? NULL : ReportTime::iso($updatedAt, $tz),
       'feature' => $lead['feature'] ?? NULL,
       'stage' => $lead['stage'] ?? NULL,
       'producer_id' => $lead['producer_id'] ?? NULL,
@@ -398,8 +397,8 @@ final class UsageReportService {
       'tokens' => $reported ? array_map(static fn($value) => $value === NULL ? NULL : (string) $value,
         array_intersect_key($row, array_flip(self::TOKENS))) : NULL,
       'images_generated' => $reported && $row['images_generated'] !== NULL ? (string) $row['images_generated'] : NULL,
-      'started_at' => self::iso((int) $row['started_at'], $tz),
-      'finished_at' => $row['finished_at'] === NULL ? NULL : self::iso((int) $row['finished_at'], $tz),
+      'started_at' => ReportTime::iso((int) $row['started_at'], $tz),
+      'finished_at' => $row['finished_at'] === NULL ? NULL : ReportTime::iso((int) $row['finished_at'], $tz),
     ];
   }
 
@@ -453,7 +452,7 @@ final class UsageReportService {
   private function completeness(string $siteId): array {
     $watermark = $this->projection->watermark($siteId);
     return [
-      'data_as_of' => $watermark === NULL ? NULL : self::iso($watermark['data_as_of'], new \DateTimeZone('UTC')),
+      'data_as_of' => $watermark === NULL ? NULL : ReportTime::iso($watermark['data_as_of'], new \DateTimeZone('UTC')),
       'projection_version' => $watermark['projection_version'] ?? NULL,
       'pending_events' => $this->projection->pendingCount($siteId),
     ];
@@ -461,8 +460,8 @@ final class UsageReportService {
 
   private function describeFilter(array $filter): array {
     return [
-      'from' => self::iso($filter['from'], $filter['timezone']),
-      'to' => self::iso($filter['to'], $filter['timezone']),
+      'from' => ReportTime::iso($filter['from'], $filter['timezone']),
+      'to' => ReportTime::iso($filter['to'], $filter['timezone']),
       'timezone' => $filter['timezone']->getName(),
       'feature' => $filter['feature'],
       'model' => $filter['model'],
@@ -489,19 +488,6 @@ final class UsageReportService {
   private static function text(array $query, string $key): ?string {
     $value = $query[$key] ?? NULL;
     return is_string($value) && trim($value) !== '' ? trim($value) : NULL;
-  }
-
-  private static function at(int $ms, \DateTimeZone $tz): \DateTimeImmutable {
-    return (new \DateTimeImmutable('@' . intdiv($ms, 1000)))->setTimezone($tz)
-      ->modify(sprintf('+%d milliseconds', $ms % 1000));
-  }
-
-  private static function floor(\DateTimeImmutable $time, string $granularity): \DateTimeImmutable {
-    return $granularity === 'hour' ? $time->setTime((int) $time->format('G'), 0) : $time->setTime(0, 0);
-  }
-
-  private static function iso(int $ms, \DateTimeZone $tz): string {
-    return self::at($ms, $tz)->format('Y-m-d\TH:i:s.vP');
   }
 
   private static function encodeCursor(int $createdAt, string $operationId): string {
