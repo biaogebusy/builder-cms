@@ -9,6 +9,7 @@ use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\Exception\JobAlreadyTerminalException;
 use Drupal\xinshi_ai\Exception\TaskExecutionException;
 use Drupal\xinshi_ai\Service\ImageJobRun;
+use Drupal\xinshi_ai\Service\PromptRewriteClient;
 use Drupal\xinshi_ai\Service\ProviderRequestTrace;
 
 /**
@@ -36,7 +37,8 @@ abstract class AiImageTaskBase extends AiTaskBase {
    * @param string $operationType
    *   drupal/ai 操作类型(text_to_image / image_to_image)。
    * @param callable $invoke
-   *   fn(object $provider, string $model): 输出对象(带 getNormalized/getRawOutput)。
+   *   fn(object $provider, string $model, string $prompt): 输出对象(带 getNormalized/getRawOutput)。
+   *   $prompt 是管线最终采用的提示词:文生图任务可能先经对话服务改写(UB2.6)。
    * @param \Drupal\xinshi_ai\Service\ImageJobRun|null $run
    *   本次执行的租约;传输层用它记录请求已发出、续租和供应商应答。
    *
@@ -54,7 +56,15 @@ abstract class AiImageTaskBase extends AiTaskBase {
     }
     $this->eventStream->publish($uuid, 'status', ['status' => 'running']);
 
-    $prompt = (string) $job->get('field_prompt')->value;
+    [$prompt, $rewriteOrdered] = $this->preparePrompt($job);
+    if ($rewriteOrdered && !$this->isOpen($job)) {
+      // A cancel may have landed while the rewrite ran; the image model is not
+      // called for a job that already ended.
+      $this->logger->notice('image_job @job was @status after its prompt was prepared; the provider is not called', [
+        '@job' => $uuid, '@status' => $job->get('field_status')->value,
+      ]);
+      return;
+    }
     $trace = new ProviderRequestTrace(
       $run === NULL ? NULL : $run->dispatched(...),
       $run === NULL ? NULL : $run->heartbeat(...),
@@ -76,7 +86,7 @@ abstract class AiImageTaskBase extends AiTaskBase {
         $run?->usageAttempt($attempt->attemptId);
       }
       $provider = $this->getProvider($job, $genConfig, $operationType, $trace);
-      $output = $invoke($provider, $this->effectiveModel($job));
+      $output = $invoke($provider, $this->effectiveModel($job), $prompt);
 
       // The provider answered: the supplier cost exists whatever happens to
       // the images below, so the lease records it before anything else.
@@ -150,6 +160,42 @@ abstract class AiImageTaskBase extends AiTaskBase {
     if ($this->lifecycle->markCancelled($job)) {
       $this->eventStream->publish($job->uuid(), 'status', ['status' => 'cancelled']);
     }
+  }
+
+  /**
+   * The prompt the provider receives (UB2.6).
+   *
+   * A text-to-image prompt that names live data is first rewritten by the chat
+   * service, ordered by this worker under the job's operation so the auxiliary
+   * call is attributed to it. The result is stored on the job (with the
+   * original in params.originalPrompt) and pushed to the client; that key also
+   * marks the job as rewritten, so a re-run after a recovery, or a job from a
+   * client that still rewrote on its own, never orders the step again. A
+   * failed rewrite keeps the original prompt.
+   *
+   * @return array{0:string,1:bool}
+   *   The prompt to generate with, and whether a rewrite was ordered.
+   */
+  private function preparePrompt(NodeInterface $job): array {
+    $prompt = (string) $job->get('field_prompt')->value;
+    if ((string) $job->get('field_job_kind')->value !== 'text_to_image') {
+      return [$prompt, FALSE];
+    }
+    $params = json_decode((string) ($job->get('field_params')->value ?? ''), TRUE) ?: [];
+    if (array_key_exists('originalPrompt', $params) || !PromptRewriteClient::needsRewrite($prompt)
+      || !$this->promptRewrite->isConfigured()) {
+      return [$prompt, FALSE];
+    }
+    $revised = $this->promptRewrite->rewrite($job, $prompt);
+    if ($revised === NULL) {
+      return [$prompt, TRUE];
+    }
+    if (!$this->lifecycle->recordPromptRewrite($job, $revised, $prompt)) {
+      // Ended while the rewrite ran; the caller reads the stored status.
+      return [$prompt, TRUE];
+    }
+    $this->eventStream->publish($job->uuid(), 'status', ['status' => 'running', 'prompt' => $revised]);
+    return [$revised, TRUE];
   }
 
   /**

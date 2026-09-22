@@ -123,6 +123,9 @@ final class HarnessSettingsTest extends TestCase {
       'tools' => ['pages_enabled' => TRUE, 'disabled' => []],
       'mcp' => ['product_documents' => ['enabled' => FALSE, 'content_types' => []]],
       'task_limits' => ['max_model_calls' => 7, 'max_tokens' => 1500],
+      // Server-to-server calls (UB2.6): no address means no rewrite; the producer
+      // ID is never stored empty.
+      'service' => ['url' => '', 'producer_id' => 'chat-node'],
     ], $stored['harness']);
     $this->assertSame('secret-key', $stored['gateway']['api_key']);
     $this->assertSame(['ingest_token_env' => 'SECRET_TOKEN_ENV'], $stored['observability']);

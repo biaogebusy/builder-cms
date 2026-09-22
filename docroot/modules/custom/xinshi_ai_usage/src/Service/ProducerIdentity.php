@@ -90,6 +90,16 @@ final class ProducerIdentity {
     return hash_hmac('sha256', $material, $secret);
   }
 
+  /**
+   * The shared secret of a registered producer, for signing requests this
+   * site sends to that producer's service (UB2.6). NULL when it is not
+   * registered or its entry no longer decrypts.
+   */
+  public function secretOf(string $producerId): ?string {
+    $secret = $this->producers()[$producerId]['secret'] ?? NULL;
+    return is_string($secret) && $secret !== '' ? $secret : NULL;
+  }
+
   /** Deployment settings win over the admin registry for the same producer ID. */
   private function producers(): array {
     $configured = $this->settings->get('xinshi_ai_usage.producers', []);

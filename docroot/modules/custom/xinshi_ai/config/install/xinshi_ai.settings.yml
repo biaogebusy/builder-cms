@@ -19,6 +19,11 @@ harness:
   task_limits:
     max_model_calls: 40
     max_tokens: 200000
+  # 服务器之间调用对话服务(图片提示词前置改写等子步骤,UB2.6):填 Node 自身监听的
+  # 源地址,不含路径;留空则跳过改写。用同名生产者在"用量计量"登记的密钥签名。
+  service:
+    url: ''
+    producer_id: chat-node
 event_ticket:
   ttl: 300
 queue:

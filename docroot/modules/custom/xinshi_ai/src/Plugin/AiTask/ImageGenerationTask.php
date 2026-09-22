@@ -39,13 +39,14 @@ final class ImageGenerationTask extends AiImageTaskBase {
    */
   public function execute(NodeInterface $job, ?ImageJobRun $run = NULL): void {
     $genConfig = $this->buildGenConfig($job, ['size', 'response_format', 'quality', 'output_format']);
-    $prompt = (string) $job->get('field_prompt')->value;
 
+    // The pipeline hands over the prompt it settled on: a text-to-image prompt
+    // may be rewritten by the chat service first (UB2.6).
     $this->runImagePipeline(
       $job,
       $genConfig,
       'text_to_image',
-      fn (object $provider, string $model) => $provider->textToImage($prompt, $model, ['xinshi_ai']),
+      fn (object $provider, string $model, string $prompt) => $provider->textToImage($prompt, $model, ['xinshi_ai']),
       $run,
     );
   }

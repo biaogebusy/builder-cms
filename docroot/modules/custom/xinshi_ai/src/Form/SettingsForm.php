@@ -8,6 +8,8 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\xinshi_ai\Service\FigmaConnector;
 use Drupal\xinshi_ai\Service\HarnessSettings;
+use Drupal\xinshi_ai\Service\PromptRewriteClient;
+use Drupal\xinshi_ai_usage\Service\ProducerVault;
 
 /**
  * Xinshi AI 模块全局配置:/admin/config/xinshi/ai。
@@ -164,6 +166,21 @@ final class SettingsForm extends ConfigFormBase {
       '#step' => 1,
       '#required' => TRUE,
     ];
+    $service = $config->get('harness.service') ?? [];
+    $form['harness']['service'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('服务端调用'),
+      '#description' => $this->t('图片任务的提示词前置改写由本站在后台向对话服务下单，记在图片任务名下（UB2.6）。填对话服务自身监听的源地址（如 http://127.0.0.1:4200，不含路径）；留空则不改写。请求用下方生产者在“用量计量”登记的密钥签名，对话服务用同一密钥核验。'),
+      'url' => [
+        '#type' => 'url', '#title' => $this->t('对话服务地址'), '#maxlength' => 2048,
+        '#default_value' => $service['url'] ?? '',
+      ],
+      'producer_id' => [
+        '#type' => 'textfield', '#title' => $this->t('生产者 ID'), '#maxlength' => 64,
+        '#default_value' => $service['producer_id'] ?? 'chat-node',
+        '#description' => $this->t('与对话服务的 METERING_PRODUCER_ID 一致，默认 chat-node。'),
+      ],
+    ];
 
     $form['image'] = [
       '#type' => 'details',
@@ -247,6 +264,14 @@ final class SettingsForm extends ConfigFormBase {
     if (($uri !== '' || !empty($figma['enabled'])) && !FigmaConnector::origin($uri)) {
       $form_state->setErrorByName('harness][mcp][figma][redirect_uri', $this->t('填写有效的 HTTPS 信使回调地址，路径必须是 /chat/figma/callback，不能包含用户信息、查询参数或片段。'));
     }
+    $service = $form_state->getValue(['harness', 'service'], []);
+    $serviceUrl = trim((string) ($service['url'] ?? ''));
+    if ($serviceUrl !== '' && !PromptRewriteClient::isServiceUrl($serviceUrl)) {
+      $form_state->setErrorByName('harness][service][url', $this->t('对话服务地址只能是 http(s) 源地址，不含路径、查询参数、用户信息或片段。'));
+    }
+    if (!preg_match(ProducerVault::PRODUCER_PATTERN, trim((string) ($service['producer_id'] ?? '')))) {
+      $form_state->setErrorByName('harness][service][producer_id', $this->t('生产者 ID 只能包含字母、数字、点、下划线和连字符。'));
+    }
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state): void {
@@ -293,6 +318,9 @@ final class SettingsForm extends ConfigFormBase {
       ->set('harness.mcp.product_documents.content_types', $documentTypes)
       ->set('harness.task_limits.max_model_calls', (int) $form_state->getValue(['harness', 'task_limits', 'max_model_calls']))
       ->set('harness.task_limits.max_tokens', (int) $form_state->getValue(['harness', 'task_limits', 'max_tokens']))
+      ->set('harness.service.url', rtrim(trim((string) $form_state->getValue(['harness', 'service', 'url'])), '/'))
+      // The producer ID never stores empty: the client falls back to chat-node as well.
+      ->set('harness.service.producer_id', trim((string) $form_state->getValue(['harness', 'service', 'producer_id'])) ?: 'chat-node')
       ->save();
 
     parent::submitForm($form, $form_state);

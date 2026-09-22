@@ -87,6 +87,16 @@ xinshi_ai.settings:
                 Range:
                   min: 1
                   max: 9007199254740991
+        service:
+          type: mapping
+          label: '服务端调用'
+          mapping:
+            url:
+              type: string
+              label: '对话服务地址（服务器之间调用，不含路径）'
+            producer_id:
+              type: string
+              label: '对话服务登记的生产者 ID（用其密钥签名）'
     event_ticket:
       type: mapping
       label: '事件票据'

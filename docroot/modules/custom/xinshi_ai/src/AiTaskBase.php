@@ -13,6 +13,7 @@ use Drupal\xinshi_ai\Service\ImageUsageRecorder;
 use Drupal\xinshi_ai\Service\JobLifecycleServiceInterface;
 use Drupal\xinshi_ai\Service\MediaUploadServiceInterface;
 use Drupal\xinshi_ai\Service\ModelRegistryServiceInterface;
+use Drupal\xinshi_ai\Service\PromptRewriteClient;
 use Drupal\xinshi_ai\Service\ProviderErrorMapper;
 use Drupal\xinshi_ai\Service\ProviderRequestTrace;
 use Drupal\xinshi_ai\Service\ProviderResolver;
@@ -34,6 +35,7 @@ abstract class AiTaskBase extends PluginBase implements AiTaskInterface, Contain
   protected ModelRegistryServiceInterface $registry;
   protected ProviderErrorMapper $errorMapper;
   protected ImageUsageRecorder $usageRecorder;
+  protected PromptRewriteClient $promptRewrite;
   protected LoggerInterface $logger;
 
   /**
@@ -48,6 +50,7 @@ abstract class AiTaskBase extends PluginBase implements AiTaskInterface, Contain
     $instance->registry = $container->get('xinshi_ai.model_registry');
     $instance->errorMapper = $container->get('xinshi_ai.provider_error_mapper');
     $instance->usageRecorder = $container->get('xinshi_ai.image_usage_recorder');
+    $instance->promptRewrite = $container->get('xinshi_ai.prompt_rewrite');
     $instance->logger = $container->get('logger.channel.xinshi_ai');
     return $instance;
   }

@@ -236,6 +236,51 @@ final class UsageReportTest extends TestCase {
     }
   }
 
+  public function testAuxiliaryStepsJoinTheirOperationWithoutDecidingItsStatus(): void {
+    // An image job whose prompt rewrite, ordered by the CMS worker under the
+    // job's operation (UB2.6), succeeded while the generation itself failed.
+    $this->attempt('op-img-failed', 'att-rewrite', self::ME, ['feature' => 'query-transformer',
+      'stage' => 'query-transformer', 'billing_role' => 'auxiliary', 'started_at' => self::T0,
+      'state' => 'succeeded', 'usage_quality' => 'reported', 'input_tokens_total' => 40,
+      'output_tokens_total' => 20, 'model_id' => 'deepseek-v4-flash', 'requested_model' => 'deepseek-v4-flash']);
+    $this->attempt('op-img-failed', 'att-image', self::ME, ['feature' => 'text_to_image', 'stage' => 'image',
+      'producer_id' => 'cms-image', 'started_at' => self::T0 + 5_000, 'state' => 'failed',
+      'usage_quality' => 'missing', 'error_code' => 'content_policy', 'model_id' => 'qwen-image',
+      'requested_model' => 'qwen-image']);
+    // A legacy title request is an operation of auxiliary calls only: judged on them.
+    $this->attempt('op-title', 'att-title', self::ME, ['feature' => 'title', 'stage' => 'title',
+      'billing_role' => 'auxiliary', 'started_at' => self::T0 + self::HOUR, 'state' => 'succeeded',
+      'usage_quality' => 'reported', 'input_tokens_total' => 10, 'output_tokens_total' => 5]);
+    // A rewrite still in flight before the image call started keeps the job running.
+    $this->attempt('op-img-open', 'att-rewrite-open', self::ME, ['feature' => 'query-transformer',
+      'stage' => 'query-transformer', 'billing_role' => 'auxiliary', 'started_at' => self::T0 + 2 * self::HOUR,
+      'state' => 'in_flight']);
+    $filter = $this->reports->parseFilter(['from' => '2023-11-14', 'to' => '2023-11-18'], $this->now);
+
+    $listed = $this->reports->operations(self::SITE, self::ME, $filter, NULL, 50)['operations'];
+    $byId = array_column($listed, NULL, 'operation_id');
+    $this->assertSame('failed', $byId['op-img-failed']['status'], 'a succeeded rewrite never stands in for the generation');
+    $this->assertSame('text_to_image', $byId['op-img-failed']['feature'], 'the primary call leads the operation');
+    $this->assertSame('cms-image', $byId['op-img-failed']['producer_id']);
+    $this->assertSame(['deepseek-v4-flash', 'qwen-image'], $byId['op-img-failed']['models']);
+    $this->assertSame(2, $byId['op-img-failed']['attempts']);
+    $this->assertSame('2023-11-14T22:13:20.000+00:00', $byId['op-img-failed']['created_at'], 'created at its first attempt');
+    $this->assertSame('succeeded', $byId['op-title']['status']);
+    $this->assertSame('running', $byId['op-img-open']['status']);
+
+    // The list filter agrees with the reported status.
+    $ids = fn(string $status): array => array_column(
+      $this->reports->operations(self::SITE, self::ME, $filter, NULL, 50, $status)['operations'], 'operation_id');
+    $this->assertSame(['op-img-failed'], $ids('failed'));
+    $this->assertSame(['op-title'], $ids('succeeded'));
+    $this->assertSame(['op-img-open'], $ids('running'));
+    $this->assertSame([], $ids('unknown'));
+    $this->assertSame([], $ids('not_sent'));
+    $detail = $this->reports->operation(self::SITE, self::ME, 'op-img-failed', new \DateTimeZone('UTC'));
+    $this->assertSame('failed', $detail['status']);
+    $this->assertSame(['auxiliary', 'primary'], array_column($detail['attempt_list'], 'billing_role'));
+  }
+
   public function testTheOperationDetailListsAttemptsAndDeliveriesOfTheOwnerOnly(): void {
     $this->seedScenario();
     $tz = new \DateTimeZone('UTC');

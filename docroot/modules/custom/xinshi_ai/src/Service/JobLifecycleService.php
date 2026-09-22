@@ -33,7 +33,7 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
   /** Fields a transition may change; copied back into the caller's node object. */
   private const SYNCED_FIELDS = ['field_status', 'field_status_reason', 'field_error_code',
     'field_started_at', 'field_completed_at', 'field_latency_ms', 'field_n_succeeded', 'field_assets',
-    'field_provider_request_id', 'field_prompt_revised'];
+    'field_provider_request_id', 'field_prompt_revised', 'field_prompt', 'field_params'];
 
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
@@ -220,6 +220,18 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
       }
       $fresh->save();
       $this->sync($job, $fresh);
+    });
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function recordPromptRewrite(NodeInterface $job, string $prompt, string $originalPrompt): bool {
+    return $this->transition($job, function (NodeInterface $fresh) use ($prompt, $originalPrompt): void {
+      $params = json_decode((string) ($fresh->get('field_params')->value ?? ''), TRUE) ?: [];
+      $params['originalPrompt'] = $originalPrompt;
+      $fresh->set('field_prompt', $prompt);
+      $fresh->set('field_params', json_encode($params, JSON_UNESCAPED_UNICODE));
     });
   }
 

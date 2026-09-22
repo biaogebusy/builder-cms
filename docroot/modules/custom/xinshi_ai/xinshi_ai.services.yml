@@ -39,6 +39,11 @@ services:
     class: Drupal\xinshi_ai\Service\ImageUsageRecorder
     arguments: ['@xinshi_ai_usage.local_producer', '@logger.channel.xinshi_ai']
 
+  # Orders the prompt pre-rewrite of image jobs from the chat service (UB2.6).
+  xinshi_ai.prompt_rewrite:
+    class: Drupal\xinshi_ai\Service\PromptRewriteClient
+    arguments: ['@config.factory', '@http_client', '@xinshi_ai_usage.producer_identity', '@datetime.time', '@logger.channel.xinshi_ai']
+
   xinshi_ai.provider_error_mapper:
     class: Drupal\xinshi_ai\Service\ProviderErrorMapper
 

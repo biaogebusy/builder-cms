@@ -73,6 +73,15 @@ interface JobLifecycleServiceInterface {
   public function recordProviderMeta(NodeInterface $job, ?string $requestId, ?string $revisedPrompt): void;
 
   /**
+   * 记录服务端前置改写的结果:field_prompt 改为改写稿,原文存入
+   * params.originalPrompt,该键同时标记"本任务已改写过",不会再次下单(UB2.6)。
+   *
+   * @return bool
+   *   FALSE 表示任务在改写期间已到终态(例如被取消),什么都没写。
+   */
+  public function recordPromptRewrite(NodeInterface $job, string $prompt, string $originalPrompt): bool;
+
+  /**
    * 为 job 追加一张成功的 asset,并把 job 推进到 partial。
    *
    * @param int $index

@@ -18,9 +18,11 @@ use Drupal\Core\Database\Connection;
  * Operations are not stored yet (the operation table belongs to UB4); an
  * operation here is the group of attempts sharing an `operation_id`, created
  * at its first attempt in the window. Its status is derived from the attempt
- * states: open attempts make it `running`, otherwise an unknown attempt makes
- * it `unknown`, otherwise a succeeded attempt makes it `succeeded`, then
- * `failed`, then `not_sent`. Unknown is never reported as success.
+ * states: open attempts make it `running`; otherwise its non-auxiliary
+ * attempts (all attempts when it has none) decide: an unknown attempt makes it
+ * `unknown`, otherwise a succeeded attempt makes it `succeeded`, then `failed`,
+ * then `not_sent`. Unknown is never reported as success, and a succeeded
+ * auxiliary step never stands in for the primary call.
  */
 final class UsageReportService {
 
@@ -172,13 +174,7 @@ final class UsageReportService {
         [':cursor_ts' => $cursorTs, ':cursor_id' => $cursorId]);
     }
     if ($status !== NULL) {
-      $query->having(match ($status) {
-        'running' => "SUM(CASE WHEN a.state IN ('prepared', 'in_flight') THEN 1 ELSE 0 END) > 0",
-        'unknown' => "SUM(CASE WHEN a.state IN ('prepared', 'in_flight') THEN 1 ELSE 0 END) = 0 AND SUM(CASE WHEN a.state = 'unknown' THEN 1 ELSE 0 END) > 0",
-        'succeeded' => "SUM(CASE WHEN a.state IN ('prepared', 'in_flight', 'unknown') THEN 1 ELSE 0 END) = 0 AND SUM(CASE WHEN a.state = 'succeeded' THEN 1 ELSE 0 END) > 0",
-        'failed' => "SUM(CASE WHEN a.state IN ('prepared', 'in_flight', 'unknown', 'succeeded') THEN 1 ELSE 0 END) = 0 AND SUM(CASE WHEN a.state = 'failed' THEN 1 ELSE 0 END) > 0",
-        'not_sent' => "SUM(CASE WHEN a.state <> 'not_sent' THEN 1 ELSE 0 END) = 0",
-      });
+      $query->having(self::statusHaving($status));
     }
     $heads = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
     $next = NULL;
@@ -408,16 +404,47 @@ final class UsageReportService {
   }
 
   private static function operationStatus(array $rows): string {
-    $states = array_column($rows, 'state');
-    if (array_intersect($states, self::OPEN) !== []) {
+    if (array_intersect(array_column($rows, 'state'), self::OPEN) !== []) {
       return 'running';
     }
+    // Only the calls that deliver the operation decide its outcome. A succeeded
+    // auxiliary step (a prompt rewrite ordered under an image job, UB2.6) must
+    // not turn a failed generation into a success; an operation made of
+    // auxiliary calls alone (a legacy title request) is judged on those.
+    $deciding = array_filter($rows, static fn(array $row): bool => ($row['billing_role'] ?? NULL) !== 'auxiliary') ?: $rows;
+    $states = array_column($deciding, 'state');
     foreach (['unknown', 'succeeded', 'failed'] as $state) {
       if (in_array($state, $states, TRUE)) {
         return $state;
       }
     }
     return 'not_sent';
+  }
+
+  /**
+   * The HAVING clause selecting operations of one derived status.
+   *
+   * Mirrors operationStatus() so the list filter and the reported status agree:
+   * an open attempt of any role is `running`; otherwise the non-auxiliary
+   * attempts decide, falling back to all attempts when there are none.
+   */
+  private static function statusHaving(string $status): string {
+    $open = self::countWhere("a.state IN ('prepared', 'in_flight')");
+    if ($status === 'running') {
+      return "$open > 0";
+    }
+    $outcome = static function (bool $deciding) use ($status): string {
+      $scope = $deciding ? " AND (a.billing_role IS NULL OR a.billing_role <> 'auxiliary')" : '';
+      $count = static fn(string $predicate): string => self::countWhere("($predicate)$scope");
+      return match ($status) {
+        'unknown' => "{$count("a.state = 'unknown'")} > 0",
+        'succeeded' => "{$count("a.state = 'unknown'")} = 0 AND {$count("a.state = 'succeeded'")} > 0",
+        'failed' => "{$count("a.state IN ('unknown', 'succeeded')")} = 0 AND {$count("a.state = 'failed'")} > 0",
+        'not_sent' => "{$count("a.state <> 'not_sent'")} = 0",
+      };
+    };
+    $deciding = self::countWhere("a.billing_role IS NULL OR a.billing_role <> 'auxiliary'");
+    return "$open = 0 AND (($deciding > 0 AND {$outcome(TRUE)}) OR ($deciding = 0 AND {$outcome(FALSE)}))";
   }
 
   /**

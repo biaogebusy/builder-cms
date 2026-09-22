@@ -196,6 +196,24 @@ final class JobLifecycleServiceTest extends TestCase {
     $this->assertSame('failed', $this->stored->get('field_status')->value);
   }
 
+  public function testAPromptRewriteIsStoredWithTheOriginalUnlessTheJobEnded(): void {
+    $this->stored->set('field_params', '{"n":2}');
+    $this->assertTrue($this->lifecycle->recordPromptRewrite($this->worker, '上海今日晴', '上海今天的天气'));
+    $this->assertSame(['running'], $this->saves);
+    $this->assertSame('上海今日晴', $this->stored->get('field_prompt')->value);
+    $this->assertSame('{"n":2,"originalPrompt":"上海今天的天气"}', $this->stored->get('field_params')->value);
+    $this->assertSame('上海今日晴', $this->worker->get('field_prompt')->value, 'the worker copy learns the rewrite');
+    $this->assertSame('{"n":2,"originalPrompt":"上海今天的天气"}', $this->worker->get('field_params')->value);
+
+    // Cancelled while the rewrite ran: the terminal state stands, nothing is written.
+    $this->saves = [];
+    $this->stored->set('field_status', 'cancelled');
+    $this->assertFalse($this->lifecycle->recordPromptRewrite($this->worker, 'later', '上海今天的天气'));
+    $this->assertSame([], $this->saves);
+    $this->assertSame('上海今日晴', $this->stored->get('field_prompt')->value);
+    $this->assertSame('cancelled', $this->worker->get('field_status')->value);
+  }
+
   public function testProviderMetaIsRecordedEvenOnAFinishedJob(): void {
     $this->stored->set('field_status', 'cancelled');
     $this->lifecycle->recordProviderMeta($this->worker, 'req-1', 'a fluffy cat');
