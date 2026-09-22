@@ -36,3 +36,8 @@ services:
   xinshi_ai_usage.reconcile:
     class: Drupal\xinshi_ai_usage\Service\AttemptReconcileService
     arguments: ['@database', '@xinshi_ai_usage.local_producer', '@xinshi_ai_usage.projection', '@logger.channel.xinshi_ai_usage']
+
+  # Read-only usage reports of the authenticated user (UB3.1).
+  xinshi_ai_usage.report:
+    class: Drupal\xinshi_ai_usage\Service\UsageReportService
+    arguments: ['@database', '@xinshi_ai_usage.projection']

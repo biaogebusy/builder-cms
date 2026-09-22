@@ -33,3 +33,54 @@ xinshi_ai_usage.price_book:
     _permission: 'administer xinshi ai pricing'
   options:
     _admin_route: TRUE
+
+# Read-only usage reports of the authenticated user (UB3.1). The account comes
+# from the session / OAuth token; scope parameters in the query are refused.
+xinshi_ai_usage.report.summary:
+  path: '/api/v3/ai/usage/me/summary'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageReportController::summary'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_ai_usage.report.timeseries:
+  path: '/api/v3/ai/usage/me/timeseries'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageReportController::timeseries'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_ai_usage.report.operations:
+  path: '/api/v3/ai/usage/me/operations'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageReportController::operations'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_ai_usage.report.operation:
+  path: '/api/v3/ai/usage/me/operations/{operation}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageReportController::operation'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    operation: '[A-Za-z0-9_.:-]{1,128}'
