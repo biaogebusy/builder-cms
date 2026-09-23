@@ -99,6 +99,18 @@ final class SiteUsageReportController extends ControllerBase {
   }
 
   /**
+   * GET /api/v3/ai/admin/reports/consistency.
+   *
+   * Cost checks are included only for accounts that may see costs.
+   */
+  public function consistency(Request $request): JsonResponse {
+    return $this->report($request, function (string $site, array $query): array {
+      $filter = $this->reports->parseFilter($query, $this->nowMs());
+      return $this->reports->consistency($site, $filter, $this->account->hasPermission('view ai supplier costs'));
+    }, 'view site ai usage');
+  }
+
+  /**
    * Shared authorization, site resolution and response envelope for all endpoints.
    *
    * @param string $permissions

@@ -27,4 +27,14 @@ function xinshi_ai_usage_cron(): void {
       '@message' => $e->getMessage(),
     ]);
   }
+  // Export files are short-lived downloads (UB3.4); drop them with their rows.
+  try {
+    $nowMs = (int) round(\Drupal::time()->getCurrentMicroTime() * 1000);
+    \Drupal::service('xinshi_ai_usage.export')->purgeExpired($nowMs);
+  }
+  catch (\Throwable $e) {
+    \Drupal::logger('xinshi_ai_usage')->error('Usage export purge failed: @message', [
+      '@message' => $e->getMessage(),
+    ]);
+  }
 }

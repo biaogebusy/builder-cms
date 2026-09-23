@@ -40,6 +40,8 @@ final class SiteUsageReportService {
 
   /** Breakdown dimensions exposed on the admin endpoints. */
   public const DIMENSIONS = ['users', 'features', 'models', 'channels', 'roles'];
+  /** Limit value asking breakdown()/costs() for every row; internal callers only. */
+  public const UNLIMITED = -1;
 
   public function __construct(
     private readonly Connection $database,
@@ -141,7 +143,9 @@ final class SiteUsageReportService {
    */
   public function breakdown(string $siteId, array $filter, string $dimension, int $limit = 50): array {
     $dimExpr = $this->dimensionExpression($dimension);
-    $limit = max(1, min($limit, 200));
+    // UNLIMITED is for exports and the consistency check, which need every row.
+    $unlimited = $limit === self::UNLIMITED;
+    $limit = $unlimited ? self::UNLIMITED : max(1, min($limit, 200));
 
     $query = $this->scoped($siteId, $filter);
     $query->addExpression($dimExpr, 'dim');
@@ -155,10 +159,12 @@ final class SiteUsageReportService {
     $query->groupBy('dim');
     $query->orderBy('attempts', 'DESC');
     $query->orderBy('dim', 'ASC');
-    // One row beyond the limit tells whether the list is truncated.
-    $query->range(0, $limit + 1);
+    if (!$unlimited) {
+      // One row beyond the limit tells whether the list is truncated.
+      $query->range(0, $limit + 1);
+    }
     $rows = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
-    $truncated = count($rows) > $limit;
+    $truncated = !$unlimited && count($rows) > $limit;
     if ($truncated) {
       array_pop($rows);
     }
@@ -175,6 +181,109 @@ final class SiteUsageReportService {
       'operations_exclusive' => $dimension === 'users',
       'limit' => $limit,
     ] + $this->completeness($siteId);
+  }
+
+  /**
+   * Checks that every split of one window adds up to its summary (UB3.4).
+   *
+   * All figures are read under the same filter; the watermark is returned so
+   * the caller can tell whether the projection moved between reads. Each
+   * check names the split, the summary value and the sum over the split.
+   * `operations` is compared only where one operation belongs to one row
+   * (the users dimension); elsewhere it may legitimately exceed the summary.
+   *
+   * @return array{consistent:bool,checks:list<array{name:string,expected:string,actual:string,ok:bool}>,filter:array}
+   */
+  public function consistency(string $siteId, array $filter, bool $withCosts): array {
+    $before = $this->projection->watermark($siteId);
+    $summary = $this->summary($siteId, $filter);
+    $totals = $summary['totals'];
+    $checks = [];
+    $compare = static function (string $name, string|int $expected, string|int $actual) use (&$checks): void {
+      $checks[] = ['name' => $name, 'expected' => (string) $expected, 'actual' => (string) $actual,
+        'ok' => (string) $expected === (string) $actual];
+    };
+    $sumOf = static function (array $rows, string $key): string {
+      $sum = '0';
+      foreach ($rows as $row) {
+        $sum = self::addDecimal($sum, (string) $row[$key]);
+      }
+      return $sum;
+    };
+    $tokenSumOf = static function (array $rows, string $token): string {
+      $sum = '0';
+      foreach ($rows as $row) {
+        $sum = self::addDecimal($sum, (string) $row['tokens'][$token]);
+      }
+      return $sum;
+    };
+    $splits = ['by_role' => array_values($summary['by_role'])];
+    foreach (self::DIMENSIONS as $dimension) {
+      $splits["breakdown:$dimension"] = $this->breakdown($siteId, $filter, $dimension, self::UNLIMITED)['rows'];
+    }
+    foreach ($splits as $name => $rows) {
+      foreach (['attempts', 'sent', 'succeeded', 'failed', 'unknown', 'usage_missing'] as $key) {
+        $compare("$name.$key", $totals[$key], $sumOf($rows, $key));
+      }
+      $compare("$name.input_tokens_total", $totals['tokens']['input_tokens_total'], $tokenSumOf($rows, 'input_tokens_total'));
+      $compare("$name.output_tokens_total", $totals['tokens']['output_tokens_total'], $tokenSumOf($rows, 'output_tokens_total'));
+      $compare("$name.images_generated", $totals['images_generated'], $sumOf($rows, 'images_generated'));
+    }
+    $users = $splits['breakdown:users'];
+    $compare('breakdown:users.operations', $totals['operations'], $sumOf($users, 'operations'));
+    $compare('breakdown:users.active_users', $totals['active_users'],
+      count(array_filter($users, static fn(array $row): bool => $row['dimension'] !== self::NONE)));
+    if ($withCosts) {
+      $costs = $this->costs($siteId, $filter, 'models', self::UNLIMITED);
+      $byCurrency = [];
+      foreach ($costs['rows'] as $row) {
+        foreach ($row['by_currency'] as $key => $cell) {
+          $byCurrency[$key] ??= ['attempts' => '0', 'micros' => '0'];
+          $byCurrency[$key]['attempts'] = self::addDecimal($byCurrency[$key]['attempts'], (string) $cell['attempts']);
+          $byCurrency[$key]['micros'] = self::addDecimal($byCurrency[$key]['micros'], $cell['cost_micros']);
+        }
+      }
+      foreach ($costs['totals'] as $total) {
+        $key = $total['currency'] ?? self::NONE;
+        $compare("costs:$key.attempts", $total['attempts'], $byCurrency[$key]['attempts'] ?? '0');
+        $compare("costs:$key.micros", self::addDecimal($total['rated_micros'], $total['reconciled_micros']),
+          $byCurrency[$key]['micros'] ?? '0');
+      }
+    }
+    $after = $this->projection->watermark($siteId);
+    return [
+      'consistent' => !in_array(FALSE, array_column($checks, 'ok'), TRUE),
+      'checks' => $checks,
+      'filter' => $summary['filter'],
+      'watermark_stable' => ($before['last_event_id'] ?? NULL) === ($after['last_event_id'] ?? NULL),
+    ] + $this->completeness($siteId);
+  }
+
+  /**
+   * Every attempt row of the window, oldest first, for exports.
+   *
+   * Streams through the result instead of building the PHP array the reports
+   * use, so an export may exceed the report scan cap up to its own row cap.
+   *
+   * @param string|null $actorUserId
+   *   Restricts to one actor (the user export); NULL for the site.
+   *
+   * @return iterable<array<string,mixed>>
+   */
+  public function attemptRows(string $siteId, array $filter, ?string $actorUserId = NULL): iterable {
+    $query = $this->scoped($siteId, $filter)->fields('a');
+    if ($actorUserId !== NULL) {
+      $query->condition('a.actor_user_id', $actorUserId);
+    }
+    $query->orderBy('a.started_at')->orderBy('a.id');
+    foreach ($query->execute() as $row) {
+      yield (array) $row;
+    }
+  }
+
+  /** The `data_as_of` instant of the site projection in ms, or NULL before the first event. */
+  public function watermark(string $siteId): ?int {
+    return $this->projection->watermark($siteId)['data_as_of'] ?? NULL;
   }
 
   /**
@@ -198,7 +307,7 @@ final class SiteUsageReportService {
    */
   public function costs(string $siteId, array $filter, string $dimension, int $limit = 50): array {
     $dimExpr = $this->dimensionExpression($dimension);
-    $limit = max(1, min($limit, 200));
+    $limit = $limit === self::UNLIMITED ? self::UNLIMITED : max(1, min($limit, 200));
 
     // Totals by currency and valuation state.
     $totalQuery = $this->scopedCost($siteId, $filter);
@@ -243,15 +352,18 @@ final class SiteUsageReportService {
       'cost_unpriced_reason', 'reason');
 
     // Top-N dimension values by attempts; one row beyond the limit detects truncation.
+    $unlimited = $limit === self::UNLIMITED;
     $topQuery = $this->scopedCost($siteId, $filter);
     $topQuery->addExpression($dimExpr, 'dim');
     $topQuery->addExpression('COUNT(*)', 'attempts');
     $topQuery->groupBy('dim');
     $topQuery->orderBy('attempts', 'DESC');
     $topQuery->orderBy('dim', 'ASC');
-    $topQuery->range(0, $limit + 1);
+    if (!$unlimited) {
+      $topQuery->range(0, $limit + 1);
+    }
     $topRows = $topQuery->execute()->fetchAll(\PDO::FETCH_ASSOC);
-    $truncated = count($topRows) > $limit;
+    $truncated = !$unlimited && count($topRows) > $limit;
     if ($truncated) {
       array_pop($topRows);
     }
@@ -616,6 +728,25 @@ final class SiteUsageReportService {
     }
     ksort($byCurrency);
     return array_values($byCurrency);
+  }
+
+  /**
+   * Exact addition of two non-negative decimal strings without bcmath.
+   */
+  private static function addDecimal(string $a, string $b): string {
+    $a = ltrim($a, '0') ?: '0';
+    $b = ltrim($b, '0') ?: '0';
+    if (strlen($a) < 18 && strlen($b) < 18) {
+      return (string) ((int) $a + (int) $b);
+    }
+    $out = '';
+    $carry = 0;
+    for ($i = strlen($a) - 1, $j = strlen($b) - 1; $i >= 0 || $j >= 0 || $carry; $i--, $j--) {
+      $sum = $carry + ($i >= 0 ? (int) $a[$i] : 0) + ($j >= 0 ? (int) $b[$j] : 0);
+      $out = ($sum % 10) . $out;
+      $carry = intdiv($sum, 10);
+    }
+    return $out;
   }
 
   private static function text(array $query, string $key): ?string {

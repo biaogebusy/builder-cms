@@ -138,3 +138,95 @@ xinshi_ai_usage.admin.costs:
   requirements:
     _permission: 'view site ai usage,view ai supplier costs'
     dimension: 'users|features|models|channels|roles'
+
+# Consistency check of one window: every split must add up to the summary (UB3.4).
+xinshi_ai_usage.admin.consistency:
+  path: '/api/v3/ai/admin/reports/consistency'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::consistency'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+
+# CSV exports (UB3.4). A job is created and run in the request; the file is
+# downloadable by its requester for one hour. Cookie sessions must pass the
+# CSRF token on the POST, as for every state-changing route.
+xinshi_ai_usage.report.exports:
+  path: '/api/v3/ai/usage/me/exports'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageExportController::createUser'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+
+xinshi_ai_usage.report.export:
+  path: '/api/v3/ai/usage/me/exports/{export}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageExportController::statusUser'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    export: '\d+'
+
+xinshi_ai_usage.report.export_download:
+  path: '/api/v3/ai/usage/me/exports/{export}/download'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageExportController::downloadUser'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    export: '\d+'
+
+xinshi_ai_usage.admin.exports:
+  path: '/api/v3/ai/admin/reports/exports'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageExportController::createSite'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage,export site ai usage'
+    _csrf_request_header_token: 'TRUE'
+
+xinshi_ai_usage.admin.export:
+  path: '/api/v3/ai/admin/reports/exports/{export}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageExportController::statusSite'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage,export site ai usage'
+    export: '\d+'
+
+xinshi_ai_usage.admin.export_download:
+  path: '/api/v3/ai/admin/reports/exports/{export}/download'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\UsageExportController::downloadSite'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage,export site ai usage'
+    export: '\d+'

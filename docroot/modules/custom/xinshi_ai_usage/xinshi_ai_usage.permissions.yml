@@ -17,3 +17,8 @@ view site ai usage:
   title: '查看 AI 全站用量'
   description: '查看所有用户的 AI 用量统计，按用户、功能、模型、渠道拆分。'
   restrict access: true
+
+export site ai usage:
+  title: '导出 AI 全站用量'
+  description: '把全站用量报表导出为 CSV；数据范围与查看权限相同。'
+  restrict access: true

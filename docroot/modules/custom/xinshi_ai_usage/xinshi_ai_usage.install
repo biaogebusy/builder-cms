@@ -295,7 +295,39 @@ function xinshi_ai_usage_schema(): array {
     ],
   ];
 
+  $schema['ai_usage_export'] = [
+    'description' => 'CSV export jobs of the usage reports (UB3.4); the file lives under the private path and is purged with the row.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'scope' => ['type' => 'varchar_ascii', 'length' => 8, 'not null' => TRUE,
+        'description' => 'user (own report) or site (administrator).'],
+      'requester' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE,
+        'description' => 'uid of the account that may download the file.'],
+      'kind' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+      'filter_json' => ['type' => 'text', 'not null' => TRUE],
+      'file_name' => ['type' => 'varchar_ascii', 'length' => 191, 'not null' => TRUE],
+      'row_count' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'byte_size' => ['type' => 'int', 'size' => 'big', 'unsigned' => TRUE, 'not null' => TRUE],
+      'data_as_of' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'created_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      'expires_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'requester' => ['scope', 'requester', 'created_at'],
+      'expires' => ['expires_at'],
+    ],
+  ];
+
   return $schema;
+}
+
+/**
+ * Add the export job table (UB3.4).
+ */
+function xinshi_ai_usage_update_10008(): void {
+  xinshi_ai_usage_apply_schema_updates(\Drupal::database());
 }
 
 /**
@@ -368,7 +400,7 @@ function xinshi_ai_usage_apply_schema_updates(Connection $database): void {
 
   $costEntryExisted = $schema->tableExists('ai_usage_cost_entry');
   foreach (['ai_price_book_version', 'ai_usage_cost_entry', 'ai_provider_attempt',
-    'ai_usage_rollup_hour', 'ai_usage_watermark', 'ai_usage_delivery'] as $table) {
+    'ai_usage_rollup_hour', 'ai_usage_watermark', 'ai_usage_delivery', 'ai_usage_export'] as $table) {
     if (!$schema->tableExists($table)) {
       $schema->createTable($table, $definitions[$table]);
     }
