@@ -2947,6 +2947,59 @@
             "install-path": "../../docroot/modules/contrib/address"
         },
         {
+            "name": "drupal/address_display",
+            "version": "1.0.0",
+            "version_normalized": "1.0.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/address_display.git",
+                "reference": "8.x-1.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/address_display-8.x-1.0.zip",
+                "reference": "8.x-1.0",
+                "shasum": "09964b6ae945078e215b85536552bc1c5cd72934"
+            },
+            "require": {
+                "drupal/address": "^1.0 || ^2.0",
+                "drupal/core": "^10 || ^11"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "8.x-1.0",
+                    "datestamp": "1731941411",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "installation-source": "dist",
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "Lamp5",
+                    "homepage": "https://www.drupal.org/u/lamp5",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Adds configurable address field formatter.",
+            "homepage": "https://www.drupal.org/project/address_display",
+            "keywords": [
+                "Drupal"
+            ],
+            "support": {
+                "source": "http://cgit.drupalcode.org/address_display",
+                "issues": "https://www.drupal.org/project/issues/address_display"
+            },
+            "install-path": "../../docroot/modules/contrib/address_display"
+        },
+        {
             "name": "drupal/admin_toolbar",
             "version": "3.6.2",
             "version_normalized": "3.6.2.0",
