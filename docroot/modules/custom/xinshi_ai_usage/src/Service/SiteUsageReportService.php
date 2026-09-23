@@ -456,7 +456,7 @@ final class SiteUsageReportService {
     ];
   }
 
-  private function describeFilter(array $filter): array {
+  public function describeFilter(array $filter): array {
     return [
       'from' => ReportTime::iso($filter['from'], $filter['timezone']),
       'to' => ReportTime::iso($filter['to'], $filter['timezone']),
@@ -493,12 +493,22 @@ final class SiteUsageReportService {
 
   /**
    * SELECT base scoped to the site, time window and all filters.
+   *
+   * Shared with UsageQualityReportService, which runs over the same base
+   * instead of copying the filter conditions. $withTime drops only the window
+   * conditions; the attempt-gap recheck uses it so a window that cuts one
+   * logical call in half cannot read as a missing attempt.
+   *
+   * @param bool $withTime
+   *   FALSE omits the started_at window, keeping every other filter.
    */
-  private function scoped(string $siteId, array $filter) {
+  public function scoped(string $siteId, array $filter, bool $withTime = TRUE) {
     $query = $this->database->select(UsageProjectionService::ATTEMPT_TABLE, 'a')
-      ->condition('a.site_id', $siteId)
-      ->condition('a.started_at', $filter['from'], '>=')
-      ->condition('a.started_at', $filter['to'], '<');
+      ->condition('a.site_id', $siteId);
+    if ($withTime) {
+      $query->condition('a.started_at', $filter['from'], '>=')
+        ->condition('a.started_at', $filter['to'], '<');
+    }
     if ($filter['feature'] !== NULL) {
       $query->condition('a.feature', $filter['feature']);
     }

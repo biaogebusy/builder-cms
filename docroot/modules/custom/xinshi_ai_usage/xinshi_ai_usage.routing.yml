@@ -152,6 +152,35 @@ xinshi_ai_usage.admin.consistency:
   requirements:
     _permission: 'view site ai usage'
 
+# Data-quality report and deduplicated work queue of one window (UB3.5a).
+# Read-only: resolving an item happens through the Drush reconcile command,
+# the Node reconcile route or the price book form, never here. The unpriced
+# family and unpriced queue rows need `view ai supplier costs` on top and are
+# hidden without it.
+xinshi_ai_usage.admin.quality:
+  path: '/api/v3/ai/admin/reports/quality'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::quality'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+
+xinshi_ai_usage.admin.quality_items:
+  path: '/api/v3/ai/admin/reports/quality/items'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::qualityItems'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+
 # CSV exports (UB3.4). A job is created and run in the request; the file is
 # downloadable by its requester for one hour. Cookie sessions must pass the
 # CSRF token on the POST, as for every state-changing route.

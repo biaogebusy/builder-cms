@@ -47,6 +47,11 @@ services:
     class: Drupal\xinshi_ai_usage\Service\SiteUsageReportService
     arguments: ['@database', '@xinshi_ai_usage.projection', '@xinshi_ai_usage.report', '@xinshi_ai_usage.price_book']
 
+  # Read-only data-quality report and work queue of the projection (UB3.5a).
+  xinshi_ai_usage.quality_report:
+    class: Drupal\xinshi_ai_usage\Service\UsageQualityReportService
+    arguments: ['@database', '@xinshi_ai_usage.projection', '@xinshi_ai_usage.site_report']
+
   # CSV exports of both reports, stored under the private file path (UB3.4).
   xinshi_ai_usage.export:
     class: Drupal\xinshi_ai_usage\Service\UsageExportService

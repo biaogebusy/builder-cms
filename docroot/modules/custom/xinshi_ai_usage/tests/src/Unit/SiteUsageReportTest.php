@@ -18,6 +18,7 @@ use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
 use Drupal\xinshi_ai_usage\Service\SiteUsageReportService;
 use Drupal\xinshi_ai_usage\Service\UsageProjectionService;
+use Drupal\xinshi_ai_usage\Service\UsageQualityReportService;
 use Drupal\xinshi_ai_usage\Service\UsageReportException;
 use Drupal\xinshi_ai_usage\Service\UsageReportService;
 use PHPUnit\Framework\TestCase;
@@ -52,6 +53,7 @@ final class SiteUsageReportTest extends TestCase {
   private UsageProjectionService $projection;
   private UsageReportService $userReports;
   private SiteUsageReportService $siteReports;
+  private UsageQualityReportService $qualityReports;
   private int $now = 0;
   private int $sequence = 0;
 
@@ -75,6 +77,8 @@ final class SiteUsageReportTest extends TestCase {
     $this->userReports = new UsageReportService($this->database, $this->projection);
     $this->siteReports = new SiteUsageReportService($this->database, $this->projection,
       $this->userReports, $priceBook);
+    $this->qualityReports = new UsageQualityReportService($this->database,
+      $this->projection, $this->siteReports);
   }
 
   protected function tearDown(): void {
@@ -712,7 +716,7 @@ final class SiteUsageReportTest extends TestCase {
     $time = $this->createMock(TimeInterface::class);
     $time->method('getCurrentMicroTime')->willReturnCallback(fn(): float => $this->now / 1000);
     return new SiteUsageReportController($this->siteReports, $account,
-      new Settings(['hash_salt' => 'site-report-salt']), $vault, $time);
+      new Settings(['hash_salt' => 'site-report-salt']), $vault, $time, $this->qualityReports);
   }
 
 }

@@ -11,6 +11,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
 use Drupal\xinshi_ai_usage\Service\RegisteredSites;
 use Drupal\xinshi_ai_usage\Service\SiteUsageReportService;
+use Drupal\xinshi_ai_usage\Service\UsageQualityReportService;
 use Drupal\xinshi_ai_usage\Service\UsageReportException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -37,6 +38,7 @@ final class SiteUsageReportController extends ControllerBase {
     private readonly Settings $settings,
     private readonly ProducerVault $vault,
     private readonly TimeInterface $time,
+    private readonly UsageQualityReportService $qualityReports,
   ) {}
 
   /**
@@ -49,6 +51,7 @@ final class SiteUsageReportController extends ControllerBase {
       $container->get('settings'),
       $container->get('xinshi_ai_usage.producer_vault'),
       $container->get('datetime.time'),
+      $container->get('xinshi_ai_usage.quality_report'),
     );
   }
 
@@ -111,6 +114,32 @@ final class SiteUsageReportController extends ControllerBase {
   }
 
   /**
+   * GET /api/v3/ai/admin/reports/quality.
+   *
+   * Read-only quality report (UB3.5a). The unpriced family is included only
+   * for accounts that may see supplier costs; everything else needs only
+   * `view site ai usage`.
+   */
+  public function quality(Request $request): JsonResponse {
+    return $this->report($request, fn(string $site, array $query): array =>
+      $this->qualityReports->quality($site, $query,
+        $this->account->hasPermission('view ai supplier costs'), $this->nowMs()),
+      'view site ai usage');
+  }
+
+  /**
+   * GET /api/v3/ai/admin/reports/quality/items.
+   *
+   * The deduplicated work queue of the quality report (UB3.5a); read-only.
+   */
+  public function qualityItems(Request $request): JsonResponse {
+    return $this->report($request, fn(string $site, array $query): array =>
+      $this->qualityReports->items($site, $query,
+        $this->account->hasPermission('view ai supplier costs'), $this->nowMs()),
+      'view site ai usage');
+  }
+
+  /**
    * Shared authorization, site resolution and response envelope for all endpoints.
    *
    * @param string $permissions
@@ -147,6 +176,7 @@ final class SiteUsageReportController extends ControllerBase {
     catch (UsageReportException $e) {
       $status = match ($e->reportCode) {
         'not_found' => 404,
+        'forbidden' => 403,
         'range_too_large' => 422,
         default => 400,
       };
