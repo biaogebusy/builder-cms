@@ -1,0 +1,12 @@
+name: Address display
+type: module
+description: Adds configurable address field formatter.
+package: Field types
+core_version_requirement: ^8.8 || ^9 || ^10 || ^11
+dependencies:
+  - address:address
+
+# Information added by Drupal.org packaging script on 2024-11-18
+version: '8.x-1.0'
+project: 'address_display'
+datestamp: 1731941413

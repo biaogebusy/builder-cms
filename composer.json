@@ -21,6 +21,7 @@
         "drupal/ace_editor": "^2.0",
         "drupal/acquia_connector": "^4.1",
         "drupal/address": "^2.0",
+        "drupal/address_display": "^1.0",
         "drupal/admin_toolbar": "^3.6",
         "drupal/advancedqueue": "^1.5",
         "drupal/ai": "^1.4",
