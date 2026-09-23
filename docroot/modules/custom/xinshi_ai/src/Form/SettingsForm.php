@@ -6,6 +6,7 @@ namespace Drupal\xinshi_ai\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\xinshi_ai\Service\HarnessSettings;
 
 /**
  * Xinshi AI 模块全局配置:/admin/config/xinshi/ai。
@@ -61,6 +62,50 @@ final class SettingsForm extends ConfigFormBase {
       '#description' => $this->t('调用网关生图的 HTTP 超时。上游生图可能耗时近百秒,默认 180。'),
       '#min' => 1,
       '#default_value' => $config->get('gateway.request_timeout'),
+      '#required' => TRUE,
+    ];
+
+    $harness = HarnessSettings::normalize($config->get('harness'));
+    $form['harness'] = [
+      '#type' => 'details',
+      '#title' => $this->t('对话任务（Harness）'),
+      '#description' => $this->t('若对话服务设置了对应环境变量，则以环境变量为准。移除对应启动参数后，后台设置才会生效。'),
+      '#open' => TRUE,
+      '#tree' => TRUE,
+    ];
+    $form['harness']['tools'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('业务工具'),
+    ];
+    $form['harness']['tools']['pages_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('启用页面草稿工具'),
+      '#description' => $this->t('允许 AI 读取、创建、追加组件和删除本人草稿；仍需相应页面权限，写入仍需用户确认。关闭后仍可核验已提交操作。对应 CHAT_CREATE_PAGE_ENABLED。'),
+      '#default_value' => $harness['tools']['pages_enabled'],
+    ];
+    $form['harness']['task_limits'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('任务限制'),
+      '#description' => $this->t('仅影响新建任务。已有任务在审批、继续执行和服务重启后，仍保留原上限及已用次数。'),
+    ];
+    $form['harness']['task_limits']['max_model_calls'] = [
+      '#type' => 'number',
+      '#title' => $this->t('每个任务最多模型调用次数'),
+      '#description' => $this->t('包含规划、执行、评审、工具内部调用及显式重试。达到上限后停止发起新的模型请求。对应 CHAT_TASK_MAX_MODEL_CALLS。'),
+      '#default_value' => $harness['task_limits']['max_model_calls'],
+      '#min' => 1,
+      '#max' => HarnessSettings::MAX_LIMIT,
+      '#step' => 1,
+      '#required' => TRUE,
+    ];
+    $form['harness']['task_limits']['max_tokens'] = [
+      '#type' => 'number',
+      '#title' => $this->t('每个任务最多已报告 Token'),
+      '#description' => $this->t('按模型实际报告的输入与输出 Token 累计。达到上限后停止下一次调用，单次响应可能超过此值。对应 CHAT_TASK_MAX_TOKENS。'),
+      '#default_value' => $harness['task_limits']['max_tokens'],
+      '#min' => 1,
+      '#max' => HarnessSettings::MAX_LIMIT,
+      '#step' => 1,
       '#required' => TRUE,
     ];
 
@@ -136,6 +181,9 @@ final class SettingsForm extends ConfigFormBase {
       ->set('event_ticket.ttl', (int) $form_state->getValue('ttl'))
       ->set('sse.heartbeat_seconds', (int) $form_state->getValue('heartbeat_seconds'))
       ->set('sse.max_lifetime_seconds', (int) $form_state->getValue('max_lifetime_seconds'))
+      ->set('harness.tools.pages_enabled', (bool) $form_state->getValue(['harness', 'tools', 'pages_enabled']))
+      ->set('harness.task_limits.max_model_calls', (int) $form_state->getValue(['harness', 'task_limits', 'max_model_calls']))
+      ->set('harness.task_limits.max_tokens', (int) $form_state->getValue(['harness', 'task_limits', 'max_tokens']))
       ->save();
 
     parent::submitForm($form, $form_state);
