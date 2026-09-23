@@ -1,0 +1,15 @@
+field.formatter.settings.address_display_formatter:
+  type: mapping
+  label: 'Address display format settings'
+  mapping:
+    address_display:
+      type: sequence
+      sequence:
+        type: mapping
+        mapping:
+          glue:
+            type: string
+          weight:
+            type: integer
+          display:
+            type: boolean
