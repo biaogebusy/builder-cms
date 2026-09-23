@@ -130,7 +130,7 @@ class AlibabaSend extends SmsGatewayPluginBase implements ContainerFactoryPlugin
         ->setRecipient($number)
         ->setStatus(SmsMessageReportStatus::DELIVERED)
         ->setStatusMessage($message)
-        ->setTimeDelivered(REQUEST_TIME);
+        ->setTimeDelivered(\Drupal::time()->getRequestTime());
       $result->addReport($report);
     }
 
