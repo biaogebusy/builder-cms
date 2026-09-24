@@ -43,22 +43,26 @@ function xinshi_api_update_10001() {
  * no role held, so every endpoint answered 403 for non-admin users.
  */
 function xinshi_api_update_10002() {
-  $permissions = [
-    'restful get xinshi_api_account_rest',
-    'restful get xinshi_api_comment_rest',
-    'restful get xinshi_api_landing_page_rest',
-    'restful get xinshi_api_node_component_rest',
-    'restful get xinshi_api_statistics_node_rest',
-    'restful get xinshi_api_statistics_register_rest',
-    'restful get xinshi_api_webform_rest',
+  $ids = [
+    'xinshi_api_account_rest',
+    'xinshi_api_comment_rest',
+    'xinshi_api_landing_page_rest',
+    'xinshi_api_node_component_rest',
+    'xinshi_api_statistics_node_rest',
+    'xinshi_api_statistics_register_rest',
+    'xinshi_api_webform_rest',
   ];
-  $ids = array_map(fn(string $permission): string => substr($permission, strlen('restful get ')), $permissions);
-  $resource_storage = \Drupal::entityTypeManager()->getStorage('rest_resource_config');
-  foreach ($resource_storage->loadMultiple($ids) as $resource) {
-    // The controller route owns the path from now on.
-    $resource->delete();
+  // The plugin classes ship deleted with this release, so the config entity
+  // API cannot remove these: its preDelete dependency handling saves dependent
+  // roles, which resolves every still-existing resource's plugin and fatal
+  // errors. Removing the raw config skips that dependency handling.
+  $config_factory = \Drupal::configFactory();
+  foreach ($ids as $id) {
+    $config_factory->getEditable("rest.resource.$id")->delete();
   }
+  \Drupal\Core\Cache\Cache::invalidateTags(['config:rest_resource_config_list']);
   // The permission is gone with the resource; drop the grants it left behind.
+  $permissions = array_map(static fn(string $id): string => "restful get $id", $ids);
   $role_storage = \Drupal::entityTypeManager()->getStorage('user_role');
   foreach ($role_storage->loadMultiple() as $role) {
     $stale = array_intersect($permissions, $role->getPermissions());

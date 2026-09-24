@@ -84,9 +84,14 @@ final class ApiV3RoutesTest extends TestCase {
 
   public function testUpdateHookDropsEveryRestResourceConfig(): void {
     $install = file_get_contents($this->modulePath() . '/xinshi_api.install');
-    $this->assertStringContainsString("substr(\$permission, strlen('restful get '))", $install);
+    // Entity deletion fatals once the plugin classes are gone (dependent-role
+    // saves resolve the missing plugin), so the hook must remove the raw
+    // config and revoke the stale role grants itself.
+    $this->assertStringContainsString('getEditable("rest.resource.$id")', $install);
+    $this->assertStringContainsString('"restful get $id"', $install);
     foreach (self::REST_PERMISSIONS as $permission) {
-      $this->assertStringContainsString("'$permission'", $install);
+      $id = substr($permission, strlen('restful get '));
+      $this->assertStringContainsString("'$id'", $install);
     }
   }
 
