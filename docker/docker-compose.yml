@@ -1,41 +1,119 @@
 version: "3"
 
 services:
-  mariadb:
-    image: wodby/mariadb:$MARIADB_TAG
-    container_name: "${COMPOSE_PROJECT_NAME}_mariadb"
-    hostname: "${COMPOSE_PROJECT_NAME}_mariadb"
+  mysql-base:
+    image: mysql:$MYSQL_TAG
+    container_name: "${COMPOSE_PROJECT_NAME}_mysql_base"
+    hostname: "${COMPOSE_PROJECT_NAME}_mysql_base"
     stop_grace_period: 30s
+    command:
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
      - app_net
     environment:
       MYSQL_ROOT_PASSWORD: $DB_ROOT_PASSWORD
-      MYSQL_DATABASE: $DB_NAME
+      MYSQL_DATABASE: $DB_NAME_BASE
       MYSQL_USER: $DB_USER
       MYSQL_PASSWORD: $DB_PASSWORD
-      #MYSQL_INNODB_FLUSH_METHOD: fsync
-#    volumes:
-#      - ./mariadb-init:/docker-entrypoint-initdb.d # Place init .sql file(s) here.
-#      - ./data:/var/lib/mysql # Use bind mount
 
-  apache:
-    image: ipumpkin/drupalvm
-    container_name: "${COMPOSE_PROJECT_NAME}_apache"
-    hostname: "${COMPOSE_PROJECT_NAME}_apache"
-    environment:
-      APACHE_DOCUMENT_ROOT: "/var/www/html/docroot"
+  mysql-pro:
+    image: mysql:$MYSQL_TAG
+    container_name: "${COMPOSE_PROJECT_NAME}_mysql_pro"
+    hostname: "${COMPOSE_PROJECT_NAME}_mysql_pro"
+    stop_grace_period: 30s
+    command:
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
      - app_net
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+      MYSQL_DATABASE: $DB_NAME_PRO
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASSWORD
+
+  builder-base:
+    image: registry.cn-hangzhou.aliyuncs.com/davyin/nginx-php:8.3-alpine
+    container_name: builder-base
+    hostname: builder-base
+    depends_on:
+      - mysql-base
+    environment:
+      VIRTUAL_HOST: ${PROJECT_BASE_URL_BASE}
+      DRUPAL_WEB_ROOT: docroot
+      MAX_FILE_UPLOAD_SIZE: 300M
+      TIMEOUT: "300"
+      DB_NAME: $DB_NAME_BASE
+      DB_USER: $DB_USER
+      DB_PASSWORD: $DB_PASSWORD
+      DB_HOST: mysql-base
+      DB_PORT: "3306"
+      CONFIG_SYNC_DIRECTORY: /var/www/html/config/base/sync
+    networks:
+     - app_net
+     - proxy
     volumes:
       - ../:/var/www/html
-# For macOS users (https://wodby.com/stacks/drupal/docs/local/docker-for-mac/)
-#      - ./:/var/www/html:cached # User-guided caching
-#      - docker-sync:/var/www/html # Docker-sync
+      - ../logs:/www/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
     labels:
-      - 'traefik.backend=${COMPOSE_PROJECT_NAME}_apache'
+      - 'traefik.backend=builder-base'
       - 'traefik.port=80'
-      - 'traefik.frontend.rule=Host:${PROJECT_BASE_URL}'
+      - 'traefik.frontend.rule=Host:${PROJECT_BASE_URL_BASE}'
+
+  builder-pro:
+    image: registry.cn-hangzhou.aliyuncs.com/davyin/nginx-php:8.3-alpine
+    container_name: builder-pro
+    hostname: builder-pro
+    depends_on:
+      - mysql-pro
+    environment:
+      VIRTUAL_HOST: ${PROJECT_BASE_URL_PRO}
+      DRUPAL_WEB_ROOT: docroot
+      MAX_FILE_UPLOAD_SIZE: 300M
+      TIMEOUT: "300"
+      DB_NAME: $DB_NAME_PRO
+      DB_USER: $DB_USER
+      DB_PASSWORD: $DB_PASSWORD
+      DB_HOST: mysql-pro
+      DB_PORT: "3306"
+      CONFIG_SYNC_DIRECTORY: /var/www/html/config/pro/sync
+    networks:
+     - app_net
+     - proxy
+    volumes:
+      - ../:/var/www/html
+      - ../logs:/www/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    labels:
+      - 'traefik.backend=builder-pro'
+      - 'traefik.port=80'
+      - 'traefik.frontend.rule=Host:${PROJECT_BASE_URL_PRO}'
 
 networks:
   app_net:
+    external: true
+  # 宿主 nginx-proxy(按 VIRTUAL_HOST 路由 *.docker.localhost)所在网络
+  proxy:
     external: true

@@ -1,7 +1,7 @@
 <h1 align="center">信使 Web builder 低代码 CMS</h1>
 
 <p align="center">
-  <i>Builder CMS 是基于 Drupal的内容管理系统，是信使 Web builder 的HeadLess后台，Web builder 是基于 Material 的 Angular 低代码前端框架，丰富的组件库可提供优秀的数字创新体验，<br>通过拖拽可视化配置快速构建现代化响应式UI、多主题、多语言的 Web 页面，包含美观的后台管理主题，拥有完整的前端解决方案，Pro 版本已接入AI，可优化文案，创建组件和一句话生成页面。
+  <i>Builder CMS 是基于 Drupal 的 Headless 内容管理系统，是信使 Web builder 的后台服务。Web builder 是基于 Material 的 Angular 低代码前端框架，通过拖拽可视化配置快速构建现代化响应式 UI，支持多主题、多语言。<br>深度集成 AI：支持对话、文案优化、图表生成、创建组件、一句话生成整页，并内置 AI Harness（可接入多模型、统一评测与用量管控）。
     </i>
   <br>
 </p>
@@ -68,6 +68,56 @@
 - [复制功能快速构建组件](https://www.bilibili.com/video/BV1nF4m1w7cs/)
 - [多语言发布及媒体库管理](https://www.bilibili.com/video/BV1XohfeoEtz/)
 - [自定义示例和模板库](https://www.bilibili.com/video/BV1wExPeBEdn)
+
+## 本地开发环境(base / pro)
+
+CMS 分为 base 基础版和 Pro 专业版，两者使用**同一份程序代码**，通过 Docker 编排同时运行，差异如下:
+
+| 版本 | Web 容器 | 数据库 | 配置导出目录 | 本地域名 |
+| ---- | -------- | ------ | ------------ | -------- |
+| base | `builder-base` | `drupal_base` | `config/base/sync` | `builder-cms-base.docker.localhost` |
+| Pro  | `builder-pro`  | `drupal_pro`  | `config/pro/sync`  | `builder-cms-pro.docker.localhost` |
+
+两版通过容器环境变量(`DB_HOST`、`DB_NAME`、`CONFIG_SYNC_DIRECTORY` 等)区分数据库与配置目录，`docroot/sites/default/settings.php` 优先读取环境变量，未设置时保持原有单容器行为。
+
+### 启动步骤
+
+```bash
+# 1. 创建外部网络(仅首次,已存在则跳过)
+docker network create app_net
+
+# 2. 配置本机 DNS,让 *.docker.localhost 解析到本机(仅首次,需 sudo)
+sudo sh -c 'echo "127.0.0.1 builder-cms-base.docker.localhost builder-cms-pro.docker.localhost" >> /etc/hosts'
+
+# 3. 启动服务
+cd docker
+docker-compose up -d
+```
+
+启动后访问:
+
+- base:http://builder-cms-base.docker.localhost
+- Pro:http://builder-cms-pro.docker.localhost
+
+### 首次初始化
+
+两个 MySQL 容器各自初始化**空库**，首次需分别安装站点或导入已有数据库:
+
+```bash
+docker-compose exec builder-base drush site:install --account-pass=admin -y
+docker-compose exec builder-pro drush site:install --account-pass=admin -y
+```
+
+### 配置管理
+
+两版启用的模块不同(如 Pro 版多启用 xinshi_ai 等模块)，配置各自导出，互不覆盖:
+
+```bash
+docker-compose exec builder-base drush cex -y   # 导出到 config/base/sync
+docker-compose exec builder-pro drush cex -y    # 导出到 config/pro/sync
+```
+
+> `sites/default/files` 为两版共享，本地上传的文件互通;两版可独立启停，如只跑 Pro:`docker-compose up -d builder-pro mysql-pro`。
 
 ## 最后
 
