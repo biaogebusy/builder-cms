@@ -152,6 +152,33 @@ xinshi_ai_usage.admin.consistency:
   requirements:
     _permission: 'view site ai usage'
 
+# Site-wide operation list and detail (admin drilldown): the admin counterpart
+# of the user's operations endpoints. Rows carry the actor; quantity only.
+xinshi_ai_usage.admin.operations:
+  path: '/api/v3/ai/admin/reports/operations'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::operations'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+
+xinshi_ai_usage.admin.operation:
+  path: '/api/v3/ai/admin/reports/operations/{operation}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::operation'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'view site ai usage'
+    operation: '[A-Za-z0-9_.:-]{1,128}'
+
 # Data-quality report and deduplicated work queue of one window (UB3.5a).
 # Read-only: resolving an item happens through the Drush reconcile command,
 # the Node reconcile route or the price book form, never here. The unpriced

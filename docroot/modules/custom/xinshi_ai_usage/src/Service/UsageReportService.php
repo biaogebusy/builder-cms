@@ -291,9 +291,11 @@ final class UsageReportService {
   /**
    * Committed image assets per operation: the deliveries a user may be charged for.
    *
+   * Public for the site report, which lists the site's operations the same way.
+   *
    * @return array<string,int>
    */
-  private function deliveredByOperation(string $siteId, array $operationIds): array {
+  public function deliveredByOperation(string $siteId, array $operationIds): array {
     $counts = [];
     foreach (array_chunk(array_values($operationIds), self::IN_CHUNK) as $chunk) {
       if ($chunk === []) {
@@ -351,7 +353,13 @@ final class UsageReportService {
     ];
   }
 
-  private function describeOperation(string $id, array $rows, int $delivered, \DateTimeZone $tz): array {
+  /**
+   * The summary block of one operation from its attempt rows.
+   *
+   * Public for the site report: the admin operation list and detail describe
+   * operations exactly like the user report, only with the actor added.
+   */
+  public function describeOperation(string $id, array $rows, int $delivered, \DateTimeZone $tz): array {
     $first = $rows[0] ?? NULL;
     $primary = NULL;
     foreach ($rows as $row) {
@@ -377,7 +385,10 @@ final class UsageReportService {
     ] + self::aggregate($rows);
   }
 
-  private function describeAttempt(array $row, \DateTimeZone $tz): array {
+  /**
+   * One attempt row of an operation detail; public for the site report.
+   */
+  public function describeAttempt(array $row, \DateTimeZone $tz): array {
     $reported = $row['usage_quality'] === 'reported';
     return [
       'attempt_id' => $row['attempt_id'],
@@ -426,8 +437,10 @@ final class UsageReportService {
    * Mirrors operationStatus() so the list filter and the reported status agree:
    * an open attempt of any role is `running`; otherwise the non-auxiliary
    * attempts decide, falling back to all attempts when there are none.
+   *
+   * Public for the site report's operation list, which filters the same way.
    */
-  private static function statusHaving(string $status): string {
+  public static function statusHaving(string $status): string {
     $open = self::countWhere("a.state IN ('prepared', 'in_flight')");
     if ($status === 'running') {
       return "$open > 0";
@@ -490,14 +503,15 @@ final class UsageReportService {
     return is_string($value) && trim($value) !== '' ? trim($value) : NULL;
   }
 
-  private static function encodeCursor(int $createdAt, string $operationId): string {
+  /** Public for the site report's operation list (same cursor shape). */
+  public static function encodeCursor(int $createdAt, string $operationId): string {
     return rtrim(strtr(base64_encode($createdAt . ':' . $operationId), '+/', '-_'), '=');
   }
 
   /**
    * @return array{0:int,1:string}
    */
-  private static function decodeCursor(string $cursor): array {
+  public static function decodeCursor(string $cursor): array {
     $decoded = base64_decode(strtr($cursor, '-_', '+/'), TRUE);
     if ($decoded === FALSE || !preg_match('/^(\d{1,15}):(.{1,128})\z/', $decoded, $m)) {
       throw new UsageReportException('invalid_request', 'cursor is not valid');
@@ -505,7 +519,8 @@ final class UsageReportService {
     return [(int) $m[1], $m[2]];
   }
 
-  private static function countWhere(string $predicate): string {
+  /** Public for the site report's operation list (same head expressions). */
+  public static function countWhere(string $predicate): string {
     return "SUM(CASE WHEN $predicate THEN 1 ELSE 0 END)";
   }
 

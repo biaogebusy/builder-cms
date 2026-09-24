@@ -95,7 +95,7 @@ final class SiteUsageReportTest extends TestCase {
     $this->assertTrue($permissions['view site ai usage']['restrict access']);
 
     $routes = Yaml::parseFile($module . '/xinshi_ai_usage.routing.yml');
-    foreach (['summary', 'timeseries', 'breakdown', 'costs'] as $name) {
+    foreach (['summary', 'timeseries', 'breakdown', 'costs', 'operations'] as $name) {
       $route = $routes["xinshi_ai_usage.admin.$name"];
       $this->assertSame(['GET'], $route['methods'], $name);
       $this->assertTrue($route['options']['no_cache'], $name);
@@ -103,6 +103,10 @@ final class SiteUsageReportTest extends TestCase {
       $this->assertSame('\Drupal\xinshi_ai_usage\Controller\SiteUsageReportController::' . $name,
         $route['defaults']['_controller'], $name);
     }
+    $this->assertSame('/api/v3/ai/admin/reports/operations', $routes['xinshi_ai_usage.admin.operations']['path']);
+    $this->assertSame('view site ai usage', $routes['xinshi_ai_usage.admin.operations']['requirements']['_permission']);
+    $this->assertSame('/api/v3/ai/admin/reports/operations/{operation}', $routes['xinshi_ai_usage.admin.operation']['path']);
+    $this->assertSame('[A-Za-z0-9_.:-]{1,128}', $routes['xinshi_ai_usage.admin.operation']['requirements']['operation']);
     $this->assertSame('/api/v3/ai/admin/reports/summary', $routes['xinshi_ai_usage.admin.summary']['path']);
     $this->assertSame('view site ai usage', $routes['xinshi_ai_usage.admin.summary']['requirements']['_permission']);
     // Drupal's PermissionAccessCheck joins comma-separated permissions with
@@ -511,6 +515,112 @@ final class SiteUsageReportTest extends TestCase {
     // No registered site -> 503.
     $noSite = $this->controller('99', $this->vault(), ['view site ai usage' => TRUE])->summary(Request::create('/x'));
     $this->assertSame(503, $noSite->getStatusCode());
+  }
+
+  public function testOperationsListIsNewestFirstWithActorsAndCursor(): void {
+    $this->seedScenario();
+    $filter = $this->siteReports->parseFilter(self::WINDOW, $this->now);
+
+    $list = $this->siteReports->operations(self::SITE, $filter, NULL, 100);
+    // Newest operation first; every row names the actor, which the user list omits.
+    $this->assertSame(['op-image', 'op-fail', 'op-legacy', 'op-other-usd', 'op-plan', 'op-other', 'op-chat'],
+      array_column($list['operations'], 'operation_id'));
+    $actors = array_column($list['operations'], 'actor_user_id', 'operation_id');
+    $this->assertSame([self::ME, self::OTHER, NULL],
+      [$actors['op-image'], $actors['op-other'], $actors['op-legacy']]);
+    $this->assertNull($list['next_cursor']);
+
+    // The admin user filter narrows to one actor's operations.
+    $filtered = $this->siteReports->operations(self::SITE,
+      $this->siteReports->parseFilter(self::WINDOW + ['user' => self::OTHER], $this->now), NULL, 100);
+    $this->assertSame(['op-other-usd', 'op-other'], array_column($filtered['operations'], 'operation_id'));
+
+    // The status filter agrees with the reported status: only op-fail is failed.
+    $failed = $this->siteReports->operations(self::SITE, $filter, NULL, 100, 'failed');
+    $this->assertSame(['op-fail'], array_column($failed['operations'], 'operation_id'));
+    try {
+      $this->siteReports->operations(self::SITE, $filter, NULL, 100, 'bogus');
+      $this->fail('expected invalid_request for an unknown status');
+    }
+    catch (UsageReportException $e) {
+      $this->assertSame('invalid_request', $e->reportCode);
+    }
+
+    // Cursor pagination: two pages, no duplicates, cursor ends empty.
+    $page1 = $this->siteReports->operations(self::SITE, $filter, NULL, 3);
+    $this->assertSame(['op-image', 'op-fail', 'op-legacy'], array_column($page1['operations'], 'operation_id'));
+    $this->assertNotNull($page1['next_cursor']);
+    $page2 = $this->siteReports->operations(self::SITE, $filter, $page1['next_cursor'], 3);
+    $this->assertSame(['op-other-usd', 'op-plan', 'op-other'], array_column($page2['operations'], 'operation_id'));
+    $page3 = $this->siteReports->operations(self::SITE, $filter, $page2['next_cursor'], 3);
+    $this->assertSame(['op-chat'], array_column($page3['operations'], 'operation_id'));
+    $this->assertNull($page3['next_cursor']);
+    $this->assertSame(7, count(array_unique(array_column(array_merge(
+      $page1['operations'], $page2['operations'], $page3['operations']), 'operation_id'))));
+  }
+
+  public function testOperationDetailCarriesActorsAttemptsAndDeliveries(): void {
+    $this->seedScenario();
+    $tz = new \DateTimeZone('UTC');
+
+    $image = $this->siteReports->operation(self::SITE, 'op-image', $tz);
+    $this->assertSame(self::ME, $image['actor_user_id']);
+    $this->assertSame('succeeded', $image['status']);
+    $this->assertSame('3', $image['images_generated']);
+    $this->assertSame(2, $image['images_delivered']);
+    $this->assertSame([self::ME], array_column($image['attempt_list'], 'actor_user_id'));
+    $this->assertCount(3, $image['deliveries']);
+    $this->assertSame(['not_enabled'], [$image['charges']['status']]);
+
+    // Two attempts of different roles, both carrying the actor; the summary
+    // keeps the repair's unknown state out of the success verdict.
+    $chat = $this->siteReports->operation(self::SITE, 'op-chat', $tz);
+    $this->assertSame('succeeded', $chat['status']);
+    $this->assertSame(['att-main', 'att-repair'], array_column($chat['attempt_list'], 'attempt_id'));
+    $this->assertSame([self::ME, self::ME], array_column($chat['attempt_list'], 'actor_user_id'));
+    $this->assertSame(['repair'], [$chat['attempt_list'][1]['billing_role']]);
+
+    // The legacy attempt has no actor; NULL is reported, not faked.
+    $legacy = $this->siteReports->operation(self::SITE, 'op-legacy', $tz);
+    $this->assertNull($legacy['actor_user_id']);
+    $this->assertNull($legacy['attempt_list'][0]['actor_user_id']);
+
+    // Unknown operation: NULL for the controller to map to 404.
+    $this->assertNull($this->siteReports->operation(self::SITE, 'op-nope', $tz));
+  }
+
+  public function testControllerOperationsAndDetailGates(): void {
+    $this->seedScenario();
+    $vault = $this->vault();
+    $vault->set('chat-node', 'secret', self::SITE, 1);
+    $controller = $this->controller('99', $vault, ['view site ai usage' => TRUE]);
+
+    // Without the permission the list and the detail are both refused.
+    $denied = $this->controller('99', $vault, ['view site ai usage' => FALSE]);
+    $this->assertSame(403, $denied->operations(Request::create('/x', 'GET', self::WINDOW))->getStatusCode());
+    $this->assertSame(403, $denied->operation(Request::create('/x', 'GET'), 'op-chat')->getStatusCode());
+
+    $list = $controller->operations(Request::create('/x', 'GET', self::WINDOW));
+    $this->assertSame(200, $list->getStatusCode());
+    $body = json_decode((string) $list->getContent(), TRUE);
+    $this->assertSame(7, count($body['operations']));
+    $this->assertSame(self::ME, $body['operations'][0]['actor_user_id']);
+
+    // An invalid status is a 400, not an empty list.
+    $badStatus = $controller->operations(Request::create('/x', 'GET', self::WINDOW + ['status' => 'bogus']));
+    $this->assertSame(400, $badStatus->getStatusCode());
+
+    // Unknown operation: a plain 404 (no other user to protect from enumeration).
+    $missing = $controller->operation(Request::create('/x', 'GET'), 'op-nope');
+    $this->assertSame(404, $missing->getStatusCode());
+    $this->assertSame('not_found', json_decode((string) $missing->getContent(), TRUE)['code']);
+
+    // The detail shows the actor, unlike the user endpoint.
+    $detail = $controller->operation(Request::create('/x', 'GET'), 'op-other');
+    $this->assertSame(200, $detail->getStatusCode());
+    $detailBody = json_decode((string) $detail->getContent(), TRUE);
+    $this->assertSame(self::OTHER, $detailBody['actor_user_id']);
+    $this->assertSame(self::OTHER, $detailBody['attempt_list'][0]['actor_user_id']);
   }
 
   public function testSchemaUpgradeAddsReportIndexesIdempotently(): void {

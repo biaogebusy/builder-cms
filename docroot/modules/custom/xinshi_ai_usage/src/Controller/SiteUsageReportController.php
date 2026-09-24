@@ -12,6 +12,7 @@ use Drupal\xinshi_ai_usage\Service\ProducerVault;
 use Drupal\xinshi_ai_usage\Service\RegisteredSites;
 use Drupal\xinshi_ai_usage\Service\SiteUsageReportService;
 use Drupal\xinshi_ai_usage\Service\UsageQualityReportService;
+use Drupal\xinshi_ai_usage\Service\UsageReportService;
 use Drupal\xinshi_ai_usage\Service\UsageReportException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -110,6 +111,40 @@ final class SiteUsageReportController extends ControllerBase {
     return $this->report($request, function (string $site, array $query): array {
       $filter = $this->reports->parseFilter($query, $this->nowMs());
       return $this->reports->consistency($site, $filter, $this->account->hasPermission('view ai supplier costs'));
+    }, 'view site ai usage');
+  }
+
+  /**
+   * GET /api/v3/ai/admin/reports/operations.
+   *
+   * The site's operations in the window (admin drilldown). Every row carries
+   * the actor, which the user list never shows.
+   */
+  public function operations(Request $request): JsonResponse {
+    return $this->report($request, function (string $site, array $query): array {
+      $filter = $this->reports->parseFilter($query, $this->nowMs());
+      $limit = is_numeric($query['limit'] ?? NULL) ? (int) $query['limit'] : UsageReportService::DEFAULT_LIMIT;
+      $cursor = is_string($query['cursor'] ?? NULL) && $query['cursor'] !== '' ? $query['cursor'] : NULL;
+      $status = is_string($query['status'] ?? NULL) && $query['status'] !== '' ? $query['status'] : NULL;
+      return $this->reports->operations($site, $filter, $cursor, $limit, $status);
+    }, 'view site ai usage');
+  }
+
+  /**
+   * GET /api/v3/ai/admin/reports/operations/{operation}.
+   *
+   * One operation with its attempts and deliveries; the whole operation, not
+   * just the window. Unlike the user endpoint, a missing operation is a plain
+   * 404: there is no other user to protect from enumeration.
+   */
+  public function operation(Request $request, string $operation): JsonResponse {
+    return $this->report($request, function (string $site, array $query) use ($operation): array {
+      $filter = $this->reports->parseFilter(['timezone' => $query['timezone'] ?? NULL], $this->nowMs());
+      $result = $this->reports->operation($site, $operation, $filter['timezone']);
+      if ($result === NULL) {
+        throw new UsageReportException('not_found', 'operation not found');
+      }
+      return $result;
     }, 'view site ai usage');
   }
 

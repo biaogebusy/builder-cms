@@ -260,6 +260,149 @@ final class SiteUsageReportService {
   }
 
   /**
+   * The site's operations in the window, newest first (admin drilldown).
+   *
+   * Same head expressions, status filter and `(created_at, operation_id)`
+   * cursor as the user list; the head query runs on the admin filter
+   * (user/channel/payer/role included) and every row carries `actor_user_id`.
+   *
+   * @return array{filter:array,operations:list<array>,next_cursor:?string,limit:int}
+   *
+   * @throws \Drupal\xinshi_ai_usage\Service\UsageReportException
+   *   `invalid_request` for an unknown status or an unusable cursor.
+   */
+  public function operations(string $siteId, array $filter, ?string $cursor, int $limit,
+    ?string $status = NULL): array {
+    $limit = max(1, min($limit, UsageReportService::MAX_LIMIT));
+    if ($status !== NULL && !in_array($status, UsageReportService::STATUSES, TRUE)) {
+      throw new UsageReportException('invalid_request', 'status must be one of ' . implode(', ', UsageReportService::STATUSES));
+    }
+    $query = $this->scoped($siteId, $filter)
+      ->fields('a', ['operation_id'])
+      ->groupBy('a.operation_id')
+      ->range(0, $limit + 1);
+    $query->addExpression('MIN(a.started_at)', 'created_at');
+    $query->addExpression(UsageReportService::countWhere("a.state IN ('prepared', 'in_flight')"), 'open_count');
+    foreach (['succeeded', 'failed', 'unknown', 'not_sent'] as $state) {
+      $query->addExpression(UsageReportService::countWhere("a.state = '$state'"), $state . '_count');
+    }
+    $query->orderBy('created_at', 'DESC')->orderBy('a.operation_id', 'DESC');
+    if ($cursor !== NULL) {
+      [$cursorTs, $cursorId] = UsageReportService::decodeCursor($cursor);
+      $query->having('(MIN(a.started_at) < :cursor_ts OR (MIN(a.started_at) = :cursor_ts AND a.operation_id < :cursor_id))',
+        [':cursor_ts' => $cursorTs, ':cursor_id' => $cursorId]);
+    }
+    if ($status !== NULL) {
+      $query->having(UsageReportService::statusHaving($status));
+    }
+    $heads = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
+    $next = NULL;
+    if (count($heads) > $limit) {
+      array_pop($heads);
+      $last = end($heads);
+      $next = UsageReportService::encodeCursor((int) $last['created_at'], (string) $last['operation_id']);
+    }
+    $ids = array_column($heads, 'operation_id');
+    $byOperation = [];
+    foreach ($this->attemptsOfOperations($siteId, $filter, $ids) as $row) {
+      $byOperation[$row['operation_id']][] = $row;
+    }
+    $delivered = $this->userReports->deliveredByOperation($siteId, $ids);
+    $operations = [];
+    foreach ($heads as $head) {
+      $id = (string) $head['operation_id'];
+      $rows = $byOperation[$id] ?? [];
+      $operations[] = $this->userReports->describeOperation($id, $rows, $delivered[$id] ?? 0, $filter['timezone'])
+        + ['actor_user_id' => self::leadActor($rows)];
+    }
+    return [
+      'filter' => $this->describeFilter($filter) + ['status' => $status],
+      'operations' => $operations,
+      'next_cursor' => $next,
+      'limit' => $limit,
+    ] + $this->completeness($siteId);
+  }
+
+  /**
+   * One operation of the site with its attempts and deliveries, or NULL when unknown.
+   *
+   * Reads the whole operation, not just the window, like the user detail: an
+   * administrator drills in from a row already inside the filter. The summary
+   * and every attempt carry `actor_user_id`, which the user report omits.
+   */
+  public function operation(string $siteId, string $operationId, \DateTimeZone $tz): ?array {
+    $rows = $this->database->select(UsageProjectionService::ATTEMPT_TABLE, 'a')
+      ->fields('a')
+      ->condition('a.site_id', $siteId)
+      ->condition('a.operation_id', $operationId)
+      ->orderBy('a.started_at')->orderBy('a.id')
+      ->execute()->fetchAll(\PDO::FETCH_ASSOC);
+    if ($rows === []) {
+      return NULL;
+    }
+    $deliveries = $this->database->select(LocalUsageProducer::DELIVERY_TABLE, 'd')
+      ->fields('d', ['attempt_id', 'output_index', 'artifact_kind', 'artifact_ref', 'state', 'delivered_at'])
+      ->condition('d.site_id', $siteId)
+      ->condition('d.operation_id', $operationId)
+      ->orderBy('d.attempt_id')->orderBy('d.output_index')->orderBy('d.id')
+      ->execute()->fetchAll(\PDO::FETCH_ASSOC);
+    $committed = count(array_filter($deliveries, static fn(array $d): bool =>
+      $d['state'] === LocalUsageProducer::STATE_COMMITTED && $d['artifact_kind'] === 'image_asset'));
+    return $this->userReports->describeOperation($operationId, $rows, $committed, $tz)
+      + ['actor_user_id' => self::leadActor($rows)] + [
+        'attempt_list' => array_map(fn(array $row): array =>
+          $this->userReports->describeAttempt($row, $tz) + [
+            'actor_user_id' => $row['actor_user_id'] === NULL ? NULL : (string) $row['actor_user_id'],
+          ], $rows),
+        'deliveries' => array_map(static fn(array $d): array => [
+          'attempt_id' => $d['attempt_id'],
+          'output_index' => (int) $d['output_index'],
+          'artifact_kind' => $d['artifact_kind'],
+          'artifact_ref' => $d['artifact_ref'],
+          'state' => $d['state'],
+          'delivered_at' => ReportTime::iso((int) $d['delivered_at'], $tz),
+        ], $deliveries),
+        // No sales price book or ledger exists yet (UB4); nothing was charged.
+        'charges' => ['status' => 'not_enabled'],
+      ] + $this->completeness($siteId);
+  }
+
+  /**
+   * The full attempt rows of the given operations inside the window filter.
+   *
+   * @param list<string> $operationIds
+   *
+   * @return list<array<string,mixed>>
+   */
+  private function attemptsOfOperations(string $siteId, array $filter, array $operationIds): array {
+    if ($operationIds === []) {
+      return [];
+    }
+    $rows = [];
+    foreach (array_chunk(array_values($operationIds), 500) as $chunk) {
+      $rows = [...$rows, ...$this->scoped($siteId, $filter)
+        ->fields('a')
+        ->condition('a.operation_id', $chunk, 'IN')
+        ->orderBy('a.started_at')->orderBy('a.id')
+        ->execute()->fetchAll(\PDO::FETCH_ASSOC)];
+    }
+    return $rows;
+  }
+
+  /**
+   * The actor of an operation's lead attempt: the primary call, else the first.
+   */
+  private static function leadActor(array $rows): ?string {
+    foreach ($rows as $row) {
+      if ($row['billing_role'] === 'primary') {
+        return $row['actor_user_id'] === NULL ? NULL : (string) $row['actor_user_id'];
+      }
+    }
+    $first = $rows[0] ?? NULL;
+    return $first === NULL || $first['actor_user_id'] === NULL ? NULL : (string) $first['actor_user_id'];
+  }
+
+  /**
    * Every attempt row of the window, oldest first, for exports.
    *
    * Streams through the result instead of building the PHP array the reports
