@@ -1,7 +1,8 @@
 <?php
 
-namespace Drupal\xinshi_api\Plugin\rest\resource;
+namespace Drupal\xinshi_api\Controller;
 
+use Drupal\Core\Cache\CacheableJsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -10,16 +11,8 @@ use Symfony\Component\HttpFoundation\Request;
  * webform_rest exposes a single webform's fields and accepts submissions, but
  * has no endpoint to enumerate the webforms; the builder's widget picker needs
  * that list to offer them as insertable components.
- *
- * @RestResource(
- *   id = "xinshi_api_webform_rest",
- *   label = @Translation("Webform list"),
- *   uri_paths = {
- *     "canonical" = "/api/v3/webform"
- *   }
- * )
  */
-class WebformResource extends XinshibResourceBase {
+class WebformController extends XinshiApiControllerBase {
 
   /**
    * Returns the webforms the current user may read, as a flat list.
@@ -27,19 +20,19 @@ class WebformResource extends XinshibResourceBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
    *
-   * @return \Drupal\rest\ResourceResponse
+   * @return \Drupal\Core\Cache\CacheableJsonResponse
    *   Each item carries id, title, description, category and status.
    */
-  public function get(Request $request) {
+  public function webformList(Request $request) {
     $this->addCacheTags(['config:webform_list']);
     $data = [];
     // The module does not hard depend on webform; answer with an empty list
     // instead of fataling when the resource is enabled without it.
-    if (!$this->entityTypeManager->hasDefinition('webform')) {
+    if (!$this->entityTypeManager()->hasDefinition('webform')) {
       return $this->getResponse($data);
     }
     /** @var \Drupal\webform\WebformInterface $webform */
-    foreach ($this->entityTypeManager->getStorage('webform')->loadMultiple() as $webform) {
+    foreach ($this->entityTypeManager()->getStorage('webform')->loadMultiple() as $webform) {
       // Templates are starting points for new webforms, never live forms.
       // On a non-HTML request 'view' maps to webform configuration access,
       // which is what reading a form's metadata to embed it needs.

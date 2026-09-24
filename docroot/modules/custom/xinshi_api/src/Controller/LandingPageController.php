@@ -1,11 +1,11 @@
 <?php
 
-namespace Drupal\xinshi_api\Plugin\rest\resource;
+namespace Drupal\xinshi_api\Controller;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Render\RenderContext;
-use Drupal\rest\ResourceResponse;
 use Drupal\xinshi_api\EntityJsonBase;
 use Drupal\xinshi_api\JsonAPIUtil;
 use Drupal\xinshi_api\NodeJson;
@@ -14,23 +14,15 @@ use Drupal\xinshi_api\UserJson;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Creates a resource for landing page.
- *
- * @RestResource(
- *   id = "xinshi_api_landing_page_rest",
- *   label = @Translation("Landing Page"),
- *   uri_paths = {
- *     "canonical" = "/api/v3/landingPage"
- *   }
- * )
+ * Landing page content json.
  */
-class LandingPageResource extends XinshibResourceBase {
+class LandingPageController extends XinshiApiControllerBase {
 
   /**
    * @param Request $request
-   * @return ResourceResponse
+   * @return CacheableJsonResponse
    */
-  public function get(Request $request) {
+  public function landingPage(Request $request) {
     $context = new RenderContext();
     $data = \Drupal::service('renderer')->executeInRenderContext($context, function () use ($request) {
       // triggers the code that we don't don't control that in turn triggers early rendering.
@@ -62,8 +54,8 @@ class LandingPageResource extends XinshibResourceBase {
     $mode = $request->get('mode') ?? 'json';
     if ($access) {
       try {
-        $cache_enable = !$is_draft && $this->config->get('cache_enable');
-        $cache_config = $this->config->get($entity->getEntityTypeId() . '_cache') ?? [];
+        $cache_enable = !$is_draft && $this->config('xinshi_api.settings')->get('cache_enable');
+        $cache_config = $this->config('xinshi_api.settings')->get($entity->getEntityTypeId() . '_cache') ?? [];
         $context = $cache_config[$entity->bundle()]['context'] ?? [];
         $cid = empty($cache_enable) ? '' : "xinshi:jsonapi:{$mode}" . $entity->getEntityTypeId() . ':' . $entity->id();
         if ($cache_enable && ($context['user'] ?? 0)) {

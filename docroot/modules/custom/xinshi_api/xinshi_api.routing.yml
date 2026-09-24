@@ -6,6 +6,83 @@ xinshi_api.settings:
   requirements:
     _permission: 'administer xinshi api configuration'
 
+xinshi_api.v3.accountProfile:
+  path: '/api/v3/accountProfile'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\AccountController::accountProfile'
+    _title: 'Account Profile'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
+xinshi_api.v3.comment:
+  path: '/api/v3/comment/{comment_type}/{entity_uuid}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\CommentController::nodeComment'
+    _title: 'Comment List'
+  requirements:
+    _permission: 'access comments'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
+xinshi_api.v3.landingPage:
+  path: '/api/v3/landingPage'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\LandingPageController::landingPage'
+    _title: 'Landing Page Json'
+  requirements:
+    _permission: 'access content'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
+xinshi_api.v3.node.component:
+  path: '/api/v3/node/component'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\NodeComponentController::componentList'
+    _title: 'Node Component'
+  requirements:
+    _permission: 'access content'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
+xinshi_api.v3.webform:
+  path: '/api/v3/webform'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\WebformController::webformList'
+    _title: 'Webform List'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
+xinshi_api.v3.statistics.node.published:
+  path: '/api/v3/statistics/node/published'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\StatisticsController::nodePublished'
+    _title: 'Statistics Node Published'
+  requirements:
+    _access: 'TRUE'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
+xinshi_api.v3.statistics.user.register:
+  path: '/api/v3/statistics/user/register'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\StatisticsController::userRegister'
+    _title: 'Statistics User Register'
+  requirements:
+    _access: 'TRUE'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
 xinshi_api.v3.landingPage.builder:
   path: '/api/v3/landingPage/builder'
   defaults:

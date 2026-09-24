@@ -1,28 +1,24 @@
 <?php
 
-namespace Drupal\xinshi_api\Plugin\rest\resource;
+namespace Drupal\xinshi_api\Controller;
 
+use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Render\RenderContext;
 use Drupal\node\Entity\Node;
+use Drupal\taxonomy\Entity\Term;
 use Drupal\xinshi_api\CommonUtil;
 use Symfony\Component\HttpFoundation\Request;
 
-
 /**
- * Creates a resource for Group component list.
- *
- * @RestResource(
- *   id = "xinshi_api_node_component_rest",
- *   label = @Translation("Component"),
- *   uri_paths = {
- *     "canonical" = "/api/v3/node/component"
- *   }
- * )
+ * Group component list.
  */
-class NodeComponentResource extends XinshibResourceBase {
+class NodeComponentController extends XinshiApiControllerBase {
 
-  public function get(Request $request) {
-
+  /**
+   * @param Request $request
+   * @return CacheableJsonResponse
+   */
+  public function componentList(Request $request) {
     $this->addCacheTags(['taxonomy_term_list', 'node_list']);
     $context = new RenderContext();
     $data  = \Drupal::service('renderer')->executeInRenderContext($context, function () use ($request) {
@@ -42,7 +38,7 @@ class NodeComponentResource extends XinshibResourceBase {
    *   An array containing the taxonomy tree with IDs and titles.
    */
   protected function getComponentTypeTree() {
-    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('component_type', 0, NULL, TRUE);
+    $terms = $this->entityTypeManager()->getStorage('taxonomy_term')->loadTree('component_type', 0, NULL, TRUE);
     $flatTerms = [];
     /** @var Term */
     foreach ($terms as $term) {
@@ -59,14 +55,14 @@ class NodeComponentResource extends XinshibResourceBase {
   }
 
   protected function setComponentData(array &$types) {
-    $query = $this->entityTypeManager->getStorage('node')->getQuery()
+    $query = $this->entityTypeManager()->getStorage('node')->getQuery()
       ->accessCheck()
       ->condition('type', 'component')
       ->condition('status', 1)
       ->condition('category', '', 'IS NOT NULL');
     foreach ($query->execute() as $id) {
       /** @var Node $entity */
-      $entity = $this->entityTypeManager->getStorage('node')->load($id);
+      $entity = $this->entityTypeManager()->getStorage('node')->load($id);
       $this->addCacheTags($entity->getCacheTags());
       foreach ($entity->get('category')->getValue() as $val) {
         $cid = $val['target_id'];

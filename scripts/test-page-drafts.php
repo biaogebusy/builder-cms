@@ -39,7 +39,7 @@ final class PageDraftRegression {
     $tag = $this->state['tag'];
     $permissions = ['access content', 'access user profiles', 'create landing_page content',
       'view own unpublished content', 'create json block content', 'access block library',
-      'use text format json', 'restful get xinshi_api_landing_page_rest',
+      'use text format json',
       'edit own landing_page content', 'delete own landing_page content'];
     $probe = \Drupal::entityTypeManager()->getStorage('node')->create(['type' => 'landing_page']);
     if (\Drupal::hasService('content_moderation.moderation_information')) {

@@ -35,3 +35,39 @@ function xinshi_api_update_10001() {
     $schema->createTable($table, xinshi_api_schema()[$table]);
   }
 }
+
+/**
+ * Serve the api/v3 endpoints from controller routes instead of REST resources.
+ *
+ * The REST resources required the generated "restful get ..." permission, which
+ * no role held, so every endpoint answered 403 for non-admin users.
+ */
+function xinshi_api_update_10002() {
+  $permissions = [
+    'restful get xinshi_api_account_rest',
+    'restful get xinshi_api_comment_rest',
+    'restful get xinshi_api_landing_page_rest',
+    'restful get xinshi_api_node_component_rest',
+    'restful get xinshi_api_statistics_node_rest',
+    'restful get xinshi_api_statistics_register_rest',
+    'restful get xinshi_api_webform_rest',
+  ];
+  $ids = array_map(fn(string $permission): string => substr($permission, strlen('restful get ')), $permissions);
+  $resource_storage = \Drupal::entityTypeManager()->getStorage('rest_resource_config');
+  foreach ($resource_storage->loadMultiple($ids) as $resource) {
+    // The controller route owns the path from now on.
+    $resource->delete();
+  }
+  // The permission is gone with the resource; drop the grants it left behind.
+  $role_storage = \Drupal::entityTypeManager()->getStorage('user_role');
+  foreach ($role_storage->loadMultiple() as $role) {
+    $stale = array_intersect($permissions, $role->getPermissions());
+    if (!$stale) {
+      continue;
+    }
+    foreach ($stale as $permission) {
+      $role->revokePermission($permission);
+    }
+    $role->save();
+  }
+}

@@ -1,31 +1,23 @@
 <?php
 
-namespace Drupal\xinshi_api\Plugin\rest\resource;
+namespace Drupal\xinshi_api\Controller;
 
 use Drupal\comment\Entity\Comment;
+use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Render\RenderContext;
-use Drupal\rest\ResourceResponse;
 use Drupal\xinshi_api\CommonUtil;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Creates a resource for entity comment.
- *
- * @RestResource(
- *   id = "xinshi_api_comment_rest",
- *   label = @Translation("Comment Rest"),
- *   uri_paths = {
- *     "canonical" = "/api/v3/comment/{comment_type}/{entity_uuid}"
- *   }
- * )
+ * Comment threads of a node.
  */
-class CommentResource extends XinshibResourceBase {
+class CommentController extends XinshiApiControllerBase {
 
   /**
-   * @param Request $request
-   * @return ResourceResponse
+   * @param $comment_type
+   * @param $entity_uuid
+   * @return CacheableJsonResponse
    */
-  public function get($comment_type, $entity_uuid) {
+  public function nodeComment($comment_type, $entity_uuid) {
     $context = new RenderContext();
     $data = \Drupal::service('renderer')->executeInRenderContext($context, function () use ($comment_type, $entity_uuid) {
       // triggers the code that we don't don't control that in turn triggers early rendering.
@@ -40,7 +32,7 @@ class CommentResource extends XinshibResourceBase {
    * @return array
    */
   protected function getNodeComment($comment_type, $entity_uuid) {
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = $this->entityTypeManager();
     $node = $entity_type_manager->getStorage('node')->loadByProperties(['uuid' => $entity_uuid]);
     if (empty($node)) {
       return [];
