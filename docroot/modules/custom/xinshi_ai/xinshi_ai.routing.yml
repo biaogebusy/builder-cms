@@ -33,6 +33,18 @@ xinshi_ai.figma:
   requirements:
     _user_is_logged_in: 'TRUE'
 
+xinshi_ai.figma.assets:
+  path: '/api/v3/ai/figma/assets'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\FigmaAssetController::upload'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 xinshi_ai.product_documents.mcp:
   path: '/api/v3/ai/mcp/product-documents'
   defaults:
