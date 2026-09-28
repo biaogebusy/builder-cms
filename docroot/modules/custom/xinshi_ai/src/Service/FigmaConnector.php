@@ -307,7 +307,16 @@ final class FigmaConnector {
     catch (FigmaException $error) {
       throw $error;
     }
-    catch (\Throwable) {
+    catch (\Throwable $e) {
+      \Drupal::logger('xinshi_ai')->error(
+        'Figma API request failed: @method @path — @class: @message',
+        [
+          '@method'  => $method,
+          '@path'    => $path,
+          '@class'   => get_class($e),
+          '@message' => $e->getMessage(),
+        ]
+      );
       throw new FigmaException('figma_unavailable', 503);
     }
   }
