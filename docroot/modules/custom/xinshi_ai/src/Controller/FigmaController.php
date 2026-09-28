@@ -50,6 +50,16 @@ final class FigmaController extends ControllerBase {
       return $response;
     }
     catch (\Throwable $error) {
+      if (!$error instanceof FigmaException) {
+        \Drupal::logger('xinshi_ai')->error(
+          'Figma controller uncaught error for operation @op: @class: @message',
+          [
+            '@op'      => $input['operation'] ?? 'unknown',
+            '@class'   => get_class($error),
+            '@message' => $error->getMessage(),
+          ]
+        );
+      }
       return new JsonResponse(['code' => $error instanceof FigmaException ? $error->error : 'figma_unavailable'],
         $error instanceof FigmaException ? $error->status : 503, ['Cache-Control' => 'private, no-store']);
     }
