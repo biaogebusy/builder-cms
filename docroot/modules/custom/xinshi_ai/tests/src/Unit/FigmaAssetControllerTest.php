@@ -12,6 +12,7 @@ use Drupal\media\MediaInterface;
 use Drupal\xinshi_ai\Controller\FigmaAssetController;
 use Drupal\xinshi_ai\Service\MediaUploadServiceInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /** Tests FigmaAssetController in isolation — no site database, no Drupal bootstrap. */
@@ -19,6 +20,7 @@ final class FigmaAssetControllerTest extends TestCase {
 
   private MediaUploadServiceInterface $upload;
   private FigmaAssetController $controller;
+  private LoggerInterface $logger;
   private const URL = 'https://builder.example/sites/default/files/xinshi_ai/2026-09/asset.png';
 
   protected function setUp(): void {
@@ -39,7 +41,8 @@ final class FigmaAssetControllerTest extends TestCase {
     $container->set('file_url_generator', $urlGenerator);
     \Drupal::setContainer($container);
 
-    $this->controller = new FigmaAssetController($this->upload);
+    $this->logger = $this->createMock(LoggerInterface::class);
+    $this->controller = new FigmaAssetController($this->upload, $this->logger);
   }
 
   private function mockMedia(string $fileUri): MediaInterface {
@@ -138,6 +141,10 @@ final class FigmaAssetControllerTest extends TestCase {
 
   public function testServiceExceptionReturns503(): void {
     $this->upload->method('fromImageFile')->willThrowException(new \RuntimeException('disk full'));
+    $this->logger->expects(self::once())->method('error')->with(
+      'Figma media upload failed: @class: @message',
+      ['@class' => \RuntimeException::class, '@message' => 'disk full'],
+    );
 
     $response = $this->controller->upload($this->request([
       'filename' => 'figma-asset.png',
@@ -146,7 +153,7 @@ final class FigmaAssetControllerTest extends TestCase {
     ]));
 
     self::assertSame(503, $response->getStatusCode());
-    self::assertSame('figma_unavailable', json_decode($response->getContent(), TRUE)['code']);
+    self::assertSame('figma_asset_unavailable', json_decode($response->getContent(), TRUE)['code']);
   }
 
 }

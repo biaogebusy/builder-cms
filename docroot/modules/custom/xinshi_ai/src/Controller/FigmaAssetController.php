@@ -8,6 +8,7 @@ use Drupal\ai\OperationType\GenericType\ImageFile;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\xinshi_ai\Exception\FigmaException;
 use Drupal\xinshi_ai\Service\MediaUploadServiceInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,10 +35,13 @@ final class FigmaAssetController extends ControllerBase {
   // 12 MB JSON body limit (base64 overhead + envelope).
   private const MAX_BODY = 12 * 1024 * 1024;
 
-  public function __construct(private readonly MediaUploadServiceInterface $mediaUpload) {}
+  public function __construct(
+    private readonly MediaUploadServiceInterface $mediaUpload,
+    private readonly LoggerInterface $logger,
+  ) {}
 
   public static function create(ContainerInterface $container): self {
-    return new self($container->get('xinshi_ai.media_upload'));
+    return new self($container->get('xinshi_ai.media_upload'), $container->get('logger.channel.xinshi_ai'));
   }
 
   public function upload(Request $request): JsonResponse {
@@ -90,8 +94,14 @@ final class FigmaAssetController extends ControllerBase {
       );
     }
     catch (\Throwable $error) {
+      if (!$error instanceof FigmaException) {
+        $this->logger->error('Figma media upload failed: @class: @message', [
+          '@class' => get_class($error),
+          '@message' => $error->getMessage(),
+        ]);
+      }
       $status = $error instanceof FigmaException ? $error->status : 503;
-      $code   = $error instanceof FigmaException ? $error->error  : 'figma_unavailable';
+      $code   = $error instanceof FigmaException ? $error->error  : 'figma_asset_unavailable';
       return new JsonResponse(
         ['code' => $code],
         $status,
