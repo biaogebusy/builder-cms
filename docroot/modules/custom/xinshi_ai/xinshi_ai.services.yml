@@ -1,4 +1,8 @@
 services:
+  xinshi_ai.conversation_writer:
+    class: Drupal\xinshi_ai\Service\ConversationWriter
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']
+
   xinshi_ai.figma_vault:
     class: Drupal\xinshi_ai\Service\FigmaVault
     arguments: ['@keyvalue', '@private_key']
