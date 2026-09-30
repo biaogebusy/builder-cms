@@ -4,8 +4,6 @@ namespace Drupal\xinshi_api;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Uuid\UuidInterface;
-use Drupal\content_moderation\ModerationInformationInterface;
-use Drupal\content_moderation\StateTransitionValidationInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -28,8 +26,7 @@ final class PageDraftService {
     private readonly LanguageManagerInterface $languages,
     private readonly TimeInterface $time,
     private readonly UuidInterface $uuid,
-    private readonly ?ModerationInformationInterface $moderation,
-    private readonly ?StateTransitionValidationInterface $transitions,
+    private readonly PageModerationPolicy $moderationPolicy,
   ) {}
 
   public function canCreate(): bool {
@@ -361,22 +358,7 @@ final class PageDraftService {
   }
 
   private function setDraftState(ContentEntityInterface $entity): void {
-    if (!$this->moderation || !$this->moderation->isModeratedEntity($entity)) {
-      return;
-    }
-    $workflow = $this->moderation->getWorkflowForEntity($entity);
-    $type = $workflow->getTypePlugin();
-    if (!$type->hasState('draft') || $type->getState('draft')->isPublishedState()) {
-      throw new PageDraftException('draft_not_supported', 503);
-    }
-    $initial = $entity->isNew() ? $type->getInitialState($entity)
-      : $type->getState($entity->get('moderation_state')->value);
-    if (!$initial->canTransitionTo('draft') || !$this->transitions->isTransitionValid(
-      $workflow, $initial, $type->getState('draft'), $this->account, $entity
-    )) {
-      throw new PageDraftException('permission_denied', 403);
-    }
-    $entity->set('moderation_state', 'draft');
+    $this->moderationPolicy->apply($entity, 'draft', TRUE);
   }
 
   private function validateId(string $execution_id): void {

@@ -150,6 +150,7 @@ final class PageDraftServiceTest extends TestCase {
     $this->services = ['database' => $this->database, 'entity_type.manager' => $entities,
       'current_user' => $account, 'language_manager' => $languages,
       'datetime.time' => $time, 'uuid' => new Uuid(), 'plugin.manager.core.layout' => $layouts];
+    $this->services['xinshi_api.page_moderation_policy'] = new \Drupal\xinshi_api\PageModerationPolicy(NULL, NULL, $account);
     $token = $this->createMock(Token::class);
     $token->method('replace')->willReturn('Approved page');
     $container = new ContainerBuilder();
@@ -182,7 +183,7 @@ final class PageDraftServiceTest extends TestCase {
   private function entity(string $type, array $values): NodeInterface|BlockContentInterface {
     $id = ++$this->nextId;
     $values['vid'] = $id * 10;
-    $entity = $this->createMock($type === 'node' ? Node::class : BlockContentInterface::class);
+    $entity = $this->createMock($type === 'node' ? Node::class : \Drupal\block_content\Entity\BlockContent::class);
     $this->created[$id] = ['entity' => $entity, 'type' => $type, 'values' => $values];
     $entity->method('id')->willReturn($id);
     $entity->method('getEntityTypeId')->willReturn($type);
@@ -336,7 +337,7 @@ final class PageDraftServiceTest extends TestCase {
     $id = (new Uuid())->generate();
     $saved = $drafts->createDraft($id, $input);
     $node = $this->created[$saved['result']['id']]['entity'];
-    $response = (new PanelsIPEPageController())->landingPageCanonical($node);
+    $response = (new PanelsIPEPageController($this->createStub(\Drupal\xinshi_api\PageWriteService::class)))->landingPageCanonical($node);
     $page = json_decode($response->getContent(), TRUE, 64, JSON_THROW_ON_ERROR);
     self::assertTrue($page['status']);
     self::assertCount(count($body), $page['body']);
@@ -492,7 +493,7 @@ final class PageDraftServiceTest extends TestCase {
     $after = $this->drafts()->readDraft($page['id']);
     self::assertEquals([...$page['body'], ...$input->body], $after['body']);
     self::assertNotSame($page['version'], $after['version']);
-    $response = (new PanelsIPEPageController())->landingPageCanonical($this->created[$page['id']]['entity']);
+    $response = (new PanelsIPEPageController($this->createStub(\Drupal\xinshi_api\PageWriteService::class)))->landingPageCanonical($this->created[$page['id']]['entity']);
     $preview = json_decode($response->getContent());
     self::assertTrue($preview->status);
     self::assertEquals($after['body'], array_map(fn($block) => $block->attributes->body, $preview->body));

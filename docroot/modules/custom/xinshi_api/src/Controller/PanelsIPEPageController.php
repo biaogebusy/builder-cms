@@ -6,14 +6,14 @@ namespace Drupal\xinshi_api\Controller;
 
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\Component\Serialization\Json;
-use Drupal\content_translation\ContentTranslationManager;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\node\Entity\Node;
+use Drupal\xinshi_api\PageWriteService;
+use Drupal\xinshi_api\PageDraftException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\xinshi_api\NodeJson;
-use Drupal\layout_builder\Section;
-use Drupal\layout_builder\SectionComponent;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
 /**
@@ -21,6 +21,54 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
  * @package Drupal\xinshi_api\Controller
  */
 class PanelsIPEPageController extends ControllerBase {
+
+  public function __construct(private readonly PageWriteService $pageWriter) {}
+
+  public static function create(ContainerInterface $container) {
+    return new static($container->get('xinshi_api.page_writer'));
+  }
+
+  /** Runs a builder write without exposing internal exceptions to clients. */
+  private function writeResponse(callable $operation): JsonResponse {
+    try {
+      $entity = $operation();
+      return new JsonResponse([
+        'status' => TRUE,
+        'message' => $this->t('Page saved successfully.'),
+        'data' => ['nid' => $entity->id(), 'url' => $entity->toUrl()->toString()],
+      ]);
+    }
+    catch (PageDraftException $error) {
+      return new JsonResponse([
+        'status' => FALSE, 'code' => $error->reason,
+        'message' => $this->t('The page could not be saved. Check your permissions and reload the page before retrying.'),
+      ], $error->httpStatus);
+    }
+    catch (\Throwable $error) {
+      $this->getLogger('xinshi_api')->error('Builder page write failed (@type).', ['@type' => get_class($error)]);
+      return new JsonResponse([
+        'status' => FALSE, 'code' => 'page_write_failed',
+        'message' => $this->t('The page could not be saved. Please try again later.'),
+      ], 500);
+    }
+  }
+
+  private function writeInput(bool $allow_empty = FALSE): array {
+    $content = \Drupal::request()->getContent();
+    if ($allow_empty && trim($content) === '') {
+      return [];
+    }
+    try {
+      $input = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
+    }
+    catch (\JsonException $error) {
+      throw new PageDraftException('invalid_input', 422);
+    }
+    if (!is_array($input) || !str_starts_with(ltrim($content), '{')) {
+      throw new PageDraftException('invalid_input', 422);
+    }
+    return $input;
+  }
 
   /**
    * 历史版本列表最多返回的条数
@@ -47,28 +95,7 @@ class PanelsIPEPageController extends ControllerBase {
    * @return JsonResponse
    */
   public function landingPageBuilder() {
-    $data = [];
-    $status = FALSE;
-    try {
-      if ($json = $this->getRequest()) {
-        $entity = $this->addLandingPage($json['title']);
-        $builder = new NodeJson($entity);
-        if ($builder->isLayoutBuilder()) {
-          $this->saveLayoutBuilder($entity, $json['body']);
-        }
-        $data['data'] = [
-          'nid' => $entity->id(),
-          'url' => $entity->toUrl()->toString(),
-        ];
-        $status = TRUE;
-        $this->setMessage($this->t('Create landing page @name successful.', ['@name' => $entity->label()]));
-      }
-    } catch (\Exception $exception) {
-      $this->setMessage($exception->getMessage());
-    }
-    $data['status'] = $status;
-    $data['message'] = $this->getMessage();
-    return new JsonResponse($data);
+    return $this->writeResponse(fn() => $this->pageWriter->createPage($this->writeInput()));
   }
 
   /**
@@ -96,28 +123,6 @@ class PanelsIPEPageController extends ControllerBase {
       return [];
     }
     return $json;
-  }
-
-  /**
-   * 添加着陆页
-   * @param $title
-   * @return Node
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   */
-  private function addLandingPage($title) {
-    $entity = Node::create([
-      'type' => 'landing_page',
-      'title' => $title,
-      'status' => 1,
-      'moderation_state' => 'published',
-    ]);
-    $entity->save();
-    return $entity;
-  }
-
-  private function getNumber() {
-    $entities = $this->entityTypeManager()->getStorage('block_content')->loadByProperties(['type' => 'json']);
-    return count($entities);
   }
 
   /**
@@ -365,80 +370,8 @@ class PanelsIPEPageController extends ControllerBase {
    * @return JsonResponse
    */
   public function landingPageUpdate(Node $node) {
-    $data = [];
-    $status = FALSE;
-    try {
-      if ($node->bundle() == 'landing_page' && $this->entityValidate($node) && $json = $this->getRequest()) {
-
-        if (!empty($json['title']) && $node->label() !== $json['title']) {
-          $node->set('title', $json['title']);
-          $node->save();
-        }
-        $builder = new NodeJson($node);
-        if ($builder->isLayoutBuilder()) {
-          $this->saveLayoutBuilder($node, $json['body']);
-        }
-        $data['data'] = [
-          'nid' => $node->id(),
-          'url' => $node->toUrl()->toString(),
-        ];
-        $this->setMessage($this->t('Update landing page @name successful.', ['@name' => $node->label()]));
-        $status = TRUE;
-      } elseif (empty($this->getMessage())) {
-        $this->setMessage($this->t('Invalid parameter'));
-      }
-    } catch (\Exception $exception) {
-      $this->setMessage($exception->getMessage());
-    }
-
-    $data['status'] = $status;
-    $data['message'] = $this->getMessage() ?? '';
-    return new JsonResponse($data);
+    return $this->writeResponse(fn() => $this->pageWriter->updatePage($node, $this->writeInput()));
   }
-
-  private function entityValidate(Node $node) {
-    $request = $this->getRequest();
-    $vid = $request['vid'] ?? FALSE;
-    if (empty($vid)) {
-      $this->setMessage($this->t('Invalid revision ID'));
-      return FALSE;
-    }
-    if ($vid == $node->getRevisionId()) {
-      return TRUE;
-    }
-    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
-    $storage = $this->entityTypeManager()->getStorage('node');
-    /** @var Node $revision */
-    $revision = $storage->loadRevision($vid);
-    if (empty($revision) || $node->id() != $revision->id()) {
-      $this->setMessage($this->t('Invalid revision'));
-      return FALSE;
-    }
-    if ($revision->hasTranslation($this->currentLanguageId())) {
-      $revision = $revision->getTranslation($this->currentLanguageId());
-    }
-    if ($this->layoutSignature($node) === $this->layoutSignature($revision)) {
-      return TRUE;
-    } else {
-      $this->setMessage($this->t('The content has either been modified by another user, or you have already submitted modifications. As a result, your changes cannot be saved.'));
-      return FALSE;
-    }
-  }
-
-  /**
-   * 计算节点布局字段的签名，用于并发编辑检测。
-   *
-   * @param Node $node
-   * @return string
-   */
-  private function layoutSignature(Node $node) {
-    $field = OverridesSectionStorage::FIELD_NAME;
-    if (!$node->hasField($field) || $node->get($field)->isEmpty()) {
-      return '';
-    }
-    return serialize($node->get($field)->getValue());
-  }
-
 
   /**
    * 获取区块
@@ -462,81 +395,9 @@ class PanelsIPEPageController extends ControllerBase {
    * @return JsonResponse
    */
   public function landingPageTranslations(Node $node, LanguageInterface $source, LanguageInterface $target) {
-    if ($node->bundle() !== 'landing_page') {
-      return new JsonResponse([
-        'status' => FALSE,
-        'message' => 'Invalid content type',
-      ]);
-    }
-    $trans_manager = \Drupal::moduleHandler()->moduleExists('content_translation') ? \Drupal::service('content_translation.manager') : FALSE;
-    if (empty($trans_manager) || !$trans_manager->isEnabled($node->getEntityTypeId(), $node->bundle())) {
-      return new JsonResponse([
-        'status' => FALSE,
-        'message' => 'Translation not enabled.',
-      ]);
-    }
-    $data = [];
-    // In case of a pending revision, make sure we load the latest
-    // translation-affecting revision for the source language, otherwise the
-    // initial form values may not be up-to-date.
-    if (!$node->isDefaultRevision() && ContentTranslationManager::isPendingRevisionSupportEnabled($node->id(), $node->bundle())) {
-      /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
-      $storage = $this->entityTypeManager()->getStorage($node->getEntityTypeId());
-      $revision_id = $storage->getLatestTranslationAffectedRevisionId($node->id(), $source->getId());
-      if ($revision_id != $node->getRevisionId()) {
-        $node = $storage->loadRevision($revision_id);
-      }
-    }
-    try {
-      // 路由上的 {source} 之前是被忽略的：请求 URL 不带语言前缀，参数转换器按当前
-      // 语言上溯，$node 永远是默认语言那份。按 source 取翻译，"从简体创建繁体"才
-      // 真的以简体为源。
-      $source_node = $node->hasTranslation($source->getId())
-        ? $node->getTranslation($source->getId())
-        : $node->getUntranslated();
-      /** @var Node $trans */
-      $trans = $node->addTranslation($target->getId(), $source_node->toArray());
-      $time = time();
-      $trans->setCreatedTime($time);
-      $trans->setChangedTime($time);
-      $trans->setOwnerId($this->currentUser()->id());
-      $trans->setNewRevision();
-      // toArray() 复制过来的 path 里带着源语言别名记录的 pid。核心 PathItem::postSave()
-      // 一见到 pid 就只改写那条已有记录，目标语言拿不到自己的 path_alias（URL 退回
-      // /<lang>/node/N），源语言的别名反而可能被改掉。清掉 pid 才会走新建分支。
-      $trans->set('path', [
-        'alias' => $source_node->get('path')->alias ?: '',
-        'pid' => NULL,
-        'langcode' => $target->getId(),
-      ]);
-      $json = $this->getRequest(FALSE);
-      if (!empty($json['title'])) {
-        $trans->set('title', $json['title']);
-      }
-      $builder = new NodeJson($node);
-      if (!empty($json['body'])) {
-        if ($builder->isLayoutBuilder()) {
-          $this->saveLayoutBuilder($trans, $json['body'], $target->getId());
-        }
-      } else {
-        if ($builder->isLayoutBuilder()) {
-          // addTranslation() 用 toArray() 复制时 layout_builder__layout 字段会
-          // 丢失，需用源节点的 blocks 重建 layout，否则翻译的 body 为空。
-          /** @var \Drupal\block_content\Entity\BlockContent $block */
-          $blocks = $this->getPanelBlocks($source_node);
-          foreach ($blocks as $block) {
-            $this->addBlockTranslation($block, $target->getId());
-          }
-          $this->saveLayout($trans, $blocks, TRUE);
-        }
-      }
-      $trans->save();
-    } catch (\Exception $exception) {
-      $this->setMessage($exception->getMessage());
-    }
-    $data['status'] = empty($this->getMessage());
-    $data['message'] = $this->getMessage() ?? '';
-    return new JsonResponse($data);
+    return $this->writeResponse(fn() => $this->pageWriter->translatePage(
+      $node, $source->getId(), $target->getId(), $this->writeInput(TRUE),
+    ));
   }
 
   /**
@@ -717,25 +578,6 @@ class PanelsIPEPageController extends ControllerBase {
   }
 
   /**
-   * add block translation
-   * @param BlockContent $block
-   * @param $langcode
-   * @return BlockContent|\Drupal\Core\Entity\ContentEntityBase
-   */
-  private function addBlockTranslation(BlockContent $block, $langcode) {
-    $trans_manager = \Drupal::moduleHandler()->moduleExists('content_translation') ? \Drupal::service('content_translation.manager') : FALSE;
-    if ($trans_manager && $trans_manager->isEnabled($block->getEntityTypeId(), $block->bundle())) {
-      if (!$block->hasTranslation($langcode)) {
-        $block->addTranslation($langcode, $block->toArray());
-        $block->save();
-        return $block->getTranslation($langcode);
-      }
-    }
-
-    return $block->hasTranslation($langcode) ? $block->getTranslation($langcode) : $block;
-  }
-
-  /**
    * @return string
    */
   private function currentLanguageId() {
@@ -795,42 +637,6 @@ class PanelsIPEPageController extends ControllerBase {
   }
 
   /**
-   * 用源节点的 blocks 重建 layout_builder__layout 字段。
-   *
-   * addTranslation() 用 toArray() 复制时 layout_builder__layout 字段会丢失，
-   * 所以这里从源节点的 block_content 实体重新构建布局，否则翻译的 body 为空。
-   *
-   * 注意：本方法不会再调用 $entity->save()，由调用方统一保存。
-   *
-   * @param \Drupal\node\Entity\Node $entity
-   * @param \Drupal\block_content\Entity\BlockContent[] $blocks
-   * @param bool $add_translations
-   */
-  private function saveLayout(Node &$entity, array $blocks, $add_translations = FALSE) {
-    $layout_field = $entity->get(OverridesSectionStorage::FIELD_NAME);
-    $layout_field->setValue([]);
-    /** @var \Drupal\block_content\Entity\BlockContent $block */
-    foreach ($blocks as $block) {
-      $configuration = [
-        'id' => 'inline_block:' . $block->bundle(),
-        'label' => $block->label(),
-        'label_display' => '0',
-        'provider' => 'layout_builder',
-        'view_mode' => 'full',
-        'block_revision_id' => $block->getRevisionId(),
-      ];
-      $section = new Section('layout_onecol');
-      $component = new SectionComponent(\Drupal::service('uuid')->generate(), 'content', $configuration);
-      $section->appendComponent($component);
-      $layout_field->appendItem($section);
-    }
-
-    if (!$add_translations) {
-      $entity->save();
-    }
-  }
-
-  /**
    * 获取 Layout Builder 的 sections 及每个 section 内的 blocks（BlockContent 实体）
    *
    * @return array
@@ -865,63 +671,4 @@ class PanelsIPEPageController extends ControllerBase {
     return $blocks;
   }
 
-  private function saveLayoutBuilder(Node &$entity, array $blocks, $langcode = NULL) {
-    // 获取布局字段（存储layout builder配置的字段）
-    /** @var \Drupal\layout_builder\Field\LayoutSectionItemList $layout_field */
-    $layout_field = $entity->get(OverridesSectionStorage::FIELD_NAME);
-    $langcode = $langcode ?? $this->currentLanguageId();
-    $number = $this->getNumber();
-    $layout_field->setValue([]); // 清空现有布局配置
-
-    foreach ($blocks as $row) {
-      $uuid = $row['uuid'] ?? '';
-      $body = $row['attributes']['body'] ?? '';
-      $blocks = $uuid ? $this->entityTypeManager->getStorage('block_content')->loadByProperties(['uuid' => $uuid]) : FALSE;
-      /** @var BlockContent $block_content */
-      $block_content = $blocks ? reset($blocks) : FALSE;
-      if ($block_content && $block_content->bundle() != 'json') {
-        continue;
-      }
-      if (empty($block_content) && $body) {
-        $number++;
-        $block_content = BlockContent::create([
-          'type' => 'json',
-          'info' => "Json {$number}",
-          'langcode' => [
-            'value' => $langcode,
-          ],
-        ]);
-      }
-      if (empty($block_content)) {
-        continue;
-      }
-
-      $block_content = $this->addBlockTranslation($block_content, $langcode);
-      $block_content->set('body', [
-        [
-          'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
-          'format' => 'json',
-        ],
-      ]);
-      $block_content->set('reusable', 0);
-      $block_content->save();
-      $configuration = [
-        'id' => 'inline_block:' . $block_content->bundle(),   // 格式必须是 'inline_block:{block_type}'
-        'label' =>  $block_content->label(), // 可选：显示给用户的标题
-        'label_display' => '0', // 'visible' 显示，'0' 隐藏
-        'provider' => 'layout_builder',
-        'view_mode' => 'full', // 渲染视图模式
-        // 关键配置：指向刚创建的 block_content 的 revision ID
-        'block_revision_id' => $block_content->getRevisionId(),
-      ];
-      // 创建一个新的section，使用单列布局
-      // 可用的布局插件ID包括：'layout_onecol', 'layout_twocol_section', 'layout_threecol_section' 等
-      $section = new Section('layout_onecol');
-      $uuid = \Drupal::service('uuid')->generate();
-      $component = new SectionComponent($uuid, 'content', $configuration);
-      $section->appendComponent($component);
-      $layout_field->appendItem($section);
-    }
-    $entity->save();
-  }
 }

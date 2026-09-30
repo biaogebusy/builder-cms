@@ -1,4 +1,10 @@
 services:
+  xinshi_api.page_moderation_policy:
+    class: Drupal\xinshi_api\PageModerationPolicy
+    arguments: ['@?content_moderation.moderation_information', '@?content_moderation.state_transition_validation', '@current_user']
+  xinshi_api.page_writer:
+    class: Drupal\xinshi_api\PageWriteService
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@language_manager', '@uuid', '@xinshi_api.page_moderation_policy', '@?content_translation.manager', '@inline_block.usage']
   xinshi_api.page_drafts:
     class: Drupal\xinshi_api\PageDraftService
     arguments:
@@ -8,8 +14,7 @@ services:
       - '@language_manager'
       - '@datetime.time'
       - '@uuid'
-      - '@?content_moderation.moderation_information'
-      - '@?content_moderation.state_transition_validation'
+      - '@xinshi_api.page_moderation_policy'
   xinshi_api.twig.extension:
     class: Drupal\xinshi_api\TwigExtension\DefaultTwigExtension
     tags:

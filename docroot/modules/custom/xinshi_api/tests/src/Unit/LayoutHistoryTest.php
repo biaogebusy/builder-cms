@@ -88,7 +88,7 @@ final class LayoutHistoryTest extends TestCase {
     $node->method('get')->with('layout_builder__layout')->willReturn($field);
 
     $method = new \ReflectionMethod(PanelsIPEPageController::class, 'getRevisionBlocks');
-    $result = $method->invoke(new PanelsIPEPageController(), $node);
+    $result = $method->invoke(new PanelsIPEPageController($this->createStub(\Drupal\xinshi_api\PageWriteService::class)), $node);
     self::assertSame($expected === NULL ? [] : [$translations[$expected]], $result);
     self::assertSame($revisionLookups, $actualRevisions);
     self::assertSame($uuidLookups, $actualUuids);
@@ -137,7 +137,7 @@ final class LayoutHistoryTest extends TestCase {
     $container->set('language_manager', $languages);
     \Drupal::setContainer($container);
 
-    self::assertSame([$translated, $untranslated], (new PanelsIPEPageController())->getLayoutBuilderBlocks($node));
+    self::assertSame([$translated, $untranslated], (new PanelsIPEPageController($this->createStub(\Drupal\xinshi_api\PageWriteService::class)))->getLayoutBuilderBlocks($node));
   }
 
   protected function tearDown(): void {

@@ -6,6 +6,10 @@ configure: xinshi_api.settings
 dependencies:
   - drupal:rest
   - drupal:views
+  - drupal:node
+  - drupal:block_content
+  - drupal:layout_builder
+  - drupal:filter
 package: "XINSHI"
 # Information added by Drupal.org packaging script on 2020-09-03
 version: '1.1'
