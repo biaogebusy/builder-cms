@@ -10,6 +10,8 @@ use Drupal\ai\Exception\AiSetupFailureException;
 use Drupal\ai\Exception\AiUnsafePromptException;
 use Drupal\xinshi_ai\Exception\MissingCredentialsException;
 use Drupal\xinshi_ai\Exception\ProviderUnavailableException;
+use Drupal\xinshi_ai\Exception\InputImageAccessException;
+use Drupal\xinshi_ai\Exception\ImageSafetyException;
 use OpenAI\Exceptions\ErrorException as OpenAiErrorException;
 use OpenAI\Exceptions\TransporterException;
 
@@ -27,6 +29,15 @@ final class ProviderErrorMapper {
    * 异常 → 错误码。
    */
   public function mapToCode(\Throwable $e): string {
+    // HTTP/SDK wrappers must not turn a policy rejection into a retryable 5xx.
+    for ($cause = $e; $cause !== NULL; $cause = $cause->getPrevious()) {
+      if ($cause instanceof InputImageAccessException) {
+        return 'forbidden';
+      }
+      if ($cause instanceof ImageSafetyException) {
+        return 'validation';
+      }
+    }
     // drupal/ai 已归类的异常(OpenAiProvider 会把部分错误重映射成这些)。
     if ($e instanceof AiUnsafePromptException) {
       return 'content_policy';

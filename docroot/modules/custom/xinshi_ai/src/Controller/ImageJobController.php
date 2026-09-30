@@ -9,6 +9,9 @@ use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\xinshi_ai\AiTaskManager;
 use Drupal\xinshi_ai\Exception\TaskNotFoundException;
+use Drupal\xinshi_ai\Exception\InputImageAccessException;
+use Drupal\xinshi_ai\Exception\ImageSafetyException;
+use Drupal\xinshi_ai\Service\PublicUrlPolicy;
 use Drupal\xinshi_ai\Service\EventTicketServiceInterface;
 use Drupal\xinshi_ai\Service\ImageJobCredentialVault;
 use Drupal\xinshi_ai\Service\ImmediateJobRunner;
@@ -33,6 +36,7 @@ final class ImageJobController extends ControllerBase {
     private readonly AccountInterface $account,
     private readonly ImmediateJobRunner $immediateRunner,
     private readonly ImageJobCredentialVault $credentials,
+    private readonly PublicUrlPolicy $urlPolicy,
   ) {}
 
   /**
@@ -47,6 +51,7 @@ final class ImageJobController extends ControllerBase {
       $container->get('current_user'),
       $container->get('xinshi_ai.immediate_job_runner'),
       $container->get('xinshi_ai.image_job_credentials'),
+      $container->get('xinshi_ai.public_url_policy'),
     );
   }
 
@@ -91,11 +96,24 @@ final class ImageJobController extends ControllerBase {
     if ($credentialError !== NULL) {
       $errors['credentials'] = $credentialError;
     }
+    elseif ($platform === 'custom') {
+      try {
+        $this->urlPolicy->destination($credentials['endpoint']);
+      }
+      catch (ImageSafetyException $e) {
+        $errors['credentials'] = $e->getMessage();
+      }
+    }
     if ($errors) {
       return new JsonResponse(['errors' => $errors], 422);
     }
 
-    $job = $this->lifecycle->createQueued($input, $this->account);
+    try {
+      $job = $this->lifecycle->createQueued($input, $this->account);
+    }
+    catch (InputImageAccessException $e) {
+      return new JsonResponse(['error' => $e->getMessage(), 'code' => 'forbidden'], 403);
+    }
     $uuid = $job->uuid();
     if ($platform === 'custom') {
       try {

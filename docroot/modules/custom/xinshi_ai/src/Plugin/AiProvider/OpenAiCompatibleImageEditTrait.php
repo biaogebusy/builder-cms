@@ -11,6 +11,9 @@ use Drupal\ai\OperationType\GenericType\ImageFile;
 use Drupal\ai\OperationType\ImageToImage\ImageToImageInput;
 use Drupal\ai\OperationType\ImageToImage\ImageToImageOutput;
 use Drupal\ai\Traits\OperationType\ImageToImageTrait;
+use Drupal\xinshi_ai\Service\ProviderImageFiles;
+use Drupal\xinshi_ai\Exception\ImageSafetyException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * 给 OpenAI-compatible 网关补上 image_to_image(图生图 / 编辑)。
@@ -27,6 +30,18 @@ use Drupal\ai\Traits\OperationType\ImageToImageTrait;
 trait OpenAiCompatibleImageEditTrait {
 
   use ImageToImageTrait;
+
+  protected ProviderImageFiles $imageFiles;
+
+  /**
+   * Secure every provider call, including inherited text-to-image operations.
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->setHttpClient($container->get('xinshi_ai.image_http')->create($configuration['http_client_options'] ?? []));
+    $instance->imageFiles = $container->get('xinshi_ai.provider_image_files');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -128,36 +143,18 @@ trait OpenAiCompatibleImageEditTrait {
    * 解析 images 响应的 data[](b64_json / url)→ ImageFile[]。
    */
   private function parseImageResponse(array $response, string $model_id): array {
+    $data = $response['data'] ?? [];
+    if (!is_array($data) || count($data) > 16) {
+      throw new ImageSafetyException('Invalid image response or too many images.');
+    }
     $images = [];
-    foreach ($response['data'] ?? [] as $data) {
-      $isGptImage = str_starts_with($model_id, 'gpt-image') || isset($data['revised_prompt']);
-      $name = ($isGptImage ? 'gpt-image' : 'dalle');
-      if (isset($data['b64_json'])) {
-        [$mime, $ext] = $this->mimeFromFormat($response['output_format'] ?? ($this->configuration['output_format'] ?? NULL));
-        $images[] = new ImageFile(base64_decode($data['b64_json']), $mime, $name . '.' . $ext);
+    foreach ($data as $item) {
+      if (!is_array($item)) {
+        throw new ImageSafetyException('Invalid image response item.');
       }
-      elseif (!empty($data['url'])) {
-        $content = @file_get_contents($data['url']);
-        if ($content !== FALSE) {
-          $images[] = new ImageFile($content, 'image/png', $name . '.png');
-        }
-        else {
-          $this->logger->error('Failed to fetch edited image from URL: @url', ['@url' => $data['url']]);
-        }
-      }
+      $images[] = $this->imageFiles->fromData($item);
     }
     return $images;
-  }
-
-  /**
-   * output_format → [mime, ext]。
-   */
-  private function mimeFromFormat(?string $format): array {
-    return match ($format) {
-      'jpeg' => ['image/jpeg', 'jpeg'],
-      'webp' => ['image/webp', 'webp'],
-      default => ['image/png', 'png'],
-    };
   }
 
 }

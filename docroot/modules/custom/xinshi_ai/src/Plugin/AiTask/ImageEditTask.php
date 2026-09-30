@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\xinshi_ai\Plugin\AiTask;
 
-use Drupal\ai\OperationType\GenericType\ImageFile;
 use Drupal\ai\OperationType\ImageToImage\ImageToImageInput;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\AiImageTaskBase;
 use Drupal\xinshi_ai\Attribute\AiTask;
 use Drupal\xinshi_ai\Service\ImageJobRun;
+use Drupal\xinshi_ai\Service\InputImageAccess;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * 图生图 / 图片编辑任务:image(+prompt) → image,经 Provider 调网关 /v1/images/edits。
@@ -24,6 +25,14 @@ use Drupal\xinshi_ai\Service\ImageJobRun;
   platforms: ['xinshi', 'custom'],
 )]
 final class ImageEditTask extends AiImageTaskBase {
+
+  protected InputImageAccess $inputImages;
+
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->inputImages = $container->get('xinshi_ai.input_images');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -45,13 +54,11 @@ final class ImageEditTask extends AiImageTaskBase {
   public function execute(NodeInterface $job, ?ImageJobRun $run = NULL): void {
     $genConfig = $this->buildGenConfig($job, ['size', 'response_format', 'quality', 'output_format']);
     $prompt = (string) $job->get('field_prompt')->value;
-    $imageInput = $this->buildImageInput($job, $prompt);
-
     $this->runImagePipeline(
       $job,
       $genConfig,
       'image_to_image',
-      fn (object $provider, string $model) => $provider->imageToImage($imageInput, $model, ['xinshi_ai']),
+      fn (object $provider, string $model) => $provider->imageToImage($this->buildImageInput($job, $prompt), $model, ['xinshi_ai']),
       $run,
     );
   }
@@ -60,19 +67,7 @@ final class ImageEditTask extends AiImageTaskBase {
    * 从 field_input_image(media)读出源图,构造 ImageToImageInput。
    */
   private function buildImageInput(NodeInterface $job, string $prompt): ImageToImageInput {
-    $media = $job->get('field_input_image')->entity;
-    if (!$media) {
-      throw new \RuntimeException('image_edit job 缺少 field_input_image。');
-    }
-    $file = $media->get('field_media_image')->entity;
-    if (!$file) {
-      throw new \RuntimeException('输入 media 没有可用的图片文件。');
-    }
-    $binary = file_get_contents($file->getFileUri());
-    if ($binary === FALSE) {
-      throw new \RuntimeException('读取输入图片失败:' . $file->getFileUri());
-    }
-    $image = new ImageFile($binary, $file->getMimeType() ?: 'image/png', $file->getFilename() ?: 'input.png');
+    $image = $this->inputImages->forJob($job);
     $input = new ImageToImageInput($image);
     if ($prompt !== '') {
       $input->setPrompt($prompt);

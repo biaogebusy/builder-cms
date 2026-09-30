@@ -53,7 +53,7 @@ services:
 
   xinshi_ai.job_lifecycle:
     class: Drupal\xinshi_ai\Service\JobLifecycleService
-    arguments: ['@entity_type.manager', '@datetime.time', '@entity.repository', '@lock']
+    arguments: ['@entity_type.manager', '@datetime.time', '@entity.repository', '@lock', '@xinshi_ai.input_images']
 
   # Execution leases and queue decisions of image jobs (UB2.5).
   xinshi_ai.image_job_runs:
@@ -66,7 +66,7 @@ services:
 
   xinshi_ai.media_upload:
     class: Drupal\xinshi_ai\Service\MediaUploadService
-    arguments: ['@entity_type.manager', '@file.repository', '@file_system']
+    arguments: ['@entity_type.manager', '@file.repository', '@file_system', '@xinshi_ai.image_validator']
 
   xinshi_ai.event_stream:
     class: Drupal\xinshi_ai\Service\EventStreamService
@@ -96,3 +96,21 @@ services:
     arguments: ['@xinshi_ai.immediate_job_runner']
     tags:
       - { name: event_subscriber }
+
+  xinshi_ai.public_url_policy:
+    class: Drupal\xinshi_ai\Service\PublicUrlPolicy
+
+  xinshi_ai.image_http:
+    class: Drupal\xinshi_ai\Service\ImageHttpClientFactory
+    arguments: ['@xinshi_ai.public_url_policy']
+
+  xinshi_ai.image_validator:
+    class: Drupal\xinshi_ai\Service\ImageFileValidator
+
+  xinshi_ai.provider_image_files:
+    class: Drupal\xinshi_ai\Service\ProviderImageFiles
+    arguments: ['@xinshi_ai.image_http', '@xinshi_ai.image_validator']
+
+  xinshi_ai.input_images:
+    class: Drupal\xinshi_ai\Service\InputImageAccess
+    arguments: ['@entity_type.manager', '@entity.repository', '@module_handler', '@account_switcher', '@stream_wrapper_manager', '@xinshi_ai.image_validator']

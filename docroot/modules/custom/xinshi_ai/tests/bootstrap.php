@@ -15,6 +15,9 @@ $loader->addPsr4('Drupal\\user\\', $root . '/docroot/core/modules/user/src');
 $loader->addPsr4('Drupal\\jsonapi\\', $root . '/docroot/core/modules/jsonapi/src');
 $loader->addPsr4('Drupal\\node\\', $root . '/docroot/core/modules/node/src');
 $loader->addPsr4('Drupal\\media\\', $root . '/docroot/core/modules/media/src');
+$loader->addPsr4('Drupal\\file\\', $root . '/docroot/core/modules/file/src');
+$loader->addPsr4('Drupal\\ai\\', $root . '/docroot/modules/contrib/ai/src');
+$loader->addPsr4('Drupal\\ai_provider_openai\\', $root . '/docroot/modules/contrib/ai_provider_openai/src');
 $loader->addPsr4('Drupal\\xinshi_ai\\', dirname(__DIR__) . '/src', TRUE);
 // Test-only helpers (traits) live next to the test classes PHPUnit loads itself.
 $loader->addPsr4('Drupal\\Tests\\xinshi_ai\\', __DIR__ . '/src', TRUE);

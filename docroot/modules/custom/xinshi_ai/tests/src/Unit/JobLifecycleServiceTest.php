@@ -14,6 +14,8 @@ use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\Exception\JobAlreadyTerminalException;
 use Drupal\xinshi_ai\Service\JobLifecycleService;
+use Drupal\xinshi_ai\Service\InputImageAccess;
+use Drupal\xinshi_ai\Exception\InputImageAccessException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -31,6 +33,7 @@ final class JobLifecycleServiceTest extends TestCase {
   private NodeInterface&MockObject $stored;
   private LockBackendInterface&MockObject $lock;
   private JobLifecycleService $lifecycle;
+  private InputImageAccess $inputImages;
   /** @var list<string> */
   private array $saves = [];
   /** @var list<string> */
@@ -75,8 +78,9 @@ final class JobLifecycleServiceTest extends TestCase {
     $this->lock->method('release')->willReturnCallback(function (string $name): void {
       $this->lockCalls[] = 'release ' . $name;
     });
+    $this->inputImages = $this->createMock(InputImageAccess::class);
     $this->lifecycle = new JobLifecycleService($manager, $time,
-      $this->createMock(EntityRepositoryInterface::class), $this->lock);
+      $this->createMock(EntityRepositoryInterface::class), $this->lock, $this->inputImages);
   }
 
   public function testCreateQueuedNeverStoresConnectionSecrets(): void {
@@ -93,6 +97,32 @@ final class JobLifecycleServiceTest extends TestCase {
     $this->assertSame('{"n":2,"model":"dall-e-3"}', $this->createdJobs[0]['field_params']);
     $this->assertSame('custom', $this->createdJobs[0]['field_platform']);
     $this->assertSame(2, $this->createdJobs[0]['field_n_requested']);
+  }
+
+  public function testUnavailableInputMediaCannotCreateAJob(): void {
+    $this->inputImages->method('forSubmission')->willThrowException(new InputImageAccessException());
+    try {
+      $this->lifecycle->createQueued([
+        'jobKind' => 'image_edit', 'inputImage' => '11111111-1111-4111-8111-111111111111',
+      ], $this->createMock(AccountInterface::class));
+      $this->fail('Unauthorized input was accepted.');
+    }
+    catch (InputImageAccessException) {
+      $this->assertSame(0, $this->created);
+      $this->assertSame([], $this->createdJobs);
+    }
+  }
+
+  public function testAuthorizedInputMediaIsReferencedByTheJob(): void {
+    $owner = $this->createMock(AccountInterface::class);
+    $owner->method('id')->willReturn(7);
+    $media = $this->createMock(MediaInterface::class);
+    $media->method('id')->willReturn(55);
+    $uuid = '11111111-1111-4111-8111-111111111111';
+    $this->inputImages->expects($this->once())->method('forSubmission')->with($uuid, $owner)->willReturn($media);
+    $this->lifecycle->createQueued(['jobKind' => 'image_edit', 'inputImage' => $uuid], $owner);
+    $this->assertCount(1, $this->createdJobs);
+    $this->assertSame(['target_id' => 55], $this->createdJobs[0]['field_input_image']);
   }
 
   public function testTransitionsRunUnderTheJobLockAndSyncTheWorkerCopy(): void {
@@ -244,7 +274,7 @@ final class JobLifecycleServiceTest extends TestCase {
     $lock->expects($this->once())->method('wait')->willReturn(TRUE);
     $manager = $this->createMock(EntityTypeManagerInterface::class);
     $lifecycle = new JobLifecycleService($manager, $this->createMock(TimeInterface::class),
-      $this->createMock(EntityRepositoryInterface::class), $lock);
+      $this->createMock(EntityRepositoryInterface::class), $lock, $this->inputImages);
     $this->expectException(\RuntimeException::class);
     $this->expectExceptionMessage('locked by another status change');
     $lifecycle->markCancelled($this->worker);

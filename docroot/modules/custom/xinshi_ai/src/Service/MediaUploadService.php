@@ -25,12 +25,15 @@ final class MediaUploadService implements MediaUploadServiceInterface {
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly FileRepositoryInterface $fileRepository,
     private readonly FileSystemInterface $fileSystem,
+    private readonly ImageFileValidator $validator,
   ) {}
 
   /**
    * {@inheritdoc}
    */
   public function fromImageFile(ImageFile $image, int $uid, string $alt = '', bool $published = TRUE): MediaInterface {
+    // Validate before any writes, and never keep a provider-controlled extension.
+    $image = $this->validator->fromBinary($image->getBinary());
     $dir = 'public://xinshi_ai/' . date('Y-m');
     $this->fileSystem->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
 

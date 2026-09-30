@@ -40,6 +40,7 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
     private readonly TimeInterface $time,
     private readonly EntityRepositoryInterface $entityRepository,
     private readonly LockBackendInterface $lock,
+    private readonly InputImageAccess $inputImages,
   ) {}
 
   /**
@@ -71,14 +72,9 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
     if (!empty($input['negativePrompt'])) {
       $values['field_negative_prompt'] = $input['negativePrompt'];
     }
-    if (!empty($input['inputImage'])) {
-      // 前端只持有 media uuid(JSON:API 规范);entity_reference 的 target_id 需要 numeric
-      // entity id,这里做 uuid → id 解析。无效 uuid 直接跳过写入,后续 worker 会因
-      // field_input_image 为空抛 image_edit job 缺少 field_input_image,行为可观察。
-      $media = $this->entityRepository->loadEntityByUuid('media', (string) $input['inputImage']);
-      if ($media) {
-        $values['field_input_image'] = ['target_id' => $media->id()];
-      }
+    if (isset($input['inputImage']) || ($input['jobKind'] ?? '') === 'image_edit') {
+      $media = $this->inputImages->forSubmission($input['inputImage'] ?? NULL, $owner);
+      $values['field_input_image'] = ['target_id' => $media->id()];
     }
     if (!empty($input['parentJob'])) {
       $parent = $this->entityRepository->loadEntityByUuid('node', (string) $input['parentJob']);
