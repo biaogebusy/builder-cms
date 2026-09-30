@@ -2,10 +2,17 @@
 
 namespace Drupal\xinshi_sms;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\otp_login\Otp as BaseOtp;
 use Drupal\sms\Direction;
 use Drupal\sms\Message\SmsMessage;
+use Drupal\sms\Provider\SmsProviderInterface;
 use Drupal\user\Entity\User;
+use Drupal\user\UserDataInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class Otp
@@ -13,18 +20,52 @@ use Drupal\user\Entity\User;
 class Otp extends BaseOtp {
 
   /**
+   * Serializes challenge updates and consumption across requests.
+   */
+  protected LockBackendInterface $lock;
+
+  /**
+   * Constructs the OTP service with the shared challenge lock.
+   */
+  public function __construct(
+    TimeInterface $time,
+    SmsProviderInterface $sms_provider,
+    UserDataInterface $user_data,
+    EntityTypeManagerInterface $entity_type_manager,
+    ConfigFactory $config_factory,
+    LockBackendInterface $lock,
+  ) {
+    parent::__construct($time, $sms_provider, $user_data, $entity_type_manager, $config_factory);
+    $this->lock = $lock;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('datetime.time'),
+      $container->get('sms.provider'),
+      $container->get('user.data'),
+      $container->get('entity_type.manager'),
+      $container->get('config.factory'),
+      $container->get('lock'),
+    );
+  }
+
+  /**
    * @param $mobile_number
    * @return string
    */
   public function validateMobileNumber($mobile_number) {
-    $message = '';
-    if (empty($mobile_number)) {
-      $message = t('Please enter the phone number');
+    if ($mobile_number === '' || $mobile_number === NULL) {
+      return t('Please enter the phone number');
     }
-    if (preg_match("/^1[3456789]\d{9}$/", $mobile_number) == 0) {
-      $message = t('Please enter the correct phone number');
+    // Existing clients send phone numbers as strings or JSON integers.
+    if ((!is_string($mobile_number) && !is_int($mobile_number)) || !preg_match('/\A1[3-9][0-9]{9}\z/', (string) $mobile_number)) {
+      return t('Please enter the correct phone number');
     }
-    return $message;
+    return '';
   }
 
   /**
@@ -33,7 +74,7 @@ class Otp extends BaseOtp {
   public function generateOtp($mobile_number) {
     $current_time = $this->currentTime->getCurrentTime();
     // Generate 6 digit random OTP number.
-    $six_digit_random_number = (string)mt_rand(100000, 999999);
+    $six_digit_random_number = (string) random_int(100000, 999999);
     // Send OTP SMS.
     $sms = (new SmsMessage())
       // Set the message.
@@ -64,7 +105,7 @@ class Otp extends BaseOtp {
   public function sendVerificationCode($mobile_number, $uid) {
     $current_time = $this->currentTime->getCurrentTime();
     // Generate 6 digit random OTP number.
-    $six_digit_random_number = mt_rand(100000, 999999);
+    $six_digit_random_number = (string) random_int(100000, 999999);
     // Send OTP SMS.
     $sms = (new SmsMessage())
       // Set the message.
@@ -82,20 +123,18 @@ class Otp extends BaseOtp {
    */
   public function userOtpLogin($otp, $mobile_number) {
     $user = $this->otpLoginCheckUserAlreadyExists($mobile_number);
-    // Generate 6 digit random session id.
-    $six_digit_random_sessionid = mt_rand(100000, 999999);
-    // Activate user account if not activated.
-    if (!$user->isActive()) {
-      $user->set("status", 1);
-      $user->save();
+    if (!$user || !$user->isActive()) {
+      return FALSE;
     }
+    // Preserve the legacy return value; Drupal generates the actual session ID.
+    $six_digit_random_sessionid = random_int(100000, 999999);
     user_login_finalize($user);
     return $six_digit_random_sessionid;
   }
 
   public function sendEmailVerificationCode($email, $uid) {
     // Generate 6 digit random OTP number.
-    $six_digit_random_number = mt_rand(100000, 999999);
+    $six_digit_random_number = (string) random_int(100000, 999999);
     $this->updateUserData($uid, $email, $six_digit_random_number, 'email_user_data');
     return $six_digit_random_number;
   }
@@ -104,13 +143,18 @@ class Otp extends BaseOtp {
    * {@inheritdoc}
    */
   public function validateOtp($otp, $mobile_number) {
+    if ((!is_string($mobile_number) && !is_int($mobile_number)) || !preg_match('/\A1[3-9][0-9]{9}\z/', (string) $mobile_number)) {
+      return TRUE;
+    }
     $users = $this->entityTypeManager->getStorage('user')
       ->loadByProperties(['phone_number' => $mobile_number]);
     $user = reset($users);
-    if ($user) {
+    if ($user && $user->isActive()) {
       $uid = $user->id();
       return !$this->validateOtpKey($uid, $otp, $mobile_number);
     }
+    // This API returns TRUE for invalid credentials, including missing users.
+    return TRUE;
   }
 
   /**
@@ -133,21 +177,30 @@ class Otp extends BaseOtp {
    * @param string $name
    */
   protected function updateUserData($uid, $key, $code, $name = 'otp_user_data') {
-    $current_time = $this->currentTime->getCurrentTime();
-    $data = $this->userData->get('xinshi_sms', $uid, $name);
-    $sessions = $data['sessions'] ?? [];
-    $otps = $data['otps'] ?? [];
-    $otps[] = [
-      'code' => $code,
-      'time' => $current_time,
-      'key' => $key,
-    ];
-    $otp_user_data = [
-      "otps" => $otps,
-      "last_otp_time" => $current_time,
-      "sessions" => $sessions,
-    ];
-    $this->userData->set('xinshi_sms', $uid, $name, $otp_user_data);
+    $lock_name = $this->challengeLockName($uid, $name);
+    if (!$this->lock->acquire($lock_name)) {
+      throw new \RuntimeException('OTP challenge is busy. Please try again.');
+    }
+    try {
+      $current_time = $this->currentTime->getCurrentTime();
+      $data = $this->userData->get('xinshi_sms', $uid, $name);
+      $sessions = $data['sessions'] ?? [];
+      $otps = $data['otps'] ?? [];
+      $otps[] = [
+        'code' => (string) $code,
+        'time' => $current_time,
+        'key' => (string) $key,
+      ];
+      $otp_user_data = [
+        "otps" => $otps,
+        "last_otp_time" => $current_time,
+        "sessions" => $sessions,
+      ];
+      $this->userData->set('xinshi_sms', $uid, $name, $otp_user_data);
+    }
+    finally {
+      $this->lock->release($lock_name);
+    }
   }
 
   /**
@@ -158,19 +211,49 @@ class Otp extends BaseOtp {
    * @return bool
    */
   public function validateOtpKey($uid, $code, $key, $name = 'otp_user_data') {
-    $otp_user_data = $this->userData->get('xinshi_sms', $uid, $name);
-    $current_time = $this->currentTime->getCurrentTime();
-    $otps = $otp_user_data['otps'] ?? [];
-    $effective = array_filter($otps, function ($otp) use ($code, $key, $current_time) {
-      return $otp['code'] == $code && $otp['key'] == $key && ($current_time - $otp['time']) < 60 * 5;
-    });
-    $effective_otps = array_filter($otps, function ($otp) use ($code, $key, $current_time) {
-      return !(($otp['code'] == $code && $otp['key'] == $key && ($current_time - $otp['time']) < 60 * 5) || (($current_time - $otp['time']) >= 60 * 5));
-    });
-    if ($otp_user_data) {
-      $otp_user_data['otps'] = $effective_otps;
-      $this->userData->set('xinshi_sms', $uid, $name, $otp_user_data);
+    if (!is_string($code) || !preg_match('/\A[0-9]{6}\z/', $code) || (!is_string($key) && !is_int($key))) {
+      return FALSE;
     }
-    return !empty($effective);
+    $lock_name = $this->challengeLockName($uid, $name);
+    if (!$this->lock->acquire($lock_name)) {
+      return FALSE;
+    }
+    try {
+      $otp_user_data = $this->userData->get('xinshi_sms', $uid, $name);
+      $current_time = $this->currentTime->getCurrentTime();
+      $remaining = [];
+      $valid = FALSE;
+      foreach ($otp_user_data['otps'] ?? [] as $otp) {
+        $age = $current_time - ($otp['time'] ?? 0);
+        if ($age < 0 || $age >= 300) {
+          continue;
+        }
+        // Older records may store integer codes or phone numbers.
+        $stored_code = $otp['code'] ?? NULL;
+        $stored_key = $otp['key'] ?? NULL;
+        if ((is_string($stored_code) || is_int($stored_code)) && (is_string($stored_key) || is_int($stored_key))
+          && (string) $stored_key === (string) $key && hash_equals((string) $stored_code, $code)) {
+          $valid = TRUE;
+        }
+        else {
+          $remaining[] = $otp;
+        }
+      }
+      if ($otp_user_data) {
+        $otp_user_data['otps'] = $remaining;
+        $this->userData->set('xinshi_sms', $uid, $name, $otp_user_data);
+      }
+      return $valid;
+    }
+    finally {
+      $this->lock->release($lock_name);
+    }
+  }
+
+  /**
+   * Locks the entire user-data record to avoid lost updates across recipients.
+   */
+  protected function challengeLockName($uid, string $name): string {
+    return 'xinshi_sms.challenge.' . hash('sha256', $uid . ':' . $name);
   }
 }

@@ -158,6 +158,11 @@ class OtpLoginForm extends BaseOtpLoginForm {
       $form_state->setRebuild();
     } elseif ($user) {
       $session_id = $this->OTP->userOtpLogin($otp, $mobile_number);
+      if ($session_id === FALSE) {
+        $this->messenger()->addError($this->t('Unable to log in with these credentials.'));
+        $form_state->setRebuild();
+        return;
+      }
       // Save user cookie.
       //user_cookie_save([$mobile_number => $session_id]);
       // Redirect to user profile page.

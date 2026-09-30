@@ -1,7 +1,7 @@
 services:
   xinshi_sms.OTP:
     class: Drupal\xinshi_sms\Otp
-    arguments: [ '@datetime.time', '@sms.provider', '@user.data', '@entity_type.manager', '@config.factory' ]
+    arguments: [ '@datetime.time', '@sms.provider', '@user.data', '@entity_type.manager', '@config.factory', '@lock' ]
 
   xinshi_sms.route_subscriber:
     class: Drupal\xinshi_sms\Routing\RouteSubscriber

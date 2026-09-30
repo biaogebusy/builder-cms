@@ -8,6 +8,10 @@ services:
       - '@logger.factory'
       - '@file.repository'
       - '@file_system'
+      - '@request_stack'
+      - '@keyvalue.expirable'
+      - '@lock'
+      - '@datetime.time'
 
   xinshi_linux_do.authorize_idp_subscriber:
     class: Drupal\xinshi_linux_do\EventSubscriber\AuthorizeIdpRedirectSubscriber

@@ -69,6 +69,13 @@
 - [多语言发布及媒体库管理](https://www.bilibili.com/video/BV1XohfeoEtz/)
 - [自定义示例和模板库](https://www.bilibili.com/video/BV1wExPeBEdn)
 
+## 开发规范与审查跟踪
+
+- 协作与 Drupal 开发规则见 [AGENTS.md](AGENTS.md)，Claude Code 通过 [CLAUDE.md](CLAUDE.md) 引用同一份规则。
+- 技术文档统一维护在 [xinshi-docs 文档索引](../xinshi-docs/stories/develop/engineering/documentation.mdx)。
+- 自定义模块问题依据见 [CMS 审查报告](../xinshi-docs/stories/develop/engineering/cms-custom-modules-review.mdx)，当前状态与更新历史见 [CMS 整改进度](../xinshi-docs/stories/develop/engineering/cms-custom-modules-progress.mdx)。
+- 后续涉及这些模块的行为调整，需要在同次交付中同步专题文档、对应问题状态、验证结果和下一步；记录归档不代表缺陷修复完成。
+
 ## 本地开发环境(base / pro)
 
 CMS 分为 base 基础版和 Pro 专业版，两者使用**同一份程序代码**，通过 Docker 编排同时运行，差异如下:

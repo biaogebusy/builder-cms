@@ -2,17 +2,21 @@
 
 namespace Drupal\xinshi_linux_do;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
+use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\user\UserInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Service wrapping linux.do OAuth2 client + user mapping.
@@ -24,6 +28,8 @@ class LinuxDoSDK {
   const FIELD_USERNAME = 'field_linux_do_username';
   // State token is valid for 10 minutes.
   const STATE_TTL = 600;
+  // This random binding stays in the initiating browser's Drupal session.
+  const SESSION_STATE_BINDING_KEY = 'xinshi_linux_do.state_binding';
   // Marks a session as established by the linux.do flow. The authorize
   // interceptor needs it to tell "the browser just came back from linux.do", so
   // simple_oauth must be allowed to issue the code, apart from "an unrelated
@@ -36,6 +42,10 @@ class LinuxDoSDK {
   protected LoggerChannelInterface $logger;
   protected FileRepositoryInterface $fileRepository;
   protected FileSystemInterface $fileSystem;
+  protected KeyValueStoreExpirableInterface $stateStore;
+  protected RequestStack $requestStack;
+  protected LockBackendInterface $lock;
+  protected TimeInterface $time;
 
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -44,6 +54,10 @@ class LinuxDoSDK {
     LoggerChannelFactoryInterface $logger_factory,
     FileRepositoryInterface $file_repository,
     FileSystemInterface $file_system,
+    RequestStack $request_stack,
+    KeyValueExpirableFactoryInterface $key_value_expirable,
+    LockBackendInterface $lock,
+    TimeInterface $time,
   ) {
     $this->configFactory = $config_factory;
     $this->entityTypeManager = $entity_type_manager;
@@ -51,6 +65,10 @@ class LinuxDoSDK {
     $this->logger = $logger_factory->get('xinshi_linux_do');
     $this->fileRepository = $file_repository;
     $this->fileSystem = $file_system;
+    $this->stateStore = $key_value_expirable->get('xinshi_linux_do.oauth_state');
+    $this->requestStack = $request_stack;
+    $this->lock = $lock;
+    $this->time = $time;
   }
 
   /**
@@ -82,24 +100,22 @@ class LinuxDoSDK {
   }
 
   /**
-   * Build a stateless, signed state token.
-   *
-   * The token is `base64url(payload).hex(hmac)` where payload is JSON
-   * `{n: nonce, t: issued_at, d: destination}`. We verify it on callback
-   * without any server-side storage, so the OAuth flow does not depend on
-   * the Drupal session cookie surviving the cross-site redirect to linux.do.
+   * Create an expiring, single-use challenge bound to the current browser.
    */
   public function startState(?string $destination = NULL): string {
-    $payload = [
-      'n' => Crypt::randomBytesBase64(16),
-      't' => time(),
-    ];
-    if ($destination !== NULL) {
-      $payload['d'] = $destination;
+    $session = $this->requestStack->getSession();
+    $binding = $session->get(self::SESSION_STATE_BINDING_KEY);
+    if (!is_string($binding) || $binding === '') {
+      $binding = Crypt::randomBytesBase64(32);
+      $session->set(self::SESSION_STATE_BINDING_KEY, $binding);
     }
-    $encoded = self::base64UrlEncode(json_encode($payload, JSON_UNESCAPED_SLASHES));
-    $sig = hash_hmac('sha256', $encoded, $this->getStateSecret());
-    return $encoded . '.' . $sig;
+    $state = Crypt::randomBytesBase64(32);
+    $this->stateStore->setWithExpire(hash('sha256', $state), [
+      'binding' => hash('sha256', $binding),
+      't' => $this->time->getCurrentTime(),
+      'd' => $destination,
+    ], self::STATE_TTL);
+    return $state;
   }
 
   /**
@@ -107,61 +123,51 @@ class LinuxDoSDK {
    */
   public function consumeState(string $received): bool {
     $this->decodedState = NULL;
-    if (!str_contains($received, '.')) {
+    $request = $this->requestStack->getCurrentRequest();
+    if (!preg_match('/\A[A-Za-z0-9_-]{43}\z/', $received) || !$request || !$request->hasSession()) {
       return FALSE;
     }
-    [$encoded, $sig] = explode('.', $received, 2);
-    $expected = hash_hmac('sha256', $encoded, $this->getStateSecret());
-    if (!hash_equals($expected, $sig)) {
+    $binding = $request->getSession()->get(self::SESSION_STATE_BINDING_KEY);
+    if (!is_string($binding) || $binding === '') {
       return FALSE;
     }
-    $payload = json_decode(self::base64UrlDecode($encoded), TRUE);
-    if (!is_array($payload) || empty($payload['t'])) {
+    $key = hash('sha256', $received);
+    $lock_name = 'xinshi_linux_do.state.' . $key;
+    if (!$this->lock->acquire($lock_name)) {
       return FALSE;
     }
-    if ((time() - (int) $payload['t']) > self::STATE_TTL) {
-      return FALSE;
+    try {
+      $payload = $this->stateStore->get($key);
+      if (!is_array($payload) || !is_int($payload['t'] ?? NULL) || !is_string($payload['binding'] ?? NULL)) {
+        return FALSE;
+      }
+      $age = $this->time->getCurrentTime() - $payload['t'];
+      if ($age < 0 || $age >= self::STATE_TTL || !hash_equals($payload['binding'], hash('sha256', $binding))) {
+        return FALSE;
+      }
+      // Consume before any network request or user-account side effect.
+      $this->stateStore->delete($key);
+      $this->decodedState = $payload;
+      return TRUE;
     }
-    $this->decodedState = $payload;
-    return TRUE;
+    finally {
+      $this->lock->release($lock_name);
+    }
   }
 
   /**
    * Return destination extracted from the most recently consumed state.
    */
   public function consumeDestination(): ?string {
-    return $this->decodedState['d'] ?? NULL;
+    $destination = $this->decodedState['d'] ?? NULL;
+    $this->decodedState = NULL;
+    return $destination;
   }
 
   /**
    * Last successfully verified state payload.
    */
   protected ?array $decodedState = NULL;
-
-  /**
-   * Site-wide secret used to sign the state token.
-   */
-  protected function getStateSecret(): string {
-    return Settings::getHashSalt();
-  }
-
-  /**
-   * URL-safe base64 encode without padding.
-   */
-  protected static function base64UrlEncode(string $data): string {
-    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-  }
-
-  /**
-   * URL-safe base64 decode.
-   */
-  protected static function base64UrlDecode(string $data): string {
-    $pad = strlen($data) % 4;
-    if ($pad) {
-      $data .= str_repeat('=', 4 - $pad);
-    }
-    return base64_decode(strtr($data, '-_', '+/')) ?: '';
-  }
 
   /**
    * Exchange authorization code for access token.
@@ -250,6 +256,9 @@ class LinuxDoSDK {
     $by_id = $user_storage->loadByProperties([self::FIELD_ID => $linux_do_id]);
     if ($by_id) {
       $user = reset($by_id);
+      if (!$user->isActive()) {
+        return [NULL, 'account_blocked'];
+      }
       $this->syncProfileFields($user, $profile);
       return [$user, NULL];
     }
@@ -259,6 +268,9 @@ class LinuxDoSDK {
     if ($by_mail) {
       /** @var \Drupal\user\UserInterface $user */
       $user = reset($by_mail);
+      if (!$user->isActive()) {
+        return [NULL, 'account_blocked'];
+      }
       // Hijack guard: if this user already has a different linux_do_id bound,
       // refuse to rebind.
       if ($user->hasField(self::FIELD_ID) && !$user->get(self::FIELD_ID)->isEmpty()) {

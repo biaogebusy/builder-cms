@@ -56,11 +56,14 @@ class LinuxDoAuthController extends ControllerBase {
     $code = $request->query->get('code');
     $state = $request->query->get('state');
 
-    if (empty($code) || empty($state)) {
-      throw new BadRequestHttpException('Missing code or state.');
+    if (!is_string($state) || $state === '') {
+      throw new BadRequestHttpException('Missing state.');
     }
     if (!$this->sdk->consumeState($state)) {
       throw new BadRequestHttpException('Invalid or expired state.');
+    }
+    if ($request->query->has('error') || !is_string($code) || $code === '') {
+      throw new BadRequestHttpException('Authorization was cancelled or the code is missing. Please start login again.');
     }
 
     $token_data = $this->sdk->exchangeCodeForToken($code);
@@ -82,6 +85,10 @@ class LinuxDoAuthController extends ControllerBase {
         $this->messenger()->addError($this->t('linux.do 登录失败，请联系管理员。'));
       }
       return new RedirectResponse(Url::fromRoute('user.login')->toString());
+    }
+
+    if (!$account->isActive()) {
+      throw new BadRequestHttpException('Unable to log in with this account.');
     }
 
     // Establish a Drupal session. Replaces whoever was signed in before, which

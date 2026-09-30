@@ -65,7 +65,18 @@ class OtpSubmitResource extends ResourceBase {
       throw new AccessDeniedHttpException();
     }
     $user_input = json_decode($this->request->getCurrentRequest()->getContent(), TRUE);
+    if (!is_array($user_input) || array_is_list($user_input)) {
+      return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Expected a JSON object'), 400);
+    }
     $otp = $user_input["code"] ?? '';
+    if (!is_string($otp) || !preg_match('/\A[0-9]{6}\z/', $otp)) {
+      return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Expected a six-digit code string'), 400);
+    }
+    foreach (['grant_type', 'client_id', 'client_secret'] as $field) {
+      if (isset($user_input[$field]) && (!is_string($user_input[$field]) || strlen($user_input[$field]) > 1024)) {
+        return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::OAUTH_FAILED, 'Invalid OAuth parameters'), 400);
+      }
+    }
     $mobile_number = $user_input["mobile_number"] ?? '';
     $otp_service = \Drupal::service('xinshi_sms.OTP');
     $data = [
@@ -77,7 +88,7 @@ class OtpSubmitResource extends ResourceBase {
       if (empty($message)) {
         $is_invalid_otp = $otp_service->validateOtp($otp, $mobile_number);
         if ($is_invalid_otp) {
-          $data = OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Incorrect Code');
+          return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Incorrect Code'), 401);
         }
         else {
           // Check if OAuth2 token generation is requested.
@@ -90,13 +101,15 @@ class OtpSubmitResource extends ResourceBase {
             }
             catch (\RuntimeException $exception) {
               return new ResourceResponse(
-                OtpErrorCode::failure(OtpErrorCode::OAUTH_FAILED, $exception->getMessage())
+                OtpErrorCode::failure(OtpErrorCode::OAUTH_FAILED, 'Unable to issue an OAuth token'), 400
               );
             }
           }
           else {
             // Standard OTP login flow.
-            $otp_service->userOtpLogin($otp, $mobile_number);
+            if ($otp_service->userOtpLogin($otp, $mobile_number) === FALSE) {
+              return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Incorrect Code'), 401);
+            }
             $logout_path = \Drupal::service('router.route_provider')->getRouteByName('user.logout.http');
             $logout_path = ltrim($logout_path->getPath(), '/');
             $data['logout_token'] = \Drupal::service('csrf_token')->get($logout_path);
@@ -115,7 +128,7 @@ class OtpSubmitResource extends ResourceBase {
     }
     catch (\Exception $exception) {
       $this->logger->error('OTP login failed: @message', ['@message' => $exception->getMessage()]);
-      $data = OtpErrorCode::failure(OtpErrorCode::SERVER_ERROR, $exception->getMessage());
+      return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::SERVER_ERROR, 'Unable to complete login'), 500);
     }
     return new ResourceResponse($data);
   }
@@ -173,8 +186,8 @@ class OtpSubmitResource extends ResourceBase {
     }
 
     $user = \Drupal::service('xinshi_sms.OTP')->otpLoginCheckUserAlreadyExists($user_input['mobile_number']);
-    if (empty($user)) {
-      throw new \RuntimeException('User not found for mobile_number');
+    if (empty($user) || !$user->isActive()) {
+      throw new \RuntimeException('No active user for mobile_number');
     }
     $user_id = $user->id();
 
