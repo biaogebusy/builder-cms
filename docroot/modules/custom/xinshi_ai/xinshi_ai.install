@@ -155,6 +155,32 @@ function xinshi_ai_update_10005(): void {
 }
 
 /**
+ * Seed the classifier role while preserving site choices and disabled models.
+ */
+function xinshi_ai_update_10006(): void {
+  $config = \Drupal::configFactory()->getEditable('xinshi_ai.models');
+  $platforms = $config->get('platforms') ?? [];
+  if (empty($platforms['xinshi']['enabled'])) {
+    return;
+  }
+  $path = \Drupal::service('extension.list.module')->getPath('xinshi_ai') . '/config/install';
+  $seed = (new \Drupal\Core\Config\FileStorage($path))->read('xinshi_ai.models');
+  $id = $seed['defaults']['classifier'];
+  $models = array_column($config->get('models') ?? [], NULL, 'id');
+  if (!isset($models[$id])) {
+    $models[$id] = array_column($seed['models'], NULL, 'id')[$id];
+    $config->set('models', array_values($models));
+  }
+  $defaults = $config->get('defaults') ?? [];
+  $model = $models[$id];
+  if (!array_key_exists('classifier', $defaults) && ($model['enabled'] ?? TRUE)
+    && ($model['platform'] ?? '') === 'xinshi' && in_array('chat', $model['capabilities'] ?? [], TRUE)) {
+    $config->set('defaults.classifier', $id);
+  }
+  $config->save();
+}
+
+/**
  * Strips connection secrets from one batch of image_job params rows.
  *
  * Works on the field data and field revision tables alike, walking them by

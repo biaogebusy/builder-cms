@@ -70,9 +70,9 @@ final class ModelRegistryController extends ControllerBase {
     $defaults = [];
     foreach ($registry['defaults'] as $mode => $id) {
       $model = $this->registry->getModel((string) $id);
-      $capability = $mode === 'critic' ? 'chat' : $mode;
+      $capability = in_array($mode, ['critic', 'classifier'], TRUE) ? 'chat' : $mode;
       if ($model !== NULL && in_array($capability, $model['capabilities'] ?? [], TRUE)
-        && ($mode !== 'critic' || ($model['platform'] ?? '') === 'xinshi')) {
+        && (!in_array($mode, ['critic', 'classifier'], TRUE) || ($model['platform'] ?? '') === 'xinshi')) {
         $defaults[$mode] = $id;
       }
     }

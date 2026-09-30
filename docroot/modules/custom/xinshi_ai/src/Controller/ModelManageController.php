@@ -73,15 +73,15 @@ final class ModelManageController extends ControllerBase {
         $errors[$mode] = 'model id must be a string or null.';
         continue;
       }
-      // The critic uses the gateway client and requires chat capability, not a new capability.
+      // Auxiliary defaults use gateway chat capability, not a new capability.
       $model = $this->registry->getModel($id);
-      $capability = $mode === 'critic' ? 'chat' : $mode;
+      $capability = in_array($mode, ['critic', 'classifier'], TRUE) ? 'chat' : $mode;
       if ($model === NULL || !in_array($capability, $model['capabilities'] ?? [], TRUE)) {
         $errors[$mode] = sprintf("Model '%s' must be an enabled model with the '%s' capability.", $id, $capability);
         continue;
       }
-      if ($mode === 'critic' && ($model['platform'] ?? '') !== 'xinshi') {
-        $errors[$mode] = 'The default critic must use the xinshi platform.';
+      if (in_array($mode, ['critic', 'classifier'], TRUE) && ($model['platform'] ?? '') !== 'xinshi') {
+        $errors[$mode] = sprintf('The default %s must use the xinshi platform.', $mode);
         continue;
       }
       $defaults[$mode] = $id;

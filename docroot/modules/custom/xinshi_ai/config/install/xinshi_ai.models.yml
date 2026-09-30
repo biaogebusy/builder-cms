@@ -145,5 +145,6 @@ models:
 defaults:
   chat: deepseek-v4-pro
   critic: deepseek-flash
+  classifier: deepseek-flash
   image: qwen-image-plus
   image-edit: qwen-image-edit-plus
