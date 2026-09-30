@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\xinshi_sms\Exception\OtpRateLimitException;
 use Drupal\otp_login\Otp;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -228,7 +229,14 @@ class FindPasswordForm extends FormBase {
    */
   public function nextSubmit(array $form, FormStateInterface $form_state) {
     $mobile_number = $form_state->getValue('mobile_number');
-    $this->OTP->generateOtp($mobile_number);
+    try {
+      $this->OTP->generateOtp($mobile_number);
+    }
+    catch (OtpRateLimitException) {
+      $this->messenger()->addError($this->t('Too many code requests. Please try again later.'));
+      $form_state->setRebuild();
+      return;
+    }
     $form_state->setValue('step', 2);
     $form_state->setRebuild();
   }
@@ -247,7 +255,13 @@ class FindPasswordForm extends FormBase {
     \Drupal::messenger()->deleteAll();
     $response = new AjaxResponse();
     $mobile_number = $form_state->getValue('mobile_number');
-    $this->OTP->generateOtp($mobile_number);
+    try {
+      $this->OTP->generateOtp($mobile_number);
+    }
+    catch (OtpRateLimitException) {
+      $response->addCommand(new InvokeCommand('.send-message', 'text', [$this->t('Too many code requests. Please try again later.')]));
+      return $response;
+    }
     $response->addCommand(new InvokeCommand('.mobile-message', 'html', ['']));
     $response->addCommand(new InvokeCommand('.js-verification-send', 'attr', ['disabled', TRUE]));
     $response->addCommand(new InvokeCommand('.js-verification-send', 'smsSend', []));
@@ -261,7 +275,15 @@ class FindPasswordForm extends FormBase {
     // TODO: Implement submitForm() method.
     $otp = $form_state->getValue('code');
     $mobile_number = $form_state->getValue('mobile_number');
-    $is_invalid_otp = $this->OTP->validateOtp($otp, $mobile_number);
+    try {
+      $is_invalid_otp = $this->OTP->validateOtp($otp, $mobile_number);
+    }
+    catch (OtpRateLimitException) {
+      $this->messenger()->addError($this->t('Too many verification attempts. Please try again later.'));
+      $form_state->setValue('step', 2);
+      $form_state->setRebuild();
+      return;
+    }
     $user = $this->account->isAuthenticated() ? $this->user : $this->OTP->otpLoginCheckUserAlreadyExists($mobile_number);
     if (empty($user)) {
       $this->messenger()->addError($this->t('This number has not been registered'));

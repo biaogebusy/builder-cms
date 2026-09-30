@@ -12,6 +12,7 @@ use Drupal\sms\Message\SmsMessage;
 use Drupal\sms\Provider\SmsProviderInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserDataInterface;
+use Drupal\xinshi_sms\Service\OtpRateLimiter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -34,6 +35,7 @@ class Otp extends BaseOtp {
     EntityTypeManagerInterface $entity_type_manager,
     ConfigFactory $config_factory,
     LockBackendInterface $lock,
+    protected readonly OtpRateLimiter $rateLimiter,
   ) {
     parent::__construct($time, $sms_provider, $user_data, $entity_type_manager, $config_factory);
     $this->lock = $lock;
@@ -50,6 +52,7 @@ class Otp extends BaseOtp {
       $container->get('entity_type.manager'),
       $container->get('config.factory'),
       $container->get('lock'),
+      $container->get('xinshi_sms.otp_rate_limiter'),
     );
   }
 
@@ -72,6 +75,8 @@ class Otp extends BaseOtp {
    * {@inheritDoc}
    */
   public function generateOtp($mobile_number) {
+    $this->assertMobileRecipient($mobile_number);
+    $this->rateLimiter->reserveSend((string) $mobile_number);
     $current_time = $this->currentTime->getCurrentTime();
     // Generate 6 digit random OTP number.
     $six_digit_random_number = (string) random_int(100000, 999999);
@@ -103,6 +108,8 @@ class Otp extends BaseOtp {
   }
 
   public function sendVerificationCode($mobile_number, $uid) {
+    $this->assertMobileRecipient($mobile_number);
+    $this->rateLimiter->reserveSend((string) $mobile_number);
     $current_time = $this->currentTime->getCurrentTime();
     // Generate 6 digit random OTP number.
     $six_digit_random_number = (string) random_int(100000, 999999);
@@ -111,7 +118,7 @@ class Otp extends BaseOtp {
       // Set the message.
       ->setMessage($six_digit_random_number)
       // Set recipient phone number.
-      ->addRecipient($mobile_number)
+      ->addRecipient((string) $mobile_number)
       ->setDirection(Direction::OUTGOING);
 
     $this->smsProvider->queue($sms);
@@ -133,6 +140,10 @@ class Otp extends BaseOtp {
   }
 
   public function sendEmailVerificationCode($email, $uid) {
+    if (!is_string($email) || strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      throw new \InvalidArgumentException('Invalid verification email address.');
+    }
+    $this->rateLimiter->reserveSend($email, 'email');
     // Generate 6 digit random OTP number.
     $six_digit_random_number = (string) random_int(100000, 999999);
     $this->updateUserData($uid, $email, $six_digit_random_number, 'email_user_data');
@@ -146,15 +157,13 @@ class Otp extends BaseOtp {
     if ((!is_string($mobile_number) && !is_int($mobile_number)) || !preg_match('/\A1[3-9][0-9]{9}\z/', (string) $mobile_number)) {
       return TRUE;
     }
-    $users = $this->entityTypeManager->getStorage('user')
-      ->loadByProperties(['phone_number' => $mobile_number]);
-    $user = reset($users);
-    if ($user && $user->isActive()) {
-      $uid = $user->id();
-      return !$this->validateOtpKey($uid, $otp, $mobile_number);
-    }
     // This API returns TRUE for invalid credentials, including missing users.
-    return TRUE;
+    return !$this->rateLimiter->verify((string) $mobile_number, function () use ($otp, $mobile_number): bool {
+      $users = $this->entityTypeManager->getStorage('user')
+        ->loadByProperties(['phone_number' => $mobile_number]);
+      $user = reset($users);
+      return $user && $user->isActive() && $this->consumeOtpKey($user->id(), $otp, $mobile_number);
+    });
   }
 
   /**
@@ -211,6 +220,18 @@ class Otp extends BaseOtp {
    * @return bool
    */
   public function validateOtpKey($uid, $code, $key, $name = 'otp_user_data') {
+    if ((!is_string($key) && !is_int($key)) || strlen((string) $key) > 254) {
+      return FALSE;
+    }
+    $channel = $name === 'email_user_data' ? 'email' : 'sms';
+    return $this->rateLimiter->verify((string) $key,
+      fn(): bool => $this->consumeOtpKey($uid, $code, $key, $name), $channel);
+  }
+
+  /**
+   * Compares and consumes only inside the shared verification budget.
+   */
+  private function consumeOtpKey($uid, $code, $key, $name = 'otp_user_data'): bool {
     if (!is_string($code) || !preg_match('/\A[0-9]{6}\z/', $code) || (!is_string($key) && !is_int($key))) {
       return FALSE;
     }
@@ -255,5 +276,15 @@ class Otp extends BaseOtp {
    */
   protected function challengeLockName($uid, string $name): string {
     return 'xinshi_sms.challenge.' . hash('sha256', $uid . ':' . $name);
+  }
+
+  /**
+   * Reject malformed recipients before reserving a send or causing side effects.
+   */
+  private function assertMobileRecipient(mixed $mobile_number): void {
+    if ((!is_string($mobile_number) && !is_int($mobile_number))
+      || !preg_match('/\A1[3-9][0-9]{9}\z/', (string) $mobile_number)) {
+      throw new \InvalidArgumentException('Invalid verification phone number.');
+    }
   }
 }

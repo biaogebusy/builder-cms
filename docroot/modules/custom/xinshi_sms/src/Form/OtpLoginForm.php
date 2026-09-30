@@ -7,6 +7,7 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\otp_login\Form\OtpLoginForm as BaseOtpLoginForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\xinshi_sms\Exception\OtpRateLimitException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\sms\Direction;
 use Drupal\sms\Message\SmsMessage;
@@ -122,7 +123,13 @@ class OtpLoginForm extends BaseOtpLoginForm {
         $message = $this->t('This number has not been registered');
         $response->addCommand(new InvokeCommand('#mobile-message', 'html', [$message]));
       } else {
-        $this->OTP->generateOtp($mobile_number);
+        try {
+          $this->OTP->generateOtp($mobile_number);
+        }
+        catch (OtpRateLimitException) {
+          $response->addCommand(new InvokeCommand('#mobile-message', 'text', [$this->t('Too many code requests. Please try again later.')]));
+          return $response;
+        }
         $response->addCommand(new InvokeCommand('#mobile-message', 'html', ['']));
         $response->addCommand(new InvokeCommand('#edit-send', 'attr', ['disabled', TRUE]));
         $response->addCommand(new InvokeCommand('#edit-send', 'smsSend', []));
@@ -148,7 +155,14 @@ class OtpLoginForm extends BaseOtpLoginForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $otp = $form_state->getValue('code');
     $mobile_number = $form_state->getValue('mobile_number');
-    $is_invalid_otp = $this->OTP->validateOtp($otp, $mobile_number);
+    try {
+      $is_invalid_otp = $this->OTP->validateOtp($otp, $mobile_number);
+    }
+    catch (OtpRateLimitException) {
+      $this->messenger()->addError($this->t('Too many verification attempts. Please try again later.'));
+      $form_state->setRebuild();
+      return;
+    }
     $user = $this->OTP->otpLoginCheckUserAlreadyExists($mobile_number);
     if (empty($user)) {
       $this->messenger()->addError($this->t('This number has not been registered'));

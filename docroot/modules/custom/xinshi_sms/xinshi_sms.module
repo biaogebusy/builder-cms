@@ -7,6 +7,21 @@
 use Drupal\Core\Form\FormStateInterface;
 
 /**
+ * Implements hook_rest_resource_alter().
+ */
+function xinshi_sms_rest_resource_alter(array &$definitions): void {
+  // Keep legacy paths and permissions if enabled, but share validation/limits.
+  foreach ([
+    'generate_otp_resource' => \Drupal\xinshi_sms\Plugin\rest\resource\OtpGenerateResource::class,
+    'submit_otp_resource' => \Drupal\xinshi_sms\Plugin\rest\resource\OtpSubmitResource::class,
+  ] as $id => $class) {
+    if (isset($definitions[$id])) {
+      $definitions[$id]['class'] = $class;
+    }
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  * @param $form
  * @param FormStateInterface $form_state

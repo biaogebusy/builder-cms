@@ -7,6 +7,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
 use Drupal\xinshi_sms\OtpErrorCode;
+use Drupal\xinshi_sms\Exception\OtpRateLimitException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Defuse\Crypto\Crypto;
@@ -68,7 +69,9 @@ class OtpSubmitResource extends ResourceBase {
     if (!is_array($user_input) || array_is_list($user_input)) {
       return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Expected a JSON object'), 400);
     }
-    $otp = $user_input["code"] ?? '';
+    // The dependency's legacy endpoint calls this field "otp".
+    $otp_field = $this->getPluginId() === 'submit_otp_resource' ? 'otp' : 'code';
+    $otp = $user_input[$otp_field] ?? '';
     if (!is_string($otp) || !preg_match('/\A[0-9]{6}\z/', $otp)) {
       return new ResourceResponse(OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Expected a six-digit code string'), 400);
     }
@@ -125,6 +128,12 @@ class OtpSubmitResource extends ResourceBase {
       else {
         $data = OtpErrorCode::failure(OtpErrorCode::phoneFailure($mobile_number), $message);
       }
+    }
+    catch (OtpRateLimitException $exception) {
+      return new ResourceResponse(
+        OtpErrorCode::failure(OtpErrorCode::CODE_VERIFY_THROTTLED, $exception->getMessage()),
+        429, ['Retry-After' => (string) $exception->retryAfter]
+      );
     }
     catch (\Exception $exception) {
       $this->logger->error('OTP login failed: @message', ['@message' => $exception->getMessage()]);

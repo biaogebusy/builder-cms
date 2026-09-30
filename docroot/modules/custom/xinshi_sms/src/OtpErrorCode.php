@@ -37,6 +37,11 @@ final class OtpErrorCode {
   const CODE_SEND_THROTTLED = 'code_send_throttled';
 
   /**
+   * Too many failed verification attempts for the recipient or client IP.
+   */
+  const CODE_VERIFY_THROTTLED = 'code_verify_throttled';
+
+  /**
    * The SMS gateway refused or failed to queue the message.
    */
   const CODE_SEND_FAILED = 'code_send_failed';

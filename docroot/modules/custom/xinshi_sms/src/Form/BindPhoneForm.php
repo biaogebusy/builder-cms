@@ -3,6 +3,8 @@
 
 namespace Drupal\xinshi_sms\Form;
 
+use Drupal\xinshi_sms\Exception\OtpRateLimitException;
+
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseModalDialogCommand;
@@ -135,7 +137,13 @@ class BindPhoneForm extends FormBase {
       $message = t('The phone number is already in use by other');
       $response->addCommand(new InvokeCommand('#mobile-message', 'html', [$message]));
     } else {
-      \Drupal::service('xinshi_sms.OTP')->sendVerificationCode($mobile_number, $this->user->id());
+      try {
+        \Drupal::service('xinshi_sms.OTP')->sendVerificationCode($mobile_number, $this->user->id());
+      }
+      catch (OtpRateLimitException) {
+        $response->addCommand(new InvokeCommand('#mobile-message', 'text', [$this->t('Too many code requests. Please try again later.')]));
+        return $response;
+      }
       $response->addCommand(new InvokeCommand('#mobile-message', 'html', ['']));
       $response->addCommand(new InvokeCommand('.obtain-code', 'attr', ['disabled', TRUE]));
       $response->addCommand(new InvokeCommand('.obtain-code', 'smsSend', []));
@@ -173,7 +181,13 @@ class BindPhoneForm extends FormBase {
       $response->addCommand(new InvokeCommand('#send-message', 'html', [$message]));
     } else {
       $uid = \Drupal::currentUser()->id();
-      $is_invalid_otp = \Drupal::service('xinshi_sms.OTP')->validateOtpByUser($code, $mobile_number, $uid);
+      try {
+        $is_invalid_otp = \Drupal::service('xinshi_sms.OTP')->validateOtpByUser($code, $mobile_number, $uid);
+      }
+      catch (OtpRateLimitException) {
+        $response->addCommand(new InvokeCommand('#send-message', 'text', [$this->t('Too many verification attempts. Please try again later.')]));
+        return $response;
+      }
       if ($is_invalid_otp) {
         $message = $this->t('Incorrect Verification Code');
         $response->addCommand(new InvokeCommand('#send-message', 'html', [$message]));

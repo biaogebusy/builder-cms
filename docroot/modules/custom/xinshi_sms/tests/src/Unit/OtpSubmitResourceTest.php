@@ -7,6 +7,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\user\UserInterface;
 use Drupal\xinshi_sms\Otp;
+use Drupal\xinshi_sms\Exception\OtpRateLimitException;
 use Drupal\xinshi_sms\Plugin\rest\resource\OtpSubmitResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -78,6 +79,31 @@ final class OtpSubmitResourceTest extends TestCase {
     $this->assertSame('test-only', $response->getResponseData()['access_token']);
   }
 
+  #[DataProvider('loginModes')]
+  public function testThrottledVerificationCannotCreateSessionOrToken(string $grant): void {
+    $this->request($grant);
+    $this->otp->method('validateMobileNumber')->willReturn('');
+    $this->otp->method('validateOtp')->willThrowException(new OtpRateLimitException(300));
+    $this->otp->expects($this->never())->method('userOtpLogin');
+    $response = $this->resource->post();
+    $this->assertSame(429, $response->getStatusCode());
+    $this->assertSame('code_verify_throttled', $response->getResponseData()['code']);
+    $this->assertSame('300', $response->headers->get('Retry-After'));
+    $this->assertFalse($this->resource->issued);
+  }
+
+  public function testLegacyResourcePreservesOtpInputName(): void {
+    $resource = new TestOtpSubmitResource([], 'submit_otp_resource', [], ['json'], new NullLogger());
+    $resource->initialize($this->requests, $this->createMock(ModuleHandlerInterface::class));
+    $this->requests->push(Request::create('/otp/login', 'POST', [], [], [], [], json_encode([
+      'mobile_number' => '13800000000', 'otp' => '123456', 'grant_type' => 'oauth2',
+    ])));
+    $this->otp->method('validateMobileNumber')->willReturn('');
+    $this->otp->expects($this->once())->method('validateOtp')->with('123456', '13800000000')->willReturn(FALSE);
+    $this->assertSame(200, $resource->post()->getStatusCode());
+    $this->assertTrue($resource->issued);
+  }
+
   public function testAccountBlockedBetweenValidationAndSessionCreationIsRejected(): void {
     $this->request('');
     $this->otp->method('validateMobileNumber')->willReturn('');
@@ -137,4 +163,3 @@ final class TestOtpSubmitResource extends OtpSubmitResource {
   }
 
 }
-

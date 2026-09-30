@@ -15,7 +15,7 @@ foreach (['user', 'rest', 'file'] as $module) {
 $loader->addPsr4('Drupal\\sms\\', $root . '/docroot/modules/contrib/smsframework/src');
 $loader->addPsr4('Drupal\\otp_login\\', $root . '/docroot/modules/contrib/otp_login/src');
 $loader->addPsr4('Drupal\\xinshi_sms\\', dirname(__DIR__) . '/src', TRUE);
+$loader->addPsr4('Drupal\\Tests\\xinshi_sms\\', __DIR__ . '/src', TRUE);
 if (!class_exists('Drupal')) {
   require $root . '/docroot/core/lib/Drupal.php';
 }
-

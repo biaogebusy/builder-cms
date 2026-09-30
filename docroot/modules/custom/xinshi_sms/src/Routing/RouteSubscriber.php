@@ -16,6 +16,10 @@ class RouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   protected function alterRoutes(RouteCollection $collection) {
+    // The dependency's form must use the same service and throttling feedback.
+    if ($route = $collection->get('otp_login.otp_login_form')) {
+      $route->setDefault('_form', '\Drupal\xinshi_sms\Form\OtpLoginForm');
+    }
     if ($route = $collection->get('user.pass')) {
       $config = \Drupal::configFactory()->get('xinshi_sms.settings');
       if ($config->get('override_reset_pass')) {

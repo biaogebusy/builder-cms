@@ -4,6 +4,8 @@ namespace Drupal\Tests\xinshi_sms\Unit;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Component\Uuid\Php as Uuid;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
@@ -11,6 +13,8 @@ use Drupal\sms\Provider\SmsProviderInterface;
 use Drupal\user\UserDataInterface;
 use Drupal\user\UserInterface;
 use Drupal\xinshi_sms\Otp;
+use Drupal\xinshi_sms\Service\OtpRateLimiter;
+use Symfony\Component\HttpFoundation\RequestStack;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -25,6 +29,7 @@ final class OtpTest extends TestCase {
   private bool $exists = TRUE;
   private int $now = 1000;
   private Otp $otp;
+  private SmsProviderInterface $sms;
 
   protected function setUp(): void {
     $GLOBALS['xinshi_sms_test_logins'] = [];
@@ -47,7 +52,14 @@ final class OtpTest extends TestCase {
     $entities->method('getStorage')->with('user')->willReturn($storage);
     $lock = $this->createMock(LockBackendInterface::class);
     $lock->method('acquire')->willReturnCallback(fn() => $this->lockAvailable);
-    $this->otp = new Otp($time, $this->createMock(SmsProviderInterface::class), $data, $entities, $this->createMock(ConfigFactory::class), $lock);
+    $rateLock = $this->createMock(LockBackendInterface::class);
+    $rateLock->method('acquire')->willReturn(TRUE);
+    $limiter = new OtpRateLimiter(new MemoryOtpFlood(), $rateLock, new RequestStack());
+    $this->sms = $this->createMock(SmsProviderInterface::class);
+    $this->otp = new Otp($time, $this->sms, $data, $entities, $this->createMock(ConfigFactory::class), $lock, $limiter);
+    $container = new ContainerBuilder();
+    $container->set('uuid', new Uuid());
+    \Drupal::setContainer($container);
   }
 
   public static function invalidCodes(): array {
@@ -127,6 +139,67 @@ final class OtpTest extends TestCase {
     $this->assertSame($code, $this->data['otps'][1]['code']);
     $this->assertFalse($this->otp->validateEmailCode($code, 7, 'test@example.invalid'));
     $this->assertTrue($this->otp->validateEmailCode($code, 7, 'test@example.invalid'));
+  }
+
+  public function testDirectSmsSendCannotBypassLimit(): void {
+    $this->sms->expects($this->exactly(5))->method('queue');
+    $this->expectException(\Drupal\xinshi_sms\Exception\OtpRateLimitException::class);
+    for ($i = 0; $i < 6; $i++) {
+      $this->otp->sendVerificationCode('13800000000', 7);
+    }
+  }
+
+  public function testEmailSendCannotBypassLimit(): void {
+    $this->expectException(\Drupal\xinshi_sms\Exception\OtpRateLimitException::class);
+    for ($i = 0; $i < 6; $i++) {
+      $this->otp->sendEmailVerificationCode('test@example.invalid', 7);
+    }
+  }
+
+  public function testFailedVerificationLimitIsSharedAcrossLoginAndBinding(): void {
+    for ($i = 0; $i < 5; $i++) {
+      $this->assertTrue($i % 2
+        ? $this->otp->validateOtpByUser('654321', '13800000000', 7)
+        : $this->otp->validateOtp('654321', '13800000000'));
+    }
+    $this->expectException(\Drupal\xinshi_sms\Exception\OtpRateLimitException::class);
+    $this->otp->validateOtpKey(7, '123456', '13800000000');
+  }
+
+  public function testFailedQueueAttemptsStillSpendSendBudget(): void {
+    $this->sms->expects($this->exactly(5))->method('queue')->willThrowException(new \RuntimeException('queue unavailable'));
+    for ($i = 0; $i < 5; $i++) {
+      try {
+        $this->otp->sendVerificationCode('13800000000', 7);
+        $this->fail('Queue should fail.');
+      }
+      catch (\RuntimeException $e) {
+        $this->assertSame('queue unavailable', $e->getMessage());
+      }
+    }
+    $this->expectException(\Drupal\xinshi_sms\Exception\OtpRateLimitException::class);
+    $this->otp->generateOtp('13800000000');
+  }
+
+  public function testLoginAndBindingShareOneSendBudget(): void {
+    $this->sms->expects($this->exactly(5))->method('queue');
+    for ($i = 0; $i < 5; $i++) {
+      $i % 2 ? $this->otp->generateOtp(13800000000) : $this->otp->sendVerificationCode('13800000000', 7);
+    }
+    $this->expectException(\Drupal\xinshi_sms\Exception\OtpRateLimitException::class);
+    $this->otp->generateOtp('13800000000');
+  }
+
+  public function testMalformedRecipientCannotSendOrStore(): void {
+    $this->sms->expects($this->never())->method('queue');
+    $before = $this->data;
+    try {
+      $this->otp->generateOtp(TRUE);
+      $this->fail('Invalid phone must be rejected.');
+    }
+    catch (\InvalidArgumentException) {
+      $this->assertSame($before, $this->data);
+    }
   }
 
 }

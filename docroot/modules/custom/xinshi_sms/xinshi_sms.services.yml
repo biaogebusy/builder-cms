@@ -1,7 +1,11 @@
 services:
   xinshi_sms.OTP:
     class: Drupal\xinshi_sms\Otp
-    arguments: [ '@datetime.time', '@sms.provider', '@user.data', '@entity_type.manager', '@config.factory', '@lock' ]
+    arguments: [ '@datetime.time', '@sms.provider', '@user.data', '@entity_type.manager', '@config.factory', '@lock', '@xinshi_sms.otp_rate_limiter' ]
+
+  xinshi_sms.otp_rate_limiter:
+    class: Drupal\xinshi_sms\Service\OtpRateLimiter
+    arguments: [ '@flood', '@lock', '@request_stack' ]
 
   xinshi_sms.route_subscriber:
     class: Drupal\xinshi_sms\Routing\RouteSubscriber
