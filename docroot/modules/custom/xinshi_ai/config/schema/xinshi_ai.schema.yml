@@ -164,6 +164,9 @@ xinshi_ai.models:
         chat:
           type: string
           label: '对话默认模型'
+        critic:
+          type: string
+          label: 'Plan 评审默认模型'
         image:
           type: string
           label: '文生图默认模型'

@@ -21,6 +21,12 @@ models:
     platform: xinshi
     capabilities:
       - chat
+  - id: deepseek-flash
+    label: 'DeepSeek Flash'
+    platform: xinshi
+    capabilities:
+      - chat
+      - reasoning
   - id: deepseek-v4-pro
     label: 'DeepSeek v4'
     platform: xinshi
@@ -138,5 +144,6 @@ models:
 # 前端在 defaults 缺失或指向无效模型时回落到本地常量)。
 defaults:
   chat: deepseek-v4-pro
+  critic: deepseek-flash
   image: qwen-image-plus
   image-edit: qwen-image-edit-plus

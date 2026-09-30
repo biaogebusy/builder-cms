@@ -12,9 +12,9 @@ namespace Drupal\xinshi_ai\Service;
 interface ModelRegistryServiceInterface {
 
   /**
-   * 默认模型支持的模式(键名与能力枚举一致)。
+   * Default roles; critic uses chat capability on the Xinshi gateway.
    */
-  public const DEFAULT_MODES = ['chat', 'image', 'image-edit'];
+  public const DEFAULT_MODES = ['chat', 'critic', 'image', 'image-edit'];
 
   /**
    * 全量注册中心(供 admin 与 /api/v3/ai/models 使用)。

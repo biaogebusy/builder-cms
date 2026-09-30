@@ -65,12 +65,14 @@ final class ModelRegistryController extends ControllerBase {
       'models' => array_values($models),
     ];
 
-    // 各模式默认模型:只暴露公开可用(平台+模型均启用)且能力匹配的条目;
-    // 无有效条目时整键省略,前端回落到本地兜底默认。
+    // Only publish enabled, compatible defaults. Consumers decide how to handle a missing role;
+    // the critic fails explicitly rather than selecting an unrelated chat default.
     $defaults = [];
     foreach ($registry['defaults'] as $mode => $id) {
       $model = $this->registry->getModel((string) $id);
-      if ($model !== NULL && in_array($mode, $model['capabilities'] ?? [], TRUE)) {
+      $capability = $mode === 'critic' ? 'chat' : $mode;
+      if ($model !== NULL && in_array($capability, $model['capabilities'] ?? [], TRUE)
+        && ($mode !== 'critic' || ($model['platform'] ?? '') === 'xinshi')) {
         $defaults[$mode] = $id;
       }
     }

@@ -73,10 +73,15 @@ final class ModelManageController extends ControllerBase {
         $errors[$mode] = 'model id must be a string or null.';
         continue;
       }
-      // getModel 已过滤平台禁用 / 模型禁用;能力须与模式同名。
+      // The critic uses the gateway client and requires chat capability, not a new capability.
       $model = $this->registry->getModel($id);
-      if ($model === NULL || !in_array($mode, $model['capabilities'] ?? [], TRUE)) {
-        $errors[$mode] = sprintf("Model '%s' must be an enabled model with the '%s' capability.", $id, $mode);
+      $capability = $mode === 'critic' ? 'chat' : $mode;
+      if ($model === NULL || !in_array($capability, $model['capabilities'] ?? [], TRUE)) {
+        $errors[$mode] = sprintf("Model '%s' must be an enabled model with the '%s' capability.", $id, $capability);
+        continue;
+      }
+      if ($mode === 'critic' && ($model['platform'] ?? '') !== 'xinshi') {
+        $errors[$mode] = 'The default critic must use the xinshi platform.';
         continue;
       }
       $defaults[$mode] = $id;
