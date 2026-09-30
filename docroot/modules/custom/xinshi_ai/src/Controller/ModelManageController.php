@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_ai\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\xinshi_ai\Service\ModelDefaultRules;
 use Drupal\xinshi_ai\Service\ModelRegistryServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -61,27 +62,13 @@ final class ModelManageController extends ControllerBase {
     $defaults = $this->registry->getDefaults();
     $errors = [];
     foreach ($payload as $mode => $id) {
-      if (!in_array($mode, ModelRegistryServiceInterface::DEFAULT_MODES, TRUE)) {
-        $errors[(string) $mode] = sprintf('mode must be one of: %s.', implode(', ', ModelRegistryServiceInterface::DEFAULT_MODES));
+      $error = ModelDefaultRules::validate($this->registry, (string) $mode, $id);
+      if ($error !== NULL) {
+        $errors[(string) $mode] = $error;
         continue;
       }
       if ($id === NULL || $id === '') {
         unset($defaults[$mode]);
-        continue;
-      }
-      if (!is_string($id)) {
-        $errors[$mode] = 'model id must be a string or null.';
-        continue;
-      }
-      // Auxiliary defaults use gateway chat capability, not a new capability.
-      $model = $this->registry->getModel($id);
-      $capability = in_array($mode, ['critic', 'classifier'], TRUE) ? 'chat' : $mode;
-      if ($model === NULL || !in_array($capability, $model['capabilities'] ?? [], TRUE)) {
-        $errors[$mode] = sprintf("Model '%s' must be an enabled model with the '%s' capability.", $id, $capability);
-        continue;
-      }
-      if (in_array($mode, ['critic', 'classifier'], TRUE) && ($model['platform'] ?? '') !== 'xinshi') {
-        $errors[$mode] = sprintf('The default %s must use the xinshi platform.', $mode);
         continue;
       }
       $defaults[$mode] = $id;

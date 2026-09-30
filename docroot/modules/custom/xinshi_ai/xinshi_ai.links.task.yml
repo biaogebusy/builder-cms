@@ -9,3 +9,9 @@ xinshi_ai.models.tab:
   route_name: xinshi_ai.models.overview
   base_route: xinshi_ai.settings
   weight: 10
+
+xinshi_ai.models.defaults.tab:
+  title: '默认模型'
+  route_name: xinshi_ai.models.defaults
+  base_route: xinshi_ai.settings
+  weight: 20

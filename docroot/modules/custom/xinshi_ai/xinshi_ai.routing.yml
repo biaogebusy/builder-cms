@@ -129,6 +129,16 @@ xinshi_ai.models.overview:
   options:
     _admin_route: TRUE
 
+xinshi_ai.models.defaults:
+  path: '/admin/config/xinshi/ai/models/defaults'
+  defaults:
+    _form: '\Drupal\xinshi_ai\Form\ModelDefaultsForm'
+    _title: '默认模型'
+  requirements:
+    _permission: 'administer xinshi_ai'
+  options:
+    _admin_route: TRUE
+
 xinshi_ai.models.add:
   path: '/admin/config/xinshi/ai/models/add'
   defaults:
