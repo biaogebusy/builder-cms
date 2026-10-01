@@ -59,19 +59,33 @@ function xinshi_ai_install(): void {
 }
 
 /**
- * 重新导入 image_jobs view,添加后台管理列表页(page_admin display)。
+ * Add the missing image jobs admin display without replacing site configuration.
  */
 function xinshi_ai_update_10001(): void {
+  $config_name = 'views.view.image_jobs';
+  $config = \Drupal::configFactory()->getEditable($config_name);
+  // Do not recreate a deleted view or replace an existing (possibly disabled) display.
+  if ($config->isNew() || array_key_exists('page_admin', $config->get('display') ?? [])) {
+    return;
+  }
+
   $config_path = \Drupal::service('extension.list.module')->getPath('xinshi_ai') . '/config/install';
   $source = new \Drupal\Core\Config\FileStorage($config_path);
-  $config_storage = \Drupal::service('config.storage');
-
-  $config_name = 'views.view.image_jobs';
   $data = $source->read($config_name);
-  if ($data) {
-    $config_storage->write($config_name, $data);
-    \Drupal::service('cache_tags.invalidator')->invalidateTags(['config:' . $config_name]);
+  if (empty($data['display']['page_admin'])) {
+    return;
   }
+
+  $config->set('display.page_admin', $data['display']['page_admin']);
+  // Keep site dependencies and include the shipped display's fields and plugins.
+  foreach (['config', 'module'] as $type) {
+    $dependencies = array_unique(array_merge(
+      $config->get('dependencies.' . $type) ?? [],
+      $data['dependencies'][$type] ?? [],
+    ));
+    $config->set('dependencies.' . $type, array_values($dependencies));
+  }
+  $config->save();
 }
 
 /**

@@ -8,15 +8,17 @@ dependencies:
   - drupal:node
   - drupal:media
   - drupal:file
+  - drupal:field
+  - drupal:image
   - drupal:jsonapi
-  - drupal:jsonapi_extras
+  - jsonapi_extras:jsonapi_extras
   - drupal:views
   - drupal:rest
   - drupal:serialization
   - drupal:user
   - drupal:options
   - drupal:text
-  - drupal:xinshi_views
+  - xinshi_views:xinshi_views
   - ai:ai
   - ai_provider_openai:ai_provider_openai
   - xinshi_ai_usage:xinshi_ai_usage
