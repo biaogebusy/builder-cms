@@ -397,8 +397,16 @@ class PanelizerMigrator {
    *
    * @return string[]
    *   执行日志。
+   *
+   * @throws \RuntimeException
+   *   When the current migration verification report contains errors.
    */
   public function cleanup(): array {
+    // Recheck at the destructive boundary, including for direct service callers.
+    $report = $this->verify();
+    if ($report['missing'] || $report['mismatch'] || $report['display_residue']) {
+      throw new \RuntimeException('Panelizer migration verification failed. Run update-to-d11:panelizer-verify before cleanup.');
+    }
     $log = [];
 
     // 1. 剥离所有视图显示中的 panelizer 设置。

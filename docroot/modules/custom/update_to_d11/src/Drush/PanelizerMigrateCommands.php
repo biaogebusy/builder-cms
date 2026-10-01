@@ -50,7 +50,9 @@ class PanelizerMigrateCommands extends DrushCommands {
   #[CLI\Command(name: 'update-to-d11:panelizer-verify', description: '验证迁移结果：比对 panelizer 与 Layout Builder 的块 uuid 序列。')]
   public function verify(): int {
     $report = $this->migrator->verify();
-    if ($report['checked'] === 0) {
+    $has_errors = $report['missing'] || $report['mismatch'] || $report['display_residue'];
+    // Display configuration can remain even when there is no content to check.
+    if ($report['checked'] === 0 && !$has_errors) {
       $this->logger()->warning('未发现需要校验的数据（无 panelizer 块数据）。');
       return self::EXIT_SUCCESS;
     }
@@ -73,7 +75,7 @@ class PanelizerMigrateCommands extends DrushCommands {
       $this->io()->error('视图显示仍残留 panelizer 设置：');
       $this->io()->listing($report['display_residue']);
     }
-    if ($report['missing'] || $report['mismatch'] || $report['display_residue']) {
+    if ($has_errors) {
       return self::EXIT_FAILURE;
     }
     $this->logger()->success('全部一致，可执行 update-to-d11:panelizer-cleanup 清理。');
