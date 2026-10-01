@@ -10,6 +10,11 @@ dependencies:
   - drupal:block_content
   - drupal:layout_builder
   - drupal:filter
+  - drupal:file
+  - drupal:image
+  - drupal:taxonomy
+  - drupal:user
+  - entity_theme_engine:entity_theme_engine
 package: "XINSHI"
 # Information added by Drupal.org packaging script on 2020-09-03
 version: '1.1'

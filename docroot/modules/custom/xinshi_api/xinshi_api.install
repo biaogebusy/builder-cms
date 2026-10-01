@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Schema and updates for durable page draft operations.
+ * Schema and updates for the Xinshi API module.
  */
 
 /**
@@ -74,4 +74,26 @@ function xinshi_api_update_10002() {
     }
     $role->save();
   }
+}
+
+/**
+ * Add missing API settings without replacing existing site choices.
+ */
+function xinshi_api_update_10003() {
+  // Keep these defaults fixed: future install defaults must not change upgrades.
+  $defaults = [
+    'page' => ['not_found' => '', 'access_denied' => ''],
+    'cache_enable' => FALSE,
+    'node_cache' => [],
+    'taxonomy_term_cache' => [],
+    'user_cache' => [],
+    'debug' => FALSE,
+  ];
+  $config = \Drupal::configFactory()->getEditable('xinshi_api.settings');
+  $data = $config->getRawData() + $defaults;
+  if (is_array($data['page'])) {
+    $data['page'] += $defaults['page'];
+  }
+  // Normal saves apply the schema's boolean/string casts to legacy checkboxes.
+  $config->setData($data)->save();
 }

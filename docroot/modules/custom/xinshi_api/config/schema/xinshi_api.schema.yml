@@ -1,0 +1,47 @@
+xinshi_api.settings:
+  type: config_object
+  label: 'Xinshi API settings'
+  mapping:
+    page:
+      type: mapping
+      label: 'Fallback page JSON'
+      nullable: true
+      mapping:
+        not_found:
+          type: string
+          label: 'Page not found JSON'
+        access_denied:
+          type: string
+          label: 'Access denied JSON'
+    cache_enable:
+      type: boolean
+      label: 'Enable entity context cache'
+    node_cache:
+      type: xinshi_api.bundle_cache_settings
+      label: 'Node cache contexts'
+    taxonomy_term_cache:
+      type: xinshi_api.bundle_cache_settings
+      label: 'Taxonomy term cache contexts'
+    user_cache:
+      type: xinshi_api.bundle_cache_settings
+      label: 'User cache contexts'
+    debug:
+      type: boolean
+      label: 'Debug'
+
+xinshi_api.bundle_cache_settings:
+  type: sequence
+  label: 'Cache contexts by bundle'
+  nullable: true
+  sequence:
+    type: mapping
+    label: 'Bundle cache settings'
+    mapping:
+      context:
+        type: sequence
+        label: 'Selected cache contexts'
+        nullable: true
+        sequence:
+          # Form API stores the selected option name or an unchecked zero.
+          type: string
+          label: 'Cache context selection'

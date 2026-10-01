@@ -13,7 +13,6 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
-use Drupal\webform\Entity\Webform;
 
 /**
  * Class EntityJsonBase
@@ -211,7 +210,11 @@ class EntityJsonBase implements EntityJsonInterface, CacheableDependencyInterfac
   }
 
   private function getWebform($webform_id) {
-    if (empty($webform_id) || empty($webform = Webform::load($webform_id))) {
+    if (empty($webform_id) || !$this->entityTypeManager->hasDefinition('webform')) {
+      return [];
+    }
+    $webform = $this->entityTypeManager->getStorage('webform')->load($webform_id);
+    if (!$webform) {
       return [];
     }
     $this->addCacheableDependency($webform);
