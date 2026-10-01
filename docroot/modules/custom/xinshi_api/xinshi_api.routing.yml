@@ -89,6 +89,7 @@ xinshi_api.v3.landingPage.builder:
     _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageBuilder'
     _title: 'landingPage builder'
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _permission: 'create landing_page content'
   methods: [ POST ]
   options:
@@ -146,6 +147,7 @@ xinshi_api.v3.landingPage.update:
     _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageUpdate'
     _title: 'landingPage update'
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _entity_access: 'node.update'
     node: \d+
   options:
@@ -161,6 +163,7 @@ xinshi_api.v3.landingPage.alias:
     _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageAlias'
     _title: 'landingPage alias'
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _entity_access: 'node.update'
     node: \d+
   options:
@@ -176,6 +179,7 @@ xinshi_api.v3.landingPage.translations.add:
     _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageTranslations'
     _title: 'landingPage update'
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _entity_access: 'node.update'
     node: \d+
   options:
@@ -195,6 +199,7 @@ xinshi_api.v3.landingPage.translations.delete:
     _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageTranslationsDelete'
     _title: 'landingPage delete translation'
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _entity_access: 'node.update'
     node: \d+
   options:
@@ -212,6 +217,7 @@ xinshi_api.v3.node.translations.add:
     _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::nodeTranslations'
     _title: 'node translation add'
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _entity_access: 'node.update'
     node: \d+
   options:

@@ -79,6 +79,7 @@ xinshi_ai.models.api_add:
     no_cache: TRUE
     _auth: ['oauth2', 'cookie']
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _permission: 'administer xinshi_ai'
 
 xinshi_ai.models.api_update:
@@ -91,6 +92,7 @@ xinshi_ai.models.api_update:
     no_cache: TRUE
     _auth: ['oauth2', 'cookie']
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _permission: 'administer xinshi_ai'
     id: '[a-z0-9_.\-]+'
 
@@ -105,6 +107,7 @@ xinshi_ai.models.api_defaults:
     no_cache: TRUE
     _auth: ['oauth2', 'cookie']
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _permission: 'administer xinshi_ai'
 
 # 模块全局配置(详见模块文档 §10.4)。
@@ -180,6 +183,7 @@ xinshi_ai.image_job.create:
     no_cache: TRUE
     _auth: ['oauth2', 'cookie']
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _permission: 'create xinshi_ai image job'
 
 # 图片任务:取消(软取消)。
@@ -193,6 +197,7 @@ xinshi_ai.image_job.cancel:
     no_cache: TRUE
     _auth: ['oauth2', 'cookie']
   requirements:
+    _csrf_request_header_token: 'TRUE'
     _permission: 'cancel xinshi_ai image job'
     uuid: '[0-9a-f-]+'
 

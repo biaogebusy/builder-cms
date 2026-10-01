@@ -9,8 +9,15 @@ maintain shared project rules here. Adapted on 2026-09-30 from the sibling
 - This repository is the active Drupal 11 CMS development target. Read
   `composer.json` and `composer.lock` for actual dependencies and versions.
   Custom modules live in `docroot/modules/custom/`; this is not an Angular app.
-- `../xinshi-pro` contains the frontend and Node/Harness integration. Inspect its
-  actual branch, proxy, environment and protocol code before changing an API contract.
+- `../xinshi-base` is the source of truth for ordinary frontend behavior.
+  `../xinshi-pro` is the source of truth for AI behavior and Node/Harness integration.
+  Before implementing a change whose behavior is unclear, read the relevant caller
+  in the corresponding repository to confirm the existing logic. Check its actual
+  branch, proxy, environment and protocol code; do not infer frontend behavior from
+  CMS code alone or substitute the Pro implementation for ordinary frontend logic.
+  Shared frontend changes are made only in `../xinshi-base`; they reach
+  `../xinshi-pro` through a later base-branch merge, not direct copying. Keep
+  AI-specific integration in Pro separate and record any pending base dependency.
 - `../pro` is a frontend deployment checkout. `../xinshi-cms` is the base CMS in
   delivery/maintenance state. Do not automatically propagate changes to either.
 - Inspect the current branch and working tree before editing. Frontend `master`
@@ -127,7 +134,8 @@ scope; a source review does not authorize these operations.
 
 ## Cross-repository contracts
 
-Check the frontend/Node caller before changing `/api/v3`, JSON:API, authentication,
+Check ordinary frontend callers in `../xinshi-base` and AI/Node callers in
+`../xinshi-pro` before changing `/api/v3`, JSON:API, authentication,
 error codes, page revisions, AI job events or usage/metering contracts. Keep CMS
 business policy in CMS/product adapters; do not move it into the generic Harness
 tool kernel. Changes affecting submitted writes must preserve reconciliation and
