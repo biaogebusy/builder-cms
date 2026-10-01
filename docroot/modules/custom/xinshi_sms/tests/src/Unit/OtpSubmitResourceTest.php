@@ -133,6 +133,16 @@ final class OtpSubmitResourceTest extends TestCase {
     $this->resource->actualIssuer(['client_id' => 'test', 'mobile_number' => '13800000000']);
   }
 
+  public function testOptionalOAuthIsRejectedBeforeResolvingMissingServices(): void {
+    $modules = $this->createMock(ModuleHandlerInterface::class);
+    $modules->expects($this->once())->method('moduleExists')->with('simple_oauth')->willReturn(FALSE);
+    $this->resource->initialize($this->requests, $modules);
+    $this->otp->expects($this->never())->method('otpLoginCheckUserAlreadyExists');
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('simple_oauth module is not enabled');
+    $this->resource->actualIssuer(['client_id' => 'test', 'mobile_number' => '13800000000']);
+  }
+
   private function request(string $grant): void {
     $this->requests->push(Request::create('/api/v3/otp/login', 'POST', [], [], [], [], json_encode([
       'mobile_number' => 13800000000, 'code' => '123456', 'grant_type' => $grant, 'client_id' => 'test',

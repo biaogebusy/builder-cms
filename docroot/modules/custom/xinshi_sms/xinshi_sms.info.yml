@@ -7,5 +7,9 @@ package: "XINSHI"
 version: '1.1'
 project: 'xinshi_sms'
 dependencies:
-  - drupal:sms
-  - drupal:otp_login
+  - smsframework:sms
+  - otp_login:otp_login
+  - drupal:rest
+  - drupal:telephone
+  - drupal:text
+  - drupal:user

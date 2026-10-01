@@ -1,0 +1,4 @@
+activate: false
+disable_register: false
+enabled_find_password: false
+override_reset_pass: false

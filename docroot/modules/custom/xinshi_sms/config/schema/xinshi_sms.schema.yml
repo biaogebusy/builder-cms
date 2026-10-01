@@ -1,4 +1,75 @@
 # Schema for the configuration files of the SMS module.
+xinshi_sms.settings:
+  type: config_object
+  label: 'Xinshi SMS settings'
+  mapping:
+    activate:
+      type: boolean
+      label: 'Activate OTP login'
+    disable_register:
+      type: boolean
+      label: 'Disable user registration'
+    enabled_find_password:
+      type: boolean
+      label: 'Find password by SMS'
+    override_reset_pass:
+      type: boolean
+      label: 'Override password reset form'
+    alibaba:
+      type: xinshi_sms.alibaba_settings
+      label: 'Legacy Alibaba SMS settings'
+      nullable: true
+
+xinshi_sms.alibaba_settings:
+  type: sms_gateway_settings
+  label: 'Alibaba SMS settings'
+  mapping:
+    access_key_id:
+      type: string
+      label: 'Access key ID'
+    access_key_secret:
+      type: string
+      label: 'Access key secret'
+    sign_name:
+      type: string
+      label: 'Sign name'
+    template_code:
+      type: string
+      label: 'Template code'
+
+sms_gateway.settings.alibaba_send:
+  type: xinshi_sms.alibaba_settings
+  label: 'Alibaba SMS gateway settings'
+
+sms_gateway.settings.alibaba_dypnsapi_send:
+  type: xinshi_sms.alibaba_settings
+  label: 'Alibaba verification gateway settings'
+
+xinshi_sms.alibaba_sms_settings:
+  type: config_object
+  label: 'Legacy standalone Alibaba SMS settings'
+  mapping:
+    access_key_id:
+      type: string
+      label: 'Access key ID'
+    access_key_secret:
+      type: string
+      label: 'Access key secret'
+    sign_name:
+      type: string
+      label: 'Sign name'
+    template_code:
+      type: string
+      label: 'Template code'
+
+field.formatter.settings.xinshi_telephone:
+  type: mapping
+  label: 'Xinshi telephone formatter settings'
+  mapping:
+    display_all:
+      type: boolean
+      label: 'Display the full phone number'
+
 field.widget.settings.xinshi_sms_telephone:
   type: mapping
   label: 'SMS Framework telephone widget settings'

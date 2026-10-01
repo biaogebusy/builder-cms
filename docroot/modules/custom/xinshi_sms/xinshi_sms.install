@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Update hooks for Xinshi SMS settings.
+ */
+
+/**
+ * Add missing login settings without replacing existing site choices.
+ */
+function xinshi_sms_update_10001() {
+  // Keep these defaults fixed independently of future install configuration.
+  $defaults = [
+    'activate' => FALSE,
+    'disable_register' => FALSE,
+    'enabled_find_password' => FALSE,
+    'override_reset_pass' => FALSE,
+  ];
+  $config = \Drupal::configFactory()->getEditable('xinshi_sms.settings');
+  $config->setData($config->getRawData() + $defaults)->save();
+}
