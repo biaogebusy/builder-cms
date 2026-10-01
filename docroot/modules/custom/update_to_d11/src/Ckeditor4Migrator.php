@@ -10,15 +10,14 @@ use Drupal\editor\EditorInterface;
 use Drupal\filter\FilterFormatInterface;
 
 /**
- * CKEditor 4 → CKEditor 5 迁移。
+ * Migrates CKEditor 4 settings using core SmartDefaultSettings.
  *
- * 核心按钮由 SmartDefaultSettings 自动映射；本类补充 contrib 按钮的
- * 手工映射（FontSize/codeBlock/fullscreen）并处理 filter_html 兼容。
+ * Enables available font plugins and adjusts filter_html for font-size output.
  */
 class Ckeditor4Migrator {
 
   /**
-   * 无 CKEditor 5 等价物的按钮（内容不受影响，仅按钮消失）。
+   * Legacy buttons reported as dropped in the migration log.
    */
   protected const DROPPED_BUTTONS = [
     // textindent：无等价插件；full_html 未启用 filter_html，
@@ -26,8 +25,7 @@ class Ckeditor4Migrator {
     'textindent',
     // ImceImage：imce 模块未安装，本就是死按钮。
     'ImceImage',
-    // Maximize：ckeditor5_plugin_pack_fullscreen 子模块仅 1.5.x 提供，
-    // 当前 1.2.0 无该子模块，丢弃全屏按钮。
+    // This migration does not install the fullscreen submodule.
     'Maximize',
   ];
 
@@ -53,9 +51,8 @@ class Ckeditor4Migrator {
       'errors' => [],
     ];
 
-    // 1. 安装 CKEditor 5 与补充插件（fontSize、fullscreen）。
-    //    plugin_pack 是 contrib 包，D10 阶段可能尚未通过 composer 安装，
-    //    未安装时跳过，FontSize 按钮降级丢弃（内容不受影响）。
+    // Enable CKEditor 5 and the font modules when their code is available.
+    // The font plugin pack remains optional during an upgrade.
     $extension_list = \Drupal::service('extension.list.module');
     $install = ['ckeditor5'];
     foreach (['ckeditor5_plugin_pack', 'ckeditor5_plugin_pack_font'] as $module) {

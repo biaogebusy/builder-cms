@@ -6,7 +6,12 @@ version: '2.1'
 package: "XINSHI CMS"
 dependencies:
   - drupal:block_content
+  - drupal:editor
+  - drupal:field
+  - drupal:filter
   - drupal:layout_builder
-  - drupal:layout_builder_at
-  - drupal:eck
+  - drupal:node
+  - drupal:views
+  - layout_builder_at:layout_builder_at
+  - eck:eck
 project: 'update_to_d11'

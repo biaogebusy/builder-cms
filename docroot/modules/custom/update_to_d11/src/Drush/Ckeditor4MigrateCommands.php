@@ -17,7 +17,7 @@ class Ckeditor4MigrateCommands extends DrushCommands {
     parent::__construct();
   }
 
-  #[CLI\Command(name: 'update-to-d11:ckeditor4-migrate', description: '迁移 CKEditor 4 编辑器配置到 CKEditor 5（SmartDefaultSettings + 补充 fontSize/codeBlock/fullscreen）。')]
+  #[CLI\Command(name: 'update-to-d11:ckeditor4-migrate', description: '使用 SmartDefaultSettings 迁移 CKEditor 4 配置；字体插件按源码可用性启用。')]
   #[CLI\Usage(name: 'drush update-to-d11:ckeditor4-migrate', description: '执行迁移并输出逐编辑器报告。')]
   public function migrate(): void {
     if (!$this->io()->confirm('开始迁移 CKEditor 4 到 CKEditor 5？')) {

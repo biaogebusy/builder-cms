@@ -1,0 +1,34 @@
+field.widget.settings.xinshi_media_library_widget:
+  type: field.widget.settings.media_library_widget
+  label: 'Xinshi media library widget settings'
+  mapping:
+    title:
+      type: label
+      label: 'Media dialog title'
+    width:
+      type: string
+      label: 'Media dialog width'
+    height:
+      type: string
+      label: 'Media dialog height'
+    description:
+      type: boolean
+      label: 'Display description'
+    border:
+      type: boolean
+      label: 'Display selection border'
+    hidden_title:
+      type: boolean
+      label: 'Hide field widget title'
+    view:
+      type: string
+      label: 'Media view ID'
+    display_id:
+      type: string
+      label: 'Media view display ID'
+    widget_grid:
+      type: string
+      label: 'Media items per row'
+    edit:
+      type: boolean
+      label: 'Display edit button'
