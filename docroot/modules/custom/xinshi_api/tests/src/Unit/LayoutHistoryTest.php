@@ -62,6 +62,9 @@ final class LayoutHistoryTest extends TestCase {
       return $properties['uuid'] === self::UUID_A ? [1 => $blocks['current']] : [];
     });
     $display = $this->createMock(LayoutBuilderEntityViewDisplay::class);
+    $display->method('getCacheContexts')->willReturn([]);
+    $display->method('getCacheTags')->willReturn([]);
+    $display->method('getCacheMaxAge')->willReturn(-1);
     $display->method('get')->with('third_party_settings')->willReturn(['layout_builder' => ['enabled' => TRUE]]);
     $displayStorage = $this->createMock(EntityStorageInterface::class);
     $displayStorage->method('load')->willReturn($display);
@@ -83,6 +86,8 @@ final class LayoutHistoryTest extends TestCase {
     $field->method('getIterator')->willReturn(new \ArrayIterator([(object) ['section' => $section]]));
     $node = $this->createMock(Node::class);
     $node->method('getCacheTags')->willReturn([]);
+    $node->method('getCacheContexts')->willReturn([]);
+    $node->method('getCacheMaxAge')->willReturn(-1);
     $node->method('getEntityTypeId')->willReturn('node');
     $node->method('bundle')->willReturn('landing_page');
     $node->method('get')->with('layout_builder__layout')->willReturn($field);
@@ -104,9 +109,14 @@ final class LayoutHistoryTest extends TestCase {
 
     $node = $this->createMock(Node::class);
     $node->method('getCacheTags')->willReturn([]);
+    $node->method('getCacheContexts')->willReturn([]);
+    $node->method('getCacheMaxAge')->willReturn(-1);
     $node->method('getEntityTypeId')->willReturn('node');
     $node->method('bundle')->willReturn('landing_page');
     $display = $this->createMock(LayoutBuilderEntityViewDisplay::class);
+    $display->method('getCacheContexts')->willReturn([]);
+    $display->method('getCacheTags')->willReturn([]);
+    $display->method('getCacheMaxAge')->willReturn(-1);
     $display->method('get')->with('third_party_settings')->willReturn(['layout_builder' => ['enabled' => TRUE]]);
     $display->expects(self::once())->method('build')->with($node)->willReturn([
       '_layout_builder' => [

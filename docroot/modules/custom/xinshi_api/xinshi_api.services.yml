@@ -1,4 +1,14 @@
 services:
+  xinshi_api.page_json_cache:
+    class: Drupal\Core\Cache\VariationCacheInterface
+    factory: ['@variation_cache_factory', 'get']
+    arguments: [rest]
+  xinshi_api.page_json_response:
+    class: Drupal\xinshi_api\PageJsonResponseBuilder
+    arguments: ['@config.factory', '@xinshi_api.page_json_cache', '@renderer', '@module_handler', '@current_user', '@datetime.time', '@logger.channel.xinshi_api']
+  logger.channel.xinshi_api:
+    parent: logger.channel_base
+    arguments: [xinshi_api]
   xinshi_api.page_moderation_policy:
     class: Drupal\xinshi_api\PageModerationPolicy
     arguments: ['@?content_moderation.moderation_information', '@?content_moderation.state_transition_validation', '@current_user']

@@ -37,6 +37,8 @@ xinshi_api.v3.landingPage:
     _permission: 'access content'
   options:
     _auth: [ 'oauth2', 'cookie' ]
+    # Page JSON uses its own variation cache. Core page cache ignores max-age.
+    no_cache: TRUE
   methods: [ GET ]
 
 xinshi_api.v3.node.component:

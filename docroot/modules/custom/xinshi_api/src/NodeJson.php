@@ -39,6 +39,7 @@ class NodeJson extends EntityJsonBase {
     $widgets = [];
     if ($this->isLayoutBuilder()) {
       $builder =  $this->layoutBuilder->build($this->entity);
+      $this->addRenderCacheability($builder);
       $weight = 0;
       foreach (($builder['_layout_builder'] ?? []) as $section) {
         /** @var SectionComponent $component */
@@ -51,7 +52,7 @@ class NodeJson extends EntityJsonBase {
               'type' => $entityJson->entity->bundle(),
             ];
             $weight++;
-            $this->addCacheTags($entityJson->getCacheTags());;
+            $this->addCacheableDependency($entityJson);
           }
         }
       }
@@ -84,6 +85,12 @@ class NodeJson extends EntityJsonBase {
     $banner['style'] = $this->entity->get('banner_style')->isEmpty() ? 'normal' : $this->entity->get('banner_style')->value;
 
     $media = $this->entity->get('media')->entity;
+    if ($media) {
+      $this->addCacheableDependency($media);
+      if ($file_id = $media->get('field_media_image')->target_id) {
+        $this->addCacheTags(['file:' . $file_id, 'config:image.style.crop']);
+      }
+    }
     $img = $media ? CommonUtil::getImageStyle($media->get('field_media_image')->target_id) : '';
     if ($img) {
       $class[] = 'bg-fill-width';
@@ -126,6 +133,7 @@ class NodeJson extends EntityJsonBase {
     unset($build['#prefix']);
     unset($build['#suffix']);
     $content = \Drupal::service('renderer')->render($build);
+    $this->addRenderCacheability($build);
     if ($str = $content->jsonSerialize()) {
       $str = htmlspecialchars_decode($str);
       $str = str_replace(["\t"], '', $str);

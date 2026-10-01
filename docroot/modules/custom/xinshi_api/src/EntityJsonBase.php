@@ -3,6 +3,8 @@
 namespace Drupal\xinshi_api;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
@@ -17,7 +19,7 @@ use Drupal\webform\Entity\Webform;
  * Class EntityJsonBase
  * @package Drupal\xinshi_api
  */
-class EntityJsonBase implements EntityJsonInterface {
+class EntityJsonBase implements EntityJsonInterface, CacheableDependencyInterface {
 
   /**
    * @var \Drupal\Core\Entity\EntityInterface
@@ -35,9 +37,11 @@ class EntityJsonBase implements EntityJsonInterface {
   protected $mode = 'json';
 
   /**
-   * @var array
+   * Cacheability of the entity and all data used by its JSON view.
+   *
+   * @var \Drupal\Core\Cache\CacheableMetadata
    */
-  private $cacheTags = [];
+  private CacheableMetadata $cacheability;
 
   /**
    * Undocumented variable
@@ -55,7 +59,7 @@ class EntityJsonBase implements EntityJsonInterface {
     $this->entity = $entity;
     $this->mode = $mode;
     $this->entityTypeManager = \Drupal::entityTypeManager();
-    $this->setCacheTags($entity->getCacheTags());
+    $this->cacheability = CacheableMetadata::createFromObject($entity);
   }
 
   public function getLayoutBuilder() {
@@ -80,6 +84,7 @@ class EntityJsonBase implements EntityJsonInterface {
     unset($build['#prefix']);
     unset($build['#suffix']);
     $content = \Drupal::service('renderer')->render($build);
+    $this->addRenderCacheability($build);
     if (($str = (string) $content) && $data = Json::decode(htmlspecialchars_decode($str))) {
       $this->setFullText($data);
     }
@@ -154,7 +159,7 @@ class EntityJsonBase implements EntityJsonInterface {
    * @return array
    */
   public function getCacheTags() {
-    return $this->cacheTags;
+    return $this->cacheability->getCacheTags();
   }
 
   /**
@@ -162,7 +167,7 @@ class EntityJsonBase implements EntityJsonInterface {
    * @param array $cacheTags
    */
   public function setCacheTags($cacheTags) {
-    $this->cacheTags = $cacheTags;
+    $this->cacheability->setCacheTags($cacheTags);
   }
 
   /**
@@ -171,7 +176,37 @@ class EntityJsonBase implements EntityJsonInterface {
    */
   public function addCacheTags($tag) {
     if ($tag) {
-      $this->cacheTags = array_unique(array_merge($this->cacheTags, is_array($tag) ? $tag : [$tag]));
+      $this->cacheability->addCacheTags(is_array($tag) ? $tag : [$tag]);
+    }
+  }
+
+  /** {@inheritdoc} */
+  public function getCacheContexts() {
+    return $this->cacheability->getCacheContexts();
+  }
+
+  /** {@inheritdoc} */
+  public function getCacheMaxAge() {
+    return $this->cacheability->getCacheMaxAge();
+  }
+
+  /** Includes the cacheability of referenced content or access decisions. */
+  public function addCacheableDependency(CacheableDependencyInterface $dependency): void {
+    $this->cacheability->addCacheableDependency($dependency);
+  }
+
+  /** Collects metadata even from layout components that are read without rendering. */
+  protected function addRenderCacheability(array $build): void {
+    $this->addCacheableDependency(CacheableMetadata::createFromRenderArray($build));
+    if (($build['#access'] ?? NULL) instanceof CacheableDependencyInterface) {
+      $this->addCacheableDependency($build['#access']);
+    }
+    foreach ($build as $key => $child) {
+      // Views rows are read directly as JSON, so their metadata may not bubble.
+      // Follow this known render subtree without traversing arbitrary properties.
+      if (is_array($child) && ($key === '#rows' || !is_string($key) || !str_starts_with($key, '#'))) {
+        $this->addRenderCacheability($child);
+      }
     }
   }
 
@@ -179,6 +214,7 @@ class EntityJsonBase implements EntityJsonInterface {
     if (empty($webform_id) || empty($webform = Webform::load($webform_id))) {
       return [];
     }
+    $this->addCacheableDependency($webform);
     $elements = [];
     foreach ($webform->getElementsDecodedAndFlattened() as $key => $item) {
       $element = [];
@@ -232,10 +268,12 @@ class EntityJsonBase implements EntityJsonInterface {
     $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
     $modes = [$this->mode, 'full', 'default'];
     foreach ($modes as $display_mode) {
+      $this->addCacheTags(['config:core.entity_view_display.' . $this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.' . $display_mode]);
       $display = $storage->load($this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.' . $display_mode);
       if (!$display) {
         continue;
       }
+      $this->addCacheableDependency($display);
       // 或者检查 third party settings 中是否有 layout_builder 的配置
       $settings = $display->get('third_party_settings') ?: [];
       if (!empty($settings['layout_builder']) && $settings['layout_builder']['enabled']) {
@@ -266,6 +304,7 @@ class EntityJsonBase implements EntityJsonInterface {
     if (empty($builder)) {
       return [];
     }
+    $this->addCacheableDependency($builder);
     $blocks = [];
     /** @var Section $section */
     foreach ($builder->getSections() as $section) {
@@ -278,11 +317,15 @@ class EntityJsonBase implements EntityJsonInterface {
           $display_id = explode('-', $id)[1];
           /** @var ViewExecutable $view */
           $view = Views::getView($view_name);
+          if ($view) {
+            $this->addCacheableDependency($view->storage);
+          }
           if ($view && $view->access($display_id)) {
             $view->setDisplay($display_id);
             $view->preExecute();
             $view->execute($display_id);
             $render = $view->render();
+            $this->addRenderCacheability($render);
             $blocks["{$view_name}_{$display_id}"] = [
               'rows' => $render['#rows'][0]['#rows'] ?? [],
               'title' => empty($configuration['views_label']) ? $view->getTitle() : $configuration['views_label'],

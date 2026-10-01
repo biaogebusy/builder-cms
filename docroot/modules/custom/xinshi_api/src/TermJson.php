@@ -30,6 +30,7 @@ class TermJson extends EntityJsonBase {
     unset($build['#prefix']);
     unset($build['#suffix']);
     $content = \Drupal::service('renderer')->render($build);
+    $this->addRenderCacheability($build);
     if ($str = $content->jsonSerialize()) {
       $data = Json::decode(htmlspecialchars_decode($str));
       parent::setFullText($data);

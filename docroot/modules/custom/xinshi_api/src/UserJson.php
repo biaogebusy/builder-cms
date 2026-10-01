@@ -17,7 +17,7 @@ class UserJson extends EntityJsonBase {
     $data = [];
     $build = $this->entityTypeManager->getViewBuilder($this->entity->getEntityTypeId())->view($this->entity, $this->mode);
     $content = \Drupal::service('renderer')->render($build, TRUE);
-    $this->addCacheTags($build['content']['#cache']['tags'] ?? []);
+    $this->addRenderCacheability($build);
     if (($str = $content->jsonSerialize()) && $data = Json::decode(htmlspecialchars_decode($str))) {
       $this->setFullText($data);
     }

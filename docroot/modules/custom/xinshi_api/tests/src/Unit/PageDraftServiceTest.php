@@ -106,6 +106,9 @@ final class PageDraftServiceTest extends TestCase {
     $storages['filter_format'] = $this->createMock(EntityStorageInterface::class);
     $storages['filter_format']->method('load')->with('json')->willReturn($format);
     $display = $this->createMock(LayoutBuilderEntityViewDisplay::class);
+    $display->method('getCacheContexts')->willReturn([]);
+    $display->method('getCacheTags')->willReturn([]);
+    $display->method('getCacheMaxAge')->willReturn(-1);
     $display->method('get')->with('third_party_settings')->willReturn([
       'layout_builder' => ['enabled' => TRUE, 'allow_custom' => TRUE],
     ]);
@@ -184,6 +187,9 @@ final class PageDraftServiceTest extends TestCase {
     $id = ++$this->nextId;
     $values['vid'] = $id * 10;
     $entity = $this->createMock($type === 'node' ? Node::class : \Drupal\block_content\Entity\BlockContent::class);
+    $entity->method('getCacheContexts')->willReturn([]);
+    $entity->method('getCacheTags')->willReturn([]);
+    $entity->method('getCacheMaxAge')->willReturn(-1);
     $this->created[$id] = ['entity' => $entity, 'type' => $type, 'values' => $values];
     $entity->method('id')->willReturn($id);
     $entity->method('getEntityTypeId')->willReturn($type);
