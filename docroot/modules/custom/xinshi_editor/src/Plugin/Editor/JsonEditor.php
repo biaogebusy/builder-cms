@@ -28,7 +28,7 @@ class JsonEditor extends EditorBase {
   public function getDefaultSettings() {
     return [
       'height' => '600px',
-      'mode' => 'mode',
+      'mode' => 'code',
       'allow_modes' => [],
     ];
   }
@@ -57,7 +57,7 @@ class JsonEditor extends EditorBase {
         '#type' => 'checkboxes',
         '#title' => t('Allow Mode'),
         '#options' => ['code' => t('Code'), 'form' => t('Form'), 'text' => t('Text'), 'tree' => t('Tree'), 'view' => t('View'), 'preview' => t('Preview')],
-        '#default_value' => array_keys(array_filter($settings['allow_modes'])),
+        '#default_value' => array_keys(array_filter($settings['allow_modes'] ?? [])),
       ],
       'height' => [
         '#type' => 'textfield',
@@ -114,8 +114,13 @@ class JsonEditor extends EditorBase {
    */
   public function getJsSettings(Editor $editor) {
     // Pass settings to javascript.
-    $settings = $editor->getSettings()['fieldset'];
-    $settings['allow_modes'] = array_keys(array_filter($settings['allow_modes']));
+    $stored = $editor->getSettings();
+    $settings = ($stored['fieldset'] ?? $stored) + $this->getDefaultSettings();
+    // Older defaults used "mode", which is not a supported JSONEditor mode.
+    if ($settings['mode'] === 'mode') {
+      $settings['mode'] = 'code';
+    }
+    $settings['allow_modes'] = array_keys(array_filter($settings['allow_modes'] ?? []));
     return $settings;
   }
 

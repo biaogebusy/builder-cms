@@ -1,0 +1,29 @@
+xinshi_editor.json_settings:
+  type: mapping
+  label: 'JSON editor options'
+  mapping:
+    height:
+      type: string
+      label: 'Editor height'
+    mode:
+      type: string
+      label: 'Default mode'
+    allow_modes:
+      type: sequence
+      label: 'Allowed modes'
+      sequence:
+        type: string
+        label: 'Mode checkbox value'
+
+editor.settings.json_editor:
+  type: xinshi_editor.json_settings
+  label: 'JSON editor settings'
+  mapping:
+    fieldset:
+      type: xinshi_editor.json_settings
+      label: 'Options saved by the editor settings form'
+
+# Keep the existing plugin ID used in stored display configuration.
+field.formatter.settings.json_foramtter:
+  type: field.formatter.settings.text_default
+  label: 'JSON formatter settings'

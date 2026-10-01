@@ -23,6 +23,21 @@ function xinshi_editor_theme($existing, $type, $theme, $path) {
   ];
 }
 
+/**
+ * Implements hook_config_schema_info_alter().
+ */
+function xinshi_editor_config_schema_info_alter(array &$definitions): void {
+  // Extend the optional block type without replacing existing revision metadata.
+  if (isset($definitions['block.settings.block_content:*']) &&
+      !array_key_exists('vid', $definitions['block.settings.block_content:*']['mapping'] ?? [])) {
+    $definitions['block.settings.block_content:*']['mapping']['vid'] = [
+      'type' => 'integer',
+      'label' => 'Selected content block revision',
+      'requiredKey' => FALSE,
+    ];
+  }
+}
+
 
 /**
  * Implements hook_block_alter().
