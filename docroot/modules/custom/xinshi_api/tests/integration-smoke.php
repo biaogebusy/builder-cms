@@ -162,3 +162,68 @@ check((new \Drupal\Component\DependencyInjection\Container($oldDefinition))->get
   'Replacing the old arguments with the current definition restores construction');
 echo "Isolated API controller wiring checks passed.\n";
 
+
+// Simple OAuth is optional for the API module. Verify both container states,
+// then exercise persisted users/roles/scopes through the real permission chain.
+check(!\Drupal::getContainer()->has('xinshi_api.oauth_permission_cache_policy'),
+  'No OAuth cache policy is registered while Simple OAuth is disabled');
+\Drupal::service('module_installer')->install(['simple_oauth']);
+$container = \Drupal::getContainer();
+check($container->get('xinshi_api.oauth_permission_cache_policy') instanceof \Drupal\xinshi_api\Access\OAuthPermissionCachePolicy,
+  'Enabling Simple OAuth registers the permission cache policy');
+check($container->get('cache_context.xinshi_oauth_account') instanceof \Drupal\xinshi_api\Cache\Context\OAuthAccountCacheContext,
+  'OAuth account context constructs from the rebuilt container');
+check(in_array('xinshi_oauth_account', $container->get('cache_contexts_manager')->getAll(), TRUE),
+  'OAuth account context is available to the real cache context manager');
+
+\Drupal\user\Entity\Role::create([
+  'id' => 'cache_webmaster', 'label' => 'Cache fixture webmaster', 'permissions' => ['access content'],
+])->save();
+\Drupal\user\Entity\Role::create([
+  'id' => 'cache_admin', 'label' => 'Cache fixture administrator', 'is_admin' => TRUE,
+])->save();
+$scope = \Drupal\simple_oauth\Entity\Oauth2Scope::create([
+  'name' => 'cache_webmaster', 'granularity_id' => 'role',
+  'granularity_configuration' => ['role' => 'cache_webmaster'],
+  'grant_types' => ['authorization_code' => ['status' => TRUE]],
+]);
+$scope->save();
+$consumer = \Drupal\consumers\Entity\Consumer::create([
+  'label' => 'Permission cache fixture', 'client_id' => 'permission-cache-fixture',
+]);
+$consumer->save();
+$accounts = [];
+foreach (['ordinary' => FALSE, 'admin' => TRUE] as $name => $admin) {
+  $user = \Drupal\user\Entity\User::create([
+    'name' => 'cache-fixture-' . $name, 'status' => 1,
+    'roles' => $admin ? ['cache_webmaster', 'cache_admin'] : ['cache_webmaster'],
+  ]);
+  $user->save();
+  check((int) $user->id() !== 1, 'Fixture does not rely on uid 1: ' . $name);
+  // No JWT is issued here: this test starts at the authenticated account
+  // boundary, with real field resolution for the stored user, scope and client.
+  $token = \Drupal\simple_oauth\Entity\Oauth2Token::create([
+    'bundle' => 'access_token', 'auth_user_id' => $user->id(),
+    'client' => $consumer->id(), 'scopes' => [['scope_id' => $scope->id()]],
+  ]);
+  $accounts[$name] = new \Drupal\simple_oauth\Authentication\TokenAuthUser(
+    $container->get('permission_checker'), $token,
+    $container->get('psr7.http_message_factory'), $container->get('request_stack'),
+  );
+}
+check($accounts['ordinary']->getRoles() === $accounts['admin']->getRoles(),
+  'OAuth exposes identical scope-filtered roles for different underlying accounts');
+$permissionCheck = new \Drupal\user\Access\PermissionAccessCheck();
+foreach ([['ordinary', 'admin'], ['admin', 'ordinary']] as $order) {
+  $container->get('cache_tags.invalidator')->invalidateTags(['access_policies']);
+  foreach ($order as $name) {
+    $account = $accounts[$name];
+    $container->get('current_user')->setAccount($account);
+    foreach (['administer xinshi_ai', 'view site ai usage', 'view site ai usage,view ai supplier costs'] as $permission) {
+      $route = new \Symfony\Component\Routing\Route('/fixture', [], ['_permission' => $permission]);
+      check($permissionCheck->access($route, $account)->isAllowed() === ($name === 'admin'),
+        'Installed permission pipeline isolates ' . $name . ' for ' . $permission . ' after ' . $order[0]);
+    }
+  }
+}
+echo "Isolated OAuth permission cache checks passed.\n";

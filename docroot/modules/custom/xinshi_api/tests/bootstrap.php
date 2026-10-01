@@ -12,6 +12,9 @@ $loader->addPsr4('Drupal\\Component\\', $root . '/docroot/core/lib/Drupal/Compon
 foreach (['block_content', 'content_translation', 'workflows', 'content_moderation', 'filter', 'layout_builder', 'node', 'sqlite', 'user'] as $module) {
   $loader->addPsr4('Drupal\\' . $module . '\\', $root . '/docroot/core/modules/' . $module . '/src');
 }
+foreach (['simple_oauth', 'consumers'] as $module) {
+  $loader->addPsr4('Drupal\\' . $module . '\\', $root . '/docroot/modules/contrib/' . $module . '/src');
+}
 $loader->addPsr4('Drupal\\xinshi_api\\', dirname(__DIR__) . '/src', TRUE);
 if (!class_exists('Drupal')) {
   require $root . '/docroot/core/lib/Drupal.php';
