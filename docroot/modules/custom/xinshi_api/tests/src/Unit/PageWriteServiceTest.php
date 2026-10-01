@@ -163,7 +163,7 @@ final class PageWriteServiceTest extends TestCase {
     $entity->method('label')->willReturnCallback(fn() => $this->records[$id]['values'][$type === 'node' ? 'title' : 'info']);
     $entity->method('getRevisionId')->willReturnCallback(fn() => $this->records[$id]['values']['vid']);
     $entity->method('access')->willReturnCallback(fn($op) => $this->grants[$id . ':' . $op] ?? TRUE);
-    $entity->method('hasField')->willReturn(TRUE);
+    $entity->method('hasField')->willReturnCallback(fn($name) => $this->grants['has:' . $name] ?? TRUE);
     $entity->method('validate')->willReturn(new ConstraintViolationList());
     $entity->method('get')->willReturnCallback(function ($name) use ($id) {
       $field = $this->createMock($name === 'layout_builder__layout' ? LayoutSectionItemList::class : FieldItemListInterface::class);
@@ -296,7 +296,28 @@ final class PageWriteServiceTest extends TestCase {
   }
 
   public static function deniedGrants(): array {
-    return [['node', 'update'], ['node', 'title'], ['node', 'layout_builder__layout'], ['block', 'update'], ['block', 'body'], ['block', 'reusable'], ['global', 'format']];
+    return [['node', 'update'], ['node', 'title'], ['block', 'update'], ['block', 'body'], ['block', 'reusable'], ['global', 'format']];
+  }
+
+  public function testInternalLayoutFieldDenialDoesNotBlockAuthorizedWrites(): void {
+    [$node, $block] = $this->fixture();
+    // Drupal's real LayoutSectionItemList always denies raw field access.
+    $this->grants[$node->id() . ':layout_builder__layout'] = FALSE;
+    self::assertSame(200, $this->update($node, $this->input($node, $block))->getStatusCode());
+    $translated = $this->writer->translatePage($node, 'en', 'fr', ['title' => 'French page']);
+    self::assertSame($node->id(), $translated->id());
+  }
+
+  public function testMissingLayoutStillRejectsBeforeAnyWrites(): void {
+    $this->grants['has:layout_builder__layout'] = FALSE;
+    try {
+      $this->writer->createPage(['title' => 'Page', 'body' => [['attributes' => ['body' => []]]]]);
+      self::fail('A page without layout storage must be rejected.');
+    }
+    catch (\Drupal\xinshi_api\PageDraftException $error) {
+      self::assertSame('permission_denied', $error->reason);
+    }
+    self::assertSame([], $this->persisted());
   }
 
   #[DataProvider('deniedGrants')]
