@@ -7,6 +7,9 @@ configure: xinshi_knowledge.settings
 dependencies:
   - drupal:node
   - drupal:text
+  - drupal:field
+  - drupal:media
+  - drupal:image
   - drupal:media_library
   - drupal:file
   - drupal:taxonomy
