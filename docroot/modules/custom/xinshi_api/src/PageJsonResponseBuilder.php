@@ -66,7 +66,8 @@ class PageJsonResponseBuilder {
     $cache_enabled = $config->get('cache_enable') && $metadata->getCacheMaxAge() !== 0;
     if ($cache_enabled && ($item = $this->cache->get($keys, $initial))) {
       $metadata = $metadata->merge($item->data['metadata'])->addCacheTags($item->tags);
-      if ($item->expire !== Cache::PERMANENT) {
+      // Database cache backends can return numeric columns as strings.
+      if ((int) $item->expire !== Cache::PERMANENT) {
         // A late hit must not restart the lifetime of time-sensitive rendered data.
         $metadata->setCacheMaxAge(Cache::mergeMaxAges($metadata->getCacheMaxAge(), max(0, $item->expire - $this->time->getRequestTime())));
       }

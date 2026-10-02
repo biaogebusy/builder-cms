@@ -2,6 +2,7 @@
 
 namespace Drupal\xinshi_api;
 
+use Drupal\block_content\BlockContentInterface;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Component\Serialization\Json;
 use Drupal\entity_print\Plugin\EntityPrint\PrintEngine\DomPdf;
@@ -44,8 +45,11 @@ class NodeJson extends EntityJsonBase {
       foreach (($builder['_layout_builder'] ?? []) as $section) {
         /** @var SectionComponent $component */
         foreach (($section['content'] ?? []) as $component) {
-          if (($component['content']['#entity_type'] ?? null) == 'block_content') {
-            $entityJson = new EntityJsonBase($component['content']['#block_content']);
+          // Core's lazy block render array has the entity before theme hooks
+          // add #entity_type. Component access was checked by Layout Builder.
+          $block = $component['content']['#block_content'] ?? NULL;
+          if ($block instanceof BlockContentInterface) {
+            $entityJson = new EntityJsonBase($block);
             $widgets[] = [
               'weight' => $weight,
               'content' => $entityJson->getContent(),

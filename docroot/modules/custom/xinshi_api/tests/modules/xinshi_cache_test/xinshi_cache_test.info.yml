@@ -1,0 +1,7 @@
+name: Xinshi page cache test
+type: module
+description: Instrumentation for the disposable page cache integration fixture.
+package: Testing
+core_version_requirement: ^11
+dependencies:
+  - xinshi_api:xinshi_api

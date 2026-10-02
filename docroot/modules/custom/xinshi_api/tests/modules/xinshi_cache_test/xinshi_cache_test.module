@@ -1,0 +1,31 @@
+<?php
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\entity_theme_engine\Entity\EntityWidget;
+
+/** Implements hook_xinshi_api_data_alter(). */
+function xinshi_cache_test_xinshi_api_data_alter(&$data, EntityInterface $entity, CacheableMetadata $metadata): void {
+  $key = 'xinshi_cache_test.renders.' . $entity->id();
+  \Drupal::state()->set($key, \Drupal::state()->get($key, 0) + 1);
+}
+
+/** Implements hook_entity_widget_variables_alter(). */
+function xinshi_cache_test_entity_widget_variables_alter(array &$variables, EntityWidget $widget, EntityInterface $entity): void {
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'cache_row') {
+    // Generated at row render time, after Views has built its outer metadata.
+    $metadata = CacheableMetadata::createFromRenderArray($variables);
+    $metadata->addCacheContexts(['timezone']);
+    $metadata->setCacheMaxAge(\Drupal::state()->get('xinshi_cache_test.row_age', -1));
+    $metadata->applyTo($variables);
+  }
+}
+
+/** Implements hook_block_content_access(). */
+function xinshi_cache_test_block_content_access(EntityInterface $entity, string $operation, AccountInterface $account): AccessResult {
+  $denied = $operation === 'view' && \Drupal::state()->get('xinshi_cache_test.deny_block') === $entity->id();
+  $result = $denied ? AccessResult::forbidden() : AccessResult::neutral();
+  return $result->addCacheTags(['cache_test:block_access']);
+}
