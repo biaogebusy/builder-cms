@@ -36,7 +36,7 @@ final class PageModerationPolicy {
     }
     if (!$this->transitions || !$original->canTransitionTo($target) ||
       !$this->transitions->isTransitionValid($workflow, $original, $state, $this->account, $entity)) {
-      throw new PageDraftException('permission_denied', 403);
+      throw new PageDraftException('permission_denied', 403, $entity->getEntityTypeId() === 'node' ? 'page_moderation_denied' : 'component_moderation_denied');
     }
     $entity->set('moderation_state', $target);
   }

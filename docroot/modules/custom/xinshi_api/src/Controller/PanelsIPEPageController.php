@@ -39,10 +39,24 @@ class PanelsIPEPageController extends ControllerBase {
       ]);
     }
     catch (PageDraftException $error) {
-      return new JsonResponse([
+      $messages = [
+        'page_create_denied' => $this->t('You do not have permission to create landing pages.'),
+        'page_layout_missing' => $this->t('Page layout storage is not configured. Please contact the site administrator.'),
+        'node.title.edit' => $this->t('You do not have permission to edit the page title.'),
+        'node.path.edit' => $this->t('You do not have permission to edit the page URL.'),
+        'component_storage_missing' => $this->t('JSON component storage is not configured. Please contact the site administrator.'),
+        'page_moderation_denied' => $this->t('The page cannot be saved in its required publication state. Check the workflow transition permissions.'),
+        'component_moderation_denied' => $this->t('The component cannot be saved in its required publication state. Check the workflow transition permissions.'),
+      ];
+      $data = [
         'status' => FALSE, 'code' => $error->reason,
-        'message' => $this->t('The page could not be saved. Check your permissions and reload the page before retrying.'),
-      ], $error->httpStatus);
+        'message' => $messages[$error->detail ?? ''] ?? $this->t('The page could not be saved. Check your permissions and reload the page before retrying.'),
+      ];
+      // Only expose known diagnostics, never arbitrary exception text or input.
+      if (isset($messages[$error->detail ?? ''])) {
+        $data['detail'] = $error->detail;
+      }
+      return new JsonResponse($data, $error->httpStatus);
     }
     catch (\Throwable $error) {
       $this->getLogger('xinshi_api')->error('Builder page write failed (@type).', ['@type' => get_class($error)]);

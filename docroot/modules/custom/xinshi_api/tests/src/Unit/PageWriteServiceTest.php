@@ -41,6 +41,7 @@ final class PageWriteServiceTest extends TestCase {
   private array $revisions = [];
   private array $grants = [];
   private array $lookups = [];
+  private array $violations = [];
   private int $nextId = 0;
   private int $saves = 0;
   private ?int $failSaveAt = NULL;
@@ -164,7 +165,7 @@ final class PageWriteServiceTest extends TestCase {
     $entity->method('getRevisionId')->willReturnCallback(fn() => $this->records[$id]['values']['vid']);
     $entity->method('access')->willReturnCallback(fn($op) => $this->grants[$id . ':' . $op] ?? TRUE);
     $entity->method('hasField')->willReturnCallback(fn($name) => $this->grants['has:' . $name] ?? TRUE);
-    $entity->method('validate')->willReturn(new ConstraintViolationList());
+    $entity->method('validate')->willReturnCallback(fn() => new ConstraintViolationList($this->violations[$id] ?? []));
     $entity->method('get')->willReturnCallback(function ($name) use ($id) {
       $field = $this->createMock($name === 'layout_builder__layout' ? LayoutSectionItemList::class : FieldItemListInterface::class);
       $field->method('access')->willReturnCallback(fn() => $this->grants[$id . ':' . $name] ?? TRUE);
@@ -267,19 +268,18 @@ final class PageWriteServiceTest extends TestCase {
     return (new PanelsIPEPageController($this->writer))->landingPageUpdate($node);
   }
 
-  public function testUnauthorizedSharedUuidRejectedBeforeAnyWrites(): void {
+  public function testSharedUuidUsesPagePermissionInsteadOfBlockLibraryPermission(): void {
     [$a, $own] = $this->fixture();
     [$b, $foreign] = $this->fixture();
     $this->records[$foreign->id()]['values']['reusable'] = TRUE;
     $foreign->save();
     $this->grants[$foreign->id() . ':update'] = FALSE;
-    $before = $this->persisted();
     $input = $this->input($a, $own);
     $input['body'][] = $this->input($b, $foreign)['body'][0];
     $response = $this->update($a, $input);
-    self::assertSame($before, $this->persisted(), 'Neither the title nor any block may be partially saved.');
-    self::assertSame(403, $response->getStatusCode());
-    self::assertTrue($this->records[$foreign->id()]['values']['reusable']);
+    self::assertSame(200, $response->getStatusCode());
+    self::assertFalse($this->records[$foreign->id()]['values']['reusable']);
+    self::assertStringContainsString('after', $this->records[$foreign->id()]['values']['body']['value']);
     self::assertContains(['uuid' => $foreign->uuid()], $this->lookups);
   }
 
@@ -296,7 +296,57 @@ final class PageWriteServiceTest extends TestCase {
   }
 
   public static function deniedGrants(): array {
-    return [['node', 'update'], ['node', 'title'], ['block', 'update'], ['block', 'body'], ['block', 'reusable'], ['global', 'format']];
+    return [['node', 'update'], ['node', 'title']];
+  }
+
+  public function testPagePermissionDoesNotRequireInternalBlockOrFormatGrants(): void {
+    [$node, $block] = $this->fixture();
+    foreach (['update', 'body', 'reusable'] as $operation) {
+      $this->grants[$block->id() . ':' . $operation] = FALSE;
+    }
+    $this->grants['format'] = FALSE;
+    $this->grants['create:json'] = FALSE;
+    self::assertSame(200, $this->update($node, $this->input($node, $block))->getStatusCode());
+    $copy = $this->writer->createPage(['title' => 'Page only', 'body' => [['attributes' => ['body' => ['type' => 'text']]]]]);
+    self::assertTrue($copy->isPublished());
+  }
+
+  public static function formatConstraints(): array {
+    $allowed = \Drupal\Core\Validation\Plugin\Validation\Constraint\AllowedValuesConstraint::class;
+    return [
+      ['body.0.format', 'json', $allowed, 200],
+      ['body.0.format', 'other', $allowed, 422],
+      ['body.0.value', 'json', $allowed, 422],
+      ['body.0.format', 'json', \Symfony\Component\Validator\Constraints\NotBlank::class, 422],
+    ];
+  }
+
+  #[DataProvider('formatConstraints')]
+  public function testOnlyTheFixedInternalFormatConstraintIsExempted(string $path, string $value, string $constraint, int $status): void {
+    [$node, $block] = $this->fixture();
+    $this->violations[$block->id()] = [new \Symfony\Component\Validator\ConstraintViolation(
+      'Invalid value', NULL, [], $block, $path, $value, constraint: new $constraint(),
+    )];
+    $before = $this->persisted();
+    self::assertSame($status, $this->update($node, $this->input($node, $block))->getStatusCode());
+    if ($status !== 200) {
+      self::assertSame($before, $this->persisted());
+    }
+  }
+
+  public function testMissingLayoutResponseIdentifiesTheConfigurationProblem(): void {
+    $this->grants['has:layout_builder__layout'] = FALSE;
+    $this->container->set('request_stack', new \Symfony\Component\HttpFoundation\RequestStack());
+    $this->container->get('request_stack')->push(new Request(content: json_encode([
+      'title' => 'Page', 'body' => [['attributes' => ['body' => ['type' => 'text']]]],
+    ])));
+    $response = (new PanelsIPEPageController($this->writer))->landingPageBuilder();
+    $data = json_decode($response->getContent(), TRUE);
+    self::assertSame(403, $response->getStatusCode());
+    self::assertSame('permission_denied', $data['code']);
+    self::assertSame('page_layout_missing', $data['detail']);
+    self::assertStringContainsString('layout storage is not configured', $data['message']);
+    self::assertSame([], $this->persisted());
   }
 
   public function testInternalLayoutFieldDenialDoesNotBlockAuthorizedWrites(): void {
@@ -350,6 +400,7 @@ final class PageWriteServiceTest extends TestCase {
     $response = (new PanelsIPEPageController($writer))->landingPageBuilder();
     self::assertSame([], $this->persisted(), 'An unauthorized create must leave no published or partial page.');
     self::assertSame(403, $response->getStatusCode());
+    self::assertSame('page_moderation_denied', json_decode($response->getContent(), TRUE)['detail']);
   }
 
   public function testCopyCreatesNewEntitiesWithoutChangingSource(): void {
@@ -391,7 +442,7 @@ final class PageWriteServiceTest extends TestCase {
     [$node, $own] = $this->fixture();
     [$other, $shared] = $this->fixture();
     $beforeVid = $shared->getRevisionId();
-    $shared->expects(self::once())->method('setAccessDependency')->with(self::callback(fn($dependency) => $dependency->id() === $node->id()));
+    $shared->expects(self::never())->method('setAccessDependency');
     $shared->expects(self::never())->method('setNewRevision');
     self::assertSame(200, $this->update($node, $this->input($node, $shared))->getStatusCode());
     self::assertCount(4, $this->records);
@@ -505,14 +556,13 @@ final class PageWriteServiceTest extends TestCase {
     self::assertStringContainsString('restored history', $this->records[$block->id()]['values']['body']['value']);
   }
 
-  public function testCreatePermissionRefusalPreventsPartialUpdate(): void {
+  public function testAddingComponentsOnlyRequiresPageUpdatePermission(): void {
     [$node, $block] = $this->fixture();
     $input = $this->input($node, $block);
     $input['body'][] = ['attributes' => ['body' => ['type' => 'text']]];
     $this->grants['create:json'] = FALSE;
-    $before = $this->persisted();
-    self::assertSame(403, $this->update($node, $input)->getStatusCode());
-    self::assertSame($before, $this->persisted());
+    self::assertSame(200, $this->update($node, $input)->getStatusCode());
+    self::assertCount(3, $this->records);
   }
 
   public function testAnonymousCreateIsDenied(): void {

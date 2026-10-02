@@ -11,6 +11,10 @@ Make shared frontend changes only in `../xinshi-base`; a later branch merge brin
 them to Pro. Do not copy shared changes directly into `../xinshi-pro`.
 Follow the repository-boundary and caller-verification rules in `AGENTS.md`.
 
+Permission behavior and existing-site compatibility are maintained in
+[Permission rules](../xinshi-docs/stories/develop/engineering/permissions.mdx).
+Follow the shared permission-documentation requirements in `AGENTS.md`.
+
 `AGENTS.md` is the single source for repository boundaries, Drupal conventions,
 validation, and the requirement to update the corresponding xinshi-docs pages and
 CMS remediation progress with each change. Edit shared rules there rather than

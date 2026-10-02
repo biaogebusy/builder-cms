@@ -35,6 +35,7 @@ entry points, not duplicate specifications.
 - [Documentation index](../xinshi-docs/stories/develop/engineering/documentation.mdx)
 - [CMS custom module review](../xinshi-docs/stories/develop/engineering/cms-custom-modules-review.mdx)
 - [CMS remediation progress and change history](../xinshi-docs/stories/develop/engineering/cms-custom-modules-progress.mdx)
+- [Permission rules and compatibility](../xinshi-docs/stories/develop/engineering/permissions.mdx)
 
 For every subsequent change to reviewed CMS behavior:
 
@@ -50,6 +51,10 @@ For every subsequent change to reviewed CMS behavior:
    and environment prerequisites rather than marking the item complete.
 5. Summarize code and documentation changes together. If documentation could not be
    updated, report the specific outstanding work; do not claim full completion.
+6. Before changing authorization, read the permission rules linked above. Document
+   new, changed or retired permission rules there in the same delivery, including
+   their scope, Drupal configuration, existing-site compatibility and verification.
+   Add future permission domains to that page and link their detailed API docs.
 
 Internal documentation links use actual Storybook routes derived from `Meta.title`.
 Follow the documentation repository's own instructions for MDX, index generation
@@ -106,6 +111,12 @@ scope; a source review does not authorize these operations.
   translation, text-format and moderation-transition access where relevant.
   Entity loading and `save()` do not perform these checks for custom callers.
   A supplied UUID does not prove ownership or authorization.
+- Preserve the explicitly agreed legacy Builder page contract: landing-page
+  create/update/delete authority comes from Drupal page permissions. Its JSON
+  components are written under that page authority, including cross-page UUID
+  sharing; do not add block-library or user text-format grants to that protocol.
+  Keep the fixed internal `format: json` marker compatible with existing sites.
+  This exception does not grant access to generic block or unrelated API routes.
 - State-changing routes accepting session cookies require CSRF protection. OAuth-only
   routes must explicitly enforce that authentication mode. Distinguish user OAuth
   from service-to-service signatures; neither replaces business authorization.

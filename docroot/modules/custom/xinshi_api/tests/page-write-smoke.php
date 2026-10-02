@@ -60,17 +60,15 @@ if (!FieldConfig::loadByName('block_content', 'json', 'body')) {
     'label' => 'Body',
   ])->save();
 }
-if (!FilterFormat::load('json')) {
-  FilterFormat::create(['format' => 'json', 'name' => 'JSON', 'filters' => []])->save();
-}
+// Reset only this disposable fixture so its legacy-format case can be rerun.
+FilterFormat::load('json')?->delete();
 if (!LayoutBuilderEntityViewDisplay::load('node.landing_page.default')) {
   LayoutBuilderEntityViewDisplay::create([
     'targetEntityType' => 'node', 'bundle' => 'landing_page', 'mode' => 'default', 'status' => TRUE,
   ])->enableLayoutBuilder()->setOverridable()->save();
 }
 $role = Role::load('page_author') ?? Role::create(['id' => 'page_author', 'label' => 'Page author']);
-$permissions = ['access content', 'create landing_page content', 'edit own landing_page content',
-  'create json block content', 'edit any json block content', 'use text format json'];
+$permissions = ['access content', 'create landing_page content', 'edit own landing_page content', 'delete own landing_page content'];
 $role->set('permissions', $permissions)->save();
 $account = User::create(['name' => uniqid('page-author-'), 'status' => 1, 'roles' => ['page_author']]);
 $account->save();
@@ -82,8 +80,9 @@ check($probe->hasField('layout_builder__layout'), 'Layout field is installed');
 check(!$probe->get('layout_builder__layout')->access('edit', $account), 'Core intentionally denies direct layout field editing');
 check($probe->get('title')->access('edit', $account), 'Author can edit the page title');
 check(\Drupal::entityTypeManager()->getAccessControlHandler('node')->createAccess('landing_page', $account), 'Author can create landing pages');
-check(\Drupal::entityTypeManager()->getAccessControlHandler('block_content')->createAccess('json', $account), 'Author can create JSON components');
-check(FilterFormat::load('json')->access('use', $account), 'Author can use the JSON text format');
+check(!\Drupal::entityTypeManager()->getAccessControlHandler('block_content')->createAccess('json', $account), 'Author has no block-library creation permission');
+check(!$account->hasPermission('use text format json'), 'Author has no JSON text-format permission');
+check(!FilterFormat::load('json'), 'Legacy site has no JSON filter-format configuration');
 
 $input = ['title' => 'About us', 'body' => [
   ['type' => 'json', 'attributes' => ['body' => ['type' => 'banner-simple', 'title' => '<p>About us</p>']]],
@@ -120,6 +119,7 @@ $component = reset($components);
 $block = \Drupal::entityTypeManager()->getStorage('block_content')->loadRevision($component->get('configuration')['block_revision_id']);
 $block_id = $block->id();
 $revision_id = $block->getRevisionId();
+check($block->get('body')->format === 'json', 'Legacy JSON format marker is persisted without format configuration');
 $update = ['title' => 'Updated page', 'vid' => $page->getRevisionId(), 'body' => [[
   'uuid' => $block->uuid(), 'attributes' => ['body' => ['type' => 'text', 'body' => 'Updated content']],
 ]]];
@@ -132,7 +132,7 @@ $stored = BlockContent::load($block_id);
 check((string) $stored->getRevisionId() === (string) $revision_id, 'Shared component keeps its existing revision identity');
 check(str_contains($stored->get('body')->value, 'Updated content'), 'Shared component content is updated in place');
 
-foreach (['create landing_page content', 'create json block content', 'use text format json'] as $index => $permission) {
+foreach (['create landing_page content'] as $index => $permission) {
   $role_id = 'page_refused_' . $index;
   $restricted = Role::load($role_id) ?? Role::create(['id' => $role_id, 'label' => $role_id]);
   $restricted->set('permissions', array_values(array_diff($permissions, [$permission])))->save();
@@ -163,4 +163,23 @@ catch (\Drupal\xinshi_api\PageDraftException $error) {
 check(entityCounts() === $before, 'Refused non-owner update creates no entities');
 \Drupal::entityTypeManager()->getStorage('node')->resetCache([$saved->id()]);
 check(Node::load($saved->id())->label() === 'Updated page', 'Refused non-owner update preserves the title');
+check(!$saved->access('delete', $other), 'A non-owner cannot delete the original page');
+check($saved->access('delete', $account), 'An author can delete their own page');
+
+$admin_role = Role::load('page_manager') ?? Role::create(['id' => 'page_manager', 'label' => 'Page manager']);
+$admin_role->set('permissions', ['access content', 'create landing_page content', 'edit any landing_page content', 'delete any landing_page content'])->save();
+$admin = User::create(['name' => uniqid('page-manager-'), 'status' => 1, 'roles' => ['page_manager']]);
+$admin->save();
+\Drupal::currentUser()->setAccount($admin);
+$updated = $writer->updatePage($saved, ['title' => 'Administrator edit', 'vid' => $saved->getRevisionId(), 'body' => $update['body']]);
+check($updated->label() === 'Administrator edit', 'A page administrator can update another author without block-library permissions');
+check($updated->access('delete', $admin), 'A page administrator can delete another author page');
+$created = $writer->createPage($input);
+check($created->isPublished(), 'Page administrator creates a published page without JSON format configuration');
+
+FilterFormat::create(['format' => 'json', 'name' => 'JSON', 'filters' => []])->save();
+\Drupal::currentUser()->setAccount($account);
+check(!FilterFormat::load('json')->access('use', $account), 'Configured JSON text format remains inaccessible to the page author');
+$created = $writer->createPage($input);
+check($created->isPublished(), 'Internal format does not require a separate user permission when configured');
 echo "Isolated page write checks passed.\n";
