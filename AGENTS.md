@@ -185,6 +185,25 @@ contract is affected, using that repository's current instructions and commands.
   Cookie/OAuth permissions, validation and pending workflow integration are maintained in
   [Cross-business Plan](../xinshi-docs/stories/pro/ai/architecture/cross-business-plan.mdx).
 
+## Protected conversation references
+
+- `xinshi_ai_reference` is an optional session-storage guard, independent of the
+  analytics source and heavy AI module dependencies. Keep report bodies, receipts,
+  reasoning, summaries and generated report titles out of ordinary ai_session fields.
+- The fixed versioned runId/chatId locator is untrusted. Node validates task ownership,
+  original conversation and current source evidence before first-party save/recovery;
+  Drupal validates shape, author and conversation binding, not Node task existence.
+  Never describe the locator as a capability or an independent historical-report grant.
+- Use entity validation plus presave for copy-free fields and immutable binding,
+  covering ConversationWriter and direct JSON:API writes. Node access alone does not
+  protect JSON:API relationship linkage: retain the sessions field access check too.
+  Keep unrelated node/field access neutral and preserve existing entity permissions.
+- Run `ANALYTICS_REFERENCE_TESTS=1` with the analytics isolated runner for changes.
+  The optional fixture also uses actual JSON:API and field-based Views; no production
+  dependency between the two modules is implied. Real site aliases, fields, Views and
+  other writers still need deployment verification. No automatic migration can identify
+  sensitive report numbers hidden in previously saved ordinary text.
+
 ## Working method and verification
 
 - State material assumptions and acceptance criteria. Proceed with routine choices
