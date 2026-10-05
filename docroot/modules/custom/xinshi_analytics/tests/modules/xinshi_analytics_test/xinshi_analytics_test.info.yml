@@ -1,0 +1,9 @@
+name: Analytics access test fixtures
+type: module
+package: Testing
+core_version_requirement: ^11.4
+dependencies:
+  - xinshi_analytics:xinshi_analytics
+  - drupal:node
+  - drupal:taxonomy
+

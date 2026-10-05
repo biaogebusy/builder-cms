@@ -153,6 +153,38 @@ tool kernel. Changes affecting submitted writes must preserve reconciliation and
 document incompatible behavior. Run relevant sibling checks only when that code or
 contract is affected, using that repository's current instructions and commands.
 
+## Configured analytics boundary
+
+- `xinshi_analytics` is an optional, count-only source module. Keep entity and field
+  mappings, exact translation/publication rules and access checks there; do not
+  add business branches to the Node Harness kernel.
+- Datasets are explicit versioned configuration entities. Querying needs the
+  general query permission plus the dataset-specific grant and actual entity/field
+  access. Configuration administration is a separate permission. No default
+  datasets, grants or automatic site updates are installed. Fixed authenticated
+  capabilities/datasets/count endpoints are read-only and always private/no-store,
+  including authentication and access failures. Keep OAuth scope in the effective
+  principal throughout dataset, query, entity and field checks; never replace it
+  with the full user. POST count does not mutate data or require write CSRF.
+- Preserve access-checked ID pagination, complete results and configured scan/group
+  limits. Do not push private field predicates into SQL before proving equivalent
+  access semantics. `max_seconds` is cooperative, not a database statement timeout.
+- Historical evidence uses the user-confirmed conservative invalidation rule.
+  Keep original counts immutable. Revalidate current access, participating records
+  and field values, plus durable bundle/account/configuration markers; equal totals
+  alone cannot authorize old evidence. Seal receipts with the purpose-separated
+  site secret and never expose internal fingerprints or record IDs.
+- Configuration saves and source/entity access changes invalidate evidence even
+  when values or grants are restored. Project rules outside the covered hooks must
+  call the evidence epoch invalidation service. Do not use expiring cache tags as
+  durable history, or claim polling can detect an unannounced change later reversed.
+  Receipt capture/verification is read-only; mutation hooks update markers, not reports.
+- Run the module's isolated integration entry for configuration/count/evidence changes.
+  It copies sources into a disposable network-none container and uses synthetic
+  SQLite data. Never run its installation script in an existing site. Protocol,
+  Cookie/OAuth permissions, validation and pending workflow integration are maintained in
+  [Cross-business Plan](../xinshi-docs/stories/pro/ai/architecture/cross-business-plan.mdx).
+
 ## Working method and verification
 
 - State material assumptions and acceptance criteria. Proceed with routine choices

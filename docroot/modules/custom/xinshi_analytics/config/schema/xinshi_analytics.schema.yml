@@ -1,0 +1,86 @@
+xinshi_analytics.dataset.*:
+  type: config_entity
+  label: 'Analytics dataset'
+  mapping:
+    id:
+      type: string
+      label: 'Public dataset alias'
+    label:
+      type: label
+      label: 'Dataset meaning'
+    version:
+      type: integer
+      label: 'Semantic version'
+    entity_type:
+      type: string
+      label: 'Source content entity type'
+    bundles:
+      type: sequence
+      label: 'Allowed bundles'
+      sequence:
+        type: string
+    time_field:
+      type: string
+      label: 'Timestamp field'
+    dimensions:
+      type: sequence
+      label: 'Grouping aliases'
+      sequence:
+        type: mapping
+        mapping:
+          label:
+            type: label
+            label: 'Dimension meaning'
+          field:
+            type: string
+            label: 'Single-valued source field'
+          kind:
+            type: string
+            label: 'Month or category'
+    filters:
+      type: sequence
+      label: 'Enum filter aliases'
+      sequence:
+        type: mapping
+        mapping:
+          label:
+            type: label
+            label: 'Filter meaning'
+          field:
+            type: string
+            label: 'Single-valued source field'
+          operators:
+            type: sequence
+            label: 'Allowed operators'
+            sequence:
+              type: string
+          values:
+            type: sequence
+            label: 'Allowed enum values'
+            sequence:
+              type: string
+    query_policy:
+      type: mapping
+      label: 'Explicit query limits'
+      mapping:
+        timezone:
+          type: string
+          label: 'Calendar timezone'
+        languages:
+          type: sequence
+          label: 'Allowed exact translations'
+          sequence:
+            type: string
+        max_calendar_months:
+          type: integer
+          label: 'Maximum touched calendar months'
+        max_scanned_entities:
+          type: integer
+          label: 'Maximum access-filtered candidate entities'
+        max_groups:
+          type: integer
+          label: 'Maximum complete result groups'
+        max_seconds:
+          type: integer
+          label: 'Cooperative scan deadline in seconds'
+

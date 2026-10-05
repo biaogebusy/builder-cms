@@ -1,0 +1,48 @@
+<?php
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+
+/** Implements hook_node_grants(). */
+function xinshi_analytics_test_node_grants(AccountInterface $account, $operation): array {
+  return ['analytics_owner' => [(int) $account->id()]];
+}
+
+/** Implements hook_node_access_records(). */
+function xinshi_analytics_test_node_access_records(NodeInterface $node): array {
+  return [['realm' => 'analytics_owner', 'gid' => (int) $node->getOwnerId(),
+    'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0]];
+}
+
+/** Implements hook_entity_access(). */
+function xinshi_analytics_test_entity_access(EntityInterface $entity, $operation, AccountInterface $account): AccessResult {
+  if (\Drupal::state()->get('analytics_test.invalidate_during_scan')) {
+    \Drupal::state()->delete('analytics_test.invalidate_during_scan');
+    \Drupal::service('xinshi_analytics.evidence_epochs')->invalidate();
+  }
+  $denied = \Drupal::state()->get('analytics_test.denied_entity');
+  return $operation === 'view' && $denied === [$entity->getEntityTypeId(), $entity->id()]
+    ? AccessResult::forbidden()->setCacheMaxAge(0) : AccessResult::neutral();
+}
+
+/** Implements hook_entity_field_access(). */
+function xinshi_analytics_test_entity_field_access($operation, FieldDefinitionInterface $definition,
+  AccountInterface $account, ?FieldItemListInterface $items = NULL): AccessResult {
+  if ($operation === 'view' && $definition->getName() === 'created'
+    && \Drupal::state()->get('analytics_test.require_field_permission')
+    && !$account->hasPermission('view analytics fixture fields')) {
+    return AccessResult::forbidden()->setCacheMaxAge(0);
+  }
+  $field = \Drupal::state()->get('analytics_test.denied_field');
+  if ($operation === 'view' && $definition->getName() === $field) {
+    $onlyEntity = \Drupal::state()->get('analytics_test.denied_field_entity');
+    if ($onlyEntity === NULL || ($items && $items->getEntity()->id() === $onlyEntity)) {
+      return AccessResult::forbidden()->setCacheMaxAge(0);
+    }
+  }
+  return AccessResult::neutral();
+}

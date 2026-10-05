@@ -1,0 +1,25 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\NodeInterface;
+
+/** Implements hook_entity_insert(). */
+function xinshi_analytics_entity_insert(EntityInterface $entity): void {
+  \Drupal::service('xinshi_analytics.evidence_epochs')->entityChanged($entity);
+}
+
+/** Implements hook_entity_update(). */
+function xinshi_analytics_entity_update(EntityInterface $entity): void {
+  \Drupal::service('xinshi_analytics.evidence_epochs')->entityChanged($entity);
+}
+
+/** Implements hook_entity_delete(). */
+function xinshi_analytics_entity_delete(EntityInterface $entity): void {
+  \Drupal::service('xinshi_analytics.evidence_epochs')->entityChanged($entity);
+}
+
+/** Implements hook_node_access_records_alter(). */
+function xinshi_analytics_node_access_records_alter(array &$grants, NodeInterface $node): void {
+  // Node access rebuilds can change grants without saving the node itself.
+  \Drupal::service('xinshi_analytics.evidence_epochs')->entityChanged($node);
+}

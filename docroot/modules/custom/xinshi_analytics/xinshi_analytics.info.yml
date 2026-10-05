@@ -1,0 +1,7 @@
+name: Xinshi Analytics
+type: module
+description: 'Configured, account-scoped entity counts through authenticated read-only endpoints.'
+package: Xinshi
+core_version_requirement: ^11.4
+dependencies:
+  - drupal:user

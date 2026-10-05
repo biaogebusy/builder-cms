@@ -1,0 +1,22 @@
+services:
+  xinshi_analytics.datasets:
+    class: Drupal\xinshi_analytics\DatasetValidator
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@language_manager']
+  xinshi_analytics.counts:
+    class: Drupal\xinshi_analytics\CountService
+    arguments: ['@entity_type.manager', '@xinshi_analytics.datasets', '@current_user', '@account_switcher', '@xinshi_analytics.evidence_epochs']
+  xinshi_analytics.evidence_epochs:
+    class: Drupal\xinshi_analytics\EvidenceEpochs
+    arguments: ['@keyvalue']
+  xinshi_analytics.evidence_configuration:
+    class: Drupal\xinshi_analytics\EventSubscriber\EvidenceConfigurationSubscriber
+    arguments: ['@xinshi_analytics.evidence_epochs']
+    tags:
+      - { name: event_subscriber }
+  xinshi_analytics.responses:
+    class: Drupal\xinshi_analytics\EventSubscriber\AnalyticsResponseSubscriber
+    tags:
+      - { name: event_subscriber }
+  xinshi_analytics.evidence:
+    class: Drupal\xinshi_analytics\EvidenceService
+    arguments: ['@xinshi_analytics.counts']
