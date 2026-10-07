@@ -328,6 +328,11 @@ class EntityJsonBase implements EntityJsonInterface, CacheableDependencyInterfac
             $view->preExecute();
             $view->execute($display_id);
             $render = $view->render();
+            if ($render === NULL) {
+              // Views may fail or deny access during execution. Keep empty rows,
+              // but do not cache a page whose view dependencies are incomplete.
+              $render = ['#cache' => ['max-age' => 0]];
+            }
             $this->addRenderCacheability($render);
             $blocks["{$view_name}_{$display_id}"] = [
               'rows' => $render['#rows'][0]['#rows'] ?? [],
