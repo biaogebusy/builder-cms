@@ -153,12 +153,12 @@ tool kernel. Changes affecting submitted writes must preserve reconciliation and
 document incompatible behavior. Run relevant sibling checks only when that code or
 contract is affected, using that repository's current instructions and commands.
 
-## Configured analytics boundary
+## Analytics source boundary
 
 - `xinshi_analytics` is an optional, count-only source module. Keep entity and field
   mappings, exact translation/publication rules and access checks there; do not
   add business branches to the Node Harness kernel.
-- Datasets are explicit versioned configuration entities. Querying needs the
+- Configured datasets are explicit versioned configuration entities. Querying needs the
   general query permission plus the dataset-specific grant and actual entity/field
   access. Configuration administration is a separate permission. No default
   datasets, grants or automatic site updates are installed. Fixed authenticated
@@ -166,6 +166,17 @@ contract is affected, using that repository's current instructions and commands.
   including authentication and access failures. Keep OAuth scope in the effective
   principal throughout dataset, query, entity and field checks; never replace it
   with the full user. POST count does not mutate data or require write CSRF.
+- Automatic node counts are a separate opt-in source. `NodeCountDatasets` builds
+  ephemeral mappings from actual node types using one explicit `node_counts` policy;
+  discovery never saves generated datasets. Require general query permission and
+  current content/translation/field access, retaining OAuth scope; no per-type grant.
+  Include viewable unpublished content while preserving configured-source publication rules.
+  Require explicit all/range scope; all removes only the time predicate/month limit.
+  One fixed endpoint family and explicit-scope contract serve both sources; keep
+  only evidence envelope/signature version 2. Reject obsolete inputs and envelopes.
+  Reserve node__ IDs for automatic mappings and fail closed on existing collisions.
+  Bind exact scope and mapping identity to durable invalidation markers. No default settings or automatic
+  existing-site enablement. Test both source policies, both scopes and legal Drupal machine names.
 - Preserve access-checked ID pagination, complete results and configured scan/group
   limits. Do not push private field predicates into SQL before proving equivalent
   access semantics. `max_seconds` is cooperative, not a database statement timeout.
@@ -182,7 +193,7 @@ contract is affected, using that repository's current instructions and commands.
 - Run the module's isolated integration entry for configuration/count/evidence changes.
   It copies sources into a disposable network-none container and uses synthetic
   SQLite data. Never run its installation script in an existing site. Protocol,
-  Cookie/OAuth permissions, validation and pending workflow integration are maintained in
+  Cookie/OAuth permissions, validation and workflow integration are maintained in
   [Cross-business Plan](../xinshi-docs/stories/pro/ai/architecture/cross-business-plan.mdx).
 
 ## Protected conversation references

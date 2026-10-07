@@ -64,6 +64,9 @@ final class AnalyticsDataset extends ConfigEntityBase {
       }
     }
     parent::preSave($storage);
+    if (str_starts_with((string) $this->id(), 'node__')) {
+      throw new \Drupal\xinshi_analytics\AnalyticsException('invalid_query');
+    }
   }
 
   /** {@inheritdoc} */

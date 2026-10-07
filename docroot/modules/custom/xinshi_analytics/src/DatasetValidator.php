@@ -33,7 +33,8 @@ final class DatasetValidator {
     if (!CountQuery::alias($dataset->id()) || !CountQuery::text($dataset->label())
       || !CountQuery::integer($dataset->get('version')) || !is_bool($dataset->get('status'))
       || !CountQuery::alias($entityType) || !CountQuery::strings($bundles, 100, 1)
-      || count(array_filter($bundles, CountQuery::alias(...))) !== count($bundles)
+      || count(array_filter($bundles, static fn(string $bundle): bool =>
+        preg_match('/^[a-z0-9_]{1,128}$/D', $bundle) === 1)) !== count($bundles)
       || !CountQuery::alias($dataset->get('time_field'))
       || !is_array($dimensions) || count($dimensions) > 20
       || !is_array($filters) || count($filters) > 20

@@ -15,7 +15,7 @@ final class EvidenceService {
   /** Issues an opaque receipt without storing results or entity identifiers in Drupal. */
   public function capture(array $query): array {
     $snapshot = $this->counts->snapshot($query);
-    $evidence = ['version' => 1, 'result' => $snapshot['result'],
+    $evidence = ['version' => 2, 'result' => $snapshot['result'],
       'receipt' => $this->seal($snapshot['result'], $snapshot)];
     if (strlen(json_encode($evidence, JSON_THROW_ON_ERROR)) > 1024 * 1024) {
       throw new AnalyticsException('query_failed');
@@ -25,7 +25,7 @@ final class EvidenceService {
 
   /** Never replace historical counts with the newly computed verification result. */
   public function verify(array $evidence): array {
-    if (!CountQuery::keys($evidence, ['version', 'result', 'receipt']) || $evidence['version'] !== 1
+    if (!CountQuery::keys($evidence, ['version', 'result', 'receipt']) || $evidence['version'] !== 2
       || !is_string($evidence['receipt']) || !preg_match('/^[a-f0-9]{64}$/D', $evidence['receipt'])
       || !CountQuery::keys($evidence['result'], ['query', 'rows', 'completeness', 'startedAt', 'finishedAt'])
       || !is_array($evidence['result']['query'])) {
@@ -49,7 +49,7 @@ final class EvidenceService {
 
   /** Domain separation and the site secret bind the original result to the current source. */
   private function seal(array $result, array $snapshot): string {
-    return hash_hmac('sha256', "xinshi-analytics-evidence-v1\0" . json_encode(self::canonical([
+    return hash_hmac('sha256', "xinshi-analytics-evidence-v2\0" . json_encode(self::canonical([
       'result' => $result, 'uid' => $snapshot['uid'], 'epochs' => $snapshot['epochs'],
       'definition' => $snapshot['definition'], 'fingerprint' => $snapshot['fingerprint'],
     ]), JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION), Settings::getHashSalt());

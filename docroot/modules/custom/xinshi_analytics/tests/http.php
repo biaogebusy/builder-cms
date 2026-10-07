@@ -104,6 +104,7 @@ $grants = [
   'full' => ['access content', 'query analytics datasets', 'query analytics dataset editorial_activity', 'view analytics fixture fields'],
   'query' => ['access content', 'query analytics datasets', 'query analytics dataset editorial_activity'],
   'general' => ['access content', 'query analytics datasets'],
+  'scoped' => ['access content', 'query analytics datasets', 'view analytics fixture fields'],
   'none' => ['access content'],
 ];
 foreach ($grants as $name => $permissions) {
@@ -170,7 +171,7 @@ try {
   }
   check($ready, 'Loopback server ready');
   $query = ['datasetId' => 'editorial_activity', 'datasetVersion' => 1, 'dimensions' => ['category'],
-    'filters' => [], 'range' => ['from' => '2026-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z'],
+    'filters' => [], 'scope' => ['kind' => 'range', 'from' => '2026-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z'],
     'timezone' => 'UTC', 'language' => 'en'];
   $body = json_encode($query, JSON_THROW_ON_ERROR);
   $cap = '/api/v3/analytics/capabilities';
@@ -211,7 +212,7 @@ try {
   status(http('POST', $count, $tokens['full'], body: $body, type: 'text/plain'), 415, 'Content type required');
   status(http('POST', $count, $tokens['full'], body: json_encode(array_replace($query, ['datasetVersion' => 2]))), 409, 'Version failure is distinct');
   status(http('POST', $count, $tokens['full'], body: json_encode(array_replace($query,
-    ['range' => ['from' => '2025-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z']]))), 422, 'Range limit is distinct');
+    ['scope' => ['kind' => 'range', 'from' => '2025-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z']]))), 422, 'Range limit is distinct');
   status(http('GET', '/api/v3/analytics/datasets?language[]=en', $tokens['full']), 400, 'Discovery language shape rejected');
   $evidencePath = '/api/v3/analytics/evidence';
   $verifyPath = '/api/v3/analytics/evidence/verify';
@@ -237,11 +238,12 @@ try {
   check(status(http('POST', $verifyPath, $tokens['full'], body: json_encode($tampered)), 410,
     'Tampered result rejected')['code'] === 'evidence_unavailable', 'Evidence refusal has a distinct stable code');
   $tampered = $sealed;
-  $tampered['version'] = 2;
+  $tampered['version'] = 1;
   status(http('POST', $verifyPath, $tokens['full'], body: json_encode($tampered)), 400, 'Unsupported evidence format rejected');
   $tampered = $sealed;
   $tampered['result']['rows'][0]['dimensions'] = new stdClass();
   status(http('POST', $verifyPath, $tokens['full'], body: json_encode($tampered)), 400, 'Evidence preserves wire array types');
+  require __DIR__ . '/scoped.http.php';
   $process = proc_open([PHP_BINARY, '-d', 'extension=pdo_sqlite', __FILE__, 'withdraw'],
     [1 => ['file', '/dev/null', 'w'], 2 => ['file', $fixture . '/withdraw.log', 'w']], $pipes);
   check(proc_close($process) === 0, 'Withdraw dataset grant in a separate request');

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\xinshi_analytics;
 
-/** Strict v1 protocol validation, independent of entity storage and site defaults. */
+/** Strict explicit-scope protocol validation, independent of entity storage and site defaults. */
 final class CountQuery {
 
   public const MAX_INTEGER = 9007199254740991;
@@ -63,15 +63,20 @@ final class CountQuery {
   /** Validates the same required fields and count-only operation as the Node tools. */
   public static function validate(array $query): void {
     if (!self::keys($query, ['datasetId', 'datasetVersion', 'dimensions', 'filters',
-      'range', 'timezone', 'language']) || !self::alias($query['datasetId'])
+      'scope', 'timezone', 'language'])
+      || !self::alias($query['datasetId'])
       || !self::integer($query['datasetVersion']) || !self::strings($query['dimensions'], 2)
       || count(array_filter($query['dimensions'], self::alias(...))) !== count($query['dimensions'])
       || !is_array($query['filters']) || !array_is_list($query['filters']) || count($query['filters']) > 10
-      || !self::keys($query['range'], ['from', 'toExclusive'])
       || !self::timezone($query['timezone']) || !self::language($query['language'])) {
       throw new AnalyticsException('invalid_query');
     }
-    if (self::instant($query['range']['from']) >= self::instant($query['range']['toExclusive'])) {
+    $scope = $query['scope'];
+    $all = is_array($scope) && ($scope['kind'] ?? NULL) === 'all';
+    $keys = $all ? ['kind'] : ['kind', 'from', 'toExclusive'];
+    if (!self::keys($scope, $keys)
+      || (!in_array($scope['kind'], ['all', 'range'], TRUE))
+      || (!$all && self::instant($scope['from']) >= self::instant($scope['toExclusive']))) {
       throw new AnalyticsException('invalid_query');
     }
     $seen = [];
@@ -92,4 +97,3 @@ final class CountQuery {
   }
 
 }
-

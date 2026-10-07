@@ -19,11 +19,17 @@ docker exec "$container" sh -c \
   'find /app/docroot/modules/custom/xinshi_analytics \( -name "*.php" -o -name "*.module" \) -exec php -l {} \;'
 docker exec -e XINSHI_ANALYTICS_ISOLATED_TEST=1 "$container" php -d extension=pdo_sqlite \
   /app/docroot/modules/custom/xinshi_analytics/tests/integration.php
+if [ -n "${ANALYTICS_SCOPED_PROTOCOL_OUTPUT:-}" ]; then
+  docker cp "$container":/tmp/analytics-test/scoped-protocol.json "$ANALYTICS_SCOPED_PROTOCOL_OUTPUT"
+fi
 if [ -n "${ANALYTICS_PROTOCOL_OUTPUT:-}" ]; then
   docker cp "$container":/tmp/analytics-test/protocol.json "$ANALYTICS_PROTOCOL_OUTPUT"
 fi
 docker exec -e XINSHI_ANALYTICS_ISOLATED_TEST=1 "$container" php -d extension=pdo_sqlite \
   /app/docroot/modules/custom/xinshi_analytics/tests/http.php
+if [ -n "${ANALYTICS_SCOPED_HTTP_PROTOCOL_OUTPUT:-}" ]; then
+  docker cp "$container":/tmp/analytics-test/scoped-http-protocol.json "$ANALYTICS_SCOPED_HTTP_PROTOCOL_OUTPUT"
+fi
 if [ -n "${ANALYTICS_HTTP_PROTOCOL_OUTPUT:-}" ]; then
   docker cp "$container":/tmp/analytics-test/http-protocol.json "$ANALYTICS_HTTP_PROTOCOL_OUTPUT"
 fi

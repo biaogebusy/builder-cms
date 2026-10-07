@@ -117,7 +117,7 @@ function definition(string $id = 'editorial_activity', string $entityType = 'nod
 }
 function query(string $id = 'editorial_activity'): array {
   return ['datasetId' => $id, 'datasetVersion' => 1, 'dimensions' => ['category'], 'filters' => [],
-    'range' => ['from' => '2026-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z'],
+    'scope' => ['kind' => 'range', 'from' => '2026-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z'],
     'timezone' => 'UTC', 'language' => 'en'];
 }
 function rows(array $query): array {
@@ -217,13 +217,19 @@ $grouped = rows(query('service_activity'));
 check(count($grouped) === 3 && array_sum(array_column($grouped, 'count')) === 3
   && in_array(['dimensions' => [NULL], 'count' => 1], $grouped, TRUE),
   'Different private fields yield category counts and a null bucket');
+$withoutTime = node('service_ticket', $reader->id(), ['field_opened_at' => NULL]);
+node_access_rebuild();
+$allMonths = rows(array_replace(query('service_activity'), ['dimensions' => ['month'], 'scope' => ['kind' => 'all']]));
+check(in_array(['dimensions' => [NULL], 'count' => 1], $allMonths, TRUE),
+  'An empty configured timestamp produces a null month bucket in all scope');
+$withoutTime->delete();
 $filtered = array_replace(query('service_activity'), ['dimensions' => ['month', 'category'],
   'filters' => [['field' => 'category', 'operator' => 'eq', 'value' => 'closed']]]);
 check(rows($filtered) === [['dimensions' => ['2026-01', 'closed'], 'count' => 1]],
   'Month and category grouping with an enum predicate');
 $filtered['filters'] = [['field' => 'category', 'operator' => 'in', 'values' => ['closed', 'open']]];
 check(array_sum(array_column(rows($filtered), 'count')) === 2, 'IN filters use exact enum values');
-$empty = array_replace(query(), ['range' => ['from' => '2024-01-01T00:00:00Z', 'toExclusive' => '2024-02-01T00:00:00Z']]);
+$empty = array_replace(query(), ['scope' => ['kind' => 'range', 'from' => '2024-01-01T00:00:00Z', 'toExclusive' => '2024-02-01T00:00:00Z']]);
 check(rows($empty) === [], 'No grouped entities returns an empty table');
 check(rows(array_replace($empty, ['dimensions' => []])) === [['dimensions' => [], 'count' => 0]],
   'No ungrouped entities returns one explicit zero');
@@ -263,7 +269,7 @@ asAccount($reader);
 foreach ([
   ['metrics' => ['sum']], ['actor' => '1'], ['datasetVersion' => '1'], ['dimensions' => ['category', 'category']],
   ['dimensions' => ['field_secret.value']], ['dimensions' => ['unknown']], ['timezone' => '+01:00'],
-  ['range' => ['from' => '2026-02-30T00:00:00Z', 'toExclusive' => '2026-03-02T00:00:00Z']],
+  ['scope' => ['kind' => 'range', 'from' => '2026-02-30T00:00:00Z', 'toExclusive' => '2026-03-02T00:00:00Z']],
   ['filters' => [['field' => 'category', 'operator' => 'eq', 'value' => 'private']]],
   ['filters' => [['field' => 'category', 'operator' => 'eq', 'value' => 'article'],
     ['field' => 'category', 'operator' => 'eq', 'value' => 'article']]],
@@ -273,8 +279,8 @@ foreach ([
 denied(fn() => rows(array_replace(query(), ['datasetVersion' => 2])), 'dataset_version_changed', 'Stale dataset version is explicit');
 denied(fn() => rows(array_replace(query(), ['datasetId' => 'missing'])), 'dataset_unavailable', 'Unknown dataset reveals no mapping');
 denied(fn() => rows(array_replace(query(), ['language' => 'de'])), 'dataset_unavailable', 'Unsupported language never falls back');
-$range = ['from' => '2025-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z'];
-denied(fn() => rows(array_replace(query(), ['range' => $range])), 'range_too_large', 'Calendar month limit rejects excessive ranges');
+$range = ['kind' => 'range', 'from' => '2025-01-01T00:00:00Z', 'toExclusive' => '2026-02-01T00:00:00Z'];
+denied(fn() => rows(array_replace(query(), ['scope' => $range])), 'range_too_large', 'Calendar month limit rejects excessive ranges');
 
 $before = $service->get('query_policy');
 foreach (['max_scanned_entities' => 2, 'max_groups' => 1] as $limit => $value) {
@@ -343,9 +349,9 @@ $role->grantPermission($calendar->queryPermission())->save();
 node('service_ticket', $reader->id(), ['field_opened_at' => strtotime('2026-03-08T07:00:00Z'), 'field_ticket_state' => 'open']);
 node_access_rebuild();
 $local = array_replace(query('local_calendar'), ['dimensions' => ['month'], 'timezone' => 'America/New_York',
-  'range' => ['from' => '2026-03-01T05:00:00Z', 'toExclusive' => '2026-04-01T04:00:00Z']]);
+  'scope' => ['kind' => 'range', 'from' => '2026-03-01T05:00:00Z', 'toExclusive' => '2026-04-01T04:00:00Z']]);
 check(rows($local) === [['dimensions' => ['2026-03'], 'count' => 1]], 'Named timezone handles a DST month using a half-open UTC range');
-$local['range']['from'] = '2026-03-01T04:59:59Z';
+$local['scope']['from'] = '2026-03-01T04:59:59Z';
 denied(fn() => rows($local), 'range_too_large', 'One extra second in the prior local month exceeds the calendar limit');
 
 NodeType::create(['type' => 'batch_entry', 'name' => 'Batch entry'])->save();
@@ -372,3 +378,5 @@ denied(fn() => rows(query('term_activity')), 'dataset_unavailable', 'Removed map
 echo 'PASS: ' . $checks . ' real Drupal integration checks' . PHP_EOL;
 
 require __DIR__ . '/evidence.integration.php';
+
+require __DIR__ . '/scoped.integration.php';

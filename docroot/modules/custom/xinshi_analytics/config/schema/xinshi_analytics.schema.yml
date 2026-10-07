@@ -84,3 +84,35 @@ xinshi_analytics.dataset.*:
           type: integer
           label: 'Cooperative scan deadline in seconds'
 
+xinshi_analytics.node_counts:
+  type: config_object
+  label: 'Automatic content type counts'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enable v2 discovery and counts'
+    query_policy:
+      type: mapping
+      label: 'Explicit query limits'
+      mapping:
+        timezone:
+          type: string
+          label: 'Calendar timezone'
+        languages:
+          type: sequence
+          label: 'Allowed exact translations'
+          sequence:
+            type: string
+        max_calendar_months:
+          type: integer
+          label: 'Maximum touched calendar months'
+        max_scanned_entities:
+          type: integer
+          label: 'Maximum access-filtered candidate entities'
+        max_groups:
+          type: integer
+          label: 'Maximum complete result groups'
+        max_seconds:
+          type: integer
+          label: 'Cooperative scan deadline in seconds'
+

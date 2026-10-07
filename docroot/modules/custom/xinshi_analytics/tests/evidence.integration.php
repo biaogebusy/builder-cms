@@ -29,7 +29,7 @@ $evidence = \Drupal::service('xinshi_analytics.evidence');
 $input = query('evidence_activity');
 asAccount($reader);
 $saved = $evidence->capture($input);
-check($saved['version'] === 1 && preg_match('/^[a-f0-9]{64}$/D', $saved['receipt']) === 1,
+check($saved['version'] === 2 && preg_match('/^[a-f0-9]{64}$/D', $saved['receipt']) === 1,
   'Evidence has a bounded opaque receipt without record identifiers');
 check($saved['result']['rows'] === rows($input), 'Evidence uses the ordinary count semantics');
 check($evidence->verify($saved) === ['valid' => TRUE], 'Unchanged evidence verifies');
@@ -43,7 +43,7 @@ foreach (['count', 'time', 'receipt', 'query'] as $tamper) {
     'count' => $changed['result']['rows'][0]['count']++,
     'time' => $changed['result']['startedAt'] = '2020-01-01T00:00:00Z',
     'receipt' => $changed['receipt'] = str_repeat('0', 64),
-    'query' => $changed['result']['query']['range']['from'] = '2026-01-02T00:00:00Z',
+    'query' => $changed['result']['query']['scope']['from'] = '2026-01-02T00:00:00Z',
   };
   denied(fn() => $evidence->verify($changed), 'evidence_unavailable', 'Receipt binds original ' . $tamper);
 }

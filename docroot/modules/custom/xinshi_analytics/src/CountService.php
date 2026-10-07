@@ -22,6 +22,7 @@ final class CountService {
     private readonly AccountProxyInterface $currentUser,
     private readonly AccountSwitcherInterface $accountSwitcher,
     private readonly EvidenceEpochs $epochs,
+    private readonly NodeCountDatasets $nodeCounts,
   ) {}
 
   /** Maps the effective request permission without exposing dataset grants or roles. */
@@ -41,9 +42,16 @@ final class CountService {
       $datasets = [];
       $storage = $this->entityTypes->getStorage('analytics_dataset');
       $storage->resetCache();
-      foreach ($storage->loadMultiple() as $dataset) {
+      $automatic = $this->nodeCounts->load($account);
+      $configured = $storage->loadMultiple();
+      foreach (array_merge($configured, $automatic) as $id => $dataset) {
+        // Ambiguous existing configuration never chooses a less restrictive source policy.
+        if (isset($configured[$id], $automatic[$id])) {
+          continue;
+        }
+        $isAutomatic = isset($automatic[$id]);
         try {
-          $this->available($dataset, $account, $language);
+          $this->available($dataset, $account, $language, $isAutomatic);
         }
         catch (AnalyticsException) {
           continue;
@@ -62,6 +70,8 @@ final class CountService {
           'timezone' => $policy['timezone'], 'languages' => $policy['languages'],
           'limits' => ['maxCalendarMonths' => $policy['max_calendar_months'],
             'maxScannedEntities' => $policy['max_scanned_entities'], 'maxGroups' => $policy['max_groups']]];
+        $datasets[array_key_last($datasets)]['scopes'] = ['all', 'range'];
+        $datasets[array_key_last($datasets)]['timeBasis'] = $isAutomatic ? 'created' : 'configured';
         if (count($datasets) > 100) {
           throw new AnalyticsException('query_failed');
         }
@@ -87,10 +97,16 @@ final class CountService {
     return $this->authorized(function (AccountInterface $account) use ($query, $evidence, $identityBefore): array {
       $storage = $this->entityTypes->getStorage('analytics_dataset');
       $storage->resetCache([$query['datasetId']]);
-      $dataset = $storage->load($query['datasetId']);
+      $configured = $storage->load($query['datasetId']);
+      $automatic = $this->nodeCounts->load($account, $query['datasetId'])[$query['datasetId']] ?? NULL;
+      if ($configured && $automatic) {
+        throw new AnalyticsException('dataset_unavailable');
+      }
+      $isAutomatic = $automatic !== NULL;
+      $dataset = $configured ?? $automatic;
       // Read markers before validating access or configuration to detect concurrent changes.
       $before = $evidence && $dataset ? $this->epochs->current($dataset, (string) $account->id()) : [];
-      $this->available($dataset, $account, $query['language']);
+      $this->available($dataset, $account, $query['language'], $isAutomatic);
       if ($evidence && array_intersect_key($before, $identityBefore) !== $identityBefore) {
         throw new AnalyticsException('query_failed');
       }
@@ -112,17 +128,21 @@ final class CountService {
         }
       }
       $zone = new \DateTimeZone($query['timezone']);
-      $from = CountQuery::instant($query['range']['from'])->setTimezone($zone);
-      $until = CountQuery::instant($query['range']['toExclusive'])->setTimezone($zone);
-      $last = $until->modify('-1 second');
-      $months = ((int) $last->format('Y') - (int) $from->format('Y')) * 12
-        + (int) $last->format('n') - (int) $from->format('n') + 1;
-      if ($months > $policy['max_calendar_months']) {
-        throw new AnalyticsException('range_too_large');
+      $scope = $query['scope'];
+      $from = $until = NULL;
+      if ($scope['kind'] === 'range') {
+        $from = CountQuery::instant($scope['from'])->setTimezone($zone);
+        $until = CountQuery::instant($scope['toExclusive'])->setTimezone($zone);
+        $last = $until->modify('-1 second');
+        $months = ((int) $last->format('Y') - (int) $from->format('Y')) * 12
+          + (int) $last->format('n') - (int) $from->format('n') + 1;
+        if ($months > $policy['max_calendar_months']) {
+          throw new AnalyticsException('range_too_large');
+        }
       }
       $started = gmdate('Y-m-d\TH:i:s\Z');
       $fingerprint = $evidence ? hash_init('sha256') : NULL;
-      $rows = $this->scan($dataset, $query, $account, $from, $until, $zone, $fingerprint);
+      $rows = $this->scan($dataset, $query, $account, $from, $until, $zone, $isAutomatic, $fingerprint);
       $result = $this->bounded(['query' => $query, 'rows' => $rows, 'completeness' => 'complete',
         'startedAt' => $started, 'finishedAt' => gmdate('Y-m-d\TH:i:s\Z')]);
       if ($evidence && $before !== $this->epochs->current($dataset, (string) $account->id())) {
@@ -171,8 +191,10 @@ final class CountService {
   }
 
   /** Definition-level field access is checked before exposing capabilities. */
-  private function available(?AnalyticsDataset $dataset, AccountInterface $account, string $language): void {
-    if (!$dataset || !$dataset->status() || !$account->hasPermission($dataset->queryPermission())) {
+  private function available(?AnalyticsDataset $dataset, AccountInterface $account, string $language, bool $isAutomatic): void {
+    if (!$dataset || !$dataset->status()
+      || (!$isAutomatic && (str_starts_with($dataset->id(), 'node__')
+        || !$account->hasPermission($dataset->queryPermission())))) {
       throw new AnalyticsException('dataset_unavailable');
     }
     $definitions = $this->validator->validate($dataset);
@@ -198,7 +220,7 @@ final class CountService {
 
   /** Scans bounded, access-filtered IDs before reading any time or filter value. */
   private function scan(AnalyticsDataset $dataset, array $query, AccountInterface $account,
-    \DateTimeImmutable $from, \DateTimeImmutable $until, \DateTimeZone $zone,
+    ?\DateTimeImmutable $from, ?\DateTimeImmutable $until, \DateTimeZone $zone, bool $isAutomatic,
     ?\HashContext $fingerprint = NULL): array {
     $type = $this->entityTypes->getDefinition($dataset->get('entity_type'));
     $storage = $this->entityTypes->getStorage($type->id());
@@ -256,11 +278,12 @@ final class CountService {
             continue 2;
           }
         }
-        if (!$entity->isPublished() || $entity->get($timeField)->isEmpty()) {
+        if ((!$isAutomatic && !$entity->isPublished())
+          || ($from !== NULL && $entity->get($timeField)->isEmpty())) {
           continue;
         }
         $timestamp = (int) $entity->get($timeField)->value;
-        if ($timestamp < $from->getTimestamp() || $timestamp >= $until->getTimestamp()) {
+        if ($from !== NULL && ($timestamp < $from->getTimestamp() || $timestamp >= $until->getTimestamp())) {
           continue;
         }
         foreach ($query['filters'] as $filter) {
@@ -283,7 +306,8 @@ final class CountService {
         foreach ($query['dimensions'] as $alias) {
           $dimension = $dimensions[$alias];
           $keys[] = $dimension['kind'] === 'month'
-            ? (new \DateTimeImmutable('@' . $timestamp))->setTimezone($zone)->format('Y-m')
+            ? ($entity->get($timeField)->isEmpty() ? NULL
+              : (new \DateTimeImmutable('@' . $timestamp))->setTimezone($zone)->format('Y-m'))
             : $this->category($entity->get($dimension['field']));
         }
         $key = json_encode($keys, JSON_THROW_ON_ERROR);

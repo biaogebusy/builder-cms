@@ -34,7 +34,7 @@ final class HttpInput {
   /** Validates wire container types before converting to the service's array representation. */
   public static function query(mixed $shape): array {
     if (!$shape instanceof \stdClass || !is_array($shape->dimensions ?? NULL)
-      || !is_array($shape->filters ?? NULL) || !($shape->range ?? NULL) instanceof \stdClass) {
+      || !is_array($shape->filters ?? NULL) || !($shape->scope ?? NULL) instanceof \stdClass) {
       throw new AnalyticsException('invalid_query');
     }
     return self::array($shape);
