@@ -1,0 +1,8 @@
+name: Xinshi Administration
+type: module
+description: Groups Xinshi configuration pages in the administration menu.
+package: Xinshi
+core_version_requirement: ^11
+configure: xinshi_manage.admin.config
+dependencies:
+  - drupal:system

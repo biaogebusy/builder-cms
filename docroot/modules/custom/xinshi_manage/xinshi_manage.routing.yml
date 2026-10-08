@@ -1,0 +1,10 @@
+xinshi_manage.admin.config:
+  path: '/admin/config/xinshi'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Xinshi'
+  requirements:
+    _permission: 'access administration pages'
+    _access_admin_menu_block_page: 'TRUE'
+  options:
+    _admin_route: TRUE

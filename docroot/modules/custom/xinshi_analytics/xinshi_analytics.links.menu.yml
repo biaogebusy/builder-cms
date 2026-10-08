@@ -1,0 +1,6 @@
+xinshi_analytics.settings:
+  title: '内容数量统计'
+  description: '配置内容类型数量统计的启用状态、语言、时区与查询限额。'
+  route_name: xinshi_analytics.settings
+  parent: system.admin_config_services
+  weight: 11

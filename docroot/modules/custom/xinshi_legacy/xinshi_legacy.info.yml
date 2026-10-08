@@ -1,7 +1,7 @@
 name: Xinshi legacy content compatibility
 type: module
 description: Preserves migrated editing widgets and existing account bindings.
-package: XINSHI
+package: Xinshi
 core_version_requirement: ^11
 dependencies:
   - drupal:user

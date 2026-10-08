@@ -1,3 +1,13 @@
+xinshi_analytics.settings:
+  path: '/admin/config/services/xinshi-analytics'
+  defaults:
+    _form: '\Drupal\xinshi_analytics\Form\NodeCountsSettingsForm'
+    _title: '内容数量统计'
+  requirements:
+    _permission: 'administer analytics datasets'
+  options:
+    _admin_route: TRUE
+
 xinshi_analytics.capabilities:
   path: '/api/v3/analytics/capabilities'
   defaults:

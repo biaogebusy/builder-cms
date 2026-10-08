@@ -2,7 +2,7 @@ name: 'XINSHI Editor'
 type: module
 description: 'Editor for xinshi.'
 core_version_requirement: ^9 || ^10 || ^11
-package: "XINSHI"
+package: "Xinshi"
 # Information added by Drupal.org packaging script on 2020-09-03
 version: '1.1'
 project: 'xinshi_editor'

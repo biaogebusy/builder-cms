@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Groups configuration links from optional Xinshi modules.
+ */
+
+/**
+ * Implements hook_menu_links_discovered_alter().
+ */
+function xinshi_manage_menu_links_discovered_alter(array &$links): void {
+  $weights = [
+    'xinshi_api.settings' => 0,
+    'xinshi_sms.settings' => 10,
+    'xinshi_linux_do.settings' => 20,
+    'xinshi_ai.settings' => 30,
+    'xinshi_ai_usage.settings' => 40,
+    'xinshi_knowledge.settings' => 50,
+    'xinshi_analytics.settings' => 60,
+  ];
+
+  foreach ($weights as $id => $weight) {
+    // Only group links from modules already present in menu discovery.
+    if (isset($links[$id])) {
+      $links[$id]['parent'] = 'xinshi_manage.admin.config';
+      $links[$id]['weight'] = $weight;
+    }
+  }
+}

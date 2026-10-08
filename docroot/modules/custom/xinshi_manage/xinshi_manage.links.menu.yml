@@ -1,0 +1,5 @@
+xinshi_manage.admin.config:
+  title: 'Xinshi'
+  description: 'Configure Xinshi services, sign-in, AI, and knowledge.'
+  route_name: xinshi_manage.admin.config
+  parent: system.admin_config

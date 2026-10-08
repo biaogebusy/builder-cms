@@ -244,6 +244,7 @@ try {
   $tampered['result']['rows'][0]['dimensions'] = new stdClass();
   status(http('POST', $verifyPath, $tokens['full'], body: json_encode($tampered)), 400, 'Evidence preserves wire array types');
   require __DIR__ . '/scoped.http.php';
+  require __DIR__ . '/settings.http.php';
   $process = proc_open([PHP_BINARY, '-d', 'extension=pdo_sqlite', __FILE__, 'withdraw'],
     [1 => ['file', '/dev/null', 'w'], 2 => ['file', $fixture . '/withdraw.log', 'w']], $pipes);
   check(proc_close($process) === 0, 'Withdraw dataset grant in a separate request');
