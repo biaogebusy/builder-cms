@@ -17,14 +17,14 @@ $siteRoot = dirname(Drupal::root());
 $snapshotPath = $siteRoot . '/xinshi-docs-snapshot.json';
 $snapshotJson = json_encode(snapshot('cli-test', ['help.md']), JSON_THROW_ON_ERROR);
 file_put_contents($snapshotPath, $snapshotJson);
-$runSync = static function (string $path, array $options = ['--source=cli-test', '--account=1'], ?string $cwd = NULL) use ($siteRoot): Process {
-  $process = new Process([$siteRoot . '/vendor/bin/drush', '--no-ansi',
-    'xinshi-knowledge:sync', $path, ...$options], $cwd ?? $siteRoot, timeout: 30);
+$runSync = static function (string $path, array $options = ['--source=cli-test', '--account=1'], ?string $cwd = NULL, bool $ansi = FALSE, array $env = []) use ($siteRoot): Process {
+  $process = new Process([$siteRoot . '/vendor/bin/drush', $ansi ? '--ansi' : '--no-ansi',
+    'xinshi-knowledge:sync', $path, ...$options], $cwd ?? $siteRoot, env: $env, timeout: 30);
   $process->run();
   return $process;
 };
-$expectStats = static function (Process $process, string $field, int $value): void {
-  check($process->isSuccessful() && preg_match('/\b' . $field . '\s+' . $value . '\b/', $process->getOutput()) === 1,
+$expectStats = static function (Process $process, string $field, int|string $value): void {
+  check($process->isSuccessful() && preg_match('/^' . $field . ': ' . $value . '$/m', $process->getOutput()) === 1,
     'Unexpected CLI result: ' . $process->getOutput() . $process->getErrorOutput());
 };
 $expectFailure = static function (Process $process, string $message): void {
@@ -45,6 +45,12 @@ $expectStats($runSync('../xinshi-docs-snapshot.json', cwd: Drupal::root()), 'cre
 $expectStats($runSync($snapshotPath), 'created', 1);
 file_put_contents($siteRoot . '/snapshot with spaces.json', $snapshotJson);
 $expectStats($runSync('./snapshot with spaces.json'), 'created', 1);
+// Container terminals may report no usable width even with ANSI output enabled.
+foreach (['0', '', 'invalid', '1', '80', FALSE] as $columns) {
+  $preview = $runSync('./xinshi-docs-snapshot.json', ansi: TRUE, env: ['COLUMNS' => $columns]);
+  $expectStats($preview, 'created', 1);
+  $expectStats($preview, 'applied', 'false');
+}
 check($ledgerCount() === 0, 'CLI preview wrote source records.');
 
 $expectFailure($runSync($snapshotPath, ['--account=1']), 'The --source option is required.');
@@ -79,7 +85,14 @@ $cliReader->save();
 $expectFailure($runSync($snapshotPath, ['--source=cli-test', '--account=' . $cliReader->id(), '--apply']), 'import_forbidden');
 check($ledgerCount() === 0, 'Rejected CLI import wrote source records.');
 
-$expectStats($runSync('./xinshi-docs-snapshot.json', ['--source=cli-test', '--account=1', '--apply']), 'created', 1);
+$applied = $runSync('./xinshi-docs-snapshot.json', ['--source=cli-test', '--account=1', '--apply'],
+  ansi: TRUE, env: ['COLUMNS' => '0']);
+$expectStats($applied, 'created', 1);
+$expectStats($applied, 'applied', 'true');
 check($ledgerCount() === 1, 'CLI apply did not persist the source record.');
 $expectStats($runSync($snapshotPath), 'unchanged', 1);
-$expectStats($runSync('./xinshi-docs-snapshot.json', ['--source=cli-test', '--account=1', '--apply']), 'unchanged', 1);
+$reapplied = $runSync('./xinshi-docs-snapshot.json', ['--source=cli-test', '--account=1', '--apply'],
+  ansi: TRUE, env: ['COLUMNS' => '']);
+$expectStats($reapplied, 'unchanged', 1);
+$expectStats($reapplied, 'applied', 'true');
+check($ledgerCount() === 1, 'Repeated CLI apply duplicated source records.');

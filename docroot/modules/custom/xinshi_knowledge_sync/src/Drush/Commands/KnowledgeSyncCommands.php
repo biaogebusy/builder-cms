@@ -69,7 +69,11 @@ final class KnowledgeSyncCommands extends DrushCommands {
       throw new \InvalidArgumentException('Snapshot file must contain a JSON object: ' . $snapshot);
     }
     $stats = $this->importer->import($manifest, $options['source'], $account, (bool) $options['apply'], (bool) $options['allow-empty']);
-    $this->io()->definitionList(...array_map(fn($key, $value) => [$key => $value], array_keys($stats), $stats));
+    // Plain lines also work when container terminals report a zero column width.
+    foreach ($stats as $key => $value) {
+      $text = is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
+      $this->output()->writeln($key . ': ' . $text);
+    }
     return self::EXIT_SUCCESS;
   }
 
