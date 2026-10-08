@@ -26,6 +26,9 @@ function openSource(?string $id, FormState $state): array {
 function submitSource(?string $id, array $values, ?FormState $state = NULL): FormState {
   $state ??= new FormState();
   $form = openSource($id, $state);
+  // Omitted rows model AJAX removal before a programmatic submit.
+  $state->set('rules_rows', array_values(array_intersect(
+    $state->get('rules_rows'), array_keys($values['rules'] ?? []))));
   $state->setValues(['settings' => $values, 'op' => '保存来源',
     'source_fingerprint' => $form['source_fingerprint']['#default_value']]);
   Drupal::formBuilder()->submitForm(SourceForm::class, $state, $id);
@@ -68,6 +71,23 @@ function sourceValues(array $source): array {
   $menu = Drupal::service('plugin.manager.menu.link')->getDefinition('xinshi_knowledge_sync.settings');
   check($menu['parent'] === 'system.admin_config_content', 'Standalone module menu fallback failed.');
   Drupal::currentUser()->setAccount($configAdmin);
+
+  $state = new FormState();
+  openSource(NULL, $state);
+  $defaults = $state->get('source_defaults');
+  $defaults['id'] = 'form-defaults';
+  $defaults['enabled'] = TRUE;
+  $state = submitSource(NULL, sourceValues($defaults), $state);
+  check(!$state->hasAnyErrors() && !$state->isRebuilding(), 'Prefilled source could not be saved.');
+  $access = Drupal::service('xinshi_knowledge_sync.access');
+  check($access->allowed('form-defaults', 'readers', $reader), 'Prefilled role does not admit a knowledge reader.');
+  check(!$access->allowed('form-defaults', 'readers', $parserAdmin) &&
+    !$access->allowed('form-defaults', 'readers', new AnonymousUserSession()), 'Prefilled role bypassed baseline knowledge permissions.');
+  $defaults['policies'][0]['roles'] = ['operations'];
+  check(!submitSource('form-defaults', sourceValues($defaults))->hasAnyErrors(), 'Could not narrow the prefilled reader role.');
+  check(!$access->allowed('form-defaults', 'readers', $reader), 'All-readers flag bypassed the narrowed role selection.');
+  Drupal::configFactory()->getEditable($configName)->set('sources', $originalSources)->save();
+
   $basic = ['id' => 'form-created', 'enabled' => TRUE, 'default_policy' => 'readers',
     'policies' => [['id' => 'readers', 'all_readers' => TRUE, 'roles' => [], 'users' => []]], 'rules' => []];
   $state = submitSource(NULL, sourceValues($basic));

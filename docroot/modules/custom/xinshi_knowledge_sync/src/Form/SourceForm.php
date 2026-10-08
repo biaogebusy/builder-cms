@@ -56,8 +56,13 @@ final class SourceForm extends ConfigFormBase {
       if ($source_id !== NULL && $original === NULL) {
         throw new NotFoundHttpException();
       }
-      $source = $original ?? ['id' => '', 'enabled' => FALSE, 'default_policy' => 'readers',
-        'policies' => [['id' => 'readers', 'all_readers' => TRUE, 'roles' => [], 'users' => []]], 'rules' => []];
+      $source = $original ?? ['id' => 'xinshi-docs', 'enabled' => FALSE, 'default_policy' => 'readers',
+        'policies' => [['id' => 'readers', 'all_readers' => FALSE,
+          'roles' => [RoleInterface::AUTHENTICATED_ID], 'users' => []]],
+        'rules' => [
+          ['prefix' => 'config/builder/', 'policy' => 'readers'],
+          ['prefix' => 'pro/ai/', 'policy' => 'readers'],
+        ]];
       $source += ['enabled' => FALSE, 'default_policy' => '', 'policies' => [], 'rules' => []];
       $source['policies'] = array_map(fn($policy) => $policy + ['all_readers' => FALSE, 'roles' => [], 'users' => []], $source['policies']);
       $form_state->set('original', ['id' => $source_id, 'value' => $original]);
@@ -95,7 +100,7 @@ final class SourceForm extends ConfigFormBase {
       '#type' => 'textfield', '#title' => $this->t('来源标识'), '#required' => TRUE,
       '#default_value' => $source['id'], '#maxlength' => 64,
       '#disabled' => $form_state->get('original')['id'] !== NULL,
-      '#description' => $this->t('使用小写字母、数字、下划线或连字符，以字母或数字开头，例如 customer-docs。'),
+      '#description' => $this->t('默认 xinshi-docs，客户文档可改为 customer-docs 等标识。使用小写字母、数字、下划线或连字符，以字母或数字开头，并与导出配置保持一致。'),
     ];
     $settings['enabled'] = ['#type' => 'checkbox', '#title' => $this->t('启用来源'),
       '#default_value' => $source['enabled'],
@@ -132,7 +137,7 @@ final class SourceForm extends ConfigFormBase {
       '#description' => $this->t('没有匹配目录规则的文档使用此策略。更改映射后，需要重新同步文档。'),
     ];
     $settings['rules'] = ['#type' => 'details', '#title' => $this->t('目录规则'), '#open' => TRUE,
-      '#description' => $this->t('相对文档根目录填写，以 / 结尾；多个规则匹配时使用最长的前缀。规则在下一次同步时生效。')];
+      '#description' => $this->t('相对导出配置的文档根目录填写，以 / 结尾。默认规则对应 xinshi-docs/stories/ 下的 config/builder/ 和 pro/ai/，无需再加 stories/。根目录文档使用默认策略；客户文档可修改或移除这些规则。多个规则匹配时使用最长前缀，规则在下一次同步时生效。')];
     foreach ($form_state->get('rules_rows') as $index) {
       $rule = $source['rules'][$index] ?? ['prefix' => '', 'policy' => ''];
       $settings['rules'][$index] = [
