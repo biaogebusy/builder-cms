@@ -10,6 +10,7 @@ use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Filesystem\Path;
 
 /** Imports local snapshots through an explicitly selected administrative account. */
 final class KnowledgeSyncCommands extends DrushCommands {
@@ -27,16 +28,31 @@ final class KnowledgeSyncCommands extends DrushCommands {
 
   /** Preview or apply one complete snapshot; run Search API indexing after applying. */
   #[CLI\Command(name: 'xinshi-knowledge:sync')]
-  #[CLI\Argument(name: 'snapshot', description: 'Local JSON snapshot path (not a URL).')]
+  #[CLI\Argument(name: 'snapshot', description: 'Local JSON snapshot path, relative to the directory where Drush was invoked.')]
   #[CLI\Option(name: 'source', description: 'Expected administrator configured source id.')]
   #[CLI\Option(name: 'account', description: 'Active administrative Drupal user ID for this import.')]
   #[CLI\Option(name: 'apply', description: 'Apply the preview, including unpublishing missing source documents.')]
   #[CLI\Option(name: 'allow-empty', description: 'Accept a verified empty snapshot and unpublish this source language.')]
   public function sync(string $snapshot, array $options = ['source' => NULL, 'account' => NULL, 'apply' => FALSE, 'allow-empty' => FALSE]): int {
-    if (!is_string($options['source']) || !is_string($options['account']) ||
-        !ctype_digit($options['account']) || str_contains($snapshot, '://') ||
-        !is_file($snapshot) || !is_readable($snapshot) || filesize($snapshot) > 20 * 1024 * 1024) {
-      throw new \InvalidArgumentException('A local snapshot, --source and --account are required.');
+    if (!is_string($options['source']) || $options['source'] === '') {
+      throw new \InvalidArgumentException('The --source option is required.');
+    }
+    if (!is_string($options['account']) || !ctype_digit($options['account'])) {
+      throw new \InvalidArgumentException('The --account option must be a numeric Drupal user ID.');
+    }
+    if (str_contains($snapshot, '://')) {
+      throw new \InvalidArgumentException('The snapshot must be a local JSON file, not a URL.');
+    }
+    // Drupal bootstrap changes cwd; preserve the meaning of the caller's relative path.
+    $snapshot = Path::makeAbsolute($snapshot, $this->getConfig()->cwd());
+    if (!is_file($snapshot)) {
+      throw new \InvalidArgumentException('Snapshot file not found or not a regular file: ' . $snapshot);
+    }
+    if (!is_readable($snapshot)) {
+      throw new \InvalidArgumentException('Snapshot file is not readable: ' . $snapshot);
+    }
+    if (filesize($snapshot) > 20 * 1024 * 1024) {
+      throw new \InvalidArgumentException('Snapshot file exceeds the 20 MiB limit: ' . $snapshot);
     }
     $account = $this->entities->getStorage('user')->load($options['account']);
     if (!$account) {
