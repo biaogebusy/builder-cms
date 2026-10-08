@@ -1,0 +1,4 @@
+administer xinshi knowledge sync:
+  title: '管理知识库同步来源与访问策略'
+  description: '配置文档来源并调整读者范围，仅授予受信任的管理员；不授予执行同步的权限。'
+  restrict access: true

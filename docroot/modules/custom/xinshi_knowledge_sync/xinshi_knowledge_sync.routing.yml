@@ -1,0 +1,28 @@
+xinshi_knowledge_sync.settings:
+  path: '/admin/config/content/xinshi-knowledge-sync'
+  defaults:
+    _controller: '\Drupal\xinshi_knowledge_sync\Controller\SourceController::overview'
+    _title: '知识库文档同步'
+  requirements:
+    _permission: 'administer xinshi knowledge sync'
+  options:
+    _admin_route: true
+xinshi_knowledge_sync.source_add:
+  path: '/admin/config/content/xinshi-knowledge-sync/add'
+  defaults:
+    _form: '\Drupal\xinshi_knowledge_sync\Form\SourceForm'
+    _title: '添加文档来源'
+  requirements:
+    _permission: 'administer xinshi knowledge sync'
+  options:
+    _admin_route: true
+xinshi_knowledge_sync.source_edit:
+  path: '/admin/config/content/xinshi-knowledge-sync/{source_id}/edit'
+  defaults:
+    _form: '\Drupal\xinshi_knowledge_sync\Form\SourceForm'
+    _title: '编辑文档来源'
+  requirements:
+    _permission: 'administer xinshi knowledge sync'
+    source_id: '[a-z0-9][a-z0-9_-]{0,63}'
+  options:
+    _admin_route: true

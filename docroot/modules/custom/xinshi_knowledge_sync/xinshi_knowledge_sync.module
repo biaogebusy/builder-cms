@@ -50,3 +50,10 @@ function xinshi_knowledge_sync_query_node_access_alter(AlterableInterface $query
     }
   }
 }
+
+/** Implements hook_menu_links_discovered_alter(). */
+function xinshi_knowledge_sync_menu_links_discovered_alter(array &$links): void {
+  if (isset($links['xinshi_knowledge_sync.settings']) && !isset($links['xinshi_manage.admin.config'])) {
+    $links['xinshi_knowledge_sync.settings']['parent'] = 'system.admin_config_content';
+  }
+}
