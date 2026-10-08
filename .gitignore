@@ -28,5 +28,8 @@
 /.vscode
 /logs
 
+# Ignore the local documentation snapshot used by manual imports.
+/xinshi-docs-snapshot.json
+
 # node modules
 **/node_modules/

@@ -59,6 +59,20 @@ $oversized = fopen($oversizedPath, 'w');
 ftruncate($oversized, 20 * 1024 * 1024 + 1);
 fclose($oversized);
 $expectFailure($runSync('./oversized.json'), 'Snapshot file exceeds the 20 MiB limit: ' . $oversizedPath);
+$invalidJsonPath = $siteRoot . '/invalid.json';
+file_put_contents($invalidJsonPath, '{"documents":[{"text":"SYNTHETIC_PRIVATE_JSON_MARKER"');
+$invalidJson = $runSync('./invalid.json', ['--source=cli-test', '--account=1', '--apply']);
+$expectFailure($invalidJson, 'Snapshot file is not valid JSON: ' . $invalidJsonPath);
+check(!str_contains($invalidJson->getOutput() . $invalidJson->getErrorOutput(), 'SYNTHETIC_PRIVATE_JSON_MARKER'),
+  'Invalid JSON error exposed snapshot contents.');
+foreach (['', "Exported 1 documents.\n" . $snapshotJson, "\xEF\xBB\xBF" . $snapshotJson] as $invalidContents) {
+  file_put_contents($invalidJsonPath, $invalidContents);
+  $expectFailure($runSync('./invalid.json', ['--source=cli-test', '--account=1', '--apply']),
+    'Snapshot file is not valid JSON: ' . $invalidJsonPath);
+}
+file_put_contents($invalidJsonPath, 'null');
+$expectFailure($runSync('./invalid.json', ['--source=cli-test', '--account=1', '--apply']),
+  'Snapshot file must contain a JSON object: ' . $invalidJsonPath);
 $expectFailure($runSync($snapshotPath, ['--source=cli-test', '--account=999999999']), 'Unknown import account.');
 $cliReader = User::create(['name' => 'cli-reader', 'status' => 1]);
 $cliReader->save();

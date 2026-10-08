@@ -58,7 +58,16 @@ final class KnowledgeSyncCommands extends DrushCommands {
     if (!$account) {
       throw new \InvalidArgumentException('Unknown import account.');
     }
-    $manifest = json_decode(file_get_contents($snapshot), TRUE, 32, JSON_THROW_ON_ERROR);
+    try {
+      $manifest = json_decode(file_get_contents($snapshot), TRUE, 32, JSON_THROW_ON_ERROR);
+    }
+    catch (\JsonException $error) {
+      throw new \InvalidArgumentException('Snapshot file is not valid JSON: ' . $snapshot .
+        ' (' . $error->getMessage() . '). Re-export and copy the generated JSON file.', 0, $error);
+    }
+    if (!is_array($manifest)) {
+      throw new \InvalidArgumentException('Snapshot file must contain a JSON object: ' . $snapshot);
+    }
     $stats = $this->importer->import($manifest, $options['source'], $account, (bool) $options['apply'], (bool) $options['allow-empty']);
     $this->io()->definitionList(...array_map(fn($key, $value) => [$key => $value], array_keys($stats), $stats));
     return self::EXIT_SUCCESS;
