@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_knowledge_sync\Service;
 
 use Drupal\Component\Utility\Html;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -30,6 +31,7 @@ final class SnapshotImporter {
     private readonly SourceAccess $access,
     private readonly AccountSwitcherInterface $accounts,
     private readonly LanguageManagerInterface $languages,
+    private readonly ?ModerationInformationInterface $moderation,
   ) {}
 
   /** Preview by default; applying requires an active administrative account. */
@@ -177,7 +179,8 @@ final class SnapshotImporter {
           !$node->get('field_knowledge_documents')->isEmpty()))) {
       throw new \DomainException('source_revision_conflict');
     }
-    if ($node->hasField('moderation_state')) {
+    // A moderation_state field can exist even when this bundle has no workflow.
+    if ($this->moderation?->isModeratedEntity($node)) {
       throw new \DomainException('moderated_source_not_supported');
     }
     $allowed = $row ? $node->access('update', $account) :

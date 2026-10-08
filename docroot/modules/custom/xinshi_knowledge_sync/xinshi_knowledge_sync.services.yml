@@ -4,7 +4,7 @@ services:
     arguments: ['@config.factory', '@database', '@entity_type.manager']
   xinshi_knowledge_sync.importer:
     class: Drupal\xinshi_knowledge_sync\Service\SnapshotImporter
-    arguments: ['@entity_type.manager', '@database', '@lock', '@xinshi_knowledge_sync.access', '@account_switcher', '@language_manager']
+    arguments: ['@entity_type.manager', '@database', '@lock', '@xinshi_knowledge_sync.access', '@account_switcher', '@language_manager', '@?content_moderation.moderation_information']
   xinshi_knowledge_sync.uninstall_validator:
     class: Drupal\xinshi_knowledge_sync\Service\UninstallValidator
     arguments: ['@database']
