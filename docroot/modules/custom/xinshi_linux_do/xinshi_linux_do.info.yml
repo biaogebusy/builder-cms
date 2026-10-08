@@ -3,7 +3,7 @@ type: module
 description: 'linux.do OAuth2 federated identity provider for simple_oauth.'
 core_version_requirement: ^10.2 || ^11
 version: '1.0'
-package: 'XINSHI CMS'
+package: 'Xinshi'
 dependencies:
   # field: hook_install creates the linux_do binding fields on the user entity.
   - drupal:field

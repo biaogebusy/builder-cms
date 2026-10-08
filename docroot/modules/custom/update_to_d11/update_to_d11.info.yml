@@ -3,7 +3,7 @@ type: module
 description: 'Drupal 11 升级处理：panelizer 到 Layout Builder 的数据迁移与清理等。'
 core_version_requirement: ^10 || ^11
 version: '2.1'
-package: "XINSHI CMS"
+package: "Xinshi"
 dependencies:
   - drupal:block_content
   - drupal:editor
