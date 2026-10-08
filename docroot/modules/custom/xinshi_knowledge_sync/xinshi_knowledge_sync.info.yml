@@ -3,6 +3,7 @@ type: module
 description: Imports directory snapshots with source ownership and document access policies.
 core_version_requirement: ^11
 package: Xinshi
+configure: xinshi_knowledge_sync.settings
 dependencies:
   - drupal:node
   - drupal:user

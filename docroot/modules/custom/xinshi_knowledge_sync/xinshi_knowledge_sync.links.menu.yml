@@ -1,0 +1,5 @@
+xinshi_knowledge_sync.settings:
+  title: '知识库文档同步'
+  description: '管理同步来源、阅读策略和目录规则。'
+  route_name: xinshi_knowledge_sync.settings
+  parent: xinshi_manage.admin.config

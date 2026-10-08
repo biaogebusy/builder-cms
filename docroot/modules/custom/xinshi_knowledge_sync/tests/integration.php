@@ -197,3 +197,6 @@ if (is_file('/tmp/xinshi-docs-snapshot.json')) {
   check(count($documents->search('信使', 'zh-hans', ['xinshi_knowledge'], 0, $reader)['matches']) > 0, 'Actual Chinese docs cannot be searched.');
 }
 fwrite(STDOUT, "Knowledge sync integration: $count checks passed.\n");
+$count = 0;
+require __DIR__ . '/form.integration.php';
+fwrite(STDOUT, "Knowledge sync forms: $count checks passed.\n");
