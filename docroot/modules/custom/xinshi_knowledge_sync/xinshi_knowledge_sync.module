@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Enforces live source policies at entity and node-query boundaries.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+
+/** Implements hook_entity_access(). */
+function xinshi_knowledge_sync_entity_access(EntityInterface $entity, string $operation, AccountInterface $account): AccessResult {
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'xinshi_knowledge' ||
+      $entity->isNew()) {
+    return AccessResult::neutral();
+  }
+  $access = \Drupal::service('xinshi_knowledge_sync.access');
+  $row = $access->document((int) $entity->id());
+  if (!$row) {
+    return AccessResult::neutral();
+  }
+  if (in_array($operation, ['update', 'delete', 'revert', 'delete revision'], TRUE)) {
+    return \Drupal::service('xinshi_knowledge_sync.importer')->isImporting()
+      ? AccessResult::neutral()->setCacheMaxAge(0) : AccessResult::forbidden()->setCacheMaxAge(0);
+  }
+  if (!str_starts_with($operation, 'view')) {
+    return AccessResult::neutral();
+  }
+  $result = $access->allowed($row['source'], $row['policy'], $account)
+    ? AccessResult::neutral() : AccessResult::forbidden();
+  return $result->setCacheMaxAge(0)->addCacheableDependency($entity)
+    ->addCacheTags(['config:xinshi_knowledge_sync.settings']);
+}
+
+/** Implements hook_query_node_access_alter(). */
+function xinshi_knowledge_sync_query_node_access_alter(AlterableInterface $query): void {
+  if (($query->getMetaData('op') ?? 'view') !== 'view') {
+    return;
+  }
+  $account = $query->getMetaData('account') ?? \Drupal::currentUser();
+  foreach ($query->getTables() as $alias => $table) {
+    if (in_array($table['table'], ['node', 'node_field_data', 'node_revision', 'node_field_revision'], TRUE)) {
+      \Drupal::service('xinshi_knowledge_sync.access')->filter($query, $alias, $account);
+      break;
+    }
+  }
+}

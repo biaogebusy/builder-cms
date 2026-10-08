@@ -1,0 +1,9 @@
+<?php
+
+/** Implements hook_entity_presave(). */
+function xinshi_knowledge_sync_test_entity_presave(\Drupal\Core\Entity\EntityInterface $entity): void {
+  if ($entity instanceof \Drupal\node\NodeInterface &&
+      $entity->label() === \Drupal::state()->get('knowledge_sync_test.fail_title')) {
+    throw new \RuntimeException('synthetic_save_failure');
+  }
+}

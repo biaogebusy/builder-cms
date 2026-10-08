@@ -1,0 +1,16 @@
+services:
+  xinshi_knowledge_sync.access:
+    class: Drupal\xinshi_knowledge_sync\Service\SourceAccess
+    arguments: ['@config.factory', '@database', '@entity_type.manager']
+  xinshi_knowledge_sync.importer:
+    class: Drupal\xinshi_knowledge_sync\Service\SnapshotImporter
+    arguments: ['@entity_type.manager', '@database', '@lock', '@xinshi_knowledge_sync.access', '@account_switcher', '@language_manager']
+  xinshi_knowledge_sync.uninstall_validator:
+    class: Drupal\xinshi_knowledge_sync\Service\UninstallValidator
+    arguments: ['@database']
+    tags:
+      - { name: module_install.uninstall_validator }
+  xinshi_knowledge_sync.grants_cache_context:
+    class: Drupal\xinshi_knowledge_sync\Cache\SourceGrantsCacheContext
+    decorates: cache_context.user.node_grants
+    arguments: ['@xinshi_knowledge_sync.grants_cache_context.inner', '@config.factory', '@current_user']

@@ -1,0 +1,6 @@
+name: Knowledge sync test failures
+type: module
+core_version_requirement: ^11
+package: Testing
+dependencies:
+  - xinshi_knowledge_sync:xinshi_knowledge_sync

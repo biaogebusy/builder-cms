@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+/** Implements hook_schema(). */
+function xinshi_knowledge_sync_schema(): array {
+  return ['xinshi_knowledge_sync_document' => [
+    'description' => 'Source ownership and last imported revision; not a content copy.',
+    'fields' => [
+      'document_key' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'source' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'language' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE],
+      'path' => ['type' => 'varchar', 'length' => 512, 'not null' => TRUE],
+      'policy' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'nid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'revision_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'content_hash' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'node_hash' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'source_revision' => ['type' => 'varchar', 'length' => 200, 'not null' => TRUE],
+    ],
+    'primary key' => ['document_key'],
+    'unique keys' => ['node' => ['nid']],
+    'indexes' => ['source_language' => ['source', 'language']],
+  ]];
+}

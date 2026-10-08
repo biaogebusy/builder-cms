@@ -1,0 +1,10 @@
+name: Xinshi Knowledge Sync
+type: module
+description: Imports directory snapshots with source ownership and document access policies.
+core_version_requirement: ^11
+package: Xinshi
+dependencies:
+  - drupal:node
+  - drupal:user
+  - drupal:filter
+  - xinshi_knowledge:xinshi_knowledge
