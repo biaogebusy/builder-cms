@@ -1,6 +1,6 @@
 administer analytics datasets:
   title: 'Administer analytics datasets'
-  description: 'Configure the entity and field mappings available for counting.'
+  description: 'Configure analytics sources, automatic content type counts and query limits.'
   restrict access: true
 query analytics datasets:
   title: 'Query analytics datasets'
