@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @file
+ * Optional storage guards for protected task locators, never report authorization.
+ */
+
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+
+/** Implements hook_node_presave(). */
+function xinshi_ai_reference_node_presave(NodeInterface $node): void {
+  if (in_array($node->bundle(), ['ai_session', 'conversation'], TRUE)) {
+    \Drupal::service('xinshi_ai_reference.guard')->validate($node);
+  }
+}
+
+/** Implements hook_node_access(). */
+function xinshi_ai_reference_node_access(NodeInterface $node, $operation, AccountInterface $account) {
+  return \Drupal::service('xinshi_ai_reference.guard')->access($node, $account);
+}
+
+/** Implements hook_entity_type_alter(). */
+function xinshi_ai_reference_entity_type_alter(array &$entity_types): void {
+  $entity_types['node']->addConstraint('XinshiTaskReference');
+}
+
+/** Implements hook_entity_field_access(). */
+function xinshi_ai_reference_entity_field_access($operation,
+  \Drupal\Core\Field\FieldDefinitionInterface $definition, AccountInterface $account,
+  ?\Drupal\Core\Field\FieldItemListInterface $items = NULL) {
+  if ($operation === 'view' && $items) {
+    return \Drupal::service('xinshi_ai_reference.guard')->relationshipAccess($items, $account);
+  }
+  return \Drupal\Core\Access\AccessResult::neutral();
+}

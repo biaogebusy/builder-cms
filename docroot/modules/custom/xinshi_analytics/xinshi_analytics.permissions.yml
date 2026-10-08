@@ -1,0 +1,10 @@
+administer analytics datasets:
+  title: 'Administer analytics datasets'
+  description: 'Configure the entity and field mappings available for counting.'
+  restrict access: true
+query analytics datasets:
+  title: 'Query analytics datasets'
+  description: 'Requires an additional permission for each dataset and access to its entities and fields.'
+permission_callbacks:
+  - Drupal\xinshi_analytics\DatasetPermissions::permissions
+

@@ -1,0 +1,63 @@
+xinshi_analytics.capabilities:
+  path: '/api/v3/analytics/capabilities'
+  defaults:
+    _controller: '\Drupal\xinshi_analytics\Controller\AnalyticsController::capabilities'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_analytics.datasets:
+  path: '/api/v3/analytics/datasets'
+  defaults:
+    _controller: '\Drupal\xinshi_analytics\Controller\AnalyticsController::datasets'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'query analytics datasets'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_analytics.count:
+  path: '/api/v3/analytics/count'
+  defaults:
+    _controller: '\Drupal\xinshi_analytics\Controller\AnalyticsController::count'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'query analytics datasets'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_analytics.evidence:
+  path: '/api/v3/analytics/evidence'
+  defaults:
+    _controller: '\Drupal\xinshi_analytics\Controller\EvidenceController::capture'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'query analytics datasets'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_analytics.evidence_verify:
+  path: '/api/v3/analytics/evidence/verify'
+  defaults:
+    _controller: '\Drupal\xinshi_analytics\Controller\EvidenceController::verify'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'query analytics datasets'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE

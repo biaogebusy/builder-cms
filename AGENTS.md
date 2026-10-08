@@ -153,6 +153,68 @@ tool kernel. Changes affecting submitted writes must preserve reconciliation and
 document incompatible behavior. Run relevant sibling checks only when that code or
 contract is affected, using that repository's current instructions and commands.
 
+## Analytics source boundary
+
+- `xinshi_analytics` is an optional, count-only source module. Keep entity and field
+  mappings, exact translation/publication rules and access checks there; do not
+  add business branches to the Node Harness kernel.
+- Configured datasets are explicit versioned configuration entities. Querying needs the
+  general query permission plus the dataset-specific grant and actual entity/field
+  access. Configuration administration is a separate permission. No default
+  datasets, grants or automatic site updates are installed. Fixed authenticated
+  capabilities/datasets/count endpoints are read-only and always private/no-store,
+  including authentication and access failures. Keep OAuth scope in the effective
+  principal throughout dataset, query, entity and field checks; never replace it
+  with the full user. POST count does not mutate data or require write CSRF.
+- Automatic node counts are a separate opt-in source. `NodeCountDatasets` builds
+  ephemeral mappings from actual node types using one explicit `node_counts` policy;
+  discovery never saves generated datasets. Require general query permission and
+  current content/translation/field access, retaining OAuth scope; no per-type grant.
+  Include viewable unpublished content while preserving configured-source publication rules.
+  Require explicit all/range scope; all removes only the time predicate/month limit.
+  One fixed endpoint family and explicit-scope contract serve both sources; keep
+  only evidence envelope/signature version 2. Reject obsolete inputs and envelopes.
+  Reserve node__ IDs for automatic mappings and fail closed on existing collisions.
+  Bind exact scope and mapping identity to durable invalidation markers. No default settings or automatic
+  existing-site enablement. Test both source policies, both scopes and legal Drupal machine names.
+- Preserve access-checked ID pagination, complete results and configured scan/group
+  limits. Do not push private field predicates into SQL before proving equivalent
+  access semantics. `max_seconds` is cooperative, not a database statement timeout.
+- Historical evidence uses the user-confirmed conservative invalidation rule.
+  Keep original counts immutable. Revalidate current access, participating records
+  and field values, plus durable bundle/account/configuration markers; equal totals
+  alone cannot authorize old evidence. Seal receipts with the purpose-separated
+  site secret and never expose internal fingerprints or record IDs.
+- Configuration saves and source/entity access changes invalidate evidence even
+  when values or grants are restored. Project rules outside the covered hooks must
+  call the evidence epoch invalidation service. Do not use expiring cache tags as
+  durable history, or claim polling can detect an unannounced change later reversed.
+  Receipt capture/verification is read-only; mutation hooks update markers, not reports.
+- Run the module's isolated integration entry for configuration/count/evidence changes.
+  It copies sources into a disposable network-none container and uses synthetic
+  SQLite data. Never run its installation script in an existing site. Protocol,
+  Cookie/OAuth permissions, validation and workflow integration are maintained in
+  [Cross-business Plan](../xinshi-docs/stories/pro/ai/architecture/cross-business-plan.mdx).
+
+## Protected conversation references
+
+- `xinshi_ai_reference` is an optional session-storage guard, independent of the
+  analytics source and heavy AI module dependencies. Keep report bodies, receipts,
+  reasoning, summaries and generated report titles out of ordinary ai_session fields.
+- The fixed versioned runId/chatId locator is untrusted. Node validates task ownership,
+  original conversation and current source evidence before first-party save/recovery;
+  Drupal validates shape, author and conversation binding, not Node task existence.
+  Never describe the locator as a capability or an independent historical-report grant.
+- Use entity validation plus presave for copy-free fields and immutable binding,
+  covering ConversationWriter and direct JSON:API writes. Node access alone does not
+  protect JSON:API relationship linkage: retain the sessions field access check too.
+  Keep unrelated node/field access neutral and preserve existing entity permissions.
+- Run `ANALYTICS_REFERENCE_TESTS=1` with the analytics isolated runner for changes.
+  The optional fixture also uses actual JSON:API and field-based Views; no production
+  dependency between the two modules is implied. Real site aliases, fields, Views and
+  other writers still need deployment verification. No automatic migration can identify
+  sensitive report numbers hidden in previously saved ordinary text.
+
 ## Working method and verification
 
 - State material assumptions and acceptance criteria. Proceed with routine choices

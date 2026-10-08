@@ -9,7 +9,7 @@ $root = dirname(__DIR__, 5);
 $loader = require $root . '/vendor/autoload.php';
 $loader->addPsr4('Drupal\\Core\\', $root . '/docroot/core/lib/Drupal/Core');
 $loader->addPsr4('Drupal\\Component\\', $root . '/docroot/core/lib/Drupal/Component');
-foreach (['block_content', 'content_translation', 'workflows', 'content_moderation', 'filter', 'layout_builder', 'node', 'sqlite', 'user'] as $module) {
+foreach (['block_content', 'content_translation', 'workflows', 'content_moderation', 'filter', 'layout_builder', 'node', 'sqlite', 'user', 'views'] as $module) {
   $loader->addPsr4('Drupal\\' . $module . '\\', $root . '/docroot/core/modules/' . $module . '/src');
 }
 foreach (['simple_oauth', 'consumers'] as $module) {

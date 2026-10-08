@@ -1,0 +1,8 @@
+name: Xinshi AI task references
+type: module
+description: Keeps protected task results out of ordinary conversation storage.
+package: Xinshi
+core_version_requirement: ^11.2
+dependencies:
+  - drupal:node
+  - drupal:jsonapi

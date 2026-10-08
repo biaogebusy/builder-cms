@@ -1,0 +1,8 @@
+services:
+  xinshi_ai_reference.guard:
+    class: Drupal\xinshi_ai_reference\TaskReferenceGuard
+    arguments: ['@entity_type.manager', '@jsonapi.resource_type.repository', '@current_user']
+  xinshi_ai_reference.responses:
+    class: Drupal\xinshi_ai_reference\ReferenceResponseSubscriber
+    tags:
+      - { name: event_subscriber }
