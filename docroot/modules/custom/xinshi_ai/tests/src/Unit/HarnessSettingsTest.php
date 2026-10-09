@@ -178,6 +178,8 @@ final class HarnessSettingsTest extends TestCase {
         $element['#default_value']);
     }
     $this->assertCount(18, HarnessSettings::toolNames());
+    $this->assertContains('analyze_entity_counts', HarnessSettings::toolNames());
+    $this->assertNotContains('get_nodes_statistics', HarnessSettings::toolNames());
   }
 
   public function testDisabledToolsSurviveSaveReloadAndReenable(): void {

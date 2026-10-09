@@ -24,7 +24,7 @@ final class HarnessSettings {
       'get_content' => '站点内容', 'get_node_type' => '内容类型',
       'get_conversations' => '对话记录', 'get_sessions' => '会话记录',
       'get_components' => '组件目录与模板', 'get_landing_page' => '页面列表',
-      'get_nodes_statistics' => '内容统计', 'get_users_statistics' => '用户统计',
+      'get_users_statistics' => '用户统计',
     ]],
     'design' => ['label' => '设计辅助', 'tools' => [
       'get_assets' => '设计素材', 'get_design_system' => '设计系统建议',
@@ -35,6 +35,9 @@ final class HarnessSettings {
     ]],
     'product_documents' => ['label' => '产品资料（MCP）', 'tools' => [
       'search_product_documents' => '搜索产品资料', 'get_product_document' => '读取产品资料正文',
+    ]],
+    'analytics_chat' => ['label' => '数量统计（可选）', 'tools' => [
+      'analyze_entity_counts' => '对话数量统计',
     ]],
   ];
 
