@@ -36,8 +36,9 @@ final class HarnessSettings {
     'product_documents' => ['label' => '产品资料（MCP）', 'tools' => [
       'search_product_documents' => '搜索产品资料', 'get_product_document' => '读取产品资料正文',
     ]],
-    'analytics_chat' => ['label' => '数量统计（可选）', 'tools' => [
-      'analyze_entity_counts' => '对话数量统计',
+    'analytics' => ['label' => '数量统计（可选）', 'tools' => [
+      'list_analytics_datasets' => '可用统计数据集',
+      'count_analytics_entities' => '查询内容数量',
     ]],
   ];
 
