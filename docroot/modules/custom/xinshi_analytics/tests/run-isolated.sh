@@ -43,6 +43,10 @@ if [ "${ANALYTICS_REFERENCE_TESTS:-0}" = 1 ]; then
   docker exec "$container" mkdir -p /app/docroot/modules/custom/xinshi_ai/src/Service
   docker cp docroot/modules/custom/xinshi_ai/src/Service/ConversationWriter.php \
     "$container":/app/docroot/modules/custom/xinshi_ai/src/Service/
+  tar -cf - docroot/modules/custom/xinshi_ai/src/Service/SessionContentWriter.php \
+    docroot/modules/custom/xinshi_ai/src/Controller/SessionContentController.php \
+    docroot/modules/custom/xinshi_ai/xinshi_ai.routing.yml \
+    docroot/modules/custom/xinshi_ai/xinshi_ai.services.yml | docker cp - "$container":/app
   docker exec "$container" sh -c \
     'find /app/docroot/modules/custom/xinshi_ai_reference \( -name "*.php" -o -name "*.module" \) -exec php -l {} \;'
   docker exec -e XINSHI_ANALYTICS_ISOLATED_TEST=1 "$container" php -d extension=pdo_sqlite \
