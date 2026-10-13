@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Durable shot associations and the queue outbox for the optional shooting app.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function xinshi_shooting_plan_schema(): array {
+  return ['xinshi_shooting_sketch' => [
+    'description' => 'One immutable image attempt for an authorized storyboard composition.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'not null' => TRUE],
+      'request_key' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'chat_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'session_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'shot_id' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'job_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'task_id' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'prompt' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
+      'model' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'queue_pending' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 1],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => ['request_key' => ['request_key'], 'job_uuid' => ['job_uuid']],
+    'indexes' => ['session_shot' => ['uid', 'session_uuid', 'shot_id', 'id'],
+      'outbox' => ['queue_pending', 'id']],
+  ]];
+}

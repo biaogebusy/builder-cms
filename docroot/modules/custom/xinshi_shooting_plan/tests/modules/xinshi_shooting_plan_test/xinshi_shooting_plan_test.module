@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Mutable field policy for the disposable test site.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_entity_field_access().
+ */
+function xinshi_shooting_plan_test_entity_field_access(string $operation, FieldDefinitionInterface $field,
+  AccountInterface $account, ?FieldItemListInterface $items = NULL): AccessResult {
+  return AccessResult::forbiddenIf(\Drupal::state()->get('shooting.denied') === $field->getName() . ':' . $operation)
+    ->setCacheMaxAge(0);
+}
