@@ -1,4 +1,8 @@
 services:
+  xinshi_ai.session_content_writer:
+    class: Drupal\xinshi_ai\Service\SessionContentWriter
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']
+
   xinshi_ai.conversation_writer:
     class: Drupal\xinshi_ai\Service\ConversationWriter
     arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']

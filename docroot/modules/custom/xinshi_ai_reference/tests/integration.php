@@ -27,7 +27,23 @@ if (getenv('XINSHI_ANALYTICS_ISOLATED_TEST') !== '1' || !is_file('/.dockerenv')
 $loader = require $root . '/vendor/autoload.php';
 $loader->addPsr4('Drupal\\Core\\', $root . '/docroot/core/lib/Drupal/Core');
 $loader->addPsr4('Drupal\\Component\\', $root . '/docroot/core/lib/Drupal/Component');
+$loader->addPsr4('Drupal\\xinshi_ai\\', $root . '/docroot/modules/custom/xinshi_ai/src');
 require_once $root . '/docroot/core/includes/bootstrap.inc';
+if (PHP_SAPI !== 'cli-server') {
+  // Register the actual content route and service without the heavy optional AI module dependencies.
+  $session_module = $root . '/docroot/modules/custom/xinshi_session_content_test';
+  mkdir($session_module);
+  file_put_contents($session_module . '/xinshi_session_content_test.info.yml',
+    "name: Session content tests\ntype: module\npackage: Testing\ncore_version_requirement: ^11\n");
+  $routes = \Symfony\Component\Yaml\Yaml::parseFile($root . '/docroot/modules/custom/xinshi_ai/xinshi_ai.routing.yml');
+  $services = \Symfony\Component\Yaml\Yaml::parseFile($root . '/docroot/modules/custom/xinshi_ai/xinshi_ai.services.yml');
+  file_put_contents($session_module . '/xinshi_session_content_test.routing.yml',
+    \Symfony\Component\Yaml\Yaml::dump(['xinshi_ai.session.content' => $routes['xinshi_ai.session.content']], 8));
+  file_put_contents($session_module . '/xinshi_session_content_test.services.yml',
+    \Symfony\Component\Yaml\Yaml::dump(['services' => [
+      'xinshi_ai.session_content_writer' => $services['services']['xinshi_ai.session_content_writer'],
+    ]], 8));
+}
 chdir($root . '/docroot');
 if (PHP_SAPI === 'cli-server') {
   $_SERVER['SCRIPT_NAME'] = $_SERVER['PHP_SELF'] = '/index.php';
@@ -75,7 +91,8 @@ function field(string $bundle, string $name, string $type, array $settings = [],
 }
 // Remove fixture grants so the reference module cannot accidentally inherit owner filtering.
 \Drupal::service('module_installer')->uninstall(['xinshi_analytics_test']);
-\Drupal::service('module_installer')->install(['xinshi_ai_reference', 'basic_auth', 'views', 'rest']);
+\Drupal::service('module_installer')->install(['xinshi_ai_reference', 'basic_auth', 'views', 'rest',
+  'xinshi_session_content_test']);
 foreach (['ai_session', 'conversation'] as $bundle) {
   NodeType::create(['type' => $bundle, 'name' => $bundle])->save();
 }
@@ -218,7 +235,7 @@ function http(string $path, ?string $bearer = NULL, string $method = 'GET', ?arr
     throw new RuntimeException('HTTP server failure: ' . substr((string) file_get_contents(
       '/tmp/analytics-test/reference-http.log'), -5000));
   }
-  if ($jsonapi) {
+  if ($jsonapi || str_starts_with($path, '/api/v3/ai/conversations/') && in_array($status, [200, 409], TRUE)) {
     check(str_contains($cache, 'no-store') && str_contains($cache, 'private'), 'JSON:API no-store ' . $status);
   }
   check(!str_contains((string) $content, 'private-count'), 'Response contains no report body');
@@ -291,6 +308,39 @@ try {
     'Cookie writes retain core CSRF protection');
   check(http($base . '/' . $runId, NULL, 'PATCH', $patch, $jar, $login['data']['csrf_token'])['status'] === 200,
     'Cookie owner can save an unchanged locator with valid CSRF');
+
+  $ordinary_id = $ordinary['data']['data']['id'];
+  $content_path = '/api/v3/ai/conversations/' . $conversation->uuid() . '/sessions/' . $ordinary_id . '/content';
+  $content_update = ['expectedHash' => hash('sha256', 'Explain xinshi-protected-run'), 'content' => 'Updated UI source'];
+  check(http($content_path, $bearers['owner'], 'PATCH', $content_update)['status'] === 403,
+    'Content updates require membership in the selected conversation');
+  $writer->update($conversation->uuid(), [$ordinary_id], []);
+  check(http($content_path, $bearers['other'], 'PATCH', $content_update)['status'] === 403,
+    'Another OAuth user cannot replace owned message content');
+  check(http($content_path, NULL, 'PATCH', $content_update)['status'] === 403,
+    'Anonymous users cannot replace message content');
+  check(http($content_path, NULL, 'PATCH', $content_update, $jar, $login['data']['csrf_token'])['status'] === 403,
+    'The content route rejects Cookie writes even with a valid CSRF token');
+  check(http($content_path, $bearers['other'], 'PATCH', $content_update, $jar, $login['data']['csrf_token'])['status'] === 403,
+    'An owner Cookie does not elevate another user OAuth identity');
+  $changed = http($content_path, $bearers['owner'], 'PATCH', $content_update);
+  check($changed['status'] === 200 && $changed['data'] === ['updated' => TRUE, 'content' => 'Updated UI source'],
+    'An owned message with the expected content version updates successfully');
+  $conflict = http($content_path, $bearers['owner'], 'PATCH', $content_update);
+  check($conflict['status'] === 409 && $conflict['data'] === ['updated' => FALSE, 'content' => 'Updated UI source'],
+    'A stale writer gets the authorized current content and cannot overwrite it');
+  check(http($content_path, $bearers['owner'], 'PATCH', $content_update + ['title' => 'Ignored'])['status'] === 400,
+    'Content updates reject unrelated fields');
+  $protected_path = '/api/v3/ai/conversations/' . $conversation->uuid() . '/sessions/' . $runId . '/content';
+  check(http($protected_path, $bearers['owner'], 'PATCH', [
+    'expectedHash' => hash('sha256', json_encode($ref)), 'content' => 'ordinary',
+  ])['status'] === 422, 'Atomic content updates cannot remove protected-reference constraints');
+  check(http($base . '/' . $runId, $bearers['owner'])['data']['data']['attributes']['content'] === json_encode($ref),
+    'A rejected atomic update leaves the protected locator unchanged');
+  $missing = '/api/v3/ai/conversations/' . $conversation->uuid() . '/sessions/' .
+    \Drupal::service('uuid')->generate() . '/content';
+  check(http($missing, $bearers['owner'], 'PATCH', $content_update)['status'] === 404,
+    'Atomic content updates do not recreate a missing message');
   echo 'Reference checks: ' . $checks . PHP_EOL;
 }
 finally {
