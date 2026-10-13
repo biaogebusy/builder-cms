@@ -1,0 +1,6 @@
+name: Entity tools test
+type: module
+package: Testing
+core_version_requirement: ^11
+dependencies:
+  - xinshi_entity_tools:xinshi_entity_tools

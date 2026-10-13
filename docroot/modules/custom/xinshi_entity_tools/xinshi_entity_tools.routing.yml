@@ -1,0 +1,135 @@
+entity.entity_tool_resource.collection:
+  path: '/admin/config/services/entity-tools'
+  defaults:
+    _entity_list: 'entity_tool_resource'
+    _title: 'Entity tool resources'
+  requirements:
+    _permission: 'administer entity tool resources'
+  options:
+    _admin_route: TRUE
+
+entity.entity_tool_resource.add_form:
+  path: '/admin/config/services/entity-tools/add'
+  defaults:
+    _entity_form: 'entity_tool_resource.add'
+    _title: 'Add entity tool resource'
+  requirements:
+    _permission: 'administer entity tool resources'
+  options:
+    _admin_route: TRUE
+
+entity.entity_tool_resource.edit_form:
+  path: '/admin/config/services/entity-tools/{entity_tool_resource}'
+  defaults:
+    _entity_form: 'entity_tool_resource.edit'
+    _title: 'Edit entity tool resource'
+  requirements:
+    _permission: 'administer entity tool resources'
+  options:
+    _admin_route: TRUE
+
+xinshi_entity_tools.capabilities:
+  path: '/api/v3/entity-tools/capabilities'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::capabilities'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_entity_tools.resources:
+  path: '/api/v3/entity-tools/resources'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::resources'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use entity tools'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_entity_tools.describe:
+  path: '/api/v3/entity-tools/resources/{resource_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::describe'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use entity tools'
+    resource_id: '[a-z][a-z0-9_]{0,63}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_entity_tools.query:
+  path: '/api/v3/entity-tools/query'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::query'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use entity tools'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_entity_tools.read:
+  path: '/api/v3/entity-tools/read'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::read'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use entity tools'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_entity_tools.validate:
+  path: '/api/v3/entity-tools/validate'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::validate'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use entity tools,write entity tools'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_entity_tools.write:
+  path: '/api/v3/entity-tools/operations/{execution_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::write'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use entity tools,write entity tools'
+    _csrf_request_header_token: 'TRUE'
+    execution_id: '[a-fA-F0-9-]{36}'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_entity_tools.find:
+  path: '/api/v3/entity-tools/operations/{execution_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_entity_tools\Controller\EntityController::find'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    execution_id: '[a-fA-F0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE

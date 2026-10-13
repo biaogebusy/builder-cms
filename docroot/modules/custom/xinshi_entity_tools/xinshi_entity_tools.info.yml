@@ -1,0 +1,9 @@
+name: Xinshi Entity Tools
+type: module
+description: Explicit content resources for authenticated AI entity tools.
+package: Xinshi
+core_version_requirement: ^11
+dependencies:
+  - drupal:node
+  - drupal:text
+  - drupal:filter

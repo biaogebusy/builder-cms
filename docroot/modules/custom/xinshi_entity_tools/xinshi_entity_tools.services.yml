@@ -1,0 +1,11 @@
+services:
+  xinshi_entity_tools.resources:
+    class: Drupal\xinshi_entity_tools\ResourceCatalog
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@current_user', '@language_manager']
+  xinshi_entity_tools.entities:
+    class: Drupal\xinshi_entity_tools\EntityService
+    arguments: ['@xinshi_entity_tools.resources', '@entity_type.manager', '@current_user', '@database', '@private_key', '@?content_moderation.moderation_information', '@?content_moderation.state_transition_validation']
+  xinshi_entity_tools.response:
+    class: Drupal\xinshi_entity_tools\EventSubscriber\EntityResponseSubscriber
+    tags:
+      - { name: event_subscriber }

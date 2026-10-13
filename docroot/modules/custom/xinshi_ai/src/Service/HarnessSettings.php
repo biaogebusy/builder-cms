@@ -40,6 +40,12 @@ final class HarnessSettings {
       'list_analytics_datasets' => '可用统计数据集',
       'count_analytics_entities' => '查询内容数量',
     ]],
+    'entities' => ['label' => '实体内容（可选）', 'tools' => [
+      'list_resources' => '发现内容资源', 'describe_resource' => '读取资源结构',
+      'query_entities' => '查询实体', 'read_entity' => '读取实体字段',
+      'validate_entity' => '校验实体字段', 'create_entity_draft' => '创建实体草稿',
+      'update_entity' => '更新实体草稿修订',
+    ]],
   ];
 
   public static function toolNames(): array {
