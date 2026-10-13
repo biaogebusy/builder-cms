@@ -97,3 +97,22 @@ function xinshi_api_update_10003() {
   // Normal saves apply the schema's boolean/string casts to legacy checkboxes.
   $config->setData($data)->save();
 }
+
+/**
+ * Purge permission cache entries written before OAuth account isolation.
+ *
+ * The old access-policy cache varied by the scope-filtered user.roles context,
+ * so accounts sharing the same token scopes shared one entry: an ordinary
+ * user's entry then answered an administrator's requests with 403 after the
+ * account-isolating context was added. New entries vary by that context, but
+ * the VariationCache still serves legacy entries varying by fewer contexts, so
+ * they survive until the bin is cleared. updatedb must therefore purge them,
+ * because a deploy that skips cache:rebuild keeps serving the stale entry.
+ */
+function xinshi_api_update_10004() {
+  // The bin is a core service since the access-policy system; older cores
+  // listed in core_version_requirement never wrote these entries.
+  if (\Drupal::hasService('cache.access_policy')) {
+    \Drupal::cache('access_policy')->deleteAll();
+  }
+}
