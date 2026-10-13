@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Durable receipts are installed only when the optional module is enabled.
+ */
+
+/** Implements hook_schema(). */
+function xinshi_entity_tools_schema(): array {
+  return ['xinshi_entity_tool_operation' => [
+    'description' => 'Atomic entity tool write receipts, bound to the original account.',
+    'fields' => [
+      'execution_id' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'nid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE],
+      'input_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
+      'result_json' => ['type' => 'text', 'size' => 'big', 'not null' => FALSE],
+      'created' => ['type' => 'int', 'not null' => TRUE],
+    ],
+    'primary key' => ['execution_id'],
+    'indexes' => ['actor' => ['uid']],
+  ]];
+}

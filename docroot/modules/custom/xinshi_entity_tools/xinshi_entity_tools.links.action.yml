@@ -1,0 +1,5 @@
+entity.entity_tool_resource.add_form:
+  route_name: entity.entity_tool_resource.add_form
+  title: 'Add resource'
+  appears_on:
+    - entity.entity_tool_resource.collection

@@ -1,0 +1,44 @@
+<?php
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+
+/** Implements hook_node_grants(). */
+function xinshi_entity_tools_test_node_grants(AccountInterface $account, $operation): array {
+  return ['entity_tool_owner' => [(int) $account->id()]];
+}
+
+/** Implements hook_node_access_records(). */
+function xinshi_entity_tools_test_node_access_records(NodeInterface $node): array {
+  return [['realm' => 'entity_tool_owner', 'gid' => (int) $node->getOwnerId(),
+    'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0]];
+}
+
+/** Implements hook_entity_access(). */
+function xinshi_entity_tools_test_entity_access(EntityInterface $entity, $operation, AccountInterface $account): AccessResult {
+  $denied = \Drupal::state()->get('entity_tools_test.denied_entity');
+  return $denied !== NULL && $operation === 'view' && $entity->id() === $denied
+    ? AccessResult::forbidden()->setCacheMaxAge(0) : AccessResult::neutral();
+}
+
+/** Implements hook_entity_field_access(). */
+function xinshi_entity_tools_test_entity_field_access($operation, FieldDefinitionInterface $definition,
+  AccountInterface $account, ?FieldItemListInterface $items = NULL): AccessResult {
+  $denial = \Drupal::state()->get('entity_tools_test.denied_field');
+  return $denial === [$operation, $definition->getName()]
+    ? AccessResult::forbidden()->setCacheMaxAge(0) : AccessResult::neutral();
+}
+
+/** Implements hook_node_presave(). */
+function xinshi_entity_tools_test_node_presave(NodeInterface $node): void {
+  if (\Drupal::state()->get('entity_tools_test.publish_on_save')) {
+    $node->setPublished();
+  }
+  if (\Drupal::state()->get('entity_tools_test.fail_on_save')) {
+    throw new RuntimeException('Synthetic save failure');
+  }
+}

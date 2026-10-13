@@ -1,0 +1,40 @@
+xinshi_entity_tools.resource.*:
+  type: config_entity
+  label: 'Entity tool resource'
+  mapping:
+    id:
+      type: string
+      label: 'Resource ID'
+    label:
+      type: label
+      label: 'Label'
+    version:
+      type: integer
+      label: 'Definition version'
+    bundle:
+      type: string
+      label: 'Node bundle'
+    fields:
+      type: sequence
+      label: 'Readable fields'
+      sequence:
+        type: string
+    write_fields:
+      type: sequence
+      label: 'Writable fields'
+      sequence:
+        type: string
+    languages:
+      type: sequence
+      label: 'Content languages'
+      sequence:
+        type: string
+    text_format:
+      type: string
+      label: 'Allowed text format'
+    allow_create:
+      type: boolean
+      label: 'Allow draft creation'
+    allow_update:
+      type: boolean
+      label: 'Allow draft revision updates'

@@ -1,0 +1,8 @@
+administer entity tool resources:
+  title: 'Administer entity tool resources'
+  restrict access: true
+use entity tools:
+  title: 'Read configured entity tool resources'
+write entity tools:
+  title: 'Create and update drafts through entity tools'
+  restrict access: true
