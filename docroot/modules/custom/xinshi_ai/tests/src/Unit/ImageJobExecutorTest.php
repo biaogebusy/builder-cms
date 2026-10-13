@@ -8,6 +8,7 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\node\NodeInterface;
@@ -60,6 +61,8 @@ final class ImageJobExecutorTest extends TestCase {
   private array $queued = [];
   /** @var list<array{0:string,1:array}> */
   private array $published = [];
+  private array $admission = [];
+  private int $admissionChecks = 0;
 
   protected function setUp(): void {
     parent::setUp();
@@ -107,8 +110,13 @@ final class ImageJobExecutorTest extends TestCase {
     $this->credentials->method('delete')->willReturnCallback(function (string $uuid): void {
       $this->deletedCredentials[] = $uuid;
     });
+    $modules = $this->createMock(ModuleHandlerInterface::class);
+    $modules->method('invokeAll')->with('xinshi_ai_image_job_admission')->willReturnCallback(function (): array {
+      $this->admissionChecks++;
+      return $this->admission;
+    });
     $this->executor = new ImageJobExecutor($manager, $this->lifecycle, new ProviderErrorMapper(), $queues,
-      $this->events, $this->runs, $this->usage, $this->logger, $this->credentials);
+      $this->events, $this->runs, $this->usage, $this->logger, $this->credentials, $modules);
   }
 
   protected function tearDown(): void {
@@ -144,6 +152,25 @@ final class ImageJobExecutorTest extends TestCase {
 
     $this->assertNull($this->runs->row(self::JOB), 'no lease is taken for a finished job');
     $this->assertSame([self::JOB], $this->deletedCredentials, 'a finished job keeps no customer key');
+  }
+
+  public function testRevokedSourceStopsBeforeAnyModelCallAndReleasesTheLease(): void {
+    $this->admission = [TRUE, FALSE];
+    $job = $this->jobNode(self::JOB);
+    $this->lifecycle->method('loadJobByUuid')->willReturn($job);
+    $this->task->expects($this->never())->method('execute');
+    $this->lifecycle->expects($this->once())->method('markFailed')
+      ->with($job, 'Source access is no longer available.', 'source_access_denied')
+      ->willReturnCallback(function (NodeInterface $job): bool {
+        $job->set('field_status', 'failed');
+        $job->set('field_error_code', 'source_access_denied');
+        return TRUE;
+      });
+    $this->executor->run(['jobUuid' => self::JOB]);
+    $this->assertSame(1, $this->admissionChecks);
+    $this->assertSame(ImageJobRuns::STATE_FINISHED, $this->runs->row(self::JOB)['state']);
+    $this->assertSame([], $this->queued);
+    $this->assertSame('source_access_denied', $this->published[0][1]['errorCode']);
   }
 
   public function testTheCustomerKeyIsKeptForARetryAndDroppedWhenTheJobEnds(): void {
@@ -294,6 +321,7 @@ final class ImageJobExecutorTest extends TestCase {
   }
 
   public function testADeadWorkerWithTheRequestInFlightLeavesTheJobUnknownNotRerun(): void {
+    $this->admission = [FALSE];
     $job = $this->jobNode(self::JOB, ['field_status' => 'running']);
     $this->storedStatus = 'running';
     $this->lifecycle->method('loadJobByUuid')->willReturn($job);
@@ -311,6 +339,7 @@ final class ImageJobExecutorTest extends TestCase {
     $this->assertSame('failed', $this->published[0][0]);
     $this->assertSame(ImageJobExecutor::RESULT_UNKNOWN, $this->published[0][1]['errorCode']);
     $this->assertSame(ImageJobRuns::STATE_FINISHED, $this->runs->row(self::JOB)['state']);
+    $this->assertSame(0, $this->admissionChecks, 'Revocation must not hide an unresolved provider request.');
   }
 
   public function testADeadWorkerThatGotTheResponseFinalizesWithWhatWasSaved(): void {

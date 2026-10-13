@@ -1,0 +1,11 @@
+name: Shooting plan isolated tests
+type: module
+package: Testing
+hidden: true
+core_version_requirement: ^11
+dependencies:
+  - drupal:node
+  - drupal:media
+  - drupal:image
+  - drupal:jsonapi
+  - jsonapi_extras:jsonapi_extras

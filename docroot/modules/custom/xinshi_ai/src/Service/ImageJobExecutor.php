@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_ai\Service;
 
 use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\AiTaskManagerInterface;
 use Drupal\xinshi_ai\Exception\TaskExecutionException;
@@ -44,6 +45,7 @@ final class ImageJobExecutor {
     private readonly ImageUsageRecorder $usageRecorder,
     private readonly LoggerInterface $logger,
     private readonly ImageJobCredentialVault $credentials,
+    private readonly ?ModuleHandlerInterface $modules = NULL,
   ) {}
 
   /**
@@ -186,6 +188,14 @@ final class ImageJobExecutor {
   private function execute(NodeInterface $job, ImageJobRun $run, int $queueAttempt): void {
     $uuid = $job->uuid();
     try {
+      // Optional source adapters can revoke execution without changing lease reconciliation.
+      if ($this->modules && in_array(FALSE,
+        $this->modules->invokeAll('xinshi_ai_image_job_admission', [$job]), TRUE)) {
+        if ($this->lifecycle->markFailed($job, 'Source access is no longer available.', 'source_access_denied')) {
+          $this->publishTerminal($job);
+        }
+        return;
+      }
       $task = $this->taskManager->getByKind((string) $job->get('field_job_kind')->value);
       $task->execute($job, $run);
     }

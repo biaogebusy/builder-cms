@@ -1,0 +1,12 @@
+name: Xinshi Shooting Plan
+type: module
+description: Account-owned storyboard sketches using the existing AI image queue.
+package: Xinshi
+core_version_requirement: ^11
+dependencies:
+  - xinshi_ai:xinshi_ai
+  - drupal:jsonapi
+  - drupal:node
+  - drupal:media
+  - drupal:file
+  - drupal:user

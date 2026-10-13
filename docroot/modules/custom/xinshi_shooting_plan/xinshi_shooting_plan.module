@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Queue delivery recovery; model execution stays in xinshi_ai's existing worker.
+ */
+
+/**
+ * Implements hook_cron().
+ */
+function xinshi_shooting_plan_cron(): void {
+  \Drupal::service('xinshi_shooting_plan.sketches')->dispatch();
+}
+
+/**
+ * Implements hook_xinshi_ai_image_job_admission().
+ */
+function xinshi_shooting_plan_xinshi_ai_image_job_admission(\Drupal\node\NodeInterface $job): bool {
+  return \Drupal::service('xinshi_shooting_plan.sketches')->admits($job);
+}
