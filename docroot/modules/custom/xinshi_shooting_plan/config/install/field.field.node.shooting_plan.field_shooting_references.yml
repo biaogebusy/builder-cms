@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_shooting_references
+    - node.type.shooting_plan
+id: node.shooting_plan.field_shooting_references
+field_name: field_shooting_references
+entity_type: node
+bundle: shooting_plan
+label: 'Reference materials'
+description: 'Source images, documents and videos; generated assets have separate task associations.'
+required: false
+translatable: false
+default_value: { }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings: { }
+field_type: entity_reference

@@ -18,3 +18,16 @@ function xinshi_shooting_plan_test_entity_field_access(string $operation, FieldD
   return AccessResult::forbiddenIf(\Drupal::state()->get('shooting.denied') === $field->getName() . ':' . $operation)
     ->setCacheMaxAge(0);
 }
+
+/** Implements hook_node_access() using the production plan policy. */
+function xinshi_shooting_plan_test_node_access($node, $operation, $account) {
+  return xinshi_shooting_plan_node_access($node, $operation, $account);
+}
+
+/** Implements hook_node_presave() using the production document invariant. */
+function xinshi_shooting_plan_test_node_presave($node): void {
+  if (\Drupal::state()->get('shooting.fail_save') && $node->bundle() === 'shooting_plan') {
+    throw new \RuntimeException('Synthetic storage failure');
+  }
+  xinshi_shooting_plan_node_presave($node);
+}

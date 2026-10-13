@@ -25,51 +25,103 @@ final class ShootingDocumentAccess {
     private readonly ResourceTypeRepositoryInterface $resources,
   ) {}
 
-  /**
-   * Loads the linked working copy, taking the session writer's lock order for writes.
-   *
-   * The caller owns the transaction when supplying an expected content hash.
-   */
-  public function read(string $chat_uuid, string $session_uuid, ?string $expected_hash = NULL): array {
-    if (!Uuid::isValid($chat_uuid) || !Uuid::isValid($session_uuid)) {
+  /** Loads the current plan, sharing the content writer's row lock for image submissions. */
+  public function read(string $plan_uuid, ?string $expected_hash = NULL): array {
+    $node = $this->owned($plan_uuid, $expected_hash !== NULL);
+    $field = $this->field($node, 'field_shooting_document', $expected_hash !== NULL);
+    $content = (string) $node->get($field)->value;
+    if ($expected_hash !== NULL && (!preg_match('/^[a-f0-9]{64}$/D', $expected_hash) ||
+      !hash_equals(hash('sha256', $content), $expected_hash))) {
+      throw new ConflictHttpException('shooting_document_changed');
+    }
+    $doc = self::document($content, $plan_uuid);
+    if ($doc['status'] !== 'ready') {
+      throw new UnprocessableEntityHttpException('shooting_document_not_ready');
+    }
+    self::prompts($doc['draft'] ?? NULL);
+    return $doc;
+  }
+
+  /** Saves the document and its history title in one transaction, returning authorized conflicts. */
+  public function update(string $plan_uuid, string $expected_hash, string $content): array {
+    if (!preg_match('/^[a-f0-9]{64}$/D', $expected_hash)) {
+      throw new UnprocessableEntityHttpException('shooting_hash_invalid');
+    }
+    $doc = self::document($content, $plan_uuid);
+    $storage = $this->entities->getStorage('node');
+    $transaction = $this->database->startTransaction();
+    try {
+      $node = $this->owned($plan_uuid, TRUE);
+      $field = $this->field($node, 'field_shooting_document', TRUE);
+      $title = $this->field($node, 'title', TRUE);
+      $current = (string) $node->get($field)->value;
+      $updated = hash_equals(hash('sha256', $current), $expected_hash);
+      if ($updated) {
+        $node->set($field, $content);
+        $node->set($title, mb_substr($doc['request']['topic'], 0, 100));
+        if (count($node->validate())) {
+          throw new UnprocessableEntityHttpException('shooting_document_invalid');
+        }
+        $node->save();
+      }
+      $result = ['updated' => $updated, 'content' => (string) $node->get($field)->value];
+      unset($transaction);
+      return $result;
+    }
+    catch (\Throwable $error) {
+      if (isset($transaction)) {
+        $transaction->rollBack();
+        unset($transaction);
+      }
+      $storage->resetCache();
+      throw $error;
+    }
+  }
+
+  /** Validates the current envelope; complete generated text remains the Node host's responsibility. */
+  public static function document(string $content, string $plan_uuid): array {
+    if (mb_strlen($content) > 450000) {
+      throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+    $doc = json_decode($content, TRUE);
+    if (!is_array($doc) || array_diff(array_keys($doc), ['kind', 'version', 'id', 'previousId',
+      'taskId', 'runId', 'request', 'sketchModel', 'original', 'draft', 'status']) ||
+      ($doc['kind'] ?? NULL) !== 'xinshi-shooting-plan' || ($doc['version'] ?? NULL) !== 1 ||
+      ($doc['id'] ?? NULL) !== $plan_uuid || !Uuid::isValid($plan_uuid) ||
+      !is_string($doc['taskId'] ?? NULL) || !Uuid::isValid($doc['taskId']) ||
+      !in_array($doc['status'] ?? NULL, ['draft', 'generating', 'ready', 'failed', 'cancelled'], TRUE) ||
+      !is_array($doc['request'] ?? NULL) || !self::text($doc['request']['topic'] ?? NULL)) {
+      throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+    foreach (['runId', 'previousId'] as $key) {
+      if (array_key_exists($key, $doc) && (!is_string($doc[$key]) || !Uuid::isValid($doc[$key]))) {
+        throw new UnprocessableEntityHttpException('shooting_document_invalid');
+      }
+    }
+    if ($doc['status'] === 'ready' && (!isset($doc['runId']) ||
+      !is_array($doc['original'] ?? NULL) || !is_array($doc['draft'] ?? NULL))) {
+      throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+    return $doc;
+  }
+
+  private function owned(string $uuid, bool $write): NodeInterface {
+    if (!Uuid::isValid($uuid)) {
       throw new NotFoundHttpException();
     }
     if (!$this->account->isAuthenticated()) {
       throw new AccessDeniedHttpException();
     }
-    $write = $expected_hash !== NULL;
-    $chat = $this->load($chat_uuid, 'conversation', $write);
-    $session = $this->load($session_uuid, 'ai_session', $write);
-    foreach ([$chat, $session] as $node) {
-      if ((string) $node->getOwnerId() !== (string) $this->account->id() ||
-        !$node->access('view', $this->account) || ($write && !$node->access('update', $this->account))) {
-        throw new AccessDeniedHttpException();
-      }
-    }
-    $sessions = $this->field($chat, 'sessions', FALSE);
-    $type = $this->field($chat, 'chat_type', FALSE);
-    $content_field = $this->field($session, 'content', $write);
-    if ($chat->get($type)->value !== 'shooting-plan' ||
-      !in_array((string) $session->id(), array_map('strval', array_column(
-        $chat->get($sessions)->getValue(), 'target_id')), TRUE)) {
+    $owner = $this->entities->getStorage('user')->load($this->account->id());
+    if (!$owner || $owner->isBlocked()) {
       throw new AccessDeniedHttpException();
     }
-    $content = (string) $session->get($content_field)->value;
-    if ($write && (!preg_match('/^[a-f0-9]{64}$/D', $expected_hash) ||
-      !hash_equals(hash('sha256', $content), $expected_hash))) {
-      throw new ConflictHttpException('shooting_document_changed');
+    $node = $this->load($uuid, 'shooting_plan', $write);
+    if ((string) $node->getOwnerId() !== (string) $this->account->id() ||
+      !$node->access('view', $this->account) || ($write && !$node->access('update', $this->account))) {
+      throw new AccessDeniedHttpException();
     }
-    if (strlen($content) > 2 * 1024 * 1024) {
-      throw new UnprocessableEntityHttpException('shooting_document_invalid');
-    }
-    $doc = json_decode($content, TRUE);
-    if (!is_array($doc) || ($doc['kind'] ?? NULL) !== 'xinshi-shooting-plan' ||
-      ($doc['version'] ?? NULL) !== 1 || ($doc['id'] ?? NULL) !== $chat_uuid ||
-      ($doc['sessionId'] ?? NULL) !== $session_uuid || ($doc['status'] ?? NULL) !== 'ready') {
-      throw new UnprocessableEntityHttpException('shooting_document_invalid');
-    }
-    self::prompts($doc['draft'] ?? NULL);
-    return $doc;
+    return $node;
   }
 
   /** Validates only the bounded visual projection consumed by the image task. */
@@ -84,12 +136,14 @@ final class ShootingDocumentAccess {
       if (!is_array($shot) || !is_string($shot['id'] ?? NULL) ||
         !preg_match('/^[a-zA-Z0-9_-]{1,64}$/D', $shot['id']) || isset($prompts[$shot['id']]) ||
         !in_array($shot['framing'] ?? NULL, ['wide', 'medium', 'close', 'detail'], TRUE) ||
+        !self::text($shot['camera'] ?? NULL) || !self::text($shot['lighting'] ?? NULL) ||
         !self::text($shot['visual'] ?? NULL) || !self::text($shot['sketchPrompt'] ?? NULL)) {
         throw new UnprocessableEntityHttpException('shooting_visuals_invalid');
       }
       $prompts[$shot['id']] = "Storyboard sketch, {$plan['aspectRatio']}, black and white pencil line art, light gray " .
         "shading. No lettering, subtitles or watermark.\n{$plan['styleGuide']}\n" .
-        "Framing: {$shot['framing']}\nScene: {$shot['visual']}\nComposition: {$shot['sketchPrompt']}";
+        "Framing: {$shot['framing']}\nCamera: {$shot['camera']}\nLighting: {$shot['lighting']}\n" .
+        "Scene: {$shot['visual']}\nComposition: {$shot['sketchPrompt']}";
     }
     return $prompts;
   }

@@ -1,5 +1,5 @@
 xinshi_shooting_plan.sketches.read:
-  path: '/api/v3/ai/shooting-plans/{chat_uuid}/sessions/{session_uuid}/sketches'
+  path: '/api/v3/ai/shooting-plans/{plan_uuid}/sketches'
   defaults:
     _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSketchController::read'
     _format: 'json'
@@ -9,11 +9,10 @@ xinshi_shooting_plan.sketches.read:
     _auth: ['oauth2', 'cookie']
   requirements:
     _user_is_logged_in: 'TRUE'
-    chat_uuid: '[0-9a-f-]+'
-    session_uuid: '[0-9a-f-]+'
+    plan_uuid: '[0-9a-f-]+'
 
 xinshi_shooting_plan.sketches.submit:
-  path: '/api/v3/ai/shooting-plans/{chat_uuid}/sessions/{session_uuid}/sketches'
+  path: '/api/v3/ai/shooting-plans/{plan_uuid}/sketches'
   defaults:
     _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSketchController::submit'
     _format: 'json'
@@ -24,5 +23,18 @@ xinshi_shooting_plan.sketches.submit:
   requirements:
     _csrf_request_header_token: 'TRUE'
     _permission: 'create xinshi_ai image job'
-    chat_uuid: '[0-9a-f-]+'
-    session_uuid: '[0-9a-f-]+'
+    plan_uuid: '[0-9a-f-]+'
+
+xinshi_shooting_plan.content.update:
+  path: '/api/v3/ai/shooting-plans/{plan_uuid}/content'
+  defaults:
+    _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingDocumentController::update'
+    _format: 'json'
+  methods: [PATCH]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+    plan_uuid: '[0-9a-f-]+'

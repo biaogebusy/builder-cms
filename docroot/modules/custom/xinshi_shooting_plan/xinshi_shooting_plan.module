@@ -5,6 +5,36 @@
  * Queue delivery recovery; model execution stays in xinshi_ai's existing worker.
  */
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+use Drupal\xinshi_shooting_plan\Service\ShootingDocumentAccess;
+
+/**
+ * Implements hook_node_access().
+ */
+function xinshi_shooting_plan_node_access(NodeInterface $node, $operation, AccountInterface $account) {
+  if ($node->bundle() !== 'shooting_plan') {
+    return AccessResult::neutral();
+  }
+  $owner = $account->isAuthenticated() && (string) $account->id() === (string) $node->getOwnerId();
+  if (!$owner) {
+    return AccessResult::forbidden()->cachePerUser()->addCacheableDependency($node);
+  }
+  // Keep Drupal's unpublished-read and per-bundle write permissions authoritative for the owner.
+  return AccessResult::neutral()->cachePerUser()->addCacheableDependency($node);
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function xinshi_shooting_plan_node_presave(NodeInterface $node): void {
+  if ($node->bundle() === 'shooting_plan') {
+    ShootingDocumentAccess::document((string) $node->get('field_shooting_document')->value,
+      $node->uuid());
+  }
+}
+
 /**
  * Implements hook_cron().
  */

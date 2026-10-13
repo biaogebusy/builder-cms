@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - xinshi_shooting_plan
+name: 'Shooting plan'
+type: shooting_plan
+description: 'Account-owned shooting request, original result and editable storyboard.'
+help: null
+new_revision: false
+preview_mode: 0
+display_submitted: false

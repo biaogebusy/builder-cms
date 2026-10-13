@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_shooting_document
+    - node.type.shooting_plan
+id: node.shooting_plan.field_shooting_document
+field_name: field_shooting_document
+entity_type: node
+bundle: shooting_plan
+label: 'Shooting document (JSON)'
+description: 'Current request, task identity, original result and working copy.'
+required: true
+translatable: false
+default_value: { }
+default_value_callback: ''
+settings: { }
+field_type: string_long

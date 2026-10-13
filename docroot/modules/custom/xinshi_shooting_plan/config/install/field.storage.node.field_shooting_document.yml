@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_shooting_document
+field_name: field_shooting_document
+entity_type: node
+type: string_long
+settings: { }
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: { }
+persist_with_no_fields: false
+custom_storage: false

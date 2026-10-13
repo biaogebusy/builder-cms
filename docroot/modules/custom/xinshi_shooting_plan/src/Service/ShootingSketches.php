@@ -46,9 +46,9 @@ final class ShootingSketches {
   ) {}
 
   /** Returns at most one latest attempt per current shot under current source authorization. */
-  public function read(string $chat_uuid, string $session_uuid): array {
-    $doc = $this->documents->read($chat_uuid, $session_uuid);
-    return $this->project($this->latest($session_uuid, array_keys(ShootingDocumentAccess::prompts($doc['draft']))));
+  public function read(string $plan_uuid): array {
+    $doc = $this->documents->read($plan_uuid);
+    return $this->project($this->latest($plan_uuid, array_keys(ShootingDocumentAccess::prompts($doc['draft']))));
   }
 
   /**
@@ -57,7 +57,7 @@ final class ShootingSketches {
    * A retry names its predecessor. Repeating that request finds the same successor;
    * an unresolved predecessor cannot be turned into a new billable attempt.
    */
-  public function submit(string $chat_uuid, string $session_uuid, array $input): array {
+  public function submit(string $plan_uuid, array $input): array {
     if (!$this->account->hasPermission('create xinshi_ai image job')) {
       throw new AccessDeniedHttpException();
     }
@@ -71,9 +71,9 @@ final class ShootingSketches {
     $transaction = $this->database->startTransaction();
     try {
       // This is also the CAS writer's lock, so input cannot change during reservation.
-      $doc = $this->documents->read($chat_uuid, $session_uuid, $input['expectedHash']);
+      $doc = $this->documents->read($plan_uuid, $input['expectedHash']);
       $prompts = ShootingDocumentAccess::prompts($doc['draft']);
-      $latest = $this->latest($session_uuid, array_keys($prompts));
+      $latest = $this->latest($plan_uuid, array_keys($prompts));
       if (isset($input['shotId']) && !isset($prompts[$input['shotId']])) {
         throw new UnprocessableEntityHttpException('shooting_shot_invalid');
       }
@@ -97,7 +97,7 @@ final class ShootingSketches {
           continue;
         }
         $predecessor = $input['previousJobId'] ?? '';
-        $key = hash('sha256', json_encode([$this->account->id(), $session_uuid, $shot_id,
+        $key = hash('sha256', json_encode([$this->account->id(), $plan_uuid, $shot_id,
           $prompt, $model['id'], $predecessor]));
         $existing = $this->database->select(self::TABLE, 's')->fields('s', ['id'])
           ->condition('request_key', $key)->execute()->fetchField();
@@ -107,7 +107,7 @@ final class ShootingSketches {
         if ($predecessor !== '') {
           $previous = $this->database->select(self::TABLE, 's')->fields('s')
             ->condition('job_uuid', $predecessor)->condition('uid', $this->account->id())
-            ->condition('session_uuid', $session_uuid)->condition('shot_id', $shot_id)->execute()->fetchAssoc();
+            ->condition('plan_uuid', $plan_uuid)->condition('shot_id', $shot_id)->execute()->fetchAssoc();
           $job = $previous ? $this->lifecycle->loadJobByUuid($predecessor) : NULL;
           if (!$previous || !$job ||
             ($latest[$shot_id]['job_uuid'] ?? NULL) !== $predecessor) {
@@ -131,8 +131,8 @@ final class ShootingSketches {
         }
         $job = $this->lifecycle->createQueued($job_input, $this->account);
         $this->database->insert(self::TABLE)->fields([
-          'request_key' => $key, 'uid' => (int) $this->account->id(), 'chat_uuid' => $chat_uuid,
-          'session_uuid' => $session_uuid, 'shot_id' => $shot_id, 'job_uuid' => $job->uuid(),
+          'request_key' => $key, 'uid' => (int) $this->account->id(), 'plan_uuid' => $plan_uuid,
+          'shot_id' => $shot_id, 'job_uuid' => $job->uuid(),
           'task_id' => $task_id, 'prompt' => $prompt, 'model' => $model['id'], 'queue_pending' => 1,
         ])->execute();
       }
@@ -146,18 +146,18 @@ final class ShootingSketches {
       $this->entities->getStorage('node')->resetCache();
       throw $error;
     }
-    $this->dispatch($session_uuid);
-    return $this->read($chat_uuid, $session_uuid);
+    $this->dispatch($plan_uuid);
+    return $this->read($plan_uuid);
   }
 
   /**
    * Delivers a bounded outbox batch; a crash after enqueue can only redeliver the same job.
    */
-  public function dispatch(?string $session_uuid = NULL): void {
+  public function dispatch(?string $plan_uuid = NULL): void {
     $query = $this->database->select(self::TABLE, 's')->fields('s', ['id', 'job_uuid'])
       ->condition('queue_pending', 1)->orderBy('id')->range(0, 100);
-    if ($session_uuid !== NULL) {
-      $query->condition('session_uuid', $session_uuid)->condition('uid', $this->account->id());
+    if ($plan_uuid !== NULL) {
+      $query->condition('plan_uuid', $plan_uuid)->condition('uid', $this->account->id());
     }
     foreach ($query->execute()->fetchAll() as $row) {
       $item = $this->queues->get(ImageJobExecutor::QUEUE)->createItem([
@@ -195,7 +195,7 @@ final class ShootingSketches {
     }
     $this->switcher->switchTo($owner);
     try {
-      $this->documents->read($row['chat_uuid'], $row['session_uuid']);
+      $this->documents->read($row['plan_uuid']);
       return $job->access('view', $owner);
     }
     catch (\Throwable) {
@@ -224,9 +224,9 @@ final class ShootingSketches {
     return $best ?? (is_string($sizes[0] ?? NULL) ? $sizes[0] : NULL);
   }
 
-  private function latest(string $session_uuid, array $shots): array {
+  private function latest(string $plan_uuid, array $shots): array {
     $query = $this->database->select(self::TABLE, 's')->condition('uid', $this->account->id())
-      ->condition('session_uuid', $session_uuid)->condition('shot_id', $shots, 'IN')->groupBy('shot_id');
+      ->condition('plan_uuid', $plan_uuid)->condition('shot_id', $shots, 'IN')->groupBy('shot_id');
     $query->addExpression('MAX(id)', 'latest');
     $ids = $query->execute()->fetchCol();
     if (!$ids) {

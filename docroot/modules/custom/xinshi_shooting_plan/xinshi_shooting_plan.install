@@ -15,8 +15,7 @@ function xinshi_shooting_plan_schema(): array {
       'id' => ['type' => 'serial', 'not null' => TRUE],
       'request_key' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
       'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
-      'chat_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
-      'session_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'plan_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
       'shot_id' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
       'job_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
       'task_id' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
@@ -26,7 +25,7 @@ function xinshi_shooting_plan_schema(): array {
     ],
     'primary key' => ['id'],
     'unique keys' => ['request_key' => ['request_key'], 'job_uuid' => ['job_uuid']],
-    'indexes' => ['session_shot' => ['uid', 'session_uuid', 'shot_id', 'id'],
+    'indexes' => ['plan_shot' => ['uid', 'plan_uuid', 'shot_id', 'id'],
       'outbox' => ['queue_pending', 'id']],
   ]];
 }

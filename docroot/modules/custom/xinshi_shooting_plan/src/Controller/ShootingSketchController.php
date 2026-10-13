@@ -22,12 +22,12 @@ final class ShootingSketchController extends ControllerBase {
   }
 
   /** GET reauthorizes job, asset, media and file access without resubmitting any work. */
-  public function read(string $chat_uuid, string $session_uuid): JsonResponse {
-    return $this->respond(fn(): array => $this->sketches->read($chat_uuid, $session_uuid));
+  public function read(string $plan_uuid): JsonResponse {
+    return $this->respond(fn(): array => $this->sketches->read($plan_uuid));
   }
 
   /** POST is protected by both route CSRF/permissions and source document authorization. */
-  public function submit(string $chat_uuid, string $session_uuid, Request $request): JsonResponse {
+  public function submit(string $plan_uuid, Request $request): JsonResponse {
     if (strlen($request->getContent()) > 4096) {
       return new JsonResponse(['message' => 'shooting_submission_too_large'], 413,
         ['Cache-Control' => 'private, no-store']);
@@ -37,7 +37,7 @@ final class ShootingSketchController extends ControllerBase {
       return new JsonResponse(['message' => 'shooting_submission_invalid'], 400,
         ['Cache-Control' => 'private, no-store']);
     }
-    return $this->respond(fn(): array => $this->sketches->submit($chat_uuid, $session_uuid, $body), 202);
+    return $this->respond(fn(): array => $this->sketches->submit($plan_uuid, $body), 202);
   }
 
   private function respond(callable $operation, int $status = 200): JsonResponse {

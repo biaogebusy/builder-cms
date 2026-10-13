@@ -11,7 +11,6 @@ use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
-use Drupal\jsonapi_extras\Entity\JsonapiResourceConfig;
 use Drupal\media\Entity\Media;
 use Drupal\media\Entity\MediaType;
 use Drupal\node\Entity\Node;
@@ -26,6 +25,7 @@ use Drupal\xinshi_ai\Service\InputImageAccess;
 use Drupal\xinshi_ai\Service\JobLifecycleService;
 use Drupal\xinshi_ai\Service\ModelRegistryServiceInterface;
 use Drupal\xinshi_shooting_plan\Controller\ShootingSketchController;
+use Drupal\xinshi_shooting_plan\Controller\ShootingDocumentController;
 use Drupal\xinshi_shooting_plan\Service\ShootingDocumentAccess;
 use Drupal\xinshi_shooting_plan\Service\ShootingSketches;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Yaml\Yaml;
 
 /** Real Drupal nodes, JSON:API aliases, field access, transactions and queue with no model calls. */
@@ -41,8 +42,7 @@ final class ShootingSketchesTest extends TestCase {
   private ShootingSketches $sketches;
   private ShootingDocumentAccess $documents;
   private JobLifecycleService $lifecycle;
-  private Node $chat;
-  private Node $session;
+  private Node $plan;
   private User $owner;
   private array $doc;
   private bool $queueFails = FALSE;
@@ -54,17 +54,6 @@ final class ShootingSketchesTest extends TestCase {
     require dirname(__DIR__, 2) . '/install-fixture.php';
     foreach (['conversation', 'ai_session', 'image_job', 'image_asset'] as $type) {
       NodeType::create(['type' => $type, 'name' => $type])->save();
-    }
-    self::field('node', 'conversation', 'field_sessions', 'entity_reference', ['target_type' => 'node'], -1);
-    self::field('node', 'conversation', 'field_chat_type', 'string');
-    self::field('node', 'ai_session', 'field_content', 'string_long');
-    foreach (['conversation' => ['sessions', 'chat_type'], 'ai_session' => ['content']] as $bundle => $fields) {
-      $aliases = [];
-      foreach ($fields as $field) {
-        $aliases['field_' . $field] = ['fieldName' => 'field_' . $field, 'publicName' => $field, 'disabled' => FALSE];
-      }
-      JsonapiResourceConfig::create(['id' => 'node--' . $bundle, 'resourceType' => 'node--' . $bundle,
-        'path' => 'node/' . $bundle, 'disabled' => FALSE, 'resourceFields' => $aliases])->save();
     }
     foreach (['job_kind', 'platform', 'model', 'status', 'error_code', 'task_id', 'provider_request_id'] as $field) {
       self::field('node', 'image_job', 'field_' . $field, 'string');
@@ -85,32 +74,31 @@ final class ShootingSketchesTest extends TestCase {
       'source_configuration' => ['source_field' => 'field_media_image']])->save();
     self::field('media', 'image', 'field_media_image', 'image', ['target_type' => 'file']);
     Role::create(['id' => 'shooting_owner', 'label' => 'Shooting owner', 'permissions' => [
-      'access content', 'view media', 'create xinshi_ai image job',
-      'edit own conversation content', 'edit own ai_session content',
+      'access content', 'view own unpublished content', 'view media', 'create xinshi_ai image job',
+      'create shooting_plan content', 'edit own shooting_plan content',
     ]])->save();
   }
 
   protected function setUp(): void {
     \Drupal::state()->delete('shooting.denied');
+    \Drupal::state()->delete('shooting.fail_save');
     $this->owner = User::create(['name' => 'owner-' . \Drupal::service('uuid')->generate(),
       'status' => 1, 'roles' => ['shooting_owner']]);
     $this->owner->save();
     \Drupal::currentUser()->setAccount($this->owner);
-    $this->chat = Node::create(['type' => 'conversation', 'title' => 'Synthetic plan',
-      'uid' => $this->owner->id(), 'status' => 1, 'field_chat_type' => 'shooting-plan']);
-    $this->chat->save();
-    $this->session = Node::create(['type' => 'ai_session', 'title' => 'Synthetic script',
-      'uid' => $this->owner->id(), 'status' => 1]);
-    $this->session->save();
-    $this->doc = ['kind' => 'xinshi-shooting-plan', 'version' => 1, 'id' => $this->chat->uuid(),
-      'sessionId' => $this->session->uuid(), 'status' => 'ready', 'draft' => [
+    $this->plan = Node::create(['type' => 'shooting_plan', 'title' => 'Synthetic plan',
+      'uid' => $this->owner->id()]);
+    $this->doc = ['kind' => 'xinshi-shooting-plan', 'version' => 1, 'id' => $this->plan->uuid(),
+      'taskId' => \Drupal::service('uuid')->generate(), 'runId' => \Drupal::service('uuid')->generate(),
+      'request' => ['topic' => 'Synthetic plan'], 'original' => [], 'status' => 'ready', 'draft' => [
         'aspectRatio' => '9:16', 'styleGuide' => 'Same presenter in a quiet studio.',
         'shots' => [['id' => 'shot_1', 'framing' => 'wide', 'visual' => 'Presenter at a desk',
+          'camera' => 'Phone at eye level, one metre away.', 'lighting' => 'Window to the left.',
           'sketchPrompt' => 'Camera at eye level'], ['id' => 'shot_2', 'framing' => 'detail',
+          'camera' => 'Overhead phone on a fixed support.', 'lighting' => 'Window to the left.',
           'visual' => 'Two sample objects', 'sketchPrompt' => 'Overhead close view']],
       ]];
     $this->saveDoc();
-    $this->chat->set('field_sessions', [['target_id' => $this->session->id()]])->save();
     $db = \Drupal::database();
     $entities = \Drupal::entityTypeManager();
     $account = \Drupal::currentUser();
@@ -158,7 +146,7 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame($first['shot_1']['taskId'], $job->get('field_task_id')->value);
     $this->assertTrue($this->sketches->admits($job));
     $this->assertSame(0, (int) \Drupal::database()->select(ShootingSketches::TABLE, 's')
-      ->condition('session_uuid', $this->session->uuid())->condition('queue_pending', 1)->countQuery()->execute()->fetchField());
+      ->condition('plan_uuid', $this->plan->uuid())->condition('queue_pending', 1)->countQuery()->execute()->fetchField());
   }
 
   public function testValidationRollsBackBothJobsAndAssociations(): void {
@@ -232,13 +220,10 @@ final class ShootingSketchesTest extends TestCase {
   #[DataProvider('denials')]
   public function testRequiresCurrentEntityFieldAndOwnerAccess(string $denial, bool $write): void {
     if ($denial === 'other-owner') {
-      $this->session->setOwnerId(1)->save();
+      $this->plan->setOwnerId(1)->save();
     }
     elseif ($denial === 'anonymous') {
       \Drupal::currentUser()->setAccount(new AnonymousUserSession());
-    }
-    elseif ($denial === 'membership') {
-      $this->chat->set('field_sessions', [])->save();
     }
     else {
       \Drupal::state()->set('shooting.denied', $denial);
@@ -248,9 +233,8 @@ final class ShootingSketchesTest extends TestCase {
   }
 
   public static function denials(): array {
-    return [['other-owner', FALSE], ['anonymous', FALSE], ['membership', FALSE],
-      ['field_content:view', FALSE], ['field_content:edit', TRUE], ['field_sessions:view', TRUE],
-      ['field_chat_type:view', FALSE]];
+    return [['other-owner', FALSE], ['anonymous', FALSE],
+      ['field_shooting_document:view', FALSE], ['field_shooting_document:edit', TRUE]];
   }
 
   public function testRejectsStaleHashesAndUserSuppliedModelCredentialsBeforeReservation(): void {
@@ -264,9 +248,10 @@ final class ShootingSketchesTest extends TestCase {
     $images = $this->submit();
     $job = $this->lifecycle->loadJobByUuid($images['shot_1']['jobId']);
     $this->assertTrue($this->sketches->admits($job));
-    \Drupal::state()->set('shooting.denied', 'field_content:view');
+    \Drupal::state()->set('shooting.denied', 'field_shooting_document:view');
     $this->assertFalse($this->sketches->admits($job));
     \Drupal::state()->delete('shooting.denied');
+    \Drupal::state()->delete('shooting.fail_save');
     $this->owner->block()->save();
     $this->assertFalse($this->sketches->admits($job));
     $this->assertSame((string) $this->owner->id(), (string) \Drupal::currentUser()->id());
@@ -295,33 +280,179 @@ final class ShootingSketchesTest extends TestCase {
   public function testControllerBoundsInputAndDisablesResponseCaching(): void {
     $controller = new ShootingSketchController($this->sketches);
     $request = Request::create('/', 'POST', content: str_repeat('x', 4097));
-    $response = $controller->submit($this->chat->uuid(), $this->session->uuid(), $request);
+    $response = $controller->submit($this->plan->uuid(), $request);
     $this->assertSame(413, $response->getStatusCode());
     $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
-    $response = $controller->read($this->chat->uuid(), $this->session->uuid());
+    $response = $controller->read($this->plan->uuid());
     $this->assertSame('{}', json_encode(json_decode($response->getContent())->sketches));
     $routes = Yaml::parseFile(dirname(__DIR__, 3) . '/xinshi_shooting_plan.routing.yml');
     $this->assertSame('TRUE', $routes['xinshi_shooting_plan.sketches.submit']['requirements']['_csrf_request_header_token']);
     $this->assertSame(['oauth2', 'cookie'], $routes['xinshi_shooting_plan.sketches.submit']['options']['_auth']);
   }
 
+  public function testShippedContentTypeIsPrivateAndIndependentOfChat(): void {
+    $this->assertFalse($this->plan->isPublished());
+    $this->assertTrue($this->plan->access('view', $this->owner));
+    $this->assertTrue($this->plan->access('update', $this->owner));
+    $this->assertFalse($this->plan->hasField('field_sessions'));
+    $this->assertFalse($this->plan->hasField('field_content'));
+    $references = $this->plan->getFieldDefinition('field_shooting_references');
+    $this->assertSame('media', $references->getSetting('target_type'));
+    $this->assertSame(-1, $references->getFieldStorageDefinition()->getCardinality());
+    $this->assertSame(0, (int) \Drupal::entityTypeManager()->getStorage('node')->getQuery()
+      ->accessCheck(FALSE)->condition('type', ['conversation', 'ai_session'], 'IN')->count()->execute());
+    $other = User::create(['name' => 'other-' . \Drupal::service('uuid')->generate(),
+      'status' => 1, 'roles' => ['shooting_owner']]);
+    $other->save();
+    // Even an administrator publishing a plan does not expose its body or title to other users.
+    $this->plan->setPublished()->save();
+    $this->assertFalse($this->plan->access('view', $other));
+    $this->assertFalse($this->plan->access('view label', $other));
+    $this->assertFalse($this->plan->access('update', $other));
+    $this->assertFalse($this->plan->access('view', new AnonymousUserSession()));
+    $ordinary = Node::create(['type' => 'conversation', 'title' => 'Ordinary chat', 'status' => 1,
+      'uid' => $this->owner->id()]);
+    $ordinary->save();
+    $this->assertTrue($ordinary->access('view', $other));
+    $this->expectHttp(fn() => $this->documents->read($ordinary->uuid()), 404);
+    $ordinary->delete();
+  }
+
+  public function testContentAndHistoryTitleCommitTogetherAndConflictsPreserveBoth(): void {
+    $before = $this->plan->get('field_shooting_document')->value;
+    $changed = $this->doc;
+    $changed['request']['topic'] = 'Revised topic';
+    $content = json_encode($changed);
+    $controller = new ShootingDocumentController($this->documents);
+    $request = Request::create('/', 'PATCH', content: json_encode([
+      'expectedHash' => hash('sha256', $before), 'content' => $content,
+    ]));
+    $response = $controller->update($this->plan->uuid(), $request);
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+    $saved = Node::load($this->plan->id());
+    $this->assertSame('Revised topic', $saved->getTitle());
+    $this->assertSame($content, $saved->get('field_shooting_document')->value);
+    // Lost acknowledgements return the complete committed bytes; a later edit cannot be overwritten.
+    $retry = $controller->update($this->plan->uuid(), $request);
+    $this->assertSame(409, $retry->getStatusCode());
+    $this->assertSame($content, json_decode($retry->getContent(), TRUE)['content']);
+    $changed['request']['topic'] = 'Stale overwrite';
+    $conflict = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+    $this->assertFalse($conflict['updated']);
+    $this->assertSame('Revised topic', Node::load($this->plan->id())->getTitle());
+  }
+
+  public function testWriteFailureAndTitleAccessDenialPreserveTheWholeDocument(): void {
+    $before = $this->plan->get('field_shooting_document')->value;
+    $changed = $this->doc;
+    $changed['request']['topic'] = 'Must not save';
+    \Drupal::state()->set('shooting.denied', 'title:edit');
+    $this->expectHttp(fn() => $this->documents->update($this->plan->uuid(),
+      hash('sha256', $before), json_encode($changed)), 403);
+    \Drupal::state()->delete('shooting.denied');
+    \Drupal::state()->set('shooting.fail_save', TRUE);
+    $controller = new ShootingDocumentController($this->documents);
+    $response = $controller->update($this->plan->uuid(), Request::create('/', 'PATCH',
+      content: json_encode(['expectedHash' => hash('sha256', $before), 'content' => json_encode($changed)])));
+    $this->assertSame(503, $response->getStatusCode());
+    $saved = Node::load($this->plan->id());
+    $this->assertSame('Synthetic plan', $saved->getTitle());
+    $this->assertSame($before, $saved->get('field_shooting_document')->value);
+  }
+
+  public function testNonReadyDocumentsCanSaveButCannotSubmitImages(): void {
+    foreach (['draft', 'generating', 'failed', 'cancelled'] as $status) {
+      $before = Node::load($this->plan->id())->get('field_shooting_document')->value;
+      $changed = $this->doc;
+      $changed['status'] = $status;
+      unset($changed['original'], $changed['draft']);
+      $saved = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+      $this->assertTrue($saved['updated']);
+      $this->expectHttp(fn() => $this->sketches->submit($this->plan->uuid(), [
+        'expectedHash' => hash('sha256', $saved['content']), 'model' => 'fixture',
+      ]), 422);
+    }
+    $this->assertSame(0, $this->rows());
+  }
+
+  public function testContentUpdateRequiresOwnerAndCurrentFieldAccess(): void {
+    $content = $this->plan->get('field_shooting_document')->value;
+    foreach (['field_shooting_document:view', 'field_shooting_document:edit'] as $denial) {
+      \Drupal::state()->set('shooting.denied', $denial);
+      $this->expectHttp(fn() => $this->documents->update($this->plan->uuid(), hash('sha256', $content), $content), 403);
+    }
+    \Drupal::state()->delete('shooting.denied');
+    $this->owner->block()->save();
+    $this->expectHttp(fn() => $this->documents->update($this->plan->uuid(), hash('sha256', $content), $content), 403);
+    $this->owner->activate()->save();
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $this->expectHttp(fn() => $this->documents->update($this->plan->uuid(), hash('sha256', $content), $content), 403);
+  }
+
+  public function testJsonApiCreatesAndListsOnlyIndependentOwnedPlans(): void {
+    $this->assertFalse(\Drupal::config('jsonapi.settings')->get('read_only'));
+    \Drupal::service('router.builder')->rebuild();
+    $kernel = \Drupal::service('http_kernel');
+    $principal = $this->owner;
+    $send = static function (string $path, string $method = 'GET', ?array $body = NULL) use ($kernel, &$principal) {
+      \Drupal::currentUser()->setAccount($principal);
+      $request = Request::create($path, $method, server: [
+        'HTTP_ACCEPT' => 'application/vnd.api+json', 'CONTENT_TYPE' => 'application/vnd.api+json',
+      ], content: $body === NULL ? NULL : json_encode($body));
+      return $kernel->handle($request, HttpKernelInterface::SUB_REQUEST);
+    };
+    $uuid = \Drupal::service('uuid')->generate();
+    $doc = $this->doc;
+    $doc['id'] = $uuid;
+    $doc['status'] = 'draft';
+    unset($doc['original'], $doc['draft'], $doc['runId']);
+    $payload = ['data' => ['type' => 'node--shooting_plan', 'id' => $uuid, 'attributes' => [
+      'title' => 'Synthetic plan', 'field_shooting_document' => json_encode($doc),
+    ]]];
+    $response = $send('/jsonapi/node/shooting_plan', 'POST', $payload);
+    $this->assertSame(201, $response->getStatusCode(), $response->getContent());
+    $created = json_decode($response->getContent(), TRUE)['data'];
+    $this->assertSame($uuid, $created['id']);
+    $this->assertSame($this->owner->uuid(), $created['relationships']['uid']['data']['id']);
+    $this->assertSame(json_encode($doc), $created['attributes']['field_shooting_document']);
+    $this->assertFalse($created['attributes']['status']);
+    $retry = $send('/jsonapi/node/shooting_plan', 'POST', $payload);
+    $this->assertSame(409, $retry->getStatusCode(), $retry->getContent());
+    $response = $send('/jsonapi/node/shooting_plan?filter[uid.drupal_internal__uid]=' . $this->owner->id() .
+      '&page[limit]=20&sort=-created');
+    $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+    $ids = array_column(json_decode($response->getContent(), TRUE)['data'], 'id');
+    $this->assertContains($uuid, $ids);
+    $this->assertContains($this->plan->uuid(), $ids, $response->getContent());
+    $this->assertSame([], json_decode($send('/jsonapi/node/conversation')->getContent(), TRUE)['data']);
+    $other = User::create(['name' => 'reader-' . \Drupal::service('uuid')->generate(),
+      'status' => 1, 'roles' => ['shooting_owner']]);
+    $other->save();
+    $principal = $other;
+    $response = $send('/jsonapi/node/shooting_plan');
+    $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+    $this->assertSame([], json_decode($response->getContent(), TRUE)['data']);
+    $this->assertSame(403, $send('/jsonapi/node/shooting_plan/' . $uuid)->getStatusCode());
+  }
+
   private function saveDoc(): void {
-    $this->session->set('field_content', json_encode($this->doc, JSON_UNESCAPED_UNICODE))->save();
+    $this->plan->set('field_shooting_document', json_encode($this->doc, JSON_UNESCAPED_UNICODE))->save();
   }
 
   private function submit(array $input = []): array {
-    return $this->sketches->submit($this->chat->uuid(), $this->session->uuid(), $input + [
-      'expectedHash' => hash('sha256', $this->session->get('field_content')->value), 'model' => 'fixture',
+    return $this->sketches->submit($this->plan->uuid(), $input + [
+      'expectedHash' => hash('sha256', $this->plan->get('field_shooting_document')->value), 'model' => 'fixture',
     ]);
   }
 
   private function read(): array {
-    return $this->sketches->read($this->chat->uuid(), $this->session->uuid());
+    return $this->sketches->read($this->plan->uuid());
   }
 
   private function rows(): int {
     return (int) \Drupal::database()->select(ShootingSketches::TABLE, 's')
-      ->condition('session_uuid', $this->session->uuid())->countQuery()->execute()->fetchField();
+      ->condition('plan_uuid', $this->plan->uuid())->countQuery()->execute()->fetchField();
   }
 
   private function jobs(): int {

@@ -25,6 +25,7 @@ $settings['hash_salt'] = 'disposable-shooting-tests';
 $settings['config_sync_directory'] = '/tmp/shooting-test/config';
 $settings['skip_permissions_hardening'] = TRUE;
 $settings['extension_discovery_scan_tests'] = TRUE;
+$config['jsonapi.settings']['read_only'] = FALSE;
 SETTINGS);
 file_put_contents('sites/default/default.settings.php', '<?php');
 file_put_contents('sites/default/default.services.yml', 'parameters: {}');
@@ -43,3 +44,12 @@ install_drupal($loader, [
 ]);
 \Drupal::service('module_installer')->install(['xinshi_shooting_plan_test']);
 \Drupal::database()->schema()->createTable('xinshi_shooting_sketch', xinshi_shooting_plan_schema()['xinshi_shooting_sketch']);
+
+// Install the shipped plan schema in the synthetic site without loading AI providers.
+$source = new \Drupal\Core\Config\FileStorage(dirname(__DIR__) . '/config/install');
+\Drupal\node\Entity\NodeType::create($source->read('node.type.shooting_plan'))->save();
+\Drupal\field\Entity\FieldStorageConfig::create($source->read('field.storage.node.field_shooting_document'))->save();
+\Drupal\field\Entity\FieldConfig::create($source->read('field.field.node.shooting_plan.field_shooting_document'))->save();
+\Drupal\Core\Field\Entity\BaseFieldOverride::create($source->read('core.base_field_override.node.shooting_plan.status'))->save();
+\Drupal\field\Entity\FieldStorageConfig::create($source->read('field.storage.node.field_shooting_references'))->save();
+\Drupal\field\Entity\FieldConfig::create($source->read('field.field.node.shooting_plan.field_shooting_references'))->save();
