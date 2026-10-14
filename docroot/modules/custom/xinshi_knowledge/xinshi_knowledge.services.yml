@@ -16,3 +16,10 @@ services:
     arguments: ['@xinshi_knowledge.documents']
     tags:
       - { name: event_subscriber }
+  xinshi_knowledge.catalog:
+    class: Drupal\xinshi_knowledge\Service\KnowledgeCatalog
+    arguments: ['@entity_type.manager', '@xinshi_knowledge.extraction', '@module_handler', '@database']
+  xinshi_knowledge.catalog_response:
+    class: Drupal\xinshi_knowledge\EventSubscriber\CatalogResponseSubscriber
+    tags:
+      - { name: event_subscriber }

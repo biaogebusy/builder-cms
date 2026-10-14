@@ -17,3 +17,26 @@ xinshi_knowledge.document_status:
     parameters:
       node:
         type: entity:node
+xinshi_knowledge.catalog:
+  path: '/api/v3/knowledge'
+  defaults:
+    _controller: '\Drupal\xinshi_knowledge\Controller\KnowledgeCatalogController::listing'
+  requirements:
+    _permission: 'view xinshi knowledge'
+    _user_is_logged_in: 'TRUE'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_knowledge.catalog_detail:
+  path: '/api/v3/knowledge/{uuid}'
+  defaults:
+    _controller: '\Drupal\xinshi_knowledge\Controller\KnowledgeCatalogController::detail'
+  requirements:
+    _permission: 'view xinshi knowledge'
+    _user_is_logged_in: 'TRUE'
+    uuid: '[0-9a-fA-F-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
