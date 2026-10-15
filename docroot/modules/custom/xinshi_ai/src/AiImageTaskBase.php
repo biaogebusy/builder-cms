@@ -148,8 +148,10 @@ abstract class AiImageTaskBase extends AiTaskBase {
       if ($attempt !== NULL && !$attempt->isObserved()) {
         $attempt->failed($code, $trace);
       }
-      // 不在此 markFailed:重试 vs 终态由执行器决定。携带归一码抛出。
-      throw new TaskExecutionException($e->getMessage(), $code, $e);
+      // 不在此 markFailed:重试 vs 终态由执行器决定。携带归一码与传输层
+      // 证据抛出;异常 message 常常只是网关的泛化文案,上游真实原因只
+      // 存在于错误响应体里,随日志落地而非任务实体。
+      throw new TaskExecutionException($e->getMessage(), $code, $e, $this->upstreamDetail($trace));
     }
   }
 
@@ -160,6 +162,28 @@ abstract class AiImageTaskBase extends AiTaskBase {
     if ($this->lifecycle->markCancelled($job)) {
       $this->eventStream->publish($job->uuid(), 'status', ['status' => 'cancelled']);
     }
+  }
+
+  /**
+   * Transport facts plus the raw error body kept by the trace; NULL when the
+   * failure produced neither (e.g. a timeout before any response).
+   */
+  private function upstreamDetail(ProviderRequestTrace $trace): ?string {
+    $status = $trace->statusCode();
+    $body = $trace->errorBody();
+    if ($status === NULL && $body === NULL) {
+      return NULL;
+    }
+    $facts = [];
+    if ($status !== NULL) {
+      $facts[] = 'http=' . $status;
+    }
+    $rid = $trace->requestId();
+    if ($rid !== NULL) {
+      $facts[] = 'request_id=' . $rid;
+    }
+    $prefix = $facts === [] ? '' : ('[' . implode(' ', $facts) . '] ');
+    return $prefix . ($body ?? '(empty error body)');
   }
 
   /**

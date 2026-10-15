@@ -88,7 +88,9 @@ final class FigmaAssetControllerTest extends TestCase {
     self::assertSame(200, $response->getStatusCode());
     $body = json_decode($response->getContent(), TRUE);
     self::assertSame(self::URL, $body['url']);
-    self::assertSame('private, no-store', $response->headers->get('Cache-Control'));
+    // Symfony reorders cache-control directives; assert the set, not the string.
+    self::assertTrue($response->headers->hasCacheControlDirective('private'));
+    self::assertTrue($response->headers->hasCacheControlDirective('no-store'));
   }
 
   public function testUnsupportedMimeTypeReturns400(): void {
@@ -129,7 +131,7 @@ final class FigmaAssetControllerTest extends TestCase {
   public function testFilenameIsSanitised(): void {
     $this->upload->expects(self::once())
       ->method('fromImageFile')
-      ->with(self::callback(fn(ImageFile $img) => $img->getFilename() === '..--etc-passwd.png'))
+      ->with(self::callback(fn(ImageFile $img) => $img->getFilename() === '..-..-etc-passwd.png'))
       ->willReturn($this->mockMedia('public://xinshi_ai/2026-09/asset.png'));
 
     $this->controller->upload($this->request([

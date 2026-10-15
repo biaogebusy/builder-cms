@@ -13,6 +13,11 @@ final class TaskExecutionException extends \RuntimeException {
     string $message,
     public readonly string $errorCode,
     ?\Throwable $previous = NULL,
+    /**
+     * Transport facts + raw upstream error body, for the logs only; the mapped
+     * code plus a gateway's generic message cannot answer why the call failed.
+     */
+    public readonly ?string $upstreamDetail = NULL,
   ) {
     parent::__construct($message, 0, $previous);
   }

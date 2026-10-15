@@ -33,6 +33,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Yaml\Yaml;
@@ -259,7 +260,7 @@ final class FigmaConnectorTest extends TestCase {
   }
 
   public function testControllerRejectsIdentityOverridesAndSanitizesProviderFailures(): void {
-    $controller = new FigmaController($this->connector);
+    $controller = new FigmaController($this->connector, $this->createMock(LoggerInterface::class));
     $request = fn(array $body) => new Request(content: json_encode($body));
     $response = $controller->handle($request(['operation' => 'status', 'uid' => '2']));
     $this->assertSame(400, $response->getStatusCode());

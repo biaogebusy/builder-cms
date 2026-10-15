@@ -1,0 +1,2 @@
+route_callbacks:
+  - '\Drupal\xinshi_shooting_plan_test\Routing\Routes::routes'

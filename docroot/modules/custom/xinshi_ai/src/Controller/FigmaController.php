@@ -7,6 +7,7 @@ namespace Drupal\xinshi_ai\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\xinshi_ai\Exception\FigmaException;
 use Drupal\xinshi_ai\Service\FigmaConnector;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,10 +15,13 @@ use Symfony\Component\HttpFoundation\Request;
 /** Fixed connector operations, authenticated by the current Drupal OAuth user. */
 final class FigmaController extends ControllerBase {
 
-  public function __construct(private readonly FigmaConnector $figma) {}
+  public function __construct(
+    private readonly FigmaConnector $figma,
+    private readonly LoggerInterface $logger,
+  ) {}
 
   public static function create(ContainerInterface $container): self {
-    return new self($container->get('xinshi_ai.figma'));
+    return new self($container->get('xinshi_ai.figma'), $container->get('logger.channel.xinshi_ai'));
   }
 
   public function handle(Request $request): JsonResponse {
@@ -51,7 +55,7 @@ final class FigmaController extends ControllerBase {
     }
     catch (\Throwable $error) {
       if (!$error instanceof FigmaException) {
-        \Drupal::logger('xinshi_ai')->error(
+        $this->logger->error(
           'Figma controller uncaught error for operation @op: @class: @message',
           [
             '@op'      => $input['operation'] ?? 'unknown',
