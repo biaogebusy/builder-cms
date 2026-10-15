@@ -200,7 +200,7 @@ final class ImageJobExecutor {
       $task->execute($job, $run);
     }
     catch (TaskExecutionException $e) {
-      $this->handleFailure($job, $uuid, $e->errorCode, $e->getMessage(), $queueAttempt);
+      $this->handleFailure($job, $uuid, $e->errorCode, $e->getMessage(), $queueAttempt, $e->upstreamDetail);
     }
     catch (\Throwable $e) {
       // An error outside the task pipeline is not retried.
@@ -213,9 +213,13 @@ final class ImageJobExecutor {
    *
    * The message is stored on the job and logged, so the customer's key is
    * removed from it first: a provider error may echo the request it rejected.
+   * `$upstreamDetail` (transport facts + raw error body) is appended to the
+   * log entries only, never to the job entity the frontend renders.
    */
-  private function handleFailure(NodeInterface $job, string $uuid, string $code, string $message, int $attempt): void {
+  private function handleFailure(NodeInterface $job, string $uuid, string $code, string $message, int $attempt,
+    ?string $upstreamDetail = NULL): void {
     $message = $this->credentials->redact($uuid, $message);
+    $logDetail = $upstreamDetail === NULL ? '' : ' upstream=' . $this->credentials->redact($uuid, $upstreamDetail);
     if ($this->isTerminal($job)) {
       // Cancelled (or otherwise closed) while the call was running: that
       // decision stands, the failure is neither retried nor recorded over it.
@@ -231,7 +235,7 @@ final class ImageJobExecutor {
         '@u' => $uuid,
         '@c' => $code,
         '@a' => $attempt + 1,
-        '@m' => $message,
+        '@m' => $message . $logDetail,
       ]);
       $this->queueFactory->get(self::QUEUE)->createItem([
         'jobUuid' => $uuid,
@@ -244,7 +248,7 @@ final class ImageJobExecutor {
       '@u' => $uuid,
       '@c' => $code,
       '@a' => $attempt,
-      '@m' => $message,
+      '@m' => $message . $logDetail,
     ]);
     if ($this->lifecycle->markFailed($job, $message, $code)) {
       $this->eventStream->publish($uuid, 'failed', [

@@ -28,10 +28,13 @@ final class ProviderRequestTrace {
 
   public const MIDDLEWARE = 'xinshi_ai_usage_trace';
   private const REQUEST_ID_HEADER = 'x-request-id';
+  /** Error bodies are log evidence, not payloads; keep the copy bounded. */
+  private const MAX_ERROR_BODY_LENGTH = 2000;
 
   private bool $dispatched = FALSE;
   private ?int $statusCode = NULL;
   private ?string $requestId = NULL;
+  private ?string $errorBody = NULL;
   private ?\Closure $onDispatch;
   private ?\Closure $onProgress;
 
@@ -67,6 +70,7 @@ final class ProviderRequestTrace {
           $this->statusCode = $response->getStatusCode();
           $header = trim($response->getHeaderLine(self::REQUEST_ID_HEADER));
           $this->requestId = $header === '' ? NULL : $header;
+          $this->captureErrorBody($response);
           return $response;
         });
       };
@@ -89,6 +93,33 @@ final class ProviderRequestTrace {
 
   public function requestId(): ?string {
     return $this->requestId;
+  }
+
+  /**
+   * The raw body of an error response, before the SDK reduces it to a short
+   * message; NULL without an error response. A gateway may answer with a
+   * generic message (e.g. "openai_error"), so the body is the only place the
+   * real upstream reason survives.
+   */
+  public function errorBody(): ?string {
+    return $this->errorBody;
+  }
+
+  /**
+   * Copy the error body out of the stream and rewind it, so the SDK and the
+   * http_errors middleware still see an unread response.
+   */
+  private function captureErrorBody(ResponseInterface $response): void {
+    if ($response->getStatusCode() < 400) {
+      return;
+    }
+    $stream = $response->getBody();
+    if (!$stream->isSeekable()) {
+      return;
+    }
+    $body = trim((string) $stream);
+    $stream->rewind();
+    $this->errorBody = $body === '' ? NULL : mb_substr($body, 0, self::MAX_ERROR_BODY_LENGTH);
   }
 
 }

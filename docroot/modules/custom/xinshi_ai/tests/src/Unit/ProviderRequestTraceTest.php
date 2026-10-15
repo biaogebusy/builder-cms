@@ -6,6 +6,7 @@ namespace Drupal\Tests\xinshi_ai\Unit;
 
 use Drupal\xinshi_ai\Service\ProviderRequestTrace;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
@@ -54,6 +55,57 @@ final class ProviderRequestTraceTest extends TestCase {
     $this->assertSame('sent', $trace->dispatchState());
     $this->assertSame(400, $trace->statusCode());
     $this->assertSame('req-43', $trace->requestId());
+  }
+
+  public function testTheErrorBodySurvivesAnHttpError(): void {
+    $trace = new ProviderRequestTrace();
+    $body = '{"error":{"message":"openai_error","type":"upstream_error"}}';
+    try {
+      $this->client($trace, new Response(403, ['x-request-id' => 'req-44'], $body))
+        ->post('https://gateway.example/v1/images/generations');
+      $this->fail('expected the http_errors middleware to throw');
+    }
+    catch (ClientException $e) {
+      // The body must still be readable for whoever inspects the failure.
+      $this->assertSame($body, (string) $e->getResponse()->getBody());
+    }
+    $this->assertSame(403, $trace->statusCode());
+    $this->assertSame($body, $trace->errorBody());
+  }
+
+  public function testASuccessfulResponseKeepsNoErrorBody(): void {
+    $trace = new ProviderRequestTrace();
+    $this->client($trace, new Response(200, [], '{"data":[]}'))
+      ->post('https://gateway.example/v1/images/generations');
+    $this->assertNull($trace->errorBody());
+  }
+
+  public function testAnEmptyErrorBodyIsNotKept(): void {
+    $trace = new ProviderRequestTrace();
+    try {
+      $this->client($trace, new Response(503, [], ''))
+        ->post('https://gateway.example/v1/images/generations');
+      $this->fail('expected the http_errors middleware to throw');
+    }
+    catch (BadResponseException) {
+      $this->addToAssertionCount(1);
+    }
+    $this->assertSame(503, $trace->statusCode());
+    $this->assertNull($trace->errorBody());
+  }
+
+  public function testALongErrorBodyIsTruncated(): void {
+    $trace = new ProviderRequestTrace();
+    $body = str_repeat('x', 5000);
+    try {
+      $this->client($trace, new Response(500, [], $body))
+        ->post('https://gateway.example/v1/images/generations');
+      $this->fail('expected the http_errors middleware to throw');
+    }
+    catch (BadResponseException) {
+      $this->addToAssertionCount(1);
+    }
+    $this->assertSame(2000, strlen($trace->errorBody() ?? ''));
   }
 
   public function testATransportFailureLeavesTheOutcomeUnknown(): void {
