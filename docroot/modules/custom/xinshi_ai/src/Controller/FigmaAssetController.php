@@ -46,7 +46,9 @@ final class FigmaAssetController extends ControllerBase {
 
   public function upload(Request $request): JsonResponse {
     try {
-      if ($request->headers->get('Content-Length', 0) > self::MAX_BODY ||
+      // HeaderBag::get() takes a ?string default since Symfony 7; cast the header.
+      $declaredLength = $request->headers->get('Content-Length');
+      if (($declaredLength !== NULL && (int) $declaredLength > self::MAX_BODY) ||
           strlen($request->getContent()) > self::MAX_BODY) {
         throw new FigmaException('figma_too_large', 413);
       }
@@ -65,16 +67,19 @@ final class FigmaAssetController extends ControllerBase {
       }
 
       $binary = base64_decode($input['data'], TRUE);
-      if ($binary === FALSE || strlen($binary) > self::MAX_BYTES) {
+      if ($binary === FALSE) {
+        throw new FigmaException('figma_invalid_request', 400);
+      }
+      if (strlen($binary) > self::MAX_BYTES) {
         throw new FigmaException('figma_too_large', 413);
       }
       if ($binary === '') {
         throw new FigmaException('figma_invalid_request', 400);
       }
 
-      // Sanitise the filename: basename only, force the correct extension.
+      // Sanitise the filename: path separators become dashes, no traversal survives.
       $ext = self::ALLOWED_TYPES[$mimeType];
-      $filename = preg_replace('/[^a-zA-Z0-9._-]/', '-', basename((string) $input['filename']));
+      $filename = preg_replace('/[^a-zA-Z0-9._-]/', '-', (string) $input['filename']);
       if ($filename === '' || $filename === '.') {
         $filename = 'figma-asset.' . $ext;
       }
