@@ -17,6 +17,9 @@ use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\AiTaskManagerInterface;
 use Drupal\xinshi_ai\Service\ImageJobExecutor;
+use Drupal\xinshi_ai\Service\ImageJobCredentialVault;
+use Drupal\xinshi_ai\Service\PublicUrlPolicy;
+use Drupal\xinshi_ai\Exception\ImageSafetyException;
 use Drupal\xinshi_ai\Service\ImmediateJobRunner;
 use Drupal\xinshi_ai\Service\JobLifecycleServiceInterface;
 use Drupal\xinshi_ai\Service\ModelRegistryServiceInterface;
@@ -43,6 +46,8 @@ final class ShootingSketches {
     private readonly ImmediateJobRunner $runner,
     private readonly ConfigFactoryInterface $config,
     private readonly AccountSwitcherInterface $switcher,
+    private readonly ImageJobCredentialVault $credentials,
+    private readonly PublicUrlPolicy $urlPolicy,
   ) {}
 
   /** Returns at most one latest attempt per current shot under current source authorization. */
@@ -61,13 +66,37 @@ final class ShootingSketches {
     if (!$this->account->hasPermission('create xinshi_ai image job')) {
       throw new AccessDeniedHttpException();
     }
-    if (array_diff(array_keys($input), ['expectedHash', 'model', 'shotId', 'previousJobId']) ||
+    if (array_diff(array_keys($input), ['expectedHash', 'model', 'shotId', 'previousJobId', 'platform', 'size', 'credentials']) ||
       !is_string($input['expectedHash'] ?? NULL) || !preg_match('/^[a-f0-9]{64}$/D', $input['expectedHash']) ||
-      !is_string($input['model'] ?? NULL) || strlen($input['model']) > 128 ||
+      !is_string($input['model'] ?? NULL) || trim($input['model']) === '' || strlen($input['model']) > 128 ||
       (isset($input['shotId']) && (!is_string($input['shotId']) || !preg_match('/^[a-zA-Z0-9_-]{1,64}$/D', $input['shotId']))) ||
       (isset($input['previousJobId']) && (!isset($input['shotId']) || !is_string($input['previousJobId']) || !Uuid::isValid($input['previousJobId'])))) {
       throw new UnprocessableEntityHttpException('shooting_submission_invalid');
     }
+    $custom = ($input['platform'] ?? NULL) === 'custom';
+    $secrets = NULL;
+    if ($custom) {
+      if (!is_array($input['credentials'] ?? NULL) ||
+        array_diff(array_keys($input['credentials']), ['endpoint', 'apiKey']) ||
+        !is_string($input['size'] ?? NULL) || !preg_match('/^(auto|[1-9]\d{0,4}x[1-9]\d{0,4})$/D', $input['size'])) {
+        throw new UnprocessableEntityHttpException('shooting_provider_invalid');
+      }
+      $params = [];
+      $secrets = ImageJobCredentialVault::fromPayload($input, $params);
+      if (ImageJobCredentialVault::validate($secrets, 'custom') !== NULL) {
+        throw new UnprocessableEntityHttpException('shooting_provider_invalid');
+      }
+      try {
+        $this->urlPolicy->destination($secrets['endpoint']);
+      }
+      catch (ImageSafetyException) {
+        throw new UnprocessableEntityHttpException('shooting_provider_invalid');
+      }
+    }
+    elseif (array_intersect(array_keys($input), ['platform', 'size', 'credentials'])) {
+      throw new UnprocessableEntityHttpException('shooting_provider_invalid');
+    }
+    $credential_jobs = [];
     $transaction = $this->database->startTransaction();
     try {
       // This is also the CAS writer's lock, so input cannot change during reservation.
@@ -77,16 +106,17 @@ final class ShootingSketches {
       if (isset($input['shotId']) && !isset($prompts[$input['shotId']])) {
         throw new UnprocessableEntityHttpException('shooting_shot_invalid');
       }
-      $model = $this->models->getModel($input['model']);
+      $model = $custom ? ['id' => trim($input['model']), 'platform' => 'custom']
+        : $this->models->getModel($input['model']);
       $platforms = $this->models->getPlatforms();
       $platform = $model['platform'] ?? '';
       $platform_row = array_values(array_filter($platforms, static fn(array $row): bool => ($row['id'] ?? '') === $platform));
-      if (!$model || !in_array('image', $model['capabilities'] ?? [], TRUE) ||
-        !$platform_row || !empty($platform_row[0]['user_supplied'])) {
+      if (!$custom && (!$model || !in_array('image', $model['capabilities'] ?? [], TRUE) ||
+        !$platform_row || !empty($platform_row[0]['user_supplied']))) {
         throw new UnprocessableEntityHttpException('shooting_image_model_unavailable');
       }
       $task = $this->tasks->getByKind('text_to_image');
-      $size = self::size($model['sizes'] ?? [], $doc['draft']['aspectRatio']);
+      $size = $custom ? $input['size'] : self::size($model['sizes'] ?? [], $doc['draft']['aspectRatio']);
       foreach ($prompts as $shot_id => $prompt) {
         $shot_id = (string) $shot_id;
         if (isset($input['shotId']) && $input['shotId'] !== $shot_id) {
@@ -97,8 +127,11 @@ final class ShootingSketches {
           continue;
         }
         $predecessor = $input['previousJobId'] ?? '';
-        $key = hash('sha256', json_encode([$this->account->id(), $plan_uuid, $shot_id,
-          $prompt, $model['id'], $predecessor]));
+        $identity = [$this->account->id(), $plan_uuid, $shot_id, $prompt, $model['id'], $predecessor];
+        if ($custom) {
+          $identity[] = ['custom', $secrets['endpoint'], $size];
+        }
+        $key = hash('sha256', json_encode($identity));
         $existing = $this->database->select(self::TABLE, 's')->fields('s', ['id'])
           ->condition('request_key', $key)->execute()->fetchField();
         if ($existing) {
@@ -130,6 +163,10 @@ final class ShootingSketches {
           throw new UnprocessableEntityHttpException('shooting_image_input_invalid');
         }
         $job = $this->lifecycle->createQueued($job_input, $this->account);
+        if ($custom) {
+          $credential_jobs[] = $job->uuid();
+          $this->credentials->store($job->uuid(), $secrets['endpoint'], $secrets['api_key']);
+        }
         $this->database->insert(self::TABLE)->fields([
           'request_key' => $key, 'uid' => (int) $this->account->id(), 'plan_uuid' => $plan_uuid,
           'shot_id' => $shot_id, 'job_uuid' => $job->uuid(),
@@ -144,6 +181,9 @@ final class ShootingSketches {
         unset($transaction);
       }
       $this->entities->getStorage('node')->resetCache();
+      foreach ($credential_jobs as $job_uuid) {
+        $this->credentials->delete($job_uuid);
+      }
       throw $error;
     }
     $this->dispatch($plan_uuid);

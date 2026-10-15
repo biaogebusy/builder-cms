@@ -5,4 +5,4 @@ services:
 
   xinshi_shooting_plan.sketches:
     class: Drupal\xinshi_shooting_plan\Service\ShootingSketches
-    arguments: ['@database', '@entity_type.manager', '@current_user', '@xinshi_shooting_plan.documents', '@xinshi_ai.job_lifecycle', '@plugin.manager.xinshi_ai_task', '@xinshi_ai.model_registry', '@queue', '@uuid', '@file_url_generator', '@xinshi_ai.immediate_job_runner', '@config.factory', '@account_switcher']
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@xinshi_shooting_plan.documents', '@xinshi_ai.job_lifecycle', '@plugin.manager.xinshi_ai_task', '@xinshi_ai.model_registry', '@queue', '@uuid', '@file_url_generator', '@xinshi_ai.immediate_job_runner', '@config.factory', '@account_switcher', '@xinshi_ai.image_job_credentials', '@xinshi_ai.public_url_policy']

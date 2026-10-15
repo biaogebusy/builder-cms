@@ -85,7 +85,8 @@ final class ShootingDocumentAccess {
     }
     $doc = json_decode($content, TRUE);
     if (!is_array($doc) || array_diff(array_keys($doc), ['kind', 'version', 'id', 'previousId',
-      'taskId', 'runId', 'request', 'sketchModel', 'original', 'draft', 'status']) ||
+      'taskId', 'runId', 'request', 'sketchModel', 'sketchPlatform', 'sketchSize',
+      'textModel', 'textPlatform', 'original', 'draft', 'status']) ||
       ($doc['kind'] ?? NULL) !== 'xinshi-shooting-plan' || ($doc['version'] ?? NULL) !== 1 ||
       ($doc['id'] ?? NULL) !== $plan_uuid || !Uuid::isValid($plan_uuid) ||
       !is_string($doc['taskId'] ?? NULL) || !Uuid::isValid($doc['taskId']) ||
@@ -97,6 +98,20 @@ final class ShootingDocumentAccess {
       if (array_key_exists($key, $doc) && (!is_string($doc[$key]) || !Uuid::isValid($doc[$key]))) {
         throw new UnprocessableEntityHttpException('shooting_document_invalid');
       }
+    }
+    foreach (['textPlatform', 'sketchPlatform'] as $key) {
+      if (array_key_exists($key, $doc) && $doc[$key] !== 'custom') {
+        throw new UnprocessableEntityHttpException('shooting_document_invalid');
+      }
+    }
+    foreach (['textModel', 'sketchModel'] as $key) {
+      if (array_key_exists($key, $doc) && (!is_string($doc[$key]) || mb_strlen($doc[$key]) > 128)) {
+        throw new UnprocessableEntityHttpException('shooting_document_invalid');
+      }
+    }
+    if (array_key_exists('sketchSize', $doc) && (!is_string($doc['sketchSize']) ||
+      !preg_match('/^(auto|[1-9]\d{0,4}x[1-9]\d{0,4})$/D', $doc['sketchSize']))) {
+      throw new UnprocessableEntityHttpException('shooting_document_invalid');
     }
     if ($doc['status'] === 'ready' && (!isset($doc['runId']) ||
       !is_array($doc['original'] ?? NULL) || !is_array($doc['draft'] ?? NULL))) {

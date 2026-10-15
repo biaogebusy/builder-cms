@@ -28,7 +28,7 @@ final class ShootingSketchController extends ControllerBase {
 
   /** POST is protected by both route CSRF/permissions and source document authorization. */
   public function submit(string $plan_uuid, Request $request): JsonResponse {
-    if (strlen($request->getContent()) > 4096) {
+    if (strlen($request->getContent()) > 16384) {
       return new JsonResponse(['message' => 'shooting_submission_too_large'], 413,
         ['Cache-Control' => 'private, no-store']);
     }

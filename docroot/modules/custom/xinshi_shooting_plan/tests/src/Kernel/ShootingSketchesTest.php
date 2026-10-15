@@ -20,6 +20,8 @@ use Drupal\user\Entity\User;
 use Drupal\xinshi_ai\AiTaskInterface;
 use Drupal\xinshi_ai\AiTaskManagerInterface;
 use Drupal\xinshi_ai\Service\ImageJobExecutor;
+use Drupal\xinshi_ai\Service\ImageJobCredentialVault;
+use Drupal\xinshi_ai\Service\PublicUrlPolicy;
 use Drupal\xinshi_ai\Service\ImmediateJobRunner;
 use Drupal\xinshi_ai\Service\InputImageAccess;
 use Drupal\xinshi_ai\Service\JobLifecycleService;
@@ -49,6 +51,7 @@ final class ShootingSketchesTest extends TestCase {
   private int $validations = 0;
   private int $failValidationAt = 0;
   private bool $customModel = FALSE;
+  private ImageJobCredentialVault $credentials;
 
   public static function setUpBeforeClass(): void {
     require dirname(__DIR__, 2) . '/install-fixture.php';
@@ -112,7 +115,7 @@ final class ShootingSketchesTest extends TestCase {
     $task->expects($this->never())->method('execute');
     $task->method('validate')->willReturnCallback(function (array $input): array {
       $this->assertSame(1, $input['nRequested']);
-      $this->assertSame('768x1360', $input['params']['size']);
+      $this->assertSame($input['platform'] === 'custom' ? '1024x1536' : '768x1360', $input['params']['size']);
       $this->assertFalse($input['params']['promptExtend']);
       return ++$this->validations === $this->failValidationAt ? ['prompt' => 'Rejected'] : [];
     });
@@ -130,9 +133,18 @@ final class ShootingSketchesTest extends TestCase {
     $queues = $this->createMock(QueueFactory::class);
     $queues->method('get')->willReturn($queue);
     $runner = new ImmediateJobRunner($queues, $this->createMock(QueueWorkerManagerInterface::class), new NullLogger());
+    $this->credentials = new ImageJobCredentialVault(\Drupal::service('keyvalue.expirable'),
+      \Drupal::service('private_key'));
+    $urlPolicy = $this->createMock(PublicUrlPolicy::class);
+    $urlPolicy->method('destination')->willReturnCallback(function (string $url): array {
+      if ($url !== 'https://images.example.com/v1/images/generations') {
+        throw new \Drupal\xinshi_ai\Exception\ImageSafetyException('Blocked destination');
+      }
+      return ['host' => 'images.example.com', 'port' => 443, 'address' => '93.184.216.34'];
+    });
     $this->sketches = new ShootingSketches($db, $entities, $account, $this->documents, $this->lifecycle,
       $tasks, $models, $queues, \Drupal::service('uuid'), \Drupal::service('file_url_generator'),
-      $runner, \Drupal::configFactory(), \Drupal::service('account_switcher'));
+      $runner, \Drupal::configFactory(), \Drupal::service('account_switcher'), $this->credentials, $urlPolicy);
   }
 
   public function testCreatesRealImageJobsAndDeduplicatesLostSubmissionAcknowledgements(): void {
@@ -147,6 +159,54 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertTrue($this->sketches->admits($job));
     $this->assertSame(0, (int) \Drupal::database()->select(ShootingSketches::TABLE, 's')
       ->condition('plan_uuid', $this->plan->uuid())->condition('queue_pending', 1)->countQuery()->execute()->fetchField());
+  }
+
+  public function testCustomProviderReservesJobsWithEncryptedCredentialsAndExplicitSize(): void {
+    $input = $this->customInput();
+    $first = $this->submit($input);
+    $this->assertSame($first, $this->submit($input));
+    $this->assertSame(2, $this->validations);
+    foreach ($first as $sketch) {
+      $job = $this->lifecycle->loadJobByUuid($sketch['jobId']);
+      $this->assertSame('custom', $job->get('field_platform')->value);
+      $this->assertSame('my-image-model', $job->get('field_model')->value);
+      $this->assertSame('1024x1536', json_decode($job->get('field_params')->value, TRUE)['size']);
+      $this->assertSame(['endpoint' => $input['credentials']['endpoint'], 'api_key' => 'synthetic-key'],
+        $this->credentials->get($job->uuid()));
+      $public = json_encode([$job->toArray(), $first, $this->doc]);
+      $this->assertStringNotContainsString('synthetic-key', $public);
+      $this->assertStringNotContainsString('images.example.com', $public);
+      $encrypted = \Drupal::service('keyvalue.expirable')->get(ImageJobCredentialVault::COLLECTION)->get($job->uuid());
+      $this->assertStringNotContainsString('synthetic-key', $encrypted);
+    }
+    $this->assertSame($first, $this->read());
+    $this->assertSame(2, $this->rows());
+  }
+
+  public function testCustomValidationAndBlockedDestinationsDoNotCreateJobs(): void {
+    foreach ([['credentials' => []], ['size' => '0x1024'], ['size' => ['1024x1536']],
+      ['model' => ' '], ['credentials' => ['endpoint' => 'http://127.0.0.1/v1', 'apiKey' => 'synthetic-key']]] as $invalid) {
+      $this->expectHttp(fn() => $this->submit($invalid + $this->customInput()), 422);
+    }
+    $this->assertSame(0, $this->rows());
+    $this->assertSame(0, $this->validations);
+  }
+
+  public function testCustomReservationRollsBackCredentialsAlongWithJobs(): void {
+    $before = $this->jobs();
+    $values = \Drupal::service('keyvalue.expirable')->get(ImageJobCredentialVault::COLLECTION);
+    $keys = array_keys($values->getAll());
+    $this->failValidationAt = 2;
+    $this->expectHttp(fn() => $this->submit($this->customInput()), 422);
+    $this->assertSame($before, $this->jobs());
+    $this->assertSame(0, $this->rows());
+    $this->assertSame($keys, array_keys($values->getAll()));
+  }
+
+  private function customInput(): array {
+    return ['platform' => 'custom', 'model' => 'my-image-model', 'size' => '1024x1536',
+      'credentials' => ['endpoint' => 'https://images.example.com/v1/images/generations',
+        'apiKey' => 'synthetic-key']];
   }
 
   public function testValidationRollsBackBothJobsAndAssociations(): void {
@@ -279,7 +339,7 @@ final class ShootingSketchesTest extends TestCase {
 
   public function testControllerBoundsInputAndDisablesResponseCaching(): void {
     $controller = new ShootingSketchController($this->sketches);
-    $request = Request::create('/', 'POST', content: str_repeat('x', 4097));
+    $request = Request::create('/', 'POST', content: str_repeat('x', 16385));
     $response = $controller->submit($this->plan->uuid(), $request);
     $this->assertSame(413, $response->getStatusCode());
     $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
