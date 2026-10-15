@@ -14,6 +14,7 @@ $loader = require $root . '/vendor/autoload.php';
 chdir($root . '/docroot');
 mkdir('sites/default/files', 0777, TRUE);
 mkdir('/tmp/shooting-test');
+mkdir('/tmp/shooting-test/private');
 file_put_contents('sites/default/settings.php', <<<'SETTINGS'
 <?php
 $databases['default']['default'] = [
@@ -23,6 +24,7 @@ $databases['default']['default'] = [
 ];
 $settings['hash_salt'] = 'disposable-shooting-tests';
 $settings['config_sync_directory'] = '/tmp/shooting-test/config';
+$settings['file_private_path'] = '/tmp/shooting-test/private';
 $settings['skip_permissions_hardening'] = TRUE;
 $settings['extension_discovery_scan_tests'] = TRUE;
 $config['jsonapi.settings']['read_only'] = FALSE;
@@ -44,6 +46,8 @@ install_drupal($loader, [
 ]);
 \Drupal::service('module_installer')->install(['xinshi_shooting_plan_test']);
 \Drupal::database()->schema()->createTable('xinshi_shooting_sketch', xinshi_shooting_plan_schema()['xinshi_shooting_sketch']);
+xinshi_shooting_plan_update_10001();
+xinshi_shooting_plan_update_10001();
 
 // Install the shipped plan schema in the synthetic site without loading AI providers.
 $source = new \Drupal\Core\Config\FileStorage(dirname(__DIR__) . '/config/install');

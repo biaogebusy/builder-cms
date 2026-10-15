@@ -1,3 +1,83 @@
+xinshi_shooting_plan.sharing.read:
+  path: '/api/v3/ai/shooting-plans/{plan_uuid}/sharing'
+  defaults:
+    _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSharingController::settings'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    plan_uuid: '[0-9a-f-]+'
+
+xinshi_shooting_plan.sharing.update:
+  path: '/api/v3/ai/shooting-plans/{plan_uuid}/sharing'
+  defaults:
+    _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSharingController::settings'
+    _format: 'json'
+  methods: [PUT]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+    plan_uuid: '[0-9a-f-]+'
+
+xinshi_shooting_plan.sharing.users:
+  path: '/api/v3/ai/shooting-plans/{plan_uuid}/collaborators'
+  defaults:
+    _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSharingController::users'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    plan_uuid: '[0-9a-f-]+'
+
+xinshi_shooting_plan.shared.read:
+  path: '/api/v3/ai/shooting-plans/shared/{token}'
+  defaults:
+    _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSharingController::read'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _access: 'TRUE'
+    token: '[a-f0-9]{64}'
+
+xinshi_shooting_plan.shared.update:
+  path: '/api/v3/ai/shooting-plans/shared/{token}'
+  defaults:
+    _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSharingController::update'
+    _format: 'json'
+  methods: [PATCH]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+    token: '[a-f0-9]{64}'
+
+xinshi_shooting_plan.shared.image:
+  path: '/api/v3/ai/shooting-plans/shared/{token}/sketches/{shot_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_shooting_plan\Controller\ShootingSharingController::image'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _access: 'TRUE'
+    token: '[a-f0-9]{64}'
+    shot_id: '[a-zA-Z0-9_-]{1,64}'
+
 xinshi_shooting_plan.sketches.read:
   path: '/api/v3/ai/shooting-plans/{plan_uuid}/sketches'
   defaults:

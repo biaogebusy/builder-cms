@@ -31,3 +31,8 @@ function xinshi_shooting_plan_test_node_presave($node): void {
   }
   xinshi_shooting_plan_node_presave($node);
 }
+
+/** Implements hook_node_delete() using the production sharing cleanup. */
+function xinshi_shooting_plan_test_node_delete($node): void {
+  xinshi_shooting_plan_node_delete($node);
+}

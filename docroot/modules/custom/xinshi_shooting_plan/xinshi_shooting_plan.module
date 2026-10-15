@@ -35,6 +35,13 @@ function xinshi_shooting_plan_node_presave(NodeInterface $node): void {
   }
 }
 
+/** Implements hook_node_delete(); a recreated UUID must not inherit a retired sharing grant. */
+function xinshi_shooting_plan_node_delete(NodeInterface $node): void {
+  if ($node->bundle() === 'shooting_plan') {
+    \Drupal::database()->delete('xinshi_shooting_share')->condition('plan_uuid', $node->uuid())->execute();
+  }
+}
+
 /**
  * Implements hook_cron().
  */

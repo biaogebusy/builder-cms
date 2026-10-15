@@ -9,7 +9,17 @@
  * Implements hook_schema().
  */
 function xinshi_shooting_plan_schema(): array {
-  return ['xinshi_shooting_sketch' => [
+  return ['xinshi_shooting_share' => [
+    'description' => 'Revocable public links and an explicitly selected document editor.',
+    'fields' => [
+      'plan_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'owner_uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'token' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'editor_uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['plan_uuid'],
+    'unique keys' => ['token' => ['token']],
+  ], 'xinshi_shooting_sketch' => [
     'description' => 'One immutable image attempt for an authorized storyboard composition.',
     'fields' => [
       'id' => ['type' => 'serial', 'not null' => TRUE],
@@ -28,4 +38,12 @@ function xinshi_shooting_plan_schema(): array {
     'indexes' => ['plan_shot' => ['uid', 'plan_uuid', 'shot_id', 'id'],
       'outbox' => ['queue_pending', 'id']],
   ]];
+}
+
+/** Adds sharing storage without enabling links or granting site-wide permissions. */
+function xinshi_shooting_plan_update_10001(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('xinshi_shooting_share')) {
+    $schema->createTable('xinshi_shooting_share', xinshi_shooting_plan_schema()['xinshi_shooting_share']);
+  }
 }

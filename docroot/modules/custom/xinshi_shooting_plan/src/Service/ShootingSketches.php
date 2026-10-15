@@ -51,6 +51,15 @@ final class ShootingSketches {
     return $this->project($this->latest($plan_uuid, array_keys(ShootingDocumentAccess::prompts($doc['draft']))));
   }
 
+  /** Resolves an authorized local file for the revocable share route, never a remote URL. */
+  public function image(string $plan_uuid, string $shot_id): ?\Drupal\file\FileInterface {
+    $doc = $this->documents->read($plan_uuid);
+    if (!isset(ShootingDocumentAccess::prompts($doc['draft'])[$shot_id])) {
+      return NULL;
+    }
+    return $this->project($this->latest($plan_uuid, [$shot_id]), TRUE)[$shot_id] ?? NULL;
+  }
+
   /**
    * Reserves each attempt once, even when the response or queue acknowledgement is lost.
    *
@@ -256,7 +265,7 @@ final class ShootingSketches {
     }
   }
 
-  private function project(array $rows): array {
+  private function project(array $rows, bool $files_only = FALSE): array {
     if (!$rows) {
       return [];
     }
@@ -310,11 +319,16 @@ final class ShootingSketches {
         $file = $item ? ($files[$item->get('field_media_image')->target_id] ?? NULL) : NULL;
         if ($file && $asset->get('field_status')->value === 'succeeded') {
           $this->requireFields($file, ['uri']);
+          if ($files_only && $status === 'succeeded') {
+            $result[$shot_id] = $file;
+          }
           $value['src'] = $this->urls->generateAbsoluteString($file->getFileUri());
           break;
         }
       }
-      $result[$shot_id] = $value;
+      if (!$files_only) {
+        $result[$shot_id] = $value;
+      }
     }
     return $result;
   }

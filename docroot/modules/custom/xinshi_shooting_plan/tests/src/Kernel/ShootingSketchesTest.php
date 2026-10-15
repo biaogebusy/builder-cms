@@ -28,6 +28,8 @@ use Drupal\xinshi_shooting_plan\Controller\ShootingSketchController;
 use Drupal\xinshi_shooting_plan\Controller\ShootingDocumentController;
 use Drupal\xinshi_shooting_plan\Service\ShootingDocumentAccess;
 use Drupal\xinshi_shooting_plan\Service\ShootingSketches;
+use Drupal\xinshi_shooting_plan\Service\ShootingSharing;
+use Drupal\xinshi_shooting_plan\Controller\ShootingSharingController;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -434,6 +436,218 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame(200, $response->getStatusCode(), $response->getContent());
     $this->assertSame([], json_decode($response->getContent(), TRUE)['data']);
     $this->assertSame(403, $send('/jsonapi/node/shooting_plan/' . $uuid)->getStatusCode());
+  }
+
+  public function testSharingProjectsOnlyTheDraftAndGrantsOnlyTheSelectedAccount(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $before = $this->doc;
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $public = $sharing->read($token);
+    $this->assertSame(['id', 'request', 'plan', 'canEdit', 'contentHash', 'sketches'], array_keys($public));
+    $this->assertSame($this->doc['draft'], $public['plan']);
+    $this->assertFalse($public['canEdit']);
+    $this->assertNull($public['contentHash']);
+    $this->assertFalse($this->plan->access('view', \Drupal::currentUser()));
+    $input = ['expectedHash' => str_repeat('0', 64), 'plan' => $public['plan']];
+    $this->expectHttp(fn() => $sharing->update($token, $input), 403);
+    $stranger = User::create(['name' => 'stranger-' . $token, 'status' => 1, 'roles' => ['shooting_owner']]);
+    $stranger->save();
+    \Drupal::currentUser()->setAccount($stranger);
+    $this->assertFalse($sharing->read($token)['canEdit']);
+    $this->expectHttp(fn() => $sharing->update($token, $input), 403);
+    $this->expectHttp(fn() => $sharing->settings($this->plan->uuid()), 403);
+    \Drupal::currentUser()->setAccount($editor);
+    $shared = $sharing->read($token);
+    $this->assertTrue($shared['canEdit']);
+    $input['expectedHash'] = $shared['contentHash'];
+    $input['plan']['title'] = 'Collaborative title';
+    $input['plan']['shots'] = array_reverse($input['plan']['shots']);
+    $saved = $sharing->update($token, $input);
+    $this->assertSame($saved, $sharing->update($token, $input));
+    $stored = json_decode(Node::load($this->plan->id())->get('field_shooting_document')->value, TRUE);
+    $this->assertSame($input['plan'], $stored['draft']);
+    unset($stored['draft'], $before['draft']);
+    $this->assertSame($before, $stored);
+    $this->assertSame((string) $this->owner->id(), (string) Node::load($this->plan->id())->getOwnerId());
+    $this->assertFalse($this->plan->access('update', $editor));
+    $this->expectHttp(fn() => $sharing->configure($this->plan->uuid(), ['enabled' => TRUE, 'editorId' => 0]), 403);
+    $this->expectHttp(fn() => $this->documents->read($this->plan->uuid()), 403);
+  }
+
+  public function testSharedEditsConflictWithOwnerSavesAndRevocationTakesEffectImmediately(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $original = $sharing->read($token);
+    $content = Node::load($this->plan->id())->get('field_shooting_document')->value;
+    $this->doc['draft']['concept'] = 'Owner updated concept';
+    $this->documents->update($this->plan->uuid(), hash('sha256', $content), json_encode($this->doc));
+    \Drupal::currentUser()->setAccount($editor);
+    $input = ['expectedHash' => $original['contentHash'], 'plan' => $original['plan']];
+    $input['plan']['title'] = 'Stale collaborator title';
+    $this->expectHttp(fn() => $sharing->update($token, $input), 409);
+    $fresh = $sharing->read($token);
+    $this->assertSame('Owner updated concept', $fresh['plan']['concept']);
+    \Drupal::currentUser()->setAccount($this->owner);
+    $sharing->configure($this->plan->uuid(), ['enabled' => TRUE, 'editorId' => 0]);
+    \Drupal::currentUser()->setAccount($editor);
+    $this->assertFalse($sharing->read($token)['canEdit']);
+    $this->expectHttp(fn() => $sharing->update($token, $input), 403);
+    \Drupal::currentUser()->setAccount($this->owner);
+    $sharing->configure($this->plan->uuid(), ['enabled' => FALSE, 'editorId' => 0]);
+    $this->expectHttp(fn() => $sharing->read($token), 404);
+    $next = $sharing->configure($this->plan->uuid(), ['enabled' => TRUE, 'editorId' => 0]);
+    $this->assertNotSame($token, $next['token']);
+    $this->expectHttp(fn() => $sharing->read($token), 404);
+    $this->plan->delete();
+    $this->expectHttp(fn() => $sharing->read($next['token']), 404);
+  }
+
+  public function testSharingRechecksBlockedAccountsAndFieldGrantsAndRejectsInvalidInput(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $shared = $sharing->read($token);
+    $input = ['expectedHash' => $shared['contentHash'], 'plan' => $shared['plan']];
+    $this->expectHttp(fn() => $sharing->update($token, $input + ['runId' => $this->doc['runId']]), 422);
+    $invalid = $input;
+    $invalid['plan']['shots'][0]['duration'] = -1;
+    $this->expectHttp(fn() => $sharing->update($token, $invalid), 422);
+    \Drupal::state()->set('shooting.denied', 'field_shooting_document:view');
+    $this->expectHttp(fn() => $sharing->read($token), 403);
+    \Drupal::state()->set('shooting.denied', 'field_shooting_document:edit');
+    \Drupal::currentUser()->setAccount($editor);
+    $this->assertFalse($sharing->read($token)['canEdit']);
+    $this->expectHttp(fn() => $sharing->update($token, $input), 403);
+    \Drupal::state()->delete('shooting.denied');
+    $editor->block()->save();
+    $this->assertFalse($sharing->read($token)['canEdit']);
+    $this->expectHttp(fn() => $sharing->update($token, $input), 403);
+    $this->owner->block()->save();
+    $this->expectHttp(fn() => $sharing->read($token), 404);
+  }
+
+  public function testSharedImagesUseRevocableFilesWithoutLeakingPrivateUrlsOrTaskIds(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $images = $this->submit();
+    $job = $this->lifecycle->loadJobByUuid($images['shot_1']['jobId']);
+    file_put_contents('private://shared-synthetic.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKAAAAABJRU5ErkJggg=='));
+    $file = File::create(['uri' => 'private://shared-synthetic.png', 'filemime' => 'image/png',
+      'uid' => $this->owner->id(), 'status' => 1]);
+    $file->save();
+    $media = Media::create(['bundle' => 'image', 'name' => 'Shared sketch', 'status' => 1,
+      'uid' => $this->owner->id(), 'field_media_image' => ['target_id' => $file->id(), 'alt' => 'Sketch']]);
+    $media->save();
+    $asset = Node::create(['type' => 'image_asset', 'title' => 'Shared sketch', 'status' => 1,
+      'uid' => $this->owner->id(), 'field_status' => 'succeeded', 'field_asset_image' => ['target_id' => $media->id()]]);
+    $asset->save();
+    $job->set('field_status', 'succeeded')->set('field_assets', [['target_id' => $asset->id()]])->save();
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $projection = (array) $sharing->read($token)['sketches'];
+    $this->assertSame('/api/v3/ai/shooting-plans/shared/' . $token . '/sketches/shot_1', $projection['shot_1']['src']);
+    $this->assertArrayNotHasKey('jobId', $projection['shot_1']);
+    $this->assertArrayNotHasKey('taskId', $projection['shot_1']);
+    $controller = new ShootingSharingController($sharing, \Drupal::service('file_system'));
+    $response = $controller->image($token, 'shot_1');
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertInstanceOf(\Symfony\Component\HttpFoundation\BinaryFileResponse::class, $response);
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+    $this->assertSame('image/png', $response->headers->get('Content-Type'));
+    $this->assertSame(404, $controller->image($token, 'nonexistent')->getStatusCode());
+    \Drupal::state()->set('shooting.denied', 'uri:view');
+    $this->assertSame(403, $controller->image($token, 'shot_1')->getStatusCode());
+    \Drupal::state()->delete('shooting.denied');
+    \Drupal::currentUser()->setAccount($this->owner);
+    $sharing->configure($this->plan->uuid(), ['enabled' => FALSE, 'editorId' => (int) $editor->id()]);
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $this->assertSame(404, $controller->image($token, 'shot_1')->getStatusCode());
+  }
+
+  public function testSharingAccountPickerIsBoundedAndRoutesSeparatePublicReadsFromCsrfWrites(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $this->assertSame([], $sharing->users($this->plan->uuid(), 'x'));
+    $this->assertSame([['id' => (int) $editor->id(), 'name' => $editor->getAccountName()]],
+      $sharing->users($this->plan->uuid(), $editor->getAccountName()));
+    $routes = Yaml::parseFile(dirname(__DIR__, 3) . '/xinshi_shooting_plan.routing.yml');
+    foreach (['sharing.update', 'shared.update'] as $route) {
+      $this->assertSame('TRUE', $routes['xinshi_shooting_plan.' . $route]['requirements']['_csrf_request_header_token']);
+      $this->assertSame('TRUE', $routes['xinshi_shooting_plan.' . $route]['requirements']['_user_is_logged_in']);
+    }
+    foreach (['shared.read', 'shared.image'] as $route) {
+      $this->assertSame('TRUE', $routes['xinshi_shooting_plan.' . $route]['requirements']['_access']);
+    }
+    $controller = new ShootingSharingController($sharing, \Drupal::service('file_system'));
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $response = $controller->read($token);
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+    $this->assertSame('no-referrer', $response->headers->get('Referrer-Policy'));
+    $this->assertSame(404, $controller->read(str_repeat('0', 64))->getStatusCode());
+  }
+
+  public function testPublicHttpRoutesAndCookieCsrfProtectCollaborativeWrites(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    \Drupal::getContainer()->set('xinshi_shooting_plan.sharing', $sharing);
+    \Drupal::service('router.builder')->rebuild();
+    $path = '/api/v3/ai/shooting-plans/shared/' . $token;
+    $principal = new AnonymousUserSession();
+    $send = static function (string $method, ?array $body = NULL, bool $cookie = FALSE, ?string $csrf = NULL)
+      use ($path, &$principal) {
+      \Drupal::currentUser()->setAccount($principal);
+      $request = Request::create($path, $method, server: ['HTTP_ACCEPT' => 'application/json',
+        'CONTENT_TYPE' => 'application/json'], content: $body === NULL ? NULL : json_encode($body));
+      if ($cookie) {
+        $name = \Drupal::service('session_configuration')->getOptions($request)['name'];
+        $request->cookies->set($name, 'synthetic-session');
+      }
+      if ($csrf !== NULL) {
+        $request->headers->set('X-CSRF-Token', $csrf);
+      }
+      // Error-page subrequests can replace the matcher context in this long-lived test kernel.
+      $context = \Drupal::service('router.request_context');
+      $context->fromRequest($request);
+      \Drupal::service('router')->setContext($context);
+      return \Drupal::service('http_kernel')->handle($request, HttpKernelInterface::SUB_REQUEST);
+    };
+    $public = $send('GET');
+    $this->assertSame(200, $public->getStatusCode(), $public->getContent());
+    $this->assertFalse(json_decode($public->getContent(), TRUE)['canEdit']);
+    $this->assertStringContainsString('no-store', $public->headers->get('Cache-Control'));
+    $denied = $send('PATCH', []);
+    $this->assertSame(403, $denied->getStatusCode(), $denied->getContent());
+    $principal = $editor;
+    $view = $send('GET');
+    $this->assertSame(200, $view->getStatusCode(), $view->getContent());
+    $shared = json_decode($view->getContent(), TRUE);
+    $this->assertTrue($shared['canEdit']);
+    $input = ['expectedHash' => $shared['contentHash'], 'plan' => $shared['plan']];
+    $input['plan']['title'] = 'Saved through HTTP';
+    $denied = $send('PATCH', $input, TRUE);
+    $this->assertSame(403, $denied->getStatusCode(), $denied->getContent());
+    $denied = $send('PATCH', $input, TRUE, 'invalid');
+    $this->assertSame(403, $denied->getStatusCode(), $denied->getContent());
+    $csrf = \Drupal::service('csrf_token')->get('X-CSRF-Token request header');
+    $saved = $send('PATCH', $input, TRUE, $csrf);
+    $this->assertSame(200, $saved->getStatusCode(), $saved->getContent());
+    $this->assertStringContainsString('no-store', $saved->headers->get('Cache-Control'));
+    $principal = new AnonymousUserSession();
+    $this->assertSame('Saved through HTTP', json_decode($send('GET')->getContent(), TRUE)['plan']['title']);
+  }
+
+  private function sharedFixture(): array {
+    $this->doc['draft'] += ['title' => 'Shared plan', 'concept' => 'A clear comparison',
+      'audience' => 'Beginners', 'assumptions' => ['One presenter'], 'preparation' => ['Charge the phone'],
+      'targetDuration' => 60, 'structure' => [['id' => 'intro', 'title' => 'Introduction']]];
+    foreach ($this->doc['draft']['shots'] as &$shot) {
+      $shot += ['sectionId' => 'intro', 'duration' => 30, 'audio' => 'Quiet room',
+        'actions' => ['Start recording'], 'acceptance' => 'Clear speech', 'dialogue' => [],
+        'tip' => 'Keep the camera steady', 'sounds' => []];
+    }
+    $this->saveDoc();
+    $sharing = new ShootingSharing(\Drupal::database(), \Drupal::entityTypeManager(),
+      \Drupal::currentUser(), \Drupal::service('account_switcher'), $this->documents, $this->sketches);
+    $this->assertNull($sharing->settings($this->plan->uuid())['token']);
+    $editor = User::create(['name' => 'collaborator-' . \Drupal::service('uuid')->generate(), 'status' => 1]);
+    $editor->save();
+    $settings = $sharing->configure($this->plan->uuid(), ['enabled' => TRUE, 'editorId' => (int) $editor->id()]);
+    $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $settings['token']);
+    return [$sharing, $editor, $settings['token']];
   }
 
   private function saveDoc(): void {

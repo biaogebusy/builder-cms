@@ -1,4 +1,8 @@
 services:
+  xinshi_shooting_plan.sharing:
+    class: Drupal\xinshi_shooting_plan\Service\ShootingSharing
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@account_switcher', '@xinshi_shooting_plan.documents', '@xinshi_shooting_plan.sketches']
+
   xinshi_shooting_plan.documents:
     class: Drupal\xinshi_shooting_plan\Service\ShootingDocumentAccess
     arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']

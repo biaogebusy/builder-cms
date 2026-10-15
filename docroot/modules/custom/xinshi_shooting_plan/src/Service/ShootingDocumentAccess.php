@@ -25,6 +25,13 @@ final class ShootingDocumentAccess {
     private readonly ResourceTypeRepositoryInterface $resources,
   ) {}
 
+  /** Checks the owner's source and field authority before delegating a shared projection. */
+  public function ownerDocument(string $uuid, bool $write = FALSE): NodeInterface {
+    $node = $this->owned($uuid, $write);
+    $this->field($node, 'field_shooting_document', $write);
+    return $node;
+  }
+
   /** Loads the current plan, sharing the content writer's row lock for image submissions. */
   public function read(string $plan_uuid, ?string $expected_hash = NULL): array {
     $node = $this->owned($plan_uuid, $expected_hash !== NULL);
