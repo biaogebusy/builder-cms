@@ -54,6 +54,7 @@ final class ShootingSketchesTest extends TestCase {
   private int $failValidationAt = 0;
   private bool $customModel = FALSE;
   private ImageJobCredentialVault $credentials;
+  private ImmediateJobRunner $runner;
 
   public static function setUpBeforeClass(): void {
     require dirname(__DIR__, 2) . '/install-fixture.php';
@@ -134,7 +135,7 @@ final class ShootingSketchesTest extends TestCase {
     $queue->method('createItem')->willReturnCallback(fn($item) => $this->queueFails ? FALSE : $realQueue->createItem($item));
     $queues = $this->createMock(QueueFactory::class);
     $queues->method('get')->willReturn($queue);
-    $runner = new ImmediateJobRunner($queues, $this->createMock(QueueWorkerManagerInterface::class), new NullLogger());
+    $this->runner = new ImmediateJobRunner($queues, $this->createMock(QueueWorkerManagerInterface::class), new NullLogger());
     $this->credentials = new ImageJobCredentialVault(\Drupal::service('keyvalue.expirable'),
       \Drupal::service('private_key'));
     $urlPolicy = $this->createMock(PublicUrlPolicy::class);
@@ -146,7 +147,57 @@ final class ShootingSketchesTest extends TestCase {
     });
     $this->sketches = new ShootingSketches($db, $entities, $account, $this->documents, $this->lifecycle,
       $tasks, $models, $queues, \Drupal::service('uuid'), \Drupal::service('file_url_generator'),
-      $runner, \Drupal::configFactory(), \Drupal::service('account_switcher'), $this->credentials, $urlPolicy);
+      $this->runner, \Drupal::configFactory(), \Drupal::service('account_switcher'), $this->credentials, $urlPolicy);
+  }
+
+  public function testAuthorPollingWakesQueuedWorkWithoutReservingOrRedeliveringJobs(): void {
+    $config = \Drupal::configFactory()->getEditable('xinshi_ai.settings');
+    $config->set('queue.worker', 'daemon')->save();
+    try {
+      $first = $this->submit();
+      $queue = \Drupal::queue(ImageJobExecutor::QUEUE);
+      $items = $queue->numberOfItems();
+      $controller = new ShootingSketchController($this->sketches);
+      $controller->read($this->plan->uuid());
+      $this->assertFalse($this->runner->isScheduled());
+      $config->set('queue.worker', 'cron')->save();
+      // Anonymous sharing uses the pure projection and cannot wake consumers.
+      $this->assertSame($first, $this->sketches->read($this->plan->uuid()));
+      $this->assertFalse($this->runner->isScheduled());
+      $response = $controller->read($this->plan->uuid());
+      $this->assertTrue($this->runner->isScheduled());
+      $this->assertSame(200, $response->getStatusCode());
+      $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+      $this->assertSame($first, json_decode($response->getContent(), TRUE)['sketches']);
+      $controller->read($this->plan->uuid());
+      $this->assertSame($items, $queue->numberOfItems());
+      $this->assertSame(2, $this->rows());
+      $this->assertSame(2, $this->validations);
+    }
+    finally {
+      $config->set('queue.worker', 'daemon')->save();
+    }
+  }
+
+  public function testPollingDoesNotWakeTerminalOrUnauthorizedPlans(): void {
+    $config = \Drupal::configFactory()->getEditable('xinshi_ai.settings');
+    $config->set('queue.worker', 'daemon')->save();
+    try {
+      foreach ($this->submit() as $sketch) {
+        $job = $this->lifecycle->loadJobByUuid($sketch['jobId']);
+        $this->lifecycle->markFailed($job, 'Unknown outcome', ImageJobExecutor::RESULT_UNKNOWN);
+      }
+      $config->set('queue.worker', 'cron')->save();
+      $controller = new ShootingSketchController($this->sketches);
+      $this->assertSame(200, $controller->read($this->plan->uuid())->getStatusCode());
+      $this->assertFalse($this->runner->isScheduled());
+      \Drupal::currentUser()->setAccount(new \Drupal\Core\Session\AnonymousUserSession());
+      $this->assertSame(403, $controller->read($this->plan->uuid())->getStatusCode());
+      $this->assertFalse($this->runner->isScheduled());
+    }
+    finally {
+      $config->set('queue.worker', 'daemon')->save();
+    }
   }
 
   public function testCreatesRealImageJobsAndDeduplicatesLostSubmissionAcknowledgements(): void {
@@ -350,6 +401,38 @@ final class ShootingSketchesTest extends TestCase {
     $routes = Yaml::parseFile(dirname(__DIR__, 3) . '/xinshi_shooting_plan.routing.yml');
     $this->assertSame('TRUE', $routes['xinshi_shooting_plan.sketches.submit']['requirements']['_csrf_request_header_token']);
     $this->assertSame(['oauth2', 'cookie'], $routes['xinshi_shooting_plan.sketches.submit']['options']['_auth']);
+  }
+
+  public function testSketchStatusRefreshesWithoutClearingDrupalCaches(): void {
+    $jobs = $this->submit();
+    $controller = new ShootingSketchController($this->sketches);
+    $path = '/api/v3/ai/shooting-plans/' . $this->plan->uuid() . '/sketches';
+    $config = \Drupal::configFactory()->getEditable('system.performance');
+    $previous = $config->get('cache.page.max_age');
+    $config->set('cache.page.max_age', 3600)->save();
+    try {
+      $read = static function () use ($controller, $path) {
+        $response = $controller->read(basename(dirname($path)));
+        $event = new \Symfony\Component\HttpKernel\Event\ResponseEvent(
+          \Drupal::service('http_kernel'), Request::create($path),
+          HttpKernelInterface::MAIN_REQUEST, $response);
+        \Drupal::service('finish_response_subscriber')->onRespond($event);
+        return $response;
+      };
+      $queued = $read();
+      $this->assertSame('queued', json_decode($queued->getContent(), TRUE)['sketches']['shot_1']['status']);
+      $job = $this->lifecycle->loadJobByUuid($jobs['shot_1']['jobId']);
+      $job->set('field_status', 'succeeded')->save();
+      $finished = $read();
+      $this->assertSame('succeeded', json_decode($finished->getContent(), TRUE)['sketches']['shot_1']['status']);
+      foreach ([$queued, $finished] as $response) {
+        $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+        $this->assertFalse($response->headers->hasCacheControlDirective('public'));
+      }
+    }
+    finally {
+      $config->set('cache.page.max_age', $previous)->save();
+    }
   }
 
   public function testShippedContentTypeIsPrivateAndIndependentOfChat(): void {

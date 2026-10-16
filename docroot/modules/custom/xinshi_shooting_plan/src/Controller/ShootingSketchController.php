@@ -23,7 +23,7 @@ final class ShootingSketchController extends ControllerBase {
 
   /** GET reauthorizes job, asset, media and file access without resubmitting any work. */
   public function read(string $plan_uuid): JsonResponse {
-    return $this->respond(fn(): array => $this->sketches->read($plan_uuid));
+    return $this->respond(fn(): array => $this->sketches->poll($plan_uuid));
   }
 
   /** POST is protected by both route CSRF/permissions and source document authorization. */

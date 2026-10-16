@@ -56,6 +56,19 @@ final class ShootingSketches {
     return $this->project($this->latest($plan_uuid, array_keys(ShootingDocumentAccess::prompts($doc['draft']))));
   }
 
+  /** Author polling wakes existing queued work after the previous claim window elapsed. */
+  public function poll(string $plan_uuid): array {
+    $sketches = $this->read($plan_uuid);
+    if (in_array('queued', array_column($sketches, 'status'), TRUE)) {
+      $worker = (string) ($this->config->get('xinshi_ai.settings')->get('queue.worker') ?? 'cron');
+      if ($worker === 'cron' || $worker === 'immediate') {
+        // No reservation or redelivery: the existing consumer still claims each queued item.
+        $this->runner->schedule();
+      }
+    }
+    return $sketches;
+  }
+
   /** Resolves an authorized local file for the revocable share route, never a remote URL. */
   public function image(string $plan_uuid, string $shot_id): ?\Drupal\file\FileInterface {
     $doc = $this->documents->read($plan_uuid);
