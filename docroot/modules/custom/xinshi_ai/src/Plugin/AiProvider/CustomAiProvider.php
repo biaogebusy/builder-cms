@@ -39,7 +39,7 @@ final class CustomAiProvider extends OpenAiProvider implements ImageToImageInter
   protected function loadClient(): void {
     $endpoint = trim((string) ($this->configuration['endpoint'] ?? ''));
     if ($endpoint !== '') {
-      $this->setEndpoint(rtrim($endpoint, '/'));
+      $this->setEndpoint($this->normalizeEndpoint($endpoint));
     }
     $apiKey = trim((string) ($this->configuration['api_key'] ?? ''));
     if ($apiKey !== '') {
@@ -50,6 +50,15 @@ final class CustomAiProvider extends OpenAiProvider implements ImageToImageInter
 
     // 父类 host 逻辑(getConfig()->get('host'))在 xinshi_ai.settings 下为空,不会覆盖上面的 endpoint。
     parent::loadClient();
+  }
+
+  /**
+   * 前端提交的是完整生图地址(.../v1/images/generations);OpenAI SDK 把 endpoint 当
+   * base URI,自行追加操作路径(生图 /images/generations、编辑 /images/edits),不剥
+   * 后缀会拼成 .../images/generations/images/generations。
+   */
+  private function normalizeEndpoint(string $endpoint): string {
+    return (string) preg_replace('~/images/generations$~i', '', rtrim($endpoint, '/'));
   }
 
   /**
