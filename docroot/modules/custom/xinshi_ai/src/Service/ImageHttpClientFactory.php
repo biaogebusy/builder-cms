@@ -30,6 +30,9 @@ class ImageHttpClientFactory {
     $stack->setHandler(new CurlHandler());
     // Check before the metering middleware marks a request as dispatched.
     $stack->unshift($this->middleware($limit), 'xinshi_ai.public_destination');
+    // Gateway image responses may omit usage keys the strict openai-php
+    // parser requires; repair them before the SDK reads the body.
+    $stack->push(OpenAiImageUsageShape::middleware(), OpenAiImageUsageShape::MIDDLEWARE);
     return new Client(['handler' => $stack, 'allow_redirects' => FALSE, 'proxy' => '', 'verify' => TRUE,
       'timeout' => min(300, max(1, (float) ($options['timeout'] ?? 180))), 'connect_timeout' => 10]);
   }
