@@ -15,6 +15,12 @@ Permission behavior and existing-site compatibility are maintained in
 [Permission rules](../xinshi-docs/stories/develop/engineering/permissions.mdx).
 Follow the shared permission-documentation requirements in `AGENTS.md`.
 
+When creating or updating documentation, follow the mandatory
+[ASD-STE100 writing rules](AGENTS.md#documentation-writing-asd-ste100) and the shared
+[terminology and writing guide](../xinshi-docs/stories/develop/engineering/terminology.mdx).
+The imported rules distinguish English ASD-STE100 requirements from Chinese clear-expression
+principles and require factual preservation and verification.
+
 `AGENTS.md` is the single source for repository boundaries, Drupal conventions,
 validation, and the requirement to update the corresponding xinshi-docs pages and
 CMS remediation progress with each change. Edit shared rules there rather than

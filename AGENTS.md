@@ -60,6 +60,31 @@ Internal documentation links use actual Storybook routes derived from `Meta.titl
 Follow the documentation repository's own instructions for MDX, index generation
 and builds. Documentation-only changes do not require CMS application tests.
 
+### Documentation writing (ASD-STE100)
+
+These rules are mandatory whenever a task creates or updates documentation, including
+MDX, Markdown, source README files, and repository guidance.
+
+- Read the [terminology and writing rules](../xinshi-docs/stories/develop/engineering/terminology.mdx)
+  before writing. Use one term for one concept.
+- For English, follow ASD-STE100 writing rules and approved vocabulary, including its rules
+  for technical names and verbs. For Chinese, apply the clear-expression principles below.
+  Do not claim full ASD-STE100 compliance for Chinese text or from a keyword scan alone.
+- Write short sentences in active voice. Name the actor. Keep one idea per sentence and
+  one topic per paragraph. Replace ambiguous pronouns and remove filler or promotional claims.
+- Put conditions before actions. Write procedures in execution order, with one main action
+  per step. State prerequisites, expected results, and what to do when a step fails.
+- Use lists for parallel requirements and tables for comparisons. Distinguish mandatory,
+  optional, and default behavior. State the scope of claims; avoid unsupported absolutes.
+- Verify behavior, defaults, permissions, paths, and versions against the responsible source.
+  Keep planned, implemented, tested, and deployed states separate.
+- Preserve dates, finding IDs, quantities, units, code identifiers, commands, headings,
+  anchors, links, and diagram names. Do not relabel historical evidence as current acceptance.
+  Record source-verified factual corrections separately from expression-only edits.
+- After a full rewrite, compare code blocks, identifiers, numbers, links, and diagram names
+  programmatically, then review meaning and procedure order. Follow the documentation
+  repository's instructions for index generation, builds, and link checks.
+
 ## Local environment and commands
 
 `docker/docker-compose.yml` and `docroot/sites/default/settings.php` define the
