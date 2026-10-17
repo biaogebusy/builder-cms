@@ -49,21 +49,47 @@ class InputImageAccess {
    * Reloads all references so queued work cannot retain revoked authorization.
    */
   public function forJob(NodeInterface $job): ImageFile {
+    return $this->forJobImages($job)[0];
+  }
+
+  /** Loads each source under current access and checks the frozen file version. */
+  public function forJobImages(NodeInterface $job): array {
     $owner = $this->activeOwner($job->getOwnerId());
-    if (!$job->hasField('field_input_image') || !$job->get('field_input_image')->access('view', $owner)) {
+    if (!$job->hasField('field_input_image') ||
+      !$job->get('field_input_image')->access('view', $owner) ||
+      !$job->get('field_params')->access('view', $owner)) {
       throw new InputImageAccessException();
     }
-    $mid = $job->get('field_input_image')->target_id;
-    if (!$mid) {
+    $refs = $job->get('field_input_image')->getValue();
+    $params = json_decode((string) $job->get('field_params')->value, TRUE) ?: [];
+    $versions = $params['inputVersions'] ?? NULL;
+    if (!$refs || count($refs) > 8 || ($versions !== NULL && count($versions) !== count($refs))) {
       throw new InputImageAccessException();
     }
-    $storage = $this->entities->getStorage('media');
-    $storage->resetCache([$mid]);
-    $media = $storage->load($mid);
-    if (!$media instanceof MediaInterface) {
-      throw new InputImageAccessException();
+    $images = [];
+    $bytes = 0;
+    foreach ($refs as $index => $ref) {
+      $storage = $this->entities->getStorage('media');
+      $storage->resetCache([$ref['target_id']]);
+      $media = $storage->load($ref['target_id']);
+      if (!$media instanceof MediaInterface) {
+        throw new InputImageAccessException();
+      }
+      $file = $this->authorizedFile($media, $owner);
+      if ($versions !== NULL && $file->uuid() !== $versions[$index]) {
+        throw new InputImageAccessException();
+      }
+      $image = $this->readImage($file);
+      $bytes += strlen($image->getBinary());
+      if ($bytes > 4 * ImageFileValidator::MAX_BYTES) {
+        throw new InputImageAccessException();
+      }
+      $images[] = $image;
     }
-    $file = $this->authorizedFile($media, $owner);
+    return $images;
+  }
+
+  private function readImage(FileInterface $file): ImageFile {
     $path = $this->localPath($file);
     $handle = @fopen($path, 'rb');
     if ($handle === FALSE) {

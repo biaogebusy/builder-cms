@@ -73,6 +73,7 @@ final class ShootingSketchesTest extends TestCase {
     foreach (['started_at', 'completed_at'] as $field) {
       self::field('node', 'image_job', 'field_' . $field, 'timestamp');
     }
+    self::field('node', 'image_job', 'field_input_image', 'entity_reference', ['target_type' => 'media'], 8);
     self::field('node', 'image_job', 'field_assets', 'entity_reference', ['target_type' => 'node'], -1);
     self::field('node', 'image_asset', 'field_status', 'string');
     self::field('node', 'image_asset', 'field_asset_image', 'entity_reference', ['target_type' => 'media']);
@@ -108,10 +109,11 @@ final class ShootingSketchesTest extends TestCase {
     $db = \Drupal::database();
     $entities = \Drupal::entityTypeManager();
     $account = \Drupal::currentUser();
+    $inputImages = new InputImageAccess($entities, \Drupal::service('entity.repository'),
+      \Drupal::moduleHandler(), \Drupal::service('account_switcher'),
+      \Drupal::service('stream_wrapper_manager'), new \Drupal\xinshi_ai\Service\ImageFileValidator());
     $this->documents = new ShootingDocumentAccess($db, $entities, $account,
-      \Drupal::service('jsonapi.resource_type.repository'));
-    $inputImages = $this->createMock(InputImageAccess::class);
-    $inputImages->expects($this->never())->method('forSubmission');
+      \Drupal::service('jsonapi.resource_type.repository'), $inputImages);
     $this->lifecycle = new JobLifecycleService($entities, \Drupal::time(),
       \Drupal::service('entity.repository'), \Drupal::lock(), $inputImages);
     $task = $this->createMock(AiTaskInterface::class);
@@ -123,10 +125,10 @@ final class ShootingSketchesTest extends TestCase {
       return ++$this->validations === $this->failValidationAt ? ['prompt' => 'Rejected'] : [];
     });
     $tasks = $this->createMock(AiTaskManagerInterface::class);
-    $tasks->method('getByKind')->with('text_to_image')->willReturn($task);
+    $tasks->method('getByKind')->willReturn($task);
     $models = $this->createMock(ModelRegistryServiceInterface::class);
     $models->method('getModel')->willReturn(['id' => 'fixture', 'platform' => 'fixture',
-      'capabilities' => ['image'], 'sizes' => ['1024x1024', '768x1360']]);
+      'capabilities' => ['image', 'image-edit'], 'sizes' => ['1024x1024', '768x1360']]);
     $models->method('getPlatforms')->willReturnCallback(fn() => [
       ['id' => 'fixture', 'user_supplied' => $this->customModel],
     ]);
@@ -147,7 +149,99 @@ final class ShootingSketchesTest extends TestCase {
     });
     $this->sketches = new ShootingSketches($db, $entities, $account, $this->documents, $this->lifecycle,
       $tasks, $models, $queues, \Drupal::service('uuid'), \Drupal::service('file_url_generator'),
-      $this->runner, \Drupal::configFactory(), \Drupal::service('account_switcher'), $this->credentials, $urlPolicy);
+      $this->runner, \Drupal::configFactory(), \Drupal::service('account_switcher'), $this->credentials, $urlPolicy, $inputImages);
+  }
+
+  #[DataProvider('anchorReferenceScopes')]
+  public function testConfirmationGatesRemainingFramesAndPassesScopedReferencesAndAnchor(bool $anchor_only): void {
+    [$global, $global_file] = $this->referenceImage();
+    [$local, $local_file] = $this->referenceImage();
+    $this->doc['visuals'] = ['style' => 'color', 'anchorShotId' => 'shot_1', 'references' => [
+      ['mediaId' => $global->uuid(), 'fileId' => $global_file->uuid(), 'purpose' => 'character',
+        'name' => 'Presenter', 'note' => 'Preserve the jacket'],
+      ['mediaId' => $local->uuid(), 'fileId' => $local_file->uuid(), 'purpose' => 'product',
+        'name' => 'Product', 'note' => 'Preserve shape', 'shotId' => 'shot_2'],
+    ]];
+    if ($anchor_only) {
+      $this->doc['visuals']['references'][0]['shotId'] = 'shot_1';
+    }
+    $this->saveDoc();
+    $first = $this->submit();
+    $this->assertSame(['shot_1'], array_keys($first));
+    $this->assertStringContainsString('colored storyboard', $first['shot_1']['prompt']);
+    $this->assertStringNotContainsString('Preserve shape', $first['shot_1']['prompt']);
+    $this->expectHttp(fn() => $this->submit(['shotId' => 'shot_2']), 409);
+    $anchor_job = $this->lifecycle->loadJobByUuid($first['shot_1']['jobId']);
+    $this->assertSame('image_edit', $anchor_job->get('field_job_kind')->value);
+    $this->assertCount(1, $anchor_job->get('field_input_image'));
+    [$anchor] = $this->referenceImage();
+    $asset = Node::create(['type' => 'image_asset', 'title' => 'Anchor', 'status' => 1,
+      'uid' => $this->owner->id(), 'field_status' => 'succeeded',
+      'field_asset_image' => ['target_id' => $anchor->id()]]);
+    $asset->save();
+    $anchor_job->set('field_status', 'succeeded')->set('field_assets', [['target_id' => $asset->id()]])->save();
+    $this->assertCount(1, $this->submit());
+    $this->doc['visuals']['confirmedJobId'] = $anchor_job->uuid();
+    $this->saveDoc();
+    $next = $this->submit();
+    $this->assertCount(2, $next);
+    $this->assertFalse($next['shot_2']['stale']);
+    $job = $this->lifecycle->loadJobByUuid($next['shot_2']['jobId']);
+    $this->assertSame('image_edit', $job->get('field_job_kind')->value);
+    $inputs = $anchor_only ? [$local->id(), $anchor->id()] : [$global->id(), $local->id(), $anchor->id()];
+    $this->assertSame($inputs,
+      array_column($job->get('field_input_image')->getValue(), 'target_id'));
+    $this->assertStringContainsString('Reference ' . count($inputs) . ' is the approved continuity frame', $job->get('field_prompt')->value);
+    $this->assertSame($next, $this->submit());
+    $this->assertTrue($this->sketches->admits($job));
+    $job->set('field_status', 'succeeded')->set('field_assets', [['target_id' => $asset->id()]])->save();
+    $this->assertArrayHasKey('src', $this->read()['shot_2']);
+    $this->doc['visuals']['style'] = 'realistic';
+    $this->saveDoc();
+    $this->assertTrue($this->read()['shot_1']['stale']);
+    $this->expectHttp(fn() => $this->submit(['shotId' => 'shot_2', 'previousJobId' => $job->uuid()]), 409);
+    [, $replacement] = $this->referenceImage();
+    $global->set('field_media_image', ['target_id' => $replacement->id(), 'alt' => 'Replacement'])->save();
+    $projection = $this->read()['shot_2'];
+    $this->assertTrue($projection['sourceUnavailable']);
+    $this->assertArrayNotHasKey('src', $projection);
+    $this->assertSame($job->uuid(), $projection['jobId']);
+    $this->assertFalse($this->sketches->admits($job));
+  }
+
+  public static function anchorReferenceScopes(): array {
+    return ['shared' => [FALSE], 'anchor only' => [TRUE]];
+  }
+
+  public function testReferenceVersionsAndCurrentSourceAccessAreRequired(): void {
+    [$media, $file] = $this->referenceImage();
+    $this->doc['visuals'] = ['style' => 'pencil', 'references' => [
+      ['mediaId' => $media->uuid(), 'fileId' => $file->uuid(), 'purpose' => 'scene',
+        'name' => 'Room', 'note' => ''],
+    ]];
+    $this->saveDoc();
+    $first = $this->submit();
+    $this->assertCount(1, $first);
+    [, $replacement] = $this->referenceImage();
+    $media->set('field_media_image', ['target_id' => $replacement->id(), 'alt' => 'Replacement'])->save();
+    $this->expectHttp(fn() => $this->submit(['shotId' => 'shot_1', 'previousJobId' => $first['shot_1']['jobId']]), 409);
+    $this->assertSame(1, $this->rows());
+    $projection = $this->read()['shot_1'];
+    $this->assertTrue($projection['sourceUnavailable']);
+    $this->assertArrayNotHasKey('src', $projection);
+    $this->assertSame($first['shot_1']['jobId'], $projection['jobId']);
+  }
+
+  /** Creates only synthetic local images, never a provider result. */
+  private function referenceImage(): array {
+    $uri = 'public://' . \Drupal::service('uuid')->generate() . '.png';
+    file_put_contents($uri, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKAAAAABJRU5ErkJggg=='));
+    $file = File::create(['uri' => $uri, 'filemime' => 'image/png', 'uid' => $this->owner->id(), 'status' => 1]);
+    $file->save();
+    $media = Media::create(['bundle' => 'image', 'name' => 'Reference', 'status' => 1,
+      'uid' => $this->owner->id(), 'field_media_image' => ['target_id' => $file->id(), 'alt' => 'Reference']]);
+    $media->save();
+    return [$media, $file];
   }
 
   public function testAuthorPollingWakesQueuedWorkWithoutReservingOrRedeliveringJobs(): void {
@@ -171,8 +265,8 @@ final class ShootingSketchesTest extends TestCase {
       $this->assertSame($first, json_decode($response->getContent(), TRUE)['sketches']);
       $controller->read($this->plan->uuid());
       $this->assertSame($items, $queue->numberOfItems());
-      $this->assertSame(2, $this->rows());
-      $this->assertSame(2, $this->validations);
+      $this->assertSame(1, $this->rows());
+      $this->assertSame(1, $this->validations);
     }
     finally {
       $config->set('queue.worker', 'daemon')->save();
@@ -202,10 +296,10 @@ final class ShootingSketchesTest extends TestCase {
 
   public function testCreatesRealImageJobsAndDeduplicatesLostSubmissionAcknowledgements(): void {
     $first = $this->submit();
-    $this->assertCount(2, $first);
+    $this->assertCount(1, $first);
     $this->assertSame($first, $this->submit());
-    $this->assertSame(2, $this->validations);
-    $this->assertSame(2, $this->rows());
+    $this->assertSame(1, $this->validations);
+    $this->assertSame(1, $this->rows());
     $job = $this->lifecycle->loadJobByUuid($first['shot_1']['jobId']);
     $this->assertSame((string) $this->owner->id(), (string) $job->getOwnerId());
     $this->assertSame($first['shot_1']['taskId'], $job->get('field_task_id')->value);
@@ -218,7 +312,7 @@ final class ShootingSketchesTest extends TestCase {
     $input = $this->customInput();
     $first = $this->submit($input);
     $this->assertSame($first, $this->submit($input));
-    $this->assertSame(2, $this->validations);
+    $this->assertSame(1, $this->validations);
     foreach ($first as $sketch) {
       $job = $this->lifecycle->loadJobByUuid($sketch['jobId']);
       $this->assertSame('custom', $job->get('field_platform')->value);
@@ -233,7 +327,7 @@ final class ShootingSketchesTest extends TestCase {
       $this->assertStringNotContainsString('synthetic-key', $encrypted);
     }
     $this->assertSame($first, $this->read());
-    $this->assertSame(2, $this->rows());
+    $this->assertSame(1, $this->rows());
   }
 
   public function testCustomValidationAndBlockedDestinationsDoNotCreateJobs(): void {
@@ -249,7 +343,7 @@ final class ShootingSketchesTest extends TestCase {
     $before = $this->jobs();
     $values = \Drupal::service('keyvalue.expirable')->get(ImageJobCredentialVault::COLLECTION);
     $keys = array_keys($values->getAll());
-    $this->failValidationAt = 2;
+    $this->failValidationAt = 1;
     $this->expectHttp(fn() => $this->submit($this->customInput()), 422);
     $this->assertSame($before, $this->jobs());
     $this->assertSame(0, $this->rows());
@@ -264,7 +358,7 @@ final class ShootingSketchesTest extends TestCase {
 
   public function testValidationRollsBackBothJobsAndAssociations(): void {
     $before = $this->jobs();
-    $this->failValidationAt = 2;
+    $this->failValidationAt = 1;
     $this->expectHttp(fn() => $this->submit(), 422);
     $this->assertSame(0, $this->rows());
     $this->assertSame($before, $this->jobs());
@@ -280,10 +374,10 @@ final class ShootingSketchesTest extends TestCase {
       $this->assertStringContainsString('queue', $error->getMessage());
     }
     $before = $this->read();
-    $this->assertCount(2, $before);
+    $this->assertCount(1, $before);
     $this->queueFails = FALSE;
     $this->assertSame($before, $this->submit());
-    $this->assertSame(2, $this->validations);
+    $this->assertSame(1, $this->validations);
   }
 
   public function testUnknownAttemptsCannotBeReplacedOrHiddenByVisualEdits(): void {
@@ -295,8 +389,8 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame('unknown', $this->read()['shot_1']['status']);
     $this->assertFalse($this->read()['shot_1']['retryable']);
     $this->expectHttp(fn() => $this->submit(['shotId' => 'shot_1', 'previousJobId' => $job->uuid()]), 409);
-    $this->assertSame(2, $this->rows());
-    $this->assertSame(2, $this->validations);
+    $this->assertSame(1, $this->rows());
+    $this->assertSame(1, $this->validations);
   }
 
   public function testRetriesNameTheirPredecessorAndRepeatedRetriesDoNotCreateNewJobs(): void {
@@ -307,7 +401,7 @@ final class ShootingSketchesTest extends TestCase {
     $second = $this->submit($input);
     $this->assertNotSame($first['shot_1']['jobId'], $second['shot_1']['jobId']);
     $this->assertSame($second, $this->submit($input));
-    $this->assertSame(3, $this->rows());
+    $this->assertSame(2, $this->rows());
   }
 
   public function testAnEditedAndRestoredVisualStillCreatesAnExplicitNewAttempt(): void {
@@ -327,7 +421,7 @@ final class ShootingSketchesTest extends TestCase {
     $this->saveDoc();
     $third = $this->submit(['shotId' => 'shot_1', 'previousJobId' => $job->uuid()]);
     $this->assertNotSame($first['shot_1']['jobId'], $third['shot_1']['jobId']);
-    $this->assertSame(4, $this->rows());
+    $this->assertSame(3, $this->rows());
   }
 
   #[DataProvider('denials')]

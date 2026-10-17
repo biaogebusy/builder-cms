@@ -45,6 +45,9 @@ final class ShootingSketchController extends ControllerBase {
     try {
       return new JsonResponse(['sketches' => (object) $operation()], $status, $headers);
     }
+    catch (\Drupal\xinshi_ai\Exception\InputImageAccessException) {
+      return new JsonResponse(['message' => 'shooting_reference_unavailable'], 403, $headers);
+    }
     catch (HttpExceptionInterface $error) {
       return new JsonResponse(['message' => $error->getMessage() ?: 'shooting_request_denied'],
         $error->getStatusCode(), $headers);

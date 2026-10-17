@@ -48,12 +48,18 @@ final class ShootingSketches {
     private readonly AccountSwitcherInterface $switcher,
     private readonly ImageJobCredentialVault $credentials,
     private readonly PublicUrlPolicy $urlPolicy,
+    private readonly \Drupal\xinshi_ai\Service\InputImageAccess $inputImages,
   ) {}
 
   /** Returns at most one latest attempt per current shot under current source authorization. */
   public function read(string $plan_uuid): array {
     $doc = $this->documents->read($plan_uuid);
-    return $this->project($this->latest($plan_uuid, array_keys(ShootingDocumentAccess::prompts($doc['draft']))));
+    $prompts = ShootingDocumentAccess::prompts($doc['draft'], $doc['visuals'] ?? []);
+    $result = $this->project($this->latest($plan_uuid, array_keys($prompts)));
+    foreach ($result as $id => &$sketch) {
+      $sketch['stale'] = ($sketch['inputKey'] ?? '') !== ShootingVisuals::key($prompts[$id], $doc, (string) $id);
+    }
+    return $result;
   }
 
   /** Author polling wakes existing queued work after the previous claim window elapsed. */
@@ -72,7 +78,7 @@ final class ShootingSketches {
   /** Resolves an authorized local file for the revocable share route, never a remote URL. */
   public function image(string $plan_uuid, string $shot_id): ?\Drupal\file\FileInterface {
     $doc = $this->documents->read($plan_uuid);
-    if (!isset(ShootingDocumentAccess::prompts($doc['draft'])[$shot_id])) {
+    if (!isset(ShootingDocumentAccess::prompts($doc['draft'], $doc['visuals'] ?? [])[$shot_id])) {
       return NULL;
     }
     return $this->project($this->latest($plan_uuid, [$shot_id]), TRUE)[$shot_id] ?? NULL;
@@ -123,7 +129,7 @@ final class ShootingSketches {
     try {
       // This is also the CAS writer's lock, so input cannot change during reservation.
       $doc = $this->documents->read($plan_uuid, $input['expectedHash']);
-      $prompts = ShootingDocumentAccess::prompts($doc['draft']);
+      $prompts = ShootingDocumentAccess::prompts($doc['draft'], $doc['visuals'] ?? []);
       $latest = $this->latest($plan_uuid, array_keys($prompts));
       if (isset($input['shotId']) && !isset($prompts[$input['shotId']])) {
         throw new UnprocessableEntityHttpException('shooting_shot_invalid');
@@ -137,19 +143,70 @@ final class ShootingSketches {
         !$platform_row || !empty($platform_row[0]['user_supplied']))) {
         throw new UnprocessableEntityHttpException('shooting_image_model_unavailable');
       }
-      $task = $this->tasks->getByKind('text_to_image');
+      $anchor = ShootingVisuals::anchor($doc);
+      if (!isset($prompts[$anchor])) {
+        throw new UnprocessableEntityHttpException('shooting_anchor_invalid');
+      }
+      $confirmed = NULL;
+      if (isset($doc['visuals']['confirmedJobId'])) {
+        $candidate = $this->project(isset($latest[$anchor]) ? [$anchor => $latest[$anchor]] : [])[$anchor] ?? NULL;
+        if ($candidate && $candidate['jobId'] === $doc['visuals']['confirmedJobId'] &&
+          $candidate['status'] === 'succeeded' && isset($candidate['mediaId']) &&
+          ($candidate['inputKey'] ?? '') === ShootingVisuals::key($prompts[$anchor], $doc, $anchor)) {
+          $confirmed = $candidate;
+        }
+      }
+      if (!$confirmed && isset($input['shotId']) && $input['shotId'] !== $anchor) {
+        throw new ConflictHttpException('shooting_anchor_required');
+      }
+      $anchor_sources = [];
+      if ($confirmed) {
+        $anchor_job = $this->lifecycle->loadJobByUuid($confirmed['jobId']);
+        $anchor_params = json_decode((string) $anchor_job->get('field_params')->value, TRUE) ?: [];
+        foreach ($anchor_job->get('field_input_image')->referencedEntities() as $index => $media) {
+          $anchor_sources[] = [$media->uuid(), $anchor_params['inputVersions'][$index]];
+        }
+      }
       $size = $custom ? $input['size'] : self::size($model['sizes'] ?? [], $doc['draft']['aspectRatio']);
       foreach ($prompts as $shot_id => $prompt) {
         $shot_id = (string) $shot_id;
         if (isset($input['shotId']) && $input['shotId'] !== $shot_id) {
           continue;
         }
+        if (!$confirmed && $shot_id !== $anchor) {
+          continue;
+        }
         // Automatic continuation fills missing shots only; visual edits require explicit action.
         if (!isset($input['shotId']) && isset($latest[$shot_id])) {
           continue;
         }
+        $input_key = ShootingVisuals::key($prompt, $doc, $shot_id);
+        $references = ShootingVisuals::references($doc['visuals'] ?? [], $shot_id);
+        foreach ($references as $reference) {
+          $media = $this->inputImages->forSubmission($reference['mediaId'], $this->account);
+          if ($media->get('field_media_image')->entity->uuid() !== $reference['fileId']) {
+            throw new ConflictHttpException('shooting_reference_changed');
+          }
+        }
+        $images = array_column($references, 'mediaId');
+        if ($confirmed && $shot_id !== $anchor) {
+          $number = array_search($confirmed['mediaId'], $images, TRUE);
+          if ($number === FALSE) {
+            $images[] = $confirmed['mediaId'];
+            $number = count($images) - 1;
+          }
+          $number++;
+          $prompt .= "\nReference {$number} is the approved continuity frame. Preserve its identities, " .
+            "clothing, product geometry and location. Compose this shot from its own camera and action directions.";
+        }
+        $images = array_values(array_unique($images));
+        $kind = $images ? 'image_edit' : 'text_to_image';
+        if (!$custom && $images && !in_array('image-edit', $model['capabilities'] ?? [], TRUE)) {
+          throw new UnprocessableEntityHttpException('shooting_reference_model_required');
+        }
+        $task = $this->tasks->getByKind($kind);
         $predecessor = $input['previousJobId'] ?? '';
-        $identity = [$this->account->id(), $plan_uuid, $shot_id, $prompt, $model['id'], $predecessor];
+        $identity = [$this->account->id(), $plan_uuid, $shot_id, $input_key, $model['id'], $predecessor];
         if ($custom) {
           $identity[] = ['custom', $secrets['endpoint'], $size];
         }
@@ -178,9 +235,15 @@ final class ShootingSketches {
           throw new ConflictHttpException('shooting_predecessor_required');
         }
         $task_id = $this->uuid->generate();
-        $job_input = ['jobKind' => 'text_to_image', 'platform' => $platform, 'model' => $model['id'],
+        $job_input = ['jobKind' => $kind, 'platform' => $platform, 'model' => $model['id'],
           'prompt' => $prompt, 'taskId' => $task_id, 'nRequested' => 1,
-          'params' => ['n' => 1, 'promptExtend' => FALSE] + ($size ? ['size' => $size] : [])];
+          'params' => ['n' => 1, 'promptExtend' => FALSE, 'shootingInput' => $input_key] + ($size ? ['size' => $size] : [])];
+        if ($confirmed && $shot_id !== $anchor) {
+          $job_input['params']['shootingAnchorSources'] = $anchor_sources;
+        }
+        if ($images) {
+          $job_input['inputImage'] = $images;
+        }
         if ($task->validate($job_input, $this->account)) {
           throw new UnprocessableEntityHttpException('shooting_image_input_invalid');
         }
@@ -192,7 +255,7 @@ final class ShootingSketches {
         $this->database->insert(self::TABLE)->fields([
           'request_key' => $key, 'uid' => (int) $this->account->id(), 'plan_uuid' => $plan_uuid,
           'shot_id' => $shot_id, 'job_uuid' => $job->uuid(),
-          'task_id' => $task_id, 'prompt' => $prompt, 'model' => $model['id'], 'queue_pending' => 1,
+          'task_id' => $task_id, 'prompt' => $prompts[$shot_id], 'model' => $model['id'], 'queue_pending' => 1,
         ])->execute();
       }
       unset($transaction);
@@ -258,6 +321,7 @@ final class ShootingSketches {
     $this->switcher->switchTo($owner);
     try {
       $this->documents->read($row['plan_uuid']);
+      $this->requireAnchorSources($job);
       return $job->access('view', $owner);
     }
     catch (\Throwable) {
@@ -302,6 +366,18 @@ final class ShootingSketches {
     return $result;
   }
 
+  /** Anchor provenance remains an authorization dependency, not an extra model image. */
+  private function requireAnchorSources(NodeInterface $job): void {
+    $this->requireFields($job, ['field_params']);
+    $params = json_decode((string) $job->get('field_params')->value, TRUE) ?: [];
+    foreach ($params['shootingAnchorSources'] ?? [] as [$uuid, $version]) {
+      $media = $this->inputImages->forSubmission($uuid, $this->account);
+      if ($media->get('field_media_image')->entity->uuid() !== $version) {
+        throw new AccessDeniedHttpException('shooting_reference_changed');
+      }
+    }
+  }
+
   private function retryable(NodeInterface $job): bool {
     return $job->get('field_status')->value === 'failed' &&
       $job->get('field_error_code')->value !== ImageJobExecutor::RESULT_UNKNOWN;
@@ -329,13 +405,35 @@ final class ShootingSketches {
     $storage->resetCache($ids);
     $jobs = [];
     $asset_ids = [];
+    $unavailable = [];
     foreach ($storage->loadMultiple($ids) as $job) {
       if ((string) $job->getOwnerId() !== (string) $this->account->id()) {
         throw new AccessDeniedHttpException();
       }
-      $this->requireFields($job, ['field_status', 'field_error_code', 'field_assets']);
+      $this->requireFields($job, ['field_status', 'field_error_code', 'field_assets', 'field_params']);
+      if ($job->hasField('field_input_image') && !$job->get('field_input_image')->isEmpty()) {
+        try {
+          $this->requireAnchorSources($job);
+          $this->requireFields($job, ['field_input_image']);
+          $params = json_decode((string) $job->get('field_params')->value, TRUE) ?: [];
+          foreach ($job->get('field_input_image')->getValue() as $index => $ref) {
+            $storage_media = $this->entities->getStorage('media');
+            $storage_media->resetCache([$ref['target_id']]);
+            $reference = $storage_media->load($ref['target_id']);
+            $source = $this->inputImages->forSubmission($reference?->uuid(), $this->account);
+            if (isset($params['inputVersions']) &&
+              $source->get('field_media_image')->entity->uuid() !== ($params['inputVersions'][$index] ?? NULL)) {
+              throw new AccessDeniedHttpException('shooting_reference_changed');
+            }
+          }
+        }
+        catch (\Drupal\xinshi_ai\Exception\InputImageAccessException | AccessDeniedHttpException) {
+          // Keep the owned attempt recoverable while withholding results from unavailable sources.
+          $unavailable[$job->uuid()] = TRUE;
+        }
+      }
       $jobs[$job->uuid()] = $job;
-      foreach ($job->get('field_assets')->getValue() as $ref) {
+      foreach (isset($unavailable[$job->uuid()]) ? [] : $job->get('field_assets')->getValue() as $ref) {
         $asset_ids[] = $ref['target_id'];
       }
     }
@@ -365,8 +463,10 @@ final class ShootingSketches {
         $status = 'unknown';
       }
       $value = ['taskId' => $row['task_id'], 'jobId' => $row['job_uuid'], 'prompt' => $row['prompt'],
+        'inputKey' => $job ? (json_decode((string) $job->get('field_params')->value, TRUE)['shootingInput'] ?? '') : '',
         'model' => $row['model'], 'status' => $status, 'retryable' => $job && $this->retryable($job)];
-      foreach ($job?->get('field_assets')->getValue() ?? [] as $ref) {
+      $value['sourceUnavailable'] = isset($unavailable[$row['job_uuid']]);
+      foreach ($value['sourceUnavailable'] ? [] : ($job?->get('field_assets')->getValue() ?? []) as $ref) {
         $asset = $assets[$ref['target_id']] ?? NULL;
         $item = $asset ? ($media[$asset->get('field_asset_image')->target_id] ?? NULL) : NULL;
         $file = $item ? ($files[$item->get('field_media_image')->target_id] ?? NULL) : NULL;
@@ -375,6 +475,7 @@ final class ShootingSketches {
           if ($files_only && $status === 'succeeded') {
             $result[$shot_id] = $file;
           }
+          $value['mediaId'] = $item->uuid();
           $value['src'] = $this->urls->generateAbsoluteString($file->getFileUri());
           break;
         }

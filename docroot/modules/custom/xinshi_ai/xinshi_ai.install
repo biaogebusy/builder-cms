@@ -260,3 +260,11 @@ function xinshi_ai_apply_schema_updates(Connection $database): void {
     }
   }
 }
+
+/** Allows bounded multi-image references without replacing existing field values. */
+function xinshi_ai_update_10007(): void {
+  $field = \Drupal\field\Entity\FieldStorageConfig::load('node.field_input_image');
+  if ($field && $field->getCardinality() === 1) {
+    $field->setCardinality(8)->save();
+  }
+}

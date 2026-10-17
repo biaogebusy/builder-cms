@@ -36,6 +36,9 @@ final class ShootingDocumentController extends ControllerBase {
       $result = $this->documents->update($plan_uuid, $input['expectedHash'], $input['content']);
       return new JsonResponse($result, $result['updated'] ? 200 : 409, $headers);
     }
+    catch (\Drupal\xinshi_ai\Exception\InputImageAccessException) {
+      return new JsonResponse(['message' => 'shooting_reference_unavailable'], 403, $headers);
+    }
     catch (HttpExceptionInterface $error) {
       return new JsonResponse(['message' => $error->getMessage() ?: 'shooting_request_denied'],
         $error->getStatusCode(), $headers);

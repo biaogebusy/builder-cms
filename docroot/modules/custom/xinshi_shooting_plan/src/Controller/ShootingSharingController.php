@@ -80,6 +80,9 @@ final class ShootingSharingController extends ControllerBase {
       $result = $operation();
       return $result instanceof Response ? $result : new JsonResponse($result, 200, self::HEADERS);
     }
+    catch (\Drupal\xinshi_ai\Exception\InputImageAccessException) {
+      return new JsonResponse(['message' => 'shooting_reference_unavailable'], 403, $headers);
+    }
     catch (HttpExceptionInterface $error) {
       return new JsonResponse(['message' => $error->getMessage() ?: 'shooting_share_unavailable'],
         $error->getStatusCode(), self::HEADERS);

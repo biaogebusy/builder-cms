@@ -118,11 +118,17 @@ final class JobLifecycleServiceTest extends TestCase {
     $owner->method('id')->willReturn(7);
     $media = $this->createMock(MediaInterface::class);
     $media->method('id')->willReturn(55);
+    $file = $this->createMock(\Drupal\file\FileInterface::class);
+    $file->method('uuid')->willReturn('file-version');
+    $field = $this->createMock(\Drupal\Core\Field\FieldItemListInterface::class);
+    $field->method('__get')->with('entity')->willReturn($file);
+    $media->method('get')->with('field_media_image')->willReturn($field);
     $uuid = '11111111-1111-4111-8111-111111111111';
     $this->inputImages->expects($this->once())->method('forSubmission')->with($uuid, $owner)->willReturn($media);
     $this->lifecycle->createQueued(['jobKind' => 'image_edit', 'inputImage' => $uuid], $owner);
     $this->assertCount(1, $this->createdJobs);
-    $this->assertSame(['target_id' => 55], $this->createdJobs[0]['field_input_image']);
+    $this->assertSame([['target_id' => 55]], $this->createdJobs[0]['field_input_image']);
+    $this->assertSame(['file-version'], json_decode($this->createdJobs[0]['field_params'], TRUE)['inputVersions']);
   }
 
   public function testTransitionsRunUnderTheJobLockAndSyncTheWorkerCopy(): void {
@@ -175,6 +181,11 @@ final class JobLifecycleServiceTest extends TestCase {
   public function testALateImageIsRefusedOnceTheJobEnded(): void {
     $media = $this->createMock(MediaInterface::class);
     $media->method('id')->willReturn(55);
+    $file = $this->createMock(\Drupal\file\FileInterface::class);
+    $file->method('uuid')->willReturn('file-version');
+    $field = $this->createMock(\Drupal\Core\Field\FieldItemListInterface::class);
+    $field->method('__get')->with('entity')->willReturn($file);
+    $media->method('get')->with('field_media_image')->willReturn($field);
     $this->stored->set('field_status', 'cancelled');
 
     try {
@@ -192,6 +203,11 @@ final class JobLifecycleServiceTest extends TestCase {
   public function testAssetsCarryTheStableOutputIndexAndAdvanceTheJob(): void {
     $media = $this->createMock(MediaInterface::class);
     $media->method('id')->willReturn(55);
+    $file = $this->createMock(\Drupal\file\FileInterface::class);
+    $file->method('uuid')->willReturn('file-version');
+    $field = $this->createMock(\Drupal\Core\Field\FieldItemListInterface::class);
+    $field->method('__get')->with('entity')->willReturn($file);
+    $media->method('get')->with('field_media_image')->willReturn($field);
     $appended = [];
     $assets = $this->stored->get('field_assets');
     $assets->method('appendItem')->willReturnCallback(function (array $item) use (&$appended, $assets) {

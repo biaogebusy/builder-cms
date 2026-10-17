@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_ai\Plugin\AiTask;
 
 use Drupal\ai\OperationType\ImageToImage\ImageToImageInput;
+use Drupal\xinshi_ai\Service\ReferenceImageInput;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\AiImageTaskBase;
@@ -67,8 +68,7 @@ final class ImageEditTask extends AiImageTaskBase {
    * 从 field_input_image(media)读出源图,构造 ImageToImageInput。
    */
   private function buildImageInput(NodeInterface $job, string $prompt): ImageToImageInput {
-    $image = $this->inputImages->forJob($job);
-    $input = new ImageToImageInput($image);
+    $input = new ReferenceImageInput($this->inputImages->forJobImages($job));
     if ($prompt !== '') {
       $input->setPrompt($prompt);
     }

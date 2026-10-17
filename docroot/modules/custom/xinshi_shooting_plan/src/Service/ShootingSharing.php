@@ -101,8 +101,9 @@ final class ShootingSharing {
     $doc = ShootingDocumentAccess::document($content, $node->uuid());
     $editable = $this->canEdit($node, $row);
     $sketches = $this->asOwner($node, fn() => $this->sketches->read($node->uuid()));
+    $public_prompts = ShootingDocumentAccess::prompts($doc['draft']);
     foreach ($sketches as $id => &$sketch) {
-      $sketch = ['status' => $sketch['status'], 'prompt' => $sketch['prompt'], 'retryable' => FALSE] +
+      $sketch = ['status' => $sketch['status'], 'prompt' => $public_prompts[$id], 'retryable' => FALSE, 'stale' => $sketch['stale']] +
         (!empty($sketch['src']) ? ['src' => '/api/v3/ai/shooting-plans/shared/' . $token . '/sketches/' . rawurlencode((string) $id)] : []);
     }
     return ['id' => $node->uuid(), 'request' => $doc['request'], 'plan' => $doc['draft'],

@@ -19,10 +19,13 @@ tar -cf - vendor composer.json composer.lock docroot/autoload.php docroot/index.
 docker cp "$SHOOTING_PHPUNIT_PHAR" "$container":/tmp/phpunit.phar
 docker exec "$container" sh -c \
   'find /app/docroot/modules/custom/xinshi_shooting_plan \( -name "*.php" -o -name "*.module" -o -name "*.install" \) -exec php -l {} \;'
-docker exec "$container" php -l /app/docroot/modules/custom/xinshi_ai/src/Service/ImageJobExecutor.php
+docker exec "$container" sh -c \
+  'find /app/docroot/modules/custom/xinshi_ai/src -name "*.php" -exec php -l {} \;'
+docker exec "$container" php -l /app/docroot/modules/custom/xinshi_ai/xinshi_ai.install
 docker exec "$container" php -d extension=pdo_sqlite /tmp/phpunit.phar \
   --bootstrap /app/docroot/modules/custom/xinshi_ai/tests/bootstrap.php \
-  /app/docroot/modules/custom/xinshi_ai/tests/src/Unit/ImageJobExecutorTest.php
+  --filter 'ImageJobExecutorTest|InputImageAccessTest|JobLifecycleServiceTest|ImageResponseSafetyTest' \
+  /app/docroot/modules/custom/xinshi_ai/tests/src/Unit
 docker exec -e XINSHI_SHOOTING_ISOLATED_TEST=1 "$container" php -d extension=pdo_sqlite /tmp/phpunit.phar \
   --bootstrap /app/docroot/modules/custom/xinshi_shooting_plan/tests/bootstrap.php \
   /app/docroot/modules/custom/xinshi_shooting_plan/tests/src/Kernel/ShootingSketchesTest.php

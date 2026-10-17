@@ -12,6 +12,7 @@ use Drupal\ai\OperationType\ImageToImage\ImageToImageInput;
 use Drupal\ai\OperationType\ImageToImage\ImageToImageOutput;
 use Drupal\ai\Traits\OperationType\ImageToImageTrait;
 use Drupal\xinshi_ai\Service\ProviderImageFiles;
+use Drupal\xinshi_ai\Service\ReferenceImageInput;
 use Drupal\xinshi_ai\Exception\ImageSafetyException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -57,13 +58,23 @@ trait OpenAiCompatibleImageEditTrait {
       $this->moderationEndpoints($prompt);
     }
 
-    $tmpImage = $this->writeTempImage($imageFile);
-    $imageHandle = fopen($tmpImage, 'r');
+    $temporaryImages = [];
+    $imageHandles = [];
     $maskHandle = NULL;
     $tmpMask = NULL;
 
     try {
-      $payload = ['model' => $model_id, 'image' => $imageHandle] + $this->configuration;
+      foreach ($input instanceof ReferenceImageInput ? $input->getImages() : [$imageFile] as $image) {
+        $path = $this->writeTempImage($image);
+        $temporaryImages[] = $path;
+        $handle = fopen($path, 'r');
+        if ($handle === FALSE) {
+          throw new ImageSafetyException('Cannot read reference image.');
+        }
+        $imageHandles[] = $handle;
+      }
+      $payload = ['model' => $model_id,
+        'image' => count($imageHandles) === 1 ? $imageHandles[0] : $imageHandles] + $this->configuration;
       if ($prompt !== NULL && $prompt !== '') {
         $payload['prompt'] = $prompt;
       }
@@ -94,13 +105,15 @@ trait OpenAiCompatibleImageEditTrait {
       return new ImageToImageOutput($images, $response, []);
     }
     finally {
-      if (is_resource($imageHandle)) {
-        fclose($imageHandle);
+      foreach ($imageHandles as $handle) {
+        fclose($handle);
       }
       if (is_resource($maskHandle)) {
         fclose($maskHandle);
       }
-      @unlink($tmpImage);
+      foreach ($temporaryImages as $path) {
+        @unlink($path);
+      }
       if ($tmpMask !== NULL) {
         @unlink($tmpMask);
       }

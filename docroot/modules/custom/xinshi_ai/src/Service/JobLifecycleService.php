@@ -73,8 +73,21 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
       $values['field_negative_prompt'] = $input['negativePrompt'];
     }
     if (isset($input['inputImage']) || ($input['jobKind'] ?? '') === 'image_edit') {
-      $media = $this->inputImages->forSubmission($input['inputImage'] ?? NULL, $owner);
-      $values['field_input_image'] = ['target_id' => $media->id()];
+      $references = $input['inputImage'] ?? NULL;
+      $references = is_array($references) ? $references : [$references];
+      if (!array_is_list($references) || !$references || count($references) > 8 ||
+        count(array_unique($references, SORT_REGULAR)) !== count($references)) {
+        throw new \Drupal\xinshi_ai\Exception\InputImageAccessException();
+      }
+      $versions = [];
+      foreach ($references as $reference) {
+        $media = $this->inputImages->forSubmission($reference, $owner);
+        $values['field_input_image'][] = ['target_id' => $media->id()];
+        $versions[] = $media->get('field_media_image')->entity->uuid();
+      }
+      // Freeze actual source files so queued work cannot silently consume replacements.
+      $params['inputVersions'] = $versions;
+      $values['field_params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
     }
     if (!empty($input['parentJob'])) {
       $parent = $this->entityRepository->loadEntityByUuid('node', (string) $input['parentJob']);

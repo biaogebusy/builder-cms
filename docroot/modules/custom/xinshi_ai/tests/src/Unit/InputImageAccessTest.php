@@ -44,6 +44,9 @@ final class InputImageAccessTest extends TestCase {
   private array $headers = ['Content-Type' => 'image/png'];
   private array $switches = [];
   private array $reloads = [];
+  private array $references = [['target_id' => 9]];
+  private array $versions = [self::UUID];
+  private string $fileVersion = self::UUID;
 
   protected function setUp(): void {
     $this->directory = sys_get_temp_dir() . '/xinshi-image-access-' . bin2hex(random_bytes(8));
@@ -71,6 +74,7 @@ final class InputImageAccessTest extends TestCase {
       return $this->mediaAllowed;
     });
     $file = $this->createMock(FileInterface::class);
+    $file->method('uuid')->willReturnCallback(fn() => $this->fileVersion);
     $file->method('getFileUri')->willReturnCallback(fn() => $this->uri);
     $file->method('access')->willReturnCallback(function ($operation, $account) {
       $this->assertSame('download', $operation);
@@ -104,12 +108,15 @@ final class InputImageAccessTest extends TestCase {
     $wrappers->method('getViaUri')->willReturn($wrapper);
     $this->service = new InputImageAccess($entities, $repository, $modules, $switcher, $wrappers, new ImageFileValidator());
     $reference = $this->createMock(FieldItemListInterface::class);
-    $reference->method('__get')->with('target_id')->willReturn(9);
+    $reference->method('getValue')->willReturnCallback(fn() => $this->references);
+    $params = $this->createMock(FieldItemListInterface::class);
+    $params->method('access')->willReturn(TRUE);
+    $params->method('__get')->with('value')->willReturnCallback(fn() => json_encode(['inputVersions' => $this->versions]));
     $reference->method('access')->with('view', $this->owner)->willReturn(TRUE);
     $this->job = $this->createMock(NodeInterface::class);
     $this->job->method('getOwnerId')->willReturn(7);
     $this->job->method('hasField')->with('field_input_image')->willReturn(TRUE);
-    $this->job->method('get')->with('field_input_image')->willReturn($reference);
+    $this->job->method('get')->willReturnMap([['field_input_image', $reference], ['field_params', $params]]);
   }
 
   protected function tearDown(): void {
@@ -164,6 +171,21 @@ final class InputImageAccessTest extends TestCase {
     $this->mediaAllowed = FALSE;
     $this->expectException(InputImageAccessException::class);
     $this->service->forJob($this->job);
+  }
+
+  public function testAllImagesAreReadAndReplacedSourcesFailClosed(): void {
+    $this->references[] = ['target_id' => 10];
+    $this->versions[] = self::UUID;
+    $this->assertCount(2, $this->service->forJobImages($this->job));
+    $this->fileVersion = '22222222-2222-4222-8222-222222222222';
+    $this->expectException(InputImageAccessException::class);
+    $this->service->forJobImages($this->job);
+  }
+
+  public function testVersionCountAndReferenceLimitAreChecked(): void {
+    $this->references = array_fill(0, 9, ['target_id' => 9]);
+    $this->expectException(InputImageAccessException::class);
+    $this->service->forJobImages($this->job);
   }
 
   public function testMalformedUuidIsRejected(): void {
