@@ -40,6 +40,7 @@ final class JobLifecycleServiceTest extends TestCase {
   private array $lockCalls = [];
   private int $created = 0;
   private bool $deleted = FALSE;
+  private int $currentTime = 1_700_000_100;
   /** @var list<array<string,mixed>> */
   private array $createdJobs = [];
 
@@ -70,6 +71,7 @@ final class JobLifecycleServiceTest extends TestCase {
     $manager->method('getStorage')->with('node')->willReturn($storage);
     $time = $this->createMock(TimeInterface::class);
     $time->method('getRequestTime')->willReturn(1_700_000_100);
+    $time->method('getCurrentTime')->willReturnCallback(fn(): int => $this->currentTime);
     $this->lock = $this->createMock(LockBackendInterface::class);
     $this->lock->method('acquire')->willReturnCallback(function (string $name): bool {
       $this->lockCalls[] = 'acquire ' . $name;
@@ -149,6 +151,20 @@ final class JobLifecycleServiceTest extends TestCase {
     $this->assertTrue($this->lifecycle->markCompleted($this->worker));
     $this->assertSame('succeeded', $this->stored->get('field_status')->value);
     $this->assertSame('succeeded', $this->worker->get('field_status')->value);
+  }
+
+  public function testJobTimestampsAdvanceWithinOneLongRunningRequest(): void {
+    // A queue consumer can start a job long after the PHP request began.
+    $this->currentTime += 120;
+    $this->stored->set('field_status', 'queued');
+    $this->assertTrue($this->lifecycle->markStarted($this->worker));
+    $this->assertSame(1_700_000_220, $this->worker->get('field_started_at')->value);
+
+    $this->currentTime += 48;
+    $this->stored->set('field_n_succeeded', 1);
+    $this->assertTrue($this->lifecycle->markCompleted($this->worker));
+    $this->assertSame(1_700_000_268, $this->worker->get('field_completed_at')->value);
+    $this->assertSame(48_000, $this->worker->get('field_latency_ms')->value);
   }
 
   public function testACancelledJobIsNotCompletedFailedOrStartedByAStaleWorker(): void {

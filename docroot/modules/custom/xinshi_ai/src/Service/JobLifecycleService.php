@@ -111,7 +111,7 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
   public function markStarted(NodeInterface $job): bool {
     return $this->transition($job, function (NodeInterface $fresh): void {
       $fresh->set('field_status', 'running');
-      $fresh->set('field_started_at', $this->time->getRequestTime());
+      $fresh->set('field_started_at', $this->time->getCurrentTime());
     });
   }
 
@@ -342,7 +342,8 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
    * 写 completed_at + latency_ms。
    */
   private function stampCompletion(NodeInterface $job): void {
-    $now = $this->time->getRequestTime();
+    // A queue worker can finish several jobs within the same PHP request.
+    $now = $this->time->getCurrentTime();
     $job->set('field_completed_at', $now);
     $started = (int) ($job->get('field_started_at')->value ?? 0);
     if ($started > 0) {
