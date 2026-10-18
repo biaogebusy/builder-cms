@@ -35,6 +35,7 @@ if (PHP_SAPI !== 'cli-server') {
   mkdir($session_module);
   file_put_contents($session_module . '/xinshi_session_content_test.info.yml',
     "name: Session content tests\ntype: module\npackage: Testing\ncore_version_requirement: ^11\n");
+  copy(__DIR__ . '/session-fields-test.module', $session_module . '/xinshi_session_content_test.module');
   $routes = \Symfony\Component\Yaml\Yaml::parseFile($root . '/docroot/modules/custom/xinshi_ai/xinshi_ai.routing.yml');
   $services = \Symfony\Component\Yaml\Yaml::parseFile($root . '/docroot/modules/custom/xinshi_ai/xinshi_ai.services.yml');
   file_put_contents($session_module . '/xinshi_session_content_test.routing.yml',
@@ -200,7 +201,7 @@ foreach ($users as $name => $user) {
   $repo->persistNewAccessToken($token);
   $bearers[$name] = $token->convertToJWT()->toString();
 }
-function http(string $path, ?string $bearer = NULL, string $method = 'GET', ?array $body = NULL,
+function http(string $path, ?string $bearer = NULL, string $method = 'GET', array|string|null $body = NULL,
   ?string $jar = NULL, ?string $csrf = NULL): array {
   $curl = curl_init('http://127.0.0.1:8080' . $path);
   $jsonapi = str_starts_with($path, '/jsonapi/');
@@ -226,7 +227,7 @@ function http(string $path, ?string $bearer = NULL, string $method = 'GET', ?arr
     curl_setopt($curl, CURLOPT_COOKIEJAR, $jar);
   }
   if ($body !== NULL) {
-    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($body));
+    curl_setopt($curl, CURLOPT_POSTFIELDS, is_string($body) ? $body : json_encode($body));
   }
   $content = curl_exec($curl);
   $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
@@ -235,11 +236,11 @@ function http(string $path, ?string $bearer = NULL, string $method = 'GET', ?arr
     throw new RuntimeException('HTTP server failure: ' . substr((string) file_get_contents(
       '/tmp/analytics-test/reference-http.log'), -5000));
   }
-  if ($jsonapi || str_starts_with($path, '/api/v3/ai/conversations/') && in_array($status, [200, 409], TRUE)) {
+  if ($jsonapi || str_starts_with($path, '/api/v3/ai/conversations/')) {
     check(str_contains($cache, 'no-store') && str_contains($cache, 'private'), 'JSON:API no-store ' . $status);
   }
   check(!str_contains((string) $content, 'private-count'), 'Response contains no report body');
-  return ['status' => $status, 'data' => json_decode((string) $content, TRUE)];
+  return ['status' => $status, 'data' => json_decode((string) $content, TRUE), 'cache' => $cache];
 }
 // The setup kernel disables container dumping; discard its predecessor before HTTP boot.
 \Drupal::service('kernel')->invalidateContainer();
@@ -347,3 +348,10 @@ finally {
   proc_terminate($server);
   proc_close($server);
 }
+
+require __DIR__ . '/chat-session-fields.integration.php';
+echo 'Reference and dormant-field checks: ' . $checks . PHP_EOL;
+require __DIR__ . '/chat-session-field-scan.integration.php';
+require __DIR__ . '/chat-session-guard.integration.php';
+require __DIR__ . '/session-fields.integration.php';
+require __DIR__ . '/chat-history.integration.php';

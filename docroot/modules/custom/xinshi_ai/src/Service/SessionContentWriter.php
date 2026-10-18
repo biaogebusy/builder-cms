@@ -45,6 +45,11 @@ final class SessionContentWriter {
       if (!in_array((string) $nid, array_map('strval', array_column($chat->get($sessions)->getValue(), 'target_id')), TRUE)) {
         throw new AccessDeniedHttpException();
       }
+      $version = $this->resources->get('node', 'ai_session')?->getInternalName('storage_version');
+      if ($version && $node->hasField($version) && !$node->get($version)->isEmpty()) {
+        // Content-only hashes cannot protect the complete v2 snapshot, including conflict responses.
+        throw new UnprocessableEntityHttpException('The session requires a versioned fields update.');
+      }
       $field = $this->field($node, 'content', ['view', 'edit']);
       $current = (string) $node->get($field)->value;
       $updated = hash_equals(hash('sha256', $current), $expected_hash);
