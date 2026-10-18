@@ -66,7 +66,7 @@ final class ChatHistoryReader {
       if (!$node instanceof NodeInterface || $node->bundle() !== 'ai_session') {
         throw new ConflictHttpException('Chat history contains an unavailable message.');
       }
-      $messages[] = ['id' => $node->uuid(), 'created' => $node->getCreatedTime(),
+      $messages[] = ['id' => $node->uuid(), 'created' => (int) $node->getCreatedTime(),
         'fields' => $this->fields($node, $chat_uuid, $version)];
     }
     $next = $offset + count($messages);

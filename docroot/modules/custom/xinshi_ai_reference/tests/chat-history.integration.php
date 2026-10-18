@@ -89,6 +89,9 @@ try {
     check($page['status'] === 200 && $page['data']['offset'] === count($seen) &&
       count($page['data']['messages']) <= 50 && $page['data']['total'] === 103,
       'Each history page is bounded with an exact offset and total');
+    check(array_reduce($page['data']['messages'], static fn($valid, $message) =>
+      $valid && is_int($message['created']) && $message['created'] === 1792000000, TRUE),
+      'History serializes database timestamps as JSON integers on every page');
     $seen = [...$seen, ...array_column($page['data']['messages'], 'id')];
     $cursor = $page['data']['next'];
   } while ($cursor !== NULL);
