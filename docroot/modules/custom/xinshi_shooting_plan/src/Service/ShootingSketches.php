@@ -54,7 +54,7 @@ final class ShootingSketches {
   /** Returns at most one latest attempt per current shot under current source authorization. */
   public function read(string $plan_uuid): array {
     $doc = $this->documents->read($plan_uuid);
-    $prompts = ShootingDocumentAccess::prompts($doc['draft'], $doc['visuals'] ?? []);
+    $prompts = ShootingDocumentAccess::prompts($doc);
     $result = $this->project($this->latest($plan_uuid, array_keys($prompts)));
     foreach ($result as $id => &$sketch) {
       $sketch['stale'] = ($sketch['inputKey'] ?? '') !== ShootingVisuals::key($prompts[$id], $doc, (string) $id);
@@ -78,7 +78,7 @@ final class ShootingSketches {
   /** Resolves an authorized local file for the revocable share route, never a remote URL. */
   public function image(string $plan_uuid, string $shot_id): ?\Drupal\file\FileInterface {
     $doc = $this->documents->read($plan_uuid);
-    if (!isset(ShootingDocumentAccess::prompts($doc['draft'], $doc['visuals'] ?? [])[$shot_id])) {
+    if (!isset(ShootingDocumentAccess::prompts($doc)[$shot_id])) {
       return NULL;
     }
     return $this->project($this->latest($plan_uuid, [$shot_id]), TRUE)[$shot_id] ?? NULL;
@@ -129,7 +129,7 @@ final class ShootingSketches {
     try {
       // This is also the CAS writer's lock, so input cannot change during reservation.
       $doc = $this->documents->read($plan_uuid, $input['expectedHash']);
-      $prompts = ShootingDocumentAccess::prompts($doc['draft'], $doc['visuals'] ?? []);
+      $prompts = ShootingDocumentAccess::prompts($doc);
       $latest = $this->latest($plan_uuid, array_keys($prompts));
       if (isset($input['shotId']) && !isset($prompts[$input['shotId']])) {
         throw new UnprocessableEntityHttpException('shooting_shot_invalid');
@@ -181,7 +181,7 @@ final class ShootingSketches {
           continue;
         }
         $input_key = ShootingVisuals::key($prompt, $doc, $shot_id);
-        $references = ShootingVisuals::references($doc['visuals'] ?? [], $shot_id);
+        $references = ShootingVisuals::references($doc['visuals'] ?? []);
         foreach ($references as $reference) {
           $media = $this->inputImages->forSubmission($reference['mediaId'], $this->account);
           if ($media->get('field_media_image')->entity->uuid() !== $reference['fileId']) {

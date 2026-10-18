@@ -97,7 +97,7 @@ final class ShootingSketchesTest extends TestCase {
       'uid' => $this->owner->id()]);
     $this->doc = ['kind' => 'xinshi-shooting-plan', 'version' => 1, 'id' => $this->plan->uuid(),
       'taskId' => \Drupal::service('uuid')->generate(), 'runId' => \Drupal::service('uuid')->generate(),
-      'request' => ['topic' => 'Synthetic plan'], 'original' => [], 'status' => 'ready', 'draft' => [
+      'request' => ['topic' => 'Synthetic plan', 'style' => 'pencil'], 'original' => [], 'status' => 'ready', 'draft' => [
         'aspectRatio' => '9:16', 'styleGuide' => 'Same presenter in a quiet studio.',
         'shots' => [['id' => 'shot_1', 'framing' => 'wide', 'visual' => 'Presenter at a desk',
           'camera' => 'Phone at eye level, one metre away.', 'lighting' => 'Window to the left.',
@@ -152,24 +152,17 @@ final class ShootingSketchesTest extends TestCase {
       $this->runner, \Drupal::configFactory(), \Drupal::service('account_switcher'), $this->credentials, $urlPolicy, $inputImages);
   }
 
-  #[DataProvider('anchorReferenceScopes')]
-  public function testConfirmationGatesRemainingFramesAndPassesScopedReferencesAndAnchor(bool $anchor_only): void {
+  public function testConfirmationGatesRemainingFramesAndPassesTheReferenceAndAnchor(): void {
     [$global, $global_file] = $this->referenceImage();
-    [$local, $local_file] = $this->referenceImage();
-    $this->doc['visuals'] = ['style' => 'color', 'anchorShotId' => 'shot_1', 'references' => [
-      ['mediaId' => $global->uuid(), 'fileId' => $global_file->uuid(), 'purpose' => 'character',
-        'name' => 'Presenter', 'note' => 'Preserve the jacket'],
-      ['mediaId' => $local->uuid(), 'fileId' => $local_file->uuid(), 'purpose' => 'product',
-        'name' => 'Product', 'note' => 'Preserve shape', 'shotId' => 'shot_2'],
+    $this->doc['request']['style'] = 'color';
+    $this->doc['visuals'] = ['anchorShotId' => 'shot_1', 'reference' => [
+      'mediaId' => $global->uuid(), 'fileId' => $global_file->uuid(), 'name' => 'Presenter',
     ]];
-    if ($anchor_only) {
-      $this->doc['visuals']['references'][0]['shotId'] = 'shot_1';
-    }
     $this->saveDoc();
     $first = $this->submit();
     $this->assertSame(['shot_1'], array_keys($first));
     $this->assertStringContainsString('colored storyboard', $first['shot_1']['prompt']);
-    $this->assertStringNotContainsString('Preserve shape', $first['shot_1']['prompt']);
+    $this->assertStringContainsString('Reference image: Presenter', $first['shot_1']['prompt']);
     $this->expectHttp(fn() => $this->submit(['shotId' => 'shot_2']), 409);
     $anchor_job = $this->lifecycle->loadJobByUuid($first['shot_1']['jobId']);
     $this->assertSame('image_edit', $anchor_job->get('field_job_kind')->value);
@@ -188,7 +181,7 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertFalse($next['shot_2']['stale']);
     $job = $this->lifecycle->loadJobByUuid($next['shot_2']['jobId']);
     $this->assertSame('image_edit', $job->get('field_job_kind')->value);
-    $inputs = $anchor_only ? [$local->id(), $anchor->id()] : [$global->id(), $local->id(), $anchor->id()];
+    $inputs = [$global->id(), $anchor->id()];
     $this->assertSame($inputs,
       array_column($job->get('field_input_image')->getValue(), 'target_id'));
     $this->assertStringContainsString('Reference ' . count($inputs) . ' is the approved continuity frame', $job->get('field_prompt')->value);
@@ -196,7 +189,7 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertTrue($this->sketches->admits($job));
     $job->set('field_status', 'succeeded')->set('field_assets', [['target_id' => $asset->id()]])->save();
     $this->assertArrayHasKey('src', $this->read()['shot_2']);
-    $this->doc['visuals']['style'] = 'realistic';
+    $this->doc['request']['style'] = 'realistic';
     $this->saveDoc();
     $this->assertTrue($this->read()['shot_1']['stale']);
     $this->expectHttp(fn() => $this->submit(['shotId' => 'shot_2', 'previousJobId' => $job->uuid()]), 409);
@@ -209,15 +202,10 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertFalse($this->sketches->admits($job));
   }
 
-  public static function anchorReferenceScopes(): array {
-    return ['shared' => [FALSE], 'anchor only' => [TRUE]];
-  }
-
   public function testReferenceVersionsAndCurrentSourceAccessAreRequired(): void {
     [$media, $file] = $this->referenceImage();
-    $this->doc['visuals'] = ['style' => 'pencil', 'references' => [
-      ['mediaId' => $media->uuid(), 'fileId' => $file->uuid(), 'purpose' => 'scene',
-        'name' => 'Room', 'note' => ''],
+    $this->doc['visuals'] = ['reference' => [
+      'mediaId' => $media->uuid(), 'fileId' => $file->uuid(), 'name' => 'Room',
     ]];
     $this->saveDoc();
     $first = $this->submit();
@@ -762,6 +750,11 @@ final class ShootingSketchesTest extends TestCase {
 
   public function testSharedImagesUseRevocableFilesWithoutLeakingPrivateUrlsOrTaskIds(): void {
     [$sharing, $editor, $token] = $this->sharedFixture();
+    [$reference, $reference_file] = $this->referenceImage();
+    $this->doc['request']['style'] = 'color';
+    $this->doc['visuals'] = ['reference' => ['mediaId' => $reference->uuid(),
+      'fileId' => $reference_file->uuid(), 'name' => 'Private client reference']];
+    $this->saveDoc();
     $images = $this->submit();
     $job = $this->lifecycle->loadJobByUuid($images['shot_1']['jobId']);
     file_put_contents('private://shared-synthetic.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKAAAAABJRU5ErkJggg=='));
@@ -780,6 +773,10 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame('/api/v3/ai/shooting-plans/shared/' . $token . '/sketches/shot_1', $projection['shot_1']['src']);
     $this->assertArrayNotHasKey('jobId', $projection['shot_1']);
     $this->assertArrayNotHasKey('taskId', $projection['shot_1']);
+    $this->assertStringContainsString('colored storyboard', $projection['shot_1']['prompt']);
+    $this->assertStringNotContainsString('Private client reference', json_encode($projection));
+    $this->assertStringNotContainsString($reference->uuid(), json_encode($projection));
+    $this->assertFalse($projection['shot_1']['stale']);
     $controller = new ShootingSharingController($sharing, \Drupal::service('file_system'));
     $response = $controller->image($token, 'shot_1');
     $this->assertSame(200, $response->getStatusCode());
