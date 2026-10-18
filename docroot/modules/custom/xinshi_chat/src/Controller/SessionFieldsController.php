@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\xinshi_ai_reference\Controller;
+namespace Drupal\xinshi_chat\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\xinshi_ai_reference\ChatSessionFormat;

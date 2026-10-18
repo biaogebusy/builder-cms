@@ -1,0 +1,100 @@
+xinshi_chat.settings:
+  path: '/admin/config/services/xinshi-chat'
+  defaults:
+    _form: '\Drupal\xinshi_chat\Form\SettingsForm'
+    _title: 'Chat'
+  requirements:
+    _permission: 'administer chat configuration'
+
+xinshi_ai.session.content:
+  path: '/api/v3/ai/conversations/{chat_uuid}/sessions/{uuid}/content'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\SessionContentController::update'
+    _format: 'json'
+  methods: [PATCH]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_ai.conversation.update:
+  path: '/api/v3/ai/conversations/{uuid}'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\ConversationController::update'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_ai_reference.session.fields:
+  path: '/api/v3/ai/conversations/{chat_uuid}/sessions/{uuid}/fields'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\SessionFieldsController::update'
+    _format: 'json'
+  methods: [PATCH]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+xinshi_ai_reference.storage:
+  path: '/api/v3/ai/chat-storage'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\ChatHistoryController::storage'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+xinshi_ai_reference.history:
+  path: '/api/v3/ai/conversations/{chat_uuid}/sessions'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\ChatHistoryController::page'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+xinshi_ai_reference.session.read:
+  path: '/api/v3/ai/conversations/{chat_uuid}/sessions/{uuid}/fields'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\ChatHistoryController::session'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+xinshi_chat.conversations:
+  path: '/api/v2/conversations'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\ConversationListController::page'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_chat.sessions:
+  path: '/api/v2/sessions'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\ConversationListController::sessions'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+

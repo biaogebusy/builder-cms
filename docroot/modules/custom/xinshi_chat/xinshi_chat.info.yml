@@ -1,0 +1,14 @@
+name: Xinshi Chat
+type: module
+description: Installs, adopts and upgrades the conversation and message structure.
+package: Xinshi
+core_version_requirement: ^11.4
+configure: xinshi_chat.settings
+dependencies:
+  - drupal:node
+  - drupal:field
+  - drupal:text
+  - drupal:user
+  - drupal:jsonapi
+  - simple_oauth:simple_oauth
+  - xinshi_ai_reference:xinshi_ai_reference

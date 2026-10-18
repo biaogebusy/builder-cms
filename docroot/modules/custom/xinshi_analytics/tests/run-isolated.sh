@@ -41,12 +41,10 @@ fi
 if [ "${ANALYTICS_REFERENCE_TESTS:-0}" = 1 ]; then
   docker cp docroot/modules/custom/xinshi_ai_reference "$container":/app/docroot/modules/custom/
   docker exec "$container" mkdir -p /app/docroot/modules/custom/xinshi_ai/src/Service
-  docker cp docroot/modules/custom/xinshi_ai/src/Service/ConversationWriter.php \
-    "$container":/app/docroot/modules/custom/xinshi_ai/src/Service/
-  tar -cf - docroot/modules/custom/xinshi_ai/src/Service/SessionContentWriter.php \
+  docker cp docroot/modules/custom/xinshi_chat "$container":/app/docroot/modules/custom/
+  tar -cf - \
     docroot/modules/custom/xinshi_ai/src/Service/ChatSessionFields.php \
     docroot/modules/custom/xinshi_ai/src/Service/ChatSessionFieldScan.php \
-    docroot/modules/custom/xinshi_ai/src/Controller/SessionContentController.php \
     docroot/modules/custom/xinshi_ai/xinshi_ai.routing.yml \
     docroot/modules/custom/xinshi_ai/xinshi_ai.services.yml \
     scripts/scan-chat-session-fields.php scripts/migrate-chat-sessions.php \

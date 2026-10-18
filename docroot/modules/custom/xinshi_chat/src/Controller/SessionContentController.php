@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Drupal\xinshi_ai\Controller;
+namespace Drupal\xinshi_chat\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\xinshi_ai\Service\SessionContentWriter;
+use Drupal\xinshi_chat\Service\SessionContentWriter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,7 +17,7 @@ final class SessionContentController extends ControllerBase {
   public function __construct(private readonly SessionContentWriter $writer) {}
 
   public static function create(ContainerInterface $container): self {
-    return new self($container->get('xinshi_ai.session_content_writer'));
+    return new self($container->get('xinshi_chat.session_content_writer'));
   }
 
   public function update(string $chat_uuid, string $uuid, Request $request): JsonResponse {

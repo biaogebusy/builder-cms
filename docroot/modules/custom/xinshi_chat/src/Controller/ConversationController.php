@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Drupal\xinshi_ai\Controller;
+namespace Drupal\xinshi_chat\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\xinshi_ai\Service\ConversationWriter;
+use Drupal\xinshi_chat\Service\ConversationWriter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,7 +17,7 @@ final class ConversationController extends ControllerBase {
   public function __construct(private readonly ConversationWriter $writer) {}
 
   public static function create(ContainerInterface $container): self {
-    return new self($container->get('xinshi_ai.conversation_writer'));
+    return new self($container->get('xinshi_chat.conversation_writer'));
   }
 
   public function update(string $uuid, Request $request): JsonResponse {

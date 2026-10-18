@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Adds a per-record field denial only on the disposable Chat test site.
+ */
+
+/** Implements hook_entity_field_access(). */
+function xinshi_chat_test_entity_field_access($operation, $definition, $account, $items = NULL) {
+  return \Drupal\Core\Access\AccessResult::forbiddenIf($operation === 'view' && $items &&
+    $definition->getName() === 'title' &&
+    (string) $items->getEntity()->id() === (string) \Drupal::state()->get('xinshi_chat_test.hidden_title', ''))
+    ->setCacheMaxAge(0);
+}

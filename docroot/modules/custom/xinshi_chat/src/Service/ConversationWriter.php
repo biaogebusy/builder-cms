@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\xinshi_ai\Service;
+namespace Drupal\xinshi_chat\Service;
 
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Database\Connection;

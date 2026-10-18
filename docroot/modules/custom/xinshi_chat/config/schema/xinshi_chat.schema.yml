@@ -1,0 +1,10 @@
+xinshi_chat.settings:
+  type: config_object
+  label: 'Chat structure and availability'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Allow conversation requests'
+    schema_version:
+      type: integer
+      label: 'Installed Chat structure version'
