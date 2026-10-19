@@ -221,6 +221,15 @@ try {
     'fields' => ['summary' => 'Stale']])['status'] === 409, 'Moved CAS retains conflict detection');
   check(http($base, $tokens['owner'], 'POST', ['sessions' => [], 'attributes' => ['title' => 'Renamed']])['status'] === 200,
     'Moved conversation writer retains its update contract');
+  $web_choice = ['sessions' => [], 'attributes' => ['web_search' => TRUE]];
+  check(http($base, $tokens['owner'], 'POST', $web_choice)['status'] === 200,
+    'OAuth owner can enable conversation web search');
+  check(http('/jsonapi/node/conversation/' . $chat->uuid(), $tokens['owner'])['data']['data']['attributes']['web_search'] === TRUE,
+    'JSON:API returns the saved Boolean web preference');
+  check(http($base, $tokens['other'], 'POST', $web_choice)['status'] === 403,
+    'Another author cannot change the conversation web preference');
+  check(http($base, $tokens['owner'], 'POST', ['sessions' => [], 'attributes' => ['web_search' => 'true']])['status'] === 422,
+    'Conversation web preference rejects string coercion');
   $jar = '/tmp/chat-test/owner.cookie';
   check(http('/user/login?_format=json', NULL, 'POST', ['name' => 'chat-http-owner', 'pass' => 'test-only-chat'], $jar)['status'] === 200,
     'The synthetic owner can create a browser session');

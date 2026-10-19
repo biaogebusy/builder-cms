@@ -17,6 +17,9 @@ final class HarnessSettings {
 
   /** Only tools shipped by the Node application can be configured here. */
   public const TOOL_GROUPS = [
+    'web_search' => ['label' => '联网搜索（DeepSeek）', 'tools' => [
+      'web_search' => '搜索公开网页', 'web_fetch' => '抓取公开网页正文',
+    ]],
     'utility' => ['label' => '通用查询', 'tools' => [
       'query_time_date' => '日期与时间', 'get_weather' => '天气查询',
     ]],

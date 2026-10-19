@@ -21,6 +21,19 @@ xinshi_ai.harness.settings:
   requirements:
     _user_is_logged_in: 'TRUE'
 
+xinshi_ai.web_search:
+  path: '/api/v3/ai/web/{operation}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\WebSearchController::read'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    operation: 'search|fetch'
+
 xinshi_ai.figma:
   path: '/api/v3/ai/figma'
   defaults:

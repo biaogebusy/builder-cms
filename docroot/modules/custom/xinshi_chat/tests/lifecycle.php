@@ -35,7 +35,7 @@ $source->write('jsonapi_extras.jsonapi_resource_config.node--ai_session', [
     'fieldName' => 'content', 'publicName' => 'renamed_body', 'disabled' => FALSE]],
 ]);
 rejects(fn() => importer($source)->import(), 'Import cannot rename a required JSON:API field', 'public contract');
-foreach (['missing', 'storage', 'version', 'extra', 'shared', 'uninstall'] as $case) {
+foreach (['missing', 'storage', 'version', 'web_default', 'extra', 'shared', 'uninstall'] as $case) {
   $source = importSource();
   if ($case === 'missing') {
     $source->delete('field.field.node.ai_session.content');
@@ -49,6 +49,11 @@ foreach (['missing', 'storage', 'version', 'extra', 'shared', 'uninstall'] as $c
     $value = $source->read('xinshi_chat.settings');
     $value['schema_version'] = 0;
     $source->write('xinshi_chat.settings', $value);
+  }
+  if ($case === 'web_default') {
+    $value = $source->read('field.field.node.conversation.web_search');
+    $value['default_value'] = [['value' => 0]];
+    $source->write('field.field.node.conversation.web_search', $value);
   }
   if ($case === 'extra' || $case === 'shared') {
     $value = $source->read('field.field.node.ai_session.summary');

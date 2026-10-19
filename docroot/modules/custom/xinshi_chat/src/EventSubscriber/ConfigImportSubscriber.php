@@ -62,7 +62,8 @@ final class ConfigImportSubscriber implements EventSubscriberInterface {
           $valid = $valid && ($storage['translatable'] ?? NULL) === $expected['storage_translatable'];
         }
         if (array_key_exists('default_value', $expected)) {
-          $valid = $valid && ($field['default_value'] ?? NULL) === [] && ($field['default_value_callback'] ?? NULL) === '';
+          $valid = $valid && ($field['default_value'] ?? NULL) === $expected['default_value']
+            && ($field['default_value_callback'] ?? NULL) === $expected['default_value_callback'];
         }
         if (!$valid) {
           $errors[] = 'Chat field does not match the installed structure: ' . $bundle . '.' . $name;

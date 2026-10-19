@@ -7,13 +7,13 @@ namespace Drupal\xinshi_chat\Schema;
 /** Versioned structure contracts; old versions remain fixed for update hooks. */
 final class Definition {
 
-  public const CURRENT = 1;
+  public const CURRENT = 2;
   public const STORAGE_VERSION = 3;
   public const BUNDLES = ['conversation', 'ai_session'];
 
   /** Return module-managed properties, excluding site labels and presentation. */
   public static function fields(int $version = self::CURRENT): array {
-    if ($version !== 1) {
+    if (!in_array($version, [1, 2], TRUE)) {
       throw new \InvalidArgumentException('Unsupported Chat structure version.');
     }
     $string = ['type' => 'string', 'settings' => ['max_length' => 255]];
@@ -44,6 +44,10 @@ final class Definition {
         'uiparsing' => ['type' => 'boolean'],
       ],
     ];
+    if ($version >= 2) {
+      $fields['conversation']['web_search'] = ['type' => 'boolean',
+        'default_value' => [['value' => 1]], 'default_value_callback' => ''];
+    }
     // These are the current protocol fields. The offline A/B converter keeps its frozen contract.
     $split = [
       'storage_version' => ['type' => 'integer', 'settings' => ['size' => 'normal']],

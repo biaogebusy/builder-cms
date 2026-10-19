@@ -89,6 +89,7 @@ final class FigmaConnectorTest extends TestCase {
     $container = new ContainerBuilder();
     $container->set('config.factory', $this->factory);
     $container->set('xinshi_ai.figma_vault', $this->vault);
+    $container->set('xinshi_ai.web_search_credentials', new \Drupal\xinshi_ai\Service\WebSearchCredentials($keys, $privateKey));
     $container->set('cache_tags.invalidator', $this->createMock(CacheTagsInvalidatorInterface::class));
     $container->set('messenger', $this->createMock(MessengerInterface::class));
     $translation = $this->createMock(TranslationInterface::class);

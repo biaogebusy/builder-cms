@@ -184,7 +184,8 @@ final class Manager {
             FieldConfig::create(['entity_type' => 'node', 'bundle' => $bundle,
               'field_name' => $name, 'label' => $name, 'required' => $expected['required'],
               'translatable' => $expected['translatable'], 'settings' => $expected['field_settings'],
-              'default_value' => [], 'default_value_callback' => ''])->save();
+              'default_value' => $expected['default_value'] ?? [],
+              'default_value_callback' => $expected['default_value_callback'] ?? ''])->save();
           }
         }
         // Defaults are created once; upgrades retain the site's presentation choices.

@@ -141,6 +141,20 @@ final class SettingsForm extends ConfigFormBase {
         '#description' => $this->t('用户访问的信使源地址加 /chat/figma/callback，与 Figma OAuth App 登记值完全一致。正式环境使用 HTTPS；localhost 和 127.0.0.1 开发环境允许 HTTP。'),
       ],
     ];
+    $form['harness']['web_search'] = [
+      '#type' => 'fieldset', '#title' => $this->t('DeepSeek 联网搜索'),
+      '#description' => $this->t('CMS 直接调用 DeepSeek Search/Fetch。新会话默认开启联网搜索，用户可以按会话关闭。'),
+      'api_key' => [
+        '#type' => 'password', '#title' => $this->t('DeepSeek API Key'), '#maxlength' => 4096,
+        '#description' => $this->t('留空保留已保存密钥。密钥加密保存，不进入配置导出，也不返回浏览器。'),
+      ],
+      'configured' => [
+        '#type' => 'item', '#title' => $this->t('密钥状态'),
+        '#markup' => \Drupal::service('xinshi_ai.web_search_credentials')->has()
+          ? $this->t('已配置') : $this->t('未配置'),
+      ],
+      'clear_key' => ['#type' => 'checkbox', '#title' => $this->t('清除已保存的 DeepSeek API Key')],
+    ];
     $form['harness']['task_limits'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('任务限制'),
@@ -264,6 +278,10 @@ final class SettingsForm extends ConfigFormBase {
     if (($uri !== '' || !empty($figma['enabled'])) && !FigmaConnector::origin($uri)) {
       $form_state->setErrorByName('harness][mcp][figma][redirect_uri', $this->t('填写有效的 HTTPS 信使回调地址，路径必须是 /chat/figma/callback，不能包含用户信息、查询参数或片段。'));
     }
+    $searchKey = trim((string) $form_state->getValue(['harness', 'web_search', 'api_key'], ''));
+    if (strlen($searchKey) > 4096 || preg_match('/\s/', $searchKey)) {
+      $form_state->setErrorByName('harness][web_search][api_key', $this->t('DeepSeek API Key 不能含空白字符，且不能超过 4096 字节。'));
+    }
     $service = $form_state->getValue(['harness', 'service'], []);
     $serviceUrl = trim((string) ($service['url'] ?? ''));
     if ($serviceUrl !== '' && !PromptRewriteClient::isServiceUrl($serviceUrl)) {
@@ -275,6 +293,17 @@ final class SettingsForm extends ConfigFormBase {
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $search = $form_state->getValue(['harness', 'web_search']);
+    if (is_array($search)) {
+      $credentials = \Drupal::service('xinshi_ai.web_search_credentials');
+      $key = trim((string) ($search['api_key'] ?? ''));
+      if ($key !== '') {
+        $credentials->set($key);
+      }
+      elseif (!empty($search['clear_key'])) {
+        $credentials->delete();
+      }
+    }
     $enabled = [];
     foreach (HarnessSettings::TOOL_GROUPS as $id => $group) {
       $values = $form_state->getValue(['harness', 'tools', 'enabled', $id], []);

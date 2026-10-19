@@ -25,8 +25,16 @@ function xinshi_chat_install($is_syncing): void {
 
 /** Adopt the version 1 structure without resetting site configuration or data. */
 function xinshi_chat_update_11001(): string {
-  \Drupal::service('xinshi_chat.schema')->apply(1);
+  if ((\Drupal::config('xinshi_chat.settings')->get('schema_version') ?? 0) <= 1) {
+    \Drupal::service('xinshi_chat.schema')->apply(1);
+  }
   return 'Chat structure version 1 is installed and verified.';
+}
+
+/** Add the default-on conversation web search preference without changing message storage. */
+function xinshi_chat_update_11002(): string {
+  \Drupal::service('xinshi_chat.schema')->apply(2);
+  return 'Conversation web search preference is installed.';
 }
 
 /** Implements hook_requirements(). */

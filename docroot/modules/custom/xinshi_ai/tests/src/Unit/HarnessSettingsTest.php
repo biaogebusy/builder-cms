@@ -56,6 +56,10 @@ final class HarnessSettingsTest extends TestCase {
     $documents = $this->createMock(ProductDocuments::class);
     $documents->method('availableContentTypes')->willReturn(['product' => '产品资料', 'article' => '文章']);
     $container->set('xinshi_ai.product_documents', $documents);
+    $private = $this->createMock(\Drupal\Core\PrivateKey::class);
+    $private->method('get')->willReturn('synthetic-private-key');
+    $container->set('xinshi_ai.web_search_credentials', new \Drupal\xinshi_ai\Service\WebSearchCredentials(
+      new \Drupal\Core\KeyValueStore\KeyValueMemoryFactory(), $private));
     \Drupal::setContainer($container);
     $this->form = new SettingsForm($this->factory, $typed);
   }
@@ -76,6 +80,37 @@ final class HarnessSettingsTest extends TestCase {
     $this->assertFalse($form['harness']['tools']['pages_enabled']['#default_value']);
     $this->assertSame(40, $form['harness']['task_limits']['max_model_calls']['#default_value']);
     $this->assertSame(200000, $form['harness']['task_limits']['max_tokens']['#default_value']);
+  }
+
+  public function testDeepSeekKeyIsWriteOnlyAndBothWebToolsCanBeSwitchedSeparately(): void {
+    new \Drupal\Core\Site\Settings(['hash_salt' => 'synthetic-web-test']);
+    try {
+      $state = (new FormState())->setValues(['harness' => ['web_search' => ['api_key' => 'new-key']]]);
+      $elements = $this->form->buildForm([], $state);
+      $key = $elements['harness']['web_search']['api_key'];
+      $this->assertSame('password', $key['#type']);
+      $this->assertArrayNotHasKey('#default_value', $key);
+      $this->selectTools($state, ['web_fetch']);
+      $this->form->submitForm($elements, $state);
+      $credentials = \Drupal::service('xinshi_ai.web_search_credentials');
+      $this->assertSame('new-key', $credentials->get());
+      $this->assertStringNotContainsString('new-key', json_encode($this->storage->read('xinshi_ai.settings')));
+      $this->assertSame(['web_fetch'], HarnessSettings::normalize(
+        $this->storage->read('xinshi_ai.settings')['harness'])['tools']['disabled']);
+      $this->assertStringNotContainsString('new-key', (new HarnessSettingsController())->read()->getContent());
+      $state->setValue(['harness', 'web_search', 'api_key'], '');
+      $this->selectTools($state, ['web_search']);
+      $this->form->submitForm($elements, $state);
+      $this->assertSame('new-key', $credentials->get());
+      $this->assertSame(['web_search'], HarnessSettings::normalize(
+        $this->storage->read('xinshi_ai.settings')['harness'])['tools']['disabled']);
+      $state->setValue(['harness', 'web_search', 'clear_key'], TRUE);
+      $this->form->submitForm($elements, $state);
+      $this->assertFalse($credentials->has());
+    }
+    finally {
+      new \Drupal\Core\Site\Settings([]);
+    }
   }
 
   public function testApiIsAnUncachedAllowlistAndDoesNotExposeSecrets(): void {
@@ -177,7 +212,7 @@ final class HarnessSettingsTest extends TestCase {
       $this->assertSame(array_values(array_diff(array_keys($group['tools']), ['get_assets', 'create_page'])),
         $element['#default_value']);
     }
-    $this->assertCount(26, HarnessSettings::toolNames());
+    $this->assertCount(28, HarnessSettings::toolNames());
     $this->assertContains('list_analytics_datasets', HarnessSettings::toolNames());
     $this->assertContains('count_analytics_entities', HarnessSettings::toolNames());
     $this->assertNotContains('analyze_entity_counts', HarnessSettings::toolNames());

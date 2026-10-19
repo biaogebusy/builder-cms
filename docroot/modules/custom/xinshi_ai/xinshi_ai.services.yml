@@ -1,4 +1,12 @@
 services:
+  xinshi_ai.web_search_credentials:
+    class: Drupal\xinshi_ai\Service\WebSearchCredentials
+    arguments: ['@keyvalue', '@private_key']
+
+  xinshi_ai.web_search:
+    class: Drupal\xinshi_ai\Service\WebSearchClient
+    arguments: ['@http_client', '@xinshi_ai.web_search_credentials', '@config.factory', '@current_user']
+
   xinshi_ai.figma_vault:
     class: Drupal\xinshi_ai\Service\FigmaVault
     arguments: ['@keyvalue', '@private_key']
