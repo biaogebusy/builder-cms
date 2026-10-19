@@ -16,6 +16,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\xinshi_ai_usage\Contract\PriceCatalogFetcher;
 use Drupal\xinshi_ai_usage\Form\PriceBookForm;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
@@ -226,11 +227,107 @@ final class PriceBookFormTest extends TestCase {
     $this->assertSame('addError', end($this->messages)[0]);
   }
 
-  private function form(array $settings = []): PriceBookForm {
+  public function testLitellmPrefillFillsChatRatesAndSwitchesCurrencyToUsd(): void {
+    $this->vault->set('chat-node', 'secret', 'app.example', $this->now);
+    $form = $this->form();
+    $built = $form->buildForm([], new FormState());
+
+    // Chat book: the prefill replaces the rates textarea with USD list prices.
+    $state = (new FormState())->setValues([
+      'site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'v1', 'currency' => 'CNY',
+      'rates_json' => $built['create']['rates_json']['#default_value'],
+      'prefill_account' => 'aliyun',
+      'prefill_models' => "deepseek/deepseek-chat\r\n\nanthropic/claude-sonnet-4-5\n  deepseek/deepseek-chat  ",
+    ]);
+    $state->setUserInput(['rates_json' => 'old', 'currency' => 'CNY']);
+    $form->prefillFromCatalog($built, $state);
+    $this->assertSame('addStatus', end($this->messages)[0]);
+    $this->assertTrue($state->isRebuilding());
+    $decoded = json_decode($state->getUserInput()['rates_json'], TRUE);
+    $this->assertSame([
+      'per_million_input' => 280000,
+      'per_million_cache_read' => 28000,
+      'per_million_cache_write' => 0,
+      'per_million_output' => 420000,
+    ], $decoded['accounts']['aliyun']['models']['deepseek/deepseek-chat']);
+    $this->assertSame([
+      'per_million_input' => 3000000,
+      'per_million_cache_read' => 300000,
+      'per_million_cache_write' => 3750000,
+      'per_million_output' => 15000000,
+    ], $decoded['accounts']['aliyun']['models']['anthropic/claude-sonnet-4-5']);
+    $this->assertSame('USD', $state->getUserInput()['currency']);
+    $this->assertSame('USD', $state->getValue('currency'));
+
+    // The prefilled book is a valid chat draft: it passes the normal checks.
+    $state->setValues([
+      'site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'v1',
+      'currency' => 'USD', 'rates_json' => $state->getUserInput()['rates_json'],
+    ]);
+    $form->validateForm($built, $state);
+    $this->assertSame([], $state->getErrors());
+
+    // Unknown or non-chat model ids abort the prefill; nothing is replaced.
+    $state = (new FormState())->setValues([
+      'book_kind' => self::KIND, 'prefill_account' => 'xinshi',
+      'prefill_models' => "deepseek/deepseek-chat\ndoes/not-exist\ntext-embedding-3-small",
+    ]);
+    $state->setUserInput(['rates_json' => 'old', 'currency' => 'CNY']);
+    $form->prefillFromCatalog($built, $state);
+    $this->assertSame('addError', end($this->messages)[0]);
+    $this->assertStringContainsString('catalog_mismatch', (string) end($this->messages)[1]);
+    $this->assertStringContainsString('does/not-exist', (string) end($this->messages)[1]);
+    $this->assertStringContainsString('text-embedding-3-small', (string) end($this->messages)[1]);
+    $this->assertSame('old', $state->getUserInput()['rates_json']);
+    $this->assertFalse($state->isRebuilding());
+
+    // Image books are out of scope for the prefill.
+    $state = (new FormState())->setValues([
+      'book_kind' => PriceBookService::KIND_SUPPLIER_IMAGE, 'prefill_account' => 'xinshi',
+      'prefill_models' => 'deepseek/deepseek-chat',
+    ]);
+    $form->prefillFromCatalog($built, $state);
+    $this->assertSame('addError', end($this->messages)[0]);
+
+    // An empty model list or missing account is refused before any fetch.
+    $state = (new FormState())->setValues([
+      'book_kind' => self::KIND, 'prefill_account' => 'xinshi', 'prefill_models' => '  ',
+    ]);
+    $form->prefillFromCatalog($built, $state);
+    $this->assertSame('addError', end($this->messages)[0]);
+    $state = (new FormState())->setValues([
+      'book_kind' => self::KIND, 'prefill_account' => ' ', 'prefill_models' => 'deepseek/deepseek-chat',
+    ]);
+    $form->prefillFromCatalog($built, $state);
+    $this->assertSame('addError', end($this->messages)[0]);
+  }
+
+  private function form(array $settings = [], ?PriceCatalogFetcher $catalog = NULL): PriceBookForm {
     $requests = new RequestStack();
     $requests->push(Request::create('https://cms.example/admin/config/xinshi/ai/usage/pricing'));
-    return new PriceBookForm($this->priceBook, $this->vault, $requests,
+    return new PriceBookForm($this->priceBook, $catalog ?? $this->fixtureCatalog(), $this->vault, $requests,
       new Settings($settings + ['hash_salt' => 'isolated-hash-salt']), $this->time);
+  }
+
+  /**
+   * Fixed LiteLLM-shaped catalog with real price magnitudes.
+   */
+  private function fixtureCatalog(): PriceCatalogFetcher {
+    return new class implements PriceCatalogFetcher {
+
+      public function fetchCatalog(): array {
+        return json_decode('{
+          "deepseek/deepseek-chat": {"mode": "chat", "input_cost_per_token": 0.00000028,
+            "output_cost_per_token": 0.00000042, "cache_read_input_token_cost": 0.000000028,
+            "cache_creation_input_token_cost": 0.0},
+          "anthropic/claude-sonnet-4-5": {"mode": "chat", "input_cost_per_token": 0.000003,
+            "output_cost_per_token": 0.000015, "cache_read_input_token_cost": 0.0000003,
+            "cache_creation_input_token_cost": 0.00000375},
+          "text-embedding-3-small": {"mode": "embedding", "input_cost_per_token": 0.00000002}
+        }', TRUE);
+      }
+
+    };
   }
 
 }

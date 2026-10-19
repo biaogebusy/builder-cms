@@ -8,7 +8,9 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\xinshi_ai_usage\Contract\PriceCatalogFetcher;
 use Drupal\xinshi_ai_usage\Contract\UsageEventValidator;
+use Drupal\xinshi_ai_usage\Service\LitellmRateConverter;
 use Drupal\xinshi_ai_usage\Service\PriceBookException;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
@@ -28,12 +30,15 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * This is a first-pass admin UI: rates are edited as JSON textarea so that
  * arbitrarily complex rate structures can be entered without building dozens
  * of form elements. A structured form can replace it later when the rate
- * schema is finalised.
+ * schema is finalised. The LiteLLM prefill button is assist-only: it fills
+ * the textarea with official list prices (USD); the admin adjusts them to
+ * the contract price before saving.
  */
 final class PriceBookForm extends FormBase {
 
   public function __construct(
     private readonly PriceBookService $priceBook,
+    private readonly PriceCatalogFetcher $priceCatalog,
     private readonly ProducerVault $vault,
     RequestStack $requestStack,
     private readonly Settings $settings,
@@ -48,6 +53,7 @@ final class PriceBookForm extends FormBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('xinshi_ai_usage.price_book'),
+      $container->get('xinshi_ai_usage.price_catalog'),
       $container->get('xinshi_ai_usage.producer_vault'),
       $container->get('request_stack'),
       $container->get('settings'),
@@ -181,6 +187,32 @@ final class PriceBookForm extends FormBase {
       '#maxlength' => 8,
       '#required' => TRUE,
     ];
+    $form['create']['prefill'] = [
+      '#type' => 'details',
+      '#title' => $this->t('从 LiteLLM 预填（官方牌价参考）'),
+      '#open' => FALSE,
+      '#description' => $this->t('联网拉取 LiteLLM 社区维护的模型价格表，把所选模型的官方牌价换算成费率 JSON（USD）。牌价不是合同价：预填后请核对并改成实际采购价再保存。目前仅支持对话价卡。'),
+    ];
+    $form['create']['prefill']['prefill_account'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('账户名'),
+      '#description' => $this->t('预填到该账户下，须与事件里的 account_ref 一致，例如 xinshi。'),
+      '#default_value' => 'xinshi',
+      '#maxlength' => 64,
+    ];
+    $form['create']['prefill']['prefill_models'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('LiteLLM 模型 ID（每行一个）'),
+      '#description' => $this->t('例如 deepseek/deepseek-chat。模型键使用 LiteLLM 的完整 ID，预填后可改为事件实际上报的模型名；预填会整体替换费率 JSON 和币种（USD）。'),
+      '#rows' => 4,
+    ];
+    $form['create']['prefill']['prefill_action'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('从 LiteLLM 预填'),
+      '#name' => 'litellm_prefill',
+      '#submit' => ['::prefillFromCatalog'],
+      '#limit_validation_errors' => [['book_kind'], ['prefill_account'], ['prefill_models']],
+    ];
     $imageExample = json_encode(self::seedRates(PriceBookService::KIND_SUPPLIER_IMAGE),
       JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $form['create']['rates_json'] = [
@@ -287,6 +319,63 @@ final class PriceBookForm extends FormBase {
     else {
       $this->messenger()->addStatus($this->t('已保存草稿版本 @version。', ['@version' => $version]));
     }
+  }
+
+  /**
+   * Submit handler of the prefill button: fills the rates textarea only.
+   *
+   * The catalog carries official list prices in USD, so the form's currency
+   * is switched to USD together with the rates. Nothing is saved here: the
+   * admin reviews, adjusts to the contract price and saves a draft as usual.
+   */
+  public function prefillFromCatalog(array &$form, FormStateInterface $form_state): void {
+    $kind = (string) $form_state->getValue('book_kind');
+    if ($kind !== PriceBookService::KIND_SUPPLIER_CHAT) {
+      $this->messenger()->addError($this->t('LiteLLM 预填目前只支持对话（按 token）价卡。'));
+      return;
+    }
+    $account = trim((string) $form_state->getValue('prefill_account'));
+    if ($account === '') {
+      $this->messenger()->addError($this->t('请先填写预填用的账户名。'));
+      return;
+    }
+    $rawModels = str_replace("\r", '', (string) $form_state->getValue('prefill_models'));
+    $modelIds = array_values(array_unique(array_filter(
+      array_map('trim', explode("\n", $rawModels)), 'strlen')));
+    if ($modelIds === []) {
+      $this->messenger()->addError($this->t('请至少填写一个 LiteLLM 模型 ID。'));
+      return;
+    }
+    if (count($modelIds) > 200) {
+      $this->messenger()->addError($this->t('一次最多预填 200 个模型。'));
+      return;
+    }
+
+    try {
+      $catalog = $this->priceCatalog->fetchCatalog();
+      $modelRates = LitellmRateConverter::chatModelRates($catalog, $modelIds);
+    }
+    catch (PriceBookException $e) {
+      $this->messenger()->addError($this->t('预填失败：@message', ['@message' => $e->getMessage()]));
+      return;
+    }
+
+    $json = json_encode(['accounts' => [$account => ['models' => $modelRates]]],
+      JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($json === FALSE) {
+      $this->messenger()->addError($this->t('预填失败：费率 JSON 编码失败。'));
+      return;
+    }
+    // The rebuild renders elements from user input, not from #default_value
+    // or form state values, so the prefilled content must replace the input.
+    $input = $form_state->getUserInput();
+    $input['rates_json'] = $json;
+    $input['currency'] = 'USD';
+    $form_state->setUserInput($input);
+    $form_state->setValue('rates_json', $json);
+    $form_state->setValue('currency', 'USD');
+    $form_state->setRebuild();
+    $this->messenger()->addStatus($this->t('已预填 @count 个模型的 LiteLLM 官方牌价（USD）。模型键是 LiteLLM ID，可改为事件实际模型名；请核对并改成实际采购价后再保存。', ['@count' => count($modelRates)]));
   }
 
   /**

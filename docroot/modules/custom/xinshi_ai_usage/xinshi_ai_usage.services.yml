@@ -19,6 +19,11 @@ services:
     class: Drupal\xinshi_ai_usage\Service\PriceBookService
     arguments: ['@database', '@datetime.time']
 
+  # Fetches the LiteLLM model price catalog; prefill assist for price book drafts.
+  xinshi_ai_usage.price_catalog:
+    class: Drupal\xinshi_ai_usage\Service\LitellmPriceCatalog
+    arguments: ['@http_client', '@cache.default', '@settings', '@datetime.time']
+
   xinshi_ai_usage.cost_rating:
     class: Drupal\xinshi_ai_usage\Service\CostRatingService
     arguments: ['@database', '@xinshi_ai_usage.price_book', '@datetime.time']
