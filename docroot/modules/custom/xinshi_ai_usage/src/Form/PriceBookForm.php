@@ -59,14 +59,19 @@ final class PriceBookForm extends FormBase {
     'gemini-2.5-pro' => 'Gemini 2.5 Pro（国外）',
   ];
 
+  // Service properties must stay protected and non-readonly: the form is
+  // rebuilt (and therefore cached in cache_form) by the prefill button, and
+  // DependencySerializationTrait::__sleep() runs in FormBase scope, where it
+  // only sees protected child properties. Private ones would be silently
+  // dropped from serialization and stay uninitialized after __wakeup().
   public function __construct(
-    private readonly PriceBookService $priceBook,
-    private readonly PriceCatalogFetcher $priceCatalog,
-    private readonly ProducerVault $vault,
-    private readonly ReportedModels $reportedModels,
+    protected PriceBookService $priceBook,
+    protected PriceCatalogFetcher $priceCatalog,
+    protected ProducerVault $vault,
+    protected ReportedModels $reportedModels,
     RequestStack $requestStack,
-    private readonly Settings $settings,
-    private readonly TimeInterface $time,
+    protected Settings $settings,
+    protected TimeInterface $time,
   ) {
     $this->requestStack = $requestStack;
   }
