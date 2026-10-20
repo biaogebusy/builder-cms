@@ -10,6 +10,9 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\xinshi_ai_usage\Service\UsageUserLabelService;
 use Drupal\Core\Site\Settings;
 use Drupal\xinshi_ai_usage\Controller\SiteUsageReportController;
 use Drupal\xinshi_ai_usage\Service\CostRatingService;
@@ -606,8 +609,13 @@ final class UsageQualityReportTest extends TestCase {
       static fn(string $perm): bool => $permissions[$perm] ?? FALSE);
     $time = $this->createMock(TimeInterface::class);
     $time->method('getCurrentMicroTime')->willReturnCallback(fn(): float => $this->now / 1000);
+    $storage = $this->createMock(EntityStorageInterface::class);
+    $storage->method('loadMultiple')->willReturn([]);
+    $entities = $this->createMock(EntityTypeManagerInterface::class);
+    $entities->method('getStorage')->with('user')->willReturn($storage);
     return new SiteUsageReportController($this->siteReports, $account,
-      new Settings(['hash_salt' => 'quality-report-salt']), $vault, $time, $this->quality);
+      new Settings(['hash_salt' => 'quality-report-salt']), $vault, $time, $this->quality,
+      new UsageUserLabelService($entities));
   }
 
 }

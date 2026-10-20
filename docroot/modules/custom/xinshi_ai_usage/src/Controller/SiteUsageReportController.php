@@ -14,6 +14,7 @@ use Drupal\xinshi_ai_usage\Service\SiteUsageReportService;
 use Drupal\xinshi_ai_usage\Service\UsageQualityReportService;
 use Drupal\xinshi_ai_usage\Service\UsageReportService;
 use Drupal\xinshi_ai_usage\Service\UsageReportException;
+use Drupal\xinshi_ai_usage\Service\UsageUserLabelService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,6 +41,7 @@ final class SiteUsageReportController extends ControllerBase {
     private readonly ProducerVault $vault,
     private readonly TimeInterface $time,
     private readonly UsageQualityReportService $qualityReports,
+    private readonly UsageUserLabelService $userLabels,
   ) {}
 
   /**
@@ -53,6 +55,7 @@ final class SiteUsageReportController extends ControllerBase {
       $container->get('xinshi_ai_usage.producer_vault'),
       $container->get('datetime.time'),
       $container->get('xinshi_ai_usage.quality_report'),
+      $container->get('xinshi_ai_usage.user_labels'),
     );
   }
 
@@ -217,7 +220,8 @@ final class SiteUsageReportController extends ControllerBase {
       };
       return $this->failure($status, $e->reportCode, $e->getMessage(), $requestId);
     }
-    return $this->respond($body + ['request_id' => $requestId], 200);
+    return $this->respond($this->userLabels->enrich($body, $this->account)
+      + ['request_id' => $requestId], 200);
   }
 
   private function failure(int $status, string $code, string $message, string $requestId): JsonResponse {
