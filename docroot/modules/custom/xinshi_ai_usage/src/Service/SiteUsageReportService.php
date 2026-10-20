@@ -16,7 +16,7 @@ use Drupal\Core\Database\Connection;
  *
  * Quantity endpoints (summary/timeseries/breakdown) require `view site ai usage`.
  * Cost figures require the additional `view ai supplier costs` permission and
- * are on a separate endpoint; they are never folded into quantity responses.
+ * are omitted from quantity responses unless the caller supplies that permission.
  *
  * Time bucketing matches the user report: buckets are cut on wall-clock
  * boundaries of the requested IANA timezone. For site-wide reports we read
@@ -90,16 +90,17 @@ final class SiteUsageReportService {
   /**
    * Site-wide summary: operations, active users, attempts, tokens, images, by-role split.
    *
-   * Does not include cost figures; those are on the costs endpoint.
+   * Includes saved cost estimates only when the caller authorizes supplier costs.
    */
-  public function summary(string $siteId, array $filter): array {
+  public function summary(string $siteId, array $filter, bool $withCosts = FALSE): array {
     $rows = $this->fetchAttempts($siteId, $filter);
     return [
       'filter' => $this->describeFilter($filter),
       'totals' => $this->aggregateTotals($rows),
       'by_role' => $this->aggregateByRole($rows),
       'charges' => ['status' => 'not_enabled'],
-    ] + $this->completeness($siteId);
+    ] + ($withCosts ? ['estimated_cost' => UsageCostSummary::fromAttempts($rows)] : [])
+      + $this->completeness($siteId);
   }
 
   /**
@@ -107,7 +108,7 @@ final class SiteUsageReportService {
    *
    * @return array{filter:array,buckets:list<array>}
    */
-  public function timeseries(string $siteId, array $filter, string $granularity): array {
+  public function timeseries(string $siteId, array $filter, string $granularity, bool $withCosts = FALSE): array {
     if (!in_array($granularity, ReportTime::GRANULARITIES, TRUE)) {
       throw new UsageReportException('invalid_request', 'granularity must be hour or day');
     }
@@ -121,7 +122,8 @@ final class SiteUsageReportService {
     $buckets = [];
     foreach (ReportTime::bucketLabels($filter['from'], $filter['to'], $tz, $granularity) as $label) {
       $bucketRows = $grouped[$label] ?? [];
-      $buckets[] = ['bucket_start' => $label, 'empty' => $bucketRows === []] + $this->aggregateTotals($bucketRows);
+      $buckets[] = ['bucket_start' => $label, 'empty' => $bucketRows === []] + $this->aggregateTotals($bucketRows)
+        + ($withCosts ? ['estimated_cost' => UsageCostSummary::fromAttempts($bucketRows)] : []);
     }
     return [
       'filter' => $this->describeFilter($filter) + ['granularity' => $granularity],
@@ -272,7 +274,7 @@ final class SiteUsageReportService {
    *   `invalid_request` for an unknown status or an unusable cursor.
    */
   public function operations(string $siteId, array $filter, ?string $cursor, int $limit,
-    ?string $status = NULL): array {
+    ?string $status = NULL, bool $withCosts = FALSE): array {
     $limit = max(1, min($limit, UsageReportService::MAX_LIMIT));
     if ($status !== NULL && !in_array($status, UsageReportService::STATUSES, TRUE)) {
       throw new UsageReportException('invalid_request', 'status must be one of ' . implode(', ', UsageReportService::STATUSES));
@@ -312,7 +314,7 @@ final class SiteUsageReportService {
     foreach ($heads as $head) {
       $id = (string) $head['operation_id'];
       $rows = $byOperation[$id] ?? [];
-      $operations[] = $this->userReports->describeOperation($id, $rows, $delivered[$id] ?? 0, $filter['timezone'])
+      $operations[] = $this->userReports->describeOperation($id, $rows, $delivered[$id] ?? 0, $filter['timezone'], $withCosts)
         + ['actor_user_id' => self::leadActor($rows)];
     }
     return [
@@ -330,7 +332,7 @@ final class SiteUsageReportService {
    * administrator drills in from a row already inside the filter. The summary
    * and every attempt carry `actor_user_id`, which the user report omits.
    */
-  public function operation(string $siteId, string $operationId, \DateTimeZone $tz): ?array {
+  public function operation(string $siteId, string $operationId, \DateTimeZone $tz, bool $withCosts = FALSE): ?array {
     $rows = $this->database->select(UsageProjectionService::ATTEMPT_TABLE, 'a')
       ->fields('a')
       ->condition('a.site_id', $siteId)
@@ -348,10 +350,10 @@ final class SiteUsageReportService {
       ->execute()->fetchAll(\PDO::FETCH_ASSOC);
     $committed = count(array_filter($deliveries, static fn(array $d): bool =>
       $d['state'] === LocalUsageProducer::STATE_COMMITTED && $d['artifact_kind'] === 'image_asset'));
-    return $this->userReports->describeOperation($operationId, $rows, $committed, $tz)
+    return $this->userReports->describeOperation($operationId, $rows, $committed, $tz, $withCosts)
       + ['actor_user_id' => self::leadActor($rows)] + [
         'attempt_list' => array_map(fn(array $row): array =>
-          $this->userReports->describeAttempt($row, $tz) + [
+          $this->userReports->describeAttempt($row, $tz, $withCosts) + [
             'actor_user_id' => $row['actor_user_id'] === NULL ? NULL : (string) $row['actor_user_id'],
           ], $rows),
         'deliveries' => array_map(static fn(array $d): array => [
@@ -887,19 +889,7 @@ final class SiteUsageReportService {
    * Exact addition of two non-negative decimal strings without bcmath.
    */
   private static function addDecimal(string $a, string $b): string {
-    $a = ltrim($a, '0') ?: '0';
-    $b = ltrim($b, '0') ?: '0';
-    if (strlen($a) < 18 && strlen($b) < 18) {
-      return (string) ((int) $a + (int) $b);
-    }
-    $out = '';
-    $carry = 0;
-    for ($i = strlen($a) - 1, $j = strlen($b) - 1; $i >= 0 || $j >= 0 || $carry; $i--, $j--) {
-      $sum = $carry + ($i >= 0 ? (int) $a[$i] : 0) + ($j >= 0 ? (int) $b[$j] : 0);
-      $out = ($sum % 10) . $out;
-      $carry = intdiv($sum, 10);
-    }
-    return $out;
+    return UsageCostSummary::addDecimal($a, $b);
   }
 
   private static function text(array $query, string $key): ?string {

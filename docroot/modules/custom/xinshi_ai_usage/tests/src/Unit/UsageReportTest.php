@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * The user's read-only usage reports stay in their own scope and never show purchase prices (UB3.1).
+ * The user's read-only usage reports stay in their own scope and expose only saved cost estimates.
  */
 final class UsageReportTest extends TestCase {
 
@@ -127,7 +127,7 @@ final class UsageReportTest extends TestCase {
     }
   }
 
-  public function testTheSummaryCountsOnlyTheUsersAttemptsAndNeverShowsCost(): void {
+  public function testTheSummaryCountsOnlyTheUsersAttemptsAndCosts(): void {
     $this->seedScenario();
     $filter = $this->reports->parseFilter(['from' => '2023-11-14', 'to' => '2023-11-18'], $this->now);
 
@@ -150,8 +150,11 @@ final class UsageReportTest extends TestCase {
     $this->assertSame(1, $summary['projection_version']);
     $this->assertSame(0, $summary['pending_events']);
     $this->assertSame('2023-11-14T00:00:00.000+00:00', $summary['filter']['from']);
-    $this->assertStringNotContainsString('cost', json_encode($summary));
-    $this->assertStringNotContainsString('micros', json_encode($summary));
+    $this->assertSame([['currency' => 'CNY', 'amount_micros' => '600000']], $summary['estimated_cost']['totals']);
+    $this->assertSame(1, $summary['estimated_cost']['rated_attempts']);
+    $this->assertSame(4, $summary['estimated_cost']['unpriced_attempts']);
+    $this->assertSame(1, $summary['estimated_cost']['pending_attempts']);
+    $this->assertStringNotContainsString('price_version', json_encode($summary));
     $this->assertStringNotContainsString(self::OTHER . '-att', json_encode($summary));
 
     // Feature and model filters narrow the same rows.
@@ -298,7 +301,9 @@ final class UsageReportTest extends TestCase {
       array_map(static fn(array $d): array => [$d['output_index'], $d['artifact_kind'], $d['state']],
         $detail['deliveries']));
     $this->assertSame(['status' => 'not_enabled'], $detail['charges']);
-    $this->assertStringNotContainsString('cost', json_encode($detail));
+    $this->assertSame([['currency' => 'CNY', 'amount_micros' => '600000']], $detail['estimated_cost']['totals']);
+    $this->assertSame($detail['estimated_cost'], $attempt['estimated_cost']);
+    $this->assertStringNotContainsString('price_version', json_encode($detail));
 
     // Attempts without reported usage carry no token block instead of zeros.
     $chat = $this->reports->operation(self::SITE, self::ME, 'op-chat', $tz);
@@ -359,6 +364,28 @@ final class UsageReportTest extends TestCase {
     $unregistered = $this->controller(self::ME, $this->vault())->summary(Request::create('/x'));
     $this->assertSame(503, $unregistered->getStatusCode());
     $this->assertTrue(json_decode((string) $unregistered->getContent(), TRUE)['retryable']);
+  }
+
+  public function testOwnCostWindowsListsAndBucketsUseTheSameAuthorizedRows(): void {
+    $this->seedScenario();
+    $this->database->update(UsageProjectionService::ATTEMPT_TABLE)->fields([
+      'cost_valuation_state' => 'rated_estimate', 'cost_currency' => 'USD', 'cost_total_micros' => 900,
+    ])->condition('actor_user_id', self::OTHER)->execute();
+    $filter = $this->reports->parseFilter(['from' => '2023-11-14', 'to' => '2023-11-18',
+      'timezone' => 'Asia/Shanghai'], $this->now);
+    $summary = $this->reports->summary(self::SITE, self::ME, $filter);
+    $series = $this->reports->timeseries(self::SITE, self::ME, $filter, 'day');
+    $list = $this->reports->operations(self::SITE, self::ME, $filter, NULL, 100);
+    foreach ([$series['buckets'], $list['operations']] as $rows) {
+      $costs = array_column($rows, 'estimated_cost');
+      $this->assertSame(1, array_sum(array_column($costs, 'rated_attempts')));
+      $this->assertSame($summary['estimated_cost']['totals'], array_merge(...array_column($costs, 'totals')));
+    }
+    $other = $this->reports->summary(self::SITE, self::OTHER, $filter);
+    $this->assertSame([['currency' => 'USD', 'amount_micros' => '900']], $other['estimated_cost']['totals']);
+    $empty = $this->reports->summary(self::SITE, self::ME, ['model' => 'absent'] + $filter);
+    $this->assertSame([], $empty['estimated_cost']['totals']);
+    $this->assertSame(0, $empty['estimated_cost']['unpriced_attempts']);
   }
 
   /**

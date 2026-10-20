@@ -64,7 +64,8 @@ final class SiteUsageReportController extends ControllerBase {
    */
   public function summary(Request $request): JsonResponse {
     return $this->report($request, function (string $site, array $query): array {
-      return $this->reports->summary($site, $this->reports->parseFilter($query, $this->nowMs()));
+      return $this->reports->summary($site, $this->reports->parseFilter($query, $this->nowMs()),
+        $this->account->hasPermission('view ai supplier costs'));
     }, 'view site ai usage');
   }
 
@@ -75,7 +76,8 @@ final class SiteUsageReportController extends ControllerBase {
     return $this->report($request, function (string $site, array $query): array {
       $granularity = is_string($query['granularity'] ?? NULL) ? $query['granularity'] : 'day';
       $filter = $this->reports->parseFilter($query, $this->nowMs(), $granularity);
-      return $this->reports->timeseries($site, $filter, $granularity);
+      return $this->reports->timeseries($site, $filter, $granularity,
+        $this->account->hasPermission('view ai supplier costs'));
     }, 'view site ai usage');
   }
 
@@ -129,7 +131,8 @@ final class SiteUsageReportController extends ControllerBase {
       $limit = is_numeric($query['limit'] ?? NULL) ? (int) $query['limit'] : UsageReportService::DEFAULT_LIMIT;
       $cursor = is_string($query['cursor'] ?? NULL) && $query['cursor'] !== '' ? $query['cursor'] : NULL;
       $status = is_string($query['status'] ?? NULL) && $query['status'] !== '' ? $query['status'] : NULL;
-      return $this->reports->operations($site, $filter, $cursor, $limit, $status);
+      return $this->reports->operations($site, $filter, $cursor, $limit, $status,
+        $this->account->hasPermission('view ai supplier costs'));
     }, 'view site ai usage');
   }
 
@@ -143,7 +146,8 @@ final class SiteUsageReportController extends ControllerBase {
   public function operation(Request $request, string $operation): JsonResponse {
     return $this->report($request, function (string $site, array $query) use ($operation): array {
       $filter = $this->reports->parseFilter(['timezone' => $query['timezone'] ?? NULL], $this->nowMs());
-      $result = $this->reports->operation($site, $operation, $filter['timezone']);
+      $result = $this->reports->operation($site, $operation, $filter['timezone'],
+        $this->account->hasPermission('view ai supplier costs'));
       if ($result === NULL) {
         throw new UsageReportException('not_found', 'operation not found');
       }

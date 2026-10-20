@@ -467,6 +467,37 @@ final class SiteUsageReportTest extends TestCase {
       $costs['by_state'][0]['by_currency']);
   }
 
+  public function testCostEstimatesFollowCurrentPermissionAcrossAllReportReaders(): void {
+    $this->seedScenario();
+    $vault = $this->vault();
+    $vault->set('chat-node', 'secret', self::SITE, 1);
+    foreach ([TRUE, FALSE, TRUE] as $allowed) {
+      $controller = $this->controller('99', $vault, ['view site ai usage' => TRUE,
+        'view ai supplier costs' => $allowed]);
+      $request = Request::create('/x', 'GET', self::WINDOW);
+      foreach ([$controller->summary($request), $controller->timeseries($request),
+        $controller->operations($request), $controller->operation($request, 'op-chat')] as $response) {
+        $this->assertSame(200, $response->getStatusCode());
+        $body = json_decode((string) $response->getContent(), TRUE);
+        $rows = $body['buckets'] ?? $body['operations'] ?? [$body];
+        foreach ($rows as $row) {
+          $this->assertSame($allowed, array_key_exists('estimated_cost', $row));
+        }
+        foreach ($body['attempt_list'] ?? [] as $attempt) {
+          $this->assertSame($allowed, array_key_exists('estimated_cost', $attempt));
+        }
+        if (!$allowed) {
+          $this->assertStringNotContainsString('micros', (string) $response->getContent());
+        }
+        $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+      }
+    }
+    $filter = $this->siteReports->parseFilter(self::WINDOW, $this->now);
+    $summary = $this->siteReports->summary(self::SITE, $filter, TRUE);
+    $this->assertSame([['currency' => 'CNY', 'amount_micros' => '616500'],
+      ['currency' => 'USD', 'amount_micros' => '20000']], $summary['estimated_cost']['totals']);
+  }
+
   public function testControllerRequiresPermissionAndRefusesSiteParam(): void {
     $this->seedScenario();
     $vault = $this->vault();

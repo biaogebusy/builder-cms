@@ -12,8 +12,8 @@ use Drupal\Core\Database\Connection;
  * Everything is computed from the attempt projection and the delivery facts of
  * one site, filtered to one actor, over a half-open `[from, to)` window. The
  * same rows feed the summary, the time series and the operation list, so the
- * three agree under the same filter and watermark. Supplier cost never leaves
- * this service: users see quantities and completeness, not purchase prices.
+ * three agree under the same filter and watermark. Own cost estimates use saved
+ * supplier valuations; price-book configuration and actual charges stay separate.
  *
  * Operations are not stored yet (the operation table belongs to UB4); an
  * operation here is the group of attempts sharing an `operation_id`, created
@@ -110,6 +110,7 @@ final class UsageReportService {
     return [
       'filter' => $this->describeFilter($filter),
       'totals' => $totals,
+      'estimated_cost' => UsageCostSummary::fromAttempts($rows),
       // No sales price book or ledger exists yet (UB4); nothing was charged.
       'charges' => ['status' => 'not_enabled'],
     ] + $this->completeness($siteId);
@@ -137,7 +138,8 @@ final class UsageReportService {
     foreach (ReportTime::bucketLabels($filter['from'], $filter['to'], $tz, $granularity) as $label) {
       $bucketRows = $grouped[$label] ?? [];
       $buckets[] = ['bucket_start' => $label, 'empty' => $bucketRows === [],
-        'operations' => count(array_unique(array_column($bucketRows, 'operation_id')))]
+        'operations' => count(array_unique(array_column($bucketRows, 'operation_id'))),
+        'estimated_cost' => UsageCostSummary::fromAttempts($bucketRows)]
         + self::aggregate($bucketRows);
     }
     return [
@@ -191,7 +193,7 @@ final class UsageReportService {
     $operations = [];
     foreach ($heads as $head) {
       $id = (string) $head['operation_id'];
-      $operations[] = $this->describeOperation($id, $byOperation[$id] ?? [], $delivered[$id] ?? 0, $filter['timezone']);
+      $operations[] = $this->describeOperation($id, $byOperation[$id] ?? [], $delivered[$id] ?? 0, $filter['timezone'], TRUE);
     }
     return [
       'filter' => $this->describeFilter($filter) + ['status' => $status],
@@ -219,8 +221,8 @@ final class UsageReportService {
       $d['state'] === LocalUsageProducer::STATE_COMMITTED && $d['artifact_kind'] === 'image_asset'));
     // The summary block already carries `attempts` as a count; the list gets
     // its own key so the union cannot swallow it.
-    return $this->describeOperation($operationId, $rows, $committed, $tz) + [
-      'attempt_list' => array_map(fn(array $row): array => $this->describeAttempt($row, $tz), $rows),
+    return $this->describeOperation($operationId, $rows, $committed, $tz, TRUE) + [
+      'attempt_list' => array_map(fn(array $row): array => $this->describeAttempt($row, $tz, TRUE), $rows),
       'deliveries' => array_map(static fn(array $d): array => [
         'attempt_id' => $d['attempt_id'],
         'output_index' => (int) $d['output_index'],
@@ -359,7 +361,7 @@ final class UsageReportService {
    * Public for the site report: the admin operation list and detail describe
    * operations exactly like the user report, only with the actor added.
    */
-  public function describeOperation(string $id, array $rows, int $delivered, \DateTimeZone $tz): array {
+  public function describeOperation(string $id, array $rows, int $delivered, \DateTimeZone $tz, bool $withCosts = FALSE): array {
     $first = $rows[0] ?? NULL;
     $primary = NULL;
     foreach ($rows as $row) {
@@ -382,13 +384,14 @@ final class UsageReportService {
       'models' => array_values(array_unique(array_column($rows, 'model_id'))),
       'status' => self::operationStatus($rows),
       'images_delivered' => $delivered,
-    ] + self::aggregate($rows);
+    ] + self::aggregate($rows)
+      + ($withCosts ? ['estimated_cost' => UsageCostSummary::fromAttempts($rows)] : []);
   }
 
   /**
    * One attempt row of an operation detail; public for the site report.
    */
-  public function describeAttempt(array $row, \DateTimeZone $tz): array {
+  public function describeAttempt(array $row, \DateTimeZone $tz, bool $withCosts = FALSE): array {
     $reported = $row['usage_quality'] === 'reported';
     return [
       'attempt_id' => $row['attempt_id'],
@@ -410,7 +413,7 @@ final class UsageReportService {
       'images_generated' => $reported && $row['images_generated'] !== NULL ? (string) $row['images_generated'] : NULL,
       'started_at' => ReportTime::iso((int) $row['started_at'], $tz),
       'finished_at' => $row['finished_at'] === NULL ? NULL : ReportTime::iso((int) $row['finished_at'], $tz),
-    ];
+    ] + ($withCosts ? ['estimated_cost' => UsageCostSummary::fromAttempts([$row])] : []);
   }
 
   private static function operationStatus(array $rows): string {
