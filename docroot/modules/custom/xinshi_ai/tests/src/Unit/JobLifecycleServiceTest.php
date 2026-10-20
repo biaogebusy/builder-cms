@@ -115,6 +115,15 @@ final class JobLifecycleServiceTest extends TestCase {
     }
   }
 
+  public function testCreateQueuedStoresNegativePromptInItsDedicatedField(): void {
+    $this->lifecycle->createQueued([
+      'prompt' => 'a cat', 'negativePrompt' => 'watermarks, blurry', 'params' => ['n' => 1],
+    ], $this->createMock(AccountInterface::class));
+
+    $this->assertSame('watermarks, blurry', $this->createdJobs[0]['field_negative_prompt']);
+    $this->assertSame('{"n":1}', $this->createdJobs[0]['field_params']);
+  }
+
   public function testAuthorizedInputMediaIsReferencedByTheJob(): void {
     $owner = $this->createMock(AccountInterface::class);
     $owner->method('id')->willReturn(7);

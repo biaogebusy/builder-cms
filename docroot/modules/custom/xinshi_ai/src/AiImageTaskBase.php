@@ -234,6 +234,10 @@ abstract class AiImageTaskBase extends AiTaskBase {
         $config[$k] = $params[$k];
       }
     }
+    $negativePrompt = $job->get('field_negative_prompt')->value;
+    if ($negativePrompt !== NULL && $negativePrompt !== '') {
+      $config['negative_prompt'] = $negativePrompt;
+    }
     // 归一化 size 格式:前端可能传 1328*1328,但 OpenAI Images API 标准是 1024x1024(小写 x)。
     if (isset($config['size']) && is_string($config['size'])) {
       $config['size'] = str_replace('*', 'x', $config['size']);
