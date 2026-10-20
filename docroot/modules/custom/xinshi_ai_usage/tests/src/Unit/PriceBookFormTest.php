@@ -20,6 +20,8 @@ use Drupal\xinshi_ai_usage\Contract\PriceCatalogFetcher;
 use Drupal\xinshi_ai_usage\Form\PriceBookForm;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
+use Drupal\xinshi_ai_usage\Service\ReportedModels;
+use Drupal\xinshi_ai_usage\Service\UsageProjectionService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -47,6 +49,14 @@ final class PriceBookFormTest extends TestCase {
     ]);
     $this->database = Database::getConnection('default', 'price_form_test');
     $this->database->schema()->createTable(PriceBookService::TABLE, xinshi_ai_usage_schema()[PriceBookService::TABLE]);
+    // Only the columns ReportedModels reads; the real schema has many more.
+    $this->database->schema()->createTable(UsageProjectionService::ATTEMPT_TABLE, [
+      'fields' => [
+        'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+        'model_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+        'started_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      ],
+    ]);
     $time = $this->createMock(TimeInterface::class);
     $time->method('getCurrentMicroTime')->willReturnCallback(fn() => $this->now + 0.25);
     $this->time = $time;
@@ -302,10 +312,129 @@ final class PriceBookFormTest extends TestCase {
     $this->assertSame('addError', end($this->messages)[0]);
   }
 
+  public function testPrefillAutomaticallyMatchesReportedModels(): void {
+    $this->vault->set('chat-node', 'secret', 'app.example', $this->now);
+    $this->database->insert(UsageProjectionService::ATTEMPT_TABLE)
+      ->fields(['site_id', 'model_id', 'started_at'])
+      ->values(['site_id' => 'app.example', 'model_id' => 'deepseek-chat', 'started_at' => $this->now])
+      ->values(['site_id' => 'app.example', 'model_id' => 'deepseek-chat', 'started_at' => $this->now])
+      ->values(['site_id' => 'app.example', 'model_id' => 'anthropic/claude-sonnet-4-5',
+        'started_at' => $this->now])
+      ->values(['site_id' => 'app.example', 'model_id' => 'text-embedding-3-small',
+        'started_at' => $this->now])
+      ->values(['site_id' => 'app.example', 'model_id' => 'does/not-exist', 'started_at' => $this->now])
+      ->values(['site_id' => 'other.example', 'model_id' => 'deepseek/deepseek-chat',
+        'started_at' => $this->now])
+      ->execute();
+    $form = $this->form();
+    $built = $form->buildForm([], new FormState());
+    $state = (new FormState())->setValues([
+      'site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'v1', 'currency' => 'CNY',
+      'rates_json' => $built['create']['rates_json']['#default_value'],
+      'prefill_account' => 'aliyun', 'prefill_models' => '', 'prefill_search' => '',
+      'prefill_popular' => [],
+    ]);
+    $state->setUserInput(['rates_json' => 'old', 'currency' => 'CNY']);
+    $form->prefillFromCatalog($built, $state);
+
+    // Reported model names become the rate keys, so no manual renaming is needed.
+    $decoded = json_decode($state->getUserInput()['rates_json'], TRUE);
+    $models = $decoded['accounts']['aliyun']['models'];
+    $this->assertArrayHasKey('deepseek-chat', $models);
+    $this->assertArrayHasKey('anthropic/claude-sonnet-4-5', $models);
+    $this->assertSame(280000, $models['deepseek-chat']['per_million_input']);
+    $this->assertArrayNotHasKey('text-embedding-3-small', $models, 'non-chat models are skipped');
+    $this->assertArrayNotHasKey('does/not-exist', $models);
+    $this->assertArrayNotHasKey('deepseek/deepseek-chat', $models, 'other sites are not included');
+
+    $warnings = array_values(array_filter($this->messages,
+      static fn(array $message): bool => $message[0] === 'addWarning'));
+    $this->assertCount(2, $warnings);
+    $this->assertStringContainsString('does/not-exist', $warnings[0][1]);
+    $this->assertStringContainsString('未找到', $warnings[0][1]);
+    $this->assertStringContainsString('text-embedding-3-small', $warnings[1][1]);
+    $this->assertStringContainsString('不是对话模型', $warnings[1][1]);
+    $status = end($this->messages);
+    $this->assertSame('addStatus', $status[0]);
+    $this->assertStringContainsString('2 个模型', $status[1]);
+    $this->assertStringContainsString('其中 2 个', $status[1]);
+  }
+
+  public function testPrefillMergesSearchAndPopularModelsIntoTheList(): void {
+    $form = $this->form();
+    $built = $form->buildForm([], new FormState());
+    $this->assertSame('xinshi_ai_usage.price_catalog_autocomplete',
+      $built['create']['prefill']['prefill_search']['#autocomplete_route_name']);
+    $this->assertArrayHasKey('deepseek/deepseek-chat',
+      $built['create']['prefill']['prefill_popular']['#options']);
+
+    $state = (new FormState())->setValues([
+      'site_id' => 'cms.example', 'book_kind' => self::KIND, 'version' => 'v1', 'currency' => 'CNY',
+      'rates_json' => $built['create']['rates_json']['#default_value'],
+      'prefill_account' => 'aliyun', 'prefill_models' => 'deepseek/deepseek-chat',
+      'prefill_search' => 'anthropic/claude-sonnet-4-5',
+      'prefill_popular' => ['deepseek/deepseek-chat' => 'deepseek/deepseek-chat'],
+    ]);
+    $state->setUserInput(['rates_json' => 'old', 'currency' => 'CNY']);
+    $form->prefillFromCatalog($built, $state);
+
+    $models = json_decode($state->getUserInput()['rates_json'], TRUE)['accounts']['aliyun']['models'];
+    $this->assertArrayHasKey('deepseek/deepseek-chat', $models);
+    $this->assertArrayHasKey('anthropic/claude-sonnet-4-5', $models);
+    $merged = $state->getUserInput()['prefill_models'];
+    $this->assertStringContainsString('deepseek/deepseek-chat', $merged);
+    $this->assertStringContainsString('anthropic/claude-sonnet-4-5', $merged);
+    $this->assertSame('', $state->getUserInput()['prefill_search']);
+    $this->assertSame([], $state->getUserInput()['prefill_popular']);
+    $this->assertSame('addStatus', end($this->messages)[0], 'a valid search id never warns');
+  }
+
+  public function testSearchFieldRequiresACompleteUsableModelId(): void {
+    $form = $this->form();
+    $built = $form->buildForm([], new FormState());
+
+    // A half-typed keyword is ignored with a warning; the prefill continues.
+    $state = (new FormState())->setValues([
+      'site_id' => 'cms.example', 'book_kind' => self::KIND, 'version' => 'v1', 'currency' => 'CNY',
+      'rates_json' => $built['create']['rates_json']['#default_value'],
+      'prefill_account' => 'xinshi', 'prefill_models' => 'deepseek/deepseek-chat',
+      'prefill_search' => 'deepseek', 'prefill_popular' => [],
+    ]);
+    $state->setUserInput(['rates_json' => 'old', 'currency' => 'CNY']);
+    $form->prefillFromCatalog($built, $state);
+    $models = json_decode($state->getUserInput()['rates_json'], TRUE)['accounts']['xinshi']['models'];
+    $this->assertSame(['deepseek/deepseek-chat'], array_keys($models));
+    $warnings = array_values(array_filter($this->messages,
+      static fn(array $message): bool => $message[0] === 'addWarning'));
+    $this->assertCount(1, $warnings);
+    $this->assertStringContainsString('"deepseek"', $warnings[0][1]);
+    $this->assertStringContainsString('已忽略', $warnings[0][1]);
+    $this->assertSame('addStatus', end($this->messages)[0]);
+    $this->assertSame('deepseek/deepseek-chat', $state->getUserInput()['prefill_models']);
+
+    // An exact but non-chat id is ignored the same way; with nothing else to
+    // prefill the empty-list error is added, but the hint still names it.
+    $this->messages = [];
+    $state = (new FormState())->setValues([
+      'site_id' => 'cms.example', 'book_kind' => self::KIND, 'version' => 'v1', 'currency' => 'CNY',
+      'rates_json' => 'old', 'prefill_account' => 'xinshi', 'prefill_models' => '',
+      'prefill_search' => 'text-embedding-3-small', 'prefill_popular' => [],
+    ]);
+    $form->prefillFromCatalog($built, $state);
+    $this->assertSame('addError', end($this->messages)[0]);
+    $this->assertStringContainsString('已上报的模型', end($this->messages)[1]);
+    $warnings = array_values(array_filter($this->messages,
+      static fn(array $message): bool => $message[0] === 'addWarning'));
+    $this->assertCount(1, $warnings);
+    $this->assertStringContainsString('text-embedding-3-small', $warnings[0][1]);
+    $this->assertFalse($state->isRebuilding());
+  }
+
   private function form(array $settings = [], ?PriceCatalogFetcher $catalog = NULL): PriceBookForm {
     $requests = new RequestStack();
     $requests->push(Request::create('https://cms.example/admin/config/xinshi/ai/usage/pricing'));
-    return new PriceBookForm($this->priceBook, $catalog ?? $this->fixtureCatalog(), $this->vault, $requests,
+    return new PriceBookForm($this->priceBook, $catalog ?? $this->fixtureCatalog(), $this->vault,
+      new ReportedModels($this->database), $requests,
       new Settings($settings + ['hash_salt' => 'isolated-hash-salt']), $this->time);
   }
 

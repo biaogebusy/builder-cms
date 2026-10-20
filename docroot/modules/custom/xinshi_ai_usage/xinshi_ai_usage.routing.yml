@@ -34,6 +34,20 @@ xinshi_ai_usage.price_book:
   options:
     _admin_route: TRUE
 
+# Chat model suggestions for the price book prefill field. Read-only and
+# admin-only; a failed catalog fetch yields an empty suggestion list.
+xinshi_ai_usage.price_catalog_autocomplete:
+  path: '/admin/config/xinshi/ai/usage/pricing/catalog-autocomplete'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\PriceCatalogAutocompleteController::handle'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer xinshi ai pricing'
+
 # Read-only usage reports of the authenticated user (UB3.1). The account comes
 # from the session / OAuth token; scope parameters in the query are refused.
 xinshi_ai_usage.report.summary:
