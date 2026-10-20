@@ -1,0 +1,32 @@
+services:
+  xinshi_chat.conversations:
+    class: Drupal\xinshi_chat\Service\ConversationList
+    arguments: ['@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository', '@date.formatter']
+  xinshi_chat.routes:
+    class: Drupal\xinshi_chat\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  xinshi_chat.schema:
+    class: Drupal\xinshi_chat\Schema\Manager
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@config.factory', '@entity_display.repository', '@database', '@lock', '@jsonapi.resource_type.repository']
+  xinshi_chat.uninstall_validator:
+    class: Drupal\xinshi_chat\UninstallValidator
+    arguments: ['@xinshi_chat.schema']
+    tags:
+      - { name: module_install.uninstall_validator }
+  xinshi_chat.availability:
+    class: Drupal\xinshi_chat\EventSubscriber\AvailabilitySubscriber
+    arguments: ['@config.factory']
+    tags:
+      - { name: event_subscriber }
+  xinshi_chat.config_import:
+    class: Drupal\xinshi_chat\EventSubscriber\ConfigImportSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  xinshi_chat.session_content_writer:
+    class: Drupal\xinshi_chat\Service\SessionContentWriter
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']
+  xinshi_chat.conversation_writer:
+    class: Drupal\xinshi_chat\Service\ConversationWriter
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']

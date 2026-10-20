@@ -7,6 +7,7 @@ namespace Drupal\xinshi_ai_reference;
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -21,15 +22,40 @@ final class TaskReferenceGuard {
     private readonly EntityTypeManagerInterface $entities,
     private readonly ResourceTypeRepositoryInterface $resources,
     private readonly AccountInterface $account,
+    private readonly ChatSessionSnapshot $snapshots,
+    private readonly SessionFieldsWriter $writer,
+    private readonly Connection $database,
+    private readonly ChatStorage $protocol,
   ) {}
+
+  /** Serialize direct saves too, so an unchanged stale entity cannot overwrite a concurrent CAS. */
+  public function presave(NodeInterface $node): void {
+    if ($node->bundle() === 'ai_session' && !$node->isNew()) {
+      // SqlContentEntityStorage already holds the save transaction at this hook boundary.
+      $row = $this->database->select('node', 'n')->fields('n', ['vid'])
+        ->condition('nid', $node->id())->forUpdate()->execute()->fetchAssoc();
+      $original = $this->entities->getStorage('node')->loadUnchanged($node->id());
+      // A locking read sees the current revision even if core opened a repeatable-read snapshot earlier.
+      if (($this->snapshots->usesNewFields($node) ||
+        ($original && $this->snapshots->usesNewFields($original))) &&
+        (!$row || (string) $row['vid'] !== (string) $node->getLoadedRevisionId() ||
+          !$original || (string) $row['vid'] !== (string) $original->getRevisionId())) {
+        $this->reject();
+      }
+    }
+    $this->validate($node);
+  }
 
   /** Entity access covers JSON:API single, collection, relationship and included resources. */
   public function access(NodeInterface $node, AccountInterface $account): AccessResultInterface {
-    if (!$this->marked($node)) {
+    $current = $node->bundle() === 'ai_session' && !$node->isNew() && !$node->isDefaultRevision() ?
+      $this->entities->getStorage('node')->loadUnchanged($node->id()) : NULL;
+    if (!$this->marked($node) && !($current instanceof NodeInterface && $this->marked($current))) {
       return AccessResult::neutral();
     }
     return AccessResult::forbiddenIf($account->isAnonymous() ||
-      (string) $account->id() !== (string) $node->getOwnerId())
+      (string) $account->id() !== (string) $node->getOwnerId() ||
+      ($current && (string) $account->id() !== (string) $current->getOwnerId()))
       ->cachePerUser()->setCacheMaxAge(0)->addCacheableDependency($node);
   }
 
@@ -59,6 +85,9 @@ final class TaskReferenceGuard {
       }
       foreach ($node->getTranslationLanguages() as $language) {
         foreach ($node->getTranslation($language->getId())->get($field)->referencedEntities() as $session) {
+          if ($session instanceof NodeInterface && $session->bundle() === 'ai_session') {
+            $this->requireSelectedVersion($session);
+          }
           if (!$session instanceof NodeInterface || !$this->marked($session)) {
             continue;
           }
@@ -76,9 +105,24 @@ final class TaskReferenceGuard {
     if ($node->bundle() !== 'ai_session') {
       return;
     }
-    $original = $node->getOriginal() ?? ($node->isNew() ? NULL :
-      $this->entities->getStorage('node')->loadUnchanged($node->id()));
-    if (!$this->marked($node) && !($original instanceof NodeInterface && $this->marked($original))) {
+    $this->requireSelectedVersion($node);
+    // The default stored entity is authoritative even when the caller edits an older revision.
+    $original = $node->isNew() ? NULL :
+      $this->entities->getStorage('node')->loadUnchanged($node->id());
+    $loaded = !$node->isNew() && $node->getLoadedRevisionId() ?
+      $this->entities->getStorage('node')->loadRevisionUnchanged($node->getLoadedRevisionId()) : NULL;
+    try {
+      $this->validateSnapshots($node, $original);
+      if ($loaded instanceof NodeInterface) {
+        $this->validateSnapshots($node, $loaded);
+      }
+    }
+    catch (ChatSessionFormatException) {
+      $this->reject();
+    }
+    $protected_originals = array_filter([$original, $loaded],
+      fn($entity) => $entity instanceof NodeInterface && $this->marked($entity));
+    if (!$this->marked($node) && $protected_originals === []) {
       return;
     }
     if ($this->account->isAnonymous() ||
@@ -94,12 +138,20 @@ final class TaskReferenceGuard {
         $this->reject();
       }
       $expected = $ref;
-      if ($original instanceof NodeInterface && $this->marked($original) &&
-        $this->reference($original) !== $ref) {
-        $this->reject();
+      foreach ($protected_originals as $protected_original) {
+        if ($this->reference($protected_original) !== $ref ||
+          (string) $protected_original->getOwnerId() !== (string) $node->getOwnerId()) {
+          $this->reject();
+        }
       }
       $content = $this->field($translation, 'content');
       $role = $this->field($translation, 'session_role');
+      $v2 = $this->snapshots->usesNewFields($translation);
+      $allowed = $v2 ? array_map(fn($name) => $this->field($translation, $name),
+        [...ChatSessionSnapshot::NEW_FIELDS, ...ChatSessionSnapshot::PLAN_FIELDS,
+          'content', 'reasoning_content', 'summary',
+          'img', 'style_preset']) : [$content];
+      $allowed[] = $role;
       if ($translation->label() !== 'Protected task result' || !$translation->hasField($role) ||
         $translation->get($role)->value !== 'assistant') {
         $this->reject();
@@ -107,7 +159,7 @@ final class TaskReferenceGuard {
       // Unknown custom fields are closed by default; new presentation copies require review.
       foreach ($translation->getFieldDefinitions() as $name => $definition) {
         if ($definition->isComputed() || $definition->getFieldStorageDefinition()->isBaseField() ||
-          in_array($name, [$content, $role], TRUE)) {
+          in_array($name, $allowed, TRUE)) {
           continue;
         }
         $items = $translation->get($name);
@@ -131,6 +183,58 @@ final class TaskReferenceGuard {
     }
   }
 
+  /** Require the full contract and the writer's exact locked transition for every changed snapshot. */
+  private function validateSnapshots(NodeInterface $node, ?NodeInterface $original): void {
+    $current_v2 = $original && $this->snapshots->usesNewFields($original);
+    foreach ($node->getTranslationLanguages() as $language) {
+      $translation = $node->getTranslation($language->getId());
+      $v2 = $this->snapshots->usesNewFields($translation);
+      if (!$v2 && !$current_v2) {
+        continue;
+      }
+      if (!$v2 || ($original && !$current_v2) ||
+        ($original && (string) $original->getOwnerId() !== (string) $node->getOwnerId())) {
+        $this->reject();
+      }
+      $snapshot = $this->snapshots->validate($translation);
+      if ($node->isNew() && isset($snapshot->plan_context->legacyPlanRunId)) {
+        $this->reject();
+      }
+      if ($original && (!$original->hasTranslation($language->getId()) ||
+        (ChatSessionFormat::encode($snapshot) !== ChatSessionFormat::encode(
+          $this->snapshots->validate($original->getTranslation($language->getId()))) &&
+          !$this->writer->permits($node, $original)))) {
+        $this->reject();
+      }
+    }
+    if ($current_v2 && array_keys($node->getTranslationLanguages()) !==
+      array_keys($original->getTranslationLanguages())) {
+      $this->reject();
+    }
+  }
+
+  /** Historical revisions remain readable; only current-format entities may be saved or linked. */
+  private function requireSelectedVersion(NodeInterface $node): void {
+    $version = $this->protocol->version();
+    foreach ($node->getTranslationLanguages() as $language) {
+      $translation = $node->getTranslation($language->getId());
+      if (!$this->snapshots->usesNewFields($translation)) {
+        if ($version !== 1) {
+          $this->reject();
+        }
+        continue;
+      }
+      try {
+        if ($this->snapshots->validate($translation)->storage_version !== $version) {
+          $this->reject();
+        }
+      }
+      catch (ChatSessionFormatException) {
+        $this->reject();
+      }
+    }
+  }
+
   /** Recognize corrupt markers too, so an invalid locator cannot fall back to ordinary text. */
   private function marked(NodeInterface $node): bool {
     if ($node->bundle() !== 'ai_session') {
@@ -138,12 +242,17 @@ final class TaskReferenceGuard {
     }
     foreach ($node->getTranslationLanguages() as $language) {
       $translation = $node->getTranslation($language->getId());
+      foreach (['storage_mode', 'result_reference'] as $public) {
+        $field = $this->field($translation, $public);
+        if ($translation->hasField($field) &&
+          (($public === 'storage_mode' && $translation->get($field)->value === 'protected_reference') ||
+          ($public === 'result_reference' && !$translation->get($field)->isEmpty()))) {
+          return TRUE;
+        }
+      }
       $name = $this->field($translation, 'content');
       $content = $translation->hasField($name) ? (string) $translation->get($name)->value : '';
-      $value = json_decode($content, TRUE);
-      $malformed = json_last_error() !== JSON_ERROR_NONE &&
-        str_starts_with(ltrim($content), '{') && str_contains($content, '"xinshi-protected-run"');
-      if ($malformed || (is_array($value) && ($value['kind'] ?? NULL) === 'xinshi-protected-run')) {
+      if (ChatSessionSnapshot::managedEnvelope($content, ['xinshi-protected-run'])) {
         return TRUE;
       }
     }
@@ -152,9 +261,27 @@ final class TaskReferenceGuard {
 
   /** Require a bounded, exact shape bound to this session UUID. */
   private function reference(NodeInterface $node): array {
+    if ($this->snapshots->usesNewFields($node)) {
+      try {
+        $value = $this->snapshots->validate($node);
+        if ($value->storage_mode !== 'protected_reference') {
+          $this->reject();
+        }
+        return (array) $value->result_reference;
+      }
+      catch (ChatSessionFormatException) {
+        $this->reject();
+      }
+    }
     $name = $this->field($node, 'content');
     $content = $node->hasField($name) ? (string) $node->get($name)->value : '';
-    $ref = strlen($content) <= 300 ? json_decode($content, TRUE) : NULL;
+    try {
+      $decoded = strlen($content) <= 300 ? ChatSessionFormat::decode($content) : NULL;
+      $ref = $decoded instanceof \stdClass ? (array) $decoded : NULL;
+    }
+    catch (ChatSessionFormatException) {
+      $this->reject();
+    }
     if (!is_array($ref)) {
       $this->reject();
     }

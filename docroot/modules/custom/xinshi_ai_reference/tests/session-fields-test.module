@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Test-only field denials and save failures on the disposable reference site.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+
+// Drush rebuilds routes after field installation without the reference HTTP bootstrap.
+$session_test_loader = require DRUPAL_ROOT . '/autoload.php';
+$session_test_loader->addPsr4('Drupal\\xinshi_ai\\', DRUPAL_ROOT . '/modules/custom/xinshi_ai/src');
+
+/** Implements hook_entity_field_access(). */
+function xinshi_session_content_test_entity_field_access(string $operation,
+  FieldDefinitionInterface $definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+  // The CLI driver changes this flag between HTTP requests; bypass request-end state caches.
+  $denial = \Drupal::keyValue('state')->get('session_fields_test_denial');
+  return AccessResult::forbiddenIf($denial === [$definition->getName(), $operation])
+    ->setCacheMaxAge(0);
+}
+
+/** Implements hook_node_access(). */
+function xinshi_session_content_test_node_access(EntityInterface $node, string $operation,
+  AccountInterface $account) {
+  return AccessResult::forbiddenIf($operation === 'update' &&
+    \Drupal::state()->get('session_fields_test_translation') === $node->language()->getId())
+    ->setCacheMaxAge(0);
+}
+
+/** Implements hook_node_presave(). */
+function xinshi_session_content_test_node_presave(EntityInterface $node): void {
+  if ($node->bundle() === 'ai_session' && \Drupal::state()->get('session_fields_test_mutate')) {
+    $node->set('summary', 'Unexpected presave change');
+  }
+}
+
+/** Implements hook_node_update(). */
+function xinshi_session_content_test_node_update(EntityInterface $node): void {
+  if ($node->bundle() === 'ai_session' && \Drupal::state()->get('session_fields_test_fail')) {
+    throw new RuntimeException('Synthetic post-write failure.');
+  }
+}

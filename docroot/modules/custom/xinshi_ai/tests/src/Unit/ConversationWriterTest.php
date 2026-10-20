@@ -13,8 +13,8 @@ use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeStorageInterface;
-use Drupal\xinshi_ai\Controller\ConversationController;
-use Drupal\xinshi_ai\Service\ConversationWriter;
+use Drupal\xinshi_chat\Controller\ConversationController;
+use Drupal\xinshi_chat\Service\ConversationWriter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -196,7 +196,7 @@ final class ConversationWriterTest extends TestCase {
   }
 
   public function testTheRouteIsOauthOnlyAndControllerRejectsUnknownKeys(): void {
-    $routes = Yaml::parseFile(dirname(__DIR__, 3) . '/xinshi_ai.routing.yml');
+    $routes = Yaml::parseFile(dirname(__DIR__, 4) . '/xinshi_chat/xinshi_chat.routing.yml');
     $route = $routes['xinshi_ai.conversation.update'];
     $this->assertSame(['POST'], $route['methods']);
     $this->assertSame(['oauth2'], $route['options']['_auth']);

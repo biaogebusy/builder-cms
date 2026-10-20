@@ -1,0 +1,7 @@
+xinshi_ai_reference.settings:
+  type: config_object
+  label: 'Chat storage protocol'
+  mapping:
+    storage_version:
+      type: integer
+      label: 'Storage protocol version'

@@ -21,6 +21,19 @@ xinshi_ai.harness.settings:
   requirements:
     _user_is_logged_in: 'TRUE'
 
+xinshi_ai.web_search:
+  path: '/api/v3/ai/web/{operation}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\WebSearchController::read'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    operation: 'search|fetch'
+
 xinshi_ai.figma:
   path: '/api/v3/ai/figma'
   defaults:
@@ -213,28 +226,3 @@ xinshi_ai.image_job.events:
   requirements:
     _custom_access: '\Drupal\xinshi_ai\Controller\ImageJobEventsController::accessByTicket'
     uuid: '[0-9a-f-]+'
-
-# All conversation appends and attribute edits share a database row lock.
-xinshi_ai.session.content:
-  path: '/api/v3/ai/conversations/{chat_uuid}/sessions/{uuid}/content'
-  defaults:
-    _controller: '\Drupal\xinshi_ai\Controller\SessionContentController::update'
-    _format: 'json'
-  methods: [PATCH]
-  options:
-    no_cache: TRUE
-    _auth: ['oauth2']
-  requirements:
-    _user_is_logged_in: 'TRUE'
-
-xinshi_ai.conversation.update:
-  path: '/api/v3/ai/conversations/{uuid}'
-  defaults:
-    _controller: '\Drupal\xinshi_ai\Controller\ConversationController::update'
-    _format: 'json'
-  methods: [POST]
-  options:
-    no_cache: TRUE
-    _auth: ['oauth2']
-  requirements:
-    _user_is_logged_in: 'TRUE'

@@ -1,0 +1,5 @@
+xinshi_chat.settings:
+  title: 'Chat'
+  description: 'Control Chat availability without removing conversations.'
+  parent: system.admin_config_services
+  route_name: xinshi_chat.settings

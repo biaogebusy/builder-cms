@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\xinshi_ai\Service;
+namespace Drupal\xinshi_chat\Service;
 
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Database\Connection;
@@ -17,7 +17,7 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 /** Serializes conversation updates and appends message references idempotently. */
 final class ConversationWriter {
 
-  private const ATTRIBUTES = ['title', 'chat_type', 'model', 'platform', 'temperature', 'top_p', 'mode', 'ai_optimized', 'sticky'];
+  private const ATTRIBUTES = ['title', 'chat_type', 'model', 'platform', 'temperature', 'top_p', 'mode', 'ai_optimized', 'sticky', 'web_search'];
 
   public function __construct(
     private readonly Connection $database,
@@ -41,6 +41,9 @@ final class ConversationWriter {
       if (!is_scalar($value)) {
         throw new UnprocessableEntityHttpException('Invalid attribute value.');
       }
+    }
+    if (array_key_exists('web_search', $attributes) && !is_bool($attributes['web_search'])) {
+      throw new UnprocessableEntityHttpException('Invalid web search preference.');
     }
     $storage = $this->entities->getStorage('node');
     $resource = $this->resources->get('node', 'conversation');

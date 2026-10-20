@@ -123,6 +123,11 @@ scope; a source review does not authorize these operations.
   `*.services.yml`; use constructor injection and container factories. Procedural
   hooks may resolve services at the boundary. Avoid broad rewrites solely to remove
   existing `\Drupal::` calls.
+- Injected service properties in forms must be protected and not readonly.
+  A rebuilt or AJAX form is cached in `cache_form` with its form object;
+  `DependencySerializationTrait::__sleep()` runs in FormBase scope and
+  silently drops private child properties from serialization, so the restored
+  form crashes with "must not be accessed before initialization".
 - Declare direct module dependencies in `*.info.yml`. Keep optional dependencies
   optional throughout service construction and execution. Follow the locked Drupal
   APIs; do not claim compatibility with a core version without checking it.

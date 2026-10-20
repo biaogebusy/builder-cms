@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Installs only configuration; historical message conversion remains an explicit job.
+ */
+
+/** Implements hook_install(). */
+function xinshi_chat_install($is_syncing): void {
+  $manager = \Drupal::service('xinshi_chat.schema');
+  if ($is_syncing) {
+    // The new module's event subscriber did not exist during IMPORT_VALIDATE.
+    $source = \Drupal::service('config.installer')->getSourceStorage();
+    $errors = \Drupal\xinshi_chat\EventSubscriber\ConfigImportSubscriber::errors($source);
+    if ($manager->hasContent() && \Drupal::config('xinshi_ai_reference.settings')->get('storage_version') !== 3) {
+      $errors[] = 'Migrate existing Chat data before installing Chat through configuration import.';
+    }
+    if ($errors) {
+      throw new \RuntimeException(implode(' ', $errors));
+    }
+    return;
+  }
+  $manager->apply();
+}
+
+/** Adopt the version 1 structure without resetting site configuration or data. */
+function xinshi_chat_update_11001(): string {
+  if ((\Drupal::config('xinshi_chat.settings')->get('schema_version') ?? 0) <= 1) {
+    \Drupal::service('xinshi_chat.schema')->apply(1);
+  }
+  return 'Chat structure version 1 is installed and verified.';
+}
+
+/** Add the default-on conversation web search preference without changing message storage. */
+function xinshi_chat_update_11002(): string {
+  \Drupal::service('xinshi_chat.schema')->apply(2);
+  return 'Conversation web search preference is installed.';
+}
+
+/** Implements hook_requirements(). */
+function xinshi_chat_requirements($phase): array {
+  if ($phase !== 'runtime' || !\Drupal::hasService('xinshi_chat.schema')) {
+    return [];
+  }
+  $report = \Drupal::service('xinshi_chat.schema')->inspect();
+  $valid = $report['matches'] && $report['installed_version'] === $report['target_version'];
+  return ['xinshi_chat_structure' => [
+    'title' => t('Chat structure'),
+    'value' => $valid ? t('Current') : t('Update or repair required'),
+    'description' => t('Run drush xinshi-chat:check for the configuration differences.'),
+    'severity' => $valid ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+  ]];
+}

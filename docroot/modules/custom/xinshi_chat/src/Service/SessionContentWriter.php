@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\xinshi_ai\Service;
+namespace Drupal\xinshi_chat\Service;
 
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Database\Connection;
@@ -44,6 +44,11 @@ final class SessionContentWriter {
       $sessions = $this->field($chat, 'sessions', ['view']);
       if (!in_array((string) $nid, array_map('strval', array_column($chat->get($sessions)->getValue(), 'target_id')), TRUE)) {
         throw new AccessDeniedHttpException();
+      }
+      $version = $this->resources->get('node', 'ai_session')?->getInternalName('storage_version');
+      if ($version && $node->hasField($version) && !$node->get($version)->isEmpty()) {
+        // Content-only hashes cannot protect the complete v2 snapshot, including conflict responses.
+        throw new UnprocessableEntityHttpException('The session requires a versioned fields update.');
       }
       $field = $this->field($node, 'content', ['view', 'edit']);
       $current = (string) $node->get($field)->value;

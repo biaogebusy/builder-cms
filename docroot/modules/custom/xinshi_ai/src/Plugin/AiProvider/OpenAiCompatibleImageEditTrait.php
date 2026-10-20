@@ -106,7 +106,10 @@ trait OpenAiCompatibleImageEditTrait {
     }
     finally {
       foreach ($imageHandles as $handle) {
-        fclose($handle);
+        // The SDK can close upload streams when it builds the multipart body.
+        if (is_resource($handle)) {
+          fclose($handle);
+        }
       }
       if (is_resource($maskHandle)) {
         fclose($maskHandle);

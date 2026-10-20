@@ -13,8 +13,8 @@ use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeStorageInterface;
-use Drupal\xinshi_ai\Controller\SessionContentController;
-use Drupal\xinshi_ai\Service\SessionContentWriter;
+use Drupal\xinshi_chat\Controller\SessionContentController;
+use Drupal\xinshi_chat\Service\SessionContentWriter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -115,6 +115,20 @@ final class SessionContentWriterTest extends TestCase {
       hash('sha256', 'new source'), 'new source and review')['updated']);
   }
 
+  public function testSplitFieldsRequireTheVersionedWriterWithoutChangingContent(): void {
+    $values = $this->data(2);
+    $values['field_storage_version'] = 3;
+    $this->writeData(2, $values);
+    try {
+      $this->writer->update(self::CHAT, self::SESSION, hash('sha256', 'initial source'), 'replacement');
+      $this->fail('Split-field messages must reject content-only writes.');
+    }
+    catch (HttpException $error) {
+      $this->assertSame(422, $error->getStatusCode());
+      $this->assertSame($values, $this->data(2));
+    }
+  }
+
   #[DataProvider('denials')]
   public function testRequiresCurrentOwnershipAccessAndConversationMembership(string $denial): void {
     $this->denied = $denial;
@@ -174,7 +188,7 @@ final class SessionContentWriterTest extends TestCase {
       $this->assertTrue($response->headers->hasCacheControlDirective('no-store'));
       $this->assertSame('changed', json_decode($response->getContent(), TRUE)['content']);
     }
-    $route = Yaml::parseFile(dirname(__DIR__, 3) . '/xinshi_ai.routing.yml')['xinshi_ai.session.content'];
+    $route = Yaml::parseFile(dirname(__DIR__, 4) . '/xinshi_chat/xinshi_chat.routing.yml')['xinshi_ai.session.content'];
     $this->assertSame(['PATCH'], $route['methods']);
     $this->assertSame(['oauth2'], $route['options']['_auth']);
     $this->assertSame('TRUE', $route['requirements']['_user_is_logged_in']);
@@ -276,6 +290,7 @@ final class SessionContentWriterTest extends TestCase {
       $field->method('access')->willReturnCallback(fn($op) => $this->denied !== "$name-$op");
       $field->method('__get')->willReturnCallback(fn($key) => $key === 'value' ? ($values[$name] ?? NULL) : NULL);
       $field->method('getValue')->willReturnCallback(fn() => $values[$name] ?? []);
+      $field->method('isEmpty')->willReturnCallback(fn() => !isset($values[$name]) || $values[$name] === []);
       return $field;
     });
     $node->method('set')->willReturnCallback(function ($name, $value) use (&$values, $node) {

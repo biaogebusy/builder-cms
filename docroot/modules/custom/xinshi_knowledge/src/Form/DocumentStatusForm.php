@@ -18,9 +18,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /** A node-local status/retry form; the normal Media Library handles uploads. */
 final class DocumentStatusForm extends FormBase {
 
+  // Protected and non-readonly so DependencySerializationTrait (FormBase
+  // scope) can strip and restore them when the rebuilt form is cached; a
+  // private child property would be silently dropped from serialization.
   public function __construct(
-    private readonly AttachmentExtraction $extraction,
-    private readonly EntityTypeManagerInterface $entityTypeManager,
+    protected AttachmentExtraction $extraction,
+    protected EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   public static function create(ContainerInterface $container): static {

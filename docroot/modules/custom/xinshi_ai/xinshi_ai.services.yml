@@ -1,11 +1,11 @@
 services:
-  xinshi_ai.session_content_writer:
-    class: Drupal\xinshi_ai\Service\SessionContentWriter
-    arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']
+  xinshi_ai.web_search_credentials:
+    class: Drupal\xinshi_ai\Service\WebSearchCredentials
+    arguments: ['@keyvalue', '@private_key']
 
-  xinshi_ai.conversation_writer:
-    class: Drupal\xinshi_ai\Service\ConversationWriter
-    arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository']
+  xinshi_ai.web_search:
+    class: Drupal\xinshi_ai\Service\WebSearchClient
+    arguments: ['@http_client', '@xinshi_ai.web_search_credentials', '@config.factory', '@current_user']
 
   xinshi_ai.figma_vault:
     class: Drupal\xinshi_ai\Service\FigmaVault

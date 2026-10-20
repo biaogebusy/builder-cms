@@ -20,6 +20,11 @@ final class ReferenceResponseSubscriber implements EventSubscriberInterface {
     $route = (string) $request->attributes->get('_route');
     if (str_starts_with($route, 'jsonapi.node--ai_session.') ||
       str_starts_with($route, 'jsonapi.node--conversation.') ||
+      $route === 'xinshi_ai.session.content' ||
+      in_array($route, ['xinshi_ai.conversation.update', 'xinshi_chat.conversations', 'xinshi_chat.sessions'], TRUE) ||
+      str_starts_with($route, 'xinshi_ai_reference.') ||
+      $request->getPathInfo() === '/api/v3/ai/chat-storage' ||
+      str_starts_with($request->getPathInfo(), '/api/v3/ai/conversations/') ||
       in_array($request->getPathInfo(), ['/api/v2/sessions', '/api/v2/conversations'], TRUE)) {
       $event->getResponse()->headers->set('Cache-Control', 'private, no-store');
     }
