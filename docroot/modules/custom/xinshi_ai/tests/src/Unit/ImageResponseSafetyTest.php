@@ -103,6 +103,7 @@ final class ImageResponseSafetyTest extends TestCase {
       }
       catch (ErrorException $error) {
         $this->assertFalse($success, 'A successful provider result must survive cleanup.');
+        $this->assertSame(400, $error->getStatusCode());
         $this->assertSame('synthetic provider rejection', $error->getMessage());
       }
     }
@@ -121,6 +122,8 @@ final class ImageResponseSafetyTest extends TestCase {
     return [
       'single success' => [1, FALSE, TRUE],
       'single failure' => [1, FALSE, FALSE],
+      'single with mask success' => [1, TRUE, TRUE],
+      'single with mask failure' => [1, TRUE, FALSE],
       'multiple with mask success' => [2, TRUE, TRUE],
       'multiple with mask failure' => [2, TRUE, FALSE],
     ];
