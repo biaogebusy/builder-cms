@@ -538,6 +538,10 @@ final class SiteUsageReportTest extends TestCase {
     // The status filter agrees with the reported status: only op-fail is failed.
     $failed = $this->siteReports->operations(self::SITE, $filter, NULL, 100, 'failed');
     $this->assertSame(['op-fail'], array_column($failed['operations'], 'operation_id'));
+    // Repairs are deciding calls, so the interrupted repair keeps op-chat in
+    // 'unknown' — the same contract the user report's list and filter assert.
+    $unknown = $this->siteReports->operations(self::SITE, $filter, NULL, 100, 'unknown');
+    $this->assertSame(['op-chat'], array_column($unknown['operations'], 'operation_id'));
     try {
       $this->siteReports->operations(self::SITE, $filter, NULL, 100, 'bogus');
       $this->fail('expected invalid_request for an unknown status');
@@ -572,10 +576,11 @@ final class SiteUsageReportTest extends TestCase {
     $this->assertCount(3, $image['deliveries']);
     $this->assertSame(['not_enabled'], [$image['charges']['status']]);
 
-    // Two attempts of different roles, both carrying the actor; the summary
-    // keeps the repair's unknown state out of the success verdict.
+    // Two attempts of different roles, both carrying the actor. The repair is
+    // a deciding call, so its interrupted state surfaces: the operation is
+    // 'unknown', matching the user report's list and status filter.
     $chat = $this->siteReports->operation(self::SITE, 'op-chat', $tz);
-    $this->assertSame('succeeded', $chat['status']);
+    $this->assertSame('unknown', $chat['status']);
     $this->assertSame(['att-main', 'att-repair'], array_column($chat['attempt_list'], 'attempt_id'));
     $this->assertSame([self::ME, self::ME], array_column($chat['attempt_list'], 'actor_user_id'));
     $this->assertSame(['repair'], [$chat['attempt_list'][1]['billing_role']]);
