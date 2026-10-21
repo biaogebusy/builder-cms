@@ -53,6 +53,20 @@ class VideoValidatorTest extends ConstraintValidatorTestCase
         $this->assertNoViolation();
     }
 
+    public function testValidVideoWithFilenameStartingWithHyphen()
+    {
+        $filename = basename(tempnam(getcwd(), '-video-'));
+        copy(__DIR__.'/Fixtures/test.mp4', $filename);
+
+        try {
+            $this->validator->validate($filename, new Video());
+
+            $this->assertNoViolation();
+        } finally {
+            unlink($filename);
+        }
+    }
+
     public function testFileNotFound()
     {
         $constraint = new Video(notFoundMessage: 'myMessage');
@@ -281,6 +295,28 @@ class VideoValidatorTest extends ConstraintValidatorTestCase
             ->setParameter('{{ types }}', '"video/mkv", "video/mov"')
             ->setParameter('{{ name }}', '"test.mp4"')
             ->setCode(Video::INVALID_MIME_TYPE_ERROR)
+            ->assertRaised();
+    }
+
+    public function testUnsupportedCodecWithoutAnyDimensionConstraint()
+    {
+        $constraint = new Video(allowedCodecs: ['vp9'], unsupportedCodecMessage: 'myMessage');
+        $this->validator->validate(__DIR__.'/Fixtures/test.mp4', $constraint);
+
+        $this->buildViolation('myMessage')
+            ->setParameter('{{ codec }}', 'h264')
+            ->setCode(Video::UNSUPPORTED_VIDEO_CODEC_ERROR)
+            ->assertRaised();
+    }
+
+    public function testUnsupportedContainerWithoutAnyDimensionConstraint()
+    {
+        $constraint = new Video(allowedContainers: ['webm'], unsupportedContainerMessage: 'myMessage');
+        $this->validator->validate(__DIR__.'/Fixtures/test.mp4', $constraint);
+
+        $this->buildViolation('myMessage')
+            ->setParameter('{{ container }}', 'mov, mp4, m4a, 3gp, 3g2, mj2')
+            ->setCode(Video::UNSUPPORTED_VIDEO_CONTAINER_ERROR)
             ->assertRaised();
     }
 }

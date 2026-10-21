@@ -29,6 +29,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         '2c2415ec15363ede1bff13a287462ba1' => __DIR__ . '/..' . '/symfony/polyfill-php86/bootstrap.php',
         '1052008401d4a2a5be02f7b4e274d051' => __DIR__ . '/..' . '/twig/html-extra/Resources/functions.php',
         '2f69d3914119f042cca9e44442d5ce95' => __DIR__ . '/../..' . '/docroot/core/includes/bootstrap.inc',
+        '38a4a83ee9437fa4c0c7a481bbf0d2a0' => __DIR__ . '/../..' . '/docroot/core/includes/guzzle_file_cookie_jar_shim.php',
         'd767e4fc2dc52fe66584ab8c6684783e' => __DIR__ . '/..' . '/adbario/php-dot-notation/src/helpers.php',
         '5897ea0ac4cccf14d323035e65887801' => __DIR__ . '/..' . '/symfony/polyfill-php82/bootstrap.php',
         '23c18046f52bef3eea034657bafda50f' => __DIR__ . '/..' . '/symfony/polyfill-php81/bootstrap.php',
