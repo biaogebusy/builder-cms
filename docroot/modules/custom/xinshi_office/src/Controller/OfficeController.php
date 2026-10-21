@@ -44,12 +44,12 @@ final class OfficeController implements ContainerInjectionInterface {
 
   /** Creates an owner-bound working copy and first revision. */
   public function createDocument(Request $request): JsonResponse {
-    return new JsonResponse($this->documents->write(NULL, OfficeInput::read($request)));
+    return $this->write(NULL, $request);
   }
 
   /** Compares the expected revision before atomically saving a replacement snapshot. */
   public function update(string $document_id, Request $request): JsonResponse {
-    return new JsonResponse($this->documents->write($document_id, OfficeInput::read($request)));
+    return $this->write($document_id, $request);
   }
 
   /** Reads one current or historical working copy. */
@@ -98,6 +98,21 @@ final class OfficeController implements ContainerInjectionInterface {
       'X-Content-Type-Options' => 'nosniff'], FALSE);
     $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file['name'], 'office-file');
     return $response;
+  }
+
+  private function write(?string $id, Request $request): JsonResponse {
+    $input = OfficeInput::read($request);
+    OfficeInput::uuid($input->operationId ?? NULL);
+    try {
+      return new JsonResponse($this->documents->write($id, $input));
+    }
+    catch (OfficeException $error) {
+      // Service refusals precede a write or follow its successful transaction rollback.
+      // A reused operation ID can refer to another committed input; it stays uncertain.
+      if ($error->status >= 500 || $error->reason === 'operation_id_conflict') throw $error;
+      return new JsonResponse(['code' => $error->reason, 'outcome' => 'not_written',
+        'executionId' => $input->operationId], $error->status);
+    }
   }
 
   private function number(Request $request, string $key): ?int {

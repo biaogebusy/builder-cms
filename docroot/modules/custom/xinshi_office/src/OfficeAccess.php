@@ -48,7 +48,7 @@ final class OfficeAccess {
 
   /** Returns UI capabilities without granting authority to client-selected types. */
   public function capabilities(): array {
-    $this->owner();
+    $uid = $this->owner();
     $writable = [];
     foreach ($this->types->kinds() as $kind) {
       try {
@@ -57,7 +57,7 @@ final class OfficeAccess {
       }
       catch (OfficeException) {}
     }
-    return ['version' => 1, 'writeTypes' => $writable,
+    return ['version' => 1, 'uid' => (string) $uid, 'writeTypes' => $writable,
       'maxStorageBytes' => $this->limit('max_storage_bytes'), 'maxDocuments' => $this->limit('max_documents')];
   }
 

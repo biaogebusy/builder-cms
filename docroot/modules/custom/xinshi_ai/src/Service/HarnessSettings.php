@@ -61,6 +61,14 @@ final class HarnessSettings {
       'create_entity_draft' => '创建实体草稿',
       'update_entity' => '更新实体草稿修订',
     ]],
+    'office_word' => ['label' => 'Word 文档（可选）', 'tools' => [
+      'create_word_document' => '创建 Word 文档',
+      'update_word_document' => '修改 Word 文档',
+    ]],
+    'office_resources' => ['label' => '办公文档读取（可选）', 'tools' => [
+      'list_office_documents' => '当前会话的办公文档',
+      'read_office_document' => '读取办公文档选区',
+    ]],
   ];
 
   public static function toolNames(): array {

@@ -173,6 +173,7 @@ try {
   foreach (['full', 'read', 'full', 'read'] as $scope) {
     $cap = status(http('GET', $base . '/capabilities', $tokens[$scope]), 200, 'Effective OAuth capabilities');
     check($cap['writeTypes'] === ($scope === 'full' ? ['word'] : []), 'Full account roles cannot widen a scoped token');
+    check($cap['uid'] === (string) $user->id(), 'Capabilities bind to the authenticated source account');
   }
   status(http('GET', $base, $tokens['none'], $jar), 403, 'Cookie cannot elevate limited Bearer scope');
   $input = ['operationId' => \Drupal::service('uuid')->generate(), 'name' => 'HTTP document', 'kind' => 'word',
@@ -201,7 +202,16 @@ try {
   $changed = status(http('PATCH', $path, jar: $jar, body: json_encode($update), csrf: $csrf), 200, 'Cookie update with valid CSRF');
   check($changed['revision'] === 2, 'HTTP update advances exactly one revision');
   $update['operationId'] = \Drupal::service('uuid')->generate();
-  status(http('PATCH', $path, $tokens['full'], body: json_encode($update)), 409, 'Stale HTTP revision is rejected');
+  $refusal = status(http('PATCH', $path, $tokens['full'], body: json_encode($update)), 409, 'Stale HTTP revision is rejected');
+  check($refusal === ['code' => 'revision_conflict', 'outcome' => 'not_written',
+    'executionId' => $update['operationId']], 'CAS refusal binds the exact uncommitted operation');
+  status(http('GET', $base . '/operations/' . $update['operationId'], $tokens['full']), 404,
+    'Rejected operation has no receipt');
+  $collision = $input;
+  $collision['name'] = 'Different approved input';
+  $conflict = status(http('POST', $base, $tokens['full'], body: json_encode($collision)), 409,
+    'Operation ID reuse with different input is rejected');
+  check($conflict === ['code' => 'operation_id_conflict'], 'A colliding receipt is not proof of no earlier write');
   check(status(http('GET', $path . '?revision=1', $tokens['full']), 200, 'Historical snapshot')['name'] === $input['name'],
     'Historical name survives later edits');
   status(http('GET', $path . '?revision=0', $tokens['full']), 400, 'Invalid revision query rejected');
