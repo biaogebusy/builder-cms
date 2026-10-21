@@ -1,0 +1,16 @@
+xinshi_office.settings:
+  type: config_object
+  label: 'Office document storage'
+  mapping:
+    write_types:
+      type: sequence
+      label: 'Document types open for new writes'
+      sequence:
+        type: string
+    max_storage_bytes:
+      type: integer
+      label: 'Maximum retained revision and file bytes per owner'
+    max_documents:
+      type: integer
+      label: 'Maximum documents per owner'
+

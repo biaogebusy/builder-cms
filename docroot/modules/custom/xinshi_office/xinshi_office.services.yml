@@ -1,0 +1,24 @@
+services:
+  xinshi_office.word_type:
+    class: Drupal\xinshi_office\WordType
+  xinshi_office.types:
+    class: Drupal\xinshi_office\OfficeTypes
+    arguments: [['@xinshi_office.word_type']]
+  xinshi_office.access:
+    class: Drupal\xinshi_office\OfficeAccess
+    arguments: ['@current_user', '@entity_type.manager', '@config.factory', '@database', '@xinshi_office.types']
+  xinshi_office.files:
+    class: Drupal\xinshi_office\OfficeFiles
+    arguments: ['@database', '@file_system', '@xinshi_office.access', '@xinshi_office.types']
+  xinshi_office.documents:
+    class: Drupal\xinshi_office\OfficeDocuments
+    arguments: ['@database', '@xinshi_office.access', '@xinshi_office.types', '@xinshi_office.files', '@uuid']
+  xinshi_office.responses:
+    class: Drupal\xinshi_office\EventSubscriber\OfficeResponseSubscriber
+    tags:
+      - { name: event_subscriber }
+  xinshi_office.uninstall_validator:
+    class: Drupal\xinshi_office\UninstallValidator
+    arguments: ['@database']
+    tags:
+      - { name: module_install.uninstall_validator }

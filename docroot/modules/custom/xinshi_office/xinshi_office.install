@@ -1,0 +1,66 @@
+<?php
+
+/**
+ * @file
+ * Private document storage installed only with the optional Office module.
+ */
+
+/** Implements hook_schema(). */
+function xinshi_office_schema(): array {
+  $uuid = ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE];
+  $hash = ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE];
+  $number = ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE];
+  $text = ['type' => 'text', 'size' => 'big', 'not null' => TRUE];
+  return [
+    'xinshi_office_document' => [
+      'description' => 'Owner-bound Office document identities and immutable import origins.',
+      'fields' => [
+        'document_id' => $uuid, 'uid' => $number,
+        'name' => ['type' => 'varchar', 'length' => 200, 'not null' => TRUE],
+        'kind' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+        'chat_id' => array_replace($uuid, ['not null' => FALSE]),
+        'original_file_id' => array_replace($uuid, ['not null' => FALSE]),
+        'import_report' => array_replace($text, ['not null' => FALSE]),
+        'current_revision' => $number, 'created' => $number, 'updated' => $number,
+      ],
+      'primary key' => ['document_id'],
+      'indexes' => ['owner_documents' => ['uid', 'document_id'], 'conversation' => ['uid', 'chat_id']],
+    ],
+    'xinshi_office_revision' => [
+      'description' => 'Immutable document snapshots; restore always creates another revision.',
+      'fields' => [
+        'document_id' => $uuid, 'revision' => $number, 'uid' => $number,
+        'name' => ['type' => 'varchar', 'length' => 200, 'not null' => TRUE],
+        'payload_json' => $text, 'sha256' => $hash, 'bytes' => $number,
+        'source' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+        'created' => $number,
+      ],
+      'primary key' => ['document_id', 'revision'],
+      'indexes' => ['owner_storage' => ['uid']],
+    ],
+    'xinshi_office_file' => [
+      'description' => 'Private immutable original and raster resources, with server-computed digests.',
+      'fields' => [
+        'file_id' => $uuid, 'uid' => $number, 'sha256' => $hash, 'bytes' => $number,
+        'kind' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+        'role' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+        'name' => ['type' => 'varchar', 'length' => 200, 'not null' => TRUE],
+        'mime' => ['type' => 'varchar_ascii', 'length' => 150, 'not null' => TRUE],
+        'uri' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE],
+        'width' => $number, 'height' => $number, 'created' => $number,
+      ],
+      'primary key' => ['file_id'],
+      'indexes' => ['owner_storage' => ['uid']],
+    ],
+    'xinshi_office_operation' => [
+      'description' => 'Write receipts committed in the same transaction as the document revision.',
+      'fields' => [
+        'operation_id' => $uuid, 'uid' => $number, 'document_id' => $uuid,
+        'revision' => $number, 'input_sha256' => $hash, 'created' => $number,
+      ],
+      'primary key' => ['operation_id'],
+      'indexes' => ['owner_operations' => ['uid']],
+    ],
+  ];
+}
+

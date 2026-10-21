@@ -1,0 +1,9 @@
+name: Xinshi Office
+type: module
+description: Private Office working copies, immutable resources and atomic revision receipts.
+package: Xinshi
+core_version_requirement: ^11
+dependencies:
+  - drupal:node
+  - drupal:file
+

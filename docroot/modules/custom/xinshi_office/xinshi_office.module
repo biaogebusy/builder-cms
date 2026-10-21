@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Keeps private Office bytes behind document membership and owner checks.
+ */
+
+/** Implements hook_file_download(). */
+function xinshi_office_file_download(string $uri): array|int|null {
+  if (str_starts_with($uri, 'private://xinshi-office/')) {
+    return -1;
+  }
+  return NULL;
+}

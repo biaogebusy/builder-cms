@@ -1,0 +1,139 @@
+xinshi_office.capabilities:
+  path: '/api/v3/ai/office-documents/capabilities'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::capabilities'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.list:
+  path: '/api/v3/ai/office-documents'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::listing'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.create:
+  path: '/api/v3/ai/office-documents'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::createDocument'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.read:
+  path: '/api/v3/ai/office-documents/{document_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::read'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    document_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.update:
+  path: '/api/v3/ai/office-documents/{document_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::update'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    _csrf_request_header_token: 'TRUE'
+    document_id: '[a-f0-9-]{36}'
+  methods: [PATCH]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.revisions:
+  path: '/api/v3/ai/office-documents/{document_id}/revisions'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::revisions'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    document_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.receipt:
+  path: '/api/v3/ai/office-documents/operations/{operation_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::find'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    operation_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.upload:
+  path: '/api/v3/ai/office-files'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::upload'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.file_metadata:
+  path: '/api/v3/ai/office-files/{file_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::metadata'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    file_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_office.download:
+  path: '/api/v3/ai/office-documents/{document_id}/files/{file_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeController::download'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'read own office documents'
+    document_id: '[a-f0-9-]{36}'
+    file_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
