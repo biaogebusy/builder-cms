@@ -31,6 +31,16 @@ $settings['file_private_path'] = '/tmp/office-test/private';
 $settings['skip_permissions_hardening'] = TRUE;
 $settings['extension_discovery_scan_tests'] = TRUE;
 SETTINGS);
+if (getenv('XINSHI_OFFICE_TEST_MYSQL') === '1') {
+  file_put_contents('sites/default/settings.php', <<<'MYSQL'
+$databases['default']['default'] = [
+  'driver' => 'mysql', 'database' => 'office_test', 'username' => 'office',
+  'password' => 'office-test-only', 'host' => 'office-db', 'port' => 3306,
+  'namespace' => 'Drupal\mysql\Driver\Database\mysql',
+  'autoload' => 'core/modules/mysql/src/Driver/Database/mysql/', 'prefix' => '',
+];
+MYSQL, FILE_APPEND);
+}
 file_put_contents('sites/default/default.settings.php', '<?php');
 file_put_contents('sites/default/default.services.yml', 'parameters: {}');
 $_SERVER += ['HTTP_HOST' => 'office-test', 'SERVER_NAME' => 'office-test', 'SERVER_PORT' => 80,
