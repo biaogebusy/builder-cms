@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Access denials used only by the disposable metadata test site.
+ */
+
+use Drupal\Core\Access\AccessResult;
+
+/** Implements hook_entity_access(). */
+function ai_log_metadata_test_entity_access($entity, $operation, $account) {
+  $denied = \Drupal::state()->get('ai_log_metadata_test.entity', '');
+  return AccessResult::forbiddenIf($entity->uuid() === $denied)->setCacheMaxAge(0);
+}
+
+/** Implements hook_entity_field_access(). */
+function ai_log_metadata_test_entity_field_access($operation, $definition, $account, $items = NULL) {
+  return AccessResult::forbiddenIf($operation === 'view' && $items &&
+    $definition->getName() === \Drupal::state()->get('ai_log_metadata_test.field', ''))
+    ->setCacheMaxAge(0);
+}

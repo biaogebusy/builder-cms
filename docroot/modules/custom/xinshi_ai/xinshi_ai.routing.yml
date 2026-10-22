@@ -226,3 +226,15 @@ xinshi_ai.image_job.events:
   requirements:
     _custom_access: '\Drupal\xinshi_ai\Controller\ImageJobEventsController::accessByTicket'
     uuid: '[0-9a-f-]+'
+xinshi_ai.log_metadata:
+  path: '/api/v3/ai/log-metadata'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\AiLogMetadataController::read'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'administer xinshi_ai'
+
