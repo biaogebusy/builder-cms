@@ -57,6 +57,9 @@ $types = \Drupal::service('xinshi_office.types');
 $settings = \Drupal::configFactory()->getEditable('xinshi_office.settings');
 check(!\Drupal::moduleHandler()->moduleExists('xinshi_ai') && !\Drupal::moduleHandler()->moduleExists('xinshi_chat'),
   'Office installs without AI and Chat modules');
+check(\Drupal::moduleHandler()->invokeAll('gin_ignore_sticky_form_actions') ===
+  ['xinshi_office_admin_filter', 'xinshi_office_delete_confirm'],
+  'Office opts only its filter and confirmation forms out of Gin sticky actions');
 check(count(\Drupal::service('config.typed')->createFromNameAndData('xinshi_office.settings', $settings->getRawData())->validate()) === 0,
   'Installed settings validate against their schema');
 check($types->kinds() === ['word', 'sheet'], 'Only implemented document types are registered');
