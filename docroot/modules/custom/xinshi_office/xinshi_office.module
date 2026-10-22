@@ -12,3 +12,9 @@ function xinshi_office_file_download(string $uri): array|int|null {
   }
   return NULL;
 }
+
+/** Implements hook_gin_ignore_sticky_form_actions(). */
+function xinshi_office_gin_ignore_sticky_form_actions(): array {
+  // Embedded filters and confirmations must retain their actions within the form.
+  return ['xinshi_office_admin_filter', 'xinshi_office_delete_confirm'];
+}
