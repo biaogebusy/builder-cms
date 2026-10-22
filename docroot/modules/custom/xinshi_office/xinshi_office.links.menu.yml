@@ -1,0 +1,6 @@
+xinshi_office.admin:
+  title: 'Office documents'
+  description: 'View documents, revisions, private files and the trash.'
+  route_name: xinshi_office.admin
+  parent: system.admin_content
+  weight: 30

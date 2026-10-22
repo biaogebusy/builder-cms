@@ -31,7 +31,9 @@ final class OfficeResponseSubscriber implements EventSubscriberInterface {
 
   /** Applies the same private policy to binary downloads and pre-controller refusals. */
   public function onResponse(ResponseEvent $event): void {
-    if ($this->matches($event->getRequest()->getPathInfo())) {
+    if ($this->matches($event->getRequest()->getPathInfo()) ||
+      str_starts_with((string) $event->getRequest()->attributes->get('_route'), 'xinshi_office.admin') ||
+      preg_match('@^/admin/content/office-documents(/|$)@', $event->getRequest()->getPathInfo())) {
       $event->getResponse()->headers->set('Cache-Control', 'private, no-store, max-age=0');
       $event->getResponse()->headers->set('Pragma', 'no-cache');
       $event->getResponse()->headers->set('X-Content-Type-Options', 'nosniff');

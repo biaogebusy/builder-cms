@@ -72,11 +72,16 @@ final class OfficeInput {
       }
       return is_array($item) ? array_map($sort, $item) : $item;
     };
+    $precision = ini_get('serialize_precision');
+    ini_set('serialize_precision', '17');
     try {
       $json = json_encode($sort($value), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
     catch (\JsonException) {
       throw new OfficeException('invalid_input');
+    }
+    finally {
+      ini_set('serialize_precision', $precision);
     }
     if (strlen($json) > self::SNAPSHOT_BYTES) {
       throw new OfficeException('content_limit', 413);

@@ -37,12 +37,19 @@ if (isset($argv[1])) {
     throw new RuntimeException('Unexpected worker database.');
   }
   $job = json_decode(file_get_contents($argv[1]), FALSE, 64, JSON_THROW_ON_ERROR);
-  \Drupal::currentUser()->setAccount(User::load($job->uid));
+  \Drupal::currentUser()->setAccount(User::load($job->actor ?? $job->uid));
   try {
-    $result = ['receipt' => \Drupal::service('xinshi_office.documents')->write($job->id, $job->input)];
+    if (($job->action ?? '') === 'trash') {
+      \Drupal::service('xinshi_office.administration')->changeStatus($job->id, TRUE, $job->revision, 0);
+      $result = ['trashed' => TRUE];
+    }
+    else $result = ['receipt' => \Drupal::service('xinshi_office.documents')->write($job->id, $job->input)];
   }
   catch (OfficeException $error) {
     $result = ['error' => $error->getMessage()];
+  }
+  catch (\Symfony\Component\HttpKernel\Exception\ConflictHttpException) {
+    $result = ['error' => 'confirmation_conflict'];
   }
   file_put_contents($argv[1] . '.result', json_encode($result, JSON_THROW_ON_ERROR));
   exit;
@@ -123,6 +130,11 @@ function race(int $uid, array $jobs): array {
 Role::create(['id' => 'office_writer', 'label' => 'Office writer', 'permissions' => [
   'read own office documents', 'edit own office documents',
 ]])->save();
+Role::create(['id' => 'office_manager', 'label' => 'Office manager', 'permissions' => [
+  'view all office documents', 'delete office documents',
+]])->save();
+$manager = User::create(['name' => 'office-race-manager', 'status' => 1, 'roles' => ['office_manager']]);
+$manager->save();
 $documents = \Drupal::service('xinshi_office.documents');
 $settings = \Drupal::configFactory()->getEditable('xinshi_office.settings');
 echo 'Database: ' . \Drupal::database()->query('SELECT VERSION()')->fetchField() . PHP_EOL;
@@ -187,6 +199,15 @@ foreach (['word', 'sheet'] as $kind) {
   check(isset($quota[$winner]['receipt']) && $quota[1 - $winner] === ['error' => 'storage_limit'],
     "$kind concurrent creations respect the last available document slot");
   check(counts($uid) === ['document' => 2, 'revision' => 3, 'operation' => 3], "$kind quota failure leaves no partial rows");
+  $edit = clone $jobs[0]['input']; $edit->operationId = id(); $edit->expectedRevision = 2;
+  $lifecycle = race($uid, [['id' => $doc, 'input' => $edit],
+    ['id' => $doc, 'actor' => (int) $manager->id(), 'action' => 'trash', 'revision' => 2]]);
+  check((isset($lifecycle[0]['receipt']) && $lifecycle[1] === ['error' => 'confirmation_conflict']) ||
+    ($lifecycle[0] === ['error' => 'document_unavailable'] && $lifecycle[1] === ['trashed' => TRUE]),
+    "$kind concurrent edit and deletion cannot both succeed from the same confirmation");
+  check($documents->read($doc, 1)['content'] == $history['content'], "$kind deletion preserves historical snapshots");
+  check($documents->find($receipt['operationId']) === $receipt,
+    "$kind deletion preserves the exact submitted-write receipt");
   $settings->set('max_documents', 100)->save();
 }
 echo 'Passed ' . $checks . ' MySQL concurrency checks.' . PHP_EOL;

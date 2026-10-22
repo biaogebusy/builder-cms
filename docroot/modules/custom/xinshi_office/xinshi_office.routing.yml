@@ -137,3 +137,75 @@ xinshi_office.download:
   options:
     _auth: ['oauth2', 'cookie']
     no_cache: TRUE
+xinshi_office.admin:
+  path: '/admin/content/office-documents'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeAdminController::listing'
+    _title: 'Office documents'
+  requirements:
+    _permission: 'view all office documents'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+
+xinshi_office.admin_view:
+  path: '/admin/content/office-documents/{document_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeAdminController::view'
+    _title: 'Office document'
+  requirements:
+    _permission: 'view all office documents'
+    document_id: '[a-f0-9-]{36}'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+
+xinshi_office.admin_snapshot:
+  path: '/admin/content/office-documents/{document_id}/snapshot/{revision}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeAdminController::snapshot'
+  requirements:
+    _permission: 'view all office documents'
+    document_id: '[a-f0-9-]{36}'
+    revision: '[1-9][0-9]{0,9}'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+
+xinshi_office.admin_download:
+  path: '/admin/content/office-documents/{document_id}/files/{file_id}/{revision}'
+  defaults:
+    _controller: '\Drupal\xinshi_office\Controller\OfficeAdminController::download'
+  requirements:
+    _permission: 'view all office documents'
+    document_id: '[a-f0-9-]{36}'
+    file_id: '[a-f0-9-]{36}'
+    revision: '[1-9][0-9]{0,9}'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+
+xinshi_office.admin_delete:
+  path: '/admin/content/office-documents/{document_id}/delete'
+  defaults:
+    _form: '\Drupal\xinshi_office\Form\OfficeDeleteForm'
+    operation: 'delete'
+  requirements:
+    _permission: 'view all office documents,delete office documents'
+    document_id: '[a-f0-9-]{36}'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+
+xinshi_office.admin_restore:
+  path: '/admin/content/office-documents/{document_id}/restore'
+  defaults:
+    _form: '\Drupal\xinshi_office\Form\OfficeDeleteForm'
+    operation: 'restore'
+  requirements:
+    _permission: 'view all office documents,delete office documents'
+    document_id: '[a-f0-9-]{36}'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+

@@ -93,7 +93,7 @@ function http(string $method, string $path, ?string $bearer = NULL, ?string $jar
   $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
   curl_close($curl);
   check(is_string($content), 'Loopback transport completes');
-  if (str_starts_with($path, '/api/v3/ai/office-')) {
+  if (str_starts_with($path, '/api/v3/ai/office-') || str_starts_with($path, '/admin/content/office-documents')) {
     check(str_contains($cache, 'no-store') && str_contains($cache, 'private'), 'API response is private/no-store: ' . $status);
   }
   return ['status' => $status, 'data' => json_decode($content, TRUE), 'body' => $content];
@@ -261,6 +261,7 @@ try {
   status(http('GET', $path . '/files/' . $file_id, $tokens['other']), 404, 'Foreign owner cannot download bytes');
   $generic = http('GET', '/system/files/xinshi-office/' . $user->id() . '/' . $file_id, jar: $jar);
   check($generic['status'] === 403, 'Generic private download cannot bypass the Office API');
+  require __DIR__ . '/admin-http.php';
   echo 'Office HTTP integration: ' . $checks . ' checks passed.' . PHP_EOL;
 }
 finally {

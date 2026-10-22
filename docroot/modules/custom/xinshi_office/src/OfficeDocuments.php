@@ -104,7 +104,8 @@ final class OfficeDocuments {
 
   /** Reads a current or immutable historical snapshot under the current owner permission. */
   public function read(string $id, ?int $revision = NULL): array {
-    $document = $this->owned($id);
+    // Explicit historical reads remain available for submitted-write reconciliation.
+    $document = $this->owned($id, $revision !== NULL);
     $revision ??= (int) $document['current_revision'];
     $row = $this->revision($id, $revision);
     $payload = json_decode($row['payload_json'], FALSE, 64, JSON_THROW_ON_ERROR);
@@ -122,7 +123,7 @@ final class OfficeDocuments {
     $uid = $this->access->owner();
     $query = $this->database->select('xinshi_office_document', 'd')
       ->fields('d', ['document_id', 'name', 'kind', 'chat_id', 'current_revision', 'created', 'updated'])
-      ->condition('uid', $uid)->orderBy('document_id')->range(0, 26);
+      ->condition('uid', $uid)->condition('deleted', 0)->orderBy('document_id')->range(0, 26);
     if ($after !== NULL) { OfficeInput::uuid($after); $query->condition('document_id', $after, '>'); }
     if ($chat !== NULL) { OfficeInput::uuid($chat); $query->condition('chat_id', $chat); }
     $rows = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
@@ -163,7 +164,7 @@ final class OfficeDocuments {
   /** Requires both owner access and membership in the requested document revision. */
   public function file(string $id, string $file_id, ?int $revision = NULL): array {
     OfficeInput::uuid($file_id);
-    $document = $this->owned($id);
+    $document = $this->owned($id, $revision !== NULL);
     $row = $this->revision($id, $revision ?? (int) $document['current_revision']);
     $payload = json_decode($row['payload_json'], FALSE, 64, JSON_THROW_ON_ERROR);
     if ($document['original_file_id'] !== $file_id && !in_array($file_id, $payload->assetIds, TRUE)) {
@@ -172,12 +173,14 @@ final class OfficeDocuments {
     return $this->files->download($file_id);
   }
 
-  private function owned(string $id): array {
+  private function owned(string $id, bool $historical = FALSE): array {
     OfficeInput::uuid($id);
     $uid = $this->access->owner();
     $row = $this->database->select('xinshi_office_document', 'd')->fields('d')
       ->condition('document_id', $id)->condition('uid', $uid)->execute()->fetchAssoc();
-    if (!$row) throw new OfficeException('document_unavailable', 404);
+    if (!$row || (!$historical && (int) $row['deleted'] !== 0)) {
+      throw new OfficeException('document_unavailable', 404);
+    }
     return $row;
   }
 
@@ -189,7 +192,7 @@ final class OfficeDocuments {
   }
 
   private function receipt(array $operation): array {
-    $this->owned($operation['document_id']);
+    $this->owned($operation['document_id'], TRUE);
     $sha = $this->database->select('xinshi_office_revision', 'r')->fields('r', ['sha256'])
       ->condition('document_id', $operation['document_id'])->condition('revision', $operation['revision'])
       ->execute()->fetchField();

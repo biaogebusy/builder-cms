@@ -22,9 +22,11 @@ function xinshi_office_schema(): array {
         'original_file_id' => array_replace($uuid, ['not null' => FALSE]),
         'import_report' => array_replace($text, ['not null' => FALSE]),
         'current_revision' => $number, 'created' => $number, 'updated' => $number,
+        'deleted' => $number + ['default' => 0],
       ],
       'primary key' => ['document_id'],
-      'indexes' => ['owner_documents' => ['uid', 'document_id'], 'conversation' => ['uid', 'chat_id']],
+      'indexes' => ['owner_documents' => ['uid', 'document_id'], 'conversation' => ['uid', 'chat_id'],
+        'admin_documents' => ['deleted', 'updated', 'document_id']],
     ],
     'xinshi_office_revision' => [
       'description' => 'Immutable document snapshots; restore always creates another revision.',
@@ -62,5 +64,18 @@ function xinshi_office_schema(): array {
       'indexes' => ['owner_operations' => ['uid']],
     ],
   ];
+}
+
+/** Add recoverable document deletion without changing revisions, receipts or role grants. */
+function xinshi_office_update_11001(): void {
+  $schema = \Drupal::database()->schema();
+  $definition = xinshi_office_schema()['xinshi_office_document'];
+  if (!$schema->fieldExists('xinshi_office_document', 'deleted')) {
+    $schema->addField('xinshi_office_document', 'deleted', $definition['fields']['deleted']);
+  }
+  if (!$schema->indexExists('xinshi_office_document', 'admin_documents')) {
+    $schema->addIndex('xinshi_office_document', 'admin_documents',
+      $definition['indexes']['admin_documents'], $definition);
+  }
 }
 

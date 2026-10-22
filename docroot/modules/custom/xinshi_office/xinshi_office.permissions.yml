@@ -3,3 +3,13 @@ read own office documents:
 edit own office documents:
   title: 'Create and edit own Office documents and upload private resources'
 
+view all office documents:
+  title: 'View all Office documents'
+  description: 'View every account’s Office documents, revisions, private originals and attachments.'
+  restrict access: true
+
+delete office documents:
+  title: 'Delete and restore Office documents'
+  description: 'Move Office documents to the trash and restore them. Requires View all Office documents.'
+  restrict access: true
+

@@ -1,4 +1,10 @@
 services:
+  xinshi_office.administration:
+    class: Drupal\xinshi_office\OfficeAdministration
+    arguments: ['@database', '@current_user', '@entity_type.manager', '@file_system', '@logger.channel.xinshi_office']
+  logger.channel.xinshi_office:
+    parent: logger.channel_base
+    arguments: ['xinshi_office']
   xinshi_office.word_type:
     class: Drupal\xinshi_office\WordType
   xinshi_office.sheet_type:
