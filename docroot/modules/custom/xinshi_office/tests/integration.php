@@ -59,7 +59,7 @@ check(!\Drupal::moduleHandler()->moduleExists('xinshi_ai') && !\Drupal::moduleHa
   'Office installs without AI and Chat modules');
 check(count(\Drupal::service('config.typed')->createFromNameAndData('xinshi_office.settings', $settings->getRawData())->validate()) === 0,
   'Installed settings validate against their schema');
-check($types->kinds() === ['word'], 'Only implemented document types are registered');
+check($types->kinds() === ['word', 'sheet'], 'Only implemented document types are registered');
 $role = Role::create(['id' => 'office_editor', 'label' => 'Office editor', 'permissions' => [
   'read own office documents', 'edit own office documents', 'access content', 'view own unpublished content',
 ]]);
@@ -72,7 +72,7 @@ foreach ([new AnonymousUserSession(), $none] as $account) {
   denied(fn() => $documents->listing(), 'permission_denied', 'No implicit document read grant');
 }
 asUser($owner);
-check($access->capabilities()['writeTypes'] === ['word'], 'Owner receives enabled write capabilities');
+check($access->capabilities()['writeTypes'] === ['word', 'sheet'], 'Owner receives enabled write capabilities');
 $input = createInput();
 $receipt = $documents->write(NULL, $input);
 $doc = $receipt['documentId'];
@@ -184,4 +184,5 @@ check($documents->revisions($doc)['items'][0]['revision'] === 3, 'Revision metad
 $restored = updateInput(3); $restored->source = 'restore'; $restored->content = $documents->read($doc, 1)['content'];
 check($documents->write($doc, $restored)['revision'] === 4 && $documents->read($doc, 3)['assets'][0]['fileId'] === $image_meta['fileId'],
   'Restore creates a new revision and retains earlier image references');
+require __DIR__ . '/sheet-integration.php';
 echo 'Office storage integration: ' . $checks . ' checks passed.' . PHP_EOL;

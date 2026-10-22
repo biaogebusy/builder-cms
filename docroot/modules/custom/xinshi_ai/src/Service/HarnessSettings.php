@@ -68,6 +68,11 @@ final class HarnessSettings {
     'office_resources' => ['label' => '办公文档读取（可选）', 'tools' => [
       'list_office_documents' => '当前会话的办公文档',
       'read_office_document' => '读取办公文档选区',
+      'read_spreadsheet' => '读取工作表选区',
+    ]],
+    'office_sheet' => ['label' => 'Excel 工作簿（可选）', 'tools' => [
+      'create_spreadsheet' => '创建 Excel 工作簿',
+      'update_spreadsheet' => '修改 Excel 工作簿',
     ]],
   ];
 

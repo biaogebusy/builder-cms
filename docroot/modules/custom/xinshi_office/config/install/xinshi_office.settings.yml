@@ -1,5 +1,6 @@
 write_types:
   - word
+  - sheet
 max_storage_bytes: 268435456
 max_documents: 100
 

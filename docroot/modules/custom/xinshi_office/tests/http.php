@@ -172,7 +172,7 @@ try {
   }
   foreach (['full', 'read', 'full', 'read'] as $scope) {
     $cap = status(http('GET', $base . '/capabilities', $tokens[$scope]), 200, 'Effective OAuth capabilities');
-    check($cap['writeTypes'] === ($scope === 'full' ? ['word'] : []), 'Full account roles cannot widen a scoped token');
+    check($cap['writeTypes'] === ($scope === 'full' ? ['word', 'sheet'] : []), 'Full account roles cannot widen a scoped token');
     check($cap['uid'] === (string) $user->id(), 'Capabilities bind to the authenticated source account');
   }
   status(http('GET', $base, $tokens['none'], $jar), 403, 'Cookie cannot elevate limited Bearer scope');
@@ -217,6 +217,30 @@ try {
   status(http('GET', $path . '?revision=0', $tokens['full']), 400, 'Invalid revision query rejected');
   status(http('POST', $base, $tokens['full'], body: '[]'), 422, 'Array cannot replace object protocol');
   status(http('POST', $base, $tokens['full'], body: '{'), 400, 'Invalid JSON is bounded and sanitized');
+  $sheet_input = $input;
+  $sheet_input['operationId'] = \Drupal::service('uuid')->generate();
+  $sheet_input['kind'] = 'sheet';
+  $sheet_input['content'] = ['version' => 1, 'type' => 'workbook', 'dateSystem' => '1900', 'styles' => (object) [],
+    'sheets' => [['id' => 'data', 'name' => 'Data', 'rows' => 100, 'columns' => 10,
+      'defaultRowHeight' => 15, 'defaultColumnWidth' => 8.43, 'rowSizes' => [], 'columnSizes' => [],
+      'merges' => [], 'freeze' => ['rows' => 0, 'columns' => 0], 'cells' => [
+        ['row' => 0, 'column' => 0, 'value' => ['type' => 'text', 'value' => '00123']],
+        ['row' => 1, 'column' => 0, 'value' => ['type' => 'formula', 'formula' => '=SUM(1,2)']],
+      ]]]];
+  $sheet_body = json_encode($sheet_input);
+  status(http('POST', $base, $tokens['read'], body: $sheet_body), 403, 'Spreadsheet cannot widen read-only OAuth scope');
+  $sheet_receipt = status(http('POST', $base, jar: $jar, body: $sheet_body, csrf: $csrf), 200,
+    'Spreadsheet Cookie creation uses the same CSRF and source authority');
+  $sheet_path = $base . '/' . $sheet_receipt['documentId'];
+  check(canonical(status(http('GET', $sheet_path, $tokens['read']), 200, 'Spreadsheet source read')['content']) ===
+    canonical(json_decode(json_encode($sheet_input['content']), TRUE)),
+    'HTTP retains native spreadsheet types and formulas');
+  status(http('GET', $sheet_path, $tokens['other']), 404, 'Spreadsheet cells remain owner-only');
+  $sheet_input['operationId'] = \Drupal::service('uuid')->generate();
+  $sheet_input['content']['sheets'][0]['cells'][1]['value']['formula'] = '=INDIRECT("A1")';
+  $invalid_sheet = status(http('POST', $base, $tokens['full'], body: json_encode($sheet_input)), 422,
+    'Unsupported formula is rejected by the real HTTP endpoint');
+  check($invalid_sheet['outcome'] === 'not_written', 'Invalid spreadsheet carries confirmed non-write semantics');
   $file_id = \Drupal::service('uuid')->generate();
   $upload_body = ['metadata' => json_encode(['fileId' => $file_id, 'kind' => 'word', 'role' => 'image', 'name' => 'HTTP.png']),
     'file' => new CURLFile('/tmp/office-test/image.png', 'image/png', 'HTTP.png')];
