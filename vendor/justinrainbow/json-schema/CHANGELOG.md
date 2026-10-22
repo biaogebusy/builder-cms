@@ -7,6 +7,145 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.13.1] - 2026-09-30
+
+### Fixed
+- Fix: Coerce quoted 0 and 1 to booleans ([#965](https://github.com/jsonrainbow/json-schema/pull/965))
+- Fix badge URL for Draft 2019-09 in README ([#964](https://github.com/jsonrainbow/json-schema/pull/964))
+
+
+## [6.13.0] - 2026-09-23
+
+### Fixed
+- fix: Reject percent signs that do not introduce a hex triplet in relative references ([#959](https://github.com/jsonrainbow/json-schema/pull/959))
+- Validate iri and iri-reference formats according to RFC 3987 ([#962](https://github.com/jsonrainbow/json-schema/pull/962))
+- Fix uri-template rejecting non-Latin literals on PCRE2 10.46 ([#961](https://github.com/jsonrainbow/json-schema/pull/961))
+- Validate uri-template format according to RFC 6570 ([#960](https://github.com/jsonrainbow/json-schema/pull/960))
+- fix: Address warning on PHPUnit process due to upstream changes ([#956](https://github.com/jsonrainbow/json-schema/pull/956))
+- Resolve nested schema ids against their enclosing base uri ([#947](https://github.com/jsonrainbow/json-schema/pull/947))
+
+### Added
+- Validate idn-email format ([#963](https://github.com/jsonrainbow/json-schema/pull/963))
+
+
+## [6.12.0] - 2026-09-04
+
+### Fixed
+- Report additional property errors at the property path ([#942](https://github.com/jsonrainbow/json-schema/pull/942))
+- Fix RFC 3339 date-time validation with high-precision fractional seconds ([#940](https://github.com/jsonrainbow/json-schema/pull/940))
+
+### Added
+- Define minimal permissions on every workflow ([#941](https://github.com/jsonrainbow/json-schema/pull/941))
+- feat: Add --allow-invalid-content-type-endpoint option to validate-json ([#932](https://github.com/jsonrainbow/json-schema/pull/932))
+
+
+### Changed
+- fix: Avoid restricted stargazers endpoint in Welcome workflow and avoid running for bot user types ([#946](https://github.com/jsonrainbow/json-schema/pull/946))
+- fix: Correct changelog and changelog updates ([#945](https://github.com/jsonrainbow/json-schema/pull/945))
+
+
+## [6.11.0] - 2026-08-21
+
+### Fixed
+- fix: Handle null byte when validating date/time formats ([#939](https://github.com/jsonrainbow/json-schema/pull/939))
+- fix: Correct php-cs-fixer setup ([#938](https://github.com/jsonrainbow/json-schema/pull/938))
+- fix: Ignore Content-Type header parameters when checking media type ([#934](https://github.com/jsonrainbow/json-schema/pull/934))
+- fix: Dont use mb_detect_encoding for mb_string function calls ([#924](https://github.com/jsonrainbow/json-schema/pull/924))
+- Add missing ext-filter dependency ([#922](https://github.com/jsonrainbow/json-schema/pull/922))
+
+### Changed
+- Update README with Draft 7 badge correction and include JetBrains logo ([#921](https://github.com/jsonrainbow/json-schema/pull/921))
+
+### Added
+- Update composer.json authors to reflect current active maintainer ([#928](https://github.com/jsonrainbow/json-schema/pull/928))
+
+
+## [6.10.0] - 2026-06-16
+
+### Added
+- feat: Add Draft-2019-09 ([#885](https://github.com/jsonrainbow/json-schema/pull/885))
+
+
+## [6.9.0] - 2026-06-05
+
+### Fixed
+- fix: allow "#", "?", and "?#" as valid URI references per RFC 3986 ([#910](https://github.com/jsonrainbow/json-schema/pull/910))
+- fix: annotate resolved schemas with dialect-aware id keyword ([#912](https://github.com/jsonrainbow/json-schema/pull/912))
+
+### Added
+- fix: treat optional JSON Schema test suite cases as real tests (#913) ([#915](https://github.com/jsonrainbow/json-schema/pull/915))
+- feat: add bin/run-test-case to run a single test suite case by description ([#914](https://github.com/jsonrainbow/json-schema/pull/914))
+
+
+## [6.8.2] - 2026-05-05
+
+### Fixed
+- Update to json schema test suite main branch ([#906](https://github.com/jsonrainbow/json-schema/pull/906))
+
+## [6.8.1] - 2026-05-04
+
+### Fixed
+- Bump actions/checkout from v4 to v5 was re-applied due to PR merge issues with GitHub ([#902](https://github.com/jsonrainbow/json-schema/pull/902))
+
+## [6.8.0] - 2026-04-02
+
+### Added
+- Bump actions/checkout from v4 to v5 ([#902](https://github.com/jsonrainbow/json-schema/pull/902))
+- Update readme for draft 7 ([#899](https://github.com/jsonrainbow/json-schema/pull/899))
+- ci: Add Copilot setup steps ([#892](https://github.com/jsonrainbow/json-schema/pull/892))
+
+### Fixed
+- Fix shell injection in update-changelog workflow for PR titles with backticks ([#897](https://github.com/jsonrainbow/json-schema/pull/897))
+- Remove `v` prefix from release tags and GitHub releases ([#895](https://github.com/jsonrainbow/json-schema/pull/895))
+
+### Deprecated
+- Deprecate `Constraint::CHECK_MODE_NONE` ([#896](https://github.com/jsonrainbow/json-schema/pull/896))
+
+
+## [6.7.2] - 2026-02-15
+
+### Fixed
+- Fix idn_to_ascii deprecation warning by using INTL_IDNA_VARIANT_UTS46 ([#887](https://github.com/jsonrainbow/json-schema/pull/887))
+
+
+## [6.7.1] - 2026-02-13
+
+### Fixed
+- Fix TypeError in pattern property validation with integer keys ([#880](https://github.com/jsonrainbow/json-schema/pull/880))
+
+
+## [6.7.0] - 2026-02-13
+### Fixed
+- Enforce RFC 1035 hostname label length limits in draft 3/4 ([#878](https://github.com/jsonrainbow/json-schema/pull/878))
+- UriRetriever: Include actual media type in InvalidSchemaMediaTypeException message ([#872](https://github.com/jsonrainbow/json-schema/pull/872))
+- docs: Correct trailing spaces in Markdown ([#873](https://github.com/jsonrainbow/json-schema/pull/873))
+
+### Added
+- Feat: Add Draft-07 support ([#847](https://github.com/jsonrainbow/json-schema/pull/847))
+- Automate changelog updates on PR merge ([#874](https://github.com/jsonrainbow/json-schema/pull/874))
+
+### Changed
+- Add automated release workflow with changelog integration ([#879](https://github.com/jsonrainbow/json-schema/pull/879))
+- Fix welcome workflow permission errors from forked PRs ([#875](https://github.com/jsonrainbow/json-schema/pull/875))
+
+
+## [6.6.4] - 2025-12-19
+### Changed
+- ci: Run workflows against 5.x.x branches ([#859](https://github.com/jsonrainbow/json-schema/pull/859))
+### Fixed
+- UriValidator: Allow `file:/` and `file:///` ([#856](https://github.com/jsonrainbow/json-schema/discussions/856))
+- Fix .php-cs-fixer.dist.php export-ignore ([#861](https://github.com/jsonrainbow/json-schema/discussions/861))
+
+## [6.6.3] - 2025-12-02
+### Changed
+- Restricted `mark-mabe/php-enum` dependency to `^4.4` due to lower versions emitting a warning on PHP 8 ([#854](https://github.com/jsonrainbow/json-schema/pull/854))
+
+## [6.6.2] - 2025-11-28
+### Changed
+- Move PHP 8.5 to default add PHP 8.6 as experimental ([#852](https://github.com/jsonrainbow/json-schema/pull/852))
+### Fixed
+- Allow underscore and tilde in URI hostnames as per RFC 3986 ([#853](https://github.com/jsonrainbow/json-schema/pull/853))
+
 ## [6.6.1] - 2025-11-07
 ### Changed
 - Rename master to main ([#848](https://github.com/jsonrainbow/json-schema/pull/848))
@@ -37,7 +176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [6.4.2] - 2025-06-03
 ### Fixed
 - Fix objects are non-unique despite key order ([#819](https://github.com/jsonrainbow/json-schema/pull/819))
-- Id's not being resolved and id property affects sibling ref which it should not do ([#828](https://github.com/jsonrainbow/json-schema/pull/828)) 
+- Id's not being resolved and id property affects sibling ref which it should not do ([#828](https://github.com/jsonrainbow/json-schema/pull/828))
 
 ### Changed
 - Added extra breaking change to UPDATE-6.0.md regarding BaseConstraint::addError signature change ([#823](https://github.com/jsonrainbow/json-schema/pull/823))
@@ -75,7 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 - replace icecave/parity with custom deep comparator ([#803](https://github.com/jsonrainbow/json-schema/pull/803))
- 
+
 ## [6.2.1] - 2025-03-06
 ### Fixed
 - allow items: true to pass validation ([#801](https://github.com/jsonrainbow/json-schema/pull/801))
@@ -105,7 +244,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add return types in the test suite ([#748](https://github.com/jsonrainbow/json-schema/pull/748))
 - Add test case for validating array of strings with objects ([#704](https://github.com/jsonrainbow/json-schema/pull/704))
-- Add contributing information, contributor recognition and security information ([#771](https://github.com/jsonrainbow/json-schema/pull/771)) 
+- Add contributing information, contributor recognition and security information ([#771](https://github.com/jsonrainbow/json-schema/pull/771))
 
 ### Fixed
 - Correct misconfigured mocks in JsonSchema\Tests\Uri\UriRetrieverTest ([#741](https://github.com/jsonrainbow/json-schema/pull/741))

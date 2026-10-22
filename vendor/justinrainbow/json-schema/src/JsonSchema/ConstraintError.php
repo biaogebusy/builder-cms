@@ -25,6 +25,7 @@ class ConstraintError extends Enum
     public const FORMAT_DATE = 'dateFormat';
     public const FORMAT_DATE_TIME = 'dateTimeFormat';
     public const FORMAT_DATE_UTC = 'dateUtcFormat';
+    public const FORMAT_DURATION = 'durationFormat';
     public const FORMAT_EMAIL = 'emailFormat';
     public const FORMAT_HOSTNAME = 'styleHostName';
     public const FORMAT_IP = 'ipFormat';
@@ -36,10 +37,13 @@ class ConstraintError extends Enum
     public const FORMAT_URI_TEMPLATE = 'uriTemplateFormat';
     public const FORMAT_URL = 'urlFormat';
     public const FORMAT_URL_REF = 'urlRefFormat';
+    public const FORMAT_UUID = 'uuidFormat';
     public const INVALID_SCHEMA = 'invalidSchema';
     public const LENGTH_MAX = 'maxLength';
     public const LENGTH_MIN = 'minLength';
+    public const MAX_CONTAINS = 'maxContains';
     public const MAXIMUM = 'maximum';
+    public const MIN_CONTAINS = 'minContains';
     public const MIN_ITEMS = 'minItems';
     public const MINIMUM = 'minimum';
     public const MISSING_ERROR = 'missingError';
@@ -58,6 +62,8 @@ class ConstraintError extends Enum
     public const PROPERTY_NAMES = 'propertyNames';
     public const TYPE = 'type';
     public const UNIQUE_ITEMS = 'uniqueItems';
+    public const CONTENT_MEDIA_TYPE = 'contentMediaType';
+    public const CONTENT_ENCODING = 'contentEncoding';
 
     /**
      * @return string
@@ -83,6 +89,7 @@ class ConstraintError extends Enum
             self::FORMAT_DATE => 'Invalid date %s, expected format YYYY-MM-DD',
             self::FORMAT_DATE_TIME => 'Invalid date-time %s, expected format YYYY-MM-DDThh:mm:ssZ or YYYY-MM-DDThh:mm:ss+hh:mm',
             self::FORMAT_DATE_UTC => 'Invalid time %s, expected integer of milliseconds since Epoch',
+            self::FORMAT_DURATION => 'Invalid duration %s, expected ISO 8601 duration such as P1DT12H',
             self::FORMAT_EMAIL => 'Invalid email',
             self::FORMAT_HOSTNAME => 'Invalid hostname',
             self::FORMAT_IP => 'Invalid IP address',
@@ -94,11 +101,14 @@ class ConstraintError extends Enum
             self::FORMAT_URI_TEMPLATE => 'Invalid URI template format',
             self::FORMAT_URL => 'Invalid URL format',
             self::FORMAT_URL_REF => 'Invalid URL reference format',
+            self::FORMAT_UUID => 'Invalid UUID format',
             self::LENGTH_MAX => 'Must be at most %d characters long',
             self::INVALID_SCHEMA => 'Schema is not valid',
             self::LENGTH_MIN => 'Must be at least %d characters long',
+            self::MAX_CONTAINS => 'There must be a maximum of %d valid items in the array, %d found',
             self::MAX_ITEMS => 'There must be a maximum of %d items in the array, %d found',
             self::MAXIMUM => 'Must have a maximum value less than or equal to %d',
+            self::MIN_CONTAINS => 'There must be a minimum of %d valid items in the array, %d found',
             self::MIN_ITEMS => 'There must be a minimum of %d items in the array, %d found',
             self::MINIMUM => 'Must have a minimum value greater than or equal to %d',
             self::MISSING_MAXIMUM => 'Use of exclusiveMaximum requires presence of maximum',
@@ -115,7 +125,9 @@ class ConstraintError extends Enum
             self::PROPERTIES_MAX => 'Must contain no more than %d properties',
             self::PROPERTY_NAMES => 'Property name %s is invalid',
             self::TYPE => '%s value found, but %s is required',
-            self::UNIQUE_ITEMS => 'There are no duplicates allowed in the array'
+            self::UNIQUE_ITEMS => 'There are no duplicates allowed in the array',
+            self::CONTENT_MEDIA_TYPE => 'Value is not valid with content media type',
+            self::CONTENT_ENCODING => 'Value is not valid with content encoding',
         ];
 
         if (!isset($messages[$name])) {

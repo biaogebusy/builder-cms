@@ -151,7 +151,7 @@ class ObjectNormalizer extends AbstractObjectNormalizer
 
         $class = \is_object($classOrObject) ? $classOrObject::class : $classOrObject;
 
-        if ($this->classDiscriminatorResolver?->getMappingForMappedObject($classOrObject)?->getTypeProperty() === $attribute) {
+        if ($this->isDiscriminatorTypeProperty($classOrObject, $attribute)) {
             return true;
         }
 
@@ -169,7 +169,7 @@ class ObjectNormalizer extends AbstractObjectNormalizer
             return self::$isWritableCache[$cacheKey];
         }
 
-        if (str_contains($attribute, '.') || $this->propertyInfoExtractor->isWritable($class, $attribute, $context)) {
+        if (str_contains($attribute, '.') || str_contains($attribute, '[') || $this->propertyInfoExtractor->isWritable($class, $attribute, $context)) {
             return self::$isWritableCache[$cacheKey] = true;
         }
 

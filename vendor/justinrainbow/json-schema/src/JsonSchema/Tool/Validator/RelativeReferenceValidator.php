@@ -44,12 +44,8 @@ class RelativeReferenceValidator
             return false; // Spaces are not allowed in URIs
         }
 
-        if (preg_match('/^\?#|^#$/', $ref)) {
-            return false; // Missing path but having query and fragment
-        }
-
-        if ($ref === '#' || $ref === '?') {
-            return false; // Missing path and having only fragment or query
+        if (preg_match('/%(?![0-9A-Fa-f]{2})/', $ref)) {
+            return false; // A percent sign must introduce a two digit hexadecimal triplet
         }
 
         return true;

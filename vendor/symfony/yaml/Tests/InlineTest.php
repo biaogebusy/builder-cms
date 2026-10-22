@@ -35,6 +35,22 @@ class InlineTest extends TestCase
     }
 
     /**
+     * @testWith [".nan"]
+     *           [".NaN"]
+     *           [".NAN"]
+     */
+    public function testParseNan(string $yaml)
+    {
+        $this->assertNan(Inline::parse($yaml));
+    }
+
+    public function testDumpNan()
+    {
+        $this->assertSame('.NaN', Inline::dump(\NAN));
+        $this->assertNan(Inline::parse(Inline::dump(\NAN)));
+    }
+
+    /**
      * @dataProvider getTestsForParseWithMapObjects
      */
     public function testParseWithMapObjects($yaml, $value, $flags = Yaml::PARSE_OBJECT_FOR_MAP)
@@ -245,6 +261,7 @@ class InlineTest extends TestCase
             'map' => ['{ key: *var }', ['key' => 'var-value']],
             'list-in-map' => ['{ key: [*var] }', ['key' => ['var-value']]],
             'map-in-map' => ['{ foo: { bar: *var } }', ['foo' => ['bar' => 'var-value']]],
+            'map-followed-by-a-comment' => ['{ key: *var  # comment }', ['key' => 'var-value']],
         ];
     }
 
@@ -332,6 +349,7 @@ class InlineTest extends TestCase
             ['true', true],
             ['12', 12],
             ['-12', -12],
+            ['+12', 12],
             ['1_2', 12],
             ['_12', '_12'],
             ['12_', 12],
@@ -342,6 +360,7 @@ class InlineTest extends TestCase
             ['123.45_67', 123.4567],
             ['0x4D2', 0x4D2],
             ['0x_4_D_2_', 0x4D2],
+            ['0X4D2', '0X4D2'],
             ['0o2333', 0o2333],
             ['0o_2_3_3_3', 0o2333],
             ['.Inf', -log(0)],
@@ -511,15 +530,30 @@ class InlineTest extends TestCase
             ["'1_2'", '1_2'],
             ['_12', '_12'],
             ["'12_'", '12_'],
+            ["'+1_2'", '+1_2'],
+            ["'1_2.5'", '1_2.5'],
+            ["'+1_2.5'", '+1_2.5'],
+            ["{ '1_2.5': foo }", ['1_2.5' => 'foo']],
             ["'quoted string'", 'quoted string'],
             ['1230.0', 12.30e+02],
             ['1.23E+45', 12.30e+44],
             ['1234', 0x4D2],
             ['1243', 0o2333],
             ["'0x_4_D_2_'", '0x_4_D_2_'],
+            ['0X4D2', '0X4D2'],
             ["'0_2_3_3_3'", '0_2_3_3_3'],
+            ["'0o2333'", '0o2333'],
+            ["'+0o2333'", '+0o2333'],
+            ["'0o_2_3_3_3'", '0o_2_3_3_3'],
+            ['0O2333', '0O2333'],
             ['.Inf', -log(0)],
             ['-.Inf', log(0)],
+            ["'.inf'", '.inf'],
+            ["'.Inf'", '.Inf'],
+            ["'.INF'", '.INF'],
+            ["'.nan'", '.nan'],
+            ["'.NaN'", '.NaN'],
+            ["'.NAN'", '.NAN'],
             ["'686e444'", '686e444'],
             ['"foo\r\nbar"', "foo\r\nbar"],
             ["'foo#bar'", 'foo#bar'],
@@ -534,6 +568,8 @@ class InlineTest extends TestCase
 
             ["'-dash'", '-dash'],
             ["'-'", '-'],
+            ["'---'", '---'],
+            ["'...'", '...'],
 
             // Pre-YAML-1.2 booleans
             ["'y'", 'y'],
@@ -602,6 +638,12 @@ class InlineTest extends TestCase
         $date = Inline::parse($yaml, Yaml::PARSE_DATETIME);
         $this->assertEquals($expected, $date);
         $this->assertSame($timezone, $date->format('O'));
+    }
+
+    public function testParseTimestampBeforeUnixEpochAsUnixTimestamp()
+    {
+        $this->assertSame(-1.5, Inline::parse('1969-12-31T23:59:58.5Z'));
+        $this->assertSame(-2, Inline::parse('1969-12-31T23:59:58Z'));
     }
 
     public static function getTimestampTests(): array
@@ -812,6 +854,22 @@ class InlineTest extends TestCase
         Inline::parse('{this, is not, supported}');
     }
 
+    public function testUnterminatedSequenceEndingWithTag()
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Malformed inline YAML string: "[!foo"');
+
+        Inline::parse('[!foo', Yaml::PARSE_CUSTOM_TAGS);
+    }
+
+    public function testUnterminatedMappingEndingWithTag()
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Malformed inline YAML string: "{foo: !bar"');
+
+        Inline::parse('{foo: !bar', Yaml::PARSE_CUSTOM_TAGS);
+    }
+
     public function testVeryLongQuotedStrings()
     {
         $longStringWithQuotes = str_repeat("x\r\n\\\"x\"x", 1000);
@@ -868,6 +926,14 @@ class InlineTest extends TestCase
             'null' => ['{null: "foo"}', ['null' => 'foo']],
             'float' => ['{0.25: "foo"}', ['0.25' => 'foo']],
         ];
+    }
+
+    public function testBuiltInTagWithoutValueAsMappingKey()
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Implicit casting of incompatible mapping keys to strings is not supported. Quote your evaluable mapping keys instead');
+
+        Inline::parse('{!!str : foo}');
     }
 
     public function testTagWithoutValueInSequence()
@@ -1173,5 +1239,96 @@ class InlineTest extends TestCase
         $parsed = Yaml::parse($yaml);
         $this->assertSame(['&string1', '&string2', '&string3', null], $parsed['block']);
         $this->assertSame($parsed['block'], $parsed['flow']);
+    }
+
+    /**
+     * @dataProvider getAnchoredInlineValues
+     */
+    public function testParseAnchoredInlineValues(string $yaml, array $expected)
+    {
+        $this->assertSame($expected, Inline::parse($yaml));
+    }
+
+    public static function getAnchoredInlineValues(): iterable
+    {
+        yield 'double-quoted value in mapping' => [
+            '{ foo: &a "FOO", bar: *a }',
+            ['foo' => 'FOO', 'bar' => 'FOO'],
+        ];
+        yield 'single-quoted value in mapping' => [
+            "{ foo: &a 'FOO', bar: *a }",
+            ['foo' => 'FOO', 'bar' => 'FOO'],
+        ];
+        yield 'double-quoted value with braces in mapping' => [
+            '{ foo: &a "${FOO}", bar: *a }',
+            ['foo' => '${FOO}', 'bar' => '${FOO}'],
+        ];
+        yield 'double-quoted value with comma in mapping' => [
+            '{ foo: &a "a,b", bar: *a }',
+            ['foo' => 'a,b', 'bar' => 'a,b'],
+        ];
+        yield 'sequence value in mapping' => [
+            '{ foo: &a [a, b], bar: *a }',
+            ['foo' => ['a', 'b'], 'bar' => ['a', 'b']],
+        ];
+        yield 'mapping value in mapping' => [
+            '{ foo: &a { k: v }, bar: *a }',
+            ['foo' => ['k' => 'v'], 'bar' => ['k' => 'v']],
+        ];
+        yield 'double-quoted value in sequence' => [
+            '[&a "FOO", *a]',
+            ['FOO', 'FOO'],
+        ];
+        yield 'double-quoted value with braces in sequence' => [
+            '[&a "${FOO}", *a]',
+            ['${FOO}', '${FOO}'],
+        ];
+        yield 'sequence value in sequence' => [
+            '[&a [a, b], *a]',
+            [['a', 'b'], ['a', 'b']],
+        ];
+        yield 'plain scalar value in mapping' => [
+            '{ foo: &a bar, baz: *a }',
+            ['foo' => 'bar', 'baz' => 'bar'],
+        ];
+    }
+
+    public function testParseAnchoredMergeKey()
+    {
+        $this->assertSame(
+            ['k' => 'v', 'bar' => 2],
+            Inline::parse('{ <<: &a { k: v }, bar: 2 }'),
+        );
+    }
+
+    public function testParseQuotedMergeKeyAsRegularKey()
+    {
+        $this->assertSame(['<<' => 'foo', 'bar' => 2], Inline::parse("{ '<<': foo, bar: 2 }"));
+        $this->assertSame(['<<' => ['k' => 'v']], Inline::parse('{ "<<": { k: v } }'));
+        $this->assertSame(['<<' => ['foo']], Inline::parse("{ '<<': [foo] }"));
+    }
+
+    public function testParseMergeKeyWithScalarValueThrowsParseException()
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('YAML merge keys used with a scalar value instead of an array');
+
+        Inline::parse('{ <<: foo }');
+    }
+
+    public function testParseMergeKeyWithSequenceOfScalarsThrowsParseException()
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Merge items must be arrays');
+
+        Inline::parse('{ <<: [foo] }');
+    }
+
+    public function testParseKeyStartingWithNulByteWithMapObjectsThrowsParseException()
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Mapping keys starting with a NUL byte are not supported with the "Yaml::PARSE_OBJECT_FOR_MAP" flag');
+
+        Inline::parse('{ foo: 1, "\0": 1 }', Yaml::PARSE_OBJECT_FOR_MAP);
     }
 }

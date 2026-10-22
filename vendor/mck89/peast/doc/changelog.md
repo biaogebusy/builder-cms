@@ -1,6 +1,9 @@
 Changelog
 ==========
 
+#### 1.17.7
+* Fixed deprecation warning about null array index on PHP 8.5 when parsing trailing comments
+
 #### 1.17.6
 * Fixed bug where single BlockStatement where wrongly expanded removing brackets
 

@@ -122,9 +122,28 @@ class JsonPointer
     public function withPropertyPaths(array $propertyPaths)
     {
         $new = clone $this;
-        $new->propertyPaths = array_map(function ($p): string { return (string) $p; }, $propertyPaths);
+        $new->propertyPaths = array_map(static function ($p): string { return (string) $p; }, $propertyPaths);
 
         return $new;
+    }
+
+    /**
+     * Returns a new pointer with one more segment appended.
+     *
+     * A null or empty segment yields the pointer unchanged, so that callers can
+     * pass through an index they have not resolved yet.
+     *
+     * @param mixed $propertyPath
+     *
+     * @return JsonPointer
+     */
+    public function withAppendedPath($propertyPath)
+    {
+        if ($propertyPath === null || $propertyPath === '') {
+            return $this;
+        }
+
+        return $this->withPropertyPaths(array_merge($this->propertyPaths, [$propertyPath]));
     }
 
     /**

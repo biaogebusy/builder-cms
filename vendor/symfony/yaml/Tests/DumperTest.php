@@ -14,7 +14,6 @@ namespace Symfony\Component\Yaml\Tests;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Dumper;
 use Symfony\Component\Yaml\Exception\DumpException;
-use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Parser;
 use Symfony\Component\Yaml\Tag\TaggedValue;
 use Symfony\Component\Yaml\Yaml;
@@ -457,7 +456,7 @@ class DumperTest extends TestCase
     {
         $data = new TaggedValue('text', "a\nb\n");
 
-        $this->assertSame("!text |\n    a\n    b\n    ", $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
+        $this->assertSame("!text |\n    a\n    b\n", $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
     }
 
     public function testDumpingTaggedValueSpecialCharsInTag()
@@ -582,7 +581,7 @@ class DumperTest extends TestCase
         $data = [
             'foo' => new TaggedValue('bar', "foo\nline with trailing spaces:\n  \nbar\ninteger like line:\n123456789\nempty line:\n\nbaz"),
         ];
-        $expected = "foo: !bar |\n".
+        $expected = "foo: !bar |-\n".
             "    foo\n".
             "    line with trailing spaces:\n".
             "      \n".
@@ -590,7 +589,7 @@ class DumperTest extends TestCase
             "    integer like line:\n".
             "    123456789\n".
             "    empty line:\n".
-            "    \n".
+            "\n".
             '    baz';
 
         $this->assertSame($expected, $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
@@ -602,14 +601,9 @@ class DumperTest extends TestCase
         $data = [
             new TaggedValue('bar', "a\nb"),
         ];
-        $expected = "- !bar |\n    a\n    b";
+        $expected = "- !bar |-\n    a\n    b";
         $this->assertSame($expected, $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
-
-        // @todo Fix the parser, eliminate these exceptions.
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Unable to parse at line 3 (near "!bar |").');
-
-        $this->parser->parse($expected, Yaml::PARSE_CUSTOM_TAGS);
+        $this->assertSameData($data, $this->parser->parse($expected, Yaml::PARSE_CUSTOM_TAGS));
     }
 
     public function testDumpingTaggedMultiLineTrailingNewlinesInMap()
@@ -617,15 +611,10 @@ class DumperTest extends TestCase
         $data = [
             'foo' => new TaggedValue('bar', "a\nb\n\n\n"),
         ];
-        $expected = "foo: !bar |\n    a\n    b\n    \n    \n    ";
+        $expected = "foo: !bar |+\n    a\n    b\n\n\n";
         $this->assertSame($expected, $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
 
-        // @todo Fix the parser, the result should be identical to $data.
-        $this->assertSameData(
-            [
-                'foo' => new TaggedValue('bar', "a\nb\n"),
-            ],
-            $this->parser->parse($expected, Yaml::PARSE_CUSTOM_TAGS));
+        $this->assertSameData($data, $this->parser->parse($expected, Yaml::PARSE_CUSTOM_TAGS));
     }
 
     public function testDumpingTaggedMultiLineTrailingNewlinesInList()
@@ -633,14 +622,10 @@ class DumperTest extends TestCase
         $data = [
             new TaggedValue('bar', "a\nb\n\n\n"),
         ];
-        $expected = "- !bar |\n    a\n    b\n    \n    \n    ";
+        $expected = "- !bar |+\n    a\n    b\n\n\n";
         $this->assertSame($expected, $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
 
-        // @todo Fix the parser, eliminate these exceptions.
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Unable to parse at line 6 (near "!bar |").');
-
-        $this->parser->parse($expected, Yaml::PARSE_CUSTOM_TAGS);
+        $this->assertSameData($data, $this->parser->parse($expected, Yaml::PARSE_CUSTOM_TAGS));
     }
 
     public function testDumpingInlinedMultiLineIfRnBreakLineInTaggedValue()
@@ -658,6 +643,68 @@ class DumperTest extends TestCase
         $yml = $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
         $this->assertSame($expected, $yml);
         $this->assertSameData($data, $this->parser->parse($expected, Yaml::PARSE_CUSTOM_TAGS));
+    }
+
+    public function testTaggedMultiLineLiteralBlocksRoundTrip()
+    {
+        $data = [
+            'strip' => new TaggedValue('my-tag', "one\ntwo"),
+            'clip' => new TaggedValue('my-tag', "one\ntwo\n"),
+            'keep' => new TaggedValue('my-tag', "one\ntwo\n\n"),
+            'line break' => new TaggedValue('my-tag', "\n"),
+            'list' => [
+                new TaggedValue('my-tag', "one\ntwo"),
+                new TaggedValue('my-tag', "one\ntwo\n"),
+                new TaggedValue('my-tag', "one\ntwo\n\n"),
+                new TaggedValue('my-tag', "one\ntwo"),
+            ],
+        ];
+        $yaml = $this->dumper->dump($data, 4, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
+
+        $expected = <<<YAML
+            strip: !my-tag |-
+                one
+                two
+            clip: !my-tag |
+                one
+                two
+            keep: !my-tag |+
+                one
+                two
+
+            'line break': !my-tag |+
+
+            list:
+                - !my-tag |-
+                    one
+                    two
+                - !my-tag |
+                    one
+                    two
+                - !my-tag |+
+                    one
+                    two
+
+                - !my-tag |-
+                    one
+                    two
+            YAML;
+
+        $this->assertSame($expected, $yaml);
+        $this->assertSameData($data, $this->parser->parse($yaml, Yaml::PARSE_CUSTOM_TAGS));
+    }
+
+    public function testDumpingTaggedValueWithCarriageReturnAsQuotedString()
+    {
+        $data = [
+            'foo' => new TaggedValue('bar', "a\rb\nc"),
+            'baz' => [new TaggedValue('bar', "a\rb\nc")],
+        ];
+        $yaml = $this->dumper->dump($data, 3, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
+
+        $this->assertSame("foo: !bar \"a\\rb\\nc\"\nbaz:\n    - !bar \"a\\rb\\nc\"\n", $yaml);
+        $this->assertSameData($data, $this->parser->parse($yaml, Yaml::PARSE_CUSTOM_TAGS));
+        $this->assertSame("!bar \"a\\rb\\nc\"\n", $this->dumper->dump(new TaggedValue('bar', "a\rb\nc"), 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
     }
 
     public function testDumpMultiLineStringAsScalarBlock()
@@ -733,17 +780,42 @@ class DumperTest extends TestCase
             ],
         ];
 
-        $expectedData = [
-            'data' => [
-                'multi_line' => "\nthe second line\nThe third line.",
-            ],
-        ];
-
-        $expectedYml = "data:\n    multi_line: |-\n            \n        the second line\n        The third line.";
+        $expectedYml = "data:\n    multi_line: |4-\n            \n        the second line\n        The third line.";
 
         $yml = $this->dumper->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
         $this->assertSame($expectedYml, $yml);
-        $this->assertSame($expectedData, $this->parser->parse($yml));
+        $this->assertSame($data, $this->parser->parse($yml));
+    }
+
+    /**
+     * @dataProvider provideMultiLineStringsWithLeadingSpacesOnlyLines
+     */
+    public function testDumpMultiLineStringWithLeadingSpacesOnlyLines(string $value, int $indentation)
+    {
+        $data = ['value' => $value];
+        $yml = (new Dumper($indentation))->dump($data, 2, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
+
+        $this->assertSame($data, $this->parser->parse($yml));
+    }
+
+    public static function provideMultiLineStringsWithLeadingSpacesOnlyLines(): iterable
+    {
+        yield 'comment after one space' => [" \n# comment\ntext", 4];
+        yield 'comment after several spaces' => ["    \n# comment\ntext", 4];
+        yield 'empty line before spaces' => ["\n \n# comment\ntext", 4];
+        yield 'several spaces-only lines' => [" \n   \n# comment\ntext", 4];
+        yield 'ordinary text after spaces' => [" \ntext\nmore text", 4];
+        yield 'only spaces and newlines' => [" \n  \n", 4];
+        yield 'custom indentation' => [" \n# comment\ntext", 2];
+    }
+
+    public function testDumpSingleLineBreakAsMultiLineLiteralBlock()
+    {
+        $data = ['a' => "\n", 'b' => ['c' => "\n"], 'd' => ["\n"]];
+        $yml = $this->dumper->dump($data, 3, 0, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
+
+        $this->assertSame("a: |+\n\nb:\n    c: |+\n\nd:\n    - |+\n\n", $yml);
+        $this->assertSame($data, $this->parser->parse($yml));
     }
 
     public function testCarriageReturnFollowedByNewlineIsMaintainedWhenDumpingAsMultiLineLiteralBlock()
@@ -780,6 +852,12 @@ class DumperTest extends TestCase
 
         $this->assertSame("- |-\n    a\n    b\n- |-\n    c\n    d", $yaml);
         $this->assertSame($data, $this->parser->parse($yaml));
+    }
+
+    public function testDumpDocumentMarkersAsTopLevelStrings()
+    {
+        $this->assertSame('---', $this->parser->parse($this->dumper->dump('---')));
+        $this->assertSame('...', $this->parser->parse($this->dumper->dump('...')));
     }
 
     public function testTopLevelMultiLineStringLiteral()
@@ -1002,6 +1080,14 @@ class DumperTest extends TestCase
             ['date' => new \DateTimeImmutable('2023-01-24T01:02:03.456789Z')],
             'date: 2023-01-24T01:02:03.456789+00:00',
         ];
+    }
+
+    public function testDumpedMergeKeyStringCanBeParsedBack()
+    {
+        $data = ['<<' => 'foo', 'nested' => ['<<' => ['a' => 1]], 'list' => [['<<' => 'bar']]];
+
+        $this->assertSame($data, Yaml::parse($this->dumper->dump($data, 0)));
+        $this->assertSame($data, Yaml::parse($this->dumper->dump($data, 10)));
     }
 
     private function assertSameData($expected, $actual)

@@ -24,11 +24,11 @@
             </trans-unit>
             <trans-unit id="6">
                 <source>You must select at least {{ limit }} choice.|You must select at least {{ limit }} choices.</source>
-                <target>Valima peaks vähemalt {{ limit }} valikut.</target>
+                <target>Valima peaks vähemalt {{ limit }} valiku.|Valima peaks vähemalt {{ limit }} valikut.</target>
             </trans-unit>
             <trans-unit id="7">
                 <source>You must select at most {{ limit }} choice.|You must select at most {{ limit }} choices.</source>
-                <target>Valima peaks mitte rohkem kui  {{ limit }} valikut.</target>
+                <target>Valima peaks mitte rohkem kui {{ limit }} valiku.|Valima peaks mitte rohkem kui {{ limit }} valikut.</target>
             </trans-unit>
             <trans-unit id="8">
                 <source>One or more of the given values is invalid.</source>
@@ -76,15 +76,15 @@
             </trans-unit>
             <trans-unit id="19">
                 <source>This value is too long. It should have {{ limit }} character or less.|This value is too long. It should have {{ limit }} characters or less.</source>
-                <target>Väärtus on liiga pikk. Pikkus peaks olema {{ limit }} tähemärki või vähem.</target>
+                <target>Väärtus on liiga pikk. Pikkus peaks olema {{ limit }} tähemärk või vähem.|Väärtus on liiga pikk. Pikkus peaks olema {{ limit }} tähemärki või vähem.</target>
             </trans-unit>
             <trans-unit id="20">
                 <source>This value should be {{ limit }} or more.</source>
-                <target>Väärtus peaks olema {{ limit }} või rohkem.</target>
+                <target>Väärtus peaks olema vähemalt {{ limit }}.</target>
             </trans-unit>
             <trans-unit id="21">
                 <source>This value is too short. It should have {{ limit }} character or more.|This value is too short. It should have {{ limit }} characters or more.</source>
-                <target>Väärtus on liiga lühike. Pikkus peaks  olema {{ limit }} tähemärki või rohkem.</target>
+                <target>Väärtus on liiga lühike. Pikkus peaks olema vähemalt {{ limit }} tähemärk.|Väärtus on liiga lühike. Pikkus peaks olema vähemalt {{ limit }} tähemärki.</target>
             </trans-unit>
             <trans-unit id="22">
                 <source>This value should not be blank.</source>
@@ -212,7 +212,7 @@
             </trans-unit>
             <trans-unit id="56">
                 <source>This collection should contain exactly {{ limit }} element.|This collection should contain exactly {{ limit }} elements.</source>
-                <target>Kogumikus peaks olema täpselt {{ limit }} element.|Kogumikus peaks olema täpselt {{ limit }}|elementi.</target>
+                <target>Kogumikus peaks olema täpselt {{ limit }} element.|Kogumikus peaks olema täpselt {{ limit }} elementi.</target>
             </trans-unit>
             <trans-unit id="57">
                 <source>Invalid card number.</source>
@@ -553,6 +553,98 @@
             <trans-unit id="142">
                 <source>This filename does not match the expected charset.</source>
                 <target>See failinimi ei vasta eeldatavale märgistikule.</target>
+            </trans-unit>
+            <trans-unit id="143">
+                <source>This value is not valid XML.</source>
+                <target>See väärtus ei ole korrektne XML.</target>
+            </trans-unit>
+            <trans-unit id="144">
+                <source>This value does not conform to the expected XSD schema.</source>
+                <target>See väärtus ei vasta eeldatud XSD-skeemile.</target>
+            </trans-unit>
+            <trans-unit id="145">
+                <source>This XML payload is too large ({{ size }} bytes): it exceeds the limit of {{ limit }} bytes.</source>
+                <target>See XML-i sisu on liiga suur ({{ size }} baiti): see ületab {{ limit }} baidi piiri.</target>
+            </trans-unit>
+            <trans-unit id="146">
+                <source>This value is not a valid cron expression.</source>
+                <target>See väärtus ei ole korrektne cron-avaldis.</target>
+            </trans-unit>
+            <trans-unit id="147">
+                <source>The referenced entity does not exist.</source>
+                <target>Viidatud üksust ei eksisteeri.</target>
+            </trans-unit>
+            <trans-unit id="148" resname="This is not a valid ULID.">
+                <source>This value is not a valid ULID.</source>
+                <target>See väärtus ei ole korrektne ULID.</target>
+            </trans-unit>
+            <trans-unit id="149">
+                <source>This file is not a valid audio file.</source>
+                <target state="needs-review-translation">See fail ei ole kehtiv helifail.</target>
+            </trans-unit>
+            <trans-unit id="150">
+                <source>The audio is too short ({{ duration }} seconds). Minimum duration expected is {{ min_duration }} seconds.</source>
+                <target state="needs-review-translation">Heli on liiga lühike ({{ duration }} sekundit). Oodatav minimaalne kestus on {{ min_duration }} sekundit.</target>
+            </trans-unit>
+            <trans-unit id="151">
+                <source>The audio is too long ({{ duration }} seconds). Allowed maximum duration is {{ max_duration }} seconds.</source>
+                <target state="needs-review-translation">Heli on liiga pikk ({{ duration }} sekundit). Lubatud maksimaalne kestus on {{ max_duration }} sekundit.</target>
+            </trans-unit>
+            <trans-unit id="152">
+                <source>The duration of the audio could not be detected.</source>
+                <target state="needs-review-translation">Heli kestust ei õnnestunud tuvastada.</target>
+            </trans-unit>
+            <trans-unit id="153">
+                <source>The audio bitrate is too low ({{ bitrate }} bps). Minimum bitrate expected is {{ min_bitrate }} bps.</source>
+                <target state="needs-review-translation">Heli bitikiirus on liiga madal ({{ bitrate }} bps). Oodatav minimaalne bitikiirus on {{ min_bitrate }} bps.</target>
+            </trans-unit>
+            <trans-unit id="154">
+                <source>The audio bitrate is too high ({{ bitrate }} bps). Allowed maximum bitrate is {{ max_bitrate }} bps.</source>
+                <target state="needs-review-translation">Heli bitikiirus on liiga suur ({{ bitrate }} bps). Lubatud maksimaalne bitikiirus on {{ max_bitrate }} bps.</target>
+            </trans-unit>
+            <trans-unit id="155">
+                <source>The bitrate of the audio could not be detected.</source>
+                <target state="needs-review-translation">Heli bitikiirust ei õnnestunud tuvastada.</target>
+            </trans-unit>
+            <trans-unit id="156">
+                <source>Unsupported audio sample rate ({{ sample_rate }} Hz).</source>
+                <target state="needs-review-translation">Toetamata heli diskreetimissagedus ({{ sample_rate }} Hz).</target>
+            </trans-unit>
+            <trans-unit id="157">
+                <source>The sample rate of the audio could not be detected.</source>
+                <target state="needs-review-translation">Heli diskreetimissagedust ei õnnestunud tuvastada.</target>
+            </trans-unit>
+            <trans-unit id="158">
+                <source>The audio has too few channels ({{ channels }}). Minimum amount expected is {{ min_channels }}.</source>
+                <target state="needs-review-translation">Helil on liiga vähe kanaleid ({{ channels }}). Oodatav miinimum on {{ min_channels }}.</target>
+            </trans-unit>
+            <trans-unit id="159">
+                <source>The audio has too many channels ({{ channels }}). Maximum amount expected is {{ max_channels }}.</source>
+                <target state="needs-review-translation">Helil on liiga palju kanaleid ({{ channels }}). Eeldatav maksimaalne kogus on {{ max_channels }}.</target>
+            </trans-unit>
+            <trans-unit id="160">
+                <source>The number of audio channels could not be detected.</source>
+                <target state="needs-review-translation">Helikanalite arvu ei õnnestunud tuvastada.</target>
+            </trans-unit>
+            <trans-unit id="161">
+                <source>The audio file is corrupted.</source>
+                <target state="needs-review-translation">Helifail on rikutud.</target>
+            </trans-unit>
+            <trans-unit id="162">
+                <source>The audio contains multiple streams. Only one stream is allowed.</source>
+                <target state="needs-review-translation">Heli sisaldab mitu voogu. Lubatud on ainult üks voog.</target>
+            </trans-unit>
+            <trans-unit id="163">
+                <source>Unsupported audio codec "{{ codec }}".</source>
+                <target state="needs-review-translation">Toetamata helikoodek „{{ codec }}“.</target>
+            </trans-unit>
+            <trans-unit id="164">
+                <source>Unsupported audio container "{{ container }}".</source>
+                <target state="needs-review-translation">Toetamata helikonteiner "{{ container }}".</target>
+            </trans-unit>
+            <trans-unit id="165">
+                <source>The file does not contain any audio stream.</source>
+                <target state="needs-review-translation">Fail ei sisalda ühtegi helivoogu.</target>
             </trans-unit>
         </body>
     </file>

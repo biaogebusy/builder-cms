@@ -171,7 +171,9 @@ class YamlFileLoader extends FileLoader
 
         // services
         $this->anonymousServicesCount = 0;
-        $this->anonymousServicesSuffix = '~'.ContainerBuilder::hash($path);
+        $projectDir = $this->container->hasParameter('kernel.project_dir') ? $this->container->getParameter('kernel.project_dir') : null;
+        // hashing the path relative to the project keeps the ids independent from where the project is
+        $this->anonymousServicesSuffix = '~'.ContainerBuilder::hash(\is_string($projectDir) && str_starts_with($path, $projectDir) ? substr($path, \strlen($projectDir)) : $path);
         $this->setCurrentDir(\dirname($path));
         try {
             $this->parseDefinitions($content, $path);
@@ -662,7 +664,7 @@ class YamlFileLoader extends FileLoader
         if (isset($defaults['bind']) || isset($service['bind'])) {
             // deep clone, to avoid multiple process of the same instance in the passes
             $bindings = $definition->getBindings();
-            $bindings += isset($defaults['bind']) ? unserialize(serialize($defaults['bind'])) : [];
+            $bindings += isset($defaults['bind']) ? unserialize(serialize($defaults['bind']), ['allowed_classes' => true]) : [];
 
             if (isset($service['bind'])) {
                 if (!\is_array($service['bind'])) {

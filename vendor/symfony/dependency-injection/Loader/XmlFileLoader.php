@@ -379,7 +379,7 @@ class XmlFileLoader extends FileLoader
         }
 
         // deep clone, to avoid multiple process of the same instance in the passes
-        $bindings = array_merge(unserialize(serialize($defaults->getBindings())), $bindings);
+        $bindings = array_merge(unserialize(serialize($defaults->getBindings()), ['allowed_classes' => true]), $bindings);
 
         if ($bindings) {
             $definition->setBindings($bindings);
@@ -503,7 +503,9 @@ class XmlFileLoader extends FileLoader
     {
         $definitions = [];
         $count = 0;
-        $suffix = '~'.ContainerBuilder::hash($file);
+        $projectDir = $this->container->hasParameter('kernel.project_dir') ? $this->container->getParameter('kernel.project_dir') : null;
+        // hashing the path relative to the project keeps the ids independent from where the project is
+        $suffix = '~'.ContainerBuilder::hash(\is_string($projectDir) && str_starts_with($file, $projectDir) ? substr($file, \strlen($projectDir)) : $file);
 
         $xpath = new \DOMXPath($xml);
         $xpath->registerNamespace('container', self::NS);

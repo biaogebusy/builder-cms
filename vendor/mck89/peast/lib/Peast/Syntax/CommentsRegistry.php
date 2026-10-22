@@ -212,7 +212,7 @@ class CommentsRegistry
         //corresponding node's leading comments. This associates
         //comments that appear immediately before a node.
         //For example: /*comment*/ for (;;){}
-        if (isset($this->nodesStartMap[$next])) {
+        if ($next !== null && isset($this->nodesStartMap[$next])) {
             $nodes = $this->nodesStartMap[$next];
         }
         //If the group of comments has a previous token index that appears
@@ -220,7 +220,7 @@ class CommentsRegistry
         //corresponding node's trailing comments. This associates
         //comments that appear immediately after a node.
         //For example: for (;;){} /*comment*/ 
-        elseif (isset($this->nodesEndMap[$prev])) {
+        elseif ($prev !== null && isset($this->nodesEndMap[$prev])) {
             $nodes = $this->nodesEndMap[$prev];
             $leading = false;
         }

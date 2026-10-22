@@ -6,7 +6,7 @@ namespace JsonSchema;
 
 class Rfc3339
 {
-    private const REGEX = '/^(\d{4}-\d{2}-\d{2}[T ](0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):((?:[0-5][0-9]|60)))(\.\d+)?(Z|([+-](0[0-9]|1[0-9]|2[0-3]))(:)?([0-5][0-9]))$/';
+    private const REGEX = '/^(\d{4}-\d{2}-\d{2}[T ](0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):((?:[0-5][0-9]|60)))(\.\d+)?(Z|([+-](0[0-9]|1[0-9]|2[0-3]))(:)?([0-5][0-9]))$/D';
 
     /**
      * Try creating a DateTime instance
@@ -25,7 +25,7 @@ class Rfc3339
         $inputHasTSeparator = strpos($input, 'T');
 
         $dateAndTime = $matches[1];
-        $microseconds = $matches[5] ?: '.000000';
+        $microseconds = $matches[5] ? substr($matches[5], 0, 7) : '.000000';
         $timeZone = 'Z' !== $matches[6] ? $matches[6] : '+00:00';
         $dateFormat = $inputHasTSeparator === false ? 'Y-m-d H:i:s.uP' : 'Y-m-d\TH:i:s.uP';
         $dateTime = \DateTimeImmutable::createFromFormat($dateFormat, $dateAndTime . $microseconds . $timeZone, new \DateTimeZone('UTC'));

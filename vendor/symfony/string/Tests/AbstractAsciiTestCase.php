@@ -140,6 +140,41 @@ abstract class AbstractAsciiTestCase extends TestCase
                 '-',
                 true,
             ],
+            [
+                "hello\nworld\n",
+                "hello world\n",
+                5,
+                "\n",
+                true,
+            ],
+            [
+                "ab cd\n",
+                "ab cd\n",
+                5,
+                "\n",
+                true,
+            ],
+            [
+                "abc\ndef\n",
+                "abcdef\n",
+                3,
+                "\n",
+                true,
+            ],
+            [
+                "abc\ndef\n\n",
+                "abcdef\n\n",
+                3,
+                "\n",
+                true,
+            ],
+            [
+                'a b ',
+                'a b ',
+                1,
+                ' ',
+                true,
+            ],
         ];
     }
 
@@ -223,6 +258,8 @@ abstract class AbstractAsciiTestCase extends TestCase
             [2, 'abc', 'c', 1],
             [4, 'abacabab', 'ab', 1],
             [4, '123abc', 'b', -3],
+            [null, 'abc', 'b', 10],
+            [null, 'abc', 'b', -10],
         ];
     }
 
@@ -255,6 +292,8 @@ abstract class AbstractAsciiTestCase extends TestCase
             [2, 'ABC', 'c', 2],
             [4, 'ABACaBAB', 'Ab', 1],
             [4, '123abc', 'B', -3],
+            [null, 'ABC', 'b', 10],
+            [null, 'ABC', 'b', -10],
         ];
     }
 
@@ -282,6 +321,8 @@ abstract class AbstractAsciiTestCase extends TestCase
             [57, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, amet sagittis felis.', 'amet', 0],
             [57, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, amet sagittis felis.', 'amet', -10],
             [22, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, amet sagittis felis.', 'amet', -30],
+            [null, 'abc', 'b', 10],
+            [null, 'abc', 'b', -10],
         ];
     }
 
@@ -313,6 +354,8 @@ abstract class AbstractAsciiTestCase extends TestCase
             [57, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, amet sagittis felis.', 'AmeT', 0],
             [57, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, amet sagittis felis.', 'aMEt', -10],
             [22, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, amet sagittis felis.', 'AMET', -30],
+            [null, 'ABC', 'b', 10],
+            [null, 'ABC', 'b', -10],
         ];
     }
 
@@ -1048,6 +1091,9 @@ abstract class AbstractAsciiTestCase extends TestCase
             ['symfonyIsAGreatFramework', 'Symfony is a great framework'],
             ['symfonyIsGREAT', '*Symfony* is GREAT!!'],
             ['SYMFONY', 'SYMFONY'],
+            ['XMLHttpRequest', 'XMLHttpRequest'],
+            ['IOError', 'IOError'],
+            ['iPhone', 'iPhone'],
         ];
     }
 
@@ -1085,6 +1131,11 @@ abstract class AbstractAsciiTestCase extends TestCase
             ['symfonyisgreat', 'SYMFONY _ IS _ GREAT'],
             ['symfony_isgreat', 'Symfony IS GREAT!'],
             ['123_customer_with_special_name', '123-customer,with/special#name'],
+            ['xml_http_request', 'XMLHttpRequest'],
+            ['http_response', 'HTTPResponse'],
+            ['url_value', 'URLValue'],
+            ['io_error', 'IOError'],
+            ['symfony5', 'SYMFONY5'],
         ];
     }
 
@@ -1582,6 +1633,18 @@ abstract class AbstractAsciiTestCase extends TestCase
             [6, "foo\u{001b}[0mbar"],
             [6, "foo\u{0001}bar"],
             [6, "foo\u{0001}bar", false],
+            [4, "\u{001b}]8;;http://x.y\u{001b}\\link\u{001b}]8;;\u{001b}\\"],
+            [4, "\u{001b}]8;;http://x.y\u{0007}link\u{001b}]8;;\u{0007}"],
+            [4, "\u{001b}]8;;http://x.y\u{0007}link\u{001b}]8;;\u{001b}\\"],
+            [3, "\u{001b}]0;title\u{0007}foo"],
+            [2, "\u{001b}]0;title\u{001b}\\f\u{0007}o"],
+            [3, "\u{001b}[1mfoo\u{001b}(B\u{001b}[m"],
+            [3, "\u{001b}7foo\u{001b}8"],
+            [3, "\u{001b}=foo\u{001b}>"],
+            [3, "\u{001b} F\u{001b}%Gfoo"],
+            [3, "foo\u{001b}("],
+            [3, "\u{001b}(\u{001b}[1mfoo"],
+            [3, "\u{001b}\u{001b}[1mfoo"],
             [4, '--ֿ--'],
             [4, 'café'],
             [1, 'А҈'],

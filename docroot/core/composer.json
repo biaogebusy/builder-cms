@@ -33,7 +33,7 @@
         "symfony/process": "^6.4.33",
         "symfony/polyfill-iconv": "^1.26",
         "symfony/yaml": "^6.4.40",
-        "twig/twig": "^3.27.0",
+        "twig/twig": "^3.28.0",
         "doctrine/lexer": "^2",
         "guzzlehttp/guzzle": "^7.5",
         "guzzlehttp/psr7": "^2.4.5",
@@ -53,6 +53,16 @@
         "dealerdirect/phpcodesniffer-composer-installer": "1.1.0"
     },
     "replace": {
+        "drupal/ban": "*",
+        "drupal/contact": "*",
+        "drupal/field_layout": "*",
+        "drupal/history": "*",
+        "drupal/search": "*",
+        "drupal/settings_tray": "*",
+        "drupal/shortcut": "*",
+        "drupal/stable9": "*",
+        "drupal/telephone": "*",
+        "drupal/toolbar": "*",
         "drupal/core-annotation": "self.version",
         "drupal/core-assertion": "self.version",
         "drupal/core-class-finder": "self.version",
@@ -110,7 +120,8 @@
             "lib/Drupal/Component/Datetime/Time.php"
         ],
         "files": [
-            "includes/bootstrap.inc"
+            "includes/bootstrap.inc",
+            "includes/guzzle_file_cookie_jar_shim.php"
         ]
     },
     "config": {

@@ -47,7 +47,7 @@ class PropertiesNamesConstraint implements ConstraintInterface
 
         if (property_exists($schema->propertyNames, 'maxLength')) {
             foreach ($propertyNames as $propertyName => $_) {
-                $length = mb_strlen($propertyName);
+                $length = mb_strlen($propertyName, 'UTF-8');
                 if ($length > $schema->propertyNames->maxLength) {
                     $this->addError(ConstraintError::PROPERTY_NAMES(), $path, ['propertyNames' => $schema->propertyNames, 'violating' => 'maxLength', 'length' => $length, 'name' => $propertyName]);
                 }
@@ -59,6 +59,21 @@ class PropertiesNamesConstraint implements ConstraintInterface
                 if (!preg_match('/' . str_replace('/', '\/', $schema->propertyNames->pattern) . '/', $propertyName)) {
                     $this->addError(ConstraintError::PROPERTY_NAMES(), $path, ['propertyNames' => $schema->propertyNames, 'violating' => 'pattern', 'name' => $propertyName]);
                 }
+            }
+        }
+
+        if (property_exists($schema->propertyNames, 'const')) {
+            foreach ($propertyNames as $propertyName => $_) {
+                if ($propertyName !== $schema->propertyNames->const) {
+                    $this->addError(ConstraintError::PROPERTY_NAMES(), $path, ['propertyNames' => $schema->propertyNames, 'violating' => 'const', 'name' => $propertyName]);
+                }
+            }
+        }
+
+        if (property_exists($schema->propertyNames, 'enum')) {
+            $diff = array_diff(array_keys($propertyNames), $schema->propertyNames->enum);
+            foreach ($diff as $propertyName) {
+                $this->addError(ConstraintError::PROPERTY_NAMES(), $path, ['propertyNames' => $schema->propertyNames, 'violating' => 'enum', 'name' => $propertyName]);
             }
         }
     }
