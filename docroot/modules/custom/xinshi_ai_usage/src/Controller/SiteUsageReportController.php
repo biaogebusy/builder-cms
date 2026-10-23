@@ -90,7 +90,11 @@ final class SiteUsageReportController extends ControllerBase {
     return $this->report($request, function (string $site, array $query) use ($dimension): array {
       $filter = $this->reports->parseFilter($query, $this->nowMs());
       $limit = is_numeric($query['limit'] ?? NULL) ? (int) $query['limit'] : 50;
-      return $this->reports->breakdown($site, $filter, $dimension, $limit);
+      $sort = $query['sort'] ?? 'attempts';
+      if (!is_string($sort)) {
+        throw new UsageReportException('invalid_request', 'sort must be attempts or tokens');
+      }
+      return $this->reports->breakdown($site, $filter, $dimension, $limit, $sort);
     }, 'view site ai usage');
   }
 

@@ -7,7 +7,7 @@ namespace Drupal\xinshi_ai_usage\Service;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 
-/** Adds current, access-checked user labels to authorized site report responses. */
+/** Adds current, access-checked user labels and avatars to site report responses. */
 final class UsageUserLabelService {
 
   public function __construct(
@@ -33,6 +33,7 @@ final class UsageUserLabelService {
       }
     }
     $names = [];
+    $avatarIds = [];
     if ($ids !== []) {
       /** @var \Drupal\user\UserInterface[] $users */
       $users = $this->entityTypes->getStorage('user')->loadMultiple(array_values($ids));
@@ -42,6 +43,26 @@ final class UsageUserLabelService {
           if ($name !== '') {
             $names[$id] = $name;
           }
+        }
+        if ($userDimension && $user->hasField('user_picture') && $user->access('view', $viewer)) {
+          $picture = $user->get('user_picture');
+          if ($picture->access('view', $viewer) && !$picture->isEmpty()) {
+            $fileId = $picture->getValue()[0]['target_id'] ?? NULL;
+            if ($fileId) {
+              $avatarIds[$id] = $fileId;
+            }
+          }
+        }
+      }
+    }
+    $avatars = [];
+    if ($avatarIds !== []) {
+      // Resolve image references in one batch, without loading each user's file separately.
+      /** @var \Drupal\file\FileInterface[] $files */
+      $files = $this->entityTypes->getStorage('file')->loadMultiple(array_values(array_unique($avatarIds)));
+      foreach ($files as $id => $file) {
+        if ($file->access('view', $viewer) && $file->get('uri')->access('view', $viewer)) {
+          $avatars[$id] = $file->createFileUrl(FALSE);
         }
       }
     }
@@ -60,6 +81,7 @@ final class UsageUserLabelService {
         $record = $labelActor($record);
         if ($section === 'rows' && $userDimension) {
           $record['dimension_label'] = $names[$record['dimension']] ?? NULL;
+          $record['dimension_avatar'] = $avatars[$avatarIds[$record['dimension']] ?? ''] ?? NULL;
         }
       }
       unset($record);

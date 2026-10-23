@@ -277,7 +277,7 @@ final class ChatSessionFormat {
     $report = $value->report;
     if ($report !== NULL) {
       if (!self::keys($report, ['version', 'type', 'sourceHash', 'status', 'summary',
-        'issues', 'captures', 'limitations']) || !self::version($report->version, 1) ||
+        'issues', 'captures', 'limitations'], ['execution']) || !self::version($report->version, 1) ||
         !in_array($report->type, ['fullHTML', 'custom-template'], TRUE) ||
         !is_string($report->sourceHash) || !preg_match('/^[a-f0-9]{64}$/D', $report->sourceHash) ||
         !in_array($report->status, ['reviewed', 'unavailable'], TRUE) ||
@@ -286,6 +286,9 @@ final class ChatSessionFormat {
         !is_array($report->limitations) || count($report->limitations) > 8 ||
         !self::every($report->limitations, fn($item) => self::reviewText($item, 500))) {
         self::fail('invalid_review');
+      }
+      if (property_exists($report, 'execution')) {
+        self::execution($report->execution);
       }
       $ids = [];
       foreach ($report->captures as $capture) {
@@ -315,6 +318,47 @@ final class ChatSessionFormat {
       }
     }
     self::within(self::encode($value), self::REVIEW_BYTES);
+  }
+
+  /** Validate bounded browser observations without accepting raw logs or screenshot copies. */
+  private static function execution(mixed $value): void {
+    $categories = [
+      'script' => ['ok', 'script-error'], 'resources' => ['ok', 'resource-failed'],
+      'network' => ['ok', 'network-blocked'], 'overflow' => ['ok', 'overflow'],
+      'accessibility' => ['ok', 'axe-violation', 'axe-incomplete', 'check-unavailable'],
+      'interaction' => ['ok', 'step-failed', 'check-unavailable', 'invalid-plan', 'not-provided'],
+    ];
+    $statuses = [
+      'passed' => ['ok'],
+      'failed' => ['script-error', 'resource-failed', 'overflow', 'axe-violation', 'step-failed'],
+      'blocked' => ['network-blocked', 'axe-incomplete', 'check-unavailable', 'invalid-plan'],
+      'skipped' => ['not-provided'],
+    ];
+    if (!self::keys($value, ['version', 'status', 'checks']) || !self::version($value->version, 1) ||
+      !in_array($value->status, ['completed', 'unavailable'], TRUE) ||
+      !is_array($value->checks) || count($value->checks) > 32) {
+      self::fail('invalid_review');
+    }
+    $ids = [];
+    foreach ($value->checks as $check) {
+      if (!self::keys($check, ['id', 'viewport', 'kind', 'status', 'code', 'count'], ['label', 'step']) ||
+        !is_string($check->id) || !preg_match('/^(desktop|mobile)-[a-z]+-\d+$/D', $check->id) ||
+        !in_array($check->viewport, ['desktop', 'mobile'], TRUE) ||
+        !is_string($check->kind) || !isset($categories[$check->kind]) ||
+        !is_string($check->status) || !isset($statuses[$check->status]) ||
+        !str_starts_with($check->id, $check->viewport . '-' . $check->kind . '-') ||
+        isset($ids[$check->id]) || !in_array($check->code, $categories[$check->kind], TRUE) ||
+        !in_array($check->code, $statuses[$check->status], TRUE) ||
+        !self::nonnegative($check->count) || $check->count > 100000 ||
+        (property_exists($check, 'label') && !self::reviewText($check->label, 80)) ||
+        (property_exists($check, 'step') && ($check->kind !== 'interaction' ||
+          !self::positive($check->step) || $check->step > 12)) ||
+        ($check->status === 'passed' && $check->kind !== 'interaction' && $check->count != 0) ||
+        ($check->status === 'failed' && $check->count == 0)) {
+        self::fail('invalid_review');
+      }
+      $ids[$check->id] = TRUE;
+    }
   }
 
   private static function approvals(\stdClass $data): void {

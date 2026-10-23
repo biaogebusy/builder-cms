@@ -337,6 +337,61 @@ final class SiteUsageReportTest extends TestCase {
     }
   }
 
+  public function testTokenRankingAppliesBeforeLimitAndPreservesExactTotals(): void {
+    for ($index = 1; $index <= 12; $index++) {
+      $actor = str_pad((string) $index, 2, '0', STR_PAD_LEFT);
+      $this->attempt("op-$actor", "attempt-$actor", $actor, [
+        'usage_quality' => 'reported',
+        'input_tokens_total' => $index >= 11 ? '9007199254740992' : (string) (min($index, 9) * 100),
+        'output_tokens_total' => $index >= 11 ? (string) ($index - 10) : (string) (min($index, 9) * 10),
+        'input_tokens_cache_read' => $index === 2 ? '999999' : '0',
+        'output_tokens_reasoning' => $index === 2 ? '999999' : '0',
+      ]);
+    }
+    // A frequent caller must not displace a higher-token caller before sorting.
+    for ($index = 0; $index < 15; $index++) {
+      $this->attempt("frequent-$index", "frequent-$index", '01', ['usage_quality' => 'missing']);
+    }
+    $this->attempt('missing', 'missing', '02', [
+      'usage_quality' => 'missing', 'input_tokens_total' => '9999999999999999',
+    ]);
+    foreach ([['site_id' => 'other-site'], ['started_at' => self::T0 - 10 * self::DAY]] as $index => $scope) {
+      $this->attempt("excluded-$index", "excluded-$index", '99', $scope + [
+        'usage_quality' => 'reported', 'input_tokens_total' => '9999999999999999',
+      ]);
+    }
+    $filter = $this->siteReports->parseFilter(self::WINDOW, $this->now);
+    $ranked = $this->siteReports->breakdown(self::SITE, $filter, 'users', 10, 'tokens');
+    $this->assertSame(['12', '11', '09', '10', '08', '07', '06', '05', '04', '03'],
+      array_column($ranked['rows'], 'dimension'));
+    $this->assertSame([12, TRUE, 10, 'tokens'],
+      [$ranked['row_count'], $ranked['truncated'], $ranked['limit'], $ranked['filter']['sort']]);
+    $this->assertSame('9007199254740992', $ranked['rows'][0]['tokens']['input_tokens_total']);
+    $this->assertSame('2', $ranked['rows'][0]['tokens']['output_tokens_total']);
+    $this->assertSame('01', $this->siteReports->breakdown(self::SITE, $filter, 'users', 1)['rows'][0]['dimension']);
+  }
+
+  public function testControllerValidatesTokenRankingAndRetainsReportPermissions(): void {
+    $this->seedScenario();
+    $vault = $this->vault();
+    $vault->set('chat-node', 'secret', self::SITE, 1);
+    $controller = $this->controller('99', $vault, ['view site ai usage' => TRUE]);
+    $response = $controller->breakdown(Request::create('/x', 'GET',
+      self::WINDOW + ['sort' => 'tokens', 'limit' => 10]), 'users');
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertTrue($response->headers->hasCacheControlDirective('private'));
+    $this->assertTrue($response->headers->hasCacheControlDirective('no-store'));
+    $this->assertSame('tokens', json_decode((string) $response->getContent(), TRUE)['filter']['sort']);
+    foreach (['cost', 'tokens DESC', ['tokens']] as $sort) {
+      $invalid = $controller->breakdown(Request::create('/x', 'GET', self::WINDOW + ['sort' => $sort]), 'users');
+      $this->assertSame(400, $invalid->getStatusCode());
+      $this->assertSame('invalid_request', json_decode((string) $invalid->getContent(), TRUE)['code']);
+    }
+    $denied = $this->controller('99', $vault)->breakdown(Request::create('/x', 'GET',
+      self::WINDOW + ['sort' => 'tokens']), 'users');
+    $this->assertSame(403, $denied->getStatusCode());
+  }
+
   public function testEveryBreakdownAddsUpToTheSummary(): void {
     $this->seedScenario();
     $filter = $this->siteReports->parseFilter(self::WINDOW, $this->now);
