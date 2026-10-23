@@ -1,4 +1,20 @@
 services:
+  xinshi_api.content_forms:
+    class: Drupal\xinshi_api\ContentFormService
+    arguments:
+      - '@entity_type.manager'
+      - '@current_user'
+      - '@language_manager'
+      - '@Drupal\filter\FilterFormatRepositoryInterface'
+      - '@?jsonapi.resource_type.repository'
+      - '@?content_moderation.moderation_information'
+      - '@?content_moderation.state_transition_validation'
+      - '@?content_translation.manager'
+  xinshi_api.content_form_response:
+    class: Drupal\xinshi_api\EventSubscriber\ContentFormResponseSubscriber
+    arguments: ['@logger.channel.xinshi_api']
+    tags:
+      - { name: event_subscriber }
   xinshi_api.page_json_cache:
     class: Drupal\Core\Cache\VariationCacheInterface
     factory: ['@variation_cache_factory', 'get']

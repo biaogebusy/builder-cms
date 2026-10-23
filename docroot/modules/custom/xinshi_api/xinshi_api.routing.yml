@@ -293,3 +293,64 @@ xinshi_api.v3.landingPage.drafts.find:
   options:
     _auth: [ 'oauth2', 'cookie' ]
     no_cache: TRUE
+
+xinshi_api.content_form.types:
+  path: '/api/v3/node-form/types'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\ContentFormController::types'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
+xinshi_api.content_form.node_create:
+  path: '/api/v3/node-form/{bundle}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\ContentFormController::node'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    bundle: '[a-z0-9_]+'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
+xinshi_api.content_form.node_edit:
+  path: '/api/v3/node-form/{bundle}/{uuid}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\ContentFormController::node'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    bundle: '[a-z0-9_]+'
+    uuid: '[a-fA-F0-9]{8}(-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
+xinshi_api.content_form.comment_create:
+  path: '/api/v3/comment-form/{bundle}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\ContentFormController::comment'
+  requirements:
+    _permission: 'post comments'
+    bundle: '[a-z0-9_]+'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
+xinshi_api.content_form.comment_edit:
+  path: '/api/v3/comment-form/{bundle}/{uuid}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\ContentFormController::comment'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    bundle: '[a-z0-9_]+'
+    uuid: '[a-fA-F0-9]{8}(-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
