@@ -192,6 +192,14 @@ final class ContentFormService {
   }
 
   private function writable(FieldItemListInterface $items): bool {
+    $entity = $items->getEntity();
+    // Legacy node types can leave new_revision unset. Core passes that NULL to
+    // allowedIf(), which requires a boolean, when non-admins edit revision_log.
+    if ($items->getFieldDefinition()->getName() === 'revision_log' && $entity instanceof NodeInterface &&
+      !$this->account->hasPermission('administer nodes') &&
+      $entity->get('type')->entity->shouldCreateNewRevision() === NULL) {
+      return FALSE;
+    }
     return !$items->getFieldDefinition()->isReadOnly() &&
       $items->access('view', $this->account) && $items->access('edit', $this->account);
   }

@@ -201,5 +201,36 @@ account(User::load($writer->id()));
 check(count($service->node('blog', $node->uuid(), 'fr')['fields']) === 1, 'Authorized new translation can obtain its form');
 check(!Node::load($node->id())->hasTranslation('fr'), 'Describing a translation never saves it');
 denied(fn() => $service->node('blog', NULL, 'invalid-language'), 400, 'Unknown language is rejected');
+// Legacy migrated types can have no boolean revision default. Keep this case
+// for the HTTP fixture too, so real create/edit requests exercise the guard.
+NodeType::load('blog')->set('new_revision', TRUE)->save();
+check(isset($service->node('blog', NULL, NULL)['baseFields']->revision_log), 'Explicit revision creation retains authorized revision notes');
+NodeType::load('blog')->set('new_revision', FALSE)->save();
+check(!isset($service->node('blog', NULL, NULL)['baseFields']->revision_log), 'Disabled revisions omit ordinary-author revision notes');
+NodeType::load('blog')->set('new_revision', NULL)->save();
+check(NodeType::load('blog')->shouldCreateNewRevision() === NULL, 'Legacy fixture has an unset revision default');
+check(!isset($service->node('blog', NULL, NULL)['baseFields']->revision_log), 'Unset revision default does not break an ordinary-author create form');
+check(!isset($service->node('blog', $node->uuid(), NULL)['baseFields']->revision_log), 'Unset revision default does not break an ordinary-author edit form');
+account(User::load(1));
+check(isset($service->node('blog', NULL, NULL)['baseFields']->revision_log), 'Administrator revision access is preserved with an unset default');
+account($writer);
+// Database logging keeps only recognized placeholders, not an exception object.
+$logger = new class extends \Psr\Log\AbstractLogger {
+  public array $records = [];
+  public function log($level, string|\Stringable $message, array $context = []): void {
+    $this->records[] = ['message' => $message, 'context' => $context];
+  }
+};
+$subscriber = new \Drupal\xinshi_api\EventSubscriber\ContentFormResponseSubscriber($logger);
+$error = new \TypeError('Synthetic form diagnostic');
+$event = new \Symfony\Component\HttpKernel\Event\ExceptionEvent(
+  \Drupal::service('http_kernel'), \Symfony\Component\HttpFoundation\Request::create('/api/v3/node-form/blog'),
+  \Symfony\Component\HttpKernel\HttpKernelInterface::MAIN_REQUEST, $error);
+$subscriber->onException($event);
+$record = $logger->records[0];
+$variables = (new \Drupal\Core\Logger\LogMessageParser())->parseMessagePlaceholders($record['message'], $record['context']);
+check($variables['@message'] === 'Synthetic form diagnostic' && isset($variables['%file'], $variables['%line']), 'Drupal logs retain exception detail and source location');
+check($event->getResponse()->getStatusCode() === 503 &&
+  json_decode($event->getResponse()->getContent(), TRUE) === ['code' => 'operation_unavailable'], 'Diagnostic detail stays out of the public error response');
 // A separately booted HTTP fixture checks real auth, JSON:API writes, and refusal cache headers.
 echo "Content form service checks: $checks\n";

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\xinshi_api\EventSubscriber;
 
+use Drupal\Core\Utility\Error;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,7 +29,7 @@ final class ContentFormResponseSubscriber implements EventSubscriberInterface {
     }
     $error = $event->getThrowable();
     if (!$error instanceof HttpExceptionInterface) {
-      $this->logger->error('Content form description failed.', ['exception' => $error]);
+      Error::logException($this->logger, $error);
     }
     $status = $error instanceof HttpExceptionInterface ? $error->getStatusCode() : 503;
     $code = match ($status) {
