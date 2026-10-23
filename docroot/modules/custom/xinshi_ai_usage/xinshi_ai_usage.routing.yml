@@ -34,7 +34,7 @@ xinshi_ai_usage.price_book:
   options:
     _admin_route: TRUE
 
-# Chat model suggestions for the price book prefill field. Read-only and
+# Chat and image model suggestions for the price book prefill field. Read-only and
 # admin-only; a failed catalog fetch yields an empty suggestion list.
 xinshi_ai_usage.price_catalog_autocomplete:
   path: '/admin/config/xinshi/ai/usage/pricing/catalog-autocomplete'

@@ -18,15 +18,15 @@ final class LitellmRateConverterSearchTest extends TestCase {
       'deepseek/deepseek-chat',
       'deepseek/deepseek-v4-pro',
       'azure_ai/deepseek-chat',
-    ], LitellmRateConverter::searchChatModels($catalog, 'deepseek'));
+    ], LitellmRateConverter::searchModels($catalog, 'deepseek'));
     $this->assertSame(['deepseek/deepseek-v4-pro'],
-      LitellmRateConverter::searchChatModels($catalog, 'deepseek/deepseek-v4-pro', 1));
-    $this->assertSame([], LitellmRateConverter::searchChatModels($catalog, 'embedding'));
-    $this->assertSame([], LitellmRateConverter::searchChatModels($catalog, '  '));
+      LitellmRateConverter::searchModels($catalog, 'deepseek/deepseek-v4-pro', 1));
+    $this->assertSame([], LitellmRateConverter::searchModels($catalog, 'embedding'));
+    $this->assertSame([], LitellmRateConverter::searchModels($catalog, '  '));
   }
 
   public function testReportedIdsMatchTheShortestCatalogKey(): void {
-    $result = LitellmRateConverter::backendChatRates($this->catalog(), [
+    $result = LitellmRateConverter::backendRates($this->catalog(), [
       'deepseek-chat',
       'deepseek/deepseek-v4-pro',
       'qwen-image',
@@ -42,14 +42,14 @@ final class LitellmRateConverterSearchTest extends TestCase {
   }
 
   public function testUnderscoresAndCaseDoNotMatter(): void {
-    $result = LitellmRateConverter::backendChatRates($this->catalog(), ['DEEPSEEK_CHAT']);
+    $result = LitellmRateConverter::backendRates($this->catalog(), ['DEEPSEEK_CHAT']);
     $this->assertSame(280000, $result['rates']['DEEPSEEK_CHAT']['per_million_input']);
     $this->assertSame([], $result['unmatched']);
   }
 
   public function testEmptyReportedListReturnsEmptyResult(): void {
     $this->assertSame(['rates' => [], 'unmatched' => [], 'skipped' => []],
-      LitellmRateConverter::backendChatRates($this->catalog(), []));
+      LitellmRateConverter::backendRates($this->catalog(), []));
   }
 
   /**

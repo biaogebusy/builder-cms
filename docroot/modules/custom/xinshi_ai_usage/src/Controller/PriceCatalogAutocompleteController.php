@@ -8,12 +8,13 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\xinshi_ai_usage\Contract\PriceCatalogFetcher;
 use Drupal\xinshi_ai_usage\Service\LitellmRateConverter;
 use Drupal\xinshi_ai_usage\Service\PriceBookException;
+use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Autocomplete of chat models for the price book prefill field.
+ * Autocomplete of chat or image models for the price book prefill field.
  *
  * Suggestions come from the cached LiteLLM catalog. A cold cache triggers
  * the normal fetch; a failed fetch returns no suggestions instead of an
@@ -37,7 +38,8 @@ final class PriceCatalogAutocompleteController extends ControllerBase {
    */
   public function handle(Request $request): JsonResponse {
     $query = trim((string) $request->query->get('q', ''));
-    if ($query === '' || mb_strlen($query) > 128) {
+    $kind = (string) $request->query->get('book_kind', PriceBookService::KIND_SUPPLIER_CHAT);
+    if ($query === '' || mb_strlen($query) > 128 || !in_array($kind, PriceBookService::KINDS, TRUE)) {
       return new JsonResponse([]);
     }
     try {
@@ -47,11 +49,11 @@ final class PriceCatalogAutocompleteController extends ControllerBase {
       return new JsonResponse([]);
     }
     $items = [];
-    foreach (LitellmRateConverter::searchChatModels($catalog, $query) as $modelId) {
+    foreach (LitellmRateConverter::searchModels($catalog, $query, 10, $kind) as $modelId) {
       $entry = $catalog[$modelId];
       $items[] = [
         'value' => $modelId,
-        'label' => $modelId . ' — ' . self::priceSummary($entry),
+        'label' => $modelId . ' — ' . self::priceSummary($entry, $kind),
       ];
     }
     return new JsonResponse($items);
@@ -60,7 +62,16 @@ final class PriceCatalogAutocompleteController extends ControllerBase {
   /**
    * Formats the catalog list price for the suggestion label.
    */
-  private static function priceSummary(array $entry): string {
+  private static function priceSummary(array $entry, string $kind): string {
+    if ($kind === PriceBookService::KIND_SUPPLIER_IMAGE && isset($entry['output_cost_per_image'])) {
+      return '$' . self::usd((float) $entry['output_cost_per_image']) . ' per image';
+    }
+    if ($kind === PriceBookService::KIND_SUPPLIER_IMAGE) {
+      return '$' . self::usd((float) $entry['input_cost_per_token'] * 1_000_000)
+        . ' text in / $' . self::usd((float) $entry['input_cost_per_image_token'] * 1_000_000)
+        . ' image in / $' . self::usd((float) $entry['output_cost_per_image_token'] * 1_000_000)
+        . ' image out per 1M tokens (standard)';
+    }
     return '$' . self::usd((float) $entry['input_cost_per_token'] * 1_000_000)
       . ' in / $' . self::usd((float) $entry['output_cost_per_token'] * 1_000_000)
       . ' out per 1M tokens';

@@ -7,7 +7,9 @@ namespace Drupal\Tests\xinshi_ai_usage\Unit;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
+use Drupal\xinshi_ai_usage\Contract\ImageUsageNormalizer;
 use Drupal\xinshi_ai_usage\Service\CostRatingService;
+use Drupal\xinshi_ai_usage\Service\LitellmRateConverter;
 use Drupal\xinshi_ai_usage\Service\PriceBookException;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use PHPUnit\Framework\TestCase;
@@ -479,6 +481,64 @@ final class PriceBookAndCostRatingTest extends TestCase {
     $this->expectException(PriceBookException::class);
     $this->expectExceptionMessageMatches('/cost_conflict/');
     $this->costRating->rateAttempt(self::SITE, 'att-img', 1, $provider, $this->imageUsage(3), $this->nowMs());
+  }
+
+  public function testPrefilledGptImageRatesPriceTheObservedInputModalities(): void {
+    $kind = PriceBookService::KIND_SUPPLIER_IMAGE;
+    $rates = LitellmRateConverter::modelRates(['gpt-image-2' => [
+      'mode' => 'image_generation', 'input_cost_per_token' => 0.000005,
+      'input_cost_per_image_token' => 0.000008, 'output_cost_per_image_token' => 0.00003,
+    ]], ['gpt-image-2'], $kind);
+    $id = $this->priceBook->createDraft(self::SITE, $kind, 'gpt-image-v1', 'USD',
+      json_encode(['accounts' => ['xinshi' => ['models' => $rates]]]), $this->nowMs());
+    $this->priceBook->activate($id, self::SITE, $kind);
+    $provider = ['account_ref' => 'xinshi', 'requested_model' => 'gpt-image-2'];
+    $usage = ImageUsageNormalizer::normalize(['data' => [['b64_json' => 'synthetic']], 'usage' => [
+      'input_tokens' => 100, 'output_tokens' => 1000,
+      'input_tokens_details' => ['text_tokens' => 60, 'image_tokens' => 40],
+    ]]);
+    $result = $this->costRating->computeRate(self::SITE, $provider, $usage, $this->nowMs());
+    $this->assertSame(CostRatingService::STATE_RATED_ESTIMATE, $result['valuation_state']);
+    $this->assertSame('USD', $result['currency']);
+    $this->assertSame(620, $result['input_cost_micros']);
+    $this->assertSame(30_000, $result['output_cost_micros']);
+    $this->assertSame(0, $result['image_cost_micros']);
+    $this->assertSame(30_620, $result['total_cost_micros']);
+
+    // A supplier that omits the breakdown cannot be priced as text-only.
+    foreach ([[], ['input_tokens_details.text_tokens' => 100],
+      ['input_tokens_details.text_tokens' => 60, 'input_tokens_details.image_tokens' => 50],
+      ['input_tokens_details.text_tokens' => -1, 'input_tokens_details.image_tokens' => 101],
+      ['input_tokens_details.text_tokens' => 100, 'input_tokens_details.image_tokens' => 'invalid']] as $raw) {
+      $invalid = $usage;
+      $invalid['raw_usage'] = $raw;
+      $result = $this->costRating->computeRate(self::SITE, $provider, $invalid, $this->nowMs());
+      $this->assertSame('invalid_usage', $result['unpriced_reason']);
+      $this->assertNull($result['total_cost_micros']);
+    }
+    $noTokens = ImageUsageNormalizer::normalize(['data' => [['url' => 'synthetic']]]);
+    $result = $this->costRating->computeRate(self::SITE, $provider, $noTokens, $this->nowMs());
+    $this->assertSame('invalid_usage', $result['unpriced_reason']);
+    $this->assertNull($result['total_cost_micros']);
+
+    $zero = ImageUsageNormalizer::normalize(['data' => [], 'usage' => ['input_tokens' => 0, 'output_tokens' => 0]]);
+    $this->assertSame(0, $this->costRating->computeRate(self::SITE, $provider, $zero, $this->nowMs())['total_cost_micros']);
+  }
+
+  public function testImageInputRatesRequireTheOtherTokenRates(): void {
+    foreach ([['per_image' => 0, 'per_million_input_image' => 8_000_000],
+      ['per_image' => 0, 'per_million_input' => 5_000_000, 'per_million_input_image' => 8_000_000],
+      ['per_image' => 0, 'per_million_input' => 5_000_000, 'per_million_output' => 30_000_000,
+        'per_million_input_image' => -1]] as $rates) {
+      try {
+        $this->priceBook->parseRates(json_encode(['accounts' => ['xinshi' => ['models' => ['gpt-image-2' => $rates]]]]),
+          PriceBookService::KIND_SUPPLIER_IMAGE);
+        $this->fail('Incomplete image token pricing must not be saved.');
+      }
+      catch (PriceBookException $e) {
+        $this->assertContains($e->priceCode, ['invalid_rate', 'invalid_rates']);
+      }
+    }
   }
 
   public function testDifferentResultCannotOverwriteImmutableCostEntry(): void {

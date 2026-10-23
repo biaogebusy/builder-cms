@@ -59,6 +59,11 @@ final class PriceBookForm extends FormBase {
     'gemini-2.5-pro' => 'Gemini 2.5 Pro（国外）',
   ];
 
+  /** Image model aliases with token prices supported by the image book. */
+  private const POPULAR_IMAGE_MODELS = [
+    'gpt-image-2' => 'GPT Image 2',
+  ];
+
   // Service properties must stay protected and non-readonly: the form is
   // rebuilt (and therefore cached in cache_form) by the prefill button, and
   // DependencySerializationTrait::__sleep() runs in FormBase scope, where it
@@ -191,15 +196,17 @@ final class PriceBookForm extends FormBase {
       '#default_value' => $siteIds[0],
       '#required' => TRUE,
     ];
+    $kind = (string) ($form_state->getValue('book_kind') ?? PriceBookService::KIND_SUPPLIER_CHAT);
     $form['create']['book_kind'] = [
       '#type' => 'select',
       '#title' => $this->t('价卡类型'),
-      '#description' => $this->t('对话价卡按 token 计价（对话、规划、修复等所有文本调用）；图片价卡按张计价（Drupal 图片任务），两类各自独立版本化。'),
+      '#description' => $this->t('对话价卡按 token 计价（对话、规划、修复等所有文本调用）；图片价卡按张或图片 token 计价（Drupal 图片任务），两类各自独立版本化。'),
       '#options' => [
         PriceBookService::KIND_SUPPLIER_CHAT => $this->kindLabel(PriceBookService::KIND_SUPPLIER_CHAT),
         PriceBookService::KIND_SUPPLIER_IMAGE => $this->kindLabel(PriceBookService::KIND_SUPPLIER_IMAGE),
       ],
       '#default_value' => PriceBookService::KIND_SUPPLIER_CHAT,
+      '#ajax' => ['callback' => '::refreshPrefill', 'wrapper' => 'price-catalog-prefill'],
       '#required' => TRUE,
     ];
     $form['create']['version'] = [
@@ -220,8 +227,10 @@ final class PriceBookForm extends FormBase {
     $form['create']['prefill'] = [
       '#type' => 'details',
       '#title' => $this->t('从 LiteLLM 预填（官方牌价参考）'),
-      '#open' => FALSE,
-      '#description' => $this->t('联网拉取 LiteLLM 社区维护的模型价格表，自动匹配该站点已上报的模型，并把官方牌价换算成费率 JSON（USD）。未上报的模型可通过搜索或热门模型补充。牌价不是合同价：预填后请核对并改成实际采购价再保存。目前仅支持对话价卡。'),
+      '#open' => $kind === PriceBookService::KIND_SUPPLIER_IMAGE,
+      '#prefix' => '<div id="price-catalog-prefill">',
+      '#suffix' => '</div>',
+      '#description' => $this->t('联网拉取 LiteLLM 社区维护的模型价格表，自动匹配该站点已上报的模型，并把官方牌价换算成费率 JSON（USD）。未上报的模型可通过搜索或热门模型补充。牌价不是合同价：预填后请核对并改成实际采购价再保存。按所选价卡类型搜索和预填。图片支持固定每张价格或分别计价的文本输入、图片输入和图片输出 token 标准价；图片缓存折扣、批处理折扣和尺寸分档暂不预填。'),
     ];
     $form['create']['prefill']['prefill_account'] = [
       '#type' => 'textfield',
@@ -233,7 +242,7 @@ final class PriceBookForm extends FormBase {
     $form['create']['prefill']['prefill_models'] = [
       '#type' => 'textarea',
       '#title' => $this->t('LiteLLM 模型 ID（每行一个）'),
-      '#description' => $this->t('例如 deepseek/deepseek-chat。此处只填尚未上报、需要手动指定的 LiteLLM 模型；站点已上报的模型会自动加入。预填会整体替换费率 JSON 和币种（USD）。'),
+      '#description' => $this->t('例如对话模型 deepseek/deepseek-chat，图片模型 gpt-image-2。此处只填尚未上报、需要手动指定的 LiteLLM 模型；站点已上报的模型会自动加入。预填会整体替换费率 JSON 和币种（USD）。'),
       '#rows' => 4,
     ];
     $form['create']['prefill']['prefill_search'] = [
@@ -242,12 +251,14 @@ final class PriceBookForm extends FormBase {
       '#description' => $this->t('输入模型名关键字，从 LiteLLM 目录中选择。目录首次加载可能需要几秒；选中完整 ID 后与模型列表一起预填，未选中的残留关键字会被忽略并提示。'),
       '#maxlength' => 128,
       '#autocomplete_route_name' => 'xinshi_ai_usage.price_catalog_autocomplete',
+      '#autocomplete_route_parameters' => ['book_kind' => $kind],
     ];
     $form['create']['prefill']['prefill_popular'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('热门模型快捷选择'),
       '#description' => $this->t('勾选后与模型列表一起预填。预填会把所选 ID 写回模型列表，之后可继续搜索或手动修改。'),
-      '#options' => self::POPULAR_CHAT_MODELS,
+      '#options' => $kind === PriceBookService::KIND_SUPPLIER_IMAGE
+        ? self::POPULAR_IMAGE_MODELS : self::POPULAR_CHAT_MODELS,
     ];
     $form['create']['prefill']['prefill_action'] = [
       '#type' => 'submit',
@@ -264,7 +275,7 @@ final class PriceBookForm extends FormBase {
     $form['create']['rates_json'] = [
       '#type' => 'textarea',
       '#title' => $this->t('费率 JSON'),
-      '#description' => $this->t('按 accounts → models 结构填写。对话价卡每个模型填 per_million_* 四项（每百万 token 的 micros）；图片价卡每个模型填 per_image（每张图的 micros），模型另计 token 时再加 per_million_input / per_million_output，例如 @example。预填内容只是格式示例，必须按供应商报价改成真实费率后才能保存；显式填 0 表示该项免费。详见架构文档第 5.2 节。',
+      '#description' => $this->t('按 accounts → models 结构填写。对话价卡每个模型填 per_million_* 四项（每百万 token 的 micros）；图片价卡每个模型填 per_image（每张图的 micros），模型按 token 计价时再加 per_million_input / per_million_output；文本与图片输入单价不同时，再填 per_million_input_image，此时 per_million_input 只用于文本输入，例如 @example。预填内容只是格式示例，必须按供应商报价改成真实费率后才能保存；显式填 0 表示该项免费。详见架构文档第 5.2 节。',
         ['@example' => $imageExample]),
       '#rows' => 20,
       '#default_value' => json_encode(self::seedRates(),
@@ -376,8 +387,8 @@ final class PriceBookForm extends FormBase {
    */
   public function prefillFromCatalog(array &$form, FormStateInterface $form_state): void {
     $kind = (string) $form_state->getValue('book_kind');
-    if ($kind !== PriceBookService::KIND_SUPPLIER_CHAT) {
-      $this->messenger()->addError($this->t('LiteLLM 预填目前只支持对话（按 token）价卡。'));
+    if (!in_array($kind, PriceBookService::KINDS, TRUE)) {
+      $this->messenger()->addError($this->t('价卡类型无效。'));
       return;
     }
     $account = trim((string) $form_state->getValue('prefill_account'));
@@ -405,11 +416,11 @@ final class PriceBookForm extends FormBase {
     // The search box is assistive: a half-typed keyword must not abort the
     // prefill, so only a complete, priceable catalog id is honoured.
     if ($search !== '') {
-      if (LitellmRateConverter::isUsableChatModel($catalog, $search)) {
+      if (LitellmRateConverter::isUsableModel($catalog, $search, $kind)) {
         $modelIds = array_values(array_unique(array_merge($modelIds, [$search])));
       }
       else {
-        $this->messenger()->addWarning($this->t('搜索框内容 "@search" 不是目录中可预填的完整对话模型 ID，已忽略。请从补全列表中选择完整 ID。',
+        $this->messenger()->addWarning($this->t('搜索框内容 "@search" 不是当前价卡类型可预填的完整模型 ID，已忽略。请从补全列表中选择完整 ID。',
           ['@search' => $search]));
       }
     }
@@ -425,10 +436,10 @@ final class PriceBookForm extends FormBase {
     }
 
     try {
-      $auto = LitellmRateConverter::backendChatRates($catalog, $reportedIds);
+      $auto = LitellmRateConverter::backendRates($catalog, $reportedIds, $kind);
       $modelRates = $modelIds === []
         ? []
-        : LitellmRateConverter::chatModelRates($catalog, $modelIds);
+        : LitellmRateConverter::modelRates($catalog, $modelIds, $kind);
     }
     catch (PriceBookException $e) {
       $this->messenger()->addError($this->t('预填失败：@message', ['@message' => $e->getMessage()]));
@@ -436,17 +447,17 @@ final class PriceBookForm extends FormBase {
     }
     $autoCount = count($auto['rates']);
     $modelRates = array_merge($auto['rates'], $modelRates);
-    if ($modelRates === []) {
-      $this->messenger()->addError($this->t('目录中没有可匹配的模型。'));
-      return;
-    }
     if ($auto['unmatched'] !== []) {
       $this->messenger()->addWarning($this->t('以下已上报模型在目录中未找到，需在费率 JSON 中手动补充：@models',
         ['@models' => implode(', ', $auto['unmatched'])]));
     }
     if ($auto['skipped'] !== []) {
-      $this->messenger()->addWarning($this->t('以下已上报模型不是对话模型，已跳过：@models',
+      $this->messenger()->addWarning($this->t('以下已上报模型不属于当前价卡类型或价格结构暂不支持，已跳过：@models',
         ['@models' => implode(', ', $auto['skipped'])]));
+    }
+    if ($modelRates === []) {
+      $this->messenger()->addError($this->t('目录中没有可匹配的模型。'));
+      return;
     }
 
     $json = json_encode(['accounts' => [$account => ['models' => $modelRates]]],
@@ -475,6 +486,11 @@ final class PriceBookForm extends FormBase {
       '@count' => count($modelRates),
       '@auto' => $autoCount,
     ]));
+  }
+
+  /** Updates catalog choices when the administrator switches book kind. */
+  public function refreshPrefill(array &$form, FormStateInterface $form_state): array {
+    return $form['create']['prefill'];
   }
 
   /**
@@ -526,7 +542,7 @@ final class PriceBookForm extends FormBase {
 
   private function kindLabel(string $kind): string {
     return (string) ($kind === PriceBookService::KIND_SUPPLIER_IMAGE
-      ? $this->t('图片（按张）') : $this->t('对话（按 token）'));
+      ? $this->t('图片（按张或 token）') : $this->t('对话（按 token）'));
   }
 
   private function formatMs(int $ms): string {

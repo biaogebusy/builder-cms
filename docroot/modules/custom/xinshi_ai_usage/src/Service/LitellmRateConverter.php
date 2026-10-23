@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_ai_usage\Service;
 
 /**
- * Converts LiteLLM model_prices catalog entries into chat price book rates.
+ * Converts LiteLLM model_prices catalog entries into chat or image price book rates.
  *
  * LiteLLM publishes per-token USD costs. A chat price book stores micros of
  * its currency per million tokens, so per_million_* micros = per-token USD *
@@ -13,40 +13,38 @@ namespace Drupal\xinshi_ai_usage\Service;
  * exact while following PriceBookService's half-up rounding policy.
  *
  * Tiered vendor pricing that LiteLLM publishes as separate fields (priority,
- * batches, per-second audio, per-image) is intentionally ignored: the price
- * book schema has one flat rate per model and unused dimensions are not
- * implemented ahead of time.
+ * batches, cache discounts on images, per-second audio) is not imported.
+ * Image prices retain separate text/image input rates when the catalog
+ * supplies them. Mixed output prices require a separate usage breakdown.
  */
 final class LitellmRateConverter {
-
-  /** USD per token -> micros per million tokens: multiply by 10^12. */
-  private const SCALE = 12;
 
   private function __construct() {}
 
   /**
-   * Builds the chat rates of the requested catalog models.
+   * Builds standard rates for the requested catalog models and book kind.
    *
-   * Models without cache price fields get 0 for those fields: the vendor
-   * charges nothing extra for cache traffic on them. Nothing is returned
-   * partially: one bad model id aborts the whole prefill so the admin fixes
-   * the list instead of saving a silently incomplete book.
+   * Chat models retain the existing cache-rate defaults. Image models use
+   * standard prices. One unsupported manual model id aborts the prefill so
+   * the admin fixes the list before saving an incomplete book.
    *
    * @param array<string, array> $catalog
    *   Decoded LiteLLM catalog: model id => entry.
    * @param list<string> $modelIds
    *   Requested LiteLLM model ids.
+   * @param string $kind
+   *   The selected price book kind.
    *
-   * @return array<string, array{per_million_input:int,per_million_cache_read:int,per_million_cache_write:int,per_million_output:int}>
+   * @return array<string, array<string,int>>
    *   Model id => rates. Keys stay the LiteLLM ids; the admin renames them to
    *   the account's real model ids before saving.
    *
    * @throws \Drupal\xinshi_ai_usage\Service\PriceBookException
-   *   When a model id is unknown, not a chat model, missing token costs, or
+   *   When a model id is unknown, of the wrong kind, missing supported costs, or
    *   when no usable id was requested.
    */
-  public static function chatModelRates(array $catalog, array $modelIds): array {
-    $unknown = $notChat = $incomplete = [];
+  public static function modelRates(array $catalog, array $modelIds, string $kind = PriceBookService::KIND_SUPPLIER_CHAT): array {
+    $unknown = $wrongKind = $incomplete = [];
     $rates = [];
     foreach ($modelIds as $modelId) {
       $modelId = trim((string) $modelId);
@@ -58,25 +56,25 @@ final class LitellmRateConverter {
         continue;
       }
       $entry = $catalog[$modelId];
-      if (($entry['mode'] ?? NULL) !== 'chat') {
-        $notChat[] = $modelId;
+      if (!self::matchesKind($entry, $kind)) {
+        $wrongKind[] = $modelId;
         continue;
       }
-      if (!isset($entry['input_cost_per_token'], $entry['output_cost_per_token'])) {
+      if (!self::isUsableEntry($entry, $kind)) {
         $incomplete[] = $modelId;
         continue;
       }
-      $rates[$modelId] = self::chatRate($entry);
+      $rates[$modelId] = self::modelRate($entry, $kind);
     }
     $problems = [];
     if ($unknown !== []) {
       $problems[] = 'not in the catalog: ' . implode(', ', $unknown);
     }
-    if ($notChat !== []) {
-      $problems[] = 'not chat models: ' . implode(', ', $notChat);
+    if ($wrongKind !== []) {
+      $problems[] = 'not models for ' . $kind . ': ' . implode(', ', $wrongKind);
     }
     if ($incomplete !== []) {
-      $problems[] = 'no per-token costs: ' . implode(', ', $incomplete);
+      $problems[] = 'no supported standard costs: ' . implode(', ', $incomplete);
     }
     if ($problems !== []) {
       throw new PriceBookException('catalog_mismatch', implode('; ', $problems));
@@ -88,11 +86,11 @@ final class LitellmRateConverter {
   }
 
   /**
-   * Finds chat model ids whose name contains the query.
+   * Finds model ids whose name contains the query, within one book kind.
    *
-   * Only entries with token costs and mode "chat" can be prefilled, so other
-   * catalog entries are not suggested. Exact matches and prefix matches sort
-   * first; the remaining matches follow in case-insensitive id order.
+   * Only entries with prices supported by the book kind are suggested.
+   * Exact matches and prefix matches sort first; the remaining matches
+   * follow in case-insensitive id order.
    *
    * @param array<string, array> $catalog
    *   Decoded LiteLLM catalog: model id => entry.
@@ -100,26 +98,33 @@ final class LitellmRateConverter {
    *   Case-insensitive substring of the model id.
    * @param int $limit
    *   Maximum number of ids to return.
+   * @param string $kind
+   *   The selected price book kind.
    *
    * @return list<string>
    *   Matching model ids.
    */
-  public static function searchChatModels(array $catalog, string $query, int $limit = 10): array {
+  public static function searchModels(array $catalog, string $query, int $limit = 10, string $kind = PriceBookService::KIND_SUPPLIER_CHAT): array {
     $needle = mb_strtolower(trim($query));
     if ($needle === '') {
       return [];
     }
     $matches = [];
     foreach ($catalog as $modelId => $entry) {
-      if (!is_string($modelId)
-        || !is_array($entry)
-        || ($entry['mode'] ?? NULL) !== 'chat'
-        || !isset($entry['input_cost_per_token'], $entry['output_cost_per_token'])) {
+      if (!is_string($modelId) || !self::isUsableEntry($entry, $kind)) {
         continue;
       }
       $haystack = mb_strtolower($modelId);
       if (!str_contains($haystack, $needle)) {
         continue;
+      }
+      if ($kind === PriceBookService::KIND_SUPPLIER_IMAGE) {
+        try {
+          self::modelRate($entry, $kind);
+        }
+        catch (PriceBookException) {
+          continue;
+        }
       }
       // Rank: exact match 0, prefix match 1, substring match 2.
       $rank = $haystack === $needle ? 0 : (str_starts_with($haystack, $needle) ? 1 : 2);
@@ -131,7 +136,7 @@ final class LitellmRateConverter {
   }
 
   /**
-   * Builds chat rates for reported backend models, keyed by backend id.
+   * Builds rates for reported backend models, keyed by backend id.
    *
    * Backend ids often drop the provider prefix that LiteLLM keeps, so the
    * match tries the exact id first and then the id without its provider path
@@ -139,8 +144,7 @@ final class LitellmRateConverter {
    * several entries share a segment, the shortest key wins: provider-specific
    * duplicates such as dated Azure or Bedrock aliases are longer.
    *
-   * A reported model that matches a non-chat catalog entry (for example an
-   * image model) is skipped silently: it does not belong in a chat book. A
+   * A reported model of another kind or with unsupported prices is skipped. A
    * model with no catalog entry is returned as unmatched so the caller can
    * ask the admin to add it manually.
    *
@@ -148,25 +152,36 @@ final class LitellmRateConverter {
    *   Decoded LiteLLM catalog: model id => entry.
    * @param list<string> $modelIds
    *   Model ids the site reported.
+   * @param string $kind
+   *   The selected price book kind.
    *
    * @return array{rates:array<string,array>,unmatched:list<string>,skipped:list<string>}
-   *   Rates keyed by backend id, ids with no catalog entry, and non-chat ids.
+   *   Rates keyed by backend id, unmatched ids, and unsupported ids.
    */
-  public static function backendChatRates(array $catalog, array $modelIds): array {
+  public static function backendRates(array $catalog, array $modelIds, string $kind = PriceBookService::KIND_SUPPLIER_CHAT): array {
     $rates = [];
     $unmatched = [];
     $skipped = [];
     if ($modelIds === []) {
       return ['rates' => $rates, 'unmatched' => $unmatched, 'skipped' => $skipped];
     }
-    $chatIndex = self::catalogIndex($catalog, TRUE);
-    $anyIndex = self::catalogIndex($catalog, FALSE);
+    $kindIndex = self::catalogIndex($catalog, $kind);
+    $anyIndex = self::catalogIndex($catalog, NULL);
     foreach ($modelIds as $modelId) {
       $modelId = trim((string) $modelId);
       if ($modelId === '') {
         continue;
       }
-      $match = self::matchWithIndex($catalog, $chatIndex, $modelId);
+      // A known image model with unsupported prices must not fall back to
+      // another provider's simpler price for the same model name.
+      $knownKey = isset($catalog[$modelId]) ? $modelId
+        : ($anyIndex['normalized'][self::normalizeModelId($modelId)] ?? NULL);
+      if ($kind === PriceBookService::KIND_SUPPLIER_IMAGE && $knownKey !== NULL
+        && !self::isUsableEntry($catalog[$knownKey], $kind)) {
+        $skipped[] = $modelId;
+        continue;
+      }
+      $match = self::matchWithIndex($catalog, $kindIndex, $modelId);
       if ($match === NULL) {
         if (self::matchWithIndex($catalog, $anyIndex, $modelId) !== NULL) {
           $skipped[] = $modelId;
@@ -176,41 +191,45 @@ final class LitellmRateConverter {
         }
         continue;
       }
-      $rates[$modelId] = self::chatRate($catalog[$match]);
+      $rates[$modelId] = self::modelRate($catalog[$match], $kind);
     }
     return ['rates' => $rates, 'unmatched' => $unmatched, 'skipped' => $skipped];
   }
 
   /**
-   * Whether the exact catalog key can be prefilled into a chat book.
+   * Whether the exact catalog key can be prefilled into the selected book kind.
    */
-  public static function isUsableChatModel(array $catalog, string $modelId): bool {
-    return self::isUsableEntry($catalog[trim($modelId)] ?? NULL, TRUE);
+  public static function isUsableModel(array $catalog, string $modelId, string $kind = PriceBookService::KIND_SUPPLIER_CHAT): bool {
+    return self::isUsableEntry($catalog[trim($modelId)] ?? NULL, $kind);
   }
 
   /**
    * One-pass lookup structures for matching ids against the catalog.
    *
-   * @return array{chatOnly:bool,normalized:array<string,string>,segments:array<string,list<array{provider:string,length:int,key:string}>>}
+   * @return array{kind:?string,normalized:array<string,string>,segments:array<string,list<array{provider:string,length:int,key:string}>>}
    *   Normalized-key map (the first catalog key wins) and, per normalized
    *   last path segment, the candidate keys with their provider name and
    *   length. Matching many ids against a multi-thousand-entry catalog scans
    *   it once per kind instead of once per id.
    */
-  private static function catalogIndex(array $catalog, bool $chatOnly): array {
+  private static function catalogIndex(array $catalog, ?string $kind): array {
     $normalized = [];
     $segments = [];
     foreach ($catalog as $key => $entry) {
-      if (!is_string($key) || !self::isUsableEntry($entry, $chatOnly)) {
+      if (!is_string($key) || !self::isUsableEntry($entry, $kind)) {
         continue;
       }
       $normalizedKey = self::normalizeModelId($key);
       $normalized[$normalizedKey] ??= $key;
       $separator = strpos($key, '/');
       $provider = self::normalizeModelId($separator === FALSE ? $key : substr($key, 0, $separator));
-      $segments[self::modelSegment($key)][] = [$provider, strlen($key), $key];
+      // Image variants with extra path segments can encode size/quality.
+      // Only an explicit id can select them; never guess a variant from a model name.
+      if ($kind !== PriceBookService::KIND_SUPPLIER_IMAGE || substr_count($key, '/') <= 1) {
+        $segments[self::modelSegment($key)][] = [$provider, strlen($key), $key];
+      }
     }
-    return ['chatOnly' => $chatOnly, 'normalized' => $normalized, 'segments' => $segments];
+    return ['kind' => $kind, 'normalized' => $normalized, 'segments' => $segments];
   }
 
   /**
@@ -224,7 +243,7 @@ final class LitellmRateConverter {
     if ($modelId === '') {
       return NULL;
     }
-    if (self::isUsableEntry($catalog[$modelId] ?? NULL, $index['chatOnly'])) {
+    if (self::isUsableEntry($catalog[$modelId] ?? NULL, $index['kind'])) {
       return $modelId;
     }
     $normalized = $index['normalized'][self::normalizeModelId($modelId)] ?? NULL;
@@ -255,7 +274,7 @@ final class LitellmRateConverter {
    */
   private static function chatRate(array $entry): array {
     return [
-      'per_million_input' => self::perTokenCostToMicros($entry['input_cost_per_token']),
+      'per_million_input' => self::costToMicros($entry['input_cost_per_token'], 12),
       'per_million_cache_read' => isset($entry['cache_read_input_token_cost'])
         ? self::perTokenCostToMicros($entry['cache_read_input_token_cost']) : 0,
       'per_million_cache_write' => isset($entry['cache_creation_input_token_cost'])
@@ -267,15 +286,53 @@ final class LitellmRateConverter {
   /**
    * Whether a catalog entry can supply rates for the requested kind.
    */
-  private static function isUsableEntry(mixed $entry, bool $chatOnly): bool {
+  private static function isUsableEntry(mixed $entry, ?string $kind): bool {
     if (!is_array($entry)) {
       return FALSE;
     }
-    // A non-chat match only classifies the id (for example as an image
-    // model), so it does not need token costs.
-    return !$chatOnly
-      || (($entry['mode'] ?? NULL) === 'chat'
-        && isset($entry['input_cost_per_token'], $entry['output_cost_per_token']));
+    if ($kind === NULL) {
+      return TRUE;
+    }
+    if (!self::matchesKind($entry, $kind)) {
+      return FALSE;
+    }
+    if ($kind === PriceBookService::KIND_SUPPLIER_CHAT) {
+      return isset($entry['input_cost_per_token'], $entry['output_cost_per_token']);
+    }
+    // A fixed image price and token prices can describe alternative billing
+    // units. Do not combine them or flatten mixed text/image output prices.
+    if (isset($entry['output_cost_per_image'])) {
+      return !isset($entry['input_cost_per_token'])
+        && !isset($entry['output_cost_per_token'])
+        && !isset($entry['output_cost_per_image_token']);
+    }
+    return isset($entry['input_cost_per_token'], $entry['input_cost_per_image_token'],
+      $entry['output_cost_per_image_token']) && !isset($entry['output_cost_per_token']);
+  }
+
+  private static function matchesKind(array $entry, string $kind): bool {
+    return match ($kind) {
+      PriceBookService::KIND_SUPPLIER_CHAT => ($entry['mode'] ?? NULL) === 'chat',
+      PriceBookService::KIND_SUPPLIER_IMAGE => in_array($entry['mode'] ?? NULL,
+        ['image_generation', 'image_edit'], TRUE),
+      default => FALSE,
+    };
+  }
+
+  /** Standard image prices; cache and batch discounts are not imported. */
+  private static function modelRate(array $entry, string $kind): array {
+    if ($kind === PriceBookService::KIND_SUPPLIER_CHAT) {
+      return self::chatRate($entry);
+    }
+    if (isset($entry['output_cost_per_image'])) {
+      return ['per_image' => self::costToMicros($entry['output_cost_per_image'], 6)];
+    }
+    return [
+      'per_image' => 0,
+      'per_million_input' => self::costToMicros($entry['input_cost_per_token'], 12),
+      'per_million_input_image' => self::costToMicros($entry['input_cost_per_image_token'], 12),
+      'per_million_output' => self::costToMicros($entry['output_cost_per_image_token'], 12),
+    ];
   }
 
   /**
@@ -311,39 +368,48 @@ final class LitellmRateConverter {
    *   When the value is negative, non-numeric or overflows the integer range.
    */
   public static function perTokenCostToMicros(float|int|string $cost): int {
+    return self::costToMicros($cost, 12);
+  }
+
+  /** Scales a USD rate with decimal half-up rounding and checked integer bounds. */
+  private static function costToMicros(mixed $cost, int $scale): int {
     if (is_int($cost)) {
       if ($cost < 0) {
-        throw new PriceBookException('invalid_rate', 'per-token cost must not be negative');
+        throw new PriceBookException('invalid_rate', 'cost must not be negative');
       }
-      $digits = (string) $cost;
+      $digits = $cost === 0 ? '0' : (string) $cost . str_repeat('0', $scale);
     }
     elseif (is_float($cost)) {
       if (!is_finite($cost) || $cost < 0) {
-        throw new PriceBookException('invalid_rate', 'per-token cost must be a non-negative finite number');
+        throw new PriceBookException('invalid_rate', 'cost must be a non-negative finite number');
       }
-      $scaled = $cost * (10 ** self::SCALE);
-      if ($scaled > (float) PHP_INT_MAX) {
-        throw new PriceBookException('rate_overflow', 'per-token cost exceeds the supported integer range');
+      $scaled = $cost * (10 ** $scale);
+      if ($scaled >= (float) PHP_INT_MAX) {
+        throw new PriceBookException('rate_overflow', 'cost exceeds the supported integer range');
       }
       return (int) round($scaled);
     }
     elseif (is_string($cost) && preg_match('/^\d+(?:\.\d+)?$/', $cost) === 1) {
       [$intPart, $fracPart] = array_pad(explode('.', $cost, 2), 2, '');
-      $keep = str_pad(substr($fracPart, 0, self::SCALE), self::SCALE, '0');
+      $keep = str_pad(substr($fracPart, 0, $scale), $scale, '0');
       $digits = ltrim($intPart . $keep, '0') ?: '0';
       // Round half up at the first dropped fractional digit.
-      $dropped = substr($fracPart, self::SCALE);
+      $dropped = substr($fracPart, $scale);
       if ($dropped !== '' && $dropped[0] >= '5') {
+        if (strlen($digits) > strlen((string) PHP_INT_MAX)
+          || (strlen($digits) === strlen((string) PHP_INT_MAX) && strcmp($digits, (string) PHP_INT_MAX) >= 0)) {
+          throw new PriceBookException('rate_overflow', 'cost exceeds the supported integer range');
+        }
         $digits = (string) ((int) $digits + 1);
       }
     }
     else {
-      throw new PriceBookException('invalid_rate', 'per-token cost must be a non-negative number');
+      throw new PriceBookException('invalid_rate', 'cost must be a non-negative number');
     }
     $max = (string) PHP_INT_MAX;
     if (strlen($digits) > strlen($max)
       || (strlen($digits) === strlen($max) && strcmp($digits, $max) > 0)) {
-      throw new PriceBookException('rate_overflow', 'per-token cost exceeds the supported integer range');
+      throw new PriceBookException('rate_overflow', 'cost exceeds the supported integer range');
     }
     return (int) $digits;
   }

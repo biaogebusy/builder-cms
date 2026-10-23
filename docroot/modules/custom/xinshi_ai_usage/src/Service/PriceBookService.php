@@ -49,7 +49,8 @@ use Drupal\Component\Datetime\TimeInterface;
  *     "xinshi": {
  *       "models": {
  *         "qwen-image-plus": { "per_image": 200000 },
- *         "gpt-image-2": { "per_image": 0, "per_million_input": 5000000, "per_million_output": 40000000 }
+ *         "example-token-image": { "per_image": 0, "per_million_input": 5000000,
+ *           "per_million_input_image": 8000000, "per_million_output": 30000000 }
  *       }
  *     }
  *   }
@@ -150,8 +151,9 @@ final class PriceBookService {
    * Throws on malformed JSON or missing required keys, so a bad admin save
    * cannot silently produce zero-cost ratings. Chat models need all four
    * per-million rates; image models need `per_image` and may carry
-   * `per_million_input` / `per_million_output` (NULL when absent, meaning the
-   * model is not expected to report tokens).
+   * `per_million_input` / `per_million_output` (NULL when absent). When
+   * `per_million_input_image` is present, input rates distinguish text and
+   * image tokens and require the supplier's input token breakdown.
    *
    * @param string $ratesJson
    *   The stored rates_json string.
@@ -215,7 +217,7 @@ final class PriceBookService {
   }
 
   /**
-   * @return array{per_image:int,per_million_input:int|null,per_million_output:int|null}
+   * @return array<string,int|null>
    */
   private static function imageModelRate(string $modelId, array $rates): array {
     if (!array_key_exists('per_image', $rates)) {
@@ -225,6 +227,12 @@ final class PriceBookService {
     foreach (self::IMAGE_TOKEN_RATE_KEYS as $rateKey) {
       $clean[$rateKey] = array_key_exists($rateKey, $rates) && $rates[$rateKey] !== NULL
         ? self::asMicros($rates[$rateKey]) : NULL;
+    }
+    if (array_key_exists('per_million_input_image', $rates)) {
+      if ($clean['per_million_input'] === NULL || $clean['per_million_output'] === NULL) {
+        throw new PriceBookException('invalid_rates', "model {$modelId} needs text input and output token rates with image input rates");
+      }
+      $clean['per_million_input_image'] = self::asMicros($rates['per_million_input_image']);
     }
     return $clean;
   }

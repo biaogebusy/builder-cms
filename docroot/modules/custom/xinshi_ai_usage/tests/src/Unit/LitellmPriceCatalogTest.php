@@ -81,7 +81,7 @@ final class LitellmPriceCatalogTest extends TestCase {
       "no-cost-model": {"mode": "chat", "max_tokens": 100}
     }', TRUE);
 
-    $rates = LitellmRateConverter::chatModelRates($catalog,
+    $rates = LitellmRateConverter::modelRates($catalog,
       ['deepseek/deepseek-chat', '  anthropic/claude-sonnet-4-5  ', '', 'no-cache-model', 'null-cache-model']);
     $this->assertSame([
       'deepseek/deepseek-chat' => [
@@ -112,12 +112,12 @@ final class LitellmPriceCatalogTest extends TestCase {
 
     foreach ([
       ['does/not-exist', 'not in the catalog'],
-      ['text-embedding-3-small', 'not chat models'],
-      ['no-cost-model', 'no per-token costs'],
+      ['text-embedding-3-small', 'not models for supplier_chat'],
+      ['no-cost-model', 'no supported standard costs'],
       ['', 'no model id was requested'],
     ] as [$modelId, $expectedFragment]) {
       try {
-        LitellmRateConverter::chatModelRates($catalog, [$modelId]);
+        LitellmRateConverter::modelRates($catalog, [$modelId]);
         $this->fail("expected catalog failure for {$modelId}");
       }
       catch (PriceBookException $e) {

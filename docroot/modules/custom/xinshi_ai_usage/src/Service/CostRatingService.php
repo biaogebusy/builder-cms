@@ -279,7 +279,17 @@ final class CostRatingService {
       throw new PriceBookException('cost_overflow', 'computed cost exceeds the supported integer range');
     }
     $imageCost = $rate['per_image'] * $images;
-    $inputNumerator = $inputTotal === NULL ? 0 : self::costNumerator((int) $rate['per_million_input'], $inputTotal);
+    if (isset($rate['per_million_input_image'])) {
+      // Split prices require actual token observations. A count of generated
+      // images alone must not turn a token-billed response into a free call.
+      if ($inputTotal === NULL || $outputTotal === NULL) {
+        throw new PriceBookException('invalid_usage', 'image token pricing requires input and output token counts');
+      }
+      $inputNumerator = self::imageInputNumerator($rate, $usage, $inputTotal);
+    }
+    else {
+      $inputNumerator = $inputTotal === NULL ? 0 : self::costNumerator((int) $rate['per_million_input'], $inputTotal);
+    }
     $outputNumerator = $outputTotal === NULL ? 0 : self::costNumerator((int) $rate['per_million_output'], $outputTotal);
     $tokenNumerator = self::safeAdd($inputNumerator, $outputNumerator);
     $totalNumerator = self::safeAdd(self::costNumerator(self::MILLION, $imageCost), $tokenNumerator);
@@ -289,6 +299,26 @@ final class CostRatingService {
       'image_cost_micros' => $imageCost,
       'total_cost_micros' => self::roundNumerator($totalNumerator, $roundingPolicy),
     ];
+  }
+
+  /** Prices the input breakdown already retained by the Images normalizer. */
+  private static function imageInputNumerator(array $rate, array $usage, int $inputTotal): int {
+    $raw = $usage['raw_usage'] ?? [];
+    if (!is_array($raw)) {
+      throw new PriceBookException('invalid_usage', 'image input token details are missing');
+    }
+    $text = self::parseCount($raw['input_tokens_details.text_tokens'] ?? NULL);
+    $image = self::parseCount($raw['input_tokens_details.image_tokens'] ?? NULL);
+    // A reported zero input total needs no modality breakdown.
+    if ($inputTotal === 0 && !isset($raw['input_tokens_details.text_tokens'])
+      && !isset($raw['input_tokens_details.image_tokens'])) {
+      return 0;
+    }
+    if ($text === NULL || $image === NULL || $text > $inputTotal || $image !== $inputTotal - $text) {
+      throw new PriceBookException('invalid_usage', 'image input token details are missing or contradict the input total');
+    }
+    return self::safeAdd(self::costNumerator($rate['per_million_input'], $text),
+      self::costNumerator($rate['per_million_input_image'], $image));
   }
 
   /**

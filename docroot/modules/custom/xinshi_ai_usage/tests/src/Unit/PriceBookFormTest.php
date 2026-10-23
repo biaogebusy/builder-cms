@@ -177,7 +177,7 @@ final class PriceBookFormTest extends TestCase {
     $overview = array_map(fn(array $row): array => [$row[0], (string) $row[1], (string) $row[2]],
       $built['overview']['active']['#rows']);
     $this->assertSame([['app.example', '对话（按 token）', '无（该类调用全部标记为未定价）'],
-      ['app.example', '图片（按张）', 'img-v1']], $overview);
+      ['app.example', '图片（按张或 token）', 'img-v1']], $overview);
     $chatRates = PriceBookForm::seedRates();
     $chatRates['accounts']['xinshi']['models'] = ['real-model' => $chatRates['accounts']['xinshi']['models']['example-model']];
     $state = (new FormState())->setValues(['site_id' => 'app.example', 'book_kind' => self::KIND,
@@ -291,7 +291,7 @@ final class PriceBookFormTest extends TestCase {
     $this->assertSame('old', $state->getUserInput()['rates_json']);
     $this->assertFalse($state->isRebuilding());
 
-    // Image books are out of scope for the prefill.
+    // A chat model cannot be imported into an image book.
     $state = (new FormState())->setValues([
       'book_kind' => PriceBookService::KIND_SUPPLIER_IMAGE, 'prefill_account' => 'xinshi',
       'prefill_models' => 'deepseek/deepseek-chat',
@@ -353,7 +353,7 @@ final class PriceBookFormTest extends TestCase {
     $this->assertStringContainsString('does/not-exist', $warnings[0][1]);
     $this->assertStringContainsString('未找到', $warnings[0][1]);
     $this->assertStringContainsString('text-embedding-3-small', $warnings[1][1]);
-    $this->assertStringContainsString('不是对话模型', $warnings[1][1]);
+    $this->assertStringContainsString('不属于当前价卡类型或价格结构暂不支持', $warnings[1][1]);
     $status = end($this->messages);
     $this->assertSame('addStatus', $status[0]);
     $this->assertStringContainsString('2 个模型', $status[1]);
@@ -438,6 +438,59 @@ final class PriceBookFormTest extends TestCase {
       new Settings($settings + ['hash_salt' => 'isolated-hash-salt']), $this->time);
   }
 
+  public function testImagePrefillCanBeReviewedSavedAndActivated(): void {
+    $this->vault->set('image-cms', 'secret', 'app.example', $this->now);
+    $this->database->insert(UsageProjectionService::ATTEMPT_TABLE)
+      ->fields(['site_id', 'model_id', 'started_at'])
+      ->values(['site_id' => 'app.example', 'model_id' => 'GPT_IMAGE_2', 'started_at' => $this->now])
+      ->values(['site_id' => 'app.example', 'model_id' => 'deepseek/deepseek-chat', 'started_at' => $this->now])
+      ->execute();
+    $form = $this->form();
+    $kind = PriceBookService::KIND_SUPPLIER_IMAGE;
+    $state = (new FormState())->setValues([
+      'site_id' => 'app.example', 'book_kind' => $kind, 'version' => 'image-v1',
+      'currency' => 'CNY', 'prefill_account' => 'xinshi', 'prefill_models' => '',
+      'prefill_search' => 'fixed-image', 'prefill_popular' => [],
+    ]);
+    $state->setUserInput(['rates_json' => 'old', 'currency' => 'CNY']);
+    $built = $form->buildForm([], $state);
+    $prefill = $form->refreshPrefill($built, $state);
+    $this->assertSame(['book_kind' => $kind], $prefill['prefill_search']['#autocomplete_route_parameters']);
+    $this->assertArrayHasKey('gpt-image-2', $prefill['prefill_popular']['#options']);
+    $this->assertArrayNotHasKey('deepseek/deepseek-chat', $prefill['prefill_popular']['#options']);
+
+    $form->prefillFromCatalog($built, $state);
+    $this->assertTrue($state->isRebuilding());
+    $this->assertSame('USD', $state->getValue('currency'));
+    $models = json_decode($state->getValue('rates_json'), TRUE)['accounts']['xinshi']['models'];
+    $this->assertSame(['per_image' => 0, 'per_million_input' => 5_000_000,
+      'per_million_input_image' => 8_000_000, 'per_million_output' => 30_000_000], $models['GPT_IMAGE_2']);
+    $this->assertSame(['per_image' => 40_000], $models['fixed-image']);
+    $this->assertArrayNotHasKey('deepseek/deepseek-chat', $models);
+    $this->assertSame([], $this->priceBook->listVersions('app.example', $kind), 'Prefill never saves a draft.');
+
+    $form->validateForm($built, $state);
+    $this->assertSame([], $state->getErrors());
+    $state->setTriggeringElement(['#name' => 'save_and_activate']);
+    $form->submitForm($built, $state);
+    $active = $this->priceBook->loadActive('app.example', $kind);
+    $this->assertSame('image-v1', $active['version']);
+    $this->assertSame($models, json_decode($active['rates_json'], TRUE)['accounts']['xinshi']['models']);
+  }
+
+  public function testImagePopularChoiceWorksWithoutReportedUsage(): void {
+    $form = $this->form();
+    $state = (new FormState())->setValues([
+      'site_id' => 'cms.example', 'book_kind' => PriceBookService::KIND_SUPPLIER_IMAGE,
+      'prefill_account' => 'xinshi', 'prefill_popular' => ['gpt-image-2' => 'gpt-image-2'],
+    ]);
+    $built = $form->buildForm([], $state);
+    $form->prefillFromCatalog($built, $state);
+    $this->assertSame('gpt-image-2', $state->getUserInput()['prefill_models']);
+    $this->assertSame([], $state->getUserInput()['prefill_popular']);
+    $this->assertSame('addStatus', end($this->messages)[0]);
+  }
+
   /**
    * Fixed LiteLLM-shaped catalog with real price magnitudes.
    */
@@ -452,7 +505,10 @@ final class PriceBookFormTest extends TestCase {
           "anthropic/claude-sonnet-4-5": {"mode": "chat", "input_cost_per_token": 0.000003,
             "output_cost_per_token": 0.000015, "cache_read_input_token_cost": 0.0000003,
             "cache_creation_input_token_cost": 0.00000375},
-          "text-embedding-3-small": {"mode": "embedding", "input_cost_per_token": 0.00000002}
+          "text-embedding-3-small": {"mode": "embedding", "input_cost_per_token": 0.00000002},
+          "gpt-image-2": {"mode": "image_generation", "input_cost_per_token": 0.000005,
+            "input_cost_per_image_token": 0.000008, "output_cost_per_image_token": 0.00003},
+          "fixed-image": {"mode": "image_edit", "output_cost_per_image": 0.04}
         }', TRUE);
       }
 
