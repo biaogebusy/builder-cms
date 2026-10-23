@@ -88,17 +88,32 @@ check($conflict['status'] === 'conflict' && $conflict['session']->summary === 'N
   $fresh()->content->value === "Changed😀\r\n", 'A stale partial patch returns current fields without overwrite');
 check($update_fields(3, $first_patch)['status'] === 'conflict',
   'A future expected version is not accepted even when fields match');
-$review = (object) ['version' => 1, 'report' => NULL,
+$review_report = (object) ['version' => 1, 'type' => 'fullHTML', 'sourceHash' => str_repeat('a', 64),
+  'status' => 'unavailable', 'summary' => 'Vision unavailable', 'issues' => [], 'captures' => [],
+  'limitations' => [], 'execution' => (object) ['version' => 1, 'status' => 'completed',
+    'checks' => [(object) ['id' => 'mobile-interaction-0', 'viewport' => 'mobile',
+      'kind' => 'interaction', 'status' => 'failed', 'code' => 'step-failed', 'count' => 1,
+      'label' => 'Quote calculation', 'step' => 3]]]];
+$review = (object) ['version' => 1, 'report' => $review_report,
   'lastReviewRun' => (object) ['id' => \Drupal::service('uuid')->generate(), 'createdAt' => 1792000000000]];
 $review_result = $update_fields(2, ['ui_review' => $review]);
 check($review_result['session']->run_id === $message->uuid() &&
   $review_result['session']->ui_review->lastReviewRun->id === $review->lastReviewRun->id &&
   $review_result['session']->content->value === "Changed😀\r\n",
   'Review-only changes retain the winning source and original generation identity');
+check($fresh()->ui_review->report->execution->checks[0]->step === 3,
+  'Execution feedback survives field persistence independently of the unavailable visual verdict');
 $ordered_review = (object) ['lastReviewRun' => (object) [
-  'createdAt' => 1792000000000, 'id' => $review->lastReviewRun->id], 'report' => NULL, 'version' => 1];
+  'createdAt' => 1792000000000, 'id' => $review->lastReviewRun->id], 'report' => $review_report, 'version' => 1];
 check($update_fields(2, ['ui_review' => $ordered_review])['status'] === 'unchanged',
   'Retry comparison ignores object key order while preserving JSON types');
+foreach ([['status', 'passed'], ['count', '1'], ['count', 0], ['step', 13],
+  ['kind', 'script'], ['viewport', 'desktop'], ['code', 'invented'], ['browserLog', 'private']] as [$key, $value]) {
+  $bad_review = ChatSessionFormat::decode(ChatSessionFormat::encode($review));
+  $bad_review->report->execution->checks[0]->$key = $value;
+  $expect_error(fn() => $update_fields(3, ['ui_review' => $bad_review]), 422,
+    'Execution feedback rejects contradictory types, codes or copied logs: ' . $key);
+}
 foreach (['edit_version' => 8, 'storage_version' => 1, 'storage_mode' => 'protected_reference',
   'run_id' => $message->uuid(), 'run_created_at_ms' => 1, 'session_role' => 'user',
   'result_reference' => NULL, 'uid' => $users['other']->id(), 'unknown' => TRUE] as $name => $value) {
