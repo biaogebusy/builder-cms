@@ -132,19 +132,24 @@ final class SiteUsageReportService {
   }
 
   /**
-   * Breakdown of usage by a single dimension (top-N by attempts).
+   * Breakdown of usage by a single dimension, ranked before applying the limit.
    *
    * @param string $siteId
    * @param array $filter
    * @param string $dimension
    *   One of self::DIMENSIONS.
    * @param int $limit
-   *   Maximum rows returned (top-N by attempts desc). Default 50, max 200.
+   *   Maximum rows returned. Default 50, max 200.
+   * @param string $sort
+   *   Descending attempts or reported input plus output tokens.
    *
    * @return array{filter:array,rows:list<array>,row_count:int,truncated:bool,operations_exclusive:bool,limit:int}
    */
-  public function breakdown(string $siteId, array $filter, string $dimension, int $limit = 50): array {
+  public function breakdown(string $siteId, array $filter, string $dimension, int $limit = 50, string $sort = 'attempts'): array {
     $dimExpr = $this->dimensionExpression($dimension);
+    if (!in_array($sort, ['attempts', 'tokens'], TRUE)) {
+      throw new UsageReportException('invalid_request', 'sort must be attempts or tokens');
+    }
     // UNLIMITED is for exports and the consistency check, which need every row.
     $unlimited = $limit === self::UNLIMITED;
     $limit = $unlimited ? self::UNLIMITED : max(1, min($limit, 200));
@@ -159,7 +164,11 @@ final class SiteUsageReportService {
     $this->addCountExpressions($query);
     $this->addSumExpressions($query);
     $query->groupBy('dim');
-    $query->orderBy('attempts', 'DESC');
+    if ($sort === 'tokens') {
+      // Cache and reasoning counters are subsets of these totals, not additional usage.
+      $query->addExpression("SUM(CASE WHEN a.usage_quality = 'reported' THEN COALESCE(a.input_tokens_total, 0) + COALESCE(a.output_tokens_total, 0) ELSE 0 END)", 'total_tokens');
+    }
+    $query->orderBy($sort === 'tokens' ? 'total_tokens' : 'attempts', 'DESC');
     $query->orderBy('dim', 'ASC');
     if (!$unlimited) {
       // One row beyond the limit tells whether the list is truncated.
@@ -176,7 +185,7 @@ final class SiteUsageReportService {
     $rowCount = (int) $countQuery->execute()->fetchField();
 
     return [
-      'filter' => $this->describeFilter($filter) + ['dimension' => $dimension],
+      'filter' => $this->describeFilter($filter) + ['dimension' => $dimension, 'sort' => $sort],
       'rows' => array_map(fn(array $row): array => $this->shapeDimensionRow($row, $dimension), $rows),
       'row_count' => $rowCount,
       'truncated' => $truncated,
