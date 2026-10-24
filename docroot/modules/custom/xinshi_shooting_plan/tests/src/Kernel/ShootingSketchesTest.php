@@ -603,6 +603,36 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame(0, $this->rows());
   }
 
+  public function testRegenerationUpdatesOnePlanAndRetainsRecoveryMetadata(): void {
+    $before = $this->plan->get('field_shooting_document')->value;
+    $changed = $this->doc;
+    $changed['previousGeneration'] = array_intersect_key($this->doc,
+      array_flip(['taskId', 'runId', 'request', 'status', 'visuals']));
+    $changed['taskId'] = \Drupal::service('uuid')->generate();
+    unset($changed['runId']);
+    $changed['request']['topic'] = 'Updated creative brief';
+    $changed['status'] = 'generating';
+    $saved = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+    $this->assertTrue($saved['updated']);
+    $this->assertSame($changed, json_decode($saved['content'], TRUE));
+    $this->assertSame('Updated creative brief', Node::load($this->plan->id())->getTitle());
+    $this->expectHttp(fn() => $this->sketches->submit($this->plan->uuid(), [
+      'expectedHash' => hash('sha256', $saved['content']), 'model' => 'fixture',
+    ]), 422);
+    $restored = $this->documents->update($this->plan->uuid(), hash('sha256', $saved['content']), $before);
+    $this->assertTrue($restored['updated']);
+    $this->assertSame($before, $restored['content']);
+    foreach (['id', 'previousGeneration', 'credentials'] as $forbidden) {
+      $invalid = $changed;
+      $invalid['previousGeneration'][$forbidden] = 'unexpected';
+      $this->expectHttp(fn() => $this->documents->update($this->plan->uuid(),
+        hash('sha256', $before), json_encode($invalid)), 422);
+    }
+    $changed['previousGeneration']['runId'] = 'invalid';
+    $this->expectHttp(fn() => $this->documents->update($this->plan->uuid(),
+      hash('sha256', $before), json_encode($changed)), 422);
+  }
+
   public function testContentUpdateRequiresOwnerAndCurrentFieldAccess(): void {
     $content = $this->plan->get('field_shooting_document')->value;
     foreach (['field_shooting_document:view', 'field_shooting_document:edit'] as $denial) {

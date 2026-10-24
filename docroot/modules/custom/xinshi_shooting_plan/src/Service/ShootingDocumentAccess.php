@@ -109,7 +109,7 @@ final class ShootingDocumentAccess {
     $doc = json_decode($content, TRUE);
     if (!is_array($doc) || array_diff(array_keys($doc), ['kind', 'version', 'id', 'previousId',
       'taskId', 'runId', 'request', 'sketchModel', 'sketchPlatform', 'sketchSize',
-      'textModel', 'textPlatform', 'original', 'draft', 'status', 'visuals']) ||
+      'textModel', 'textPlatform', 'original', 'draft', 'status', 'visuals', 'previousGeneration']) ||
       ($doc['kind'] ?? NULL) !== 'xinshi-shooting-plan' || ($doc['version'] ?? NULL) !== 1 ||
       ($doc['id'] ?? NULL) !== $plan_uuid || !Uuid::isValid($plan_uuid) ||
       !is_string($doc['taskId'] ?? NULL) || !Uuid::isValid($doc['taskId']) ||
@@ -141,6 +141,20 @@ final class ShootingDocumentAccess {
     if ($doc['status'] === 'ready' && (!isset($doc['runId']) ||
       !is_array($doc['original'] ?? NULL) || !is_array($doc['draft'] ?? NULL))) {
       throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+    if (array_key_exists('previousGeneration', $doc)) {
+      $previous = $doc['previousGeneration'];
+      if (!is_array($previous) || array_diff(array_keys($previous), ['taskId', 'runId',
+        'request', 'visuals', 'textModel', 'textPlatform', 'sketchModel', 'sketchPlatform',
+        'sketchSize', 'status']) || !in_array($doc['status'], ['draft', 'generating'], TRUE) ||
+        ($previous['status'] ?? NULL) !== 'ready' || !isset($previous['taskId'],
+        $previous['runId'], $previous['request'])) {
+        throw new UnprocessableEntityHttpException('shooting_document_invalid');
+      }
+      // Validate recovery metadata with the retained result, without allowing nested snapshots.
+      $restored = array_replace($doc, $previous);
+      unset($restored['previousGeneration']);
+      self::document(json_encode($restored, JSON_THROW_ON_ERROR), $plan_uuid);
     }
     if (array_key_exists('visuals', $doc)) {
       ShootingVisuals::validate($doc['visuals']);
