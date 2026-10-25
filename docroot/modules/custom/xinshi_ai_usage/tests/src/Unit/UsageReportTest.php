@@ -30,6 +30,8 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class UsageReportTest extends TestCase {
 
+  use CurrencyDisplayTestTrait;
+
   private const SITE = 'site-a';
   private const ME = '7';
   private const OTHER = '8';
@@ -469,7 +471,7 @@ final class UsageReportTest extends TestCase {
     $time = $this->createMock(TimeInterface::class);
     $time->method('getCurrentMicroTime')->willReturnCallback(fn(): float => $this->now / 1000);
     return new UsageReportController($this->reports, $account, new Settings(['hash_salt' => 'isolated-hash-salt']),
-      $vault, $time);
+      $vault, $time, $this->currencyDisplay());
   }
 
 }

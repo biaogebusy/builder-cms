@@ -1,0 +1,7 @@
+xinshi_ai_usage.currency:
+  type: config_object
+  label: 'AI currency display'
+  mapping:
+    currency:
+      type: string
+      label: 'Default display currency'

@@ -9,3 +9,9 @@ xinshi_ai_usage.price_book.tab:
   route_name: xinshi_ai_usage.price_book
   base_route: xinshi_ai.settings
   weight: 30
+
+xinshi_ai_usage.currency_display.tab:
+  title: '显示币种与汇率'
+  route_name: xinshi_ai_usage.currency_display
+  base_route: xinshi_ai.settings
+  weight: 31

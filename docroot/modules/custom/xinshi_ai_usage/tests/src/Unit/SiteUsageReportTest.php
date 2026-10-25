@@ -39,6 +39,8 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class SiteUsageReportTest extends TestCase {
 
+  use CurrencyDisplayTestTrait;
+
   private const SITE = 'site-a';
   private const ME = '7';
   private const OTHER = '8';
@@ -925,7 +927,7 @@ final class SiteUsageReportTest extends TestCase {
     $entities->method('getStorage')->with('user')->willReturn($storage);
     return new SiteUsageReportController($this->siteReports, $account,
       new Settings(['hash_salt' => 'site-report-salt']), $vault, $time, $this->qualityReports,
-      new UsageUserLabelService($entities));
+      new UsageUserLabelService($entities), $this->currencyDisplay());
   }
 
 }

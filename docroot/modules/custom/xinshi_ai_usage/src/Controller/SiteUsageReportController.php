@@ -8,6 +8,7 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\xinshi_ai_usage\Service\CurrencyDisplay;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
 use Drupal\xinshi_ai_usage\Service\RegisteredSites;
 use Drupal\xinshi_ai_usage\Service\SiteUsageReportService;
@@ -42,6 +43,7 @@ final class SiteUsageReportController extends ControllerBase {
     private readonly TimeInterface $time,
     private readonly UsageQualityReportService $qualityReports,
     private readonly UsageUserLabelService $userLabels,
+    private readonly CurrencyDisplay $currencyDisplay,
   ) {}
 
   /**
@@ -56,6 +58,7 @@ final class SiteUsageReportController extends ControllerBase {
       $container->get('datetime.time'),
       $container->get('xinshi_ai_usage.quality_report'),
       $container->get('xinshi_ai_usage.user_labels'),
+      $container->get('xinshi_ai_usage.currency_display'),
     );
   }
 
@@ -229,7 +232,8 @@ final class SiteUsageReportController extends ControllerBase {
       return $this->failure($status, $e->reportCode, $e->getMessage(), $requestId);
     }
     return $this->respond($this->userLabels->enrich($body, $this->account)
-      + ['request_id' => $requestId], 200);
+      + ['request_id' => $requestId,
+        'currency_display' => $this->currencyDisplay->snapshot()], 200);
   }
 
   private function failure(int $status, string $code, string $message, string $requestId): JsonResponse {
