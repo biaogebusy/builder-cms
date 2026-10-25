@@ -603,6 +603,63 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame(0, $this->rows());
   }
 
+  public function testSharingOmitsReviewTaskAndWorkflowMetadata(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $this->doc['workflow'] = 'plan';
+    $this->doc['reviewTask'] = [
+      'taskId' => $this->doc['taskId'], 'runId' => $this->doc['runId'],
+      'request' => ['topic' => 'Private review brief', 'duration' => 60, 'platform' => 'douyin',
+        'format' => 'comparison', 'tone' => 'natural', 'style' => 'pencil', 'locale' => 'zh-hans'],
+    ];
+    $this->saveDoc();
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $projection = $sharing->read($token);
+    $this->assertArrayNotHasKey('workflow', $projection);
+    $this->assertArrayNotHasKey('reviewTask', $projection);
+    $this->assertStringNotContainsString('Private review brief', json_encode($projection));
+    $this->assertStringNotContainsString($this->doc['reviewTask']['runId'], json_encode($projection));
+  }
+
+  public function testReviewedModeAndFrozenReplayLocatorUseTheDocumentCas(): void {
+    $before = $this->plan->get('field_shooting_document')->value;
+    $changed = $this->doc;
+    $changed['workflow'] = 'plan';
+    $changed['reviewTask'] = [
+      'taskId' => $changed['taskId'], 'runId' => $changed['runId'],
+      'request' => ['topic' => 'Original topic', 'duration' => 60, 'platform' => 'douyin',
+        'format' => 'comparison', 'tone' => 'natural', 'style' => 'pencil', 'locale' => 'zh-hans'],
+    ];
+    $saved = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+    $this->assertTrue($saved['updated']);
+    $this->assertSame($changed, $this->documents->read($this->plan->uuid()));
+    $this->assertFalse($this->documents->update($this->plan->uuid(), hash('sha256', $before), $before)['updated']);
+    $changed['previousGeneration'] = array_intersect_key($changed,
+      array_flip(['taskId', 'runId', 'request', 'status', 'workflow', 'reviewTask']));
+    $changed['status'] = 'generating';
+    $changed['taskId'] = \Drupal::service('uuid')->generate();
+    unset($changed['runId'], $changed['reviewTask']);
+    $this->assertSame($changed, ShootingDocumentAccess::document(json_encode($changed), $this->plan->uuid()));
+    foreach (['page-design', NULL, 1] as $mode) {
+      $invalid = $changed;
+      $invalid['workflow'] = $mode;
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+      $invalid = $changed;
+      $invalid['previousGeneration']['workflow'] = $mode;
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    }
+    foreach (['runId', 'taskId', 'request', 'credentials'] as $field) {
+      $invalid = $changed;
+      $invalid['reviewTask'] = $changed['previousGeneration']['reviewTask'];
+      $invalid['reviewTask'][$field] = 'invalid';
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    }
+    $invalid = $changed;
+    $invalid['reviewTask'] = $changed['previousGeneration']['reviewTask'];
+    $invalid['reviewTask']['request']['apiKey'] = 'forbidden';
+    $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    $this->assertSame(0, $this->rows());
+  }
+
   public function testRegenerationUpdatesOnePlanAndRetainsRecoveryMetadata(): void {
     $before = $this->plan->get('field_shooting_document')->value;
     $changed = $this->doc;

@@ -108,7 +108,7 @@ final class ShootingDocumentAccess {
     }
     $doc = json_decode($content, TRUE);
     if (!is_array($doc) || array_diff(array_keys($doc), ['kind', 'version', 'id', 'previousId',
-      'taskId', 'runId', 'request', 'sketchModel', 'sketchPlatform', 'sketchSize',
+      'taskId', 'runId', 'request', 'workflow', 'reviewTask', 'sketchModel', 'sketchPlatform', 'sketchSize',
       'textModel', 'textPlatform', 'original', 'draft', 'status', 'visuals', 'previousGeneration']) ||
       ($doc['kind'] ?? NULL) !== 'xinshi-shooting-plan' || ($doc['version'] ?? NULL) !== 1 ||
       ($doc['id'] ?? NULL) !== $plan_uuid || !Uuid::isValid($plan_uuid) ||
@@ -118,6 +118,29 @@ final class ShootingDocumentAccess {
       !is_string($doc['request']['style'] ?? NULL) ||
       !isset(ShootingVisuals::STYLES[$doc['request']['style']])) {
       throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+    if (array_key_exists('workflow', $doc) && !in_array($doc['workflow'], ['chat', 'plan'], TRUE)) {
+      throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+    if (array_key_exists('reviewTask', $doc)) {
+      $review = $doc['reviewTask'];
+      if (!is_array($review) || count($review) !== 3 ||
+        array_diff(array_keys($review), ['taskId', 'runId', 'request']) ||
+        !is_string($review['taskId'] ?? NULL) || !Uuid::isValid($review['taskId']) ||
+        !is_string($review['runId'] ?? NULL) || !Uuid::isValid($review['runId']) ||
+        !is_array($review['request'] ?? NULL) || !self::text($review['request']['topic'] ?? NULL) ||
+        !is_string($review['request']['style'] ?? NULL) ||
+        !isset(ShootingVisuals::STYLES[$review['request']['style']]) ||
+        count($review['request']) !== 7 ||
+        array_diff(array_keys($review['request']), ['topic', 'duration', 'platform', 'format', 'tone', 'style', 'locale']) ||
+        mb_strlen($review['request']['topic']) > 1000 ||
+        !in_array($review['request']['duration'] ?? NULL, [30, 60, 90, 180], TRUE) ||
+        !in_array($review['request']['platform'] ?? NULL, ['douyin', 'rednote', 'wechat', 'bilibili'], TRUE) ||
+        !in_array($review['request']['format'] ?? NULL, ['comparison', 'talking', 'skit', 'tutorial', 'vlog'], TRUE) ||
+        !in_array($review['request']['tone'] ?? NULL, ['professional', 'humorous', 'natural', 'warm', 'energetic'], TRUE) ||
+        !in_array($review['request']['locale'] ?? NULL, ['zh-hans', 'en'], TRUE)) {
+        throw new UnprocessableEntityHttpException('shooting_document_invalid');
+      }
     }
     foreach (['runId', 'previousId'] as $key) {
       if (array_key_exists($key, $doc) && (!is_string($doc[$key]) || !Uuid::isValid($doc[$key]))) {
@@ -145,7 +168,7 @@ final class ShootingDocumentAccess {
     if (array_key_exists('previousGeneration', $doc)) {
       $previous = $doc['previousGeneration'];
       if (!is_array($previous) || array_diff(array_keys($previous), ['taskId', 'runId',
-        'request', 'visuals', 'textModel', 'textPlatform', 'sketchModel', 'sketchPlatform',
+        'request', 'workflow', 'reviewTask', 'visuals', 'textModel', 'textPlatform', 'sketchModel', 'sketchPlatform',
         'sketchSize', 'status']) || !in_array($doc['status'], ['draft', 'generating'], TRUE) ||
         ($previous['status'] ?? NULL) !== 'ready' || !isset($previous['taskId'],
         $previous['runId'], $previous['request'])) {
