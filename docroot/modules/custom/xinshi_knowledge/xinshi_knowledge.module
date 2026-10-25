@@ -8,6 +8,7 @@ declare(strict_types=1);
  */
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\file\FileInterface;
@@ -67,7 +68,16 @@ function xinshi_knowledge_entity_access(EntityInterface $entity, string $operati
   if (!$account->isAuthenticated() || !$account->hasPermission('view xinshi knowledge')) {
     return AccessResult::forbidden()->cachePerPermissions()->cachePerUser();
   }
-  if (!$knowledgeMedia || $account->hasPermission('administer media') ||
+  if ($knowledgeNode) {
+    // Synchronized documents retain their source policy, including owner revocation.
+    if (\Drupal::hasService('xinshi_knowledge_sync.access') &&
+        \Drupal::service('xinshi_knowledge_sync.access')->document((int) $entity->id())) {
+      return AccessResult::neutral()->setCacheMaxAge(0);
+    }
+    return AccessResult::forbiddenIf($entity->getOwnerId() != $account->id())
+      ->cachePerPermissions()->cachePerUser()->addCacheableDependency($entity);
+  }
+  if ($account->hasPermission('bypass node access') ||
       ($entity->getOwnerId() == $account->id() && $account->hasPermission('create ' . Knowledge::MEDIA . ' media'))) {
     return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
   }
@@ -86,6 +96,31 @@ function xinshi_knowledge_entity_access(EntityInterface $entity, string $operati
     }
   }
   return AccessResult::forbidden()->setCacheMaxAge(0);
+}
+
+/** Implements hook_query_node_access_alter(). */
+function xinshi_knowledge_query_node_access_alter(AlterableInterface $query): void {
+  $account = $query->getMetaData('account') ?? \Drupal::currentUser();
+  if (($query->getMetaData('op') ?? 'view') !== 'view' || $account->hasPermission('bypass node access')) {
+    return;
+  }
+  foreach ($query->getTables() as $alias => $table) {
+    if (!in_array($table['table'], ['node', 'node_field_data', 'node_revision', 'node_field_revision'], TRUE)) {
+      continue;
+    }
+    // Filter before pagination; other content types retain their existing access rules.
+    $private = \Drupal::database()->select('node_field_data', 'knowledge_private')
+      ->fields('knowledge_private', ['nid'])->condition('type', Knowledge::NODE)
+      ->condition('uid', $account->id(), '<>');
+    if (\Drupal::hasService('xinshi_knowledge_sync.access')) {
+      // The sync module applies its live source-policy filter independently.
+      $shared = \Drupal::database()->select('xinshi_knowledge_sync_document', 'knowledge_shared')
+        ->fields('knowledge_shared', ['nid']);
+      $private->condition('nid', $shared, 'NOT IN');
+    }
+    $query->condition($alias . '.nid', $private, 'NOT IN');
+    break;
+  }
 }
 
 /** Implements hook_file_download(). */
