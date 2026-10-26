@@ -41,6 +41,8 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class UsageQualityReportTest extends TestCase {
 
+  use CurrencyDisplayTestTrait;
+
   private const SITE = 'site-a';
   private const ME = '7';
   /** 2023-11-14T22:13:20Z. */
@@ -615,7 +617,7 @@ final class UsageQualityReportTest extends TestCase {
     $entities->method('getStorage')->with('user')->willReturn($storage);
     return new SiteUsageReportController($this->siteReports, $account,
       new Settings(['hash_salt' => 'quality-report-salt']), $vault, $time, $this->quality,
-      new UsageUserLabelService($entities));
+      new UsageUserLabelService($entities), $this->currencyDisplay());
   }
 
 }

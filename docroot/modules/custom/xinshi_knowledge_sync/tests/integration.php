@@ -117,6 +117,10 @@ foreach ([$reader, $operator] as $account) {
   $expected = $account === $operator;
   check(Node::load($privateId)->access('view', $account) === $expected, 'Private node access mismatch.');
   check(Node::load($publicId)->access('view', $account), 'Public help denied to reader.');
+  $catalog = Drupal::service('xinshi_knowledge.catalog');
+  check($catalog->detail(Node::load($publicId)->uuid(), $account)['shared'], 'Shared catalog label missing.');
+  check(($catalog->detail($privateUuid, $account) !== NULL) === $expected, 'Catalog bypassed source policy.');
+  check($catalog->summary($account)['shared'] === ($expected ? 4 : 3), 'Shared summary bypassed source policy.');
   $ids = Drupal::entityQuery('node')->accessCheck(TRUE)->condition('type', 'xinshi_knowledge')->execute();
   check(in_array($privateId, array_map('intval', $ids), TRUE) === $expected, 'Entity query exposed private node.');
   $hits = $documents->search('Quasarengine', 'en', ['xinshi_knowledge'], 0, $account)['matches'];

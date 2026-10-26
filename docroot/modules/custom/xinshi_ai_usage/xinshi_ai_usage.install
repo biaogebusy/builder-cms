@@ -323,6 +323,14 @@ function xinshi_ai_usage_schema(): array {
   return $schema;
 }
 
+/** Add the display preference without changing an existing site's choice. */
+function xinshi_ai_usage_update_10009(): void {
+  $config = \Drupal::configFactory()->getEditable('xinshi_ai_usage.currency');
+  if ($config->get('currency') === NULL) {
+    $config->set('currency', 'CNY')->save();
+  }
+}
+
 /**
  * Add the export job table (UB3.4).
  */

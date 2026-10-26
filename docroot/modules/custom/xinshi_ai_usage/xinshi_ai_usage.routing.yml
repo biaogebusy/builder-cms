@@ -24,6 +24,16 @@ xinshi_ai_usage.settings:
     _admin_route: TRUE
 
 # Purchasing price book management.
+xinshi_ai_usage.currency_display:
+  path: '/admin/config/xinshi/ai/usage/currency'
+  defaults:
+    _form: '\Drupal\xinshi_ai_usage\Form\CurrencyDisplayForm'
+    _title: '显示币种与汇率'
+  requirements:
+    _permission: 'administer xinshi ai pricing'
+  options:
+    _admin_route: TRUE
+
 xinshi_ai_usage.price_book:
   path: '/admin/config/xinshi/ai/usage/pricing'
   defaults:

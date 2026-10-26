@@ -22,6 +22,9 @@ try {
   const list = await context.get('/api/v3/knowledge');
   check(list.ok(), 'Authenticated catalog failed: ' + await list.text());
   privateResponse(list);
+  const summary = await context.get('/api/v3/knowledge/summary');
+  check(summary.ok() && (await summary.json()).entries === 23, 'HTTP summary has wrong ownership scope');
+  privateResponse(summary);
   check((await list.json()).items.length === 20, 'HTTP pagination');
   const bad = await context.get('/api/v3/knowledge?before[]=1');
   check(bad.status() === 400, 'Malformed cursor accepted');
@@ -57,6 +60,22 @@ try {
   const status = await context.get('/api/v3/knowledge/' + node.id);
   const row = await status.json();
   check(row.owner === 'catalog-editor' && row.attachments[0].status === 'pending' && row.attachments[0].name === '产品资料.txt', 'Upload owner or queued state incorrect');
+  const peer = await request.newContext({ baseURL });
+  try {
+    const login = await peer.post('/user/login?_format=json', {
+      data: { name: 'catalog-peer', pass: 'catalog-test-password' },
+    });
+    check(login.ok(), 'Peer login failed');
+    const listed = await peer.get('/api/v3/knowledge');
+    check(!(await listed.json()).items.some(item => item.id === node.id), 'Peer catalog leaked upload');
+    for (const path of ['/api/v3/knowledge/' + node.id,
+      '/api/v1/node/xinshi_knowledge/' + node.id,
+      '/api/v1/media/xinshi_knowledge_document/' + media.id,
+      '/system/files/xinshi-knowledge/catalog.txt']) {
+      const denied = await peer.get(path);
+      check([403, 404].includes(denied.status()), 'Peer accessed private resource: ' + path);
+    }
+  } finally { await peer.dispose(); }
   const other = await request.newContext({ baseURL });
   try {
     login = await other.post('/user/login?_format=json', { data: { name: 'catalog-outsider', pass: 'catalog-test-password' } });

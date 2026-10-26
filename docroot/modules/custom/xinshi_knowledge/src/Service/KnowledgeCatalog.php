@@ -26,6 +26,7 @@ final class KnowledgeCatalog {
   public function listing(AccountInterface $account, int $before = 0): array {
     $storage = $this->entities->getStorage('node');
     $query = $storage->getQuery()->accessCheck(TRUE)->condition('type', Knowledge::NODE)
+      ->addMetaData('account', $account)
       ->sort('nid', 'DESC')->range(0, 21);
     if ($before > 0) {
       $query->condition('nid', $before, '<');
@@ -39,6 +40,33 @@ final class KnowledgeCatalog {
       }
     }
     return ['items' => $items, 'next' => count($ids) > 20 ? (int) end($page) : NULL];
+  }
+
+  /** Count the complete accessible catalog with the same entity and field checks as its rows. */
+  public function summary(AccountInterface $account): array {
+    $summary = ['entries' => 0, 'personal' => 0, 'shared' => 0, 'files' => 0,
+      'pending' => 0, 'failed' => 0, 'ready' => 0,
+      'scope' => $account->hasPermission('bypass node access') ? 'all' : 'accessible'];
+    $seen = [];
+    $before = 0;
+    do {
+      // Reuse bounded catalog pages so counts cannot bypass a row or attachment denial.
+      $page = $this->listing($account, $before);
+      foreach ($page['items'] as $entry) {
+        $summary['entries']++;
+        $summary[$entry['shared'] ? 'shared' : 'personal']++;
+        foreach ($entry['attachments'] as $file) {
+          if (isset($seen[$file['id']])) {
+            continue;
+          }
+          $seen[$file['id']] = TRUE;
+          $summary['files']++;
+          $summary[in_array($file['status'], ['pending', 'processing'], TRUE) ? 'pending' : $file['status']]++;
+        }
+      }
+      $before = $page['next'];
+    } while ($before !== NULL);
+    return $summary;
   }
 
   /** Resolve only default revisions; a UUID is never an access grant. */
@@ -102,6 +130,9 @@ final class KnowledgeCatalog {
     }
     return [
       'id' => $node->uuid(), 'title' => $node->label(), 'owner' => $owner,
+      'shared' => $this->modules->moduleExists('xinshi_knowledge_sync') && (bool) $this->database
+        ->select('xinshi_knowledge_sync_document', 'shared')->fields('shared', ['nid'])
+        ->condition('nid', $node->id())->execute()->fetchField(),
       'created' => $node->get('created')->access('view', $account)
         ? gmdate('c', (int) $node->getCreatedTime()) : NULL,
       'attachments' => $attachments, 'restricted' => $restricted,

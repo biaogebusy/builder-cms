@@ -48,7 +48,7 @@ final class KnowledgeWorkflowTest extends TestCase {
       'status' => 1, Knowledge::FILE => ['target_id' => $file->id()]]);
     $media->save();
     $node = Node::create(['type' => Knowledge::NODE, 'title' => 'Equipment reference',
-      'uid' => 1, 'status' => 1, 'langcode' => 'en', 'body' => ['value' => 'Read the attachment.'],
+      'uid' => $reader->id(), 'status' => 1, 'langcode' => 'en', 'body' => ['value' => 'Read the attachment.'],
       Knowledge::ATTACHMENTS => [['target_id' => $media->id()]]]);
     $node->save();
     $documents = \Drupal::service('xinshi_knowledge.documents');
@@ -282,7 +282,7 @@ final class KnowledgeWorkflowTest extends TestCase {
     $media = Media::create(['bundle' => Knowledge::MEDIA, 'name' => $name, 'uid' => 1,
       'status' => 1, Knowledge::FILE => ['target_id' => $file->id()]]);
     $media->save();
-    $node = Node::create(['type' => Knowledge::NODE, 'title' => $name, 'uid' => 1,
+    $node = Node::create(['type' => Knowledge::NODE, 'title' => $name, 'uid' => $reader->id(),
       'status' => 1, 'langcode' => 'en', 'body' => ['value' => 'Reference notes.'],
       Knowledge::ATTACHMENTS => [['target_id' => $media->id()]]]);
     $node->save();

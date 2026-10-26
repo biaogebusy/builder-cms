@@ -8,6 +8,7 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\xinshi_ai_usage\Service\CurrencyDisplay;
 use Drupal\xinshi_ai_usage\Contract\PriceCatalogFetcher;
 use Drupal\xinshi_ai_usage\Contract\UsageEventValidator;
 use Drupal\xinshi_ai_usage\Service\LitellmRateConverter;
@@ -59,6 +60,24 @@ final class PriceBookForm extends FormBase {
     'gemini-2.5-pro' => 'Gemini 2.5 Pro（国外）',
   ];
 
+  /** Formats integer micros without floating-point conversion. */
+  private static function formatAmount(string $micros): string {
+    $digits = str_pad($micros, 7, '0', STR_PAD_LEFT);
+    return substr($digits, 0, -6) . '.' . str_pad(rtrim(substr($digits, -6), '0'), 2, '0');
+  }
+
+  private function rateLabel(string $unit): string {
+    return (string) match ($unit) {
+      'per_image' => $this->t('每张图片'),
+      'per_million_input' => $this->t('每百万输入 Token'),
+      'per_million_input_image' => $this->t('每百万图片输入 Token'),
+      'per_million_output' => $this->t('每百万输出 Token'),
+      'per_million_cache_read' => $this->t('每百万缓存读取 Token'),
+      'per_million_cache_write' => $this->t('每百万缓存写入 Token'),
+      default => $unit,
+    };
+  }
+
   /** Image model aliases with token prices supported by the image book. */
   private const POPULAR_IMAGE_MODELS = [
     'gpt-image-2' => 'GPT Image 2',
@@ -77,6 +96,7 @@ final class PriceBookForm extends FormBase {
     RequestStack $requestStack,
     protected Settings $settings,
     protected TimeInterface $time,
+    protected CurrencyDisplay $currencyDisplay,
   ) {
     $this->requestStack = $requestStack;
   }
@@ -93,6 +113,7 @@ final class PriceBookForm extends FormBase {
       $container->get('request_stack'),
       $container->get('settings'),
       $container->get('datetime.time'),
+      $container->get('xinshi_ai_usage.currency_display'),
     );
   }
 
@@ -122,9 +143,29 @@ final class PriceBookForm extends FormBase {
       ];
     }
     $rows = [];
+    $referenceRows = [];
+    $display = $this->currencyDisplay->snapshot();
     foreach ($siteIds as $siteId) {
       foreach (PriceBookService::KINDS as $kind) {
         $active = $this->priceBook->loadActive($siteId, $kind);
+        if ($active !== NULL) {
+          $rates = $this->priceBook->parseRates($active['rates_json'], $kind);
+          foreach ($rates['accounts'] as $account => $accountRates) {
+            foreach ($accountRates['models'] as $model => $modelRates) {
+              foreach ($modelRates as $unit => $micros) {
+                if ($micros === NULL) {
+                  continue;
+                }
+                $amount = CurrencyDisplay::convertMicros((string) $micros, $active['currency'], $display);
+                $referenceRows[] = [$siteId, $account, $model, $this->rateLabel($unit),
+                  self::formatAmount((string) $micros) . ' ' . $active['currency'],
+                  $amount === NULL ? $this->t('缺少汇率，保留原币种')
+                    : ($active['currency'] === $display['currency'] ? '' : '≈ ')
+                      . self::formatAmount($amount) . ' ' . $display['currency']];
+              }
+            }
+          }
+        }
         $rows[] = [
           $siteId,
           $this->kindLabel($kind),
@@ -146,6 +187,23 @@ final class PriceBookForm extends FormBase {
       '#title' => $this->t('版本列表'),
       '#open' => TRUE,
       '#description' => $this->t('草稿可在此设为生效；切换从激活时刻起生效并关闭当前版本，不回溯已发生的调用。'),
+    ];
+    $form['overview']['reference'] = [
+      '#type' => 'details', '#title' => $this->t('生效价格参考（@currency）', [
+        '@currency' => $display['currency'],
+      ]),
+      '#description' => $this->t('ECB 汇率日期：@date。按后台显示币种换算，仅供参考。原币种和费率 JSON 仍用于计价；预填仍保留目录的 USD。', [
+        '@date' => $display['rate_date'] ?? $this->t('尚未获取'),
+      ]),
+    ];
+    if ($display['stale']) {
+      $form['overview']['reference']['stale'] = ['#markup' => '<p>'
+        . $this->t('汇率更新延迟，当前使用上次成功获取的数据。') . '</p>'];
+    }
+    $form['overview']['reference']['table'] = [
+      '#type' => 'table', '#header' => [$this->t('站点标识'), $this->t('账户'),
+        $this->t('模型'), $this->t('计价项'), $this->t('原始单价'), $this->t('参考单价')],
+      '#rows' => $referenceRows, '#empty' => $this->t('暂无生效价格。'),
     ];
     $form['versions']['table'] = [
       '#type' => 'table',
@@ -218,9 +276,9 @@ final class PriceBookForm extends FormBase {
     ];
     $form['create']['currency'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('币种'),
+      '#title' => $this->t('价卡原币种'),
       '#description' => $this->t('ISO 4217 代码，例如 CNY、USD。金额单位为该币种的 micros（1 单位 = 1,000,000 micros）。'),
-      '#default_value' => 'CNY',
+      '#default_value' => $display['currency'],
       '#maxlength' => 8,
       '#required' => TRUE,
     ];

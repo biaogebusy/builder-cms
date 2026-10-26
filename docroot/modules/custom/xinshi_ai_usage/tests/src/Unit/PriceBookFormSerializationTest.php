@@ -38,6 +38,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 final class PriceBookFormSerializationTest extends TestCase {
 
+  use CurrencyDisplayTestTrait;
+
   protected function setUp(): void {
     parent::setUp();
     Database::addConnectionInfo('price_form_serialization_test', 'default', [
@@ -56,6 +58,7 @@ final class PriceBookFormSerializationTest extends TestCase {
       new KeyValueMemoryFactory(),
       new PrivateKey(new State(new KeyValueMemoryFactory(), new MemoryCache($time), new NullLockBackend()))));
     $container->set('xinshi_ai_usage.reported_models', new ReportedModels($database));
+    $container->set('xinshi_ai_usage.currency_display', $this->currencyDisplay());
     $container->set('settings', $settings);
     $container->set('datetime.time', $time);
     $container->set('request_stack', $requests);

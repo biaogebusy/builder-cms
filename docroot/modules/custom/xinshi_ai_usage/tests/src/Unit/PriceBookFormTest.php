@@ -18,6 +18,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\xinshi_ai_usage\Contract\PriceCatalogFetcher;
 use Drupal\xinshi_ai_usage\Form\PriceBookForm;
+use Drupal\xinshi_ai_usage\Service\CurrencyDisplay;
 use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
 use Drupal\xinshi_ai_usage\Service\ReportedModels;
@@ -31,6 +32,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * refuses the unedited example rates, and can activate saved drafts.
  */
 final class PriceBookFormTest extends TestCase {
+
+  use CurrencyDisplayTestTrait;
 
   private const KIND = PriceBookService::KIND_SUPPLIER_CHAT;
 
@@ -430,12 +433,31 @@ final class PriceBookFormTest extends TestCase {
     $this->assertFalse($state->isRebuilding());
   }
 
-  private function form(array $settings = [], ?PriceCatalogFetcher $catalog = NULL): PriceBookForm {
+  public function testReferencePreviewConvertsPricesWithoutChangingTheActiveBook(): void {
+    $this->vault->set('chat-node', 'secret', 'app.example', $this->now);
+    $book = $this->priceBook->createDraft('app.example', PriceBookService::KIND_SUPPLIER_IMAGE,
+      'usd-v1', 'USD', '{"accounts":{"xinshi":{"models":{"m":{"per_image":20000}}}}}',
+      $this->now * 1000);
+    $this->priceBook->activate($book, 'app.example', PriceBookService::KIND_SUPPLIER_IMAGE);
+    $before = $this->priceBook->loadActive('app.example', PriceBookService::KIND_SUPPLIER_IMAGE);
+    $display = $this->currencyDisplay('CNY', ['rate_date' => '2026-10-23',
+      'rates' => ['EUR' => '1', 'USD' => '1.2', 'CNY' => '8.4'], 'fetched_at' => $this->now]);
+    $form = $this->form([], NULL, $display)->buildForm([], new FormState());
+    $row = $form['overview']['reference']['table']['#rows'][0];
+    $this->assertSame(['0.02 USD', '≈ 0.14 CNY'], array_slice($row, -2));
+    $this->assertSame('CNY', $form['create']['currency']['#default_value']);
+    $this->assertSame($before,
+      $this->priceBook->loadActive('app.example', PriceBookService::KIND_SUPPLIER_IMAGE));
+  }
+
+  private function form(array $settings = [], ?PriceCatalogFetcher $catalog = NULL,
+    ?CurrencyDisplay $display = NULL): PriceBookForm {
     $requests = new RequestStack();
     $requests->push(Request::create('https://cms.example/admin/config/xinshi/ai/usage/pricing'));
     return new PriceBookForm($this->priceBook, $catalog ?? $this->fixtureCatalog(), $this->vault,
       new ReportedModels($this->database), $requests,
-      new Settings($settings + ['hash_salt' => 'isolated-hash-salt']), $this->time);
+      new Settings($settings + ['hash_salt' => 'isolated-hash-salt']), $this->time,
+      $display ?? $this->currencyDisplay());
   }
 
   public function testImagePrefillCanBeReviewedSavedAndActivated(): void {

@@ -13,6 +13,7 @@ $loader->addPsr4('Drupal\\sqlite\\', $root . '/docroot/core/modules/sqlite/src')
 $loader->addPsr4('Drupal\\user\\', $root . '/docroot/core/modules/user/src');
 $loader->addPsr4('Drupal\\file\\', $root . '/docroot/core/modules/file/src');
 $loader->addPsr4('Drupal\\xinshi_ai_usage\\', dirname(__DIR__) . '/src', TRUE);
+$loader->addPsr4('Drupal\\Tests\\xinshi_ai_usage\\Unit\\', __DIR__ . '/src/Unit');
 if (!class_exists('Drupal')) {
   require $root . '/docroot/core/lib/Drupal.php';
 }

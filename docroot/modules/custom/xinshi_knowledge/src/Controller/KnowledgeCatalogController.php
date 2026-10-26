@@ -40,6 +40,15 @@ final class KnowledgeCatalogController extends ControllerBase {
     return $item ? $this->respond($item) : $this->respond(['error' => 'not_found'], 404);
   }
 
+  /** Return only counts authorized for the effective Cookie or OAuth account. */
+  public function summary(): JsonResponse {
+    if (!$this->currentUser()->isAuthenticated() ||
+        !$this->currentUser()->hasPermission('view xinshi knowledge')) {
+      return $this->respond(['error' => 'access_denied'], 403);
+    }
+    return $this->respond($this->catalog->summary($this->currentUser()));
+  }
+
   private function respond(array $data, int $status = 200): JsonResponse {
     return new JsonResponse($data, $status, ['Cache-Control' => 'private, no-store']);
   }
