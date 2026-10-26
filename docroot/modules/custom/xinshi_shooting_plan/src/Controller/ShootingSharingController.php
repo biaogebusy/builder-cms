@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_shooting_plan\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\xinshi_shooting_plan\Service\ShootingSharing;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -24,11 +25,13 @@ final class ShootingSharingController extends ControllerBase {
   public function __construct(
     private readonly ShootingSharing $sharing,
     private readonly FileSystemInterface $files,
+    private readonly EntityTypeManagerInterface $entities,
   ) {}
 
   /** {@inheritdoc} */
   public static function create(ContainerInterface $container): static {
-    return new static($container->get('xinshi_shooting_plan.sharing'), $container->get('file_system'));
+    return new static($container->get('xinshi_shooting_plan.sharing'), $container->get('file_system'),
+      $container->get('entity_type.manager'));
   }
 
   /** Returns or updates the author's sharing choices. */
@@ -53,14 +56,28 @@ final class ShootingSharingController extends ControllerBase {
   }
 
   /** Streams local image bytes after rechecking both the token and source permissions. */
-  public function image(string $token, string $shot_id): Response {
-    return $this->respond(function () use ($token, $shot_id) {
+  public function image(string $token, string $shot_id, Request $request): Response {
+    return $this->respond(function () use ($token, $shot_id, $request) {
       $file = $this->sharing->image($token, $shot_id);
+      $size = $request->query->all()['size'] ?? 'original';
+      if (!in_array($size, ['original', 'thumbnail'], TRUE)) {
+        throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException();
+      }
       $path = $this->files->realpath($file->getFileUri());
       if (!$path || !is_file($path)) {
         throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException();
       }
-      return new BinaryFileResponse($path, 200, self::HEADERS + ['Content-Type' => $file->getMimeType()], FALSE);
+      if ($size === 'thumbnail') {
+        $style = $this->entities->getStorage('image_style')->load('large');
+        $uri = $style?->buildUri($file->getFileUri());
+        if (!$uri || (!is_file($uri) && !$style->createDerivative($file->getFileUri(), $uri))) {
+          throw new \Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException();
+        }
+        $path = $this->files->realpath($uri);
+      }
+      $response = new BinaryFileResponse($path, 200, self::HEADERS, FALSE);
+      $response->headers->set('Content-Type', $response->getFile()->getMimeType() ?? 'application/octet-stream');
+      return $response;
     });
   }
 

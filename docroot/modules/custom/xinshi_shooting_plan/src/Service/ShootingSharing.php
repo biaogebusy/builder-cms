@@ -106,8 +106,10 @@ final class ShootingSharing {
     unset($public_doc['visuals']);
     $public_prompts = ShootingDocumentAccess::prompts($public_doc);
     foreach ($sketches as $id => &$sketch) {
+      $src = '/api/v3/ai/shooting-plans/shared/' . $token . '/sketches/' . rawurlencode((string) $id);
       $sketch = ['status' => $sketch['status'], 'prompt' => $public_prompts[$id], 'retryable' => FALSE, 'stale' => $sketch['stale']] +
-        (!empty($sketch['src']) ? ['src' => '/api/v3/ai/shooting-plans/shared/' . $token . '/sketches/' . rawurlencode((string) $id)] : []);
+        (!empty($sketch['src']) ? ['src' => $src] : []) +
+        (!empty($sketch['thumbnailSrc']) ? ['thumbnailSrc' => $src . '?size=thumbnail'] : []);
     }
     return ['id' => $node->uuid(), 'request' => $doc['request'], 'plan' => $doc['draft'],
       'canEdit' => $editable, 'contentHash' => $editable ? hash('sha256', $content) : NULL,

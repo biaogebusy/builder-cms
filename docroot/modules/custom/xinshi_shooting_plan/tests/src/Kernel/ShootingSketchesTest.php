@@ -844,7 +844,9 @@ final class ShootingSketchesTest extends TestCase {
     $this->saveDoc();
     $images = $this->submit();
     $job = $this->lifecycle->loadJobByUuid($images['shot_1']['jobId']);
-    file_put_contents('private://shared-synthetic.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKAAAAABJRU5ErkJggg=='));
+    $image = imagecreatetruecolor(1200, 800);
+    imagepng($image, 'private://shared-synthetic.png');
+    imagedestroy($image);
     $file = File::create(['uri' => 'private://shared-synthetic.png', 'filemime' => 'image/png',
       'uid' => $this->owner->id(), 'status' => 1]);
     $file->save();
@@ -855,29 +857,51 @@ final class ShootingSketchesTest extends TestCase {
       'uid' => $this->owner->id(), 'field_status' => 'succeeded', 'field_asset_image' => ['target_id' => $media->id()]]);
     $asset->save();
     $job->set('field_status', 'succeeded')->set('field_assets', [['target_id' => $asset->id()]])->save();
+    $owned = $this->sketches->read($this->plan->uuid())['shot_1'];
+    $style = \Drupal::entityTypeManager()->getStorage('image_style')->load('large');
+    $this->assertSame($style->buildUrl($file->getFileUri()), $owned['thumbnailSrc']);
+    $this->assertNotSame($owned['src'], $owned['thumbnailSrc']);
     \Drupal::currentUser()->setAccount(new AnonymousUserSession());
     $projection = (array) $sharing->read($token)['sketches'];
     $this->assertSame('/api/v3/ai/shooting-plans/shared/' . $token . '/sketches/shot_1', $projection['shot_1']['src']);
+    $this->assertSame($projection['shot_1']['src'] . '?size=thumbnail', $projection['shot_1']['thumbnailSrc']);
+    $this->assertStringNotContainsString('private', json_encode($projection));
     $this->assertArrayNotHasKey('jobId', $projection['shot_1']);
     $this->assertArrayNotHasKey('taskId', $projection['shot_1']);
     $this->assertStringContainsString('colored storyboard', $projection['shot_1']['prompt']);
     $this->assertStringNotContainsString('Private client reference', json_encode($projection));
     $this->assertStringNotContainsString($reference->uuid(), json_encode($projection));
     $this->assertFalse($projection['shot_1']['stale']);
-    $controller = new ShootingSharingController($sharing, \Drupal::service('file_system'));
-    $response = $controller->image($token, 'shot_1');
+    $controller = new ShootingSharingController($sharing, \Drupal::service('file_system'), \Drupal::entityTypeManager());
+    $response = $controller->image($token, 'shot_1', Request::create('/'));
     $this->assertSame(200, $response->getStatusCode());
     $this->assertInstanceOf(\Symfony\Component\HttpFoundation\BinaryFileResponse::class, $response);
     $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
     $this->assertSame('image/png', $response->headers->get('Content-Type'));
-    $this->assertSame(404, $controller->image($token, 'nonexistent')->getStatusCode());
+    $thumbnail_request = Request::create('/?size=thumbnail');
+    $thumbnail = $controller->image($token, 'shot_1', $thumbnail_request);
+    $this->assertSame(200, $thumbnail->getStatusCode());
+    $dimensions = getimagesize($thumbnail->getFile()->getPathname());
+    $this->assertSame([480, 320], array_slice($dimensions, 0, 2));
+    $this->assertSame($dimensions['mime'], $thumbnail->headers->get('Content-Type'));
+    $this->assertStringContainsString('no-store', $thumbnail->headers->get('Cache-Control'));
+    $this->assertSame('nosniff', $thumbnail->headers->get('X-Content-Type-Options'));
+    $this->assertNotSame($response->getFile()->getPathname(), $thumbnail->getFile()->getPathname());
+    $this->assertSame($thumbnail->getFile()->getPathname(),
+      $controller->image($token, 'shot_1', $thumbnail_request)->getFile()->getPathname());
+    $this->assertSame(400, $controller->image($token, 'shot_1', Request::create('/?size=unknown'))->getStatusCode());
+    $this->assertSame(400, $controller->image($token, 'shot_1', Request::create('/?size[]=thumbnail'))->getStatusCode());
+    $this->assertSame(404, $controller->image($token, 'nonexistent', Request::create('/'))->getStatusCode());
+    $this->assertSame(404, $controller->image($token, 'nonexistent', $thumbnail_request)->getStatusCode());
     \Drupal::state()->set('shooting.denied', 'uri:view');
-    $this->assertSame(403, $controller->image($token, 'shot_1')->getStatusCode());
+    $this->assertSame(403, $controller->image($token, 'shot_1', Request::create('/'))->getStatusCode());
+    $this->assertSame(403, $controller->image($token, 'shot_1', $thumbnail_request)->getStatusCode());
     \Drupal::state()->delete('shooting.denied');
     \Drupal::currentUser()->setAccount($this->owner);
     $sharing->configure($this->plan->uuid(), ['enabled' => FALSE, 'editorId' => (int) $editor->id()]);
     \Drupal::currentUser()->setAccount(new AnonymousUserSession());
-    $this->assertSame(404, $controller->image($token, 'shot_1')->getStatusCode());
+    $this->assertSame(404, $controller->image($token, 'shot_1', Request::create('/'))->getStatusCode());
+    $this->assertSame(404, $controller->image($token, 'shot_1', $thumbnail_request)->getStatusCode());
   }
 
   public function testSharingAccountPickerIsBoundedAndRoutesSeparatePublicReadsFromCsrfWrites(): void {
@@ -893,7 +917,7 @@ final class ShootingSketchesTest extends TestCase {
     foreach (['shared.read', 'shared.image'] as $route) {
       $this->assertSame('TRUE', $routes['xinshi_shooting_plan.' . $route]['requirements']['_access']);
     }
-    $controller = new ShootingSharingController($sharing, \Drupal::service('file_system'));
+    $controller = new ShootingSharingController($sharing, \Drupal::service('file_system'), \Drupal::entityTypeManager());
     \Drupal::currentUser()->setAccount(new AnonymousUserSession());
     $response = $controller->read($token);
     $this->assertSame(200, $response->getStatusCode());

@@ -10,4 +10,5 @@ dependencies:
   - drupal:node
   - drupal:media
   - drupal:file
+  - drupal:image
   - drupal:user

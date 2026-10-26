@@ -455,6 +455,7 @@ final class ShootingSketches {
       }
     }
     $files = $this->entities->getStorage('file')->loadMultiple(array_unique($file_ids));
+    $thumbnail = $files_only ? NULL : $this->entities->getStorage('image_style')->load('large');
     $result = [];
     foreach ($rows as $shot_id => $row) {
       $job = $jobs[$row['job_uuid']] ?? NULL;
@@ -477,6 +478,9 @@ final class ShootingSketches {
           }
           $value['mediaId'] = $item->uuid();
           $value['src'] = $this->urls->generateAbsoluteString($file->getFileUri());
+          if ($thumbnail) {
+            $value['thumbnailSrc'] = $thumbnail->buildUrl($file->getFileUri());
+          }
           break;
         }
       }
