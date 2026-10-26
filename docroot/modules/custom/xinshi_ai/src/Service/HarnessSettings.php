@@ -37,6 +37,7 @@ final class HarnessSettings {
     'design' => ['label' => '设计辅助', 'tools' => [
       'get_assets' => '设计素材',
       'get_design_system' => '设计系统建议',
+      'analyze_image' => '图片理解',
     ]],
     'pages' => ['label' => '页面草稿', 'tools' => [
       'create_page' => '创建草稿',
