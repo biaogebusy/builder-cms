@@ -35,6 +35,8 @@ final class InputImageAccessTest extends TestCase {
   private string $directory;
   private string $uri = 'private://image.png';
   private bool $active = TRUE;
+  private bool $catalogEnabled = FALSE;
+  private bool $selectAllowed = TRUE;
   private bool $permission = TRUE;
   private bool $mediaAllowed = TRUE;
   private bool $fieldAllowed = TRUE;
@@ -71,7 +73,7 @@ final class InputImageAccessTest extends TestCase {
     $this->media->method('get')->with('field_media_image')->willReturn($field);
     $this->media->method('access')->willReturnCallback(function ($operation, $account) {
       $this->assertSame($this->owner, $account);
-      return $this->mediaAllowed;
+      return $operation === 'select' ? $this->selectAllowed : $this->mediaAllowed;
     });
     $file = $this->createMock(FileInterface::class);
     $file->method('uuid')->willReturnCallback(fn() => $this->fileVersion);
@@ -93,6 +95,7 @@ final class InputImageAccessTest extends TestCase {
     $repository = $this->createMock(EntityRepositoryInterface::class);
     $repository->method('loadEntityByUuid')->with('media', self::UUID)->willReturnCallback(fn() => $this->exists ? $this->media : NULL);
     $modules = $this->createMock(ModuleHandlerInterface::class);
+    $modules->method('moduleExists')->with('xinshi_media')->willReturnCallback(fn() => $this->catalogEnabled);
     $modules->method('invokeAll')->willReturnCallback(function ($hook) {
       $this->assertSame('file_download', $hook);
       $this->assertSame(7, end($this->switches));
@@ -129,6 +132,22 @@ final class InputImageAccessTest extends TestCase {
     $this->assertSame('image/png', $this->service->forJob($this->job)->getMimeType());
     $this->assertSame([7, 'restored', 7, 'restored'], $this->switches);
     $this->assertSame(['user', 'file', 'user', 'media', 'file'], $this->reloads);
+  }
+
+  public function testCatalogSelectionScopeIsRecheckedForSubmittedAndQueuedImages(): void {
+    $this->catalogEnabled = TRUE;
+    $this->service->forSubmission(self::UUID, $this->owner);
+    $this->selectAllowed = FALSE;
+    $this->expectException(InputImageAccessException::class);
+    $this->service->forJob($this->job);
+  }
+
+  public function testPublicDisplayDoesNotGrantNewModelSelection(): void {
+    $this->catalogEnabled = TRUE;
+    $this->selectAllowed = FALSE;
+    $this->uri = 'public://image.png';
+    $this->expectException(InputImageAccessException::class);
+    $this->service->forSubmission(self::UUID, $this->owner);
   }
 
   public static function deniedCases(): array {

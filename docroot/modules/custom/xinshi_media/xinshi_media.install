@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\media\Entity\MediaType;
+
+/** Implements hook_schema(). */
+function xinshi_media_schema(): array {
+  return ['xinshi_media_hidden' => [
+    'description' => 'Library removal preserves media entities, files and existing references.',
+    'fields' => [
+      'mid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'removed' => ['type' => 'int', 'not null' => TRUE],
+    ], 'primary key' => ['mid'],
+  ]];
+}
+
+/** Adds missing ordinary types without replacing existing fields, roles or storage schemes. */
+function xinshi_media_install(): void {
+  $types = [
+    'image' => ['Image', 'image', 'field_media_image', 'image', 'public'],
+    'vector' => ['Vector image', 'file', 'field_media_vector', 'file', 'public'],
+    'document' => ['Document', 'file', 'field_media_document', 'file', 'private'],
+    'audio' => ['Audio', 'audio_file', 'field_media_audio_file', 'file', 'public'],
+    'video' => ['Video', 'video_file', 'field_media_video_file', 'file', 'public'],
+  ];
+  foreach ($types as $id => [$label, $source, $name, $fieldType, $scheme]) {
+    if (MediaType::load($id)) continue;
+    MediaType::create(['id' => $id, 'label' => $label, 'source' => $source,
+      'source_configuration' => ['source_field' => $name], 'new_revision' => TRUE,
+      'field_map' => [], 'dependencies' => ['module' => ['xinshi_media']]])->save();
+    $storage = FieldStorageConfig::loadByName('media', $name);
+    if (!$storage) {
+      $storage = FieldStorageConfig::create(['entity_type' => 'media', 'field_name' => $name,
+        'type' => $fieldType, 'settings' => ['uri_scheme' => $scheme, 'target_type' => 'file']]);
+      $storage->save();
+    }
+    FieldConfig::create(['field_storage' => $storage, 'bundle' => $id, 'label' => $label,
+      'required' => TRUE, 'settings' => [
+        'file_extensions' => implode(' ', \Drupal\xinshi_media\MediaTypes::EXTENSIONS[$id]),
+        'file_directory' => 'xinshi-media/' . $id . '/[date:custom:Y]-[date:custom:m]',
+        'max_filesize' => $id === 'vector' ? '1 MB' : ($id === 'image' ? '20 MB' : '100 MB'),
+        'alt_field' => $fieldType === 'image', 'alt_field_required' => FALSE,
+      ]])->save();
+  }
+}

@@ -1,0 +1,116 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\file\FileInterface;
+use Drupal\media\MediaInterface;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\views\Plugin\views\query\Sql;
+use Drupal\views\ViewExecutable;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+
+/** Keeps private media and metadata APIs in the same author scope as the catalog. */
+function xinshi_media_media_access(MediaInterface $media, string $operation, AccountInterface $account): AccessResult {
+  $policy = \Drupal::service('xinshi_media.policy');
+  if (!isset(\Drupal::service('xinshi_media.types')->all()[$media->bundle()])) return AccessResult::neutral();
+  $metadata = $policy->metadataRequest();
+  $scoped = in_array($operation, ['update', 'delete', 'select'], TRUE) || $metadata || $policy->privateSource($media);
+  $result = AccessResult::neutral()->cachePerUser()->cachePerPermissions()
+    ->addCacheContexts(['route'])->addCacheableDependency($media);
+  if ($scoped && !$policy->inScope($media, $account)) return $result->andIf(AccessResult::forbidden());
+  if ($operation === 'select') {
+    return AccessResult::allowedIf($policy->inScope($media, $account))->cachePerUser()
+      ->cachePerPermissions()->addCacheableDependency($media);
+  }
+  // Physical deletion can break JSON, HTML and business references that file_usage does not track.
+  if ($operation === 'delete' && $metadata) return $result->andIf(AccessResult::forbidden());
+  return $result;
+}
+
+/** Prevents the raw file collection or an included file UUID from bypassing metadata scope. */
+function xinshi_media_file_access(FileInterface $file, string $operation, AccountInterface $account): AccessResult {
+  $policy = \Drupal::service('xinshi_media.policy');
+  if (!$policy->metadataRequest() || !in_array($operation, ['view', 'download', 'update', 'delete'], TRUE)) {
+    return AccessResult::neutral();
+  }
+  $result = AccessResult::neutral()->cachePerUser()->cachePerPermissions()->addCacheContexts(['route']);
+  if ($operation === 'delete') return $result->andIf(AccessResult::forbidden());
+  if ($account->isAnonymous() || (!$policy->all($account) && (string) $file->getOwnerId() !== (string) $account->id())) {
+    return $result->andIf(AccessResult::forbidden());
+  }
+  return $result;
+}
+
+/** Applies SQL ownership before JSON:API pagination, counts and entity normalization. */
+function xinshi_media_query_media_access_alter(AlterableInterface $query): void {
+  $policy = \Drupal::service('xinshi_media.policy');
+  $account = \Drupal::currentUser();
+  if (!$policy->metadataRequest() || $policy->all($account)) return;
+  foreach ($query->getTables() as $alias => $table) {
+    if (!is_string($table['table']) || !in_array($table['table'], ['media', 'media_field_data'], TRUE)) continue;
+    $access = \Drupal::database()->select('media_field_data', 'media_scope')->fields('media_scope', ['mid']);
+    $access->where('media_scope.mid = ' . $alias . '.mid');
+    $bundles = array_keys(\Drupal::service('xinshi_media.types')->all());
+    if (!$bundles) return;
+    $condition = $access->orConditionGroup()->condition('media_scope.bundle', $bundles, 'NOT IN');
+    if ($account->isAuthenticated()) $condition->condition('media_scope.uid', $account->id());
+    $access->condition($condition);
+    $query->exists($access);
+    return;
+  }
+}
+
+/** Applies the same scope to raw JSON:API file listings. */
+function xinshi_media_query_file_access_alter(AlterableInterface $query): void {
+  $policy = \Drupal::service('xinshi_media.policy');
+  $account = \Drupal::currentUser();
+  if (!$policy->metadataRequest() || $policy->all($account)) return;
+  foreach ($query->getTables() as $alias => $table) {
+    if ($table['table'] !== 'file_managed') continue;
+    if ($account->isAnonymous()) $query->where('1 = 0');
+    else $query->condition($alias . '.uid', $account->id());
+    return;
+  }
+}
+
+/** Legacy library Views retain their fields but cannot return another author's media. */
+function xinshi_media_views_query_alter(ViewExecutable $view, QueryPluginBase $query): void {
+  $policy = \Drupal::service('xinshi_media.policy');
+  if (!$query instanceof Sql || !$policy->metadataRequest() ||
+    !in_array($view->storage->get('base_table'), ['media_field_data', 'media'], TRUE)) return;
+  $query->addTag('media_access');
+  if (!$policy->all(\Drupal::currentUser())) {
+    // Keep the owner condition in the Views query and its result-cache identity.
+    $alias = $query->ensureTable('media_field_data');
+    $query->addWhere(0, $alias . '.uid', \Drupal::currentUser()->isAuthenticated()
+      ? \Drupal::currentUser()->id() : -1);
+  }
+}
+
+/** New SVG files pass the sanitizer; metadata saves must not rewrite historical source bytes. */
+function xinshi_media_file_presave(FileInterface $file): void {
+  if (!$file->isNew()) return;
+  $extension = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
+  if ($extension !== 'svg' && $file->getMimeType() !== 'image/svg+xml') return;
+  $uri = $file->getFileUri();
+  $size = filesize($uri);
+  if (!$size || $size > 1048576) throw new \Drupal\xinshi_media\MediaException('invalid_svg', 422);
+  $clean = \Drupal::service('xinshi_media.validator')->svg(file_get_contents($uri));
+  if (file_put_contents($uri, $clean) === FALSE) throw new \RuntimeException('Cannot save sanitized SVG');
+  $file->setMimeType('image/svg+xml');
+  $file->setSize(strlen($clean));
+}
+
+/** Generic metadata writers cannot spoof the owner of a new media record. */
+function xinshi_media_media_presave(MediaInterface $media): void {
+  $policy = \Drupal::service('xinshi_media.policy');
+  if (!$policy->metadataRequest() || !isset(\Drupal::service('xinshi_media.types')->all()[$media->bundle()])) return;
+  if (!$policy->inScope($media, \Drupal::currentUser()) || ($media->isNew() &&
+    (string) $media->getOwnerId() !== (string) \Drupal::currentUser()->id())) {
+    throw new AccessDeniedHttpException('Media owner must be the authenticated uploader.');
+  }
+}

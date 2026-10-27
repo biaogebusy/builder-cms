@@ -127,6 +127,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
     );
 
     public static $prefixLengthsPsr4 = array (
+        'e' => array ('enshrined\\svgSanitize\\' => 22),
         'v' => 
         array (
             'voku\\helper\\' => 12,
@@ -348,6 +349,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
     );
 
     public static $prefixDirsPsr4 = array (
+        'enshrined\\svgSanitize\\' => array (__DIR__ . '/..' . '/enshrined/svg-sanitize/src'),
         'voku\\helper\\' => 
         array (
             0 => __DIR__ . '/..' . '/voku/simple_html_dom/src/voku/helper',

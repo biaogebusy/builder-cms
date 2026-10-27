@@ -143,6 +143,7 @@
         "drupal/xls_serialization": "^2.0",
         "drupal/xmlsitemap": "^2.0",
         "drush/drush": "^13",
+        "enshrined/svg-sanitize": "^1.1",
         "mikehaertl/phpwkhtmltopdf": "^2.5",
         "phpoffice/phpword": "^1.2",
         "tecnickcom/tcpdf": "^6.7",

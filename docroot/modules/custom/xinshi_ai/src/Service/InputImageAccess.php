@@ -41,6 +41,10 @@ class InputImageAccess {
     if (!$media instanceof MediaInterface) {
       throw new InputImageAccessException();
     }
+    // Preserve the submitting token's selection scope before loading the durable job owner.
+    if ($this->modules->moduleExists('xinshi_media') && !$media->access('select', $owner)) {
+      throw new InputImageAccessException();
+    }
     $this->authorizedFile($media, $this->activeOwner($owner->id()));
     return $media;
   }
@@ -125,6 +129,7 @@ class InputImageAccess {
     $this->accounts->switchTo($owner);
     try {
       if ($media->bundle() !== 'image' || !$media->access('view', $owner)
+        || ($this->modules->moduleExists('xinshi_media') && !$media->access('select', $owner))
         || !$media->hasField('field_media_image') || !$media->get('field_media_image')->access('view', $owner)) {
         throw new InputImageAccessException();
       }

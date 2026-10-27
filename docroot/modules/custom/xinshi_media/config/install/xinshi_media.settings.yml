@@ -1,0 +1,7 @@
+bundles:
+  - image
+  - vector
+  - document
+  - audio
+  - video
+max_upload_bytes: 104857600

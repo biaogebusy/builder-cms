@@ -1,0 +1,25 @@
+services:
+  xinshi_media.types:
+    class: Drupal\xinshi_media\MediaTypes
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@config.factory']
+  xinshi_media.policy:
+    class: Drupal\xinshi_media\MediaPolicy
+    arguments: ['@xinshi_media.types', '@request_stack']
+  xinshi_media.validator:
+    class: Drupal\xinshi_media\MediaValidator
+  xinshi_media.catalog:
+    class: Drupal\xinshi_media\MediaCatalog
+    arguments: ['@entity_type.manager', '@entity.repository', '@current_user', '@xinshi_media.types', '@xinshi_media.policy', '@file_url_generator', '@database', '@module_handler']
+  xinshi_media.upload:
+    class: Drupal\xinshi_media\MediaUpload
+    arguments: ['@xinshi_media.catalog', '@xinshi_media.types', '@xinshi_media.validator', '@entity_type.manager', '@current_user', '@file.repository', '@file_system', '@database']
+  xinshi_media.response:
+    class: Drupal\xinshi_media\EventSubscriber\MediaResponseSubscriber
+    arguments: ['@xinshi_media.policy']
+    tags:
+      - { name: event_subscriber }
+  xinshi_media.svg_upload:
+    class: Drupal\xinshi_media\EventSubscriber\SvgUploadSubscriber
+    arguments: ['@xinshi_media.validator']
+    tags:
+      - { name: event_subscriber }

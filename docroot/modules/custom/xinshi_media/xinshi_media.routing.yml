@@ -1,0 +1,112 @@
+xinshi_media.display:
+  path: '/api/v3/media/{media_id}/display'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::display'
+    _format: 'json'
+  requirements:
+    _access: 'TRUE'
+    media_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_media.capabilities:
+  path: '/api/v3/media/capabilities'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::capabilities'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view media'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_media.list:
+  path: '/api/v3/media'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::listing'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view media'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_media.read:
+  path: '/api/v3/media/{media_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::read'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view media'
+    media_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_media.file:
+  path: '/api/v3/media/{media_id}/file'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::file'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view media'
+    media_id: '[a-f0-9-]{36}'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_media.upload:
+  path: '/api/v3/media/{bundle}/upload'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::upload'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view media'
+    _csrf_request_header_token: 'TRUE'
+    bundle: '[a-z0-9_]+'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_media.rename:
+  path: '/api/v3/media/{media_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::rename'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view media'
+    _csrf_request_header_token: 'TRUE'
+    media_id: '[a-f0-9-]{36}'
+  methods: [PATCH]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+
+xinshi_media.remove:
+  path: '/api/v3/media/{media_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_media\Controller\MediaController::remove'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view media'
+    _csrf_request_header_token: 'TRUE'
+    media_id: '[a-f0-9-]{36}'
+  methods: [DELETE]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+

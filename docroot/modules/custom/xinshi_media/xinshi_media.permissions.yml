@@ -1,0 +1,4 @@
+view all media assets:
+  title: 'View all media library assets'
+  description: 'Browse other authors in the media library without granting write access.'
+  restrict access: true

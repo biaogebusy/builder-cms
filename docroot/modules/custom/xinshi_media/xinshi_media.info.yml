@@ -1,0 +1,10 @@
+name: Xinshi Media
+type: module
+description: 'Owner-scoped media catalog and validated multi-format uploads.'
+package: Xinshi
+core_version_requirement: ^11
+dependencies:
+  - drupal:media
+  - drupal:file
+  - drupal:image
+  - drupal:field
