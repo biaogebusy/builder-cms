@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\media\Entity\MediaType;
 
 /** Implements hook_schema(). */
@@ -18,8 +19,31 @@ function xinshi_media_schema(): array {
   ]];
 }
 
+/** Builds a library-sized derivative; the core thumbnail style is too small for the grid. */
+function _xinshi_media_ensure_preview_style(): void {
+  if (ImageStyle::load('xinshi_media_preview')) {
+    return;
+  }
+  $style = ImageStyle::create([
+    'name' => 'xinshi_media_preview',
+    'label' => 'Media library preview',
+  ]);
+  $style->addImageEffect([
+    'id' => 'image_scale',
+    'data' => ['width' => 640, 'height' => 640, 'upscale' => FALSE],
+    'weight' => 0,
+  ]);
+  $style->save();
+}
+
+/** Adds the library preview style on existing sites. */
+function xinshi_media_update_10001(): void {
+  _xinshi_media_ensure_preview_style();
+}
+
 /** Adds missing ordinary types without replacing existing fields, roles or storage schemes. */
 function xinshi_media_install(): void {
+  _xinshi_media_ensure_preview_style();
   $types = [
     'image' => ['Image', 'image', 'field_media_image', 'image', 'public'],
     'vector' => ['Vector image', 'file', 'field_media_vector', 'file', 'public'],

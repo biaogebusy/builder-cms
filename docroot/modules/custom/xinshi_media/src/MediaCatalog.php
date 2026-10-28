@@ -137,9 +137,13 @@ final class MediaCatalog {
       : $this->urls->generateAbsoluteString($file->getFileUri());
     $thumb = NULL;
     if (!$private && $type['kind'] === 'image' &&
-      in_array($file->getMimeType(), ['image/png', 'image/jpeg', 'image/gif', 'image/webp'], TRUE) &&
-      ($style = ImageStyle::load('thumbnail'))) {
-      $thumb = $style->buildUrl($file->getFileUri());
+      in_array($file->getMimeType(), ['image/png', 'image/jpeg', 'image/gif', 'image/webp'], TRUE)) {
+      foreach (['xinshi_media_preview', 'thumbnail'] as $style_id) {
+        if ($style = ImageStyle::load($style_id)) {
+          $thumb = $style->buildUrl($file->getFileUri());
+          break;
+        }
+      }
     }
     if (!$private && $file->getMimeType() === 'image/svg+xml') $thumb = $source;
     return ['id' => (string) $media->id(), 'uuid' => $media->uuid(), 'mediaId' => $media->uuid(),
