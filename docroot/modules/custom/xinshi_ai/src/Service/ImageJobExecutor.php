@@ -220,23 +220,31 @@ final class ImageJobExecutor {
     ?string $upstreamDetail = NULL): void {
     $message = $this->credentials->redact($uuid, $message);
     $logDetail = $upstreamDetail === NULL ? '' : ' upstream=' . $this->credentials->redact($uuid, $upstreamDetail);
+    // Prompt rewrites are already saved on the job; log only the effective text and model identity.
+    $generationContext = [
+      '@platform' => (string) $job->get('field_platform')->value,
+      '@model' => (string) $job->get('field_model')->value,
+      '@kind' => (string) $job->get('field_job_kind')->value,
+      '@prompt' => $this->credentials->redact($uuid, (string) $job->get('field_prompt')->value),
+    ];
+    $generationDetail = " platform=@platform model=@model kind=@kind\nPrompt:\n@prompt";
     if ($this->isTerminal($job)) {
       // Cancelled (or otherwise closed) while the call was running: that
       // decision stands, the failure is neither retried nor recorded over it.
-      $this->logger->notice('image_job @u failed (@c) after it was already @s; nothing to retry', [
+      $this->logger->notice('image_job @u failed (@c) after it was already @s; nothing to retry' . $generationDetail, [
         '@u' => $uuid,
         '@c' => $code,
         '@s' => $job->get('field_status')->value,
-      ]);
+      ] + $generationContext);
       return;
     }
     if ($this->errorMapper->isRetryable($code) && $attempt < self::MAX_RETRIES) {
-      $this->logger->warning('image_job 重试 job=@u code=@c attempt=@a: @m', [
+      $this->logger->warning('image_job 重试 job=@u code=@c attempt=@a: @m' . $generationDetail, [
         '@u' => $uuid,
         '@c' => $code,
         '@a' => $attempt + 1,
         '@m' => $message . $logDetail,
-      ]);
+      ] + $generationContext);
       $this->queueFactory->get(self::QUEUE)->createItem([
         'jobUuid' => $uuid,
         'attempt' => $attempt + 1,
@@ -244,12 +252,12 @@ final class ImageJobExecutor {
       return;
     }
 
-    $this->logger->error('image_job 失败(终态)job=@u code=@c attempt=@a: @m', [
+    $this->logger->error('image_job 失败(终态)job=@u code=@c attempt=@a: @m' . $generationDetail, [
       '@u' => $uuid,
       '@c' => $code,
       '@a' => $attempt,
       '@m' => $message . $logDetail,
-    ]);
+    ] + $generationContext);
     if ($this->lifecycle->markFailed($job, $message, $code)) {
       $this->eventStream->publish($uuid, 'failed', [
         'statusReason' => $message,

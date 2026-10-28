@@ -24,7 +24,7 @@ docker exec "$container" sh -c \
 docker exec "$container" php -l /app/docroot/modules/custom/xinshi_ai/xinshi_ai.install
 docker exec "$container" php -d extension=pdo_sqlite /tmp/phpunit.phar \
   --bootstrap /app/docroot/modules/custom/xinshi_ai/tests/bootstrap.php \
-  --filter 'ImageJobExecutorTest|InputImageAccessTest|JobLifecycleServiceTest|ImageResponseSafetyTest' \
+  --filter 'ImageJobExecutorTest|InputImageAccessTest|JobLifecycleServiceTest|ImageResponseSafetyTest|ImageBoundaryTest' \
   /app/docroot/modules/custom/xinshi_ai/tests/src/Unit
 docker exec -e XINSHI_SHOOTING_ISOLATED_TEST=1 "$container" php -d extension=pdo_sqlite /tmp/phpunit.phar \
   --bootstrap /app/docroot/modules/custom/xinshi_shooting_plan/tests/bootstrap.php \

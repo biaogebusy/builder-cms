@@ -296,6 +296,30 @@ final class ShootingSketchesTest extends TestCase {
       ->condition('plan_uuid', $this->plan->uuid())->condition('queue_pending', 1)->countQuery()->execute()->fetchField());
   }
 
+  public function testFailedSketchProjectsSafeCategoryWithoutRewritingOrExposingProviderDetails(): void {
+    $first = $this->submit()['shot_1'];
+    $job = $this->lifecycle->loadJobByUuid($first['jobId']);
+    $message = 'The request was rejected by the content safety policy. Please revise the input and try again.';
+    $this->lifecycle->markFailed($job, $message, 'validation');
+    $projection = $this->read()['shot_1'];
+    $this->assertSame('content_policy', $projection['errorCode']);
+    $this->assertSame('failed', $projection['status']);
+    $this->assertSame($first['jobId'], $projection['jobId']);
+    $this->assertSame($first['taskId'], $projection['taskId']);
+    $this->assertStringNotContainsString($message, json_encode($projection));
+    $this->assertArrayNotHasKey('statusReason', $projection);
+    $this->assertSame(1, $this->rows());
+    $this->assertSame('validation', $this->lifecycle->loadJobByUuid($first['jobId'])->get('field_error_code')->value);
+
+    \Drupal::state()->set('shooting.denied', 'field_status_reason:view');
+    $this->assertSame('validation', $this->read()['shot_1']['errorCode']);
+    \Drupal::state()->delete('shooting.denied');
+    $job->set('field_error_code', 'content_policy')->save();
+    $this->assertSame('content_policy', $this->read()['shot_1']['errorCode']);
+    $job->set('field_error_code', 'validation')->set('field_status_reason', 'Invalid size.')->save();
+    $this->assertSame('validation', $this->read()['shot_1']['errorCode']);
+  }
+
   public function testCustomProviderReservesJobsWithEncryptedCredentialsAndExplicitSize(): void {
     $input = $this->customInput();
     $first = $this->submit($input);

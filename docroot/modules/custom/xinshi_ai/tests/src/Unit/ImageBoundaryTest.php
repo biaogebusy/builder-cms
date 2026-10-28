@@ -31,6 +31,7 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use OpenAI\Exceptions\TransporterException;
+use OpenAI\Exceptions\ErrorException;
 
 /**
  * Network and content boundaries, without contacting any remote addresses.
@@ -229,6 +230,33 @@ final class ImageBoundaryTest extends TestCase {
       $this->assertFalse($mapper->isRetryable($code));
       $transport = new RequestException('Transfer failed.', new Request('GET', 'https://8.8.8.8/image'), NULL, $error);
       $this->assertSame($code, $mapper->mapToCode(new TransporterException($transport)));
+    }
+  }
+
+  public function testGatewaySafetyRejectionsKeepTheirCategoryAcrossHttpAndTransportWrappers(): void {
+    $mapper = new ProviderErrorMapper();
+    $message = 'The request was rejected by the content safety policy. Please revise the input and try again.';
+    foreach ([
+      [400, 400, $message],
+      [400, 'content_filter', 'Image rejected.'],
+      [400, 'content_policy_violation', 'Image rejected.'],
+      [403, 'moderation_blocked', 'Image rejected.'],
+    ] as [$http, $code, $reason]) {
+      $error = new ErrorException(['message' => $reason, 'type' => 'invalid_request_error', 'code' => $code], new Response($http));
+      $wrapped = new TransporterException(new RequestException('Transfer failed.', new Request('POST', 'https://8.8.8.8/v1/images/edits'), NULL, $error));
+      foreach ([$error, $wrapped] as $failure) {
+        $this->assertSame('content_policy', $mapper->mapToCode($failure));
+        $this->assertFalse($mapper->isRetryable($mapper->mapToCode($failure)));
+      }
+    }
+    foreach ([
+      [400, 'Invalid size.', 'validation'],
+      [400, 'Unsupported parameter: content safety policy.', 'validation'],
+      [401, 'Invalid API key.', 'unauthorized'],
+      [500, 'Server error.', 'provider_5xx'],
+    ] as [$http, $reason, $expected]) {
+      $error = new ErrorException(['message' => $reason, 'code' => $http], new Response($http));
+      $this->assertSame($expected, $mapper->mapToCode($error));
     }
   }
 

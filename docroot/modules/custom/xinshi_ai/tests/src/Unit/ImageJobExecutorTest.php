@@ -192,17 +192,36 @@ final class ImageJobExecutorTest extends TestCase {
     $this->assertSame([self::JOB], $this->deletedCredentials);
   }
 
-  public function testTheCustomerKeyIsRedactedFromStoredFailureReasons(): void {
-    $job = $this->jobNode(self::JOB, ['field_status' => 'running']);
+  public function testTheCustomerKeyIsRedactedFromStoredReasonsAndLoggedGenerationPrompt(): void {
+    $job = $this->jobNode(self::JOB, ['field_status' => 'running',
+      'field_platform' => 'custom', 'field_model' => 'image-model',
+      'field_prompt' => "Original prompt.\nsk-secret-key-1234",
+      'field_params' => '{"endpoint":"https://example.invalid","apiKey":"do-not-log-params"}',
+    ]);
     $this->storedStatus = 'running';
     $this->lifecycle->method('loadJobByUuid')->willReturn($job);
-    $this->task->method('execute')
-      ->willThrowException(new TaskExecutionException('401 for key sk-secret-key-1234', 'unauthorized'));
+    $this->task->method('execute')->willReturnCallback(function (NodeInterface $job): void {
+      $job->set('field_prompt', "Rewritten prompt.\nA picnic. sk-secret-key-1234");
+      throw new TaskExecutionException('401 for key sk-secret-key-1234', 'unauthorized');
+    });
     $credentials = $this->createMock(ImageJobCredentialVault::class);
     $credentials->method('redact')->willReturnCallback(
       fn(string $uuid, string $text): string => str_replace('sk-secret-key-1234', '[redacted]', $text));
     $this->lifecycle->expects($this->once())->method('markFailed')
       ->with($job, '401 for key [redacted]', 'unauthorized')->willReturn(TRUE);
+    $this->logger->expects($this->once())->method('error')->with(
+      $this->stringContains("Prompt:\n@prompt"),
+      $this->callback(function (array $context): bool {
+        $this->assertSame(self::JOB, $context['@u']);
+        $this->assertSame('custom', $context['@platform']);
+        $this->assertSame('image-model', $context['@model']);
+        $this->assertSame('text_to_image', $context['@kind']);
+        $this->assertSame("Rewritten prompt.\nA picnic. [redacted]", $context['@prompt']);
+        $this->assertStringNotContainsString('sk-secret-key-1234', json_encode($context));
+        $this->assertStringNotContainsString('do-not-log-params', json_encode($context));
+        return TRUE;
+      }),
+    );
     $manager = $this->createMock(AiTaskManagerInterface::class);
     $manager->method('getByKind')->willReturn($this->task);
     $executor = new ImageJobExecutor($manager, $this->lifecycle, new ProviderErrorMapper(),
@@ -249,11 +268,15 @@ final class ImageJobExecutorTest extends TestCase {
   }
 
   public function testARetryableFailureIsRequeuedWithTheNextAttemptNumber(): void {
-    $job = $this->jobNode(self::JOB, ['field_status' => 'running']);
+    $job = $this->jobNode(self::JOB, ['field_status' => 'running', 'field_prompt' => "A picnic.\nWarm light."]);
     $this->storedStatus = 'running';
     $this->lifecycle->method('loadJobByUuid')->willReturn($job);
     $this->task->method('execute')->willThrowException(new TaskExecutionException('503', 'provider_5xx'));
     $this->lifecycle->expects($this->never())->method('markFailed');
+    $this->logger->expects($this->once())->method('warning')->with(
+      $this->stringContains("Prompt:\n@prompt"),
+      $this->callback(fn(array $context): bool => $context['@prompt'] === "A picnic.\nWarm light." && $context['@a'] === 2),
+    );
 
     $this->executor->run(['jobUuid' => self::JOB, 'attempt' => 1]);
 

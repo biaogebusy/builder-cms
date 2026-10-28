@@ -19,6 +19,7 @@ use Drupal\xinshi_ai\AiTaskManagerInterface;
 use Drupal\xinshi_ai\Service\ImageJobExecutor;
 use Drupal\xinshi_ai\Service\ImageJobCredentialVault;
 use Drupal\xinshi_ai\Service\PublicUrlPolicy;
+use Drupal\xinshi_ai\Service\ProviderErrorMapper;
 use Drupal\xinshi_ai\Exception\ImageSafetyException;
 use Drupal\xinshi_ai\Service\ImmediateJobRunner;
 use Drupal\xinshi_ai\Service\JobLifecycleServiceInterface;
@@ -467,6 +468,17 @@ final class ShootingSketches {
         'inputKey' => $job ? (json_decode((string) $job->get('field_params')->value, TRUE)['shootingInput'] ?? '') : '',
         'model' => $row['model'], 'status' => $status, 'retryable' => $job && $this->retryable($job)];
       $value['sourceUnavailable'] = isset($unavailable[$row['job_uuid']]);
+      if ($job && $status === 'failed') {
+        $code = (string) $job->get('field_error_code')->value;
+        // Correct the read projection of existing failures without rewriting task history.
+        if ($code === 'validation' && $job->get('field_status_reason')->access('view', $this->account) &&
+          ProviderErrorMapper::isContentPolicyRejection((string) $job->get('field_status_reason')->value)) {
+          $code = 'content_policy';
+        }
+        if ($code !== '') {
+          $value['errorCode'] = $code;
+        }
+      }
       foreach ($value['sourceUnavailable'] ? [] : ($job?->get('field_assets')->getValue() ?? []) as $ref) {
         $asset = $assets[$ref['target_id']] ?? NULL;
         $item = $asset ? ($media[$asset->get('field_asset_image')->target_id] ?? NULL) : NULL;

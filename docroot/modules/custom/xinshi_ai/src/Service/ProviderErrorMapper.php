@@ -37,11 +37,14 @@ final class ProviderErrorMapper {
       if ($cause instanceof ImageSafetyException) {
         return 'validation';
       }
+      if ($cause instanceof AiUnsafePromptException ||
+        ($cause instanceof OpenAiErrorException && self::isContentPolicyRejection(
+          $cause->getMessage(), (string) ($cause->getErrorCode() ?? $cause->getErrorType() ?? ''),
+        ))) {
+        return 'content_policy';
+      }
     }
     // drupal/ai 已归类的异常(OpenAiProvider 会把部分错误重映射成这些)。
-    if ($e instanceof AiUnsafePromptException) {
-      return 'content_policy';
-    }
     if ($e instanceof AiQuotaException) {
       return 'quota_exhausted';
     }
@@ -89,6 +92,12 @@ final class ProviderErrorMapper {
     return in_array($code, self::RETRYABLE, TRUE);
   }
 
+  /** Recognizes explicit provider safety signals, including gateways that use numeric codes. */
+  public static function isContentPolicyRejection(string $message, string $code = ''): bool {
+    return in_array($code, ['content_filter', 'content_policy_violation', 'moderation_blocked'], TRUE) ||
+      preg_match('/\AThe request was rejected by the content safety policy(?:[.!]|\z)/i', trim($message)) === 1;
+  }
+
   private function mapHttp(int $http, string $upstreamCode): string {
     return match (TRUE) {
       $http === 400 => 'validation',
@@ -97,7 +106,6 @@ final class ProviderErrorMapper {
       $http === 404 => 'not_found',
       $http === 429 && $upstreamCode === 'quota_exceeded' => 'quota_exhausted',
       $http === 429 => 'rate_limit',
-      $upstreamCode === 'content_filter' => 'content_policy',
       $http >= 500 => 'provider_5xx',
       $http >= 400 => 'provider_4xx',
       default => 'internal',
