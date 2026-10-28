@@ -20,6 +20,15 @@ maintain shared project rules here. Adapted on 2026-09-30 from the sibling
   AI-specific integration in Pro separate and record any pending base dependency.
 - `../pro` is a frontend deployment checkout. `../xinshi-cms` is the base CMS in
   delivery/maintenance state. Do not automatically propagate changes to either.
+- `../builder-docker` is a Docker deployment kit for trial users. `install.sh` and
+  `docker-compose.yml` install this CMS and the frontend checkout on a server;
+  image tags, ports and credentials come from `.env`, and the installed CMS
+  baseline comes from `init.d/` (`drupal.sql`, `services.yml`). When a change here
+  affects that kit, update it in the same delivery: image tags (`PHP_TAG`,
+  `NGINX_TAG`, `MARIADB_TAG`) when required runtime versions change,
+  `init.d/drupal.sql` when the installed baseline changes, and CORS origins in
+  `init.d/services.yml`. Read the actual files in `../builder-docker` before each
+  sync.
 - Inspect the current branch and working tree before editing. Frontend `master`
   and AI branch rules do not define this CMS repository's branch strategy.
 - Keep optional functionality in its own module with explicit dependencies and
