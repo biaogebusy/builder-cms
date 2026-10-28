@@ -201,7 +201,8 @@ final class ShootingDocumentAccess {
       throw new AccessDeniedHttpException();
     }
     $node = $this->load($uuid, 'shooting_plan', $write);
-    if ((string) $node->getOwnerId() !== (string) $this->account->id() ||
+    if (((string) $node->getOwnerId() !== (string) $this->account->id() &&
+      !$this->account->hasPermission('bypass node access')) ||
       !$node->access('view', $this->account) || ($write && !$node->access('update', $this->account))) {
       throw new AccessDeniedHttpException();
     }

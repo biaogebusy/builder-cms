@@ -612,6 +612,40 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame($before, $saved->get('field_shooting_document')->value);
   }
 
+  public function testAdministratorCanReadAndEditAnotherAuthorsPlanWithoutChangingOwnership(): void {
+    $original = $this->submit();
+    $before = $this->plan->get('field_shooting_document')->value;
+    $role = Role::create(['id' => 'shooting_admin', 'label' => 'Shooting administrator',
+      'permissions' => ['bypass node access', 'create xinshi_ai image job', 'view media']]);
+    $role->save();
+    $admin = User::create(['name' => 'admin-' . \Drupal::service('uuid')->generate(),
+      'status' => 1, 'roles' => [$role->id()]]);
+    $admin->save();
+    \Drupal::currentUser()->setAccount($admin);
+    $this->assertTrue($this->plan->access('view', $admin));
+    $this->assertSame($original['shot_1']['jobId'], $this->read()['shot_1']['jobId']);
+    $this->expectHttp(fn() => $this->submit(['shotId' => 'shot_1',
+      'previousJobId' => $original['shot_1']['jobId']]), 409);
+    $changed = $this->doc;
+    $changed['request']['topic'] = 'Administrator revision';
+    $saved = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+    $this->assertTrue($saved['updated']);
+    $node = Node::load($this->plan->id());
+    $this->assertSame((string) $this->owner->id(), (string) $node->getOwnerId());
+    $this->assertSame($this->doc['taskId'], json_decode($saved['content'], TRUE)['taskId']);
+    $this->assertFalse($this->documents->update($this->plan->uuid(),
+      hash('sha256', $before), $before)['updated']);
+    \Drupal::state()->set('shooting.denied', 'field_shooting_document:edit');
+    $this->expectHttp(fn() => $this->documents->update($this->plan->uuid(),
+      hash('sha256', $saved['content']), $saved['content']), 403);
+    \Drupal::state()->delete('shooting.denied');
+    $role->revokePermission('bypass node access')->save();
+    $admin = User::load($admin->id());
+    \Drupal::currentUser()->setAccount($admin);
+    $this->expectHttp(fn() => $this->read(), 403);
+    $role->delete();
+  }
+
   public function testNonReadyDocumentsCanSaveButCannotSubmitImages(): void {
     foreach (['draft', 'generating', 'failed', 'cancelled'] as $status) {
       $before = Node::load($this->plan->id())->get('field_shooting_document')->value;

@@ -219,7 +219,7 @@ final class ShootingSketches {
         }
         if ($predecessor !== '') {
           $previous = $this->database->select(self::TABLE, 's')->fields('s')
-            ->condition('job_uuid', $predecessor)->condition('uid', $this->account->id())
+            ->condition('job_uuid', $predecessor)
             ->condition('plan_uuid', $plan_uuid)->condition('shot_id', $shot_id)->execute()->fetchAssoc();
           $job = $previous ? $this->lifecycle->loadJobByUuid($predecessor) : NULL;
           if (!$previous || !$job ||
@@ -352,8 +352,11 @@ final class ShootingSketches {
   }
 
   private function latest(string $plan_uuid, array $shots): array {
-    $query = $this->database->select(self::TABLE, 's')->condition('uid', $this->account->id())
+    $query = $this->database->select(self::TABLE, 's')
       ->condition('plan_uuid', $plan_uuid)->condition('shot_id', $shots, 'IN')->groupBy('shot_id');
+    if (!$this->account->hasPermission('bypass node access')) {
+      $query->condition('uid', $this->account->id());
+    }
     $query->addExpression('MAX(id)', 'latest');
     $ids = $query->execute()->fetchCol();
     if (!$ids) {
@@ -408,7 +411,8 @@ final class ShootingSketches {
     $asset_ids = [];
     $unavailable = [];
     foreach ($storage->loadMultiple($ids) as $job) {
-      if ((string) $job->getOwnerId() !== (string) $this->account->id()) {
+      if ((string) $job->getOwnerId() !== (string) $this->account->id() &&
+        !$this->account->hasPermission('bypass node access')) {
         throw new AccessDeniedHttpException();
       }
       $this->requireFields($job, ['field_status', 'field_error_code', 'field_assets', 'field_params']);
