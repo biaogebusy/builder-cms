@@ -3,7 +3,9 @@
 namespace Drupal\xinshi_views\Plugin\views\style;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\rest\Plugin\views\row\DataFieldRow;
@@ -77,6 +79,9 @@ class PagerSerializer extends Serializer {
         if ($access->isAllowed()) {
           $data['published'] = $entity->isPublished();
         }
+        if ($entity instanceof ContentEntityInterface) {
+          $this->addPageLanguages($entity, $data, $metadata, $entity_access);
+        }
         if ($this->moderation?->isModeratedEntity($entity)) {
           $workflow = $this->moderation->getWorkflowForEntity($entity);
           $items = $entity->get('moderation_state');
@@ -124,6 +129,39 @@ class PagerSerializer extends Serializer {
       ],
     ];
     return $this->serializer->serialize($result, $content_type, ['views_style_plugin' => $this]);
+  }
+
+  /** Adds language identity only from accessible entity fields, never site defaults. */
+  private function addPageLanguages(ContentEntityInterface $entity, array &$data, CacheableMetadata $metadata, AccessResultInterface $entity_access): void {
+    if (!$entity->hasField('default_langcode') || !$entity->hasField('langcode')) {
+      return;
+    }
+    $access = $entity_access
+      ->andIf($entity->get('default_langcode')->access('view', NULL, TRUE))
+      ->andIf($entity->get('langcode')->access('view', NULL, TRUE));
+    $metadata->addCacheableDependency($access);
+    if (!$access->isAllowed()) {
+      return;
+    }
+    $data['default_langcode'] = $entity->isDefaultTranslation();
+    $languages = [];
+    $complete = TRUE;
+    foreach ($entity->getTranslationLanguages() as $langcode => $language) {
+      $translation = $entity->getTranslation($langcode);
+      $translation_access = $translation->access('view', NULL, TRUE)
+        ->andIf($translation->get('langcode')->access('view', NULL, TRUE));
+      $metadata->addCacheableDependency($translation)->addCacheableDependency($translation_access);
+      if (!$translation_access->isAllowed()) {
+        $complete = FALSE;
+      }
+      else {
+        $languages[] = $langcode;
+      }
+    }
+    // A partial list cannot tell the UI that an omitted language does not exist.
+    if ($complete) {
+      $data['translation_languages'] = $languages;
+    }
   }
 
 }

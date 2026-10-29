@@ -96,6 +96,12 @@ foreach ([FALSE, TRUE] as $raw) {
   check(count($rows) === 2 && $data['pager']['total_items'] === 2, $id . ' preserves both rows and pagination');
   check($rows[$raw ? 'en' : 'English']['published'] === FALSE, $id . ' reports the unpublished original');
   check($rows[$raw ? 'fr' : 'French']['published'] === TRUE, $id . ' reports the published translation');
+  check($rows[$raw ? 'en' : 'English']['default_langcode'] === TRUE,
+    $id . ' identifies the actual English original');
+  check($rows[$raw ? 'fr' : 'French']['default_langcode'] === FALSE,
+    $id . ' identifies the actual French translation');
+  check($rows[$raw ? 'en' : 'English']['translation_languages'] === ['en', 'fr'],
+    $id . ' lists existing language versions for this page');
 }
 // Keep the site's two-step recovery policy; distinguish its draft from its public flag.
 $workflow = \Drupal\workflows\Entity\Workflow::create([
