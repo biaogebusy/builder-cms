@@ -99,14 +99,15 @@ drush update-to-d11:seven-cleanup
 composer update drupal/seven
 ```
 
-## 遗留核心模块清理（color / rdf / tour / switch_page_theme）
+## 遗留核心模块清理（color / rdf / search / statistics / tour / switch_page_theme）
 
-color、rdf（D10 已从 core 移除的 contrib 回退）、tour（D11 core 弃用）与
-switch_page_theme（无 D11 版本）在升级 D11 前统一卸载，并把弃用的 standard
-安装 profile 切换到 minimal：
+color、rdf（D10 已从 core 移除的 contrib 回退）、search（D11 移除，update hook
+`search_update_11402` 依赖已不存在的 statistics 模块）、statistics（D11 移除）、
+tour（D11 core 弃用）与 switch_page_theme（无 D11 版本）在升级 D11 前统一卸载，
+并把弃用的 standard 安装 profile 切换到 minimal：
 
 ```bash
-# 1. 卸载 color/rdf/tour/switch_page_theme，并切换 profile standard → minimal
+# 1. 卸载 color/rdf/search/statistics/tour/switch_page_theme，并切换 profile standard → minimal
 drush update-to-d11:legacy-cleanup
 
 # 2. 移除 vendor 中的孤儿锁定包

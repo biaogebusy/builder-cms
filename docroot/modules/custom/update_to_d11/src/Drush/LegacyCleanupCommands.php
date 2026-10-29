@@ -13,7 +13,8 @@ use Drush\Commands\DrushCommands;
 /**
  * D11 移除/弃用模块与 standard profile 清理命令。
  *
- * color / rdf（D10 已出 core 的 contrib 回退）、switch_page_theme（无 D11 版本）
+ * color / rdf（D10 已出 core 的 contrib 回退）、switch_page_theme（无 D11 版本）、
+ * search（D11 移除，update hook 依赖已不存在的 statistics）、statistics（D11 移除）
  * 统一卸载；standard profile 在 D11 弃用，切换到 minimal。
  */
 class LegacyCleanupCommands extends DrushCommands {
@@ -24,6 +25,8 @@ class LegacyCleanupCommands extends DrushCommands {
   protected const UNINSTALL = [
     'color',
     'rdf',
+    'search',
+    'statistics',
     'switch_page_theme',
   ];
 
@@ -35,10 +38,10 @@ class LegacyCleanupCommands extends DrushCommands {
     parent::__construct();
   }
 
-  #[CLI\Command(name: 'update-to-d11:legacy-cleanup', description: '卸载 color/rdf/switch_page_theme，并把 standard profile 切到 minimal。')]
+  #[CLI\Command(name: 'update-to-d11:legacy-cleanup', description: '卸载 color/rdf/search/statistics/switch_page_theme，并把 standard profile 切到 minimal。')]
   #[CLI\Usage(name: 'drush update-to-d11:legacy-cleanup', description: '执行前请先 drush sql-dump 备份。')]
   public function cleanup(): void {
-    if (!$this->io()->confirm('将卸载 color、rdf、switch_page_theme 模块，并把安装 profile 从 standard 切到 minimal，继续？', FALSE)) {
+    if (!$this->io()->confirm('将卸载 color、rdf、search、statistics、switch_page_theme 模块，并把安装 profile 从 standard 切到 minimal，继续？', FALSE)) {
       $this->logger()->warning('已取消。');
       return;
     }
@@ -52,7 +55,7 @@ class LegacyCleanupCommands extends DrushCommands {
       $this->logger()->success('已卸载模块：' . implode(', ', $enabled));
     }
     else {
-      $this->logger()->info('color、rdf、switch_page_theme 均未启用，无需处理。');
+      $this->logger()->info('color、rdf、search、statistics、switch_page_theme 均未启用，无需处理。');
     }
 
     // standard profile 在 D11 弃用，切换到 minimal。
