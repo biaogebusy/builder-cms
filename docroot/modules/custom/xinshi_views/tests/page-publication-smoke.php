@@ -97,4 +97,58 @@ foreach ([FALSE, TRUE] as $raw) {
   check($rows[$raw ? 'en' : 'English']['published'] === FALSE, $id . ' reports the unpublished original');
   check($rows[$raw ? 'fr' : 'French']['published'] === TRUE, $id . ' reports the published translation');
 }
+// Keep the site's two-step recovery policy; distinguish its draft from its public flag.
+$workflow = \Drupal\workflows\Entity\Workflow::create([
+  'id' => 'page_list_editorial', 'label' => 'Page list editorial', 'type' => 'content_moderation',
+  'type_settings' => [
+    'states' => [
+      'draft' => ['label' => 'Draft', 'weight' => 0, 'published' => FALSE, 'default_revision' => FALSE],
+      'published' => ['label' => 'Published', 'weight' => 1, 'published' => TRUE, 'default_revision' => TRUE],
+      'unpublished' => ['label' => 'Unpublished', 'weight' => 2, 'published' => FALSE, 'default_revision' => TRUE],
+    ],
+    'transitions' => [
+      'draft' => ['label' => 'Draft', 'from' => ['draft', 'published', 'unpublished'], 'to' => 'draft', 'weight' => 0],
+      'publish' => ['label' => 'Publish', 'from' => ['draft', 'published'], 'to' => 'published', 'weight' => 1],
+      'withdraw' => ['label' => 'Withdraw', 'from' => ['published'], 'to' => 'unpublished', 'weight' => 2],
+    ],
+    'entity_types' => ['node' => ['landing_page']], 'default_moderation_state' => 'draft',
+  ],
+]);
+$workflow->save();
+$node_type = \Drupal\node\Entity\NodeType::load('landing_page');
+$node_type->setNewRevision(TRUE);
+$node_type->save();
+$page = Node::create(['type' => 'landing_page', 'title' => 'Two-step recovery',
+  'langcode' => 'en', 'uid' => 1, 'moderation_state' => 'unpublished']);
+$page->save();
+$view = View::load($id)->createDuplicate();
+$id = 'publication_workflow_' . $page->id();
+$view->set('id', $id);
+$display = $view->get('display');
+$display['default']['display_options']['filters']['nid']['value']['value'] = $page->id();
+$display['rest_export_1']['display_options']['path'] = 'api/v2/node/' . $id;
+$view->set('display', $display)->save();
+foreach (['unpublished', 'draft', 'published'] as $state) {
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $storage->resetCache([$page->id()]);
+  $page = $storage->load($page->id());
+  if ($state !== 'unpublished') {
+    $transitions = \Drupal::service('content_moderation.state_transition_validation')
+      ->getValidTransitions($page, \Drupal::currentUser());
+    check(in_array($state, array_map(fn($transition) => $transition->to()->id(), $transitions), TRUE),
+      'Workflow permits the next recovery step: ' . $state);
+    $page->set('moderation_state', $state);
+    $page->save();
+    $storage->resetCache([$page->id()]);
+    $page = $storage->load($page->id());
+  }
+  check($page->get('moderation_state')->value === $state && $page->isDefaultRevision(),
+    'Recovery step updates the default revision: ' . $state);
+  $response = RestExport::buildResponse($id, 'rest_export_1');
+  $row = json_decode($response->getContent(), TRUE, 512, JSON_THROW_ON_ERROR)['rows'][0];
+  check($row['moderation_state'] === $state && $row['moderation_state_label'] === ucfirst($state),
+    'Views returns the workflow state and label: ' . $state);
+  check($row['published'] === ($state === 'published'),
+    'Views keeps the public flag separate from workflow state: ' . $state);
+}
 echo 'Isolated Views publication checks passed.' . PHP_EOL;

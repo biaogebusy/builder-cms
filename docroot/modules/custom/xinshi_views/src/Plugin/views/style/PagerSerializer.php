@@ -5,8 +5,10 @@ namespace Drupal\xinshi_views\Plugin\views\style;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\rest\Plugin\views\row\DataFieldRow;
 use Drupal\rest\Plugin\views\style\Serializer;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * The style plugin for serialized output formats.
@@ -21,6 +23,18 @@ use Drupal\rest\Plugin\views\style\Serializer;
  * )
  */
 class PagerSerializer extends Serializer {
+
+  /** The optional moderation service for workflow state labels. */
+  protected ?ModerationInformationInterface $moderation = NULL;
+
+  /** {@inheritdoc} */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    if ($container->has('content_moderation.moderation_information')) {
+      $instance->moderation = $container->get('content_moderation.moderation_information');
+    }
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -55,14 +69,27 @@ class PagerSerializer extends Serializer {
         if (is_string($langcode) && $langcode !== '' && $entity->hasTranslation($langcode)) {
           $entity = $entity->getTranslation($langcode);
         }
-        $access = $entity->access('view', NULL, TRUE)
+        $entity_access = $entity->access('view', NULL, TRUE);
+        $access = $entity_access
           ->andIf($entity->get('status')->access('view', NULL, TRUE));
         $metadata = CacheableMetadata::createFromRenderArray($this->view->element)
           ->addCacheableDependency($entity)->addCacheableDependency($access);
-        $metadata->applyTo($this->view->element);
         if ($access->isAllowed()) {
           $data['published'] = $entity->isPublished();
         }
+        if ($this->moderation?->isModeratedEntity($entity)) {
+          $workflow = $this->moderation->getWorkflowForEntity($entity);
+          $items = $entity->get('moderation_state');
+          $state_access = $entity_access->andIf($items->access('view', NULL, TRUE));
+          $metadata->addCacheableDependency($workflow)->addCacheableDependency($state_access)
+            ->addCacheContexts(['languages:language_interface']);
+          $state_id = $items->value;
+          if ($state_access->isAllowed() && is_string($state_id) && $workflow->getTypePlugin()->hasState($state_id)) {
+            $data['moderation_state'] = $state_id;
+            $data['moderation_state_label'] = (string) $workflow->getTypePlugin()->getState($state_id)->label();
+          }
+        }
+        $metadata->applyTo($this->view->element);
       }
       $rows[] = $data;
     }

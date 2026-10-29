@@ -9,7 +9,7 @@ $root = dirname(__DIR__, 5);
 $loader = require $root . '/vendor/autoload.php';
 $loader->addPsr4('Drupal\\Core\\', $root . '/docroot/core/lib/Drupal/Core');
 $loader->addPsr4('Drupal\\Component\\', $root . '/docroot/core/lib/Drupal/Component');
-foreach (['rest', 'views'] as $module) {
+foreach (['rest', 'views', 'content_moderation', 'workflows'] as $module) {
   $loader->addPsr4('Drupal\\' . $module . '\\', $root . '/docroot/core/modules/' . $module . '/src');
 }
 $loader->addPsr4('Drupal\\xinshi_views\\', dirname(__DIR__) . '/src', TRUE);
