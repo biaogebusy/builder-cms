@@ -7,6 +7,9 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\rest\Plugin\views\row\DataFieldRow;
+use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\Plugin\views\row\RowPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
@@ -19,16 +22,29 @@ use Symfony\Component\Serializer\SerializerInterface;
 final class PagePublicationTest extends TestCase {
 
   public static function states(): array {
-    return [[TRUE, TRUE], [FALSE, TRUE], [FALSE, FALSE]];
+    return [
+      'published raw language' => [TRUE, TRUE, 'fr'],
+      'unpublished raw language' => [FALSE, TRUE, 'fr'],
+      'field denied raw language' => [FALSE, FALSE, 'fr'],
+      'published rendered language' => [TRUE, TRUE, Markup::create('fr')],
+      'unpublished rendered language' => [FALSE, TRUE, Markup::create('fr')],
+      'field denied rendered language' => [FALSE, FALSE, Markup::create('fr')],
+      'published language label with alias' => [TRUE, TRUE, Markup::create('French'), TRUE],
+      'unpublished language label with alias' => [FALSE, TRUE, Markup::create('French'), TRUE],
+      'field denied language label with alias' => [FALSE, FALSE, Markup::create('French'), TRUE],
+    ];
   }
 
   #[DataProvider('states')]
-  public function testExactTranslationAndFieldAccess(bool $published, bool $allowed): void {
+  public function testExactTranslationAndFieldAccess(bool $published, bool $allowed, string|Markup $langcode, bool $raw_field = FALSE): void {
     $entity = $this->createMock(PublishedPageInterface::class);
     $translation = $this->createMock(PublishedPageInterface::class);
     $entity->method('getEntityTypeId')->willReturn('node');
     $entity->method('bundle')->willReturn('landing_page');
-    $entity->method('hasTranslation')->with('fr')->willReturn(TRUE);
+    $entity->method('hasTranslation')->willReturnCallback(function ($value): bool {
+      // Drupal uses the language code as an array key without converting render objects.
+      return isset(['fr' => TRUE][$value]);
+    });
     $entity->method('getTranslation')->with('fr')->willReturn($translation);
     $translation->method('isPublished')->willReturn($published);
     $translation->method('getCacheTags')->willReturn(['node:12']);
@@ -42,8 +58,14 @@ final class PagePublicationTest extends TestCase {
     $view->result = [new ResultRow(['_entity' => $entity])];
     $view->element = ['#cache' => ['tags' => ['view:existing']]];
     $view->live_preview = TRUE;
-    $view->rowPlugin = $this->createMock(RowPluginBase::class);
-    $view->rowPlugin->method('render')->willReturn(['nid' => '12', 'langcode' => 'fr', 'title' => 'Page']);
+    $view->rowPlugin = $this->createMock($raw_field ? DataFieldRow::class : RowPluginBase::class);
+    if ($raw_field) {
+      $language = $this->createMock(FieldPluginBase::class);
+      $language->method('getValue')->willReturn('fr');
+      $view->field = ['display_language' => $language];
+      $view->rowPlugin->method('getFieldKeyAlias')->with('display_language')->willReturn('langcode');
+    }
+    $view->rowPlugin->method('render')->willReturn(['nid' => '12', 'langcode' => $langcode, 'title' => 'Page']);
     $serializer = $this->createMock(SerializerInterface::class);
     $serializer->method('serialize')->willReturnCallback(fn($value) => json_encode($value));
     $plugin = new PagerSerializer([], 'xinshi_pager_serializer', [], $serializer, ['json'], []);
@@ -51,6 +73,7 @@ final class PagePublicationTest extends TestCase {
     $plugin->options = ['formats' => ['json']];
     $data = json_decode($plugin->render(), TRUE);
     $this->assertSame('Page', $data['rows'][0]['title']);
+    $this->assertSame((string) $langcode, $data['rows'][0]['langcode']);
     if ($allowed) {
       $this->assertSame($published, $data['rows'][0]['published']);
     } else {

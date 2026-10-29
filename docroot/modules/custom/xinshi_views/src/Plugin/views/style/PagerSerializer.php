@@ -2,8 +2,10 @@
 
 namespace Drupal\xinshi_views\Plugin\views\style;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\rest\Plugin\views\row\DataFieldRow;
 use Drupal\rest\Plugin\views\style\Serializer;
 
 /**
@@ -36,8 +38,22 @@ class PagerSerializer extends Serializer {
       $entity = $row->_entity ?? NULL;
       if (is_array($data) && $entity instanceof EntityPublishedInterface
         && $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'landing_page') {
-        if (!empty($data['langcode']) && $entity->hasTranslation($data['langcode'])) {
-          $entity = $entity->getTranslation($data['langcode']);
+        $langcode = $data['langcode'] ?? NULL;
+        // Publication follows the raw language code, not a translated display label.
+        if ($this->view->rowPlugin instanceof DataFieldRow) {
+          foreach ($this->view->field as $id => $field) {
+            if ($this->view->rowPlugin->getFieldKeyAlias($id) === 'langcode') {
+              $langcode = $field->getValue($row);
+              break;
+            }
+          }
+        }
+        // Views rendered fields contain markup objects; entity language keys require strings.
+        if ($langcode instanceof MarkupInterface) {
+          $langcode = (string) $langcode;
+        }
+        if (is_string($langcode) && $langcode !== '' && $entity->hasTranslation($langcode)) {
+          $entity = $entity->getTranslation($langcode);
         }
         $access = $entity->access('view', NULL, TRUE)
           ->andIf($entity->get('status')->access('view', NULL, TRUE));
