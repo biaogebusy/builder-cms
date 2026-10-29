@@ -160,6 +160,7 @@ class PanelsIPEPageController extends ControllerBase {
       $data['title'] = \Drupal::token()->replace($title, ['node' => $node]);
       $data['uuid'] = $node->uuid();
       $data['nid'] = $node->id();
+      $data['published'] = $node->isPublished();
       $data['vid'] = $node->getRevisionId();
       $data['changed'] = $node->getChangedTime();
       $data['langcode'] = $node->language()->getId();

@@ -33,16 +33,30 @@ class PageJsonResponseBuilder {
 
   /** Preserves the page endpoint's data and fallback response formats. */
   public function build(?EntityInterface $entity, Request $request): CacheableJsonResponse {
+    $public = $request->query->getBoolean('public');
+    $check = $public && $request->query->getBoolean('access_only');
     $config = $this->configs->get('xinshi_api.settings');
     $metadata = (new CacheableMetadata())->addCacheableDependency($config)
       ->addCacheContexts(['url', 'user.permissions', 'languages:language_interface', 'languages:language_content']);
     if (!$entity) {
-      return $this->response(JsonAPIUtil::notFound(), $metadata->setCacheMaxAge(0));
+      return $this->response(JsonAPIUtil::notFound(), $metadata->setCacheMaxAge(0), $public ? 404 : 200);
+    }
+    // Public URLs never expose drafts, even to their authors or administrators.
+    // Historical revisions remain available through the authenticated builder endpoints.
+    if ($public && (($entity instanceof EntityPublishedInterface && !$entity->isPublished())
+      || $request->query->has('revision'))) {
+      return $this->response(JsonAPIUtil::notFound(), $metadata->setCacheMaxAge(0), 404);
     }
     $access = $entity->access('view', $this->account, TRUE);
     $metadata->addCacheableDependency($entity)->addCacheableDependency($access);
     if (!$access->isAllowed()) {
-      return $this->response(JsonAPIUtil::accessDenied(), $metadata->setCacheMaxAge(0));
+      return $this->response(JsonAPIUtil::accessDenied(), $metadata->setCacheMaxAge(0), $public ? 404 : 200);
+    }
+
+    $public_key = implode(':', [$entity->getEntityTypeId(), $entity->id(),
+      $entity->language()->getId(), $entity instanceof RevisionableInterface ? $entity->getRevisionId() : 'none']);
+    if ($check) {
+      return $this->response(['publicPageKey' => $public_key], $metadata->setCacheMaxAge(0));
     }
 
     // Personalized and unpublished output must not enter a persistent page cache.
@@ -92,6 +106,9 @@ class PageJsonResponseBuilder {
       if (!$context->isEmpty()) {
         $metadata = $metadata->merge($context->pop());
       }
+      if ($public && is_array($data)) {
+        $data['publicPageKey'] = $public_key;
+      }
       if ($cache_enabled) {
         $this->cache->set($keys, ['data' => $data, 'metadata' => $metadata], $metadata, $initial);
       }
@@ -101,7 +118,7 @@ class PageJsonResponseBuilder {
       $this->logger->error('Page JSON rendering failed for @type:@id (@exception).', [
         '@type' => $entity->getEntityTypeId(), '@id' => $entity->id(), '@exception' => get_class($exception),
       ]);
-      return $this->response([], $metadata->setCacheMaxAge(0));
+      return $this->response([], $metadata->setCacheMaxAge(0), $public ? 503 : 200);
     }
   }
 
@@ -116,9 +133,12 @@ class PageJsonResponseBuilder {
     return FALSE;
   }
 
-  private function response($data, CacheableMetadata $metadata): CacheableJsonResponse {
-    $response = new CacheableJsonResponse($data);
+  private function response($data, CacheableMetadata $metadata, int $status = 200): CacheableJsonResponse {
+    $response = new CacheableJsonResponse($data, $status);
     $response->addCacheableDependency($metadata);
+    // Internal variation caching keeps render work reusable; HTTP reuse must recheck publication.
+    $response->headers->set('Cache-Control', 'private, no-store');
+    $response->headers->set('X-Accel-Expires', '0');
     return $response;
   }
 

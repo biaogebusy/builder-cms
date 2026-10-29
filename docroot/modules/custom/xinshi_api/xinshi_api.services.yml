@@ -19,6 +19,10 @@ services:
     class: Drupal\Core\Cache\VariationCacheInterface
     factory: ['@variation_cache_factory', 'get']
     arguments: [rest]
+  xinshi_api.page_json_http_response:
+    class: Drupal\xinshi_api\EventSubscriber\PageJsonResponseSubscriber
+    tags:
+      - { name: event_subscriber }
   xinshi_api.page_json_response:
     class: Drupal\xinshi_api\PageJsonResponseBuilder
     arguments: ['@config.factory', '@xinshi_api.page_json_cache', '@renderer', '@module_handler', '@current_user', '@datetime.time', '@logger.channel.xinshi_api']

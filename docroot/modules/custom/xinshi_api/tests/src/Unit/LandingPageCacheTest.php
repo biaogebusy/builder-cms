@@ -194,6 +194,53 @@ final class LandingPageCacheTest extends TestCase {
     $this->assertSame(3, $this->renders);
   }
 
+  public function testPublicReadRejectsUnpublishedEvenWhenAccountCanView(): void {
+    $this->uid = 1;
+    $this->published = FALSE;
+    $this->allowed = TRUE;
+    $response = $this->request(['public' => 'true']);
+    $this->assertSame(404, $response->getStatusCode());
+    $this->assertSame([], $this->data($response));
+    $this->assertSame(0, $this->renders);
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+    $this->assertSame(200, $this->request()->getStatusCode());
+    $this->assertSame(1, $this->renders, 'The existing privileged builder read remains available.');
+  }
+
+  public function testPublicationCheckNeverRendersOrReusesPermissionFromWarmCache(): void {
+    $public = $this->request(['public' => 'true']);
+    $key = $this->data($public)['publicPageKey'];
+    $this->assertSame($key, $this->data($this->request(['public' => 'true', 'access_only' => 'true']))['publicPageKey']);
+    $this->assertSame(1, $this->renders);
+    $this->published = FALSE;
+    foreach ([[], ['access_only' => 'true']] as $query) {
+      $this->assertSame(404, $this->request($query + ['public' => 'true'])->getStatusCode());
+    }
+    $this->published = TRUE;
+    $this->allowed = FALSE;
+    $this->assertSame(404, $this->request(['public' => 'true', 'access_only' => 'true'])->getStatusCode());
+    $this->assertSame(1, $this->renders);
+  }
+
+  public function testPublicIdentityTracksLanguageRevisionAndRejectsHistoricalRevision(): void {
+    $key = $this->data($this->request(['public' => 'true']))['publicPageKey'];
+    $this->language = 'fr';
+    $this->assertNotSame($key, $this->data($this->request(['public' => 'true']))['publicPageKey']);
+    $this->language = 'en';
+    $this->revision++;
+    $this->assertNotSame($key, $this->data($this->request(['public' => 'true']))['publicPageKey']);
+    $this->assertSame(404, $this->request(['public' => 'true', 'revision' => 10])->getStatusCode());
+    $this->assertSame(200, $this->request(['revision' => 10])->getStatusCode());
+  }
+
+  public function testPublicMissingAndFailedReadsHaveRealHttpStatus(): void {
+    $this->exists = FALSE;
+    $this->assertSame(404, $this->request(['public' => 'true'])->getStatusCode());
+    $this->exists = TRUE;
+    $this->renderError = TRUE;
+    $this->assertSame(503, $this->request(['public' => 'true'])->getStatusCode());
+  }
+
   public function testRenderVariantsAndMetadataSurviveHits(): void {
     $this->maxAge = 60;
     foreach (['UTC', 'Asia/Shanghai', 'UTC'] as $zone) {

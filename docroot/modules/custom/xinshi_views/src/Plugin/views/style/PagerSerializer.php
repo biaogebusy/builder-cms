@@ -2,6 +2,8 @@
 
 namespace Drupal\xinshi_views\Plugin\views\style;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\rest\Plugin\views\style\Serializer;
 
 /**
@@ -30,7 +32,23 @@ class PagerSerializer extends Serializer {
     // Encoder.
     foreach ($this->view->result as $row_index => $row) {
       $this->view->row_index = $row_index;
-      $rows[] = $this->view->rowPlugin->render($row);
+      $data = $this->view->rowPlugin->render($row);
+      $entity = $row->_entity ?? NULL;
+      if (is_array($data) && $entity instanceof EntityPublishedInterface
+        && $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'landing_page') {
+        if (!empty($data['langcode']) && $entity->hasTranslation($data['langcode'])) {
+          $entity = $entity->getTranslation($data['langcode']);
+        }
+        $access = $entity->access('view', NULL, TRUE)
+          ->andIf($entity->get('status')->access('view', NULL, TRUE));
+        $metadata = CacheableMetadata::createFromRenderArray($this->view->element)
+          ->addCacheableDependency($entity)->addCacheableDependency($access);
+        $metadata->applyTo($this->view->element);
+        if ($access->isAllowed()) {
+          $data['published'] = $entity->isPublished();
+        }
+      }
+      $rows[] = $data;
     }
     unset($this->view->row_index);
 

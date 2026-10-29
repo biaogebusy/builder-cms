@@ -154,6 +154,24 @@ if ($operation === 'run') {
   step('mutate', ['target' => 'withdraw']);
   $withdrawn = step('read', ['page' => 'host']);
   check($withdrawn['data'] === ['denied' => TRUE] && $withdrawn['max_age'] === 0, 'Withdrawing a previously cached page prevents anonymous reuse');
+  foreach ([[], ['account' => 'admin']] as $account) {
+    $public = step('read', $account + ['page' => 'host', 'query' => ['public' => TRUE]]);
+    check($public['status'] === 404 && !isset($public['data']['title']), 'Public read hides unpublished content, including from administrators');
+  }
+  check(step('read', ['page' => 'host', 'account' => 'admin'])['status'] === 200, 'Privileged internal read still accepts unpublished content');
+  $public = step('http', ['page' => 'b', 'query' => ['public' => TRUE]]);
+  check($public['status'] === 200 && isset($public['data']['publicPageKey']), 'Published public page includes its cache validation identity');
+  $probe = step('http', ['page' => 'b', 'query' => ['public' => TRUE, 'access_only' => TRUE]]);
+  check($probe['data']['publicPageKey'] === $public['data']['publicPageKey'] && $probe['renders'] === $public['renders'], 'Public access probe rechecks access without rendering content');
+  check(str_contains($probe['cache_control'], 'no-store'), 'HTTP publication probe cannot be cached');
+  check(step('http', ['page' => 'b', 'query' => ['public' => TRUE, 'revision' => $ids['host_revision']]])['status'] === 404, 'Public URL cannot request historical revisions');
+  step('mutate', ['target' => 'withdraw_b']);
+  $hidden = step('http', ['page' => 'b', 'query' => ['public' => TRUE, 'access_only' => TRUE]]);
+  check($hidden['status'] === 404 && !isset($hidden['data']['publicPageKey']), 'Warm public identity is revoked immediately after unpublishing');
+  $hidden = step('read', ['page' => 'b', 'account' => 'admin', 'query' => ['public' => TRUE]]);
+  check($hidden['status'] === 404 && !isset($hidden['data']['body']), 'Administrator public URL cannot return unpublished landing-page components');
+  $draft = step('read', ['page' => 'b', 'account' => 'admin']);
+  check($draft['data']['body'][0]['title'] === 'Shared after', 'Builder internal read retains the unpublished components');
   echo "Isolated page cache checks passed.\n";
   exit;
 }
@@ -163,6 +181,9 @@ require_once $root . '/docroot/core/includes/bootstrap.inc';
 chdir($root . '/docroot');
 $options = json_decode($argv[2] ?? '{}', TRUE, 512, JSON_THROW_ON_ERROR);
 $ids = is_file('/tmp/xinshi-api-test/cache-fixture.json') ? json_decode(file_get_contents('/tmp/xinshi-api-test/cache-fixture.json'), TRUE) : [];
+if ($operation !== 'setup') {
+  $ids['admin'] = 1;
+}
 $query = ['content' => '/node/' . ($ids[$options['page'] ?? 'host'] ?? 1)] + ($options['query'] ?? []);
 $prefix = isset($options['language']) ? '/' . $options['language'] : '';
 $request = Request::create('http://api-test' . $prefix . '/api/v3/landingPage?' . http_build_query($query));
@@ -339,6 +360,10 @@ elseif ($operation === 'mutate') {
 
     case 'withdraw':
       Node::load($ids['host'])->setUnpublished()->save();
+      break;
+
+    case 'withdraw_b':
+      Node::load($ids['b'])->setUnpublished()->save();
       break;
   }
   echo json_encode($result) . PHP_EOL;
