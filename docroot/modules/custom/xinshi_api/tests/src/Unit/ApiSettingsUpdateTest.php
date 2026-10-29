@@ -48,6 +48,8 @@ final class ApiSettingsUpdateTest extends TestCase {
     }
     $container = new ContainerBuilder();
     $modules = $this->createMock(ModuleHandlerInterface::class);
+    $modules->method('moduleExists')->with('content_moderation')->willReturn(TRUE);
+    $container->set('module_handler', $modules);
     $cache = new NullBackend('config');
     $typed = new TypedConfigManager($this->storage, $schema, $cache, $modules, new ClassResolver($container));
     $namespaces = new \ArrayObject([
@@ -71,6 +73,50 @@ final class ApiSettingsUpdateTest extends TestCase {
     FileCacheFactory::setConfiguration($this->fileCacheConfiguration);
     \Drupal::unsetContainer();
     parent::tearDown();
+  }
+
+  public function testRepublicationUpgradePreservesOtherWorkflowSettings(): void {
+    $this->dispatcher->removeSubscriber($this->checker);
+    $config = 'workflows.workflow.editorial';
+    $original = ['id' => 'editorial', 'type' => 'content_moderation', 'label' => 'Site editorial',
+      'type_settings' => [
+        'entity_types' => ['node' => ['landing_page', 'article']],
+        'states' => ['draft' => ['published' => FALSE], 'unpublished' => ['published' => FALSE],
+          'published' => ['published' => TRUE]],
+        'transitions' => ['publish' => ['label' => 'Approve', 'from' => ['draft', 'published'],
+          'to' => 'published', 'weight' => 7],
+          'review' => ['from' => ['draft'], 'to' => 'draft', 'label' => 'Keep draft']],
+      ]];
+    $this->storage->write($config, $original);
+    xinshi_api_update_10005();
+    $expected = $original;
+    $expected['type_settings']['transitions']['publish']['from'][] = 'unpublished';
+    $this->assertSame($expected, $this->storage->read($config));
+    xinshi_api_update_10005();
+    $this->assertSame($expected, $this->storage->read($config));
+
+    foreach (['unbound', 'custom target', 'different state semantics'] as $case) {
+      $custom = $original;
+      if ($case === 'unbound') {
+        $custom['type_settings']['entity_types']['node'] = ['article'];
+      }
+      if ($case === 'custom target') {
+        $custom['type_settings']['transitions']['publish']['to'] = 'draft';
+      }
+      if ($case === 'different state semantics') {
+        $custom['type_settings']['states']['unpublished']['published'] = TRUE;
+      }
+      $this->storage->write($config, $custom);
+      $this->factory->reset($config);
+      xinshi_api_update_10005();
+      $this->assertSame($custom, $this->storage->read($config), $case);
+    }
+    // Keep the memory collection initialized when testing a missing workflow.
+    $this->storage->write('system.site', ['name' => 'Fixture']);
+    $this->storage->delete($config);
+    $this->factory->reset($config);
+    xinshi_api_update_10005();
+    $this->assertFalse($this->storage->read($config));
   }
 
   public function testInstallDefaultsHaveCompleteSchema(): void {

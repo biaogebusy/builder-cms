@@ -197,6 +197,7 @@ try {
   status(http('GET', '/api/v3/node-form/blog', bearer: $full), 403, 'Revocation affects later form requests');
   $body['data']['attributes']['body']['format'] = 'basic_html';
   status(http('POST', '/jsonapi/node/blog', bearer: $full, body: json_encode($body), type: 'application/vnd.api+json'), 403, 'Revocation also rejects writes after an earlier form load');
+  require __DIR__ . '/page-republication-http.php';
   echo "Content form HTTP checks: $checks\n";
 }
 finally {

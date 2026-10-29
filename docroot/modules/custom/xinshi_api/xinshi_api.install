@@ -116,3 +116,29 @@ function xinshi_api_update_10004() {
     \Drupal::cache('access_policy')->deleteAll();
   }
 }
+
+/**
+ * Allow direct republication in the Builder baseline's editorial workflow.
+ */
+function xinshi_api_update_10005() {
+  if (!\Drupal::moduleHandler()->moduleExists('content_moderation')) {
+    return;
+  }
+  $config = \Drupal::configFactory()->getEditable('workflows.workflow.editorial');
+  $settings = $config->get('type_settings');
+  // Limit the upgrade to the baseline workflow; custom workflow policies stay site-owned.
+  if ($config->isNew() || $config->get('type') !== 'content_moderation' ||
+      !in_array('landing_page', $settings['entity_types']['node'] ?? [], TRUE) ||
+      !isset($settings['states']['unpublished'], $settings['states']['published']) ||
+      ($settings['states']['unpublished']['published'] ?? TRUE) !== FALSE ||
+      ($settings['states']['published']['published'] ?? FALSE) !== TRUE ||
+      ($settings['transitions']['publish']['to'] ?? '') !== 'published') {
+    return;
+  }
+  $from = $settings['transitions']['publish']['from'] ?? [];
+  if (!in_array('unpublished', $from, TRUE)) {
+    $from[] = 'unpublished';
+    // Reuse the existing publish transition and its permissions; do not grant roles new access.
+    $config->set('type_settings.transitions.publish.from', $from)->save();
+  }
+}
