@@ -719,6 +719,39 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame(0, $this->rows());
   }
 
+  public function testIdeasReservationsUseCasAndStayOutOfSharedResults(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $before = Node::load($this->plan->id())->get('field_shooting_document')->value;
+    $changed = $this->doc;
+    $changed['ideasTask'] = ['version' => 1, 'taskId' => \Drupal::service('uuid')->generate(),
+      'inputHash' => str_repeat('a', 64), 'model' => 'fixture',
+      'spec' => ['version' => 1, 'documentId' => $this->plan->uuid(),
+        'request' => ['topic' => 'Private creative brief', 'duration' => 60,
+          'platform' => 'douyin', 'format' => 'comparison', 'tone' => 'natural',
+          'style' => 'pencil', 'locale' => 'zh-hans']]];
+    $saved = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+    $this->assertTrue($saved['updated']);
+    $this->assertSame($changed, $this->documents->read($this->plan->uuid()));
+    $this->assertFalse($this->documents->update($this->plan->uuid(), hash('sha256', $before), $before)['updated']);
+    foreach (['version' => 2, 'taskId' => 'bad', 'runId' => NULL, 'inputHash' => 'bad',
+      'planHash' => str_repeat('b', 64), 'apiKey' => 'forbidden', 'ideas' => []] as $key => $value) {
+      $invalid = $changed;
+      $invalid['ideasTask'][$key] = $value;
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    }
+    foreach (['documentId' => \Drupal::service('uuid')->generate(), 'version' => 2,
+      'operation' => 'check', 'plan' => $changed['draft'], 'request' => []] as $key => $value) {
+      $invalid = $changed;
+      $invalid['ideasTask']['spec'][$key] = $value;
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    }
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $projection = $sharing->read($token);
+    $this->assertArrayNotHasKey('ideasTask', $projection);
+    $this->assertStringNotContainsString('Private creative brief', json_encode($projection));
+    $this->assertSame(0, $this->rows());
+  }
+
   public function testReviewedModeAndFrozenReplayLocatorUseTheDocumentCas(): void {
     $before = $this->plan->get('field_shooting_document')->value;
     $changed = $this->doc;

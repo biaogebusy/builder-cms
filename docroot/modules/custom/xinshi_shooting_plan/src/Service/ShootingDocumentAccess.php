@@ -108,7 +108,7 @@ final class ShootingDocumentAccess {
     }
     $doc = json_decode($content, TRUE);
     if (!is_array($doc) || array_diff(array_keys($doc), ['kind', 'version', 'id', 'previousId',
-      'taskId', 'runId', 'request', 'workflow', 'reviewTask', 'revisionTask', 'sketchModel', 'sketchPlatform', 'sketchSize',
+      'taskId', 'runId', 'request', 'workflow', 'reviewTask', 'revisionTask', 'ideasTask', 'sketchModel', 'sketchPlatform', 'sketchSize',
       'textModel', 'textPlatform', 'original', 'draft', 'status', 'visuals', 'previousGeneration']) ||
       ($doc['kind'] ?? NULL) !== 'xinshi-shooting-plan' || ($doc['version'] ?? NULL) !== 1 ||
       ($doc['id'] ?? NULL) !== $plan_uuid || !Uuid::isValid($plan_uuid) ||
@@ -133,7 +133,10 @@ final class ShootingDocumentAccess {
       }
     }
     if (array_key_exists('revisionTask', $doc)) {
-      self::revisionTask($doc['revisionTask'], $plan_uuid);
+      self::adviceTask($doc['revisionTask'], $plan_uuid, TRUE);
+    }
+    if (array_key_exists('ideasTask', $doc)) {
+      self::adviceTask($doc['ideasTask'], $plan_uuid, FALSE);
     }
     foreach (['runId', 'previousId'] as $key) {
       if (array_key_exists($key, $doc) && (!is_string($doc[$key]) || !Uuid::isValid($doc[$key]))) {
@@ -183,27 +186,28 @@ final class ShootingDocumentAccess {
   }
 
   /** Validates bounded task metadata; Node owns the frozen source and task existence. */
-  private static function revisionTask(mixed $task, string $document_id): void {
+  private static function adviceTask(mixed $task, string $document_id, bool $revision): void {
     if (!is_array($task) || array_diff(array_keys($task), ['version', 'taskId', 'runId',
-      'inputHash', 'planHash', 'spec', 'model', 'platform']) || ($task['version'] ?? NULL) !== 1 ||
+      'inputHash', 'spec', 'model', 'platform', ...($revision ? ['planHash'] : [])]) || ($task['version'] ?? NULL) !== 1 ||
       !is_string($task['taskId'] ?? NULL) || !Uuid::isValid($task['taskId']) ||
       !is_string($task['inputHash'] ?? NULL) || !preg_match('/^[a-f0-9]{64}$/D', $task['inputHash']) ||
-      !is_string($task['planHash'] ?? NULL) || !preg_match('/^[a-f0-9]{64}$/D', $task['planHash']) ||
+      ($revision && (!is_string($task['planHash'] ?? NULL) ||
+        !preg_match('/^[a-f0-9]{64}$/D', $task['planHash']))) ||
       (array_key_exists('runId', $task) && (!is_string($task['runId']) || !Uuid::isValid($task['runId']))) ||
       (array_key_exists('model', $task) && (!is_string($task['model']) || mb_strlen($task['model']) > 128)) ||
       (array_key_exists('platform', $task) && $task['platform'] !== 'custom')) {
       throw new UnprocessableEntityHttpException('shooting_document_invalid');
     }
     $spec = $task['spec'] ?? NULL;
-    $rewrite = is_array($spec) && ($spec['operation'] ?? NULL) === 'rewrite';
-    $keys = ['version', 'documentId', 'request', 'operation'];
+    $rewrite = $revision && is_array($spec) && ($spec['operation'] ?? NULL) === 'rewrite';
+    $keys = ['version', 'documentId', 'request', ...($revision ? ['operation'] : [])];
     if ($rewrite) {
       $keys = array_merge($keys, ['shotId', 'mode', 'instruction']);
     }
     if (!is_array($spec) || count($spec) !== count($keys) || array_diff(array_keys($spec), $keys) ||
       ($spec['version'] ?? NULL) !== 1 || ($spec['documentId'] ?? NULL) !== $document_id ||
       !self::request($spec['request'] ?? NULL) ||
-      !in_array($spec['operation'] ?? NULL, ['check', 'rewrite'], TRUE) ||
+      ($revision && !in_array($spec['operation'] ?? NULL, ['check', 'rewrite'], TRUE)) ||
       ($rewrite && (!is_string($spec['shotId'] ?? NULL) ||
         !preg_match('/^[A-Za-z0-9_-]{1,64}$/D', $spec['shotId']) ||
         !in_array($spec['mode'] ?? NULL, ['dialogue', 'staging', 'shot'], TRUE) ||
@@ -212,7 +216,7 @@ final class ShootingDocumentAccess {
     }
   }
 
-  /** Review and revision reservations use the same complete creative brief. */
+  /** All advice reservations use the same complete creative brief. */
   private static function request(mixed $request): bool {
     return is_array($request) && count($request) === 7 &&
       !array_diff(array_keys($request), ['topic', 'duration', 'platform', 'format', 'tone', 'style', 'locale']) &&
