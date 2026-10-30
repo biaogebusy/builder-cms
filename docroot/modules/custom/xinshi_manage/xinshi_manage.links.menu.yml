@@ -3,3 +3,9 @@ xinshi_manage.admin.config:
   description: 'Configure Xinshi services, sign-in, AI, and knowledge.'
   route_name: xinshi_manage.admin.config
   parent: system.admin_config
+xinshi_manage.admin.ai:
+  title: 'AI'
+  description: 'Configure AI services, usage, credits, and knowledge.'
+  route_name: xinshi_manage.admin.ai
+  parent: xinshi_manage.admin.config
+  weight: 30

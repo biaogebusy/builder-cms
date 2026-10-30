@@ -9,21 +9,32 @@
  * Implements hook_menu_links_discovered_alter().
  */
 function xinshi_manage_menu_links_discovered_alter(array &$links): void {
-  $weights = [
-    'xinshi_api.settings' => 0,
-    'xinshi_sms.settings' => 10,
-    'xinshi_linux_do.settings' => 20,
-    'xinshi_ai.settings' => 30,
-    'xinshi_ai_usage.settings' => 40,
-    'xinshi_knowledge.settings' => 50,
-    'xinshi_analytics.settings' => 60,
+  $groups = [
+    'xinshi_manage.admin.config' => [
+      'xinshi_api.settings' => 0,
+      'xinshi_sms.settings' => 10,
+      'xinshi_linux_do.settings' => 20,
+    ],
+    'xinshi_manage.admin.ai' => [
+      'xinshi_ai.settings' => 0,
+      'xinshi_chat.settings' => 10,
+      'xinshi_ai_usage.settings' => 20,
+      'xinshi_credits.budgets' => 30,
+      'xinshi_credits.pools' => 40,
+      'xinshi_knowledge.settings' => 50,
+      'xinshi_knowledge_sync.settings' => 60,
+      'xinshi_analytics.settings' => 70,
+      'xinshi_entity_tools.resources' => 80,
+    ],
   ];
 
-  foreach ($weights as $id => $weight) {
-    // Only group links from modules already present in menu discovery.
-    if (isset($links[$id])) {
-      $links[$id]['parent'] = 'xinshi_manage.admin.config';
-      $links[$id]['weight'] = $weight;
+  foreach ($groups as $parent => $weights) {
+    foreach ($weights as $id => $weight) {
+      // Only group links from modules already present in menu discovery.
+      if (isset($links[$id])) {
+        $links[$id]['parent'] = $parent;
+        $links[$id]['weight'] = $weight;
+      }
     }
   }
 }

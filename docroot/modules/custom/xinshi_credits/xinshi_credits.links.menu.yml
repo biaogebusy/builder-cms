@@ -1,5 +1,10 @@
 xinshi_credits.budgets:
-  title: 'Credit budgets and allocations'
+  title: 'Credit cost budgets'
   description: 'Publish cost budgets and reward limits without issuing credits.'
   route_name: xinshi_credits.budgets
+  parent: user.admin_index
+xinshi_credits.pools:
+  title: 'Credit reward allocations'
+  description: 'Publish reward amounts, expiry dates, and total allocations.'
+  route_name: xinshi_credits.pools
   parent: user.admin_index
