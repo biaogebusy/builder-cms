@@ -1,0 +1,73 @@
+xinshi_ai_billing.quote:
+  path: '/api/v3/credits/ai/quotes'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_billing\Controller\BillingController::quote'
+    _format: json
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use ai credits'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_ai_billing.authorize:
+  path: '/api/v3/credits/ai/authorizations'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_billing\Controller\BillingController::authorize'
+    _format: json
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use ai credits'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_ai_billing.operation:
+  path: '/api/v3/credits/ai/operations/{operation}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_billing\Controller\BillingController::own'
+    _format: json
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'use ai credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_ai_billing.profile:
+  path: '/api/v3/credits/ai/profiles'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_billing\Controller\BillingController::profile'
+    _format: json
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'administer ai credit prices'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_ai_billing.permit:
+  path: '/api/v3/credits/ai/executor/permit'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_billing\Controller\BillingController::permit'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: []
+    no_cache: TRUE
+xinshi_ai_billing.finalize:
+  path: '/api/v3/credits/ai/executor/finalize'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_billing\Controller\BillingController::finalize'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: []
+    no_cache: TRUE

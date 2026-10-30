@@ -1,0 +1,18 @@
+services:
+  xinshi_ai_billing.images:
+    class: Drupal\xinshi_ai_billing\ImageBilling
+    arguments: ['@xinshi_ai_billing.billing', '@xinshi_ai_billing.profiles', '@database', '@config.factory', '@xinshi_credits.context', '@entity_type.manager', '@xinshi_ai_usage.local_producer', '@datetime.time', '@?xinshi_ai.prompt_rewrite', '@?xinshi_ai.image_job_runs']
+  xinshi_ai_billing.reports:
+    class: Drupal\xinshi_ai_billing\BillingReports
+    arguments: ['@database', '@config.factory']
+  xinshi_ai_billing.profiles:
+    class: Drupal\xinshi_ai_billing\BillingProfiles
+    arguments: ['@database', '@config.factory', '@xinshi_credits.context']
+  xinshi_ai_billing.billing:
+    class: Drupal\xinshi_ai_billing\AiBilling
+    arguments: ['@database', '@config.factory', '@xinshi_credits.context', '@xinshi_credits.lifecycle', '@xinshi_ai_billing.profiles', '@datetime.time', '@uuid', '@current_user', '@entity_type.manager']
+  xinshi_ai_billing.uninstall:
+    class: Drupal\xinshi_ai_billing\BillingUninstallValidator
+    arguments: ['@database']
+    tags:
+      - { name: module_install.uninstall_validator }

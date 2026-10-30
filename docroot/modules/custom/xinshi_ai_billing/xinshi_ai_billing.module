@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+/** Implements hook_cron(). */
+function xinshi_ai_billing_cron(): void {
+  \Drupal::service('xinshi_ai_billing.images')->reconcile();
+}
+
+/** Implements hook_entity_predelete(). */
+function xinshi_ai_billing_entity_predelete(\Drupal\Core\Entity\EntityInterface $entity): void {
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'image_job') {
+    \Drupal::service('xinshi_ai_billing.images')->assertDeletable($entity->uuid());
+  }
+}

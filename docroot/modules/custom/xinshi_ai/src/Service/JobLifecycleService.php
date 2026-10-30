@@ -46,7 +46,7 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function createQueued(array $input, AccountInterface $owner): NodeInterface {
+  public function createQueued(array $input, AccountInterface $owner, ?string $operationId = NULL): NodeInterface {
     $prompt = (string) ($input['prompt'] ?? '');
     $params = is_array($input['params'] ?? NULL) ? $input['params'] : [];
     // Connection secrets of custom-platform jobs live in the credential vault
@@ -69,6 +69,8 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
       'field_n_succeeded' => 0,
       'field_status' => 'queued',
     ];
+    // Trusted host identity binds a prepaid operation before the first entity write.
+    if ($operationId !== NULL) $values['uuid'] = $operationId;
     if (!empty($input['negativePrompt'])) {
       $values['field_negative_prompt'] = $input['negativePrompt'];
     }

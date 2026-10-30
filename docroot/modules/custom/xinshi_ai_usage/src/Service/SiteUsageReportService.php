@@ -48,6 +48,7 @@ final class SiteUsageReportService {
     private readonly UsageProjectionService $projection,
     private readonly UsageReportService $userReports,
     private readonly PriceBookService $priceBook,
+    private readonly ?UsageChargesInterface $charges = NULL,
   ) {}
 
   /**
@@ -98,7 +99,8 @@ final class SiteUsageReportService {
       'filter' => $this->describeFilter($filter),
       'totals' => $this->aggregateTotals($rows),
       'by_role' => $this->aggregateByRole($rows),
-      'charges' => ['status' => 'not_enabled'],
+      'charges' => $this->charges?->summarize($siteId, array_column($rows, 'operation_id'))
+        ?? ['status' => 'not_enabled'],
     ] + ($withCosts ? ['estimated_cost' => UsageCostSummary::fromAttempts($rows)] : [])
       + $this->completeness($siteId);
   }
@@ -373,8 +375,7 @@ final class SiteUsageReportService {
           'state' => $d['state'],
           'delivered_at' => ReportTime::iso((int) $d['delivered_at'], $tz),
         ], $deliveries),
-        // No sales price book or ledger exists yet (UB4); nothing was charged.
-        'charges' => ['status' => 'not_enabled'],
+        'charges' => $this->charges?->summarize($siteId, [$operationId]) ?? ['status' => 'not_enabled'],
       ] + $this->completeness($siteId);
   }
 

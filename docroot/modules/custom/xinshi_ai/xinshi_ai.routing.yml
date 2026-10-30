@@ -200,6 +200,20 @@ xinshi_ai.image_job.create:
     _permission: 'create xinshi_ai image job'
 
 # 图片任务:取消(软取消)。
+xinshi_ai.image_job.quote:
+  path: '/api/v3/image-jobs/quote'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ImageJobController::quote'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+    _permission: 'create xinshi_ai image job'
+
 xinshi_ai.image_job.cancel:
   path: '/api/v3/image-jobs/{uuid}/cancel'
   defaults:

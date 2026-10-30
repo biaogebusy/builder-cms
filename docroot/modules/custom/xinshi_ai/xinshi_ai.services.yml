@@ -49,7 +49,7 @@ services:
   # Usage attempts and delivery facts of image jobs (UB2.4).
   xinshi_ai.image_usage_recorder:
     class: Drupal\xinshi_ai\Service\ImageUsageRecorder
-    arguments: ['@xinshi_ai_usage.local_producer', '@logger.channel.xinshi_ai']
+    arguments: ['@xinshi_ai_usage.local_producer', '@logger.channel.xinshi_ai', '@?xinshi_ai_billing.images']
 
   # Orders the prompt pre-rewrite of image jobs from the chat service (UB2.6).
   xinshi_ai.prompt_rewrite:

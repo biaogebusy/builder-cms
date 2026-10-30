@@ -32,6 +32,11 @@ final class ImageJobCacheSubscriber implements EventSubscriberInterface {
    */
   public function onResponse(ResponseEvent $event): void {
     $request = $event->getRequest();
+    // Quotes, submissions and their access failures contain private task state.
+    if (preg_match('#/api/v3/image-jobs(?:/|$)#', $request->getPathInfo())) {
+      $event->getResponse()->headers->set('Cache-Control', 'no-store, private');
+      return;
+    }
     if (!$request->isMethodCacheable()) {
       return;
     }

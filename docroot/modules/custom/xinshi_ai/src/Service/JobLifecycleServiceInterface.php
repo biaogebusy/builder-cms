@@ -24,7 +24,8 @@ interface JobLifecycleServiceInterface {
    *   归一化输入:jobKind / platform / model / prompt / negativePrompt /
    *   params(array)/ nRequested / inputImage(media id)/ parentJob(node id)。
    */
-  public function createQueued(array $input, AccountInterface $owner): NodeInterface;
+  // The optional operation ID comes from the trusted host, never the HTTP payload.
+  public function createQueued(array $input, AccountInterface $owner, ?string $operationId = NULL): NodeInterface;
 
   /**
    * queued → running。

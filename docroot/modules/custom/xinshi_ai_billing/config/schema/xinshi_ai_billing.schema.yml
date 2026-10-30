@@ -1,0 +1,12 @@
+xinshi_ai_billing.settings:
+  type: config_object
+  label: 'AI credit billing'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Admit new quotes and authorizations'
+    active_versions:
+      type: sequence
+      label: 'Explicitly accepted sales profile versions'
+      sequence:
+        type: string

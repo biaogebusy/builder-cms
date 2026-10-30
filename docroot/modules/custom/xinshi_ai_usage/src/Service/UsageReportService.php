@@ -50,6 +50,7 @@ final class UsageReportService {
   public function __construct(
     private readonly Connection $database,
     private readonly UsageProjectionService $projection,
+    private readonly ?UsageChargesInterface $charges = NULL,
   ) {}
 
   /**
@@ -111,8 +112,8 @@ final class UsageReportService {
       'filter' => $this->describeFilter($filter),
       'totals' => $totals,
       'estimated_cost' => UsageCostSummary::fromAttempts($rows),
-      // No sales price book or ledger exists yet (UB4); nothing was charged.
-      'charges' => ['status' => 'not_enabled'],
+      'charges' => $this->charges?->summarize($siteId, array_column($rows, 'operation_id'), $actorUserId)
+        ?? ['status' => 'not_enabled'],
     ] + $this->completeness($siteId);
   }
 
@@ -231,8 +232,8 @@ final class UsageReportService {
         'state' => $d['state'],
         'delivered_at' => ReportTime::iso((int) $d['delivered_at'], $tz),
       ], $deliveries),
-      // No sales price book or ledger exists yet (UB4); nothing was charged.
-      'charges' => ['status' => 'not_enabled'],
+      'charges' => $this->charges?->summarize($siteId, [$operationId], $actorUserId)
+        ?? ['status' => 'not_enabled'],
     ] + $this->completeness($siteId);
   }
 

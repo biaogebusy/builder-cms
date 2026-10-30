@@ -1,0 +1,6 @@
+use ai credits:
+  title: 'Authorize AI credit spending'
+  restrict access: true
+administer ai credit prices:
+  title: 'Publish AI credit sales profiles'
+  restrict access: true

@@ -38,7 +38,9 @@ fi
 docker exec "$credits_container" mkdir -p /app/docroot/sites/default /app/docroot/modules/contrib
 cd "$credits_root"
 tar -cf - vendor composer.json composer.lock docroot/autoload.php docroot/index.php docroot/core \
-  docroot/modules/custom/xinshi_credits docroot/modules/custom/xinshi_rewards docroot/modules/contrib/simple_oauth \
+  docroot/modules/custom/xinshi_credits docroot/modules/custom/xinshi_rewards \
+  docroot/modules/custom/xinshi_ai_usage docroot/modules/custom/xinshi_ai_billing \
+  docroot/modules/custom/xinshi_ai/src docroot/modules/custom/xinshi_ai/xinshi_ai.install docroot/modules/contrib/simple_oauth \
   docroot/modules/contrib/consumers | docker cp - "$credits_container":/app
 docker exec "$credits_container" sh -c 'find /app/docroot/modules/custom/xinshi_credits \( -name "*.php" -o -name "*.module" -o -name "*.install" \) -exec php -l {} \;'
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 -e CREDITS_TEST_MYSQL="$credits_mysql" "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
@@ -64,3 +66,10 @@ docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extens
   /app/docroot/modules/custom/xinshi_rewards/tests/http.php
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_rewards/tests/concurrency.php
+docker exec "$credits_container" sh -c 'find /app/docroot/modules/custom/xinshi_ai_billing \( -name "*.php" -o -name "*.install" \) -exec php -l {} \;'
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_ai_billing/tests/integration.php
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_ai_billing/tests/http.php
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_ai_billing/tests/images.php

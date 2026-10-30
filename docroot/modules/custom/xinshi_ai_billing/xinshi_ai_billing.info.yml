@@ -1,0 +1,8 @@
+name: 'Xinshi AI Billing'
+type: module
+description: 'Optional AI quotes, user authorization and evidence-based credit settlement.'
+package: Xinshi
+core_version_requirement: ^11
+dependencies:
+  - xinshi_credits:xinshi_credits
+  - xinshi_ai_usage:xinshi_ai_usage

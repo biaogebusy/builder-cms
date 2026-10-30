@@ -16,6 +16,8 @@ use Drupal\xinshi_ai\Service\EventTicketServiceInterface;
 use Drupal\xinshi_ai\Service\ImageJobCredentialVault;
 use Drupal\xinshi_ai\Service\ImmediateJobRunner;
 use Drupal\xinshi_ai\Service\JobLifecycleServiceInterface;
+use Drupal\xinshi_ai_billing\ImageBilling;
+use Drupal\xinshi_credits\CreditWriteRequest;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,6 +39,8 @@ final class ImageJobController extends ControllerBase {
     private readonly ImmediateJobRunner $immediateRunner,
     private readonly ImageJobCredentialVault $credentials,
     private readonly PublicUrlPolicy $urlPolicy,
+    private readonly ?ImageBilling $billing = NULL,
+    private readonly ?CreditWriteRequest $creditWrites = NULL,
   ) {}
 
   /**
@@ -52,6 +56,8 @@ final class ImageJobController extends ControllerBase {
       $container->get('xinshi_ai.immediate_job_runner'),
       $container->get('xinshi_ai.image_job_credentials'),
       $container->get('xinshi_ai.public_url_policy'),
+      $container->has('xinshi_ai_billing.images') ? $container->get('xinshi_ai_billing.images') : NULL,
+      $container->has('xinshi_credits.write_request') ? $container->get('xinshi_credits.write_request') : NULL,
     );
   }
 
@@ -71,18 +77,7 @@ final class ImageJobController extends ControllerBase {
     $params = is_array($payload['params'] ?? NULL) ? $payload['params'] : [];
     $platform = (string) ($payload['platform'] ?? '');
     $credentials = ImageJobCredentialVault::fromPayload($payload, $params);
-    $input = [
-      'jobKind' => $payload['jobKind'] ?? 'text_to_image',
-      'platform' => $payload['platform'] ?? NULL,
-      'model' => $payload['model'] ?? NULL,
-      'prompt' => $payload['prompt'] ?? '',
-      'negativePrompt' => $payload['negativePrompt'] ?? NULL,
-      'params' => $params,
-      'nRequested' => $payload['params']['n'] ?? $payload['n'] ?? NULL,
-      'inputImage' => $payload['inputImage'] ?? NULL,
-      'parentJob' => $payload['parentJob'] ?? NULL,
-      'taskId' => $payload['taskId'] ?? NULL,
-    ];
+    $input = self::input($payload, $params);
 
     try {
       $task = $this->taskManager->getByKind((string) $input['jobKind']);
@@ -109,10 +104,18 @@ final class ImageJobController extends ControllerBase {
     }
 
     try {
-      $job = $this->lifecycle->createQueued($input, $this->account);
+      if (isset($payload['billingQuoteId'])) {
+        if (!$this->billing || !$this->creditWrites) return new JsonResponse(['code' => 'billing_unavailable'], 503);
+        $this->creditWrites->parse($request);
+      }
+      $create = fn(?string $operation = NULL) => $this->lifecycle->createQueued($input, $this->account, $operation);
+      $job = $this->billing ? $this->billing->create($input, $payload['billingQuoteId'] ?? NULL, $create) : $create();
     }
     catch (InputImageAccessException $e) {
       return new JsonResponse(['error' => $e->getMessage(), 'code' => 'forbidden'], 403);
+    }
+    catch (\Drupal\xinshi_credits\CreditException $e) {
+      return new JsonResponse(['code' => $e->reason], $e->status);
     }
     $uuid = $job->uuid();
     if ($platform === 'custom') {
@@ -134,8 +137,7 @@ final class ImageJobController extends ControllerBase {
       'taskId' => $task->getId(),
     ]);
 
-    // 默认(queue.worker=cron)在响应回客户端后即时消费队列,免去 cron 空窗;
-    // 若配置为外部常驻消费者(如 advancedqueue)则不重复处理。
+    // Consume after the response unless an external worker owns the queue.
     $worker = (string) ($this->config('xinshi_ai.settings')->get('queue.worker') ?? 'cron');
     if ($worker === 'cron' || $worker === 'immediate') {
       $this->immediateRunner->schedule();
@@ -147,6 +149,42 @@ final class ImageJobController extends ControllerBase {
       'nRequested' => (int) $job->get('field_n_requested')->value,
       'eventTicket' => $ticket,
     ], 202);
+  }
+
+  /** Quote without creating a job; disabled installations retain their original behavior. */
+  public function quote(Request $request): JsonResponse {
+    $headers = ['Cache-Control' => 'private, no-store'];
+    if (!$this->billing) return new JsonResponse(['status' => 'disabled'], 200, $headers);
+    $payload = json_decode($request->getContent(), TRUE);
+    if (!is_array($payload) || array_is_list($payload) || strlen($request->getContent()) > 100000) {
+      return new JsonResponse(['code' => 'invalid_image_request'], 422, $headers);
+    }
+    $params = is_array($payload['params'] ?? NULL) ? $payload['params'] : [];
+    ImageJobCredentialVault::fromPayload($payload, $params);
+    try {
+      $this->creditWrites?->parse($request);
+      $result = $this->billing->quote(self::input($payload, $params), (string) $request->headers->get('Idempotency-Key'));
+      return new JsonResponse($result, 200, $headers);
+    }
+    catch (\Drupal\xinshi_credits\CreditException $e) {
+      return new JsonResponse(['code' => $e->reason], $e->status, $headers);
+    }
+  }
+
+  /** Share the exact request projection between quotation and task creation. */
+  private static function input(array $payload, array $params): array {
+    return [
+      'jobKind' => $payload['jobKind'] ?? 'text_to_image',
+      'platform' => $payload['platform'] ?? NULL,
+      'model' => $payload['model'] ?? NULL,
+      'prompt' => $payload['prompt'] ?? '',
+      'negativePrompt' => $payload['negativePrompt'] ?? NULL,
+      'params' => $params,
+      'nRequested' => $payload['params']['n'] ?? $payload['n'] ?? NULL,
+      'inputImage' => $payload['inputImage'] ?? NULL,
+      'parentJob' => $payload['parentJob'] ?? NULL,
+      'taskId' => $payload['taskId'] ?? NULL,
+    ];
   }
 
   /**

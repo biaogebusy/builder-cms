@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+/** Implements hook_schema(). */
+function xinshi_ai_billing_schema(): array {
+  $id = ['type' => 'varchar', 'length' => 128, 'not null' => TRUE];
+  $text = ['type' => 'text', 'size' => 'big', 'not null' => TRUE];
+  $integer = ['type' => 'int', 'size' => 'big', 'not null' => TRUE];
+  return [
+    'ai_billing_profile' => ['fields' => ['site_id' => $id, 'version' => $id,
+      'profile_json' => $text], 'primary key' => ['site_id', 'version']],
+    'ai_billing_quote' => ['fields' => ['id' => $id, 'site_id' => $id, 'user_id' => $id,
+      'producer_id' => $id, 'request_hash' => $id, 'request_key' => $id, 'request_json' => $text, 'version' => $id,
+      'expires_at' => $integer, 'created_at' => $integer], 'primary key' => ['id'],
+      'unique keys' => ['request' => ['site_id', 'user_id', 'request_key']],
+      'indexes' => ['owner' => ['site_id', 'user_id', 'created_at']]],
+    'ai_billing_authorization' => ['fields' => ['site_id' => $id, 'operation_id' => $id,
+      'quote_id' => $id, 'reservation_id' => $id, 'user_id' => $id, 'producer_id' => $id,
+      'state' => $id, 'final_json' => $text, 'terminal_journal_id' => $id,
+      'created_at' => $integer, 'checked_at' => $integer + ['default' => 0]], 'primary key' => ['site_id', 'operation_id'],
+      'unique keys' => ['quote' => ['quote_id']],
+      'indexes' => ['owner' => ['site_id', 'user_id', 'created_at'],
+        'reconcile' => ['site_id', 'producer_id', 'state', 'checked_at']]],
+    'ai_billing_permit' => ['fields' => ['site_id' => $id, 'operation_id' => $id,
+      'attempt_id' => $id, 'call_json' => $text, 'created_at' => $integer],
+      'primary key' => ['site_id', 'attempt_id'],
+      'indexes' => ['operation' => ['site_id', 'operation_id']]],
+    'ai_billing_evidence' => ['fields' => ['site_id' => $id, 'operation_id' => $id,
+      'evidence_hash' => $id, 'evidence_json' => $text, 'created_at' => $integer],
+      'primary key' => ['site_id', 'operation_id', 'evidence_hash']],
+  ];
+}

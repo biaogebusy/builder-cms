@@ -6,6 +6,8 @@ namespace Drupal\xinshi_ai\Service;
 
 use Drupal\xinshi_ai_usage\Service\LocalUsageException;
 use Drupal\xinshi_ai_usage\Service\LocalUsageProducer;
+use Drupal\xinshi_ai_billing\ImageBilling;
+use Drupal\node\NodeInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -23,7 +25,13 @@ class ImageUsageRecorder {
   public function __construct(
     private readonly LocalUsageProducer $producer,
     private readonly LoggerInterface $logger,
+    private readonly ?ImageBilling $billing = NULL,
   ) {}
+
+  /** Apply optional pricing admission before prompt preparation can call another provider. */
+  public function authorizeJob(NodeInterface $job, array $generation): void {
+    ($this->billing ?? NULL)?->beforeRun($job, $generation);
+  }
 
   /**
    * Records the intent of the call and returns its attempt handle.
@@ -69,8 +77,17 @@ class ImageUsageRecorder {
       ]);
       return NULL;
     }
-    return new ImageAttempt($this->producer, $this->logger, $prepared['site_id'], $operationId,
+    $attempt = new ImageAttempt($this->producer, $this->logger, $prepared['site_id'], $operationId,
       $prepared['attempt_id'], $prepared['attempt_no']);
+    try {
+      // Financial denial is outside the observe-mode fallback and can never send a free call.
+      ($this->billing ?? NULL)?->permit($call, $prepared['attempt_id']);
+    }
+    catch (\Throwable $error) {
+      $attempt->failed('billing_denied', new ProviderRequestTrace());
+      throw $error;
+    }
+    return $attempt;
   }
 
   /**

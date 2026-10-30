@@ -47,6 +47,7 @@ abstract class AiImageTaskBase extends AiTaskBase {
   protected function runImagePipeline(NodeInterface $job, array $genConfig, string $operationType, callable $invoke,
     ?ImageJobRun $run = NULL): void {
     $uuid = $job->uuid();
+    $this->usageRecorder->authorizeJob($job, $genConfig);
     if (!$this->lifecycle->markStarted($job)) {
       // Cancelled between the queue claim and the start: nothing is called.
       $this->logger->notice('image_job @job was @status before it started; the provider is not called', [
