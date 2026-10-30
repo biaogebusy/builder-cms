@@ -27,10 +27,10 @@ final class CreditPublication {
     if (!in_array($type, ['budget', 'pool'], TRUE)) throw new CreditException('invalid_publication');
     $required = ['publication_ref', 'period_start', 'period_end', 'source_ref'];
     $required = [...$required, ...($type === 'budget' ? ['category', 'currency', 'cap_micros', 'execution_headroom_micros']
-      : ['rule_id', 'rule_version', 'cap_atoms', 'mode', 'source_kind', 'grant_limit_atoms', 'expires_at', 'bounds'])];
-    CreditValue::fields($input, $required);
+      : ['rule_id', 'rule_version', 'cap_atoms', 'mode', 'source_kind', 'grant_limit_atoms', 'bounds'])];
+    CreditValue::fields($input, $required, $type === 'pool' ? ['expires_at'] : []);
     $value = ['publication_ref' => CreditValue::id($input['publication_ref']), 'source_ref' => CreditValue::text($input['source_ref'])];
-    foreach (['period_start', 'period_end', ...($type === 'pool' ? ['expires_at'] : [])] as $field) {
+    foreach (['period_start', 'period_end'] as $field) {
       if (!is_int($input[$field]) || $input[$field] <= 0) throw new CreditException('invalid_period');
       $value[$field] = $input[$field];
     }
@@ -44,13 +44,14 @@ final class CreditPublication {
       if ((int) $value['execution_headroom_micros'] > (int) $value['cap_micros']) throw new CreditException('invalid_budget_bound');
       return $value;
     }
+    $value['expires_at'] = CreditValue::expiry($input['expires_at'] ?? NULL);
     foreach (['rule_id', 'rule_version'] as $field) $value[$field] = CreditValue::id($input[$field]);
     foreach (['cap_atoms', 'grant_limit_atoms'] as $field) $value[$field] = (string) CreditValue::amount($input[$field], TRUE);
     if (!in_array($input['mode'], ['fixed', 'variable'], TRUE)
       || !in_array($input['source_kind'], ['promotion', 'admin_gift', 'compensation'], TRUE)) throw new CreditException('invalid_grant_policy');
     $value['mode'] = $input['mode']; $value['source_kind'] = $input['source_kind'];
     if ((int) $value['grant_limit_atoms'] > (int) $value['cap_atoms']
-      || $value['expires_at'] <= $value['period_start'] || $value['expires_at'] > $value['period_end']
+      || ($value['expires_at'] !== NULL && $value['expires_at'] <= $value['period_start'])
       || ($value['mode'] === 'fixed' && (int) $value['cap_atoms'] % (int) $value['grant_limit_atoms'] !== 0)) {
       throw new CreditException('invalid_grant_policy');
     }

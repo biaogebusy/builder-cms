@@ -15,7 +15,7 @@ use Drupal\xinshi_credits\CreditException;
 use Drupal\xinshi_credits\CreditLedger;
 use Drupal\xinshi_credits\CreditValue;
 
-/** Qualifies G11/G12 rewards without owning a second balance or ledger transaction. */
+/** Qualifies G11/G12/G13 rewards without owning a second balance or ledger transaction. */
 final class Rewards {
 
   public function __construct(
@@ -46,29 +46,31 @@ final class Rewards {
       if (!$grant) throw new CreditException('reward_unavailable', 503);
       return $base + ['status' => 'already_granted', 'journal_id' => $claim['journal_id'],
         'amount_atoms' => (string) $grant['granted_atoms'], 'scope' => json_decode($grant['scope_json'], TRUE, 16, JSON_THROW_ON_ERROR),
-        'expires_at' => gmdate('c', (int) $grant['expires_at'])];
+        'expires_at' => CreditValue::expiryIso($grant['expires_at'])];
     }
     $pool = $this->pool('G11');
     return $base + ['status' => (int) $pool['cap_atoms'] - (int) $pool['issued_atoms'] < (int) $pool['policy']['grant_limit_atoms']
       ? 'budget_closed' : 'eligible', 'amount_atoms' => $pool['policy']['grant_limit_atoms'],
-      'scope' => array_keys($pool['bounds']), 'expires_at' => gmdate('c', $pool['policy']['expires_at'])];
+      'scope' => array_keys($pool['bounds']), 'expires_at' => CreditValue::expiryIso($pool['policy']['expires_at'])];
   }
 
-  /** Admit the first active visit of a server business date, independent of rule version. */
-  public function daily(string $clientKey): array {
+  /** Admit a daily or one-time active visit, independent of rule version. */
+  public function daily(string $clientKey, string $rule = 'G11'): array {
+    if (!in_array($rule, ['G11', 'G13'], TRUE)) throw new CreditException('invalid_reward');
+    $welcome = $rule === 'G13';
     $uid = $this->actor(['view own credits']);
-    [$key, $hash] = $this->requestIdentity('daily', $uid, $clientKey, []);
+    [$key, $hash] = $this->requestIdentity($welcome ? 'welcome' : 'daily', $uid, $clientKey, []);
     if ($previous = $this->previous($key, $hash)) return $previous;
-    $this->throttle('daily', $uid);
-    if (!$this->currentUser->hasPermission('receive daily credits')) return ['status' => 'not_eligible'];
-    [$date, , $zone] = $this->calendar();
-    $id = $this->identity([$this->context->site(), $uid, 'G11', $date]);
+    $this->throttle($welcome ? 'welcome' : 'daily', $uid);
+    if (!$this->currentUser->hasPermission($welcome ? 'receive welcome credits' : 'receive daily credits')) return ['status' => 'not_eligible'];
+    [$date, , $zone] = $welcome ? ['', NULL, NULL] : $this->calendar();
+    $id = $this->identity([$this->context->site(), $uid, $rule, $date]);
     if ($this->claim($id)) return $this->alias($key, $hash, $id, 'already_granted');
-    if (!$this->config->get('xinshi_rewards.settings')->get('daily_enabled')
+    if (!$this->config->get('xinshi_rewards.settings')->get($welcome ? 'welcome_enabled' : 'daily_enabled')
       || !$this->config->get('xinshi_credits.settings')->get('grants_enabled')) return ['status' => 'paused'];
-    $pool = $this->pool('G11');
+    $pool = $this->pool($rule);
     $command = $this->command($uid, $uid, $pool, $id, $pool['policy']['grant_limit_atoms'],
-      array_keys($pool['bounds']), $pool['policy']['expires_at'], 'Daily active-visit reward');
+      array_keys($pool['bounds']), $pool['policy']['expires_at'], $welcome ? 'First active-visit reward' : 'Daily active-visit reward');
     try {
       $this->issue($command, $id, $key, $hash, $date, $zone);
       return $this->previous($key, $hash) ?? $this->alias($key, $hash, $id, 'already_granted');
@@ -85,13 +87,12 @@ final class Rewards {
   /** Validate administrator input before review and again before financial admission. */
   public function normalizeGift(array $input): array {
     CreditValue::fields($input, ['beneficiary_user_id', 'amount_atoms', 'budget_pool_id',
-      'scope', 'expires_at', 'public_reason'], ['internal_note']);
+      'scope', 'public_reason'], ['internal_note', 'expires_at']);
     $result = ['beneficiary_user_id' => (string) CreditValue::amount($input['beneficiary_user_id'], TRUE),
       'amount_atoms' => (string) CreditValue::amount($input['amount_atoms'], TRUE),
       'budget_pool_id' => CreditValue::id($input['budget_pool_id']), 'scope' => CreditValue::scope($input['scope']),
-      'expires_at' => $input['expires_at'], 'public_reason' => CreditValue::text($input['public_reason']),
+      'expires_at' => CreditValue::expiry($input['expires_at'] ?? NULL), 'public_reason' => CreditValue::text($input['public_reason']),
       'internal_note' => CreditValue::text($input['internal_note'] ?? '', 1000, TRUE)];
-    if (!is_int($result['expires_at']) || $result['expires_at'] <= 0) throw new CreditException('invalid_expiry');
     return $result;
   }
 
@@ -154,7 +155,7 @@ final class Rewards {
       });
   }
 
-  private function command(string $target, string $actor, array $pool, string $source, string $amount, array $scope, int $expires, string $reason): array {
+  private function command(string $target, string $actor, array $pool, string $source, string $amount, array $scope, ?int $expires, string $reason): array {
     return ['beneficiary_user_id' => $target, 'actor_user_id' => $actor, 'amount_atoms' => $amount,
       'source_kind' => $pool['policy']['source_kind'], 'source_ref' => $source,
       'grant_kind' => $pool['rule_id'], 'rule_id' => $pool['rule_id'], 'rule_version' => $pool['rule_version'],
@@ -172,9 +173,9 @@ final class Rewards {
     $pool = $rows[0];
     $pool['policy'] = json_decode($pool['grant_policy_json'], TRUE, 16, JSON_THROW_ON_ERROR);
     $pool['bounds'] = json_decode($pool['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR);
-    if ($pool['policy']['mode'] !== ($rule === 'G11' ? 'fixed' : 'variable')
-      || $pool['policy']['source_kind'] !== ($rule === 'G11' ? 'promotion' : 'admin_gift')
-      || $pool['policy']['expires_at'] <= $now) throw new CreditException('rewards_not_configured', 503);
+    if ($pool['policy']['mode'] !== ($rule === 'G12' ? 'variable' : 'fixed')
+      || $pool['policy']['source_kind'] !== ($rule === 'G12' ? 'admin_gift' : 'promotion')
+      || ($pool['policy']['expires_at'] !== NULL && $pool['policy']['expires_at'] <= $now)) throw new CreditException('rewards_not_configured', 503);
     return $pool;
   }
 

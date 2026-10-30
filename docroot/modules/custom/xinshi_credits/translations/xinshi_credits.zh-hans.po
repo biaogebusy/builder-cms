@@ -1,0 +1,284 @@
+msgid ""
+msgstr ""
+"Language: zh-hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "- Select -"
+msgstr "- 请选择 -"
+
+msgid "@amount points"
+msgstr "@amount 积分"
+
+msgid "Actual cost"
+msgstr "实际成本"
+
+msgid "Add category"
+msgstr "添加类别"
+
+msgid "Administrator gift"
+msgstr "管理员赠送"
+
+msgid "Amount policy"
+msgstr "发放数量规则"
+
+msgid "Back to edit"
+msgstr "返回编辑"
+
+msgid "Budget or rule evidence reference"
+msgstr "预算或规则依据编号"
+
+msgid "Category @number"
+msgstr "类别 @number"
+
+msgid "Category cost bound"
+msgstr "类别成本上界"
+
+msgid "Check the UTC dates. The start must precede the end, and the end and latest expiry must be in the future."
+msgstr "请检查 UTC 时间。开始时间须早于结束时间。结束时间和已指定的到期时间须在未来。"
+
+msgid "Check the grant amount, source and expiry. Fixed allocations must be a multiple of the per-grant amount. A specified expiry must be after the allocation start."
+msgstr "请检查发放数量、来源和到期时间。固定奖励总额度须为单次数量的整数倍。已指定的到期时间须晚于发放周期开始时间。"
+
+msgid "Compensation"
+msgstr "补偿"
+
+msgid "Configure the credit site identifier before publishing limits."
+msgstr "发布额度前，请先配置积分站点标识。"
+
+msgid "Confirm the evidence, currency, period and limits. Publication checks the current budget again. A cost reference records your evidence; it does not verify supplier data."
+msgstr "请确认依据、币种、周期和额度。发布时会再次检查当前预算。成本依据编号用于记录依据，系统不会据此核实供应商数据。"
+
+msgid "Cost bound evidence reference"
+msgstr "成本上界依据编号"
+
+msgid "Cost bound for every eligible category"
+msgstr "各可消费类别的成本上界"
+
+msgid "Cost budget"
+msgstr "成本预算"
+
+msgid "Cost budget in currency units"
+msgstr "成本预算金额（所选币种）"
+
+msgid "Cost budgets"
+msgstr "成本预算"
+
+msgid "Cost evidence"
+msgstr "成本依据"
+
+msgid "Credit cost budgets"
+msgstr "积分成本预算"
+
+msgid "Credit ledger records must be retained"
+msgstr "必须保留积分账本记录"
+
+msgid "Credit reward allocations"
+msgstr "积分奖励额度"
+
+msgid "Currency"
+msgstr "币种"
+
+msgid "Currency code"
+msgstr "币种代码"
+
+msgid "Current commitments"
+msgstr "当前履约承诺"
+
+msgid "Current reservations"
+msgstr "当前预占成本"
+
+msgid "Each category must cover the full allocation. Variable grants reserve the worst rounding cost down to 0.001 point. Leave an unused row empty. The most recent 100 budgets are listed."
+msgstr "每个类别的预算均须覆盖全部奖励额度。可变奖励按拆分至 0.001 积分的最坏舍入成本预留。未使用的行请留空。此处显示最近 100 个预算。"
+
+msgid "Enter nonnegative decimal amounts within the supported range. Budgets, allocations and grant limits must be positive."
+msgstr "请输入支持范围内的非负十进制数。预算、奖励总额度和单次上限须大于零。"
+
+msgid "Evidence reference"
+msgstr "依据编号"
+
+msgid "Execution and failure cost reserve"
+msgstr "执行与失败成本预留"
+
+msgid "Execution and failure reserve"
+msgstr "执行与失败预留"
+
+msgid "Fixed"
+msgstr "固定数量"
+
+msgid "Fixed amount or per-grant maximum (points)"
+msgstr "固定数量或单次上限（积分）"
+
+msgid "Fixed amount per grant"
+msgstr "每次发放固定数量"
+
+msgid "Grant amount policy"
+msgstr "发放数量规则"
+
+msgid "Grant source"
+msgstr "发放来源"
+
+msgid "Issued (points)"
+msgstr "已发放（积分）"
+
+msgid "Latest expiry (UTC)"
+msgstr "最晚到期时间（UTC）"
+
+msgid "Latest grant expiry (UTC)"
+msgstr "积分最晚到期时间（UTC）"
+
+msgid "Leave empty for no expiry. Otherwise use YYYY-MM-DD HH:MM, after the period start. Existing credits remain valid after the issuance period ends."
+msgstr "留空表示不过期。如需到期，请填写 YYYY-MM-DD HH:MM，且晚于发放周期开始时间。发放周期结束后，已发积分仍按自身有效期保留。"
+
+msgid "Maximum currency cost per point"
+msgstr "每积分最大成本（所选币种）"
+
+msgid "No expiry"
+msgstr "不过期"
+
+msgid "No published versions."
+msgstr "暂无已发布版本。"
+
+msgid "Part of this budget, unavailable for reward allocation plans. Enter zero only when supported by your evidence."
+msgstr "此预留属于总预算，不能分配给奖励计划。仅在有依据时填写零。"
+
+msgid "Per-grant amount or maximum (points)"
+msgstr "单次发放数量或上限（积分）"
+
+msgid "Period end, exclusive (UTC)"
+msgstr "周期结束时间，不含此时刻（UTC）"
+
+msgid "Period start (UTC)"
+msgstr "周期开始时间（UTC）"
+
+msgid "Promotion"
+msgstr "活动赠送"
+
+msgid "Publication could not be completed. Check the values and retry with the same reference. Error: @code"
+msgstr "发布未完成。请检查填写值，并使用同一发布编号重试。错误：@code"
+
+msgid "Publication could not be confirmed. Retry with the same reference."
+msgstr "暂时无法确认发布结果。请使用同一发布编号重试。"
+
+msgid "Publication reference"
+msgstr "发布编号"
+
+msgid "Publish cost budgets and reward limits without issuing credits."
+msgstr "发布成本预算和奖励上限，不发放积分。"
+
+msgid "Publish credit budgets and reward allocations"
+msgstr "发布积分预算与奖励额度"
+
+msgid "Publish immutable version"
+msgstr "确认发布不可变版本"
+
+msgid "Publish reward amounts, expiry dates, and total allocations."
+msgstr "发布奖励数量、有效期和总额度。"
+
+msgid "Published @reference. No credits were issued."
+msgstr "已发布 @reference。此次操作未发放积分。"
+
+msgid "Published cost budget"
+msgstr "已发布成本预算"
+
+msgid "Published credit budgets and allocations must be retained"
+msgstr "必须保留已发布的积分预算与奖励额度"
+
+msgid "Published reward cost plans"
+msgstr "已发布奖励成本计划"
+
+msgid "Published versions"
+msgstr "已发布版本"
+
+msgid "Publishing sets limits only. It does not issue credits or enable grants or spending. Published versions cannot be edited. All dates are UTC."
+msgstr "发布仅设置额度。发布不会发放积分，也不会开启赠送或消费。已发布版本不能编辑。所有时间均为 UTC。"
+
+msgid "Read cost evidence and publish immutable limits. Does not authorize user grants or enabling credits."
+msgstr "查看成本依据并发布不可变额度。此权限不允许向用户赠分或开启积分功能。"
+
+msgid "Read personal credit information. Does not authorize grants or spending."
+msgstr "查看本人积分信息。此权限不允许发放或消费积分。"
+
+msgid "Read public ledger fields for viewable users. Does not expose internal audit notes or authorize gifts."
+msgstr "查看有权访问用户的公开账本字段。此权限不允许查看内部审核备注或赠送积分。"
+
+msgid "Review publication"
+msgstr "复核发布内容"
+
+msgid "Reward allocations"
+msgstr "奖励额度"
+
+msgid "Rule / version"
+msgstr "规则／版本"
+
+msgid "Rule identifier"
+msgstr "规则标识"
+
+msgid "Rule version"
+msgstr "规则版本"
+
+msgid "Select distinct published category budgets that cover the entire period. Supply a positive cost bound and evidence for each category."
+msgstr "请选择覆盖整个发放周期的已发布预算。各类别不能重复。请为每个类别填写大于零的成本上界和依据。"
+
+msgid "Service category"
+msgstr "服务类别"
+
+msgid "Service category identifier"
+msgstr "服务类别标识"
+
+msgid "Setting"
+msgstr "配置项"
+
+msgid "Showing the most recent 100 versions. Older versions are retained."
+msgstr "显示最近 100 个版本。较早版本仍保留。"
+
+msgid "Source"
+msgstr "来源"
+
+msgid "The cost budget cannot cover this allocation and its execution reserve. Review the amounts and evidence."
+msgstr "成本预算不足以覆盖此奖励额度及执行预留。请复核金额与依据。"
+
+msgid "This category or rule already has a version in this period. Select a non-overlapping period."
+msgstr "此类别或规则在该周期内已有版本。请选择不重叠的周期。"
+
+msgid "This publication reference already has different settings. Keep the original version and use a new reference for a new period."
+msgstr "此发布编号已有不同配置。请保留原版本，并为新周期使用新的发布编号。"
+
+msgid "Three uppercase letters. Different currencies are not added together."
+msgstr "填写 3 个大写字母。不同币种不能直接相加。"
+
+msgid "Total allocation (points)"
+msgstr "奖励总额度（积分）"
+
+msgid "Total reward allocation (points)"
+msgstr "奖励总额度（积分）"
+
+msgid "Up to six decimal places. Enter an approved amount."
+msgstr "最多 6 位小数。请填写已确认的金额。"
+
+msgid "Up to three decimal places. Fixed allocations must be a multiple of the per-grant amount."
+msgstr "最多 3 位小数。固定奖励总额度须为单次发放数量的整数倍。"
+
+msgid "Use YYYY-MM-DD HH:MM. The end is outside the period."
+msgstr "使用 YYYY-MM-DD HH:MM 格式。周期不包含结束时刻。"
+
+msgid "Use the selected budget currency, up to six decimal places. This is a cost bound, not a credit sale price."
+msgstr "使用所选预算的币种，最多 6 位小数。此值表示成本上界，不表示积分售价。"
+
+msgid "Value"
+msgstr "填写值"
+
+msgid "Variable"
+msgstr "可变数量"
+
+msgid "Variable amount with a per-grant limit"
+msgstr "每次填写数量，并受单次上限约束"
+
+msgid "View managed users credit accounts and transactions"
+msgstr "查看受管理用户的积分账户与流水"
+
+msgid "View own credit account and transactions"
+msgstr "查看本人的积分账户与流水"
+
+msgid "You do not have permission to publish credit limits."
+msgstr "你没有发布积分额度的权限。"

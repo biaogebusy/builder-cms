@@ -33,9 +33,9 @@ $project = function (mixed $content = '/core/base') use ($stack, $entity): array
 
 try {
   $settings->set('grants_enabled', FALSE)->set('spending_enabled', FALSE)->save();
-  $rewards?->set('daily_enabled', TRUE)->save();
+  $rewards?->set('daily_enabled', TRUE)->set('welcome_enabled', FALSE)->save();
   [$data, $metadata] = $project();
-  check($data['credits'] === ['enabled' => FALSE, 'daily_enabled' => FALSE], 'Closed site overrides authored credit flags');
+  check($data['credits'] === ['enabled' => FALSE, 'daily_enabled' => FALSE, 'welcome_enabled' => FALSE], 'Closed site overrides authored credit flags');
   check($data['theme'] === ['fixture'], 'Credit projection preserves other core configuration');
   check(in_array('config:xinshi_credits.settings', $metadata->getCacheTags(), TRUE), 'Core configuration depends on credit switches');
   check(in_array('config:core.extension', $metadata->getCacheTags(), TRUE), 'Core configuration depends on optional module installation');
@@ -46,20 +46,26 @@ try {
   $settings->set('grants_enabled', TRUE)->save();
   check(!\Drupal::cache()->get('credits-feature-projection'), 'Changing a credit switch invalidates the cached projection');
   [$data] = $project();
-  check($data['credits'] === ['enabled' => TRUE, 'daily_enabled' => $rewardsInstalled], 'Gift admission enables credits and only installed daily rewards');
+  check($data['credits'] === ['enabled' => TRUE, 'daily_enabled' => $rewardsInstalled, 'welcome_enabled' => FALSE], 'Gift admission enables credits and only installed daily rewards');
   $settings->set('grants_enabled', FALSE)->set('spending_enabled', TRUE)->save();
   [$data] = $project();
-  check($data['credits'] === ['enabled' => TRUE, 'daily_enabled' => FALSE], 'Spending alone never enables daily rewards');
+  check($data['credits'] === ['enabled' => TRUE, 'daily_enabled' => FALSE, 'welcome_enabled' => FALSE], 'Spending alone never enables daily rewards');
   $settings->set('grants_enabled', TRUE)->save();
   $rewards?->set('daily_enabled', FALSE)->save();
   [$data] = $project();
-  check($data['credits'] === ['enabled' => TRUE, 'daily_enabled' => FALSE], 'Daily pause keeps enabled credit reads available');
+  check($data['credits'] === ['enabled' => TRUE, 'daily_enabled' => FALSE, 'welcome_enabled' => FALSE], 'Daily pause keeps enabled credit reads available');
 
   if ($rewards) {
     [, $metadata] = $project();
     \Drupal::cache()->set('credits-feature-projection', $data, -1, $metadata->getCacheTags());
     $rewards->set('daily_enabled', TRUE)->save();
     check(!\Drupal::cache()->get('credits-feature-projection'), 'Changing a reward switch invalidates the cached projection');
+    $rewards->set('welcome_enabled', TRUE)->save();
+    [$data] = $project();
+    check($data['credits']['welcome_enabled'] === TRUE, 'Welcome projects only its explicit enabled switch');
+    $settings->set('grants_enabled', FALSE)->save();
+    [$data] = $project();
+    check($data['credits']['welcome_enabled'] === FALSE, 'Grant pause hides the welcome capability');
   }
   foreach (['/home', ['/core/base'], NULL] as $content) {
     [, $metadata] = $project($content);

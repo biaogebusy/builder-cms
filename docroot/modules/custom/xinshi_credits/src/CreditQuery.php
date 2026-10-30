@@ -90,7 +90,7 @@ final class CreditQuery {
       unset($row['id'], $row['sequence']);
       foreach (['available_delta_atoms', 'available_after_atoms', 'held_delta_atoms', 'held_after_atoms',
         'refund_locked_delta_atoms', 'refund_locked_after_atoms', 'balance_version'] as $field) $row[$field] = (string) $row[$field];
-      foreach (['posted_at', 'expires_at'] as $field) if ($row[$field] !== NULL) $row[$field] = gmdate('c', (int) $row[$field]);
+      foreach (['posted_at', 'expires_at'] as $field) if ($row[$field] !== NULL) $row[$field] = CreditValue::expiryIso($row[$field]);
       $row['scope'] = $row['scope_json'] === NULL ? NULL : json_decode($row['scope_json'], TRUE, 16, JSON_THROW_ON_ERROR);
       unset($row['scope_json']);
     }

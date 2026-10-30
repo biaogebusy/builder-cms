@@ -64,7 +64,7 @@ function xinshi_credits_schema(): array {
       'rule_id' => $id, 'rule_version' => $id, 'budget_pool_id' => $uuid, 'scope_json' => $text,
       'cost_commitments_json' => $text,
       'granted_atoms' => $integer, 'available_atoms' => $integer, 'held_atoms' => $integer,
-      'refund_locked_atoms' => $integer, 'valid_from' => $integer, 'expires_at' => $integer,
+      'refund_locked_atoms' => $integer, 'valid_from' => $integer, 'expires_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE, 'default' => NULL],
       'consumed_atoms' => $integer, 'expired_atoms' => $integer,
     ],
     'primary key' => ['id'], 'unique keys' => ['origin' => ['site_id', 'origin_key']],
@@ -253,4 +253,10 @@ function xinshi_credits_update_11002(): void {
   if (!$db->select('credit_publication_guard', 'g')->condition('id', 1)->countQuery()->execute()->fetchField()) {
     $db->insert('credit_publication_guard')->fields(['id' => 1])->execute();
   }
+}
+
+/** Allow grants without expiry without changing existing dates or balances. */
+function xinshi_credits_update_11003(): void {
+  $definition = xinshi_credits_schema()['credit_grant']['fields']['expires_at'];
+  \Drupal::database()->schema()->changeField('credit_grant', 'expires_at', 'expires_at', $definition);
 }

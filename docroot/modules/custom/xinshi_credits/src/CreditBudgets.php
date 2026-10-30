@@ -22,7 +22,7 @@ final class CreditBudgets {
    * Qualification belongs to the owning business adapter.
    * No default pool, cost bound, or reward is created by this module.
    */
-  public function reserveGrant(string $poolId, string $rule, string $version, array $scope, int $atoms, int $expiresAt, string $grantId, string $journalId, string $sourceKind): array {
+  public function reserveGrant(string $poolId, string $rule, string $version, array $scope, int $atoms, ?int $expiresAt, string $grantId, string $journalId, string $sourceKind): array {
     if (!$this->database->inTransaction()) throw new \LogicException('A ledger transaction is required.');
     $site = $this->context->site();
     $now = $this->time->getCurrentTime();
@@ -32,8 +32,7 @@ final class CreditBudgets {
       || (int) $pool['period_start'] > $now || (int) $pool['period_end'] <= $now) {
       throw new CreditException('reward_pool_unavailable', 409);
     }
-    // Cross-period commitments require the later carryover lifecycle.
-    if ($expiresAt > (int) $pool['period_end']) throw new CreditException('invalid_expiry');
+    // Issuance periods do not cancel existing obligations. Keep their original budget rows.
     CreditValue::text($pool['source_ref']);
     $bounds = json_decode($pool['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR);
     if (!is_array($bounds) || !$bounds || count($bounds) > 32 || array_diff($scope, array_keys($bounds))) {
@@ -46,7 +45,7 @@ final class CreditBudgets {
       $limit = CreditValue::amount($policy['grant_limit_atoms'], TRUE);
       if (!in_array($policy['mode'], ['fixed', 'variable'], TRUE) || $sourceKind !== $policy['source_kind']
         || $atoms > $limit || ($policy['mode'] === 'fixed' && $atoms !== $limit)
-        || $expiresAt > $policy['expires_at'] || array_diff(array_keys($bounds), $scope)) {
+        || ($policy['expires_at'] !== NULL && ($expiresAt === NULL || $expiresAt > $policy['expires_at'])) || array_diff(array_keys($bounds), $scope)) {
         throw new CreditException('invalid_grant_policy');
       }
     }
@@ -140,7 +139,7 @@ final class CreditBudgets {
     foreach ($rows as $cost) {
       $available = (int) $grant['available_atoms'];
       $exposed = CreditValue::add($available, CreditValue::add((int) $grant['held_atoms'], (int) $grant['consumed_atoms']));
-      $valid = (int) $grant['expires_at'] > $now;
+      $valid = ($grant['expires_at'] === NULL || (int) $grant['expires_at'] > $now);
       $committed = $valid ? CreditValue::cost($available, (int) $cost['micros_per_point']) : 0;
       // Partition one rounded total so splitting a batch cannot create rounding liabilities.
       $reserved = $valid ? CreditValue::cost($exposed, (int) $cost['micros_per_point']) - $committed : 0;

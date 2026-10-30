@@ -7,6 +7,17 @@ namespace Drupal\xinshi_credits;
 /** Exact bounded integers and canonical identifiers shared by ledger writes. */
 final class CreditValue {
 
+  /** NULL means no expiry; timestamps are positive UTC epoch seconds. */
+  public static function expiry(mixed $value): ?int {
+    if ($value !== NULL && (!is_int($value) || $value <= 0)) throw new CreditException('invalid_expiry');
+    return $value;
+  }
+
+  /** Preserve NULL when presenting stored expiry timestamps. */
+  public static function expiryIso(int|string|null $value): ?string {
+    return $value === NULL ? NULL : gmdate('c', (int) $value);
+  }
+
   /** Parse an unsigned decimal integer without floating-point conversion. */
   public static function amount(mixed $value, bool $positive = FALSE): int {
     if (!is_string($value) || !preg_match('/^(0|[1-9][0-9]*)$/D', $value)

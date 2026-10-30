@@ -29,10 +29,10 @@ final class RewardController implements ContainerInjectionInterface {
   }
 
   /** Process a visit with identity and date determined by the server. */
-  public function daily(Request $request): JsonResponse {
+  public function daily(Request $request, string $rule = 'G11'): JsonResponse {
     [$body, $key] = $this->writes->parse($request);
     CreditValue::fields($body, []);
-    return new JsonResponse($this->rewards->daily($key));
+    return new JsonResponse($this->rewards->daily($key, $rule));
   }
 
   /** Process an authorized administrator gift. */

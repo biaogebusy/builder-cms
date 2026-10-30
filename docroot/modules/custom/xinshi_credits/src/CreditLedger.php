@@ -33,7 +33,7 @@ final class CreditLedger {
   public function grant(array $input, string $businessKey, ?callable $record = NULL): array {
     CreditValue::fields($input, ['beneficiary_user_id', 'actor_user_id', 'amount_atoms',
       'source_kind', 'source_ref', 'grant_kind', 'rule_id', 'rule_version',
-      'budget_pool_id', 'scope', 'expires_at', 'public_reason'], ['internal_note']);
+      'budget_pool_id', 'scope', 'public_reason'], ['internal_note', 'expires_at']);
     $command = [];
     foreach (['beneficiary_user_id', 'actor_user_id'] as $field) {
       $command[$field] = (string) CreditValue::amount($input[$field], TRUE);
@@ -48,15 +48,14 @@ final class CreditLedger {
     }
     $command['source_ref'] = CreditValue::text($input['source_ref']);
     $command['scope'] = CreditValue::scope($input['scope']);
-    if (!is_int($input['expires_at']) || $input['expires_at'] <= 0) throw new CreditException('invalid_expiry');
-    $command['expires_at'] = $input['expires_at'];
+    $command['expires_at'] = CreditValue::expiry($input['expires_at'] ?? NULL);
     $command['public_reason'] = CreditValue::text($input['public_reason']);
     $command['internal_note'] = CreditValue::text($input['internal_note'] ?? '', 1000, TRUE);
     $origin = hash('sha256', json_encode([$command['beneficiary_user_id'], $command['source_kind'],
       $command['source_ref'], $command['grant_kind']], JSON_THROW_ON_ERROR));
     return $this->store->run($command, $businessKey, $origin, function (array $account, string $journalId, int $now) use ($command, $atoms, $origin, $record): array {
       $this->context->assertGrantsEnabled();
-      if ($command['expires_at'] <= $now) throw new CreditException('invalid_expiry');
+      if ($command['expires_at'] !== NULL && $command['expires_at'] <= $now) throw new CreditException('invalid_expiry');
       foreach (array_unique([$command['beneficiary_user_id'], $command['actor_user_id']]) as $userId) {
         $user = $this->entities->getStorage('user')->load($userId);
         if (!$user || !$user->isActive()) throw new CreditException('account_unavailable', 403);

@@ -75,7 +75,7 @@ final class CreditPublicationForm extends FormBase {
         '#options' => ['promotion' => $this->t('Promotion'), 'admin_gift' => $this->t('Administrator gift'), 'compensation' => $this->t('Compensation')]];
       $form['cap'] = $this->field($this->t('Total reward allocation (points)'), $draft['cap'] ?? '', $this->t('Up to three decimal places. Fixed allocations must be a multiple of the per-grant amount.'));
       $form['grant_limit'] = $this->field($this->t('Fixed amount or per-grant maximum (points)'), $draft['grant_limit'] ?? '');
-      $form['expires_at'] = $this->field($this->t('Latest grant expiry (UTC)'), $draft['expires_at'] ?? '', $this->t('Use YYYY-MM-DD HH:MM. Must be after the start and at or before the period end.'));
+      $form['expires_at'] = $this->field($this->t('Latest grant expiry (UTC)'), $draft['expires_at'] ?? '', $this->t('Leave empty for no expiry. Otherwise use YYYY-MM-DD HH:MM, after the period start. Existing credits remain valid after the issuance period ends.'), FALSE);
       $budgets = $this->publication->catalog('budget'); $options = [];
       foreach ($budgets['rows'] as $row) {
         $options[$row['id']] = $row['category'] . ' / ' . $row['currency'] . ' / ' . gmdate('Y-m-d H:i', (int) $row['period_start']) . ' / ' . $row['publication_ref'];
@@ -115,7 +115,7 @@ final class CreditPublicationForm extends FormBase {
     try {
       $value = array_intersect_key($input, array_flip(['publication_ref', 'source_ref', 'category', 'currency', 'rule_id', 'rule_version', 'mode', 'source_kind']));
       foreach (['period_start', 'period_end', ...($type === 'pool' ? ['expires_at'] : [])] as $field) {
-        $value[$field] = $this->date($input[$field]);
+        $value[$field] = $field === 'expires_at' && $input[$field] === '' ? NULL : $this->date($input[$field]);
       }
       $value[$type === 'budget' ? 'cap_micros' : 'cap_atoms'] = CreditValue::decimal($input['cap'], $type === 'budget' ? 6 : 3);
       if ($type === 'budget') $value['execution_headroom_micros'] = CreditValue::decimal($input['headroom'], 6);
@@ -193,7 +193,7 @@ final class CreditPublicationForm extends FormBase {
       $rows[] = [$this->t('Amount policy'), $policy['mode'] === 'fixed' ? $this->t('Fixed') : $this->t('Variable')];
       $rows[] = [$this->t('Total allocation (points)'), CreditValue::display((string) $value['cap_atoms'], 3)];
       $rows[] = [$this->t('Per-grant amount or maximum (points)'), CreditValue::display($policy['grant_limit_atoms'], 3)];
-      $rows[] = [$this->t('Latest expiry (UTC)'), gmdate('Y-m-d H:i', $policy['expires_at'])];
+      $rows[] = [$this->t('Latest expiry (UTC)'), $policy['expires_at'] === NULL ? $this->t('No expiry') : gmdate('Y-m-d H:i', $policy['expires_at'])];
       if (isset($value['issued_atoms'])) $rows[] = [$this->t('Issued (points)'), CreditValue::display((string) $value['issued_atoms'], 3)];
       $bounds = $value['bounds'] ?? array_values(json_decode($value['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR));
       $evidence = isset($value['cost_evidence_json']) ? array_values(json_decode($value['cost_evidence_json'], TRUE, 16, JSON_THROW_ON_ERROR)) : [];
@@ -214,7 +214,7 @@ final class CreditPublicationForm extends FormBase {
       'credits_not_configured' => $this->t('Configure the credit site identifier before publishing limits.'),
       'invalid_amount', 'amount_overflow' => $this->t('Enter nonnegative decimal amounts within the supported range. Budgets, allocations and grant limits must be positive.'),
       'invalid_period' => $this->t('Check the UTC dates. The start must precede the end, and the end and latest expiry must be in the future.'),
-      'invalid_grant_policy' => $this->t('Check the grant amount, source and expiry. Fixed allocations must be a multiple of the per-grant amount. Expiry must be within the allocation period.'),
+      'invalid_grant_policy' => $this->t('Check the grant amount, source and expiry. Fixed allocations must be a multiple of the per-grant amount. A specified expiry must be after the allocation start.'),
       'invalid_budget_bound', 'cost_budget_unavailable', 'invalid_budget_scope' => $this->t('Select distinct published category budgets that cover the entire period. Supply a positive cost bound and evidence for each category.'),
       'reward_budget_exhausted' => $this->t('The cost budget cannot cover this allocation and its execution reserve. Review the amounts and evidence.'),
       'publication_period_overlap' => $this->t('This category or rule already has a version in this period. Select a non-overlapping period.'),

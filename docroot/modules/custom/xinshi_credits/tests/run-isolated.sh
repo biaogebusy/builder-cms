@@ -56,6 +56,8 @@ docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extens
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_credits/tests/lifecycle.php
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_credits/tests/no-expiry.php
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_credits/tests/lifecycle-concurrency.php
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_credits/tests/publication.php
@@ -77,3 +79,5 @@ docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extens
   /app/docroot/modules/custom/xinshi_ai_billing/tests/http.php
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_ai_billing/tests/images.php
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_credits/tests/locale.php

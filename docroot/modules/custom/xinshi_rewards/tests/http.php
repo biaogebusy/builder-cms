@@ -138,6 +138,20 @@ try {
   rewardHttp('POST', $giftPath, $jars['reward_admin'], http_build_query($confirm), $formHeaders);
   check((int) $db->select('credit_journal', 'j')->condition('site_id', 'reward-fixture')->countQuery()->execute()->fetchField() === $before + 1, 'Repeated confirmation cannot duplicate the gift');
   check(rewardHttp('GET', '/api/v3/credits/me/account', $jar)['data']['available_atoms'] === '1125', 'Confirmation ignores unreviewed amount overrides');
+  // First-visit writes keep the same Cookie/OAuth boundary with separate qualification.
+  \Drupal::configFactory()->getEditable('xinshi_rewards.settings')->set('welcome_enabled', TRUE)->save();
+  $welcomePath = '/api/v3/credits/me/welcome-visit';
+  check(rewardHttp('POST', $welcomePath, NULL, '{}', $headers)['status'] === 403, 'Anonymous welcome denied');
+  check(rewardHttp('POST', $welcomePath, $jar, '{}', $headers)['status'] === 403, 'Welcome Cookie requires CSRF');
+  check(rewardHttp('POST', $welcomePath, $jar, '{}', $protected)['data']['status'] === 'not_eligible', 'Daily eligibility does not authorize welcome');
+  $user->addRole('welcome_eligible')->save();
+  $welcome = rewardHttp('POST', $welcomePath, $jar, '{}', $protected);
+  check($welcome['status'] === 200 && $welcome['data']['status'] === 'granted', 'Qualified Cookie welcome grants once');
+  check(rewardHttp('POST', $welcomePath, $jar, '{}', $protected)['data'] === $welcome['data'], 'Welcome HTTP retries return one receipt');
+  $restrictedWelcome = rewardHttp('POST', $welcomePath, NULL, '{}', ['Content-Type: application/json',
+    'Idempotency-Key: limited-welcome', 'Authorization: Bearer ' . rewardToken((string) $user->id(), 'reward_eligible')]);
+  check($restrictedWelcome['data']['status'] === 'not_eligible', 'Daily-only OAuth scope cannot borrow the user welcome role');
+  check(rewardHttp('POST', $welcomePath, $jar, '{"rule":"G12"}', $protected)['status'] === 422, 'Caller cannot change the welcome rule');
   foreach (glob($fixture . '/ui/gift*.html') as $page) {
     preg_match_all('/(?:href|src)="([^" ]+\.(?:css|js)[^" ]*)"/', file_get_contents($page), $matches);
     foreach ($matches[1] as $url) {

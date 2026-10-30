@@ -53,10 +53,12 @@ $varPool = $publisher->publish('pool', $variable);
 $planned = $db->select('credit_pool_allocation', 'a')->fields('a', ['planned_cost_micros'])->condition('pool_id', $varPool['id'])->execute()->fetchField();
 check((int) $planned === 2000, 'Variable plan covers 2000 one-atom grants with upward rounding');
 denied(fn() => $publisher->publish('pool', allocationInput('rounding-overflow', [$tiny['id']], '1', '1', '1')), 'reward_budget_exhausted');
-foreach ([['cap_atoms' => '1500'], ['expires_at' => $poolInput['period_end'] + 1], ['expires_at' => $poolInput['period_start']],
+foreach ([['cap_atoms' => '1500'], ['expires_at' => $poolInput['period_start']],
   ['source_kind' => 'purchase'], ['grant_limit_atoms' => '3000']] as $change) {
   denied(fn() => $publisher->normalize('pool', array_replace($poolInput, $change)), 'invalid_grant_policy');
 }
+check($publisher->normalize('pool', array_replace($poolInput, ['expires_at' => NULL]))['expires_at'] === NULL, 'Publication permits an explicit no-expiry policy');
+check($publisher->normalize('pool', array_replace($poolInput, ['expires_at' => $poolInput['period_end'] + 1]))['expires_at'] > $poolInput['period_end'], 'Grant expiry is independent of issuance period');
 denied(fn() => $publisher->normalize('budget', $budget + ['actor_user_id' => '1']), 'invalid_fields');
 denied(fn() => $publisher->normalize('budget', array_replace($budget, ['cap_micros' => 10000])), 'invalid_amount');
 denied(fn() => $publisher->normalize('budget', array_replace($budget, ['execution_headroom_micros' => '10001'])), 'invalid_budget_bound');

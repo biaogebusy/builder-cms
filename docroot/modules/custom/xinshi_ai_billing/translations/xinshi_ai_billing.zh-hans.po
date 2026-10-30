@@ -1,0 +1,11 @@
+msgid ""
+msgstr ""
+"Language: zh-hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Authorize AI credit spending"
+msgstr "允许使用积分消费 AI"
+
+msgid "Publish AI credit sales profiles"
+msgstr "发布 AI 积分计费规格"

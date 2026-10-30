@@ -2,6 +2,9 @@ xinshi_rewards.settings:
   type: config_object
   label: 'Reward admission settings'
   mapping:
+    welcome_enabled:
+      type: boolean
+      label: 'Enable first-visit rewards'
     daily_enabled:
       type: boolean
       label: 'Enable new daily rewards'

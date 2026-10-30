@@ -48,3 +48,18 @@ xinshi_rewards.gift_form:
     _auth: ['cookie']
     _admin_route: TRUE
     no_cache: TRUE
+
+xinshi_rewards.welcome:
+  path: '/api/v3/credits/me/welcome-visit'
+  defaults:
+    _controller: '\Drupal\xinshi_rewards\Controller\RewardController::daily'
+    _format: 'json'
+    rule: 'G13'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE

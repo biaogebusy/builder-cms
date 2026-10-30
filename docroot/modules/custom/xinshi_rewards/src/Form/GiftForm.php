@@ -56,7 +56,7 @@ final class GiftForm extends FormBase {
       '#markup' => $this->t('Pool @pool. Per-gift maximum: @limit credits. Remaining pool: @remaining credits. Scope: @scope. Latest expiry (UTC): @expiry.',
         ['@pool' => $policy['budget_pool_id'], '@limit' => CreditValue::display($policy['grant_limit_atoms'], 3),
           '@remaining' => CreditValue::display($policy['remaining_atoms'], 3), '@scope' => implode(', ', $policy['scope']),
-          '@expiry' => gmdate('Y-m-d H:i:s', $policy['expires_at'])])];
+          '@expiry' => $policy['expires_at'] === NULL ? $this->t('No expiry') : gmdate('Y-m-d H:i:s', $policy['expires_at'])])];
     if ($result = $form_state->get('result')) {
       $form['result'] = ['#type' => 'item', '#title' => $this->t('Gift committed'),
         '#markup' => $this->t('Transaction: @id. The recipient can read the transaction and notification.',
@@ -70,8 +70,8 @@ final class GiftForm extends FormBase {
         'budget_pool_id' => $this->t('Published pool'), 'scope' => $this->t('Scope'), 'expires_at' => $this->t('Expiry (UTC)')];
       foreach ($labels as $field => $label) {
         $value = $snapshot[$field];
-        if ($field === 'amount_atoms') $value = CreditValue::display($value, 3) . ' credits';
-        if ($field === 'expires_at') $value = gmdate('Y-m-d H:i:s', $value) . ' UTC';
+        if ($field === 'amount_atoms') $value = $this->t('@amount credits', ['@amount' => CreditValue::display($value, 3)]);
+        if ($field === 'expires_at') $value = $value === NULL ? $this->t('No expiry') : gmdate('Y-m-d H:i:s', $value) . ' UTC';
         if (is_array($value)) $value = implode(', ', $value);
         $rows[] = [['data' => ['#plain_text' => $label]], ['data' => ['#plain_text' => (string) $value]]];
       }
@@ -90,9 +90,9 @@ final class GiftForm extends FormBase {
       '#maxlength' => 255, '#default_value' => $draft['public_reason'] ?? ''];
     $form['internal_note'] = ['#type' => 'textfield', '#title' => $this->t('Internal audit note'),
       '#maxlength' => 1000, '#default_value' => $draft['internal_note'] ?? ''];
-    $form['expiry'] = ['#type' => 'textfield', '#title' => $this->t('Expiry (UTC)'), '#required' => TRUE,
-      '#default_value' => $draft ? gmdate('Y-m-d H:i:s', $draft['expires_at']) : '',
-      '#description' => $this->t('Use YYYY-MM-DD HH:MM:SS. The expiry must not exceed the published latest expiry.')];
+    $form['expiry'] = ['#type' => 'textfield', '#title' => $this->t('Expiry (UTC)'), '#required' => FALSE,
+      '#default_value' => ($draft['expires_at'] ?? NULL) !== NULL ? gmdate('Y-m-d H:i:s', $draft['expires_at']) : '',
+      '#description' => $this->t('Leave empty for no expiry when the published policy permits it. Otherwise use YYYY-MM-DD HH:MM:SS, no later than the published expiry.')];
     $form['review_action'] = ['#type' => 'submit', '#value' => $this->t('Review gift')];
     return $form;
   }
@@ -104,14 +104,15 @@ final class GiftForm extends FormBase {
       $policy = $form_state->get('policy');
       if (!$policy) throw new CreditException('rewards_not_configured', 503);
       $date = \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', (string) $form_state->getValue('expiry'), new \DateTimeZone('UTC'));
-      if (!$date || $date->format('Y-m-d H:i:s') !== $form_state->getValue('expiry')) throw new CreditException('invalid_expiry');
+      if ($form_state->getValue('expiry') !== '' && (!$date || $date->format('Y-m-d H:i:s') !== $form_state->getValue('expiry'))) throw new CreditException('invalid_expiry');
       $input = $this->rewards->normalizeGift(['beneficiary_user_id' => $form_state->get('target'),
         'amount_atoms' => CreditValue::decimal($form_state->getValue('amount'), 3),
         'budget_pool_id' => $policy['budget_pool_id'], 'scope' => $policy['scope'],
-        'expires_at' => $date->getTimestamp(), 'public_reason' => $form_state->getValue('public_reason'),
+        'expires_at' => $date ? $date->getTimestamp() : NULL, 'public_reason' => $form_state->getValue('public_reason'),
         'internal_note' => $form_state->getValue('internal_note') ?? '']);
       if ((int) $input['amount_atoms'] > (int) $policy['grant_limit_atoms']
-        || $input['expires_at'] > $policy['expires_at'] || $input['expires_at'] <= time()) {
+        || ($policy['expires_at'] !== NULL && ($input['expires_at'] === NULL || $input['expires_at'] > $policy['expires_at']))
+        || ($input['expires_at'] !== NULL && $input['expires_at'] <= time())) {
         throw new CreditException('invalid_grant_policy');
       }
       $form_state->set('validated_input', $input);

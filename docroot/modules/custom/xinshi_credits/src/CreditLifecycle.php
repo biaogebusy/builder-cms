@@ -47,9 +47,13 @@ final class CreditLifecycle {
           $user = $this->entities->getStorage('user')->load($uid);
           if (!$user || !$user->isActive()) throw new CreditException('account_unavailable', 403);
         }
-        $candidates = $this->database->select('credit_grant', 'g')->fields('g')->condition('account_id', $account['id'])
-          ->condition('available_atoms', 0, '>')->condition('valid_from', $now, '<=')->condition('expires_at', $now, '>')
-          ->orderBy('expires_at')->orderBy('valid_from')->orderBy('id')->range(0, 129)->execute()->fetchAll(\PDO::FETCH_ASSOC);
+        $query = $this->database->select('credit_grant', 'g')->fields('g')->condition('account_id', $account['id'])
+          ->condition('available_atoms', 0, '>')->condition('valid_from', $now, '<=');
+        $query->condition($query->orConditionGroup()->isNull('expires_at')->condition('expires_at', $now, '>'));
+        // Spend dated grants first on both SQLite and MariaDB.
+        $query->addExpression('CASE WHEN expires_at IS NULL THEN 1 ELSE 0 END', 'no_expiry');
+        $candidates = $query->orderBy('no_expiry')->orderBy('expires_at')->orderBy('valid_from')->orderBy('id')
+          ->range(0, 129)->execute()->fetchAll(\PDO::FETCH_ASSOC);
         $grants = []; $allocations = []; $remaining = $amount;
         foreach (array_slice($candidates, 0, 128) as $grant) {
           if (!in_array($command['category'], json_decode($grant['scope_json'], TRUE, 32, JSON_THROW_ON_ERROR), TRUE)) continue;
@@ -128,7 +132,7 @@ final class CreditLifecycle {
           $grant = $grants[$allocation['grant_id']]; $held = (int) $allocation['held_atoms'];
           $charged = min($remaining, $held); $remaining -= $charged;
           $refund = $held - $charged;
-          $back = (int) $grant['expires_at'] > $now ? $refund : 0;
+          $back = ($grant['expires_at'] === NULL || (int) $grant['expires_at'] > $now) ? $refund : 0;
           $expired += $refund - $back; $released += $back;
           $this->changeGrant($grant, ['held_atoms' => -$held, 'available_atoms' => $back,
             'consumed_atoms' => $charged, 'expired_atoms' => $refund - $back], $journalId, $now);
@@ -184,7 +188,7 @@ final class CreditLifecycle {
           if ($amount > (int) $allocation['charged_atoms'] - (int) $allocation['returned_atoms']) {
             throw new CreditException('return_exceeded', 409);
           }
-          $back = (int) $grant['expires_at'] > $now ? $amount : 0;
+          $back = ($grant['expires_at'] === NULL || (int) $grant['expires_at'] > $now) ? $amount : 0;
           $total = CreditValue::add($total, $amount); $available = CreditValue::add($available, $back);
           $expired = CreditValue::add($expired, $amount - $back);
           $this->changeGrant($grant, ['consumed_atoms' => -$amount, 'available_atoms' => $back,
@@ -211,7 +215,7 @@ final class CreditLifecycle {
       function (array $account, string $journalId, int $now) use ($command): array {
         $grant = $this->database->select('credit_grant', 'g')->fields('g')->condition('id', $command['grant_id'])
           ->condition('account_id', $account['id'])->execute()->fetchAssoc();
-        if (!$grant || (int) $grant['expires_at'] > $now) throw new CreditException('grant_not_expired', 409);
+        if (!$grant || ($grant['expires_at'] === NULL || (int) $grant['expires_at'] > $now)) throw new CreditException('grant_not_expired', 409);
         $this->lockCosts([$grant]);
         $expired = (int) $grant['available_atoms'];
         $this->changeGrant($grant, ['available_atoms' => -$expired, 'expired_atoms' => $expired], $journalId, $now);

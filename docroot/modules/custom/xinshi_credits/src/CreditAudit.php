@@ -101,7 +101,7 @@ final class CreditAudit {
             $issues[] = 'grant_cost_bound_mismatch';
           }
           // A due but unprocessed expiry is lag, not corruption of the last committed projection.
-          $valid = (int) $grant['expires_at'] > ($lastGrantTime[$grant['id']] ?? 0);
+          $valid = ($grant['expires_at'] === NULL || (int) $grant['expires_at'] > ($lastGrantTime[$grant['id']] ?? 0));
           $exposed = CreditValue::add((int) $grant['available_atoms'],
             CreditValue::add((int) $grant['held_atoms'], (int) $grant['consumed_atoms']));
           $committed = $valid ? CreditValue::cost((int) $grant['available_atoms'], $rate) : 0;

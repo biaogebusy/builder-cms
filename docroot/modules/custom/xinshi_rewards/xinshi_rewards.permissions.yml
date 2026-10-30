@@ -6,3 +6,8 @@ grant user credits:
   title: 'Give credits to managed users'
   description: 'Give credits within the published G12 amount, scope, expiry and budget limits.'
   restrict access: true
+
+receive welcome credits:
+  title: 'Receive first-visit credits'
+  description: 'Receive the published welcome reward once per site and user.'
+  restrict access: true

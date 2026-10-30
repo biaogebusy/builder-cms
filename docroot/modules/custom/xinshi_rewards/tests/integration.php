@@ -160,6 +160,32 @@ $db->update('credit_reward_pool')->fields(['cap_atoms' => 2000])->condition('id'
 $before = snapshot();
 check($rewards->daily('exhausted')['status'] === 'budget_closed', 'Exhausted daily allocation gives an explicit outcome');
 check(snapshot() === $before, 'Budget rejection leaves no financial or notification write');
+// First-visit eligibility has its own rule and is not tied to a business date.
+$principal->setAccount(User::load(1));
+$welcomeInput = allocationInput('welcome-fixture', $buckets, '100000', '1000');
+$welcomeInput['rule_id'] = 'G13'; $welcomeInput['mode'] = 'fixed'; $welcomeInput['source_kind'] = 'promotion';
+$welcomeInput['period_start'] = $now - 30; $welcomeInput['period_end'] = $now + 6 * 86400;
+$welcomeInput['expires_at'] = NULL;
+$welcomePool = $publication->publish('pool', $welcomeInput);
+Role::create(['id' => 'welcome_eligible', 'label' => 'Synthetic welcome eligibility',
+  'permissions' => ['view own credits', 'receive welcome credits']])->save();
+$welcomeUser = User::create(['name' => 'welcome-only', 'status' => 1, 'roles' => ['welcome_eligible']]); $welcomeUser->save();
+$principal->setAccount($welcomeUser);
+check($rewards->daily('first-paused', 'G13')['status'] === 'paused', 'Welcome admission remains disabled by default');
+$rewardSettings->set('welcome_enabled', TRUE)->set('daily_enabled', FALSE)->set('business_timezone', '')->save();
+$welcome = $rewards->daily('first-device', 'G13');
+check($welcome['status'] === 'granted', 'Welcome grants without daily admission or a calendar timezone');
+check($rewards->daily('first-device', 'G13') === $welcome, 'Welcome retries replay the original request');
+$clock->now += 86400;
+$db->update('credit_reward_pool')->fields(['rule_version' => 'welcome-v2'])->condition('id', $welcomePool['id'])->execute();
+check($rewards->daily('new-day-version', 'G13')['receipt'] === $welcome['receipt'], 'Date and rule version changes cannot grant a second welcome reward');
+$grant = $db->select('credit_grant', 'g')->fields('g')->condition('journal_id', $welcome['receipt']['journal_id'])->execute()->fetchAssoc();
+check($grant['expires_at'] === NULL && $grant['rule_id'] === 'G13', 'Welcome preserves the published no-expiry policy');
+$principal->setAccount($users['ineligible']);
+check($rewards->daily('not-qualified', 'G13')['status'] === 'not_eligible', 'Welcome requires its separate eligibility permission');
+$welcomeUser->block()->save(); $principal->setAccount($welcomeUser);
+denied(fn() => $rewards->daily('first-device', 'G13'), 'permission_denied');
+$rewardSettings->set('welcome_enabled', FALSE)->set('daily_enabled', TRUE)->set('business_timezone', 'Asia/Shanghai')->save();
 // The fixture kernel disables container dumping; discard the earlier HTTP kernel's definition.
 \Drupal::service('kernel')->invalidateContainer();
 echo 'Rewards checks: ' . $checks . PHP_EOL;

@@ -1,0 +1,107 @@
+msgid ""
+msgstr ""
+"Language: zh-hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "@amount credits"
+msgstr "@amount 积分"
+
+msgid "Available credits"
+msgstr "可用积分"
+
+msgid "Confirm gift"
+msgstr "确认赠送"
+
+msgid "Confirmed value"
+msgstr "已复核值"
+
+msgid "Credit gift unavailable: @reason"
+msgstr "暂时无法赠送积分：@reason"
+
+msgid "Credits granted."
+msgstr "积分已发放。"
+
+msgid "Credits to give"
+msgstr "赠送积分数量"
+
+msgid "Edit gift"
+msgstr "编辑赠送内容"
+
+msgid "Enter a positive amount with at most 3 decimal places. No amount is selected by default."
+msgstr "请输入大于零的数量，最多 3 位小数。系统不预设赠送数量。"
+
+msgid "Expiry (UTC)"
+msgstr "到期时间（UTC）"
+
+msgid "Field"
+msgstr "字段"
+
+msgid "Gift committed"
+msgstr "赠送已入账"
+
+msgid "Gift not accepted: @reason"
+msgstr "赠送未受理：@reason"
+
+msgid "Gift status could not be confirmed. Retry this review with the same request."
+msgstr "暂时无法确认赠送结果。请保留此次复核内容，并使用同一请求重试。"
+
+msgid "Give credits to managed users"
+msgstr "向受管理用户赠送积分"
+
+msgid "Give credits within the published G12 amount, scope, expiry and budget limits."
+msgstr "在已发布的 G12 数量、范围、有效期和预算内赠送积分。"
+
+msgid "Give user credits"
+msgstr "向用户赠送积分"
+
+msgid "Grant only after the site has verified the user against its reward eligibility policy."
+msgstr "站点核实用户符合奖励资格后，才允许发放。"
+
+msgid "Internal audit note"
+msgstr "内部审核备注"
+
+msgid "Leave empty for no expiry when the published policy permits it. Otherwise use YYYY-MM-DD HH:MM:SS, no later than the published expiry."
+msgstr "已发布规则允许不过期时，可留空。如需到期，请填写 YYYY-MM-DD HH:MM:SS，且不晚于已发布的最晚到期时间。"
+
+msgid "No expiry"
+msgstr "不过期"
+
+msgid "Pool @pool. Per-gift maximum: @limit credits. Remaining pool: @remaining credits. Scope: @scope. Latest expiry (UTC): @expiry."
+msgstr "奖励池：@pool。单次上限：@limit 积分。剩余额度：@remaining 积分。消费范围：@scope。最晚到期时间（UTC）：@expiry。"
+
+msgid "Published authorization"
+msgstr "已发布赠送规则"
+
+msgid "Published pool"
+msgstr "已发布奖励池"
+
+msgid "Qualify for daily active-visit credits"
+msgstr "领取每日活跃访问积分"
+
+msgid "Reason shown to the recipient"
+msgstr "向接收用户显示的原因"
+
+msgid "Receive first-visit credits"
+msgstr "领取首次登录积分"
+
+msgid "Receive the published welcome reward once per site and user."
+msgstr "每个用户在本站仅领取一次已发布的首次登录奖励。"
+
+msgid "Recipient user ID"
+msgstr "接收用户 ID"
+
+msgid "Recipient: @name (user ID @id). Current account state: @state."
+msgstr "接收用户：@name（用户 ID：@id）。当前积分账户状态：@state。"
+
+msgid "Review gift"
+msgstr "复核赠送内容"
+
+msgid "Reward qualifications and accepted requests must be retained. Pause admission in configuration."
+msgstr "必须保留奖励资格和已受理请求。请通过配置暂停新发放。"
+
+msgid "Scope"
+msgstr "消费范围"
+
+msgid "Transaction: @id. The recipient can read the transaction and notification."
+msgstr "流水编号：@id。接收用户可以查看此流水和通知。"
