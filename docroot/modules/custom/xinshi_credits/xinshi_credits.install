@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * @file
+ * Dedicated storage for the shared credit ledger and promotional commitments.
+ */
+
+declare(strict_types=1);
+
+/** Implements hook_schema(). */
+function xinshi_credits_schema(): array {
+  $id = ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE];
+  $uuid = ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE];
+  $hash = ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE];
+  $integer = ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0];
+  $text = ['type' => 'text', 'not null' => TRUE];
+  $serial = ['type' => 'serial', 'size' => 'big', 'not null' => TRUE];
+  $schema['credit_account'] = [
+    'description' => 'Account identity and the transactionally maintained balance projection.',
+    'fields' => [
+      'id' => $uuid, 'site_id' => $id, 'owner_id' => $id, 'status' => $id,
+      'available_atoms' => $integer, 'held_atoms' => $integer, 'refund_locked_atoms' => $integer,
+      'balance_version' => $integer, 'updated_at' => $integer,
+    ],
+    'primary key' => ['id'], 'unique keys' => ['owner' => ['site_id', 'owner_id']],
+  ];
+  $schema['credit_budget_bucket'] = [
+    'description' => 'A currency and category cost limit with mutually exclusive commitments.',
+    'fields' => [
+      'id' => $uuid, 'site_id' => $id, 'category' => $id, 'currency' => $id,
+      'period_start' => $integer, 'period_end' => $integer, 'cap_micros' => $integer,
+      'committed_cost_micros' => $integer, 'reserved_cost_micros' => $integer,
+      'actual_cost_micros' => $integer, 'version' => $integer, 'source_ref' => $text,
+      'created_by' => $id, 'created_at' => $integer,
+    ],
+    'primary key' => ['id'], 'indexes' => ['period' => ['site_id', 'period_start', 'period_end']],
+  ];
+  $schema['credit_reward_pool'] = [
+    'description' => 'Immutable rule allocation and cost bounds; only issued quantity changes.',
+    'fields' => [
+      'id' => $uuid, 'site_id' => $id, 'rule_id' => $id, 'rule_version' => $id,
+      'period_start' => $integer, 'period_end' => $integer, 'cap_atoms' => $integer,
+      'issued_atoms' => $integer, 'version' => $integer, 'bounds_json' => $text,
+      'source_ref' => $text, 'created_by' => $id, 'created_at' => $integer,
+    ],
+    'primary key' => ['id'],
+  ];
+  $schema['credit_grant'] = [
+    'description' => 'Grant provenance and balance, retained independently of user content.',
+    'fields' => [
+      'id' => $uuid, 'site_id' => $id, 'account_id' => $uuid, 'journal_id' => $uuid,
+      'origin_key' => $hash, 'source_kind' => $id, 'source_ref' => $text, 'grant_kind' => $id,
+      'rule_id' => $id, 'rule_version' => $id, 'budget_pool_id' => $uuid, 'scope_json' => $text,
+      'cost_commitments_json' => $text,
+      'granted_atoms' => $integer, 'available_atoms' => $integer, 'held_atoms' => $integer,
+      'refund_locked_atoms' => $integer, 'valid_from' => $integer, 'expires_at' => $integer,
+    ],
+    'primary key' => ['id'], 'unique keys' => ['origin' => ['site_id', 'origin_key']],
+    'indexes' => ['expiry' => ['account_id', 'expires_at']],
+  ];
+  $schema['credit_journal'] = [
+    'description' => 'Append-only committed transactions; sequence is the account paging watermark.',
+    'fields' => [
+      'sequence' => $serial, 'id' => $uuid, 'site_id' => $id, 'account_id' => $uuid,
+      'business_key' => $hash, 'request_hash' => $hash, 'origin_key' => $hash,
+      'transaction_kind' => $id, 'grant_id' => $uuid, 'actor_user_id' => $id,
+      'available_delta_atoms' => $integer, 'available_after_atoms' => $integer,
+      'balance_version' => $integer, 'public_reason' => $text, 'internal_note' => $text,
+      'posted_at' => $integer,
+    ],
+    'primary key' => ['sequence'],
+    'unique keys' => ['uuid' => ['id'], 'business' => ['site_id', 'business_key'], 'origin' => ['site_id', 'origin_key']],
+    'indexes' => ['history' => ['account_id', 'sequence'], 'period' => ['account_id', 'posted_at', 'sequence']],
+  ];
+  $schema['credit_posting'] = [
+    'description' => 'Balanced append-only postings; signed atoms, never cash accounting entries.',
+    'fields' => [
+      'id' => $serial, 'journal_id' => $uuid, 'grant_id' => $uuid,
+      'ledger_account_ref' => $id, 'unit' => $id, 'delta_atoms' => $integer,
+    ],
+    'primary key' => ['id'], 'indexes' => ['journal' => ['journal_id']],
+  ];
+  $schema['credit_notification_outbox'] = [
+    'description' => 'Durable grant notification intent; delivery cannot issue another grant.',
+    'fields' => [
+      'event_id' => $uuid, 'journal_id' => $uuid, 'recipient_user_id' => $id,
+      'template_id' => $id, 'state' => $id, 'attempts' => $integer,
+      'created_at' => $integer, 'next_retry_at' => $integer,
+    ],
+    'primary key' => ['event_id'], 'unique keys' => ['journal' => ['journal_id']],
+    'indexes' => ['pending' => ['state', 'next_retry_at']],
+  ];
+  return $schema;
+}

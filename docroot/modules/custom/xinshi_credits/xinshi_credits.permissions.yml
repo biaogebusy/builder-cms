@@ -1,0 +1,3 @@
+view own credits:
+  title: 'View own credit account and transactions'
+  description: 'Read personal credit information. Does not authorize grants or spending.'

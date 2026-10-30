@@ -1,0 +1,24 @@
+xinshi_credits.account:
+  path: '/api/v3/credits/me/account'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::account'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_credits.transactions:
+  path: '/api/v3/credits/me/transactions'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::transactions'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
