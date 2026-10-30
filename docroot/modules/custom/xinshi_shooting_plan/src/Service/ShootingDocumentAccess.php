@@ -108,7 +108,7 @@ final class ShootingDocumentAccess {
     }
     $doc = json_decode($content, TRUE);
     if (!is_array($doc) || array_diff(array_keys($doc), ['kind', 'version', 'id', 'previousId',
-      'taskId', 'runId', 'request', 'workflow', 'reviewTask', 'sketchModel', 'sketchPlatform', 'sketchSize',
+      'taskId', 'runId', 'request', 'workflow', 'reviewTask', 'revisionTask', 'ideasTask', 'sketchModel', 'sketchPlatform', 'sketchSize',
       'textModel', 'textPlatform', 'original', 'draft', 'status', 'visuals', 'previousGeneration']) ||
       ($doc['kind'] ?? NULL) !== 'xinshi-shooting-plan' || ($doc['version'] ?? NULL) !== 1 ||
       ($doc['id'] ?? NULL) !== $plan_uuid || !Uuid::isValid($plan_uuid) ||
@@ -128,19 +128,15 @@ final class ShootingDocumentAccess {
         array_diff(array_keys($review), ['taskId', 'runId', 'request']) ||
         !is_string($review['taskId'] ?? NULL) || !Uuid::isValid($review['taskId']) ||
         !is_string($review['runId'] ?? NULL) || !Uuid::isValid($review['runId']) ||
-        !is_array($review['request'] ?? NULL) || !self::text($review['request']['topic'] ?? NULL) ||
-        !is_string($review['request']['style'] ?? NULL) ||
-        !isset(ShootingVisuals::STYLES[$review['request']['style']]) ||
-        count($review['request']) !== 7 ||
-        array_diff(array_keys($review['request']), ['topic', 'duration', 'platform', 'format', 'tone', 'style', 'locale']) ||
-        mb_strlen($review['request']['topic']) > 1000 ||
-        !in_array($review['request']['duration'] ?? NULL, [30, 60, 90, 180], TRUE) ||
-        !in_array($review['request']['platform'] ?? NULL, ['douyin', 'rednote', 'wechat', 'bilibili'], TRUE) ||
-        !in_array($review['request']['format'] ?? NULL, ['comparison', 'talking', 'skit', 'tutorial', 'vlog'], TRUE) ||
-        !in_array($review['request']['tone'] ?? NULL, ['professional', 'humorous', 'natural', 'warm', 'energetic'], TRUE) ||
-        !in_array($review['request']['locale'] ?? NULL, ['zh-hans', 'en'], TRUE)) {
+        !self::request($review['request'] ?? NULL)) {
         throw new UnprocessableEntityHttpException('shooting_document_invalid');
       }
+    }
+    if (array_key_exists('revisionTask', $doc)) {
+      self::adviceTask($doc['revisionTask'], $plan_uuid, TRUE);
+    }
+    if (array_key_exists('ideasTask', $doc)) {
+      self::adviceTask($doc['ideasTask'], $plan_uuid, FALSE);
     }
     foreach (['runId', 'previousId'] as $key) {
       if (array_key_exists($key, $doc) && (!is_string($doc[$key]) || !Uuid::isValid($doc[$key]))) {
@@ -187,6 +183,50 @@ final class ShootingDocumentAccess {
       }
     }
     return $doc;
+  }
+
+  /** Validates bounded task metadata; Node owns the frozen source and task existence. */
+  private static function adviceTask(mixed $task, string $document_id, bool $revision): void {
+    if (!is_array($task) || array_diff(array_keys($task), ['version', 'taskId', 'runId',
+      'inputHash', 'spec', 'model', 'platform', ...($revision ? ['planHash'] : [])]) || ($task['version'] ?? NULL) !== 1 ||
+      !is_string($task['taskId'] ?? NULL) || !Uuid::isValid($task['taskId']) ||
+      !is_string($task['inputHash'] ?? NULL) || !preg_match('/^[a-f0-9]{64}$/D', $task['inputHash']) ||
+      ($revision && (!is_string($task['planHash'] ?? NULL) ||
+        !preg_match('/^[a-f0-9]{64}$/D', $task['planHash']))) ||
+      (array_key_exists('runId', $task) && (!is_string($task['runId']) || !Uuid::isValid($task['runId']))) ||
+      (array_key_exists('model', $task) && (!is_string($task['model']) || mb_strlen($task['model']) > 128)) ||
+      (array_key_exists('platform', $task) && $task['platform'] !== 'custom')) {
+      throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+    $spec = $task['spec'] ?? NULL;
+    $rewrite = $revision && is_array($spec) && ($spec['operation'] ?? NULL) === 'rewrite';
+    $keys = ['version', 'documentId', 'request', ...($revision ? ['operation'] : [])];
+    if ($rewrite) {
+      $keys = array_merge($keys, ['shotId', 'mode', 'instruction']);
+    }
+    if (!is_array($spec) || count($spec) !== count($keys) || array_diff(array_keys($spec), $keys) ||
+      ($spec['version'] ?? NULL) !== 1 || ($spec['documentId'] ?? NULL) !== $document_id ||
+      !self::request($spec['request'] ?? NULL) ||
+      ($revision && !in_array($spec['operation'] ?? NULL, ['check', 'rewrite'], TRUE)) ||
+      ($rewrite && (!is_string($spec['shotId'] ?? NULL) ||
+        !preg_match('/^[A-Za-z0-9_-]{1,64}$/D', $spec['shotId']) ||
+        !in_array($spec['mode'] ?? NULL, ['dialogue', 'staging', 'shot'], TRUE) ||
+        !self::text($spec['instruction'] ?? NULL) || mb_strlen($spec['instruction']) > 2000))) {
+      throw new UnprocessableEntityHttpException('shooting_document_invalid');
+    }
+  }
+
+  /** All advice reservations use the same complete creative brief. */
+  private static function request(mixed $request): bool {
+    return is_array($request) && count($request) === 7 &&
+      !array_diff(array_keys($request), ['topic', 'duration', 'platform', 'format', 'tone', 'style', 'locale']) &&
+      self::text($request['topic'] ?? NULL) && mb_strlen($request['topic']) <= 1000 &&
+      is_string($request['style'] ?? NULL) && isset(ShootingVisuals::STYLES[$request['style']]) &&
+      in_array($request['duration'] ?? NULL, [30, 60, 90, 180], TRUE) &&
+      in_array($request['platform'] ?? NULL, ['douyin', 'rednote', 'wechat', 'bilibili'], TRUE) &&
+      in_array($request['format'] ?? NULL, ['comparison', 'talking', 'skit', 'tutorial', 'vlog'], TRUE) &&
+      in_array($request['tone'] ?? NULL, ['professional', 'humorous', 'natural', 'warm', 'energetic'], TRUE) &&
+      in_array($request['locale'] ?? NULL, ['zh-hans', 'en'], TRUE);
   }
 
   private function owned(string $uuid, bool $write): NodeInterface {
