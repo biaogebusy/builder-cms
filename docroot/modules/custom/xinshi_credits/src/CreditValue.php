@@ -24,6 +24,29 @@ final class CreditValue {
     return $left + $right;
   }
 
+  /** Multiply nonnegative quantities without promoting to floating point. */
+  public static function multiply(int $left, int $right): int {
+    if ($left < 0 || $right < 0 || ($left && $right > intdiv(PHP_INT_MAX, $left))) throw new CreditException('amount_overflow');
+    return $left * $right;
+  }
+
+  /** Parse a human decimal into exact atoms or micros for administrative forms. */
+  public static function decimal(mixed $value, int $places): string {
+    if (!in_array($places, [3, 6], TRUE) || !is_string($value)
+      || !preg_match('/^(0|[1-9][0-9]*)(?:\.([0-9]{1,' . $places . '}))?$/D', $value, $parts)) {
+      throw new CreditException('invalid_amount');
+    }
+    return (string) self::amount(ltrim($parts[1] . str_pad($parts[2] ?? '', $places, '0'), '0') ?: '0');
+  }
+
+  /** Format atoms or micros without loss of precision. */
+  public static function display(string $value, int $places): string {
+    self::amount($value);
+    if (!in_array($places, [3, 6], TRUE)) throw new \InvalidArgumentException('Invalid scale.');
+    $digits = str_pad($value, $places + 1, '0', STR_PAD_LEFT);
+    return rtrim(rtrim(substr($digits, 0, -$places) . '.' . substr($digits, -$places), '0'), '.');
+  }
+
   /** Apply a signed movement without creating a negative balance or a float. */
   public static function shift(int $balance, int $delta): int {
     if ($balance < 0 || $delta === PHP_INT_MIN || ($delta < 0 && $balance < -$delta)) {

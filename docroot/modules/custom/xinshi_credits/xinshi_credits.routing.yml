@@ -1,3 +1,29 @@
+xinshi_credits.budgets:
+  path: '/admin/config/people/credits/budgets'
+  defaults:
+    _form: '\Drupal\xinshi_credits\Form\CreditPublicationForm'
+    _title: 'Credit cost budgets'
+    type: 'budget'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'administer credit budgets'
+  options:
+    _admin_route: TRUE
+    _auth: ['cookie']
+    no_cache: TRUE
+xinshi_credits.pools:
+  path: '/admin/config/people/credits/pools'
+  defaults:
+    _form: '\Drupal\xinshi_credits\Form\CreditPublicationForm'
+    _title: 'Credit reward allocations'
+    type: 'pool'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'administer credit budgets'
+  options:
+    _admin_route: TRUE
+    _auth: ['cookie']
+    no_cache: TRUE
 xinshi_credits.account:
   path: '/api/v3/credits/me/account'
   defaults:

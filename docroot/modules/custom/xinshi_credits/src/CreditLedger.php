@@ -62,7 +62,8 @@ final class CreditLedger {
       $site = $account['site_id'];
       $grantId = $this->uuid->generate();
       $commitments = $this->budgets->reserveGrant($command['budget_pool_id'], $command['rule_id'],
-        $command['rule_version'], $command['scope'], $atoms, $command['expires_at'], $grantId, $journalId);
+        $command['rule_version'], $command['scope'], $atoms, $command['expires_at'], $grantId, $journalId,
+        $command['source_kind']);
       $this->database->insert('credit_grant')->fields([
         'id' => $grantId, 'site_id' => $site, 'account_id' => $account['id'], 'journal_id' => $journalId,
         'origin_key' => $origin, 'source_kind' => $command['source_kind'], 'source_ref' => $command['source_ref'],

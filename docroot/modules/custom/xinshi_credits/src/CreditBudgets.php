@@ -19,10 +19,10 @@ final class CreditBudgets {
   /**
    * Consume an immutable rule allocation and every eligible category budget.
    *
-   * Budget publication and qualification belong to the owning business adapter.
+   * Qualification belongs to the owning business adapter.
    * No default pool, cost bound, or reward is created by this module.
    */
-  public function reserveGrant(string $poolId, string $rule, string $version, array $scope, int $atoms, int $expiresAt, string $grantId, string $journalId): array {
+  public function reserveGrant(string $poolId, string $rule, string $version, array $scope, int $atoms, int $expiresAt, string $grantId, string $journalId, string $sourceKind): array {
     if (!$this->database->inTransaction()) throw new \LogicException('A ledger transaction is required.');
     $site = $this->context->site();
     $now = $this->time->getCurrentTime();
@@ -38,6 +38,17 @@ final class CreditBudgets {
     $bounds = json_decode($pool['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR);
     if (!is_array($bounds) || !$bounds || count($bounds) > 32 || array_diff($scope, array_keys($bounds))) {
       throw new CreditException('invalid_budget_scope');
+    }
+    if ($pool['publication_ref'] !== NULL) {
+      $policy = json_decode($pool['grant_policy_json'] ?? 'null', TRUE, 16, JSON_THROW_ON_ERROR);
+      if (!is_array($policy)) throw new CreditException('invalid_grant_policy');
+      CreditValue::fields($policy, ['mode', 'source_kind', 'grant_limit_atoms', 'expires_at']);
+      $limit = CreditValue::amount($policy['grant_limit_atoms'], TRUE);
+      if (!in_array($policy['mode'], ['fixed', 'variable'], TRUE) || $sourceKind !== $policy['source_kind']
+        || $atoms > $limit || ($policy['mode'] === 'fixed' && $atoms !== $limit)
+        || $expiresAt > $policy['expires_at'] || array_diff(array_keys($bounds), $scope)) {
+        throw new CreditException('invalid_grant_policy');
+      }
     }
     $ordered = [];
     foreach ($scope as $category) {

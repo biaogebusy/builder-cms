@@ -6,7 +6,16 @@ credits_root=$(CDPATH= cd -- "$(dirname -- "$0")/../../../../.." && pwd)
 credits_container=$(docker create --network none --entrypoint sh "$CREDITS_TEST_IMAGE" -c 'sleep 3600')
 credits_database=''
 credits_mysql=0
-trap 'if [ -n "$credits_database" ]; then docker rm -fv "$credits_database" >/dev/null; fi; docker rm -fv "$credits_container" >/dev/null' EXIT
+credits_cleanup() {
+  if [ -n "${CREDITS_TEST_ARTIFACTS:-}" ]; then
+    mkdir -p "$CREDITS_TEST_ARTIFACTS"
+    docker cp "$credits_container":/tmp/credits-test/ui/. "$CREDITS_TEST_ARTIFACTS"/ 2>/dev/null || true
+    docker cp "$credits_container":/tmp/credits-test/http.log "$CREDITS_TEST_ARTIFACTS"/ 2>/dev/null || true
+  fi
+  if [ -n "$credits_database" ]; then docker rm -fv "$credits_database" >/dev/null; fi
+  docker rm -fv "$credits_container" >/dev/null
+}
+trap credits_cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 docker start "$credits_container" >/dev/null
@@ -44,3 +53,7 @@ docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extens
   /app/docroot/modules/custom/xinshi_credits/tests/lifecycle.php
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_credits/tests/lifecycle-concurrency.php
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_credits/tests/publication.php
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_credits/tests/publication-concurrency.php

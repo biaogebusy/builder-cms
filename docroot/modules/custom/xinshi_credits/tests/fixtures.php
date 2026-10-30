@@ -39,7 +39,7 @@ function command(string $pool, string $rule, string $ref, string $user, string $
 function snapshot(): array {
   $tables = ['credit_account', 'credit_budget_bucket', 'credit_reward_pool', 'credit_grant',
     'credit_journal', 'credit_posting', 'credit_notification_outbox', 'credit_grant_cost',
-    'credit_budget_posting', 'credit_reservation', 'credit_allocation'];
+    'credit_budget_posting', 'credit_reservation', 'credit_allocation', 'credit_publication_guard', 'credit_pool_allocation'];
   $state = [];
   foreach ($tables as $table) $state[$table] = \Drupal::database()->select($table, 't')->fields('t')
     ->execute()->fetchAll(PDO::FETCH_ASSOC);

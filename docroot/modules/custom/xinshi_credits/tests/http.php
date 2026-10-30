@@ -60,7 +60,7 @@ function http(string $method, string $path, ?string $jar = NULL, string $body = 
   $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
   curl_close($curl);
   if ($content === FALSE) throw new RuntimeException('Loopback HTTP failed');
-  if (str_starts_with($path, '/api/v3/credits')) {
+  if (str_starts_with($path, '/api/v3/credits') || str_starts_with($path, '/admin/config/people/credits')) {
     check(str_contains($cache, 'no-store') && str_contains($cache, 'private'), 'Private cache policy: ' . $status);
   }
   return ['status' => $status, 'body' => $content, 'data' => json_decode($content, TRUE)];
@@ -143,6 +143,7 @@ try {
   check($unavailable === ['code' => 'credits_not_configured'], 'No guessed zero or exception details');
   \Drupal::configFactory()->getEditable('xinshi_credits.settings')->set('site_id', 'fixture')->save();
   echo 'HTTP checks: ' . $checks . PHP_EOL;
+  require __DIR__ . '/publication-http.php';
 }
 finally {
   proc_terminate($server);

@@ -35,8 +35,12 @@ function xinshi_credits_schema(): array {
       'opening_reserved_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'opening_actual_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'created_by' => $id, 'created_at' => $integer,
+      'publication_ref' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+      'publication_hash' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'execution_headroom_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
     ],
     'primary key' => ['id'], 'indexes' => ['period' => ['site_id', 'period_start', 'period_end']],
+    'unique keys' => ['publication' => ['site_id', 'publication_ref']],
   ];
   $schema['credit_reward_pool'] = [
     'description' => 'Immutable rule allocation and cost bounds; only issued quantity changes.',
@@ -45,8 +49,12 @@ function xinshi_credits_schema(): array {
       'period_start' => $integer, 'period_end' => $integer, 'cap_atoms' => $integer,
       'issued_atoms' => $integer, 'version' => $integer, 'bounds_json' => $text,
       'source_ref' => $text, 'created_by' => $id, 'created_at' => $integer,
+      'publication_ref' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+      'publication_hash' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'grant_policy_json' => ['type' => 'text', 'not null' => FALSE],
+      'cost_evidence_json' => ['type' => 'text', 'not null' => FALSE],
     ],
-    'primary key' => ['id'],
+    'primary key' => ['id'], 'unique keys' => ['publication' => ['site_id', 'publication_ref']],
   ];
   $schema['credit_grant'] = [
     'description' => 'Grant provenance and balance, retained independently of user content.',
@@ -129,7 +137,21 @@ function xinshi_credits_schema(): array {
       'held_atoms' => $integer, 'charged_atoms' => $integer, 'returned_atoms' => $integer],
     'primary key' => ['reservation_id', 'grant_id'],
   ];
+  $schema['credit_publication_guard'] = [
+    'description' => 'A permanent transaction lock for immutable budget and pool publication.',
+    'fields' => ['id' => $integer, 'generation' => $integer], 'primary key' => ['id'],
+  ];
+  $schema['credit_pool_allocation'] = [
+    'description' => 'Conservative published quota plans, separate from actual ledger commitments.',
+    'fields' => ['pool_id' => $uuid, 'bucket_id' => $uuid, 'planned_cost_micros' => $integer],
+    'primary key' => ['pool_id', 'bucket_id'], 'indexes' => ['bucket' => ['bucket_id']],
+  ];
   return $schema;
+}
+
+/** Implements hook_install(). */
+function xinshi_credits_install(): void {
+  \Drupal::database()->insert('credit_publication_guard')->fields(['id' => 1])->execute();
 }
 
 /** Add the lifecycle storage while preserving CR2a receipts and budget origins. */
@@ -205,5 +227,30 @@ function xinshi_credits_update_11001(array &$sandbox): void {
         ->condition('id', $bucket->id)->execute();
     }
     $sandbox['#finished'] = count($buckets) < 100 ? 1 : 0;
+  }
+}
+
+/** Add publication metadata without adopting or rewriting legacy budgets. */
+function xinshi_credits_update_11002(): void {
+  $db = \Drupal::database();
+  $config = \Drupal::config('xinshi_credits.settings');
+  if ($config->get('grants_enabled') || $config->get('spending_enabled')) {
+    throw new \Drupal\Core\Utility\UpdateException('Pause credit grants and spending before the publication update.');
+  }
+  $schema = xinshi_credits_schema();
+  foreach (['credit_budget_bucket', 'credit_reward_pool', 'credit_publication_guard', 'credit_pool_allocation'] as $table) {
+    $definition = $schema[$table];
+    if (!$db->schema()->tableExists($table)) $db->schema()->createTable($table, $definition);
+    else {
+      foreach ($definition['fields'] as $field => $spec) {
+        if (!$db->schema()->fieldExists($table, $field)) $db->schema()->addField($table, $field, $spec);
+      }
+      foreach ($definition['unique keys'] ?? [] as $name => $fields) {
+        if (!$db->schema()->indexExists($table, $name)) $db->schema()->addUniqueKey($table, $name, $fields);
+      }
+    }
+  }
+  if (!$db->select('credit_publication_guard', 'g')->condition('id', 1)->countQuery()->execute()->fetchField()) {
+    $db->insert('credit_publication_guard')->fields(['id' => 1])->execute();
   }
 }

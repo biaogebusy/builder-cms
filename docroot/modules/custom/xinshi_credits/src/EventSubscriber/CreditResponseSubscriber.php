@@ -39,7 +39,7 @@ final class CreditResponseSubscriber implements EventSubscriberInterface {
 
   /** Prevent personal amounts and denials from entering any shared cache. */
   public function response(ResponseEvent $event): void {
-    if (!preg_match('@/api/v3/credits(/|$)@', $event->getRequest()->getPathInfo())) return;
+    if (!preg_match('@/(?:api/v3/credits|admin/config/people/credits)(/|$)@', $event->getRequest()->getPathInfo())) return;
     $headers = $event->getResponse()->headers;
     $headers->set('Cache-Control', 'private, no-store, max-age=0');
     $headers->set('Pragma', 'no-cache');
