@@ -31,6 +31,9 @@ function xinshi_credits_schema(): array {
       'period_start' => $integer, 'period_end' => $integer, 'cap_micros' => $integer,
       'committed_cost_micros' => $integer, 'reserved_cost_micros' => $integer,
       'actual_cost_micros' => $integer, 'version' => $integer, 'source_ref' => $text,
+      'opening_committed_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'opening_reserved_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'opening_actual_micros' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
       'created_by' => $id, 'created_at' => $integer,
     ],
     'primary key' => ['id'], 'indexes' => ['period' => ['site_id', 'period_start', 'period_end']],
@@ -54,9 +57,10 @@ function xinshi_credits_schema(): array {
       'cost_commitments_json' => $text,
       'granted_atoms' => $integer, 'available_atoms' => $integer, 'held_atoms' => $integer,
       'refund_locked_atoms' => $integer, 'valid_from' => $integer, 'expires_at' => $integer,
+      'consumed_atoms' => $integer, 'expired_atoms' => $integer,
     ],
     'primary key' => ['id'], 'unique keys' => ['origin' => ['site_id', 'origin_key']],
-    'indexes' => ['expiry' => ['account_id', 'expires_at']],
+    'indexes' => ['expiry' => ['account_id', 'expires_at'], 'site_expiry' => ['site_id', 'expires_at', 'id']],
   ];
   $schema['credit_journal'] = [
     'description' => 'Append-only committed transactions; sequence is the account paging watermark.',
@@ -65,6 +69,11 @@ function xinshi_credits_schema(): array {
       'business_key' => $hash, 'request_hash' => $hash, 'origin_key' => $hash,
       'transaction_kind' => $id, 'grant_id' => $uuid, 'actor_user_id' => $id,
       'available_delta_atoms' => $integer, 'available_after_atoms' => $integer,
+      'held_delta_atoms' => $integer, 'held_after_atoms' => $integer,
+      'refund_locked_delta_atoms' => $integer, 'refund_locked_after_atoms' => $integer,
+      'operation_id' => $id + ['default' => ''],
+      'reverses_journal_id' => $uuid + ['default' => ''],
+      'receipt_json' => ['type' => 'text', 'not null' => FALSE],
       'balance_version' => $integer, 'public_reason' => $text, 'internal_note' => $text,
       'posted_at' => $integer,
     ],
@@ -90,5 +99,111 @@ function xinshi_credits_schema(): array {
     'primary key' => ['event_id'], 'unique keys' => ['journal' => ['journal_id']],
     'indexes' => ['pending' => ['state', 'next_retry_at']],
   ];
+  $schema['credit_grant_cost'] = [
+    'description' => 'Frozen grant cost bounds and current promise or return exposure.',
+    'fields' => ['grant_id' => $uuid, 'bucket_id' => $uuid, 'micros_per_point' => $integer,
+      'committed_micros' => $integer, 'reserved_micros' => $integer],
+    'primary key' => ['grant_id', 'bucket_id'], 'indexes' => ['bucket' => ['bucket_id']],
+  ];
+  $schema['credit_budget_posting'] = [
+    'description' => 'Append-only cost budget movements, separate from credit currency postings.',
+    'fields' => ['id' => $serial, 'journal_id' => $uuid, 'bucket_id' => $uuid,
+      'committed_delta_micros' => $integer, 'reserved_delta_micros' => $integer, 'actual_delta_micros' => $integer],
+    'primary key' => ['id'], 'indexes' => ['journal' => ['journal_id'], 'bucket' => ['bucket_id']],
+  ];
+  $schema['credit_reservation'] = [
+    'description' => 'One immutable authorization per operation; unresolved execution retains its hold.',
+    'fields' => ['id' => $uuid, 'site_id' => $id, 'account_id' => $uuid, 'operation_id' => $id,
+      'quote_id' => $id, 'authorization_version' => $id, 'quote_expires_at' => $integer,
+      'category' => $id, 'cost_currency' => $id,
+      'authorized_atoms' => $integer, 'charged_atoms' => $integer, 'returned_atoms' => $integer,
+      'state' => $id, 'hold_journal_id' => $uuid, 'terminal_journal_id' => $uuid + ['default' => ''],
+      'cost_bucket_id' => $uuid, 'cost_limit_micros' => $integer, 'actual_cost_micros' => $integer,
+      'evidence_ref' => $text, 'created_at' => $integer],
+    'primary key' => ['id'], 'unique keys' => ['operation' => ['site_id', 'operation_id']],
+    'indexes' => ['account' => ['account_id', 'state'], 'cost_budget' => ['cost_bucket_id', 'state']],
+  ];
+  $schema['credit_allocation'] = [
+    'description' => 'Frozen grant ordering and amounts for an accepted authorization.',
+    'fields' => ['reservation_id' => $uuid, 'grant_id' => $uuid, 'position' => $integer,
+      'held_atoms' => $integer, 'charged_atoms' => $integer, 'returned_atoms' => $integer],
+    'primary key' => ['reservation_id', 'grant_id'],
+  ];
   return $schema;
+}
+
+/** Add the lifecycle storage while preserving CR2a receipts and budget origins. */
+function xinshi_credits_update_11001(array &$sandbox): void {
+  $db = \Drupal::database();
+  $config = \Drupal::configFactory()->getEditable('xinshi_credits.settings');
+  if ($config->get('grants_enabled') || $config->get('spending_enabled')) {
+    throw new \Drupal\Core\Utility\UpdateException('Pause credit grants and spending before the ledger update.');
+  }
+  $schema = xinshi_credits_schema();
+  if (!isset($sandbox['last_sequence'])) {
+    foreach ($schema as $table => $definition) {
+      if (!$db->schema()->tableExists($table)) $db->schema()->createTable($table, $definition);
+      else foreach ($definition['fields'] as $field => $spec) {
+        if (!$db->schema()->fieldExists($table, $field)) $db->schema()->addField($table, $field, $spec);
+      }
+      foreach ($definition['indexes'] ?? [] as $name => $fields) {
+        if (!$db->schema()->indexExists($table, $name)) $db->schema()->addIndex($table, $name, $fields, $definition);
+      }
+    }
+    if ($config->get('spending_enabled') === NULL) $config->set('spending_enabled', FALSE)->save();
+    $sandbox['last_sequence'] = 0;
+  }
+  $rows = $db->select('credit_journal', 'j')->fields('j')->condition('sequence', $sandbox['last_sequence'], '>')
+    ->orderBy('sequence')->range(0, 100)->execute()->fetchAll(\PDO::FETCH_ASSOC);
+  foreach ($rows as $row) {
+    if ($row['receipt_json'] === NULL) {
+      if ($row['transaction_kind'] !== 'grant') throw new \Drupal\Core\Utility\UpdateException('Unexpected pre-lifecycle journal.');
+      $receipt = ['journal_id' => $row['id'], 'grant_id' => $row['grant_id'], 'account_id' => $row['account_id'],
+        'amount_atoms' => (string) $row['available_delta_atoms'], 'available_after_atoms' => (string) $row['available_after_atoms'],
+        'balance_version' => (string) $row['balance_version'], 'posted_at' => gmdate('c', (int) $row['posted_at'])];
+      $grant = $db->select('credit_grant', 'g')->fields('g')->condition('id', $row['grant_id'])->execute()->fetchAssoc();
+      if (!$grant) throw new \Drupal\Core\Utility\UpdateException('Original credit grant is missing.');
+      $pool = $db->select('credit_reward_pool', 'p')->fields('p')->condition('id', $grant['budget_pool_id'])->execute()->fetchAssoc();
+      if (!$pool) throw new \Drupal\Core\Utility\UpdateException('Original credit reward pool is missing.');
+      $bounds = json_decode($pool['bounds_json'], TRUE, 32, JSON_THROW_ON_ERROR);
+      $transaction = $db->startTransaction();
+      try {
+        foreach (json_decode($grant['cost_commitments_json'], TRUE, 32, JSON_THROW_ON_ERROR) as $cost) {
+          $bound = $bounds[$cost['category']] ?? [];
+          $rate = \Drupal\xinshi_credits\CreditValue::amount($bound['micros_per_point'] ?? NULL, TRUE);
+          if (($bound['bucket_id'] ?? '') !== $cost['bucket_id'] || $pool['rule_version'] !== $grant['rule_version']
+            || $pool['rule_id'] !== $grant['rule_id'] || $pool['site_id'] !== $grant['site_id']
+            || \Drupal\xinshi_credits\CreditValue::cost((int) $grant['granted_atoms'], $rate)
+              !== \Drupal\xinshi_credits\CreditValue::amount($cost['committed_micros'])) {
+            throw new \Drupal\Core\Utility\UpdateException('Grant cost evidence does not match the original pool.');
+          }
+          $db->insert('credit_grant_cost')->fields(['grant_id' => $grant['id'], 'bucket_id' => $cost['bucket_id'],
+            'micros_per_point' => $rate, 'committed_micros' => $cost['committed_micros']])->execute();
+          $db->insert('credit_budget_posting')->fields(['journal_id' => $row['id'], 'bucket_id' => $cost['bucket_id'],
+            'committed_delta_micros' => $cost['committed_micros']])->execute();
+        }
+        $db->update('credit_journal')->fields(['receipt_json' => json_encode($receipt, JSON_THROW_ON_ERROR)])
+          ->condition('id', $row['id'])->execute();
+        $transaction->commitOrRelease();
+      }
+      catch (\Throwable $error) { $transaction->rollBack(); throw $error; }
+    }
+    $sandbox['last_sequence'] = $row['sequence'];
+  }
+  $sandbox['#finished'] = count($rows) < 100 ? 1 : 0;
+  if ($sandbox['#finished']) {
+    $buckets = $db->select('credit_budget_bucket', 'b')->fields('b')->isNull('opening_committed_micros')
+      ->range(0, 100)->execute()->fetchAll();
+    foreach ($buckets as $bucket) {
+      $sum = $db->select('credit_budget_posting', 'p')->condition('bucket_id', $bucket->id);
+      $sum->addExpression('SUM(committed_delta_micros)');
+      $recorded = \Drupal\xinshi_credits\CreditValue::amount((string) ($sum->execute()->fetchField() ?? '0'));
+      $opening = \Drupal\xinshi_credits\CreditValue::shift(
+        \Drupal\xinshi_credits\CreditValue::amount((string) $bucket->committed_cost_micros), -$recorded);
+      $db->update('credit_budget_bucket')->fields(['opening_committed_micros' => $opening,
+        'opening_reserved_micros' => $bucket->reserved_cost_micros, 'opening_actual_micros' => $bucket->actual_cost_micros])
+        ->condition('id', $bucket->id)->execute();
+    }
+    $sandbox['#finished'] = count($buckets) < 100 ? 1 : 0;
+  }
 }

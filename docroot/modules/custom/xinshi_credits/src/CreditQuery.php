@@ -34,7 +34,7 @@ final class CreditQuery {
     $expired = $this->database->select('credit_grant', 'g')->fields('g', ['id'])
       ->condition('account_id', $account['id'])->condition('expires_at', $now, '<=')
       ->condition('available_atoms', 0, '>')->range(0, 1)->execute()->fetchField();
-    // Expiry postings belong to the next lifecycle batch; never expose stale spendable funds.
+    // Cron may lag behind the clock; reads must never expose stale spendable funds.
     if ($expired) return array_replace($result, ['status' => 'expiry_pending']);
     $active = 0;
     foreach (['available_atoms', 'held_atoms', 'refund_locked_atoms'] as $field) {
@@ -52,7 +52,9 @@ final class CreditQuery {
     $from = $this->timestamp($input['from']);
     $to = $this->timestamp($input['to']);
     if ($from >= $to || $to - $from > 366 * 86400) throw new CreditException('invalid_period');
-    if (isset($input['kind']) && $input['kind'] !== 'grant') throw new CreditException('invalid_kind');
+    if (isset($input['kind']) && !in_array($input['kind'], ['grant', 'hold', 'release', 'consume', 'return', 'expire'], TRUE)) {
+      throw new CreditException('invalid_kind');
+    }
     $limit = CreditValue::amount($input['limit'] ?? '50', TRUE);
     if ($limit > 100) throw new CreditException('invalid_limit');
     $account = $this->ownAccount();
@@ -69,9 +71,10 @@ final class CreditQuery {
       [$watermark, $before] = $this->decodeCursor($input['cursor'], $binding);
     }
     $query = $this->database->select('credit_journal', 'j');
-    $query->join('credit_grant', 'g', 'g.id = j.grant_id');
+    $query->leftJoin('credit_grant', 'g', 'g.id = j.grant_id');
     $query->fields('j', ['sequence', 'id', 'transaction_kind', 'grant_id', 'available_delta_atoms',
-      'available_after_atoms', 'balance_version', 'public_reason', 'posted_at']);
+      'available_after_atoms', 'held_delta_atoms', 'held_after_atoms', 'refund_locked_delta_atoms',
+      'refund_locked_after_atoms', 'operation_id', 'reverses_journal_id', 'balance_version', 'public_reason', 'posted_at']);
     $query->fields('g', ['source_kind', 'grant_kind', 'rule_id', 'rule_version', 'scope_json', 'expires_at']);
     $query->condition('j.account_id', $account['id'])->condition('j.site_id', $account['site_id'])
       ->condition('j.posted_at', $from, '>=')->condition('j.posted_at', $to, '<')
@@ -85,9 +88,10 @@ final class CreditQuery {
     foreach ($rows as &$row) {
       $row['journal_id'] = $row['id'];
       unset($row['id'], $row['sequence']);
-      foreach (['available_delta_atoms', 'available_after_atoms', 'balance_version'] as $field) $row[$field] = (string) $row[$field];
-      foreach (['posted_at', 'expires_at'] as $field) $row[$field] = gmdate('c', (int) $row[$field]);
-      $row['scope'] = json_decode($row['scope_json'], TRUE, 16, JSON_THROW_ON_ERROR);
+      foreach (['available_delta_atoms', 'available_after_atoms', 'held_delta_atoms', 'held_after_atoms',
+        'refund_locked_delta_atoms', 'refund_locked_after_atoms', 'balance_version'] as $field) $row[$field] = (string) $row[$field];
+      foreach (['posted_at', 'expires_at'] as $field) if ($row[$field] !== NULL) $row[$field] = gmdate('c', (int) $row[$field]);
+      $row['scope'] = $row['scope_json'] === NULL ? NULL : json_decode($row['scope_json'], TRUE, 16, JSON_THROW_ON_ERROR);
       unset($row['scope_json']);
     }
     return ['status' => 'complete', 'rows' => $rows, 'next_cursor' => $next,

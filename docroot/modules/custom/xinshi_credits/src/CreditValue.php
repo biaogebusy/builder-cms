@@ -24,6 +24,14 @@ final class CreditValue {
     return $left + $right;
   }
 
+  /** Apply a signed movement without creating a negative balance or a float. */
+  public static function shift(int $balance, int $delta): int {
+    if ($balance < 0 || $delta === PHP_INT_MIN || ($delta < 0 && $balance < -$delta)) {
+      throw new CreditException('invalid_balance', 409);
+    }
+    return $delta < 0 ? $balance + $delta : self::add($balance, $delta);
+  }
+
   /** Round a cost commitment up to whole micros. One point has 1,000 atoms. */
   public static function cost(int $atoms, int $microsPerPoint): int {
     $whole = intdiv($atoms, 1000);

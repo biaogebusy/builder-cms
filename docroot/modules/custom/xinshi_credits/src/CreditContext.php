@@ -25,4 +25,11 @@ final class CreditContext {
     }
   }
 
+  /** Stop new reservations while allowing accepted operations to finish. */
+  public function assertSpendingEnabled(): void {
+    if ($this->config->get('xinshi_credits.settings')->get('spending_enabled') !== TRUE) {
+      throw new CreditException('credits_spending_disabled', 503);
+    }
+  }
+
 }

@@ -9,3 +9,6 @@ xinshi_credits.settings:
     grants_enabled:
       type: boolean
       label: 'Allow new qualified credit grants'
+    spending_enabled:
+      type: boolean
+      label: 'Allow new credit reservations'

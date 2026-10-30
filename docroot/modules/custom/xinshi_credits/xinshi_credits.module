@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Lifecycle scheduling for the independent credit module.
+ */
+
+declare(strict_types=1);
+
+/** Implements hook_cron(). */
+function xinshi_credits_cron(): void {
+  \Drupal::service('xinshi_credits.expiry')->process();
+}
