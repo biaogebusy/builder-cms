@@ -678,6 +678,47 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertStringNotContainsString($this->doc['reviewTask']['runId'], json_encode($projection));
   }
 
+  public function testRevisionReservationsUseCasAndStayOutOfSharedResults(): void {
+    [$sharing, $editor, $token] = $this->sharedFixture();
+    $before = Node::load($this->plan->id())->get('field_shooting_document')->value;
+    $changed = $this->doc;
+    $task = ['version' => 1, 'taskId' => \Drupal::service('uuid')->generate(),
+      'inputHash' => str_repeat('a', 64), 'planHash' => str_repeat('b', 64),
+      'spec' => ['version' => 1, 'documentId' => $this->plan->uuid(), 'operation' => 'rewrite',
+        'request' => ['topic' => 'Private revision instructions', 'duration' => 60,
+          'platform' => 'douyin', 'format' => 'comparison', 'tone' => 'natural',
+          'style' => 'pencil', 'locale' => 'zh-hans'],
+        'shotId' => 'shot_1', 'mode' => 'dialogue', 'instruction' => 'Shorten the dialogue.']];
+    $changed['revisionTask'] = $task;
+    $saved = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+    $this->assertTrue($saved['updated']);
+    $this->assertSame($changed, $this->documents->read($this->plan->uuid()));
+    $this->assertFalse($this->documents->update($this->plan->uuid(), hash('sha256', $before), $before)['updated']);
+    foreach (['version' => 2, 'taskId' => 'bad', 'runId' => NULL, 'inputHash' => 'bad',
+      'planHash' => 2, 'credentials' => 'forbidden', 'plan' => $changed['draft']] as $key => $value) {
+      $invalid = $changed;
+      $invalid['revisionTask'][$key] = $value;
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    }
+    foreach (['documentId' => \Drupal::service('uuid')->generate(), 'version' => 2,
+      'operation' => 'delete', 'mode' => 'duration', 'shotId' => '',
+      'instruction' => str_repeat('a', 2001), 'apiKey' => 'forbidden'] as $key => $value) {
+      $invalid = $changed;
+      $invalid['revisionTask']['spec'][$key] = $value;
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    }
+    $changed['revisionTask']['runId'] = \Drupal::service('uuid')->generate();
+    $changed['revisionTask']['spec']['operation'] = 'check';
+    unset($changed['revisionTask']['spec']['shotId'], $changed['revisionTask']['spec']['mode'],
+      $changed['revisionTask']['spec']['instruction']);
+    $this->assertSame($changed, ShootingDocumentAccess::document(json_encode($changed), $this->plan->uuid()));
+    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    $projection = $sharing->read($token);
+    $this->assertArrayNotHasKey('revisionTask', $projection);
+    $this->assertStringNotContainsString('Private revision instructions', json_encode($projection));
+    $this->assertSame(0, $this->rows());
+  }
+
   public function testReviewedModeAndFrozenReplayLocatorUseTheDocumentCas(): void {
     $before = $this->plan->get('field_shooting_document')->value;
     $changed = $this->doc;
