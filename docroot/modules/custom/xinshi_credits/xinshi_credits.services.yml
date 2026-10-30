@@ -1,0 +1,44 @@
+services:
+  xinshi_credits.write_request:
+    class: Drupal\xinshi_credits\CreditWriteRequest
+    arguments: ['@session_configuration', '%cors.config%']
+  xinshi_credits.publication:
+    class: Drupal\xinshi_credits\CreditPublication
+    arguments: ['@database', '@xinshi_credits.context', '@datetime.time', '@uuid', '@current_user', '@entity_type.manager']
+  xinshi_credits.context:
+    class: Drupal\xinshi_credits\CreditContext
+    arguments: ['@config.factory']
+  xinshi_credits.budgets:
+    class: Drupal\xinshi_credits\CreditBudgets
+    arguments: ['@database', '@xinshi_credits.context', '@datetime.time']
+  xinshi_credits.ledger:
+    class: Drupal\xinshi_credits\CreditLedger
+    arguments: ['@database', '@xinshi_credits.context', '@uuid', '@entity_type.manager', '@xinshi_credits.budgets', '@xinshi_credits.store']
+  xinshi_credits.store:
+    class: Drupal\xinshi_credits\CreditStore
+    arguments: ['@database', '@xinshi_credits.context', '@datetime.time', '@uuid']
+  xinshi_credits.lifecycle:
+    class: Drupal\xinshi_credits\CreditLifecycle
+    arguments: ['@database', '@xinshi_credits.context', '@xinshi_credits.store', '@xinshi_credits.budgets', '@uuid', '@entity_type.manager']
+  xinshi_credits.expiry:
+    class: Drupal\xinshi_credits\CreditExpiry
+    arguments: ['@database', '@xinshi_credits.context', '@xinshi_credits.lifecycle', '@datetime.time', '@logger.channel.xinshi_credits']
+  xinshi_credits.audit:
+    class: Drupal\xinshi_credits\CreditAudit
+    arguments: ['@database', '@xinshi_credits.context']
+  xinshi_credits.query:
+    class: Drupal\xinshi_credits\CreditQuery
+    arguments: ['@database', '@xinshi_credits.context', '@datetime.time', '@private_key', '@current_user', '@entity_type.manager']
+  xinshi_credits.response:
+    class: Drupal\xinshi_credits\EventSubscriber\CreditResponseSubscriber
+    arguments: ['@logger.channel.xinshi_credits']
+    tags:
+      - { name: event_subscriber }
+  logger.channel.xinshi_credits:
+    parent: logger.channel_base
+    arguments: ['xinshi_credits']
+  xinshi_credits.uninstall:
+    class: Drupal\xinshi_credits\CreditUninstallValidator
+    arguments: ['@database']
+    tags:
+      - { name: module_install.uninstall_validator }

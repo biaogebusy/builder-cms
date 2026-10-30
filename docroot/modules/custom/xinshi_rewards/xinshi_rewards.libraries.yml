@@ -1,0 +1,4 @@
+gift:
+  css:
+    theme:
+      css/gift.css: {}

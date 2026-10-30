@@ -1,0 +1,51 @@
+.credit-publication-form {
+  max-inline-size: 64rem;
+  overflow-wrap: anywhere;
+}
+
+.credit-publication-form fieldset {
+  box-sizing: border-box;
+  min-inline-size: 0;
+}
+
+.credit-publication-form input,
+.credit-publication-form select {
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  min-block-size: 2rem;
+  font: inherit;
+}
+
+.credit-publication-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.credit-publication-navigation li {
+  margin: 0;
+}
+
+.credit-publication-navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2rem;
+}
+
+.credit-publication-form summary {
+  min-block-size: 2rem;
+}
+
+.credit-publication-form table {
+  inline-size: 100%;
+  table-layout: fixed;
+}
+
+.credit-publication-form th,
+.credit-publication-form td {
+  padding: 0.5rem;
+  text-align: start;
+  vertical-align: top;
+}

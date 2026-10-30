@@ -1,0 +1,7 @@
+name: Xinshi Credits
+type: module
+description: 'Shared credit accounts, append-only grants and bounded promotional budgets.'
+package: Xinshi
+core_version_requirement: ^11
+dependencies:
+  - drupal:user

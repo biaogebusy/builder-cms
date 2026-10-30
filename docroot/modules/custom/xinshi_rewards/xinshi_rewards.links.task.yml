@@ -1,0 +1,5 @@
+xinshi_rewards.gift_form:
+  route_name: xinshi_rewards.gift_form
+  base_route: entity.user.canonical
+  title: 'Give credits'
+  weight: 30

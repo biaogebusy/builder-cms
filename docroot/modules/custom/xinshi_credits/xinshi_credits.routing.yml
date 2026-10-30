@@ -1,0 +1,99 @@
+xinshi_credits.budgets:
+  path: '/admin/config/people/credits/budgets'
+  defaults:
+    _form: '\Drupal\xinshi_credits\Form\CreditPublicationForm'
+    _title: 'Credit cost budgets'
+    type: 'budget'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'administer credit budgets'
+  options:
+    _admin_route: TRUE
+    _auth: ['cookie']
+    no_cache: TRUE
+xinshi_credits.pools:
+  path: '/admin/config/people/credits/pools'
+  defaults:
+    _form: '\Drupal\xinshi_credits\Form\CreditPublicationForm'
+    _title: 'Credit reward allocations'
+    type: 'pool'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'administer credit budgets'
+  options:
+    _admin_route: TRUE
+    _auth: ['cookie']
+    no_cache: TRUE
+xinshi_credits.account:
+  path: '/api/v3/credits/me/account'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::account'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_credits.transactions:
+  path: '/api/v3/credits/me/transactions'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::transactions'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_credits.user_account:
+  path: '/api/v3/credits/admin/users/{user}/account'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::userAccount'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view user credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_credits.user_transactions:
+  path: '/api/v3/credits/admin/users/{user}/transactions'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::userTransactions'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view user credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_credits.notifications:
+  path: '/api/v3/credits/me/notifications'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::notifications'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_credits.acknowledge:
+  path: '/api/v3/credits/me/notifications/{event}/ack'
+  defaults:
+    _controller: '\Drupal\xinshi_credits\Controller\CreditController::acknowledge'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE

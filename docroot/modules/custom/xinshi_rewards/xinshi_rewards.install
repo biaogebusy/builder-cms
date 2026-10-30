@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+/** Implements hook_schema(). */
+function xinshi_rewards_schema(): array {
+  $id = ['type' => 'varchar', 'length' => 128, 'not null' => TRUE];
+  $hash = ['type' => 'varchar', 'length' => 64, 'not null' => TRUE];
+  $time = ['type' => 'int', 'size' => 'big', 'not null' => TRUE];
+  return [
+    'credit_reward_claim' => [
+      'description' => 'Immutable qualified reward, committed with its ledger grant.',
+      'fields' => [
+        'id' => $hash, 'site_id' => $id, 'beneficiary_user_id' => $id,
+        'rule_id' => $id, 'rule_version' => $id,
+        'business_date' => ['type' => 'varchar', 'length' => 10, 'not null' => TRUE],
+        'journal_id' => $id, 'created_at' => $time,
+      ],
+      'primary key' => ['id'],
+      'unique keys' => ['journal' => ['journal_id']],
+      'indexes' => ['user_rule' => ['site_id', 'beneficiary_user_id', 'rule_id']],
+    ],
+    'credit_reward_request' => [
+      'description' => 'Identity-bound request aliases, retained across business dates.',
+      'fields' => [
+        'id' => $hash, 'request_hash' => $hash, 'claim_id' => $hash,
+        'outcome' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE],
+      ],
+      'primary key' => ['id'],
+      'indexes' => ['claim' => ['claim_id']],
+    ],
+    'credit_reward_calendar' => [
+      'description' => 'Permanent calendar lock and immutable admitted business timezone.',
+      'fields' => [
+        'id' => ['type' => 'int', 'not null' => TRUE],
+        'timezone' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''],
+        'generation' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE, 'default' => 0],
+      ],
+      'primary key' => ['id'],
+    ],
+  ];
+}
+
+/** Implements hook_install(). */
+function xinshi_rewards_install(): void {
+  \Drupal::database()->insert('credit_reward_calendar')->fields(['id' => 1])->execute();
+}

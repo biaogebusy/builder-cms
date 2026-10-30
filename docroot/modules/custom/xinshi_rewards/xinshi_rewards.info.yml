@@ -1,0 +1,7 @@
+name: Xinshi Rewards
+type: module
+description: 'Optional daily active-visit rewards and authorized administrator gifts.'
+package: Xinshi
+core_version_requirement: ^11.4
+dependencies:
+  - xinshi_credits:xinshi_credits

@@ -1,0 +1,14 @@
+xinshi_credits.settings:
+  type: config_object
+  label: 'Shared credit settings'
+  mapping:
+    site_id:
+      type: string
+      label: 'Explicit ledger site identifier'
+      nullable: true
+    grants_enabled:
+      type: boolean
+      label: 'Allow new qualified credit grants'
+    spending_enabled:
+      type: boolean
+      label: 'Allow new credit reservations'

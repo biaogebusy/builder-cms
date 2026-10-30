@@ -1,0 +1,13 @@
+xinshi_rewards.settings:
+  type: config_object
+  label: 'Reward admission settings'
+  mapping:
+    daily_enabled:
+      type: boolean
+      label: 'Enable new daily rewards'
+    admin_gifts_enabled:
+      type: boolean
+      label: 'Enable new administrator gifts'
+    business_timezone:
+      type: string
+      label: 'Explicit business timezone, fixed by the first daily grant'

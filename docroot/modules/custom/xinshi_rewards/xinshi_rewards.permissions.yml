@@ -1,0 +1,8 @@
+receive daily credits:
+  title: 'Qualify for daily active-visit credits'
+  description: 'Grant only after the site has verified the user against its reward eligibility policy.'
+  restrict access: true
+grant user credits:
+  title: 'Give credits to managed users'
+  description: 'Give credits within the published G12 amount, scope, expiry and budget limits.'
+  restrict access: true

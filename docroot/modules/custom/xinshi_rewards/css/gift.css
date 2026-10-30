@@ -1,0 +1,18 @@
+#xinshi-rewards-gift {
+  max-width: 64rem;
+  overflow-wrap: anywhere;
+}
+#xinshi-rewards-gift input {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+#xinshi-rewards-gift table {
+  width: 100%;
+  table-layout: fixed;
+}
+#xinshi-rewards-gift th,
+#xinshi-rewards-gift td {
+  padding: 0.5rem;
+  text-align: start;
+  vertical-align: top;
+}
