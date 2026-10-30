@@ -1,4 +1,7 @@
 services:
+  xinshi_credits.write_request:
+    class: Drupal\xinshi_credits\CreditWriteRequest
+    arguments: ['@session_configuration', '%cors.config%']
   xinshi_credits.publication:
     class: Drupal\xinshi_credits\CreditPublication
     arguments: ['@database', '@xinshi_credits.context', '@datetime.time', '@uuid', '@current_user', '@entity_type.manager']

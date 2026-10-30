@@ -1,0 +1,9 @@
+services:
+  xinshi_rewards.rewards:
+    class: Drupal\xinshi_rewards\Rewards
+    arguments: ['@database', '@config.factory', '@xinshi_credits.context', '@xinshi_credits.ledger', '@datetime.time', '@current_user', '@entity_type.manager', '@flood']
+  xinshi_rewards.uninstall:
+    class: Drupal\xinshi_rewards\RewardUninstallValidator
+    arguments: ['@database']
+    tags:
+      - { name: module_install.uninstall_validator }

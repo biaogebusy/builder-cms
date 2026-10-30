@@ -1,0 +1,50 @@
+xinshi_rewards.status:
+  path: '/api/v3/credits/me/rewards'
+  defaults:
+    _controller: '\Drupal\xinshi_rewards\Controller\RewardController::status'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+  methods: [GET]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_rewards.daily:
+  path: '/api/v3/credits/me/daily-visit'
+  defaults:
+    _controller: '\Drupal\xinshi_rewards\Controller\RewardController::daily'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'view own credits'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_rewards.gift:
+  path: '/api/v3/credits/admin/grants'
+  defaults:
+    _controller: '\Drupal\xinshi_rewards\Controller\RewardController::gift'
+    _format: 'json'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'grant user credits+view user credits'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]
+  options:
+    _auth: ['oauth2', 'cookie']
+    no_cache: TRUE
+xinshi_rewards.gift_form:
+  path: '/admin/config/people/credits/users/{user}/gift'
+  defaults:
+    _form: '\Drupal\xinshi_rewards\Form\GiftForm'
+    _title: 'Give user credits'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'grant user credits+view user credits'
+  options:
+    _auth: ['cookie']
+    _admin_route: TRUE
+    no_cache: TRUE

@@ -1,6 +1,10 @@
 view own credits:
   title: 'View own credit account and transactions'
   description: 'Read personal credit information. Does not authorize grants or spending.'
+view user credits:
+  title: 'View managed users credit accounts and transactions'
+  description: 'Read public ledger fields for viewable users. Does not expose internal audit notes or authorize gifts.'
+  restrict access: true
 administer credit budgets:
   title: 'Publish credit budgets and reward allocations'
   description: 'Read cost evidence and publish immutable limits. Does not authorize user grants or enabling credits.'

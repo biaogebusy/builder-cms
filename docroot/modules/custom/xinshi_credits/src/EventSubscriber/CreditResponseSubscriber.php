@@ -13,7 +13,7 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-/** Protect financial reads, including failures raised before route matching. */
+/** Protect credit responses, including failures raised before route matching. */
 final class CreditResponseSubscriber implements EventSubscriberInterface {
 
   public function __construct(private readonly LoggerInterface $logger) {}
@@ -24,7 +24,7 @@ final class CreditResponseSubscriber implements EventSubscriberInterface {
     $error = $event->getThrowable();
     if (!$error instanceof CreditException && !$error instanceof HttpExceptionInterface) {
       // Raw database messages can include financial notes or source references.
-      $this->logger->error('Credit read failed with @class (code @code).',
+      $this->logger->error('Credit request failed with @class (code @code).',
         ['@class' => $error::class, '@code' => $error->getCode()]);
     }
     $status = $error instanceof CreditException ? $error->status :

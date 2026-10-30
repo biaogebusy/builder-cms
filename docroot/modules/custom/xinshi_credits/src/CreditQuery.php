@@ -10,7 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Session\AccountProxyInterface;
 
-/** Own-account projections, with no implicit initialization or grant side effects. */
+/** Authorized projections and notification acknowledgement, with no grant side effects. */
 final class CreditQuery {
 
   public function __construct(
@@ -23,8 +23,8 @@ final class CreditQuery {
   ) {}
 
   /** Return a balance at its committed version, or an explicit unavailable state. */
-  public function account(): array {
-    $account = $this->ownAccount();
+  public function account(?string $target = NULL): array {
+    $account = $this->authorizedAccount($target);
     $now = $this->time->getCurrentTime();
     if (!$account) return ['status' => 'not_initialized', 'data_as_of' => gmdate('c', $now)];
     $result = ['status' => $account['status'], 'account_id' => $account['id'],
@@ -47,7 +47,7 @@ final class CreditQuery {
   }
 
   /** Paginate an immutable journal window with a principal-bound signed cursor. */
-  public function transactions(array $input): array {
+  public function transactions(array $input, ?string $target = NULL): array {
     CreditValue::fields($input, ['from', 'to'], ['kind', 'limit', 'cursor']);
     $from = $this->timestamp($input['from']);
     $to = $this->timestamp($input['to']);
@@ -57,14 +57,14 @@ final class CreditQuery {
     }
     $limit = CreditValue::amount($input['limit'] ?? '50', TRUE);
     if ($limit > 100) throw new CreditException('invalid_limit');
-    $account = $this->ownAccount();
+    $account = $this->authorizedAccount($target);
     if (!$account) {
       if (isset($input['cursor'])) throw new CreditException('invalid_cursor');
       return ['status' => 'not_initialized', 'rows' => [], 'next_cursor' => NULL, 'ledger_watermark' => '0'];
     }
     if ($account['status'] !== 'active') throw new CreditException('account_unavailable', 409);
     $binding = hash('sha256', json_encode([$account['site_id'], $account['id'], $from, $to,
-      $input['kind'] ?? NULL, $limit], JSON_THROW_ON_ERROR));
+      $input['kind'] ?? NULL, $limit, $target === NULL ? NULL : (string) $this->currentUser->id()], JSON_THROW_ON_ERROR));
     $watermark = $this->watermark($account);
     $before = NULL;
     if (isset($input['cursor'])) {
@@ -98,15 +98,61 @@ final class CreditQuery {
       'ledger_watermark' => $watermark, 'data_as_of' => gmdate('c', $this->time->getCurrentTime())];
   }
 
-  private function ownAccount(): array|false {
+  /** Return pending in-app events with only the recipient's public ledger fields. */
+  public function notifications(): array {
+    $account = $this->authorizedAccount(NULL);
+    if (!$account) return ['rows' => []];
+    $query = $this->database->select('credit_notification_outbox', 'n');
+    $query->innerJoin('credit_journal', 'j', 'j.id = n.journal_id');
+    $query->innerJoin('credit_grant', 'g', 'g.id = j.grant_id');
+    $query->fields('n', ['event_id', 'journal_id']);
+    $query->fields('j', ['public_reason', 'available_delta_atoms', 'posted_at']);
+    $query->fields('g', ['grant_kind']);
+    $rows = $query->condition('n.recipient_user_id', (string) $this->currentUser->id())
+      ->condition('n.state', 'pending')->condition('j.account_id', $account['id'])
+      ->condition('j.site_id', $account['site_id'])->orderBy('j.sequence')->range(0, 20)
+      ->execute()->fetchAll(\PDO::FETCH_ASSOC);
+    foreach ($rows as &$row) {
+      $row['available_delta_atoms'] = (string) $row['available_delta_atoms'];
+      $row['posted_at'] = gmdate('c', (int) $row['posted_at']);
+    }
+    return ['rows' => $rows];
+  }
+
+  /** Acknowledge one owned event without changing the grant or issuing another event. */
+  public function acknowledge(string $event): array {
+    $account = $this->authorizedAccount(NULL);
+    CreditValue::id($event);
+    if (!$account) throw new CreditException('notification_not_found', 404);
+    $query = $this->database->select('credit_notification_outbox', 'n');
+    $query->innerJoin('credit_journal', 'j', 'j.id = n.journal_id');
+    $found = $query->fields('n', ['event_id'])->condition('n.event_id', $event)
+      ->condition('n.recipient_user_id', (string) $this->currentUser->id())
+      ->condition('j.account_id', $account['id'])->condition('j.site_id', $account['site_id'])
+      ->execute()->fetchField();
+    if (!$found) throw new CreditException('notification_not_found', 404);
+    $this->database->update('credit_notification_outbox')->fields(['state' => 'acknowledged'])
+      ->condition('event_id', $event)->condition('recipient_user_id', (string) $this->currentUser->id())->execute();
+    return ['status' => 'acknowledged', 'event_id' => $event];
+  }
+
+  private function authorizedAccount(?string $target): array|false {
     // Keep the OAuth principal for access; load the user only to check current account status.
-    if (!$this->currentUser->isAuthenticated() || !$this->currentUser->hasPermission('view own credits')) {
+    if (!$this->currentUser->isAuthenticated()
+      || !$this->currentUser->hasPermission($target === NULL ? 'view own credits' : 'view user credits')) {
       throw new CreditException('permission_denied', 403);
     }
     $user = $this->entities->getStorage('user')->load($this->currentUser->id());
     if (!$user || !$user->isActive()) throw new CreditException('permission_denied', 403);
+    if ($target !== NULL) {
+      CreditValue::amount($target, TRUE);
+      $subject = $this->entities->getStorage('user')->load($target);
+      if (!$subject || !$subject->isActive() || !$subject->access('view', $this->currentUser)) {
+        throw new CreditException('permission_denied', 403);
+      }
+    }
     return $this->database->select('credit_account', 'a')->fields('a')
-      ->condition('site_id', $this->context->site())->condition('owner_id', (string) $this->currentUser->id())
+      ->condition('site_id', $this->context->site())->condition('owner_id', $target ?? (string) $this->currentUser->id())
       ->execute()->fetchAssoc();
   }
 

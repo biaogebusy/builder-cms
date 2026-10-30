@@ -8,7 +8,7 @@ use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 
-/** The sole promotional grant writer; no controller accepts grant commands yet. */
+/** The sole promotional grant writer, called by trusted business adapters. */
 final class CreditLedger {
 
   public function __construct(
@@ -26,8 +26,11 @@ final class CreditLedger {
    * The adapter must authorize the action, derive the actor and business key,
    * and validate reward eligibility before calling. Never pass a request body
    * directly. This service owns provenance, dedup, exact amounts and budgets.
+   * The optional callback saves qualified business records in this transaction.
+   * It must use this connection, acquire no account locks and do no external I/O.
+   * It runs only for a new grant; any exception rolls back the whole grant.
    */
-  public function grant(array $input, string $businessKey): array {
+  public function grant(array $input, string $businessKey, ?callable $record = NULL): array {
     CreditValue::fields($input, ['beneficiary_user_id', 'actor_user_id', 'amount_atoms',
       'source_kind', 'source_ref', 'grant_kind', 'rule_id', 'rule_version',
       'budget_pool_id', 'scope', 'expires_at', 'public_reason'], ['internal_note']);
@@ -51,7 +54,7 @@ final class CreditLedger {
     $command['internal_note'] = CreditValue::text($input['internal_note'] ?? '', 1000, TRUE);
     $origin = hash('sha256', json_encode([$command['beneficiary_user_id'], $command['source_kind'],
       $command['source_ref'], $command['grant_kind']], JSON_THROW_ON_ERROR));
-    return $this->store->run($command, $businessKey, $origin, function (array $account, string $journalId, int $now) use ($command, $atoms, $origin): array {
+    return $this->store->run($command, $businessKey, $origin, function (array $account, string $journalId, int $now) use ($command, $atoms, $origin, $record): array {
       $this->context->assertGrantsEnabled();
       if ($command['expires_at'] <= $now) throw new CreditException('invalid_expiry');
       foreach (array_unique([$command['beneficiary_user_id'], $command['actor_user_id']]) as $userId) {
@@ -77,6 +80,7 @@ final class CreditLedger {
         'recipient_user_id' => $command['beneficiary_user_id'], 'template_id' => 'credits.granted',
         'state' => 'pending', 'created_at' => $now, 'next_retry_at' => $now,
       ])->execute();
+      if ($record !== NULL) $record($journalId, $grantId, $now);
       return ['kind' => 'grant', 'grant_id' => $grantId, 'deltas' => ['available' => $atoms],
         'postings' => [[$grantId, 'customer:' . $account['id'] . ':available', $atoms],
           [$grantId, 'system:issued', -$atoms]]];
