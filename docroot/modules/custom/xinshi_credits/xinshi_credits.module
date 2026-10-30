@@ -2,10 +2,34 @@
 
 /**
  * @file
- * Lifecycle scheduling for the independent credit module.
+ * Lifecycle scheduling and optional frontend configuration for credits.
  */
 
 declare(strict_types=1);
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityInterface;
+
+/** Implements hook_xinshi_api_data_alter(). */
+function xinshi_credits_xinshi_api_data_alter(&$data, EntityInterface $entity, CacheableMetadata $metadata): void {
+  if (!is_array($data) || (\Drupal::request()->query->all()['content'] ?? NULL) !== '/core/base') {
+    return;
+  }
+  $settings = \Drupal::config('xinshi_credits.settings');
+  $metadata->addCacheableDependency($settings)->addCacheTags(['config:core.extension']);
+  $grants = $settings->get('grants_enabled') === TRUE;
+  $daily = FALSE;
+  if (\Drupal::moduleHandler()->moduleExists('xinshi_rewards')) {
+    $rewards = \Drupal::config('xinshi_rewards.settings');
+    $metadata->addCacheableDependency($rewards);
+    $daily = $grants && $rewards->get('daily_enabled') === TRUE;
+  }
+  // Project only site switches; the credit routes retain all authorization checks.
+  $data['credits'] = [
+    'enabled' => $grants || $settings->get('spending_enabled') === TRUE,
+    'daily_enabled' => $daily,
+  ];
+}
 
 /** Implements hook_cron(). */
 function xinshi_credits_cron(): void {
