@@ -116,7 +116,9 @@ final class ShootingDocumentAccess {
       !in_array($doc['status'] ?? NULL, ['draft', 'generating', 'ready', 'failed', 'cancelled'], TRUE) ||
       !is_array($doc['request'] ?? NULL) || !self::text($doc['request']['topic'] ?? NULL) ||
       !is_string($doc['request']['style'] ?? NULL) ||
-      !isset(ShootingVisuals::STYLES[$doc['request']['style']])) {
+      !isset(ShootingVisuals::STYLES[$doc['request']['style']]) ||
+      (array_key_exists('aspectRatio', $doc['request']) &&
+        !in_array($doc['request']['aspectRatio'], ['9:16', '16:9', '1:1'], TRUE))) {
       throw new UnprocessableEntityHttpException('shooting_document_invalid');
     }
     if (array_key_exists('workflow', $doc) && !in_array($doc['workflow'], ['chat', 'plan'], TRUE)) {
@@ -218,8 +220,9 @@ final class ShootingDocumentAccess {
 
   /** All advice reservations use the same complete creative brief. */
   private static function request(mixed $request): bool {
-    return is_array($request) && count($request) === 7 &&
-      !array_diff(array_keys($request), ['topic', 'duration', 'platform', 'format', 'tone', 'style', 'locale']) &&
+    return is_array($request) && count($request) === 7 + (int) array_key_exists('aspectRatio', $request) &&
+      !array_diff(array_keys($request), ['topic', 'duration', 'platform', 'format', 'tone', 'style', 'locale', 'aspectRatio']) &&
+      (!array_key_exists('aspectRatio', $request) || in_array($request['aspectRatio'], ['9:16', '16:9', '1:1'], TRUE)) &&
       self::text($request['topic'] ?? NULL) && mb_strlen($request['topic']) <= 1000 &&
       is_string($request['style'] ?? NULL) && isset(ShootingVisuals::STYLES[$request['style']]) &&
       in_array($request['duration'] ?? NULL, [30, 60, 90, 180], TRUE) &&

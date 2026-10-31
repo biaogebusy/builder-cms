@@ -752,6 +752,21 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame(0, $this->rows());
   }
 
+  public function testExplicitFramingSurvivesDocumentSaveAndRejectsInvalidValues(): void {
+    $before = $this->plan->get('field_shooting_document')->value;
+    $changed = $this->doc;
+    $changed['request']['aspectRatio'] = '16:9';
+    $saved = $this->documents->update($this->plan->uuid(), hash('sha256', $before), json_encode($changed));
+    $this->assertTrue($saved['updated']);
+    $this->assertSame('16:9', $this->documents->read($this->plan->uuid())['request']['aspectRatio']);
+    foreach ([NULL, 1, '4:3', ' 9:16'] as $ratio) {
+      $invalid = $changed;
+      $invalid['request']['aspectRatio'] = $ratio;
+      $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
+    }
+    $this->assertSame(0, $this->rows());
+  }
+
   public function testReviewedModeAndFrozenReplayLocatorUseTheDocumentCas(): void {
     $before = $this->plan->get('field_shooting_document')->value;
     $changed = $this->doc;
