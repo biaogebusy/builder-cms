@@ -63,7 +63,7 @@ final class CreditLedger {
       if ($account['status'] !== 'active') throw new CreditException('account_unavailable', 409);
       $site = $account['site_id'];
       $grantId = $this->uuid->generate();
-      $commitments = $this->budgets->reserveGrant($command['budget_pool_id'], $command['rule_id'],
+      $funding = $this->budgets->reserveGrant($command['budget_pool_id'], $command['rule_id'],
         $command['rule_version'], $command['scope'], $atoms, $command['expires_at'], $grantId, $journalId,
         $command['source_kind']);
       $this->database->insert('credit_grant')->fields([
@@ -71,7 +71,8 @@ final class CreditLedger {
         'origin_key' => $origin, 'source_kind' => $command['source_kind'], 'source_ref' => $command['source_ref'],
         'grant_kind' => $command['grant_kind'], 'rule_id' => $command['rule_id'], 'rule_version' => $command['rule_version'],
         'budget_pool_id' => $command['budget_pool_id'], 'scope_json' => json_encode($command['scope'], JSON_THROW_ON_ERROR),
-        'cost_commitments_json' => json_encode($commitments, JSON_THROW_ON_ERROR),
+        'accounting_mode' => $funding['accounting_mode'],
+        'cost_commitments_json' => json_encode($funding['commitments'], JSON_THROW_ON_ERROR),
         'granted_atoms' => $atoms, 'available_atoms' => $atoms, 'valid_from' => $now, 'expires_at' => $command['expires_at'],
       ])->execute();
       $this->database->insert('credit_notification_outbox')->fields([

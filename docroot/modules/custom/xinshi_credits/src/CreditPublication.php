@@ -25,9 +25,10 @@ final class CreditPublication {
   /** Validate publication shape without saving or guessing missing business inputs. */
   public function normalize(string $type, array $input): array {
     if (!in_array($type, ['budget', 'pool'], TRUE)) throw new CreditException('invalid_publication');
+    $points = $type === 'pool' && ($input['accounting_mode'] ?? '') === 'points';
     $required = ['publication_ref', 'period_start', 'period_end', 'source_ref'];
     $required = [...$required, ...($type === 'budget' ? ['category', 'currency', 'cap_micros', 'execution_headroom_micros']
-      : ['rule_id', 'rule_version', 'cap_atoms', 'mode', 'source_kind', 'grant_limit_atoms', 'bounds'])];
+      : ['rule_id', 'rule_version', 'cap_atoms', 'mode', 'source_kind', 'grant_limit_atoms', ...($points ? ['accounting_mode', 'scope'] : ['bounds'])])];
     CreditValue::fields($input, $required, $type === 'pool' ? ['expires_at'] : []);
     $value = ['publication_ref' => CreditValue::id($input['publication_ref']), 'source_ref' => CreditValue::text($input['source_ref'])];
     foreach (['period_start', 'period_end'] as $field) {
@@ -55,6 +56,7 @@ final class CreditPublication {
       || ($value['mode'] === 'fixed' && (int) $value['cap_atoms'] % (int) $value['grant_limit_atoms'] !== 0)) {
       throw new CreditException('invalid_grant_policy');
     }
+    if ($points) return $value + ['accounting_mode' => 'points', 'scope' => CreditValue::scope($input['scope'])];
     if (!is_array($input['bounds']) || !array_is_list($input['bounds']) || !$input['bounds'] || count($input['bounds']) > 32) {
       throw new CreditException('invalid_budget_bound');
     }
@@ -75,7 +77,10 @@ final class CreditPublication {
   public function publish(string $type, array $input): array {
     $this->authorize();
     $value = $this->normalize($type, $input);
-    if ($this->database->inTransaction()) throw new \LogicException('Publication must own its transaction.');
+    // Points-only setup composes publication with configuration in one transaction.
+    if ($this->database->inTransaction() && ($value['accounting_mode'] ?? '') !== 'points') {
+      throw new \LogicException('Budgeted publication must own its transaction.');
+    }
     $site = $this->context->site(); $table = $type === 'budget' ? 'credit_budget_bucket' : 'credit_reward_pool';
     $hash = hash('sha256', json_encode($value, JSON_THROW_ON_ERROR));
     $transaction = $this->database->startTransaction();
@@ -98,6 +103,12 @@ final class CreditPublication {
         ->condition('period_start', $value['period_end'], '<')->condition('period_end', $value['period_start'], '>')
         ->condition($type === 'budget' ? 'category' : 'rule_id', $value[$type === 'budget' ? 'category' : 'rule_id'])
         ->fields('p', ['id'])->range(0, 1)->execute()->fetchField();
+      if (($value['accounting_mode'] ?? '') === 'points') {
+        $overlap = $this->database->select('credit_reward_pool', 'p')->condition('site_id', $site)
+          ->condition('rule_id', $value['rule_id'])->condition('accounting_mode', 'budgeted')
+          ->condition('period_start', $value['period_end'], '<')->condition('period_end', $value['period_start'], '>')
+          ->countQuery()->execute()->fetchField();
+      }
       if ($overlap) throw new CreditException('publication_period_overlap', 409);
       $row = ['id' => $this->uuid->generate(), 'site_id' => $site, 'publication_ref' => $value['publication_ref'],
         'publication_hash' => $hash, 'period_start' => $value['period_start'], 'period_end' => $value['period_end'],
@@ -107,7 +118,7 @@ final class CreditPublication {
       }
       else {
         $bounds = []; $evidence = [];
-        foreach ($value['bounds'] as $bound) {
+        foreach ($value['bounds'] ?? [] as $bound) {
           $bucket = $this->database->select('credit_budget_bucket', 'b')->fields('b')->condition('id', $bound['bucket_id'])
             ->condition('site_id', $site)->forUpdate()->execute()->fetchAssoc();
           if (!$bucket || $bucket['publication_hash'] === NULL || (int) $bucket['period_start'] > $value['period_start']
@@ -134,6 +145,9 @@ final class CreditPublication {
         }
         ksort($bounds, SORT_STRING); ksort($evidence, SORT_STRING);
         $row += array_intersect_key($value, array_flip(['rule_id', 'rule_version', 'cap_atoms']));
+        if (($value['accounting_mode'] ?? '') === 'points') {
+          $row += ['accounting_mode' => 'points', 'scope_json' => json_encode($value['scope'], JSON_THROW_ON_ERROR)];
+        }
         $row['bounds_json'] = json_encode($bounds, JSON_THROW_ON_ERROR);
         $row['cost_evidence_json'] = json_encode($evidence, JSON_THROW_ON_ERROR);
         $row['grant_policy_json'] = json_encode(array_intersect_key($value,

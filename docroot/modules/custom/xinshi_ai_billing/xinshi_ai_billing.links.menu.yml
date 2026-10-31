@@ -1,0 +1,5 @@
+xinshi_ai_billing.trial:
+  title: 'Trial credits'
+  description: 'Set rewards and fixed deductions for a free AI trial.'
+  route_name: xinshi_ai_billing.trial
+  parent: user.admin_index

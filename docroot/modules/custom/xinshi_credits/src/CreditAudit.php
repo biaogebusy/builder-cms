@@ -92,6 +92,8 @@ final class CreditAudit {
       $byCost = []; foreach ($costs as $cost) $byCost[$cost['grant_id']][$cost['bucket_id']] = $cost;
       foreach ($grants as $grant) {
         $snapshots = json_decode($grant['cost_commitments_json'], TRUE, 32, JSON_THROW_ON_ERROR);
+        if (!in_array($grant['accounting_mode'], ['points', 'budgeted'], TRUE)
+          || ($grant['accounting_mode'] === 'points' ? (bool) $snapshots : !$snapshots)) $issues[] = 'grant_accounting_mismatch';
         if (count($snapshots) !== count($byCost[$grant['id']] ?? [])) $issues[] = 'grant_cost_projection_mismatch';
         foreach ($snapshots as $snapshot) {
           $cost = $byCost[$grant['id']][$snapshot['bucket_id']] ?? NULL;
@@ -147,10 +149,16 @@ final class CreditAudit {
           || (int) $reservation['actual_cost_micros'] !== ($actualByJournal[$reservation['terminal_journal_id']] ?? 0)) {
           $issues[] = 'reservation_projection_mismatch';
         }
+        $points = $reservation['accounting_mode'] === 'points';
+        if (!in_array($reservation['accounting_mode'], ['points', 'budgeted'], TRUE)) $issues[] = 'reservation_accounting_mismatch';
+        foreach (['cost_bucket_id', 'cost_currency', 'cost_limit_micros', 'actual_cost_micros'] as $field) {
+          if (($reservation[$field] === NULL) !== $points) $issues[] = 'reservation_accounting_mismatch';
+        }
         $rows = $byReservation[$reservation['id']] ?? [];
         if (array_column($rows, 'grant_id') !== array_keys($op['allocations'] ?? [])) $issues[] = 'allocation_projection_mismatch';
         $totals = ['held_atoms' => 0, 'charged_atoms' => 0, 'returned_atoms' => 0];
         foreach ($rows as $position => $allocation) {
+          if (($grants[$allocation['grant_id']]['accounting_mode'] ?? '') !== $reservation['accounting_mode']) $issues[] = 'allocation_accounting_mismatch';
           if ((int) $allocation['position'] !== $position) $issues[] = 'allocation_projection_mismatch';
           foreach ($totals as $part => $value) {
             $expected = $op['allocations'][$allocation['grant_id']][$part] ?? 0;

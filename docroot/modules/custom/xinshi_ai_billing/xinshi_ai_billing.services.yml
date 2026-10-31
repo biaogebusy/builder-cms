@@ -16,3 +16,6 @@ services:
     arguments: ['@database']
     tags:
       - { name: module_install.uninstall_validator }
+  xinshi_ai_billing.trial:
+    class: Drupal\xinshi_ai_billing\TrialSetup
+    arguments: ['@database', '@config.factory', '@xinshi_credits.publication', '@xinshi_ai_billing.profiles', '@xinshi_ai_usage.local_producer', '@current_user', '@entity_type.manager']

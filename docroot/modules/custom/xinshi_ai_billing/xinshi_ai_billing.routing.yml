@@ -71,3 +71,13 @@ xinshi_ai_billing.finalize:
   options:
     _auth: []
     no_cache: TRUE
+xinshi_ai_billing.trial:
+  path: '/admin/config/xinshi/ai/credits/trial'
+  defaults:
+    _form: '\Drupal\xinshi_ai_billing\Form\TrialSetupForm'
+    _title: 'Trial credits'
+  requirements:
+    _permission: 'administer site configuration,administer credit budgets,administer ai credit prices,administer permissions'
+  options:
+    _auth: ['cookie']
+    no_cache: TRUE

@@ -9,3 +9,102 @@ msgstr "允许使用积分消费 AI"
 
 msgid "Publish AI credit sales profiles"
 msgstr "发布 AI 积分计费规格"
+
+msgid "Trial credits"
+msgstr "快捷体验积分"
+
+msgid "Set rewards and fixed deductions for a free AI trial."
+msgstr "配置 AI 免费体验的奖励和固定扣分。"
+
+msgid "Keep credit balances and deductions. Set the spending cap at your provider. This setup does not accept payments or enforce a currency budget."
+msgstr "信使管理积分余额和扣分。请在供应商平台设置消费上限。本配置不开放支付，也不控制货币预算。"
+
+msgid "First visit reward (points)"
+msgstr "首次登录奖励（积分）"
+
+msgid "Daily reward (points)"
+msgstr "每日登录奖励（积分）"
+
+msgid "Successful UI or text generation (points per operation)"
+msgstr "成功生成 UI 或文本（积分／次）"
+
+msgid "Delivered image (points per image)"
+msgstr "成功交付图片（积分／张）"
+
+msgid "Trial chat model"
+msgstr "体验对话模型"
+
+msgid "Trial image model"
+msgstr "体验图片模型"
+
+msgid "Eligible role"
+msgstr "参与角色"
+
+msgid "Reward timezone"
+msgstr "奖励业务时区"
+
+msgid "Credit expiry (UTC)"
+msgstr "积分到期时间（UTC）"
+
+msgid "Setting"
+msgstr "配置项"
+
+msgid "Value"
+msgstr "值"
+
+msgid "Saving enables rewards and credit spending for this role. Existing balances and accepted tasks keep their original rules. Changing the role does not revoke earlier permissions."
+msgstr "保存后，将为所选角色开放奖励和积分消费。已有余额和已接受任务保留原规则。更换角色不会撤销此前授予的权限。"
+
+msgid "Save and enable trial credits"
+msgstr "保存并启用体验积分"
+
+msgid "Back to edit"
+msgstr "返回修改"
+
+msgid "At least 5 UI generations and 10 images at the prices below. Daily rewards are separate."
+msgstr "首次奖励至少覆盖下方价格的 5 次 UI 生成和 10 张图片。每日奖励另算。"
+
+msgid "- Select -"
+msgstr "- 请选择 -"
+
+msgid "Use the selected models for the trial. Supported: ordinary UI/text conversations and text-to-image, with registered image sizes and counts. Other workflows require separate profiles."
+msgstr "体验时使用所选模型。支持普通 UI／文本对话和文生图，图片尺寸与数量限于模型目录。其他工作流需要另行配置计费规格。"
+
+msgid "Participation and expiry"
+msgstr "参与范围与到期时间"
+
+msgid "Leave empty for no expiry. Otherwise use YYYY-MM-DD HH:MM. Existing credits are unchanged."
+msgstr "留空表示不过期。需要到期时，填写 YYYY-MM-DD HH:MM。已有积分不变。"
+
+msgid "I have set the spending cap at the provider and enabled enforced metering and Node credit billing."
+msgstr "我已在供应商平台设置消费上限，并已启用强制计量和 Node 积分计费。"
+
+msgid "Review trial settings"
+msgstr "复核体验配置"
+
+msgid "Trial credits are enabled. Verify a reward and a successful deduction with a trial account."
+msgstr "体验积分已启用。请用体验账户验证领取奖励和成功扣分。"
+
+msgid "The setup could not be saved. Retry this reviewed version."
+msgstr "配置未能保存。请重试当前复核版本。"
+
+msgid "The first reward must cover 5 UI generations and 10 images."
+msgstr "首次奖励必须覆盖 5 次 UI 生成和 10 张图片。"
+
+msgid "Configure enforced image metering and the matching site identifier before enabling trial credits."
+msgstr "启用体验积分前，请配置强制图片计量，并确认站点标识一致。"
+
+msgid "This site already has budgeted credit records or policies. Keep the existing mode and review the transition separately."
+msgstr "本站已有预算模式的积分记录或规则。请保留现有模式，另行复核切换方案。"
+
+msgid "The configuration changed. Return to edit and review the current settings."
+msgstr "配置已变化。请返回修改，并重新复核当前配置。"
+
+msgid "Configure enabled chat, classifier, critic and image models in the AI model catalog."
+msgstr "请在 AI 模型目录配置已启用的对话、分类、审查和图片模型。"
+
+msgid "Enable the Xinshi Rewards module before using this setup."
+msgstr "使用本配置前，请启用信使奖励模块。"
+
+msgid "Check the values, expiry, timezone and administrator permissions. Error: @reason"
+msgstr "请检查填写值、到期时间、时区和管理员权限。错误：@reason"

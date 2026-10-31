@@ -14,3 +14,8 @@ xinshi_rewards.settings:
     business_timezone:
       type: string
       label: 'Explicit business timezone, fixed by the first daily grant'
+    points_pool_ids:
+      type: sequence
+      label: 'Active points-only reward pools'
+      sequence:
+        type: string

@@ -34,11 +34,24 @@ final class ImageBilling {
     if (!$this->enabled()) return ['status' => 'disabled'];
     if (($input['platform'] ?? '') === 'custom') return ['status' => 'customer_key'];
     $profile = $this->profiles->select((string) $input['jobKind'], (string) $input['model'], (string) $input['platform']);
+    if (($profile['accounting_mode'] ?? '') === 'points' && isset($profile['image']['sizes'])) {
+      $params = self::request($input)['params'];
+      CreditValue::fields($params, ['n', 'size']);
+      if (!is_int($params['n']) || $params['n'] < 1 || $params['n'] > $profile['calls'][0]['max_images']
+        || !in_array($params['size'], $profile['image']['sizes'], TRUE)) throw new CreditException('image_request_outside_quote', 422);
+      // Freeze the exact count and size so later configuration changes cannot reprice this quote.
+      $profile['version'] = 'image-' . hash('sha256', BillingProfiles::json([$profile['version'], $params]));
+      $profile['image']['params'] = $params;
+      unset($profile['image']['sizes']);
+      $profile['calls'][0]['max_images'] = $params['n'];
+      $this->validate($input, $profile);
+      $profile = $this->profiles->publish($profile);
+    }
     $this->validate($input, $profile);
     return ['status' => 'quoted', 'quote' => $this->billing->quote([
       'feature' => $input['jobKind'], 'model' => $input['model'], 'platform' => $input['platform'],
       'request_hash' => self::requestHash($input), 'producer_id' => LocalUsageProducer::PRODUCER_ID,
-    ], $key)];
+    ], $key, $profile)];
   }
 
   /** One quote creates one job and one hold, even when the submit response is lost. */

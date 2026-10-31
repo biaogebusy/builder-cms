@@ -27,19 +27,23 @@ final class CreditLifecycle {
    * or acquire another account. A failure rolls back the entire ledger operation.
    */
   public function reserve(array $input, string $key, ?callable $onCommit = NULL): array {
+    $points = ($input['accounting_mode'] ?? '') === 'points';
     $command = $this->command($input, 'hold', ['operation_id', 'quote_id', 'authorization_version',
-      'quote_expires_at', 'category', 'amount_atoms', 'cost_bucket_id', 'cost_limit_micros', 'cost_currency']);
-    foreach (['operation_id', 'quote_id', 'authorization_version', 'category', 'cost_bucket_id'] as $field) {
+      'quote_expires_at', 'category', 'amount_atoms', ...($points ? ['accounting_mode'] : ['cost_bucket_id', 'cost_limit_micros', 'cost_currency'])]);
+    if ($points) $command['accounting_mode'] = 'points';
+    foreach (['operation_id', 'quote_id', 'authorization_version', 'category', ...($points ? [] : ['cost_bucket_id'])] as $field) {
       $command[$field] = CreditValue::id($input[$field]);
     }
     $amount = CreditValue::amount($input['amount_atoms'], TRUE);
     $command['amount_atoms'] = (string) $amount;
-    $command['cost_limit_micros'] = (string) CreditValue::amount($input['cost_limit_micros']);
-    $command['cost_currency'] = $this->currency($input['cost_currency']);
+    if (!$points) {
+      $command['cost_limit_micros'] = (string) CreditValue::amount($input['cost_limit_micros']);
+      $command['cost_currency'] = $this->currency($input['cost_currency']);
+    }
     if (!is_int($input['quote_expires_at'])) throw new CreditException('invalid_quote');
     $command['quote_expires_at'] = $input['quote_expires_at'];
     return $this->store->run($command, $key, $this->origin(['hold', $command['operation_id']]),
-      function (array $account, string $journalId, int $now) use ($command, $amount, $onCommit): array {
+      function (array $account, string $journalId, int $now) use ($command, $amount, $onCommit, $points): array {
         $this->context->assertSpendingEnabled();
         if ($command['quote_expires_at'] <= $now) throw new CreditException('quote_expired', 409);
         if ($account['status'] !== 'active') throw new CreditException('account_unavailable', 409);
@@ -48,7 +52,8 @@ final class CreditLifecycle {
           if (!$user || !$user->isActive()) throw new CreditException('account_unavailable', 403);
         }
         $query = $this->database->select('credit_grant', 'g')->fields('g')->condition('account_id', $account['id'])
-          ->condition('available_atoms', 0, '>')->condition('valid_from', $now, '<=');
+          ->condition('available_atoms', 0, '>')->condition('valid_from', $now, '<=')
+          ->condition('accounting_mode', $points ? 'points' : 'budgeted');
         $query->condition($query->orConditionGroup()->isNull('expires_at')->condition('expires_at', $now, '>'));
         // Spend dated grants first on both SQLite and MariaDB.
         $query->addExpression('CASE WHEN expires_at IS NULL THEN 1 ELSE 0 END', 'no_expiry');
@@ -62,17 +67,20 @@ final class CreditLifecycle {
           if ($remaining === 0) break;
         }
         if ($remaining) throw new CreditException(count($candidates) > 128 ? 'allocation_limit_exceeded' : 'insufficient_credits', 402);
-        $this->lockCosts($grants, $command['cost_bucket_id']);
-        $bucket = $this->database->select('credit_budget_bucket', 'b')->fields('b')
-          ->condition('id', $command['cost_bucket_id'])->forUpdate()->execute()->fetchAssoc();
-        if ($bucket['currency'] !== $command['cost_currency']) throw new CreditException('cost_currency_mismatch', 409);
-        if ($bucket['category'] !== $command['category'] || (int) $bucket['period_start'] > $now
-          || (int) $bucket['period_end'] <= $now) throw new CreditException('cost_budget_unavailable', 409);
-        CreditValue::text($bucket['source_ref']);
-        $exposure = CreditValue::add((int) $bucket['committed_cost_micros'],
-          CreditValue::add((int) $bucket['reserved_cost_micros'], (int) $bucket['actual_cost_micros']));
-        if ($exposure > (int) $bucket['cap_micros']) throw new CreditException('reward_budget_exhausted', 409);
-        $this->budgets->move($bucket['id'], $journalId, 0, (int) $command['cost_limit_micros'], 0);
+        $bucket = NULL;
+        if (!$points) {
+          $this->lockCosts($grants, $command['cost_bucket_id']);
+          $bucket = $this->database->select('credit_budget_bucket', 'b')->fields('b')
+            ->condition('id', $command['cost_bucket_id'])->forUpdate()->execute()->fetchAssoc();
+          if ($bucket['currency'] !== $command['cost_currency']) throw new CreditException('cost_currency_mismatch', 409);
+          if ($bucket['category'] !== $command['category'] || (int) $bucket['period_start'] > $now
+            || (int) $bucket['period_end'] <= $now) throw new CreditException('cost_budget_unavailable', 409);
+          CreditValue::text($bucket['source_ref']);
+          $exposure = CreditValue::add((int) $bucket['committed_cost_micros'],
+            CreditValue::add((int) $bucket['reserved_cost_micros'], (int) $bucket['actual_cost_micros']));
+          if ($exposure > (int) $bucket['cap_micros']) throw new CreditException('reward_budget_exhausted', 409);
+          $this->budgets->move($bucket['id'], $journalId, 0, (int) $command['cost_limit_micros'], 0);
+        }
         $id = $this->uuid->generate(); $postings = [];
         foreach ($grants as $position => $grant) {
           $take = $allocations[$position];
@@ -86,9 +94,11 @@ final class CreditLifecycle {
           'account_id' => $account['id'], 'operation_id' => $command['operation_id'], 'quote_id' => $command['quote_id'],
           'authorization_version' => $command['authorization_version'], 'category' => $command['category'],
           'quote_expires_at' => $command['quote_expires_at'],
-          'cost_currency' => $command['cost_currency'],
+          'accounting_mode' => $points ? 'points' : 'budgeted',
+          'cost_currency' => $command['cost_currency'] ?? NULL,
           'authorized_atoms' => $amount, 'state' => 'held', 'hold_journal_id' => $journalId,
-          'cost_bucket_id' => $bucket['id'], 'cost_limit_micros' => $command['cost_limit_micros'],
+          'cost_bucket_id' => $bucket['id'] ?? NULL, 'cost_limit_micros' => $command['cost_limit_micros'] ?? NULL,
+          'actual_cost_micros' => $points ? NULL : 0,
           'evidence_ref' => '', 'created_at' => $now])->execute();
         if ($onCommit) $onCommit($account, $id, $journalId, $now);
         return ['kind' => 'hold', 'grant_id' => '', 'operation_id' => $command['operation_id'],
@@ -108,22 +118,25 @@ final class CreditLifecycle {
   }
 
   private function close(array $input, string $key, bool $settle, ?callable $onCommit): array {
-    $required = ['operation_id', 'outcome', 'evidence_ref'];
-    if ($settle) $required = [...$required, 'charged_atoms', 'actual_cost_micros', 'cost_status', 'cost_currency'];
+    $points = ($input['accounting_mode'] ?? '') === 'points';
+    $required = ['operation_id', 'outcome', 'evidence_ref', ...($points ? ['accounting_mode'] : [])];
+    if ($settle) $required = [...$required, 'charged_atoms', ...($points ? [] : ['actual_cost_micros', 'cost_status', 'cost_currency'])];
     $command = $this->command($input, $settle ? 'consume' : 'release', $required);
+    if ($points) $command['accounting_mode'] = 'points';
     $command['operation_id'] = CreditValue::id($input['operation_id']);
     $command['evidence_ref'] = CreditValue::text($input['evidence_ref']);
     if ($input['outcome'] !== ($settle ? 'completed' : 'not_started')) throw new CreditException('execution_unresolved', 409);
     $command['outcome'] = $input['outcome'];
-    if ($settle && $input['cost_status'] !== 'final') throw new CreditException('cost_unresolved', 409);
+    if ($settle && !$points && $input['cost_status'] !== 'final') throw new CreditException('cost_unresolved', 409);
     $command['charged_atoms'] = (string) CreditValue::amount($settle ? $input['charged_atoms'] : '0');
-    $command['actual_cost_micros'] = (string) CreditValue::amount($settle ? $input['actual_cost_micros'] : '0');
-    if ($settle) $command['cost_currency'] = $this->currency($input['cost_currency']);
+    $command['actual_cost_micros'] = $points ? NULL : (string) CreditValue::amount($settle ? $input['actual_cost_micros'] : '0');
+    if ($settle && !$points) $command['cost_currency'] = $this->currency($input['cost_currency']);
     return $this->store->run($command, $key, $this->origin(['terminal', $command['operation_id']]),
-      function (array $account, string $journalId, int $now) use ($command, $settle, $onCommit): array {
+      function (array $account, string $journalId, int $now) use ($command, $settle, $onCommit, $points): array {
         [$reservation, $allocations, $grants] = $this->operation($account, $command['operation_id']);
         if ($reservation['state'] !== 'held') throw new CreditException('operation_already_closed', 409);
-        if ($settle && $command['cost_currency'] !== $reservation['cost_currency']) throw new CreditException('cost_currency_mismatch', 409);
+        if ($reservation['accounting_mode'] !== ($points ? 'points' : 'budgeted')) throw new CreditException('accounting_mode_mismatch', 409);
+        if ($settle && !$points && $command['cost_currency'] !== $reservation['cost_currency']) throw new CreditException('cost_currency_mismatch', 409);
         $remaining = (int) $command['charged_atoms'];
         if ($remaining > (int) $reservation['authorized_atoms']) throw new CreditException('authorization_exceeded', 409);
         $this->lockCosts($grants, $reservation['cost_bucket_id']);
@@ -143,7 +156,7 @@ final class CreditLifecycle {
           $this->database->update('credit_allocation')->fields(['charged_atoms' => $charged])
             ->condition('reservation_id', $reservation['id'])->condition('grant_id', $grant['id'])->execute();
         }
-        $this->budgets->move($reservation['cost_bucket_id'], $journalId, 0, -(int) $reservation['cost_limit_micros'],
+        if (!$points) $this->budgets->move($reservation['cost_bucket_id'], $journalId, 0, -(int) $reservation['cost_limit_micros'],
           (int) $command['actual_cost_micros'], TRUE);
         $this->database->update('credit_reservation')->fields(['state' => $settle ? 'settled' : 'released',
           'charged_atoms' => $command['charged_atoms'], 'actual_cost_micros' => $command['actual_cost_micros'],
@@ -154,7 +167,7 @@ final class CreditLifecycle {
           'deltas' => ['available' => $released, 'held' => -(int) $reservation['authorized_atoms']], 'postings' => $postings,
           'details' => ['reservation_id' => $reservation['id'], 'charged_atoms' => $command['charged_atoms'],
             'released_atoms' => (string) $released, 'expired_atoms' => (string) $expired,
-            'cost_limit_exceeded' => (int) $command['actual_cost_micros'] > (int) $reservation['cost_limit_micros']]];
+            'cost_limit_exceeded' => $points ? NULL : (int) $command['actual_cost_micros'] > (int) $reservation['cost_limit_micros']]];
       });
   }
 

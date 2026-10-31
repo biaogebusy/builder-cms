@@ -146,6 +146,13 @@ function xinshi_credits_schema(): array {
     'fields' => ['pool_id' => $uuid, 'bucket_id' => $uuid, 'planned_cost_micros' => $integer],
     'primary key' => ['pool_id', 'bucket_id'], 'indexes' => ['bucket' => ['bucket_id']],
   ];
+  foreach (['credit_reward_pool', 'credit_grant', 'credit_reservation'] as $table) {
+    $schema[$table]['fields']['accounting_mode'] = $id + ['default' => 'budgeted'];
+  }
+  $schema['credit_reward_pool']['fields']['scope_json'] = ['type' => 'text', 'not null' => FALSE];
+  foreach (['cost_bucket_id', 'cost_currency', 'cost_limit_micros', 'actual_cost_micros'] as $field) {
+    $schema['credit_reservation']['fields'][$field]['not null'] = FALSE;
+  }
   return $schema;
 }
 
@@ -259,4 +266,25 @@ function xinshi_credits_update_11002(): void {
 function xinshi_credits_update_11003(): void {
   $definition = xinshi_credits_schema()['credit_grant']['fields']['expires_at'];
   \Drupal::database()->schema()->changeField('credit_grant', 'expires_at', 'expires_at', $definition);
+}
+
+/** Add explicit points-only records without converting existing budget obligations. */
+function xinshi_credits_update_11004(): void {
+  $settings = \Drupal::config('xinshi_credits.settings');
+  if ($settings->get('grants_enabled') || $settings->get('spending_enabled')) {
+    throw new \Drupal\Core\Utility\UpdateException('Pause credit grants and spending before updating the ledger.');
+  }
+  $db = \Drupal::database();
+  $schema = xinshi_credits_schema();
+  foreach (['credit_reward_pool', 'credit_grant', 'credit_reservation'] as $table) {
+    if (!$db->schema()->fieldExists($table, 'accounting_mode')) {
+      $db->schema()->addField($table, 'accounting_mode', $schema[$table]['fields']['accounting_mode']);
+    }
+  }
+  if (!$db->schema()->fieldExists('credit_reward_pool', 'scope_json')) {
+    $db->schema()->addField('credit_reward_pool', 'scope_json', $schema['credit_reward_pool']['fields']['scope_json']);
+  }
+  foreach (['cost_bucket_id', 'cost_currency', 'cost_limit_micros', 'actual_cost_micros'] as $field) {
+    $db->schema()->changeField('credit_reservation', $field, $field, $schema['credit_reservation']['fields'][$field]);
+  }
 }

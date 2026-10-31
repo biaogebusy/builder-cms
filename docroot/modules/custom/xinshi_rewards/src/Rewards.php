@@ -167,12 +167,17 @@ final class Rewards {
     $query = $this->database->select('credit_reward_pool', 'p')->fields('p')
       ->condition('site_id', $this->context->site())->condition('rule_id', $rule)->isNotNull('publication_ref')
       ->condition('period_start', $now, '<=')->condition('period_end', $now, '>');
+    $active = $this->config->get('xinshi_rewards.settings')->get('points_pool_ids') ?? [];
+    if ($active) $query->condition('accounting_mode', 'points')->condition('id', $active, 'IN');
+    else $query->condition('accounting_mode', 'budgeted');
     if ($id !== NULL) $query->condition('id', $id);
     $rows = $query->range(0, 2)->execute()->fetchAll(\PDO::FETCH_ASSOC);
     if (count($rows) !== 1) throw new CreditException('rewards_not_configured', 503);
     $pool = $rows[0];
     $pool['policy'] = json_decode($pool['grant_policy_json'], TRUE, 16, JSON_THROW_ON_ERROR);
-    $pool['bounds'] = json_decode($pool['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR);
+    $pool['bounds'] = $pool['accounting_mode'] === 'points'
+      ? array_fill_keys(CreditValue::scope(json_decode($pool['scope_json'], TRUE, 16, JSON_THROW_ON_ERROR)), NULL)
+      : json_decode($pool['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR);
     if ($pool['policy']['mode'] !== ($rule === 'G12' ? 'variable' : 'fixed')
       || $pool['policy']['source_kind'] !== ($rule === 'G12' ? 'admin_gift' : 'promotion')
       || ($pool['policy']['expires_at'] !== NULL && $pool['policy']['expires_at'] <= $now)) throw new CreditException('rewards_not_configured', 503);

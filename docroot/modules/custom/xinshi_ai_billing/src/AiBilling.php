@@ -28,7 +28,7 @@ final class AiBilling {
   ) {}
 
   /** Create a bounded quote for the authenticated user, without reserving credits. */
-  public function quote(array $input, string $key): array {
+  public function quote(array $input, string $key, ?array $selection = NULL): array {
     $uid = $this->user();
     CreditValue::fields($input, ['feature', 'model', 'platform', 'request_hash', 'producer_id']);
     $hash = self::hash($input['request_hash']);
@@ -43,15 +43,16 @@ final class AiBilling {
       return $this->quoteSummary($previous);
     }
     $this->enabled();
-    $profile = $this->profiles->select(CreditValue::id($input['feature']),
+    $profile = $selection ?? $this->profiles->select(CreditValue::id($input['feature']),
       CreditValue::text($input['model'], 128), CreditValue::id($input['platform']));
+    if ($profile['feature'] !== $input['feature'] || $profile['model'] !== $input['model'] || $profile['platform'] !== $input['platform']) throw new CreditException('quote_mismatch');
     $now = $this->time->getCurrentTime();
     $quote = ['id' => $this->uuid->generate(), 'site_id' => $this->context->site(), 'user_id' => $uid,
       'producer_id' => $producer, 'request_hash' => $hash, 'version' => $profile['version'],
       'request_key' => $key, 'request_json' => $json,
       'expires_at' => $now + $profile['quote_ttl_seconds'], 'created_at' => $now];
     try { $this->database->insert('ai_billing_quote')->fields($quote)->execute(); }
-    catch (\Drupal\Core\Database\IntegrityConstraintViolationException) { return $this->quote($input, $requestKey); }
+    catch (\Drupal\Core\Database\IntegrityConstraintViolationException) { return $this->quote($input, $requestKey, $selection); }
     return $this->quoteSummary($quote);
   }
 
@@ -77,11 +78,12 @@ final class AiBilling {
     if ($profile['category'] === 'image' && $onCommit === NULL) {
       throw new CreditException('image_task_required', 422);
     }
+    $points = ($profile['accounting_mode'] ?? '') === 'points';
     $this->ledger->reserve($this->common($uid) + ['operation_id' => $operation,
       'quote_id' => $quote['id'], 'authorization_version' => $quote['version'],
       'quote_expires_at' => (int) $quote['expires_at'], 'category' => $profile['category'],
-      'amount_atoms' => $amounts['maximum_atoms'], 'cost_limit_micros' => $amounts['cost_limit_micros'],
-      'cost_currency' => $profile['currency'], 'cost_bucket_id' => $profile['cost_bucket_id']],
+      'amount_atoms' => $amounts['maximum_atoms']] + ($points ? ['accounting_mode' => 'points'] : [
+      'cost_limit_micros' => $amounts['cost_limit_micros'], 'cost_currency' => $profile['currency'], 'cost_bucket_id' => $profile['cost_bucket_id']]),
       'ai-hold:' . $quote['id'], function (array $account, string $reservation, string $journal, int $now) use ($quote, $operation, $onCommit): void {
         $this->enabled();
         $this->database->insert('ai_billing_authorization')->fields(['site_id' => $account['site_id'],
@@ -189,8 +191,12 @@ final class AiBilling {
     $hash = hash('sha256', $evidence);
     $command = $this->common($auth['user_id']) + ['operation_id' => $operation,
       'evidence_ref' => 'ai-evidence:' . $hash, 'outcome' => $facts['not_started'] ? 'not_started' : 'completed'];
-    if (!$facts['not_started']) $command += ['charged_atoms' => $facts['charged_atoms'],
-      'actual_cost_micros' => $facts['actual_cost_micros'], 'cost_status' => 'final', 'cost_currency' => $profile['currency']];
+    $points = ($profile['accounting_mode'] ?? '') === 'points';
+    if ($points) $command['accounting_mode'] = 'points';
+    if (!$facts['not_started']) {
+      $command['charged_atoms'] = $facts['charged_atoms'];
+      if (!$points) $command += ['actual_cost_micros' => $facts['actual_cost_micros'], 'cost_status' => 'final', 'cost_currency' => $profile['currency']];
+    }
     $commit = function (array $account, string $reservation, string $journal, int $now) use ($operation, $profile, $final, $revisions, $evidence, $hash): void {
       $current = $this->authorization($operation, TRUE);
       if ($current['state'] !== 'awaiting_evidence'
@@ -222,6 +228,7 @@ final class AiBilling {
     $rows = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
     if (array_column($rows, 'attempt_id') !== array_keys($revisions)) return ['pending' => 'usage_incomplete'];
     $permits = array_column($this->permits($auth['operation_id']), 'call_json', 'attempt_id');
+    $points = ($profile['accounting_mode'] ?? '') === 'points';
     $charged = 0; $cost = 0; $started = FALSE; $evidence = [];
     foreach ($rows as $row) {
       $id = $row['attempt_id'];
@@ -240,16 +247,19 @@ final class AiBilling {
         return ['pending' => 'call_mismatch'];
       }
       $call = $this->call($profile, $permit);
-      $costQuery = $this->database->select('ai_usage_cost_entry', 'c')->fields('c')
-        ->condition('site_id', $auth['site_id'])->condition('attempt_id', $id)
-        ->condition('observation_revision', $revisions[$id])->condition('source_kind', 'supplier_reconciliation')
-        ->condition('valuation_state', 'reconciled');
-      if ($lock) $costQuery->forUpdate();
-      $costRow = $costQuery->execute()->fetchAssoc();
-      if (!$costRow || $costRow['currency'] !== $profile['currency'] || $costRow['total_cost_micros'] === NULL) {
-        return ['pending' => 'cost_unresolved'];
+      $costRow = NULL;
+      if (!$points) {
+        $costQuery = $this->database->select('ai_usage_cost_entry', 'c')->fields('c')
+          ->condition('site_id', $auth['site_id'])->condition('attempt_id', $id)
+          ->condition('observation_revision', $revisions[$id])->condition('source_kind', 'supplier_reconciliation')
+          ->condition('valuation_state', 'reconciled');
+        if ($lock) $costQuery->forUpdate();
+        $costRow = $costQuery->execute()->fetchAssoc();
+        if (!$costRow || $costRow['currency'] !== $profile['currency'] || $costRow['total_cost_micros'] === NULL) {
+          return ['pending' => 'cost_unresolved'];
+        }
+        $cost = CreditValue::add($cost, CreditValue::amount((string) $costRow['total_cost_micros']));
       }
-      $cost = CreditValue::add($cost, CreditValue::amount((string) $costRow['total_cost_micros']));
       $delivered = [];
       if ($profile['category'] === 'image') {
         $deliveries = $this->database->select('ai_usage_delivery', 'd')->fields('d')
@@ -266,8 +276,10 @@ final class AiBilling {
       if ($final['delivery'] === 'delivered' && $row['state'] === 'succeeded' && $permit['role'] === 'primary') {
         if ($profile['category'] === 'image') {
           if (!$delivered) return ['pending' => 'delivery_unresolved'];
-          $charged = CreditValue::add($charged, BillingProfiles::charge($call, 0, 0, count($delivered)));
+          $charged = CreditValue::add($charged, $points ? CreditValue::multiply((int) $profile['charge_atoms'], count($delivered))
+            : BillingProfiles::charge($call, 0, 0, count($delivered)));
         }
+        elseif ($points) $charged = (int) $profile['charge_atoms'];
         elseif ($row['usage_quality'] !== 'reported' || $row['input_tokens_total'] === NULL || $row['output_tokens_total'] === NULL) {
           return ['pending' => 'usage_unresolved'];
         }
@@ -276,13 +288,13 @@ final class AiBilling {
           0));
       }
       $evidence[] = ['attempt_id' => $id, 'revision' => $revisions[$id], 'usage_event_id' => $row['last_event_id'],
-        'cost_entry_id' => $costRow['id'], 'cost_micros' => (string) $costRow['total_cost_micros'],
+        'cost_entry_id' => $costRow['id'] ?? NULL, 'cost_micros' => $costRow ? (string) $costRow['total_cost_micros'] : NULL,
         'deliveries' => $delivered];
     }
     if (!$started && $final['delivery'] === 'delivered') return ['pending' => 'delivery_unresolved'];
     $maximum = (int) BillingProfiles::amounts($profile)['maximum_atoms'];
     return ['attempts' => $evidence, 'delivery' => $final, 'not_started' => !$started,
-      'charged_atoms' => (string) min($maximum, $charged), 'actual_cost_micros' => (string) $cost];
+      'charged_atoms' => (string) min($maximum, $charged), 'actual_cost_micros' => $points ? NULL : (string) $cost];
   }
 
   private function summary(string $operation): array {

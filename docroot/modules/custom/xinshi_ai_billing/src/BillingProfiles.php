@@ -57,6 +57,10 @@ final class BillingProfiles {
 
   /** A conservative estimate equals the hard ceiling; no invented usage average. */
   public static function amounts(array $profile): array {
+    if (($profile['accounting_mode'] ?? '') === 'points') {
+      $atoms = CreditValue::multiply((int) $profile['charge_atoms'], $profile['category'] === 'image' ? $profile['calls'][0]['max_images'] : 1);
+      return ['maximum_atoms' => (string) $atoms, 'estimated_atoms' => (string) $atoms, 'estimate_basis' => 'upper_bound'];
+    }
     $atoms = 0; $cost = 0;
     foreach ($profile['calls'] as $call) {
       $cost = CreditValue::add($cost, CreditValue::multiply($call['max_calls'], (int) $call['cost_limit_micros']));
@@ -79,13 +83,16 @@ final class BillingProfiles {
 
   /** Closed, bounded profile input; example values are never installed as defaults. */
   public static function validate(array $p): array {
-    CreditValue::fields($p, ['version', 'feature', 'model', 'platform', 'category', 'currency',
-      'cost_bucket_id', 'evidence_ref', 'quote_ttl_seconds', 'calls'], ['image']);
-    foreach (['version', 'feature', 'platform', 'cost_bucket_id'] as $key) $p[$key] = CreditValue::id($p[$key]);
+    $points = ($p['accounting_mode'] ?? '') === 'points';
+    CreditValue::fields($p, ['version', 'feature', 'model', 'platform', 'category',
+      ...($points ? ['accounting_mode', 'charge_atoms'] : ['currency', 'cost_bucket_id']),
+      'evidence_ref', 'quote_ttl_seconds', 'calls'], ['image']);
+    if ($points) $p['charge_atoms'] = (string) CreditValue::amount($p['charge_atoms'], TRUE);
+    foreach (['version', 'feature', 'platform', ...($points ? [] : ['cost_bucket_id'])] as $key) $p[$key] = CreditValue::id($p[$key]);
     $p['model'] = CreditValue::text($p['model'], 128);
     $p['evidence_ref'] = CreditValue::text($p['evidence_ref']);
     if (!in_array($p['category'], ['chat', 'image'], TRUE)
-      || !is_string($p['currency']) || !preg_match('/^[A-Z]{3}$/D', $p['currency'])
+      || (!$points && (!is_string($p['currency']) || !preg_match('/^[A-Z]{3}$/D', $p['currency'])))
       || !is_int($p['quote_ttl_seconds']) || $p['quote_ttl_seconds'] < 1 || $p['quote_ttl_seconds'] > 900
       || !is_array($p['calls']) || !array_is_list($p['calls']) || !$p['calls'] || count($p['calls']) > 32) {
       throw new CreditException('invalid_price');
@@ -94,8 +101,8 @@ final class BillingProfiles {
     foreach ($p['calls'] as &$call) {
       if (!is_array($call)) throw new CreditException('invalid_price');
       CreditValue::fields($call, ['model', 'account_ref', 'role', 'max_calls', 'max_input_tokens',
-        'max_output_tokens', 'max_images', 'cost_limit_micros', 'input_atoms_per_million',
-        'output_atoms_per_million', 'atoms_per_image']);
+        'max_output_tokens', 'max_images', ...($points ? [] : ['cost_limit_micros', 'input_atoms_per_million',
+        'output_atoms_per_million', 'atoms_per_image'])]);
       $call['model'] = CreditValue::text($call['model'], 128);
       $call['account_ref'] = CreditValue::id($call['account_ref']);
       if (!in_array($call['role'], ['primary', 'auxiliary', 'repair'], TRUE)
@@ -107,7 +114,7 @@ final class BillingProfiles {
         throw new CreditException('invalid_price');
       }
       if ($p['category'] === 'chat' && $call['max_images'] !== 0) throw new CreditException('invalid_price');
-      foreach (['cost_limit_micros', 'input_atoms_per_million', 'output_atoms_per_million', 'atoms_per_image'] as $key) {
+      foreach ($points ? [] : ['cost_limit_micros', 'input_atoms_per_million', 'output_atoms_per_million', 'atoms_per_image'] as $key) {
         $call[$key] = (string) CreditValue::amount($call[$key], $key === 'cost_limit_micros');
       }
       $id = self::json([$call['model'], $call['account_ref'], $call['role']]);
@@ -117,7 +124,12 @@ final class BillingProfiles {
     unset($call);
     if ($p['category'] === 'image') {
       if (!is_array($p['image'] ?? NULL) || count($p['calls']) !== 1) throw new CreditException('invalid_price');
-      CreditValue::fields($p['image'], ['max_prompt_bytes', 'params']);
+      CreditValue::fields($p['image'], ['max_prompt_bytes', 'params'], $points ? ['sizes'] : []);
+      if (isset($p['image']['sizes'])) {
+        if (!is_array($p['image']['sizes']) || !array_is_list($p['image']['sizes']) || !$p['image']['sizes'] || count($p['image']['sizes']) > 32) throw new CreditException('invalid_price');
+        foreach ($p['image']['sizes'] as $size) CreditValue::text($size, 128);
+        if (!in_array($p['image']['params']['size'] ?? NULL, $p['image']['sizes'], TRUE)) throw new CreditException('invalid_price');
+      }
       $image = $p['image'];
       if (!is_int($image['max_prompt_bytes']) || $image['max_prompt_bytes'] < 1 || $image['max_prompt_bytes'] > 100000
         || !is_array($image['params'])) throw new CreditException('invalid_price');
@@ -129,14 +141,15 @@ final class BillingProfiles {
       $primary = $p['calls'][0];
       if ($primary['role'] !== 'primary' || $primary['max_calls'] !== 1
         || $primary['model'] !== $p['model'] || $primary['account_ref'] !== $p['platform']
-        || $primary['max_images'] !== $image['params']['n'] || $primary['atoms_per_image'] === '0'
-        || $primary['input_atoms_per_million'] !== '0' || $primary['output_atoms_per_million'] !== '0') {
+        || $primary['max_images'] !== $image['params']['n']
+        || (!$points && ($primary['atoms_per_image'] === '0' || $primary['input_atoms_per_million'] !== '0' || $primary['output_atoms_per_million'] !== '0'))) {
         throw new CreditException('invalid_price');
       }
     }
-    elseif (isset($p['image']) || array_filter($p['calls'], static fn(array $c): bool => $c['atoms_per_image'] !== '0')) {
+    elseif (isset($p['image']) || array_filter($p['calls'], static fn(array $c): bool => ($c['atoms_per_image'] ?? '0') !== '0')) {
       throw new CreditException('invalid_price');
     }
+    if (!array_filter($p['calls'], static fn(array $c): bool => $c['role'] === 'primary')) throw new CreditException('invalid_price');
     if ($count > 128) throw new CreditException('invalid_price');
     self::amounts($p);
     return $p;

@@ -35,7 +35,12 @@ final class CreditBudgets {
     // Issuance periods do not cancel existing obligations. Keep their original budget rows.
     CreditValue::text($pool['source_ref']);
     $bounds = json_decode($pool['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR);
-    if (!is_array($bounds) || !$bounds || count($bounds) > 32 || array_diff($scope, array_keys($bounds))) {
+    $points = $pool['accounting_mode'] === 'points';
+    if (!in_array($pool['accounting_mode'], ['budgeted', 'points'], TRUE)) throw new CreditException('invalid_accounting_mode');
+    if (!is_array($bounds)) throw new CreditException('invalid_budget_scope');
+    $eligible = $points ? CreditValue::scope(json_decode($pool['scope_json'], TRUE, 16, JSON_THROW_ON_ERROR)) : array_keys($bounds);
+    if ((!$points && !$bounds) || ($points && ($bounds || $pool['publication_ref'] === NULL))
+      || count($bounds) > 32 || array_diff($scope, $eligible)) {
       throw new CreditException('invalid_budget_scope');
     }
     if ($pool['publication_ref'] !== NULL) {
@@ -45,12 +50,12 @@ final class CreditBudgets {
       $limit = CreditValue::amount($policy['grant_limit_atoms'], TRUE);
       if (!in_array($policy['mode'], ['fixed', 'variable'], TRUE) || $sourceKind !== $policy['source_kind']
         || $atoms > $limit || ($policy['mode'] === 'fixed' && $atoms !== $limit)
-        || ($policy['expires_at'] !== NULL && ($expiresAt === NULL || $expiresAt > $policy['expires_at'])) || array_diff(array_keys($bounds), $scope)) {
+        || ($policy['expires_at'] !== NULL && ($expiresAt === NULL || $expiresAt > $policy['expires_at'])) || array_diff($eligible, $scope)) {
         throw new CreditException('invalid_grant_policy');
       }
     }
     $ordered = [];
-    foreach ($scope as $category) {
+    foreach ($points ? [] : $scope as $category) {
       $bound = $bounds[$category];
       CreditValue::id($category);
       if (!is_array($bound)) throw new CreditException('invalid_budget_bound');
@@ -87,7 +92,7 @@ final class CreditBudgets {
       ->condition('version', PHP_INT_MAX, '<')
       ->where('cap_atoms - issued_atoms >= :required', [':required' => $atoms])->execute();
     if ($changed !== 1) throw new CreditException('reward_budget_exhausted', 409);
-    return $commitments;
+    return ['accounting_mode' => $pool['accounting_mode'], 'commitments' => $commitments];
   }
 
   /** Lock the complete bucket set before applying any movement. */
@@ -135,6 +140,11 @@ final class CreditBudgets {
   public function refreshGrant(array $grant, string $journalId, int $now): void {
     $rows = $this->database->select('credit_grant_cost', 'c')->fields('c')->condition('grant_id', $grant['id'])
       ->orderBy('bucket_id')->execute()->fetchAll(\PDO::FETCH_ASSOC);
+    if ($grant['accounting_mode'] === 'points') {
+      if ($rows || $grant['cost_commitments_json'] !== '[]') throw new CreditException('invalid_accounting_mode');
+      return;
+    }
+    if ($grant['accounting_mode'] !== 'budgeted') throw new CreditException('invalid_accounting_mode');
     if (!$rows) throw new CreditException('grant_cost_unavailable', 409);
     foreach ($rows as $cost) {
       $available = (int) $grant['available_atoms'];

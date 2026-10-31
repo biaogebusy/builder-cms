@@ -10,3 +10,39 @@ xinshi_ai_billing.settings:
       label: 'Explicitly accepted sales profile versions'
       sequence:
         type: string
+
+xinshi_ai_billing.trial:
+  type: config_object
+  label: 'Reviewed trial credit settings'
+  mapping:
+    version:
+      type: string
+      label: 'version'
+    welcome:
+      type: string
+      label: 'welcome'
+    daily:
+      type: string
+      label: 'daily'
+    chat:
+      type: string
+      label: 'chat'
+    image:
+      type: string
+      label: 'image'
+    chat_model:
+      type: string
+      label: 'chat_model'
+    image_model:
+      type: string
+      label: 'image_model'
+    role:
+      type: string
+      label: 'role'
+    timezone:
+      type: string
+      label: 'timezone'
+    expires_at:
+      type: timestamp
+      label: 'Credit expiry'
+      nullable: true

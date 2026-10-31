@@ -19,6 +19,7 @@ function xinshi_manage_menu_links_discovered_alter(array &$links): void {
       'xinshi_ai.settings' => 0,
       'xinshi_chat.settings' => 10,
       'xinshi_ai_usage.settings' => 20,
+      'xinshi_ai_billing.trial' => 25,
       'xinshi_credits.budgets' => 30,
       'xinshi_credits.pools' => 40,
       'xinshi_knowledge.settings' => 50,
