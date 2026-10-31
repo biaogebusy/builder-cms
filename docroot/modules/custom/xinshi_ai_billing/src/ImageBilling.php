@@ -31,8 +31,7 @@ final class ImageBilling {
 
   /** Quote the exact effective request; no authorization or job is created here. */
   public function quote(array $input, string $key): array {
-    if (!$this->enabled()) return ['status' => 'disabled'];
-    if (($input['platform'] ?? '') === 'custom') return ['status' => 'customer_key'];
+    if ($status = $this->exemption($input['platform'] ?? '')) return ['status' => $status];
     $profile = $this->profiles->select((string) $input['jobKind'], (string) $input['model'], (string) $input['platform']);
     if (($profile['accounting_mode'] ?? '') === 'points' && isset($profile['image']['sizes'])) {
       $params = self::request($input)['params'];
@@ -205,6 +204,10 @@ final class ImageBilling {
   }
 
   private function authorization(string $operation): ?array {
+    // An unused credit module must not block images; existing records still require their site.
+    if (!$this->config->get('xinshi_credits.settings')->get('site_id')
+      && !$this->database->select('ai_billing_authorization', 'a')->fields('a', ['operation_id'])
+        ->condition('operation_id', $operation)->range(0, 1)->execute()->fetchField()) return NULL;
     return $this->database->select('ai_billing_authorization', 'a')->fields('a')
       ->condition('site_id', $this->context->site())->condition('operation_id', $operation)->execute()->fetchAssoc() ?: NULL;
   }
@@ -218,7 +221,17 @@ final class ImageBilling {
     return $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
   }
 
-  private function enabled(): bool { return $this->config->get('xinshi_ai_billing.settings')->get('enabled') === TRUE; }
+  /** Included requests do not need a credit account or the credit write envelope. */
+  public function exemption(string $platform): ?string {
+    if ($this->config->get('xinshi_ai_billing.settings')->get('enabled') !== TRUE) return 'disabled';
+    if ($platform === 'custom') return 'customer_key';
+    return $this->enabled() ? NULL : 'included';
+  }
+
+  private function enabled(): bool {
+    $settings = $this->config->get('xinshi_ai_billing.settings');
+    return $settings->get('enabled') === TRUE && $settings->get('image_enabled') === TRUE;
+  }
   private function producer(): array { return ['producer_id' => LocalUsageProducer::PRODUCER_ID, 'site_id' => $this->context->site()]; }
 
 }

@@ -31,3 +31,11 @@ function xinshi_ai_billing_schema(): array {
       'primary key' => ['site_id', 'operation_id', 'evidence_hash']],
   ];
 }
+
+/**
+ * Keep image charging separate from ordinary text conversation charging.
+ */
+function xinshi_ai_billing_update_11001(): void {
+  $settings = \Drupal::configFactory()->getEditable('xinshi_ai_billing.settings');
+  if ($settings->get('image_enabled') === NULL) $settings->set('image_enabled', FALSE)->save();
+}

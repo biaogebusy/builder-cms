@@ -162,6 +162,9 @@ final class ImageJobController extends ControllerBase {
     $params = is_array($payload['params'] ?? NULL) ? $payload['params'] : [];
     ImageJobCredentialVault::fromPayload($payload, $params);
     try {
+      if ($status = $this->billing->exemption((string) ($payload['platform'] ?? ''))) {
+        return new JsonResponse(['status' => $status], 200, $headers);
+      }
       $this->creditWrites?->parse($request);
       $result = $this->billing->quote(self::input($payload, $params), (string) $request->headers->get('Idempotency-Key'));
       return new JsonResponse($result, 200, $headers);

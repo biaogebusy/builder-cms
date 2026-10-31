@@ -13,7 +13,7 @@ $trialConfig = \Drupal::configFactory();
 new Settings(['xinshi_ai_usage.mode' => 'enforce', 'xinshi_ai_usage.site_id' => 'trial-fixture',
   'xinshi_ai_usage.producers' => ['trial-node' => ['site_id' => 'trial-fixture', 'secret' => 'synthetic-only']]]);
 $trialConfig->getEditable('xinshi_credits.settings')->set('site_id', 'trial-fixture')->set('grants_enabled', FALSE)->set('spending_enabled', FALSE)->save();
-$trialConfig->getEditable('xinshi_ai_billing.settings')->set('enabled', FALSE)->set('active_versions', [])->save();
+$trialConfig->getEditable('xinshi_ai_billing.settings')->set('enabled', FALSE)->set('image_enabled', FALSE)->set('active_versions', [])->save();
 $trialConfig->getEditable('xinshi_rewards.settings')->set('business_timezone', 'UTC')->save();
 $db->update('credit_reward_calendar')->fields(['timezone' => 'UTC'])->condition('id', 1)->execute();
 $trialConfig->getEditable('xinshi_ai.models')->setData(['platforms' => ['fixture' => ['enabled' => TRUE]],
@@ -27,12 +27,16 @@ $admin = User::create(['name' => 'trial_admin', 'status' => 1, 'roles' => ['tria
 $user = User::create(['name' => 'trial_participant', 'status' => 1, 'roles' => ['trial_participant']]); $user->save(); $uid = (string) $user->id();
 $principal = \Drupal::currentUser(); $principal->setAccount($admin);
 $setup = \Drupal::service('xinshi_ai_billing.trial');
-$input = ['welcome' => '15', 'daily' => '1', 'chat' => '1', 'image' => '1', 'chat_model' => 'trial-chat',
-  'image_model' => 'trial-image', 'role' => 'trial_participant', 'timezone' => 'UTC', 'expires_at' => NULL];
+$input = ['welcome' => '15', 'daily' => '1', 'chat' => '1', 'chat_model' => 'trial-chat', 'role' => 'trial_participant', 'timezone' => 'UTC', 'expires_at' => NULL];
+$catalog = $trialConfig->get('xinshi_ai.models')->getRawData();
+$chatOnly = $catalog; $chatOnly['models'] = [$catalog['models'][0]]; unset($chatOnly['defaults']['image']);
+$trialConfig->getEditable('xinshi_ai.models')->setData($chatOnly)->save();
+check($setup->prepare($input, 'chat-only-review', time())['chat']['id'] === 'trial-chat', 'Text trial review needs no image model');
+$trialConfig->getEditable('xinshi_ai.models')->setData($catalog)->save();
 $before = snapshot();
 $draft = $setup->prepare($input, 'trial-fixture-v1', time());
 check(snapshot() === $before && !$trialConfig->get('xinshi_ai_billing.settings')->get('enabled'), 'Trial review makes no financial writes and does not enable billing');
-denied(fn() => $setup->prepare(array_replace($input, ['welcome' => '14']), 'small', time()), 'trial_experience_too_small');
+denied(fn() => $setup->prepare(array_replace($input, ['welcome' => '4']), 'small', time()), 'trial_experience_too_small');
 denied(fn() => $setup->prepare(array_replace($input, ['role' => 'anonymous']), 'anon', time()), 'invalid_trial_role');
 $principal->setAccount($user);
 denied(fn() => $setup->save($draft), 'permission_denied');
@@ -67,11 +71,11 @@ check($db->select('credit_grant', 'g')->fields('g', ['expires_at'])->condition('
 $billing = \Drupal::service('xinshi_ai_billing.billing');
 $profiles = \Drupal::service('xinshi_ai_billing.profiles');
 $producer = ['producer_id' => 'trial-node', 'site_id' => 'trial-fixture'];
-$request = ['feature' => 'fullHTML', 'model' => 'trial-chat', 'platform' => 'fixture', 'request_hash' => str_repeat('a', 64), 'producer_id' => 'trial-node'];
+$request = ['feature' => 'common', 'model' => 'trial-chat', 'platform' => 'fixture', 'request_hash' => str_repeat('a', 64), 'producer_id' => 'trial-node'];
 function trialAuthorize(string $operation): array {
   global $billing, $request;
   $quote = $billing->quote($request, $operation);
-  check($quote['maximum_atoms'] === '1000', 'Flat UI quote reserves one point, independent of token and call ceilings');
+  check($quote['maximum_atoms'] === '1000', 'Flat ordinary conversation quote reserves one point, independent of token and call ceilings');
   $billing->authorize(['quote_id' => $quote['quote_id'], 'operation_id' => $operation, 'request_hash' => $request['request_hash']]);
   return $quote;
 }
@@ -146,6 +150,17 @@ $images = new \Drupal\xinshi_ai_billing\ImageBilling($billing, $profiles, $db, $
 $recorder = new \Drupal\xinshi_ai\Service\ImageUsageRecorder($usage, \Drupal::logger('xinshi_ai_usage'), $images);
 $imageInput = ['jobKind' => 'text_to_image', 'platform' => 'fixture', 'model' => 'trial-image',
   'prompt' => 'Synthetic image', 'params' => ['n' => 2, 'size' => '1536*1024']];
+check($images->quote($imageInput, 'included-trial-image')['status'] === 'included', 'Quick setup leaves image generation included');
+// An explicit future image rollout retains the existing points settlement coverage.
+$imageProfile = $profiles->publish(['version' => 'trial-explicit-image', 'feature' => 'text_to_image',
+  'model' => 'trial-image', 'platform' => 'fixture', 'category' => 'image', 'accounting_mode' => 'points',
+  'charge_atoms' => '1000', 'evidence_ref' => 'Synthetic explicit opt-in', 'quote_ttl_seconds' => 300,
+  'calls' => [['model' => 'trial-image', 'account_ref' => 'fixture', 'role' => 'primary', 'max_calls' => 1,
+    'max_input_tokens' => 0, 'max_output_tokens' => 0, 'max_images' => 4]],
+  'image' => ['max_prompt_bytes' => 10000, 'params' => ['n' => 4, 'size' => '1024x1024'],
+    'sizes' => ['1024x1024', '1536x1024']]]);
+$trialConfig->getEditable('xinshi_ai_billing.settings')->set('image_enabled', TRUE)
+  ->set('active_versions', [...$trialConfig->get('xinshi_ai_billing.settings')->get('active_versions'), $imageProfile['version']])->save();
 $imageQuote = $images->quote($imageInput, 'trial-image-quote')['quote'];
 check($imageQuote['maximum_atoms'] === '2000', 'Trial image quote reserves only the requested count at the registered size');
 denied(fn() => $images->quote(array_replace($imageInput, ['params' => ['n' => 5, 'size' => '1024x1024']]), 'trial-many-images'), 'image_request_outside_quote');

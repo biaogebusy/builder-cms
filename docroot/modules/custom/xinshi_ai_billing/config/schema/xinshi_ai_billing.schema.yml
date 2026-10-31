@@ -10,6 +10,9 @@ xinshi_ai_billing.settings:
       label: 'Explicitly accepted sales profile versions'
       sequence:
         type: string
+    image_enabled:
+      type: boolean
+      label: 'Opt in to image credit billing'
 
 xinshi_ai_billing.trial:
   type: config_object

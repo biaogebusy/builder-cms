@@ -50,9 +50,9 @@ try {
   check(trialHttp('POST', '/user/login?_format=json', $jar, ['name' => 'trial_admin', 'pass' => 'synthetic-pass'], TRUE)['status'] === 200, 'Trial administrator logs in through Cookie authentication');
   $form = trialHttp('GET', $path, $jar);
   check($form['status'] === 200, 'Trial administrator can open the setup');
+  check(!str_contains($form['body'], 'name="image_model"') && !str_contains($form['body'], 'name="image"'), 'Text trial form does not require image configuration');
   file_put_contents($fixture . '/ui/trial.html', $form['body']);
-  $input = ['welcome' => '15', 'daily' => '1', 'chat' => '1', 'image' => '1', 'chat_model' => 'trial-chat',
-    'image_model' => 'trial-image', 'role' => 'trial_participant', 'timezone' => 'UTC', 'expires_at' => '',
+  $input = ['welcome' => '15', 'daily' => '1', 'chat' => '1', 'chat_model' => 'trial-chat', 'role' => 'trial_participant', 'timezone' => 'UTC', 'expires_at' => '',
     'provider_cap' => '1', 'review' => 'Review trial settings'];
   $configured = \Drupal::config('xinshi_ai_billing.trial')->getRawData();
   \Drupal::service('cache_tags.invalidator.checksum')->reset();

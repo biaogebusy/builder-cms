@@ -41,16 +41,15 @@ final class TrialSetup {
   /** Validate and freeze form inputs; no publication, grant or provider call occurs here. */
   public function prepare(array $input, string $version, int $start): array {
     $this->authorize();
-    CreditValue::fields($input, ['welcome', 'daily', 'chat', 'image', 'chat_model', 'image_model', 'role', 'timezone', 'expires_at']);
-    foreach (['welcome', 'daily', 'chat', 'image'] as $key) {
+    CreditValue::fields($input, ['welcome', 'daily', 'chat', 'chat_model', 'role', 'timezone', 'expires_at']);
+    foreach (['welcome', 'daily', 'chat'] as $key) {
       $input[$key] = (string) CreditValue::amount($input[$key], TRUE);
       if ((int) $input[$key] > 1000000) throw new CreditException('invalid_trial_amount');
     }
-    if ((int) $input['welcome'] < 5 * (int) $input['chat'] + 10 * (int) $input['image']) throw new CreditException('trial_experience_too_small');
-    foreach (['chat_model', 'image_model'] as $key) $input[$key] = CreditValue::text($input[$key], 128);
+    if ((int) $input['welcome'] < 5 * (int) $input['chat']) throw new CreditException('trial_experience_too_small');
+    $input['chat_model'] = CreditValue::text($input['chat_model'], 128);
     $chat = $this->models('chat')[$input['chat_model']] ?? NULL;
-    $image = $this->models('image')[$input['image_model']] ?? NULL;
-    if (!$chat || !$image || empty($image['sizes'])) throw new CreditException('trial_models_unavailable');
+    if (!$chat) throw new CreditException('trial_models_unavailable');
     $role = $this->entities->getStorage('user_role')->load(CreditValue::id($input['role']));
     if (!$role || $role->id() === 'anonymous' || $role->isAdmin()) throw new CreditException('invalid_trial_role');
     if (!in_array($input['timezone'], \DateTimeZone::listIdentifiers(\DateTimeZone::ALL_WITH_BC), TRUE)) throw new CreditException('invalid_trial_timezone');
@@ -71,7 +70,7 @@ final class TrialSetup {
     if ($start <= 0 || $start > time() || time() - $start > 86400) throw new CreditException('invalid_period');
     return ['input' => $input, 'version' => CreditValue::id($version), 'start' => $start, 'site' => $this->usage->siteId(),
       'previous_version' => $this->config->get('xinshi_ai_billing.trial')->get('version') ?? '',
-      'chat' => $chat, 'image' => $image, 'models_hash' => hash('sha256', BillingProfiles::json($this->config->get('xinshi_ai.models')->getRawData()))];
+      'chat' => $chat, 'models_hash' => hash('sha256', BillingProfiles::json($this->config->get('xinshi_ai.models')->getRawData()))];
   }
 
   /** Activate reviewed immutable policies; retries cannot issue rewards or erase old records. */
@@ -90,7 +89,9 @@ final class TrialSetup {
       }
       $current = $this->prepare($draft['input'], $draft['version'], $draft['start']);
       if (BillingProfiles::json($current) !== BillingProfiles::json($draft)) throw new CreditException('trial_configuration_changed', 409);
-      $i = $draft['input']; $version = $draft['version']; $poolIds = []; $versions = [];
+      $i = $draft['input']; $version = $draft['version']; $poolIds = [];
+      $versions = array_values(array_filter($this->config->get('xinshi_ai_billing.settings')->get('active_versions') ?? [],
+        fn(string $active): bool => $this->profiles->load($active)['feature'] !== 'common'));
       $this->config->getEditable('xinshi_credits.settings')->set('site_id', $draft['site'])->save();
       foreach (['G13' => 'welcome', 'G11' => 'daily'] as $rule => $key) {
         $atoms = CreditValue::multiply((int) $i[$key], 1000);
@@ -112,21 +113,13 @@ final class TrialSetup {
             'max_calls' => 8, 'max_input_tokens' => 131072, 'max_output_tokens' => 32768, 'max_images' => 0];
         }
       }
-      foreach (['fullHTML', 'common'] as $feature) {
+      foreach (['common'] as $feature) {
         $p = $this->profiles->publish(['version' => $version . '-' . $feature, 'feature' => $feature,
           'model' => $draft['chat']['id'], 'platform' => $draft['chat']['platform'], 'category' => 'chat',
           'accounting_mode' => 'points', 'charge_atoms' => (string) ((int) $i['chat'] * 1000),
           'evidence_ref' => 'Trial policy ' . $version, 'quote_ttl_seconds' => 300, 'calls' => $calls]);
         $versions[] = $p['version'];
       }
-      $model = $draft['image']; $count = min(16, max(1, (int) ($model['max_n'] ?? 1)));
-      $p = $this->profiles->publish(['version' => $version . '-image', 'feature' => 'text_to_image',
-        'model' => $model['id'], 'platform' => $model['platform'], 'category' => 'image', 'accounting_mode' => 'points',
-        'charge_atoms' => (string) ((int) $i['image'] * 1000), 'evidence_ref' => 'Trial policy ' . $version,
-        'quote_ttl_seconds' => 300, 'calls' => [['model' => $model['id'], 'account_ref' => $model['platform'],
-          'role' => 'primary', 'max_calls' => 1, 'max_input_tokens' => 0, 'max_output_tokens' => 0, 'max_images' => $count]],
-        'image' => ['max_prompt_bytes' => 10000, 'params' => ['n' => $count, 'size' => $model['sizes'][0]], 'sizes' => $model['sizes']]]);
-      $versions[] = $p['version'];
       $this->config->getEditable('xinshi_ai_billing.trial')->setData($i + ['version' => $version])->save();
       $this->config->getEditable('xinshi_rewards.settings')->set('points_pool_ids', $poolIds)->set('business_timezone', $i['timezone'])
         ->set('welcome_enabled', TRUE)->set('daily_enabled', TRUE)->set('admin_gifts_enabled', FALSE)->save();

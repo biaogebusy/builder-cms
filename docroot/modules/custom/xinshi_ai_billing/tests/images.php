@@ -63,12 +63,29 @@ $input = ['jobKind' => 'text_to_image', 'platform' => 'fixture', 'model' => 'fix
 $created = 0;
 $create = function (?string $operation = NULL) use (&$created, $input, $uid): Node {
   $created++;
-  $node = Node::create(['type' => 'image_job', 'uuid' => $operation, 'uid' => $uid, 'title' => 'Synthetic image',
+  $node = Node::create(['type' => 'image_job', 'uuid' => $operation ?? \Drupal::service('uuid')->generate(), 'uid' => $uid, 'title' => 'Synthetic image',
     'field_job_kind' => $input['jobKind'], 'field_platform' => $input['platform'], 'field_model' => $input['model'],
     'field_prompt' => $input['prompt'], 'field_params' => json_encode($input['params']),
     'field_n_requested' => 2, 'field_n_succeeded' => 0, 'field_status' => 'queued']);
   $node->save(); return $node;
 };
+$settings->clear('image_enabled')->save();
+$beforeIncluded = snapshot();
+check($images->quote($input, 'included-no-flag') === ['status' => 'included'], 'Missing rollout flag keeps platform images included');
+\Drupal::moduleHandler()->loadInclude('xinshi_ai_billing', 'install');
+xinshi_ai_billing_update_11001(); xinshi_ai_billing_update_11001();
+check(\Drupal::config('xinshi_ai_billing.settings')->get('image_enabled') === FALSE, 'Update is idempotent and defaults image charging off');
+$included = $images->create($input, NULL, $create);
+\Drupal::configFactory()->getEditable('xinshi_credits.settings')->clear('site_id')->save();
+$images->beforeRun($included, ['n' => 2, 'size' => '1024x1024', 'user' => $uid]);
+$includedAttempt = $recorder->begin(['operation_id' => $included->uuid(), 'kind' => 'text_to_image',
+  'platform' => 'fixture', 'model' => 'fixture-image', 'actor_user_id' => $uid, 'task_id' => NULL]);
+check($includedAttempt !== NULL && snapshot() === $beforeIncluded, 'Included image creates a task and metering attempt without a financial write');
+\Drupal::configFactory()->getEditable('xinshi_credits.settings')->set('site_id', 'fixture')->save();
+$settings->set('image_enabled', TRUE)->save();
+xinshi_ai_billing_update_11001();
+check(\Drupal::config('xinshi_ai_billing.settings')->get('image_enabled') === TRUE, 'Update preserves an explicit image opt-in');
+$created = 0;
 $quote = $images->quote($input, 'image-first')['quote'];
 check($quote['maximum_atoms'] === '1200', 'Image quote covers the exact admitted image count');
 denied(fn() => $billing->authorize(['quote_id' => $quote['quote_id'], 'operation_id' => $quote['quote_id'],
@@ -98,7 +115,11 @@ $other = User::create(['name' => 'image-credit-other', 'status' => 1, 'roles' =>
 denied(fn() => $images->create($input, $quote['quote_id'], $create), 'quote_mismatch');
 \Drupal::currentUser()->setAccount($user);
 denied(fn() => $images->assertDeletable($job->uuid()), 'image_billing_pending');
+$settings->set('image_enabled', FALSE)->save();
 $generation = ['n' => 2, 'size' => '1024x1024', 'user' => $uid];
+\Drupal::configFactory()->getEditable('xinshi_credits.settings')->clear('site_id')->save();
+denied(fn() => $images->beforeRun($job, $generation), 'credits_not_configured');
+\Drupal::configFactory()->getEditable('xinshi_credits.settings')->set('site_id', 'fixture')->save();
 $images->beforeRun($job, $generation);
 denied(fn() => $images->beforeRun($job, array_replace($generation, ['n' => 3])), 'image_parameters_changed');
 $run = $runs->claim($job->uuid(), 0);
@@ -128,6 +149,7 @@ check($billing->own($job->uuid())['charged_atoms'] === '0', 'Undelivered provide
 $state = snapshot(); $images->reconcile();
 check(snapshot() === $state, 'Image reconciliation never repeats the settled transaction');
 $images->assertDeletable($job->uuid());
+$settings->set('image_enabled', TRUE)->save();
 
 $quote2 = $images->quote($input, 'image-delivered')['quote'];
 $job2 = $images->create($input, $quote2['quote_id'], $create);

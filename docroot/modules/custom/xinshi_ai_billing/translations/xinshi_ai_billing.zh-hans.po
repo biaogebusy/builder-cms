@@ -25,8 +25,8 @@ msgstr "首次登录奖励（积分）"
 msgid "Daily reward (points)"
 msgstr "每日登录奖励（积分）"
 
-msgid "Successful UI or text generation (points per operation)"
-msgstr "成功生成 UI 或文本（积分／次）"
+msgid "Successful ordinary text conversation (points per operation)"
+msgstr "普通文本对话成功扣分（积分／次）"
 
 msgid "Delivered image (points per image)"
 msgstr "成功交付图片（积分／张）"
@@ -61,14 +61,14 @@ msgstr "保存并启用体验积分"
 msgid "Back to edit"
 msgstr "返回修改"
 
-msgid "At least 5 UI generations and 10 images at the prices below. Daily rewards are separate."
-msgstr "首次奖励至少覆盖下方价格的 5 次 UI 生成和 10 张图片。每日奖励另算。"
+msgid "At least 5 ordinary text conversations at the price below. Daily rewards are separate."
+msgstr "首次奖励至少覆盖下方价格的 5 次普通文本对话。每日奖励另算。"
 
 msgid "- Select -"
 msgstr "- 请选择 -"
 
-msgid "Use the selected models for the trial. Supported: ordinary UI/text conversations and text-to-image, with registered image sizes and counts. Other workflows require separate profiles."
-msgstr "体验时使用所选模型。支持普通 UI／文本对话和文生图，图片尺寸与数量限于模型目录。其他工作流需要另行配置计费规格。"
+msgid "This setup charges only ordinary text conversations. UI generation, Office, shooting plans and auxiliary tasks are included. Image charging is separately configured and off by default. Web search has no extra charge."
+msgstr "本配置只对普通文本对话扣分。UI 生成、Office、拍摄计划和辅助任务暂不扣分。图片扣分独立配置，默认关闭。联网搜索不额外扣分。"
 
 msgid "Participation and expiry"
 msgstr "参与范围与到期时间"
@@ -100,8 +100,8 @@ msgstr "体验积分已启用。请用体验账户验证领取奖励和成功扣
 msgid "The setup could not be saved. Retry this reviewed version."
 msgstr "配置未能保存。请重试当前复核版本。"
 
-msgid "The first reward must cover 5 UI generations and 10 images."
-msgstr "首次奖励必须覆盖 5 次 UI 生成和 10 张图片。"
+msgid "The first reward must cover 5 ordinary text conversations."
+msgstr "首次奖励必须覆盖 5 次普通文本对话。"
 
 msgid "Configure enforced image metering and the matching site identifier before enabling trial credits."
 msgstr "启用体验积分前，请配置强制图片计量，并确认站点标识一致。"
@@ -112,8 +112,8 @@ msgstr "本站已有预算模式的积分记录或规则。请保留现有模式
 msgid "The configuration changed. Return to edit and review the current settings."
 msgstr "配置已变化。请返回修改，并重新复核当前配置。"
 
-msgid "Configure enabled chat, classifier, critic and image models in the AI model catalog."
-msgstr "请在 AI 模型目录配置已启用的对话、分类、审查和图片模型。"
+msgid "Configure enabled chat, classifier and critic models in the AI model catalog."
+msgstr "请在 AI 模型目录配置已启用的对话、分类和审查模型。"
 
 msgid "Enable the Xinshi Rewards module before using this setup."
 msgstr "使用本配置前，请启用信使奖励模块。"
