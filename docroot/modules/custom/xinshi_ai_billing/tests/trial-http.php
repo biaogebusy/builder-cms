@@ -36,6 +36,10 @@ function trialForm(string $html): array {
   if (!isset($fields['form_token'], $fields['form_build_id'])) throw new RuntimeException('Missing trial form: ' . strip_tags($html));
   return $fields;
 }
+function trialAcknowledged(string $html): bool {
+  $document = new DOMDocument(); @$document->loadHTML($html);
+  return (new DOMXPath($document))->query('//input[@name="provider_cap"][@checked]')->length === 1;
+}
 try {
   for ($i = 0; $i < 60; $i++) {
     if ($socket = @fsockopen('127.0.0.1', 8080, $errno, $error, 0.1)) { fclose($socket); break; }
@@ -50,6 +54,25 @@ try {
   $input = ['welcome' => '15', 'daily' => '1', 'chat' => '1', 'image' => '1', 'chat_model' => 'trial-chat',
     'image_model' => 'trial-image', 'role' => 'trial_participant', 'timezone' => 'UTC', 'expires_at' => '',
     'provider_cap' => '1', 'review' => 'Review trial settings'];
+  $configured = \Drupal::config('xinshi_ai_billing.trial')->getRawData();
+  \Drupal::service('cache_tags.invalidator.checksum')->reset();
+  \Drupal::configFactory()->getEditable('xinshi_ai_billing.trial')->clear('version')->save();
+  try {
+    $unconfigured = trialHttp('GET', $path, $jar);
+    check(!trialAcknowledged($unconfigured['body']), 'A setup without a saved version requires prerequisite confirmation');
+    file_put_contents($fixture . '/ui/trial-unconfigured.html', $unconfigured['body']);
+    $unconfirmed = $input; unset($unconfirmed['provider_cap']);
+    $before = snapshot();
+    $invalid = trialHttp('POST', $path, $jar, trialForm($unconfigured['body']) + $unconfirmed);
+    check($invalid['status'] === 200 && !str_contains($invalid['body'], 'name="apply"')
+      && snapshot() === $before, 'Missing prerequisite confirmation cannot reach review or publish settings');
+    \Drupal::configFactory()->reset();
+    check(!\Drupal::config('xinshi_ai_billing.trial')->get('version'), 'Failed validation does not retain prerequisite confirmation');
+  }
+  finally {
+    \Drupal::service('cache_tags.invalidator.checksum')->reset();
+    \Drupal::configFactory()->getEditable('xinshi_ai_billing.trial')->setData($configured)->save();
+  }
   $before = snapshot();
   $review = trialHttp('POST', $path, $jar, trialForm($form['body']) + $input);
   check($review['status'] === 200 && str_contains($review['body'], 'Save and enable trial credits'), 'Form API advances from valid values to review');
@@ -67,6 +90,28 @@ try {
   trialHttp('POST', $path, $jar, $confirm);
   check(snapshot() === $before, 'Repeated form confirmation cannot republish rewards');
   $form = trialHttp('GET', $path, $jar);
+  check(trialAcknowledged($form['body']), 'Saved prerequisite confirmation remains checked after a fresh GET');
+  check(str_contains($form['body'], 'All enabled'), 'Fresh GET shows all Drupal credit switches enabled');
+  file_put_contents($fixture . '/ui/trial-enabled.html', $form['body']);
+  foreach (['xinshi_credits.settings' => ['grants_enabled', 'spending_enabled'],
+    'xinshi_rewards.settings' => ['welcome_enabled', 'daily_enabled'],
+    'xinshi_ai_billing.settings' => ['enabled']] as $name => $keys) {
+    foreach ($keys as $key) {
+      \Drupal::service('cache_tags.invalidator.checksum')->reset();
+      \Drupal::configFactory()->getEditable($name)->set($key, FALSE)->save();
+      $disabled = trialHttp('GET', $path, $jar);
+      check(str_contains($disabled['body'], 'Not all enabled.') && trialAcknowledged($disabled['body']),
+        'Disabled business switch is distinct from saved confirmation: ' . $key);
+      \Drupal::configFactory()->reset();
+      check(\Drupal::config($name)->get($key) === FALSE, 'Refreshing does not re-enable ' . $key);
+      file_put_contents($fixture . '/ui/trial-disabled.html', $disabled['body']);
+      \Drupal::service('cache_tags.invalidator.checksum')->reset();
+      \Drupal::configFactory()->getEditable($name)->set($key, TRUE)->save();
+    }
+  }
+  $form = trialHttp('GET', $path, $jar);
+  check(str_contains($form['body'], 'All enabled') && snapshot() === $before,
+    'Refreshing shows restored switches without changing the ledger');
   $review = trialHttp('POST', $path, $jar, trialForm($form['body']) + $input);
   // Treat this role edit as a new request after the HTTP server rebuilt caches.
   \Drupal::service('cache_tags.invalidator.checksum')->reset();

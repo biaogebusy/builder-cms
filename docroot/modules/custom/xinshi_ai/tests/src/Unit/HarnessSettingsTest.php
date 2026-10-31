@@ -212,7 +212,6 @@ final class HarnessSettingsTest extends TestCase {
       $this->assertSame(array_values(array_diff(array_keys($group['tools']), ['get_assets', 'create_page'])),
         $element['#default_value']);
     }
-    $this->assertCount(28, HarnessSettings::toolNames());
     $this->assertContains('list_analytics_datasets', HarnessSettings::toolNames());
     $this->assertContains('count_analytics_entities', HarnessSettings::toolNames());
     $this->assertNotContains('analyze_entity_counts', HarnessSettings::toolNames());

@@ -79,6 +79,18 @@ msgstr "留空表示不过期。需要到期时，填写 YYYY-MM-DD HH:MM。已�
 msgid "I have set the spending cap at the provider and enabled enforced metering and Node credit billing."
 msgstr "我已在供应商平台设置消费上限，并已启用强制计量和 Node 积分计费。"
 
+msgid "This confirms the prerequisites. Saving retains the confirmation. Clearing this checkbox does not disable credits."
+msgstr "此项用于确认前置配置，保存后保留勾选状态。取消勾选不会关闭积分。"
+
+msgid "Drupal credit switches"
+msgstr "Drupal 积分开关"
+
+msgid "All enabled"
+msgstr "已全部开启"
+
+msgid "Not all enabled. Check the credit, reward and AI credit billing settings."
+msgstr "未全部开启。请检查积分、奖励和 AI 积分计费配置。"
+
 msgid "Review trial settings"
 msgstr "复核体验配置"
 

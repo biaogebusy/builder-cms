@@ -42,6 +42,14 @@ final class TrialSetupForm extends FormBase {
       return $form;
     }
     $saved = $this->config('xinshi_ai_billing.trial')->getRawData();
+    $enabled = $this->config('xinshi_credits.settings')->get('grants_enabled')
+      && $this->config('xinshi_credits.settings')->get('spending_enabled')
+      && $this->config('xinshi_rewards.settings')->get('welcome_enabled')
+      && $this->config('xinshi_rewards.settings')->get('daily_enabled')
+      && $this->config('xinshi_ai_billing.settings')->get('enabled');
+    $form['status'] = ['#type' => 'item', '#title' => $this->t('Drupal credit switches'),
+      '#markup' => $enabled ? $this->t('All enabled')
+        : $this->t('Not all enabled. Check the credit, reward and AI credit billing settings.')];
     $defaults = ['welcome' => '15', 'daily' => '1', 'chat' => '1', 'image' => '1'];
     foreach ($defaults as $key => $value) $form[$key] = ['#type' => 'number', '#title' => $labels[$key], '#required' => TRUE,
       '#min' => 1, '#max' => 1000000, '#step' => 1, '#default_value' => $saved[$key] ?? $value];
@@ -67,7 +75,10 @@ final class TrialSetupForm extends FormBase {
     $form['advanced']['expires_at'] = ['#type' => 'textfield', '#title' => $labels['expires_at'],
       '#default_value' => empty($saved['expires_at']) ? '' : gmdate('Y-m-d H:i', (int) $saved['expires_at']),
       '#description' => $this->t('Leave empty for no expiry. Otherwise use YYYY-MM-DD HH:MM. Existing credits are unchanged.')];
-    $form['provider_cap'] = ['#type' => 'checkbox', '#required' => TRUE, '#title' => $this->t('I have set the spending cap at the provider and enabled enforced metering and Node credit billing.')];
+    $form['provider_cap'] = ['#type' => 'checkbox', '#required' => TRUE,
+      '#default_value' => !empty($saved['version']),
+      '#title' => $this->t('I have set the spending cap at the provider and enabled enforced metering and Node credit billing.'),
+      '#description' => $this->t('This confirms the prerequisites. Saving retains the confirmation. Clearing this checkbox does not disable credits.')];
     $form['actions']['review'] = ['#type' => 'submit', '#name' => 'review', '#value' => $this->t('Review trial settings')];
     return $form;
   }

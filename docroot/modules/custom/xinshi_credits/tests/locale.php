@@ -17,7 +17,10 @@ $translator = \Drupal::translation(); $translator->reset();
 foreach (['Credit cost budgets' => '积分成本预算', 'Credits to give' => '赠送积分数量',
   'No expiry' => '不过期', 'Receive first-visit credits' => '领取首次登录积分',
   'Authorize AI credit spending' => '允许使用积分消费 AI',
-  'Trial credits' => '快捷体验积分', 'Save and enable trial credits' => '保存并启用体验积分'] as $source => $expected) {
+  'Trial credits' => '快捷体验积分', 'Save and enable trial credits' => '保存并启用体验积分',
+  'Drupal credit switches' => 'Drupal 积分开关', 'All enabled' => '已全部开启',
+  'Not all enabled. Check the credit, reward and AI credit billing settings.' => '未全部开启。请检查积分、奖励和 AI 积分计费配置。',
+  'This confirms the prerequisites. Saving retains the confirmation. Clearing this checkbox does not disable credits.' => '此项用于确认前置配置，保存后保留勾选状态。取消勾选不会关闭积分。'] as $source => $expected) {
   check((string) $translator->translate($source, [], ['langcode' => 'zh-hans']) === $expected, 'Chinese runtime label: ' . $source);
 }
 check((string) $translator->translate('@amount credits', ['@amount' => '12.345'], ['langcode' => 'zh-hans']) === '12.345 积分', 'Chinese gift review retains exact amount placeholder');
