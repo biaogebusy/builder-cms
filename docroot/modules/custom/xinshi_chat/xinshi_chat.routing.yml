@@ -30,6 +30,18 @@ xinshi_ai.conversation.update:
   requirements:
     _user_is_logged_in: 'TRUE'
 
+xinshi_chat.conversation.project:
+  path: '/api/v3/ai/conversations/{uuid}/projects/{project_uuid}'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\ConversationProjectController::link'
+    _format: 'json'
+  methods: [PUT]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 xinshi_chat.conversation.delete:
   path: '/api/v3/ai/conversations/{uuid}'
   defaults:

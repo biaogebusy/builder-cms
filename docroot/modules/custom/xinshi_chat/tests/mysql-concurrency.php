@@ -45,6 +45,14 @@ if (isset($argv[1])) {
     elseif ($job->action === 'append') {
       \Drupal::service('xinshi_chat.conversation_writer')->update($job->uuid, [$job->message], []);
     }
+    elseif ($job->action === 'project') {
+      \Drupal::service('xinshi_chat.conversation_project')->link($job->uuid, $job->project);
+    }
+    elseif ($job->action === 'project-save') {
+      $node = Node::load($job->nid);
+      $node->setTitle('Stale concurrent title');
+      $node->save();
+    }
     else {
       $node = Node::load($job->nid);
       $node->set('sessions', [['target_id' => $job->messageId]]);
@@ -56,9 +64,14 @@ if (isset($argv[1])) {
     $cause = $error;
     while ($cause->getPrevious()) $cause = $cause->getPrevious();
     $result = ['error' => get_class($cause), 'message' => $cause->getMessage()];
+    if ($cause instanceof \Drupal\xinshi_ai_reference\ConversationReferenceConflict) {
+      file_put_contents('php://stderr', $cause->getTraceAsString() . PHP_EOL);
+    }
     $request->attributes->set('_route', match ($job->action) {
       'delete' => 'xinshi_chat.conversation.delete',
       'append' => 'xinshi_ai.conversation.update',
+      'project' => 'xinshi_chat.conversation.project',
+      'project-save' => 'jsonapi.node--project.individual.patch',
       default => 'jsonapi.node--conversation.relationship.post',
     });
     $event = new \Symfony\Component\HttpKernel\Event\ExceptionEvent($kernel, $request,
@@ -76,6 +89,7 @@ if (isset($argv[1])) {
 
 require __DIR__ . '/install-fixture.php';
 \Drupal::service('module_installer')->install(['xinshi_chat']);
+require __DIR__ . '/project-fixture.php';
 touch('/tmp/chat-test/mysql-ready');
 $checks = 0;
 function check(bool $ok, string $label): void {
@@ -144,6 +158,7 @@ Role::create(['id' => 'chat_writer', 'label' => 'Chat writer', 'permissions' => 
   'access content', 'create conversation content', 'edit own conversation content',
   'delete own conversation content', 'create ai_session content', 'edit own ai_session content',
   'delete own ai_session content', 'view own unpublished content', 'use text format plain_text',
+  'edit any project content',
 ]])->save();
 $user = User::create(['name' => 'chat-race', 'status' => 1, 'roles' => ['chat_writer']]);
 $user->save();
@@ -228,4 +243,47 @@ $results = race($uid, (int) $target->id(), [['action' => 'delete', 'uuid' => $a-
   });
 check($results === [['ok' => TRUE]] && !exists($a) && exists($b) && exists($target),
   'A reference committed after deletion starts is still preserved by the locking read');
+$a = conversation([]);
+$b = conversation([]);
+$project = Node::create(['type' => 'project', 'uid' => $uid, 'title' => 'Concurrent project', 'status' => 1]);
+$project->save();
+$results = race($uid, (int) $project->id(), [
+  ['action' => 'project', 'uuid' => $a->uuid(), 'project' => $project->uuid()],
+  ['action' => 'project', 'uuid' => $b->uuid(), 'project' => $project->uuid()],
+]);
+$storage->resetCache();
+$saved = Node::load($project->id());
+$ids = array_column($saved->get('field_conversations')->getValue(), 'target_id');
+check($results === [['ok' => TRUE], ['ok' => TRUE]] &&
+  count($ids) === 2 && in_array($a->id(), $ids) && in_array($b->id(), $ids),
+  'Concurrent project appends preserve both conversations');
+$revision = $saved->getRevisionId();
+$results = race($uid, (int) $project->id(), [
+  ['action' => 'project', 'uuid' => $a->uuid(), 'project' => $project->uuid()],
+  ['action' => 'project', 'uuid' => $a->uuid(), 'project' => $project->uuid()],
+]);
+$storage->resetCache();
+check($results === [['ok' => TRUE], ['ok' => TRUE]] &&
+  Node::load($project->id())->getRevisionId() === $revision,
+  'Contending duplicate associations do not create extra revisions');
+$c = conversation([]);
+$results = race($uid, (int) $project->id(), [
+  ['action' => 'project-save', 'nid' => $project->id()],
+], static function () use ($c, $project): void {
+  \Drupal::service('xinshi_chat.conversation_project')->link($c->uuid(), $project->uuid());
+});
+$storage->resetCache();
+check(($results[0]['status'] ?? NULL) === 409 &&
+  count(Node::load($project->id())->get('field_conversations')) === 3,
+  'A waiting ordinary project save cannot overwrite a newly committed association');
+$d = conversation([]);
+$results = race($uid, (int) $d->id(), [
+  ['action' => 'project', 'uuid' => $d->uuid(), 'project' => $project->uuid()],
+], static function () use ($d): void {
+  \Drupal::service('xinshi_chat.conversation_deletion')->delete($d->uuid());
+});
+$storage->resetCache();
+check(($results[0]['status'] ?? NULL) === 409 &&
+  count(Node::load($project->id())->get('field_conversations')) === 3,
+  'A project cannot acquire a new missing reference while conversation deletion commits');
 echo 'Chat MySQL concurrency checks passed: ' . $checks . PHP_EOL;

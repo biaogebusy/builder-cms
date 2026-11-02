@@ -5,26 +5,43 @@
  * Adds a per-record field denial only on the disposable Chat test site.
  */
 
+// Fixture controls must be visible to independent HTTP requests without State cache lag.
+
 /** Implements hook_entity_field_access(). */
 function xinshi_chat_test_entity_field_access($operation, $definition, $account, $items = NULL) {
+  if ($definition->getName() === 'field_conversations' &&
+    $operation === \Drupal::keyValue('state')->get('xinshi_chat_test.project_field_denial')) {
+    return \Drupal\Core\Access\AccessResult::forbidden()->setCacheMaxAge(0);
+  }
   return \Drupal\Core\Access\AccessResult::forbiddenIf($operation === 'view' && $items &&
     (($definition->getName() === 'title' &&
-      (string) $items->getEntity()->id() === (string) \Drupal::state()->get('xinshi_chat_test.hidden_title', '')) ||
+      (string) $items->getEntity()->id() === (string) \Drupal::keyValue('state')->get('xinshi_chat_test.hidden_title', '')) ||
     ($definition->getName() === 'sessions' &&
-      (string) $items->getEntity()->id() === (string) \Drupal::state()->get('xinshi_chat_test.hidden_sessions', ''))))
+      (string) $items->getEntity()->id() === (string) \Drupal::keyValue('state')->get('xinshi_chat_test.hidden_sessions', ''))))
     ->setCacheMaxAge(0);
 }
 
 /** Implements hook_node_access(). */
 function xinshi_chat_test_node_access($node, $operation, $account) {
+  if ($operation === 'update' &&
+    (string) $node->id() === (string) \Drupal::keyValue('state')->get('xinshi_chat_test.denied_project', '')) {
+    return \Drupal\Core\Access\AccessResult::forbidden()->setCacheMaxAge(0);
+  }
   return \Drupal\Core\Access\AccessResult::forbiddenIf($operation === 'delete' &&
-    (string) $node->id() === (string) \Drupal::state()->get('xinshi_chat_test.denied_delete', ''))
+    (string) $node->id() === (string) \Drupal::keyValue('state')->get('xinshi_chat_test.denied_delete', ''))
     ->setCacheMaxAge(0);
 }
 
 /** Implements hook_node_delete(). */
 function xinshi_chat_test_node_delete($node): void {
-  if ((string) $node->id() === (string) \Drupal::state()->get('xinshi_chat_test.fail_delete', '')) {
+  if ((string) $node->id() === (string) \Drupal::keyValue('state')->get('xinshi_chat_test.fail_delete', '')) {
     throw new \RuntimeException('Synthetic deletion failure');
+  }
+}
+
+/** Implements hook_node_update(). */
+function xinshi_chat_test_node_update($node): void {
+  if ((string) $node->id() === (string) \Drupal::keyValue('state')->get('xinshi_chat_test.fail_project', '')) {
+    throw new \RuntimeException('Synthetic project failure');
   }
 }

@@ -22,7 +22,8 @@ final class ReferenceResponseSubscriber implements EventSubscriberInterface {
   public function onException(ExceptionEvent $event): void {
     $route = (string) $event->getRequest()->attributes->get('_route');
     $conversation_write = str_starts_with($route, 'jsonapi.node--conversation.') ||
-      in_array($route, ['xinshi_chat.conversation.delete', 'xinshi_ai.conversation.update'], TRUE);
+      (str_starts_with($route, 'jsonapi.node--project.') && !$event->getRequest()->isMethodCacheable()) ||
+      str_starts_with($route, 'xinshi_chat.conversation.') || $route === 'xinshi_ai.conversation.update';
     for ($error = $event->getThrowable(); $error; $error = $error->getPrevious()) {
       if ($error instanceof ConversationReferenceConflict || ($conversation_write &&
         $error instanceof \PDOException && (string) $error->getCode() === '40001')) {
@@ -37,6 +38,7 @@ final class ReferenceResponseSubscriber implements EventSubscriberInterface {
     $request = $event->getRequest();
     $route = (string) $request->attributes->get('_route');
     if (str_starts_with($route, 'jsonapi.node--ai_session.') ||
+      (str_starts_with($route, 'jsonapi.node--project.') && !$request->isMethodCacheable()) ||
       str_starts_with($route, 'jsonapi.node--conversation.') ||
       $route === 'xinshi_ai.session.content' ||
       in_array($route, ['xinshi_ai.conversation.update', 'xinshi_chat.conversations', 'xinshi_chat.sessions'], TRUE) ||

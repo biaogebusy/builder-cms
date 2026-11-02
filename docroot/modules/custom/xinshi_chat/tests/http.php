@@ -112,6 +112,9 @@ foreach (['conversations', 'sessions'] as $name) {
 
 Role::create(['id' => 'chat_admin', 'label' => 'Chat admin', 'permissions' => ['access content', 'bypass node access']])->save();
 Role::create(['id' => 'chat_limited', 'label' => 'Limited', 'permissions' => []])->save();
+require __DIR__ . '/project-fixture.php';
+Role::load('chat_owner')->grantPermission('edit any project content')
+  ->grantPermission('delete own conversation content')->grantPermission('delete own ai_session content')->save();
 foreach (['chat_owner', 'chat_admin', 'chat_limited'] as $role) {
   Oauth2Scope::create(['name' => $role, 'granularity_id' => 'role',
     'granularity_configuration' => ['role' => $role],
@@ -272,6 +275,8 @@ try {
   check(http($message_path, NULL, 'PATCH', $patch, $jar)['status'] === 403, 'Chat mutation routes remain OAuth-only');
   require __DIR__ . '/conversation-deletion.php';
   checkConversationDeletion($users, $tokens, $jar);
+  require __DIR__ . '/conversation-project.php';
+  checkConversationProject($users, $tokens, $jar);
   \Drupal::configFactory()->getEditable('xinshi_chat.settings')->set('enabled', FALSE)->save();
   foreach (['/api/v2/conversations', $base . '/sessions', '/jsonapi/node/ai_session/' . $message->uuid()] as $path) {
     check(http($path, $tokens['owner'])['status'] === 503, 'Disabled Chat stops ' . $path);

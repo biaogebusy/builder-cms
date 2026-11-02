@@ -1,4 +1,7 @@
 services:
+  xinshi_chat.conversation_project:
+    class: Drupal\xinshi_chat\Service\ConversationProject
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository', '@xinshi_ai_reference.conversation_references', '@datetime.time']
   xinshi_chat.conversation_deletion:
     class: Drupal\xinshi_chat\Service\ConversationDeletion
     arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository', '@xinshi_ai_reference.conversation_references']

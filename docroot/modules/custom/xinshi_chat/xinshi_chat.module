@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Keeps ordinary project writers consistent with Chat relationship operations.
+ */
+
+use Drupal\node\NodeInterface;
+
+/** Implements hook_node_presave(). */
+function xinshi_chat_node_presave(NodeInterface $node): void {
+  if ($node->bundle() === 'project') {
+    \Drupal::service('xinshi_chat.conversation_project')->guardSave($node);
+  }
+}

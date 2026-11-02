@@ -33,8 +33,8 @@ final class ConversationReferences {
   }
 
   /** Prevent direct entity saves from racing deletion or reintroducing missing references. */
-  public function guardSave(NodeInterface $node): void {
-    $field = $this->resources->get('node', 'conversation')?->getInternalName('sessions') ?? 'sessions';
+  public function guardSave(NodeInterface $node, ?string $field = NULL): void {
+    $field ??= $this->resources->get('node', 'conversation')?->getInternalName('sessions') ?? 'sessions';
     if (!$node->hasField($field)) {
       return;
     }
@@ -62,7 +62,10 @@ final class ConversationReferences {
       }
     }
     $storage = $this->entities->getStorage('node');
-    $storage->resetCache(array_keys($rows));
+    // Drupal treats an empty ID list as a request to clear the entire entity cache.
+    if ($rows) {
+      $storage->resetCache(array_keys($rows));
+    }
     $sessions = $storage->loadMultiple(array_keys($rows));
     foreach ($rows as $id => $row) {
       // A locking read is current even if an earlier repeatable-read snapshot is stale.

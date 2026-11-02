@@ -67,7 +67,9 @@ final class ConversationDeletion {
         throw new ServiceUnavailableHttpException(NULL, 'Conversation deletion limit exceeded.');
       }
       $rows = $this->references->lockTargets($ids);
-      $storage->resetCache(array_keys($rows));
+      if ($rows) {
+        $storage->resetCache(array_keys($rows));
+      }
       $sessions = $storage->loadMultiple(array_keys($rows));
       foreach ($rows as $id => $row) {
         if ($row->type !== 'ai_session' || !isset($sessions[$id]) ||
