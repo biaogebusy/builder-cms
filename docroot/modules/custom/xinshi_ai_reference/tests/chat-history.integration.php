@@ -96,6 +96,35 @@ try {
     $cursor = $page['data']['next'];
   } while ($cursor !== NULL);
   check($seen === $history_uuids, 'All 103 same-time messages retain relation order without gaps or duplicates');
+
+  // Deletion must read linkage even when an earlier attempt left dangling references.
+  $deleting = Node::create(['type' => 'conversation', 'title' => 'Partial deletion',
+    'uid' => $users['owner']->id(), 'status' => 1]);
+  $removed = Node::create(['type' => 'ai_session', 'title' => 'Delete first',
+    'uid' => $users['owner']->id(), 'status' => 1, 'session_role' => 'user',
+    'content' => ['value' => 'Disposable body', 'format' => 'plain_text']]);
+  $removed->save();
+  $deleting->set('sessions', [['target_id' => $removed->id()], ['target_id' => $history_ids[0]]]);
+  $deleting->save();
+  check(http('/jsonapi/node/ai_session/' . $removed->uuid(), $bearers['owner'], 'DELETE')['status'] === 204,
+    'The owner can delete a message before the conversation');
+  check(http('/api/v3/ai/conversations/' . $deleting->uuid() . '/sessions', $bearers['owner'])['status'] === 409,
+    'A partial deletion leaves history unreadable until the conversation is deleted');
+  $linkage_path = '/jsonapi/node/conversation/' . $deleting->uuid() .
+    '?noCache=true&fields%5Bnode--conversation%5D=sessions';
+  $linkage = http($linkage_path, $bearers['owner']);
+  check($linkage['status'] === 200 &&
+    array_column($linkage['data']['data']['relationships']['sessions']['data'], 'id') ===
+      ['missing', $history_uuids[0]] && !isset($linkage['data']['included']),
+    'Deletion linkage explicitly marks missing messages and returns remaining IDs without bodies');
+  \Drupal::state()->set('session_fields_test_denial', ['sessions', 'view']);
+  // Changing a test-only state flag does not invalidate JSON:API's normalized field cache.
+  \Drupal::service('cache_tags.invalidator')->invalidateTags($deleting->getCacheTags());
+  $denied_linkage = http($linkage_path, $bearers['owner']);
+  check(!isset($denied_linkage['data']['data']['relationships']['sessions']),
+    'Denied linkage is absent rather than an empty authorized deletion list');
+  \Drupal::state()->set('session_fields_test_denial', NULL);
+
   $first = http($history_path, $bearers['owner'])['data'];
   $next = '?cursor=' . rawurlencode($first['next']);
   check(http($history_path . $next . 'broken', $bearers['owner'])['status'] === 400,
