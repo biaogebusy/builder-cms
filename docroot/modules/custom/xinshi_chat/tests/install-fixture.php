@@ -32,6 +32,21 @@ $settings['skip_permissions_hardening'] = TRUE;
 $settings['extension_discovery_scan_tests'] = TRUE;
 $config['jsonapi.settings']['read_only'] = FALSE;
 SETTINGS);
+if (getenv('XINSHI_CHAT_TEST_MYSQL') === '1') {
+  file_put_contents('sites/default/settings.php', <<<'MYSQL'
+$databases['default']['default'] = [
+  'driver' => 'mysql', 'database' => 'chat_test', 'username' => 'chat',
+  'password' => 'chat-test-only', 'host' => 'chat-db', 'port' => 3306,
+  'namespace' => 'Drupal\mysql\Driver\Database\mysql',
+  'autoload' => 'core/modules/mysql/src/Driver/Database/mysql/', 'prefix' => '',
+  'isolation_level' => getenv('CHAT_TEST_REPEATABLE_READ') === '1' ? 'REPEATABLE READ' : 'READ COMMITTED',
+];
+// Isolate repeatable-read reference visibility from database cache gap locks.
+if (getenv('CHAT_TEST_REPEATABLE_READ') === '1') {
+  $settings['cache']['bins']['entity'] = 'cache.backend.memory';
+}
+MYSQL, FILE_APPEND);
+}
 file_put_contents('sites/default/default.settings.php', '<?php');
 file_put_contents('sites/default/default.services.yml', 'parameters: {}');
 $_SERVER += ['HTTP_HOST' => 'chat-test', 'SERVER_NAME' => 'chat-test', 'SERVER_PORT' => 80,

@@ -1,7 +1,10 @@
 services:
   xinshi_ai_reference.guard:
     class: Drupal\xinshi_ai_reference\TaskReferenceGuard
-    arguments: ['@entity_type.manager', '@jsonapi.resource_type.repository', '@current_user', '@xinshi_ai_reference.snapshots', '@xinshi_ai_reference.fields_writer', '@database', '@xinshi_ai_reference.storage']
+    arguments: ['@entity_type.manager', '@jsonapi.resource_type.repository', '@current_user', '@xinshi_ai_reference.snapshots', '@xinshi_ai_reference.fields_writer', '@database', '@xinshi_ai_reference.storage', '@xinshi_ai_reference.conversation_references']
+  xinshi_ai_reference.conversation_references:
+    class: Drupal\xinshi_ai_reference\ConversationReferences
+    arguments: ['@database', '@entity_type.manager', '@jsonapi.resource_type.repository']
   xinshi_ai_reference.storage:
     class: Drupal\xinshi_ai_reference\ChatStorage
     arguments: ['@config.factory']

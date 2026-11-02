@@ -176,6 +176,9 @@ try {
   $history_chat->save();
   check(http($history_path, $bearers['owner'])['status'] === 409,
     'An invalid target ID is not treated as a deleted message');
+  // Seed a pre-existing dangling link; normal saves now reject newly missing targets.
+  \Drupal::database()->update('node__sessions')->fields(['sessions_target_id' => 99999999])
+    ->condition('entity_id', $history_chat->id())->execute();
   $history_chat->set('sessions', [['target_id' => 99999999]]);
   $history_chat->save();
   $empty = http($history_path, $bearers['owner']);

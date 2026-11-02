@@ -26,10 +26,14 @@ final class TaskReferenceGuard {
     private readonly SessionFieldsWriter $writer,
     private readonly Connection $database,
     private readonly ChatStorage $protocol,
+    private readonly ConversationReferences $references,
   ) {}
 
   /** Serialize direct saves too, so an unchanged stale entity cannot overwrite a concurrent CAS. */
   public function presave(NodeInterface $node): void {
+    if ($node->bundle() === 'conversation') {
+      $this->references->guardSave($node);
+    }
     if ($node->bundle() === 'ai_session' && !$node->isNew()) {
       // SqlContentEntityStorage already holds the save transaction at this hook boundary.
       $row = $this->database->select('node', 'n')->fields('n', ['vid'])

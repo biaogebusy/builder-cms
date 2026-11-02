@@ -114,4 +114,10 @@ $event = new \Symfony\Component\HttpKernel\Event\RequestEvent(\Drupal::service('
   \Symfony\Component\HttpKernel\HttpKernelInterface::MAIN_REQUEST);
 \Drupal::service('xinshi_chat.availability')->onRequest($event);
 check($event->getResponse()?->getStatusCode() === 503, 'Language-prefixed Chat routes honor the disabled switch');
+$request = \Symfony\Component\HttpFoundation\Request::create('/fr/api/v3/ai/conversations/fixture', 'DELETE');
+$request->attributes->set('_route', 'xinshi_chat.conversation.delete');
+$event = new \Symfony\Component\HttpKernel\Event\RequestEvent(\Drupal::service('http_kernel'), $request,
+  \Symfony\Component\HttpKernel\HttpKernelInterface::MAIN_REQUEST);
+\Drupal::service('xinshi_chat.availability')->onRequest($event);
+check($event->getResponse()?->getStatusCode() === 503, 'Language-prefixed aggregate deletion honors the disabled switch');
 \Drupal::configFactory()->getEditable('xinshi_chat.settings')->set('enabled', TRUE)->save();

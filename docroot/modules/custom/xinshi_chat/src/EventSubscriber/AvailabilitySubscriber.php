@@ -29,6 +29,7 @@ final class AvailabilitySubscriber implements EventSubscriberInterface {
     if (str_starts_with($route, 'jsonapi.node--conversation.') ||
       str_starts_with($route, 'jsonapi.node--ai_session.') ||
       str_starts_with($route, 'xinshi_ai_reference.') ||
+      str_starts_with($route, 'xinshi_chat.conversation.') ||
       in_array($route, ['xinshi_chat.conversations', 'xinshi_chat.sessions',
         'xinshi_ai.conversation.update', 'xinshi_ai.session.content'], TRUE) ||
       str_starts_with($path, '/api/v3/ai/conversations/') ||

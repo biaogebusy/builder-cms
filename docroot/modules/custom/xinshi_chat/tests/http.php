@@ -270,6 +270,8 @@ try {
   check(http('/user/login?_format=json', NULL, 'POST', ['name' => 'chat-http-owner', 'pass' => 'test-only-chat'], $jar)['status'] === 200,
     'The synthetic owner can create a browser session');
   check(http($message_path, NULL, 'PATCH', $patch, $jar)['status'] === 403, 'Chat mutation routes remain OAuth-only');
+  require __DIR__ . '/conversation-deletion.php';
+  checkConversationDeletion($users, $tokens, $jar);
   \Drupal::configFactory()->getEditable('xinshi_chat.settings')->set('enabled', FALSE)->save();
   foreach (['/api/v2/conversations', $base . '/sessions', '/jsonapi/node/ai_session/' . $message->uuid()] as $path) {
     check(http($path, $tokens['owner'])['status'] === 503, 'Disabled Chat stops ' . $path);
