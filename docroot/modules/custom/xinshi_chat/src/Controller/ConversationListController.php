@@ -21,7 +21,8 @@ final class ConversationListController extends ControllerBase {
 
   public function page(Request $request): JsonResponse {
     return new JsonResponse($this->reader->page($request->query->get('page', '0'),
-      $request->query->get('keyword', ''), $request->query->get('chat_type', '')),
+      $request->query->get('keyword', ''), $request->query->get('chat_type', ''),
+      $request->query->get('scope', 'all')),
       200, ['Cache-Control' => 'private, no-store']);
   }
 

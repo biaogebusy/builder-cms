@@ -197,6 +197,42 @@ try {
   check(http('/api/v2/conversations?keyword=fixture%2024', $tokens['owner'])['data']['rows'] === [],
     'Keyword filtering cannot reveal a field-denied title');
   \Drupal::state()->delete('xinshi_chat_test.hidden_title');
+  $excluded = [];
+  for ($i = 0; $i < 22; $i++) {
+    $node = Node::create(['type' => 'conversation', 'uid' => $users['owner']->id(),
+      'title' => 'Excluded fixture ' . $i, 'chat_type' => $i % 2 ? 'img' : 'shooting-plan',
+      'created' => 1793000000 + $i, 'status' => 1]);
+    $node->save();
+    $excluded[] = $node;
+  }
+  $scoped = http('/api/v2/conversations?scope=chat', $tokens['owner']);
+  check($scoped['status'] === 200 && $scoped['data'] === $list['data'],
+    'Chat scope excludes newer image and shooting rows before pagination and counts');
+  check(count(http('/api/v2/conversations?scope=chat&page=1', $tokens['owner'])['data']['rows']) === 5,
+    'Chat scope fills page two with the remaining visible conversations');
+  check(http('/api/v2/conversations?scope=chat&chat_type=img', $tokens['owner'])['data']['pager']['total_items'] === 0,
+    'An exact type filter cannot broaden chat scope');
+  check(count(http('/api/v2/conversations?scope=chat&keyword=fixture%2024&chat_type=plan', $tokens['owner'])['data']['rows']) === 1,
+    'Chat scope composes with keyword and exact type filters');
+  check(http('/api/v2/conversations', $tokens['owner'])['data']['pager']['total_items'] === 47,
+    'Omitted scope retains all conversation types for other callers');
+  check(http('/api/v2/conversations?scope=all', $tokens['owner'])['data'] ===
+    http('/api/v2/conversations', $tokens['owner'])['data'], 'Explicit all scope matches the default');
+  \Drupal::state()->set('xinshi_chat_test.hidden_title', $chat->id());
+  check(http('/api/v2/conversations?scope=chat&keyword=fixture%2024', $tokens['owner'])['data']['pager']['total_items'] === 0,
+    'Chat scope cannot count a title denied by field access');
+  \Drupal::state()->delete('xinshi_chat_test.hidden_title');
+  check(http('/api/v2/conversations?scope=chat', $tokens['other'])['data']['rows'] === [],
+    'Chat scope retains the current author boundary');
+  foreach (['unknown', '', 'chat[]'] as $scope) {
+    check(http('/api/v2/conversations?scope=' . rawurlencode($scope), $tokens['owner'])['status'] === 400,
+      'Unknown scope fails explicitly: ' . $scope);
+  }
+  check(http('/api/v2/conversations?scope[]=chat', $tokens['owner'])['status'] === 400,
+    'Scope rejects an array');
+  foreach ($excluded as $node) {
+    $node->delete();
+  }
   check(http('/api/v2/conversations?page=-1', $tokens['owner'])['status'] === 400, 'Invalid pagination fails explicitly');
   check(http('/api/v2/conversations', $tokens['other'])['data']['rows'] === [], 'List never returns another author');
   check(http('/api/v2/sessions', $tokens['owner'])['data']['rows'][0]['uuid'] === $message->uuid(),

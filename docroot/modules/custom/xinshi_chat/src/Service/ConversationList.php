@@ -27,8 +27,12 @@ final class ConversationList {
   ) {}
 
   /** Count and filter only rows whose returned fields are readable by this principal. */
-  public function page(string $page, string $keyword, string $chat_type): array {
-    return $this->listing('conversation', self::FIELDS, $page, $keyword, $chat_type);
+  public function page(string $page, string $keyword, string $chat_type, string $scope = 'all'): array {
+    if (!in_array($scope, ['all', 'chat'], TRUE)) {
+      throw new BadRequestHttpException('Invalid conversation list scope.');
+    }
+    return $this->listing('conversation', self::FIELDS, $page, $keyword, $chat_type,
+      $scope === 'chat' ? ['img', 'shooting-plan'] : []);
   }
 
   /** Preserve the older message-list projection under the same author access boundary. */
@@ -44,7 +48,7 @@ final class ConversationList {
     return $result;
   }
 
-  private function listing(string $bundle, array $fields, string $page, string $keyword, string $chat_type): array {
+  private function listing(string $bundle, array $fields, string $page, string $keyword, string $chat_type, array $excluded_types = []): array {
     if (!$this->account->isAuthenticated()) {
       throw new AccessDeniedHttpException();
     }
@@ -85,7 +89,8 @@ final class ConversationList {
           $row[$name] = $name === 'uid' ? (string) $node->getOwnerId() : $node->get($name)->value;
         }
         if (($keyword !== '' && mb_stripos($row['title'], $keyword) === FALSE) ||
-          ($chat_type !== '' && $row['chat_type'] !== $chat_type)) {
+          ($chat_type !== '' && $row['chat_type'] !== $chat_type) ||
+          in_array($row['chat_type'] ?? '', $excluded_types, TRUE)) {
           continue;
         }
         if ($total >= $start && count($rows) < self::PAGE_SIZE) {
