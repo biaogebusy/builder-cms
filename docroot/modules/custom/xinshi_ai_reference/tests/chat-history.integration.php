@@ -108,8 +108,11 @@ try {
   $deleting->save();
   check(http('/jsonapi/node/ai_session/' . $removed->uuid(), $bearers['owner'], 'DELETE')['status'] === 204,
     'The owner can delete a message before the conversation');
-  check(http('/api/v3/ai/conversations/' . $deleting->uuid() . '/sessions', $bearers['owner'])['status'] === 409,
-    'A partial deletion leaves history unreadable until the conversation is deleted');
+  $remaining = http('/api/v3/ai/conversations/' . $deleting->uuid() . '/sessions', $bearers['owner']);
+  check($remaining['status'] === 200 && $remaining['data']['total'] === 1 &&
+    $remaining['data']['offset'] === 0 && $remaining['data']['next'] === NULL &&
+    array_column($remaining['data']['messages'], 'id') === [$history_uuids[0]],
+    'Deleting one message leaves the remaining history readable in relation order');
   $linkage_path = '/jsonapi/node/conversation/' . $deleting->uuid() .
     '?noCache=true&fields%5Bnode--conversation%5D=sessions';
   $linkage = http($linkage_path, $bearers['owner']);
@@ -124,6 +127,30 @@ try {
   check(!isset($denied_linkage['data']['data']['relationships']['sessions']),
     'Denied linkage is absent rather than an empty authorized deletion list');
   \Drupal::state()->set('session_fields_test_denial', NULL);
+
+  $retained_uuids = $history_uuids;
+  foreach ([1, 49, 50, 101] as $deleted_index) {
+    $before_delete = http($history_path, $bearers['owner'])['data'];
+    check(http('/jsonapi/node/ai_session/' . $history_uuids[$deleted_index],
+      $bearers['owner'], 'DELETE')['status'] === 204, 'Delete a message around a page boundary');
+    check(http($history_path . '?cursor=' . rawurlencode($before_delete['next']),
+      $bearers['owner'])['status'] === 409,
+      'A deletion on either side of a page boundary invalidates the previous cursor');
+    unset($retained_uuids[$deleted_index]);
+    $seen = [];
+    $cursor = NULL;
+    do {
+      $page = http($history_path . ($cursor ? '?cursor=' . rawurlencode($cursor) : ''), $bearers['owner']);
+      check($page['status'] === 200 && $page['data']['offset'] === count($seen) &&
+        $page['data']['total'] === count($retained_uuids) &&
+        count($page['data']['messages']) <= 50 && str_contains($page['cache'], 'no-store'),
+        'History pages count only existing messages after deletion');
+      $seen = [...$seen, ...array_column($page['data']['messages'], 'id')];
+      $cursor = $page['data']['next'];
+    } while ($cursor !== NULL);
+    check($seen === array_values($retained_uuids),
+      'Restarting history preserves all remaining same-time messages in relation order');
+  }
 
   $first = http($history_path, $bearers['owner'])['data'];
   $next = '?cursor=' . rawurlencode($first['next']);
@@ -145,9 +172,34 @@ try {
   $history_chat->set('sessions', [['target_id' => $history_ids[0]], ['target_id' => $history_ids[0]]]);
   $history_chat->save();
   check(http($history_path, $bearers['owner'])['status'] === 409, 'Duplicate relation entries fail explicitly');
+  $history_chat->set('sessions', [['target_id' => 0]]);
+  $history_chat->save();
+  check(http($history_path, $bearers['owner'])['status'] === 409,
+    'An invalid target ID is not treated as a deleted message');
   $history_chat->set('sessions', [['target_id' => 99999999]]);
   $history_chat->save();
-  check(http($history_path, $bearers['owner'])['status'] === 409, 'Dangling relations are not silently omitted');
+  $empty = http($history_path, $bearers['owner']);
+  check($empty['status'] === 200 && $empty['data'] === ['storage_version' => 1, 'total' => 0,
+    'offset' => 0, 'messages' => [], 'next' => NULL], 'Already missing targets produce an empty live history');
+  $unchanged_chat = \Drupal::entityTypeManager()->getStorage('node')->loadUnchanged($history_chat->id());
+  check(array_map('strval', array_column($unchanged_chat->get('sessions')->getValue(), 'target_id')) === ['99999999'],
+    'Reading live history does not rewrite the saved relationship');
+  $history_chat->set('sessions', [['target_id' => 99999999], ['target_id' => $deleting->id()]]);
+  $history_chat->save();
+  check(http($history_path, $bearers['owner'])['status'] === 409,
+    'An existing target of the wrong bundle is not treated as deleted');
+  foreach (['other_owner', 'unpublished'] as $denial) {
+    $denied_message = Node::create(['type' => 'ai_session', 'title' => 'Denied history',
+      'uid' => $users[$denial === 'other_owner' ? 'other' : 'owner']->id(),
+      'status' => $denial === 'unpublished' ? 0 : 1, 'session_role' => 'user',
+      'content' => ['value' => 'Do not omit', 'format' => 'plain_text']]);
+    $denied_message->save();
+    $history_chat->set('sessions', [['target_id' => 99999999], ['target_id' => $denied_message->id()]]);
+    $history_chat->save();
+    $denied_page = http($history_path, $bearers['owner']);
+    check($denied_page['status'] === 403 && !isset($denied_page['data']['messages']),
+      'An existing inaccessible message fails the read instead of disappearing from history');
+  }
   $history_config->set('storage_version', 2)->save();
   check(http($storage_path, $bearers['owner'])['data'] === ['storage_version' => 2],
     'Only an explicit configuration change selects v2');
@@ -250,6 +302,32 @@ try {
   unset($forged['data']['attributes']['plan_context']);
   check(http('/jsonapi/node/ai_session', $bearers['owner'], 'POST', $forged)['status'] === 422,
     'A v2 writer cannot create messages after v3 activation');
+
+  foreach ([1, 2, 3] as $delete_version) {
+    $history_config->set('storage_version', $delete_version)->save();
+    $empty_chat = Node::create(['type' => 'conversation', 'title' => 'Delete last message',
+      'uid' => $users['owner']->id(), 'status' => 1, 'model' => 'synthetic', 'platform' => 'synthetic']);
+    $empty_chat->save();
+    $last_message = Node::create(['type' => 'ai_session', 'title' => 'Last message',
+      'uid' => $users['owner']->id(), 'status' => 1, 'session_role' => 'user',
+      'content' => ['value' => 'Last body', 'format' => 'plain_text']] +
+      ($delete_version === 1 ? [] : ['storage_version' => $delete_version,
+        'edit_version' => 1, 'storage_mode' => 'inline']));
+    $last_message->save();
+    $writer->update($empty_chat->uuid(), [$last_message->uuid()], []);
+    $empty_path = '/api/v3/ai/conversations/' . $empty_chat->uuid() . '/sessions';
+    $before_last = http($empty_path, $bearers['owner']);
+    check($before_last['status'] === 200 && $before_last['data']['total'] === 1,
+      'The last-message fixture is readable before deletion in protocol ' . $delete_version);
+    check(http('/jsonapi/node/ai_session/' . $last_message->uuid(), $bearers['owner'], 'DELETE')['status'] === 204,
+      'The owner can delete the last message in protocol ' . $delete_version);
+    $after_last = http($empty_path, $bearers['owner']);
+    check($after_last['status'] === 200 && $after_last['data'] === [
+      'storage_version' => $delete_version, 'total' => 0, 'offset' => 0, 'messages' => [], 'next' => NULL],
+      'Deleting the last message leaves a readable empty conversation in protocol ' . $delete_version);
+    check(http($empty_path . '/' . $last_message->uuid() . '/fields', $bearers['owner'])['status'] === 404,
+      'A direct read of the deleted message still returns not found');
+  }
 }
 finally {
   \Drupal::state()->set('session_fields_test_denial', NULL);

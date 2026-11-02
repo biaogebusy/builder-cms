@@ -16,7 +16,7 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
-/** Reads bounded message bodies in relationship delta order, failing closed on gaps. */
+/** Reads existing messages in relationship order, failing closed on invalid or denied bodies. */
 final class ChatHistoryReader {
 
   public const PAGE_SIZE = 50;
@@ -140,10 +140,20 @@ final class ChatHistoryReader {
   private function members(NodeInterface $chat): array {
     $items = $chat->get($this->field($chat, 'sessions'))->getValue();
     $ids = array_map('strval', array_column($items, 'target_id'));
-    if (count($ids) !== count($items) || count(array_unique($ids)) !== count($ids)) {
+    if (count($ids) !== count($items) || count(array_unique($ids)) !== count($ids) ||
+      array_filter($ids, static fn($id) => !ctype_digit($id) || (int) $id < 1)) {
       throw new ConflictHttpException('Chat history contains invalid membership.');
     }
-    return $ids;
+    // JSON:API deletion leaves references behind. Check existence without loading every body.
+    // Do not filter by access or bundle: existing invalid/denied targets must still fail the page.
+    $storage = $this->entities->getStorage('node');
+    $existing = [];
+    foreach (array_chunk($ids, self::PAGE_SIZE) as $batch) {
+      foreach ($storage->getQuery()->accessCheck(FALSE)->condition('nid', $batch, 'IN')->execute() as $id) {
+        $existing[(string) $id] = TRUE;
+      }
+    }
+    return array_values(array_filter($ids, static fn($id) => isset($existing[$id])));
   }
 
   private function load(string $uuid, string $bundle): NodeInterface {
