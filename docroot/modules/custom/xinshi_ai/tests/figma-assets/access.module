@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * @file
+ * Synthetic denial and transaction-failure hooks for the isolated import fixture.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+
+function figma_asset_test_media_access(EntityInterface $entity, string $operation, AccountInterface $account) {
+  return AccessResult::forbiddenIf(getenv('FIGMA_TEST_DENY') === '1')->addCacheContexts(['user']);
+}
+
+function figma_asset_test_entity_field_access($operation, $definition, $account, $items = NULL) {
+  return AccessResult::forbiddenIf(getenv('FIGMA_TEST_FIELD_DENY') === '1' &&
+    $definition->getTargetEntityTypeId() === 'media' && $definition->getName() === 'field_media_image');
+}
+
+function figma_asset_test_file_access(EntityInterface $entity, string $operation, AccountInterface $account) {
+  return AccessResult::forbiddenIf(getenv('FIGMA_TEST_FILE_DENY') === '1');
+}
+
+function figma_asset_test_media_insert(EntityInterface $entity): void {
+  if (getenv('FIGMA_TEST_ROLLBACK') === '1') {
+    throw new RuntimeException('Synthetic failure after media insertion');
+  }
+  if (getenv('FIGMA_TEST_PAUSE') === '1') {
+    file_put_contents('/tmp/chat-test/import-started', 'ready');
+    $deadline = microtime(TRUE) + 15;
+    while (!file_exists('/tmp/chat-test/import-release') && microtime(TRUE) < $deadline) {
+      usleep(20000);
+    }
+    if (!file_exists('/tmp/chat-test/import-release')) {
+      throw new RuntimeException('Synthetic lock wait timed out');
+    }
+  }
+}

@@ -7,7 +7,7 @@ namespace Drupal\xinshi_ai\Controller;
 use Drupal\ai\OperationType\GenericType\ImageFile;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\xinshi_ai\Exception\FigmaException;
-use Drupal\xinshi_ai\Service\MediaUploadServiceInterface;
+use Drupal\xinshi_ai\Service\FigmaAssetUpload;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -36,15 +36,15 @@ final class FigmaAssetController extends ControllerBase {
   private const MAX_BODY = 12 * 1024 * 1024;
 
   public function __construct(
-    private readonly MediaUploadServiceInterface $mediaUpload,
+    private readonly FigmaAssetUpload $mediaUpload,
     private readonly LoggerInterface $logger,
   ) {}
 
   public static function create(ContainerInterface $container): self {
-    return new self($container->get('xinshi_ai.media_upload'), $container->get('logger.channel.xinshi_ai'));
+    return new self($container->get('xinshi_ai.figma_assets'), $container->get('logger.channel.xinshi_ai'));
   }
 
-  public function upload(Request $request): JsonResponse {
+  public function upload(Request $request, string $digest, string $import_id): JsonResponse {
     try {
       // HeaderBag::get() takes a ?string default since Symfony 7; cast the header.
       $declaredLength = $request->headers->get('Content-Length');
@@ -84,16 +84,11 @@ final class FigmaAssetController extends ControllerBase {
         $filename = 'figma-asset.' . $ext;
       }
 
-      $uid  = (int) $this->currentUser()->id();
       $image = new ImageFile($binary, $mimeType, $filename);
-      $media = $this->mediaUpload->fromImageFile($image, $uid, 'Figma asset');
-
-      /** @var \Drupal\file\FileInterface $file */
-      $file = $media->get('field_media_image')->entity;
-      $url  = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+      $url = $this->mediaUpload->import($image, $digest, $this->currentUser(), $import_id);
 
       return new JsonResponse(
-        ['url' => $url],
+        ['url' => $url, 'digest' => $digest, 'importId' => $import_id],
         200,
         ['Cache-Control' => 'private, no-store'],
       );
