@@ -268,3 +268,9 @@ function xinshi_ai_update_10007(): void {
     $field->setCardinality(8)->save();
   }
 }
+
+/** Installs the usage dependency added after image jobs were first deployed. */
+function xinshi_ai_update_10008(): void {
+  // The update kernel can boot before the newly required services are available.
+  \Drupal::service('module_installer')->install(['xinshi_ai_usage']);
+}
