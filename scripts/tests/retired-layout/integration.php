@@ -8,6 +8,7 @@ declare(strict_types=1);
  */
 
 use Drupal\Core\Config\DatabaseStorage;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\DrupalKernel;
 use Drupal\block_content\Entity\BlockContent;
@@ -267,5 +268,61 @@ repairCheck($storage->read('search.page.node_search') === $searchConfig, 'Search
 repairCheck(Node::load($node->id())->label() === 'Retained latest landing page', 'Landing page loads after cache rebuild');
 repairCheck(BlockContent::load($block->id())->get('body')->value === '{"body":[{"type":"hero-1v1"}]}', 'Component JSON loads unchanged after cache rebuild');
 repairCheck($storage->read('editor.editor.repair_legacy')['editor'] === 'ckeditor', 'Legacy editor configuration remains for separate conversion');
+
+// A named site and a decoy default site must resolve to independent configuration prefixes.
+$siteRoot = '/app/docroot/sites/';
+$siteSettings = file_get_contents($siteRoot . 'default/settings.php');
+foreach (['repair-target', 'repair-other'] as $site) {
+  mkdir($siteRoot . $site . '/files', 0777, TRUE);
+  file_put_contents($siteRoot . $site . '/settings.php', $siteSettings
+    . ($site === 'repair-other' ? "\n\$databases['default']['default']['prefix'] = 'decoy_';\n" : ''));
+}
+file_put_contents($siteRoot . 'default/settings.php', $siteSettings
+  . "\n\$databases['default']['default']['prefix'] = 'decoy_';\n");
+file_put_contents($siteRoot . 'sites.php', "<?php\n\$sites = ['chat-test' => 'repair-target', 'repair-other' => 'repair-other', 'chat-test.embedded' => 'repair-other'];\n");
+Database::addConnectionInfo('repair_decoy', 'default', array_replace($db->getConnectionOptions(), ['prefix' => 'decoy_']));
+$decoyDb = Database::getConnection('default', 'repair_decoy');
+foreach (['config' => 'data', 'key_value' => 'value'] as $table => $column) {
+  $decoyDb->schema()->createTable($table, ['fields' => [
+    'collection' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE],
+    'name' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE],
+    $column => ['type' => 'blob', 'size' => 'big', 'not null' => TRUE],
+  ], 'primary key' => ['collection', 'name']]);
+}
+$decoyUuid = \Drupal::service('uuid')->generate();
+foreach (['system.site' => ['uuid' => $decoyUuid], 'core.extension' => ['module' => ['system' => 0, 'ckeditor' => 0]]] as $name => $config) {
+  $decoyDb->insert('config')->fields(['collection' => '', 'name' => $name, 'data' => serialize($config)])->execute();
+}
+$decoyDb->insert('key_value')->fields(['collection' => 'system.schema', 'name' => 'ckeditor', 'value' => serialize(8000)])->execute();
+$decoyRows = static fn() => [
+  $decoyDb->select('config', 'c')->fields('c')->execute()->fetchAll(PDO::FETCH_ASSOC),
+  $decoyDb->select('key_value', 'k')->fields('k')->execute()->fetchAll(PDO::FETCH_ASSOC),
+];
+$decoyBefore = $decoyRows();
+$namedCommand = repairWith($command, '--site-path=', 'sites/repair-target');
+$wrongSite = repairRun($command, FALSE);
+repairCheck(str_contains($wrongSite, 'Selected site path "sites/repair-target"'), 'Wrong expected directory reports the actual named site');
+$namedPreview = json_decode(repairRun($namedCommand), TRUE, flags: JSON_THROW_ON_ERROR);
+repairCheck($namedPreview['site_path'] === 'sites/repair-target' && $namedPreview['site_uuid'] === $snapshot['site_uuid'], 'URI alias selects the named target database');
+$otherCommand = repairWith(repairWith($command, '--uri=', 'http://repair-other'), '--site-path=', 'sites/repair-other');
+$otherPreview = json_decode(repairRun($otherCommand), TRUE, flags: JSON_THROW_ON_ERROR);
+repairCheck($otherPreview['site_uuid'] === $decoyUuid, 'Another URI selects a separate configuration prefix');
+$pathCommand = repairWith(repairWith($command, '--uri=', 'http://chat-test/embedded'), '--site-path=', 'sites/repair-other');
+$pathPreview = json_decode(repairRun($pathCommand), TRUE, flags: JSON_THROW_ON_ERROR);
+repairCheck($pathPreview['site_uuid'] === $decoyUuid, 'URI path participates in multisite mapping');
+$extension = $storage->read('core.extension');
+$extension['module']['ckeditor'] = 0;
+$storage->write('core.extension', $extension);
+\Drupal::keyValue('system.schema')->set('ckeditor', 8000);
+$namedPreview = json_decode(repairRun($namedCommand), TRUE, flags: JSON_THROW_ON_ERROR);
+$namedApply = [...$namedCommand, '--apply', '--layout-migrated', '--confirm=' . $namedPreview['confirmation_hash'], '--backup=/tmp/chat-test/named-backup.json'];
+repairRun(repairWith($namedApply, '--site-path=', 'sites/default'), FALSE);
+repairCheck(isset($storage->read('core.extension')['module']['ckeditor']), 'Wrong site assertion prevents the target repair');
+$namedResult = json_decode(repairRun($namedApply), TRUE, flags: JSON_THROW_ON_ERROR);
+repairCheck($namedResult['status'] === 'applied' && !isset($storage->read('core.extension')['module']['ckeditor']), 'Named-site repair changes the intended configuration');
+$namedSnapshot = json_decode(file_get_contents('/tmp/chat-test/named-backup.json'), TRUE, flags: JSON_THROW_ON_ERROR);
+repairCheck($namedSnapshot['site_path'] === 'sites/repair-target' && $namedSnapshot['site_uuid'] === $snapshot['site_uuid'], 'Backup records the intended multisite identity');
+repairCheck($decoyRows() === $decoyBefore, 'Named-site preview and apply preserve the decoy default site');
+foreach ($content as $table => $rows) { repairCheck(repairRows($table) === $rows, 'Multisite repair retains content and history: ' . $table); }
 echo 'Retired layout repair checks passed: ' . $checks . PHP_EOL;
 $complete = TRUE;

@@ -31,11 +31,16 @@ try {
   if (!in_array($request->getScheme(), ['http', 'https'], TRUE)) {
     throw new RuntimeException('An HTTP or HTTPS site URI is required.');
   }
+  // Multisite discovery uses the web entry point, not this CLI script's filename.
+  $request->server->set('SCRIPT_NAME', rtrim($request->getPathInfo(), '/') . '/index.php');
+  $request->server->set('SCRIPT_FILENAME', $root . '/index.php');
   // Initializing settings selects the database; booting the kernel would load broken plugins.
   $kernel = DrupalKernel::createFromRequest($request, $loader, 'prod', FALSE, $root);
   $sitePath = $kernel->getSitePath();
-  if ($sitePath !== ($options['site-path'] ?? 'sites/' . $request->getHost())) {
-    throw new RuntimeException('Site path differs from the URI. Pass the reviewed --site-path explicitly.');
+  $expectedSitePath = $options['site-path'] ?? 'sites/' . $request->getHost();
+  if ($sitePath !== $expectedSitePath) {
+    throw new RuntimeException('Selected site path "' . $sitePath . '" differs from expected "'
+      . $expectedSitePath . '". Confirm the target mapping before passing --site-path explicitly.');
   }
   // Read current extension files without booting the kernel or consulting a stale file cache.
   FileCacheFactory::setConfiguration([FileCacheFactory::DISABLE_CACHE => TRUE]);
