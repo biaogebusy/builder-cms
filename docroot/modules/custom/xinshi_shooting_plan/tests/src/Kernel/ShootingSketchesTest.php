@@ -95,14 +95,14 @@ final class ShootingSketchesTest extends TestCase {
     \Drupal::currentUser()->setAccount($this->owner);
     $this->plan = Node::create(['type' => 'shooting_plan', 'title' => 'Synthetic plan',
       'uid' => $this->owner->id()]);
-    $this->doc = ['kind' => 'xinshi-shooting-plan', 'version' => 1, 'id' => $this->plan->uuid(),
+    $this->doc = ['kind' => 'xinshi-shooting-plan', 'version' => 2, 'id' => $this->plan->uuid(),
       'taskId' => \Drupal::service('uuid')->generate(), 'runId' => \Drupal::service('uuid')->generate(),
       'request' => ['topic' => 'Synthetic plan', 'style' => 'pencil'], 'original' => [], 'status' => 'ready', 'draft' => [
         'aspectRatio' => '9:16', 'styleGuide' => 'Same presenter in a quiet studio.',
         'shots' => [['id' => 'shot_1', 'framing' => 'wide', 'visual' => 'Presenter at a desk',
-          'camera' => 'Phone at eye level, one metre away.', 'lighting' => 'Window to the left.',
+          'movement' => 'Fixed camera, keeping the presenter in frame.', 'lighting' => 'Window to the left.',
           'sketchPrompt' => 'Camera at eye level'], ['id' => 'shot_2', 'framing' => 'detail',
-          'camera' => 'Overhead phone on a fixed support.', 'lighting' => 'Window to the left.',
+          'movement' => 'Fixed overhead shot, no movement.', 'lighting' => 'Window to the left.',
           'visual' => 'Two sample objects', 'sketchPrompt' => 'Overhead close view']],
       ]];
     $this->saveDoc();
@@ -684,7 +684,7 @@ final class ShootingSketchesTest extends TestCase {
     $changed = $this->doc;
     $task = ['version' => 1, 'taskId' => \Drupal::service('uuid')->generate(),
       'inputHash' => str_repeat('a', 64), 'planHash' => str_repeat('b', 64),
-      'spec' => ['version' => 1, 'documentId' => $this->plan->uuid(), 'operation' => 'rewrite',
+      'spec' => ['version' => 2, 'documentId' => $this->plan->uuid(), 'operation' => 'rewrite',
         'request' => ['topic' => 'Private revision instructions', 'duration' => 60,
           'platform' => 'douyin', 'format' => 'comparison', 'tone' => 'natural',
           'style' => 'pencil', 'locale' => 'zh-hans'],
@@ -700,7 +700,7 @@ final class ShootingSketchesTest extends TestCase {
       $invalid['revisionTask'][$key] = $value;
       $this->expectHttp(fn() => ShootingDocumentAccess::document(json_encode($invalid), $this->plan->uuid()), 422);
     }
-    foreach (['documentId' => \Drupal::service('uuid')->generate(), 'version' => 2,
+    foreach (['documentId' => \Drupal::service('uuid')->generate(), 'version' => 1,
       'operation' => 'delete', 'mode' => 'duration', 'shotId' => '',
       'instruction' => str_repeat('a', 2001), 'apiKey' => 'forbidden'] as $key => $value) {
       $invalid = $changed;
@@ -1128,7 +1128,7 @@ final class ShootingSketchesTest extends TestCase {
       'targetDuration' => 60, 'structure' => [['id' => 'intro', 'title' => 'Introduction']]];
     foreach ($this->doc['draft']['shots'] as &$shot) {
       $shot += ['sectionId' => 'intro', 'duration' => 30, 'audio' => 'Quiet room',
-        'actions' => ['Start recording'], 'acceptance' => 'Clear speech', 'dialogue' => [],
+        'actions' => ['Start recording'], 'dialogue' => [],
         'tip' => 'Keep the camera steady', 'sounds' => []];
     }
     $this->saveDoc();

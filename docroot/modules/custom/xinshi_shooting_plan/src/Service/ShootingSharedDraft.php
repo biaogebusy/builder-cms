@@ -31,13 +31,13 @@ final class ShootingSharedDraft {
     self::items($plan['shots'], 2, 24);
     $shots = [];
     foreach ($plan['shots'] as $shot) {
-      self::keys($shot, ['id', 'sectionId', 'duration', 'framing', 'visual', 'camera', 'lighting',
-        'audio', 'actions', 'acceptance', 'dialogue', 'sketchPrompt', 'tip', 'sounds']);
+      self::keys($shot, ['id', 'sectionId', 'duration', 'framing', 'visual', 'movement', 'lighting',
+        'audio', 'actions', 'dialogue', 'sketchPrompt', 'tip', 'sounds']);
       self::id($shot['id'], $shots);
       self::check(is_string($shot['sectionId']) && isset($sections[$shot['sectionId']]) &&
         is_int($shot['duration']) && $shot['duration'] > 0 && $shot['duration'] <= 180 &&
         in_array($shot['framing'], ['wide', 'medium', 'close', 'detail'], TRUE));
-      foreach (['visual', 'camera', 'lighting', 'audio', 'acceptance', 'sketchPrompt', 'tip'] as $key) {
+      foreach (['visual', 'movement', 'lighting', 'audio', 'sketchPrompt', 'tip'] as $key) {
         self::text($shot[$key]);
       }
       self::strings($shot['actions']);

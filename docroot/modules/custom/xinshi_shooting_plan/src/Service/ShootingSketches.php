@@ -198,7 +198,7 @@ final class ShootingSketches {
           }
           $number++;
           $prompt .= "\nReference {$number} is the approved continuity frame. Preserve its identities, " .
-            "clothing, product geometry and location. Compose this shot from its own camera and action directions.";
+            "clothing, product geometry and location. Compose this shot from its own movement and action directions.";
         }
         $images = array_values(array_unique($images));
         $kind = $images ? 'image_edit' : 'text_to_image';
