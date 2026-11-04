@@ -18,6 +18,7 @@ use Drupal\xinshi_ai_usage\Service\PriceBookService;
 use Drupal\xinshi_ai_usage\Service\ProducerVault;
 use Drupal\xinshi_ai_usage\Service\RegisteredSites;
 use Drupal\xinshi_ai_usage\Service\ReportedModels;
+use Drupal\xinshi_ai_usage\Service\ReportTime;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -256,6 +257,7 @@ final class PriceBookForm extends FormBase {
       '#title' => $this->t('新建草稿版本'),
       '#open' => TRUE,
       '#description' => $this->t('新建的版本保持草稿状态，确认无误后在版本列表点“设为生效”，或直接点“保存并设为生效版本”。'),
+      '#prefix' => '<div id="price-book-create">', '#suffix' => '</div>',
     ];
     $form['create']['site_id'] = [
       '#type' => 'select',
@@ -264,6 +266,7 @@ final class PriceBookForm extends FormBase {
       '#options' => array_combine($siteIds, $siteIds),
       '#default_value' => $siteIds[0],
       '#required' => TRUE,
+      '#ajax' => ['callback' => '::refreshCreate', 'wrapper' => 'price-book-create'],
     ];
     $kind = (string) ($form_state->getValue('book_kind') ?? PriceBookService::KIND_SUPPLIER_CHAT);
     $form['create']['book_kind'] = [
@@ -275,7 +278,7 @@ final class PriceBookForm extends FormBase {
         PriceBookService::KIND_SUPPLIER_IMAGE => $this->kindLabel(PriceBookService::KIND_SUPPLIER_IMAGE),
       ],
       '#default_value' => PriceBookService::KIND_SUPPLIER_CHAT,
-      '#ajax' => ['callback' => '::refreshPrefill', 'wrapper' => 'price-catalog-prefill'],
+      '#ajax' => ['callback' => '::refreshCreate', 'wrapper' => 'price-book-create'],
       '#required' => TRUE,
     ];
     $form['create']['version'] = [
@@ -359,14 +362,39 @@ final class PriceBookForm extends FormBase {
     ];
     $form['create']['historical'] = [
       '#type' => 'checkbox', '#title' => $this->t('补充历史区间'),
-      '#description' => $this->t('填写过去的开始与结束时间。区间包含开始时刻，不包含结束时刻。保存价卡不会自动补算成本。'),
+      '#description' => $this->t('默认从最早使用记录开始，接到已有价卡的开始时间。保存价卡后，可单独预览并确认历史成本补算。'),
+      '#ajax' => ['callback' => '::refreshCreate', 'wrapper' => 'price-book-create'],
+    ];
+    $siteId = (string) ($form_state->getValue('site_id') ?? $siteIds[0]);
+    $suggested = in_array($siteId, $siteIds, TRUE) && in_array($kind, PriceBookService::KINDS, TRUE)
+      ? $this->suggestedRange($siteId, $kind) : NULL;
+    $form_state->set('historical_suggestion', ['site_id' => $siteId, 'kind' => $kind, 'range' => $suggested]);
+    $form['create']['historical_mode'] = [
+      '#type' => 'radios', '#title' => $this->t('历史生效时间'),
+      '#options' => ['automatic' => $this->t('使用已有历史记录区间（推荐）'),
+        'custom' => $this->t('自定义开始与结束时间')], '#default_value' => 'automatic',
+      '#states' => ['visible' => [':input[name="historical"]' => ['checked' => TRUE]]],
+      '#ajax' => ['callback' => '::refreshCreate', 'wrapper' => 'price-book-create'],
+    ];
+    $form['create']['historical_suggestion'] = [
+      '#type' => 'item', '#title' => $this->t('自动选择的区间'),
+      '#plain_text' => $suggested === NULL ? $this->t('暂无可自动补充的历史区间。需要指定其他过去时段时，请选择自定义时间。')
+        : $this->formatMs($suggested[0]) . ' – ' . $this->formatMs($suggested[1]),
+      '#description' => $this->t('包含开始时刻，不包含结束时刻。系统自动处理时区和毫秒，无需复制时间字符串。'),
+      '#states' => ['visible' => [':input[name="historical"]' => ['checked' => TRUE],
+        ':input[name="historical_mode"]' => ['value' => 'automatic']]],
     ];
     foreach (['historical_from' => $this->t('历史生效开始'), 'historical_to' => $this->t('历史生效结束')] as $key => $title) {
-      $form['create'][$key] = ['#type' => 'textfield', '#title' => $title,
-        '#description' => $this->t('使用带时区和毫秒的时间，例如 2026-10-20T10:13:09.874+08:00。可复制版本列表的边界时间。'),
-        '#maxlength' => 29,
-        '#states' => ['visible' => [':input[name="historical"]' => ['checked' => TRUE]],
-          'required' => [':input[name="historical"]' => ['checked' => TRUE]]]];
+      $conditions = [':input[name="historical"]' => ['checked' => TRUE],
+        ':input[name="historical_mode"]' => ['value' => 'custom']];
+      $ms = $suggested[$key === 'historical_from' ? 0 : 1] ?? NULL;
+      $form['create'][$key] = ['#type' => 'date', '#title' => $title,
+        '#attributes' => ['type' => 'datetime-local', 'step' => 1],
+        '#date_date_format' => 'Y-m-d\TH:i:s',
+        '#default_value' => $ms === NULL ? '' : $this->localDate($ms)->format('Y-m-d\TH:i:s'),
+        '#description' => $this->t('选择日期和时间。时区：@zone。与自动区间边界相同时，系统保留原有毫秒。',
+          ['@zone' => $this->timezone()]),
+        '#states' => ['visible' => $conditions, 'required' => $conditions]];
     }
 
     $form['create']['actions'] = ['#type' => 'actions'];
@@ -391,17 +419,52 @@ final class PriceBookForm extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     $form_state->set('historical_range', NULL);
     if ($form_state->getValue('historical')) {
-      try {
-        $from = self::parseTimestamp((string) $form_state->getValue('historical_from'));
-        $to = self::parseTimestamp((string) $form_state->getValue('historical_to'));
-        if ($from < 0 || $to <= $from || $to > (int) round($this->time->getCurrentMicroTime() * 1000)) {
-          throw new PriceBookException('invalid_historical_interval', 'invalid historical boundaries');
+      $suggestion = $form_state->get('historical_suggestion');
+      if (($form_state->getValue('historical_mode') ?? 'automatic') === 'automatic') {
+        $siteId = (string) $form_state->getValue('site_id');
+        $kind = (string) $form_state->getValue('book_kind');
+        $range = in_array($siteId, $this->siteIds()['ids'], TRUE)
+          && in_array($kind, PriceBookService::KINDS, TRUE)
+          ? $this->suggestedRange($siteId, $kind, $suggestion['range'][1] ?? NULL) : NULL;
+        if ($range === NULL) {
+          $form_state->setErrorByName('historical_mode', $this->t('暂无可自动补充的历史区间，请选择自定义时间。'));
         }
-        $form_state->set('historical_range', [$from, $to]);
+        elseif ($suggestion !== ['site_id' => $siteId, 'kind' => $kind, 'range' => $range]) {
+          $form_state->setErrorByName('historical_mode', $this->t('历史记录或价卡已变化，请重新选择历史区间并核对起止时间。'));
+        }
+        else {
+          $form_state->set('historical_range', $range);
+        }
       }
-      catch (PriceBookException) {
-        $form_state->setErrorByName('historical_from',
-          $this->t('请填写带时区和三位毫秒的有效时间。结束必须晚于开始，且不能晚于当前时间。'));
+      else {
+        $range = [];
+        foreach (['historical_from', 'historical_to'] as $index => $key) {
+          try {
+            $value = $form_state->getValue($key);
+            if (!is_string($value)) {
+              throw new PriceBookException('invalid_timestamp', 'a date and time are required');
+            }
+            $range[$index] = $this->parseLocalTimestamp($value,
+              $suggestion['range'][$index] ?? NULL);
+          }
+          catch (PriceBookException | \ValueError) {
+            $form_state->setErrorByName($key, $this->t('请选择有效的日期和时间。'));
+          }
+        }
+        if (count($range) === 2) {
+          if ($range[0] < 0) {
+            $form_state->setErrorByName('historical_from', $this->t('开始时间不能早于 1970 年。'));
+          }
+          elseif ($range[1] <= $range[0]) {
+            $form_state->setErrorByName('historical_to', $this->t('结束时间必须晚于开始时间。'));
+          }
+          elseif ($range[1] > (int) round($this->time->getCurrentMicroTime() * 1000)) {
+            $form_state->setErrorByName('historical_to', $this->t('结束时间不能晚于当前时间。'));
+          }
+          else {
+            $form_state->set('historical_range', $range);
+          }
+        }
       }
       if (trim((string) $form_state->getValue('source_ref')) === '') {
         $form_state->setErrorByName('source_ref', $this->t('补充历史区间必须填写采购来源凭证。'));
@@ -462,7 +525,7 @@ final class PriceBookForm extends FormBase {
         $range[0] ?? $now, $sourceRef, (string) $this->currentUser()->id(), $range[1] ?? NULL);
     }
     catch (PriceBookException $e) {
-      $this->messenger()->addError($e->getMessage());
+      $this->messenger()->addError($this->priceBookError($e));
       return;
     }
 
@@ -473,7 +536,7 @@ final class PriceBookForm extends FormBase {
         $this->messenger()->addStatus($this->t('版本 @version 已设为生效。', ['@version' => $version]));
       }
       catch (PriceBookException $e) {
-        $this->messenger()->addError($this->t('草稿已保存，但启用失败：@message', ['@message' => $e->getMessage()]));
+        $this->messenger()->addError($this->t('草稿已保存，但启用失败：@message', ['@message' => $this->priceBookError($e)]));
       }
     }
     else {
@@ -591,9 +654,9 @@ final class PriceBookForm extends FormBase {
     ]));
   }
 
-  /** Updates catalog choices when the administrator switches book kind. */
-  public function refreshPrefill(array &$form, FormStateInterface $form_state): array {
-    return $form['create']['prefill'];
+  /** Refreshes catalog choices and historical defaults without saving a version. */
+  public function refreshCreate(array &$form, FormStateInterface $form_state): array {
+    return $form['create'];
   }
 
   /**
@@ -614,7 +677,7 @@ final class PriceBookForm extends FormBase {
       $this->messenger()->addStatus($this->t('版本已设为生效。'));
     }
     catch (PriceBookException $e) {
-      $this->messenger()->addError($this->t('启用失败：@message', ['@message' => $e->getMessage()]));
+      $this->messenger()->addError($this->t('启用失败：@message', ['@message' => $this->priceBookError($e)]));
     }
   }
 
@@ -649,17 +712,45 @@ final class PriceBookForm extends FormBase {
   }
 
   private function formatMs(int $ms): string {
-    return gmdate('Y-m-d\TH:i:s', intdiv($ms, 1000))
-      . '.' . str_pad((string) ($ms % 1000), 3, '0', STR_PAD_LEFT) . '+00:00';
+    $date = $this->localDate($ms);
+    return $date->format('Y-m-d H:i:s.v') . ' (UTC' . $date->format('P') . ')';
   }
 
-  private static function parseTimestamp(string $value): int {
-    $date = \DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s.vP', $value);
-    if ($date === FALSE || $date->format('Y-m-d\TH:i:s.vP') !== $value
-      || !preg_match('/[+-](?:0[0-9]|1[0-4]):[0-5][0-9]$/', $value)) {
-      throw new PriceBookException('invalid_timestamp', 'a precise timestamp with timezone is required');
+  private function priceBookError(PriceBookException $error): string {
+    return (string) match ($error->priceCode) {
+      'version_exists' => $this->t('该站点已存在同类型、同版本号的价卡，请使用新的版本号。'),
+      'overlapping_version' => $this->t('生效区间与已发布价卡重叠，请核对版本列表并调整起止时间。'),
+      default => $error->getMessage(),
+    };
+  }
+
+  private function suggestedRange(string $siteId, string $kind, ?int $endLimit = NULL): ?array {
+    $from = $this->reportedModels->firstRecordedAt($siteId, $kind);
+    $range = $from === NULL ? NULL : $this->priceBook->initialHistoricalGap($siteId, $kind, $from);
+    // Keep the displayed end when "now" advances between rendering and submission.
+    if ($range !== NULL && $endLimit !== NULL) {
+      $range[1] = min($range[1], $endLimit);
     }
-    return $date->getTimestamp() * 1000 + (int) $date->format('v');
+    return $range;
+  }
+
+  private function timezone(): string {
+    return $this->currentUser()->getTimeZone() ?: date_default_timezone_get();
+  }
+
+  private function localDate(int $ms): \DateTimeImmutable {
+    return ReportTime::at($ms, new \DateTimeZone($this->timezone()));
+  }
+
+  private function parseLocalTimestamp(string $value, ?int $originalMs): int {
+    $value = strlen($value) === 16 ? $value . ':00' : $value;
+    $date = \DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s', $value,
+      new \DateTimeZone($this->timezone()));
+    if ($date === FALSE || $date->format('Y-m-d\TH:i:s') !== $value) {
+      throw new PriceBookException('invalid_timestamp', 'select a valid local date and time');
+    }
+    return $originalMs !== NULL && intdiv($originalMs, 1000) === $date->getTimestamp()
+      ? $originalMs : $date->getTimestamp() * 1000;
   }
 
   /**

@@ -49,4 +49,19 @@ final class ReportedModels {
     ], $rows);
   }
 
+  /** Returns the earliest platform attempt of the selected price book kind. */
+  public function firstRecordedAt(string $siteId, string $kind): ?int {
+    $query = $this->database->select(UsageProjectionService::ATTEMPT_TABLE, 'a')
+      ->condition('a.site_id', $siteId)->condition('a.payer', 'platform');
+    if ($kind === PriceBookService::KIND_SUPPLIER_IMAGE) {
+      $query->isNotNull('a.images_generated');
+    }
+    else {
+      $query->isNull('a.images_generated');
+    }
+    $query->addExpression('MIN(a.occurred_at)', 'first_recorded_at');
+    $value = $query->execute()->fetchField();
+    return $value === NULL || $value === FALSE ? NULL : (int) $value;
+  }
+
 }

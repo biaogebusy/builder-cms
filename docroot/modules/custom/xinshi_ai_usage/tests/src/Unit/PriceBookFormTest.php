@@ -9,6 +9,9 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Form\FormBuilder;
+use Drupal\Core\Form\FormValidator;
+use Drupal\Core\Form\FormSubmitter;
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\PrivateKey;
@@ -43,6 +46,7 @@ final class PriceBookFormTest extends TestCase {
   private TimeInterface $time;
   private array $messages = [];
   private int $now = 1_700_000_000;
+  private string $timezone = 'UTC';
 
   protected function setUp(): void {
     parent::setUp();
@@ -58,6 +62,9 @@ final class PriceBookFormTest extends TestCase {
         'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
         'model_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
         'started_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+        'occurred_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+        'images_generated' => ['type' => 'int', 'not null' => FALSE],
+        'payer' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE, 'default' => 'platform'],
       ],
     ]);
     $time = $this->createMock(TimeInterface::class);
@@ -83,6 +90,7 @@ final class PriceBookFormTest extends TestCase {
     }
     $account = $this->createMock(AccountInterface::class);
     $account->method('id')->willReturn(1);
+    $account->method('getTimeZone')->willReturnCallback(fn() => $this->timezone);
     $container = new ContainerBuilder();
     $container->set('string_translation', $translation);
     $container->set('messenger', $messenger);
@@ -450,44 +458,243 @@ final class PriceBookFormTest extends TestCase {
       $this->priceBook->loadActive('app.example', PriceBookService::KIND_SUPPLIER_IMAGE));
   }
 
-  public function testHistoricalFormPreservesTimezoneAndMillisecondBoundaries(): void {
-    $this->vault->set('chat-node', 'secret', 'app.example', $this->now);
-    $form = $this->form();
-    $state = (new FormState())->setValues([
-      'site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'history',
-      'currency' => 'CNY', 'source_ref' => 'contract', 'historical' => TRUE,
-      'historical_from' => '2023-11-15T06:13:19.123+08:00',
-      'historical_to' => '2023-11-15T06:13:20.250+08:00',
-      'rates_json' => '{"accounts":{"xinshi":{"models":{"model-a":{"per_million_input":1,'
-        . '"per_million_cache_read":0,"per_million_cache_write":0,"per_million_output":1}}}}}',
-    ]);
+  public function testAutomaticHistoryDoesNotRequireDateInputAndPreservesExactBoundaries(): void {
+    $this->recordedTime();
+    $this->publishCurrent();
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState();
     $built = $form->buildForm([], $state);
+    $this->assertSame('automatic', $built['create']['historical_mode']['#default_value']);
+    $this->assertStringContainsString('2023-11-14 22:13:19.123',
+      (string) $built['create']['historical_suggestion']['#plain_text']);
     $form->validateForm($built, $state);
     $this->assertSame([], $state->getErrors());
     $this->assertSame([1_699_999_999_123, 1_700_000_000_250], $state->get('historical_range'));
     $state->setTriggeringElement(['#name' => 'save_and_activate']);
     $form->submitForm($built, $state);
-    $version = $this->priceBook->listVersions('app.example', self::KIND)[0];
-    $this->assertSame(1_699_999_999_123, (int) $version['effective_from']);
-    $this->assertSame(1_700_000_000_250, (int) $version['effective_to']);
-    $built = $form->buildForm([], new FormState());
-    $this->assertStringContainsString('2023-11-14T22:13:19.123+00:00',
-      $built['versions']['table']['app.example:' . $version['id']]['range']['#plain_text']);
+    $version = $this->priceBook->loadActive('app.example', self::KIND, 1_699_999_999_123);
+    $this->assertSame('history', $version['version']);
+    $this->assertSame(1_700_000_000_250, $version['effective_to']);
   }
 
-  public function testHistoricalFormRejectsInvalidDatesAndMissingSource(): void {
-    $form = $this->form();
-    foreach (['2023-11-14T22:13:19Z', '2023-02-30T22:13:19.123+00:00',
-      '2023-11-14T22:13:20.251+00:00'] as $date) {
-      $state = (new FormState())->setValues(['historical' => TRUE, 'historical_from' => $date,
-        'historical_to' => '2023-11-14T22:13:20.250+00:00', 'source_ref' => '',
-        'book_kind' => self::KIND, 'rates_json' => json_encode(PriceBookForm::seedRates())]);
-      $built = [];
+  public function testCustomDateControlsUseUserTimezoneAndKeepUneditedMilliseconds(): void {
+    $this->timezone = 'Asia/Shanghai';
+    $this->recordedTime();
+    $this->publishCurrent();
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState('custom');
+    $built = $form->buildForm([], $state);
+    foreach (['historical_from', 'historical_to'] as $key) {
+      $element = $built['create'][$key];
+      $element['#value'] = $element['#default_value'];
+      $element = \Drupal\Core\Render\Element\Date::preRenderDate($element);
+      $this->assertSame('datetime-local', $element['#attributes']['type']);
+      $state->setValue($key, $element['#value']);
+    }
+    $this->assertSame('2023-11-15T06:13:19', $state->getValue('historical_from'));
+    $this->assertSame('2023-11-15T06:13:20', $state->getValue('historical_to'));
+    $form->validateForm($built, $state);
+    $this->assertSame([], $state->getErrors());
+    $this->assertSame([1_699_999_999_123, 1_700_000_000_250], $state->get('historical_range'));
+  }
+
+  public function testCustomTimeAcceptsMinutesWithoutSecondsOrTimezoneSuffix(): void {
+    $this->timezone = 'Asia/Shanghai';
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState('custom')->setValue('historical_from', '2023-11-15T06:12')
+      ->setValue('historical_to', '2023-11-15T06:13');
+    $built = $form->buildForm([], $state);
+    $form->validateForm($built, $state);
+    $this->assertSame([], $state->getErrors());
+    $this->assertSame([1_699_999_920_000, 1_699_999_980_000], $state->get('historical_range'));
+  }
+
+  public function testAutomaticEndDoesNotMoveWhileTheUserFillsTheForm(): void {
+    $this->recordedTime();
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState();
+    $built = $form->buildForm([], $state);
+    $this->now += 10;
+    $form->validateForm($built, $state);
+    $this->assertSame([], $state->getErrors());
+    $this->assertSame([1_699_999_999_123, 1_700_000_000_250], $state->get('historical_range'));
+  }
+
+  public function testChangedHistoryOrPriceBookRequiresReviewingTheSuggestedRange(): void {
+    $this->recordedTime();
+    $this->publishCurrent();
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState();
+    $built = $form->buildForm([], $state);
+    $this->recordedTime(1_699_999_998_123);
+    $form->validateForm($built, $state);
+    $this->assertArrayHasKey('historical_mode', $state->getErrors());
+    $this->assertNull($state->get('historical_range'));
+    $state = $this->historicalState();
+    $built = $form->buildForm([], $state);
+    $id = $this->priceBook->createDraft('app.example', self::KIND, 'covered', 'CNY',
+      $state->getValue('rates_json'), 1_699_999_998_123, 'contract', '1', 1_700_000_000_250);
+    $this->priceBook->activate($id, 'app.example', self::KIND, '1');
+    $form->validateForm($built, $state);
+    $this->assertArrayHasKey('historical_mode', $state->getErrors());
+    $this->assertNull($state->get('historical_range'));
+  }
+
+  public function testAutomaticRangeFollowsSelectedSiteAndPriceBookKind(): void {
+    $this->recordedTime();
+    $this->recordedTime(1_699_999_997_456, PriceBookService::KIND_SUPPLIER_IMAGE);
+    $this->database->insert(UsageProjectionService::ATTEMPT_TABLE)->fields(['site_id' => 'other',
+      'model_id' => 'm', 'started_at' => 0, 'occurred_at' => 1])->execute();
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState()->setValue('book_kind', PriceBookService::KIND_SUPPLIER_IMAGE);
+    $built = $form->buildForm([], $state);
+    $this->assertSame(1_699_999_997_456, $state->get('historical_suggestion')['range'][0]);
+    $refreshed = $form->refreshCreate($built, $state);
+    $this->assertArrayHasKey('historical_suggestion', $refreshed);
+    $this->assertSame(['book_kind' => PriceBookService::KIND_SUPPLIER_IMAGE],
+      $refreshed['prefill']['prefill_search']['#autocomplete_route_parameters']);
+  }
+
+  public function testNoHistoryProvidesAClearManualAlternative(): void {
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState();
+    $built = $form->buildForm([], $state);
+    $this->assertStringContainsString('自定义', (string) $built['create']['historical_suggestion']['#plain_text']);
+    $form->validateForm($built, $state);
+    $this->assertArrayHasKey('historical_mode', $state->getErrors());
+    $this->assertNull($state->get('historical_range'));
+  }
+
+  public function testCustomDateErrorsIdentifyTheFieldAndCause(): void {
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    foreach ([['2023-02-30T22:13', '2023-11-14T22:13', 'historical_from'],
+      ["2023-11-14T22:12\0", '2023-11-14T22:13', 'historical_from'],
+      ['1969-12-31T22:12', '2023-11-14T22:13', 'historical_from'],
+      ['2023-11-14T22:12', '2023-11-14T22:13:21', 'historical_to'],
+      ['2023-11-14T22:13', '2023-11-14T22:12', 'historical_to']] as [$from, $to, $field]) {
+      $state = $this->historicalState('custom')->setValue('historical_from', $from)
+        ->setValue('historical_to', $to)->setValue('source_ref', '');
+      $built = $form->buildForm([], $state);
       $form->validateForm($built, $state);
-      $this->assertArrayHasKey('historical_from', $state->getErrors());
+      $this->assertArrayHasKey($field, $state->getErrors());
       $this->assertArrayHasKey('source_ref', $state->getErrors());
       $this->assertNull($state->get('historical_range'));
     }
+  }
+
+  public function testHistoricalPublicationExplainsOverlapAndRepeatedVersion(): void {
+    $this->recordedTime();
+    $this->publishCurrent();
+    $this->now += 10;
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $state = $this->historicalState('custom')->setValue('historical_from', '2023-11-14T22:13:19')
+      ->setValue('historical_to', '2023-11-14T22:13:21');
+    $built = $form->buildForm([], $state);
+    $form->validateForm($built, $state);
+    $this->assertSame([], $state->getErrors());
+    $state->setTriggeringElement(['#name' => 'save_and_activate']);
+    $form->submitForm($built, $state);
+    $this->assertStringContainsString('草稿已保存', end($this->messages)[1]);
+    $this->assertStringContainsString('重叠', end($this->messages)[1]);
+    $this->assertSame('current', $this->priceBook->loadActive('app.example', self::KIND)['version']);
+    $form->submitForm($built, $state);
+    $this->assertStringContainsString('新的版本号', end($this->messages)[1]);
+    $this->assertCount(2, $this->priceBook->listVersions('app.example', self::KIND));
+  }
+
+  public function testAjaxSelectorsPreserveTypedFieldsWithoutSavingThroughFormApi(): void {
+    $this->recordedTime();
+    $this->publishCurrent();
+    $form = $this->form(['xinshi_ai_usage.site_id' => 'app.example']);
+    $builder = $this->formBuilder();
+    foreach (['site_id', 'book_kind', 'historical', 'historical_mode'] as $trigger) {
+      $state = (new FormState())->setFormObject($form)->setRequestMethod('POST');
+      $state->clearErrors();
+      $built = $form->buildForm([], $state);
+      $builder->prepareForm($form->getFormId(), $built, $state);
+      $input = $this->historicalState('custom')->getValues() + [
+        'form_id' => $form->getFormId(), '_triggering_element_name' => $trigger,
+        'historical_from' => '2023-11-14T22:12', 'historical_to' => '2023-11-14T22:13',
+      ];
+      // Selector changes must also work while required fields are incomplete.
+      $input['version'] = '';
+      $input['source_ref'] = '';
+      $state->setUserInput($input);
+      $builder->processForm($form->getFormId(), $built, $state);
+      $refreshed = $form->refreshCreate($built, $state);
+      $this->assertSame($trigger, $state->getTriggeringElement()['#name']);
+      $this->assertFalse($state->isSubmitted());
+      $this->assertTrue($state->isRebuilding());
+      $this->assertSame([], $state->getErrors());
+      foreach (['version', 'rates_json', 'source_ref', 'historical_from', 'historical_to'] as $key) {
+        $this->assertSame($input[$key], $refreshed[$key]['#value']);
+      }
+      $this->assertCount(1, $this->priceBook->listVersions('app.example', self::KIND));
+      $this->assertSame([], $this->messages);
+    }
+  }
+
+  private function formBuilder(): FormBuilder {
+    $requests = new RequestStack();
+    $requests->push(Request::create('https://cms.example/admin/config/xinshi/ai/usage/pricing', 'POST'));
+    $container = \Drupal::getContainer();
+    $container->set('request_stack', $requests);
+    $resolver = $this->createMock(\Drupal\Core\DependencyInjection\ClassResolverInterface::class);
+    $callables = new \Drupal\Core\Utility\CallableResolver($resolver);
+    $urls = $this->createMock(\Drupal\Core\Routing\UrlGeneratorInterface::class);
+    $urls->method('generateFromRoute')->willReturnCallback(static fn($name, $params, $options, $metadata)
+      => $metadata ? (new \Drupal\Core\GeneratedUrl())->setGeneratedUrl('/pricing') : '/pricing');
+    $container->set('url_generator', $urls);
+    $access = $this->createMock(\Drupal\Core\Access\AccessManagerInterface::class);
+    $access->method('checkNamedRoute')->willReturn(\Drupal\Core\Access\AccessResult::allowed());
+    $container->set('access_manager', $access);
+    $elements = $this->createMock(\Drupal\Core\Render\ElementInfoManagerInterface::class);
+    $elements->method('getInfo')->willReturnCallback(static function (string $type): array {
+      $class = '\\Drupal\\Core\\Render\\Element\\' . ucfirst($type);
+      if (!class_exists($class)) {
+        return [];
+      }
+      $element = new $class([], $type, []);
+      $info = $element->getInfo() + ['#type' => $type];
+      if ($element instanceof \Drupal\Core\Render\Element\FormElementInterface) {
+        $info['#input'] = TRUE;
+        $info['#value_callback'] = [$class, 'valueCallback'];
+      }
+      return $info;
+    });
+    $csrf = $this->createMock(\Drupal\Core\Access\CsrfTokenGenerator::class);
+    $validator = new FormValidator($requests, $container->get('string_translation'), $csrf,
+      $this->createMock(\Psr\Log\LoggerInterface::class),
+      $this->createMock(\Drupal\Core\Form\FormErrorHandlerInterface::class), $callables);
+    $submitter = new FormSubmitter($requests, $urls,
+      $this->createMock(\Drupal\Core\EventSubscriber\RedirectResponseSubscriber::class), $callables);
+    return new FormBuilder($validator, $submitter,
+      $this->createMock(\Drupal\Core\Form\FormCacheInterface::class),
+      $this->createMock(\Drupal\Core\Extension\ModuleHandlerInterface::class),
+      $this->createMock(\Symfony\Contracts\EventDispatcher\EventDispatcherInterface::class),
+      $requests, $resolver, $elements,
+      $this->createMock(\Drupal\Core\Theme\ThemeManagerInterface::class), $csrf, $callables);
+  }
+
+  private function recordedTime(int $ms = 1_699_999_999_123, string $kind = self::KIND): void {
+    $this->database->insert(UsageProjectionService::ATTEMPT_TABLE)->fields([
+      'site_id' => 'app.example', 'model_id' => 'model-a', 'started_at' => $ms,
+      'occurred_at' => $ms, 'images_generated' => $kind === self::KIND ? NULL : 1,
+    ])->execute();
+  }
+
+  private function publishCurrent(): void {
+    $id = $this->priceBook->createDraft('app.example', self::KIND, 'current', 'CNY',
+      $this->historicalState()->getValue('rates_json'), $this->now * 1000 + 250);
+    $this->priceBook->activate($id, 'app.example', self::KIND, '1');
+  }
+
+  private function historicalState(string $mode = 'automatic'): FormState {
+    return (new FormState())->setValues(['site_id' => 'app.example', 'book_kind' => self::KIND,
+      'version' => 'history', 'currency' => 'CNY', 'source_ref' => 'contract', 'historical' => TRUE,
+      'historical_mode' => $mode, 'rates_json' => '{"accounts":{"xinshi":{"models":{"model-a":{'
+        . '"per_million_input":1,"per_million_cache_read":0,"per_million_cache_write":0,"per_million_output":1}}}}}',
+    ]);
   }
 
   private function form(array $settings = [], ?PriceCatalogFetcher $catalog = NULL,
@@ -516,7 +723,7 @@ final class PriceBookFormTest extends TestCase {
     ]);
     $state->setUserInput(['rates_json' => 'old', 'currency' => 'CNY']);
     $built = $form->buildForm([], $state);
-    $prefill = $form->refreshPrefill($built, $state);
+    $prefill = $form->refreshCreate($built, $state)['prefill'];
     $this->assertSame(['book_kind' => $kind], $prefill['prefill_search']['#autocomplete_route_parameters']);
     $this->assertArrayHasKey('gpt-image-2', $prefill['prefill_popular']['#options']);
     $this->assertArrayNotHasKey('deepseek/deepseek-chat', $prefill['prefill_popular']['#options']);

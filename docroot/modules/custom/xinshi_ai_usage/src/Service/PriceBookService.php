@@ -117,6 +117,25 @@ final class PriceBookService {
   }
 
   /**
+   * Returns the initial uncovered interval, bounded by the next publication or now.
+   *
+   * @return array{0: int, 1: int}|null
+   *   Exact start and exclusive end in milliseconds, or no initial gap.
+   */
+  public function initialHistoricalGap(string $siteId, string $kind, int $from): ?array {
+    $now = $this->nowMs();
+    if ($from < 0 || $from >= $now || $this->loadActive($siteId, $kind, $from) !== NULL) {
+      return NULL;
+    }
+    $query = $this->database->select(self::TABLE, 'p')->condition('p.site_id', $siteId)
+      ->condition('p.book_kind', $kind)->condition('p.status', self::STATUS_ACTIVE)
+      ->condition('p.effective_from', $from, '>');
+    $query->addExpression('MIN(p.effective_from)', 'next_start');
+    $next = $query->execute()->fetchField();
+    return [$from, $next === NULL || $next === FALSE ? $now : min($now, (int) $next)];
+  }
+
+  /**
    * Recent versions of a site and kind, newest first, for the admin listing.
    *
    * @return list<array{id:int,version:string,currency:string,status:string,source_ref:string|null,effective_from:int,effective_to:int|null,created_at:int,created_by:string|null}>
