@@ -272,6 +272,8 @@ final class PriceBookService {
    *   Optional supplier quote, invoice or contract reference for audit.
    * @param string|null $createdBy
    *   Optional identifier of the admin who created the draft.
+   * @param int|null $effectiveToMs
+   *   A finite past end selects historical gap publication; a source reference is required.
    *
    * @return int
    *   The new version id.
@@ -281,7 +283,7 @@ final class PriceBookService {
    */
   public function createDraft(string $siteId, string $kind, string $version, string $currency,
     string $ratesJson, int $effectiveFromMs, ?string $sourceRef = NULL,
-    ?string $createdBy = NULL): int {
+    ?string $createdBy = NULL, ?int $effectiveToMs = NULL): int {
     $version = trim($version);
     $currency = strtoupper(trim($currency));
     $sourceRef = $sourceRef === NULL ? NULL : trim($sourceRef);
@@ -300,6 +302,11 @@ final class PriceBookService {
     if ($effectiveFromMs < 0) {
       throw new PriceBookException('invalid_effective_from', 'effective_from must be non-negative');
     }
+    if ($effectiveToMs !== NULL && ($effectiveToMs <= $effectiveFromMs
+      || $effectiveToMs > $this->nowMs() || $sourceRef === NULL)) {
+      throw new PriceBookException('invalid_historical_interval',
+        'a historical interval must end after its start, before now, and have a source reference');
+    }
     // Validate at the service boundary as well as in the form. Other callers
     // must not be able to create a draft that can later be activated blindly.
     $this->parseRates($ratesJson, $kind);
@@ -314,7 +321,7 @@ final class PriceBookService {
         'status' => self::STATUS_DRAFT,
         'source_ref' => $sourceRef,
         'effective_from' => $effectiveFromMs,
-        'effective_to' => NULL,
+        'effective_to' => $effectiveToMs,
         'created_at' => $this->nowMs(),
         'created_by' => $createdBy === NULL || $createdBy === '' ? NULL : substr($createdBy, 0, 128),
       ])->execute();
@@ -327,9 +334,9 @@ final class PriceBookService {
   }
 
   /**
-   * Activates the given version and closes the previous active one.
+   * Publishes a draft as a normal switch or as a finite historical gap supplement.
    *
-   * Done in a transaction so there is never both zero and two active versions.
+   * Locks the publication scope so published intervals cannot overlap.
    *
    * @param int $versionId
    *   The draft version id to activate.
@@ -337,14 +344,21 @@ final class PriceBookService {
    *   The expected site id; used as a safety check.
    * @param string $kind
    *   The expected kind; used as a safety check.
+   * @param string|null $activatedBy
+   *   Publishing a historical interval requires an authenticated admin's user id.
    *
    * @throws \Drupal\xinshi_ai_usage\Service\PriceBookException
    */
-  public function activate(int $versionId, string $siteId, string $kind): void {
+  public function activate(int $versionId, string $siteId, string $kind,
+    ?string $activatedBy = NULL): void {
     $tx = $this->database->startTransaction();
     try {
+      // A stable lock order also serializes publication when no active version exists yet.
+      $this->database->select(self::TABLE, 'p')->fields('p', ['id'])
+        ->condition('p.site_id', $siteId)->condition('p.book_kind', $kind)
+        ->orderBy('p.id')->forUpdate()->execute()->fetchAll();
       $target = $this->database->select(self::TABLE, 'p')
-        ->fields('p', ['id', 'effective_from', 'effective_to', 'rates_json', 'currency'])
+        ->fields('p', ['id', 'effective_from', 'effective_to', 'rates_json', 'currency', 'source_ref'])
         ->condition('p.id', $versionId)
         ->condition('p.site_id', $siteId)
         ->condition('p.book_kind', $kind)
@@ -359,6 +373,33 @@ final class PriceBookService {
 
       $this->parseRates((string) $target['rates_json'], $kind);
       $now = $this->nowMs();
+      if ($target['effective_to'] !== NULL) {
+        if ((int) $target['effective_from'] < 0
+          || (int) $target['effective_to'] <= (int) $target['effective_from']
+          || (int) $target['effective_to'] > $now || trim($target['source_ref'] ?? '') === ''
+          || $activatedBy === NULL || !preg_match('/^[1-9][0-9]{0,127}$/', $activatedBy)) {
+          throw new PriceBookException('invalid_historical_interval',
+            'publishing a historical interval requires a past end, source reference and authenticated actor');
+        }
+        // Lock the whole publication scope, including the current version. Historical
+        // supplements fill gaps; they never shorten or replace an existing interval.
+        $existing = $this->database->select(self::TABLE, 'p')->fields('p', ['id',
+          'effective_from', 'effective_to'])->condition('p.site_id', $siteId)
+          ->condition('p.book_kind', $kind)->condition('p.status', self::STATUS_ACTIVE)
+          ->forUpdate()->execute();
+        foreach ($existing as $row) {
+          if ((int) $row->effective_from < (int) $target['effective_to']
+            && ($row->effective_to === NULL
+              || (int) $row->effective_to > (int) $target['effective_from'])) {
+            throw new PriceBookException('overlapping_version',
+              'the historical interval overlaps a published price book');
+          }
+        }
+        $this->database->update(self::TABLE)->fields(['status' => self::STATUS_ACTIVE,
+          'activated_at' => $now, 'activated_by' => $activatedBy])
+          ->condition('id', $versionId)->execute();
+        return;
+      }
       // A draft created in the past must not be applied retroactively. A
       // future effective date remains scheduled, while the previous active
       // interval ends exactly at that date.
@@ -388,7 +429,7 @@ final class PriceBookService {
 
       $this->database->update(self::TABLE)
         ->fields(['status' => self::STATUS_ACTIVE, 'effective_from' => $effectiveFrom,
-          'effective_to' => NULL])
+          'effective_to' => NULL, 'activated_at' => $now, 'activated_by' => $activatedBy])
         ->condition('id', $versionId)
         ->condition('site_id', $siteId)
         ->condition('book_kind', $kind)
@@ -402,6 +443,16 @@ final class PriceBookService {
       }
       throw new PriceBookException('activate_failed', 'failed to activate price book version: ' . $e->getMessage(), $e);
     }
+  }
+
+  /** Loads a version for an authorized administrative workflow. */
+  public function loadVersion(int $versionId, bool $lock = FALSE): ?array {
+    $query = $this->database->select(self::TABLE, 'p')->fields('p')->condition('p.id', $versionId);
+    if ($lock) {
+      $query->forUpdate();
+    }
+    $row = $query->execute()->fetchAssoc();
+    return $row === FALSE ? NULL : $row;
   }
 
   /**

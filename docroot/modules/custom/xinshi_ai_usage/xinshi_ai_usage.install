@@ -79,6 +79,8 @@ function xinshi_ai_usage_schema(): array {
         'description' => 'NULL means open-ended; new version replaces active atomically.'],
       'created_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
       'created_by' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
+      'activated_at' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE],
+      'activated_by' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
     ],
     'primary key' => ['id'],
     'unique keys' => [
@@ -111,7 +113,7 @@ function xinshi_ai_usage_schema(): array {
       'unpriced_reason' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE,
         'description' => 'Short code explaining why cost is unpriced, e.g. unknown_model.'],
       'source_kind' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE, 'default' => 'price_book',
-        'description' => 'price_book or supplier_reconciliation.'],
+        'description' => 'price_book, price_book_backfill or supplier_reconciliation.'],
       'computed_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
     ],
     'primary key' => ['id'],
@@ -122,6 +124,24 @@ function xinshi_ai_usage_schema(): array {
       'operation_lookup' => ['site_id', 'attempt_id'],
       'valuation' => ['site_id', 'valuation_state'],
     ],
+  ];
+
+  $schema['ai_usage_cost_backfill'] = [
+    'description' => 'Append-only audit receipts for historical supplier cost backfills.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'site_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'price_version_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'original_cost_entry_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'cost_entry_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'actor_user_id' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE],
+      'reason' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE],
+      'preview_hash' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'created_at' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => ['cost_entry' => ['cost_entry_id']],
+    'indexes' => ['batch' => ['site_id', 'preview_hash']],
   ];
 
   $schema['ai_provider_attempt'] = [
@@ -323,7 +343,23 @@ function xinshi_ai_usage_schema(): array {
   return $schema;
 }
 
-/** Add the display preference without changing an existing site's choice. */
+/** Adds historical publication metadata and cost receipts without changing existing facts. */
+function xinshi_ai_usage_update_10010(): void {
+  $database = \Drupal::database();
+  $schema = $database->schema();
+  $definitions = xinshi_ai_usage_schema();
+  foreach (['activated_at', 'activated_by'] as $field) {
+    if (!$schema->fieldExists('ai_price_book_version', $field)) {
+      $schema->addField('ai_price_book_version', $field,
+        $definitions['ai_price_book_version']['fields'][$field]);
+    }
+  }
+  if (!$schema->tableExists('ai_usage_cost_backfill')) {
+    $schema->createTable('ai_usage_cost_backfill', $definitions['ai_usage_cost_backfill']);
+  }
+}
+
+/** Adds display currency configuration. */
 function xinshi_ai_usage_update_10009(): void {
   $config = \Drupal::configFactory()->getEditable('xinshi_ai_usage.currency');
   if ($config->get('currency') === NULL) {

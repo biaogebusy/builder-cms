@@ -100,8 +100,8 @@ final class UsageProjectionService {
   /**
    * Drops the projection, rollup and watermark of a site and replays its events.
    *
-   * Cost entries are immutable facts and stay; re-rating them is an idempotent
-   * no-op, so the rebuilt projection carries the same cost snapshot. Quarantined
+   * Cost entries are immutable facts and stay; replay uses the saved valuation,
+   * so the rebuilt projection carries the same cost snapshot. Quarantined
    * events get a fresh chance, since the replay may follow a code fix.
    *
    * @return array{locked:bool,claimed:int,applied:int,audited:int,skipped:int,failed:int,quarantined:int,remaining:int}
@@ -324,8 +324,13 @@ final class UsageProjectionService {
     // so the audit trail is complete even when the projection ignores it.
     $cost = NULL;
     if ($observed && $event['dispatch_state'] !== 'not_sent') {
-      $cost = $this->costRating->rateAttempt($siteId, $attemptId, $revision,
-        $event['provider'], $event['usage'], $occurredAt);
+      $saved = $this->costRating->savedRate($siteId, $attemptId, $revision);
+      // Preserve explicit supplements and original gap records across publication.
+      // Other original valuations still pass immutable conflict validation on replay.
+      $cost = $saved !== NULL && ($saved['source_kind'] !== CostRatingService::SOURCE_PRICE_BOOK
+        || $saved['unpriced_reason'] === 'no_price_book') ? $saved
+        : $this->costRating->rateAttempt($siteId, $attemptId, $revision,
+          $event['provider'], $event['usage'], $occurredAt);
     }
 
     if ($current !== NULL) {
@@ -453,6 +458,33 @@ final class UsageProjectionService {
       'currency' => $row['cost_currency'] === NULL || $row['cost_currency'] === ''
         ? self::NONE : (string) $row['cost_currency'],
     ];
+  }
+
+  /** Refreshes saved cost snapshots and affected cells within the caller's locked transaction. */
+  public function refreshCosts(string $siteId, array $rows): void {
+    $cells = [];
+    foreach ($rows as $row) {
+      $cost = $this->costRating->savedRate($siteId, $row['attempt_id'], (int) $row['usage_revision']);
+      if ($cost === NULL) {
+        throw new PriceBookException('missing_cost_entry', 'the saved cost entry is missing');
+      }
+      $before = $this->cellOf($row);
+      $fields = ['cost_valuation_state' => $cost['valuation_state'],
+        'cost_unpriced_reason' => $cost['unpriced_reason'], 'cost_currency' => $cost['currency'],
+        'cost_total_micros' => $cost['total_cost_micros'], 'updated_at' => $this->nowMs()];
+      $changed = $this->database->update(self::ATTEMPT_TABLE)->fields($fields)
+        ->condition('site_id', $siteId)->condition('id', $row['id'])
+        ->condition('usage_revision', $row['usage_revision'])->execute();
+      if ($changed !== 1) {
+        throw new PriceBookException('stale_preview', 'the cost projection changed during backfill');
+      }
+      $after = $this->cellOf(array_replace($row, $fields));
+      $cells[json_encode($before)] = $before;
+      $cells[json_encode($after)] = $after;
+    }
+    foreach ($cells as $cell) {
+      $this->recomputeCell($siteId, $cell);
+    }
   }
 
   /**

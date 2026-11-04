@@ -41,6 +41,10 @@ services:
     class: Drupal\xinshi_ai_usage\Service\UsageProjectionService
     arguments: ['@database', '@xinshi_ai_usage.cost_rating', '@lock', '@datetime.time', '@logger.channel.xinshi_ai_usage']
 
+  xinshi_ai_usage.cost_backfill:
+    class: Drupal\xinshi_ai_usage\Service\CostBackfillService
+    arguments: ['@database', '@xinshi_ai_usage.price_book', '@xinshi_ai_usage.cost_rating', '@xinshi_ai_usage.projection', '@datetime.time', '@current_user', '@settings', '@xinshi_ai_usage.producer_vault', '@lock']
+
   # Usage facts for model calls this installation makes itself (image jobs, UB2.4).
   xinshi_ai_usage.local_producer:
     class: Drupal\xinshi_ai_usage\Service\LocalUsageProducer

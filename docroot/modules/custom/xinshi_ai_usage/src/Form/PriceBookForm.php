@@ -8,6 +8,7 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
 use Drupal\xinshi_ai_usage\Service\CurrencyDisplay;
 use Drupal\xinshi_ai_usage\Contract\PriceCatalogFetcher;
 use Drupal\xinshi_ai_usage\Contract\UsageEventValidator;
@@ -186,7 +187,7 @@ final class PriceBookForm extends FormBase {
       '#type' => 'details',
       '#title' => $this->t('版本列表'),
       '#open' => TRUE,
-      '#description' => $this->t('草稿可在此设为生效；切换从激活时刻起生效并关闭当前版本，不回溯已发生的调用。'),
+      '#description' => $this->t('普通版本从激活时刻起切换。历史补充版本只覆盖指定的过去区间，不能与已发布版本重叠。发布历史价卡后，可单独预览并补算缺少价卡的历史成本。'),
     ];
     $form['overview']['reference'] = [
       '#type' => 'details', '#title' => $this->t('生效价格参考（@currency）', [
@@ -221,13 +222,15 @@ final class PriceBookForm extends FormBase {
           $row['currency'] = ['#plain_text' => $version['currency']];
           $row['status'] = ['#plain_text' => $this->statusLabel($version)];
           $row['range'] = ['#plain_text' => $version['status'] === PriceBookService::STATUS_ACTIVE
+            || $version['effective_to'] !== NULL
             ? $this->formatMs($version['effective_from']) . ' – '
               . ($version['effective_to'] === NULL ? $this->t('至今') : $this->formatMs($version['effective_to']))
             : ''];
           $row['source_ref'] = ['#plain_text' => $version['source_ref'] ?? ''];
           $row['activate'] = $version['status'] === PriceBookService::STATUS_DRAFT ? [
             '#type' => 'submit',
-            '#value' => $this->t('设为生效'),
+            '#value' => $version['effective_to'] === NULL
+              ? $this->t('设为生效') : $this->t('发布历史区间'),
             '#name' => 'activate:' . $siteId . ':' . $version['id'],
             '#version_id' => $version['id'],
             '#site_id' => $siteId,
@@ -235,6 +238,14 @@ final class PriceBookForm extends FormBase {
             '#submit' => ['::activateVersion'],
             '#limit_validation_errors' => [],
           ] : ['#plain_text' => ''];
+          if ($version['status'] === PriceBookService::STATUS_ACTIVE
+            && $version['effective_to'] !== NULL
+            && (int) $version['effective_to'] <= (int) round($this->time->getCurrentMicroTime() * 1000)
+            && $this->currentUser()->hasPermission('view site ai usage')
+            && $this->currentUser()->hasPermission('view ai supplier costs')) {
+            $row['activate'] = ['#type' => 'link', '#title' => $this->t('预览历史成本补算'),
+              '#url' => Url::fromRoute('xinshi_ai_usage.cost_backfill', ['version_id' => $version['id']])];
+          }
           unset($row);
         }
       }
@@ -343,9 +354,20 @@ final class PriceBookForm extends FormBase {
     $form['create']['source_ref'] = [
       '#type' => 'textfield',
       '#title' => $this->t('来源凭证'),
-      '#description' => $this->t('可选。供应商报价单、发票或合同编号，便于对账时追溯费率来源。'),
+      '#description' => $this->t('供应商报价单、发票或合同编号。补充历史区间时必须填写，费率须有该区间的采购凭证。'),
       '#maxlength' => 255,
     ];
+    $form['create']['historical'] = [
+      '#type' => 'checkbox', '#title' => $this->t('补充历史区间'),
+      '#description' => $this->t('填写过去的开始与结束时间。区间包含开始时刻，不包含结束时刻。保存价卡不会自动补算成本。'),
+    ];
+    foreach (['historical_from' => $this->t('历史生效开始'), 'historical_to' => $this->t('历史生效结束')] as $key => $title) {
+      $form['create'][$key] = ['#type' => 'textfield', '#title' => $title,
+        '#description' => $this->t('使用带时区和毫秒的时间，例如 2026-10-20T10:13:09.874+08:00。可复制版本列表的边界时间。'),
+        '#maxlength' => 29,
+        '#states' => ['visible' => [':input[name="historical"]' => ['checked' => TRUE]],
+          'required' => [':input[name="historical"]' => ['checked' => TRUE]]]];
+    }
 
     $form['create']['actions'] = ['#type' => 'actions'];
     $form['create']['actions']['save'] = [
@@ -367,6 +389,24 @@ final class PriceBookForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $form_state->set('historical_range', NULL);
+    if ($form_state->getValue('historical')) {
+      try {
+        $from = self::parseTimestamp((string) $form_state->getValue('historical_from'));
+        $to = self::parseTimestamp((string) $form_state->getValue('historical_to'));
+        if ($from < 0 || $to <= $from || $to > (int) round($this->time->getCurrentMicroTime() * 1000)) {
+          throw new PriceBookException('invalid_historical_interval', 'invalid historical boundaries');
+        }
+        $form_state->set('historical_range', [$from, $to]);
+      }
+      catch (PriceBookException) {
+        $form_state->setErrorByName('historical_from',
+          $this->t('请填写带时区和三位毫秒的有效时间。结束必须晚于开始，且不能晚于当前时间。'));
+      }
+      if (trim((string) $form_state->getValue('source_ref')) === '') {
+        $form_state->setErrorByName('source_ref', $this->t('补充历史区间必须填写采购来源凭证。'));
+      }
+    }
     $kind = (string) $form_state->getValue('book_kind');
     if (!in_array($kind, PriceBookService::KINDS, TRUE)) {
       $form_state->setErrorByName('book_kind', $this->t('价卡类型无效。'));
@@ -411,10 +451,15 @@ final class PriceBookForm extends FormBase {
     $sourceRef = (string) $form_state->getValue('source_ref');
     // Same clock as PriceBookService, so activation and lookup agree on "now".
     $now = (int) round($this->time->getCurrentMicroTime() * 1000);
+    $range = $form_state->get('historical_range');
+    if ($form_state->getValue('historical') && !is_array($range)) {
+      $this->messenger()->addError($this->t('请先校验历史生效区间。'));
+      return;
+    }
 
     try {
-      $id = $this->priceBook->createDraft($siteId, $kind, $version, $currency, $ratesJson, $now,
-        $sourceRef, (string) $this->currentUser()->id());
+      $id = $this->priceBook->createDraft($siteId, $kind, $version, $currency, $ratesJson,
+        $range[0] ?? $now, $sourceRef, (string) $this->currentUser()->id(), $range[1] ?? NULL);
     }
     catch (PriceBookException $e) {
       $this->messenger()->addError($e->getMessage());
@@ -424,7 +469,7 @@ final class PriceBookForm extends FormBase {
     $trigger = $form_state->getTriggeringElement()['#name'] ?? '';
     if ($trigger === 'save_and_activate') {
       try {
-        $this->priceBook->activate($id, $siteId, $kind);
+        $this->priceBook->activate($id, $siteId, $kind, (string) $this->currentUser()->id());
         $this->messenger()->addStatus($this->t('版本 @version 已设为生效。', ['@version' => $version]));
       }
       catch (PriceBookException $e) {
@@ -565,7 +610,7 @@ final class PriceBookForm extends FormBase {
       return;
     }
     try {
-      $this->priceBook->activate($versionId, $siteId, $kind);
+      $this->priceBook->activate($versionId, $siteId, $kind, (string) $this->currentUser()->id());
       $this->messenger()->addStatus($this->t('版本已设为生效。'));
     }
     catch (PriceBookException $e) {
@@ -604,7 +649,17 @@ final class PriceBookForm extends FormBase {
   }
 
   private function formatMs(int $ms): string {
-    return gmdate('Y-m-d H:i:s', intdiv($ms, 1000)) . ' UTC';
+    return gmdate('Y-m-d\TH:i:s', intdiv($ms, 1000))
+      . '.' . str_pad((string) ($ms % 1000), 3, '0', STR_PAD_LEFT) . '+00:00';
+  }
+
+  private static function parseTimestamp(string $value): int {
+    $date = \DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s.vP', $value);
+    if ($date === FALSE || $date->format('Y-m-d\TH:i:s.vP') !== $value
+      || !preg_match('/[+-](?:0[0-9]|1[0-4]):[0-5][0-9]$/', $value)) {
+      throw new PriceBookException('invalid_timestamp', 'a precise timestamp with timezone is required');
+    }
+    return $date->getTimestamp() * 1000 + (int) $date->format('v');
   }
 
   /**

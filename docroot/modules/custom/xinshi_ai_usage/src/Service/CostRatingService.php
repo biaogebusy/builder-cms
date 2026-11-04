@@ -42,6 +42,7 @@ final class CostRatingService {
   public const STATE_RECONCILED = 'reconciled';
   public const SOURCE_PRICE_BOOK = 'price_book';
   public const SOURCE_SUPPLIER_RECONCILIATION = 'supplier_reconciliation';
+  public const SOURCE_PRICE_BOOK_BACKFILL = 'price_book_backfill';
   public const MILLION = 1_000_000;
   /** Normalizer versions of image attempts; see ImageUsageNormalizer::VERSION. */
   public const IMAGE_NORMALIZER_PREFIX = 'images-';
@@ -79,7 +80,8 @@ final class CostRatingService {
   public function rateAttempt(string $siteId, string $attemptId, int $observationRevision,
     array $provider, ?array $usage, int $occurredAtMs,
     string $sourceKind = self::SOURCE_PRICE_BOOK): array {
-    if (!in_array($sourceKind, [self::SOURCE_PRICE_BOOK, self::SOURCE_SUPPLIER_RECONCILIATION], TRUE)) {
+    if (!in_array($sourceKind, [self::SOURCE_PRICE_BOOK, self::SOURCE_SUPPLIER_RECONCILIATION,
+      self::SOURCE_PRICE_BOOK_BACKFILL], TRUE)) {
       throw new PriceBookException('invalid_source_kind', 'unsupported cost entry source kind');
     }
     $result = $this->computeRate($siteId, $provider, $usage, $occurredAtMs);
@@ -199,6 +201,21 @@ final class CostRatingService {
     // before the NULL placeholders of the columns this kind does not use.
     return ['valuation_state' => self::STATE_RATED_ESTIMATE, 'unpriced_reason' => NULL] + $base
       + $costs + $unpriced;
+  }
+
+  /** Replays saved valuations; publishing a historical book must not rewrite original facts. */
+  public function savedRate(string $siteId, string $attemptId, int $revision): ?array {
+    $query = $this->database->select(self::TABLE, 'c')->fields('c')
+      ->condition('c.site_id', $siteId)->condition('c.attempt_id', $attemptId)
+      ->condition('c.observation_revision', $revision)
+      ->condition('c.source_kind', [self::SOURCE_PRICE_BOOK, self::SOURCE_PRICE_BOOK_BACKFILL,
+        self::SOURCE_SUPPLIER_RECONCILIATION], 'IN');
+    // Supplier reconciliation stays authoritative even if a supplement was saved later.
+    $query->addExpression("CASE c.source_kind WHEN 'supplier_reconciliation' THEN 3 "
+      . "WHEN 'price_book_backfill' THEN 2 ELSE 1 END", 'source_priority');
+    $row = $query->orderBy('source_priority', 'DESC')->orderBy('c.id', 'DESC')
+      ->range(0, 1)->execute()->fetchAssoc();
+    return $row === FALSE ? NULL : $row;
   }
 
   /**

@@ -44,6 +44,19 @@ xinshi_ai_usage.price_book:
   options:
     _admin_route: TRUE
 
+xinshi_ai_usage.cost_backfill:
+  path: '/admin/config/xinshi/ai/usage/pricing/{version_id}/backfill'
+  defaults:
+    _form: '\Drupal\xinshi_ai_usage\Form\CostBackfillForm'
+    _title: '历史成本补算'
+  requirements:
+    _permission: 'administer xinshi ai pricing,view site ai usage,view ai supplier costs'
+    _user_is_logged_in: 'TRUE'
+    version_id: '[1-9][0-9]*'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+
 # Chat and image model suggestions for the price book prefill field. Read-only and
 # admin-only; a failed catalog fetch yields an empty suggestion list.
 xinshi_ai_usage.price_catalog_autocomplete:

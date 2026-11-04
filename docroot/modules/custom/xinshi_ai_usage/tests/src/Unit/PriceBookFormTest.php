@@ -450,6 +450,46 @@ final class PriceBookFormTest extends TestCase {
       $this->priceBook->loadActive('app.example', PriceBookService::KIND_SUPPLIER_IMAGE));
   }
 
+  public function testHistoricalFormPreservesTimezoneAndMillisecondBoundaries(): void {
+    $this->vault->set('chat-node', 'secret', 'app.example', $this->now);
+    $form = $this->form();
+    $state = (new FormState())->setValues([
+      'site_id' => 'app.example', 'book_kind' => self::KIND, 'version' => 'history',
+      'currency' => 'CNY', 'source_ref' => 'contract', 'historical' => TRUE,
+      'historical_from' => '2023-11-15T06:13:19.123+08:00',
+      'historical_to' => '2023-11-15T06:13:20.250+08:00',
+      'rates_json' => '{"accounts":{"xinshi":{"models":{"model-a":{"per_million_input":1,'
+        . '"per_million_cache_read":0,"per_million_cache_write":0,"per_million_output":1}}}}}',
+    ]);
+    $built = $form->buildForm([], $state);
+    $form->validateForm($built, $state);
+    $this->assertSame([], $state->getErrors());
+    $this->assertSame([1_699_999_999_123, 1_700_000_000_250], $state->get('historical_range'));
+    $state->setTriggeringElement(['#name' => 'save_and_activate']);
+    $form->submitForm($built, $state);
+    $version = $this->priceBook->listVersions('app.example', self::KIND)[0];
+    $this->assertSame(1_699_999_999_123, (int) $version['effective_from']);
+    $this->assertSame(1_700_000_000_250, (int) $version['effective_to']);
+    $built = $form->buildForm([], new FormState());
+    $this->assertStringContainsString('2023-11-14T22:13:19.123+00:00',
+      $built['versions']['table']['app.example:' . $version['id']]['range']['#plain_text']);
+  }
+
+  public function testHistoricalFormRejectsInvalidDatesAndMissingSource(): void {
+    $form = $this->form();
+    foreach (['2023-11-14T22:13:19Z', '2023-02-30T22:13:19.123+00:00',
+      '2023-11-14T22:13:20.251+00:00'] as $date) {
+      $state = (new FormState())->setValues(['historical' => TRUE, 'historical_from' => $date,
+        'historical_to' => '2023-11-14T22:13:20.250+00:00', 'source_ref' => '',
+        'book_kind' => self::KIND, 'rates_json' => json_encode(PriceBookForm::seedRates())]);
+      $built = [];
+      $form->validateForm($built, $state);
+      $this->assertArrayHasKey('historical_from', $state->getErrors());
+      $this->assertArrayHasKey('source_ref', $state->getErrors());
+      $this->assertNull($state->get('historical_range'));
+    }
+  }
+
   private function form(array $settings = [], ?PriceCatalogFetcher $catalog = NULL,
     ?CurrencyDisplay $display = NULL): PriceBookForm {
     $requests = new RequestStack();
