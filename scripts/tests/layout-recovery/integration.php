@@ -39,7 +39,7 @@ preg_match('/function xinshi_editor_block_alter\(.*?\n\}/s', $module, $match);
 file_put_contents($editor . '/xinshi_editor.module', '<?php ' . $match[0]);
 file_put_contents($editor . '/xinshi_editor.install', '<?php');
 require '/app/docroot/modules/custom/xinshi_chat/tests/install-fixture.php';
-\Drupal::service('module_installer')->install(['language', 'content_translation', 'layout_builder_at', 'block_content', 'xinshi_editor']);
+\Drupal::service('module_installer')->install(['language', 'content_translation', 'layout_builder', 'block_content', 'xinshi_editor']);
 foreach (['zh-hans', 'zh-hant'] as $langcode) {
   ConfigurableLanguage::createFromLangcode($langcode)->save();
 }
@@ -181,6 +181,23 @@ function layoutRun(array $options = [], bool $success = TRUE, string $script = '
 }
 \Drupal::state()->set('system.maintenance_mode', TRUE);
 $backup = '/tmp/chat-test/recovery-backup.sql';
+$beforeEnable = layoutImmutable();
+$targetsBeforeEnable = layoutTargets();
+$blocked = layoutRun([], FALSE);
+layoutCheck(str_contains($blocked['output'], 'Required module is not enabled: layout_builder_at') &&
+  str_contains($blocked['output'], 'translatable Layout Builder field storage'),
+  'An existing untranslatable storage and disabled translation module block recovery');
+\Drupal::service('module_installer')->install(['layout_builder_at']);
+layoutCheck(\Drupal::service('config.storage')->read('field.storage.node.layout_builder__layout')['translatable'] === TRUE,
+  'Actual asymmetric translation module installation makes existing storage translatable');
+layoutCheck(layoutImmutable() === $beforeEnable && layoutTargets() === $targetsBeforeEnable,
+  'Enabling asymmetric translation preserves existing layout rows, source content and bundle displays');
+$process = proc_open([PHP_BINARY, '/app/vendor/drush/drush/drush.php', '--root=/app/docroot',
+  '--uri=http://chat-test', 'cache:rebuild'], [1 => ['pipe', 'w'], 2 => ['redirect', 1]], $pipes, '/app');
+$output = stream_get_contents($pipes[1]); fclose($pipes[1]);
+$exit = proc_close($process);
+if ($exit !== 0) { fwrite(STDERR, $output); }
+layoutCheck($exit === 0, 'Cache rebuild publishes the installed translation module to a fresh CLI');
 $dump = layoutRun([], TRUE);
 if (getenv('XINSHI_CHAT_TEST_MYSQL') === '1') {
   $process = proc_open([PHP_BINARY, '/app/vendor/drush/drush/drush.php', '--root=/app/docroot',
