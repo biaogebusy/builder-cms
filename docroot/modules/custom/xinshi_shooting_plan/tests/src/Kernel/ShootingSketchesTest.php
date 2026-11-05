@@ -185,6 +185,7 @@ final class ShootingSketchesTest extends TestCase {
     $this->assertSame($inputs,
       array_column($job->get('field_input_image')->getValue(), 'target_id'));
     $this->assertStringContainsString('Reference ' . count($inputs) . ' is the approved continuity frame', $job->get('field_prompt')->value);
+    $this->assertSame($job->get('field_prompt')->value, $next['shot_2']['submittedPrompt']);
     $this->assertSame($next, $this->submit());
     $this->assertTrue($this->sketches->admits($job));
     $job->set('field_status', 'succeeded')->set('field_assets', [['target_id' => $asset->id()]])->save();
@@ -197,9 +198,35 @@ final class ShootingSketchesTest extends TestCase {
     $global->set('field_media_image', ['target_id' => $replacement->id(), 'alt' => 'Replacement'])->save();
     $projection = $this->read()['shot_2'];
     $this->assertTrue($projection['sourceUnavailable']);
+    $this->assertArrayNotHasKey('submittedPrompt', $projection);
     $this->assertArrayNotHasKey('src', $projection);
     $this->assertSame($job->uuid(), $projection['jobId']);
     $this->assertFalse($this->sketches->admits($job));
+  }
+
+  public function testAppliedPromptNeedsAnExplicitRetryAndExpiresWhenTheSceneChanges(): void {
+    $first = $this->submit();
+    $job = $this->lifecycle->loadJobByUuid($first['shot_1']['jobId']);
+    $this->lifecycle->markFailed($job, 'Rejected before dispatch', 'content_policy');
+    $source = ShootingDocumentAccess::prompts($this->doc)['shot_1'];
+    $prompt = 'Single storyboard frame, 9:16, pencil illustration. A presenter beside a desk.';
+    $this->doc['visuals']['promptOverrides']['shot_1'] = [
+      'sourceHash' => hash('sha256', json_encode([$source, NULL],
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_LINE_TERMINATORS | JSON_THROW_ON_ERROR)),
+      'prompt' => $prompt,
+    ];
+    $this->saveDoc();
+    $saved = $this->read()['shot_1'];
+    $this->assertSame($first['shot_1']['jobId'], $saved['jobId']);
+    $this->assertSame($source, $saved['submittedPrompt']);
+    $this->assertTrue($saved['stale']);
+    $next = $this->submit(['shotId' => 'shot_1', 'previousJobId' => $job->uuid()]);
+    $this->assertSame($prompt, $next['shot_1']['submittedPrompt']);
+    $this->assertFalse($next['shot_1']['stale']);
+    $this->doc['draft']['shots'][0]['visual'] = 'A different room';
+    $this->saveDoc();
+    $this->assertTrue($this->read()['shot_1']['stale']);
+    $this->assertStringContainsString('A different room', ShootingDocumentAccess::prompts($this->doc)['shot_1']);
   }
 
   public function testReferenceVersionsAndCurrentSourceAccessAreRequired(): void {

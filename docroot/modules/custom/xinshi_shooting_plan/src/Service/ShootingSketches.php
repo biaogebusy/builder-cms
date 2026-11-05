@@ -415,7 +415,7 @@ final class ShootingSketches {
         !$this->account->hasPermission('bypass node access')) {
         throw new AccessDeniedHttpException();
       }
-      $this->requireFields($job, ['field_status', 'field_error_code', 'field_assets', 'field_params']);
+      $this->requireFields($job, ['field_status', 'field_error_code', 'field_assets', 'field_params', 'field_prompt']);
       if ($job->hasField('field_input_image') && !$job->get('field_input_image')->isEmpty()) {
         try {
           $this->requireAnchorSources($job);
@@ -472,6 +472,9 @@ final class ShootingSketches {
         'inputKey' => $job ? (json_decode((string) $job->get('field_params')->value, TRUE)['shootingInput'] ?? '') : '',
         'model' => $row['model'], 'status' => $status, 'retryable' => $job && $this->retryable($job)];
       $value['sourceUnavailable'] = isset($unavailable[$row['job_uuid']]);
+      if ($job && !$value['sourceUnavailable']) {
+        $value['submittedPrompt'] = (string) $job->get('field_prompt')->value;
+      }
       if ($job && $status === 'failed') {
         $code = (string) $job->get('field_error_code')->value;
         // Correct the read projection of existing failures without rewriting task history.

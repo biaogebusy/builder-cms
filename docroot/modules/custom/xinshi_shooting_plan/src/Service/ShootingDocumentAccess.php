@@ -290,6 +290,13 @@ final class ShootingDocumentAccess {
         "rendering style and keep character identity, clothing and product geometry consistent " .
         "with it. The chosen rendering style and this shot's composition take priority over " .
         "reference framing.";
+      $source_hash = hash('sha256', json_encode([
+        $prompts[$shot['id']], $ref ? [$ref['mediaId'], $ref['fileId']] : NULL,
+      ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_LINE_TERMINATORS | JSON_THROW_ON_ERROR));
+      $override = $visuals['promptOverrides'][$shot['id']] ?? NULL;
+      if ($override && $override['sourceHash'] === $source_hash) {
+        $prompts[$shot['id']] = $override['prompt'];
+      }
     }
     return $prompts;
   }

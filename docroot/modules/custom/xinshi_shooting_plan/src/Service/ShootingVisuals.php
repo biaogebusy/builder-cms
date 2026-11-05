@@ -17,10 +17,24 @@ final class ShootingVisuals {
   ];
 
   public static function validate(mixed $value): void {
-    if (!is_array($value) || array_diff(array_keys($value), ['reference', 'anchorShotId', 'confirmedJobId']) ||
+    if (!is_array($value) || array_diff(array_keys($value), ['reference', 'anchorShotId', 'confirmedJobId', 'promptOverrides']) ||
       (array_key_exists('anchorShotId', $value) && !self::shot($value['anchorShotId'])) ||
       (array_key_exists('confirmedJobId', $value) && (!is_string($value['confirmedJobId']) || !Uuid::isValid($value['confirmedJobId'])))) {
       throw new UnprocessableEntityHttpException('shooting_visuals_invalid');
+    }
+    if (array_key_exists('promptOverrides', $value)) {
+      $overrides = $value['promptOverrides'];
+      if (!is_array($overrides) || count($overrides) > 24) {
+        throw new UnprocessableEntityHttpException('shooting_prompt_invalid');
+      }
+      foreach ($overrides as $id => $item) {
+        if (!self::shot((string) $id) || !is_array($item) || count($item) !== 2 ||
+          !is_string($item['sourceHash'] ?? NULL) || !preg_match('/^[a-f0-9]{64}$/D', $item['sourceHash']) ||
+          !is_string($item['prompt'] ?? NULL) || trim($item['prompt']) === '' ||
+          strlen(mb_convert_encoding($item['prompt'], 'UTF-16LE', 'UTF-8')) / 2 > 4000) {
+          throw new UnprocessableEntityHttpException('shooting_prompt_invalid');
+        }
+      }
     }
     if (array_key_exists('reference', $value)) {
       $ref = $value['reference'];
