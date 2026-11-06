@@ -119,8 +119,8 @@ foreach ([FALSE, TRUE] as $moderated) {
   try {
     $response = $capabilitiesController();
     $data = json_decode($response->getContent(), TRUE, 512, JSON_THROW_ON_ERROR);
-    check($response->getStatusCode() === 200 && $data === ['uid' => (string) $limited->id(), 'permissions' => []],
-      'Limited authenticated account receives its own uid and no draft permissions, ' . $phase);
+    check($response->getStatusCode() === 200 && $data === ['uid' => (string) $limited->id(), 'permissions' => ['pages.read']],
+      'Limited authenticated account receives its own uid and only published-page reading, ' . $phase);
     check(str_contains($response->headers->get('Cache-Control'), 'no-store'),
       'Capabilities remain uncacheable, ' . $phase);
   }

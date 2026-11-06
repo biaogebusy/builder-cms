@@ -43,15 +43,31 @@ final class PageDraftService {
   }
 
   public function capabilities(): array {
-    $permissions = $this->canCreate() ? ['pages.create_draft'] : [];
-    if (!$this->account->isAuthenticated() || !$this->database->schema()->tableExists(self::TABLE)) {
+    $permissions = [];
+    if (!$this->account->isAuthenticated()) {
       return $permissions;
+    }
+    $published = $this->entities->getStorage('node')->create([
+      'type' => 'landing_page', 'title' => 'Page', 'uid' => $this->account->id(),
+      'langcode' => $this->languages->getDefaultLanguage()->getId(), 'status' => TRUE,
+    ]);
+    if ($published->access('view', $this->account)) {
+      $permissions[] = 'pages.read';
+    }
+    if (!$this->database->schema()->tableExists(self::TABLE)) {
+      return $permissions;
+    }
+    if ($this->canCreate()) {
+      $permissions[] = 'pages.create_draft';
     }
     $node = $this->entities->getStorage('node')->create([
       'type' => 'landing_page', 'title' => 'Draft', 'uid' => $this->account->id(),
       'langcode' => $this->languages->getDefaultLanguage()->getId(), 'status' => FALSE,
     ]);
     if ($node->access('view', $this->account)) {
+      if (!in_array('pages.read', $permissions, TRUE)) {
+        $permissions[] = 'pages.read';
+      }
       $permissions[] = 'pages.read_draft';
       $format = $this->entities->getStorage('filter_format')->load('json');
       if ($node->access('update', $this->account) && $format &&
@@ -78,6 +94,28 @@ final class PageDraftService {
 
   public function readDraft(string $page_id): array {
     return $this->snapshot($this->ownedDraft($page_id, 'view'));
+  }
+
+  /** Read the current default revision without granting any draft write authority. */
+  public function readPage(string $page_id): array {
+    $node = $this->loadPage($page_id);
+    foreach ($node->getTranslationLanguages() as $langcode => $language) {
+      $translation = $node->getTranslation($langcode);
+      if (!$translation->access('view', $this->account)) {
+        throw new PageDraftException('permission_denied', 403);
+      }
+      if (!$translation->hasField('layout_builder__layout')) {
+        throw new PageDraftException('draft_not_supported', 409);
+      }
+      // Core forbids raw layout field access for everyone. Like page rendering,
+      // expose only components under page/block access, never internal layout data.
+      foreach (['title', 'langcode', 'status'] as $field) {
+        if (!$translation->get($field)->access('view', $this->account)) {
+          throw new PageDraftException('permission_denied', 403);
+        }
+      }
+    }
+    return $this->snapshot($node, TRUE);
   }
 
   public function changeDraft(string $execution_id, mixed $input): array {
@@ -226,6 +264,29 @@ final class PageDraftService {
   }
 
   private function ownedDraft(string $page_id, string $operation): NodeInterface {
+    $node = $this->loadPage($page_id);
+    foreach ($node->getTranslationLanguages() as $langcode => $language) {
+      $translation = $node->getTranslation($langcode);
+      if ((string) $translation->getOwnerId() !== (string) $this->account->id() ||
+        !$translation->access('view', $this->account) ||
+        !$translation->access($operation, $this->account)) {
+        throw new PageDraftException('permission_denied', 403);
+      }
+      if ($translation->isPublished()) {
+        throw new PageDraftException('not_draft', 409);
+      }
+    }
+    $storage = $this->entities->getStorage('node');
+    if ((string) $storage->getLatestRevisionId($page_id) !== (string) $node->getRevisionId()) {
+      throw new PageDraftException('version_conflict', 409);
+    }
+    if (!$node->hasField('layout_builder__layout')) {
+      throw new PageDraftException('draft_not_supported', 409);
+    }
+    return $node;
+  }
+
+  private function loadPage(string $page_id): NodeInterface {
     if (!preg_match('/^[1-9][0-9]*$/D', $page_id)) {
       throw new PageDraftException('invalid_input', 422);
     }
@@ -238,27 +299,10 @@ final class PageDraftService {
     if (!$node instanceof NodeInterface || $node->bundle() !== 'landing_page') {
       throw new PageDraftException('page_not_found', 404);
     }
-    foreach ($node->getTranslationLanguages() as $langcode => $language) {
-      $translation = $node->getTranslation($langcode);
-      if ((string) $translation->getOwnerId() !== (string) $this->account->id() ||
-        !$translation->access('view', $this->account) ||
-        !$translation->access($operation, $this->account)) {
-        throw new PageDraftException('permission_denied', 403);
-      }
-      if ($translation->isPublished()) {
-        throw new PageDraftException('not_draft', 409);
-      }
-    }
-    if ((string) $storage->getLatestRevisionId($page_id) !== (string) $node->getRevisionId()) {
-      throw new PageDraftException('version_conflict', 409);
-    }
-    if (!$node->hasField('layout_builder__layout')) {
-      throw new PageDraftException('draft_not_supported', 409);
-    }
     return $node;
   }
 
-  private function snapshot(NodeInterface $node): array {
+  private function snapshot(NodeInterface $node, bool $check_read_access = FALSE): array {
     $body = [];
     $version = [];
     $storage = $this->entities->getStorage('block_content');
@@ -274,16 +318,33 @@ final class PageDraftService {
         foreach ($components as $component) {
           $configuration = $component->toArray()['configuration'];
           $plugin = $configuration['id'] ?? '';
-          if (!str_starts_with($plugin, 'block_content:')) {
+          if (str_starts_with($plugin, 'block_content:')) {
+            // Legacy references use the current block, as in the builder reader.
+            $matches = $storage->loadByProperties(['uuid' => substr($plugin, 14)]);
+            $block = reset($matches);
+          }
+          elseif ($check_read_access && $plugin === 'inline_block:json' &&
+            empty($configuration['block_serialized']) &&
+            preg_match('/^[1-9][0-9]*$/D', (string) ($configuration['block_revision_id'] ?? ''))) {
+            // Ordinary Builder pages pin an inline block revision. Do not grant
+            // draft writes or substitute a newer block for this stored reference.
+            $block = $storage->loadRevision($configuration['block_revision_id']);
+          }
+          else {
             throw new PageDraftException('draft_not_supported', 409);
           }
-          // Match the builder reader, which uses the current block and its translation.
-          $matches = $storage->loadByProperties(['uuid' => substr($plugin, 14)]);
-          $block = reset($matches);
           if (!$block || $block->bundle() !== 'json') {
             throw new PageDraftException('draft_not_supported', 409);
           }
           $block = $block->hasTranslation($langcode) ? $block->getTranslation($langcode) : $block;
+          if ($check_read_access) {
+            // Bind non-reusable blocks to the page that actually references them.
+            $block->setAccessDependency($translation);
+            if (!$block->access('view', $this->account) ||
+              !$block->get('body')->access('view', $this->account)) {
+              throw new PageDraftException('permission_denied', 403);
+            }
+          }
           $contents[] = $block->toArray();
           if ($langcode === $node->language()->getId()) {
             $component_body = json_decode($block->get('body')->value, FALSE, 64, JSON_THROW_ON_ERROR);
@@ -298,7 +359,9 @@ final class PageDraftService {
       $values['layout_builder__layout'] = $layout;
       $version[$langcode] = [$values, $contents];
     }
-    return $this->pageResult($node) + [
+    $result = $this->pageResult($node);
+    $result['status'] = $node->isPublished() ? 'published' : 'draft';
+    return $result + [
       'title' => $node->label(), 'langcode' => $node->language()->getId(), 'body' => $body,
       // Content participates too: legacy editors can update blocks without changing node vid.
       'version' => hash('sha256', json_encode($version, JSON_THROW_ON_ERROR)),

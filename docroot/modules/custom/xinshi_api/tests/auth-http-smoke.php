@@ -365,6 +365,7 @@ NGINX);
   check((int) \Drupal::database()->select('node')->countQuery()->execute()->fetchField() === $node_count,
     'Rejected and validation-only requests created no additional page or image job entities');
   check(\Drupal::queue('xinshi_ai_image_job')->numberOfItems() === 0, 'No provider work was enqueued');
+  require __DIR__ . '/page-read-http.php';
   echo 'Isolated HTTP authentication checks passed: ' . $checks . '.' . PHP_EOL;
 }
 finally {

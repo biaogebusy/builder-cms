@@ -39,12 +39,12 @@ final class HarnessSettings {
       'get_design_system' => '设计系统建议',
       'analyze_image' => '图片理解',
     ]],
-    'pages' => ['label' => '页面草稿', 'tools' => [
+    'pages' => ['label' => '页面', 'tools' => [
       'create_page' => '创建草稿',
-      'get_page' => '读取本人草稿',
+      'get_page' => '读取页面',
       'apply_widget' => '追加组件',
       'delete_page' => '删除本人草稿',
-      'get_page_range' => '读取草稿组件范围',
+      'get_page_range' => '读取页面组件范围',
     ]],
     'product_documents' => ['label' => '产品资料（MCP）', 'tools' => [
       'search_product_documents' => '搜索产品资料',

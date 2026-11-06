@@ -48,6 +48,8 @@ final class PageDraftServiceTest extends TestCase {
   private bool $failNodeDelete = FALSE;
   private ?int $latestRevision = NULL;
   private array $entityGrants = ['view' => TRUE, 'update' => TRUE, 'delete' => TRUE];
+  private array $deniedFields = [];
+  private bool $blockView = TRUE;
   private int $blockSaves = 0;
   private ?int $failBlockSaveAt = NULL;
   private int $nextId = 0;
@@ -227,15 +229,22 @@ final class PageDraftServiceTest extends TestCase {
         fn() => empty($this->created[$id]['values']['layout_builder__layout']));
       $field->method('getSections')->willReturnCallback(
         fn() => $this->created[$id]['values']['layout_builder__layout'] ?? []);
-      $entity->method('get')->with('layout_builder__layout')->willReturn($field);
+      $field->method('access')->willReturn(FALSE);
+      $fields = ['layout_builder__layout' => $field];
+      foreach (['title', 'langcode', 'status'] as $name) {
+        $fields[$name] = $this->createMock(FieldItemListInterface::class);
+        $fields[$name]->method('access')->willReturnCallback(fn() => !in_array($name, $this->deniedFields, TRUE));
+      }
+      $entity->method('get')->willReturnCallback(fn($name) => $fields[$name]);
     }
     else {
       $field = $this->createMock(FieldItemListInterface::class);
       $field->method('__get')->with('value')->willReturnCallback(
         fn() => $this->created[$id]['values']['body']['value']);
+      $field->method('access')->willReturnCallback(fn() => !in_array('body', $this->deniedFields, TRUE));
       $entity->method('get')->with('body')->willReturn($field);
     }
-    $entity->method('access')->willReturnCallback(fn($operation) => $this->entityGrants[$operation]);
+    $entity->method('access')->willReturnCallback(fn($operation) => $type === 'block_content' && $operation === 'view' ? $this->blockView : $this->entityGrants[$operation]);
     $entity->method('isPublished')->willReturnCallback(fn() => $this->created[$id]['values']['status']);
     $entity->method('set')->willReturnCallback(function ($name, $value) use ($entity, $id) {
       $this->created[$id]['values'][$name] = $value;
@@ -481,6 +490,83 @@ final class PageDraftServiceTest extends TestCase {
       $input->body = [(object) ['type' => 'btn', 'label' => '了解更多', 'href' => '/node/1', 'mode' => 'raised']];
     }
     return $input;
+  }
+
+  public function testReadPagePreservesTheDraftVersionAndAllowsAuthorizedNonOwners(): void {
+    $page = $this->newDraft();
+    self::assertEquals($page, $this->drafts()->readPage($page['id']));
+    $this->uid = '8';
+    self::assertEquals($page, $this->drafts()->readPage($page['id']));
+    foreach (['append', 'delete'] as $action) {
+      $this->refuses(fn() => $this->drafts()->changeDraft((new Uuid())->generate(),
+        $this->changeInput($page, $action)), 'permission_denied');
+    }
+    $this->entityGrants['view'] = FALSE;
+    $this->refuses(fn() => $this->drafts()->readPage($page['id']), 'permission_denied');
+    self::assertSame(1, $this->countRows('xinshi_page_draft_operation'));
+  }
+
+  public function testPublishedDefaultRevisionIsReadableButNeverWritableAsDraft(): void {
+    $page = $this->newDraft();
+    $node = $this->created[$page['id']]['entity'];
+    $node->set('status', TRUE);
+    $node->save();
+    $this->latestRevision = 999;
+    $published = $this->drafts()->readPage($page['id']);
+    self::assertSame('published', $published['status']);
+    self::assertEquals($page['body'], $published['body']);
+    $this->refuses(fn() => $this->drafts()->readDraft($page['id']), 'not_draft');
+    foreach (['append', 'delete'] as $action) {
+      $this->refuses(fn() => $this->drafts()->changeDraft((new Uuid())->generate(),
+        $this->changeInput($published, $action)), 'not_draft');
+    }
+    self::assertSame(1, $this->countRows('xinshi_page_draft_operation'));
+  }
+
+  public function testReadChecksFieldsBlocksAndEveryTranslationWithoutWriting(): void {
+    $page = $this->newDraft();
+    foreach (['title', 'langcode', 'status', 'body'] as $field) {
+      $this->deniedFields = [$field];
+      $this->refuses(fn() => $this->drafts()->readPage($page['id']), 'permission_denied');
+    }
+    $this->deniedFields = [];
+    $this->blockView = FALSE;
+    $this->refuses(fn() => $this->drafts()->readPage($page['id']), 'permission_denied');
+    $this->blockView = TRUE;
+    $translation = $this->createMock(Node::class);
+    $translation->method('language')->willReturn(new Language(['id' => 'fr']));
+    $translation->method('access')->willReturn(FALSE);
+    $this->created[$page['id']]['translations']['fr'] = $translation;
+    $this->refuses(fn() => $this->drafts()->readPage($page['id']), 'permission_denied');
+    self::assertSame(2, $this->countRows('draft_test_entity'));
+    self::assertSame(1, $this->countRows('xinshi_page_draft_operation'));
+  }
+
+  public function testReadCapabilityDoesNotRequireDraftOperationStorage(): void {
+    $this->database->schema()->dropTable('xinshi_page_draft_operation');
+    self::assertSame(['pages.read'], $this->drafts()->capabilities());
+  }
+
+  public function testReadRouteAndControllerKeepSafeReasonsAndPrivateResponses(): void {
+    $routes = Yaml::parseFile(dirname(__DIR__, 3) . '/xinshi_api.routing.yml');
+    $route = $routes['xinshi_api.v3.landingPage.read'];
+    self::assertSame('/api/v3/landingPage/page/{page_id}', $route['path']);
+    self::assertSame(['GET'], $route['methods']);
+    self::assertSame('TRUE', $route['requirements']['_user_is_logged_in']);
+    self::assertSame(['oauth2', 'cookie'], $route['options']['_auth']);
+    self::assertTrue($route['options']['no_cache']);
+    $page = $this->newDraft();
+    $controller = new PageDraftController($this->drafts());
+    foreach ([[$page['id'], 200], ['9999', 404]] as [$id, $status]) {
+      $response = $controller->readPage($id);
+      self::assertSame($status, $response->getStatusCode());
+      self::assertTrue($response->headers->hasCacheControlDirective('private'));
+      self::assertTrue($response->headers->hasCacheControlDirective('no-store'));
+    }
+    $this->entityGrants['view'] = FALSE;
+    $response = $controller->readPage($page['id']);
+    self::assertSame(403, $response->getStatusCode());
+    self::assertSame(['code' => 'permission_denied'], json_decode($response->getContent(), TRUE));
   }
 
   public function testAppendPreservesPageAndOriginalBlocksInBuilderPreview(): void {

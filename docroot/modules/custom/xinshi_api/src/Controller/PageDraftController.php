@@ -34,8 +34,17 @@ final class PageDraftController extends ControllerBase {
   }
 
   public function readDraft(string $page_id): JsonResponse {
+    return $this->read($page_id, TRUE);
+  }
+
+  public function readPage(string $page_id): JsonResponse {
+    return $this->read($page_id, FALSE);
+  }
+
+  private function read(string $page_id, bool $draft_only): JsonResponse {
     try {
-      return $this->response($this->drafts->readDraft($page_id));
+      return $this->response($draft_only
+        ? $this->drafts->readDraft($page_id) : $this->drafts->readPage($page_id));
     }
     catch (PageDraftException $e) {
       return $this->response(['code' => $e->reason], $e->httpStatus);
