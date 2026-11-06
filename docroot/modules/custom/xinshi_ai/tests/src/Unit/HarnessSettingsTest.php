@@ -199,6 +199,17 @@ final class HarnessSettingsTest extends TestCase {
     $this->assertSame(['pages_enabled' => TRUE, 'disabled' => ['get_assets', 'create_page']], $tools);
   }
 
+  public function testPageRangeCanBeDisabledWithoutEnablingPageWrites(): void {
+    $this->factory->getEditable('xinshi_ai.settings')
+      ->set('harness.tools.disabled', ['get_page_range'])->save();
+    $settings = json_decode((new HarnessSettingsController())->read()->getContent(), TRUE);
+    $this->assertSame(['pages_enabled' => FALSE, 'disabled' => ['get_page_range']], $settings['tools']);
+    $form = $this->form->buildForm([], new FormState());
+    $pages = $form['harness']['tools']['enabled']['pages'];
+    $this->assertArrayHasKey('get_page_range', $pages['#options']);
+    $this->assertNotContains('get_page_range', $pages['#default_value']);
+  }
+
   public function testToolCheckboxesReflectSavedRestrictionsWithoutEnablingPageWrites(): void {
     $this->factory->getEditable('xinshi_ai.settings')
       ->set('harness.tools.disabled', ['get_assets', 'create_page'])->save();
