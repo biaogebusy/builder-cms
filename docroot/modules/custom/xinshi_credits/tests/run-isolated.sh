@@ -43,8 +43,14 @@ tar -cf - vendor composer.json composer.lock docroot/autoload.php docroot/index.
   docroot/modules/custom/xinshi_ai/src docroot/modules/custom/xinshi_ai/xinshi_ai.install docroot/modules/contrib/simple_oauth \
   docroot/modules/contrib/consumers | docker cp - "$credits_container":/app
 docker exec "$credits_container" sh -c 'find /app/docroot/modules/custom/xinshi_credits \( -name "*.php" -o -name "*.module" -o -name "*.install" \) -exec php -l {} \;'
-docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 -e CREDITS_TEST_MYSQL="$credits_mysql" "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 -e CREDITS_TEST_MYSQL="$credits_mysql" \
+  -e CREDITS_TEST_FINANCE_ONLY="${CREDITS_TEST_FINANCE_ONLY:-0}" "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_credits/tests/integration.php
+if [ "${CREDITS_TEST_FINANCE_ONLY:-0}" = 1 ]; then
+  docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+    /app/docroot/modules/custom/xinshi_credits/tests/finance-runtime.php
+  exit 0
+fi
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_credits/tests/configuration.php
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \

@@ -24,13 +24,19 @@ $databases['default']['default'] = [
   'namespace' => 'Drupal\sqlite\Driver\Database\sqlite',
   'autoload' => 'core/modules/sqlite/src/Driver/Database/sqlite/', 'prefix' => '',
 ];
-$settings['xinshi_finance'] = ['credits' => TRUE];
 $settings['hash_salt'] = 'disposable-credits-tests';
 $settings['config_sync_directory'] = '/tmp/credits-test/config';
 $settings['skip_permissions_hardening'] = TRUE;
 $settings['extension_discovery_scan_tests'] = TRUE;
 $settings['file_private_path'] = '/tmp/credits-test/private';
 SETTINGS);
+if (getenv('CREDITS_TEST_FINANCE_ONLY') === '1') {
+  file_put_contents('/tmp/credits-test/finance-settings.php', '<?php');
+  file_put_contents('sites/default/settings.php', "\nrequire '/tmp/credits-test/finance-settings.php';\n", FILE_APPEND);
+}
+else {
+  file_put_contents('sites/default/settings.php', "\n\$settings['xinshi_finance'] = ['credits' => TRUE];\n", FILE_APPEND);
+}
 if (getenv('CREDITS_TEST_MYSQL') === '1') {
   file_put_contents('sites/default/settings.php', <<<'MYSQL'
 
@@ -58,6 +64,9 @@ install_drupal($loader, [
     'enable_update_status_module' => FALSE, 'enable_update_status_emails' => FALSE,
   ]],
 ]);
-\Drupal::service('module_installer')->install(['xinshi_credits']);
+\Drupal::service('module_installer')->install([
+  getenv('CREDITS_TEST_FINANCE_ONLY') === '1' ? 'xinshi_ai_usage' : 'xinshi_credits',
+]);
 file_put_contents('/tmp/credits-test/installed', 'synthetic');
+if (getenv('CREDITS_TEST_FINANCE_ONLY') === '1') exit(0);
 require __DIR__ . '/ledger.php';
