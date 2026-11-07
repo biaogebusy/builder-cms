@@ -176,10 +176,10 @@ chmod($fixture . '/oauth-public.pem', 0600);
 \Drupal::configFactory()->getEditable('simple_oauth.settings')
   ->set('private_key', $fixture . '/oauth-private.pem')
   ->set('public_key', $fixture . '/oauth-public.pem')->save();
-function issueToken(string $uid, string $expiry = '+1 hour', bool $revoked = FALSE): string {
+function issueToken(string $uid, string $expiry = '+1 hour', bool $revoked = FALSE, string $scope = 'http_author'): string {
   $repository = \Drupal::service('simple_oauth.repositories.access_token');
   $client = \Drupal::service('simple_oauth.repositories.client')->getClientEntity('http-fixture');
-  $scope = \Drupal::service('simple_oauth.repositories.scope')->getScopeEntityByIdentifier('http_author');
+  $scope = \Drupal::service('simple_oauth.repositories.scope')->getScopeEntityByIdentifier($scope);
   $token = $repository->getNewToken($client, [$scope], $uid);
   $token->setIdentifier(bin2hex(random_bytes(24)));
   $token->setExpiryDateTime(new DateTimeImmutable($expiry));
@@ -366,6 +366,7 @@ NGINX);
     'Rejected and validation-only requests created no additional page or image job entities');
   check(\Drupal::queue('xinshi_ai_image_job')->numberOfItems() === 0, 'No provider work was enqueued');
   require __DIR__ . '/page-read-http.php';
+  require __DIR__ . '/page-translation-http.php';
   echo 'Isolated HTTP authentication checks passed: ' . $checks . '.' . PHP_EOL;
 }
 finally {

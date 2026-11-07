@@ -122,7 +122,7 @@ final class PageWriteServiceTest extends TestCase {
     $this->container->set('entity_type.repository', $repository);
     \Drupal::setContainer($this->container);
     $translations = $this->createMock(\Drupal\content_translation\ContentTranslationManagerInterface::class);
-    $translations->method('isEnabled')->willReturn(TRUE);
+    $translations->method('isEnabled')->willReturnCallback(fn() => $this->grants['translation_enabled'] ?? TRUE);
     $this->usage = $this->createMock(\Drupal\layout_builder\InlineBlockUsageInterface::class);
     $this->usage->method('getUsage')->willReturnCallback(fn($id) => $this->grants['usage:' . $id] ?? FALSE);
     $this->usage->expects(self::never())->method('addUsage');
@@ -528,6 +528,41 @@ final class PageWriteServiceTest extends TestCase {
     catch (\Drupal\xinshi_api\PageDraftException $error) {
       self::assertSame('permission_denied', $error->reason);
     }
+    self::assertSame($before, $this->persisted());
+  }
+
+  public static function translationRefusals(): array {
+    return [
+      ['translation_enabled', 409, 'translation_not_supported', 'page_translation_disabled'],
+      ['translate', 403, 'permission_denied', 'page_translation_denied'],
+      ['source_view', 403, 'permission_denied', 'page_translation_source_denied'],
+      ['page_update', 403, 'permission_denied', 'page_update_denied'],
+      ['translatable', 422, 'translation_not_supported', 'page_translation_layout_shared'],
+      ['source_component', 403, 'permission_denied', 'page_translation_component_denied'],
+    ];
+  }
+
+  #[DataProvider('translationRefusals')]
+  public function testTranslationReturnsActionableRefusalsWithoutWriting(string $grant, int $status, string $code, string $detail): void {
+    [$node, $block] = $this->fixture();
+    $key = match ($grant) {
+      'source_view' => $node->id() . ':view',
+      'page_update' => $node->id() . ':update',
+      'source_component' => $block->id() . ':view',
+      default => $grant,
+    };
+    $this->grants[$key] = FALSE;
+    $before = $this->persisted();
+    $this->container->set('request_stack', new \Symfony\Component\HttpFoundation\RequestStack());
+    $this->container->get('request_stack')->push(new Request(content: '{}'));
+    $response = (new PanelsIPEPageController($this->writer))->landingPageTranslations(
+      $node, new Language(['id' => 'en']), new Language(['id' => 'fr']),
+    );
+    self::assertSame($status, $response->getStatusCode());
+    $data = json_decode($response->getContent(), TRUE);
+    self::assertSame($code, $data['code']);
+    self::assertSame($detail, $data['detail']);
+    self::assertStringNotContainsString('reload the page', $data['message']);
     self::assertSame($before, $this->persisted());
   }
 

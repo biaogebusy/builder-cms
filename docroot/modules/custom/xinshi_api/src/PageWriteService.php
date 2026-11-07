@@ -87,19 +87,20 @@ class PageWriteService {
       $source_node = $node->getTranslation($source);
       $this->requireLayout($source_node);
       if (!$source_node->access('view', $this->account)) {
-        throw new PageDraftException('permission_denied', 403);
+        throw new PageDraftException('permission_denied', 403, 'page_translation_source_denied');
       }
       // A non-translatable layout would also replace the source language's layout.
       if (!$source_node->getFieldDefinition(self::LAYOUT)->isTranslatable()) {
-        throw new PageDraftException('translation_not_supported', 422);
+        throw new PageDraftException('translation_not_supported', 422, 'page_translation_layout_shared');
       }
       $references = $this->references($source_node);
       $rows = $input['body'] ?? [];
       if ($rows === []) {
         foreach ($references as $block) {
           $block = $block->hasTranslation($source) ? $block->getTranslation($source) : $block;
+          $block->setAccessDependency($source_node);
           if (!$block->access('view', $this->account) || !$block->get('body')->access('view', $this->account)) {
-            throw new PageDraftException('permission_denied', 403);
+            throw new PageDraftException('permission_denied', 403, 'page_translation_component_denied');
           }
           $rows[] = ['uuid' => $block->uuid(), 'attributes' => ['body' => $block->get('body')->value]];
         }
@@ -133,7 +134,7 @@ class PageWriteService {
     }
     $node = clone $node->getTranslation($route_node->language()->getId());
     if (!$node->access('update', $this->account)) {
-      throw new PageDraftException('permission_denied', 403);
+      throw new PageDraftException('permission_denied', 403, 'page_update_denied');
     }
     // This protocol edits the default revision; never overwrite a pending revision.
     if ($storage->getLatestRevisionId($node->id()) != $node->getRevisionId()) {
@@ -290,9 +291,11 @@ class PageWriteService {
   }
 
   private function requireTranslation(ContentEntityInterface $entity, string $operation): void {
-    if (!$this->translations || !$this->translations->isEnabled($entity->getEntityTypeId(), $entity->bundle()) ||
-      !$this->entities->getHandler($entity->getEntityTypeId(), 'translation')->getTranslationAccess($entity, $operation)->isAllowed()) {
-      throw new PageDraftException('permission_denied', 403);
+    if (!$this->translations || !$this->translations->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      throw new PageDraftException('translation_not_supported', 409, 'page_translation_disabled');
+    }
+    if (!$this->entities->getHandler($entity->getEntityTypeId(), 'translation')->getTranslationAccess($entity, $operation)->isAllowed()) {
+      throw new PageDraftException('permission_denied', 403, 'page_translation_denied');
     }
   }
 

@@ -41,6 +41,12 @@ class PanelsIPEPageController extends ControllerBase {
     catch (PageDraftException $error) {
       $messages = [
         'page_create_denied' => $this->t('You do not have permission to create landing pages.'),
+        'page_update_denied' => $this->t('The current login cannot edit this page. Check the page permissions and OAuth scope.'),
+        'page_translation_disabled' => $this->t('Content translation is not enabled for landing pages. Check the content language settings and rebuild the CMS cache.'),
+        'page_translation_denied' => $this->t('The current login cannot create or update page translations. Check the translation permissions and OAuth scope.'),
+        'page_translation_source_denied' => $this->t('The current login cannot view the source-language page.'),
+        'page_translation_layout_shared' => $this->t('The page layout is shared across languages. Enable layout translation before saving to preserve the source page.'),
+        'page_translation_component_denied' => $this->t('The current login cannot read a source component for translation. Check the component and body view permissions.'),
         'page_layout_missing' => $this->t('Page layout storage is not configured. Please contact the site administrator.'),
         'node.title.edit' => $this->t('You do not have permission to edit the page title.'),
         'node.path.edit' => $this->t('You do not have permission to edit the page URL.'),
