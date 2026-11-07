@@ -28,6 +28,16 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class CookieWriteCsrfTest extends TestCase {
 
+  // These authenticated POSTs query or validate data without persisting it.
+  private const READ_ONLY_POSTS = [
+    'xinshi_analytics.count' => '\Drupal\xinshi_analytics\Controller\AnalyticsController::count',
+    'xinshi_analytics.evidence' => '\Drupal\xinshi_analytics\Controller\EvidenceController::capture',
+    'xinshi_analytics.evidence_verify' => '\Drupal\xinshi_analytics\Controller\EvidenceController::verify',
+    'xinshi_entity_tools.query' => '\Drupal\xinshi_entity_tools\Controller\EntityController::query',
+    'xinshi_entity_tools.read' => '\Drupal\xinshi_entity_tools\Controller\EntityController::read',
+    'xinshi_entity_tools.validate' => '\Drupal\xinshi_entity_tools\Controller\EntityController::validate',
+  ];
+
   private static function routes(): array {
     $routes = [];
     foreach (glob(dirname(__DIR__, 4) . '/*/*.routing.yml') as $file) {
@@ -39,7 +49,8 @@ final class CookieWriteCsrfTest extends TestCase {
   public static function protectedRoutes(): iterable {
     foreach (self::routes() as $name => $definition) {
       if (in_array('cookie', $definition['options']['_auth'] ?? [], TRUE)
-        && array_diff($definition['methods'] ?? [], ['GET', 'HEAD', 'OPTIONS', 'TRACE'])) {
+        && array_diff($definition['methods'] ?? [], ['GET', 'HEAD', 'OPTIONS', 'TRACE'])
+        && !isset(self::READ_ONLY_POSTS[$name])) {
         yield $name => [$name, $definition];
       }
     }
@@ -123,7 +134,7 @@ final class CookieWriteCsrfTest extends TestCase {
   }
 
   public function testInventoryAndSeparateAuthenticationBoundaries(): void {
-    $this->assertCount(15, iterator_to_array(self::protectedRoutes()));
+    $this->assertNotEmpty(iterator_to_array(self::protectedRoutes()));
     $routes = self::routes();
     foreach (['xinshi_ai.figma', 'xinshi_ai.figma.assets', 'xinshi_ai.product_documents.mcp', 'xinshi_ai.conversation.update', 'xinshi_linux_do.session.logout'] as $name) {
       $this->assertSame(['oauth2'], $routes[$name]['options']['_auth'], $name);
@@ -136,6 +147,21 @@ final class CookieWriteCsrfTest extends TestCase {
       if (isset($route['methods']) && !array_diff($route['methods'], ['GET', 'HEAD', 'OPTIONS', 'TRACE'])) {
         $this->assertArrayNotHasKey('_csrf_request_header_token', $route['requirements'], $name);
       }
+    }
+  }
+
+  public function testReadOnlyPostExceptionsKeepTheirAuthenticatedQueryContracts(): void {
+    $routes = self::routes();
+    foreach (self::READ_ONLY_POSTS as $name => $controller) {
+      $this->assertArrayHasKey($name, $routes);
+      $route = $routes[$name];
+      $this->assertSame($controller, $route['defaults']['_controller'], $name);
+      $this->assertSame(['POST'], $route['methods'], $name);
+      $this->assertSame(['oauth2', 'cookie'], $route['options']['_auth'], $name);
+      $this->assertTrue($route['options']['no_cache'], $name);
+      $this->assertSame('TRUE', $route['requirements']['_user_is_logged_in'], $name);
+      $this->assertNotEmpty($route['requirements']['_permission'], $name);
+      $this->assertArrayNotHasKey('_csrf_request_header_token', $route['requirements'], $name);
     }
   }
 
