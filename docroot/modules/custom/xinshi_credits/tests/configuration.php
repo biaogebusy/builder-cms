@@ -35,7 +35,7 @@ try {
   $settings->set('grants_enabled', FALSE)->set('spending_enabled', FALSE)->save();
   $rewards?->set('daily_enabled', TRUE)->set('welcome_enabled', FALSE)->save();
   [$data, $metadata] = $project();
-  check($data['credits'] === ['enabled' => FALSE, 'daily_enabled' => FALSE, 'welcome_enabled' => FALSE], 'Closed site overrides authored credit flags');
+  check($data['credits'] === ['enabled' => TRUE, 'daily_enabled' => FALSE, 'welcome_enabled' => FALSE], 'Operational pause retains the explicitly assembled credit account');
   check($data['theme'] === ['fixture'], 'Credit projection preserves other core configuration');
   check(in_array('config:xinshi_credits.settings', $metadata->getCacheTags(), TRUE), 'Core configuration depends on credit switches');
   check(in_array('config:core.extension', $metadata->getCacheTags(), TRUE), 'Core configuration depends on optional module installation');

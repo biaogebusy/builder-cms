@@ -25,6 +25,7 @@ final class ImageBilling {
     private readonly EntityTypeManagerInterface $entities,
     private readonly LocalUsageProducer $usage,
     private readonly TimeInterface $time,
+    private readonly array $finance,
     private readonly ?PromptRewriteClient $rewrite = NULL,
     private readonly ?ImageJobRuns $runs = NULL,
   ) {}
@@ -223,14 +224,13 @@ final class ImageBilling {
 
   /** Included requests do not need a credit account or the credit write envelope. */
   public function exemption(string $platform): ?string {
-    if ($this->config->get('xinshi_ai_billing.settings')->get('enabled') !== TRUE) return 'disabled';
+    if (!$this->finance['chat_billing']) return 'disabled';
     if ($platform === 'custom') return 'customer_key';
     return $this->enabled() ? NULL : 'included';
   }
 
   private function enabled(): bool {
-    $settings = $this->config->get('xinshi_ai_billing.settings');
-    return $settings->get('enabled') === TRUE && $settings->get('image_enabled') === TRUE;
+    return $this->finance['image_billing'];
   }
   private function producer(): array { return ['producer_id' => LocalUsageProducer::PRODUCER_ID, 'site_id' => $this->context->site()]; }
 

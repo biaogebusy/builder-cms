@@ -323,3 +323,15 @@ xinshi_ai_usage.admin.export_download:
   requirements:
     _permission: 'view site ai usage,export site ai usage'
     export: '\d+'
+xinshi_ai_usage.site_finance:
+  path: '/api/v3/ai/site-finance'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_usage\Controller\SiteFinanceController::get'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  methods: [GET]
+  options:
+    _auth: []
+    no_cache: TRUE
+

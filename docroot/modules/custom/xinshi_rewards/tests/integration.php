@@ -13,6 +13,11 @@ require __DIR__ . '/../../xinshi_credits/tests/bootstrap.php';
 require __DIR__ . '/../../xinshi_credits/tests/fixtures.php';
 require __DIR__ . '/../../xinshi_credits/tests/publication-fixtures.php';
 
+// Assemble the module before exercising its independent operational pause switches.
+$finance = \Drupal\Core\Site\Settings::get('xinshi_finance', []);
+$finance['rewards'] = TRUE;
+new \Drupal\Core\Site\Settings(array_replace(\Drupal\Core\Site\Settings::getAll(), ['xinshi_finance' => $finance]));
+file_put_contents('sites/default/settings.php', "\n\$settings['xinshi_finance']['rewards'] = TRUE;\n", FILE_APPEND);
 \Drupal::service('module_installer')->install(['xinshi_rewards']);
 check(\Drupal::moduleHandler()->moduleExists('xinshi_rewards'), 'Rewards installs after credits-only coverage');
 $rewardConfigFactory = \Drupal::configFactory();

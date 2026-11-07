@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\xinshi_ai_billing;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\xinshi_ai_usage\Service\UsageChargesInterface;
 use Drupal\xinshi_credits\CreditValue;
@@ -12,7 +11,7 @@ use Drupal\xinshi_credits\CreditValue;
 /** Read complete operation totals from the shared ledger, never from supplier estimates. */
 final class BillingReports implements UsageChargesInterface {
 
-  public function __construct(private readonly Connection $database, private readonly ConfigFactoryInterface $config) {}
+  public function __construct(private readonly Connection $database, private readonly bool $enabled) {}
 
   /** {@inheritdoc} */
   public function summarize(string $siteId, array $operationIds, ?string $actorUserId = NULL): array {
@@ -35,7 +34,7 @@ final class BillingReports implements UsageChargesInterface {
         }
       }
     }
-    if (!$operations && $this->config->get('xinshi_ai_billing.settings')->get('enabled') !== TRUE) {
+    if (!$operations && !$this->enabled) {
       return ['status' => 'not_enabled'];
     }
     return ['status' => 'available', 'scope' => 'complete_matching_operations',

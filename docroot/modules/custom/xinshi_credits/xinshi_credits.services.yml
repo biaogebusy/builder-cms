@@ -1,4 +1,9 @@
 services:
+  xinshi_credits.routes:
+    class: Drupal\xinshi_credits\EventSubscriber\FinanceRouteSubscriber
+    arguments: ['%xinshi_finance.assembly%', '%xinshi_site_finance%']
+    tags:
+      - { name: event_subscriber }
   xinshi_credits.write_request:
     class: Drupal\xinshi_credits\CreditWriteRequest
     arguments: ['@session_configuration', '%cors.config%']

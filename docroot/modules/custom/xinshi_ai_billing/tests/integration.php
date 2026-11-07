@@ -7,7 +7,13 @@ use Drupal\xinshi_ai_billing\BillingProfiles;
 
 require __DIR__ . '/../../xinshi_credits/tests/bootstrap.php';
 require __DIR__ . '/../../xinshi_credits/tests/fixtures.php';
+require __DIR__ . '/assembly.php';
 
+// Assemble the module before exercising its independent operational pause switches.
+$finance = \Drupal\Core\Site\Settings::get('xinshi_finance', []);
+$finance['billing'] = TRUE;
+new \Drupal\Core\Site\Settings(array_replace(\Drupal\Core\Site\Settings::getAll(), ['xinshi_finance' => $finance]));
+file_put_contents('sites/default/settings.php', "\n\$settings['xinshi_finance']['billing'] = TRUE;\n", FILE_APPEND);
 \Drupal::service('module_installer')->install(['xinshi_ai_billing']);
 $billingConfig = \Drupal::configFactory();
 $billingConfig->getEditable('xinshi_credits.settings')->set('site_id', 'fixture')
@@ -41,6 +47,8 @@ $request = ['feature' => 'text', 'model' => 'fixture-model', 'platform' => 'fixt
 check($settings->get('enabled') === FALSE, 'Billing installs disabled');
 denied(fn() => $billing->quote($request, 'first'), 'billing_disabled');
 $settings->set('enabled', TRUE)->set('active_versions', ['synthetic-v1'])->save();
+denied(fn() => $billing->quote($request, 'before-restart'), 'billing_disabled');
+$billing = fixtureBilling();
 $quote = $billing->quote($request, 'first');
 check($billing->quote($request, 'first') === $quote, 'Quote retry returns the original ID and expiry');
 denied(fn() => $billing->quote(array_replace($request, ['request_hash' => str_repeat('b', 64)]), 'first'), 'quote_conflict');
@@ -91,6 +99,7 @@ sourceRow('ai_usage_cost_entry', ['site_id' => 'fixture', 'attempt_id' => 'billi
   'observation_revision' => 1, 'source_kind' => 'supplier_reconciliation', 'valuation_state' => 'reconciled',
   'currency' => 'CNY', 'total_cost_micros' => 55]);
 $settings->set('enabled', FALSE)->save();
+$billing = fixtureBilling();
 $settled = $billing->finalize($producer, $final);
 check($settled['status'] === 'settled' && $settled['charged_atoms'] === '150'
   && $settled['released_atoms'] === '1050', 'Verified usage settles the original price even while admission is off');
@@ -104,6 +113,7 @@ denied(fn() => $billing->own('billing-op'), 'operation_unavailable');
 denied(fn() => $billing->authorize($accept), 'quote_mismatch');
 $principal->setAccount($user);
 $settings->set('enabled', TRUE)->save();
+$billing = fixtureBilling();
 $quote2 = $billing->quote($request, 'no-dispatch');
 $billing->authorize(array_replace($accept, ['quote_id' => $quote2['quote_id'], 'operation_id' => 'no-dispatch']));
 $release = $billing->finalize($producer, ['operation_id' => 'no-dispatch', 'delivery' => 'none',
@@ -122,16 +132,19 @@ catch (Throwable) { $failed = TRUE; }
 $db->query('DROP TRIGGER reject_ai_auth');
 check($failed && snapshot() === $before, 'Adapter insert failure rolls back every ledger and budget mutation');
 check(count(\Drupal::service('xinshi_ai_billing.uninstall')->validate('xinshi_ai_billing')) === 1, 'Billing records prevent destructive uninstall');
-$report = \Drupal::service('xinshi_ai_billing.reports');
+$report = new \Drupal\xinshi_ai_billing\BillingReports($db, fixtureFinance()['chat_billing']);
 $totals = $report->summarize('fixture', ['billing-op', 'billing-op', 'no-dispatch'], $uid);
 check($totals['charged_atoms'] === '150' && $totals['operations'] === 2 && $totals['held_atoms'] === '0',
   'Usage credit totals count whole operations once');
 check($report->summarize('fixture', ['billing-op'], (string) $other->id())['charged_atoms'] === '0',
   'User report scope cannot include another ledger owner');
 $settings->set('enabled', FALSE)->save();
+$billing = fixtureBilling();
+$report = new \Drupal\xinshi_ai_billing\BillingReports($db, fixtureFinance()['chat_billing']);
 check($report->summarize('fixture', ['billing-op'], $uid)['status'] === 'available', 'Historical charges stay visible after admission is disabled');
 check($report->summarize('another-site', ['billing-op'], $uid)['status'] === 'not_enabled', 'Credit reports do not cross site boundaries');
 $settings->set('enabled', TRUE)->save();
+$billing = fixtureBilling();
 echo 'AI billing checks: ' . $checks . PHP_EOL;
 // The fixture kernel does not dump containers; discard the earlier HTTP definition.
 \Drupal::service('kernel')->invalidateContainer();

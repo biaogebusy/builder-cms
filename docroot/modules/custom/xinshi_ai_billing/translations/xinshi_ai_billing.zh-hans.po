@@ -52,8 +52,8 @@ msgstr "配置项"
 msgid "Value"
 msgstr "值"
 
-msgid "Saving enables rewards and credit spending for this role. Existing balances and accepted tasks keep their original rules. Changing the role does not revoke earlier permissions."
-msgstr "保存后，将为所选角色开放奖励和积分消费。已有余额和已接受任务保留原规则。更换角色不会撤销此前授予的权限。"
+msgid "Saving updates rewards and credit spending for this role. Billing changes take effect after the site cache is rebuilt and Node restarts. Existing balances and accepted tasks keep their original rules. Changing the role does not revoke earlier permissions."
+msgstr "保存会更新此角色的奖励和积分消费配置。计费变更在重建站点缓存并重启 Node 后生效。已有余额和已接受的任务保留原规则。更换角色不会撤销此前的权限。"
 
 msgid "Save and enable trial credits"
 msgstr "保存并启用体验积分"
@@ -94,8 +94,8 @@ msgstr "未全部开启。请检查积分、奖励和 AI 积分计费配置。"
 msgid "Review trial settings"
 msgstr "复核体验配置"
 
-msgid "Trial credits are enabled. Verify a reward and a successful deduction with a trial account."
-msgstr "体验积分已启用。请用体验账户验证领取奖励和成功扣分。"
+msgid "Trial settings are saved. Rebuild the site cache and restart Node before verifying a reward and a deduction."
+msgstr "体验配置已保存。请重建站点缓存并重启 Node，然后验证奖励发放和扣分。"
 
 msgid "The setup could not be saved. Retry this reviewed version."
 msgstr "配置未能保存。请重试当前复核版本。"

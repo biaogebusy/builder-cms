@@ -36,7 +36,7 @@ final class TrialSetupForm extends FormBase {
       foreach ($draft['input'] as $key => $value) $rows[] = [$labels[$key], $key === 'expires_at'
         ? ($value === NULL ? $this->t('No expiry') : gmdate('Y-m-d H:i', $value)) : $value];
       $form['review'] = ['#type' => 'table', '#header' => [$this->t('Setting'), $this->t('Value')], '#rows' => $rows];
-      $form['notice'] = ['#markup' => '<p>' . $this->t('Saving enables rewards and credit spending for this role. Existing balances and accepted tasks keep their original rules. Changing the role does not revoke earlier permissions.') . '</p>'];
+      $form['notice'] = ['#markup' => '<p>' . $this->t('Saving updates rewards and credit spending for this role. Billing changes take effect after the site cache is rebuilt and Node restarts. Existing balances and accepted tasks keep their original rules. Changing the role does not revoke earlier permissions.') . '</p>'];
       $form['actions']['apply'] = ['#type' => 'submit', '#name' => 'apply', '#value' => $this->t('Save and enable trial credits')];
       $form['actions']['back'] = ['#type' => 'submit', '#name' => 'back', '#value' => $this->t('Back to edit'), '#limit_validation_errors' => []];
       return $form;
@@ -107,7 +107,7 @@ final class TrialSetupForm extends FormBase {
     else {
       try {
         $this->setup->save($form_state->get('trial_draft'));
-        $this->messenger()->addStatus($this->t('Trial credits are enabled. Verify a reward and a successful deduction with a trial account.'));
+        $this->messenger()->addStatus($this->t('Trial settings are saved. Rebuild the site cache and restart Node before verifying a reward and a deduction.'));
         $form_state->setRedirect('xinshi_ai_billing.trial'); return;
       }
       catch (CreditException $error) { $this->messenger()->addError($this->error($error)); }

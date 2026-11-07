@@ -6,7 +6,6 @@ namespace Drupal\xinshi_ai_billing;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Uuid\UuidInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -17,7 +16,7 @@ final class AiBilling {
 
   public function __construct(
     private readonly Connection $database,
-    private readonly ConfigFactoryInterface $config,
+    private readonly bool $enabled,
     private readonly CreditContext $context,
     private readonly CreditLifecycle $ledger,
     private readonly BillingProfiles $profiles,
@@ -355,7 +354,7 @@ final class AiBilling {
   }
 
   private function enabled(): void {
-    if ($this->config->get('xinshi_ai_billing.settings')->get('enabled') !== TRUE) throw new CreditException('billing_disabled', 503);
+    if (!$this->enabled) throw new CreditException('billing_disabled', 503);
   }
 
   private function common(string $uid): array {

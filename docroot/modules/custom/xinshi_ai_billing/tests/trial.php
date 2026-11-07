@@ -8,6 +8,7 @@ use Drupal\xinshi_ai_billing\{BillingProfiles, TrialSetup};
 
 require __DIR__ . '/../../xinshi_credits/tests/bootstrap.php';
 require __DIR__ . '/../../xinshi_credits/tests/fixtures.php';
+require __DIR__ . '/assembly.php';
 set_exception_handler(static function (Throwable $error): never { fwrite(STDERR, (string) $error . PHP_EOL); exit(1); });
 $trialConfig = \Drupal::configFactory();
 new Settings(['xinshi_ai_usage.mode' => 'enforce', 'xinshi_ai_usage.site_id' => 'trial-fixture',
@@ -68,7 +69,7 @@ check($welcome['receipt']['amount_atoms'] === '15000' && $daily['receipt']['amou
 check($rewards->daily('trial-welcome-again', 'G13')['status'] === 'already_granted', 'Another welcome key cannot issue a second grant');
 check($rewards->daily('trial-daily-again')['status'] === 'already_granted', 'Another daily key cannot issue a second grant');
 check($db->select('credit_grant', 'g')->fields('g', ['expires_at'])->condition('id', $welcome['receipt']['grant_id'])->execute()->fetchField() === NULL, 'Trial rewards do not expire by default');
-$billing = \Drupal::service('xinshi_ai_billing.billing');
+$billing = fixtureBilling();
 $profiles = \Drupal::service('xinshi_ai_billing.profiles');
 $producer = ['producer_id' => 'trial-node', 'site_id' => 'trial-fixture'];
 $request = ['feature' => 'common', 'model' => 'trial-chat', 'platform' => 'fixture', 'request_hash' => str_repeat('a', 64), 'producer_id' => 'trial-node'];
@@ -145,9 +146,13 @@ check((int) $db->select('credit_budget_bucket', 'b')->condition('site_id', 'tria
 $loader->addPsr4('Drupal\\xinshi_ai\\', __DIR__ . '/../../xinshi_ai/src');
 $runs = new \Drupal\xinshi_ai\Service\ImageJobRuns($db, \Drupal::time(), \Drupal::service('uuid'));
 $usage = \Drupal::service('xinshi_ai_usage.local_producer');
-$images = new \Drupal\xinshi_ai_billing\ImageBilling($billing, $profiles, $db, $trialConfig,
-  \Drupal::service('xinshi_credits.context'), \Drupal::entityTypeManager(), $usage, \Drupal::time(), NULL, $runs);
-$recorder = new \Drupal\xinshi_ai\Service\ImageUsageRecorder($usage, \Drupal::logger('xinshi_ai_usage'), $images);
+$reloadImages = function () use (&$billing, &$images, &$recorder, $profiles, $db, $trialConfig, $usage, $runs): void {
+  $billing = fixtureBilling();
+  $images = new \Drupal\xinshi_ai_billing\ImageBilling($billing, $profiles, $db, $trialConfig,
+    \Drupal::service('xinshi_credits.context'), \Drupal::entityTypeManager(), $usage, \Drupal::time(), fixtureFinance(), NULL, $runs);
+  $recorder = new \Drupal\xinshi_ai\Service\ImageUsageRecorder($usage, \Drupal::logger('xinshi_ai_usage'), $images);
+};
+$reloadImages();
 $imageInput = ['jobKind' => 'text_to_image', 'platform' => 'fixture', 'model' => 'trial-image',
   'prompt' => 'Synthetic image', 'params' => ['n' => 2, 'size' => '1536*1024']];
 check($images->quote($imageInput, 'included-trial-image')['status'] === 'included', 'Quick setup leaves image generation included');
@@ -161,6 +166,7 @@ $imageProfile = $profiles->publish(['version' => 'trial-explicit-image', 'featur
     'sizes' => ['1024x1024', '1536x1024']]]);
 $trialConfig->getEditable('xinshi_ai_billing.settings')->set('image_enabled', TRUE)
   ->set('active_versions', [...$trialConfig->get('xinshi_ai_billing.settings')->get('active_versions'), $imageProfile['version']])->save();
+$reloadImages();
 $imageQuote = $images->quote($imageInput, 'trial-image-quote')['quote'];
 check($imageQuote['maximum_atoms'] === '2000', 'Trial image quote reserves only the requested count at the registered size');
 denied(fn() => $images->quote(array_replace($imageInput, ['params' => ['n' => 5, 'size' => '1024x1024']]), 'trial-many-images'), 'image_request_outside_quote');
@@ -183,6 +189,7 @@ $images->reconcile();
 check($billing->own($imageJob->uuid())['status'] === 'awaiting_evidence', 'Trial image still waits for a committed delivery');
 $imageAttempt->committed(0, 'synthetic-trial-asset');
 $trialConfig->getEditable('xinshi_ai_billing.settings')->set('enabled', FALSE)->save();
+$reloadImages();
 $images->reconcile();
 $result = $billing->own($imageJob->uuid());
 check($result['charged_atoms'] === '1000' && $result['released_atoms'] === '1000',
@@ -191,6 +198,7 @@ $before = snapshot(); $images->reconcile();
 check(snapshot() === $before, 'Trial image reconciliation cannot charge twice');
 check(\Drupal::service('xinshi_credits.audit')->inspect($uid)['status'] === 'complete', 'Trial image settlement preserves shared ledger reconstruction');
 $trialConfig->getEditable('xinshi_ai_billing.settings')->set('enabled', TRUE)->save();
+$reloadImages();
 
 $clock = new FixtureClock(time()); $context = \Drupal::service('xinshi_credits.context');
 $uuid = \Drupal::service('uuid'); $entities = \Drupal::entityTypeManager();

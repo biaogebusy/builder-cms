@@ -24,6 +24,7 @@ $databases['default']['default'] = [
   'namespace' => 'Drupal\sqlite\Driver\Database\sqlite',
   'autoload' => 'core/modules/sqlite/src/Driver/Database/sqlite/', 'prefix' => '',
 ];
+$settings['xinshi_finance'] = ['credits' => TRUE];
 $settings['hash_salt'] = 'disposable-credits-tests';
 $settings['config_sync_directory'] = '/tmp/credits-test/config';
 $settings['skip_permissions_hardening'] = TRUE;

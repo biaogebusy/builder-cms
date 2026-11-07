@@ -13,6 +13,7 @@ use Drupal\xinshi_ai_usage\Contract\ImageUsageNormalizer;
 
 require __DIR__ . '/../../xinshi_credits/tests/bootstrap.php';
 require __DIR__ . '/../../xinshi_credits/tests/fixtures.php';
+require __DIR__ . '/assembly.php';
 set_exception_handler(static function (Throwable $error): never { fwrite(STDERR, (string) $error . PHP_EOL); exit(1); });
 $loader->addPsr4('Drupal\\xinshi_ai\\', __DIR__ . '/../../xinshi_ai/src');
 require __DIR__ . '/../../xinshi_ai/xinshi_ai.install';
@@ -55,9 +56,13 @@ $usage = new LocalUsageProducer($db, \Drupal::service('xinshi_ai_usage.ingest'),
   \Drupal::service('xinshi_ai_usage.producer_vault'), $localSettings, \Drupal::time(),
   \Drupal::service('uuid'), \Drupal::logger('xinshi_ai_usage'));
 $runs = new ImageJobRuns($db, \Drupal::time(), \Drupal::service('uuid'));
-$images = new ImageBilling($billing, $profiles, $db, \Drupal::configFactory(),
-  \Drupal::service('xinshi_credits.context'), $entities, $usage, \Drupal::time(), NULL, $runs);
-$recorder = new ImageUsageRecorder($usage, \Drupal::logger('xinshi_ai_usage'), $images);
+$reloadImages = function () use (&$billing, &$images, &$recorder, $profiles, $db, $entities, $usage, $runs): void {
+  $billing = fixtureBilling();
+  $images = new ImageBilling($billing, $profiles, $db, \Drupal::configFactory(),
+    \Drupal::service('xinshi_credits.context'), $entities, $usage, \Drupal::time(), fixtureFinance(), NULL, $runs);
+  $recorder = new ImageUsageRecorder($usage, \Drupal::logger('xinshi_ai_usage'), $images);
+};
+$reloadImages();
 $input = ['jobKind' => 'text_to_image', 'platform' => 'fixture', 'model' => 'fixture-image',
   'prompt' => 'A synthetic image', 'negativePrompt' => '', 'params' => ['n' => 2, 'size' => '1024*1024']];
 $created = 0;
@@ -70,6 +75,7 @@ $create = function (?string $operation = NULL) use (&$created, $input, $uid): No
   $node->save(); return $node;
 };
 $settings->clear('image_enabled')->save();
+$reloadImages();
 $beforeIncluded = snapshot();
 check($images->quote($input, 'included-no-flag') === ['status' => 'included'], 'Missing rollout flag keeps platform images included');
 \Drupal::moduleHandler()->loadInclude('xinshi_ai_billing', 'install');
@@ -83,6 +89,7 @@ $includedAttempt = $recorder->begin(['operation_id' => $included->uuid(), 'kind'
 check($includedAttempt !== NULL && snapshot() === $beforeIncluded, 'Included image creates a task and metering attempt without a financial write');
 \Drupal::configFactory()->getEditable('xinshi_credits.settings')->set('site_id', 'fixture')->save();
 $settings->set('image_enabled', TRUE)->save();
+$reloadImages();
 xinshi_ai_billing_update_11001();
 check(\Drupal::config('xinshi_ai_billing.settings')->get('image_enabled') === TRUE, 'Update preserves an explicit image opt-in');
 $created = 0;
@@ -116,6 +123,8 @@ denied(fn() => $images->create($input, $quote['quote_id'], $create), 'quote_mism
 \Drupal::currentUser()->setAccount($user);
 denied(fn() => $images->assertDeletable($job->uuid()), 'image_billing_pending');
 $settings->set('image_enabled', FALSE)->save();
+check($images->exemption('fixture') === NULL, 'A saved flag cannot bypass charging before assembly');
+$reloadImages();
 $generation = ['n' => 2, 'size' => '1024x1024', 'user' => $uid];
 \Drupal::configFactory()->getEditable('xinshi_credits.settings')->clear('site_id')->save();
 denied(fn() => $images->beforeRun($job, $generation), 'credits_not_configured');
@@ -150,6 +159,7 @@ $state = snapshot(); $images->reconcile();
 check(snapshot() === $state, 'Image reconciliation never repeats the settled transaction');
 $images->assertDeletable($job->uuid());
 $settings->set('image_enabled', TRUE)->save();
+$reloadImages();
 
 $quote2 = $images->quote($input, 'image-delivered')['quote'];
 $job2 = $images->create($input, $quote2['quote_id'], $create);
@@ -168,6 +178,7 @@ $images->reconcile();
 check($billing->own($job2->uuid())['status'] === 'awaiting_evidence', 'A job counter alone does not prove an image was committed');
 $attempt2->committed(0, 'synthetic-image-asset');
 $settings->set('enabled', FALSE)->save();
+$reloadImages();
 $images->reconcile();
 $settled = $billing->own($job2->uuid());
 check($settled['charged_atoms'] === '600' && $settled['released_atoms'] === '600',
@@ -176,6 +187,7 @@ check(\Drupal::service('xinshi_credits.audit')->inspect($uid)['status'] === 'com
 
 // A full batch of unfinished jobs must not prevent later terminal jobs from closing.
 $settings->set('enabled', TRUE)->save();
+$reloadImages();
 \Drupal::service('xinshi_credits.ledger')->grant(command($pool, 'image-billing', 'image-batch-gift', $uid, '100000'), 'image-batch-gift');
 for ($i = 0; $i < 100; $i++) {
   $queued = $images->quote($input, 'image-queued-' . $i)['quote'];
