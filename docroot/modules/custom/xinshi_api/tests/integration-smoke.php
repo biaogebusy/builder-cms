@@ -219,6 +219,8 @@ foreach ([['ordinary', 'admin'], ['admin', 'ordinary']] as $order) {
   foreach ($order as $name) {
     $account = $accounts[$name];
     $container->get('current_user')->setAccount($account);
+    check($container->get('access_policy_processor')->processAccessPolicies($container->get('current_user'))->getItem()->isAdmin() === ($name === 'admin'),
+      'Current-user proxy preserves OAuth permissions before direct checks: ' . $name);
     foreach (['administer xinshi_ai', 'view site ai usage', 'view site ai usage,view ai supplier costs'] as $permission) {
       $route = new \Symfony\Component\Routing\Route('/fixture', [], ['_permission' => $permission]);
       check($permissionCheck->access($route, $account)->isAllowed() === ($name === 'admin'),

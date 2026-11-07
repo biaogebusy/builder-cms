@@ -16,6 +16,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Session\AccessPolicyProcessor;
+use Drupal\Core\Session\AccessPolicyProcessorInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Session\AccountSwitcherInterface;
@@ -35,6 +36,7 @@ use Drupal\simple_oauth\Plugin\Field\FieldType\Oauth2ScopeReferenceItemListInter
 use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
 use Drupal\xinshi_api\Access\OAuthPermissionCachePolicy;
+use Drupal\xinshi_api\Access\OAuthAccessPolicyProcessor;
 use Drupal\xinshi_api\XinshiApiServiceProvider;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -48,7 +50,7 @@ final class OAuthPermissionCacheTest extends TestCase {
   private AccountProxy $current;
   private MemoryBackend $static;
   private MemoryBackend $persistent;
-  private AccessPolicyProcessor $processor;
+  private AccessPolicyProcessorInterface $processor;
 
   protected function setUp(): void {
     $this->current = new AccountProxy(new EventDispatcher());
@@ -72,11 +74,11 @@ final class OAuthPermissionCacheTest extends TestCase {
     $time->method('getCurrentTime')->willReturn(1700000000);
     $time->method('getRequestTime')->willReturn(1700000000);
     $this->static = new MemoryBackend($time);
-    $this->processor = new AccessPolicyProcessor(
+    $this->processor = new OAuthAccessPolicyProcessor(new AccessPolicyProcessor(
       new VariationCache(new RequestStack(), $this->persistent = new MemoryBackend($time), $manager),
       new VariationCache(new RequestStack(), $this->static, $manager),
       $this->static, $this->current, $this->createMock(AccountSwitcherInterface::class),
-    );
+    ));
     $roles = [];
     foreach (['anonymous', 'authenticated', 'webmaster', 'administrator'] as $id) {
       $role = $this->createMock(RoleInterface::class);
@@ -125,6 +127,29 @@ final class OAuthPermissionCacheTest extends TestCase {
   public function testChangingScopesKeepsTheirPermissionLimits(): void {
     foreach ([['webmaster', FALSE], ['reporting', TRUE], ['webmaster', FALSE]] as [$scope, $allowed]) {
       $this->assertSame($allowed, $this->hasPermission($this->account(FALSE, [$scope]), 'view site ai usage'));
+    }
+  }
+
+  public function testAccountProxyCannotPoisonAdministratorPermissionCache(): void {
+    $account = $this->account(TRUE);
+    $this->current->setAccount($account);
+    // Core's user.permissions context passes current_user (AccountProxy) to
+    // the processor before a later check passes the actual OAuth identity.
+    $this->assertTrue($this->processor->processAccessPolicies($this->current)->getItem()->isAdmin());
+    $this->static->deleteAll();
+    $this->assertTrue($account->hasPermission('create content translations'));
+  }
+
+  #[DataProvider('authenticationOrders')]
+  public function testAccountProxyRetainsScopeRestrictionsInEitherOrder(array $order): void {
+    $account = $this->account(FALSE);
+    $this->current->setAccount($account);
+    foreach ($order as $proxy) {
+      $this->static->deleteAll();
+      $item = $this->processor->processAccessPolicies($proxy ? $this->current : $account)->getItem();
+      $this->assertTrue($item->hasPermission('access content'));
+      $this->assertFalse($item->hasPermission('view site ai usage'));
+      $this->assertFalse($item->isAdmin());
     }
   }
 
@@ -178,6 +203,7 @@ final class OAuthPermissionCacheTest extends TestCase {
     (new XinshiApiServiceProvider())->alter($container);
     $this->assertFalse($container->hasDefinition('cache_context.xinshi_oauth_account'));
     $this->assertFalse($container->hasDefinition('xinshi_api.oauth_permission_cache_policy'));
+    $this->assertFalse($container->hasDefinition('xinshi_api.oauth_access_policy_processor'));
   }
 
   public function testAccountContextPreservesRevocationTags(): void {

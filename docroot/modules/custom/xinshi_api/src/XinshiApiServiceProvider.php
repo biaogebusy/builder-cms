@@ -7,6 +7,7 @@ namespace Drupal\xinshi_api;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\xinshi_api\Access\OAuthPermissionCachePolicy;
+use Drupal\xinshi_api\Access\OAuthAccessPolicyProcessor;
 use Drupal\xinshi_api\Cache\Context\OAuthAccountCacheContext;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -27,6 +28,9 @@ final class XinshiApiServiceProvider extends ServiceProviderBase {
       ->addTag('cache.context');
     $container->register('xinshi_api.oauth_permission_cache_policy', OAuthPermissionCachePolicy::class)
       ->addTag('access_policy');
+    $container->register('xinshi_api.oauth_access_policy_processor', OAuthAccessPolicyProcessor::class)
+      ->setDecoratedService('access_policy_processor')
+      ->addArgument(new Reference('xinshi_api.oauth_access_policy_processor.inner'));
   }
 
 }
