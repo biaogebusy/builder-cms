@@ -345,7 +345,7 @@ final class PageDraftService {
               throw new PageDraftException('permission_denied', 403);
             }
           }
-          $contents[] = $block->toArray();
+          $contents[] = $this->storedValues($block);
           if ($langcode === $node->language()->getId()) {
             $component_body = json_decode($block->get('body')->value, FALSE, 64, JSON_THROW_ON_ERROR);
             if (!$component_body instanceof \stdClass || !isset($component_body->type)) {
@@ -355,7 +355,7 @@ final class PageDraftService {
           }
         }
       }
-      $values = $translation->toArray();
+      $values = $this->storedValues($translation);
       $values['layout_builder__layout'] = $layout;
       $version[$langcode] = [$values, $contents];
     }
@@ -366,6 +366,11 @@ final class PageDraftService {
       // Content participates too: legacy editors can update blocks without changing node vid.
       'version' => hash('sha256', json_encode($version, JSON_THROW_ON_ERROR)),
     ];
+  }
+
+  /** Exclude computed output, such as Metatag URLs that depend on the request. */
+  private function storedValues(ContentEntityInterface $entity): array {
+    return array_map(static fn($field) => $field->getValue(), $entity->getFields(FALSE));
   }
 
   private function prepareEntities(\stdClass $input): array {

@@ -202,6 +202,13 @@ final class PageDraftServiceTest extends TestCase {
     $entity->method('language')->willReturn(new Language(['id' => $values['langcode']]));
     $entity->method('getRevisionId')->willReturnCallback(fn() => $this->created[$id]['values']['vid']);
     $entity->method('toArray')->willReturnCallback(fn() => $this->created[$id]['values']);
+    $entity->method('getFields')->with(FALSE)->willReturnCallback(function () use ($id) {
+      return array_map(function ($value) {
+        $field = $this->createMock(FieldItemListInterface::class);
+        $field->method('getValue')->willReturn((array) $value);
+        return $field;
+      }, $this->created[$id]['values']);
+    });
     $entity->method('isNew')->willReturnCallback(fn() => !$this->stored($id));
     $entity->method('setNewRevision')->willReturnCallback(function () use ($id) {
       $this->created[$id]['newRevision'] = TRUE;

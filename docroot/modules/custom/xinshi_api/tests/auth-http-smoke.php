@@ -125,7 +125,7 @@ function status(array $response, int $expected, string $description): array {
   return $response;
 }
 
-\Drupal::service('module_installer')->install(['language', 'xinshi_ai']);
+\Drupal::service('module_installer')->install(['language', 'xinshi_ai', 'metatag']);
 $credentials_path = $fixture . '/auth-fixture.json';
 if (!is_file($credentials_path)) {
   Role::create(['id' => 'http_author', 'label' => 'HTTP fixture author', 'permissions' => [

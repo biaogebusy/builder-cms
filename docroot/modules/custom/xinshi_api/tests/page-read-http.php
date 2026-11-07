@@ -98,6 +98,56 @@ status(http('GET', $path . $draftId, $reviewJar), 200,
   'Actual unpublished-view permission allows a non-administrator to read another author draft');
 status(http('GET', '/api/v3/landingPage/drafts/page/' . $draftId, $reviewJar), 403,
   'Reviewer cannot prepare another author draft for writing');
+
+// Metatag derives block canonical URLs from the current request. Exercise fresh
+// HTTP kernels so service-only tests cannot hide route-dependent versions.
+foreach ([['jar' => $admin['jar'], 'csrf' => $admin['csrf']], ['bearer' => $adminToken]] as $auth) {
+  $operations = '/api/v3/landingPage/drafts/';
+  $created = json_decode(status(http('POST', $operations . \Drupal::service('uuid')->generate(),
+    ...$auth, body: json_encode(['title' => 'Metatag draft', 'body' => $body])),
+    200, 'Owner creates a draft with Metatag enabled')['body'], TRUE);
+  $id = $created['result']['id'];
+  $read = json_decode(status(http('GET', $path . $id, ...$auth), 200, 'Owner reads the page')['body'], TRUE);
+  foreach ([$operations . 'page/' . $id, $path . $id . '?noCache=1'] as $url) {
+    $other = json_decode(status(http('GET', $url, ...$auth), 200, 'Owner reads through another URL')['body'], TRUE);
+    check($other['version'] === $read['version'], 'Stored page version is independent of the request URL');
+  }
+  $change = ['action' => 'append', 'pageId' => $id, 'expectedVersion' => $read['version'],
+    'body' => [['type' => 'text', 'body' => 'Appended once']]];
+  $operation = $operations . \Drupal::service('uuid')->generate();
+  $written = status(http('POST', $operation . '/change', ...$auth, body: json_encode($change)),
+    200, 'Generic read version permits an owned draft append');
+  $receipt = status(http('GET', $operation, ...$auth), 200, 'Owner reconciles the append');
+  check(json_decode($receipt['body']) == json_decode($written['body']), 'Reconciliation returns the original append receipt');
+  $duplicate = status(http('POST', $operation . '/change', ...$auth, body: json_encode($change)),
+    200, 'Owner repeats the same append operation');
+  check(json_decode($duplicate['body']) == json_decode($written['body']),
+    'Duplicate append returns the original receipt');
+  $after = json_decode(status(http('GET', $path . $id, ...$auth), 200, 'Owner reads the appended draft')['body'], TRUE);
+  check($after['body'] === [...$body, ...$change['body']] && $after['version'] !== $read['version'],
+    'Append preserves original components and advances the version exactly once');
+  $stale = status(http('POST', $operations . \Drupal::service('uuid')->generate() . '/change',
+    ...$auth, body: json_encode($change)), 409, 'A new operation rejects the stale page version');
+  $refusal = json_decode($stale['body'], TRUE);
+  check($refusal['code'] === 'version_conflict' && $refusal['outcome'] === 'not_written',
+    'Version conflict remains a definite no-write result');
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $storage->resetCache([$id]);
+  $owned = $storage->load($id);
+  $revision = $owned->getRevisionId();
+  $components = $owned->get('layout_builder__layout')->getSections()[0]->getComponents();
+  $uuid = substr(reset($components)->get('configuration')['id'], 14);
+  $blocks = \Drupal::entityTypeManager()->getStorage('block_content')->loadByProperties(['uuid' => $uuid]);
+  $edited = reset($blocks);
+  check($edited->getFieldDefinition('metatag')->isComputed(), 'Fixture includes the computed Metatag field');
+  $edited->set('body', ['format' => 'json', 'value' => '{"type":"text","body":"Concurrent block edit"}'])->save();
+  $storage->resetCache([$id]);
+  check($storage->load($id)->getRevisionId() === $revision, 'Legacy block edit preserves the node revision');
+  $change['expectedVersion'] = $after['version'];
+  status(http('POST', $operations . \Drupal::service('uuid')->generate() . '/change',
+    ...$auth, body: json_encode($change)), 409, 'A block edit alone invalidates the page version');
+}
 administratorRole(FALSE);
 try {
   status(http('GET', $path . $draftId, $admin['jar']), 403, 'Administrator role revocation denies the next Cookie read');
