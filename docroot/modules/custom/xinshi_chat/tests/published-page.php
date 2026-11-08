@@ -10,7 +10,7 @@ use Drupal\node\Entity\Node;
 function checkPublishedPage(array $users, array $tokens, string $jar): void {
   $html = '<main>Published HTML & "quoted" 中文</main>';
   $content = static fn(string $html): string => '```json' . "\n" . json_encode([
-    'widget' => ['type' => 'fullHTML', 'html' => $html],
+    'widget' => ['type' => 'full-html', 'html' => $html],
     'uiRevision' => ['original' => 'PRIVATE ORIGINAL', 'sourceId' => 'PRIVATE SOURCE ID'],
   ], JSON_UNESCAPED_UNICODE) . "\n```";
   $message = Node::create(['type' => 'ai_session', 'title' => 'PRIVATE TITLE',
@@ -60,6 +60,8 @@ function checkPublishedPage(array $users, array $tokens, string $jar): void {
     'Ordinary privacy hooks preserve protected-reference isolation');
   $extras = [$protected];
   foreach ([['user', $content($html)], ['assistant', '{"widget":{"type":"custom","html":"invalid"}}'],
+    ['assistant', json_encode(['widget' => ['type' => 'full_html', 'html' => $html]])],
+    ['assistant', json_encode(['widget' => ['type' => 'fullHTML', 'html' => $html]])],
     ['assistant', 'not json']] as [$role, $body]) {
     $invalid = Node::create(['type' => 'ai_session', 'title' => 'Nonpublishable source',
       'uid' => $users['owner']->id(), 'status' => 1, 'session_role' => $role,
@@ -71,6 +73,18 @@ function checkPublishedPage(array $users, array $tokens, string $jar): void {
       $tokens['owner'], 'PUT', $payload)['status'] === 422, 'Only valid saved assistant FullHTML can be published');
     $extras[] = $invalid;
   }
+  $raw = $message->createDuplicate();
+  $raw->set('content', ['value' => json_encode([
+    'widget' => ['type' => 'full-html', 'html' => $html],
+  ]), 'format' => 'plain_text'])->save();
+  \Drupal::service('xinshi_chat.conversation_writer')->update($chat->uuid(), [$raw->uuid()], []);
+  $raw_result = http('/api/v3/ai/conversations/' . $chat->uuid() . '/sessions/' . $raw->uuid() . '/published-page',
+    $tokens['owner'], 'PUT', $payload);
+  check($raw_result['status'] === 200, 'Raw JSON with the full-html widget type can also be published');
+  $raw_page = $raw_result['data']['page']['id'];
+  check(http($public_path($raw_page))['data'] === ['html' => $html], 'Raw and fenced JSON expose only selected HTML');
+  $raw->delete();
+  check(http($public_path($raw_page))['status'] === 404, 'Deleting the raw JSON source revokes its public page');
   $published = http($manage, $tokens['owner'], 'PUT', $payload);
   $id = $published['data']['page']['id'] ?? '';
   check($published['status'] === 200 && $id !== $message->uuid() && strlen($id) === 36,

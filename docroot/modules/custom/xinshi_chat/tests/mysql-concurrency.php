@@ -307,7 +307,7 @@ check(($results[0]['status'] ?? NULL) === 409 &&
   'A project cannot acquire a new missing reference while conversation deletion commits');
 // Publication participates in the same source locks as private edits and aggregate deletion.
 $public_html = '<main>Author selected</main>';
-$public_source = static fn(string $html): string => json_encode(['widget' => ['type' => 'fullHTML', 'html' => $html]]);
+$public_source = static fn(string $html): string => json_encode(['widget' => ['type' => 'full-html', 'html' => $html]]);
 $target = Node::create(['type' => 'ai_session', 'uid' => $uid, 'title' => 'Publication race',
   'session_role' => 'assistant', 'storage_version' => 3, 'edit_version' => 1, 'storage_mode' => 'inline',
   'content' => ['value' => $public_source($public_html), 'format' => 'plain_text']]);

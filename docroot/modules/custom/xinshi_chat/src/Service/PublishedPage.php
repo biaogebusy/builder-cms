@@ -156,7 +156,7 @@ final class PublishedPage {
       throw new UnprocessableEntityHttpException('Invalid saved HTML result.');
     }
     $widget = $data instanceof \stdClass ? ($data->widget ?? NULL) : NULL;
-    if (!$widget instanceof \stdClass || ($widget->type ?? NULL) !== 'fullHTML' ||
+    if (!$widget instanceof \stdClass || ($widget->type ?? NULL) !== 'full-html' ||
       !is_string($widget->html ?? NULL) || trim($widget->html) === '' ||
       strlen($widget->html) > ChatSessionFormat::CONTENT_BYTES) {
       throw new UnprocessableEntityHttpException('Only a saved FullHTML result can be published.');
