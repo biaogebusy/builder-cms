@@ -9,7 +9,15 @@ services:
 
   xinshi_ai.web_search:
     class: Drupal\xinshi_ai\Service\WebSearchClient
-    arguments: ['@http_client', '@xinshi_ai.web_search_credentials', '@config.factory', '@current_user']
+    arguments: ['@http_client', '@xinshi_ai.web_search_credentials', '@config.factory', '@current_user', '@xinshi_ai.web_page_reader']
+
+  xinshi_ai.web_page_reader:
+    class: Drupal\xinshi_ai\Service\WebPageReader
+    arguments: ['@xinshi_ai.public_http']
+
+  xinshi_ai.public_http:
+    class: Drupal\xinshi_ai\Service\PublicHttpClientFactory
+    arguments: ['@xinshi_ai.public_url_policy']
 
   xinshi_ai.figma_vault:
     class: Drupal\xinshi_ai\Service\FigmaVault

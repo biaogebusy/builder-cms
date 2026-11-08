@@ -20,6 +20,7 @@ final class WebSearchClient {
     private readonly WebSearchCredentials $credentials,
     private readonly ConfigFactoryInterface $config,
     private readonly AccountProxyInterface $account,
+    private readonly WebPageReader $pages,
   ) {}
 
   /** Validate user inputs before making a paid, read-only provider request. */
@@ -110,16 +111,27 @@ final class WebSearchClient {
       if (!is_string($data['title'] ?? NULL) || !is_string($data['content'] ?? NULL)) {
         throw new \RuntimeException();
       }
+      try {
+        $data = $this->pages->read($value);
+      }
+      catch (\Throwable) {
+        // Preserve an available provider result without claiming original formatting was checked.
+        $data['contentFormat'] = 'provider_text';
+      }
       if (($input['complete'] ?? FALSE) === TRUE) {
+        if (strlen($data['content']) > self::MAX_BYTES) {
+          throw new \RuntimeException();
+        }
         // This binds later ranges to the returned text, not to the live page or its completeness.
         return ['url' => $value, 'title' => mb_substr($data['title'], 0, 500),
-          'content' => $data['content'], 'truncated' => FALSE,
+          'content' => $data['content'], 'contentFormat' => $data['contentFormat'], 'truncated' => FALSE,
           'source' => ['scope' => 'returned-text',
             'snapshot' => hash('sha256', $data['content']),
             'totalCharacters' => mb_strlen($data['content'])]];
       }
       return ['url' => $value, 'title' => mb_substr($data['title'], 0, 500),
         'content' => mb_substr($data['content'], 0, 24000),
+        'contentFormat' => $data['contentFormat'],
         'truncated' => mb_strlen($data['content']) > 24000];
     }
     catch (HttpException $error) {
