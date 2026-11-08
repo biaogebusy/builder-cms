@@ -16,6 +16,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\xinshi_ai\Controller\WebSearchController;
 use Drupal\xinshi_ai\Service\WebSearchClient;
 use Drupal\xinshi_ai\Service\WebSearchCredentials;
+use Drupal\xinshi_ai\Service\WebPageReader;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -37,6 +38,7 @@ final class WebSearchTest extends TestCase {
   private WebSearchController $controller;
   private array $history = [];
   private bool $authenticated = TRUE;
+  private ?array $originalPage = NULL;
 
   protected function setUp(): void {
     new Settings(['hash_salt' => 'web-search-test-salt']);
@@ -57,8 +59,15 @@ final class WebSearchTest extends TestCase {
     $this->http = new MockHandler();
     $stack = HandlerStack::create($this->http);
     $stack->push(Middleware::history($this->history));
+    $pages = $this->createMock(WebPageReader::class);
+    $pages->method('read')->willReturnCallback(function () {
+      if ($this->originalPage === NULL) {
+        throw new \RuntimeException('Original page unavailable');
+      }
+      return $this->originalPage;
+    });
     $this->controller = new WebSearchController(new WebSearchClient(
-      new Client(['handler' => $stack]), $this->credentials, $this->config, $account));
+      new Client(['handler' => $stack]), $this->credentials, $this->config, $account, $pages));
   }
 
   protected function tearDown(): void {
@@ -108,8 +117,23 @@ final class WebSearchTest extends TestCase {
     $this->assertSame(200, $response->getStatusCode());
     $this->assertSame(24000, mb_strlen($data['content']));
     $this->assertTrue($data['truncated']);
+    $this->assertSame('provider_text', $data['contentFormat']);
     $this->assertSame('https://example.com/article', $data['url']);
     $this->assertSame('https://api.deepseek.com/v1/tools/fetch', (string) $this->history[0]['request']->getUri());
+  }
+
+  public function testOriginalMarkupReplacesLossyProviderTextWithoutChangingTheSource(): void {
+    $this->http->append(new Response(200, [], json_encode(['title' => 'Provider title', 'content' => '248 bytes'])));
+    $this->originalPage = ['title' => 'Original title',
+      'content' => '2<sup><small>48</small></sup> bytes', 'contentFormat' => 'html_markdown'];
+    $response = $this->call('fetch', ['url' => 'https://example.com/article']);
+    $data = json_decode($response->getContent(), TRUE);
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertSame($this->originalPage['content'], $data['content']);
+    $this->assertSame('Original title', $data['title']);
+    $this->assertSame('html_markdown', $data['contentFormat']);
+    $this->assertSame('https://example.com/article', $data['url']);
+    $this->assertFalse($data['truncated']);
   }
 
   public function testEachToolCanBeDisabledIndependentlyWithoutLeakingARequest(): void {

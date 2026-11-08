@@ -20,6 +20,7 @@ final class WebSearchClient {
     private readonly WebSearchCredentials $credentials,
     private readonly ConfigFactoryInterface $config,
     private readonly AccountProxyInterface $account,
+    private readonly WebPageReader $pages,
   ) {}
 
   /** Validate user inputs before making a paid, read-only provider request. */
@@ -109,8 +110,16 @@ final class WebSearchClient {
       if (!is_string($data['title'] ?? NULL) || !is_string($data['content'] ?? NULL)) {
         throw new \RuntimeException();
       }
+      try {
+        $data = $this->pages->read($value);
+      }
+      catch (\Throwable) {
+        // Preserve an available provider result without claiming original formatting was checked.
+        $data['contentFormat'] = 'provider_text';
+      }
       return ['url' => $value, 'title' => mb_substr($data['title'], 0, 500),
         'content' => mb_substr($data['content'], 0, 24000),
+        'contentFormat' => $data['contentFormat'],
         'truncated' => mb_strlen($data['content']) > 24000];
     }
     catch (HttpException $error) {
