@@ -1,4 +1,10 @@
 services:
+  xinshi_chat.published_page:
+    class: Drupal\xinshi_chat\Service\PublishedPage
+    arguments: ['@database', '@entity_type.manager', '@current_user', '@xinshi_ai_reference.history', '@uuid', '@datetime.time']
+  xinshi_chat.read_access:
+    class: Drupal\xinshi_chat\Service\ChatReadAccess
+    arguments: ['@entity_type.manager', '@database']
   xinshi_chat.conversation_project:
     class: Drupal\xinshi_chat\Service\ConversationProject
     arguments: ['@database', '@entity_type.manager', '@current_user', '@jsonapi.resource_type.repository', '@xinshi_ai_reference.conversation_references', '@datetime.time']
@@ -22,7 +28,7 @@ services:
       - { name: module_install.uninstall_validator }
   xinshi_chat.availability:
     class: Drupal\xinshi_chat\EventSubscriber\AvailabilitySubscriber
-    arguments: ['@config.factory']
+    arguments: ['@config.factory', '@page_cache_kill_switch', '@router.route_provider']
     tags:
       - { name: event_subscriber }
   xinshi_chat.config_import:

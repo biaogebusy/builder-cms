@@ -6,6 +6,49 @@
  */
 
 use Drupal\node\NodeInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/** Implements hook_node_access(). */
+function xinshi_chat_node_access(NodeInterface $node, $operation, AccountInterface $account) {
+  return in_array($operation, ['view', 'view label', 'view revision', 'view all revisions'], TRUE)
+    ? \Drupal::service('xinshi_chat.read_access')->view($node, $account) : AccessResult::neutral();
+}
+
+/** Implements hook_entity_field_access(); JSON:API linkage can bypass entity access. */
+function xinshi_chat_entity_field_access($operation, FieldDefinitionInterface $definition,
+  AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+  $node = $items?->getEntity();
+  return $operation === 'view' && $node instanceof NodeInterface
+    ? \Drupal::service('xinshi_chat.read_access')->view($node, $account) : AccessResult::neutral();
+}
+
+/** Implements hook_query_node_access_alter(). */
+function xinshi_chat_query_node_access_alter(AlterableInterface $query): void {
+  \Drupal::service('xinshi_chat.read_access')->query($query,
+    $query->getMetaData('account') ?? \Drupal::currentUser());
+}
+
+/** Implements hook_views_post_build(); field Views must vary by the Chat query's principal. */
+function xinshi_chat_views_post_build(\Drupal\views\ViewExecutable $view): void {
+  foreach ($view->query->getEntityTableInfo() as $table) {
+    if ($table['entity_type'] === 'node') {
+      $metadata = $view->display_handler->getCacheMetadata();
+      $view->display_handler->display['cache_metadata']['contexts'] =
+        \Drupal\Core\Cache\Cache::mergeContexts($metadata->getCacheContexts(), ['user', 'user.permissions']);
+      $view->addCacheContext('user')->addCacheContext('user.permissions');
+      return;
+    }
+  }
+}
+
+/** Implements hook_node_delete(). */
+function xinshi_chat_node_delete(NodeInterface $node): void {
+  \Drupal::service('xinshi_chat.published_page')->removeSource($node);
+}
 
 /** Implements hook_node_presave(). */
 function xinshi_chat_node_presave(NodeInterface $node): void {
