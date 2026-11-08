@@ -1,0 +1,12 @@
+[Unit]
+Description=Consume Xinshi AI usage events for %i
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/xinshi/ai-usage-%i.env
+ExecStart=/usr/local/libexec/xinshi-ai-usage
+TimeoutStartSec=300
+StandardOutput=journal
+StandardError=journal

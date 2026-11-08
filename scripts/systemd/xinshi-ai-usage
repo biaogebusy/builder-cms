@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+: "${CMS_CONTAINER:?Set CMS_CONTAINER}"
+: "${CMS_USER:?Set CMS_USER}"
+: "${CMS_ROOT:?Set CMS_ROOT}"
+: "${AI_USAGE_SITE:?Set AI_USAGE_SITE}"
+# An empty Drush site selects every site, so reject an invalid scope before dispatch.
+case "$AI_USAGE_SITE" in
+  *[!a-zA-Z0-9._:-]*) echo 'Invalid AI_USAGE_SITE' >&2; exit 1 ;;
+esac
+
+exec docker exec --user "$CMS_USER" --workdir "$CMS_ROOT" "$CMS_CONTAINER" \
+  vendor/bin/drush xinshi-ai-usage:process "--site=$AI_USAGE_SITE" --limit=1000
