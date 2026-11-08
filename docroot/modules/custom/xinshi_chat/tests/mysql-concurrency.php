@@ -180,6 +180,9 @@ $user = User::create(['name' => 'chat-race', 'status' => 1, 'roles' => ['chat_wr
 $user->save();
 $uid = (int) $user->id();
 \Drupal::currentUser()->setAccount($user);
+// Initialize core's lazy permission cache table before testing transactional row locks.
+// MySQL CREATE TABLE implicitly commits, so schema initialization cannot run inside a race.
+check($user->hasPermission('access content'), 'Fixture permission storage is initialized before races');
 $storage = \Drupal::entityTypeManager()->getStorage('node');
 function message(): Node {
   $node = Node::create(['type' => 'ai_session', 'uid' => $GLOBALS['uid'], 'title' => 'Race message',
