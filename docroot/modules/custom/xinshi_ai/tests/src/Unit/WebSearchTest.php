@@ -112,11 +112,39 @@ final class WebSearchTest extends TestCase {
     $this->assertSame('https://api.deepseek.com/v1/tools/fetch', (string) $this->history[0]['request']->getUri());
   }
 
+  public function testCompleteFetchRetainsTailAndBindsCoverageToProviderText(): void {
+    $content = str_repeat('文', 24000) . '😀尾部限制：仅限工作日。';
+    $this->http->append(new Response(200, [], json_encode(['title' => 'Page', 'content' => $content])));
+    $response = $this->call('fetch', ['url' => 'https://example.com/article', 'complete' => TRUE]);
+    $data = json_decode($response->getContent(), TRUE);
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertSame($content, $data['content']);
+    $this->assertFalse($data['truncated']);
+    $this->assertSame(['scope' => 'returned-text', 'snapshot' => hash('sha256', $content),
+      'totalCharacters' => mb_strlen($content)], $data['source']);
+    $this->assertSame('https://api.deepseek.com/v1/tools/fetch', (string) $this->history[0]['request']->getUri());
+    $this->assertSame(['url' => 'https://example.com/article'],
+      json_decode((string) $this->history[0]['request']->getBody(), TRUE));
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+  }
+
+  public function testCompleteFetchStillRejectsProviderResponsesAboveTheByteLimit(): void {
+    $this->http->append(new Response(200, [], json_encode([
+      'title' => 'Large page', 'content' => str_repeat('x', 1048576),
+    ])));
+    $response = $this->call('fetch', ['url' => 'https://example.com/article', 'complete' => TRUE]);
+    $this->assertSame(502, $response->getStatusCode());
+    $this->assertSame(['code' => 'web_search_provider_failed'], json_decode($response->getContent(), TRUE));
+  }
+
   public function testEachToolCanBeDisabledIndependentlyWithoutLeakingARequest(): void {
     foreach (['search', 'fetch'] as $disabled) {
       $this->config->getEditable('xinshi_ai.settings')
         ->set('harness.tools.disabled', ['web_' . $disabled])->save();
       $input = $disabled === 'search' ? ['query' => 'news'] : ['url' => 'https://example.com'];
+      if ($disabled === 'fetch') {
+        $input['complete'] = TRUE;
+      }
       $this->assertSame(403, $this->call($disabled, $input)->getStatusCode());
       $other = $disabled === 'search' ? 'fetch' : 'search';
       $this->http->append(new Response(200, [], json_encode($other === 'search'
@@ -136,6 +164,10 @@ final class WebSearchTest extends TestCase {
       ['search', ['query' => 'news', 'count' => '2']], ['search', ['query' => 'news', 'count' => NULL]],
       ['search', ['query' => 'news', 'count' => 11]], ['search', ['query' => 'news', 'key' => 'forged']],
       ['fetch', ['url' => 'file:///etc/passwd']], ['fetch', ['url' => 'https://user:pass@example.com']],
+      ['fetch', ['url' => 'https://example.com', 'complete' => 'true']],
+      ['fetch', ['url' => 'https://example.com', 'complete' => NULL]],
+      ['fetch', ['url' => 'https://example.com', 'complete' => 1]],
+      ['search', ['query' => 'news', 'complete' => TRUE]],
       ['search', []], ['invalid', ['query' => 'news']],
     ];
   }

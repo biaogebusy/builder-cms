@@ -35,7 +35,7 @@ final class WebSearchClient {
       throw new HttpException(403, 'web_search_disabled');
     }
     $search = $operation === 'search';
-    $allowed = $search ? ['query', 'count'] : ['url'];
+    $allowed = $search ? ['query', 'count'] : ['url', 'complete'];
     $value = $input[$search ? 'query' : 'url'] ?? NULL;
     if (array_diff(array_keys($input), $allowed) || !is_string($value) || trim($value) === '' ||
       mb_strlen(trim($value)) > ($search ? 128 : 8192)) {
@@ -50,7 +50,8 @@ final class WebSearchClient {
       $body = ['query' => $value, 'count' => $count, 'need_content' => FALSE];
     }
     else {
-      if (!self::isWebUrl($value)) {
+      if (!self::isWebUrl($value) ||
+        (array_key_exists('complete', $input) && !is_bool($input['complete']))) {
         throw new HttpException(400, 'web_search_invalid_input');
       }
       $body = ['url' => $value];
@@ -108,6 +109,14 @@ final class WebSearchClient {
       }
       if (!is_string($data['title'] ?? NULL) || !is_string($data['content'] ?? NULL)) {
         throw new \RuntimeException();
+      }
+      if (($input['complete'] ?? FALSE) === TRUE) {
+        // This binds later ranges to the returned text, not to the live page or its completeness.
+        return ['url' => $value, 'title' => mb_substr($data['title'], 0, 500),
+          'content' => $data['content'], 'truncated' => FALSE,
+          'source' => ['scope' => 'returned-text',
+            'snapshot' => hash('sha256', $data['content']),
+            'totalCharacters' => mb_strlen($data['content'])]];
       }
       return ['url' => $value, 'title' => mb_substr($data['title'], 0, 500),
         'content' => mb_substr($data['content'], 0, 24000),
