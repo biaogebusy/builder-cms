@@ -76,6 +76,9 @@ final class HarnessSettings {
       'create_spreadsheet' => '创建 Excel 工作簿',
       'update_spreadsheet' => '修改 Excel 工作簿',
     ]],
+    'builder_comparison' => ['label' => '建站产品资料对照', 'tools' => [
+      'read_builder_reference' => '提取建站产品搜索证据',
+    ]],
   ];
 
   public static function toolNames(): array {
