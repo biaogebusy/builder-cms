@@ -42,6 +42,12 @@ if (isset($argv[1])) {
     if ($job->action === 'delete') {
       \Drupal::service('xinshi_chat.conversation_deletion')->delete($job->uuid);
     }
+    elseif ($job->action === 'publish') {
+      \Drupal::service('xinshi_chat.published_page')->publish($job->uuid, $job->message, $job->hash);
+    }
+    elseif ($job->action === 'revoke') {
+      \Drupal::service('xinshi_chat.published_page')->revoke($job->uuid, $job->message);
+    }
     elseif ($job->action === 'append') {
       \Drupal::service('xinshi_chat.conversation_writer')->update($job->uuid, [$job->message], []);
     }
@@ -113,10 +119,14 @@ function race(int $uid, int $held, array $jobs, ?callable $beforeRelease = NULL,
   $waits = str_contains($observer->query('SELECT VERSION()')->fetchColumn(), 'MariaDB')
     ? 'SELECT COUNT(DISTINCT requesting_trx_id) FROM information_schema.INNODB_LOCK_WAITS'
     : 'SELECT COUNT(DISTINCT REQUESTING_ENGINE_TRANSACTION_ID) FROM performance_schema.data_lock_waits';
+  $held_node = \Drupal::database()->select('node', 'n')->fields('n', ['uuid', 'type'])
+    ->condition('nid', $held)->execute()->fetchAssoc();
   $transaction = \Drupal::database()->startTransaction();
   if ($beforeLock) $beforeLock();
+  // Match the writers' unique-index order; a primary-only fixture lock can manufacture a deadlock.
   \Drupal::database()->select('node', 'n')->fields('n', ['nid'])
-    ->condition('nid', $held)->forUpdate()->execute()->fetchField();
+    ->condition('uuid', $held_node['uuid'])->condition('type', $held_node['type'])
+    ->forUpdate()->execute()->fetchField();
   $workers = [];
   try {
     foreach ($jobs as $job) {
@@ -132,7 +142,13 @@ function race(int $uid, int $held, array $jobs, ?callable $beforeRelease = NULL,
     waitFor(fn() => (int) $observer->query($waits)->fetchColumn() === count($jobs),
       'all writers waiting in InnoDB');
     check(TRUE, 'Observed ' . count($jobs) . ' independent write transactions waiting in InnoDB');
-    if ($beforeRelease) $beforeRelease();
+    if ($beforeRelease) {
+      try { $beforeRelease(); }
+      catch (\Throwable $error) {
+        echo (string) $error . PHP_EOL;
+        throw $error;
+      }
+    }
     unset($transaction);
     $results = [];
     foreach ($workers as $worker) {
@@ -164,6 +180,9 @@ $user = User::create(['name' => 'chat-race', 'status' => 1, 'roles' => ['chat_wr
 $user->save();
 $uid = (int) $user->id();
 \Drupal::currentUser()->setAccount($user);
+// Initialize core's lazy permission cache table before testing transactional row locks.
+// MySQL CREATE TABLE implicitly commits, so schema initialization cannot run inside a race.
+check($user->hasPermission('access content'), 'Fixture permission storage is initialized before races');
 $storage = \Drupal::entityTypeManager()->getStorage('node');
 function message(): Node {
   $node = Node::create(['type' => 'ai_session', 'uid' => $GLOBALS['uid'], 'title' => 'Race message',
@@ -286,4 +305,32 @@ $storage->resetCache();
 check(($results[0]['status'] ?? NULL) === 409 &&
   count(Node::load($project->id())->get('field_conversations')) === 3,
   'A project cannot acquire a new missing reference while conversation deletion commits');
+// Publication participates in the same source locks as private edits and aggregate deletion.
+$public_html = '<main>Author selected</main>';
+$public_source = static fn(string $html): string => json_encode(['widget' => ['type' => 'fullHTML', 'html' => $html]]);
+$target = Node::create(['type' => 'ai_session', 'uid' => $uid, 'title' => 'Publication race',
+  'session_role' => 'assistant', 'storage_version' => 3, 'edit_version' => 1, 'storage_mode' => 'inline',
+  'content' => ['value' => $public_source($public_html), 'format' => 'plain_text']]);
+$target->save();
+$a = conversation([$target]);
+$pages = \Drupal::service('xinshi_chat.published_page');
+$job = ['action' => 'publish', 'uuid' => $a->uuid(), 'message' => $target->uuid(), 'hash' => hash('sha256', $public_html)];
+$results = race($uid, (int) $a->id(), [$job, $job]);
+$id = $pages->status($a->uuid(), $target->uuid())['page']['id'];
+check($results === [['ok' => TRUE], ['ok' => TRUE]] && $pages->read($id) === ['html' => $public_html] &&
+  (int) \Drupal::database()->select('xinshi_chat_published_page', 'p')->condition('session_uuid', $target->uuid())
+    ->countQuery()->execute()->fetchField() === 1, 'Contending publication retries create one independent snapshot');
+$updated_html = '<main>New private source</main>';
+$results = race($uid, (int) $a->id(), [$job], static function () use ($a, $target, $updated_html, $public_source): void {
+  \Drupal::service('xinshi_ai_reference.fields_writer')->update($a->uuid(), $target->uuid(), 1,
+    (object) ['content' => (object) ['value' => $public_source($updated_html), 'format' => 'plain_text']]);
+});
+check(($results[0]['error'] ?? NULL) === \Symfony\Component\HttpKernel\Exception\ConflictHttpException::class &&
+  $pages->read($id) === ['html' => $public_html], 'A waiting publisher rejects changed private HTML without changing the public snapshot');
+$job['hash'] = hash('sha256', $updated_html);
+$results = race($uid, (int) $a->id(), [$job], static function () use ($a): void {
+  \Drupal::service('xinshi_chat.conversation_deletion')->delete($a->uuid());
+});
+check(($results[0]['error'] ?? NULL) === \Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class &&
+  $pages->read($id) === NULL, 'A waiting publisher cannot recreate a page after source deletion');
 echo 'Chat MySQL concurrency checks passed: ' . $checks . PHP_EOL;

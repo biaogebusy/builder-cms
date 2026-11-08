@@ -6,6 +6,29 @@ xinshi_chat.settings:
   requirements:
     _permission: 'administer chat configuration'
 
+xinshi_chat.published_page.manage:
+  path: '/api/v3/ai/conversations/{chat_uuid}/sessions/{uuid}/published-page'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\PublishedPageController::manage'
+    _format: 'json'
+  methods: [GET, PUT, DELETE]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_chat.published_page.read:
+  path: '/api/v3/ai/published-pages/{uuid}'
+  defaults:
+    _controller: '\Drupal\xinshi_chat\Controller\PublishedPageController::read'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+  requirements:
+    _access: 'TRUE'
+
 xinshi_ai.session.content:
   path: '/api/v3/ai/conversations/{chat_uuid}/sessions/{uuid}/content'
   defaults:

@@ -51,7 +51,7 @@ function check(bool $ok, string $message): void {
   echo 'PASS: ' . $message . PHP_EOL;
 }
 function http(string $path, ?string $token = NULL, string $method = 'GET', ?array $body = NULL,
-  ?string $jar = NULL): array {
+  ?string $jar = NULL, bool $check_cache = TRUE): array {
   $curl = curl_init('http://127.0.0.1:8080' . $path);
   $type = str_starts_with($path, '/jsonapi/') ? 'application/vnd.api+json' : 'application/json';
   $headers = ['Accept: ' . $type, 'Content-Type: ' . $type];
@@ -80,7 +80,7 @@ function http(string $path, ?string $token = NULL, string $method = 'GET', ?arra
   if ($body === FALSE || $status === 500) {
     throw new RuntimeException('HTTP failure: ' . file_get_contents('/tmp/chat-test/http.log'));
   }
-  if (!str_starts_with($path, '/user/')) {
+  if ($check_cache && !str_starts_with($path, '/user/')) {
     check(str_contains($cache, 'private') && str_contains($cache, 'no-store'), 'Private no-store HTTP ' . $status);
   }
   return ['status' => $status, 'data' => json_decode($body, TRUE)];
@@ -110,10 +110,10 @@ foreach (['conversations', 'sessions'] as $name) {
   ])->save();
 }
 
-Role::create(['id' => 'chat_admin', 'label' => 'Chat admin', 'permissions' => ['access content', 'bypass node access']])->save();
+Role::create(['id' => 'chat_admin', 'label' => 'Chat admin', 'permissions' => ['access content', 'bypass node access', 'view all revisions']])->save();
 Role::create(['id' => 'chat_limited', 'label' => 'Limited', 'permissions' => []])->save();
 require __DIR__ . '/project-fixture.php';
-Role::load('chat_owner')->grantPermission('edit any project content')
+Role::load('chat_owner')->grantPermission('view all revisions')->grantPermission('edit any project content')
   ->grantPermission('delete own conversation content')->grantPermission('delete own ai_session content')->save();
 foreach (['chat_owner', 'chat_admin', 'chat_limited'] as $role) {
   Oauth2Scope::create(['name' => $role, 'granularity_id' => 'role',
@@ -249,10 +249,10 @@ try {
   check(http($base . '/sessions', $tokens['other'])['status'] === 403, 'History denies another owner');
   check(http($base . '/sessions', $tokens['limited'])['status'] === 403, 'OAuth scopes retain entity permission restrictions');
   check(http($base . '/sessions', $tokens['admin'])['status'] === 200, 'Existing administrator preview remains available');
-  check(http('/jsonapi/node/ai_session/' . $message->uuid(), $tokens['other'])['status'] === 200,
-    'Ordinary JSON:API retains the existing site permission for shared previews');
-  check(http('/jsonapi/node/conversation/' . $chat->uuid() . '/relationships/sessions', $tokens['other'])['status'] === 200,
-    'Ordinary relationship reads retain existing entity and field permissions');
+  check(http('/jsonapi/node/ai_session/' . $message->uuid(), $tokens['other'])['status'] === 403,
+    'Ordinary JSON:API rejects another account reading private chat content');
+  check(http('/jsonapi/node/conversation/' . $chat->uuid() . '/relationships/sessions', $tokens['other'])['status'] === 403,
+    'Ordinary relationship reads reject another account');
   $patch = ['expected_edit_version' => 1, 'fields' => ['summary' => 'Updated summary']];
   check(http($message_path, $tokens['owner'], 'PATCH', $patch)['status'] === 200, 'Moved multi-field CAS route updates an owned message');
   check(http($message_path, $tokens['other'], 'PATCH', $patch)['status'] === 403, 'Moved CAS still rejects another owner');
@@ -273,6 +273,10 @@ try {
   check(http('/user/login?_format=json', NULL, 'POST', ['name' => 'chat-http-owner', 'pass' => 'test-only-chat'], $jar)['status'] === 200,
     'The synthetic owner can create a browser session');
   check(http($message_path, NULL, 'PATCH', $patch, $jar)['status'] === 403, 'Chat mutation routes remain OAuth-only');
+  require __DIR__ . '/read-isolation.php';
+  checkReadIsolation($users, $tokens, $jar);
+  require __DIR__ . '/published-page.php';
+  checkPublishedPage($users, $tokens, $jar);
   require __DIR__ . '/conversation-deletion.php';
   checkConversationDeletion($users, $tokens, $jar);
   require __DIR__ . '/conversation-project.php';

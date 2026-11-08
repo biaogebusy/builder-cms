@@ -72,6 +72,14 @@ if (getenv('CHAT_TEST_SCENARIO') !== 'manual') {
   check(\Drupal::moduleHandler()->moduleExists('xinshi_chat'),
     'A full configuration import can install Chat on an empty site');
 }
+$database = \Drupal::database();
+check($database->schema()->tableExists('xinshi_chat_published_page'), 'Fresh install creates publication storage');
+$database->schema()->dropTable('xinshi_chat_published_page');
+\Drupal::moduleHandler()->loadInclude('xinshi_chat', 'install');
+xinshi_chat_update_11003();
+xinshi_chat_update_11003();
+check((int) $database->select('xinshi_chat_published_page')->countQuery()->execute()->fetchField() === 0,
+  'Existing-site publication update is idempotent and never publishes old messages');
 $schema = \Drupal::service('xinshi_chat.schema');
 check($schema->inspect()['matches'], 'Fresh module installation creates the current complete structure');
 check(!\Drupal::moduleHandler()->moduleExists('xinshi_ai') &&

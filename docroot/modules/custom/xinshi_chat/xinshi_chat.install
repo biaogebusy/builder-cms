@@ -2,8 +2,37 @@
 
 /**
  * @file
- * Installs only configuration; historical message conversion remains an explicit job.
+ * Installs Chat configuration and explicit public snapshots without converting messages.
  */
+
+/** Implements hook_schema(). */
+function xinshi_chat_schema(): array {
+  return ['xinshi_chat_published_page' => [
+    'description' => 'Explicit public HTML snapshots, independent of private message storage.',
+    'fields' => [
+      'id' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE],
+      'session_uuid' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE],
+      'conversation_uuid' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE],
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'html' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
+      'html_hash' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'edit_version' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+      'updated' => ['type' => 'int', 'size' => 'big', 'not null' => TRUE],
+    ],
+    'primary key' => ['session_uuid'],
+    'unique keys' => ['public_id' => ['id']],
+    'indexes' => ['conversation' => ['conversation_uuid'], 'author' => ['uid']],
+  ]];
+}
+
+/** Create an empty publication store; existing messages and old links stay private. */
+function xinshi_chat_update_11003(): string {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('xinshi_chat_published_page')) {
+    $schema->createTable('xinshi_chat_published_page', xinshi_chat_schema()['xinshi_chat_published_page']);
+  }
+  return 'Explicit Chat page publication storage is installed.';
+}
 
 /** Implements hook_install(). */
 function xinshi_chat_install($is_syncing): void {
