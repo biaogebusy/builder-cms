@@ -29,7 +29,7 @@ final class AiBilling {
   /** Create a bounded quote for the authenticated user, without reserving credits. */
   public function quote(array $input, string $key, ?array $selection = NULL): array {
     $uid = $this->user();
-    CreditValue::fields($input, ['feature', 'model', 'platform', 'request_hash', 'producer_id']);
+    CreditValue::fields($input, ['feature', 'model', 'platform', 'request_hash', 'producer_id'], ['continuation']);
     $hash = self::hash($input['request_hash']);
     $producer = CreditValue::id($input['producer_id']);
     $requestKey = CreditValue::id($key);
@@ -42,6 +42,7 @@ final class AiBilling {
       return $this->quoteSummary($previous);
     }
     $this->enabled();
+    if (isset($input['continuation'])) $this->checkContinuation($input, $uid);
     $profile = $selection ?? $this->profiles->select(CreditValue::id($input['feature']),
       CreditValue::text($input['model'], 128), CreditValue::id($input['platform']));
     if ($profile['feature'] !== $input['feature'] || $profile['model'] !== $input['model'] || $profile['platform'] !== $input['platform']) throw new CreditException('quote_mismatch');
@@ -58,9 +59,19 @@ final class AiBilling {
   private function quoteSummary(array $quote): array {
     $profile = $this->profiles->load($quote['version']);
     $amounts = BillingProfiles::amounts($profile);
-    return ['quote_id' => $quote['id'], 'version' => $profile['version'], 'expires_at' => (int) $quote['expires_at'],
+    $result = ['quote_id' => $quote['id'], 'version' => $profile['version'], 'expires_at' => (int) $quote['expires_at'],
       'estimated_atoms' => $amounts['estimated_atoms'], 'maximum_atoms' => $amounts['maximum_atoms'],
       'estimate_basis' => $amounts['estimate_basis'], 'request_hash' => $quote['request_hash'], 'category' => $profile['category']];
+    $input = json_decode($quote['request_json'], TRUE, 32, JSON_THROW_ON_ERROR);
+    if (isset($input['continuation'])) {
+      $authorized = 0;
+      foreach ($this->operations($input['continuation']['root_operation_id']) as $operation) {
+        $authorized = CreditValue::add($authorized, (int) $this->operationSummary($operation)['authorized_atoms']);
+        if ($operation === $input['continuation']['parent_operation_id']) break;
+      }
+      $result['continuation'] = $input['continuation'] + ['authorized_atoms' => (string) $authorized];
+    }
+    return $result;
   }
 
   /** Accept the quote; optional local task creation shares the ledger's root transaction. */
@@ -73,6 +84,7 @@ final class AiBilling {
       throw new CreditException('quote_mismatch', 403);
     }
     $profile = $this->profiles->load($quote['version']);
+    $quoted = json_decode($quote['request_json'], TRUE, 32, JSON_THROW_ON_ERROR);
     $amounts = BillingProfiles::amounts($profile);
     if ($profile['category'] === 'image' && $onCommit === NULL) {
       throw new CreditException('image_task_required', 422);
@@ -83,8 +95,19 @@ final class AiBilling {
       'quote_expires_at' => (int) $quote['expires_at'], 'category' => $profile['category'],
       'amount_atoms' => $amounts['maximum_atoms']] + ($points ? ['accounting_mode' => 'points'] : [
       'cost_limit_micros' => $amounts['cost_limit_micros'], 'cost_currency' => $profile['currency'], 'cost_bucket_id' => $profile['cost_bucket_id']]),
-      'ai-hold:' . $quote['id'], function (array $account, string $reservation, string $journal, int $now) use ($quote, $operation, $onCommit): void {
+      'ai-hold:' . $quote['id'], function (array $account, string $reservation, string $journal, int $now) use ($quote, $quoted, $operation, $onCommit): void {
         $this->enabled();
+        if (isset($quoted['continuation'])) {
+          $root = $quoted['continuation']['root_operation_id'];
+          $this->authorization($root, TRUE);
+          $this->checkContinuation($quoted, $quote['user_id']);
+          if ($operation === $root) throw new CreditException('continuation_conflict', 409);
+          $this->database->insert('ai_billing_continuation')->fields([
+            'site_id' => $account['site_id'], 'operation_id' => $operation,
+            'root_operation_id' => $root, 'parent_operation_id' => $quoted['continuation']['parent_operation_id'],
+            'position' => count($this->operations($root)),
+          ])->execute();
+        }
         $this->database->insert('ai_billing_authorization')->fields(['site_id' => $account['site_id'],
           'operation_id' => $operation, 'quote_id' => $quote['id'], 'reservation_id' => $reservation,
           'user_id' => $quote['user_id'], 'producer_id' => $quote['producer_id'], 'state' => 'open',
@@ -101,14 +124,18 @@ final class AiBilling {
 
   /** A signed producer can dispatch only an original, still-open user authorization. */
   public function permit(array $producer, array $input): array {
-    CreditValue::fields($input, ['operation_id', 'attempt_id', 'model', 'account_ref', 'role']);
-    $operation = CreditValue::id($input['operation_id']);
+    CreditValue::fields($input, ['operation_id', 'attempt_id', 'model', 'account_ref', 'role'], ['authorization_id']);
+    $root = CreditValue::id($input['operation_id']);
+    $operation = isset($input['authorization_id']) ? CreditValue::id($input['authorization_id']) : $root;
     $attempt = CreditValue::id($input['attempt_id']);
     $input['model'] = CreditValue::text($input['model'], 128);
     $input['account_ref'] = CreditValue::id($input['account_ref']);
     if (!in_array($input['role'], ['primary', 'auxiliary', 'repair'], TRUE)) throw new CreditException('invalid_call');
     $transaction = $this->database->startTransaction();
     try {
+      $rootAuth = $this->authorization($root, TRUE);
+      $this->producer($producer, $rootAuth);
+      if ($this->root($operation) !== $root || $rootAuth['state'] !== 'open') throw new CreditException('operation_closed', 409);
       $auth = $this->authorization($operation, TRUE);
       $this->producer($producer, $auth);
       if ($auth['state'] !== 'open') throw new CreditException('operation_closed', 409);
@@ -130,6 +157,12 @@ final class AiBilling {
         if ($previous['model'] === $input['model'] && $previous['account_ref'] === $input['account_ref']
           && $previous['role'] === $input['role']) $count++;
       }
+      $operations = $this->operations($root);
+      if (end($operations) !== $operation) throw new CreditException('authorization_superseded', 409);
+      if ($this->database->select('ai_billing_permit', 'p')->condition('site_id', $auth['site_id'])
+        ->condition('attempt_id', $attempt)->countQuery()->execute()->fetchField()) {
+        throw new CreditException('permit_conflict', 409);
+      }
       if ($count >= $call['max_calls'] || count($permits) >= 128) throw new CreditException('authorization_exceeded', 409);
       $this->database->insert('ai_billing_permit')->fields(['site_id' => $auth['site_id'],
         'operation_id' => $operation, 'attempt_id' => $attempt, 'call_json' => BillingProfiles::json($input),
@@ -142,6 +175,17 @@ final class AiBilling {
 
   /** Close dispatch permanently, then reconcile the exact current attempt revisions. */
   public function finalize(array $producer, array $input): array {
+    $root = CreditValue::id($input['operation_id'] ?? NULL);
+    if ($this->root($root) !== $root) throw new CreditException('root_operation_required', 409);
+    $result = $this->finalizeOperation($producer, $input);
+    // Closing the root serializes against new approvals before the chain is read.
+    foreach (array_slice($this->operations($root), 1) as $operation) {
+      $this->finalizeOperation($producer, array_replace($input, ['operation_id' => $operation]));
+    }
+    return count($this->operations($root)) === 1 ? $result : $this->summary($root);
+  }
+
+  private function finalizeOperation(array $producer, array $input): array {
     CreditValue::fields($input, ['operation_id', 'delivery', 'delivery_ref', 'attempts'], ['delivery_count']);
     $operation = CreditValue::id($input['operation_id']);
     if (!in_array($input['delivery'], ['delivered', 'none'], TRUE)) throw new CreditException('invalid_delivery');
@@ -173,8 +217,10 @@ final class AiBilling {
       $profile = $this->profiles->load($this->quoteRow($auth['quote_id'])['version']);
       if (($profile['category'] === 'image') !== isset($final['delivery_count'])) throw new CreditException('invalid_delivery');
       if ($auth['final_json'] !== '' && $auth['final_json'] !== $json) throw new CreditException('manifest_conflict', 409);
-      foreach ($this->permits($operation) as $permit) {
-        if (!array_key_exists($permit['attempt_id'], $revisions)) throw new CreditException('manifest_incomplete', 409);
+      foreach ($this->operations($this->root($operation)) as $related) {
+        foreach ($this->permits($related) as $permit) {
+          if (!array_key_exists($permit['attempt_id'], $revisions)) throw new CreditException('manifest_incomplete', 409);
+        }
       }
       if ($auth['state'] === 'open') {
         $this->database->update('ai_billing_authorization')->fields(['state' => 'awaiting_evidence', 'final_json' => $json])
@@ -183,9 +229,9 @@ final class AiBilling {
       $transaction->commitOrRelease();
     }
     catch (\Throwable $error) { $transaction->rollBack(); throw $error; }
-    if ($auth['terminal_journal_id'] !== '') return $this->summary($operation);
+    if ($auth['terminal_journal_id'] !== '') return $this->operationSummary($operation);
     $facts = $this->facts($auth, $profile, $final, $revisions);
-    if (isset($facts['pending'])) return $this->summary($operation) + ['pending_reason' => $facts['pending']];
+    if (isset($facts['pending'])) return $this->operationSummary($operation) + ['pending_reason' => $facts['pending']];
     $evidence = BillingProfiles::json($facts);
     $hash = hash('sha256', $evidence);
     $command = $this->common($auth['user_id']) + ['operation_id' => $operation,
@@ -209,7 +255,7 @@ final class AiBilling {
     };
     if ($facts['not_started']) $this->ledger->release($command, 'ai-final:' . $auth['quote_id'], $commit);
     else $this->ledger->settle($command, 'ai-final:' . $auth['quote_id'], $commit);
-    return $this->summary($operation);
+    return $this->operationSummary($operation);
   }
 
   /** Personal reads never expose supplier costs, internal evidence or another user's task. */
@@ -221,26 +267,34 @@ final class AiBilling {
   }
 
   private function facts(array $auth, array $profile, array $final, array $revisions, bool $lock = FALSE): array {
+    $root = $this->root($auth['operation_id']);
     $query = $this->database->select('ai_provider_attempt', 'a')->fields('a')
-      ->condition('site_id', $auth['site_id'])->condition('operation_id', $auth['operation_id'])->orderBy('attempt_id')->range(0, 129);
+      ->condition('site_id', $auth['site_id'])->condition('operation_id', $root)->orderBy('attempt_id')->range(0, 129);
     if ($lock) $query->forUpdate();
     $rows = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
     if (array_column($rows, 'attempt_id') !== array_keys($revisions)) return ['pending' => 'usage_incomplete'];
-    $permits = array_column($this->permits($auth['operation_id']), 'call_json', 'attempt_id');
+    $permits = [];
+    foreach ($this->operations($root) as $operation) {
+      foreach ($this->permits($operation) as $permit) $permits[$permit['attempt_id']] = $permit;
+    }
     $points = ($profile['accounting_mode'] ?? '') === 'points';
-    $charged = 0; $cost = 0; $started = FALSE; $evidence = [];
+    $charged = 0; $cost = 0; $started = FALSE; $rootStarted = FALSE; $evidence = [];
     foreach ($rows as $row) {
       $id = $row['attempt_id'];
       if ($row['producer_id'] !== $auth['producer_id'] || $row['actor_user_id'] !== $auth['user_id']
         || (int) $row['usage_revision'] !== $revisions[$id]) return ['pending' => 'usage_mismatch'];
       if ($row['state'] === 'not_sent' && $row['dispatch_state'] === 'not_sent') {
-        $evidence[] = ['attempt_id' => $id, 'revision' => $revisions[$id], 'outcome' => 'not_sent'];
+        if (($permits[$id]['operation_id'] ?? $root) === $auth['operation_id']) {
+          $evidence[] = ['attempt_id' => $id, 'revision' => $revisions[$id], 'outcome' => 'not_sent'];
+        }
         continue;
       }
       if (!in_array($row['state'], ['succeeded', 'failed'], TRUE) || $row['dispatch_state'] !== 'sent'
         || !isset($permits[$id])) return ['pending' => 'execution_unresolved'];
+      $rootStarted = TRUE;
+      if ($permits[$id]['operation_id'] !== $auth['operation_id']) continue;
       $started = TRUE;
-      $permit = json_decode($permits[$id], TRUE, 16, JSON_THROW_ON_ERROR);
+      $permit = json_decode($permits[$id]['call_json'], TRUE, 16, JSON_THROW_ON_ERROR);
       if ($row['payer'] !== 'platform' || $row['requested_model'] !== $permit['model']
         || $row['provider_account_ref'] !== $permit['account_ref'] || $row['billing_role'] !== $permit['role']) {
         return ['pending' => 'call_mismatch'];
@@ -290,13 +344,34 @@ final class AiBilling {
         'cost_entry_id' => $costRow['id'] ?? NULL, 'cost_micros' => $costRow ? (string) $costRow['total_cost_micros'] : NULL,
         'deliveries' => $delivered];
     }
-    if (!$started && $final['delivery'] === 'delivered') return ['pending' => 'delivery_unresolved'];
+    if (!$rootStarted && $final['delivery'] === 'delivered') return ['pending' => 'delivery_unresolved'];
     $maximum = (int) BillingProfiles::amounts($profile)['maximum_atoms'];
     return ['attempts' => $evidence, 'delivery' => $final, 'not_started' => !$started,
       'charged_atoms' => (string) min($maximum, $charged), 'actual_cost_micros' => $points ? NULL : (string) $cost];
   }
 
   private function summary(string $operation): array {
+    $operations = $this->operations($operation);
+    $result = $this->operationSummary($operation);
+    if (count($operations) === 1) return $result;
+    $parts = array_map($this->operationSummary(...), $operations);
+    foreach (['authorized_atoms', 'charged_atoms', 'released_atoms', 'expired_atoms'] as $field) {
+      $total = 0;
+      foreach ($parts as $part) {
+        if ($part[$field] === NULL) { $total = NULL; break; }
+        $total = CreditValue::add($total, (int) $part[$field]);
+      }
+      $result[$field] = $total === NULL ? NULL : (string) $total;
+    }
+    $states = array_column($parts, 'status');
+    $result['status'] = in_array('open', $states, TRUE) || in_array('awaiting_evidence', $states, TRUE)
+      ? ($result['status'] === 'open' ? 'open' : 'awaiting_evidence')
+      : (in_array('settled', $states, TRUE) ? 'settled' : 'released');
+    $result['authorizations'] = $parts;
+    return $result;
+  }
+
+  private function operationSummary(string $operation): array {
     $auth = $this->authorization($operation);
     $row = $this->database->select('credit_reservation', 'r')->fields('r')
       ->condition('id', $auth['reservation_id'])->execute()->fetchAssoc();
@@ -323,6 +398,86 @@ final class AiBilling {
     return $this->database->select('ai_billing_permit', 'p')->fields('p')
       ->condition('site_id', $this->context->site())->condition('operation_id', $operation)
       ->orderBy('attempt_id')->range(0, 129)->execute()->fetchAll(\PDO::FETCH_ASSOC);
+  }
+
+  private function root(string $operation): string {
+    return $this->database->select('ai_billing_continuation', 'c')->fields('c', ['root_operation_id'])
+      ->condition('site_id', $this->context->site())->condition('operation_id', $operation)->execute()->fetchField() ?: $operation;
+  }
+
+  private function operations(string $root): array {
+    return [$root, ...$this->database->select('ai_billing_continuation', 'c')->fields('c', ['operation_id'])
+      ->condition('site_id', $this->context->site())->condition('root_operation_id', $root)
+      ->orderBy('position')->range(0, 16)->execute()->fetchCol()];
+  }
+
+  /** Supplemental quotes keep the original scope and require resolved prior dispatches. */
+  private function checkContinuation(array $input, string $uid): void {
+    $link = $input['continuation'];
+    if (!is_array($link)) throw new CreditException('invalid_continuation');
+    CreditValue::fields($link, ['root_operation_id', 'parent_operation_id']);
+    $root = CreditValue::id($link['root_operation_id']);
+    $parent = CreditValue::id($link['parent_operation_id']);
+    $auth = $this->authorization($root);
+    $operations = $this->operations($root);
+    if ($this->root($root) !== $root || $auth['user_id'] !== $uid || $auth['producer_id'] !== $input['producer_id']) {
+      throw new CreditException('operation_unavailable', 404);
+    }
+    if ($auth['state'] !== 'open' || end($operations) !== $parent || count($operations) >= 16) {
+      throw new CreditException('continuation_conflict', 409);
+    }
+    $original = $this->quoteRow($auth['quote_id']);
+    $profile = $this->profiles->load($original['version']);
+    if ($profile['category'] !== 'chat') throw new CreditException('continuation_unsupported', 422);
+    foreach (['feature', 'model', 'platform'] as $field) {
+      if ($input[$field] !== $profile[$field]) throw new CreditException('quote_mismatch', 409);
+    }
+    $hash = hash('sha256', BillingProfiles::json(['version' => 1, 'request_hash' => $original['request_hash']] + $link));
+    if (!hash_equals($hash, self::hash($input['request_hash']))) throw new CreditException('quote_mismatch', 409);
+    $current = $this->profiles->load($this->quoteRow($this->authorization($parent)['quote_id'])['version']);
+    $sources = $this->database->select('ai_provider_attempt', 'a')->fields('a')
+      ->condition('site_id', $auth['site_id'])->condition('operation_id', $root)
+      ->orderBy('attempt_id')->range(0, 129)->execute()->fetchAllAssoc('attempt_id', \PDO::FETCH_ASSOC);
+    if (count($sources) >= 128) throw new CreditException('continuation_limit', 409);
+    foreach ($sources as $source) {
+      if ($source['producer_id'] !== $auth['producer_id'] || $source['actor_user_id'] !== $uid
+        || !(($source['state'] === 'not_sent' && $source['dispatch_state'] === 'not_sent')
+        || (in_array($source['state'], ['succeeded', 'failed'], TRUE) && $source['dispatch_state'] === 'sent'))) {
+        throw new CreditException('continuation_awaiting_evidence', 409);
+      }
+    }
+    $counts = []; $permitted = [];
+    foreach ($operations as $operation) {
+      foreach ($this->permits($operation) as $permit) {
+        $call = json_decode($permit['call_json'], TRUE, 16, JSON_THROW_ON_ERROR);
+        $permitted[$permit['attempt_id']] = TRUE;
+        $source = $sources[$permit['attempt_id']] ?? NULL;
+        if (!$source || $source['producer_id'] !== $auth['producer_id'] || $source['actor_user_id'] !== $uid
+          || !(($source['state'] === 'not_sent' && $source['dispatch_state'] === 'not_sent')
+            || (in_array($source['state'], ['succeeded', 'failed'], TRUE) && $source['dispatch_state'] === 'sent'))) {
+          throw new CreditException('continuation_awaiting_evidence', 409);
+        }
+        if ($source['dispatch_state'] === 'sent' && ($source['payer'] !== 'platform'
+          || $source['requested_model'] !== $call['model'] || $source['provider_account_ref'] !== $call['account_ref']
+          || $source['billing_role'] !== $call['role'])) {
+          throw new CreditException('continuation_awaiting_evidence', 409);
+        }
+        if ($operation === $parent) {
+          $key = BillingProfiles::json(array_intersect_key($call, array_flip(['model', 'account_ref', 'role'])));
+          $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+      }
+    }
+    foreach ($sources as $id => $source) {
+      if ($source['dispatch_state'] === 'sent' && !isset($permitted[$id])) {
+        throw new CreditException('continuation_awaiting_evidence', 409);
+      }
+    }
+    foreach ($current['calls'] as $call) {
+      $key = BillingProfiles::json(array_intersect_key($call, array_flip(['model', 'account_ref', 'role'])));
+      if (($counts[$key] ?? 0) >= $call['max_calls']) return;
+    }
+    throw new CreditException('authorization_not_exhausted', 409);
   }
 
   private function quoteRow(string $id): array {

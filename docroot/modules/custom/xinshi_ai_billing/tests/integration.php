@@ -26,7 +26,7 @@ Role::create(['id' => 'ai_credit_user', 'label' => 'Synthetic AI credit user',
   'permissions' => ['use ai credits', 'view own credits']])->save();
 $user = User::create(['name' => 'ai_credit_user', 'status' => 1, 'roles' => ['ai_credit_user']]);
 $user->save(); $uid = (string) $user->id(); $principal->setAccount($user);
-$pool = pool('billing', '100000', '10000000');
+$pool = pool('billing', '101200', '10000000');
 $bucket = json_decode($db->select('credit_reward_pool', 'p')->fields('p', ['bounds_json'])
   ->condition('id', $pool)->execute()->fetchField(), TRUE)['chat']['bucket_id'];
 \Drupal::service('xinshi_credits.ledger')->grant(command($pool, 'billing', 'gift', $uid, '100000'), 'billing-gift');
@@ -145,6 +145,7 @@ check($report->summarize('fixture', ['billing-op'], $uid)['status'] === 'availab
 check($report->summarize('another-site', ['billing-op'], $uid)['status'] === 'not_enabled', 'Credit reports do not cross site boundaries');
 $settings->set('enabled', TRUE)->save();
 $billing = fixtureBilling();
+require __DIR__ . '/continuation.php';
 echo 'AI billing checks: ' . $checks . PHP_EOL;
 // The fixture kernel does not dump containers; discard the earlier HTTP definition.
 \Drupal::service('kernel')->invalidateContainer();

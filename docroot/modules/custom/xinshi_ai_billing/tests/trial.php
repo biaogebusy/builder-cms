@@ -227,5 +227,6 @@ $datedLife->expire($datedCommon + ['grant_id' => $grant['grant_id']], 'trial-dat
 check(\Drupal::service('xinshi_credits.audit')->inspect((string) $datedUser->id())['status'] === 'complete', 'Dated trial grants, late settlement, returns and expiry reconstruct exactly');
 // Persist only synthetic inputs for the separate HTTP and image fixtures.
 file_put_contents($fixture . '/trial.json', json_encode(['uid' => $uid, 'admin' => (string) $admin->id()]));
+require __DIR__ . '/trial-continuation.php';
 echo 'Trial checks: ' . $checks . PHP_EOL;
 \Drupal::service('kernel')->invalidateContainer();

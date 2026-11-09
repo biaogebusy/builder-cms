@@ -29,6 +29,11 @@ function xinshi_ai_billing_schema(): array {
     'ai_billing_evidence' => ['fields' => ['site_id' => $id, 'operation_id' => $id,
       'evidence_hash' => $id, 'evidence_json' => $text, 'created_at' => $integer],
       'primary key' => ['site_id', 'operation_id', 'evidence_hash']],
+    'ai_billing_continuation' => ['fields' => ['site_id' => $id, 'operation_id' => $id,
+      'root_operation_id' => $id, 'parent_operation_id' => $id, 'position' => $integer],
+      'primary key' => ['site_id', 'operation_id'],
+      'unique keys' => ['parent' => ['site_id', 'parent_operation_id'],
+        'position' => ['site_id', 'root_operation_id', 'position']]],
   ];
 }
 
@@ -38,4 +43,12 @@ function xinshi_ai_billing_schema(): array {
 function xinshi_ai_billing_update_11001(): void {
   $settings = \Drupal::configFactory()->getEditable('xinshi_ai_billing.settings');
   if ($settings->get('image_enabled') === NULL) $settings->set('image_enabled', FALSE)->save();
+}
+
+/** Install supplemental authorization links without changing existing authorizations. */
+function xinshi_ai_billing_update_11002(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('ai_billing_continuation')) {
+    $schema->createTable('ai_billing_continuation', xinshi_ai_billing_schema()['ai_billing_continuation']);
+  }
 }
