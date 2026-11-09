@@ -110,6 +110,38 @@ try {
     'Owner reads the same immutable financial outcome');
   check(billingHttp('POST', '/api/v3/credits/ai/profiles', '{}', $scoped)['status'] === 403,
     'Spending permission does not authorize sales price publication');
+
+  $continuation = json_decode(file_get_contents($fixture . '/continuation-http.json'), TRUE, 16, JSON_THROW_ON_ERROR);
+  $continuationHeaders = ['Content-Type: application/json', 'Idempotency-Key: http-continuation',
+    'Authorization: Bearer ' . billingToken($uid, 'ai_credit_user')];
+  $extra = billingHttp('POST', $path, json_encode($continuation), $continuationHeaders);
+  check($extra['status'] === 200 && $extra['data']['continuation']['authorized_atoms'] === '1200',
+    'Real OAuth JSON quotation accepts the exhausted root continuation object: ' . json_encode($extra));
+  check(billingHttp('POST', $path, json_encode($continuation), $continuationHeaders)['data'] === $extra['data'],
+    'HTTP supplemental quote retry preserves the original offer');
+  foreach ([NULL, [], 'invalid', TRUE, 1] as $invalid) {
+    $bad = array_replace($continuation, ['continuation' => $invalid]);
+    $result = billingHttp('POST', $path, json_encode($bad), $continuationHeaders);
+    check($result['status'] === 422 && $result['data']['code'] === 'invalid_continuation',
+      'HTTP supplemental quotation rejects a non-object continuation');
+  }
+  $bad = $continuation;
+  $bad['continuation']['unexpected'] = TRUE;
+  $invalidHeaders = $continuationHeaders;
+  $invalidHeaders[1] = 'Idempotency-Key: http-continuation-invalid';
+  check(billingHttp('POST', $path, json_encode($bad), $invalidHeaders)['data']['code'] === 'invalid_fields',
+    'HTTP continuation keeps its closed nested schema');
+  $extraBody = json_encode(['quote_id' => $extra['data']['quote_id'], 'operation_id' => 'continuation-http-extra',
+    'request_hash' => $extra['data']['request_hash']]);
+  $extraAuth = billingHttp('POST', '/api/v3/credits/ai/authorizations', $extraBody, $continuationHeaders);
+  check($extraAuth['status'] === 200 && $extraAuth['data']['state'] === 'open', 'HTTP supplemental approval succeeds');
+  check(billingHttp('POST', '/api/v3/credits/ai/authorizations', $extraBody, $continuationHeaders)['data'] === $extraAuth['data'],
+    'HTTP supplemental approval retry keeps one reservation');
+  $terminal = json_encode(['operation_id' => 'continuation-http', 'delivery' => 'none',
+    'delivery_ref' => 'synthetic-http-cancelled', 'attempts' => [['attempt_id' => 'continuation-http-first', 'revision' => 1]]]);
+  $final = billingHttp('POST', $executorPath, $terminal, signedBilling($executorPath, $terminal));
+  check($final['status'] === 200 && $final['data']['released_atoms'] === '2400'
+    && count($final['data']['authorizations']) === 2, 'HTTP cancellation releases both confirmed authorizations');
 }
 finally { proc_terminate($server); proc_close($server); }
 echo 'AI billing HTTP checks: ' . $checks . PHP_EOL;

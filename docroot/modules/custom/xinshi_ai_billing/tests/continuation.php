@@ -138,3 +138,10 @@ check(snapshot() === $before, 'Insufficient additional balance preserves the ori
 $billing->finalize($producer, ['operation_id' => $root, 'delivery' => 'none', 'delivery_ref' => 'cancelled',
   'attempts' => [['attempt_id' => $root . '-attempt', 'revision' => 1]]]);
 $user = $originalUser; $uid = $originalUid; $principal->setAccount($user);
+
+// Keep an exhausted synthetic root for the real HTTP request parser regression.
+$root = 'continuation-http';
+$quote = $billing->quote($request, $root);
+$billing->authorize(['operation_id' => $root, 'quote_id' => $quote['quote_id'], 'request_hash' => $quote['request_hash']]);
+continuationAttempt($root, $root, $root . '-first');
+file_put_contents($fixture . '/continuation-http.json', json_encode(continuationRequest($root, $root), JSON_THROW_ON_ERROR));

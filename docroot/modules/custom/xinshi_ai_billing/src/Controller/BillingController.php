@@ -35,6 +35,10 @@ final class BillingController implements ContainerInjectionInterface {
   /** Read-only pricing is private; quote persistence has a bounded admission rate. */
   public function quote(Request $request): JsonResponse {
     [$body, $key] = $this->writes->parse($request);
+    if (array_key_exists('continuation', $body)) {
+      if (!$body['continuation'] instanceof \stdClass) throw new CreditException('invalid_continuation');
+      $body['continuation'] = (array) $body['continuation'];
+    }
     $uid = (string) $this->user->id();
     if (!$this->flood->isAllowed('xinshi_ai_billing.quote', 60, 3600, $uid)) throw new CreditException('quote_rate_limited', 429);
     $this->flood->register('xinshi_ai_billing.quote', 3600, $uid);
