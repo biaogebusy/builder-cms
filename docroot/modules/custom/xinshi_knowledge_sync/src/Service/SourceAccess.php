@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\xinshi_knowledge_sync\Service;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
 
 /** Resolves deployment-owned policies; manifests cannot grant document access. */
 final class SourceAccess {
@@ -63,6 +65,36 @@ final class SourceAccess {
   public function document(int $nid): ?array {
     return $this->database->select(self::TABLE, 'd')->fields('d')->condition('nid', $nid)
       ->execute()->fetchAssoc() ?: NULL;
+  }
+
+  /** Returns the imported citation URL only for the accessible, ledger-bound body. */
+  public function originalUrl(NodeInterface $node, AccountInterface $account): ?string {
+    if ($node->bundle() !== 'xinshi_knowledge' || $node->isNew() ||
+        !$node->access('view', $account) || !$node->get('body')->access('view', $account)) {
+      return NULL;
+    }
+    $row = $this->document((int) $node->id());
+    if (!$row || $row['language'] !== $node->language()->getId() ||
+        (string) $row['revision_id'] !== (string) $node->getRevisionId()) {
+      return NULL;
+    }
+    // Reverse the importer's escaping without removing code-like text from the source.
+    $body = Html::decodeEntities(strip_tags((string) $node->get('body')->value));
+    $marker = strrpos($body, "\n\nSource: ");
+    if ($marker === FALSE) {
+      return NULL;
+    }
+    $url = substr($body, $marker + strlen("\n\nSource: "));
+    $parts = parse_url($url);
+    if (!$parts || !in_array($parts['scheme'] ?? '', ['http', 'https'], TRUE) ||
+        empty($parts['host']) || isset($parts['user']) || isset($parts['pass']) ||
+        strlen($url) > 4096 || str_contains($url, '\\') || preg_match('/[\x00-\x20\x7f]/', $url) ||
+        !hash_equals($row['content_hash'], hash('sha256', implode("\0", [
+          $node->label(), substr($body, 0, $marker), $url,
+        ])))) {
+      return NULL;
+    }
+    return $url;
   }
 
   /** Checks live policy membership in addition to the existing knowledge permission. */

@@ -108,7 +108,8 @@ Drupal::configFactory()->getEditable('xinshi_ai.settings')->set('harness.mcp.pro
   'enabled' => TRUE, 'content_types' => ['xinshi_knowledge'],
 ])->save();
 $mcp = new \Drupal\xinshi_ai\Service\ProductDocuments(Drupal::configFactory(), Drupal::entityTypeManager(),
-  Drupal::service('entity_field.manager'), Drupal::currentUser(), Drupal::languageManager(), $documents);
+  Drupal::service('entity_field.manager'), Drupal::currentUser(), Drupal::languageManager(), $documents,
+  Drupal::service('xinshi_knowledge_sync.access'));
 
 Index::load('xinshi_knowledge')->indexItems();
 foreach ([$reader, $operator] as $account) {
@@ -136,10 +137,17 @@ $cache = Drupal::service('cache_context.user.node_grants');
 $contextBefore = $cache->getContext('view');
 $firstRead = $mcp->call('get_product_document', ['id' => $privateUuid, 'language' => 'en']);
 check(str_contains($firstRead['content'], 'Quasarengine'), 'MCP authorized read failed.');
+check($firstRead['document']['sourceUrl'] === $manifest['documents'][1]['url'], 'MCP lost the imported source URL.');
+$withoutSources = new \Drupal\xinshi_ai\Service\ProductDocuments(Drupal::configFactory(), Drupal::entityTypeManager(),
+  Drupal::service('entity_field.manager'), Drupal::currentUser(), Drupal::languageManager(), $documents);
+$legacyRead = $withoutSources->call('get_product_document', ['id' => $privateUuid, 'language' => 'en']);
+check(!isset($legacyRead['document']['sourceUrl']) && $legacyRead['document']['url'] === $firstRead['document']['url'], 'Optional source service changed the existing node URL contract.');
+check(Drupal::service('xinshi_knowledge_sync.access')->originalUrl(Node::load($privateId), $reader) === NULL, 'Original URL leaked to a denied reader.');
 $sources[0]['policies'][1]['roles'] = [];
 $syncSettings->set('sources', $sources)->save();
 resetAccess();
 check($contextBefore !== $cache->getContext('view'), 'Policy change did not change query cache context.');
+check(Drupal::service('xinshi_knowledge_sync.access')->originalUrl(Node::load($privateId), $operator) === NULL, 'Revoked reader retained the original URL.');
 rejects(fn() => $documents->content(Node::load($privateId), $operator), 'not_found');
 rejects(fn() => $mcp->call('get_product_document', ['id' => $privateUuid, 'language' => 'en',
   'offset' => 1, 'revision' => $firstRead['document']['revisionId'], 'snapshot' => $firstRead['document']['snapshot']]), 'not_found');
@@ -161,8 +169,38 @@ check(!Node::load($privateId)->isPublished(), 'Deleted source stays published.')
 check(str_contains($documents->content(Node::load($publicId), $reader)['content'], '<tag>'), 'Code-like text lost during body extraction.');
 check($importer->import($manifest, 'product', $admin, TRUE)['updated'] === 2, 'Restoring source did not restore documents.');
 check(Node::load($privateId)->uuid() === $privateUuid, 'Restore lost source identity.');
+$links = Drupal::service('xinshi_knowledge_sync.access');
+$long = snapshot('product', ['help.md', 'internal/operations.md'],
+  "Quasarcitation example: https://example.test/{storyId}\n\nSource: https://example.test/forged\n" . str_repeat('资料 <tag> & quoted', 2000));
+$long['documents'][0]['url'] = 'https://docs.example.test/?path=/docs/original--docs&language=en#section';
+$long['documents'][0]['hash'] = hash('sha256', implode("\0", [
+  $long['documents'][0]['title'], $long['documents'][0]['text'], $long['documents'][0]['url'],
+]));
+$importer->import($long, 'product', $admin, TRUE);
+resetAccess();
+Index::load('xinshi_knowledge')->indexItems();
+$read = $mcp->call('get_product_document', ['id' => Node::load($publicId)->uuid(), 'language' => 'en']);
+check($read['document']['sourceUrl'] === $long['documents'][0]['url'], 'First chunk lacks the exact original URL.');
+check(!str_contains($read['content'], $long['documents'][0]['url']), 'Long-document fixture exposes the footer in its first chunk.');
+$hit = $mcp->call('search_product_documents', ['query' => 'Quasarcitation', 'language' => 'en']);
+check(in_array($long['documents'][0]['url'], array_column($hit['documents'], 'sourceUrl'), TRUE), 'Search metadata lacks the original URL.');
+$changed = clone Node::load($publicId);
+$changed->setTitle('Different title');
+check($links->originalUrl($changed, $reader) === NULL, 'Changed title retained imported provenance.');
+$changed = clone Node::load($publicId);
+$changed->set('langcode', 'zh-hans');
+check($links->originalUrl($changed, $reader) === NULL, 'Different language retained imported provenance.');
+$changed = clone Node::load($publicId);
+$changed->set('body', ['value' => $changed->get('body')->value . 'changed', 'format' => 'basic_html']);
+check($links->originalUrl($changed, $reader) === NULL, 'Changed body retained imported provenance.');
+$personal = Node::create(['type' => 'xinshi_knowledge', 'title' => 'Personal source', 'uid' => $reader->id(),
+  'status' => 1, 'body' => ['value' => "Example\n\nSource: https://docs.example.test/forged", 'format' => 'basic_html']]);
+$personal->save();
+check($links->originalUrl($personal, $reader) === NULL, 'A personal document forged sync provenance.');
+$personal->delete();
 $oldRevision = Drupal::entityTypeManager()->getStorage('node')->loadRevision($rows['help.md']['revision_id']);
 check(!$oldRevision->access('revert', $reader), 'Ordinary revision revert bypassed source ownership.');
+check($links->originalUrl($oldRevision, $admin) === NULL, 'Retired revision retained the current source URL.');
 Drupal::state()->set('knowledge_sync_test.fail_title', 'Guide failure.md');
 try {
   $importer->import(snapshot('customer', ['help.md', 'failure.md'], 'Must roll back'), 'customer', $admin, TRUE);

@@ -12,6 +12,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_knowledge\Service\DocumentRepository;
+use Drupal\xinshi_knowledge_sync\Service\SourceAccess;
 
 /** Reads selected published node bodies, with entity and field access checks. */
 class ProductDocuments {
@@ -26,6 +27,7 @@ class ProductDocuments {
     private readonly AccountInterface $account,
     private readonly LanguageManagerInterface $languageManager,
     private readonly ?DocumentRepository $documentIndex = NULL,
+    private readonly ?SourceAccess $documentSources = NULL,
   ) {}
 
   /** Only node bundles with a normal text body can supply product documents. */
@@ -162,12 +164,13 @@ class ProductDocuments {
   }
 
   private function metadata(NodeInterface $node): array {
+    $sourceUrl = $this->documentSources?->originalUrl($node, $this->account);
     return [
       'id' => $node->uuid(), 'title' => $node->label(),
       'url' => $node->toUrl('canonical', ['absolute' => FALSE, 'language' => $node->language()])->toString(),
       'langcode' => $node->language()->getId(), 'changed' => (int) $node->getChangedTime(),
       'revisionId' => (string) $node->getRevisionId(),
-    ];
+    ] + ($sourceUrl !== NULL ? ['sourceUrl' => $sourceUrl] : []);
   }
 
   private function body(NodeInterface $node): string {
