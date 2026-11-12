@@ -1,3 +1,13 @@
+xinshi_rewards.gift_settings:
+  path: '/admin/config/people/credits/gifts'
+  defaults:
+    _form: '\Drupal\xinshi_rewards\Form\GiftSettingsForm'
+    _title: 'Administrator gift settings'
+  requirements:
+    _permission: 'administer credit budgets,administer site configuration'
+  options:
+    _auth: ['cookie']
+    no_cache: TRUE
 xinshi_rewards.status:
   path: '/api/v3/credits/me/rewards'
   defaults:

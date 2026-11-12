@@ -67,8 +67,8 @@ msgstr "已发布规则允许不过期时，可留空。如需到期，请填写
 msgid "No expiry"
 msgstr "不过期"
 
-msgid "Pool @pool. Per-gift maximum: @limit credits. Remaining pool: @remaining credits. Scope: @scope. Latest expiry (UTC): @expiry."
-msgstr "奖励池：@pool。单次上限：@limit 积分。剩余额度：@remaining 积分。消费范围：@scope。最晚到期时间（UTC）：@expiry。"
+msgid "Pool @pool. Per-gift maximum: @limit. Remaining pool: @remaining. Scope: @scope. Latest expiry (UTC): @expiry."
+msgstr "奖励池：@pool。单次上限：@limit。剩余额度：@remaining。消费范围：@scope。最晚到期时间（UTC）：@expiry。"
 
 msgid "Published authorization"
 msgstr "已发布赠送规则"
@@ -105,3 +105,111 @@ msgstr "消费范围"
 
 msgid "Transaction: @id. The recipient can read the transaction and notification."
 msgstr "流水编号：@id。接收用户可以查看此流水和通知。"
+
+msgid "Administrator gift settings"
+msgstr "管理员赠送配置"
+
+msgid "Configure per-gift and total limits, or select unlimited."
+msgstr "设置单次上限和累计总额度，也可分别选择无限制。"
+
+msgid "Set each limit to a specific amount or unlimited. The total is shared by all administrators using this allocation. Saving a rule does not give credits to a user."
+msgstr "单次上限和累计总额度可分别设置为指定数值或无限制。所有管理员共用当前规则的累计总额度。保存规则不会向用户发放积分。"
+
+msgid "Review administrator gift settings"
+msgstr "复核管理员赠送配置"
+
+msgid "Publishing enables a new allocation with its own issued total. Previous gifts and balances remain unchanged. Use pause or resume to keep the current allocation and its issued total."
+msgstr "发布后启用新规则，并重新累计新规则的已赠数量。历史赠送记录和余额保持不变。暂停或恢复会保留当前规则及其已赠数量。"
+
+msgid "Publish and enable administrator gifts"
+msgstr "发布并启用管理员赠送"
+
+msgid "Administrator gifts"
+msgstr "管理员赠送"
+
+msgid "Not configured"
+msgstr "未配置"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Paused"
+msgstr "已暂停"
+
+msgid "Site credit grants are paused. An administrator must enable site grants before users can receive gifts."
+msgstr "站点积分赠送已暂停，管理员需先启用站点赠送开关才能向用户赠送积分。"
+
+msgid "Current allocation"
+msgstr "当前赠送规则"
+
+msgid "Pause administrator gifts"
+msgstr "暂停管理员赠送"
+
+msgid "Resume administrator gifts"
+msgstr "恢复管理员赠送"
+
+msgid "New administrator gift allocation"
+msgstr "发布新的管理员赠送规则"
+
+msgid "Per-gift limit"
+msgstr "单次上限"
+
+msgid "Total allocation limit"
+msgstr "累计总额度"
+
+msgid "Specific amount"
+msgstr "指定数值"
+
+msgid "Unlimited"
+msgstr "无限制"
+
+msgid "@limit (credits)"
+msgstr "@limit（积分）"
+
+msgid "For a specific amount, enter a positive number with at most 3 decimal places."
+msgstr "选择指定数值时，请填写正数，最多保留 3 位小数。"
+
+msgid "Scope and dates"
+msgstr "用途与期限"
+
+msgid "Use comma-separated service categories from the site credit rules."
+msgstr "填写站点积分规则中的服务类别，用英文逗号分隔。"
+
+msgid "Issuance ends (UTC)"
+msgstr "赠送截止时间（UTC）"
+
+msgid "Use YYYY-MM-DD HH:MM. This stops new gifts without expiring credits already given."
+msgstr "使用 YYYY-MM-DD HH:MM 格式。到达此时间后停止新的赠送，已赠积分不会因此到期。"
+
+msgid "Leave empty for no expiry. Otherwise use YYYY-MM-DD HH:MM."
+msgstr "留空表示不过期。指定时间时，使用 YYYY-MM-DD HH:MM 格式。"
+
+msgid "Administrator gift settings saved. No credits were issued."
+msgstr "管理员赠送配置已保存，本次未发放积分。"
+
+msgid "The settings could not be saved. Retry the same reviewed configuration."
+msgstr "配置未能保存，请重试当前已复核的配置。"
+
+msgid "Credits already given"
+msgstr "已赠积分"
+
+msgid "Select unlimited or enter a positive credit amount for each limit."
+msgstr "请为每项上限选择无限制，或填写正数积分。"
+
+msgid "Check the UTC dates. Issuance must end in the future, and a specified expiry must also be in the future."
+msgstr "请检查 UTC 时间，赠送截止时间和指定的积分到期时间都必须晚于当前时间。"
+
+msgid "Administrator gift settings changed. Reload this page and review the current rule."
+msgstr "管理员赠送配置已更改，请重新加载页面并复核当前规则。"
+
+msgid "This site has budgeted credit records or rules. Configure administrator gifts through the existing budget publication process."
+msgstr "本站已有预算模式的积分记录或规则，请通过原预算发布流程配置管理员赠送。"
+
+msgid "Check the gift settings and administrator permissions. Error: @reason"
+msgstr "请检查赠送配置和管理员权限，错误代码：@reason。"
+
+msgid "No active administrator gift rule is configured. Ask a configuration administrator to publish one in Administrator gift settings."
+msgstr "尚未配置有效的管理员赠送规则，请联系配置管理员在“管理员赠送配置”中发布规则。"
+
+msgid "Administrator gifts are paused. Ask a configuration administrator to configure or resume them in Administrator gift settings."
+msgstr "管理员赠送已暂停，请联系配置管理员在“管理员赠送配置”中配置或恢复赠送。"

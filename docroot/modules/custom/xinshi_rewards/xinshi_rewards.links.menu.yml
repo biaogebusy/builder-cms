@@ -1,0 +1,5 @@
+xinshi_rewards.gift_settings:
+  title: 'Administrator gift settings'
+  description: 'Configure per-gift and total limits, or select unlimited.'
+  route_name: xinshi_rewards.gift_settings
+  parent: user.admin_index

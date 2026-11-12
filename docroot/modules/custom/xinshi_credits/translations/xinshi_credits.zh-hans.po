@@ -282,3 +282,6 @@ msgstr "查看本人的积分账户与流水"
 
 msgid "You do not have permission to publish credit limits."
 msgstr "你没有发布积分额度的权限。"
+
+msgid "Unlimited"
+msgstr "无限制"

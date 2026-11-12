@@ -100,7 +100,8 @@ final class CreditPublicationForm extends FormBase {
     foreach ($catalog['rows'] as $row) {
       $summary = $type === 'budget'
         ? $row['category'] . ' / ' . $row['currency'] . ' ' . CreditValue::display((string) $row['cap_micros'], 6)
-        : $row['rule_id'] . ' / ' . $row['rule_version'] . ' / ' . $this->t('@amount points', ['@amount' => CreditValue::display((string) $row['cap_atoms'], 3)]);
+        : $row['rule_id'] . ' / ' . $row['rule_version'] . ' / ' . ($row['cap_atoms'] === NULL
+          ? $this->t('Unlimited') : $this->t('@amount points', ['@amount' => CreditValue::display((string) $row['cap_atoms'], 3)]));
       $form['catalog']['items']['#items'][] = ['#type' => 'details', '#title' => $summary . ' / ' . $row['publication_ref'],
         'record' => ['#type' => 'table', '#header' => [$this->t('Setting'), $this->t('Value')], '#rows' => $this->summary($type, $row, $type === 'pool' ? $budgets['rows'] : [])]];
     }
@@ -191,8 +192,8 @@ final class CreditPublicationForm extends FormBase {
       $rows[] = [$this->t('Rule / version'), $value['rule_id'] . ' / ' . $value['rule_version']];
       $rows[] = [$this->t('Source'), $policy['source_kind']];
       $rows[] = [$this->t('Amount policy'), $policy['mode'] === 'fixed' ? $this->t('Fixed') : $this->t('Variable')];
-      $rows[] = [$this->t('Total allocation (points)'), CreditValue::display((string) $value['cap_atoms'], 3)];
-      $rows[] = [$this->t('Per-grant amount or maximum (points)'), CreditValue::display($policy['grant_limit_atoms'], 3)];
+      $rows[] = [$this->t('Total allocation (points)'), $value['cap_atoms'] === NULL ? $this->t('Unlimited') : CreditValue::display((string) $value['cap_atoms'], 3)];
+      $rows[] = [$this->t('Per-grant amount or maximum (points)'), $policy['grant_limit_atoms'] === NULL ? $this->t('Unlimited') : CreditValue::display($policy['grant_limit_atoms'], 3)];
       $rows[] = [$this->t('Latest expiry (UTC)'), $policy['expires_at'] === NULL ? $this->t('No expiry') : gmdate('Y-m-d H:i', $policy['expires_at'])];
       if (isset($value['issued_atoms'])) $rows[] = [$this->t('Issued (points)'), CreditValue::display((string) $value['issued_atoms'], 3)];
       $bounds = $value['bounds'] ?? array_values(json_decode($value['bounds_json'], TRUE, 16, JSON_THROW_ON_ERROR));

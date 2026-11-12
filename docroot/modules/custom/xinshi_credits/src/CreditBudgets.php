@@ -47,9 +47,11 @@ final class CreditBudgets {
       $policy = json_decode($pool['grant_policy_json'] ?? 'null', TRUE, 16, JSON_THROW_ON_ERROR);
       if (!is_array($policy)) throw new CreditException('invalid_grant_policy');
       CreditValue::fields($policy, ['mode', 'source_kind', 'grant_limit_atoms', 'expires_at']);
-      $limit = CreditValue::amount($policy['grant_limit_atoms'], TRUE);
+      $optionalLimits = $points && $policy['mode'] === 'variable';
+      $limit = $optionalLimits && $policy['grant_limit_atoms'] === NULL
+        ? NULL : CreditValue::amount($policy['grant_limit_atoms'], TRUE);
       if (!in_array($policy['mode'], ['fixed', 'variable'], TRUE) || $sourceKind !== $policy['source_kind']
-        || $atoms > $limit || ($policy['mode'] === 'fixed' && $atoms !== $limit)
+        || ($limit !== NULL && $atoms > $limit) || ($policy['mode'] === 'fixed' && $atoms !== $limit)
         || ($policy['expires_at'] !== NULL && ($expiresAt === NULL || $expiresAt > $policy['expires_at'])) || array_diff($eligible, $scope)) {
         throw new CreditException('invalid_grant_policy');
       }
@@ -84,13 +86,15 @@ final class CreditBudgets {
       $commitments[] = ['bucket_id' => $id, 'category' => $bound['category'],
         'currency' => $bucket['currency'], 'committed_micros' => (string) $bound['cost']];
     }
-    CreditValue::amount((string) $pool['cap_atoms']);
+    if ($pool['cap_atoms'] !== NULL) CreditValue::amount((string) $pool['cap_atoms']);
+    elseif (!($optionalLimits ?? FALSE)) throw new CreditException('invalid_grant_policy');
     CreditValue::amount((string) $pool['issued_atoms']);
     $changed = $this->database->update('credit_reward_pool')
       ->expression('issued_atoms', 'issued_atoms + :increment', [':increment' => $atoms])
       ->expression('version', 'version + 1')->condition('id', $poolId)->condition('site_id', $site)
       ->condition('version', PHP_INT_MAX, '<')
-      ->where('cap_atoms - issued_atoms >= :required', [':required' => $atoms])->execute();
+      ->condition('issued_atoms', PHP_INT_MAX - $atoms, '<=')
+      ->where('(cap_atoms IS NULL OR cap_atoms - issued_atoms >= :required)', [':required' => $atoms])->execute();
     if ($changed !== 1) throw new CreditException('reward_budget_exhausted', 409);
     return ['accounting_mode' => $pool['accounting_mode'], 'commitments' => $commitments];
   }

@@ -46,7 +46,8 @@ function xinshi_credits_schema(): array {
     'description' => 'Immutable rule allocation and cost bounds; only issued quantity changes.',
     'fields' => [
       'id' => $uuid, 'site_id' => $id, 'rule_id' => $id, 'rule_version' => $id,
-      'period_start' => $integer, 'period_end' => $integer, 'cap_atoms' => $integer,
+      'period_start' => $integer, 'period_end' => $integer,
+      'cap_atoms' => ['type' => 'int', 'size' => 'big', 'not null' => FALSE, 'default' => 0],
       'issued_atoms' => $integer, 'version' => $integer, 'bounds_json' => $text,
       'source_ref' => $text, 'created_by' => $id, 'created_at' => $integer,
       'publication_ref' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => FALSE],
@@ -287,4 +288,10 @@ function xinshi_credits_update_11004(): void {
   foreach (['cost_bucket_id', 'cost_currency', 'cost_limit_micros', 'actual_cost_micros'] as $field) {
     $db->schema()->changeField('credit_reservation', $field, $field, $schema['credit_reservation']['fields'][$field]);
   }
+}
+
+/** Allow explicitly unlimited points allocations without changing existing limits. */
+function xinshi_credits_update_11005(): void {
+  $definition = xinshi_credits_schema()['credit_reward_pool']['fields']['cap_atoms'];
+  \Drupal::database()->schema()->changeField('credit_reward_pool', 'cap_atoms', 'cap_atoms', $definition);
 }

@@ -25,12 +25,12 @@ function trialHttp(string $method, string $path, ?string $jar = NULL, array $val
   if ($method === 'POST') curl_setopt($curl, CURLOPT_POSTFIELDS, $json ? json_encode($values) : http_build_query($values));
   $body = curl_exec($curl); $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE); curl_close($curl);
   if ($body === FALSE) throw new RuntimeException('Synthetic trial HTTP failed');
-  if (str_contains($path, '/credits/trial')) check(str_contains($cache, 'private') && str_contains($cache, 'no-store'), 'Trial configuration response is private: ' . $status);
+  if (str_contains($path, '/credits/')) check(str_contains($cache, 'private') && str_contains($cache, 'no-store'), 'Credit configuration response is private: ' . $status);
   return ['status' => $status, 'body' => $body];
 }
-function trialForm(string $html): array {
+function trialForm(string $html, string $formId = 'xinshi-ai-credit-trial'): array {
   $document = new DOMDocument(); @$document->loadHTML($html); $fields = [];
-  foreach ((new DOMXPath($document))->query('//form[@id="xinshi-ai-credit-trial"]//input[@type="hidden"]') as $node) {
+  foreach ((new DOMXPath($document))->query('//form[@id="' . $formId . '"]//input[@type="hidden"]') as $node) {
     $fields[$node->getAttribute('name')] = $node->getAttribute('value');
   }
   if (!isset($fields['form_token'], $fields['form_build_id'])) throw new RuntimeException('Missing trial form: ' . strip_tags($html));
@@ -127,7 +127,8 @@ try {
   $role = \Drupal\user\Entity\Role::load('trial_admin');
   $role->grantPermission('administer permissions')->save();
   check(trialHttp('GET', $path, $jar)['status'] === 200, 'Restored permission allows trial configuration again');
-  foreach (glob($fixture . '/ui/trial*.html') as $page) {
+  require __DIR__ . '/../../xinshi_rewards/tests/gift-settings-http.php';
+  foreach ([...glob($fixture . '/ui/trial*.html'), ...glob($fixture . '/ui/gift-settings*.html')] as $page) {
     preg_match_all('/(?:href|src)="([^" ]+\.(?:css|js)[^" ]*)"/', file_get_contents($page), $matches);
     foreach ($matches[1] as $url) {
       $url = html_entity_decode($url); $assetPath = parse_url($url, PHP_URL_PATH);

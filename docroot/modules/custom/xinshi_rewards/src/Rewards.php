@@ -126,10 +126,14 @@ final class Rewards {
   public function giftPolicy(string $target): array {
     $this->actor(['view user credits', 'grant user credits']);
     $this->target($target);
+    if (!$this->config->get('xinshi_rewards.settings')->get('admin_gifts_enabled')) {
+      throw new CreditException('admin_gifts_disabled', 503);
+    }
     $pool = $this->pool('G12');
     return ['budget_pool_id' => $pool['id'], 'rule_version' => $pool['rule_version'],
       'grant_limit_atoms' => $pool['policy']['grant_limit_atoms'],
-      'remaining_atoms' => (string) ((int) $pool['cap_atoms'] - (int) $pool['issued_atoms']),
+      'remaining_atoms' => $pool['cap_atoms'] === NULL
+        ? NULL : (string) ((int) $pool['cap_atoms'] - (int) $pool['issued_atoms']),
       'scope' => array_keys($pool['bounds']), 'expires_at' => $pool['policy']['expires_at']];
   }
 
@@ -168,6 +172,9 @@ final class Rewards {
       ->condition('site_id', $this->context->site())->condition('rule_id', $rule)->isNotNull('publication_ref')
       ->condition('period_start', $now, '<=')->condition('period_end', $now, '>');
     $active = $this->config->get('xinshi_rewards.settings')->get('points_pool_ids') ?? [];
+    if ($rule === 'G12' && $giftPool = $this->config->get('xinshi_rewards.settings')->get('admin_gift_pool_id')) {
+      $active = [$giftPool];
+    }
     if ($active) $query->condition('accounting_mode', 'points')->condition('id', $active, 'IN');
     else $query->condition('accounting_mode', 'budgeted');
     if ($id !== NULL) $query->condition('id', $id);

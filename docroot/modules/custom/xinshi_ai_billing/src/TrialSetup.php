@@ -122,7 +122,7 @@ final class TrialSetup {
       }
       $this->config->getEditable('xinshi_ai_billing.trial')->setData($i + ['version' => $version])->save();
       $this->config->getEditable('xinshi_rewards.settings')->set('points_pool_ids', $poolIds)->set('business_timezone', $i['timezone'])
-        ->set('welcome_enabled', TRUE)->set('daily_enabled', TRUE)->set('admin_gifts_enabled', FALSE)->save();
+        ->set('welcome_enabled', TRUE)->set('daily_enabled', TRUE)->save();
       $this->config->getEditable('xinshi_ai_billing.settings')->set('active_versions', $versions)->set('enabled', TRUE)->save();
       $this->config->getEditable('xinshi_credits.settings')->set('grants_enabled', TRUE)->set('spending_enabled', TRUE)->save();
       $role = $this->entities->getStorage('user_role')->load($i['role']);

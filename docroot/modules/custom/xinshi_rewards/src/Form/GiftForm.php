@@ -8,6 +8,7 @@ use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Link;
 use Drupal\xinshi_credits\CreditException;
 use Drupal\xinshi_credits\CreditQuery;
 use Drupal\xinshi_credits\CreditValue;
@@ -32,7 +33,11 @@ final class GiftForm extends FormBase {
   /** {@inheritdoc} */
   public function buildForm(array $form, FormStateInterface $form_state, ?string $user = NULL): array {
     $form['#cache']['max-age'] = 0;
+    $form['#attributes']['class'][] = 'xinshi-rewards-form';
     $form['#attached']['library'][] = 'xinshi_rewards/gift';
+    if ($this->currentUser()->hasPermission('administer credit budgets') && $this->currentUser()->hasPermission('administer site configuration')) {
+      $form['settings'] = Link::createFromRoute($this->t('Administrator gift settings'), 'xinshi_rewards.gift_settings')->toRenderable();
+    }
     if (!$form_state->get('request_key')) $form_state->set('request_key', $this->uuid->generate());
     $form_state->set('target', $user);
     try {
@@ -41,7 +46,11 @@ final class GiftForm extends FormBase {
         ? $form_state->get('review_policy') : $this->rewards->giftPolicy($user);
     }
     catch (CreditException $error) {
-      $form['unavailable'] = ['#markup' => $this->t('Credit gift unavailable: @reason', ['@reason' => $error->reason])];
+      $form['unavailable'] = ['#plain_text' => match ($error->reason) {
+        'rewards_not_configured' => $this->t('No active administrator gift rule is configured. Ask a configuration administrator to publish one in Administrator gift settings.'),
+        'admin_gifts_disabled' => $this->t('Administrator gifts are paused. Ask a configuration administrator to configure or resume them in Administrator gift settings.'),
+        default => $this->t('Credit gift unavailable: @reason', ['@reason' => $error->reason]),
+      }];
       return $form;
     }
     $form_state->set('policy', $policy);
@@ -53,9 +62,9 @@ final class GiftForm extends FormBase {
         '#plain_text' => CreditValue::display($balance['available_atoms'], 3)];
     }
     $form['limits'] = ['#type' => 'item', '#title' => $this->t('Published authorization'),
-      '#markup' => $this->t('Pool @pool. Per-gift maximum: @limit credits. Remaining pool: @remaining credits. Scope: @scope. Latest expiry (UTC): @expiry.',
-        ['@pool' => $policy['budget_pool_id'], '@limit' => CreditValue::display($policy['grant_limit_atoms'], 3),
-          '@remaining' => CreditValue::display($policy['remaining_atoms'], 3), '@scope' => implode(', ', $policy['scope']),
+      '#markup' => $this->t('Pool @pool. Per-gift maximum: @limit. Remaining pool: @remaining. Scope: @scope. Latest expiry (UTC): @expiry.',
+        ['@pool' => $policy['budget_pool_id'], '@limit' => $policy['grant_limit_atoms'] === NULL ? $this->t('Unlimited') : $this->t('@amount credits', ['@amount' => CreditValue::display($policy['grant_limit_atoms'], 3)]),
+          '@remaining' => $policy['remaining_atoms'] === NULL ? $this->t('Unlimited') : $this->t('@amount credits', ['@amount' => CreditValue::display($policy['remaining_atoms'], 3)]), '@scope' => implode(', ', $policy['scope']),
           '@expiry' => $policy['expires_at'] === NULL ? $this->t('No expiry') : gmdate('Y-m-d H:i:s', $policy['expires_at'])])];
     if ($result = $form_state->get('result')) {
       $form['result'] = ['#type' => 'item', '#title' => $this->t('Gift committed'),
@@ -110,7 +119,7 @@ final class GiftForm extends FormBase {
         'budget_pool_id' => $policy['budget_pool_id'], 'scope' => $policy['scope'],
         'expires_at' => $date ? $date->getTimestamp() : NULL, 'public_reason' => $form_state->getValue('public_reason'),
         'internal_note' => $form_state->getValue('internal_note') ?? '']);
-      if ((int) $input['amount_atoms'] > (int) $policy['grant_limit_atoms']
+      if (($policy['grant_limit_atoms'] !== NULL && (int) $input['amount_atoms'] > (int) $policy['grant_limit_atoms'])
         || ($policy['expires_at'] !== NULL && ($input['expires_at'] === NULL || $input['expires_at'] > $policy['expires_at']))
         || ($input['expires_at'] !== NULL && $input['expires_at'] <= time())) {
         throw new CreditException('invalid_grant_policy');

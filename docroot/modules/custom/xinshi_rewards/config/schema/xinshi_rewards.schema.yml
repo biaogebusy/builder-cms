@@ -11,6 +11,9 @@ xinshi_rewards.settings:
     admin_gifts_enabled:
       type: boolean
       label: 'Enable new administrator gifts'
+    admin_gift_pool_id:
+      type: string
+      label: 'Active administrator points allocation'
     business_timezone:
       type: string
       label: 'Explicit business timezone, fixed by the first daily grant'

@@ -12,6 +12,11 @@ try { xinshi_credits_update_11004(); throw new RuntimeException('Expected paused
 catch (\Drupal\Core\Utility\UpdateException) { check(TRUE, 'Points schema upgrade requires paused issuance and spending'); }
 $upgradeSettings->set('grants_enabled', FALSE)->set('spending_enabled', FALSE)->save();
 $before = snapshot();
+$oldCap = xinshi_credits_schema()['credit_reward_pool']['fields']['cap_atoms'];
+$oldCap['not null'] = TRUE;
+$db->schema()->changeField('credit_reward_pool', 'cap_atoms', 'cap_atoms', $oldCap);
+xinshi_credits_update_11005();
+xinshi_credits_update_11005();
 foreach (['credit_reward_pool', 'credit_grant', 'credit_reservation'] as $table) {
   check(!$db->select($table, 't')->condition('accounting_mode', 'budgeted', '<>')->countQuery()->execute()->fetchField(), 'Upgrade fixture contains original budgeted records: ' . $table);
   $db->schema()->dropField($table, 'accounting_mode');
@@ -28,7 +33,7 @@ $after = snapshot();
 foreach ($before as $table => $rows) {
   foreach ($rows as &$row) ksort($row); unset($row);
   foreach ($after[$table] as &$row) ksort($row); unset($row);
-  check($after[$table] === $rows, 'Repeated points upgrade preserves original rows and receipts: ' . $table);
+  check($after[$table] === $rows, 'Repeated points and optional-limit upgrades preserve original rows and receipts: ' . $table);
 }
 $upgradeSettings->set('grants_enabled', TRUE)->set('spending_enabled', TRUE)->save();
 echo 'Points upgrade checks: ' . $checks . PHP_EOL;

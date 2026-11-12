@@ -15,6 +15,8 @@ foreach (['xinshi_credits', 'xinshi_rewards', 'xinshi_ai_billing'] as $module) {
 }
 $translator = \Drupal::translation(); $translator->reset();
 foreach (['Credit cost budgets' => '积分成本预算', 'Credits to give' => '赠送积分数量',
+  'Administrator gift settings' => '管理员赠送配置', 'Unlimited' => '无限制',
+  'Per-gift limit' => '单次上限', 'Total allocation limit' => '累计总额度',
   'No expiry' => '不过期', 'Receive first-visit credits' => '领取首次登录积分',
   'Authorize AI credit spending' => '允许使用积分消费 AI',
   'Trial credits' => '快捷体验积分', 'Save and enable trial credits' => '保存并启用体验积分',

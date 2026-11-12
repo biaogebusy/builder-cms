@@ -96,4 +96,6 @@ docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extens
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_ai_billing/tests/trial-concurrency.php
 docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
+  /app/docroot/modules/custom/xinshi_rewards/tests/gift-settings.php
+docker exec -e XINSHI_CREDITS_ISOLATED_TEST=1 "$credits_container" php -d extension=pdo_sqlite -d extension=pdo_mysql \
   /app/docroot/modules/custom/xinshi_credits/tests/locale.php
