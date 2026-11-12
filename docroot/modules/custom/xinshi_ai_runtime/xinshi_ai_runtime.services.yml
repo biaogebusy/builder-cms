@@ -1,0 +1,9 @@
+services:
+  xinshi_ai_runtime.routes:
+    class: Drupal\xinshi_ai_runtime\EventSubscriber\CapabilityRouteSubscriber
+    arguments: ['%xinshi_site_finance%']
+    tags:
+      - { name: event_subscriber }
+  xinshi_ai_runtime.service_identity:
+    class: Drupal\xinshi_ai_runtime\Service\ServiceIdentity
+    arguments: ['@settings']

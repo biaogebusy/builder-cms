@@ -7,7 +7,7 @@ namespace Drupal\xinshi_ai\Service;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\node\NodeInterface;
-use Drupal\xinshi_ai_usage\Service\ProducerIdentity;
+use Drupal\xinshi_ai_runtime\Service\ServiceIdentity;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
@@ -19,9 +19,8 @@ use Psr\Log\LoggerInterface;
  * metered there as an operation of its own. The worker now orders it under the
  * job's UUID: the auxiliary attempt joins the root operation, the client cannot
  * run the step at all, and Node lets each operation order it once. The request
- * carries no user session; it is signed with the shared secret of the producer
- * the chat service delivers its usage events with, and Node verifies it the way
- * this site verifies those events (ProducerIdentity).
+ * carries no user session. ServiceIdentity signs it with an independent service
+ * secret, so prompt rewriting does not require usage collection.
  *
  * The rewrite is best effort: whatever fails, the original prompt is generated.
  *
@@ -46,7 +45,7 @@ class PromptRewriteClient {
   public function __construct(
     private readonly ConfigFactoryInterface $configFactory,
     private readonly ClientInterface $httpClient,
-    private readonly ProducerIdentity $producers,
+    private readonly ServiceIdentity $producers,
     private readonly TimeInterface $time,
     private readonly LoggerInterface $logger,
   ) {}
@@ -119,17 +118,17 @@ class PromptRewriteClient {
     $url = $serviceUrl . self::PATH;
     $timestamp = (string) $this->time->getRequestTime();
     $nonce = rtrim(strtr(base64_encode(random_bytes(18)), '+/', '-_'), '=');
-    $signature = ProducerIdentity::sign($secret, $producerId, $timestamp, $nonce, 'POST',
+    $signature = ServiceIdentity::sign($secret, $producerId, $timestamp, $nonce, 'POST',
       (string) parse_url($url, PHP_URL_PATH), self::canonicalBody($request));
 
     try {
       $response = $this->httpClient->request('POST', $url, [
         'json' => $request,
         'headers' => [
-          ProducerIdentity::HEADER_PRODUCER => $producerId,
-          ProducerIdentity::HEADER_TIMESTAMP => $timestamp,
-          ProducerIdentity::HEADER_NONCE => $nonce,
-          ProducerIdentity::HEADER_SIGNATURE => $signature,
+          ServiceIdentity::HEADER_PRODUCER => $producerId,
+          ServiceIdentity::HEADER_TIMESTAMP => $timestamp,
+          ServiceIdentity::HEADER_NONCE => $nonce,
+          ServiceIdentity::HEADER_SIGNATURE => $signature,
         ],
         'timeout' => self::TIMEOUT_SECONDS,
         'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS,

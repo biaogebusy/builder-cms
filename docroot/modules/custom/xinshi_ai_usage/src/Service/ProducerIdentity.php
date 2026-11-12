@@ -86,8 +86,8 @@ final class ProducerIdentity {
    */
   public static function sign(string $secret, string $producer, string $timestamp, string $nonce,
     string $method, string $path, string $body): string {
-    $material = implode("\n", [$producer, $timestamp, $nonce, strtoupper($method), $path, hash('sha256', $body)]);
-    return hash_hmac('sha256', $material, $secret);
+    return \Drupal\xinshi_ai_runtime\Service\ServiceIdentity::sign(
+      $secret, $producer, $timestamp, $nonce, $method, $path, $body);
   }
 
   /**

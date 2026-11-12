@@ -23,7 +23,7 @@ class ImageUsageRecorder {
   public const LOGICAL_CALL = 'image';
 
   public function __construct(
-    private readonly LocalUsageProducer $producer,
+    private readonly ?LocalUsageProducer $producer,
     private readonly LoggerInterface $logger,
     private readonly ?ImageBilling $billing = NULL,
   ) {}
@@ -47,6 +47,10 @@ class ImageUsageRecorder {
    *   In enforce mode, when the intent cannot be persisted.
    */
   public function begin(array $call): ?ImageAttempt {
+    if ($this->producer === NULL) {
+      if ($this->billing !== NULL) throw new \LogicException('Image billing requires metering');
+      return NULL;
+    }
     $enforce = $this->producer->mode() === LocalUsageProducer::MODE_ENFORCE;
     $operationId = (string) $call['operation_id'];
     $customerKey = ($call['platform'] ?? '') === 'custom';
@@ -104,6 +108,7 @@ class ImageUsageRecorder {
    *   The attempt ids that were closed.
    */
   public function abandonOpenAttempts(string $operationId, string $dispatchState): array {
+    if ($this->producer === NULL) return [];
     try {
       return $this->producer->interruptOpenAttempts($operationId, $dispatchState);
     }

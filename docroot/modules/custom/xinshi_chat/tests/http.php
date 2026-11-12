@@ -182,6 +182,11 @@ try {
     }
     usleep(50000);
   }
+  $capabilities = http('/api/v3/ai/site-finance');
+  check($capabilities['status'] === 200 && $capabilities['data'] === [
+    'version' => 2, 'metering' => 'off', 'harness' => FALSE, 'credits' => FALSE,
+    'chat_billing' => FALSE, 'image_billing' => FALSE, 'billing_recovery' => FALSE,
+  ], 'Minimal Chat publishes explicit logs-only capabilities without usage or credits');
   $chat = $chats[24];
   $base = '/api/v3/ai/conversations/' . $chat->uuid();
   $message_path = $base . '/sessions/' . $message->uuid() . '/fields';

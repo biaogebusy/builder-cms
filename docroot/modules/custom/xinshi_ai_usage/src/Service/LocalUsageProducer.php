@@ -54,10 +54,7 @@ class LocalUsageProducer {
   public function mode(): string {
     $mode = $this->settings->get(self::MODE_SETTING, self::MODE_OBSERVE);
     if ($mode !== self::MODE_ENFORCE && $mode !== self::MODE_OBSERVE) {
-      $this->logger->error('Invalid @setting "@mode"; falling back to observe', [
-        '@setting' => self::MODE_SETTING, '@mode' => is_scalar($mode) ? (string) $mode : gettype($mode),
-      ]);
-      return self::MODE_OBSERVE;
+      throw new \LogicException('Usage producer requires observe or enforce mode');
     }
     return $mode;
   }

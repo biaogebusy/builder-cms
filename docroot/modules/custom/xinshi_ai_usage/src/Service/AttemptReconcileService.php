@@ -102,7 +102,8 @@ final class AttemptReconcileService {
     }
     $latest = $this->producer->latestObservation($attemptId);
     $current = $latest['outcome'] ?? NULL;
-    if ($latest === NULL || !in_array($current, self::RECONCILABLE, TRUE)) {
+    if ($latest === NULL || (!in_array($current, self::RECONCILABLE, TRUE)
+      && !($current === 'failed' && ($latest['dispatch_state'] ?? NULL) === 'unknown'))) {
       throw new LocalUsageException('not_unknown', sprintf(
         'Attempt %s is %s, not unknown; outcomes the provider reported are not rewritten.',
         $attemptId, $latest === NULL ? 'still open' : (string) $current));

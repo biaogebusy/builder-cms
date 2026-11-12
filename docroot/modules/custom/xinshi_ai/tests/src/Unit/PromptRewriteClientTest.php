@@ -8,12 +8,11 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Config\MemoryStorage;
 use Drupal\Core\Config\TypedConfigManagerInterface;
-use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\node\NodeInterface;
 use Drupal\xinshi_ai\Service\PromptRewriteClient;
-use Drupal\xinshi_ai_usage\Service\ProducerIdentity;
+use Drupal\xinshi_ai_runtime\Service\ServiceIdentity;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
@@ -119,14 +118,14 @@ final class PromptRewriteClientTest extends TestCase {
       'operation_id' => 'job-1', 'actor_user_id' => '7', 'step' => 'query-transformer', 'task_id' => 'task-1',
       'language' => 'zh-hans', 'prompt' => '上海今天的天气',
     ], $body);
-    $this->assertSame('chat-node', $request->getHeaderLine(ProducerIdentity::HEADER_PRODUCER));
-    $this->assertSame((string) self::NOW, $request->getHeaderLine(ProducerIdentity::HEADER_TIMESTAMP));
-    $nonce = $request->getHeaderLine(ProducerIdentity::HEADER_NONCE);
+    $this->assertSame('chat-node', $request->getHeaderLine(ServiceIdentity::HEADER_PRODUCER));
+    $this->assertSame((string) self::NOW, $request->getHeaderLine(ServiceIdentity::HEADER_TIMESTAMP));
+    $nonce = $request->getHeaderLine(ServiceIdentity::HEADER_NONCE);
     $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]{16,64}\z/', $nonce);
     // The exact material Node rebuilds from the parsed body: no raw JSON bytes involved.
-    $expected = ProducerIdentity::sign(self::SECRET, 'chat-node', (string) self::NOW, $nonce, 'POST', '/chat/sub-steps',
+    $expected = ServiceIdentity::sign(self::SECRET, 'chat-node', (string) self::NOW, $nonce, 'POST', '/chat/sub-steps',
       PromptRewriteClient::canonicalBody($body));
-    $this->assertSame($expected, $request->getHeaderLine(ProducerIdentity::HEADER_SIGNATURE));
+    $this->assertSame($expected, $request->getHeaderLine(ServiceIdentity::HEADER_SIGNATURE));
     $this->assertSame("sub-step-v1\0job-1\x007\0query-transformer\0task-1\0zh-hans\0上海今天的天气",
       PromptRewriteClient::canonicalBody($body));
     $this->assertSame([], $this->logged);
@@ -144,7 +143,7 @@ final class PromptRewriteClientTest extends TestCase {
     $this->assertNull($client->rewrite($this->job(), '上海今天的天气'));
     $this->assertCount(3, $this->history);
     // Every order carries a fresh nonce.
-    $nonces = array_map(static fn(array $entry): string => $entry['request']->getHeaderLine(ProducerIdentity::HEADER_NONCE),
+    $nonces = array_map(static fn(array $entry): string => $entry['request']->getHeaderLine(ServiceIdentity::HEADER_NONCE),
       $this->history);
     $this->assertCount(3, array_unique($nonces));
   }
@@ -191,11 +190,11 @@ final class PromptRewriteClientTest extends TestCase {
     $stack->push(Middleware::history($this->history));
     $settings = new Settings([
       'hash_salt' => 'isolated-hash-salt',
-      'xinshi_ai_usage.producers' => array_map(static fn(string $secret): array => ['secret' => $secret, 'site_id' => 'site-a'], $producers),
+      'xinshi_ai_service.secrets' => $producers,
     ]);
     $time = $this->createMock(TimeInterface::class);
     $time->method('getRequestTime')->willReturn(self::NOW);
-    $identity = new ProducerIdentity($settings, $this->createMock(KeyValueExpirableFactoryInterface::class), $time);
+    $identity = new ServiceIdentity($settings);
     $logger = $this->createMock(LoggerInterface::class);
     $logger->method('log')->willReturnCallback(function (mixed $level, string|\Stringable $message, array $context = []): void {
       $this->logged[] = [(string) $level, $context];

@@ -13,7 +13,7 @@ docker exec "$usage_upgrade_container" php -r 'file_put_contents(PHP_CONFIG_FILE
 docker exec "$usage_upgrade_container" mkdir -p /app/docroot/sites/default
 cd "$usage_upgrade_root"
 tar -cf - vendor composer.json composer.lock docroot/autoload.php docroot/index.php docroot/core \
-  docroot/modules/custom/xinshi_ai docroot/modules/custom/xinshi_ai_usage \
+  docroot/modules/custom/xinshi_ai_runtime docroot/modules/custom/xinshi_ai docroot/modules/custom/xinshi_ai_usage \
   docroot/modules/custom/xinshi_chat/tests/install-fixture.php | docker cp - "$usage_upgrade_container":/app
 docker exec -e XINSHI_CHAT_ISOLATED_TEST=1 "$usage_upgrade_container" php \
   /app/docroot/modules/custom/xinshi_ai/tests/usage-upgrade/integration.php

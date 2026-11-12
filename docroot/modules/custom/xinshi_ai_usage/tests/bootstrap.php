@@ -20,3 +20,5 @@ if (!class_exists('Drupal')) {
 }
 require_once $root . '/docroot/core/includes/bootstrap.inc';
 require_once dirname(__DIR__) . '/xinshi_ai_usage.install';
+
+$loader->addPsr4('Drupal\\xinshi_ai_runtime\\', dirname(__DIR__, 2) . '/xinshi_ai_runtime/src', TRUE);

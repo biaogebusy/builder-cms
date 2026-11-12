@@ -10,6 +10,7 @@ use Drupal\xinshi_ai_billing\AiBilling;
 function fixtureFinance(): array {
   $container = new ContainerBuilder();
   $container->setParameter('container.modules', \Drupal::getContainer()->getParameter('container.modules'));
+  (new \Drupal\xinshi_ai_runtime\XinshiAiRuntimeServiceProvider())->register($container);
   (new XinshiCreditsServiceProvider())->alter($container);
   return $container->getParameter('xinshi_site_finance');
 }

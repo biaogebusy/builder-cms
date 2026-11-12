@@ -24,9 +24,10 @@ if (($argv[1] ?? '') === 'rebuild') {
 }
 
 /** Rebuild from settings on disk, then reload the parent from the compiled definition. */
-function financeRestart(array $assembly = [], bool $success = TRUE): void {
+function financeRestart(array $assembly = [], bool $success = TRUE, string $mode = 'enforce'): void {
   global $fixture, $kernel, $loader, $request;
   file_put_contents($fixture . '/finance-settings.php', "<?php\n\$settings['xinshi_finance'] = " . var_export($assembly, TRUE) . ";\n"
+    . "\$settings['xinshi_ai_usage.mode'] = " . var_export($mode, TRUE) . ";\n"
     . "\$settings['xinshi_ai_usage.producers'] = ['finance-node' => ['site_id' => 'fixture', 'secret' => 'synthetic-finance-only']];\n");
   $process = proc_open([PHP_BINARY, '-d', 'extension=pdo_sqlite', '-d', 'extension=pdo_mysql', __FILE__, 'rebuild'],
     [0 => ['file', '/dev/null', 'r'], 1 => ['file', $fixture . '/finance-rebuild.log', 'w'],
@@ -63,7 +64,7 @@ function financeHttp(string $method, string $path, ?string $jar = NULL, array $b
 /** Compare public capabilities, instantiated services, actual routes and unchanged usage. */
 function financeState(string $label, bool $credits, bool $billing, bool $recovery, bool $images = FALSE): void {
   global $fixture, $owner;
-  $expected = ['version' => 1, 'credits' => $credits, 'chat_billing' => $billing,
+  $expected = ['version' => 2, 'metering' => 'enforce', 'harness' => FALSE, 'credits' => $credits, 'chat_billing' => $billing,
     'image_billing' => $images, 'billing_recovery' => $recovery];
   $response = financeHttp('GET', '/api/v3/ai/site-finance');
   check($response['status'] === 200 && $response['data'] == $expected
@@ -229,6 +230,19 @@ try {
   financeRestart(['credits' => 'false'], FALSE);
   financeRestart();
   check(snapshot() === $history, 'Invalid configuration and recovery assembly leave historical balances unchanged');
+  financeRestart([], TRUE, 'off');
+  $off = financeHttp('GET', '/api/v3/ai/site-finance');
+  check($off['status'] === 200 && $off['data']['metering'] === 'off',
+    'Installed usage can publish an explicit disabled snapshot');
+  check(!\Drupal::hasService('xinshi_ai_usage.local_producer') && !\Drupal::hasService('xinshi_ai_usage.report'),
+    'Disabled usage removes producer and report services from the real compiled container');
+  foreach (['/api/v3/ai/usage/me/summary', '/api/v3/ai/admin/reports/summary'] as $path) {
+    check(financeHttp('GET', $path, $fixture . '/finance-admin.cookie')['status'] === 404,
+      'Disabled usage removes real HTTP route: ' . $path);
+  }
+  check(snapshot() === $history, 'Disabling metering preserves closed financial history');
+  financeRestart();
+  financeState('Metering restored', FALSE, FALSE, FALSE);
   echo 'Finance runtime checks: ' . $checks . PHP_EOL;
 }
 finally { proc_terminate($server); proc_close($server); }

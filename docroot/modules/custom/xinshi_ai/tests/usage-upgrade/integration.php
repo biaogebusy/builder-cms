@@ -25,6 +25,8 @@ $loader = require '/app/vendor/autoload.php';
 $module = dirname(__DIR__, 2);
 $install = file_get_contents($module . '/xinshi_ai.install');
 $services = Yaml::parseFile($module . '/xinshi_ai.services.yml')['services'];
+// Reproduce the required usage reference from the historical update target.
+$services['xinshi_ai.image_usage_recorder']['arguments'][0] = '@xinshi_ai_usage.local_producer';
 // Isolate the real usage service definitions from unrelated AI providers and content configuration.
 rename($module . '/config/install', $module . '/config/fixture-unused');
 file_put_contents($module . '/xinshi_ai.info.yml', Yaml::dump([

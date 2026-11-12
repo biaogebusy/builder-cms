@@ -38,7 +38,7 @@ fi
 docker exec "$credits_container" mkdir -p /app/docroot/sites/default /app/docroot/modules/contrib
 cd "$credits_root"
 tar -cf - vendor composer.json composer.lock docroot/autoload.php docroot/index.php docroot/core \
-  docroot/modules/custom/xinshi_credits docroot/modules/custom/xinshi_rewards \
+  docroot/modules/custom/xinshi_ai_runtime docroot/modules/custom/xinshi_credits docroot/modules/custom/xinshi_rewards \
   docroot/modules/custom/xinshi_ai_usage docroot/modules/custom/xinshi_ai_billing \
   docroot/modules/custom/xinshi_ai/src docroot/modules/custom/xinshi_ai/xinshi_ai.install docroot/modules/contrib/simple_oauth \
   docroot/modules/contrib/consumers | docker cp - "$credits_container":/app

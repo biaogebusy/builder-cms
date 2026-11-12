@@ -13,7 +13,7 @@ docker exec "$container" php -r 'file_put_contents(PHP_CONFIG_FILE_SCAN_DIR . "/
 docker exec "$container" mkdir -p /app/docroot/sites/default /app/docroot/modules/contrib
 cd "$root"
 tar -cf - vendor composer.json composer.lock docroot/autoload.php docroot/index.php docroot/core \
-  docroot/modules/custom/xinshi_chat docroot/modules/custom/xinshi_ai_reference \
+  docroot/modules/custom/xinshi_chat docroot/modules/custom/xinshi_ai_runtime docroot/modules/custom/xinshi_ai_reference \
   docroot/modules/custom/xinshi_ai/src/Service/ChatSessionFieldScan.php \
   docroot/modules/custom/xinshi_ai/src/Service/ChatSessionFields.php \
   docroot/modules/custom/xinshi_ai/tests/bootstrap.php docroot/modules/custom/xinshi_ai/xinshi_ai.install \

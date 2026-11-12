@@ -65,10 +65,15 @@ final class XinshiCreditsServiceProvider extends ServiceProviderBase {
       || (!$assembly['billing'] && ($charging || $billingPending))) {
       throw new \LogicException('Stop new financial operations and reconcile pending records before disabling modules');
     }
+    if ($assembly['billing'] && $container->getParameter('xinshi_site_finance')['metering'] !== 'enforce') {
+      throw new \LogicException('AI billing and recovery require enforced metering');
+    }
     $container->setParameter('xinshi_finance.assembly', $assembly);
     $container->setParameter('xinshi_finance.chat_billing', $assembly['billing'] && $charging);
     $container->setParameter('xinshi_site_finance', [
-      'version' => 1, 'credits' => $assembly['credits'],
+      'version' => 2, 'metering' => $container->getParameter('xinshi_site_finance')['metering'],
+      'harness' => $container->getParameter('xinshi_site_finance')['harness'],
+      'credits' => $assembly['credits'],
       'billing_recovery' => $assembly['billing'],
       'chat_billing' => $assembly['billing'] && $charging,
       'image_billing' => $assembly['billing'] && $charging && ($billing['image_enabled'] ?? FALSE) === TRUE,

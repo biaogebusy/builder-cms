@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\xinshi_ai_usage\Controller;
+namespace Drupal\xinshi_ai_runtime\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;

@@ -30,3 +30,5 @@ if (!class_exists('Drupal')) {
 require_once $root . '/docroot/core/includes/bootstrap.inc';
 // The execution lease table (UB2.5) is exercised against memory SQLite.
 require_once dirname(__DIR__) . '/xinshi_ai.install';
+
+$loader->addPsr4('Drupal\\xinshi_ai_runtime\\', dirname(__DIR__, 2) . '/xinshi_ai_runtime/src', TRUE);

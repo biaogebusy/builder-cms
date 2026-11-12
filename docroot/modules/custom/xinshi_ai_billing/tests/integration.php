@@ -12,8 +12,8 @@ require __DIR__ . '/assembly.php';
 // Assemble the module before exercising its independent operational pause switches.
 $finance = \Drupal\Core\Site\Settings::get('xinshi_finance', []);
 $finance['billing'] = TRUE;
-new \Drupal\Core\Site\Settings(array_replace(\Drupal\Core\Site\Settings::getAll(), ['xinshi_finance' => $finance]));
-file_put_contents('sites/default/settings.php', "\n\$settings['xinshi_finance']['billing'] = TRUE;\n", FILE_APPEND);
+new \Drupal\Core\Site\Settings(array_replace(\Drupal\Core\Site\Settings::getAll(), ['xinshi_finance' => $finance, 'xinshi_ai_usage.mode' => 'enforce']));
+file_put_contents('sites/default/settings.php', "\n\$settings['xinshi_finance']['billing'] = TRUE;\n\$settings['xinshi_ai_usage.mode'] = 'enforce';\n", FILE_APPEND);
 \Drupal::service('module_installer')->install(['xinshi_ai_billing']);
 $billingConfig = \Drupal::configFactory();
 $billingConfig->getEditable('xinshi_credits.settings')->set('site_id', 'fixture')

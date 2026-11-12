@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\xinshi_ai\Service\FigmaConnector;
 use Drupal\xinshi_ai\Service\HarnessSettings;
 use Drupal\xinshi_ai\Service\PromptRewriteClient;
-use Drupal\xinshi_ai_usage\Service\ProducerVault;
+use Drupal\xinshi_ai_runtime\Service\ServiceIdentity;
 
 /**
  * Xinshi AI 模块全局配置:/admin/config/xinshi/ai。
@@ -184,7 +184,7 @@ final class SettingsForm extends ConfigFormBase {
     $form['harness']['service'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('服务端调用'),
-      '#description' => $this->t('图片任务的提示词前置改写由本站在后台向对话服务下单，记在图片任务名下（UB2.6）。填对话服务自身监听的源地址（如 http://127.0.0.1:4200，不含路径）；留空则不改写。请求用下方生产者在“用量计量”登记的密钥签名，对话服务用同一密钥核验。'),
+      '#description' => $this->t('图片任务可在生成前请求对话服务改写提示词。填写服务地址（仅协议、主机和端口），留空则不改写。在 settings.php 的 xinshi_ai_service.secrets 配置独立服务密钥，并与 Node 的 AI_SERVICE_SECRET 保持一致。此功能不要求开启计量。'),
       'url' => [
         '#type' => 'url', '#title' => $this->t('对话服务地址'), '#maxlength' => 2048,
         '#default_value' => $service['url'] ?? '',
@@ -192,7 +192,7 @@ final class SettingsForm extends ConfigFormBase {
       'producer_id' => [
         '#type' => 'textfield', '#title' => $this->t('生产者 ID'), '#maxlength' => 64,
         '#default_value' => $service['producer_id'] ?? 'chat-node',
-        '#description' => $this->t('与对话服务的 METERING_PRODUCER_ID 一致，默认 chat-node。'),
+        '#description' => $this->t('与对话服务的 AI_SERVICE_PRODUCER_ID 及服务密钥映射键一致，默认 chat-node。'),
       ],
     ];
 
@@ -287,7 +287,7 @@ final class SettingsForm extends ConfigFormBase {
     if ($serviceUrl !== '' && !PromptRewriteClient::isServiceUrl($serviceUrl)) {
       $form_state->setErrorByName('harness][service][url', $this->t('对话服务地址只能是 http(s) 源地址，不含路径、查询参数、用户信息或片段。'));
     }
-    if (!preg_match(ProducerVault::PRODUCER_PATTERN, trim((string) ($service['producer_id'] ?? '')))) {
+    if (!preg_match(ServiceIdentity::PRODUCER_PATTERN, trim((string) ($service['producer_id'] ?? '')))) {
       $form_state->setErrorByName('harness][service][producer_id', $this->t('生产者 ID 只能包含字母、数字、点、下划线和连字符。'));
     }
   }

@@ -5,3 +5,4 @@ package: Xinshi
 core_version_requirement: ^11
 dependencies:
   - drupal:user
+  - xinshi_ai_runtime:xinshi_ai_runtime

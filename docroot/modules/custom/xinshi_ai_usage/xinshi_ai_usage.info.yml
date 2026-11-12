@@ -6,3 +6,4 @@ core_version_requirement: ^10.3 || ^11
 configure: xinshi_ai_usage.settings
 dependencies:
   - drupal:user
+  - xinshi_ai_runtime:xinshi_ai_runtime

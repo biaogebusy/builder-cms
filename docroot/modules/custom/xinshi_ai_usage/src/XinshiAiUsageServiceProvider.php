@@ -6,26 +6,28 @@ namespace Drupal\xinshi_ai_usage;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
-use Drupal\Core\Site\Settings;
+use Drupal\Core\Database\Database;
 
-/** Usage remains available without any financial module. */
+/** Stop collection only after current facts and unknown requests are reconciled. */
 final class XinshiAiUsageServiceProvider extends ServiceProviderBase {
 
   /** {@inheritdoc} */
-  public function register(ContainerBuilder $container) {
-    // Without credits installed, its provider cannot validate financial overrides.
-    if (!isset($container->getParameter('container.modules')['xinshi_credits'])) {
-      $overrides = Settings::get('xinshi_finance', []);
-      if (!is_array($overrides)
-        || array_diff_key($overrides, array_flip(['credits', 'billing', 'rewards']))
-        || array_filter($overrides, static fn(mixed $enabled): bool => $enabled !== FALSE)) {
-        throw new \LogicException('Financial assembly requires installed modules or explicit FALSE overrides');
-      }
+  public function alter(ContainerBuilder $container) {
+    if ($container->getParameter('xinshi_site_finance')['metering'] !== 'off') return;
+    $db = Database::getConnection();
+    $events = $db->schema()->tableExists('ai_usage_event') && $db->select('ai_usage_event', 'e')
+      ->fields('e', ['id'])->isNull('processed_at')->range(0, 1)->execute()->fetchField();
+    $unresolved = $db->condition('OR')->condition('state', ['prepared', 'in_flight', 'unknown'], 'IN')
+      ->condition('dispatch_state', 'unknown');
+    $unknown = $db->schema()->tableExists('ai_provider_attempt') && $db->select('ai_provider_attempt', 'a')
+      ->fields('a', ['id'])->condition($unresolved)
+      ->range(0, 1)->execute()->fetchField();
+    if ($events || $unknown) {
+      throw new \LogicException('Process usage events and reconcile unknown attempts before selecting off');
     }
-    $container->setParameter('xinshi_site_finance', [
-      'version' => 1, 'credits' => FALSE, 'chat_billing' => FALSE, 'image_billing' => FALSE,
-      'billing_recovery' => FALSE,
-    ]);
+    foreach (array_keys($container->getDefinitions()) as $id) {
+      if (str_starts_with($id, 'xinshi_ai_usage.')) $container->removeDefinition($id);
+    }
   }
 
 }

@@ -299,14 +299,15 @@ final class LocalUsageProducerTest extends TestCase {
     $this->assertSame(0, $this->countAllEvents());
   }
 
-  public function testModeFallsBackToObserveOnInvalidValues(): void {
+  public function testModeRejectsInvalidValues(): void {
     $this->assertSame(LocalUsageProducer::MODE_OBSERVE, $this->producer->mode());
     $enforce = $this->producerWith(new Settings(['hash_salt' => 'isolated-hash-salt',
       'xinshi_ai_usage.mode' => 'enforce']));
     $this->assertSame(LocalUsageProducer::MODE_ENFORCE, $enforce->mode());
     $invalid = $this->producerWith(new Settings(['hash_salt' => 'isolated-hash-salt',
       'xinshi_ai_usage.mode' => 'strict']));
-    $this->assertSame(LocalUsageProducer::MODE_OBSERVE, $invalid->mode());
+    $this->expectException(\LogicException::class);
+    $invalid->mode();
   }
 
   public function testImageAttemptsProjectImageCountsSeparatelyFromDeliveries(): void {

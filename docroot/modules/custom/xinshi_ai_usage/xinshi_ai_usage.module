@@ -7,13 +7,6 @@
 
 declare(strict_types=1);
 
-/** Implements hook_xinshi_api_data_alter(). */
-function xinshi_ai_usage_xinshi_api_data_alter(&$data, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Cache\CacheableMetadata $metadata): void {
-  if (!is_array($data) || (\Drupal::request()->query->all()['content'] ?? NULL) !== '/core/base') return;
-  $data['finance'] = \Drupal::getContainer()->getParameter('xinshi_site_finance');
-  $metadata->addCacheTags(['config:core.extension', 'config:xinshi_credits.settings', 'config:xinshi_ai_billing.settings']);
-}
-
 /**
  * Implements hook_cron().
  *
@@ -21,6 +14,7 @@ function xinshi_ai_usage_xinshi_api_data_alter(&$data, \Drupal\Core\Entity\Entit
  * The service takes its own lock, so an overlapping manual command is safe.
  */
 function xinshi_ai_usage_cron(): void {
+  if (\Drupal::getContainer()->getParameter('xinshi_site_finance')['metering'] === 'off') return;
   \Drupal::service('xinshi_ai_usage.currency_display')->refresh();
   try {
     $stats = \Drupal::service('xinshi_ai_usage.projection')->process(NULL, 500);

@@ -10,6 +10,7 @@ use Drupal\Core\Routing\RouteBuildEvent;
 use Drupal\Core\Site\Settings;
 use Drupal\xinshi_credits\XinshiCreditsServiceProvider;
 use Drupal\xinshi_ai_usage\XinshiAiUsageServiceProvider;
+use Drupal\xinshi_ai_runtime\XinshiAiRuntimeServiceProvider;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
@@ -27,8 +28,9 @@ $loader = require $root . '/vendor/autoload.php';
 $loader->addPsr4('Drupal\\Core\\', $root . '/docroot/core/lib/Drupal/Core');
 $loader->addPsr4('Drupal\\Component\\', $root . '/docroot/core/lib/Drupal/Component');
 $loader->addPsr4('Drupal\\sqlite\\', $root . '/docroot/core/modules/sqlite/src');
+$loader->addPsr4('Drupal\\jsonapi\\', $root . '/docroot/core/modules/jsonapi/src');
 require_once $root . '/docroot/core/lib/Drupal.php';
-$modules = ['xinshi_ai_usage', 'xinshi_credits', 'xinshi_rewards', 'xinshi_ai_billing', 'xinshi_ai'];
+$modules = ['xinshi_ai_runtime', 'xinshi_ai_usage', 'xinshi_credits', 'xinshi_rewards', 'xinshi_ai_billing', 'xinshi_ai'];
 foreach ($modules as $module) $loader->addPsr4('Drupal\\' . $module . '\\', $root . '/docroot/modules/custom/' . $module . '/src');
 Database::addConnectionInfo('default', 'default', [
   'driver' => 'sqlite', 'namespace' => 'Drupal\\sqlite\\Driver\\Database\\sqlite',
@@ -48,21 +50,23 @@ function check(bool $value, string $message): void {
 function assemble(array $configuration, array $overrides = [], ?array $modules = NULL): array {
   global $root;
   $modules ??= $GLOBALS['modules'];
+  $modules = array_unique(['xinshi_ai_runtime', ...$modules]);
   foreach (['xinshi_credits.settings', 'xinshi_ai_billing.settings', 'xinshi_rewards.settings'] as $name) {
     file_put_contents($root . '/config/' . $name . '.yml', Yaml::dump($configuration[$name] ?? []));
   }
   // FileStorage caches content by mtime; independent instances use a fresh file cache prefix.
   \Drupal\Component\FileCache\FileCacheFactory::setPrefix(bin2hex(random_bytes(8)));
   new Settings(['bootstrap_config_storage' => static fn() => new FileStorage($root . '/config'),
-    'xinshi_finance' => $overrides]);
+    'xinshi_finance' => $overrides, 'xinshi_ai_usage.mode' => $configuration['metering'] ?? 'enforce']);
   $container = new ContainerBuilder();
   $container->setParameter('container.modules', array_fill_keys($modules, []));
   $container->setParameter('cors.config', []);
-  (new XinshiAiUsageServiceProvider())->register($container);
+  (new XinshiAiRuntimeServiceProvider())->register($container);
   $yaml = new YamlFileLoader($container);
   foreach ($modules as $module) {
-    if ($module !== 'xinshi_ai') $yaml->load($root . '/docroot/modules/custom/' . $module . '/' . $module . '.services.yml');
+    $yaml->load($root . '/docroot/modules/custom/' . $module . '/' . $module . '.services.yml');
   }
+  if (in_array('xinshi_ai_usage', $modules, TRUE)) (new XinshiAiUsageServiceProvider())->alter($container);
   if (in_array('xinshi_credits', $modules, TRUE)) (new XinshiCreditsServiceProvider())->alter($container);
   $routes = new RouteCollection();
   foreach ($modules as $module) {
@@ -72,12 +76,14 @@ function assemble(array $configuration, array $overrides = [], ?array $modules =
     }
   }
   $event = new RouteBuildEvent($routes);
-  $container->get('xinshi_ai_usage.finance_routes')->onAlterRoutes($event);
+  $container->get('xinshi_ai_runtime.routes')->onAlterRoutes($event);
   if ($container->has('xinshi_credits.routes')) $container->get('xinshi_credits.routes')->onAlterRoutes($event);
   // External Drupal services are synthetic; optional missing references must still resolve to NULL.
   $container->register('logger.channel_base', stdClass::class)->setAbstract(TRUE);
+  $container->register('default_plugin_manager', stdClass::class)->setAbstract(TRUE);
   $external = static function (mixed $value) use (&$external, $container): void {
     if ($value instanceof Reference && $value->getInvalidBehavior() === 1 && !$container->has((string) $value)) {
+      if (str_starts_with((string) $value, 'xinshi_ai_usage.')) throw new RuntimeException('Missing usage service: ' . $value);
       $container->register((string) $value)->setSynthetic(TRUE)->setPublic(TRUE);
     } elseif (is_array($value)) foreach ($value as $item) $external($item);
   };
@@ -89,7 +95,7 @@ function assemble(array $configuration, array $overrides = [], ?array $modules =
 foreach ([['xinshi_ai_usage', 'xinshi_ai'], $modules] as $installed) {
   [$container, $routes] = assemble([], [], $installed);
   check($container->getParameter('xinshi_site_finance') == [
-    'version' => 1, 'credits' => FALSE, 'chat_billing' => FALSE, 'image_billing' => FALSE,
+    'version' => 2, 'metering' => 'enforce', 'harness' => TRUE, 'credits' => FALSE, 'chat_billing' => FALSE, 'image_billing' => FALSE,
     'billing_recovery' => FALSE,
   ], 'Disabled and absent financial modules publish the same explicit snapshot');
   foreach (['xinshi_credits.ledger', 'xinshi_credits.expiry', 'xinshi_rewards.rewards', 'xinshi_ai_billing.billing',
@@ -101,7 +107,7 @@ foreach ([['xinshi_ai_usage', 'xinshi_ai'], $modules] as $installed) {
     catch (\Symfony\Component\Routing\Exception\ResourceNotFoundException) { check(TRUE, 'No disabled route: ' . $path); }
   }
   check($routes->get('xinshi_ai.image_job.create') !== NULL, 'Uncharged image creation remains registered');
-  $response = \Drupal\xinshi_ai_usage\Controller\SiteFinanceController::create($container)->get();
+  $response = \Drupal\xinshi_ai_runtime\Controller\SiteFinanceController::create($container)->get();
   check($response->getStatusCode() === 200 && str_contains($response->headers->get('Cache-Control'), 'no-store'), 'Public snapshot is a lightweight uncached response');
   if ($container->has('xinshi_credits.uninstall')) {
     \Drupal::setContainer($container);
@@ -159,3 +165,41 @@ foreach ([['credits' => 'false'], ['billing' => TRUE, 'credits' => FALSE], ['unk
 try { assemble(['xinshi_ai_billing.settings' => ['enabled' => 'false']]); throw new RuntimeException('Invalid flag accepted'); }
 catch (LogicException) { check(TRUE, 'Malformed operational flags never become free-mode defaults'); }
 echo 'Finance assembly checks: ' . $checks . PHP_EOL;
+
+
+foreach ([['xinshi_ai_runtime'], ['xinshi_ai_runtime', 'xinshi_ai_usage', 'xinshi_ai']] as $modules) {
+  [$container, $routes] = assemble(['metering' => 'off'], [], $modules);
+  $snapshot = $container->getParameter('xinshi_site_finance');
+  check($snapshot['metering'] === 'off' && !$snapshot['credits'], 'Logs-only capability is explicit');
+  check(!$container->has('xinshi_ai_usage.local_producer') && !$container->has('xinshi_ai_usage.report'),
+    'Off assembly removes metering producers and reports');
+  check($routes->get('xinshi_ai_runtime.site_finance') !== NULL, 'Capability publication survives absent usage');
+  check($routes->get('xinshi_ai_usage.ingest') === NULL, 'Off assembly removes ingestion');
+}
+$recorder = new \Drupal\xinshi_ai\Service\ImageUsageRecorder(NULL, new \Psr\Log\NullLogger());
+check($recorder->begin([]) === NULL && $recorder->abandonOpenAttempts('synthetic', 'unknown') === [],
+  'Images without metering do not construct or call usage dependencies');
+try {
+  assemble(['metering' => 'observe'], [], ['xinshi_ai_runtime']);
+  throw new RuntimeException('Missing usage module accepted');
+} catch (LogicException $expected) {
+  check(TRUE, 'Enabled collection requires the usage module');
+}
+$db->query('CREATE TABLE ai_usage_event (id INTEGER PRIMARY KEY, processed_at INTEGER)');
+$db->query('INSERT INTO ai_usage_event (id) VALUES (1)');
+try {
+  assemble(['metering' => 'off'], [], ['xinshi_ai_usage']);
+  throw new RuntimeException('Pending usage was disabled');
+} catch (LogicException $expected) {
+  check(TRUE, 'Pending projection prevents disabling collection');
+}
+$db->query('UPDATE ai_usage_event SET processed_at = 1');
+$db->query('CREATE TABLE ai_provider_attempt (id INTEGER PRIMARY KEY, state TEXT, dispatch_state TEXT)');
+$db->query("INSERT INTO ai_provider_attempt VALUES (1, 'unknown', 'unknown')");
+try {
+  assemble(['metering' => 'off'], [], ['xinshi_ai_usage']);
+  throw new RuntimeException('Unknown attempt was abandoned');
+} catch (LogicException $expected) {
+  check(TRUE, 'Unknown provider outcomes prevent disabling collection');
+}
+echo 'Finance and optional metering checks: ' . $checks . PHP_EOL;

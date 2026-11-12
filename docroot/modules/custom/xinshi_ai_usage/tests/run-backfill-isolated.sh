@@ -16,7 +16,7 @@ trap 'exit 143' TERM
 docker start "$usage_container" >/dev/null
 docker exec "$usage_container" mkdir -p /workspace
 cd "$usage_root"
-tar -cf - vendor docroot/core docroot/modules/custom/xinshi_ai_usage \
+tar -cf - vendor docroot/core docroot/modules/custom/xinshi_ai_runtime docroot/modules/custom/xinshi_ai_usage \
   docroot/modules/custom/xinshi_ai/src docroot/modules/custom/xinshi_ai/xinshi_ai.module \
   | docker cp - "$usage_container":/workspace
 docker cp "$USAGE_TEST_PHPUNIT_PHAR" "$usage_container":/phpunit.phar

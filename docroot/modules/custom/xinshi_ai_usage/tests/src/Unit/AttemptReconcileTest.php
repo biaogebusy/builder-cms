@@ -180,6 +180,18 @@ final class AttemptReconcileTest extends TestCase {
     $this->assertNull($this->attempt($notSent)['cost_valuation_state']);
   }
 
+  public function testFailedUnknownDispatchCanBeResolved(): void {
+    $id = $this->producer->prepare($this->intent())['attempt_id'];
+    $this->producer->observe($id, ['outcome' => 'failed', 'dispatch_state' => 'unknown',
+      'usage' => NULL, 'error_code' => 'request_error']);
+    $this->projection->process(self::SITE);
+    $this->assertSame('failed', $this->attempt($id)['state']);
+    $result = $this->reconcile->reconcile($id, ['outcome' => 'not_sent']);
+    $this->assertSame(2, $result['observation_revision']);
+    $this->assertSame('not_sent', $this->attempt($id)['dispatch_state']);
+    $this->assertRejected($id, ['outcome' => 'failed'], 'not_unknown');
+  }
+
   public function testOnlyUnknownLocalAttemptsCanBeReconciled(): void {
     $succeeded = $this->producer->prepare($this->intent())['attempt_id'];
     $this->producer->observe($succeeded, ['outcome' => 'succeeded', 'dispatch_state' => 'sent',

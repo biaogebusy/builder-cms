@@ -1,0 +1,12 @@
+xinshi_ai_runtime.site_finance:
+  path: '/api/v3/ai/site-finance'
+  defaults:
+    _controller: '\Drupal\xinshi_ai_runtime\Controller\SiteFinanceController::get'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+  methods: [GET]
+  options:
+    _auth: []
+    no_cache: TRUE
+

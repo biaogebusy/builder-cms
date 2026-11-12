@@ -45,7 +45,7 @@ docker start "$chat_test_container" >/dev/null
 docker exec "$chat_test_container" mkdir -p /app/docroot/sites/default /app/docroot/modules/contrib
 cd "$chat_test_root"
 tar -cf - vendor composer.json composer.lock docroot/autoload.php docroot/index.php docroot/core \
-  docroot/modules/custom/xinshi_chat docroot/modules/custom/xinshi_ai_reference \
+  docroot/modules/custom/xinshi_chat docroot/modules/custom/xinshi_ai_runtime docroot/modules/custom/xinshi_ai_reference \
   docroot/modules/contrib/simple_oauth docroot/modules/contrib/consumers \
   docroot/modules/contrib/jsonapi_extras | docker cp - "$chat_test_container":/app
 docker exec "$chat_test_container" php -d extension=pdo_mysql \

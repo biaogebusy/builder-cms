@@ -1,0 +1,5 @@
+name: Xinshi AI Runtime
+type: module
+description: 'Public site capabilities and service identity for optional AI modules.'
+package: Xinshi
+core_version_requirement: ^11
