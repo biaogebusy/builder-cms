@@ -14,3 +14,17 @@ function xinshi_ai_runtime_xinshi_api_data_alter(&$data, \Drupal\Core\Entity\Ent
   $metadata->addCacheTags(['config:core.extension', 'config:xinshi_credits.settings', 'config:xinshi_ai_billing.settings']);
 }
 
+/**
+ * Implements hook_local_tasks_alter().
+ *
+ * CapabilityRouteSubscriber removes the usage routes while metering is off. A
+ * tab that still points at a removed route throws while the tab block builds
+ * its links, so every sibling tab under /admin/config/xinshi/ai disappears.
+ */
+function xinshi_ai_runtime_local_tasks_alter(array &$local_tasks): void {
+  if (\Drupal::getContainer()->getParameter('xinshi_site_finance')['metering'] !== 'off') return;
+  foreach ($local_tasks as $id => $task) {
+    if (str_starts_with((string) ($task['route_name'] ?? ''), 'xinshi_ai_usage.')) unset($local_tasks[$id]);
+  }
+}
+
