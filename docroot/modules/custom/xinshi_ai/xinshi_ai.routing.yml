@@ -34,6 +34,31 @@ xinshi_ai.web_search:
     _user_is_logged_in: 'TRUE'
     operation: 'search|fetch'
 
+xinshi_ai.speech.status:
+  path: '/api/v3/ai/speech'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\SpeechRecognitionController::handle'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_ai.speech.transcribe:
+  path: '/api/v3/ai/speech'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\SpeechRecognitionController::handle'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+
 xinshi_ai.figma:
   path: '/api/v3/ai/figma'
   defaults:

@@ -142,8 +142,8 @@ final class SettingsForm extends ConfigFormBase {
       ],
     ];
     $form['harness']['web_search'] = [
-      '#type' => 'fieldset', '#title' => $this->t('DeepSeek 联网搜索'),
-      '#description' => $this->t('CMS 直接调用 DeepSeek Search/Fetch。新会话默认开启联网搜索，用户可以按会话关闭。'),
+      '#type' => 'fieldset', '#title' => $this->t('DeepSeek 工具'),
+      '#description' => $this->t('联网搜索和语音识别共用此密钥。新会话默认开启联网搜索，用户可以按会话关闭。语音识别费用由站点承担，只记录用量。'),
       'api_key' => [
         '#type' => 'password', '#title' => $this->t('DeepSeek API Key'), '#maxlength' => 4096,
         '#description' => $this->t('留空保留已保存密钥。密钥加密保存，不进入配置导出，也不返回浏览器。'),
@@ -153,7 +153,8 @@ final class SettingsForm extends ConfigFormBase {
         '#markup' => \Drupal::service('xinshi_ai.web_search_credentials')->has()
           ? $this->t('已配置') : $this->t('未配置'),
       ],
-      'clear_key' => ['#type' => 'checkbox', '#title' => $this->t('清除已保存的 DeepSeek API Key')],
+      'clear_key' => ['#type' => 'checkbox', '#title' => $this->t('清除已保存的 DeepSeek API Key'),
+        '#description' => $this->t('清除后，联网搜索和语音识别均不可用。')],
     ];
     $form['harness']['task_limits'] = [
       '#type' => 'fieldset',

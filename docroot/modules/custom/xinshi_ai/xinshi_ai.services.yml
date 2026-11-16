@@ -11,6 +11,10 @@ services:
     class: Drupal\xinshi_ai\Service\WebSearchClient
     arguments: ['@http_client', '@xinshi_ai.web_search_credentials', '@config.factory', '@current_user', '@xinshi_ai.web_page_reader']
 
+  xinshi_ai.speech:
+    class: Drupal\xinshi_ai\Service\SpeechRecognitionClient
+    arguments: ['@http_client', '@xinshi_ai.web_search_credentials', '@current_user', '@lock', '@uuid', '@logger.channel.xinshi_ai', '@?xinshi_ai_usage.local_producer']
+
   xinshi_ai.web_page_reader:
     class: Drupal\xinshi_ai\Service\WebPageReader
     arguments: ['@xinshi_ai.public_http']
