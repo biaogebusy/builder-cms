@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_ai\Service;
 
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\xinshi_ai_usage\Service\LocalUsageProducer;
@@ -25,18 +26,24 @@ final class SpeechRecognitionClient {
     private readonly LockBackendInterface $lock,
     private readonly UuidInterface $uuid,
     private readonly LoggerInterface $logger,
+    private readonly ConfigFactoryInterface $configFactory,
     private readonly ?LocalUsageProducer $usage = NULL,
   ) {}
 
+  /** Missing configuration remains disabled for existing and newly installed sites. */
+  public function enabled(): bool {
+    $this->authorize();
+    return $this->configFactory->get('xinshi_ai.settings')->get('speech.enabled') === TRUE;
+  }
+
   /** Availability is checked for the current principal without returning any secret. */
   public function available(): bool {
-    $this->authorize();
-    return $this->credentials->has();
+    return $this->enabled() && $this->credentials->has();
   }
 
   /** Validate a complete recording before issuing one paid request; never retry it here. */
   public function transcribe(string $audio): array {
-    $this->authorize();
+    if (!$this->enabled()) throw new HttpException(503, 'speech_disabled');
     self::validateAudio($audio);
     try {
       $key = $this->credentials->get();

@@ -274,3 +274,11 @@ function xinshi_ai_update_10008(): void {
   // The update kernel can boot before the newly required services are available.
   \Drupal::service('module_installer')->install(['xinshi_ai_usage']);
 }
+
+/** Defaults speech recognition off without overwriting an administrator's choice. */
+function xinshi_ai_update_10009(): void {
+  $config = \Drupal::configFactory()->getEditable('xinshi_ai.settings');
+  if ($config->get('speech.enabled') === NULL) {
+    $config->set('speech.enabled', FALSE)->save();
+  }
+}

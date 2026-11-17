@@ -25,9 +25,11 @@ final class SpeechRecognitionController extends ControllerBase {
     $headers = ['Cache-Control' => 'private, no-store'];
     try {
       if ($request->isMethod('GET')) {
-        return new JsonResponse(['available' => $this->client->available()], 200, $headers);
+        return new JsonResponse(['enabled' => $this->client->enabled(),
+          'available' => $this->client->available()], 200, $headers);
       }
       if (!$request->isMethod('POST')) throw new HttpException(405, 'speech_method_not_allowed');
+      if (!$this->client->enabled()) throw new HttpException(503, 'speech_disabled');
       if ($request->headers->get('Content-Type') !== 'audio/wav') {
         throw new HttpException(415, 'speech_invalid_audio');
       }

@@ -15,6 +15,13 @@ xinshi_ai.settings:
         request_timeout:
           type: integer
           label: '上游请求超时(秒)'
+    speech:
+      type: mapping
+      label: 'Speech recognition'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable speech recognition'
     image:
       type: mapping
       label: '图片任务'

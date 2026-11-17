@@ -2,6 +2,8 @@ gateway:
   base_url: 'https://ai.builder.design'
   api_key: ''
   request_timeout: 180
+speech:
+  enabled: false
 image:
   default_n: 4
 harness:

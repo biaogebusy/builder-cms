@@ -144,6 +144,11 @@ final class SettingsForm extends ConfigFormBase {
     $form['harness']['web_search'] = [
       '#type' => 'fieldset', '#title' => $this->t('DeepSeek 工具'),
       '#description' => $this->t('联网搜索和语音识别共用此密钥。新会话默认开启联网搜索，用户可以按会话关闭。语音识别费用由站点承担，只记录用量。'),
+      'speech_enabled' => [
+        '#type' => 'checkbox', '#title' => $this->t('启用语音识别'),
+        '#default_value' => $config->get('speech.enabled') === TRUE,
+        '#description' => $this->t('默认关闭，启用后需配置下方密钥。此开关由 CMS 控制，关闭语音识别不影响联网搜索。'),
+      ],
       'api_key' => [
         '#type' => 'password', '#title' => $this->t('DeepSeek API Key'), '#maxlength' => 4096,
         '#description' => $this->t('留空保留已保存密钥。密钥加密保存，不进入配置导出，也不返回浏览器。'),
@@ -334,6 +339,7 @@ final class SettingsForm extends ConfigFormBase {
       ]);
     }
     $this->config(self::CONFIG_NAME)
+      ->set('speech.enabled', (bool) $form_state->getValue(['harness', 'web_search', 'speech_enabled']))
       ->set('gateway.base_url', $form_state->getValue('base_url'))
       ->set('gateway.api_key', $form_state->getValue('api_key'))
       ->set('gateway.request_timeout', (int) $form_state->getValue('request_timeout'))

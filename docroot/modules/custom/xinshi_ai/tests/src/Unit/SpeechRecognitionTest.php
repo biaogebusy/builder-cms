@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\xinshi_ai\Unit;
 
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\PrivateKey;
@@ -40,6 +42,8 @@ final class SpeechRecognitionTest extends TestCase {
   private bool $failIntent = FALSE;
   private string $usageMode = 'observe';
   private int $releases = 0;
+  private mixed $enabled = TRUE;
+  private SpeechRecognitionClient $client;
 
   protected function setUp(): void {
     new Settings(['hash_salt' => 'speech-fixture']);
@@ -71,9 +75,14 @@ final class SpeechRecognitionTest extends TestCase {
       $this->observations[] = $observation;
       return ['attempt_id' => $attempt, 'observation_revision' => 1];
     });
-    $this->controller = new SpeechRecognitionController(new SpeechRecognitionClient(
+    $config = $this->createMock(ImmutableConfig::class);
+    $config->method('get')->with('speech.enabled')->willReturnCallback(fn() => $this->enabled);
+    $factory = $this->createMock(ConfigFactoryInterface::class);
+    $factory->method('get')->with('xinshi_ai.settings')->willReturn($config);
+    $this->client = new SpeechRecognitionClient(
       new Client(['handler' => $stack]), $this->credentials, $account, $lock, $uuid,
-      new NullLogger(), $usage));
+      new NullLogger(), $factory, $usage);
+    $this->controller = new SpeechRecognitionController($this->client);
   }
 
   protected function tearDown(): void {
@@ -120,14 +129,51 @@ final class SpeechRecognitionTest extends TestCase {
 
   public function testAvailabilityAndAuthenticationDoNotCallTheProvider(): void {
     $request = Request::create('/api/v3/ai/speech', 'GET');
-    $this->assertSame(['available' => TRUE], json_decode($this->controller->handle($request)->getContent(), TRUE));
+    $this->assertSame(['enabled' => TRUE, 'available' => TRUE], json_decode($this->controller->handle($request)->getContent(), TRUE));
     $this->credentials->delete();
     $this->assertSame(503, $this->call()->getStatusCode());
-    $this->assertSame(['available' => FALSE], json_decode($this->controller->handle($request)->getContent(), TRUE));
+    $this->assertSame(['enabled' => TRUE, 'available' => FALSE], json_decode($this->controller->handle($request)->getContent(), TRUE));
     $this->authenticated = FALSE;
     $this->assertSame(403, $this->call()->getStatusCode());
     $this->assertSame(403, $this->controller->handle($request)->getStatusCode());
     $this->assertSame([], $this->history);
+  }
+
+
+  #[DataProvider('disabledValues')]
+  public function testMissingOrNonBooleanEnablementRejectsBeforeBodyValidationAndSideEffects(mixed $value): void {
+    $this->enabled = $value;
+    $response = $this->controller->handle(Request::create('/api/v3/ai/speech', 'GET'));
+    $this->assertSame(['enabled' => FALSE, 'available' => FALSE], json_decode($response->getContent(), TRUE));
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+    $response = $this->call('invalid', 'audio/webm');
+    $this->assertSame(503, $response->getStatusCode());
+    $this->assertSame(['code' => 'speech_disabled'], json_decode($response->getContent(), TRUE));
+    $this->assertSame([], $this->history);
+    $this->assertSame([], $this->intents);
+    $this->assertSame(0, $this->releases);
+  }
+
+  public static function disabledValues(): array {
+    return [[NULL], [FALSE], [0], [1], ['true'], ['false'], [[]]];
+  }
+
+  public function testServiceAlsoGuardsDisabledRequestsAndFreshConfigReads(): void {
+    $this->assertTrue($this->client->available());
+    $this->enabled = FALSE;
+    $this->assertFalse($this->client->available());
+    try {
+      $this->client->transcribe(self::wav());
+      $this->fail('A direct call must enforce the switch.');
+    }
+    catch (\Symfony\Component\HttpKernel\Exception\HttpException $error) {
+      $this->assertSame(503, $error->getStatusCode());
+      $this->assertSame('speech_disabled', $error->getMessage());
+    }
+    $this->assertSame([], $this->history);
+    $this->assertSame([], $this->intents);
+    $this->enabled = TRUE;
+    $this->assertTrue($this->client->available());
   }
 
   public function testRejectsMalformedOversizedAndOverlongAudioBeforeUsageOrProviderIo(): void {
