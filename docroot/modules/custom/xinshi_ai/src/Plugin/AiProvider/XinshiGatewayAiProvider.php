@@ -19,12 +19,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 )]
 final class XinshiGatewayAiProvider extends OpenAiProvider implements ImageToImageInterface {
 
-  use OpenAiCompatibleImageEditTrait;
+  use OpenAiCompatibleImageEditTrait {
+    create as private createImageProvider;
+  }
 
   protected SupplierConfiguration $suppliers;
 
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance = self::createImageProvider($container, $configuration, $plugin_id, $plugin_definition);
     $instance->suppliers = $container->get('xinshi_ai.supplier_configuration');
     return $instance;
   }
