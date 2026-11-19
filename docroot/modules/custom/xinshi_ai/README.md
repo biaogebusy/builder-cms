@@ -122,7 +122,7 @@ MediaUploadService ─► media:image + image_asset 节点
 
 `ProviderResolver` 按 `field_platform` 映射到 `drupal/ai` Provider:
 
-- `xinshi` → `XinshiGatewayAiProvider`(继承 `OpenAiProvider`,把 base URL 指向 `gateway.base_url`(自动补 `/v1`),API key 取 `gateway.api_key`)。各厂商(含阿里通义千问)由网关按 model id 转协议。
+- `xinshi` → `XinshiGatewayAiProvider`。`SupplierConfiguration` 读取 `gateway.base_url` 并补 `/v1`，密钥使用加密存储或 `settings.php` 覆盖。迁移和服务通道见[供应商配置](../../../../../xinshi-docs/stories/pro/ai/ops/supplier-configuration.mdx)。
 - `custom` → `CustomAiProvider`:用户单次提交的 `endpoint / api_key / model` 经 `setConfiguration()` 运行时注入,**不持久化**,且在 `loadClient()` 里从 payload 中 `unset` 以防泄入上游请求。
 
 超时在 `createInstance` 阶段就注入(Provider 的 Guzzle client 构造时锁定 timeout),缺省 `gateway.request_timeout`(180s),远高于 ai 模块默认的 60s,以适配上游生图耗时。
