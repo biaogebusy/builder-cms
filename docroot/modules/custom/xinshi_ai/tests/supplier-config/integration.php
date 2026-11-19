@@ -61,7 +61,8 @@ function check(bool $condition, string $message): void {
 function signed(string $path = '/api/v3/ai/service/suppliers', string $secret = 'synthetic-service-secret',
   ?string $nonce = NULL, ?string $timestamp = NULL, string $body = ''): Request {
   $request = Request::create($path, 'GET', [], [], [], [], $body);
-  $timestamp ??= (string) time();
+  // The installed CLI kernel retains its request clock across these synthetic requests.
+  $timestamp ??= (string) \Drupal::time()->getRequestTime();
   $nonce ??= bin2hex(random_bytes(16));
   $request->headers->set(ServiceIdentity::HEADER_PRODUCER, 'chat-node');
   $request->headers->set(ServiceIdentity::HEADER_TIMESTAMP, $timestamp);
@@ -97,6 +98,9 @@ catch (RuntimeException $error) {
 $vault->set('synthetic-rotated-key', 'xinshi');
 xinshi_ai_update_10010();
 $form = SettingsForm::create(\Drupal::getContainer());
+$cachedForm = serialize($form);
+check(!str_contains($cachedForm, 'synthetic-'), 'Cached forms carry service IDs without supplier secrets.');
+$form = unserialize($cachedForm);
 $built = $form->buildForm([], new FormState());
 check($built['gateway']['api_key']['#type'] === 'password' && !isset($built['gateway']['api_key']['#default_value']), 'Form never fills saved supplier keys.');
 $values = ['base_url' => 'https://gateway.test', 'api_key' => '', 'request_timeout' => 180,
@@ -123,7 +127,8 @@ check($payload['platforms']['xinshi']['baseURL'] === 'https://gateway.test/v1' &
   $payload['platforms']['aliyun']['account'] === ['ref' => 'aliyun', 'payer' => 'platform'], 'Endpoints and payer travel with each platform key.');
 check($controller->read($request)->getStatusCode() === 401, 'A used nonce cannot be replayed.');
 check($controller->read(signed(secret: 'wrong-secret'))->getStatusCode() === 401, 'Invalid signatures cannot read credentials.');
-check($controller->read(signed(timestamp: (string) (time() - 301)))->getStatusCode() === 401, 'Expired signatures cannot read credentials.');
+check($controller->read(signed(timestamp: (string) (\Drupal::time()->getRequestTime() - 301)))->getStatusCode() === 401, 'Expired signatures cannot read credentials.');
+check($controller->read(signed(timestamp: (string) (\Drupal::time()->getRequestTime() + 301)))->getStatusCode() === 401, 'Future signatures outside the window cannot read credentials.');
 foreach (['Cookie' => 'synthetic-session', 'Authorization' => 'Bearer synthetic-oauth'] as $header => $value) {
   $userRequest = Request::create('/api/v3/ai/service/suppliers');
   $userRequest->headers->set($header, $value);
