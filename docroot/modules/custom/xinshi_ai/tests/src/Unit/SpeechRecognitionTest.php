@@ -14,7 +14,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\xinshi_ai\Controller\SpeechRecognitionController;
 use Drupal\xinshi_ai\Service\SpeechRecognitionClient;
-use Drupal\xinshi_ai\Service\WebSearchCredentials;
+use Drupal\xinshi_ai\Service\ApiKeyVault;
 use Drupal\xinshi_ai_usage\Service\LocalUsageProducer;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
@@ -32,7 +32,7 @@ use Symfony\Component\Yaml\Yaml;
 final class SpeechRecognitionTest extends TestCase {
 
   private MockHandler $provider;
-  private WebSearchCredentials $credentials;
+  private ApiKeyVault $credentials;
   private SpeechRecognitionController $controller;
   private array $history = [];
   private array $intents = [];
@@ -49,7 +49,7 @@ final class SpeechRecognitionTest extends TestCase {
     new Settings(['hash_salt' => 'speech-fixture']);
     $private = $this->createMock(PrivateKey::class);
     $private->method('get')->willReturn('synthetic-private-key');
-    $this->credentials = new WebSearchCredentials(new KeyValueMemoryFactory(), $private);
+    $this->credentials = new ApiKeyVault(new KeyValueMemoryFactory(), $private);
     $this->credentials->set('synthetic-deepseek-key');
     $this->provider = new MockHandler();
     $stack = HandlerStack::create($this->provider);

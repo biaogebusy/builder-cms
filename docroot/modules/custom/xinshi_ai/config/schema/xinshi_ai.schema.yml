@@ -9,12 +9,20 @@ xinshi_ai.settings:
         base_url:
           type: uri
           label: '网关 base URL'
-        api_key:
-          type: string
-          label: '网关 API key(各项目独立;保存在配置中)'
         request_timeout:
           type: integer
           label: '上游请求超时(秒)'
+    suppliers:
+      type: mapping
+      label: 'Server supplier endpoints'
+      mapping:
+        aliyun:
+          type: mapping
+          label: 'Aliyun chat'
+          mapping:
+            base_url:
+              type: string
+              label: 'OpenAI compatible chat base URL'
     speech:
       type: mapping
       label: 'Speech recognition'

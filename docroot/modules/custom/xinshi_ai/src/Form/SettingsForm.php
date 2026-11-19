@@ -6,6 +6,11 @@ namespace Drupal\xinshi_ai\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\xinshi_ai\Service\ApiKeyVault;
+use Drupal\xinshi_ai\Service\SupplierConfiguration;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\xinshi_ai\Service\FigmaConnector;
 use Drupal\xinshi_ai\Service\HarnessSettings;
 use Drupal\xinshi_ai\Service\PromptRewriteClient;
@@ -19,6 +24,16 @@ use Drupal\xinshi_ai_runtime\Service\ServiceIdentity;
 final class SettingsForm extends ConfigFormBase {
 
   private const CONFIG_NAME = 'xinshi_ai.settings';
+
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager,
+    protected SupplierConfiguration $suppliers, protected ApiKeyVault $supplierKeys) {
+    parent::__construct($config_factory, $typedConfigManager);
+  }
+
+  public static function create(ContainerInterface $container): static {
+    return new static($container->get('config.factory'), $container->get('config.typed'),
+      $container->get('xinshi_ai.supplier_configuration'), $container->get('xinshi_ai.supplier_keys'));
+  }
 
   /**
    * {@inheritdoc}
@@ -48,16 +63,23 @@ final class SettingsForm extends ConfigFormBase {
     $form['gateway']['base_url'] = [
       '#type' => 'url',
       '#title' => $this->t('网关 base URL'),
-      '#description' => $this->t('New API(OpenAI-compatible)网关地址,如 https://ai.builder.design。'),
+      '#description' => $this->t('OpenAI 兼容网关地址，CMS 与 Node 共用此地址，未包含版本路径时自动补 /v1。'),
       '#default_value' => $config->get('gateway.base_url'),
       '#required' => TRUE,
     ];
     $form['gateway']['api_key'] = [
-      '#type' => 'textfield',
+      '#type' => 'password',
       '#title' => $this->t('网关 API key'),
-      '#description' => $this->t('New API 网关的访问 key(各项目独立)。保存在配置中,后端调用网关时作为 Bearer token 使用。'),
-      '#default_value' => $config->get('gateway.api_key'),
-      '#required' => TRUE,
+      '#maxlength' => 4096,
+      '#description' => $this->t('留空保留已保存密钥，密钥加密保存，不进入配置导出，也不回填到浏览器。settings.php 的 xinshi_ai.supplier_keys 覆盖后台密钥。'),
+    ];
+    $form['gateway']['key_configured'] = [
+      '#type' => 'item', '#title' => $this->t('密钥状态'),
+      '#markup' => $this->suppliers->hasKey('xinshi') ? $this->t('已配置') : $this->t('未配置'),
+    ];
+    $form['gateway']['clear_gateway_key'] = [
+      '#type' => 'checkbox', '#title' => $this->t('清除已保存的网关密钥'),
+      '#description' => $this->t('清除后平台调用不可用，部署覆盖值仍由 settings.php 控制。'),
     ];
     $form['gateway']['request_timeout'] = [
       '#type' => 'number',
@@ -66,6 +88,18 @@ final class SettingsForm extends ConfigFormBase {
       '#min' => 1,
       '#default_value' => $config->get('gateway.request_timeout'),
       '#required' => TRUE,
+    ];
+
+    $form['aliyun'] = [
+      '#type' => 'details', '#title' => $this->t('阿里云直连对话'), '#tree' => TRUE,
+      '#description' => $this->t('保留 aliyun 平台的 OpenAI 兼容对话连接，配置地址与密钥后供 Node 使用，不添加模型菜单或图片协议。'),
+      'base_url' => ['#type' => 'url', '#title' => $this->t('对话 API 地址'), '#maxlength' => 2048,
+        '#default_value' => $config->get('suppliers.aliyun.base_url') ?? ''],
+      'api_key' => ['#type' => 'password', '#title' => $this->t('阿里云 API key'), '#maxlength' => 4096,
+        '#description' => $this->t('填写完整 OpenAI 兼容版本路径，密钥留空保留已保存值。')],
+      'configured' => ['#type' => 'item', '#title' => $this->t('密钥状态'),
+        '#markup' => $this->suppliers->hasKey('aliyun') ? $this->t('已配置') : $this->t('未配置')],
+      'clear_key' => ['#type' => 'checkbox', '#title' => $this->t('清除已保存的阿里云密钥')],
     ];
 
     $harness = HarnessSettings::normalize($config->get('harness'));
@@ -266,6 +300,23 @@ final class SettingsForm extends ConfigFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
+    $gatewayUrl = trim((string) $form_state->getValue('base_url', ''));
+    $aliyunUrl = trim((string) $form_state->getValue(['aliyun', 'base_url'], ''));
+    foreach (['base_url' => $gatewayUrl, 'aliyun][base_url' => $aliyunUrl] as $name => $url) {
+      if ($url !== '' && !SupplierConfiguration::validUrl($url)) {
+        $form_state->setErrorByName($name, $this->t('填写 HTTPS 地址，不能包含用户信息、查询参数或片段，本地开发地址允许 HTTP。'));
+      }
+    }
+    foreach (['api_key' => $form_state->getValue('api_key', ''),
+      'aliyun][api_key' => $form_state->getValue(['aliyun', 'api_key'], '')] as $name => $key) {
+      if (!is_string($key) || strlen($key) > 4096 || preg_match('/[\s\x00-\x1f\x7f]/', $key)) {
+        $form_state->setErrorByName($name, $this->t('密钥不能包含空白字符，长度不能超过 4096 字节。'));
+      }
+    }
+    if ($aliyunUrl === '' && ($form_state->getValue(['aliyun', 'api_key']) ||
+      !$form_state->getValue(['aliyun', 'clear_key']) && $this->suppliers->hasKey('aliyun'))) {
+      $form_state->setErrorByName('aliyun][base_url', $this->t('配置阿里云密钥时，必须填写对话 API 地址。'));
+    }
     if ($form_state->getValue(['harness', 'mcp', 'product_documents', 'enabled']) &&
         !array_filter($form_state->getValue(['harness', 'mcp', 'product_documents', 'content_types'], []))) {
       $form_state->setErrorByName('harness][mcp][product_documents][content_types', $this->t('启用产品资料读取时，请至少选择一种资料内容类型。'));
@@ -299,6 +350,15 @@ final class SettingsForm extends ConfigFormBase {
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    foreach (['xinshi' => [$form_state->getValue('api_key', ''), $form_state->getValue('clear_gateway_key')],
+      'aliyun' => [$form_state->getValue(['aliyun', 'api_key'], ''), $form_state->getValue(['aliyun', 'clear_key'])]] as $platform => [$key, $clear]) {
+      if ($key !== '') {
+        $this->supplierKeys->set($key, $platform);
+      }
+      elseif ($clear) {
+        $this->supplierKeys->delete($platform);
+      }
+    }
     $search = $form_state->getValue(['harness', 'web_search']);
     if (is_array($search)) {
       $credentials = \Drupal::service('xinshi_ai.web_search_credentials');
@@ -341,7 +401,8 @@ final class SettingsForm extends ConfigFormBase {
     $this->config(self::CONFIG_NAME)
       ->set('speech.enabled', (bool) $form_state->getValue(['harness', 'web_search', 'speech_enabled']))
       ->set('gateway.base_url', $form_state->getValue('base_url'))
-      ->set('gateway.api_key', $form_state->getValue('api_key'))
+      ->clear('gateway.api_key')
+      ->set('suppliers.aliyun.base_url', rtrim(trim((string) $form_state->getValue(['aliyun', 'base_url'], '')), '/'))
       ->set('gateway.request_timeout', (int) $form_state->getValue('request_timeout'))
       ->set('image.default_n', (int) $form_state->getValue('default_n'))
       ->set('queue.worker', $form_state->getValue('worker'))

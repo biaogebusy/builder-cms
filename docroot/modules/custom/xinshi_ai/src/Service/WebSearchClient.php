@@ -17,7 +17,7 @@ final class WebSearchClient {
 
   public function __construct(
     private readonly ClientInterface $http,
-    private readonly WebSearchCredentials $credentials,
+    private readonly ApiKeyVault $credentials,
     private readonly ConfigFactoryInterface $config,
     private readonly AccountProxyInterface $account,
     private readonly WebPageReader $pages,

@@ -36,6 +36,7 @@ final class HarnessSettingsTest extends TestCase {
 
   protected function setUp(): void {
     parent::setUp();
+    new \Drupal\Core\Site\Settings(['hash_salt' => 'synthetic-harness-settings-salt']);
     $this->storage = new MemoryStorage();
     $this->storage->write('xinshi_ai.settings', [
       'gateway' => ['api_key' => 'secret-key', 'base_url' => 'https://example.test', 'request_timeout' => 180],
@@ -50,6 +51,7 @@ final class HarnessSettingsTest extends TestCase {
       fn(TranslatableMarkup $markup) => $markup->getUntranslatedString());
     $container = new ContainerBuilder();
     $container->set('config.factory', $this->factory);
+    $container->set('cache_contexts_manager', new \Drupal\Core\Cache\Context\CacheContextsManager($container, ['user', 'user.roles', 'user.permissions']));
     $container->set('string_translation', $translation);
     $container->set('messenger', $this->createMock(MessengerInterface::class));
     $container->set('cache_tags.invalidator', $this->createMock(CacheTagsInvalidatorInterface::class));
@@ -58,10 +60,12 @@ final class HarnessSettingsTest extends TestCase {
     $container->set('xinshi_ai.product_documents', $documents);
     $private = $this->createMock(\Drupal\Core\PrivateKey::class);
     $private->method('get')->willReturn('synthetic-private-key');
-    $container->set('xinshi_ai.web_search_credentials', new \Drupal\xinshi_ai\Service\WebSearchCredentials(
+    $container->set('xinshi_ai.web_search_credentials', new \Drupal\xinshi_ai\Service\ApiKeyVault(
       new \Drupal\Core\KeyValueStore\KeyValueMemoryFactory(), $private));
+    $supplierKeys = new \Drupal\xinshi_ai\Service\ApiKeyVault(new \Drupal\Core\KeyValueStore\KeyValueMemoryFactory(), $private, 'xinshi_ai.suppliers');
     \Drupal::setContainer($container);
-    $this->form = new SettingsForm($this->factory, $typed);
+    $this->form = new SettingsForm($this->factory, $typed,
+      new \Drupal\xinshi_ai\Service\SupplierConfiguration($this->factory, $supplierKeys, \Drupal\Core\Site\Settings::getInstance()), $supplierKeys);
   }
 
   protected function tearDown(): void {
@@ -162,7 +166,7 @@ final class HarnessSettingsTest extends TestCase {
       // ID is never stored empty.
       'service' => ['url' => '', 'producer_id' => 'chat-node'],
     ], $stored['harness']);
-    $this->assertSame('secret-key', $stored['gateway']['api_key']);
+    $this->assertArrayNotHasKey('api_key', $stored['gateway']);
     $this->assertSame(['ingest_token_env' => 'SECRET_TOKEN_ENV'], $stored['observability']);
     $this->assertSame(7, json_decode((new HarnessSettingsController())->read()->getContent(), TRUE)['task_limits']['max_model_calls']);
 
@@ -245,7 +249,7 @@ final class HarnessSettingsTest extends TestCase {
       $this->assertSame(['max_model_calls' => 3, 'max_tokens' => 10000], $settings['task_limits']);
       $stored = $this->storage->read('xinshi_ai.settings');
       $this->assertSame(['ingest_token_env' => 'SECRET_TOKEN_ENV'], $stored['observability']);
-      $this->assertSame('secret-key', $stored['gateway']['api_key']);
+      $this->assertArrayNotHasKey('api_key', $stored['gateway']);
       $this->assertSame($disabled, $stored['harness']['tools']['disabled']);
     }
   }

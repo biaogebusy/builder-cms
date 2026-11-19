@@ -42,6 +42,7 @@ $services['xinshi_ai.speech']['arguments'][7] = NULL;
 file_put_contents($module . '/xinshi_ai.services.yml', Yaml::dump(['services' =>
   array_intersect_key($services, array_flip([
     'logger.channel.xinshi_ai', 'xinshi_ai.speech', 'xinshi_ai.web_search_credentials', 'xinshi_ai.figma_vault',
+    'xinshi_ai.supplier_keys', 'xinshi_ai.supplier_configuration',
   ]))], 8));
 require dirname(__DIR__, 3) . '/xinshi_chat/tests/install-fixture.php';
 \Drupal::service('module_installer')->install(['xinshi_ai']);

@@ -279,3 +279,15 @@ xinshi_ai.log_metadata:
   requirements:
     _permission: 'administer xinshi_ai'
 
+xinshi_ai.suppliers:
+  path: '/api/v3/ai/service/suppliers'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\SupplierConfigurationController::read'
+    _format: json
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+  options:
+    _auth: []
+    no_cache: TRUE
+

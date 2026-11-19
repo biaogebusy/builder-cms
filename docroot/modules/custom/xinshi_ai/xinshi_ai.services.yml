@@ -1,10 +1,18 @@
 services:
+  xinshi_ai.supplier_keys:
+    class: Drupal\xinshi_ai\Service\ApiKeyVault
+    arguments: ['@keyvalue', '@private_key', 'xinshi_ai.suppliers']
+
+  xinshi_ai.supplier_configuration:
+    class: Drupal\xinshi_ai\Service\SupplierConfiguration
+    arguments: ['@config.factory', '@xinshi_ai.supplier_keys', '@settings']
+
   xinshi_ai.log_metadata:
     class: Drupal\xinshi_ai\Service\AiLogMetadata
     arguments: ['@entity_type.manager', '@jsonapi.resource_type.repository', '@current_user']
 
   xinshi_ai.web_search_credentials:
-    class: Drupal\xinshi_ai\Service\WebSearchCredentials
+    class: Drupal\xinshi_ai\Service\ApiKeyVault
     arguments: ['@keyvalue', '@private_key']
 
   xinshi_ai.web_search:

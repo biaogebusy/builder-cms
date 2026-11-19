@@ -21,7 +21,7 @@ final class SpeechRecognitionClient {
 
   public function __construct(
     private readonly ClientInterface $http,
-    private readonly WebSearchCredentials $credentials,
+    private readonly ApiKeyVault $credentials,
     private readonly AccountProxyInterface $account,
     private readonly LockBackendInterface $lock,
     private readonly UuidInterface $uuid,

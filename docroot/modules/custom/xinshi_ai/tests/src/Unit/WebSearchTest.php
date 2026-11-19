@@ -15,7 +15,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\xinshi_ai\Controller\WebSearchController;
 use Drupal\xinshi_ai\Service\WebSearchClient;
-use Drupal\xinshi_ai\Service\WebSearchCredentials;
+use Drupal\xinshi_ai\Service\ApiKeyVault;
 use Drupal\xinshi_ai\Service\WebPageReader;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
@@ -31,7 +31,7 @@ use Symfony\Component\Yaml\Yaml;
 /** Real encryption and request validation with synthetic storage and provider responses. */
 final class WebSearchTest extends TestCase {
 
-  private WebSearchCredentials $credentials;
+  private ApiKeyVault $credentials;
   private KeyValueMemoryFactory $keys;
   private ConfigFactory $config;
   private MockHandler $http;
@@ -45,7 +45,7 @@ final class WebSearchTest extends TestCase {
     $this->keys = new KeyValueMemoryFactory();
     $private = $this->createMock(PrivateKey::class);
     $private->method('get')->willReturn('synthetic-site-private-key');
-    $this->credentials = new WebSearchCredentials($this->keys, $private);
+    $this->credentials = new ApiKeyVault($this->keys, $private);
     $this->credentials->set('synthetic-deepseek-key');
     $dispatcher = new EventDispatcher();
     $this->config = new ConfigFactory(new MemoryStorage(), $dispatcher,

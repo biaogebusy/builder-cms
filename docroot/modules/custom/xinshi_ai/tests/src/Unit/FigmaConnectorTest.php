@@ -88,8 +88,11 @@ final class FigmaConnectorTest extends TestCase {
       new Client(['handler' => $stack]), $lock, $time);
     $container = new ContainerBuilder();
     $container->set('config.factory', $this->factory);
+    $supplierKeys = new \Drupal\xinshi_ai\Service\ApiKeyVault($keys, $privateKey, 'xinshi_ai.suppliers');
+    $container->set('xinshi_ai.supplier_keys', $supplierKeys);
+    $container->set('xinshi_ai.supplier_configuration', new \Drupal\xinshi_ai\Service\SupplierConfiguration($this->factory, $supplierKeys, Settings::getInstance()));
     $container->set('xinshi_ai.figma_vault', $this->vault);
-    $container->set('xinshi_ai.web_search_credentials', new \Drupal\xinshi_ai\Service\WebSearchCredentials($keys, $privateKey));
+    $container->set('xinshi_ai.web_search_credentials', new \Drupal\xinshi_ai\Service\ApiKeyVault($keys, $privateKey));
     $container->set('cache_tags.invalidator', $this->createMock(CacheTagsInvalidatorInterface::class));
     $container->set('messenger', $this->createMock(MessengerInterface::class));
     $translation = $this->createMock(TranslationInterface::class);
@@ -285,7 +288,8 @@ final class FigmaConnectorTest extends TestCase {
   }
 
   public function testAdminFormStoresOnlyPublicSettingsAndPreservesOrClearsTheEncryptedSecret(): void {
-    $form = new SettingsForm($this->factory, $this->typed);
+    $form = new SettingsForm($this->factory, $this->typed,
+      \Drupal::service('xinshi_ai.supplier_configuration'), \Drupal::service('xinshi_ai.supplier_keys'));
     $state = (new FormState())->setValues(['harness' => ['mcp' => ['figma' => [
       'enabled' => 1, 'client_id' => 'test-client', 'client_secret' => 'replacement-secret',
       'redirect_uri' => self::CALLBACK,

@@ -1,7 +1,9 @@
 gateway:
   base_url: 'https://ai.builder.design'
-  api_key: ''
   request_timeout: 180
+suppliers:
+  aliyun:
+    base_url: ''
 speech:
   enabled: false
 image:

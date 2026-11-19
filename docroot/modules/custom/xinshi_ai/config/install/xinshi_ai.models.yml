@@ -2,7 +2,7 @@
 # 安装时作为种子数据导入;之后增删改走 admin UI / config sync(详见模块文档 §5)。
 #
 # 重要:xinshi 网关的 base_url / token 不在这里,由 XinshiGatewayAiProvider
-# 从 xinshi_ai.settings 的 gateway 段读取(base_url 入 config,token 走 env)。
+# 从 SupplierConfiguration 读取地址与密钥，密钥加密保存或由 settings.php 覆盖。
 platforms:
   xinshi:
     label: '信使'

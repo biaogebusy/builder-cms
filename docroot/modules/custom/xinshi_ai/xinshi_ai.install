@@ -282,3 +282,30 @@ function xinshi_ai_update_10009(): void {
     $config->set('speech.enabled', FALSE)->save();
   }
 }
+
+/** Moves the legacy gateway key out of exportable configuration before removing it. */
+function xinshi_ai_update_10010(): void {
+  xinshi_ai_migrate_supplier_key(\Drupal::configFactory(), new \Drupal\xinshi_ai\Service\ApiKeyVault(
+    \Drupal::service('keyvalue'), \Drupal::service('private_key'), 'xinshi_ai.suppliers'));
+}
+
+/** Idempotent migration keeps a newer vault key and fails before clearing an unreadable key. */
+function xinshi_ai_migrate_supplier_key(\Drupal\Core\Config\ConfigFactoryInterface $factory,
+  \Drupal\xinshi_ai\Service\ApiKeyVault $vault): void {
+  $config = $factory->getEditable('xinshi_ai.settings');
+  $legacy = $config->get('gateway.api_key');
+  if ($legacy !== NULL && !is_string($legacy)) {
+    throw new \RuntimeException('Legacy supplier credentials are invalid.');
+  }
+  if (is_string($legacy) && $legacy !== '') {
+    if (!$vault->has('xinshi')) {
+      $vault->set($legacy, 'xinshi');
+    }
+    $vault->get('xinshi');
+  }
+  $config->clear('gateway.api_key');
+  if ($config->get('suppliers.aliyun.base_url') === NULL) {
+    $config->set('suppliers.aliyun.base_url', '');
+  }
+  $config->save();
+}

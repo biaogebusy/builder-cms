@@ -1,4 +1,8 @@
 services:
+  xinshi_ai_runtime.service_authentication:
+    class: Drupal\xinshi_ai_runtime\Service\ServiceRequestAuthentication
+    arguments: ['@xinshi_ai_runtime.service_identity', '@keyvalue.expirable', '@datetime.time']
+
   xinshi_ai_runtime.routes:
     class: Drupal\xinshi_ai_runtime\EventSubscriber\CapabilityRouteSubscriber
     arguments: ['%xinshi_site_finance%']
