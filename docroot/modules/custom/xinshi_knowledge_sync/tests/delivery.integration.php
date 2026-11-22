@@ -68,6 +68,15 @@ $cliExecution = new Process([$siteRoot . '/vendor/bin/drush', '--no-ansi', 'xins
 $cliExecution->mustRun();
 check(json_decode(trim($cliExecution->getOutput()), TRUE, 16, JSON_THROW_ON_ERROR)['receipt'] === $preview, 'Drush replay did not return the original preview.');
 check($importedState === $state(), 'Drush replay changed imported content.');
+$cmsId = Drupal::config('system.site')->get('uuid');
+$boundReceipt = new Process([$siteRoot . '/vendor/bin/drush', '--no-ansi', 'xinshi-knowledge:delivery-receipt', $applied['id'], '--account=1', '--site-uuid=' . $cmsId], $siteRoot, timeout: 30);
+$boundReceipt->mustRun();
+$envelope = json_decode(trim($boundReceipt->getOutput()), TRUE, 16, JSON_THROW_ON_ERROR);
+check($envelope['cmsId'] === $cmsId && $envelope['receipt'] === $applied, 'Pinned CMS receipt identity changed.');
+$wrongSite = new Process([$siteRoot . '/vendor/bin/drush', '--no-ansi', 'xinshi-knowledge:delivery', './delivery-request.json', './delivery-snapshot.json', '--account=1', '--site-uuid=' . Drupal::service('uuid')->generate()], $siteRoot, timeout: 30);
+$wrongSite->run();
+check(!$wrongSite->isSuccessful() && str_contains($wrongSite->getErrorOutput(), 'delivery_site_mismatch'), 'Wrong CMS identity was accepted.');
+check($importedState === $state(), 'Rejected CMS identity changed content.');
 
 // Index failures do not reopen the import stage or repeat node writes.
 $index = Index::load('xinshi_knowledge');

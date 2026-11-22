@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_knowledge_sync\Drush\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\xinshi_knowledge_sync\Service\DeliveryExecution;
 use Drush\Attributes as CLI;
@@ -23,6 +24,8 @@ final class KnowledgeDeliveryCommands extends DrushCommands {
     private readonly DeliveryExecution $delivery,
     #[Autowire(service: 'entity_type.manager')]
     private readonly EntityTypeManagerInterface $entities,
+    #[Autowire(service: 'config.factory')]
+    private readonly ConfigFactoryInterface $configFactory,
   ) {
     parent::__construct();
   }
@@ -32,14 +35,16 @@ final class KnowledgeDeliveryCommands extends DrushCommands {
   #[CLI\Argument(name: 'request', description: 'Local delivery request JSON file.')]
   #[CLI\Argument(name: 'snapshot', description: 'Local original snapshot JSON file.')]
   #[CLI\Option(name: 'account', description: 'Active administrative Drupal user ID.')]
-  public function execute(string $request, string $snapshot, array $options = ['account' => NULL]): int {
+  #[CLI\Option(name: 'site-uuid', description: 'Expected system.site UUID of the target CMS.')]
+  public function execute(string $request, string $snapshot, array $options = ['account' => NULL, 'site-uuid' => NULL]): int {
+    $cmsId = $this->site($options['site-uuid'] ?? NULL);
     $account = $this->account($options['account']);
     $input = json_decode($this->local($request, 4096), TRUE, 16, JSON_THROW_ON_ERROR);
     if (!is_array($input)) {
       throw new \InvalidArgumentException('invalid_delivery_request');
     }
     $receipt = $this->delivery->execute($input, $this->local($snapshot, 20 * 1024 * 1024), $account);
-    $this->output()->writeln(json_encode(['receipt' => $receipt], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
+    $this->output()->writeln(json_encode(['cmsId' => $cmsId, 'receipt' => $receipt], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
     // Failed and running results remain queryable protocol results, never SSH success claims.
     return self::EXIT_SUCCESS;
   }
@@ -48,9 +53,19 @@ final class KnowledgeDeliveryCommands extends DrushCommands {
   #[CLI\Command(name: 'xinshi-knowledge:delivery-receipt')]
   #[CLI\Argument(name: 'id', description: 'Original delivery task UUID.')]
   #[CLI\Option(name: 'account', description: 'Original active administrative Drupal user ID.')]
-  public function receipt(string $id, array $options = ['account' => NULL]): int {
-    $this->output()->writeln(json_encode(['receipt' => $this->delivery->receipt($id, $this->account($options['account']))], JSON_THROW_ON_ERROR));
+  #[CLI\Option(name: 'site-uuid', description: 'Expected system.site UUID of the target CMS.')]
+  public function receipt(string $id, array $options = ['account' => NULL, 'site-uuid' => NULL]): int {
+    $cmsId = $this->site($options['site-uuid'] ?? NULL);
+    $this->output()->writeln(json_encode(['cmsId' => $cmsId, 'receipt' => $this->delivery->receipt($id, $this->account($options['account']))], JSON_THROW_ON_ERROR));
     return self::EXIT_SUCCESS;
+  }
+
+  private function site(mixed $expected): string {
+    $actual = $this->configFactory->get('system.site')->get('uuid');
+    if (!is_string($actual) || ($expected !== NULL && (!is_string($expected) || !hash_equals($actual, $expected)))) {
+      throw new \DomainException('delivery_site_mismatch');
+    }
+    return $actual;
   }
 
   private function account(mixed $uid): AccountInterface {
