@@ -35,7 +35,7 @@ final class SnapshotImporter {
   ) {}
 
   /** Preview by default; applying requires an active administrative account. */
-  public function import(array $manifest, string $source, AccountInterface $account, bool $apply = FALSE, bool $allowEmpty = FALSE): array {
+  public function import(array $manifest, string $source, AccountInterface $account, bool $apply = FALSE, bool $allowEmpty = FALSE, ?callable $guard = NULL, ?string $deliveryTask = NULL): array {
     $user = $this->entities->getStorage('user')->load($account->id());
     if (!$user || !$user->isActive() || !$account->hasPermission('administer nodes') ||
         !$account->hasPermission('administer xinshi knowledge')) {
@@ -52,6 +52,12 @@ final class SnapshotImporter {
     $this->importing = TRUE;
     $this->entities->getAccessControlHandler('node')->resetCache();
     try {
+      // Legacy CLI and other callers cannot pass an unresolved delivery execution.
+      $active = $this->database->select(DeliveryExecution::TABLE, 'r')->fields('r', ['task_id'])
+        ->condition('status', 'running')->range(0, 1)->execute()->fetchField();
+      if ($active && $active !== $deliveryTask) {
+        throw new \DomainException('delivery_unresolved');
+      }
       $storage = $this->entities->getStorage('node');
       $owned = $this->database->select(SourceAccess::TABLE, 'd')->fields('d')
         ->condition('source', $source)->condition('language', $manifest['language'])->range(0, 10001)
@@ -59,6 +65,8 @@ final class SnapshotImporter {
       if (count($owned) > 10000) {
         throw new \DomainException('source_ledger_limit');
       }
+      ksort($owned);
+      $planHash = hash('sha256', serialize([$this->access->source($source), $owned, $manifest]));
       $nodes = $storage->loadMultiple(array_column($owned, 'nid'));
       $plan = [];
       $stats = ['created' => 0, 'updated' => 0, 'unpublished' => 0, 'unchanged' => 0, 'applied' => $apply];
@@ -87,6 +95,10 @@ final class SnapshotImporter {
           $this->prepare($node, NULL, $source, $manifest['revision'], $account);
           $plan[] = ['key' => $key, 'row' => $row, 'node' => $node, 'action' => 'unpublished'];
         }
+      }
+      // The caller binds approval to the live plan while the import lock is held.
+      if ($guard) {
+        $guard($stats, $planHash);
       }
       if (!$apply) {
         return $stats;

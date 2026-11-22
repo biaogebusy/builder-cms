@@ -1,4 +1,7 @@
 services:
+  xinshi_knowledge_sync.delivery:
+    class: Drupal\xinshi_knowledge_sync\Service\DeliveryExecution
+    arguments: ['@database', '@entity_type.manager', '@lock', '@xinshi_knowledge_sync.importer', '@account_switcher']
   xinshi_knowledge_sync.access:
     class: Drupal\xinshi_knowledge_sync\Service\SourceAccess
     arguments: ['@config.factory', '@database', '@entity_type.manager']

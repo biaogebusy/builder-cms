@@ -4,7 +4,22 @@ declare(strict_types=1);
 
 /** Implements hook_schema(). */
 function xinshi_knowledge_sync_schema(): array {
-  return ['xinshi_knowledge_sync_document' => [
+  return ['xinshi_knowledge_sync_delivery' => [
+    'description' => 'Durable delivery receipts without document content or credentials.',
+    'fields' => [
+      'task_id' => ['type' => 'varchar', 'length' => 36, 'not null' => TRUE],
+      'request_hash' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'request' => ['type' => 'text', 'size' => 'normal', 'not null' => TRUE],
+      'account_uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'status' => ['type' => 'varchar', 'length' => 16, 'not null' => TRUE],
+      'result' => ['type' => 'text', 'size' => 'normal', 'not null' => TRUE],
+      'error' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'created' => ['type' => 'int', 'not null' => TRUE],
+      'finished' => ['type' => 'int', 'not null' => FALSE],
+    ],
+    'primary key' => ['task_id'],
+    'indexes' => ['active' => ['status']],
+  ], 'xinshi_knowledge_sync_document' => [
     'description' => 'Source ownership and last imported revision; not a content copy.',
     'fields' => [
       'document_key' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
@@ -22,4 +37,12 @@ function xinshi_knowledge_sync_schema(): array {
     'unique keys' => ['node' => ['nid']],
     'indexes' => ['source_language' => ['source', 'language']],
   ]];
+}
+
+/** Adds receipts without modifying existing documents or source policies. */
+function xinshi_knowledge_sync_update_11001(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('xinshi_knowledge_sync_delivery')) {
+    $schema->createTable('xinshi_knowledge_sync_delivery', xinshi_knowledge_sync_schema()['xinshi_knowledge_sync_delivery']);
+  }
 }

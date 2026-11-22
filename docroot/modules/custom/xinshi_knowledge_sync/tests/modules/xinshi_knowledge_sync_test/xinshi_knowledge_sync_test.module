@@ -7,3 +7,13 @@ function xinshi_knowledge_sync_test_entity_presave(\Drupal\Core\Entity\EntityInt
     throw new \RuntimeException('synthetic_save_failure');
   }
 }
+
+/** Implements hook_entity_update(). */
+function xinshi_knowledge_sync_test_entity_update(\Drupal\Core\Entity\EntityInterface $entity): void {
+  if ($entity instanceof \Drupal\node\NodeInterface &&
+      $entity->label() === \Drupal::state()->get('knowledge_sync_test.pause_title')) {
+    // Only the disposable test site installs this module and creates this directory.
+    file_put_contents('/tmp/xinshi-knowledge-test/delivery-paused', 'paused');
+    sleep(30);
+  }
+}

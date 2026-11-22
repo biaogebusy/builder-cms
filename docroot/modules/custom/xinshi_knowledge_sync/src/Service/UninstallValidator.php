@@ -14,6 +14,10 @@ final class UninstallValidator implements ModuleUninstallValidatorInterface {
 
   /** {@inheritdoc} */
   public function validate($module): array {
+    if ($module === 'xinshi_knowledge_sync' && $this->database->schema()->tableExists(DeliveryExecution::TABLE) &&
+        $this->database->select(DeliveryExecution::TABLE, 'r')->range(0, 1)->countQuery()->execute()->fetchField()) {
+      return [t('Preserve delivery receipts and resolve outstanding tasks before uninstalling this module.')];
+    }
     if ($module === 'xinshi_knowledge_sync' && $this->database->schema()->tableExists(SourceAccess::TABLE) &&
         $this->database->select(SourceAccess::TABLE, 'd')->range(0, 1)->countQuery()->execute()->fetchField()) {
       return [t('Migrate or remove synchronized documents and their ownership records before uninstalling access enforcement.')];

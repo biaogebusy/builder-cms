@@ -246,5 +246,8 @@ $count = 0;
 require __DIR__ . '/cli.integration.php';
 fwrite(STDOUT, "Knowledge sync CLI: $count checks passed.\n");
 $count = 0;
+require __DIR__ . '/delivery.integration.php';
+fwrite(STDOUT, "Knowledge delivery: $count checks passed.\n");
+$count = 0;
 require __DIR__ . '/moderation.integration.php';
 fwrite(STDOUT, "Knowledge sync moderation: $count checks passed.\n");
