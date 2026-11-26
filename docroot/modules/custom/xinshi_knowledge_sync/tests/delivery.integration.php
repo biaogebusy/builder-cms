@@ -29,6 +29,26 @@ $request = static fn(string $action, string $snapshot, ?string $parent = NULL, i
   'snapshotSha256' => hash('sha256', $snapshot), 'sourceConfigSha256' => str_repeat('c', 64),
   'maxUnpublished' => $limit, 'parentId' => $parent,
 ];
+// Upgrade the actual prior table shape while preserving a bound historical failure.
+Drupal::moduleHandler()->loadInclude('xinshi_knowledge_sync', 'install');
+$legacyRequest = $request('preview', $bytes);
+$legacyHash = hash('sha256', json_encode([$legacyRequest, 1], JSON_THROW_ON_ERROR));
+Drupal::database()->insert(DeliveryExecution::TABLE)->fields([
+  'task_id' => $legacyRequest['id'], 'request_hash' => $legacyHash,
+  'request' => json_encode($legacyRequest), 'account_uid' => 1, 'status' => 'failed',
+  'result' => '{}', 'error' => 'delivery_execution_failed', 'created' => 1, 'finished' => 2,
+])->execute();
+foreach (['guard_hash', 'reconciled_by', 'reconciled'] as $field) {
+  Drupal::database()->schema()->dropField(DeliveryExecution::TABLE, $field);
+}
+xinshi_knowledge_sync_update_11002();
+xinshi_knowledge_sync_update_11002();
+check($delivery->receipt($legacyRequest['id'], $deliveryAdmin)['requestSha256'] === $legacyHash &&
+  $delivery->receipt($legacyRequest['id'], $deliveryAdmin)['error'] === 'delivery_execution_failed',
+  'Receipt upgrade changed a historical binding or failure.');
+check(Drupal::database()->select(DeliveryExecution::TABLE, 'r')->fields('r', ['guard_hash'])
+  ->condition('task_id', $legacyRequest['id'])->execute()->fetchField() === '',
+  'Receipt upgrade invented historical process-guard evidence.');
 $state = static function (): string {
   return hash('sha256', serialize([
     Drupal::database()->select(SourceAccess::TABLE, 'd')->fields('d')->condition('source', 'delivery-test')
@@ -37,6 +57,7 @@ $state = static function (): string {
   ]));
 };
 rejects(fn() => $delivery->execute($request('preview', $bytes), $bytes, new AnonymousUserSession()), 'import_forbidden');
+rejects(fn() => $delivery->reconcile($request('preview', $bytes), 1, new AnonymousUserSession()), 'delivery_recovery_forbidden');
 $previewRequest = $request('preview', $bytes);
 rejects(fn() => $delivery->execute([...$previewRequest, 'arbitrary' => TRUE], $bytes, $deliveryAdmin), 'invalid_delivery_request');
 rejects(fn() => $delivery->execute([...$previewRequest, 'maxUnpublished' => '0'], $bytes, $deliveryAdmin), 'invalid_delivery_request');
@@ -145,6 +166,10 @@ while (!is_file($paused) && $child->isRunning() && microtime(TRUE) < $deadline) 
   usleep(100000);
 }
 $didPause = is_file($paused);
+if ($didPause) {
+  check($delivery->reconcile($killRequest, 1, $deliveryAdmin)['status'] === 'running',
+    'A live import lost its durable exclusion.');
+}
 $child->stop(0, 9);
 check($didPause, 'Drush did not reach the interrupted transaction: ' . $child->getErrorOutput());
 Drupal::state()->delete('knowledge_sync_test.pause_title');
@@ -157,7 +182,37 @@ Drupal::database()->update('semaphore')->fields(['expire' => 0])
 rejects(fn() => $delivery->execute($request('preview', $bytes), $bytes, $deliveryAdmin), 'delivery_unresolved');
 check($delivery->execute($killRequest, $killBytes, $deliveryAdmin)['status'] === 'running', 'Killed task was repeated after lock expiry.');
 check($importedState === $state(), 'Killed task replay wrote content.');
-Drupal::database()->delete(DeliveryExecution::TABLE)->condition('task_id', $killRequest['id'])->execute();
+$guardPath = '/tmp/xinshi-knowledge-test/private/xinshi-knowledge-delivery/' . $cmsId . '.lock';
+rename($guardPath, $guardPath . '.original');
+file_put_contents($guardPath, file_get_contents($guardPath . '.original'));
+chmod($guardPath, 0600);
+try {
+  check($delivery->reconcile($killRequest, 1, $deliveryAdmin)['status'] === 'running',
+    'Replacing the process lock invented evidence that the original execution stopped.');
+}
+finally {
+  unlink($guardPath);
+  rename($guardPath . '.original', $guardPath);
+}
+$recovered = $delivery->reconcile($killRequest, 1, $deliveryAdmin);
+check($recovered['id'] === $killRequest['id'] && $recovered['status'] === 'failed' &&
+  $recovered['error'] === 'delivery_interrupted', 'Stopped import did not retain a terminal original receipt.');
+check($recovered === $delivery->execute($killRequest, $killBytes, $deliveryAdmin), 'Reconciled import was executed again.');
+check($importedState === $state(), 'Reconciliation changed imported content.');
+file_put_contents($siteRoot . '/delivery-legacy-snapshot.json', $bytes);
+$legacySync = new Process([$siteRoot . '/vendor/bin/drush', '--no-ansi', 'xinshi-knowledge:sync',
+  './delivery-legacy-snapshot.json', '--source=delivery-test', '--account=1', '--apply'], $siteRoot, timeout: 30);
+$legacySync->mustRun();
+check(str_contains($legacySync->getOutput(), 'applied: true') && $importedState === $state(),
+  'Reconciled delivery kept legacy apply blocked or repeated content writes.');
+
+// A durable failure fences a delayed request that never entered CMS execution.
+$absentRequest = $request('preview', $bytes);
+$notStarted = $delivery->reconcile($absentRequest, 1, $deliveryAdmin);
+check($notStarted['status'] === 'failed' && $notStarted['error'] === 'delivery_not_started', 'Missing request was not fenced.');
+check($notStarted === $delivery->execute($absentRequest, $bytes, $deliveryAdmin), 'A late request crossed the reconciliation fence.');
+rejects(fn() => $delivery->reconcile([...$absentRequest, 'maxUnpublished' => 1], 1, $deliveryAdmin), 'delivery_request_conflict');
+check($importedState === $state(), 'Missing-request recovery wrote content.');
 
 // Simulate process loss after durable admission. No timeout is permitted to release it.
 $unknownRequest = $request('preview', $bytes);
@@ -167,24 +222,52 @@ Drupal::database()->insert(DeliveryExecution::TABLE)->fields([
   'account_uid' => 1, 'status' => 'running', 'result' => '{}', 'error' => '', 'created' => 1,
 ])->execute();
 check($delivery->execute($unknownRequest, $bytes, $deliveryAdmin)['status'] === 'running', 'Old running task was executed again.');
+check($delivery->reconcile($unknownRequest, 1, $deliveryAdmin)['status'] === 'running',
+  'An earlier receipt without process-guard evidence was cleared.');
 rejects(fn() => $delivery->execute($request('preview', $bytes), $bytes, $deliveryAdmin), 'delivery_unresolved');
 rejects(fn() => Drupal::service('xinshi_knowledge_sync.importer')->import($deliveryManifest, 'delivery-test', $deliveryAdmin, TRUE), 'delivery_unresolved');
 check($importedState === $state(), 'Unresolved execution allowed content writes.');
 rejects(fn() => $delivery->receipt($applied['id'], $reader), 'import_forbidden');
 Role::create(['id' => 'delivery-owner', 'label' => 'Delivery owner',
-  'permissions' => ['administer nodes', 'administer xinshi knowledge']])->save();
+  'permissions' => ['administer nodes', 'administer xinshi knowledge', 'bypass node access',
+    'access content', 'use text format basic_html']])->save();
 $otherAdmin = User::create(['name' => 'delivery-other-admin', 'status' => 1, 'roles' => ['delivery-owner']]);
 $otherAdmin->save();
 rejects(fn() => $delivery->receipt($applied['id'], $otherAdmin), 'delivery_account_mismatch');
+rejects(fn() => $delivery->reconcile($importRequest, 1, $otherAdmin), 'delivery_recovery_forbidden');
+Role::create(['id' => 'delivery-recovery', 'label' => 'Delivery reconciliation only',
+  'permissions' => ['reconcile xinshi knowledge delivery']])->save();
+$reconciler = User::create(['name' => 'delivery-reconciler', 'status' => 1, 'roles' => ['delivery-recovery']]);
+$reconciler->save();
+check($delivery->reconcile($importRequest, 1, $reconciler) === $applied, 'Recovery-only account could not read the original result.');
+check($delivery->reconcile($killRequest, 1, $reconciler) === $recovered, 'Reading a reconciled receipt changed its original auditor.');
+rejects(fn() => $delivery->execute($request('preview', $bytes), $bytes, $reconciler), 'import_forbidden');
 $otherAdmin->set('roles', [])->save();
 rejects(fn() => $delivery->receipt($applied['id'], $otherAdmin), 'import_forbidden');
 $deliveryAdmin->block()->save();
 rejects(fn() => $delivery->receipt($applied['id'], $deliveryAdmin), 'import_forbidden');
+check($delivery->reconcile($importRequest, 1, $reconciler) === $applied, 'Blocking the original owner prevented independent recovery.');
 $deliveryAdmin->activate()->save();
+Role::load('delivery-recovery')->revokePermission('reconcile xinshi knowledge delivery')->save();
+rejects(fn() => $delivery->reconcile($importRequest, 1, $reconciler), 'delivery_recovery_forbidden');
+Role::load('delivery-recovery')->grantPermission('reconcile xinshi knowledge delivery')->save();
+$reconciler->block()->save();
+rejects(fn() => $delivery->reconcile($importRequest, 1, $reconciler), 'delivery_recovery_forbidden');
+$reconciler->activate()->save();
 // Cleanup is restricted to this synthetic row; production has no reset endpoint.
 Drupal::database()->delete(DeliveryExecution::TABLE)->condition('task_id', $unknownRequest['id'])->execute();
+$otherAdmin->set('roles', ['delivery-owner'])->save();
+$deletedOwnerRequest = $request('preview', $bytes);
+$deletedOwnerReceipt = $delivery->execute($deletedOwnerRequest, $bytes, $otherAdmin);
+check($deletedOwnerReceipt['status'] === 'succeeded', 'Original account could not execute its preview.');
+$deletedOwnerUid = (int) $otherAdmin->id();
+$otherAdmin->delete();
+check($delivery->reconcile($deletedOwnerRequest, $deletedOwnerUid, $reconciler) === $deletedOwnerReceipt,
+  'Removing the original account prevented receipt reconciliation.');
 check(count(Drupal::service('xinshi_knowledge_sync.uninstall_validator')->validate('xinshi_knowledge_sync')) === 1, 'Uninstall would remove durable receipts.');
 Drupal::moduleHandler()->loadInclude('xinshi_knowledge_sync', 'install');
 xinshi_knowledge_sync_update_11001();
 xinshi_knowledge_sync_update_11001();
+xinshi_knowledge_sync_update_11002();
+xinshi_knowledge_sync_update_11002();
 check($delivery->receipt($applied['id'], $deliveryAdmin) === $applied && $importedState === $state(), 'Repeated schema update changed existing receipts or content.');

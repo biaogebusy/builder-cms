@@ -2,3 +2,7 @@ administer xinshi knowledge sync:
   title: '管理知识库同步来源与访问策略'
   description: '配置文档来源并调整读者范围，仅授予受信任的管理员；不授予执行同步的权限。'
   restrict access: true
+reconcile xinshi knowledge delivery:
+  title: '核验知识库交付任务结果'
+  description: '核验原任务并保存已确认的中断结论，不授予导入、索引或修改来源策略的权限。'
+  restrict access: true

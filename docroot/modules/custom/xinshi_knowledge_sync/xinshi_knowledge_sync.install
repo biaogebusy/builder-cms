@@ -16,6 +16,9 @@ function xinshi_knowledge_sync_schema(): array {
       'error' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
       'created' => ['type' => 'int', 'not null' => TRUE],
       'finished' => ['type' => 'int', 'not null' => FALSE],
+      'guard_hash' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => ''],
+      'reconciled_by' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE],
+      'reconciled' => ['type' => 'int', 'not null' => FALSE],
     ],
     'primary key' => ['task_id'],
     'indexes' => ['active' => ['status']],
@@ -44,5 +47,16 @@ function xinshi_knowledge_sync_update_11001(): void {
   $schema = \Drupal::database()->schema();
   if (!$schema->tableExists('xinshi_knowledge_sync_delivery')) {
     $schema->createTable('xinshi_knowledge_sync_delivery', xinshi_knowledge_sync_schema()['xinshi_knowledge_sync_delivery']);
+  }
+}
+
+/** Adds process-guard provenance without inventing evidence for earlier running tasks. */
+function xinshi_knowledge_sync_update_11002(): void {
+  $schema = \Drupal::database()->schema();
+  $table = 'xinshi_knowledge_sync_delivery';
+  foreach (['guard_hash', 'reconciled_by', 'reconciled'] as $field) {
+    if (!$schema->fieldExists($table, $field)) {
+      $schema->addField($table, $field, xinshi_knowledge_sync_schema()[$table]['fields'][$field]);
+    }
   }
 }

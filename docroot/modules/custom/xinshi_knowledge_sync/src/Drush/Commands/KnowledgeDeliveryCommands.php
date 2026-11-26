@@ -60,6 +60,30 @@ final class KnowledgeDeliveryCommands extends DrushCommands {
     return self::EXIT_SUCCESS;
   }
 
+  /** Verifies an original task under a separate, current recovery authority. */
+  #[CLI\Command(name: 'xinshi-knowledge:delivery-reconcile')]
+  #[CLI\Argument(name: 'request', description: 'Original immutable request JSON file; no snapshot.')]
+  #[CLI\Option(name: 'account', description: 'Current Drupal user with delivery reconciliation permission.')]
+  #[CLI\Option(name: 'original-account', description: 'Original Drupal user ID bound to the request.')]
+  #[CLI\Option(name: 'site-uuid', description: 'Required expected system.site UUID of the target CMS.')]
+  public function reconcile(string $request, array $options = ['account' => NULL, 'original-account' => NULL, 'site-uuid' => NULL]): int {
+    if (!is_string($options['site-uuid'] ?? NULL)) {
+      throw new \DomainException('delivery_site_mismatch');
+    }
+    $cmsId = $this->site($options['site-uuid']);
+    $input = json_decode($this->local($request, 4096), TRUE, 16, JSON_THROW_ON_ERROR);
+    if (!is_array($input)) {
+      throw new \InvalidArgumentException('invalid_delivery_request');
+    }
+    $original = $options['original-account'] ?? NULL;
+    if (!is_string($original) || !preg_match('/^[1-9][0-9]{0,9}$/D', $original)) {
+      throw new \InvalidArgumentException('invalid_delivery_account');
+    }
+    $receipt = $this->delivery->reconcile($input, (int) $original, $this->account($options['account']));
+    $this->output()->writeln(json_encode(['cmsId' => $cmsId, 'receipt' => $receipt], JSON_THROW_ON_ERROR));
+    return self::EXIT_SUCCESS;
+  }
+
   private function site(mixed $expected): string {
     $actual = $this->configFactory->get('system.site')->get('uuid');
     if (!is_string($actual) || ($expected !== NULL && (!is_string($expected) || !hash_equals($actual, $expected)))) {
