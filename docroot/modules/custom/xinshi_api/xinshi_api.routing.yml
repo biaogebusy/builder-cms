@@ -63,6 +63,18 @@ xinshi_api.v3.webform:
     _auth: [ 'oauth2', 'cookie' ]
   methods: [ GET ]
 
+xinshi_api.v3.roles:
+  path: '/api/v3/roles'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\RoleController::roleList'
+    _title: 'Role List'
+  requirements:
+    # The authority that saves the branding JSON this list is selected for.
+    _permission: 'edit any json content'
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+  methods: [ GET ]
+
 xinshi_api.v3.statistics.node.published:
   path: '/api/v3/statistics/node/published'
   defaults:

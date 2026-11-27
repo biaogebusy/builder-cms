@@ -125,7 +125,8 @@ function status(array $response, int $expected, string $description): array {
   return $response;
 }
 
-\Drupal::service('module_installer')->install(['language', 'xinshi_ai', 'metatag']);
+$roles_only = ($argv[1] ?? '') === 'roles';
+\Drupal::service('module_installer')->install($roles_only ? ['language'] : ['language', 'xinshi_ai', 'metatag']);
 $credentials_path = $fixture . '/auth-fixture.json';
 if (!is_file($credentials_path)) {
   Role::create(['id' => 'http_author', 'label' => 'HTTP fixture author', 'permissions' => [
@@ -233,6 +234,11 @@ try {
   check($sessions['admin']['csrf'] !== $sessions['second_admin']['csrf'], 'Two sessions for one account have distinct CSRF tokens');
   $admin = $sessions['admin'];
   $ordinary = $sessions['ordinary'];
+  if ($roles_only) {
+    require __DIR__ . '/roles-http.php';
+    echo 'Isolated role-list HTTP checks passed: ' . $checks . '.' . PHP_EOL;
+    return;
+  }
   $paths = [
     ['POST', '/api/v3/ai/models', 400, 'admin'],
     ['PATCH', '/api/v3/ai/models/http-missing-model', 404, 'admin'],

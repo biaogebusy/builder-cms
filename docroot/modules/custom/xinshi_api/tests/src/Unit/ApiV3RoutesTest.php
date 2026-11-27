@@ -34,6 +34,10 @@ final class ApiV3RoutesTest extends TestCase {
       '/api/v3/webform',
       ['_user_is_logged_in' => 'TRUE'],
     ],
+    'xinshi_api.v3.roles' => [
+      '/api/v3/roles',
+      ['_permission' => 'edit any json content'],
+    ],
     'xinshi_api.v3.statistics.node.published' => [
       '/api/v3/statistics/node/published',
       ['_access' => 'TRUE'],
