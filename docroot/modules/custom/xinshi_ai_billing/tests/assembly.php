@@ -19,5 +19,5 @@ function fixtureBilling(): AiBilling {
   return new AiBilling(\Drupal::database(), fixtureFinance()['chat_billing'],
     \Drupal::service('xinshi_credits.context'), \Drupal::service('xinshi_credits.lifecycle'),
     \Drupal::service('xinshi_ai_billing.profiles'), \Drupal::time(), \Drupal::service('uuid'),
-    \Drupal::currentUser(), \Drupal::entityTypeManager());
+    \Drupal::currentUser(), \Drupal::entityTypeManager(), \Drupal::service('xinshi_ai_usage.projection'));
 }

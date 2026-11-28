@@ -9,6 +9,7 @@ use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\xinshi_ai_usage\Service\UsageProjectionService;
 use Drupal\xinshi_credits\{CreditContext, CreditException, CreditLifecycle, CreditValue};
 
 /** User authority precedes producer execution; only source evidence can settle. */
@@ -24,6 +25,7 @@ final class AiBilling {
     private readonly UuidInterface $uuid,
     private readonly AccountProxyInterface $currentUser,
     private readonly EntityTypeManagerInterface $entities,
+    private readonly UsageProjectionService $projection,
   ) {}
 
   /** Create a bounded quote for the authenticated user, without reserving credits. */
@@ -42,7 +44,7 @@ final class AiBilling {
       return $this->quoteSummary($previous);
     }
     $this->enabled();
-    if (isset($input['continuation'])) $this->checkContinuation($input, $uid);
+    if (isset($input['continuation'])) $this->checkContinuation($input, $uid, TRUE);
     $profile = $selection ?? $this->profiles->select(CreditValue::id($input['feature']),
       CreditValue::text($input['model'], 128), CreditValue::id($input['platform']));
     if ($profile['feature'] !== $input['feature'] || $profile['model'] !== $input['model'] || $profile['platform'] !== $input['platform']) throw new CreditException('quote_mismatch');
@@ -412,7 +414,7 @@ final class AiBilling {
   }
 
   /** Supplemental quotes keep the original scope and require resolved prior dispatches. */
-  private function checkContinuation(array $input, string $uid): void {
+  private function checkContinuation(array $input, string $uid, bool $prepareQuote = FALSE): void {
     $link = $input['continuation'];
     if (!is_array($link)) throw new CreditException('invalid_continuation');
     CreditValue::fields($link, ['root_operation_id', 'parent_operation_id']);
@@ -434,6 +436,18 @@ final class AiBilling {
     }
     $hash = hash('sha256', BillingProfiles::json(['version' => 1, 'request_hash' => $original['request_hash']] + $link));
     if (!hash_equals($hash, self::hash($input['request_hash']))) throw new CreditException('quote_mismatch', 409);
+    $site = $auth['site_id'];
+    if ($this->projection->pendingCount($site, $root)) {
+      // Never run the projection inside the credit reservation transaction.
+      if (!$prepareQuote) throw new CreditException('continuation_awaiting_evidence', 409);
+      // Each of the 128 possible attempts normally emits an intent and an observation.
+      $batch = $this->projection->process($site, 256, $root);
+      if ($batch['skipped'] || $batch['failed'] || $batch['remaining']
+        || ($batch['locked'] && $this->projection->pendingCount($site, $root))) {
+        throw new CreditException('continuation_awaiting_evidence', 409);
+      }
+    }
+    if ($this->projection->quarantinedCount($site, $root)) throw new CreditException('continuation_awaiting_evidence', 409);
     $current = $this->profiles->load($this->quoteRow($this->authorization($parent)['quote_id'])['version']);
     $sources = $this->database->select('ai_provider_attempt', 'a')->fields('a')
       ->condition('site_id', $auth['site_id'])->condition('operation_id', $root)

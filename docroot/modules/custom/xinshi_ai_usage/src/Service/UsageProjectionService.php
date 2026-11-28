@@ -6,6 +6,7 @@ namespace Drupal\xinshi_ai_usage\Service;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\xinshi_ai_usage\Contract\UsageContractException;
 use Drupal\xinshi_ai_usage\Contract\UsageEventValidator;
@@ -63,6 +64,8 @@ final class UsageProjectionService {
    *   Restrict to one site, or NULL for every site.
    * @param int $limit
    *   Maximum number of events to claim in this run.
+   * @param string|null $operationId
+   *   Restrict the batch and its counts to an operation for a current source read.
    *
    * @return array{locked:bool,claimed:int,applied:int,audited:int,skipped:int,failed:int,quarantined:int,remaining:int}
    *   `applied` changed the projection, `audited` were duplicates or stale
@@ -70,15 +73,16 @@ final class UsageProjectionService {
    *   `failed` were left unprocessed for the next run, `quarantined` is the
    *   number of events set aside after MAX_FAILURES and needing an operator.
    */
-  public function process(?string $siteId = NULL, int $limit = self::DEFAULT_LIMIT): array {
+  public function process(?string $siteId = NULL, int $limit = self::DEFAULT_LIMIT, ?string $operationId = NULL): array {
     $stats = ['locked' => FALSE, 'claimed' => 0, 'applied' => 0, 'audited' => 0,
       'skipped' => 0, 'failed' => 0, 'quarantined' => 0, 'remaining' => 0];
-    if (!$this->lock->acquire(self::LOCK_NAME, 300.0)) {
+    if (!$this->lock->acquire(self::LOCK_NAME, 300.0) && ($operationId === NULL
+      || $this->lock->wait(self::LOCK_NAME, 1) || !$this->lock->acquire(self::LOCK_NAME, 300.0))) {
       $stats['locked'] = TRUE;
       return $stats;
     }
     try {
-      foreach ($this->claim($siteId, max(1, $limit)) as $row) {
+      foreach ($this->claim($siteId, max(1, $limit), $operationId) as $row) {
         $stats['claimed']++;
         try {
           $stats[$this->applyEvent($row)]++;
@@ -88,8 +92,8 @@ final class UsageProjectionService {
           $this->recordFailure($row, $e);
         }
       }
-      $stats['remaining'] = $this->pendingCount($siteId);
-      $stats['quarantined'] = $this->quarantinedCount($siteId);
+      $stats['remaining'] = $this->pendingCount($siteId, $operationId);
+      $stats['quarantined'] = $this->quarantinedCount($siteId, $operationId);
     }
     finally {
       $this->lock->release(self::LOCK_NAME);
@@ -166,26 +170,18 @@ final class UsageProjectionService {
   /**
    * Number of events not yet acknowledged and not quarantined.
    */
-  public function pendingCount(?string $siteId = NULL): int {
-    $query = $this->database->select(UsageIngestService::TABLE, 'e')
+  public function pendingCount(?string $siteId = NULL, ?string $operationId = NULL): int {
+    return (int) $this->events($siteId, $operationId)
       ->isNull('e.processed_at')
-      ->isNull('e.quarantined_at');
-    if ($siteId !== NULL) {
-      $query->condition('e.site_id', $siteId);
-    }
-    return (int) $query->countQuery()->execute()->fetchField();
+      ->isNull('e.quarantined_at')->countQuery()->execute()->fetchField();
   }
 
   /**
    * Number of events set aside after repeated failures; they need an operator.
    */
-  public function quarantinedCount(?string $siteId = NULL): int {
-    $query = $this->database->select(UsageIngestService::TABLE, 'e')
-      ->isNotNull('e.quarantined_at');
-    if ($siteId !== NULL) {
-      $query->condition('e.site_id', $siteId);
-    }
-    return (int) $query->countQuery()->execute()->fetchField();
+  public function quarantinedCount(?string $siteId = NULL, ?string $operationId = NULL): int {
+    return (int) $this->events($siteId, $operationId)
+      ->isNotNull('e.quarantined_at')->countQuery()->execute()->fetchField();
   }
 
   /**
@@ -207,18 +203,25 @@ final class UsageProjectionService {
   /**
    * @return iterable<array<string,mixed>>
    */
-  private function claim(?string $siteId, int $limit): iterable {
-    $query = $this->database->select(UsageIngestService::TABLE, 'e')
+  private function claim(?string $siteId, int $limit, ?string $operationId): iterable {
+    return $this->events($siteId, $operationId)
       ->fields('e', ['id', 'site_id', 'producer_id', 'event_id', 'event_type', 'attempt_id',
         'observation_revision', 'occurred_at', 'failure_count', 'payload_json'])
       ->isNull('e.processed_at')
       ->isNull('e.quarantined_at')
       ->orderBy('e.id')
-      ->range(0, $limit);
+      ->range(0, $limit)->execute()->fetchAll(\PDO::FETCH_ASSOC);
+  }
+
+  private function events(?string $siteId, ?string $operationId): SelectInterface {
+    $query = $this->database->select(UsageIngestService::TABLE, 'e');
     if ($siteId !== NULL) {
       $query->condition('e.site_id', $siteId);
     }
-    return $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
+    if ($operationId !== NULL) {
+      $query->condition('e.operation_id', $operationId);
+    }
+    return $query;
   }
 
   /**

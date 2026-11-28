@@ -10,7 +10,7 @@ services:
     arguments: ['@database', '@config.factory', '@xinshi_credits.context']
   xinshi_ai_billing.billing:
     class: Drupal\xinshi_ai_billing\AiBilling
-    arguments: ['@database', '%xinshi_finance.chat_billing%', '@xinshi_credits.context', '@xinshi_credits.lifecycle', '@xinshi_ai_billing.profiles', '@datetime.time', '@uuid', '@current_user', '@entity_type.manager']
+    arguments: ['@database', '%xinshi_finance.chat_billing%', '@xinshi_credits.context', '@xinshi_credits.lifecycle', '@xinshi_ai_billing.profiles', '@datetime.time', '@uuid', '@current_user', '@entity_type.manager', '@xinshi_ai_usage.projection']
   xinshi_ai_billing.uninstall:
     class: Drupal\xinshi_ai_billing\BillingUninstallValidator
     arguments: ['@database']
